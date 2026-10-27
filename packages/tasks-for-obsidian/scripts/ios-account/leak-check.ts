@@ -3,6 +3,7 @@ import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { RelativePathSchema } from "../apple-sync-live/transport/fields";
+import { InputLogAvailabilitySchema } from "./retention";
 
 function sentinelPatterns(needles: string[]) {
   assert.ok(
@@ -86,30 +87,41 @@ export async function scanPrivateInputEvidence(
   return { files: inventory, bytes: total };
 }
 
-export const InputProbeProofSchema = z.strictObject({
-  schemaVersion: z.literal(1),
-  kind: z.literal("ios-private-account-input-probe"),
-  runID: z.uuid(),
-  sourceHead: z.string().regex(/^[a-f0-9]{40}$/u),
-  probeID: z.uuid(),
-  selector: z.literal("AccountInputUITests/testPrivateAccountInput"),
-  sourceFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
-  runnerFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
-  status: z.literal("private-input-ready"),
-  nativeCaseCount: z.literal(1),
-  disabledCheckpoints: z.literal(2),
-  submitActionCount: z.literal(0),
-  scannedRawEvidence: z.literal(true),
-  decodedActivityAndConsoleLogs: z.literal(true),
-  attachmentsCount: z.literal(0),
-  evidence: z.record(
-    RelativePathSchema,
-    z.strictObject({
-      size: z.number().int().nonnegative(),
-      sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-    }),
-  ),
-});
+export const InputProbeProofSchema = z
+  .strictObject({
+    schemaVersion: z.literal(1),
+    kind: z.literal("ios-private-account-input-probe"),
+    runID: z.uuid(),
+    sourceHead: z.string().regex(/^[a-f0-9]{40}$/u),
+    probeID: z.uuid(),
+    selector: z.literal("AccountInputUITests/testPrivateAccountInput"),
+    sourceFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
+    runnerFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
+    status: z.literal("private-input-ready"),
+    nativeCaseCount: z.literal(1),
+    disabledCheckpoints: z.literal(2),
+    submitActionCount: z.literal(0),
+    scannedRawEvidence: z.literal(true),
+    logAvailability: InputLogAvailabilitySchema,
+    consoleLog: z.enum(["decoded", "confirmed-absent"]),
+    decodedActivities: z.literal(true),
+    exportedDiagnostics: z.literal(true),
+    attachmentsCount: z.literal(0),
+    evidence: z.record(
+      RelativePathSchema,
+      z.strictObject({
+        size: z.number().int().nonnegative(),
+        sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+      }),
+    ),
+  })
+  .refine(
+    (proof) =>
+      proof.consoleLog ===
+      (proof.logAvailability.logs.includes("console")
+        ? "decoded"
+        : "confirmed-absent"),
+  );
 
 export function assertPrivateInputProof(
   value: unknown,

@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
-import { chmod, copyFile, mkdir } from "node:fs/promises";
+import { chmod, copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { ExecutionOperation, ExecutionResult } from "./contract.ts";
-import { OfficialAccountReceiptSchema } from "./contract.ts";
+import {
+  OfficialAccountReceiptSchema,
+  OfficialAccountFailureSchema,
+} from "./contract.ts";
 import { executePrivateTransport } from "../host.ts";
 import { inspectOwnedMacProcesses } from "../../mac-process-inspection.ts";
 import { macFileSHA } from "tasknotes-macos/scripts/apple-acceptance/mac-artifact.ts";
@@ -146,17 +149,31 @@ export async function runGuestOfficialAccount(
       new TextEncoder().encode(JSON.stringify(packet)),
       60_000,
     );
+    assert.equal(result.stderr.length, 0);
+    const raw: unknown = JSON.parse(
+      new TextDecoder("utf-8", { fatal: true }).decode(result.stdout),
+    );
+    if (result.exitCode === 3) {
+      const failure = OfficialAccountFailureSchema.parse(raw);
+      await writeFile(
+        path.join(directory, "failure.json"),
+        JSON.stringify({
+          schemaVersion: 1,
+          runID: runtime.config.runID,
+          guestConfigSHA256: runtime.expectedConfigSHA,
+          helperSHA256: helperSHA,
+          failure,
+        }),
+        { flag: "wx", mode: 0o600 },
+      );
+      return failure;
+    }
     assert.equal(
       result.exitCode,
       0,
-      "Official private input was blocked; inspect state before repeating",
+      "Unexpected official helper exit; inspect state before repeating",
     );
-    assert.equal(result.stderr.length, 0);
-    return OfficialAccountReceiptSchema.parse(
-      JSON.parse(
-        new TextDecoder("utf-8", { fatal: true }).decode(result.stdout),
-      ),
-    );
+    return OfficialAccountReceiptSchema.parse(raw);
   };
   const mode = ["present", "submit"].includes(action.mode)
     ? "inspect"
@@ -164,6 +181,7 @@ export async function runGuestOfficialAccount(
   const receipt = await invoke(
     z.enum(["inspect", "fill", "clear", "probe"]).parse(mode),
   );
+  if ("blocked" in receipt) return { kind: "official-account", receipt };
   if (action.mode === "submit") {
     assert.equal(receipt.startSeconds, action.lifetime.startSeconds);
     assert.equal(receipt.startMicroseconds, action.lifetime.startMicroseconds);

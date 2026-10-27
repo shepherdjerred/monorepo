@@ -76,7 +76,10 @@ export async function runIosAccountProbe(manifest: Manifest) {
     disabledCheckpoints: 2,
     submitActionCount: 0,
     scannedRawEvidence: true,
-    decodedActivityAndConsoleLogs: true,
+    logAvailability: observed.retainedLogs.availability,
+    consoleLog: observed.retainedLogs.consoleLog,
+    decodedActivities: observed.retainedLogs.decodedActivities,
+    exportedDiagnostics: observed.retainedLogs.exportedDiagnostics,
     attachmentsCount: 0,
     evidence: scanned.files,
   });

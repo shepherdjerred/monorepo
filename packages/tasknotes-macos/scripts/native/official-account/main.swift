@@ -128,6 +128,7 @@ do {
     FileHandle.standardOutput.write(Data(output.utf8))
     exit(3)
 } catch {
-    FileHandle.standardOutput.write(Data("{\"blocked\":\"internal\",\"submitActionCount\":0}".utf8))
+    let output = "{\"blocked\":\"internal\",\"phase\":\"\(inputPhase)\",\"submitActionCount\":0}"
+    FileHandle.standardOutput.write(Data(output.utf8))
     exit(3)
 }

@@ -10,6 +10,7 @@ import { assertExactNativeJourney } from "../apple-sync-live/native-evidence";
 import { runDirectory, type Manifest } from "../apple-sync-live/model";
 import { runSelectedIosJourneyTest } from "../native-acceptance/selected-tests";
 import { exportIosJourneyAttachments } from "../native-acceptance/attachments";
+import { retainPrivateInputLogs } from "./retention";
 import { withPrivateAccountInput, type AccountInputClient } from "./connection";
 import {
   prepareAccountInvocation,
@@ -92,6 +93,8 @@ export async function executePrivateAccountSession(
   })();
   const outcomes = await Promise.allSettled([native, input]);
   const failures: unknown[] = [];
+  let retainedLogs:
+    Awaited<ReturnType<typeof retainPrivateInputLogs>> | undefined;
   for (const outcome of outcomes) {
     if (outcome.status === "rejected") failures.push(outcome.reason);
   }
@@ -109,45 +112,7 @@ export async function executePrivateAccountSession(
       path.join(evidence, "attachments"),
       command,
     );
-    for (const kind of ["action", "console"]) {
-      const output = await command(
-        [
-          "xcrun",
-          "xcresulttool",
-          "get",
-          "log",
-          "--path",
-          result,
-          "--type",
-          kind,
-          "--compact",
-        ],
-        true,
-      );
-      await writeFile(path.join(evidence, `${kind}.json`), output, {
-        flag: "wx",
-        mode: 0o600,
-      });
-    }
-    const activities = await command(
-      [
-        "xcrun",
-        "xcresulttool",
-        "get",
-        "test-results",
-        "activities",
-        "--path",
-        result,
-        "--test-id",
-        privateAccountSelector + "()",
-        "--compact",
-      ],
-      true,
-    );
-    await writeFile(path.join(evidence, "activities.json"), activities, {
-      flag: "wx",
-      mode: 0o600,
-    });
+    retainedLogs = await retainPrivateInputLogs(result, evidence, command);
     assertExactNativeJourney(
       JSON.parse(reports.summaryJSON),
       JSON.parse(reports.testsJSON),
@@ -181,6 +146,7 @@ export async function executePrivateAccountSession(
   }
   const reply = outcomes[1];
   assert.equal(reply.status, "fulfilled");
+  assert.ok(retainedLogs !== undefined);
   return {
     evidence,
     probeID,
@@ -188,5 +154,6 @@ export async function executePrivateAccountSession(
     sourceFiles: provenance.sourceFiles,
     sourceHead: provenance.sourceHead,
     receipt: reply.value,
+    retainedLogs,
   };
 }

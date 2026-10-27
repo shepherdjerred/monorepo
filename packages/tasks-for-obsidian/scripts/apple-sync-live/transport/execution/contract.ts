@@ -75,6 +75,28 @@ export const OfficialAccountReceiptSchema = z.strictObject({
   submissionAttempted: z.boolean().optional(),
   formBinding: z.string().min(1).max(512).optional(),
 });
+export const OfficialAccountFailureSchema = z.strictObject({
+  blocked: z.enum([
+    "input",
+    "binding",
+    "process",
+    "session",
+    "form",
+    "focus",
+    "delivery",
+    "internal",
+  ]),
+  phase: z.enum([
+    "input",
+    "owner",
+    "activate",
+    "focus-email",
+    "focus-password",
+    "deliver-email",
+    "deliver-password",
+  ]),
+  submitActionCount: z.literal(0),
+});
 export const AccountCheckpointSchema = z.strictObject({
   completedRounds: z
     .array(
@@ -260,7 +282,10 @@ export const ClosedAccountReceiptSchema = z.strictObject({
 export const ExecutionResultSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("official-account"),
-    receipt: OfficialAccountReceiptSchema,
+    receipt: z.union([
+      OfficialAccountReceiptSchema,
+      OfficialAccountFailureSchema,
+    ]),
   }),
   z.strictObject({
     kind: z.literal("launch"),

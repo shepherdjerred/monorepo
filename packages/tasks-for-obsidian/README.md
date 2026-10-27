@@ -194,8 +194,11 @@ bun run ios:account <runID> probe
 ```
 
 The probe fills generated email and password sentinels, finishes with zero submit
-actions, and scans stdout, stderr, decoded XCTest activity/console records, raw
-result files and attachments. Any sentinel leakage, unexpected visual artifact,
+actions, and scans stdout, stderr, decoded XCTest activities, every SDK-declared
+log, exported diagnostics, raw result files and attachments. The proof retains
+the SDK's content-availability record and distinguishes decoded console output
+from confirmed absence; missing or unreadable declared content fails closed.
+Any sentinel leakage, unexpected visual artifact,
 failed native assertion or incomplete evidence blocks real credential reads.
 Results are retained without redaction. A successful proof is bound to the run,
 full source inventory, exact Runner bytes and immutable retained evidence.

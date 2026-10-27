@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import {
   ClosedAccountReceiptSchema,
   ExecutionOperationSchema,
+  ExecutionResultSchema,
 } from "./contract.ts";
 import { requireNativeLabel } from "./native.ts";
 import { readHostCredentialItem } from "./credential-host.ts";
@@ -70,4 +71,23 @@ test("invalid1Password locators fail before invoking the password manager", () =
       "--item": "invalid",
     }),
   ).toThrow();
+});
+test("official helper rejection preserves only closed blocked and phase enums", () => {
+  const receipt = { blocked: "form", phase: "owner", submitActionCount: 0 };
+  expect(() =>
+    ExecutionResultSchema.parse({ kind: "official-account", receipt }),
+  ).not.toThrow();
+  for (const rejected of [
+    { ...receipt, phase: "unexpected-dynamic-error" },
+    { ...receipt, blocked: "raw process error" },
+    { ...receipt, password: "forbidden" },
+    { ...receipt, stdout: "forbidden" },
+    { ...receipt, submitActionCount: 1 },
+  ])
+    expect(() =>
+      ExecutionResultSchema.parse({
+        kind: "official-account",
+        receipt: rejected,
+      }),
+    ).toThrow();
 });

@@ -118,11 +118,22 @@ test("proof binds exact native source, Runner and raw evidence inventory before 
     disabledCheckpoints: 2,
     submitActionCount: 0,
     scannedRawEvidence: true,
-    decodedActivityAndConsoleLogs: true,
+    logAvailability: {
+      hasCoverage: false,
+      hasDiagnostics: true,
+      hasTestResults: true,
+      logs: ["action"],
+    },
+    consoleLog: "confirmed-absent",
+    decodedActivities: true,
+    exportedDiagnostics: true,
     attachmentsCount: 0,
     evidence: scan.files,
   };
   const parsed = assertPrivateInputProof(proof, expected);
+  expect(() =>
+    assertPrivateInputProof({ ...proof, consoleLog: "decoded" }, expected),
+  ).toThrow();
   await verifyPrivateInputEvidence(root, parsed);
   expect(() =>
     assertPrivateInputProof({ ...proof, submitActionCount: 1 }, expected),
