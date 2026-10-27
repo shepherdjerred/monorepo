@@ -1,7 +1,10 @@
 import path from "node:path";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
-import { HandoffNetworkProtocolSchema } from "#shared/handoff-v2.ts";
+import {
+  HandoffNetworkProtocolSchema,
+  handoffProtocolVersion,
+} from "#shared/handoff/protocol.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { lockHandoffScopes } from "#infrastructure/handoff/scoped-snapshot.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
@@ -20,6 +23,13 @@ import { assertApplyActor, assertLatestLease } from "./final-guards.ts";
 import { unmanagedSidecars } from "./sidecars.ts";
 import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 import { initialLibrarySnapshots } from "./library-snapshots.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { assertNoPendingPlexEdits } from "#infrastructure/handoff/plex-edit-records.ts";
+import { readPlexEditProofsV1 } from "#infrastructure/handoff/plex-edit-proofs.ts";
+import {
+  handoffPlexIdentityV3,
+  assertHandoffPlexLabelsV3,
+} from "./plex-edit-plan.ts";
 
 /** The hash work is complete; this transaction only checks exact identities and grants selected records. */
 export async function applyPreparedHandoff(
@@ -29,6 +39,7 @@ export async function applyPreparedHandoff(
 ): Promise<string> {
   const { planId } = input;
   const db = context.files.db;
+  const budget = new PublicationAuthorityReadBudget();
   return db.$transaction(
     async (tx) => {
       await lockHandoffScopes(tx, prepared.scope);
@@ -54,9 +65,7 @@ export async function applyPreparedHandoff(
       if (prepared.scope.request.activation === "extend" && !authority.active)
         throw new Error("Handoff extension authority expired");
       const finished = FinishedHandoffSchema.parse(plan.plan);
-      if (
-        finished.schemaVersion !== ("schemaVersion" in prepared.scope ? 2 : 1)
-      )
+      if (finished.schemaVersion !== handoffProtocolVersion(prepared.scope))
         throw new Error("Handoff finished plan protocol changed");
       if (
         snapshotHash(finished) !== plan.planHash ||
@@ -70,20 +79,42 @@ export async function applyPreparedHandoff(
         orderBy: { createdAt: "desc" },
       });
       const network = HandoffNetworkProtocolSchema.parse(observed.evidence);
+      const stable = stableNetwork(network);
       if (
+        snapshotHash(z.json().parse(observed.evidence)) !==
+          observed.evidenceHash ||
         observed.expiresAt <= new Date() ||
         network.schemaVersion !== finished.schemaVersion ||
         network.recoveryEpoch !== runtime.recoveryEpoch ||
-        snapshotHash(finished.network) !==
-          snapshotHash(z.json().parse(stableNetwork(network)))
+        !reviewedNetworkMatches(finished, stable)
       )
         throw new Error("Handoff network evidence changed after owner review");
       const actorId = await assertApplyActor(
         tx,
-        input,
+        {
+          ...input,
+          ...(finished.schemaVersion === 3 ? { protocol: 3 as const } : {}),
+        },
         z.string().parse(plan.planHash),
       );
       await assertLatestLease(tx, network);
+      const plexEdits = await libraryEditProofs(
+        tx,
+        {
+          ...input,
+          finished,
+          stable,
+          planHash: z.string().parse(plan.planHash),
+          recoveryEpoch: runtime.recoveryEpoch,
+        },
+        budget,
+      );
+      await assertNoPendingPlexEdits(
+        tx,
+        prepared.scope.files,
+        budget,
+        finished.schemaVersion === 3 ? planId : undefined,
+      );
       await assertClaims(tx, network);
       await installStorageAuthority(tx, context, network);
       return await withFileIdentities(context, prepared, 0, async () => {
@@ -144,7 +175,8 @@ export async function applyPreparedHandoff(
             runtimeVersion: runtime.version + 1,
             actorId,
             selection: {
-              ...(await initialLibrarySnapshots(tx, prepared.scope)),
+              ...(await initialLibrarySnapshots(tx, prepared.scope, budget)),
+              ...(plexEdits === undefined ? {} : { plexEdits }),
               scope: prepared.scope,
               fileEvidence: z.json().parse(stableFiles(prepared.evidence)),
               networkEvidence: stableNetwork(network),
@@ -173,6 +205,37 @@ export async function applyPreparedHandoff(
     },
     { timeout: 30_000, maxWait: 30_000 },
   );
+}
+
+async function libraryEditProofs(
+  tx: Prisma.TransactionClient,
+  input: {
+    planId: string;
+    operationId: string;
+    planHash: string;
+    recoveryEpoch: number;
+    finished: z.infer<typeof FinishedHandoffSchema>;
+    stable: unknown;
+  },
+  budget: PublicationAuthorityReadBudget,
+) {
+  if (input.finished.schemaVersion !== 3) return;
+  assertHandoffPlexLabelsV3(input.stable);
+  return readPlexEditProofsV1(
+    tx,
+    { ...input, changes: input.finished.plexEdits },
+    budget,
+  );
+}
+
+function reviewedNetworkMatches(
+  finished: z.infer<typeof FinishedHandoffSchema>,
+  stable: unknown,
+) {
+  return finished.schemaVersion === 3
+    ? snapshotHash(z.json().parse(handoffPlexIdentityV3(finished.network))) ===
+        snapshotHash(z.json().parse(handoffPlexIdentityV3(stable)))
+    : snapshotHash(finished.network) === snapshotHash(z.json().parse(stable));
 }
 
 async function assertClaims(

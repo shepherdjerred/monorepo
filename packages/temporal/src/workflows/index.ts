@@ -452,6 +452,7 @@ import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./stre
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
 import * as media from "./media/exports.ts";
 export const prepareMediaHandoffWorkflow = media.prepareMediaHandoffWorkflow,
+  applyLibraryHandoffV3Workflow = media.applyLibraryHandoffV3Workflow,
   applyMediaHandoffWorkflow = media.applyMediaHandoffWorkflow,
   prepareNativeArchiveWorkflow = media.prepareNativeArchiveWorkflow,
   applyNativeArchiveWorkflow = media.applyNativeArchiveWorkflow,

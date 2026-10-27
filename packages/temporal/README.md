@@ -724,6 +724,15 @@ The application image publication gate controls whether the Media workloads are
 synthesized. Media schedules are declared initially paused; their existence does
 not establish that application workers or recovery procedures are ready.
 
+`applyLibraryHandoffV3Workflow` runs the separately
+approved initial-library label corrections: `media-files` proves each reviewed
+movie before `media-network` records its send intent and edits the existing Plex
+edition field. Workflow history contains IDs and opaque proof references only.
+File hashing retains its twelve-hour SDK budget while each metadata effect
+retains the original sixty-second bound. Failed or cancelled application fences
+ownership for review; retries of uncertain edits observe the original intent.
+Earlier read-only handoff Workflow types remain unchanged.
+
 Media Activity declarations provide finite schedule-to-close deadlines as well
 as start-to-close deadlines. Ordinary acquisition, notification, recovery and
 cleanup Activities explicitly retain their historical 315,360,000,000 ms total

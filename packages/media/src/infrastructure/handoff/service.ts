@@ -9,7 +9,7 @@ import {
   HandoffScopeProtocolSchema,
   ApplyHandoffProtocolSchema,
   handoffProtocolVersion,
-} from "#shared/handoff-v2.ts";
+} from "#shared/handoff/protocol.ts";
 import { buildLibraryHandoffScope } from "./library-scope.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { queueOperation } from "#automation/store.ts";
@@ -141,7 +141,7 @@ export class PrismaMediaHandoff extends MediaCommandBase {
         if (
           handoffProtocolVersion(
             HandoffScopeProtocolSchema.parse(plan.scope),
-          ) !== ("schemaVersion" in input ? 2 : 1) ||
+          ) !== ("schemaVersion" in input ? input.schemaVersion : 1) ||
           plan.state !== "awaiting_review" ||
           plan.version !== input.expectedVersion ||
           plan.planHash !== input.planHash ||
@@ -161,10 +161,20 @@ export class PrismaMediaHandoff extends MediaCommandBase {
         });
         const operationId = await queueOperation(tx, {
           key: `handoff-apply:${id}:${input.planHash}`,
-          kind: "apply_handoff",
+          kind:
+            "schemaVersion" in input && input.schemaVersion === 3
+              ? "apply_library_handoff_v3"
+              : "apply_handoff",
           targetId: id,
           userId: actor.id,
-          payload: { planId: id, planHash: input.planHash, actorId: actor.id },
+          payload: {
+            planId: id,
+            planHash: input.planHash,
+            actorId: actor.id,
+            ...("schemaVersion" in input && input.schemaVersion === 3
+              ? { schemaVersion: 3 }
+              : {}),
+          },
         });
         return {
           handoffId: id,

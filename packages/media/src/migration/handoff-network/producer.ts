@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { HandoffNetworkProtocolSchema } from "#shared/handoff-v2.ts";
+import {
+  HandoffNetworkProtocolSchema,
+  handoffProtocolVersion,
+} from "#shared/handoff/protocol.ts";
+import { observeLibraryPlexV3 } from "./plex-v3.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { readHandoffPlan } from "./plan.ts";
 import { observeHandoffMounts } from "./mounts.ts";
@@ -24,7 +28,9 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
       signal,
     );
     const [plex, claims, torrents] = await Promise.all([
-      observePlex(context, input, signal),
+      "schemaVersion" in input.scope && input.scope.schemaVersion === 3
+        ? observeLibraryPlexV3(context, input, signal)
+        : observePlex(context, input, signal),
       "schemaVersion" in input.scope
         ? Promise.resolve([])
         : observeClaims(context, input, signal),
@@ -41,7 +47,7 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
       ),
     );
     const evidence = HandoffNetworkProtocolSchema.parse({
-      schemaVersion: "schemaVersion" in input.scope ? 2 : 1,
+      schemaVersion: handoffProtocolVersion(input.scope),
       planId,
       recoveryEpoch: input.plan.recoveryEpoch,
       quiescence,

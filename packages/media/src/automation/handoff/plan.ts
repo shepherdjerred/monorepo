@@ -7,8 +7,10 @@ import {
   HandoffScopeProtocolSchema,
   HandoffNetworkProtocolSchema,
   type HandoffProtocolScope,
-  FinishedLibraryHandoffV2Schema,
-} from "#shared/handoff-v2.ts";
+  FinishedLibraryHandoffProtocolSchema,
+  handoffProtocolVersion,
+} from "#shared/handoff/protocol.ts";
+import { handoffPlexEditionChanges } from "./plex-edit-plan.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   lockHandoffScopes,
@@ -22,7 +24,9 @@ export function stableNetwork(raw: unknown) {
     ({ observationHash: _observationHash, ...identity }) => identity,
   );
   return {
-    ...(network.schemaVersion === 2 ? { schemaVersion: 2 } : {}),
+    ...(network.schemaVersion === 1
+      ? {}
+      : { schemaVersion: network.schemaVersion }),
     planId: network.planId,
     recoveryEpoch: network.recoveryEpoch,
     controllers: network.quiescence.controllers,
@@ -30,7 +34,19 @@ export function stableNetwork(raw: unknown) {
     targetsDigest: network.quiescence.targetsDigest,
     mounts: network.mounts.bindings,
     claims: network.claims,
-    plex: network.plex,
+    plex:
+      network.schemaVersion === 3
+        ? network.plex.map(({ movieEdition, ...association }) => ({
+            ...association,
+            movieEdition:
+              movieEdition === null
+                ? null
+                : {
+                    identity: movieEdition.identity,
+                    identityHash: movieEdition.identityHash,
+                  },
+          }))
+        : network.plex,
     torrents,
   };
 }
@@ -51,7 +67,7 @@ const FinishedV1 = z.strictObject({
 });
 export const FinishedHandoffSchema = z.union([
   FinishedV1,
-  FinishedLibraryHandoffV2Schema,
+  FinishedLibraryHandoffProtocolSchema,
 ]);
 
 export async function assertHandoffSnapshot(
@@ -137,10 +153,11 @@ export async function finishHandoffPreparation(
         throw new Error("Handoff network proof expired during file inspection");
       const files = stableFiles(prepared.evidence);
       const complete = FinishedHandoffSchema.parse({
-        schemaVersion: "schemaVersion" in prepared.scope ? 2 : 1,
+        schemaVersion: handoffProtocolVersion(prepared.scope),
         scopeHash: snapshotHash(z.json().parse(prepared.scope)),
         network: stableNetwork(network.evidence),
         files,
+        ...handoffPlexEditionChanges(prepared.scope, network.evidence),
       });
       await tx.mediaHandoffObservation.create({
         data: {

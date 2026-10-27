@@ -26,7 +26,7 @@ import { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { prepareHandoffFiles } from "./files.ts";
 import { finishHandoffPreparation } from "./plan.ts";
-import type { PrepareHandoffProtocolSchema } from "#shared/handoff-v2.ts";
+import type { PrepareHandoffProtocolSchema } from "#shared/handoff/protocol.ts";
 import { createHandoffNetworkProducer } from "#migration/handoff-network/producer.ts";
 import {
   MOVIE_EDITION_REGISTRY,
@@ -346,7 +346,7 @@ export async function handoffFixture(
         recoveryEpoch: 0,
         runtimeVersion: 0,
         ...("schemaVersion" in detail.scope
-          ? { schemaVersion: 2 as const }
+          ? { schemaVersion: detail.scope.schemaVersion }
           : { acknowledgeProtectedLegacySources: true as const }),
         acknowledgeRecoveryHolds: true,
       },

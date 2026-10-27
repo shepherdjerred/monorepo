@@ -55,7 +55,7 @@ export const PlexEditionChangeV1Schema = z
 export type PlexEditionSnapshotV1 = z.infer<typeof PlexEditionSnapshotV1Schema>;
 export type PlexEditionChangeV1 = z.infer<typeof PlexEditionChangeV1Schema>;
 
-const ObservationRef = z.strictObject({
+export const HandoffObservationRefV1Schema = z.strictObject({
   id: z.uuid(),
   evidenceHash: MovieEditionHashSchema,
 });
@@ -74,11 +74,13 @@ const EditBinding = z.strictObject({
 /** Appended before PUT. A durable intent may have reached Plex even after a lost response. */
 export const PlexEditionIntentV1Schema = EditBinding.extend({
   before: PlexEditionSnapshotV1Schema,
-  filesObservation: ObservationRef,
-  networkObservation: ObservationRef,
+  filesObservation: HandoffObservationRefV1Schema,
+  networkObservation: HandoffObservationRefV1Schema,
 });
 export const PlexEditionCompletionV1Schema = EditBinding.extend({
-  intent: ObservationRef.nullable(),
+  filesObservation: HandoffObservationRefV1Schema,
+  networkObservation: HandoffObservationRefV1Schema,
+  intent: HandoffObservationRefV1Schema.nullable(),
   before: PlexEditionSnapshotV1Schema,
   after: PlexEditionSnapshotV1Schema,
   response: z.enum(["acknowledged", "lost_or_unobserved", "not_sent"]),
@@ -88,10 +90,10 @@ export const PlexEditionCompletionV1Schema = EditBinding.extend({
 );
 export const PlexEditionProofV1Schema = z.strictObject({
   change: PlexEditionChangeV1Schema,
-  intent: ObservationRef.extend({
+  intent: HandoffObservationRefV1Schema.extend({
     evidence: PlexEditionIntentV1Schema,
   }).nullable(),
-  completion: ObservationRef.extend({
+  completion: HandoffObservationRefV1Schema.extend({
     evidence: PlexEditionCompletionV1Schema,
   }),
 });

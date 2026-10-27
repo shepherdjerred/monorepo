@@ -10,7 +10,7 @@ import {
   HandoffNetworkProtocolSchema,
   type HandoffProtocolScope,
   assertHandoffNetworkProtocol,
-} from "#shared/handoff-v2.ts";
+} from "#shared/handoff/protocol.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { safePath, verifyControlExclusion } from "#filesystem/operations-io.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
@@ -35,6 +35,7 @@ export type PreparedHandoffFiles = {
 export async function prepareHandoffFiles(
   context: HandoffFileContext,
   planId: string,
+  focusAssetId?: string,
 ): Promise<PreparedHandoffFiles> {
   const db = context.files.db;
   const plan = await db.mediaHandoffPlan.findUniqueOrThrow({
@@ -43,6 +44,7 @@ export async function prepareHandoffFiles(
   if (!["preparing", "applying"].includes(plan.state))
     throw new Error("Handoff file proof has no live owner command");
   const scope = HandoffScopeProtocolSchema.parse(plan.scope);
+  assertFocus(scope, focusAssetId);
   if (
     new Set(scope.files.map((file) => file.canonicalPath)).size !==
       scope.files.length ||
@@ -74,7 +76,7 @@ export async function prepareHandoffFiles(
     );
     if (binding?.canonical.podUid !== context.workerPodUid)
       throw new Error("Handoff mount proof belongs to another files executor");
-    const selected = scope.files.filter((item) => item.libraryKind === kind);
+    const selected = selectedFiles(scope, kind, focusAssetId);
     const journal = await inspectHandoffJournals(
       root.control,
       new Set(selected.map((item) => item.canonicalPath)),
@@ -140,6 +142,32 @@ export async function prepareHandoffFiles(
     files,
   });
   return { scope, content, journals, evidence };
+}
+
+function assertFocus(
+  scope: HandoffProtocolScope,
+  assetId: string | undefined,
+): void {
+  if (assetId === undefined) return;
+  if (
+    !("schemaVersion" in scope) ||
+    scope.schemaVersion !== 3 ||
+    scope.files.filter((file) => file.assetId === assetId).length !== 1
+  )
+    throw new Error(
+      "Focused file proof requires one selected v3 library asset",
+    );
+}
+function selectedFiles(
+  scope: HandoffProtocolScope,
+  kind: "movies" | "tv",
+  assetId: string | undefined,
+) {
+  return scope.files.filter(
+    (file) =>
+      file.libraryKind === kind &&
+      (assetId === undefined || file.assetId === assetId),
+  );
 }
 
 async function measuredProperties(

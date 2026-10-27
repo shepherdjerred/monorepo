@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import type {
-  LibraryHandoffScopeV2,
-  HandoffNetworkV2Schema,
-} from "#shared/handoff-v2.ts";
+  LibraryHandoffScope,
+  LibraryHandoffNetworkProtocolSchema,
+} from "#shared/handoff/protocol.ts";
 import {
   movieDefinitionRef,
   matchesMovieDefinition,
@@ -16,8 +16,8 @@ export async function adoptLibraryTargets(
   tx: Prisma.TransactionClient,
   input: {
     planId: string;
-    scope: LibraryHandoffScopeV2;
-    network: z.infer<typeof HandoffNetworkV2Schema>;
+    scope: LibraryHandoffScope;
+    network: z.infer<typeof LibraryHandoffNetworkProtocolSchema>;
   },
 ): Promise<void> {
   const { scope, network, planId } = input;
@@ -100,8 +100,8 @@ export async function adoptLibraryTargets(
 async function retainHouseholdHold(
   tx: Prisma.TransactionClient,
   input: {
-    scope: LibraryHandoffScopeV2;
-    selected: LibraryHandoffScopeV2["targets"][number];
+    scope: LibraryHandoffScope;
+    selected: LibraryHandoffScope["targets"][number];
   },
 ) {
   const { scope, selected } = input;
@@ -173,7 +173,7 @@ async function ensureMovieDefinition(
   tx: Prisma.TransactionClient,
   scope: {
     rootMediaId: string;
-    edition: LibraryHandoffScopeV2["targets"][number]["edition"];
+    edition: LibraryHandoffScope["targets"][number]["edition"];
   },
 ) {
   const ref = movieDefinitionRef(scope.rootMediaId, scope.edition);

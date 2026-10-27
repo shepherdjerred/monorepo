@@ -1,6 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import type { HandoffProtocolScope } from "#shared/handoff-v2.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { HandoffProtocolScope } from "#shared/handoff/protocol.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
 
@@ -8,9 +8,9 @@ import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/
 export async function initialLibrarySnapshots(
   tx: Prisma.TransactionClient,
   scope: HandoffProtocolScope,
+  budget: PublicationAuthorityReadBudget,
 ) {
   if (!("schemaVersion" in scope)) return {};
-  const budget = new PublicationAuthorityReadBudget();
   const assets = [];
   for (const file of scope.files) {
     const asset =
@@ -35,5 +35,5 @@ export async function initialLibrarySnapshots(
       throw new Error("Initial library owner snapshot changed");
     assets.push(asset);
   }
-  return { schemaVersion: 2, assets };
+  return { schemaVersion: scope.schemaVersion, assets };
 }
