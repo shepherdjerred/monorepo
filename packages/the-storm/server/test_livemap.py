@@ -202,6 +202,33 @@ class LiveMapTests(unittest.TestCase):
             for path, data in retained.items():
                 self.assertEqual((target / path).read_bytes(), data)
 
+    @unittest.skipUnless(os.getuid() == 0, "requires root to model a separate Kubernetes PVC")
+    def test_nonroot_install_preserves_root_owned_bluemap_mount(self):
+        self.fixture()
+        result = self.build()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.root.chmod(0o755)
+        for path in self.output.rglob("*"):
+            path.chmod(0o755 if path.is_dir() else 0o644)
+        volume = self.root / "volume"
+        volume.mkdir()
+        os.chown(volume, 1000, 2000)
+        cache = volume / "bluemap"
+        cache.mkdir()
+        os.chown(cache, 0, 2000)
+        cache.chmod(0o2770)
+        retained = cache / "maps" / "world" / "tile"
+        retained.parent.mkdir(parents=True)
+        retained.write_bytes(b"verified existing render")
+        for _ in range(2):
+            result = self.install(cache / "web", volume, user=1000, group=3000, extra_groups=[2000])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((cache.stat().st_uid, cache.stat().st_gid, cache.stat().st_mode & 0o7777),
+                             (0, 2000, 0o2770))
+            self.assertEqual((cache / "web" / "index.html").read_bytes(),
+                             (self.output / "index.html").read_bytes())
+            self.assertEqual(retained.read_bytes(), b"verified existing render")
+
 
 if __name__ == "__main__":
     unittest.main()
