@@ -49,6 +49,32 @@ func ownedJSON(_ file: String) throws -> [String: Any] {
     return result
 }
 
+struct OfficialProcessLifetime {
+    let seconds: UInt64
+    let microseconds: UInt64
+    let launchDate: Double
+    func requireOwner(pid: pid_t, program: String) throws {
+        guard let session = CGSessionCopyCurrentDictionary() as? [String: Any],
+            session["kCGSSessionOnConsoleKey"] as? Bool == true,
+            session["CGSSessionScreenIsLocked"] as? Bool != true
+        else { throw GuardFailure.session }
+        var info = proc_bsdinfo()
+        var buffer = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
+        guard
+            proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, Int32(MemoryLayout<proc_bsdinfo>.size))
+                == Int32(MemoryLayout<proc_bsdinfo>.size),
+            info.pbi_uid == geteuid(), info.pbi_ruid == getuid(),
+            info.pbi_start_tvsec == seconds, info.pbi_start_tvusec == microseconds,
+            proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0,
+            String(cString: buffer) == program,
+            let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated,
+            app.bundleIdentifier == "md.obsidian",
+            app.executableURL?.resolvingSymlinksInPath().path == program,
+            app.launchDate?.timeIntervalSince1970 == launchDate
+        else { throw GuardFailure.process }
+    }
+}
+
 struct OfficialOwner {
     let pid: pid_t
     let executable: String
@@ -85,41 +111,58 @@ struct OfficialOwner {
         guard let run = input["runID"] as? String else { throw GuardFailure.input }
         let config = input["configSHA256"] as? String ?? "probe"
         formBinding = "\(run):\(config):\(rawPID):\(seconds):\(microseconds):\(launchDate)"
+        if input["mode"] as? String != "inspect" {
+            guard (input["startSeconds"] as? NSNumber)?.uint64Value == seconds,
+                (input["startMicroseconds"] as? NSNumber)?.uint64Value == microseconds,
+                (input["launchDate"] as? NSNumber)?.doubleValue == launchDate
+            else { throw GuardFailure.process }
+        }
         root = AXUIElementCreateApplication(pid)
-        guard AXUIElementSetMessagingTimeout(root, 0.5) == .success,
-            let windows = attribute(root, "AXWindows") as? [AXUIElement]
-        else { throw GuardFailure.form }
-        let candidates = try windows.filter { candidate in
-            let fields = try descendants(candidate).filter {
-                attribute($0, "AXPlaceholderValue") as? String == "Your email..."
-            }
-            return fields.count == 1
+        let expectedStart = OfficialProcessLifetime(
+            seconds: info.pbi_start_tvsec, microseconds: info.pbi_start_tvusec,
+            launchDate: date.timeIntervalSince1970)
+        self.window = try Self.selectWindow(root) {
+            try expectedStart.requireOwner(pid: pid_t(rawPID), program: program)
         }
-        guard candidates.count == 1, let selectedWindow = candidates.first else {
-            throw GuardFailure.form
-        }
-        self.window = selectedWindow
         try validate()
     }
 
+    private static func selectWindow(
+        _ appRoot: AXUIElement, requireOwner: () throws -> Void
+    ) throws -> AXUIElement {
+        try requireOwner()
+        // Electron's documented request exposes Chromium's real accessibility tree.
+        // https://www.electronjs.org/docs/latest/tutorial/accessibility/
+        guard AXUIElementSetMessagingTimeout(appRoot, 0.5) == .success,
+            AXUIElementSetAttributeValue(
+                appRoot, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+                == .success
+        else { throw GuardFailure.form }
+        let deadline = Date().addingTimeInterval(2)
+        repeat {
+            try requireOwner()
+            if attribute(appRoot, "AXManualAccessibility") as? Bool == true,
+                let windows = attribute(appRoot, "AXWindows") as? [AXUIElement]
+            {
+                let candidates = try windows.filter { candidate in
+                    try descendants(candidate).filter {
+                        attribute($0, "AXPlaceholderValue") as? String == "Your email..."
+                    }.count == 1
+                }
+                if candidates.count == 1, let selected = candidates.first { return selected }
+                guard candidates.isEmpty else { throw GuardFailure.form }
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+        } while Date() < deadline
+        throw GuardFailure.form
+    }
+
     func validate() throws {
-        guard let session = CGSessionCopyCurrentDictionary() as? [String: Any],
-            session["kCGSSessionOnConsoleKey"] as? Bool == true,
-            session["CGSSessionScreenIsLocked"] as? Bool != true
-        else { throw GuardFailure.session }
-        var info = proc_bsdinfo()
-        var buffer = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
+        try OfficialProcessLifetime(
+            seconds: seconds, microseconds: microseconds, launchDate: launchDate
+        )
+        .requireOwner(pid: pid, program: executable)
         guard
-            proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, Int32(MemoryLayout<proc_bsdinfo>.size))
-                == Int32(MemoryLayout<proc_bsdinfo>.size),
-            info.pbi_uid == geteuid(), info.pbi_ruid == getuid(),
-            info.pbi_start_tvsec == seconds, info.pbi_start_tvusec == microseconds,
-            proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0,
-            String(cString: buffer) == executable,
-            let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated,
-            app.bundleIdentifier == "md.obsidian",
-            app.executableURL?.resolvingSymlinksInPath().path == executable,
-            app.launchDate?.timeIntervalSince1970 == launchDate,
             let windows = attribute(root, "AXWindows") as? [AXUIElement],
             windows.contains(where: { CFEqual($0, window) })
         else { throw GuardFailure.process }

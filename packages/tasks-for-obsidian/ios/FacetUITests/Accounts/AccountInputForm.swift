@@ -242,7 +242,16 @@ struct AccountInputForm {
     }
 
     private func focused(_ field: XCUIElement) throws {
-        guard field.exists, field.isEnabled, field.hasFocus else { throw AccountInputFailure.focus }
+        try owner()
+        guard field.exists, field.isEnabled, field.isHittable, app.keyboards.count == 1 else {
+            throw AccountInputFailure.focus
+        }
+        let keyboard = app.keyboards.element
+        guard keyboard.exists, !keyboard.frame.isEmpty, app.frame.intersects(keyboard.frame) else {
+            throw AccountInputFailure.focus
+        }
+        // hasFocus describes UI focus, not iOS text first-responder state. The
+        // element-addressed public typeText API enforces keyboard focus itself.
     }
 
     private func disabled(_ field: XCUIElement) throws {

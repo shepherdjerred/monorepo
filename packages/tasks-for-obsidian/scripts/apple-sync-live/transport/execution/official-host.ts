@@ -69,6 +69,10 @@ export async function runOfficialAccountCLI(args: string[]): Promise<number> {
         action,
       });
       assert.equal(result.kind, "official-account");
+      if ("blocked" in result.receipt) {
+        console.log(JSON.stringify(result.receipt));
+        throw new Error("Official private helper rejected the current form");
+      }
       return result.receipt;
     };
     if (operation === "launch" || operation === "plugin") {
