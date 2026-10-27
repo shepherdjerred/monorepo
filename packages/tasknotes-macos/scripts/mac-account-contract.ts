@@ -10,8 +10,23 @@ import {
 } from "../../tasks-for-obsidian/scripts/apple-sync-live/model.ts";
 
 export type Operation = "present" | "credentials" | "verification" | "vault";
+export type CredentialBackend = "service-account" | "desktop";
 
-export function parseArguments(args: string[]) {
+export function credentialBackend(
+  value: string | undefined,
+): CredentialBackend {
+  assert.ok(
+    value === undefined || value === "service-account" || value === "desktop",
+  );
+  return value ?? "service-account";
+}
+
+export function parseArguments(args: string[]): {
+  runID: string;
+  operation: Operation;
+  parameters: Record<string, string>;
+  lifecycleRound: number | undefined;
+} {
   const [run, operation, ...options] = args[0] === "--" ? args.slice(1) : args;
   const runID = uuid.parse(run).toLowerCase();
   assert.ok(
@@ -31,6 +46,8 @@ export function parseArguments(args: string[]) {
         "--vault",
         "--item",
         "--vault-password-ref",
+        "--credential-backend",
+        "--vault-password-backend",
         "--lifecycle-round",
       ].includes(key),
     );
@@ -47,6 +64,14 @@ export function parseArguments(args: string[]) {
     lifecycleValue === undefined ? undefined : Number(lifecycleValue);
   if (lifecycleValue !== undefined) assert.match(lifecycleValue, /^[123]$/u);
   delete parameters["--lifecycle-round"];
+  const backendKey =
+    operation === "vault" ? "--vault-password-backend" : "--credential-backend";
+  const otherBackendKey =
+    operation === "vault" ? "--credential-backend" : "--vault-password-backend";
+  assert.equal(parameters[otherBackendKey], undefined);
+  if (operation === "present") assert.equal(parameters[backendKey], undefined);
+  const backend = credentialBackend(parameters[backendKey]);
+  delete parameters[backendKey];
   if (operation === "credentials" || operation === "verification") {
     assert.deepEqual(Object.keys(parameters).sort(), [
       "--account",
@@ -65,6 +90,7 @@ export function parseArguments(args: string[]) {
       /^op:\/\/[a-zA-Z0-9]{20,32}\/[a-zA-Z0-9]{20,32}\/password$/u,
     );
   } else assert.deepEqual(parameters, {});
+  if (operation !== "present") parameters[backendKey] = backend;
   return { runID, operation, parameters, lifecycleRound };
 }
 

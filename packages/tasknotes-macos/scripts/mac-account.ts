@@ -20,16 +20,20 @@ import {
 } from "./mac-account-lifecycle.ts";
 import {
   assertFreshInitialStatus,
-  assertSecret,
   bindingFor,
   childEnvironment,
-  classifyPasswordManagerFailure,
+  credentialBackend,
   exactPID,
   parseArguments,
   root,
   runDirectory,
-  selectCredentials,
 } from "./mac-account-contract.ts";
+import {
+  PasswordManagerFailure,
+  readHostCredentialItem,
+  readHostVerificationCode,
+  readHostVaultPassword,
+} from "../../tasks-for-obsidian/scripts/apple-sync-live/transport/execution/credential-host.ts";
 
 type Payload = Record<string, unknown>;
 class DriverFailure extends Error {
@@ -313,27 +317,6 @@ export async function main(args: string[]) {
     // basename or helper-only pin, before accessing the password manager.
     await assertUnchangedBuild(manifest);
     await validateState();
-    const command =
-      operation === "vault"
-        ? [
-            path.join(root, "scripts/onepassword/with-service-account.sh"),
-            "/opt/homebrew/bin/op",
-            "read",
-            parameters["--vault-password-ref"] ?? "",
-          ]
-        : [
-            "/opt/homebrew/bin/op",
-            "item",
-            "get",
-            parameters["--item"] ?? "",
-            "--vault",
-            parameters["--vault"] ?? "",
-            "--account",
-            parameters["--account"] ?? "",
-            ...(operation === "verification"
-              ? ["--otp"]
-              : ["--format", "json", "--reveal"]),
-          ];
     console.log(
       JSON.stringify({
         phase: "password_manager_read",
@@ -341,11 +324,21 @@ export async function main(args: string[]) {
         submissionStatus: "not_attempted",
       }),
     );
-    const result = captured(command, operation === "vault" ? 30_000 : 60_000);
-    if (result.code !== 0)
-      throw new DriverFailure(
-        `password_manager_${classifyPasswordManagerFailure(result.stderr)}`,
-      );
+    const selected = {
+      "--account": parameters["--account"] ?? "",
+      "--vault": parameters["--vault"] ?? "",
+      "--item": parameters["--item"] ?? "",
+    };
+    const backend = credentialBackend(parameters["--credential-backend"]);
+    const secret =
+      operation === "credentials"
+        ? readHostCredentialItem(selected, backend)
+        : operation === "verification"
+          ? readHostVerificationCode(selected, backend)
+          : readHostVaultPassword(
+              parameters["--vault-password-ref"] ?? "",
+              credentialBackend(parameters["--vault-password-backend"]),
+            );
     // Approval can take a minute: the candidate must still be the exact frozen
     // build before any retrieved value is handed to native UI.
     await assertUnchangedBuild(manifest);
@@ -353,15 +346,11 @@ export async function main(args: string[]) {
     // and sheet before any secret is sent through the helper's private stdin.
     await native({ ...lifetime, mode: `activate_${operation}` });
     if (operation === "credentials") {
-      const credentials = selectCredentials(
-        JSON.parse(result.stdout),
-        parameters["--item"] ?? "",
-        parameters["--vault"] ?? "",
-      );
+      assert.ok(typeof secret !== "string");
       const receipt = await native({
         ...lifetime,
         mode: "fill_credentials",
-        ...credentials,
+        ...secret,
       });
       assert.equal(receipt["clearDisabledCheckpointCount"], 2);
       assert.equal(receipt["signInEnabled"], true);
@@ -370,12 +359,8 @@ export async function main(args: string[]) {
       await native({ ...lifetime, mode: "submit_credentials" });
     } else {
       assert.ok(typeof inspected["requestID"] === "string");
-      const value =
-        operation === "verification"
-          ? result.stdout.trim()
-          : result.stdout.replace(/\n$/u, "");
-      assertSecret(value, operation === "verification" ? 6 : 512);
-      if (operation === "verification") assert.match(value, /^[0-9]{6}$/u);
+      assert.ok(typeof secret === "string");
+      const value = secret;
       submissionPossible = true;
       await native({
         ...lifetime,
@@ -434,9 +419,11 @@ export async function main(args: string[]) {
     console.log(
       JSON.stringify({
         blocked:
-          error instanceof DriverFailure
+          error instanceof PasswordManagerFailure
             ? error.classification
-            : "driver_contract",
+            : error instanceof DriverFailure
+              ? error.classification
+              : "driver_contract",
         submissionStatus: submissionPossible ? "unknown" : "not_attempted",
       }),
     );
