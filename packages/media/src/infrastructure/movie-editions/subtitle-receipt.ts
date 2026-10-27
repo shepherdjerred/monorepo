@@ -14,6 +14,7 @@ import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { loadMoviePublicationV2 } from "./publication/records.ts";
+import { loadMovieLibraryParentV2 } from "./library-records.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import type { MoviePublicationOutcomeV2 } from "#shared/movie-editions/publication-v2.ts";
 
@@ -53,25 +54,49 @@ export async function readMovieSubtitleReceiptV4(
     receipt.command.payloadHash !== identityHash(command.payload)
   )
     throw new Error("Movie subtitle completion command changed");
-  const parent = await tx.mediaPublicationTransition.findUniqueOrThrow({
-    where: { id: receipt.publication.transitionId },
+  await assertReceiptParent(tx, receipt, budget);
+  assertMovieSubtitleReceiptV4(receipt);
+  return receipt;
+}
+
+async function assertReceiptParent(
+  tx: Prisma.TransactionClient,
+  receipt: MovieSubtitleReceiptV4,
+  budget: PublicationAuthorityReadBudget,
+) {
+  const reference = receipt.publication;
+  if (reference.kind === "movie_library_adoption_v2") {
+    const parent = await loadMovieLibraryParentV2(
+      tx,
+      { receiptId: reference.receiptId, assetId: reference.assetId },
+      budget,
+    );
+    const { subtitleLineage: _lineage, ...recorded } = reference;
+    if (
+      identityHash(nativeJson(recorded)) !==
+        identityHash(nativeJson(parent.reference)) ||
+      parent.asset.path !== receipt.videoPath ||
+      parent.asset.version !== receipt.after.videoVersion ||
+      parent.asset.checksum !== receipt.after.videoChecksum
+    )
+      throw new Error(
+        "Movie subtitle completion lost its actual initial library parent",
+      );
+    return;
+  }
+  const row = await tx.mediaPublicationTransition.findUniqueOrThrow({
+    where: { id: reference.transitionId },
   });
   budget.consume(1);
-  const publication = await loadMoviePublicationV2(
-    tx,
-    parent.attemptId,
-    budget,
-  );
-  if (publication === null || publication.outcome?.kind !== "published")
+  const parent = await loadMoviePublicationV2(tx, row.attemptId, budget);
+  if (parent === null || parent.outcome?.kind !== "published")
     throw new Error("Movie subtitle completion publication is not committed");
   assertReceiptPublication(
     receipt,
-    publication.outcome,
-    publication.reference.intentHash,
-    publication.outcomeHash,
+    parent.outcome,
+    parent.reference.intentHash,
+    parent.outcomeHash,
   );
-  assertMovieSubtitleReceiptV4(receipt);
-  return receipt;
 }
 
 function assertReceiptPublication(
@@ -80,12 +105,15 @@ function assertReceiptPublication(
   intentHash: string,
   outcomeHash: string | null,
 ) {
+  const reference = receipt.publication;
+  if (reference.kind !== "movie_publication_transition_v2")
+    throw new Error("Expected an actual movie acquisition publication");
   const result = outcome.entries[0];
   const asset = result.successor;
   if (
     asset == null ||
-    outcomeHash !== receipt.publication.outcomeHash ||
-    intentHash !== receipt.publication.intentHash ||
+    outcomeHash !== reference.outcomeHash ||
+    intentHash !== reference.intentHash ||
     asset.id !== receipt.input.assetId ||
     asset.version !== receipt.after.videoVersion ||
     asset.version !== receipt.publication.assetVersion ||

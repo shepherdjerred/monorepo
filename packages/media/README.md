@@ -498,6 +498,15 @@ Request and torrent records are excluded from this library-only protocol;
 Overseerr request import is optional and separate. Historical handoff records
 retain their original format and acknowledgement behavior.
 
+Movie file and caption operations can use the distinct
+`movie_library_adoption_v2` physical parent. The reader validates the original
+immutable plan, receipt, exact classified asset snapshot, file identity evidence
+and Plex association before comparing current physical state. Installed captions
+prove their own completion lineage. Historical acknowledgements read these
+original records before current flags or intent. This ownership proof creates
+no acquisition attempt, requester consent or authority over existing torrents;
+new acquisition sponsorship remains a separate check.
+
 Each batch covers at most 25 physical files and 100 canonical media items.
 `activation: "activate"` changes the reviewed observe runtime to active at its
 existing recovery epoch. Later `activation: "extend"` batches require current

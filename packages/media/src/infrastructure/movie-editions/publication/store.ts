@@ -22,6 +22,7 @@ import { assertPublicationSnapshotSuccessor } from "#infrastructure/publication-
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { assertMoviePublicationTimesV2 } from "./timestamps.ts";
 import { loadMoviePublicationV2, assertOutcomeBinding } from "./records.ts";
+import { findMovieLibraryReferenceV2 } from "#infrastructure/movie-editions/library-proof.ts";
 
 const hash = (value: unknown) => snapshotHash(nativeJson(value));
 
@@ -65,7 +66,7 @@ export async function findMoviePublicationReferenceV2(
     take: budget.take,
   });
   budget.consume(rows.length);
-  if (rows.length === 0) return null;
+  if (rows.length === 0) return findMovieLibraryReferenceV2(tx, input, budget);
   if (rows.length !== 1)
     throw new Error("Movie publication predecessor authority is ambiguous");
   const row = rows[0];

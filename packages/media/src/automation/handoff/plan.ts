@@ -7,6 +7,7 @@ import {
   HandoffScopeProtocolSchema,
   HandoffNetworkProtocolSchema,
   type HandoffProtocolScope,
+  FinishedLibraryHandoffV2Schema,
 } from "#shared/handoff-v2.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
@@ -50,7 +51,7 @@ const FinishedV1 = z.strictObject({
 });
 export const FinishedHandoffSchema = z.union([
   FinishedV1,
-  FinishedV1.extend({ schemaVersion: z.literal(2) }),
+  FinishedLibraryHandoffV2Schema,
 ]);
 
 export async function assertHandoffSnapshot(

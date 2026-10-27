@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type {
   MoviePublicationAssetV2,
-  MoviePublicationReferenceV2,
+  MovieTransitionReferenceV2,
 } from "#shared/movie-editions/publication-v2.ts";
 import {
   MoviePlexReceiptV2Schema,
@@ -18,7 +18,7 @@ type MovieTimestampInput = {
   current: MoviePublicationAssetV2;
   successor: MoviePublicationAssetV2 | null;
   publication: Pick<
-    MoviePublicationReferenceV2,
+    MovieTransitionReferenceV2,
     "transitionId" | "intentHash" | "outcomeHash"
   >;
 };

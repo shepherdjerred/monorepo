@@ -53,7 +53,7 @@ export const MoviePublicationAssetV2Schema = z
       });
   });
 
-export const MoviePublicationReferenceV2Schema = z.strictObject({
+export const MovieTransitionReferenceV2Schema = z.strictObject({
   kind: z.literal("movie_publication_transition_v2"),
   scope: MovieEditionScopeSchema,
   transitionId: z.uuid(),
@@ -65,6 +65,29 @@ export const MoviePublicationReferenceV2Schema = z.strictObject({
   physicalEvidenceHash: Hash,
   subtitleLineage: PublicationSubtitleLineageSchema.optional(),
 });
+/** An existing library file has an actual owner receipt, without an acquisition attempt. */
+export const MovieLibraryReferenceV2Schema = z.strictObject({
+  kind: z.literal("movie_library_adoption_v2"),
+  scope: MovieEditionScopeSchema,
+  receiptId: z.uuid(),
+  planId: z.uuid(),
+  planHash: Hash,
+  assetId: z.uuid(),
+  assetVersion: z.literal(0),
+  bindingHash: Hash,
+  physicalEvidenceHash: Hash,
+  subtitleLineage: PublicationSubtitleLineageSchema.optional(),
+});
+export const MoviePublicationReferenceV2Schema = z.discriminatedUnion("kind", [
+  MovieTransitionReferenceV2Schema,
+  MovieLibraryReferenceV2Schema,
+]);
+export type MovieTransitionReferenceV2 = z.infer<
+  typeof MovieTransitionReferenceV2Schema
+>;
+export type MovieLibraryReferenceV2 = z.infer<
+  typeof MovieLibraryReferenceV2Schema
+>;
 export const MoviePublicationEntryV2Schema = z.strictObject({
   entry: MovieFilePlanEntryV2Schema,
   entryHash: Hash,
