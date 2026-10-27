@@ -124,10 +124,16 @@ struct AccountInputProtocol {
     init(identity: AccountInputIdentity, bundle: Bundle) throws {
         guard let url = bundle.url(forResource: "account-input.schema", withExtension: "json")
         else { throw AccountInputFailure.input }
-        self.identity = identity
         do {
-            schema = try FacetSchema(data: Data(contentsOf: url))
+            try self.init(identity: identity, schemaData: Data(contentsOf: url))
         } catch { throw AccountInputFailure.input }
+    }
+
+    init(identity: AccountInputIdentity, schemaData: Data) throws {
+        self.identity = identity
+        do { schema = try FacetSchema(data: schemaData) } catch {
+            throw AccountInputFailure.input
+        }
     }
 
     func command(_ data: Data) throws -> AccountInputCommand {

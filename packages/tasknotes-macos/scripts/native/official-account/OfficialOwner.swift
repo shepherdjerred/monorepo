@@ -141,9 +141,7 @@ struct OfficialOwner {
         let deadline = Date().addingTimeInterval(2)
         repeat {
             try requireOwner()
-            if attribute(appRoot, "AXManualAccessibility") as? Bool == true,
-                let windows = attribute(appRoot, "AXWindows") as? [AXUIElement]
-            {
+            if let windows = attribute(appRoot, "AXWindows") as? [AXUIElement] {
                 let candidates = try windows.filter { candidate in
                     try descendants(candidate).filter {
                         attribute($0, "AXPlaceholderValue") as? String == "Your email..."
