@@ -88,6 +88,8 @@ public final class FacetStore {
             if engine !== oldValue {
                 occurrenceAdmission?.permit.cancel()
                 feedbackSessionID = UUID()
+                snapshot = nil
+                displayedQuery = nil
                 clearSavedNotice()
             }
         }
@@ -299,7 +301,12 @@ public final class FacetStore {
                 let registered = try await engine.profiles()
                 guard self.engine === engine else { throw FacetAcceptanceError.invalidDescriptor }
                 self.profiles = registered
-                await self.selectProfile(profile.id)
+                // Engine replacement clears published frames; preserve an already owned selection.
+                let prepared =
+                    self.selectedProfileID == profile.id && self.snapshot?.profileId == profile.id
+                    && self.displayedQuery != nil && self.error == nil
+                    && !self.removingProfileIDs.contains(profile.id)
+                if !prepared { await self.selectProfile(profile.id) }
                 guard self.engine === engine, self.selectedProfileID == profile.id,
                     self.snapshot?.profileId == profile.id, self.error == nil
                 else { throw FacetAcceptanceError.invalidDescriptor }
