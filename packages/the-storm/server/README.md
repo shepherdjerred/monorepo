@@ -34,7 +34,7 @@ repository.
 
 ## Plugin and configuration ownership
 
-`owned/plugins/TheStorm/config.yml` registers and enables all 27 Storm modules,
+`owned/plugins/TheStorm/config.yml` registers and enables all 29 Storm modules,
 including `creative`, `rwf`, and `rwfbots`. The creative world is the recovered
 2016 plot map. Keep its Multiverse `auto-load` setting false: Multiverse enables
 before TheStorm and cannot obtain its generator then. TheStorm opens existing
@@ -46,7 +46,8 @@ crops do not grow, fire does not spread, vines and snow do not advance, and mob
 griefing, TNT, and block-breaking projectiles are off.
 Players enter with `/creative`, arriving at the glowstone crossing, and leave
 with `/creative leave`; the visit stores their survival body and gives them an
-empty creative one. Recovered plots are the `plots` list in `creative.yml` (a
+empty creative one. Other modules can request the same entry flow through the
+`CreativeEntry` service. Recovered plots are the `plots` list in `creative.yml` (a
 blank owner is staff-held); the plugin reads that list and never writes it. A
 recovered owner can change that plot. Roads, staff-held plots, and every other
 plot stay closed, including a piston, fluid, or explosion that would cross an
@@ -110,6 +111,30 @@ or loads its explicitly declared owned void lobby before starting gameplay;
 it preserves the lobby's identity and saved terrain across restarts.
 Storm owns gameplay, economy, chat, towns and locks, quests, NPCs, skills,
 arena, moderation, Discord relay, sleep, graves, and native world borders.
+
+Stargates use the rounded obsidian frame, a wall sign and a button. Mechanic III
+players create public, private or town networks with `/stargate network create`;
+private network owners manage invitations with `/stargate network invite` and
+`uninvite`. On the wall sign, put the gate name on line one and the network
+name on line three. Right-click the sign to select another gate on that network,
+then press the button and walk into the portal. Remove a gate with
+`/stargate remove <network> <gate>` before changing its blocks. Network and gate
+records persist in the Storm database. Gate use
+checks network access, town protection and the shared teleport safety rules.
+Travel is free. Server-owned world gates use a seven-block-wide, one-block-thick
+obsidian circle, declared in `stargates.yml` with the origin at the middle of
+the bottom row. The sign and button attach to opposite sides, two blocks above
+the origin. Each gate must explicitly declare `allowPreservedPortal`; leave it
+false unless its exact portal interior has been approved for temporary changes
+on preserved land. Even when true, only the configured interior is filled and
+cleared; preserved signs are not rewritten. Each
+destination needs an explicit landing in its world. Creative's configured landing
+must match its entry point, and travel uses the inventory-isolated creative entry
+service. The server evaluates the managed
+`the-storm-stargates-enabled` flag at startup and fails closed if it cannot
+evaluate it; a flag change requires a restart. The welcome-plaza gate is configured
+for protected Spawn with an approved interior exception. Place and verify the
+reviewed plaza and its destination landings before enabling the flag.
 
 The supporting plugins are LuckPerms, WorldEdit, CoreProtect, BlueMap, Chunky,
 Geyser-Spigot, floodgate, Multiverse-Core, ViaVersion, ViaBackwards, and

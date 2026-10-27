@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.economy.EconomyModule;
 import com.shepherdjerred.thestorm.essentials.EssentialsModule;
 import com.shepherdjerred.thestorm.mail.MailModule;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
+import com.shepherdjerred.thestorm.mechanics.StargatesModule;
 import com.shepherdjerred.thestorm.messages.MessagesModule;
 import com.shepherdjerred.thestorm.mobs.MobsModule;
 import com.shepherdjerred.thestorm.npcs.NpcsModule;
@@ -65,6 +66,7 @@ final class Modules {
         new ShopsModule(),
         new ShardsModule(),
         new MechanicsModule(),
+        new StargatesModule(),
         new SpellsModule(),
         new MobsModule(),
         new NpcsModule(),

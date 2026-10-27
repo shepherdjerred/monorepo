@@ -135,6 +135,7 @@ export async function gameplayFixtures(
     | "fixturesJar"
     | "mechanicsE2eJar"
     | "mechanicsConfig"
+    | "stargatesConfig"
     | "companionsE2eJar"
     | "rwf"
     | "rwfMap"
@@ -167,6 +168,7 @@ async function profileFixtures(
     | "fixturesJar"
     | "mechanicsE2eJar"
     | "mechanicsConfig"
+    | "stargatesConfig"
     | "rwf"
     | "survivalConfig"
     | "computeConfig"
@@ -201,6 +203,9 @@ async function profileFixtures(
       // lobby before the match.
       return {
         stormConfig: withBots(owned),
+        stargatesConfig: await Bun.file(
+          path.join(packageRoot, "tests/e2e/fixture-stargates.yml"),
+        ).text(),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
         rwf: { ...fullRwfTestSettings, maps: suiteMaps },

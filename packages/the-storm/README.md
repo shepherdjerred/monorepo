@@ -637,6 +637,8 @@ still applies its access rules. Owners can grant use, management, town sharing,
 and redstone access separately. Admin
 regions retain their own opening rules. Other modules use the towns
 `Protection` port so their container interactions follow the same rules.
+The `TownMembership` service answers current membership by player and town ID
+for features that restrict access to a town's members.
 The towns `TownRead` port exposes an alphabetical, bounded directory of town
 names with member and claim counts plus the total town count. Consumers call
 it on Paper's main thread because it snapshots the loaded towns state; it

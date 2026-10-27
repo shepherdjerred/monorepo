@@ -1,5 +1,10 @@
 package com.shepherdjerred.thestorm.essentials.app;
 
+import java.util.Optional;
+import java.util.UUID;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
+
 /**
  * The registry of {@link TeleportGuard}s, published by essentials. A module enabled after
  * essentials adds its guards with {@code
@@ -16,4 +21,7 @@ public interface TeleportGuards {
 
   /** Adds {@code guard}. Guards cannot be removed; a disabled module's guard should allow all. */
   void add(TeleportGuard guard);
+
+  /** The first current refusal for a proposed destination, or empty if all guards allow it. */
+  Optional<Component> check(UUID mover, Location destination);
 }

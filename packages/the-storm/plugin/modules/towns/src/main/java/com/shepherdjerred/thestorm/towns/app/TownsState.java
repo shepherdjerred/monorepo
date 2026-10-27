@@ -34,7 +34,8 @@ import org.jspecify.annotations.Nullable;
  * <p>Main thread only. It enforces its own invariants and throws when handed data that breaks them:
  * one town per player, unique names, claims only for existing towns, one claim per chunk.
  */
-public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, LockAccess.Towns {
+public final class TownsState
+    implements ClaimMap, TownDirectory, TrustLookup, LockAccess.Towns, TownMembership {
 
   private static final Land WILDERNESS = new Land.Wilderness();
 
@@ -52,6 +53,11 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
 
   public TownsState(RegionIndex regions) {
     replaceRegions(regions);
+  }
+
+  @Override
+  public boolean isMember(UUID player, UUID townId) {
+    return townId.equals(townOfPlayer.get(player));
   }
 
   /** Reindexes arrival regions synchronously when a world loads or its spawn moves. */

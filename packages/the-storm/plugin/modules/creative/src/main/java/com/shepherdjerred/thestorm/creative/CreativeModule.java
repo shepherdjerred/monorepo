@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.creative.adapter.db.JooqReviewStore;
 import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
 import com.shepherdjerred.thestorm.creative.adapter.grim.CreativeAnticheat;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeAudit;
+import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeBodies;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeCommands;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeGenerator;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeGuard;
@@ -25,6 +26,7 @@ import com.shepherdjerred.thestorm.creative.adapter.paper.PlotGuard;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.CreativeEdits;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.PlotSchematics;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
+import com.shepherdjerred.thestorm.creative.app.CreativeEntry;
 import com.shepherdjerred.thestorm.creative.app.ReviewBook;
 import com.shepherdjerred.thestorm.creative.app.ReviewStore.Snapshot;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
@@ -113,6 +115,21 @@ public final class CreativeModule implements StormModule {
                 world,
                 context.services().require(SavedPlayerData.class)));
     sessions = visits;
+    context
+        .services()
+        .provide(
+            CreativeEntry.class,
+            new CreativeEntry() {
+              @Override
+              public void enter(org.bukkit.entity.Player player) {
+                visits.enter(player);
+              }
+
+              @Override
+              public org.bukkit.Location destination() {
+                return CreativeBodies.spawn(world);
+              }
+            });
     context.services().require(SealedWorlds.class).seal(world);
     CreativeWorld.apply(world, config);
     var book = new ClaimBook(config.catalog());

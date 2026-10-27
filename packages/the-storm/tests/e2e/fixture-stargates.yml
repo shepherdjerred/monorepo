@@ -1,0 +1,60 @@
+# Disposable full-suite coordinates; never copied to the server image.
+openFor: PT10S
+serverGates:
+  - id: acceptance-hub
+    world: world
+    origin: { x: 960, y: 70, z: 0 }
+    across: WEST
+    sign: { x: 963, y: 72, z: 1 }
+    allowPreservedPortal: false
+    destinations:
+      - {
+          label: "2026",
+          world: frontier,
+          kind: WORLD,
+          landing: { x: 970, y: 71, z: 1 },
+        }
+      - {
+          label: "2015",
+          world: world,
+          kind: WORLD,
+          landing: { x: 970, y: 71, z: 1 },
+        }
+      - {
+          label: Skylands,
+          world: skylands,
+          kind: WORLD,
+          landing: { x: 970, y: 71, z: 1 },
+        }
+      - {
+          label: Creative,
+          world: creative,
+          kind: CREATIVE,
+          landing: { x: -1, y: 65, z: -1 },
+        }
+  - id: protected-hub
+    world: world
+    origin: { x: 100, y: 70, z: 100 }
+    across: WEST
+    sign: { x: 103, y: 72, z: 101 }
+    allowPreservedPortal: false
+    destinations:
+      - {
+          label: "2015",
+          world: world,
+          kind: WORLD,
+          landing: { x: 970, y: 71, z: 1 },
+        }
+  - id: permitted-protected-hub
+    world: world
+    origin: { x: 120, y: 70, z: 100 }
+    across: WEST
+    sign: { x: 123, y: 72, z: 101 }
+    allowPreservedPortal: true
+    destinations:
+      - {
+          label: "2015",
+          world: world,
+          kind: WORLD,
+          landing: { x: 970, y: 71, z: 1 },
+        }

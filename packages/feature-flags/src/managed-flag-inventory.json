@@ -2508,6 +2508,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-stargates-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-stargates",
+      "purpose": "Enable the Stargate network after sandbox and live acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-crier-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -3120,6 +3132,14 @@
         },
         {
           "key": "the-storm-companions-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-stargates-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

@@ -76,6 +76,11 @@ final class QolHarness implements AutoCloseable {
       added.add(guard);
     }
 
+    @Override
+    public Optional<Component> check(UUID mover, Location destination) {
+      return refusal(mover, destination);
+    }
+
     Optional<Component> refusal(UUID mover, Location destination) {
       return added.stream()
           .map(guard -> guard.refusal(mover, destination))

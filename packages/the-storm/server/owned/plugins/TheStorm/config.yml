@@ -17,6 +17,7 @@ modules:
   creative: true
   tracks: true
   mechanics: true
+  stargates: true
   spells: true
   npcs: true
   quests: true

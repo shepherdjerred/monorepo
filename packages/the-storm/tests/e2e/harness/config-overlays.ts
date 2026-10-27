@@ -20,6 +20,8 @@ export type ModuleConfigOverrides = {
   /** Disposable compute.yml contents for explicit startup worker-budget calibration. */
   computeConfig?: string;
   survivalConfig?: string;
+  /** Disposable server-owned Stargate fixture; the shipped configuration stays untouched. */
+  stargatesConfig?: string;
 };
 
 /** Write explicit module overrides only after copying the owned configuration. */
@@ -30,6 +32,7 @@ export async function stageModuleConfigs(
   for (const [file, content] of [
     ["compute.yml", options.computeConfig],
     ["rwfbots.yml", options.rwfbotsConfig],
+    ["stargates.yml", options.stargatesConfig],
     [path.join("arena", "survival.yml"), options.survivalConfig],
   ] as const) {
     if (content !== undefined)

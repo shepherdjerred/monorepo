@@ -1,0 +1,37 @@
+# Stargates are player-built, sign-and-button portals. Network and gate state
+# is stored in the plugin database; this file is owned by the repository.
+openFor: PT10S
+# The approved welcome-plaza gate temporarily changes only its interior on
+# preserved Spawn land. Place the reviewed build before enabling Stargates.
+serverGates:
+  - id: welcome-world-gate
+    world: world
+    origin: { x: 6, y: 73, z: 110 }
+    across: WEST
+    sign: { x: 9, y: 75, z: 111 }
+    allowPreservedPortal: true
+    destinations:
+      - {
+          label: "2026",
+          world: frontier,
+          kind: WORLD,
+          landing: { x: 16, y: 64, z: 0 },
+        }
+      - {
+          label: "2015",
+          world: world,
+          kind: WORLD,
+          landing: { x: 68, y: 69, z: 66 },
+        }
+      - {
+          label: Skylands,
+          world: skylands,
+          kind: WORLD,
+          landing: { x: -14, y: 114, z: -24 },
+        }
+      - {
+          label: Creative,
+          world: creative,
+          kind: CREATIVE,
+          landing: { x: -1, y: 65, z: -1 },
+        }
