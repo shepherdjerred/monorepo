@@ -125,9 +125,30 @@ final class ClaimRulesTest {
                     Map.of(),
                     Set.of(),
                     PlotSurface.DEFAULT,
-                    Optional.empty())));
+                    Optional.empty(),
+                    false)));
 
     assertThat(released.owner()).isEmpty();
+    var moved =
+        PlotViews.resolve(
+            new PlotId(1, 4),
+            Optional.of(new RecoveredPlot("1;4", ACTOR.toString(), List.of())),
+            Optional.of(
+                new StoredClaim(
+                    new PlotId(1, 4),
+                    Optional.empty(),
+                    false,
+                    false,
+                    "",
+                    "",
+                    Map.of(),
+                    Set.of(),
+                    PlotSurface.DEFAULT,
+                    Optional.empty(),
+                    true)));
+    assertThat(moved.staffHeld()).isTrue();
+    assertThat(moved.owner()).isEmpty();
+    assertThat(moved.marked()).isTrue();
     assertThat(ClaimRules.counted(ACTOR, List.of(playerClaim, assigned, released))).isEqualTo(1);
   }
 

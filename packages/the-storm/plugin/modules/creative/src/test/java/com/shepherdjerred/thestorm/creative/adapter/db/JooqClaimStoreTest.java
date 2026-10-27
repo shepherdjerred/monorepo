@@ -42,7 +42,8 @@ final class JooqClaimStoreTest {
             Map.of(FRIEND, PlotRole.TRUSTED),
             Set.of(),
             PlotSurface.DEFAULT,
-            Optional.empty());
+            Optional.empty(),
+            false);
     var released =
         new StoredClaim(
             plot,
@@ -54,7 +55,8 @@ final class JooqClaimStoreTest {
             Map.of(),
             Set.of(),
             PlotSurface.DEFAULT,
-            Optional.empty());
+            Optional.empty(),
+            false);
     try (var database = StormDatabase.open(directory.resolve("creative.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -102,7 +104,8 @@ final class JooqClaimStoreTest {
             Map.of(FRIEND, PlotRole.MEMBER),
             Set.of(),
             PlotSurface.DEFAULT,
-            Optional.empty());
+            Optional.empty(),
+            false);
     try (var database = StormDatabase.open(directory.resolve("overlay.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -126,7 +129,8 @@ final class JooqClaimStoreTest {
             Map.of(),
             Set.of(),
             PlotSurface.DEFAULT,
-            Optional.empty());
+            Optional.empty(),
+            false);
     try (var database = StormDatabase.open(directory.resolve("legacy-role.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -161,7 +165,8 @@ final class JooqClaimStoreTest {
             Map.of(),
             Set.of(PlotFlag.USE, PlotFlag.PVP),
             PlotSurface.DEFAULT,
-            Optional.empty());
+            Optional.empty(),
+            false);
     try (var database = StormDatabase.open(directory.resolve("flags.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -204,7 +209,8 @@ final class JooqClaimStoreTest {
                 Optional.of("minecraft:sand"),
                 Optional.of("minecraft:quartz_block"),
                 Optional.of("minecraft:desert")),
-            Optional.empty());
+            Optional.empty(),
+            false);
     try (var database = StormDatabase.open(directory.resolve("surface.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -256,6 +262,7 @@ final class JooqClaimStoreTest {
         Map.of(),
         Set.of(),
         PlotSurface.DEFAULT,
-        Optional.empty());
+        Optional.empty(),
+        false);
   }
 }

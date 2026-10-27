@@ -47,6 +47,7 @@ import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.Nullable;
 
@@ -73,6 +74,7 @@ public final class CreativePlots {
   private final CreativeMergeCommands merges;
   private final CreativeSchematicCommands library;
   private final CreativeReviewCommands reviews;
+  private final CreativeAdminCommands admins;
   private final PlotTeleport mover;
 
   /** What the plot commands need. Redraw runs on the main thread after a claim changes. */
@@ -144,56 +146,83 @@ public final class CreativePlots {
                 this::standing,
                 book::view,
                 this::claimRow));
+    this.admins =
+        new CreativeAdminCommands(
+            new CreativeAdminCommands.Hooks(
+                grid,
+                world,
+                EmptyPlot.load(grid),
+                book::ready,
+                this::inside,
+                this::linked,
+                book::view,
+                id -> book.catalog().get(id).isPresent(),
+                this::persist,
+                this::persistAll,
+                this::removeClaim));
   }
 
   public void attach(LiteralArgumentBuilder<CommandSourceStack> root) {
-    root.then(literal("claim").executes(this::claim));
-    root.then(literal("auto").executes(this::auto));
+    root.then(playing("claim").executes(this::claim));
+    root.then(playing("auto").executes(this::auto));
     root.then(
-        literal("home")
+        playing("home")
             .executes(this::homeHere)
             .then(argument("plot", greedyString()).executes(this::homePlot)));
-    root.then(literal("tp").then(argument("plot", greedyString()).executes(this::visit)));
-    root.then(literal("member").then(argument("player", word()).executes(this::member)));
-    root.then(literal("unmember").then(argument("player", word()).executes(this::unmember)));
-    root.then(literal("trust").then(argument("player", word()).executes(this::trust)));
-    root.then(literal("untrust").then(argument("player", word()).executes(this::untrust)));
-    root.then(literal("deny").then(argument("player", word()).executes(this::deny)));
-    root.then(literal("undeny").then(argument("player", word()).executes(this::undeny)));
+    root.then(playing("tp").then(argument("plot", greedyString()).executes(this::visit)));
+    root.then(playing("member").then(argument("player", word()).executes(this::member)));
+    root.then(playing("unmember").then(argument("player", word()).executes(this::unmember)));
+    root.then(playing("trust").then(argument("player", word()).executes(this::trust)));
+    root.then(playing("untrust").then(argument("player", word()).executes(this::untrust)));
+    root.then(playing("deny").then(argument("player", word()).executes(this::deny)));
+    root.then(playing("undeny").then(argument("player", word()).executes(this::undeny)));
     root.then(
-        literal("flag")
+        playing("flag")
             .then(argument("name", string()).then(argument("value", word()).executes(this::flag))));
-    root.then(literal("info").executes(this::info));
-    root.then(literal("list").executes(this::list));
-    root.then(literal("name").then(argument("name", greedyString()).executes(this::name)));
+    root.then(playing("info").executes(this::info));
+    root.then(playing("list").executes(this::list));
+    root.then(playing("name").then(argument("name", greedyString()).executes(this::name)));
     root.then(
-        literal("desc").then(argument("description", greedyString()).executes(this::describe)));
-    root.then(literal("floor").then(argument("name", word()).executes(choices::floor)));
-    root.then(literal("wall").then(argument("name", word()).executes(choices::wall)));
-    root.then(literal("biome").then(argument("name", word()).executes(choices::biome)));
+        playing("desc").then(argument("description", greedyString()).executes(this::describe)));
+    root.then(playing("floor").then(argument("name", word()).executes(choices::floor)));
+    root.then(playing("wall").then(argument("name", word()).executes(choices::wall)));
+    root.then(playing("biome").then(argument("name", word()).executes(choices::biome)));
     root.then(
-        literal("clear")
+        playing("clear")
             .executes(maintenance::clearHint)
             .then(literal("confirm").executes(maintenance::clear)));
-    root.then(literal("reset").executes(maintenance::reset));
-    root.then(literal("unclaim").executes(maintenance::unclaim));
-    root.then(literal("merge").then(argument("plot", greedyString()).executes(merges::merge)));
-    root.then(literal("unlink").executes(merges::unlink));
-    root.then(literal("save").then(argument("name", word()).executes(library::save)));
-    root.then(literal("load").executes(library::load));
-    root.then(literal("paste").then(argument("name", word()).executes(library::paste)));
-    root.then(literal("rate").then(argument("score", word()).executes(reviews::rate)));
+    root.then(playing("reset").executes(maintenance::reset));
+    root.then(playing("unclaim").executes(maintenance::unclaim));
+    root.then(playing("merge").then(argument("plot", greedyString()).executes(merges::merge)));
+    root.then(playing("unlink").executes(merges::unlink));
+    root.then(playing("save").then(argument("name", word()).executes(library::save)));
+    root.then(playing("load").executes(library::load));
+    root.then(playing("paste").then(argument("name", word()).executes(library::paste)));
+    root.then(playing("rate").then(argument("score", word()).executes(reviews::rate)));
     root.then(
-        literal("comment")
+        playing("comment")
             .then(literal("delete").executes(reviews::delete))
             .then(argument("text", greedyString()).executes(reviews::comment)));
-    root.then(literal("download").executes(this::download));
+    root.then(playing("download").executes(this::download));
     root.then(
         literal("admin")
             .requires(source -> source.getSender().hasPermission(CreativePermissions.ADMIN))
-            .then(literal("assign").then(argument("player", word()).executes(this::assign)))
-            .then(literal("unclaim").executes(this::unclaim))
-            .then(literal("scan").executes(this::scan)));
+            .then(playing("assign").then(argument("player", word()).executes(this::assign)))
+            .then(
+                literal("unclaim").then(argument("plot", greedyString()).executes(admins::unclaim)))
+            .then(
+                literal("clear")
+                    .then(
+                        literal("confirm")
+                            .then(
+                                argument("plot", greedyString()).executes(admins::clearConfirmed)))
+                    .then(argument("plot", greedyString()).executes(admins::clearHint)))
+            .then(literal("move").then(argument("plots", greedyString()).executes(admins::move)))
+            .then(playing("scan").executes(this::scan)));
+  }
+
+  private static LiteralArgumentBuilder<CommandSourceStack> playing(String name) {
+    return literal(name).requires(source -> source.getSender() instanceof Player);
   }
 
   private int claim(CommandContext<CommandSourceStack> context) {
@@ -418,14 +447,6 @@ public final class CreativePlots {
     return Command.SINGLE_SUCCESS;
   }
 
-  private int unclaim(CommandContext<CommandSourceStack> context) {
-    var player = player(context);
-    if (ready(player)) {
-      release(player);
-    }
-    return Command.SINGLE_SUCCESS;
-  }
-
   private int scan(CommandContext<CommandSourceStack> context) {
     var player = player(context);
     if (!ready(player)) {
@@ -478,7 +499,8 @@ public final class CreativePlots {
             Map.of(),
             Set.of(),
             PlotSurface.DEFAULT,
-            Optional.empty()),
+            Optional.empty(),
+            false),
         new Notice("You claimed " + id.text() + ".", true));
   }
 
@@ -584,7 +606,8 @@ public final class CreativePlots {
         view.access(),
         view.flags(),
         view.surface(),
-        Optional.empty());
+        Optional.empty(),
+        view.staffHeld());
   }
 
   private StoredClaim claimRow(PlotId id) {
@@ -696,46 +719,12 @@ public final class CreativePlots {
             view.access(),
             view.flags(),
             view.surface(),
-            Optional.empty()),
+            Optional.empty(),
+            false),
         "Assigned " + id.text() + " to " + target.getName() + ".");
   }
 
-  private void release(Player actor) {
-    var at = standing(actor);
-    if (at.isEmpty()) {
-      error(actor, "Stand on a plot to unclaim it.");
-      return;
-    }
-    var id = at.orElseThrow();
-    if (linked(id)) {
-      error(actor, "Unlink this plot before unclaiming it.");
-      return;
-    }
-    if (book.catalog().get(id).isPresent()) {
-      persist(
-          actor,
-          new StoredClaim(
-              id,
-              Optional.empty(),
-              true,
-              false,
-              "",
-              "",
-              Map.of(),
-              Set.of(),
-              PlotSurface.DEFAULT,
-              Optional.empty()),
-          "Released " + id.text() + ".");
-      return;
-    }
-    if (book.row(id).isEmpty()) {
-      error(actor, "That plot is not claimed.");
-      return;
-    }
-    removeClaim(actor, id, "Released " + id.text() + ".");
-  }
-
-  private void removeClaim(Player actor, PlotId id, String ok) {
+  private void removeClaim(CommandSender actor, PlotId id, String ok) {
     var removal = new Removal(actor, id, book.row(id), ok);
     book.remove(id);
     redraw.run();
@@ -747,18 +736,19 @@ public final class CreativePlots {
     var _ = saved;
   }
 
-  private record Removal(Player actor, PlotId id, Optional<StoredClaim> previous, String ok) {}
+  private record Removal(
+      CommandSender actor, PlotId id, Optional<StoredClaim> previous, String ok) {}
 
   private void removed(Removal removal, @Nullable Throwable failure) {
     if (failure != null) {
       restore(removal.id(), removal.previous());
       context.logger().error("Creative unclaim failed for {}", removal.id().text(), failure);
-      if (removal.actor().isOnline()) {
+      if (listening(removal.actor())) {
         error(removal.actor(), "That could not be saved.");
       }
       return;
     }
-    if (removal.actor().isOnline()) {
+    if (listening(removal.actor())) {
       success(removal.actor(), removal.ok());
     }
   }
@@ -768,11 +758,14 @@ public final class CreativePlots {
 
   /** One optimistic write of several merged rows. */
   private record SavedBatch(
-      Player player, List<StoredClaim> claims, List<Optional<StoredClaim>> previous, String ok) {}
+      CommandSender sender,
+      List<StoredClaim> claims,
+      List<Optional<StoredClaim>> previous,
+      String ok) {}
 
-  /** One optimistic claim write and what to tell the player when it lands. */
+  /** One optimistic claim write and what to tell the sender when it lands. */
   private record PendingSave(
-      Player player, StoredClaim claim, Optional<StoredClaim> previous, Notice notice) {}
+      CommandSender sender, StoredClaim claim, Optional<StoredClaim> previous, Notice notice) {}
 
   private void persistShared(Player player, StoredClaim standing, String ok) {
     var rows = book.cluster(standing.id());
@@ -796,14 +789,14 @@ public final class CreativePlots {
     persistAll(player, next, ok);
   }
 
-  private void persistAll(Player player, List<StoredClaim> claims, String ok) {
+  private void persistAll(CommandSender sender, List<StoredClaim> claims, String ok) {
     var previous = new ArrayList<Optional<StoredClaim>>();
     for (var claim : claims) {
       previous.add(book.row(claim.id()));
       book.put(claim);
     }
     redraw.run();
-    var batch = new SavedBatch(player, List.copyOf(claims), List.copyOf(previous), ok);
+    var batch = new SavedBatch(sender, List.copyOf(claims), List.copyOf(previous), ok);
     var saved =
         store
             .saveAll(claims)
@@ -819,22 +812,22 @@ public final class CreativePlots {
         restore(batch.claims().get(i).id(), batch.previous().get(i));
       }
       context.logger().error("Creative claim save failed", failure);
-      if (batch.player().isOnline()) {
-        error(batch.player(), "That could not be saved.");
+      if (listening(batch.sender())) {
+        error(batch.sender(), "That could not be saved.");
       }
       return;
     }
-    if (batch.player().isOnline()) {
-      success(batch.player(), batch.ok());
+    if (listening(batch.sender())) {
+      success(batch.sender(), batch.ok());
     }
   }
 
-  private void persist(Player player, StoredClaim claim, String ok) {
-    persist(player, claim, new Notice(ok, false));
+  private void persist(CommandSender sender, StoredClaim claim, String ok) {
+    persist(sender, claim, new Notice(ok, false));
   }
 
-  private void persist(Player player, StoredClaim claim, Notice notice) {
-    var pending = new PendingSave(player, claim, book.row(claim.id()), notice);
+  private void persist(CommandSender sender, StoredClaim claim, Notice notice) {
+    var pending = new PendingSave(sender, claim, book.row(claim.id()), notice);
     book.put(claim);
     redraw.run();
     var saved =
@@ -852,18 +845,22 @@ public final class CreativePlots {
       context
           .logger()
           .error("Creative claim save failed for {}", pending.claim().id().text(), failure);
-      if (pending.player().isOnline()) {
-        error(pending.player(), "That could not be saved.");
+      if (listening(pending.sender())) {
+        error(pending.sender(), "That could not be saved.");
       }
       return;
     }
-    if (!pending.player().isOnline()) {
+    if (!listening(pending.sender())) {
       return;
     }
-    success(pending.player(), pending.notice().ok());
-    if (pending.notice().teleportHome()) {
-      teleport(pending.player(), pending.claim().id());
+    success(pending.sender(), pending.notice().ok());
+    if (pending.notice().teleportHome() && pending.sender() instanceof Player player) {
+      teleport(player, pending.claim().id());
     }
+  }
+
+  private static boolean listening(CommandSender sender) {
+    return !(sender instanceof Player player) || player.isOnline();
   }
 
   private void restore(PlotId id, Optional<StoredClaim> previous) {
@@ -900,7 +897,8 @@ public final class CreativePlots {
             view.access(),
             view.flags(),
             view.surface(),
-            Optional.empty()));
+            Optional.empty(),
+            false));
   }
 
   private boolean ready(Player player) {
@@ -1018,15 +1016,15 @@ public final class CreativePlots {
     return (Player) context.getSource().getSender();
   }
 
-  private static void tell(Player player, String text) {
-    player.sendMessage(HouseStyle.info(LABEL, Component.text(text)));
+  private static void tell(CommandSender sender, String text) {
+    sender.sendMessage(HouseStyle.info(LABEL, Component.text(text)));
   }
 
-  private static void success(Player player, String text) {
-    player.sendMessage(HouseStyle.success(LABEL, Component.text(text)));
+  private static void success(CommandSender sender, String text) {
+    sender.sendMessage(HouseStyle.success(LABEL, Component.text(text)));
   }
 
-  private static void error(Player player, String text) {
-    player.sendMessage(HouseStyle.error(LABEL, Component.text(text)));
+  private static void error(CommandSender sender, String text) {
+    sender.sendMessage(HouseStyle.error(LABEL, Component.text(text)));
   }
 }

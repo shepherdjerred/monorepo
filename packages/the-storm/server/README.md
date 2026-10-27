@@ -70,7 +70,7 @@ its wall, to the generator plus those choices, and does not change the road.
 `/creative reset` restores flags and those choices without changing blocks,
 members, the name, or the description. `/creative unclaim` deletes a plot the
 player claimed themselves once the footprint matches the generator again and
-the plot is not merged. Recovered plots stay on `/creative admin unclaim`.
+the plot is not merged. Recovered plots stay on `/creative admin unclaim <id>`.
 `/creative merge <id>` links the owned plot the player is standing on with
 another plot they own that shares a side. The road stays. `/creative unlink`
 separates them once that road matches the template and copies members, the
@@ -91,8 +91,13 @@ the player is not denied on. `/creative home` still returns to a plot they can
 build on. The plugin never writes `creative.yml`. `/creative download`
 saves one `x_z.schem` under the plugin data folder `creative-schematics` for
 someone to fetch outside the world; it is not mailed. `/creative admin assign`,
-`unclaim`, and `scan` require `thestorm.creative.admin`. Scan reports claim
-drift and does not rewrite the catalog. BlueMap draws a Plots marker set on
+`unclaim <id>`, `clear confirm <id>`, `move <from> <to>`, and `scan` require
+`thestorm.creative.admin`. The console can run unclaim, clear, and move. Assign
+and scan still need a player. Unclaim releases that plot and redraws its map
+marker without changing blocks. Clear writes the empty spawn footprint first,
+leaving the road, then releases it. Move copies one unmerged plot onto an empty
+cell, then leaves that same footprint behind. A merged plot is refused. Scan
+reports claim drift and does not rewrite the catalog. BlueMap draws a Plots marker set on
 the creative world's maps only. Each plot is labelled with its name, or with
 the owner's username when it has no name. The player-facing map is the map
 named creative on `https://bluemap.ts-mc.net/`, beside survival. GrimAC's owned config has no

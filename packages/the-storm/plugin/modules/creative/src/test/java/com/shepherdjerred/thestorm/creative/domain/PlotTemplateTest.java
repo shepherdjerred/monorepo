@@ -32,6 +32,22 @@ final class PlotTemplateTest {
   }
 
   @Test
+  void theEmptyPlotKeepsTheSpawnDecorationAndTheGeneratorColumn() throws IOException {
+    var grid = PlotGrid.recovered();
+    byte[] bytes;
+    try (var in = PlotTemplate.class.getResourceAsStream("/creative-empty-plot.bin")) {
+      assertThat(in).isNotNull();
+      bytes = in.readAllBytes();
+    }
+    var template = PlotTemplate.decode(grid, bytes);
+
+    assertThat(template.stateAt(20, 65, 6)).isEqualTo("minecraft:dead_bush");
+    assertThat(template.stateAt(20, 10, 6)).isEqualTo("minecraft:stone");
+    assertThat(template.stateAt(20, 80, 6)).isEqualTo("minecraft:air");
+    assertThat(template.stateAt(0, 64, 0)).isEqualTo("minecraft:glowstone");
+  }
+
+  @Test
   void aTableForAnotherCellSizeIsRefused() {
     var otherSize = ByteBuffer.allocate(11);
     otherSize.put(new byte[] {'C', 'P', 'L', 'T', 1});

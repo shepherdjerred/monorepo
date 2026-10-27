@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.creative.app.ReviewStore;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
+import com.shepherdjerred.thestorm.creative.domain.RecoveredPlot;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -33,7 +34,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.random.RandomGenerator;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
@@ -49,6 +49,9 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
   /** The next save fails and the player must stay where they are. */
   static boolean failSave;
 
+  /** Catalog rows for one test. Read once when the plugin enables, then cleared. */
+  static List<RecoveredPlot> catalog = List.of();
+
   private static @Nullable ClaimBook claims;
   private @Nullable StormDatabase database;
 
@@ -59,6 +62,8 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
   @Override
   public void onEnable() {
     failSave = false;
+    var catalog = List.copyOf(CreativeClaimCommandsPlugin.catalog);
+    CreativeClaimCommandsPlugin.catalog = List.of();
     var directory = requireNonNull(CreativeClaimCommandsPlugin.directory, "directory");
     var world = getServer().getWorld("creative");
     if (world == null) {
@@ -82,7 +87,7 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
             8,
             140,
             20,
-            List.of());
+            catalog);
     var book = new ClaimBook(config.catalog());
     book.replace(List.of());
     claims = book;
@@ -113,8 +118,7 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
                 reviews,
                 new MemoryReviews()),
             (player, location) -> CompletableFuture.completedFuture(player.teleport(location)));
-    var root =
-        Commands.literal("creative").requires(source -> source.getSender() instanceof Player);
+    var root = Commands.literal("creative");
     plots.attach(root);
     getLifecycleManager()
         .registerEventHandler(
