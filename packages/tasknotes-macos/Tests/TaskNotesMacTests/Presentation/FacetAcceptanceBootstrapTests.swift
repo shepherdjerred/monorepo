@@ -34,6 +34,132 @@
             try await context.engine.close()
         }
 
+        @Test func ownedColdSelectionSurvivesCancelledCallersWithoutFlushingDrafts() async throws {
+            let context = try await Context.open()
+            let profile = try await context.selectFixture()
+            let query = try #require(context.store.displayedQuery)
+            let before = try #require(context.store.snapshot)
+            let request = context.store.requestGeneration
+            var flushes = 0
+            let registration = UUID()
+            FacetDraftCoordinator.shared.register(
+                registration, owner: context.store, profileID: profile.id,
+                flush: {
+                    flushes += 1
+                    return true
+                })
+            defer { FacetDraftCoordinator.shared.unregister(registration) }
+            context.store.engine = context.engine
+            let callers = (0..<8).map { _ in
+                _Concurrency.Task { try await context.store.prepareAcceptanceVault(context.vault) }
+            }
+            callers[0].cancel()
+            for caller in callers { try await caller.value }
+            #expect(flushes == 0)
+            #expect(context.store.requestGeneration == request)
+            #expect(context.store.displayedQuery == query)
+            let retained = try #require(context.store.snapshot)
+            #expect(retained.profileId == before.profileId && retained.version == before.version)
+            #expect(retained.tasks.map(\.properties) == before.tasks.map(\.properties))
+            #expect(retained.tasks.map(\.body) == before.tasks.map(\.body))
+            #expect(retained.configuration == before.configuration)
+            #expect(try Data(contentsOf: context.note) == context.originalNote)
+            try await context.engine.close()
+        }
+
+        @Test(arguments: ["snapshot", "query", "selection"])
+        func incompleteOrDifferentSelectionStillPreparesNormally(missing: String) async throws {
+            let context = try await Context.open()
+            let profile = try await context.selectFixture()
+            if missing == "snapshot" { context.store.snapshot = nil }
+            if missing == "query" { context.store.displayedQuery = nil }
+            if missing == "selection" { _ = try await context.selectOtherVault() }
+            let request = context.store.requestGeneration
+            var flushes = 0
+            let registration = UUID()
+            FacetDraftCoordinator.shared.register(
+                registration, owner: context.store, profileID: profile.id,
+                flush: {
+                    flushes += 1
+                    return true
+                })
+            defer { FacetDraftCoordinator.shared.unregister(registration) }
+            try await context.store.prepareAcceptanceVault(context.vault)
+            #expect(flushes == 1)
+            #expect(context.store.requestGeneration > request)
+            #expect(context.store.selectedProfileID == profile.id)
+            #expect(context.store.snapshot?.profileId == profile.id)
+            #expect(context.store.snapshot?.tasks.map(\.title) == ["Preserved fixture"])
+            #expect(context.store.displayedQuery != nil)
+            try await context.engine.close()
+        }
+
+        @Test func rejectedDraftFlushCannotPrepareADifferentProfile() async throws {
+            let context = try await Context.open()
+            _ = try await context.selectFixture()
+            let other = try await context.selectOtherVault()
+            let registration = UUID()
+            FacetDraftCoordinator.shared.register(
+                registration, owner: context.store, profileID: other.id,
+                isDirty: { true }, flush: { false })
+            defer { FacetDraftCoordinator.shared.unregister(registration) }
+            await #expect(throws: FacetAcceptanceError.self) {
+                try await context.store.prepareAcceptanceVault(context.vault)
+            }
+            #expect(context.store.selectedProfileID == other.id)
+            #expect(context.store.snapshot?.profileId == other.id)
+            try await context.engine.close()
+        }
+
+        @Test func replacingEngineClearsFramesAndRejectsSuspendedOldQuery() async throws {
+            let context = try await Context.open()
+            let profile = try await context.selectFixture()
+            let query = try #require(context.store.displayedQuery)
+            let other = try await FacetEngine.open(
+                directory: context.scratch.url.appendingPathComponent("replacement"),
+                secrets: ComponentKeys())
+            let pause = Suspension()
+            let read = _Concurrency.Task {
+                await context.store.loadQuerySnapshot(
+                    profileID: profile.id, logicalQuery: query,
+                    ownsEngine: { context.store.engine === context.engine },
+                    load: {
+                        let result = try await context.engine.snapshot(
+                            profileID: profile.id, query: query)
+                        await pause.pause()
+                        return result
+                    })
+            }
+            await pause.waitUntilEntered()
+            #expect(context.store.snapshot != nil)
+            context.store.engine = other
+            #expect(context.store.snapshot == nil)
+            #expect(context.store.displayedQuery == nil)
+            pause.resume()
+            await read.value
+            #expect(context.store.snapshot == nil)
+            #expect(context.store.displayedQuery == nil)
+            #expect(context.store.error == nil)
+            try await context.engine.close()
+            try await other.close()
+        }
+
+        @Test func preparedTaskCannotCrossAnEngineReplacement() async throws {
+            let context = try await Context.open()
+            try await context.store.prepareAcceptanceVault(context.vault)
+            let other = try await FacetEngine.open(
+                directory: context.scratch.url.appendingPathComponent("replacement"),
+                secrets: ComponentKeys())
+            context.store.engine = other
+            await #expect(throws: FacetAcceptanceError.self) {
+                try await context.store.prepareAcceptanceVault(context.vault)
+            }
+            #expect(context.store.snapshot == nil)
+            #expect(context.store.displayedQuery == nil)
+            try await context.engine.close()
+            try await other.close()
+        }
+
         @Test func applicationPreparesWithoutAViewAndColdLaunchReusesTheProfile() async throws {
             let context = try await Context.open()
             let environment = FacetMacEnvironment(store: context.store) {
@@ -85,6 +211,25 @@
             }
             var note: URL { vault.appendingPathComponent("Existing.md") }
             var settings: URL { vault.appendingPathComponent("tasknotes.yaml") }
+
+            func selectFixture() async throws -> FacetProfile {
+                let profile = try await engine.registerLocal(
+                    directory: vault, approveStandard: true)
+                store.profiles = try await engine.profiles()
+                await store.selectProfile(profile.id)
+                return profile
+            }
+
+            func selectOtherVault() async throws -> FacetProfile {
+                let directory = scratch.url.appendingPathComponent("Other vault")
+                try FileManager.default.createDirectory(
+                    at: directory, withIntermediateDirectories: true)
+                let profile = try await engine.registerLocal(
+                    directory: directory, approveStandard: true)
+                store.profiles = try await engine.profiles()
+                await store.selectProfile(profile.id)
+                return profile
+            }
 
             static func open() async throws -> Self {
                 let testScratch = try ScratchDirectory()
