@@ -3,15 +3,20 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
-import ffmpegPath from "ffmpeg-static";
 import { prepareStream } from "../src/media/newApi.ts";
 import { demux } from "../src/media/LibavDemuxer.ts";
+
+// Exercise the system FFmpeg used by hosted consumers. The Linux static build
+// crashes while opening MPEG-TS HLS, before timestamp normalization runs.
+const ffmpegPath = Bun.which("ffmpeg");
+if (ffmpegPath === null) {
+  throw new Error("The HLS integration test requires system ffmpeg on PATH");
+}
 
 let directory = "";
 let playlist = "";
 
 function ffmpeg(args: string[]): Bun.SpawnSyncResult {
-  if (ffmpegPath === null) throw new Error("ffmpeg-static binary is missing");
   return Bun.spawnSync([
     ffmpegPath,
     "-hide_banner",
@@ -87,6 +92,7 @@ test("normalizes timestamps across an HLS discontinuity", async () => {
     "nut",
     path.join(directory, "control.nut"),
   ]);
+  expect(control.signalCode, control.stderr.toString()).toBeUndefined();
   expect(
     control.exitCode !== 0 ||
       /Non-monotonous|backward in time|Multiple keyframes/u.test(
@@ -99,7 +105,7 @@ test("normalizes timestamps across an HLS discontinuity", async () => {
     height: 180,
     frameRate: 30,
     normalizeTimestamps: true,
-    ...(ffmpegPath === null ? {} : { ffmpegPath }),
+    ffmpegPath,
   });
   const chunks: Buffer[] = [];
   const collecting = (async () => {

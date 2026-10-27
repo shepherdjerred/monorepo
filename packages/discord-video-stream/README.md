@@ -44,3 +44,11 @@ Of the `src/media` exports, `StreamObserver.ts`, `letterbox.ts`, `videoGraph.ts`
 Consumed as TypeScript source via bun (`exports.default` → `src/index.ts`); `tsc` consumers read
 the generated `dist/*.d.ts` (run `bun run build` — declaration-only emit). It is a `file:` workspace
 dependency, not published to npm.
+
+## Native test prerequisites
+
+The HLS discontinuity regression requires `ffmpeg` on `PATH`, matching the
+system executable used by hosted consumers. CI provisions it in the toolchain
+image. The `ffmpeg-static` Linux build crashes when opening this MPEG-TS HLS
+fixture, so it cannot exercise the timestamp normalization path. The other
+native demux fixtures continue to use the pinned static executable.
