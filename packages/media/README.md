@@ -958,7 +958,14 @@ requests, and acquisition waits until a known future air date has passed.
 Download recovery queries the exact coordinator and acquisition Workflow identities.
 Only observed terminal runs permit takeover; missing or active child history holds
 ambiguous submissions. Stable recovery keys preserve the existing acquisition and
-its external-effect journals. Inventory scans record Plex observations in bounded
+its external-effect journals. Adopted TV recovery rechecks the original library
+approval and current owner, profile, exact episode generations and reservations
+under the canonical, target and runtime locks. It retains the sweep's original
+execution deadline and shared provenance allowance. Recovery can resume the same
+reserved, downloading, staged or physically published acquisition without a
+personal request, another transfer, or rewriting its birth and file journal.
+Revoked authority cannot queue a takeover; prepared files retain their separate
+reconciliation path. Inventory scans record Plex observations in bounded
 pages without claiming foreign files. Missing-path diagnostics require both
 configured libraries to finish enumeration. Knaben exposes a date-ordered native
 recent-page reader; the AvistaZ family exposes empty-query recent pages with

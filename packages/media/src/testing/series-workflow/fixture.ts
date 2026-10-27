@@ -21,6 +21,7 @@ export async function createManagedSeriesFixture(
   const f = await libraryTvBindingFixture(db, directoryCreated, {
     bytes: bytes.original,
     qualitySourceId: "5",
+    title: `Synthetic Anime ${crypto.randomUUID()}`,
   });
   await db.mediaItem.update({
     where: { id: f.series.id },

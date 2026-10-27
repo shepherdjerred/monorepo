@@ -8,6 +8,7 @@ import { assertNoPublicationCompensationFence } from "#infrastructure/native-com
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
 import { GenerationsSchema } from "#shared/file-plan.ts";
 import { protectLibraryManagement } from "#infrastructure/acquisition-identity/library-management.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 type Context = Pick<
   MediaAutomationContext,
@@ -29,26 +30,8 @@ export async function validManagedAttempt(
         return false;
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attempt.id },
-        include: { reservations: true },
       });
-      if (["failed", "cancelled", "obsolete"].includes(current.state))
-        return false;
-      const generations = GenerationsSchema.parse(current.generations);
-      if (
-        current.reservations.length !== current.mediaIds.length ||
-        current.reservations.some(
-          (reservation) =>
-            reservation.edition !== "default" ||
-            !current.mediaIds.includes(reservation.mediaId) ||
-            reservation.generation !== generations[reservation.mediaId],
-        )
-      )
-        protectLibraryManagement();
-      await assertAttemptIdentity(tx, current, {
-        serverMachineId: context.serverMachineId,
-        libraryManagement: context.libraryManagement,
-      });
-      return true;
+      return managedAttemptAuthority(tx, context, current);
     });
   } catch (error) {
     if (
@@ -66,6 +49,44 @@ export async function validManagedAttempt(
     });
     return false;
   }
+}
+
+/** Caller owns complete canonical/target/runtime locks. Recovery and new effects retain the same captured policy. */
+export async function managedAttemptAuthority(
+  tx: Prisma.TransactionClient,
+  context: Context,
+  attempt: AcquisitionAttempt,
+) {
+  if (
+    ["failed", "cancelled", "obsolete", "rejected", "completed"].includes(
+      attempt.state,
+    )
+  )
+    return false;
+  const invocation = context.libraryManagement;
+  if (invocation === undefined)
+    throw new Error("Managed TV recovery needs its original invocation");
+  await bindPlexTransactionDeadline(tx, invocation.freshness);
+  const reservations = await tx.acquisitionReservation.findMany({
+    where: { attemptId: attempt.id },
+  });
+  const generations = GenerationsSchema.parse(attempt.generations);
+  if (
+    reservations.length !== attempt.mediaIds.length ||
+    reservations.some(
+      (reservation) =>
+        reservation.edition !== "default" ||
+        !attempt.mediaIds.includes(reservation.mediaId) ||
+        reservation.generation !== generations[reservation.mediaId],
+    )
+  )
+    protectLibraryManagement();
+  await assertAttemptIdentity(tx, attempt, {
+    serverMachineId: context.serverMachineId,
+    libraryManagement: invocation,
+  });
+  invocation.freshness.assertActive();
+  return true;
 }
 
 export async function releaseKnownManagedReservation(
