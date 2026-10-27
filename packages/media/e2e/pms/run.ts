@@ -9,6 +9,7 @@ import { ManifestSchema } from "./manifest.ts";
 import { createPmsWire, readPmsBootstrap, until } from "./http.ts";
 import { assertLibraryWire } from "./assertions.ts";
 import { assertEditionEdits } from "./edition-edits.ts";
+import { pmsStartupErrors } from "./startup-errors.ts";
 
 async function stop(child: ChildProcess) {
   // Spawn failure has no process group to clean. A successful spawn owns exactly this group.
@@ -76,6 +77,8 @@ const child = spawn("/usr/lib/plexmediaserver/Plex Media Server", [], {
   stdio: ["ignore", log.fd, log.fd],
   env: {
     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    // The official image supplies a writable HOME; the sanitized child must retain that startup requirement.
+    HOME: config,
     LANG: "C.UTF-8",
     PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR: config,
     PLEX_MEDIA_SERVER_HOME: "/usr/lib/plexmediaserver",
@@ -154,6 +157,15 @@ try {
     child.pid === undefined ||
     child.exitCode !== null ||
     child.signalCode !== null;
+  if (stopped && childReaped && failures.length > 0) {
+    try {
+      report["startupErrors"] = await pmsStartupErrors(
+        path.join(config, "pms-startup.log"),
+      );
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+  }
   report["childReaped"] = childReaped;
   report["processExit"] = { code: child.exitCode, signal: child.signalCode };
   // Do not delete support/config while either the child or its owned process group may remain.
