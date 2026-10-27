@@ -41,7 +41,12 @@ export async function authorizedMovieSubmissionV4(
         tx,
         current,
         scope,
-        access,
+        {
+          access,
+          ...(context.movieManagement === undefined
+            ? {}
+            : { invocation: context.movieManagement }),
+        },
       );
       if (authorized === null || !(await context.gates.acquisition()))
         return false;

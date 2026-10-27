@@ -12,12 +12,12 @@ import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/
 import { findMoviePublicationReferenceV2 } from "#infrastructure/movie-editions/publication/store.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { MoviePublicationIntentRefV2 } from "#shared/movie-editions/publication-v2.ts";
-import type { MovieFilePlanV2 } from "#shared/movie-editions/file-plan-v2.ts";
+import type { MovieFilePlan } from "#shared/movie-editions/management/contracts.ts";
 
 /** All hashing/extraction and complete journal reads occur before the final PG transaction. */
 export async function prepareMoviePublicationContentV2(
   context: PublicationContext,
-  plan: MovieFilePlanV2,
+  plan: MovieFilePlan,
   existing: MoviePublicationIntentRefV2 | null,
   budget: PublicationAuthorityReadBudget,
 ): Promise<PublicationContext> {

@@ -23,10 +23,8 @@ import {
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import { MovieReleaseAssessmentSchema } from "#shared/movie-editions/release-assessment.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
-import {
-  prepareResolvedEvidence,
-  collectResolvedEvidence,
-} from "#migration/runtime-evidence.ts";
+import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
+import { prepareResolvedMovieEvidenceV4 } from "#migration/movie-evidence/prepare.ts";
 import { MediaError } from "#application/errors.ts";
 
 /** Reparse the actual retained source, never the old title interpretation or query's coverage. */
@@ -110,19 +108,23 @@ export async function prepareMovieAssessment(
   if (current.rules.resolved !== undefined) {
     attributes.resolvedEvidence = await collectResolvedEvidence(
       current.rules.resolved,
-      prepareResolvedEvidence(current.rules.resolved, {
-        id: release.id,
-        title: source.title,
-        identityConfirmed: attributes.identityConfidence === "exact",
-        sizeBytes: source.sizeBytes,
-        runtimeMinutes: current.runtimeMinutes,
-        originalLanguage: current.originalLanguage,
-        audioLanguages:
-          attributes.audioLanguages.length === 0
-            ? null
-            : [...attributes.audioLanguages],
-        specialEpisode: false,
-      }),
+      prepareResolvedMovieEvidenceV4(
+        current.rules.resolved,
+        {
+          id: release.id,
+          title: source.title,
+          identityConfirmed: attributes.identityConfidence === "exact",
+          sizeBytes: source.sizeBytes,
+          runtimeMinutes: current.runtimeMinutes,
+          originalLanguage: current.originalLanguage,
+          audioLanguages:
+            attributes.audioLanguages.length === 0
+              ? null
+              : [...attributes.audioLanguages],
+          specialEpisode: false,
+        },
+        cut,
+      ),
     );
   }
   return MovieReleaseAssessmentSchema.parse({

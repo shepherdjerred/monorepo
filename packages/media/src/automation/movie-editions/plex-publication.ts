@@ -49,7 +49,7 @@ export async function publishMoviePlexV4(
       (await networkMovieAccess(context, [input.scope.mediaId])) ?? {},
     );
     const prepared = await context.db.$transaction((tx) =>
-      captureMoviePlexExpectedV2(tx, input, access, budget),
+      captureMoviePlexExpectedV2(tx, input, access, { budget, execution }),
     );
     const freshness = plexBindingFreshness({
       observed: execution.observed,
@@ -100,6 +100,7 @@ export async function publishMoviePlexV4(
             expected: prepared.expected,
             verified,
             observed: execution.observed,
+            execution,
           },
           budget,
         );

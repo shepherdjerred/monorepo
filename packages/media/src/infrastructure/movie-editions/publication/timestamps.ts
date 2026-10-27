@@ -5,9 +5,9 @@ import type {
   MovieTransitionReferenceV2,
 } from "#shared/movie-editions/publication-v2.ts";
 import {
-  MoviePlexReceiptV2Schema,
-  type MoviePlexReceiptV2,
-} from "#shared/movie-editions/plex-v2.ts";
+  MoviePlexReceiptSchema,
+  type MoviePlexReceipt,
+} from "#shared/movie-editions/management/plex.ts";
 import { PlexMovieAssociationV2Schema } from "#shared/plex-binding/contract.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
@@ -40,10 +40,12 @@ export async function assertMoviePublicationTimesV2(
     throw new Error("Movie publication timestamp successor missing");
   const rows = await tx.operation.findMany({
     where: {
-      result: {
-        path: ["moviePlexReceiptV2", "receipt", "publication", "transitionId"],
-        equals: input.publication.transitionId,
-      },
+      OR: ["moviePlexReceiptV2", "moviePlexReceiptV3"].map((key) => ({
+        result: {
+          path: [key, "receipt", "publication", "transitionId"],
+          equals: input.publication.transitionId,
+        },
+      })),
     },
     orderBy: { id: "asc" },
     take: budget.take,
@@ -56,16 +58,28 @@ export async function assertMoviePublicationTimesV2(
   const row = rows[0];
   if (row === undefined)
     throw new Error("Movie Plex timestamp receipt disappeared");
-  const envelope = z
+  const candidates = z
     .object({
-      moviePlexReceiptV2: z.strictObject({
-        receipt: z.json(),
-        receiptHash: z.string(),
-      }),
+      moviePlexReceiptV2: z
+        .strictObject({
+          receipt: z.json(),
+          receiptHash: z.string(),
+        })
+        .optional(),
+      moviePlexReceiptV3: z
+        .strictObject({ receipt: z.json(), receiptHash: z.string() })
+        .optional(),
     })
-    .parse(row.result).moviePlexReceiptV2;
+    .parse(row.result);
+  const envelopes = [
+    candidates.moviePlexReceiptV2,
+    candidates.moviePlexReceiptV3,
+  ].filter((item) => item !== undefined);
+  const envelope = envelopes[0];
+  if (envelope === undefined || envelopes.length !== 1)
+    throw new Error("Movie timestamp requires one literal receipt identity");
   const receipt = parsePlexRecord(
-    MoviePlexReceiptV2Schema,
+    MoviePlexReceiptSchema,
     envelope.receipt,
     envelope.receiptHash,
   );
@@ -114,7 +128,7 @@ export async function assertMoviePublicationTimesV2(
 }
 
 function assertMovieTimestampPlexParent(
-  receipt: MoviePlexReceiptV2,
+  receipt: MoviePlexReceipt,
   operationId: string,
   input: MovieTimestampInput,
   published: MoviePublicationAssetV2,

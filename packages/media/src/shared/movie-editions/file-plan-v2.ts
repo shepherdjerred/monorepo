@@ -36,7 +36,17 @@ const MovieFilePlanV2BaseSchema = z.strictObject({
   entries: z.tuple([MovieFilePlanEntryV2Schema]),
 });
 
-function scopeMatches(plan: z.infer<typeof MovieFilePlanV2BaseSchema>) {
+type PlanEvidence = Omit<
+  z.infer<typeof MovieFilePlanV2BaseSchema>,
+  "birth" | "schemaVersion"
+> & {
+  birth: Pick<
+    z.infer<typeof MovieEditionBirthAuthoritySchema>,
+    "mediaId" | "rootMediaId" | "edition" | "targetGenerationAtCapture"
+  >;
+};
+
+export function moviePlanScopeMatches(plan: PlanEvidence) {
   const entry = plan.entries[0];
   const identity = entry.identityEvidence;
   return (
@@ -55,7 +65,7 @@ function scopeMatches(plan: z.infer<typeof MovieFilePlanV2BaseSchema>) {
   );
 }
 
-function memberMatches(plan: z.infer<typeof MovieFilePlanV2BaseSchema>) {
+export function moviePlanMemberMatches(plan: PlanEvidence) {
   const entry = plan.entries[0];
   const identity = entry.identityEvidence;
   const { candidate, member } = entry.editionEvidence;
@@ -74,12 +84,12 @@ function memberMatches(plan: z.infer<typeof MovieFilePlanV2BaseSchema>) {
 
 export const MovieFilePlanV2Schema = MovieFilePlanV2BaseSchema.superRefine(
   (plan, ctx) => {
-    if (!scopeMatches(plan))
+    if (!moviePlanScopeMatches(plan))
       ctx.addIssue({
         code: "custom",
         message: "Movie plan lost its exact birth scope or generation",
       });
-    if (!memberMatches(plan))
+    if (!moviePlanMemberMatches(plan))
       ctx.addIssue({
         code: "custom",
         message: "Movie cut evidence belongs to a different release or member",

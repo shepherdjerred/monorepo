@@ -8,6 +8,7 @@ import type { TmdbClient } from "#integrations/tmdb.ts";
 import type { WatchExecution } from "./plex-events/execution.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
 import type {
   ReceiptQuery,
   ReceiptObservation,
@@ -18,6 +19,7 @@ export type MediaAutomationContext = {
   watchExecution: () => WatchExecution;
   plexAccess: (sectionType: "movie" | "show") => Promise<PlexAccess>;
   plexBindingExecution: () => PlexBindingExecution;
+  movieManagement?: MovieManagementInvocation;
   serverMachineId?: string;
   tmdb: TmdbClient;
   cipher: CredentialCipher;

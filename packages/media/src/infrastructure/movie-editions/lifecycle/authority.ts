@@ -1,4 +1,4 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { readMovieChoice } from "#infrastructure/movie-editions/authority.ts";
@@ -9,12 +9,27 @@ import {
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
+import {
+  MovieBirthAuthoritySchema,
+  type LibraryMovieManagementAuthority,
+} from "#shared/movie-editions/management/contracts.ts";
+import {
+  readLibraryMovieManagement,
+  type MovieManagementInvocation,
+} from "#infrastructure/movie-editions/management/authority.ts";
 
 type Input = {
   scope: MovieEditionScope;
   sponsorRequestId: string;
   epoch: number;
   access: MovieChoiceAccess;
+};
+type RevalidationInput = {
+  attemptId: string;
+  scope: MovieEditionScope;
+  epoch: number;
+  access: MovieChoiceAccess;
+  invocation?: MovieManagementInvocation;
 };
 
 /** Caller holds canonical/target/request/runtime locks before acquiring choice identity locks. */
@@ -66,20 +81,15 @@ export async function captureMovieChoiceV4(
 /** Exact immutable birth, then the same current semantic choice; another edition cannot substitute. */
 export async function assertMovieChoiceV4(
   tx: Prisma.TransactionClient,
-  input: {
-    attemptId: string;
-    scope: MovieEditionScope;
-    epoch: number;
-    access: MovieChoiceAccess;
-  },
+  input: RevalidationInput,
 ) {
   const scope = MovieEditionScopeSchema.parse(input.scope);
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
-  const proof = MovieEditionBirthAuthoritySchema.parse(
-    attempt.movieEditionAuthority,
-  );
+  const proof = MovieBirthAuthoritySchema.parse(attempt.movieEditionAuthority);
+  if (proof.schemaVersion === 2)
+    return assertManagedMovieChoice(tx, { ...input, scope }, attempt, proof);
   if (
     attempt.movieEditionChoiceId !== proof.choiceId ||
     attempt.movieEditionChoiceRevision !== proof.choiceRevision ||
@@ -115,4 +125,38 @@ export async function assertMovieChoiceV4(
     throw new MovieChoiceProtection("movie_edition_choice_changed");
   current.freshness.assertActive();
   return current.freshness;
+}
+
+async function assertManagedMovieChoice(
+  tx: Prisma.TransactionClient,
+  input: RevalidationInput,
+  attempt: AcquisitionAttempt,
+  proof: LibraryMovieManagementAuthority,
+) {
+  const { scope } = input;
+  if (input.invocation === undefined)
+    throw new Error(
+      "Management revalidation requires the original invocation capability and budget",
+    );
+  if (
+    attempt.sponsorRequestId !== null ||
+    attempt.movieEditionChoiceId !== null ||
+    attempt.movieEditionChoiceRevision !== null ||
+    attempt.recoveryEpoch !== proof.birthEpoch ||
+    attempt.edition !== scope.edition ||
+    attempt.mediaIds.length !== 1 ||
+    attempt.mediaIds[0] !== scope.mediaId ||
+    proof.rootMediaId !== scope.rootMediaId ||
+    proof.mediaId !== scope.mediaId ||
+    proof.edition !== scope.edition
+  )
+    throw new Error("Managed movie attempt lost its exact immutable birth");
+  const management = await readLibraryMovieManagement(
+    tx,
+    { scope, epoch: input.epoch, access: input.access, expected: proof },
+    input.invocation,
+  );
+  if (management === null)
+    throw new Error("Recorded management approval disappeared");
+  return management.freshness;
 }

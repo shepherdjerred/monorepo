@@ -7,6 +7,7 @@ import { runMediaTool } from "#filesystem/media-tools.ts";
 export async function movieVideoFixture(
   width = 1920,
   englishTracks = [{ forced: false, hearingImpaired: false }],
+  options: { bitrateKbps?: number } = {},
 ) {
   const directory = await realpath(
     await mkdtemp(path.join(tmpdir(), "media-movie-video-")),
@@ -58,6 +59,20 @@ export async function movieVideoFixture(
         "1",
         "-preset",
         "ultrafast",
+        ...(options.bitrateKbps === undefined
+          ? []
+          : [
+              "-b:v",
+              `${String(options.bitrateKbps)}k`,
+              "-minrate",
+              `${String(options.bitrateKbps)}k`,
+              "-maxrate",
+              `${String(options.bitrateKbps)}k`,
+              "-bufsize",
+              `${String(options.bitrateKbps)}k`,
+              "-x264-params",
+              "nal-hrd=cbr:force-cfr=1",
+            ]),
         "-c:a",
         "aac",
         "-c:s",

@@ -1,4 +1,9 @@
 import { z } from "zod";
+import type {
+  AcquisitionAttempt,
+  AcquisitionReservation,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
@@ -18,18 +23,23 @@ import {
   MovieOperationV4Schema,
   type MovieOperationV4,
 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisition-v2.ts";
 import type { MovieReleaseAssessmentRef } from "#shared/movie-editions/release-assessment.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
-import { currentMovieReleaseV4, requireMovieSponsorV4 } from "./candidates.ts";
+import { currentMovieReleaseV4 } from "./candidates.ts";
+import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
+import { movieManagementContext } from "./management-context.ts";
+import { MovieAcquisitionIdentitySchema } from "#shared/movie-editions/management/contracts.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 
 /** Reserve one edition under the same canonical/request/runtime locks used by its command. */
 export async function reserveMovieCandidateV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   raw: MovieOperationV4,
   selected: { releaseId: string; assessment: MovieReleaseAssessmentRef },
   epoch: number,
 ) {
+  const context = movieManagementContext(initial);
   const input = MovieOperationV4Schema.parse(raw);
   const access = requireMovieChoiceAccess(
     (await networkMovieAccess(context, [input.mediaId])) ?? {},
@@ -78,34 +88,15 @@ export async function reserveMovieCandidateV4(
       },
       include: { attempt: true },
     });
-    if (existing !== null) {
-      if (
-        existing.attempt.operationId !== input.operationId ||
-        existing.attempt.releaseId !== selected.releaseId
-      )
-        return null;
-      const identity = MovieAcquisitionIdentityV2Schema.parse(
-        existing.attempt.identityEvidence,
-      );
-      if (
-        identityHash(identity.assessment) !== identityHash(selected.assessment)
-      )
-        return null;
-      await assertCurrentMovieAssessment(
-        tx,
-        identity.assessment,
-        input.scope,
-        selected.releaseId,
-      );
-      const guard = await assertMovieChoiceV4(tx, {
-        attemptId: existing.attemptId,
-        scope: input.scope,
+    if (existing !== null)
+      return reuseMovieReservation(tx, {
+        existing,
+        input,
+        selected,
         epoch,
         access,
+        invocation: context.movieManagement,
       });
-      guard.assertActive();
-      return existing.attemptId;
-    }
     const assessed = await assertCurrentMovieAssessment(
       tx,
       selected.assessment,
@@ -132,16 +123,27 @@ export async function reserveMovieCandidateV4(
       }).upgrade
     )
       return null;
-    const sponsor = await requireMovieSponsorV4(tx, input.scope, access);
-    const birth = await captureMovieChoiceV4(tx, {
-      scope: input.scope,
-      sponsorRequestId: sponsor.request.id,
-      epoch,
+    const authority = await requireMovieAcquisitionAuthorityV4(
+      tx,
+      input.scope,
       access,
-    });
+      context.movieManagement,
+    );
+    const sponsorRequestId =
+      authority.kind === "request" ? authority.sponsor.request.id : null;
+    const birth =
+      authority.kind === "library"
+        ? authority
+        : await captureMovieChoiceV4(tx, {
+            scope: input.scope,
+            sponsorRequestId: authority.sponsor.request.id,
+            epoch,
+            access,
+          });
     const identity = await movieAcquisitionIdentityV4(tx, {
       operationId: input.operationId,
-      sponsorRequestId: sponsor.request.id,
+      sponsorRequestId,
+      ...(authority.kind === "library" ? { management: authority.proof } : {}),
       releaseId: selected.releaseId,
       epoch,
       scope: input.scope,
@@ -152,15 +154,17 @@ export async function reserveMovieCandidateV4(
       data: {
         edition: input.scope.edition,
         releaseId: selected.releaseId,
-        sponsorRequestId: sponsor.request.id,
+        sponsorRequestId,
         mediaIds: [input.mediaId],
         generations: { [input.mediaId]: target.generation },
         operationId: input.operationId,
         coordinatorOperationId: input.operationId,
         recoveryEpoch: epoch,
         state: "reserved",
-        movieEditionChoiceId: birth.proof.choiceId,
-        movieEditionChoiceRevision: birth.proof.choiceRevision,
+        movieEditionChoiceId:
+          birth.proof.schemaVersion === 1 ? birth.proof.choiceId : null,
+        movieEditionChoiceRevision:
+          birth.proof.schemaVersion === 1 ? birth.proof.choiceRevision : null,
         movieEditionAuthority: birth.proof,
         identityEvidence: z.record(z.string(), z.json()).parse(identity),
         failure: { profileId: profile.id, profileVersion: profile.version },
@@ -194,8 +198,47 @@ export async function reserveMovieCandidateV4(
           : {}),
       },
     });
-    sponsor.freshness.assertActive();
+    authority.freshness.assertActive();
     birth.freshness.assertActive();
     return attempt.id;
   });
+}
+
+async function reuseMovieReservation(
+  tx: Prisma.TransactionClient,
+  state: {
+    existing: AcquisitionReservation & { attempt: AcquisitionAttempt };
+    input: MovieOperationV4;
+    selected: { releaseId: string; assessment: MovieReleaseAssessmentRef };
+    epoch: number;
+    access: MovieChoiceAccess;
+    invocation: MovieManagementInvocation;
+  },
+) {
+  const { existing, input, selected, epoch, access, invocation } = state;
+  if (
+    existing.attempt.operationId !== input.operationId ||
+    existing.attempt.releaseId !== selected.releaseId
+  )
+    return null;
+  const identity = MovieAcquisitionIdentitySchema.parse(
+    existing.attempt.identityEvidence,
+  );
+  if (identityHash(identity.assessment) !== identityHash(selected.assessment))
+    return null;
+  await assertCurrentMovieAssessment(
+    tx,
+    identity.assessment,
+    input.scope,
+    selected.releaseId,
+  );
+  const guard = await assertMovieChoiceV4(tx, {
+    attemptId: existing.attemptId,
+    scope: input.scope,
+    epoch,
+    access,
+    invocation,
+  });
+  guard.assertActive();
+  return existing.attemptId;
 }

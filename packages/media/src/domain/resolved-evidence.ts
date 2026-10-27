@@ -9,7 +9,12 @@ export const ResolvedEvidenceSchema = z.object({
   schemaVersion: z.literal(1),
   source: z.enum(["radarr", "sonarr"]),
   sourceVersion: z.string(),
-  parserVersion: z.enum(["scene-v1", "scene-anime-v2", "handoff-v1"]),
+  parserVersion: z.enum([
+    "scene-v1",
+    "scene-anime-v2",
+    "scene-movie-v4",
+    "handoff-v1",
+  ]),
   release: ResolvedReleaseSchema,
   protectedReasons: z.array(z.string()),
   regex: z.object({

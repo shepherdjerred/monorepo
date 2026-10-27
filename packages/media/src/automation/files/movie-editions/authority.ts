@@ -8,11 +8,11 @@ import { movieAttemptEffectAuthorityV4 } from "#infrastructure/movie-editions/li
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { assertMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import { MovieEditionBirthAuthoritySchema } from "#shared/movie-editions/authority.ts";
 import {
-  MovieFilePlanV2Schema,
-  type MovieFilePlanV2,
-} from "#shared/movie-editions/file-plan-v2.ts";
+  MovieFilePlanSchema,
+  MovieBirthAuthoritySchema,
+  type MovieFilePlan,
+} from "#shared/movie-editions/management/contracts.ts";
 import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
 import {
   movieEditionDefinition,
@@ -29,6 +29,7 @@ import { FileGuardError } from "#automation/files/types.ts";
 import type { PublicationContext } from "#automation/publication-proof/invocation.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { ownedSubtitleSidecars } from "#automation/files/subtitle-lifecycle/ownership.ts";
+import { movieCurrentQuality } from "#automation/movie-editions/current-quality.ts";
 
 export const MovieTorrentObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -89,7 +90,12 @@ export async function authorizeMovieFilesV4(
     tx,
     attempt,
     input.scope,
-    access,
+    {
+      access,
+      ...(context.movieManagement === undefined
+        ? {}
+        : { invocation: context.movieManagement }),
+    },
   );
   if (authorized === null)
     throw new FileGuardError("movie_acquisition_obsolete");
@@ -170,11 +176,10 @@ export async function assertMovieMeasuredUpgradeV4(
     authority.attempt.recoveryEpoch,
   );
   if (previous !== null) {
-    const current = PublicReleaseAttributesSchema.extend({
-      id: z.string(),
-      providerId: z.string(),
-      title: z.string(),
-    }).parse(previous.properties);
+    const current = movieCurrentQuality(
+      previous.properties,
+      authority.policyMetadata,
+    );
     const decision = chooseUpgrade({
       candidate: measured,
       current,
@@ -192,11 +197,11 @@ export async function assertMovieFilePlanV4(
   tx: Prisma.TransactionClient,
   context: PublicationContext,
   authority: MovieFileAuthorityV4,
-  raw: MovieFilePlanV2,
+  raw: MovieFilePlan,
 ) {
-  const plan = MovieFilePlanV2Schema.parse(raw);
+  const plan = MovieFilePlanSchema.parse(raw);
   const entry = plan.entries[0];
-  const birth = MovieEditionBirthAuthoritySchema.parse(
+  const birth = MovieBirthAuthoritySchema.parse(
     authority.attempt.movieEditionAuthority,
   );
   if (
@@ -243,7 +248,7 @@ export async function assertMovieFilePlanV4(
 
 function assertMovieSidecarManifest(
   context: PublicationContext,
-  plan: MovieFilePlanV2,
+  plan: MovieFilePlan,
   previous: Awaited<ReturnType<typeof moviePredecessorV4>>,
 ) {
   const entry = plan.entries[0];
@@ -270,7 +275,7 @@ function assertMovieSidecarManifest(
 async function assertMovieLibraryPathV4(
   tx: Prisma.TransactionClient,
   context: PublicationContext,
-  plan: MovieFilePlanV2,
+  plan: MovieFilePlan,
   previous: Awaited<ReturnType<typeof moviePredecessorV4>>,
 ) {
   const entry = plan.entries[0];
@@ -297,7 +302,7 @@ async function assertMoviePlanMemberV4(
   tx: Prisma.TransactionClient,
   context: PublicationContext,
   authority: MovieFileAuthorityV4,
-  plan: MovieFilePlanV2,
+  plan: MovieFilePlan,
 ) {
   const entry = plan.entries[0];
   assertFileIdentity(authority.identity, entry, authority.observation.files);

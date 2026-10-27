@@ -9,7 +9,7 @@ import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/
 import { findMoviePublicationReferenceV2 } from "#infrastructure/movie-editions/publication/store.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { MoviePublicationIntentV2Schema } from "#shared/movie-editions/publication-v2.ts";
-import type { MovieFilePlanV2 } from "#shared/movie-editions/file-plan-v2.ts";
+import type { MovieFilePlan } from "#shared/movie-editions/management/contracts.ts";
 import {
   nativeAttempt,
   nativeJson,
@@ -26,7 +26,7 @@ export async function captureMoviePublicationV2(
   input: {
     context: PublicationContext;
     attempt: AcquisitionAttempt;
-    plan: MovieFilePlanV2;
+    plan: MovieFilePlan;
     transitionId: string;
     rawFilePlanHash: string;
   },

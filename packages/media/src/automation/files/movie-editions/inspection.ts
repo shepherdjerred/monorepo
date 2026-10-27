@@ -10,7 +10,8 @@ import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
+import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { FileGuardError } from "#automation/files/types.ts";
@@ -25,7 +26,13 @@ export async function inspectAndStageMovieV4(
   const execution = requirePublicationExecution(
     initial.publicationExecution?.(),
   );
-  const context = publicationInvocation(initial, execution);
+  const context = {
+    ...publicationInvocation(initial, execution),
+    movieManagement: {
+      execution,
+      budget: new PublicationAuthorityReadBudget(),
+    },
+  };
   const input = MovieAttemptOperationV4Schema.parse(raw);
   const access = requireMovieChoiceAccess(
     (await fileMovieAccess(context, [input.scope.mediaId])) ?? {},
@@ -43,11 +50,11 @@ export async function inspectAndStageMovieV4(
   const prepared =
     authority.attempt.filePlan === null
       ? await prepareMovieFilePlanV4(context, input, authority, reauthorize)
-      : MovieFilePlanV2Schema.parse(authority.attempt.filePlan);
+      : MovieFilePlanSchema.parse(authority.attempt.filePlan);
   const plan = await context.db.$transaction(async (tx) => {
     const current = await authorizeMovieFilesV4(tx, context, input, access);
     if (current.attempt.filePlan !== null) {
-      const retained = MovieFilePlanV2Schema.parse(current.attempt.filePlan);
+      const retained = MovieFilePlanSchema.parse(current.attempt.filePlan);
       if (
         authority.attempt.filePlan !== null &&
         snapshotHash(nativeJson(current.attempt.filePlan)) !==

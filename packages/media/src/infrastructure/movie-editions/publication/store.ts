@@ -9,7 +9,7 @@ import {
   type MoviePublicationAssetV2,
   MoviePublicationReferenceV2Schema,
 } from "#shared/movie-editions/publication-v2.ts";
-import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
+import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   nativeJson,
@@ -155,7 +155,7 @@ export async function createMoviePublicationV2(
     where: { id: intent.attemptId },
   });
   budget.consume(1);
-  const plan = MovieFilePlanV2Schema.parse(attempt.filePlan);
+  const plan = MovieFilePlanSchema.parse(attempt.filePlan);
   if (
     ["imported", "completed"].includes(attempt.state) ||
     hash(attempt.filePlan) !== intent.filePlanHash ||

@@ -2,8 +2,10 @@ import path from "node:path";
 import { z } from "zod";
 import type { PublicationContext } from "#automation/publication-proof/invocation.ts";
 import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
-import { MovieEditionBirthAuthoritySchema } from "#shared/movie-editions/authority.ts";
+import {
+  MovieFilePlanSchema,
+  MovieBirthAuthoritySchema,
+} from "#shared/movie-editions/management/contracts.ts";
 import { movieEditionDefinition } from "#shared/movie-editions/registry.ts";
 import { fileIdentityEvidence } from "#automation/files/acquisition-identity/evidence.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
@@ -20,10 +22,8 @@ import { ownedSubtitleSidecars } from "#automation/files/subtitle-lifecycle/owne
 import { FileGuardError } from "#automation/files/types.ts";
 import { assertMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import {
-  collectResolvedEvidence,
-  prepareResolvedEvidence,
-} from "#migration/runtime-evidence.ts";
+import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
+import { prepareResolvedMovieEvidenceV4 } from "#migration/movie-evidence/prepare.ts";
 import { measureQuality } from "#automation/files/resolved-measurement.ts";
 import type { MovieFileAuthorityV4 } from "./authority.ts";
 import { assertMovieMeasuredUpgradeV4 } from "./authority.ts";
@@ -85,18 +85,22 @@ export async function prepareMovieFilePlanV4(
   };
   const profile = authority.profile.resolved;
   if (profile !== undefined) {
-    const prepared = prepareResolvedEvidence(profile, {
-      id: measured.id,
-      title: measured.title,
-      filename: path.basename(member.name),
-      identityConfirmed: measured.identityConfidence === "exact",
-      sizeBytes: member.size,
-      runtimeMinutes: authority.policyMetadata.runtimeMinutes,
-      originalLanguage: authority.policyMetadata.originalLanguage,
-      audioLanguages:
-        measured.audioLanguages.length === 0 ? null : measured.audioLanguages,
-      specialEpisode: false,
-    });
+    const prepared = prepareResolvedMovieEvidenceV4(
+      profile,
+      {
+        id: measured.id,
+        title: measured.title,
+        filename: path.basename(member.name),
+        identityConfirmed: measured.identityConfidence === "exact",
+        sizeBytes: member.size,
+        runtimeMinutes: authority.policyMetadata.runtimeMinutes,
+        originalLanguage: authority.policyMetadata.originalLanguage,
+        audioLanguages:
+          measured.audioLanguages.length === 0 ? null : measured.audioLanguages,
+        specialEpisode: false,
+      },
+      cut.candidate,
+    );
     measureQuality(profile, prepared, measured.quality);
     measured.resolvedEvidence = await collectResolvedEvidence(
       profile,
@@ -158,11 +162,11 @@ export async function prepareMovieFilePlanV4(
   });
   authority.freshness.assertActive();
   context.execution.assertActive();
-  return MovieFilePlanV2Schema.parse({
-    schemaVersion: 2,
+  return MovieFilePlanSchema.parse({
+    schemaVersion: authority.identity.schemaVersion === 2 ? 2 : 3,
     attemptId: input.attemptId,
     scope: input.scope,
-    birth: MovieEditionBirthAuthoritySchema.parse(
+    birth: MovieBirthAuthoritySchema.parse(
       authority.attempt.movieEditionAuthority,
     ),
     entries: [

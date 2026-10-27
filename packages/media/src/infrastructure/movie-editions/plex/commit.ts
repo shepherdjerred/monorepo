@@ -4,10 +4,11 @@ import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
-  MoviePlexReceiptV2Schema,
   MovieServingPlexV2Schema,
   type VerifiedMovieServingPlexV2,
 } from "#shared/movie-editions/plex-v2.ts";
+import { MoviePlexReceiptSchema } from "#shared/movie-editions/management/plex.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { PlexBindingSnapshotSchema } from "#shared/plex-binding/contract.ts";
 import type { PlexBindingExpected } from "#shared/plex-binding/expected.ts";
 import {
@@ -15,6 +16,7 @@ import {
   plexBindingFreshness,
 } from "#infrastructure/plex-binding/freshness.ts";
 import { replacePlexClaims } from "#infrastructure/plex-binding/claims.ts";
+import { writePlexBindingPointers } from "#infrastructure/plex-binding/commit.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { captureMoviePlexExpectedV2 } from "./expected.ts";
@@ -33,6 +35,7 @@ export async function commitMoviePlexV2(
     expected: PlexBindingExpected;
     verified: VerifiedMovieServingPlexV2;
     observed: { wall: number; monotonic: number };
+    execution?: PlexBindingExecution;
   },
   budget: PublicationAuthorityReadBudget,
 ) {
@@ -40,7 +43,10 @@ export async function commitMoviePlexV2(
     tx,
     input.input,
     input.access,
-    budget,
+    {
+      budget,
+      ...(input.execution === undefined ? {} : { execution: input.execution }),
+    },
   );
   const { freshness, ...body } = input.verified;
   const observation = MovieServingPlexV2Schema.parse(body);
@@ -116,26 +122,16 @@ export async function commitMoviePlexV2(
     },
     guarded,
   );
-  const times = {
-    verifiedStartedAt: new Date(observation.verification.startedAt),
-    verifiedCompletedAt: new Date(observation.verification.completedAt),
-  };
-  await tx.plexBindingCurrent.upsert({
-    where: { mediaId_edition: association.scope },
-    create: {
-      ...association.scope,
-      evidenceId: evidence.id,
-      associationHash: hash,
-      revision: binding.revision,
-      ...times,
+  await writePlexBindingPointers(
+    tx,
+    {
+      expected: current.expected,
+      bindings: [binding],
+      startedAt: observation.verification.startedAt,
+      completedAt: observation.verification.completedAt,
     },
-    update: {
-      evidenceId: evidence.id,
-      associationHash: hash,
-      revision: binding.revision,
-      ...times,
-    },
-  });
+    guarded,
+  );
   if (prior.evidence?.associationHash !== hash) {
     await tx.plexWatchProjection.deleteMany({ where: association.scope });
     await tx.watchState.deleteMany({ where: association.scope });
@@ -173,8 +169,8 @@ export async function commitMoviePlexV2(
     },
   });
   const publication = current.publication;
-  const receipt = MoviePlexReceiptV2Schema.parse({
-    schemaVersion: 2,
+  const receipt = MoviePlexReceiptSchema.parse({
+    schemaVersion: current.attempt.sponsorRequestId === null ? 3 : 2,
     input: input.input,
     command: moviePlexCommandParentV2(current.command),
     attempt: moviePlexAttemptParentV2(current.attempt),
@@ -193,8 +189,10 @@ export async function commitMoviePlexV2(
     receiptHash: identityHash(receipt),
     receipt: z.json().parse(receipt),
   };
+  const marker =
+    receipt.schemaVersion === 2 ? "moviePlexReceiptV2" : "moviePlexReceiptV3";
   const updated =
-    await tx.$executeRaw`UPDATE "Operation" SET result=COALESCE(result,'{}'::jsonb) || jsonb_build_object('moviePlexReceiptV2',${JSON.stringify(envelope)}::jsonb) WHERE id=${input.input.operationId} AND NOT (COALESCE(result,'{}'::jsonb) ? 'moviePlexReceiptV2')`;
+    await tx.$executeRaw`UPDATE "Operation" SET result=COALESCE(result,'{}'::jsonb) || jsonb_build_object(${marker}::text,${JSON.stringify(envelope)}::jsonb) WHERE id=${input.input.operationId} AND NOT (COALESCE(result,'{}'::jsonb) ? 'moviePlexReceiptV2') AND NOT (COALESCE(result,'{}'::jsonb) ? 'moviePlexReceiptV3')`;
   if (updated !== 1)
     throw new Error("Movie Plex completion was already recorded");
   guarded.assertActive();

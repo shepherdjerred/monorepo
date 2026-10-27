@@ -18,16 +18,18 @@ import {
 import { FileGuardError } from "#automation/files/types.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import type { MovieSubtitleOperationV4 } from "#shared/movie-editions/subtitles-v4.ts";
+import { movieManagementContext } from "./management-context.ts";
 
 /** Credentials may be cached; every dispatch supplies its original invocation capability. */
 export function createMovieNetworkFacetV4(
   context: MediaAutomationContext,
   sources: Readonly<Record<string, SubtitleSourceLoader>> = defaultSources,
 ) {
-  const invocation = (execution: PlexBindingExecution) => ({
-    ...context,
-    plexBindingExecution: () => execution,
-  });
+  const invocation = (execution: PlexBindingExecution) =>
+    movieManagementContext({
+      ...context,
+      plexBindingExecution: () => execution,
+    });
   return {
     async findMovieSubtitlesV4(
       input: MovieSubtitleOperationV4,

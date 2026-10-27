@@ -14,12 +14,14 @@ import { searchMovieCandidatesV4 } from "./candidates.ts";
 import { assessRetainedMovieRelease } from "./release-assessment.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { validMovieAttemptV4 } from "./submission.ts";
+import { movieManagementContext } from "./management-context.ts";
 
 /** One coordinator retains its own scope and attempt; another cut cannot sponsor a resume. */
 export async function reconcileMovieIntentV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   raw: MovieOperationV4,
 ): ReturnType<MovieNetworkActivitiesV4["reconcileMovieIntentV4"]> {
+  const context = movieManagementContext(initial);
   const input = MovieOperationV4Schema.parse(raw);
   const execution = context.plexBindingExecution();
   execution.assertActive();

@@ -174,6 +174,49 @@ describe("resolved source policy", () => {
       }).reason,
     ).toBe("revision_downgrade");
   });
+});
+
+it("allows an explicit higher quality below cutoff without fabricating the imported file's revision", () => {
+  const higher = {
+    ...profile,
+    profile: { ...profile.profile, cutoff: bluray.id },
+  };
+  const imported = { ...current, revision: null };
+  const candidate = { ...release, qualityId: bluray.id, revision: null };
+  expect(
+    chooseResolvedUpgrade({
+      profile: higher,
+      candidate,
+      current: imported,
+      matcher,
+    }),
+  ).toMatchObject({ upgrade: true, reason: "quality_upgrade" });
+  expect(imported.revision).toBeNull();
+  expect(
+    chooseResolvedUpgrade({
+      profile: higher,
+      candidate: { ...candidate, qualityId: web.id },
+      current: imported,
+      matcher,
+    }),
+  ).toMatchObject({ upgrade: false, reason: "revision_unknown" });
+  expect(
+    chooseResolvedUpgrade({
+      profile: {
+        ...higher,
+        profile: { ...higher.profile, upgradeAllowed: false },
+      },
+      candidate,
+      current: imported,
+      matcher,
+    }).upgrade,
+  ).toBe(false);
+  expect(
+    chooseResolvedUpgrade({ profile, candidate, current: imported, matcher })
+      .upgrade,
+  ).toBe(false);
+});
+describe("resolved format and language evidence", () => {
   it("requires known original language and actual audio evidence", () => {
     const original: ResolvedProfile = {
       ...profile,

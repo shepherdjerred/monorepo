@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
@@ -23,13 +22,15 @@ import { evaluateRelease, chooseUpgrade } from "#domain/quality.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { MediaError } from "#application/errors.ts";
-import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import type { MovieReleaseAssessmentRef } from "#shared/movie-editions/release-assessment.ts";
 import { assessRetainedMovieRelease } from "./release-assessment.ts";
+import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
+import { movieManagementContext } from "./management-context.ts";
+import { movieCurrentQuality } from "./current-quality.ts";
 
 export type MovieCandidateV4 = {
   releaseId: string;
@@ -54,11 +55,11 @@ export async function currentMovieReleaseV4(
     coverage.asset.edition !== scope.edition
   )
     throw new Error("Movie quality predecessor has another edition scope");
-  return PublicReleaseAttributesSchema.extend({
-    id: z.string(),
-    providerId: z.string(),
-    title: z.string(),
-  }).parse(coverage.asset.properties);
+  const metadata = await tx.mediaItem.findUniqueOrThrow({
+    where: { id: scope.mediaId },
+    select: { runtimeMinutes: true, originalLanguage: true },
+  });
+  return movieCurrentQuality(coverage.asset.properties, metadata);
 }
 
 export async function requireMovieSponsorV4(
@@ -234,14 +235,20 @@ async function assessProviderResults(
 }
 
 export async function searchMovieCandidatesV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   input: MovieEditionScope,
 ) {
+  const context = movieManagementContext(initial);
   const scope = MovieEditionScopeSchema.parse(input);
   const access = requireMovieChoiceAccess(
     (await networkMovieAccess(context, [scope.mediaId])) ?? {},
   );
-  await requireMovieSponsorV4(context.db, scope, access);
+  await requireMovieAcquisitionAuthorityV4(
+    context.db,
+    scope,
+    access,
+    context.movieManagement,
+  );
   const target = await movieAssessmentContext(context.db, scope);
   const providers = await context.db.mediaProvider.findMany({
     where: { enabled: true, id: { in: ProviderIdSchema.options } },
@@ -253,10 +260,11 @@ export async function searchMovieCandidatesV4(
       const sources = await context.providers.withProvider(
         provider.id,
         async (client) => {
-          const sponsor = await requireMovieSponsorV4(
+          const sponsor = await requireMovieAcquisitionAuthorityV4(
             context.db,
             scope,
             access,
+            context.movieManagement,
           );
           sponsor.freshness.assertActive();
           return client.search({

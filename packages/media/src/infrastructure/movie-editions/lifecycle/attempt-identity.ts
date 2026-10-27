@@ -1,6 +1,10 @@
 import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
-import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisition-v2.ts";
+import {
+  MovieAcquisitionIdentitySchema,
+  type MovieAcquisitionIdentity,
+} from "#shared/movie-editions/management/contracts.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,
@@ -27,7 +31,7 @@ export async function readMovieAttemptIdentityV4(
   input: MovieEditionScope,
 ) {
   const scope = MovieEditionScopeSchema.parse(input);
-  const identity = MovieAcquisitionIdentityV2Schema.parse(
+  const identity = MovieAcquisitionIdentitySchema.parse(
     attempt.identityEvidence,
   );
   if (
@@ -37,7 +41,8 @@ export async function readMovieAttemptIdentityV4(
     attempt.mediaIds[0] !== scope.mediaId ||
     identity.birthEpoch !== attempt.recoveryEpoch ||
     identity.source.releaseId !== attempt.releaseId ||
-    identity.sponsorRequestId !== attempt.sponsorRequestId
+    (identity.schemaVersion === 2 ? identity.sponsorRequestId : null) !==
+      attempt.sponsorRequestId
   )
     throw new Error(
       "Movie v4 acquisition identity does not match its immutable attempt scope",
@@ -55,18 +60,7 @@ export async function readMovieAttemptIdentityV4(
     identityHash(assessed.value.canonical) !== identityHash(identity.canonical)
   )
     throw new Error("Movie v4 acquisition assessment binding is corrupt");
-  const sponsor = await readMovieAttemptSponsor(tx, {
-    attemptId: attempt.id,
-    expectedScope: scope,
-    expectedRequestId: identity.sponsorRequestId,
-  });
-  if (
-    sponsor === null ||
-    identityHash(sponsor) !== identityHash(identity.sponsorAuthority)
-  )
-    throw new Error(
-      "Movie v4 birth sponsor differs from canonical acquisition identity",
-    );
+  await assertBirthIdentity(tx, attempt, identity);
   await tx.$queryRaw`SELECT id FROM "ReleaseCandidate" WHERE id = ${attempt.releaseId} FOR SHARE`;
   const release = await tx.releaseCandidate.findUniqueOrThrow({
     where: { id: attempt.releaseId },
@@ -84,7 +78,7 @@ export async function readMovieAttemptIdentityV4(
       409,
     );
   const hash = identityHash({
-    schemaVersion: 2,
+    schemaVersion: identity.schemaVersion,
     scope,
     assessment: assessed.ref,
     canonical: identity.canonical,
@@ -100,11 +94,19 @@ export async function assertMovieAttemptIdentityV4(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
   scope: MovieEditionScope,
-  access: MovieChoiceAccess,
+  authority: {
+    access: MovieChoiceAccess;
+    invocation?: MovieManagementInvocation;
+  },
 ) {
+  const { access, invocation } = authority;
   const captured = await readMovieAttemptIdentityV4(tx, attempt, scope);
   const identity = captured.identity;
-  if (identity.sponsorAuthority.serverMachineId !== access.serverMachineId)
+  if (
+    (identity.schemaVersion === 2
+      ? identity.sponsorAuthority.serverMachineId
+      : identity.management.serverMachineId) !== access.serverMachineId
+  )
     throw new MediaError(
       "acquisition_server_changed",
       "Movie acquisition belongs to another Plex server",
@@ -115,16 +117,18 @@ export async function assertMovieAttemptIdentityV4(
     scope,
     epoch: attempt.recoveryEpoch,
     access,
+    ...(invocation === undefined ? {} : { invocation }),
   });
-  await assertSponsorAuthority(tx, {
-    authority: identity.sponsorAuthority,
-    sponsorRequestId: attempt.sponsorRequestId,
-    operationId: attempt.operationId,
-    mediaIds: attempt.mediaIds,
-    movieAccess: access,
-    movieScope: scope,
-    recordedAttemptId: attempt.id,
-  });
+  if (identity.schemaVersion === 2)
+    await assertSponsorAuthority(tx, {
+      authority: identity.sponsorAuthority,
+      sponsorRequestId: identity.sponsorRequestId,
+      operationId: attempt.operationId,
+      mediaIds: attempt.mediaIds,
+      movieAccess: access,
+      movieScope: scope,
+      recordedAttemptId: attempt.id,
+    });
   const current = await buildCanonicalIdentity(tx, [scope.mediaId]);
   if (
     identityHash(canonicalSemantics(current)) !==
@@ -177,4 +181,35 @@ export async function assertMovieAttemptIdentityV4(
   );
   freshness.assertActive();
   return { ...captured, freshness };
+}
+
+async function assertBirthIdentity(
+  tx: Prisma.TransactionClient,
+  attempt: AcquisitionAttempt,
+  identity: MovieAcquisitionIdentity,
+) {
+  if (identity.schemaVersion === 3) {
+    if (
+      attempt.movieEditionChoiceId !== null ||
+      attempt.movieEditionChoiceRevision !== null ||
+      identityHash(attempt.movieEditionAuthority) !==
+        identityHash(identity.management)
+    )
+      throw new Error(
+        "Management acquisition differs from its immutable owner approval",
+      );
+    return;
+  }
+  const sponsor = await readMovieAttemptSponsor(tx, {
+    attemptId: attempt.id,
+    expectedScope: identity.scope,
+    expectedRequestId: identity.sponsorRequestId,
+  });
+  if (
+    sponsor === null ||
+    identityHash(sponsor) !== identityHash(identity.sponsorAuthority)
+  )
+    throw new Error(
+      "Movie v4 birth sponsor differs from canonical acquisition identity",
+    );
 }

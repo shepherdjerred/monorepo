@@ -64,9 +64,9 @@ function upgradeGates(
 }
 function upgradeReason(context: UpgradeContext): string {
   const { profile, candidate, current, next, previous } = context;
-  const revision = compareRevision(candidate, current);
-  if (revision === null) return "revision_unknown";
   const quality = Math.sign(next.qualityRank - previous.qualityRank);
+  const revision = compareRevision(candidate, current);
+  if (revision === null) return unknownRevisionReason(context, quality);
   const rules = profile.profile;
   const gate = upgradeGates(context, revision, quality);
   if (gate !== null) return gate;
@@ -82,6 +82,16 @@ function upgradeReason(context: UpgradeContext): string {
   return next.score < previous.score + rules.minUpgradeFormatScore
     ? "minimum_score_increment"
     : "format_upgrade";
+}
+function unknownRevisionReason(
+  context: UpgradeContext,
+  quality: number,
+): string {
+  if (quality <= 0)
+    return quality < 0 ? "quality_downgrade" : "revision_unknown";
+  // Quality-rank improvements precede revision comparison in the pinned source.
+  // https://raw.githubusercontent.com/Radarr/Radarr/v6.4.4.10685/src/NzbDrone.Core/DecisionEngine/Specifications/UpgradableSpecification.cs
+  return upgradeGates(context, 0, quality) ?? "quality_cutoff_reached";
 }
 export function chooseResolvedUpgrade(input: {
   profile: ResolvedProfile;

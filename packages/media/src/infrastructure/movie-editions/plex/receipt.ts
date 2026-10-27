@@ -5,14 +5,14 @@ import type {
   Prisma,
 } from "#generated/prisma/client.ts";
 import {
-  MoviePlexReceiptV2Schema,
-  type MoviePlexReceiptV2,
-} from "#shared/movie-editions/plex-v2.ts";
+  MoviePlexReceiptSchema,
+  type MoviePlexReceipt,
+} from "#shared/movie-editions/management/plex.ts";
 import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
 import {
-  MovieFilePlanV2Schema,
-  type MovieFilePlanV2,
-} from "#shared/movie-editions/file-plan-v2.ts";
+  MovieFilePlanSchema,
+  type MovieFilePlan,
+} from "#shared/movie-editions/management/contracts.ts";
 import { PlexMovieAssociationV2Schema } from "#shared/plex-binding/contract.ts";
 import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/records.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -51,24 +51,41 @@ export async function readMoviePlexReceiptV2(
   tx: Prisma.TransactionClient,
   input: MovieAttemptOperationV4,
   budget: PublicationAuthorityReadBudget,
-): Promise<MoviePlexReceiptV2 | null> {
+): Promise<MoviePlexReceipt | null> {
   const command = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
   budget.consume(1);
-  const raw = z
-    .object({ moviePlexReceiptV2: z.unknown().optional() })
+  const result = z
+    .object({
+      moviePlexReceiptV2: z.unknown().optional(),
+      moviePlexReceiptV3: z.unknown().optional(),
+    })
     .nullable()
-    .parse(command.result)?.moviePlexReceiptV2;
+    .parse(command.result);
+  if (
+    result?.moviePlexReceiptV2 !== undefined &&
+    result.moviePlexReceiptV3 !== undefined
+  )
+    throw new Error("Movie completion has competing receipt identities");
+  const raw =
+    result?.moviePlexReceiptV2 === undefined
+      ? result?.moviePlexReceiptV3
+      : result.moviePlexReceiptV2;
   if (raw === undefined) return null;
   const envelope = z
     .strictObject({ receiptHash: z.string(), receipt: z.json() })
     .parse(raw);
   const receipt = parsePlexRecord(
-    MoviePlexReceiptV2Schema,
+    MoviePlexReceiptSchema,
     envelope.receipt,
     envelope.receiptHash,
   );
+  if (
+    (receipt.schemaVersion === 2) !==
+    (result?.moviePlexReceiptV2 !== undefined)
+  )
+    throw new Error("Movie completion marker differs from its literal version");
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
@@ -88,7 +105,7 @@ export async function readMoviePlexReceiptV2(
 
 export async function assertMoviePlexReceiptParentsV2(
   tx: Prisma.TransactionClient,
-  receipt: MoviePlexReceiptV2,
+  receipt: MoviePlexReceipt,
   budget: PublicationAuthorityReadBudget,
 ) {
   const publication = await loadMoviePublicationV2(
@@ -107,7 +124,7 @@ export async function assertMoviePlexReceiptParentsV2(
       })
   )
     throw new Error("Movie Plex receipt physical publication parent changed");
-  const plan = MovieFilePlanV2Schema.parse(publication.attempt.filePlan);
+  const plan = MovieFilePlanSchema.parse(publication.attempt.filePlan);
   const entry = plan.entries[0];
   const association = receipt.observation.associations[0];
   assertMoviePlexReceiptScope(receipt, plan);
@@ -132,8 +149,8 @@ export async function assertMoviePlexReceiptParentsV2(
 }
 
 function assertMoviePlexReceiptScope(
-  receipt: MoviePlexReceiptV2,
-  plan: MovieFilePlanV2,
+  receipt: MoviePlexReceipt,
+  plan: MovieFilePlan,
 ) {
   const entry = plan.entries[0];
   const target = receipt.expected.targets[0];
@@ -155,7 +172,7 @@ function assertMoviePlexReceiptScope(
     );
 }
 
-function assertMoviePlexReceiptAssociation(receipt: MoviePlexReceiptV2) {
+function assertMoviePlexReceiptAssociation(receipt: MoviePlexReceipt) {
   const association = receipt.observation.associations[0];
   const target = receipt.expected.targets[0];
   if (
