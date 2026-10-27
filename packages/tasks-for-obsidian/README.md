@@ -165,9 +165,30 @@ bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> launch
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> plugin --plugin-export <UUID>
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> present
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> probe
-bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> credentials \\
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> credentials \
+  --credential-backend service-account \
   --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
 ```
+
+Apple acceptance drivers default account-item, verification-code and vault-password
+reads to the repository's machine service account through
+`scripts/onepassword/with-service-account.sh`. Routine tests do not request
+1Password Desktop approval, and a failed service-account read never falls back
+to Desktop. `--credential-backend desktop` explicitly selects attended account
+and verification-code reads; `--vault-password-backend desktop` separately selects
+attended vault-password reads. These choices affect test setup only; installed
+apps use their normal sign-in UI and Keychain.
+
+Before live acceptance, provision the designated test login and separate encrypted
+vault password in a vault readable by the enrolled machine service account.
+An existing Personal-vault item or `--account` value does not grant that access.
+Credential owners must authorize any item provisioning; the drivers do not copy
+or move credentials, broaden Personal-vault access or change 1Password protections.
+`--account`, `--vault` and `--item` remain required item locators; service-account
+reads use their token's account and omit the `op --account` selector. Missing
+enrollment, denied access or missing items stop with a closed error before the
+requested value is sent to the app.
+Service-account enrollment alone does not establish that the test login is ready.
 
 The probe uses synthetic values and zero submits; real entry requires its measured
 privacy proof and performs one normal submit. Account success, conditional MFA,
@@ -207,14 +228,14 @@ Only after that proof may the operator invoke:
 
 ```bash
 bun run ios:account <runID> credentials \
+  --credential-backend service-account \
   --account <1Password-account-ID> --vault <vault-ID> --item <item-ID> \
   --vault-password-ref <op-reference> --vault-password-backend service-account
-# Personal vault-password items require the explicit desktop backend.
 # Reauthorization adds --lifecycle-round <1|2|3> and uses the original profile.
 ```
 
 The host reads 1Password only after the owned form is ready, rechecks ownership
-after approval, and sends values through private memory-only input. Credential
+after the read, and sends values through private memory-only input. Credential
 entry, optional verification, and connection each have separate submit actions;
 only the descriptor-bound remote vault and retained reconnect profile are allowed.
 The session stays alive until actual UI and control status settle. A successful

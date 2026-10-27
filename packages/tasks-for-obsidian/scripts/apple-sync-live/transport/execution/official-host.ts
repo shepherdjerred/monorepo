@@ -6,6 +6,8 @@ import { requestGuest } from "../client.ts";
 import { UuidSchema } from "../fields.ts";
 import type { ExecutionOperation } from "./contract.ts";
 import { readHostCredentialItem } from "./credential-host.ts";
+import { PasswordManagerFailure } from "./credential-host.ts";
+import { credentialBackend } from "tasknotes-macos/scripts/mac-account-contract.ts";
 
 export function parseOfficialAccountArguments(args: string[]) {
   const [run, mode, ...parameters] = args;
@@ -16,18 +18,30 @@ export function parseOfficialAccountArguments(args: string[]) {
   const options: Record<string, string> = {};
   for (let index = 0; index < parameters.length; index += 2) {
     const key = z
-      .enum(["--account", "--vault", "--item", "--plugin-export"])
+      .enum([
+        "--account",
+        "--vault",
+        "--item",
+        "--plugin-export",
+        "--credential-backend",
+      ])
       .parse(parameters[index]);
     const value =
-      key === "--plugin-export"
-        ? UuidSchema.parse(parameters[index + 1])
-        : z
-            .string()
-            .regex(/^[A-Za-z0-9]{20,32}$/u)
-            .parse(parameters[index + 1]);
+      key === "--credential-backend"
+        ? z.enum(["service-account", "desktop"]).parse(parameters[index + 1])
+        : key === "--plugin-export"
+          ? UuidSchema.parse(parameters[index + 1])
+          : z
+              .string()
+              .regex(/^[A-Za-z0-9]{20,32}$/u)
+              .parse(parameters[index + 1]);
     assert.equal(options[key], undefined, "Duplicate credential locator");
     options[key] = value;
   }
+  const backend = credentialBackend(options["--credential-backend"]);
+  if (operation !== "credentials")
+    assert.equal(options["--credential-backend"], undefined);
+  delete options["--credential-backend"];
   assert.deepEqual(
     Object.keys(options).sort(),
     operation === "credentials"
@@ -36,13 +50,18 @@ export function parseOfficialAccountArguments(args: string[]) {
         ? ["--plugin-export"]
         : [],
   );
-  return { runID, operation, options };
+  return { runID, operation, options, credentialBackend: backend };
 }
 /** Host-only private broker; source, run and native form are checked again after password-manager approval. */
 export async function runOfficialAccountCLI(args: string[]): Promise<number> {
   let submitting = false;
   try {
-    const { runID, operation, options } = parseOfficialAccountArguments(args);
+    const {
+      runID,
+      operation,
+      options,
+      credentialBackend: backend,
+    } = parseOfficialAccountArguments(args);
     const initial = await readManifest(runID);
     assert.equal(initial.schemaVersion, 3);
     const fresh = async () => {
@@ -128,11 +147,14 @@ export async function runOfficialAccountCLI(args: string[]): Promise<number> {
       false,
       "Inspect the retained prior submission before reading1Password again",
     );
-    const credentials = readHostCredentialItem({
-      "--account": options["--account"] ?? "",
-      "--vault": options["--vault"] ?? "",
-      "--item": options["--item"] ?? "",
-    });
+    const credentials = readHostCredentialItem(
+      {
+        "--account": options["--account"] ?? "",
+        "--vault": options["--vault"] ?? "",
+        "--item": options["--item"] ?? "",
+      },
+      backend,
+    );
     const filled = await invoke({ mode: "fill", ...credentials, lifetime });
     assert.equal(filled.emailLength, credentials.email.length);
     assert.equal(filled.passwordLength, credentials.password.length);
@@ -150,10 +172,13 @@ export async function runOfficialAccountCLI(args: string[]): Promise<number> {
       }),
     );
     return 0;
-  } catch {
+  } catch (error) {
     console.log(
       JSON.stringify({
-        blocked: "official-account-guard",
+        blocked:
+          error instanceof PasswordManagerFailure
+            ? error.classification
+            : "official-account-guard",
         submissionStatus: submitting ? "unknown" : "not-attempted",
       }),
     );

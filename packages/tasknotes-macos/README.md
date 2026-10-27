@@ -274,19 +274,38 @@ From this package:
 
 ```bash
 bun run mac:account <runID> present
-bun run mac:account <runID> credentials --account <accountID> --vault <vaultID> --item <itemID>
+bun run mac:account <runID> credentials --credential-backend service-account \
+  --account <accountID> --vault <vaultID> --item <itemID>
 # Only when the app currently requests a verification code:
-bun run mac:account <runID> verification --account <accountID> --vault <vaultID> --item <itemID>
-bun run mac:account <runID> vault --vault-password-ref op://<vaultID>/<itemID>/password
+bun run mac:account <runID> verification --credential-backend service-account \
+  --account <accountID> --vault <vaultID> --item <itemID>
+bun run mac:account <runID> vault --vault-password-backend service-account \
+  --vault-password-ref op://<vaultID>/<itemID>/password
 ```
 
 Identifiers and password references are nonsecret. Passwords and generated codes
 stay in memory/private helper input; they never belong in command arguments,
-environment variables, logs, captures or the clipboard. Account-item reads use
-Desktop authorization; the vault-password read uses the repository service-account
-wrapper. Each invocation performs only its selected action and emits a closed
-receipt. If a receipt reports an unknown submission outcome, inspect the current
-app/status before invoking it again.
+environment variables, logs, captures or the clipboard. Account-item,
+verification-code and vault-password reads default to the enrolled machine
+service account through `scripts/onepassword/with-service-account.sh`, without
+1Password Desktop approval. A failed read stops with a closed backend error;
+there is no automatic Desktop fallback. An explicitly attended invocation can
+select `--credential-backend desktop` for account/verification reads or
+`--vault-password-backend desktop` for the encryption password.
+
+Live acceptance requires a designated test login and separate vault-password item
+readable by that service account. Enrollment or a Personal-vault locator alone
+does not establish access. Credential owners must authorize provisioning into a
+service-account-accessible vault; the driver never copies or moves items, grants
+broad Personal-vault access or changes 1Password protections. The required
+`--account`, `--vault` and `--item` locators remain validated, but service-account
+reads use the token's account rather than passing `op --account`. Missing
+enrollment, denied access or absent items fail before credential input.
+
+Each invocation performs only its selected action and emits a closed receipt.
+If a receipt reports an unknown submission outcome, inspect the current
+app/status before invoking it again. These credential backends configure the
+acceptance harness; installed apps retain their normal sign-in UI and Keychain.
 
 After `lifecycle-begin <runID> macos`, add `--lifecycle-round <1|2|3>` to every
 account invocation, including `present`. The driver requires that round's retained

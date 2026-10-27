@@ -15,6 +15,7 @@ import {
 import {
   assertFreshInitialStatus,
   type Operation,
+  credentialBackend,
 } from "tasknotes-macos/scripts/mac-account-contract.ts";
 import type {
   ClosedAccountReceiptSchema,
@@ -24,6 +25,7 @@ import {
   readHostCredentialItem,
   readHostVaultPassword,
   readHostVerificationCode,
+  PasswordManagerFailure,
 } from "./credential-host.ts";
 
 type GuestAccount = Extract<ExecutionOperation, { kind: "account" }>;
@@ -130,9 +132,8 @@ export async function runHostGuestAccount(options: {
     return 0;
   } catch (error) {
     const classified =
-      error instanceof Error &&
-      /^password_manager_[a-z_]+$/u.test(error.message)
-        ? error.message
+      error instanceof PasswordManagerFailure
+        ? error.classification
         : "guest_account_guard";
     console.log(
       JSON.stringify({
@@ -152,7 +153,10 @@ function readAccountSecret(
   if (operation === "vault")
     return {
       kind: "text",
-      value: readHostVaultPassword(parameters["--vault-password-ref"] ?? ""),
+      value: readHostVaultPassword(
+        parameters["--vault-password-ref"] ?? "",
+        credentialBackend(parameters["--vault-password-backend"]),
+      ),
     };
   const selected = {
     "--account": parameters["--account"] ?? "",
@@ -160,8 +164,20 @@ function readAccountSecret(
     "--item": parameters["--item"] ?? "",
   };
   return operation === "credentials"
-    ? { kind: "credentials", value: readHostCredentialItem(selected) }
-    : { kind: "text", value: readHostVerificationCode(selected) };
+    ? {
+        kind: "credentials",
+        value: readHostCredentialItem(
+          selected,
+          credentialBackend(parameters["--credential-backend"]),
+        ),
+      }
+    : {
+        kind: "text",
+        value: readHostVerificationCode(
+          selected,
+          credentialBackend(parameters["--credential-backend"]),
+        ),
+      };
 }
 async function waitReauthorization(
   status: () => Promise<unknown>,

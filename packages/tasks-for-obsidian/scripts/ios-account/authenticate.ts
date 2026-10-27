@@ -16,10 +16,15 @@ export const IOSAccountOptionsSchema = z.strictObject({
   account: locator,
   vault: locator,
   item: locator,
+  credentialBackend: z
+    .enum(["service-account", "desktop"])
+    .default("service-account"),
   vaultPasswordRef: z
     .string()
     .regex(/^op:\/\/[A-Za-z0-9]{20,32}\/[A-Za-z0-9]{20,32}\/password$/u),
-  vaultPasswordBackend: z.enum(["service-account", "desktop"]),
+  vaultPasswordBackend: z
+    .enum(["service-account", "desktop"])
+    .default("service-account"),
   lifecycleRound: z.number().int().min(1).max(3).optional(),
 });
 export type IOSAccountOptions = z.infer<typeof IOSAccountOptionsSchema>;
@@ -50,7 +55,10 @@ export async function runIosAccountAuthentication(
       : { originalProfileID: checkpoint.profileID }),
     action: async (session) => {
       if (session.stage === "credentials") {
-        const credentials = readHostCredentialItem(locators);
+        const credentials = readHostCredentialItem(
+          locators,
+          settings.credentialBackend,
+        );
         await validateAccountState(manifest, checkpoint);
         await session.fill(credentials);
         await session.submit();
@@ -58,7 +66,10 @@ export async function runIosAccountAuthentication(
       }
       if (session.stage === "verification") {
         const before = await validateAccountState(manifest, checkpoint);
-        const code = readHostVerificationCode(locators);
+        const code = readHostVerificationCode(
+          locators,
+          settings.credentialBackend,
+        );
         const after = await validateAccountState(manifest, checkpoint);
         assert.deepEqual(
           after["accountExchange"],

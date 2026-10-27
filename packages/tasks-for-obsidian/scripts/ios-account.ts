@@ -5,8 +5,9 @@ import {
   runIosAccountAuthentication,
 } from "./ios-account/authenticate";
 import { runIosAccountProbe } from "./ios-account/probe";
+import { PasswordManagerFailure } from "./apple-sync-live/transport/execution/credential-host";
 
-function credentialOptions(args: string[]) {
+export function parseIosCredentialOptions(args: string[]) {
   const options: Record<string, string> = {};
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index],
@@ -19,6 +20,7 @@ function credentialOptions(args: string[]) {
         "--vault",
         "--item",
         "--vault-password-ref",
+        "--credential-backend",
         "--vault-password-backend",
         "--lifecycle-round",
       ].includes(key)
@@ -30,6 +32,7 @@ function credentialOptions(args: string[]) {
     account: options["--account"],
     vault: options["--vault"],
     item: options["--item"],
+    credentialBackend: options["--credential-backend"],
     vaultPasswordRef: options["--vault-password-ref"],
     vaultPasswordBackend: options["--vault-password-backend"],
     ...(options["--lifecycle-round"] === undefined
@@ -55,7 +58,10 @@ async function main() {
     throw new Error("Choose probe or credentials");
   console.log(
     JSON.stringify(
-      await runIosAccountAuthentication(manifest, credentialOptions(args)),
+      await runIosAccountAuthentication(
+        manifest,
+        parseIosCredentialOptions(args),
+      ),
     ),
   );
 }
@@ -63,12 +69,15 @@ async function main() {
 if (import.meta.main) {
   try {
     await main();
-  } catch {
+  } catch (error) {
     // SDK and password-manager diagnostics remain private, including on failure.
     console.error(
       JSON.stringify({
         status: "blocked",
-        reason: "private-input-or-authentication",
+        reason:
+          error instanceof PasswordManagerFailure
+            ? error.classification
+            : "private-input-or-authentication",
         automaticRetry: false,
       }),
     );
