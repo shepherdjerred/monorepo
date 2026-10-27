@@ -12,12 +12,16 @@ import { inspectMedia } from "#filesystem/media-tools.ts";
 export async function libraryTvBindingFixture(
   db: Database,
   directoryCreated: (directory: string) => void,
-  options: { bytes?: Uint8Array; qualitySourceId?: string } = {},
+  options: {
+    bytes?: Uint8Array;
+    qualitySourceId?: string;
+    title?: string;
+  } = {},
 ) {
   const series = await db.mediaItem.create({
     data: {
       kind: "series",
-      title: "Synthetic Anime",
+      title: options.title ?? "Synthetic Anime",
       tmdbId: Math.floor(Math.random() * 1_000_000_000),
       externalIds: {},
     },
@@ -39,7 +43,7 @@ export async function libraryTvBindingFixture(
   const f = await handoffFixture(db, {
     ...(options.bytes === undefined ? {} : { bytes: options.bytes }),
     sourceKind: "sonarr",
-    fileName: "Synthetic Anime.S01E01-E02.mkv",
+    fileName: `${series.title}.S01E01-E02.mkv`,
     prepareRequest({ request, report }) {
       return PrepareLibraryHandoffV2Schema.parse({
         ...request,
