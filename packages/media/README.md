@@ -78,6 +78,14 @@ transitions do not remove files, remove transfers or change another cut's intent
 Cancellation remains available while ownership is paused; reservation settlement
 waits for authorized acquisition reconciliation in the same epoch.
 
+Requester watch observation can select the exact edition of a currently serving
+movie. Acquired and initial-library files use their actual current Plex binding;
+the requester response must retain the same item, cut label, GUIDs and Part.
+Observation fences, known/unknown projections and unwatched intent changes stay
+within that edition. Unknown metadata clears the bound value without crediting
+another cut, and an older batch cannot overwrite a newer observation. Unscoped
+Plex hints and committed-quarantine watch use the separate default-scope contract.
+
 The internal movie Files contract is a version-2 object, separate from the
 historical array file plan. It records exact edition scope, original request
 consent, selected torrent member, assessed release/member cut evidence, measured

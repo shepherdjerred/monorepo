@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
 import type { ObservePlexHintInput } from "#shared/plex-events/contract.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
@@ -15,6 +14,7 @@ import {
   watchScope,
   type WatchAuthority,
   type WatchParticipant,
+  type WatchObservationOptions,
 } from "./authority.ts";
 import { watchAwait } from "./execution.ts";
 
@@ -90,7 +90,7 @@ function reader(
 export async function prepareWatchBatch(
   context: MediaAutomationContext,
   mediaId: string,
-  options: { expectedHint?: ObservePlexHintInput },
+  options: WatchObservationOptions,
   execution: PlexBindingExecution,
 ): Promise<PreparedWatchBatch | null> {
   const startedAt = new Date(execution.observed.wall);
@@ -113,8 +113,14 @@ export async function prepareWatchBatch(
     const fence = await watchAwait(
       execution,
       tx.watchObservationFence.upsert({
-        where: { mediaId_edition: defaultScope(mediaId) },
-        create: { ...defaultScope(mediaId), issuedRevision: 1n },
+        where: {
+          mediaId_edition: { mediaId, edition: scope.edition ?? "default" },
+        },
+        create: {
+          mediaId,
+          edition: scope.edition ?? "default",
+          issuedRevision: 1n,
+        },
         update: { issuedRevision: { increment: 1 } },
       }),
     );
