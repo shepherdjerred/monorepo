@@ -12,7 +12,7 @@ import {
   importResolvedProfiles,
   snapshotHash,
 } from "#migration/profile-import.ts";
-import snapshot from "#migration/fixtures/resolved-profiles.json";
+import snapshot from "#migration/fixtures/resolved-profiles.json" with { type: "json" };
 import {
   MigrationBundleSchema,
   BundleReportSchema,

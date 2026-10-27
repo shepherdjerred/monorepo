@@ -10,6 +10,7 @@ import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proo
 import { snapshotMoviePublicationAssetV2 } from "./publication/snapshot.ts";
 import { findMoviePublicationReferenceV2 } from "./publication/store.ts";
 import { loadMovieLibraryParentV2 } from "./library-records.ts";
+import { loadLibraryAssetParentV1 } from "#infrastructure/handoff/library-asset.ts";
 import { queueMovieSubtitleTargetsV4 } from "#automation/movie-editions/subtitles/queue.ts";
 import { findMovieSubtitlesV4 } from "#automation/movie-editions/subtitles/network.ts";
 import { installMovieSubtitlesV4 } from "#automation/files/movie-editions/subtitles.ts";
@@ -77,6 +78,34 @@ test.each(MovieEditionKeySchema.options)(
       new PublicationAuthorityReadBudget(),
     );
     expect(original.reference).toEqual(reference);
+    const servingParent = await loadLibraryAssetParentV1(
+      f.db,
+      { receiptId: f.receiptId, assetId: f.asset.id },
+      new PublicationAuthorityReadBudget(),
+    );
+    expect(servingParent.asset).toEqual(original.asset);
+    expect(servingParent.reference).toMatchObject({
+      kind: "library_adoption_v1",
+      receiptId: f.receiptId,
+      assetId: f.asset.id,
+      bindingHash: original.reference.bindingHash,
+    });
+    await expect(
+      loadLibraryAssetParentV1(
+        f.db,
+        { receiptId: f.receiptId, assetId: crypto.randomUUID() },
+        new PublicationAuthorityReadBudget(),
+      ),
+    ).rejects.toThrow("exact selected file");
+    const spent = new PublicationAuthorityReadBudget();
+    spent.consume(99);
+    await expect(
+      loadLibraryAssetParentV1(
+        f.db,
+        { receiptId: f.receiptId, assetId: f.asset.id },
+        spent,
+      ),
+    ).rejects.toThrow("100 total queried records");
     const otherScope = {
       ...f.scope,
       edition:

@@ -184,7 +184,7 @@ export async function selectMovieAssociationV2(
   scope: ServingScope,
   inventory: readonly InventoryItem[],
 ) {
-  const group = scope.expected.newGroups[0];
+  const group = scope.expected.newGroups.at(0);
   const member = group?.coverage[0];
   if (
     group === undefined ||

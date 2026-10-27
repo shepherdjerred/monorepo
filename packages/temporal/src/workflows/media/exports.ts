@@ -45,6 +45,9 @@ export const observeMediaCapacityWorkflow =
   capacity.observeMediaCapacityWorkflow;
 import * as plexEvents from "#workflows/media/plex-events.ts";
 import * as plexBinding from "#workflows/media/plex-binding.ts";
+import * as libraryPlexBinding from "#workflows/media/library-plex-binding.ts";
+export const verifyLibraryPlexBindingWorkflow =
+  libraryPlexBinding.verifyLibraryPlexBindingWorkflow;
 export const reverifyPlexBindingWorkflow =
   plexBinding.reverifyPlexBindingWorkflow;
 export const observePlexEventHintWorkflow =

@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./testing/system": "./e2e/system/sandbox.ts",
+    "./testing/library-binding": "./src/testing/library-binding.ts",
     "./contract": "./src/shared/contract.ts",
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",

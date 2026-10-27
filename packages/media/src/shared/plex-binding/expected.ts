@@ -94,7 +94,7 @@ export const PlexBindingExpectedSchema = z
     "Plex expected authority omits group members",
   );
 
-function expectedCoverageMatches(value: {
+export function expectedCoverageMatches(value: {
   targets: { scope: { mediaId: string; edition: string } }[];
   previous: { scope: { mediaId: string; edition: string } }[];
   oldGroups: z.infer<typeof PlexPhysicalGroupSchema>[];
