@@ -9,10 +9,13 @@ import { PassThrough } from "node:stream";
  * context over the input. Replacing it is what lets these tests describe a source that has audio
  * and no video — the shape a music stream produces — without ffmpeg.
  */
-const demuxState = vi.hoisted(() => ({ next: undefined }));
+const demuxState = vi.hoisted(() => ({ next: undefined, calls: [] }));
 
 vi.mock("../src/media/LibavDemuxer.js", () => ({
-  demux: () => Promise.resolve(demuxState.next),
+  demux: (_input, options) => {
+    demuxState.calls.push(options);
+    return Promise.resolve(demuxState.next);
+  },
 }));
 
 const { attachPipeline, mergePlayStreamOptions } = await import(
@@ -184,6 +187,24 @@ async function voiceSegment() {
   });
   return { audio, sink, pipeline };
 }
+
+describe("attachPipeline timestamp normalization", () => {
+  test("forwards the flag into demux", async () => {
+    demuxState.calls = [];
+    demuxState.next = { video: videoTrack(), audio: audioTrack() };
+    await attach(makeConn(), makeStreamer(), {
+      type: "go-live",
+      format: "matroska",
+      normalizeTimestamps: true,
+    });
+    expect(demuxState.calls).toEqual([
+      expect.objectContaining({
+        format: "matroska",
+        normalizeTimestamps: true,
+      }),
+    ]);
+  });
+});
 
 describe("attachPipeline with an audio-only source", () => {
   test("plays through the audio stream and resolves done when it finishes", async () => {

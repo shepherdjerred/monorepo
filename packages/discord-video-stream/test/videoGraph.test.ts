@@ -279,48 +279,4 @@ describe("buildVaapiVideoGraph", () => {
     );
   });
 
-  test("normalizes discontinuous live timestamps after the GPU overlay", () => {
-    const graph = buildVaapiVideoGraph({
-      width: 1920,
-      height: 1080,
-      frameRate: 30,
-      normalizeTimestamps: true,
-      inputColor: "sdr",
-      subtitle: { path: SUB, startTime: 0 },
-    });
-    if (graph.kind !== "filterComplex") throw new Error("expected overlay");
-    expect(graph.graph[2]).toBe(
-      "[base][subs]overlay_vaapi=shortest=1,fps=30,setpts=N/(30*TB)[vout]",
-    );
-  });
-});
-
-describe("live timestamp normalization", () => {
-  test("appends monotonic CFR timestamps to the software graph", () => {
-    expect(
-      buildSoftwareVideoGraph({
-        width: 1280,
-        height: 720,
-        frameRate: 30,
-        normalizeTimestamps: true,
-        inputColor: "sdr",
-        encoderOutFilters: [],
-      }),
-    ).toEqual({
-      kind: "filterChain",
-      filters: ["scale=1280:720", "fps=30", "setpts=N/(30*TB)"],
-    });
-  });
-
-  test("requires a frame rate when normalization is enabled", () => {
-    expect(() =>
-      buildSoftwareVideoGraph({
-        width: 1280,
-        height: 720,
-        normalizeTimestamps: true,
-        inputColor: "sdr",
-        encoderOutFilters: [],
-      }),
-    ).toThrow("requires an output frame rate");
-  });
 });

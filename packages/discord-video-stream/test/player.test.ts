@@ -83,7 +83,12 @@ function makeDeps(attachErrors = []) {
     },
     attachPipeline: (conn, _streamer, _input, opts) => {
       const index = attachCalls.length;
-      attachCalls.push({ configureConn: opts.configureConn, conn });
+      attachCalls.push({
+        configureConn: opts.configureConn,
+        format: opts.format,
+        normalizeTimestamps: opts.normalizeTimestamps,
+        conn,
+      });
       const attachError = attachErrors[index];
       if (attachError !== undefined) return Promise.reject(attachError);
       const seg = deferred();
@@ -123,7 +128,27 @@ describe("createSeekablePlayer", () => {
     expect(f.prepareCalls).toEqual([{ startTime: undefined }]);
     expect(f.attachCalls).toHaveLength(1);
     expect(f.attachCalls[0]?.configureConn).toBe(true);
+    expect(f.attachCalls[0]?.normalizeTimestamps).toBeUndefined();
     expect(player.position).toBe(0);
+  });
+
+  test("a discontinuous live source selects Matroska and forwards timestamp normalization", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(
+      streamer,
+      "live.m3u8",
+      { prepare: { normalizeTimestamps: true } },
+      f.deps,
+    );
+
+    await player.start();
+
+    expect(f.attachCalls[0]).toMatchObject({
+      format: "matroska",
+      normalizeTimestamps: true,
+      configureConn: true,
+    });
   });
 
   test("natural end resolves finished and tears down the connection", async () => {

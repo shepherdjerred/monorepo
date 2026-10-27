@@ -109,7 +109,55 @@ function parseOpusPacketDuration(frame: Uint8Array) {
 type DemuxerOptions = {
   format: "matroska" | "nut";
   observer?: StreamObserver;
+  normalizeTimestamps?: boolean;
 };
+
+export class PacketTimestampNormalizer {
+  private videoPts = 0n;
+  private audioPts = 0n;
+
+  constructor(private readonly videoTimeBase?: {
+    num: number;
+    den: number;
+  }) {}
+
+  video(packet: Packet): void {
+    if (this.videoTimeBase === undefined) {
+      throw new Error("cannot normalize video without a frame rate");
+    }
+    packet.pts = this.videoPts;
+    packet.dts = this.videoPts;
+    packet.duration = 1n;
+    packet.timeBase = this.videoTimeBase;
+    this.videoPts += 1n;
+  }
+
+  audio(packet: Packet): void {
+    const samples = audioDurationSamples(packet);
+    packet.pts = this.audioPts;
+    packet.dts = this.audioPts;
+    packet.duration = samples;
+    packet.timeBase = { num: 1, den: 48_000 };
+    this.audioPts += samples;
+  }
+}
+
+/** 48 kHz sample count. A container duration stays in that container's timebase until this converts it. */
+function audioDurationSamples(packet: Packet): bigint {
+  if (packet.duration > 0n) {
+    const { num, den } = packet.timeBase;
+    if (!Number.isInteger(num) || !Number.isInteger(den) || den === 0) {
+      throw new Error("cannot normalize audio with an invalid timebase");
+    }
+    const samples = (packet.duration * BigInt(num) * 48_000n) / BigInt(den);
+    if (samples <= 0n) {
+      throw new Error("cannot normalize a zero-length audio packet");
+    }
+    return samples;
+  }
+  if (!packet.data) throw new Error("cannot normalize audio without a duration");
+  return BigInt(parseOpusPacketDuration(packet.data));
+}
 
 function packetReadyStats(
   kind: PacketReadyStats["kind"],
@@ -126,7 +174,7 @@ function packetReadyStats(
 
 export async function demux(
   input: Readable,
-  { format, observer }: DemuxerOptions,
+  { format, observer, normalizeTimestamps = false }: DemuxerOptions,
 ) {
   const loggerFormat = new Log("demux:format");
   const loggerFrameCommon = new Log("demux:frame:common");
@@ -268,6 +316,13 @@ export async function demux(
     );
   }
 
+  const normalizer = normalizeTimestamps
+    ? new PacketTimestampNormalizer(
+        vInfo && vInfo.framerate_num > 0 && vInfo.framerate_den > 0
+          ? { num: vInfo.framerate_den, den: vInfo.framerate_num }
+          : undefined,
+      )
+    : undefined;
   const packetIterator = demuxer.packets();
   const applyBitStreamFilters = async (
     input: Packet | null,
@@ -310,6 +365,7 @@ export async function demux(
             // dropping these video packets. Track backpressure separately.
             for (const packet of packets) {
               if (!packet) continue;
+              normalizer?.video(packet);
               observer?.onPacketReady?.(packetReadyStats("video", packet));
               if (!vPipe.write(packet)) resume = false;
             }
@@ -324,7 +380,8 @@ export async function demux(
               inPacket.free();
               continue;
             }
-            packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
+            if (normalizer) normalizer.audio(packet);
+            else packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
             observer?.onPacketReady?.(packetReadyStats("audio", packet));
             if (!aPipe.write(packet)) resume = false;
           }
