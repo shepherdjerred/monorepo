@@ -8,7 +8,7 @@ import { createLibraries } from "#e2e/pms/assertions.ts";
 const directory = await mkdtemp(path.join(os.tmpdir(), "media-pms-library-"));
 afterAll(() => rm(directory, { recursive: true, force: true }));
 
-async function fixture(status = 200) {
+async function fixture(status = 201) {
   const root = path.join(directory, crypto.randomUUID());
   await mkdir(path.join(root, "artifacts"), { recursive: true });
   const sections: {
@@ -39,7 +39,7 @@ async function fixture(status = 200) {
       );
     expect(url.pathname).toBe("/library/sections");
     if (method === "POST") {
-      if (status !== 200)
+      if (status !== 201)
         return Promise.resolve(
           new Response("Synthetic rejected creation", { status }),
         );
@@ -60,7 +60,9 @@ async function fixture(status = 200) {
         refreshing: false,
         Location: [{ path: path.join(root, "media", type) }],
       });
-      return Promise.resolve(Response.json({ MediaContainer: { size: 0 } }));
+      return Promise.resolve(
+        Response.json({ MediaContainer: { size: 0 } }, { status: 201 }),
+      );
     }
     expect(method).toBe("GET");
     return Promise.resolve(
@@ -82,12 +84,15 @@ test("native fixture creates the two libraries through the established PMS creat
   ]);
 });
 
-test("native creation failure is terminal without retrying or switching endpoints", async () => {
-  const f = await fixture(404);
-  await expect(createLibraries(f.wire, { root: f.root })).rejects.toThrow(
-    "HTTP 404",
-  );
-  expect(f.requests.filter((request) => request.method === "POST")).toEqual([
-    { method: "POST", path: "/library/sections" },
-  ]);
-});
+test.each([200, 400, 404])(
+  "native creation HTTP %s is terminal without retrying or switching endpoints",
+  async (status) => {
+    const f = await fixture(status);
+    await expect(createLibraries(f.wire, { root: f.root })).rejects.toThrow(
+      `HTTP ${String(status)}`,
+    );
+    expect(f.requests.filter((request) => request.method === "POST")).toEqual([
+      { method: "POST", path: "/library/sections" },
+    ]);
+  },
+);

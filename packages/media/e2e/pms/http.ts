@@ -77,6 +77,7 @@ export function createPmsWire(
     pathname: string,
     parameters: Record<string, string> = {},
     method = "GET",
+    expectedStatus = 200,
   ) => {
     const url = new URL(pathname, ORIGIN);
     for (const [key, value] of Object.entries(parameters))
@@ -89,7 +90,7 @@ export function createPmsWire(
       },
     });
     const body = await response.text();
-    if (response.status !== 200)
+    if (response.status !== expectedStatus)
       throw new Error(
         `PMS ${method} ${url.pathname}: HTTP ${String(response.status)}`,
       );
