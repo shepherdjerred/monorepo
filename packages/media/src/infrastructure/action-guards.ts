@@ -127,6 +127,7 @@ export function actionIntentChange(action: MediaAction["action"]) {
     return {
       desiredPresence: false,
       monitoring: false,
+      libraryMonitoring: false,
       intentionallyRemovedAt: new Date(),
     };
   return action === "restore"

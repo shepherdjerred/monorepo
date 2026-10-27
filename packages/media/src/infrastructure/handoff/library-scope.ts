@@ -43,6 +43,7 @@ export async function buildLibraryHandoffScope(
   );
   assertLibrarySelection(selected, input);
   const base = await buildHandoffScope(tx, librarySourceRequest(input));
+  await assertSeriesPolicies(tx, input);
   const files = [];
   for (const file of base.files) {
     if (file.existingAssetId !== null)
@@ -104,11 +105,39 @@ export async function buildLibraryHandoffScope(
   }
   return LibraryHandoffScopeProtocolSchema.parse({
     ...base,
+    media: monitoredMedia(base.media, input),
     schemaVersion: input.schemaVersion,
     request: input,
     files,
     targets,
   });
+}
+
+async function assertSeriesPolicies(
+  tx: Prisma.TransactionClient,
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+) {
+  if (input.schemaVersion !== 3) return;
+  for (const policy of input.seriesMonitoring ?? []) {
+    const series = await tx.mediaItem.findUniqueOrThrow({
+      where: { id: policy.seriesId },
+    });
+    if (series.kind !== "series" || series.title !== policy.title)
+      throw conflict("library_series_policy_selection_changed");
+  }
+}
+
+function monitoredMedia(
+  media: LibraryHandoffScope["media"],
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+) {
+  if (input.schemaVersion !== 3) return media;
+  const monitored = new Set(
+    input.seriesMonitoring?.map((policy) => policy.seriesId),
+  );
+  return media.map((item) =>
+    monitored.has(item.mediaId) ? { ...item, monitored: true } : item,
+  );
 }
 
 function assertLibrarySelection(
@@ -137,6 +166,26 @@ function assertLibrarySelection(
     input.movies.length
   )
     throw conflict("library_classification_duplicate");
+  if (input.schemaVersion === 3 && input.seriesMonitoring !== undefined) {
+    const policies = input.seriesMonitoring;
+    if (
+      new Set(policies.map((policy) => policy.seriesId)).size !==
+        policies.length ||
+      policies.some(
+        (policy) =>
+          !selected.some(
+            (entry) =>
+              entry.provenanceKey === policy.provenanceKey &&
+              entry.confidence === "exact" &&
+              entry.sourceRecord.kind === "media" &&
+              entry.sourceRecord.mediaKind === "series" &&
+              entry.mediaIds.length === 1 &&
+              entry.mediaIds[0] === policy.seriesId,
+          ),
+      )
+    )
+      throw conflict("library_series_policy_selection_changed");
+  }
 }
 
 async function classifyMovie(
@@ -251,7 +300,11 @@ function librarySourceRequest(
   input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
 ): ReturnType<typeof librarySourceRequestV2> {
   if (input.schemaVersion === 3) {
-    const { plexEditionLabels: _labels, ...source } = input;
+    const {
+      plexEditionLabels: _labels,
+      seriesMonitoring: _monitoring,
+      ...source
+    } = input;
     return librarySourceRequestV2({ ...source, schemaVersion: 2 });
   }
   return librarySourceRequestV2(input);

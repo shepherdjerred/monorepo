@@ -17,11 +17,15 @@ export function managedSeriesWire(
     bytes: Uint8Array;
     items: PlexItem[];
     show: PlexItem;
+    episodeSpan?: { season: number; first: number; last: number };
   },
 ) {
   const hash = randomBytes(20).toString("hex");
-  const title = `${input.title.replaceAll(" ", ".")}.2020.S01.1080p.WEB-DL.H264.English-MEDIA`;
-  const member = title.replace(".S01.", ".S01E01-E02.") + ".mkv";
+  const span = input.episodeSpan ?? { season: 1, first: 1, last: 2 };
+  const season = `S${String(span.season).padStart(2, "0")}`;
+  const episodes = `${season}E${String(span.first).padStart(2, "0")}${span.first === span.last ? "" : `-E${String(span.last).padStart(2, "0")}`}`;
+  const title = `${input.title.replaceAll(" ", ".")}.2020.${span.first === span.last ? episodes : season}.1080p.WEB-DL.H264.English-MEDIA`;
+  const member = title.replace(`.${season}.`, `.${episodes}.`) + ".mkv";
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;
   const control = {
@@ -40,7 +44,7 @@ export function managedSeriesWire(
             Response.json({
               hits: [
                 {
-                  id: `synthetic-series:${input.seriesId}`,
+                  id: `synthetic-series:${input.seriesId}:${episodes}`,
                   title,
                   bytes: input.bytes.byteLength,
                   hash,
@@ -208,7 +212,7 @@ export function managedSeriesWire(
                 ratingKey: key,
                 type: "season",
                 title: "Season 1",
-                index: 1,
+                index: span.season,
                 parentRatingKey: input.show.ratingKey,
               }
             : items.find((item) => item.ratingKey === key);

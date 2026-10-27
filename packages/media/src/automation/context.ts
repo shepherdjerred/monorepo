@@ -9,7 +9,7 @@ import type { WatchExecution } from "./plex-events/execution.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
-import type { LibraryManagementInvocation } from "#infrastructure/acquisition-identity/library-management.ts";
+import type { LibraryManagementInvocation } from "#infrastructure/acquisition-identity/library-policy.ts";
 import type {
   ReceiptQuery,
   ReceiptObservation,

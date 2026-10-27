@@ -4,6 +4,7 @@ import type { ExpectedTarget } from "#shared/editions/commands.ts";
 import { assertDefaultCommandCas } from "./editions/command-cas.ts";
 import { lockCommandActor } from "./editions/command-actor.ts";
 import { z } from "zod";
+import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
 import { MediaError } from "#application/errors.ts";
 import type { CreateRequest } from "#shared/contract.ts";
 import { MediaCommandBase } from "./command-base.ts";
@@ -121,7 +122,7 @@ export class MediaRequestCommands extends MediaCommandBase {
         monitoring: true,
         intentionallyRemovedAt: null,
         profileId,
-        generation: { increment: 1 },
+        ...personalRequestGenerationChange(prior, automationEpoch),
         version: target.existed ? { increment: 1 } : 0,
       },
     });
@@ -245,6 +246,9 @@ export class MediaRequestCommands extends MediaCommandBase {
     const remaining = await db.mediaRequest.count({
       where: { mediaId: request.mediaId, ...effectiveRequestWhere },
     });
+    const target = await db.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(request.mediaId)),
+    });
     await db.mediaItem.update({
       where: { id: request.mediaId },
       data: { version: { increment: 1 } },
@@ -252,9 +256,9 @@ export class MediaRequestCommands extends MediaCommandBase {
     const intent = await db.mediaIntent.update({
       where: targetWhere(defaultScope(request.mediaId)),
       data: {
-        generation: { increment: 1 },
+        ...personalRequestGenerationChange(target),
         version: { increment: 1 },
-        ...(remaining === 0 ? { monitoring: false } : {}),
+        ...(remaining === 0 ? { monitoring: target.libraryMonitoring } : {}),
       },
     });
     await invalidateRetention(db, request.mediaId);

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { CredentialCipher } from "#application/security.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import { createMediaNetworkActivities } from "#automation/network.ts";
+import { createMediaNetworkActivities } from "#automation/network/activities.ts";
 import { createPlexRuntimeFacets } from "#automation/network/plex-facets.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import type { FileContext } from "#automation/files/types.ts";

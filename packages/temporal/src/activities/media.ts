@@ -8,6 +8,7 @@ import {
   createLibraryPlexBindingNetworkActivities,
 } from "./media/plex-binding.ts";
 import { plexBindingExecution } from "./media/plex-binding-execution.ts";
+import { createCatalogCoverageWorkerActivities } from "./media/catalog-coverage.ts";
 import { createPlexPublicationActivities } from "./media/plex-publication.ts";
 import { createPlexWatchActivities } from "./media/plex-watch.ts";
 import { createMovieWatchWorkerActivitiesV4 } from "./media/movie-watch.ts";
@@ -203,8 +204,7 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.mediaHandoffState(input)),
   refreshMediaCatalog: (input) =>
     withNetwork((activities) => activities.refreshMediaCatalog(input)),
-  expandCatalogRequests: (input) =>
-    withNetwork((activities) => activities.expandCatalogRequests(input)),
+  ...createCatalogCoverageWorkerActivities(getMediaNetworkRuntime),
   expandMediaRequest: (input) =>
     withNetwork((activities) => activities.expandMediaRequest(input)),
   dispatchMediaOutbox: () =>

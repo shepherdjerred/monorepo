@@ -15,13 +15,17 @@ export function historicalDefaultIntent<
     edition: string;
     editionRootId: string | null;
     availability: string;
+    libraryMonitoring?: boolean;
   },
->(row: T): Omit<T, "edition" | "editionRootId" | "availability"> {
+>(
+  row: T,
+): Omit<T, "edition" | "editionRootId" | "availability" | "libraryMonitoring"> {
   assertDefaultEdition(row.edition);
   const {
     edition: _edition,
     editionRootId: _root,
     availability: _availability,
+    libraryMonitoring: _libraryMonitoring,
     ...historical
   } = row;
   return historical;

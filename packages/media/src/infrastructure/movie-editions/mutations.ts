@@ -8,6 +8,7 @@ import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { movieChoiceSubject, type MovieProtectionAccess } from "./access.ts";
 import { lockMovieCommand, movieCommandConflict } from "./locks.ts";
 import { releaseCancelledMovieReservationV4 } from "./lifecycle/cancellation.ts";
+import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
 
 export async function removeMovieChoice(
   tx: Prisma.TransactionClient,
@@ -60,9 +61,9 @@ export async function removeMovieChoice(
       mediaId_edition: { mediaId: request.mediaId, edition: request.edition },
     },
     data: {
-      generation: { increment: 1 },
+      ...personalRequestGenerationChange(target),
       version: { increment: 1 },
-      ...(remaining === 0 ? { monitoring: false } : {}),
+      ...(remaining === 0 ? { monitoring: target.libraryMonitoring } : {}),
     },
   });
   await releaseCancelledMovieReservationV4(tx, input.scope, request.id);

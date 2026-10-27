@@ -21,6 +21,10 @@ export type BatchChoices = {
   cuts: Record<string, CutChoice>;
   profiles: Record<string, string>;
   chinese: Record<string, boolean>;
+  seriesMonitoring?: Record<
+    string,
+    { enabled: boolean; includeSpecials: boolean }
+  >;
 };
 
 /** Fetch actual policy versions; neither a missing read nor mixed versions becomes a made-up default. */
@@ -30,6 +34,22 @@ export async function prepareLibraryBatch(
   groups: ReturnType<typeof libraryProfileGroups>,
 ) {
   const batch = libraryBatchEntries(review, choices.files);
+  const series = batch.media.filter(
+    (entry) =>
+      choices.seriesMonitoring?.[entry.provenanceKey]?.enabled === true,
+  );
+  if (
+    series.some(
+      (entry) =>
+        entry.confidence !== "exact" ||
+        entry.sourceRecord.kind !== "media" ||
+        entry.sourceRecord.mediaKind !== "series" ||
+        entry.mediaIds.length !== 1,
+    )
+  )
+    throw new Error(
+      "Series monitoring needs an exact series from the selected files",
+    );
   const policies = batch.entries.filter(
     (entry) => entry.kind === "subtitle_preference",
   );
@@ -60,11 +80,25 @@ export async function prepareLibraryBatch(
     recoveryEpoch: runtime.recoveryEpoch,
     runtimeVersion: runtime.version,
     activation: runtime.mode === "observe" ? "activate" : "extend",
-    selected: batch.entries.map((entry) => ({
+    selected: [...batch.entries, ...series].map((entry) => ({
       provenanceKey: entry.provenanceKey,
       evidenceHash: entry.observationHash,
     })),
     profiles: libraryProfileBindings(groups, choices.profiles),
+    ...(series.length === 0
+      ? {}
+      : {
+          seriesMonitoring: series.map((entry) => ({
+            schemaVersion: 1,
+            seriesId: entry.mediaIds[0],
+            title: entry.mappedMedia[0]?.title,
+            provenanceKey: entry.provenanceKey,
+            includeFutureEpisodes: true,
+            includeSpecials:
+              choices.seriesMonitoring?.[entry.provenanceKey]
+                ?.includeSpecials === true,
+          })),
+        }),
     movies: Object.entries(choices.cuts).flatMap(([provenanceKey, choice]) =>
       choice.edition !== "suggest" && choices.files.includes(provenanceKey)
         ? [

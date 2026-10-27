@@ -48,6 +48,14 @@ export async function adoptLibraryTargets(
       automationEpoch: scope.request.recoveryEpoch,
       desiredPresence: true,
       monitoring: media.monitored,
+      libraryMonitoring:
+        media.monitored &&
+        (movie ||
+          selected.mediaId !== rootMediaId ||
+          (scope.request.schemaVersion === 3 &&
+            scope.request.seriesMonitoring?.some(
+              (policy) => policy.seriesId === rootMediaId,
+            ) === true)),
       intentionallyRemovedAt: null,
       ...(plex.length === 0 ? {} : { availability: "available" as const }),
     };

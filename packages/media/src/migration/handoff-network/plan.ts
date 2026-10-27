@@ -1,4 +1,5 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
+import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { HandoffScopeProtocolSchema } from "#shared/handoff/protocol.ts";
 import { assertLibraryHandoffSnapshot } from "#infrastructure/handoff/scoped-snapshot.ts";
@@ -96,7 +97,7 @@ function assertReview(input: {
     !report.stable
   )
     throw protectedEvidence("handoff_review_changed");
-  if (snapshotHash(scope.request) !== plan.requestHash)
+  if (snapshotHash(z.json().parse(scope.request)) !== plan.requestHash)
     throw new Error("Persisted handoff request hash mismatch");
   if (
     scope.request.bundleReviewId !== plan.bundleReviewId ||

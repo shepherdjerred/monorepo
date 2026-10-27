@@ -673,6 +673,28 @@ Recording a proven transfer's independent seeding responsibility commits before
 current library-policy projection, so revoked permission or an exhausted allowance
 cannot discard that responsibility.
 
+An owner can additionally select **Monitor this series, including future episodes**
+when preparing a TV import, with a separate choice for specials. The v3 request
+then contains an explicit version-1 `seriesMonitoring` selection bound to the
+captured series record. Earlier approvals without that selection grant no future
+episode policy. The original import receipt and verified Plex show association
+remain the source; no personal request or historical transfer is created.
+
+After catalog refresh, coverage expansion follows the requester pages with
+household pages of at most 25 episodes. It rechecks current owner, profile,
+runtime and series policy under the canonical and target locks. New episodes
+inherit the approved profile; existing episode overrides remain in effect.
+Series acquisitions use management proof version 2 within acquisition identity
+version 4, retaining the same file and completion formats. Exact episode-only
+approvals retain management proof version 1.
+
+`MediaIntent.libraryMonitoring` keeps household monitoring independent from
+personal request consent. Creating or cancelling a request preserves an unchanged
+household acquisition generation; requester and choice guards still protect its
+personal effects. Cancelling an unexpanded request does not manufacture negative
+episode targets. Owner removal clears household monitoring. Historical intent
+receipts omit this new storage field and retain their literal hashes.
+
 Each batch covers at most 25 physical files and 100 canonical media items.
 `activation: "activate"` changes the reviewed observe runtime to active at its
 existing recovery epoch. Later `activation: "extend"` batches require current
@@ -1014,6 +1036,15 @@ older serializable catalog snapshots. Canonical episode coordinates remain
 unchanged; each assigned absolute number retains its source and owner decision.
 
 ## Package boundaries
+
+`bun run generate` builds the production Prisma client and a test-only pre038
+intent client. Migration-ceiling fixtures use the latter against their actual
+historical DDL, including real SQL triggers and interactive transactions. It
+does not select or insert the later `libraryMonitoring` column; an explicit
+virtual `false` supplies the absent household policy to current fixture callers.
+This value is never stored or included in historical receipt hashes. Production
+always uses the complete current client, and historical fixtures reject a schema
+where the new column already exists.
 
 | Directory            | Responsibility                                                                          |
 | -------------------- | --------------------------------------------------------------------------------------- |

@@ -21,7 +21,7 @@ const Targets = z
   );
 
 /** Current household policy derives from a real initial-library approval, independently of personal requests. */
-export const LibrarySeriesManagementSchema = z.strictObject({
+export const LibraryEpisodeManagementV1Schema = z.strictObject({
   schemaVersion: z.literal(1),
   kind: z.literal("library_series_management"),
   seriesId: z.uuid(),
@@ -39,6 +39,19 @@ export const LibrarySeriesManagementSchema = z.strictObject({
   birthEpoch: z.int().nonnegative(),
   targets: Targets,
 });
+
+/** An explicitly selected captured series, rather than inferred permission from its imported episodes. */
+export const LibrarySeriesManagementV2Schema =
+  LibraryEpisodeManagementV1Schema.extend({
+    schemaVersion: z.literal(2),
+    policyScope: z.literal("series"),
+    includeSpecials: z.boolean(),
+    rootGenerationAtCapture: z.int().positive(),
+  });
+export const LibrarySeriesManagementSchema = z.discriminatedUnion(
+  "schemaVersion",
+  [LibraryEpisodeManagementV1Schema, LibrarySeriesManagementV2Schema],
+);
 
 /** Additive identity: literal request-sponsored v1 and movie v2/v3 records retain their original shapes. */
 export const ManagedSeriesAcquisitionIdentitySchema = z

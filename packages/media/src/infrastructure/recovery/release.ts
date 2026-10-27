@@ -55,7 +55,7 @@ export async function applyRecoveryDeclarations(
         ...(renew ? { automationEpoch: input.scope.recoveryEpoch } : {}),
         ...(restoring.has(media.id)
           ? { desiredPresence: true, intentionallyRemovedAt: null }
-          : {}),
+          : { libraryMonitoring: false }),
       },
     });
     await invalidateRetention(db, media.id);

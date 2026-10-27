@@ -628,6 +628,7 @@ model MediaIntent {
   generation             Int             @default(0)
   desiredPresence        Boolean         @default(true)
   monitoring             Boolean         @default(true)
+  libraryMonitoring      Boolean         @default(false)
   profileId              String?
   profile                QualityProfile? @relation(fields: [profileId], references: [id])
   version                Int             @default(0)

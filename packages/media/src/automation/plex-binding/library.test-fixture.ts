@@ -22,6 +22,7 @@ import { createAutomationTestContext } from "#testing/automation.ts";
 import { PlexClient, type PlexEditionItem } from "#integrations/plex.ts";
 import type { MigrationRecord } from "#shared/migration.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
+import { PrepareLibraryHandoffV3Schema } from "#shared/handoff/library-v3.ts";
 
 type SourceMedia = Extract<MigrationRecord, { kind: "media" }>;
 type Base = Awaited<ReturnType<typeof handoffFixture>>;
@@ -78,6 +79,7 @@ export async function adoptLibraryBindingSource(
     edition: MovieEditionKey;
     media: SourceMedia[];
     qualitySourceId?: string;
+    monitorSeries?: { seriesId: string; includeSpecials: boolean };
   },
 ) {
   const db = f.context.files.db;
@@ -168,6 +170,18 @@ export async function adoptLibraryBindingSource(
     reportHash: review.report.reportHash,
     selected: [
       { provenanceKey: file.provenanceKey, evidenceHash: file.observationHash },
+      ...review.report.entries
+        .filter(
+          (entry) =>
+            options.monitorSeries !== undefined &&
+            entry.sourceRecord.kind === "media" &&
+            entry.sourceRecord.mediaKind === "series" &&
+            entry.mediaIds.includes(options.monitorSeries.seriesId),
+        )
+        .map((entry) => ({
+          provenanceKey: entry.provenanceKey,
+          evidenceHash: entry.observationHash,
+        })),
     ],
     profiles: [
       {
@@ -190,12 +204,45 @@ export async function adoptLibraryBindingSource(
         : [],
     subtitlePolicies: [],
   });
+  const series = options.monitorSeries;
+  const seriesEntry =
+    series === undefined
+      ? undefined
+      : review.report.entries.find(
+          (entry) =>
+            entry.sourceRecord.kind === "media" &&
+            entry.sourceRecord.mediaKind === "series" &&
+            entry.mediaIds.includes(series.seriesId),
+        );
+  const selectedRequest =
+    series === undefined
+      ? request
+      : PrepareLibraryHandoffV3Schema.parse({
+          ...request,
+          schemaVersion: 3,
+          plexEditionLabels: "update_in_place",
+          seriesMonitoring: [
+            {
+              schemaVersion: 1,
+              seriesId: series.seriesId,
+              title: seriesEntry?.mappedMedia[0]?.title,
+              provenanceKey: seriesEntry?.provenanceKey,
+              includeFutureEpisodes: true,
+              includeSpecials: series.includeSpecials,
+            },
+          ],
+        });
   const preparing = await f.commands.prepare(
     f.network.actor,
     crypto.randomUUID(),
-    request,
+    selectedRequest,
   );
   const planId = z.uuid().parse(preparing.handoffId);
+  if (series !== undefined)
+    f.network.context.plex.metadataForEditionEdit = () =>
+      Promise.reject(
+        new Error("TV adoption must not request a movie edition edit"),
+      );
   const observe = createHandoffNetworkProducer(f.network.context);
   await observe(planId);
   await finishHandoffPreparation(
@@ -209,7 +256,7 @@ export async function adoptLibraryBindingSource(
     crypto.randomUUID(),
     planId,
     {
-      schemaVersion: 2,
+      schemaVersion: selectedRequest.schemaVersion,
       expectedVersion: detail.version,
       planHash: z.string().parse(detail.planHash),
       recoveryEpoch: 0,

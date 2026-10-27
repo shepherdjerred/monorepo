@@ -16,12 +16,26 @@ import {
   HandoffObservationRefV1Schema,
 } from "./plex-edition.ts";
 
+export const LibrarySeriesMonitoringV1Schema = z.strictObject({
+  schemaVersion: z.literal(1),
+  seriesId: z.uuid(),
+  title: z.string().min(1).max(1000),
+  provenanceKey: MovieEditionHashSchema,
+  includeFutureEpisodes: z.literal(true),
+  includeSpecials: z.boolean(),
+});
+
 /** New owner-approved metadata effects; earlier handoffs remain strictly read-only. */
 export const PrepareLibraryHandoffV3Schema =
   PrepareLibraryHandoffV2Schema.extend({
     schemaVersion: z.literal(3),
     plexEditionLabels: z.literal("update_in_place"),
     movies: PrepareLibraryHandoffV2Schema.shape.movies.default([]),
+    // Absence preserves literal earlier requests and grants no future-episode policy.
+    seriesMonitoring: z
+      .array(LibrarySeriesMonitoringV1Schema)
+      .max(25)
+      .optional(),
   });
 export const ApplyLibraryHandoffV3Schema = ApplyLibraryHandoffV2Schema.extend({
   schemaVersion: z.literal(3),

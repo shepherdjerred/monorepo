@@ -14,6 +14,7 @@ import {
 } from "./access.ts";
 import { lockMovieCommand, movieCommandConflict } from "./locks.ts";
 import { matchesMovieDefinition, movieDefinitionRef } from "./definition.ts";
+import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
 
 export async function chooseMovieEdition(
   tx: Prisma.TransactionClient,
@@ -82,9 +83,10 @@ export async function chooseMovieEdition(
     },
     update: {
       desiredPresence: true,
-      monitoring: scope.edition === "default",
+      monitoring:
+        target?.libraryMonitoring === true || scope.edition === "default",
       intentionallyRemovedAt: null,
-      generation: { increment: 1 },
+      ...personalRequestGenerationChange(target, epoch),
       version: { increment: 1 },
       ...(scope.edition === "default"
         ? {
