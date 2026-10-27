@@ -14,6 +14,7 @@ const Binding = z.strictObject({
       username: z.string().min(1),
       password: z.string().min(1),
       email: z.string().min(1).optional(),
+      otp: z.string().min(1).optional(),
     })
     .optional(),
 });
@@ -99,6 +100,7 @@ const Item = z.looseObject({
       id: z.string().optional(),
       label: z.string(),
       purpose: z.string().optional(),
+      type: z.string().optional(),
       value: z.string().optional(),
     }),
   ),
@@ -140,6 +142,11 @@ for (const binding of bindings) {
   );
   const username = loginField(source, "USERNAME", binding.fields?.username);
   const password = loginField(source, "PASSWORD", binding.fields?.password);
+  const otp = source.fields.find((entry) =>
+    binding.fields?.otp === undefined
+      ? entry.type === "OTP"
+      : entry.label === binding.fields.otp,
+  )?.value;
   const email = source.fields.find((entry) =>
     binding.fields === undefined
       ? entry.label.toLowerCase() === "email"
@@ -161,6 +168,7 @@ for (const binding of bindings) {
     username,
     password,
     hosts: binding.hosts,
+    ...(otp === undefined ? {} : { otp }),
     ...(z.email().safeParse(email).success ? { email } : {}),
   };
   print({

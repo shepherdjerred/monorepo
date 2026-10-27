@@ -34,6 +34,7 @@ export function promotionTransport(input: {
   monthlySolverUsd: number;
   enabled: () => Promise<boolean>;
   heartbeat: () => void;
+  registerSecret?: (value: string) => void;
 }) {
   const browser =
     input.target.discord === undefined

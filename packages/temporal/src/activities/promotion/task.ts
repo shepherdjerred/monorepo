@@ -14,8 +14,14 @@ import {
   type PromotionStore,
 } from "./store.ts";
 
-import type { PromotionTaskResult } from "./task-contract.ts";
-import { promotionObservationText } from "./observation.ts";
+import {
+  PromotionTaskDraftSchema,
+  type PromotionTaskResult,
+} from "./task-contract.ts";
+import {
+  promotionObservationText,
+  promotionObservationQuote,
+} from "./observation.ts";
 
 /** Checkpoints execution effects and rechecks the caller's saved schedule. */
 export class PromotionTaskJournal {
@@ -40,13 +46,37 @@ export class PromotionTaskJournal {
     },
   ) {}
 
-  observe(page: { url: string; text: string }): void {
+  observe(page: {
+    url: string;
+    text: string;
+  }): PromotionObservation & { reference: string } {
     assertPromotionUrl(this.input.target, page.url);
-    this.observations.push({
+    const observation = {
       ...page,
       id: crypto.randomUUID(),
       capturedAt: new Date(this.input.now()).toISOString(),
-    });
+    };
+    this.observations.push(observation);
+    return {
+      ...observation,
+      reference: `o${String(this.observations.length)}`,
+    };
+  }
+
+  resolveDraft(raw: unknown): PromotionTaskResult {
+    const draft = PromotionTaskDraftSchema.parse(raw);
+    return {
+      ...draft,
+      evidence: draft.evidence.map(({ observationId, ref }) => {
+        const page = this.observations[Number(observationId.slice(1)) - 1];
+        if (page === undefined)
+          throw new Error("Evidence observation does not belong to this run");
+        return {
+          url: page.url,
+          quote: promotionObservationQuote(page.text, ref),
+        };
+      }),
+    };
   }
 
   mutationFailed(): void {

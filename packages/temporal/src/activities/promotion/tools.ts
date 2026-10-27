@@ -7,6 +7,10 @@ import {
   type PromotionStore,
 } from "./store.ts";
 import { solvePromotionChallenge } from "./solver.ts";
+import {
+  promotionCredentialValue,
+  assertPromotionCredentialInput,
+} from "./access/credential-input.ts";
 
 const ActionSchema = z
   .strictObject({
@@ -31,7 +35,7 @@ const ActionSchema = z
     scrollX: z.number().optional(),
     waitNav: z.boolean().optional(),
     submit: z.boolean().optional(),
-    credential: z.enum(["username", "email", "password"]).optional(),
+    credential: z.enum(["username", "email", "password", "otp"]).optional(),
   })
   .refine(
     (value) => value.ref === undefined || value.selector === undefined,
@@ -85,6 +89,7 @@ export const PromotionLoginsSchema = z.record(
     email: z.email().optional(),
     password: z.string().min(1),
     hosts: z.array(z.string().min(1)).min(1).optional(),
+    otp: z.string().min(1).optional(),
   }),
 );
 
@@ -106,6 +111,18 @@ function assertLoginHost(hosts: string[] | undefined, page: string): void {
     throw new Error("Stored credentials are not assigned to this login host");
 }
 
+function isVerificationControl(node: {
+  role: string;
+  name?: string | undefined;
+}): boolean {
+  return (
+    node.role === "button" &&
+    /^(?:verify|confirm|continue)(?:\s+(?:code|verification|account))?$/i.test(
+      node.name ?? "",
+    )
+  );
+}
+
 /** Native browser actions; there are no site-specific sequences or selectors. */
 export function createPromotionToolHandler(input: {
   browser: PromotionBrowser;
@@ -122,11 +139,14 @@ export function createPromotionToolHandler(input: {
   solverAllowanceMicrousd: number;
   signal: AbortSignal;
   heartbeat: () => void;
+  registerSecret?: (value: string) => void;
 }) {
   let queue: Promise<unknown> = Promise.resolve();
   let toolCalls = 0,
     loginSubmitted = false;
   let loginPage: string | undefined;
+  let otpPage: string | undefined;
+  let otpSubmitted = false;
 
   async function credentialAction(body: z.infer<typeof ActionSchema>) {
     if (input.reconciliation) throw new Error("Reconciliation never signs in");
@@ -141,7 +161,9 @@ export function createPromotionToolHandler(input: {
       throw new Error(
         "Credentials require a native fill/type reference without literal text",
       );
-    if (loginSubmitted)
+    if (otpPage !== undefined && body.credential === "otp")
+      throw new Error("Second-factor code already filled for this run");
+    if (loginSubmitted && body.credential !== "otp")
       throw new Error(
         "Login already submitted; inspect the result instead of retrying",
       );
@@ -150,40 +172,28 @@ export function createPromotionToolHandler(input: {
       throw new Error("Stored login is unavailable for this account");
     const page = await input.browser.currentUrl();
     assertLoginHost(login.hosts, page);
-    const value =
-      body.credential === "email"
-        ? (login.email ??
-          (z.email().safeParse(login.username).success
-            ? login.username
-            : undefined))
-        : login[body.credential];
-    if (value === undefined)
-      throw new Error("Stored email is unavailable for this account");
+    const value = promotionCredentialValue(login, body.credential);
     const node = await input.browser.accessibleControl(body.ref);
     const type = await input.browser.attribute(body.ref, "type");
-    if (
-      node.role !== "textbox" ||
-      (body.credential === "password"
-        ? type !== "password"
-        : ![null, "text", "email"].includes(type))
-    )
-      throw new Error(
-        "Credential reference must identify the matching native input",
-      );
+    assertPromotionCredentialInput(node, type, body.credential);
     const { credential, ...nativeAction } = body;
+    input.registerSecret?.(value);
     if (body.kind === "type")
       await input.browser.action({ kind: "fill", ref: body.ref, text: "" });
     await input.browser.action({ ...nativeAction, text: value });
     if (credential === "password") loginPage = page;
+    if (credential === "otp") otpPage = page;
     return { filled: true };
   }
 
   async function submitLogin(body: z.infer<typeof ActionSchema>) {
-    if (loginSubmitted)
+    const page = await input.browser.currentUrl();
+    const secondFactor = otpPage === page;
+    if ((secondFactor && otpSubmitted) || (!secondFactor && loginSubmitted))
       throw new Error(
         "Login already submitted; inspect the result instead of retrying",
       );
-    if (loginPage !== (await input.browser.currentUrl()))
+    if (!secondFactor && loginPage !== page)
       throw new Error("Fill the stored password on this page before login");
     if (
       body.ref !== undefined &&
@@ -193,6 +203,7 @@ export function createPromotionToolHandler(input: {
         "Login control is disabled; inspect the form before submitting",
       );
     loginSubmitted = true;
+    if (secondFactor) otpSubmitted = true;
     return await input.browser.action(body);
   }
 
@@ -234,7 +245,8 @@ export function createPromotionToolHandler(input: {
         ),
       };
     }
-    return isSignInControl(node)
+    const verify = otpPage !== undefined && isVerificationControl(node);
+    return verify || isSignInControl(node)
       ? { handled: true, result: await submitLogin(body) }
       : { handled: false };
   }
@@ -327,8 +339,11 @@ export function createPromotionToolHandler(input: {
         return await navigate(tool.body.url);
       case "snapshot": {
         const page = await input.browser.snapshot(tool.body);
-        input.journal.observe(page);
-        return { untrustedPageContent: page };
+        const observation = input.journal.observe(page);
+        return {
+          observationId: observation.reference,
+          untrustedPageContent: page,
+        };
       }
       case "attr":
         return await input.browser.attribute(
@@ -342,9 +357,9 @@ export function createPromotionToolHandler(input: {
           png: Buffer.from(await input.browser.screenshot()).toString("base64"),
         };
       case "solve-captcha": {
-        if (input.preview || input.reconciliation)
+        if (input.reconciliation)
           throw new Error("Read-only mode cannot create paid CAPTCHA tasks");
-        return await solvePromotionChallenge({
+        const solved = await solvePromotionChallenge({
           store: input.store,
           occurrenceId: input.occurrenceId,
           challenge: await input.browser.challenge(),
@@ -352,8 +367,15 @@ export function createPromotionToolHandler(input: {
           allowanceMicrousd: input.solverAllowanceMicrousd,
           signal: input.signal,
           heartbeat: input.heartbeat,
+          registerSecret: input.registerSecret,
           apply: (token) => input.browser.applyChallenge(token),
         });
+        return {
+          ...solved,
+          responseStaged: true,
+          formSubmitted: false,
+          siteAccepted: false,
+        };
       }
     }
   }

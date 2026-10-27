@@ -15,7 +15,8 @@ import { redactSecrets } from "#shared/redact.ts";
 import { redactAgentTaskPayloadStrings } from "#activities/agent/agent-task-result.ts";
 import {
   PromotionTaskResultSchema,
-  PromotionPreviewResultSchema,
+  PromotionTaskDraftSchema,
+  PromotionPreviewDraftSchema,
 } from "./task-contract.ts";
 import { promotionContent, promotionMaintenanceContext } from "./manifest.ts";
 import { promotionPrompt } from "./prompt.ts";
@@ -30,6 +31,7 @@ import {
   promotionTransport,
   promotionRequiredEnv as required,
 } from "./transport.ts";
+import { recordPromotionDiagnostic } from "./diagnostic.ts";
 const PromotionAgentToolSchema = z.union([
   PromotionToolSchema,
   PromotionDiscordToolSchema,
@@ -92,13 +94,16 @@ export async function runPromotionAgent(input: {
   const logins = PromotionLoginsSchema.parse(
     JSON.parse(required("STORM_PROMOTION_LOGINS")),
   );
-  const redact = promotionSecretTokens(logins);
+  const redact = [...promotionSecretTokens(logins)];
   const transport = promotionTransport({
     ...input,
     signal,
     logins,
     maxSteps: config.maxSteps,
     monthlySolverUsd: config.monthlySolverUsd,
+    registerSecret: (value) => {
+      redact.push(value);
+    },
     enabled: async () => {
       const latest = await promotionConfig();
       return latest.enabled && latest.enabledTargets.includes(input.target.id);
@@ -154,6 +159,7 @@ export async function runPromotionAgent(input: {
   const heartbeat = setInterval(() => {
     context.heartbeat({ targetId: input.target.id });
   }, 15_000);
+  let draft: unknown;
   try {
     await chmod(socket, 0o660);
     if (uid !== undefined) await chown(socket, 0, uid);
@@ -197,8 +203,8 @@ export async function runPromotionAgent(input: {
       },
       outputSchema: z.toJSONSchema(
         input.mode === "preview"
-          ? PromotionPreviewResultSchema
-          : PromotionTaskResultSchema,
+          ? PromotionPreviewDraftSchema
+          : PromotionTaskDraftSchema,
         {
           target: "draft-7",
         },
@@ -220,9 +226,8 @@ export async function runPromotionAgent(input: {
     });
     if (outcome.finalText === undefined)
       throw new Error("Promotion agent omitted structured result");
-    const result = PromotionTaskResultSchema.parse(
-      JSON.parse(outcome.finalText),
-    );
+    draft = JSON.parse(outcome.finalText) as unknown;
+    const result = transport.journal.resolveDraft(draft);
     transport.validateResult(result);
     await transport.journal.finish(result);
     if (
@@ -239,6 +244,20 @@ export async function runPromotionAgent(input: {
       browserTrace,
       ...transport.audit(),
     };
+  } catch (error: unknown) {
+    await recordPromotionDiagnostic({
+      store: input.store,
+      occurrenceId: input.occurrenceId,
+      tokens: redact,
+      diagnostic: {
+        error: error instanceof Error ? error.message : String(error),
+        draft: draft ?? null,
+        observations: transport.journal.observations,
+        browserTrace,
+        ...transport.audit(),
+      },
+    });
+    throw error;
   } finally {
     completion.abort();
     clearInterval(heartbeat);

@@ -82,24 +82,38 @@ export class PromotionDiscordPreview {
   }
 
   private async request(path: string, body?: unknown): Promise<unknown> {
-    const response = await fetch(`http://discord${path}`, {
-      unix: this.input.socket,
-      method: body === undefined ? "GET" : "POST",
-      ...(body === undefined
-        ? {}
-        : {
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
-          }),
-      signal: AbortSignal.any([this.input.signal, AbortSignal.timeout(30_000)]),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`http://discord${path}`, {
+        unix: this.input.socket,
+        method: body === undefined ? "GET" : "POST",
+        ...(body === undefined
+          ? {}
+          : {
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(body),
+            }),
+        signal: AbortSignal.any([
+          this.input.signal,
+          AbortSignal.timeout(30_000),
+        ]),
+      });
+    } catch {
+      throw new Error(
+        "Outreach Discord daemon is unavailable. Run the service-account-backed start-discord.ts bootstrap; desktop 1Password is disabled.",
+      );
+    }
     if (!response.ok)
       throw new Error(`Discord daemon ${path} HTTP ${String(response.status)}`);
     return await response.json();
   }
 
-  private observe(text: string): void {
-    this.input.journal.observe({ url: this.input.target.url, text });
+  private observe(text: string) {
+    const observation = this.input.journal.observe({
+      url: this.input.target.url,
+      text,
+    });
+    return { observationId: observation.reference, ref: "text" };
   }
 
   async inspect() {
@@ -125,10 +139,10 @@ export class PromotionDiscordPreview {
       throw new Error(
         "Assigned Discord channel is not visible to the outreach account",
       );
-    this.observe(
+    const evidence = this.observe(
       `Account: ${expected.username}\nGuild: ${channel.guildId}\nChannel: ${channel.name}\nChannel ID: ${channel.id}\nCan send: ${String(channel.canSend)}`,
     );
-    return { identity: identities.user, channel };
+    return { identity: identities.user, channel, evidence };
   }
 
   async handle(raw: unknown): Promise<unknown> {
@@ -151,11 +165,12 @@ export class PromotionDiscordPreview {
         )
       )
         throw new Error("Discord read returned a foreign channel");
-      for (const message of result.messages)
+      const evidence = result.messages.map((message) =>
         this.observe(
           `${message.authorTag}\n${message.createdAt}\n${message.content}\n${message.embeds.map((embed) => [embed.title, embed.description, ...embed.fields.map((field) => `${field.name}: ${field.value}`)].filter(Boolean).join("\n")).join("\n")}`,
-        );
-      return { untrustedDiscordContent: result };
+        ),
+      );
+      return { untrustedDiscordContent: result, evidence };
     }
     if (!context.channel.canSend)
       throw new Error("Assigned Discord channel is read-only for this account");

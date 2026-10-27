@@ -5,7 +5,12 @@ export function promotionSecretTokens(
   logins: Readonly<
     Record<
       string,
-      { username: string; email?: string | undefined; password: string }
+      {
+        username: string;
+        email?: string | undefined;
+        password: string;
+        otp?: string | undefined;
+      }
     >
   >,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
@@ -17,6 +22,10 @@ export function promotionSecretTokens(
     environment["STORM_PROMOTION_LOGINS"],
     ...Object.values(logins).flatMap((login) => [
       login.password,
+      login.otp,
+      ...(login.otp !== undefined && URL.canParse(login.otp)
+        ? [new URL(login.otp).searchParams.get("secret") ?? undefined]
+        : []),
       JSON.stringify(login.password).slice(1, -1),
       ...(login.username.includes("@") ? [login.username] : []),
       ...(login.email === undefined ? [] : [login.email]),

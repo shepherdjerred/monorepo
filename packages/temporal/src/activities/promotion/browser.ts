@@ -5,6 +5,12 @@ import { assertPromotionUrl, type PromotionTarget } from "#shared/promotion.ts";
 import { reportReceiptStore } from "#activities/reports/report-object-store.ts";
 import { promotionStoragePrefix } from "./store.ts";
 import { captchaApplicationScript } from "./browser-scripts.ts";
+import {
+  installChallengeCapture,
+  readChallenge,
+  applyCloudflareChallenge,
+} from "./access/challenge-scripts.ts";
+import type { PromotionChallenge } from "./solver.ts";
 
 const IdentifierSchema = z.object({
   id: z.string().optional(),
@@ -57,6 +63,7 @@ export class PromotionBrowser {
   private readonly signal: AbortSignal;
   private tabId: string | undefined;
   private readonly profile: string | undefined;
+  private challengeState: PromotionChallenge | undefined;
   private lastSnapshot:
     { url: string; scope: SnapshotScope | undefined } | undefined;
   private readonly controls = new Map<
@@ -178,6 +185,7 @@ export class PromotionBrowser {
       if (this.tabId === undefined)
         throw new Error("Browser tab creation omitted tab ID");
     } else await this.json(`${this.tab()}/navigate`, { url: url.href });
+    await this.evaluate(installChallengeCapture);
     return { url: promotionPublicUrl(await this.currentUrl()) };
   }
 
@@ -257,28 +265,32 @@ export class PromotionBrowser {
     return node;
   }
 
-  async challenge(): Promise<{
-    type: "RecaptchaV2TaskProxyless" | "TurnstileTaskProxyless";
-    websiteURL: string;
-    websiteKey: string;
-  }> {
+  async challenge(): Promise<PromotionChallenge> {
     const websiteURL = await this.currentUrl();
     const widget = z
       .object({
         type: z.enum(["RecaptchaV2TaskProxyless", "TurnstileTaskProxyless"]),
         websiteKey: z.string().min(1),
+        action: z.string().optional(),
+        cData: z.string().optional(),
+        chlPageData: z.string().optional(),
       })
-      .parse(
-        await this.evaluate(
-          "(() => { const e=document.querySelector('.g-recaptcha[data-sitekey],.cf-turnstile[data-sitekey]'); if(!e) throw new Error('Supported CAPTCHA widget not found'); return {type:e.classList.contains('cf-turnstile')?'TurnstileTaskProxyless':'RecaptchaV2TaskProxyless',websiteKey:e.getAttribute('data-sitekey')}; })()",
-        ),
-      );
-    return { ...widget, websiteURL };
+      .parse(await this.evaluate(readChallenge));
+    const challenge = { ...widget, websiteURL };
+    this.challengeState = challenge;
+    return challenge;
   }
 
   async applyChallenge(token: string): Promise<void> {
     await this.currentUrl();
-    await this.evaluate(captchaApplicationScript(token));
+    if (this.challengeState?.websiteURL !== (await this.currentUrl()))
+      throw new Error("CAPTCHA page changed before token application");
+    await this.evaluate(
+      this.challengeState.chlPageData === undefined
+        ? captchaApplicationScript(token)
+        : applyCloudflareChallenge(token),
+    );
+    this.challengeState = undefined;
   }
 
   async screenshot(): Promise<Uint8Array> {

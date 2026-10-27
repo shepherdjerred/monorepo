@@ -11,6 +11,7 @@ import { memoryPromotionStore } from "#activities/promotion/test-support.ts";
 import {
   readPromotionState,
   updatePromotionState,
+  SolverBudgetSchema,
 } from "#activities/promotion/store.ts";
 import { PromotionLoginsSchema } from "#activities/promotion/tools.ts";
 import {
@@ -18,6 +19,7 @@ import {
   PromotionManifestSchema,
 } from "#shared/promotion.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import { promotionDiagnosticKey } from "#activities/promotion/diagnostic.ts";
 
 function print(text: string): void {
   process.stdout.write(`${text}\n`);
@@ -99,13 +101,13 @@ print(
     output,
     temporalServer: false,
     publishing: false,
-    paidSolver: false,
+    paidSolver: true,
   }),
 );
 
+const store = memoryPromotionStore();
 for (const target of targets) {
-  const store = memoryPromotionStore(),
-    runId = crypto.randomUUID();
+  const runId = crypto.randomUUID();
   const occurrenceId = `storm-promotion/${target.id}/${runId}`;
   const startedAt = new Date().toISOString();
   const state = await updatePromotionState(store, target.id, (current) => ({
@@ -153,14 +155,42 @@ for (const target of targets) {
   const final = await readPromotionState(store, target.id);
   if (final.attempts.length > 0)
     throw new Error("Preview unexpectedly recorded a promotion effect");
+  const months = [
+    ...new Set([startedAt.slice(0, 7), new Date().toISOString().slice(0, 7)]),
+  ];
+  const budgets = await Promise.all(
+    months.map((month) =>
+      store.read(`solver/${month}.json`, SolverBudgetSchema),
+    ),
+  );
+  const charges = budgets
+    .flatMap((budget) => Object.values(budget?.value.charges ?? {}))
+    .filter((charge) => charge.occurrenceId === occurrenceId);
+  const solver = {
+    reservations: charges.length,
+    knownTasks: charges.filter((charge) => charge.taskId !== null).length,
+    costMicrousd: charges.reduce(
+      (total, charge) => total + (charge.chargedMicrousd ?? 0),
+      0,
+    ),
+    unsettledMicrousd: charges
+      .filter((charge) => charge.chargedMicrousd === null)
+      .reduce((total, charge) => total + charge.reservedMicrousd, 0),
+  };
+  const diagnostic = await store.read(
+    promotionDiagnosticKey(occurrenceId),
+    z.unknown(),
+  );
   const entry = {
     targetId: target.id,
     startedAt,
     completedAt: new Date().toISOString(),
     outcome,
+    diagnostic: diagnostic?.value ?? null,
     state: promotionStateSummary(final),
     submissionAttempts: 0,
-    paidSolverTasks: 0,
+    paidSolverTasks: solver.knownTasks,
+    solver,
   };
   const serialized = redactSecrets(JSON.stringify(entry, null, 2), tokens);
   const file = path.join(output, `${target.id}.json`);
@@ -172,7 +202,7 @@ for (const target of targets) {
       targetId: target.id,
       result: file,
       submissionAttempts: 0,
-      paidSolverTasks: 0,
+      paidSolverTasks: solver.knownTasks,
     }),
   );
 }

@@ -19,6 +19,7 @@ const ResultSchema = z.object({
     .object({
       gRecaptchaResponse: z.string().optional(),
       token: z.string().optional(),
+      userAgent: z.string().optional(),
     })
     .optional(),
 });
@@ -27,6 +28,9 @@ export type PromotionChallenge = {
   type: "RecaptchaV2TaskProxyless" | "TurnstileTaskProxyless";
   websiteURL: string;
   websiteKey: string;
+  action?: string | undefined;
+  cData?: string | undefined;
+  chlPageData?: string | undefined;
 };
 
 /** Result tokens stay inside this Activity, never in Temporal input/output. */
@@ -38,8 +42,9 @@ export async function solvePromotionChallenge(input: {
   allowanceMicrousd: number;
   signal: AbortSignal;
   heartbeat: () => void;
-  apply: (token: string) => Promise<void>;
+  apply: (token: string, userAgent?: string) => Promise<void>;
   request?: (url: string, options: RequestInit) => Promise<Response>;
+  registerSecret?: ((value: string) => void) | undefined;
 }): Promise<{ taskId: number; costMicrousd: number }> {
   const request = input.request ?? fetch;
   const month = new Date().toISOString().slice(0, 7);
@@ -135,7 +140,8 @@ export async function solvePromotionChallenge(input: {
         },
       };
     });
-    await input.apply(token);
+    input.registerSecret?.(token);
+    await input.apply(token, result.solution?.userAgent);
     return { taskId, costMicrousd };
   }
   throw new Error(
