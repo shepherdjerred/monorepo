@@ -57,6 +57,80 @@ export function macRuntimeFile(file: string): boolean {
     /^TaskNotesAcceptance_macosx[^/]+\.xctestrun$/u.test(file)
   );
 }
+export const acceptanceStateWritePrefix =
+  "/Library/Containers/red.sjer.tasknotes.mac.acceptance/Data/Library/Application Support/FacetAcceptance/";
+const homeWriteKey =
+  "com.apple.security.temporary-exception.files.home-relative-path.read-write";
+/** Validate the effective signature, including Xcode's injected runner policy. */
+export function validateMacCapabilities(
+  raw: unknown,
+  role: "app" | "runner",
+): void {
+  assert.ok(raw !== null && typeof raw === "object" && !Array.isArray(raw));
+  assert.equal(
+    Reflect.get(raw, "com.apple.security.app-sandbox"),
+    true,
+    "App and runner must remain sandboxed",
+  );
+  const writes = Object.keys(raw).filter(
+    (key) =>
+      key.startsWith("com.apple.security.temporary-exception.files.") &&
+      key.endsWith(".read-write"),
+  );
+  assert.deepEqual(
+    writes,
+    role === "runner" ? [homeWriteKey] : [],
+    "Unexpected static filesystem write capability",
+  );
+  if (role === "app") {
+    assert.equal(
+      Reflect.get(raw, "com.apple.security.temporary-exception.sbpl"),
+      undefined,
+      "App must not inherit runner sandbox overrides",
+    );
+    return;
+  }
+  const homeWrites: unknown = Reflect.get(raw, homeWriteKey);
+  assert.ok(
+    Array.isArray(homeWrites) &&
+      homeWrites.length > 0 &&
+      homeWrites.every(
+        (prefix: unknown) => prefix === acceptanceStateWritePrefix,
+      ),
+    "Runner write access must be confined to synthetic acceptance state",
+  );
+  assert.equal(Reflect.get(raw, "com.apple.security.get-task-allow"), true);
+  const readOnly: unknown = Reflect.get(
+    raw,
+    "com.apple.security.temporary-exception.files.absolute-path.read-only",
+  );
+  assert.ok(
+    Array.isArray(readOnly) && readOnly.includes("/"),
+    "Preserve SDK runner read policy",
+  );
+  const policy: unknown = Reflect.get(
+    raw,
+    "com.apple.security.temporary-exception.sbpl",
+  );
+  assert.ok(
+    Array.isArray(policy) &&
+      policy.includes("(allow hid-control)") &&
+      policy.includes("(allow signal)") &&
+      policy.every(
+        (rule: unknown) =>
+          rule === "(allow hid-control)" || rule === "(allow signal)",
+      ),
+    "Unexpected runner sandbox policy override",
+  );
+  for (const key of Object.keys(raw))
+    assert.ok(
+      !(
+        key.startsWith("com.apple.security.files.") &&
+        key.endsWith(".read-write")
+      ),
+      "Unexpected runner file-selection write capability",
+    );
+}
 export function readMacArtifact(raw: unknown): MacArtifact {
   assert.ok(raw !== null && typeof raw === "object" && !Array.isArray(raw));
   assert.deepEqual(
@@ -215,7 +289,7 @@ export async function verifyMacArtifact(
   for (const app of [
     "FacetAcceptance.app",
     "TaskNotesAcceptanceUITests-Runner.app",
-  ])
+  ]) {
     await command([
       "codesign",
       "--verify",
@@ -223,6 +297,29 @@ export async function verifyMacArtifact(
       "--strict",
       path.join(products, "Debug", app),
     ]);
+    const entitlementFile = path.join(
+      path.dirname(products),
+      `capabilities-${app}.plist`,
+    );
+    await command([
+      "codesign",
+      "--display",
+      "--xml",
+      "--entitlements",
+      entitlementFile,
+      path.join(products, "Debug", app),
+    ]);
+    const capabilities: unknown = JSON.parse(
+      await command(
+        ["plutil", "-convert", "json", "-o", "-", entitlementFile],
+        true,
+      ),
+    );
+    validateMacCapabilities(
+      capabilities,
+      app === "FacetAcceptance.app" ? "app" : "runner",
+    );
+  }
 }
 /** Physical files first, then validated exact links; never traverse VirtioFS framework links. */
 export async function materializeMacArtifact(

@@ -357,6 +357,10 @@ per-run bundles and strict source/artifact receipts beneath `.build/occurrence-v
 no private `/tmp` helper is required after reboot. Fresh host and guest UUIDs
 protect existing state. Owned regular result files return through a size-limited,
 SHA-256 verified manifest and binary Guest Agent copies, without a writable share.
+The acceptance runner retains Xcode's sandbox and has a signing-only write grant
+for the synthetic `FacetAcceptance` state directory. Effective signed app and
+runner capabilities are checked before dispatch and again inside the guest;
+missing or broader write access stops the run before app UI.
 
 Foreground manual testing requires explicit opt-in:
 `bun scripts/occurrence-acceptance/run-macos.ts --host-ui`.

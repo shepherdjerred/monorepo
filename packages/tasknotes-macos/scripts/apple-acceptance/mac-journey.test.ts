@@ -3,7 +3,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test } from "vitest";
 import { MacSessionPreflightError } from "./mac-session.ts";
-import { materializeMacArtifact, readMacArtifact } from "./mac-artifact.ts";
+import {
+  acceptanceStateWritePrefix,
+  materializeMacArtifact,
+  readMacArtifact,
+  validateMacCapabilities,
+} from "./mac-artifact.ts";
 import { readMacEvidence } from "./mac-evidence.ts";
 import {
   buildMacAcceptance,
@@ -18,6 +23,78 @@ import {
 const directories: string[] = [];
 const proofRunID = "12345678-1234-1234-1234-123456789abc";
 const proofSHA = "a".repeat(64);
+test("effective runner capabilities confine writes without dropping the SDK sandbox", () => {
+  const homeWrite =
+    "com.apple.security.temporary-exception.files.home-relative-path.read-write";
+  const signed = {
+    "com.apple.security.app-sandbox": true,
+    "com.apple.security.get-task-allow": true,
+    "com.apple.security.temporary-exception.files.absolute-path.read-only": [
+      "/",
+      "/",
+    ],
+    "com.apple.security.temporary-exception.sbpl": [
+      "(allow hid-control)",
+      "(allow signal)",
+    ],
+    [homeWrite]: [acceptanceStateWritePrefix],
+  };
+  expect(() => validateMacCapabilities(signed, "runner")).not.toThrow();
+  expect(() =>
+    validateMacCapabilities(
+      {
+        ...signed,
+        [homeWrite]: [acceptanceStateWritePrefix, acceptanceStateWritePrefix],
+      },
+      "runner",
+    ),
+  ).not.toThrow();
+  const bad = [
+    { ...signed, "com.apple.security.app-sandbox": false },
+    { ...signed, [homeWrite]: [] },
+    { ...signed, [homeWrite]: ["/Library/Containers/"] },
+    { ...signed, [homeWrite]: [acceptanceStateWritePrefix + "../"] },
+    {
+      ...signed,
+      "com.apple.security.temporary-exception.files.absolute-path.read-write": [
+        "/",
+      ],
+    },
+    {
+      ...signed,
+      "com.apple.security.temporary-exception.sbpl": ["(allow file-write*)"],
+    },
+    {
+      ...signed,
+      "com.apple.security.temporary-exception.sbpl": ["(allow hid-control)"],
+    },
+    { ...signed, "com.apple.security.files.user-selected.read-write": true },
+  ];
+  for (const capabilities of bad)
+    expect(() => validateMacCapabilities(capabilities, "runner")).toThrow();
+  const { [homeWrite]: removed, ...missing } = signed;
+  expect(removed).toEqual([acceptanceStateWritePrefix]);
+  expect(() => validateMacCapabilities(missing, "runner")).toThrow();
+  expect(() =>
+    validateMacCapabilities(
+      {
+        "com.apple.security.app-sandbox": true,
+        "com.apple.security.files.user-selected.read-write": true,
+      },
+      "app",
+    ),
+  ).not.toThrow();
+  expect(() => validateMacCapabilities(signed, "app")).toThrow();
+  expect(() =>
+    validateMacCapabilities(
+      {
+        "com.apple.security.app-sandbox": true,
+        "com.apple.security.temporary-exception.sbpl": ["(allow file-write*)"],
+      },
+      "app",
+    ),
+  ).toThrow();
+});
 test("VM result manifest rejects traversal, collisions, foreign identity and byte overflow", () => {
   const file = { path: "state/vault/task.md", bytes: 4, sha256: proofSHA };
   const manifest = { schemaVersion: 1, runID: proofRunID, files: [file] };
