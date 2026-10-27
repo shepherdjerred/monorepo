@@ -9,25 +9,28 @@ export type CommandOptions = {
   capture?: boolean;
   input?: string;
   acceptedExitCodes?: readonly number[];
+  outputFile?: { path: string; maximumBytes: number };
 };
 
 type CommandChild = {
   pid: number;
   exited: Promise<number>;
   unref(): void;
+  stdout?: number | ReadableStream<Uint8Array>;
 };
 type CommandSpawnOptions = {
   cwd: string;
   env: Record<string, string | undefined>;
   detached: true;
   stdin: "ignore" | Uint8Array;
-  stdout: number;
+  stdout: number | "pipe";
   stderr: number;
 };
 type CommandControls = {
   retire: (pid: number) => void;
   spawn?: (argv: string[], options: CommandSpawnOptions) => CommandChild;
   clock?: () => { wallMS: number; monotonicMS: number };
+  open?: typeof open;
 };
 
 function retireGroup(pid: number): void {
@@ -46,12 +49,21 @@ export async function boundedCommandResult(
   controls: CommandControls = { retire: retireGroup },
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   assert.ok(Number.isSafeInteger(options.timeoutMS) && options.timeoutMS > 0);
+  if (options.outputFile) {
+    assert.ok(!options.capture);
+    assert.ok(
+      Number.isSafeInteger(options.outputFile.maximumBytes) &&
+        options.outputFile.maximumBytes >= 0,
+    );
+  }
   await mkdir(options.logs, { recursive: true, mode: 0o700 });
   const filename = path.join(options.logs, `${crypto.randomUUID()}.log`);
-  const log = await open(filename, "wx", 0o600);
   const diagnosticFilename = filename + ".stderr";
-  const diagnostics = await open(diagnosticFilename, "wx", 0o600);
+  let log: Awaited<ReturnType<typeof open>> | undefined;
+  let diagnostics: Awaited<ReturnType<typeof open>> | undefined;
   let child: CommandChild | undefined;
+  let output: Awaited<ReturnType<typeof open>> | undefined;
+  let reader: { cancel(): Promise<void> } | undefined;
   let timedOut = false;
   const failures: unknown[] = [];
   let observedExit = false;
@@ -76,6 +88,11 @@ export async function boundedCommandResult(
     return elapsedMS >= options.timeoutMS;
   }
   try {
+    const acquire = controls.open ?? open;
+    log = await acquire(filename, "wx", 0o600);
+    diagnostics = await acquire(diagnosticFilename, "wx", 0o600);
+    if (options.outputFile)
+      output = await acquire(options.outputFile.path, "wx", 0o600);
     const env: Record<string, string | undefined> = {
       ...Bun.env,
       MISE_EXEC_AUTO_INSTALL: "false",
@@ -89,10 +106,34 @@ export async function boundedCommandResult(
         options.input === undefined
           ? "ignore"
           : new TextEncoder().encode(options.input),
-      stdout: log.fd,
+      stdout: options.outputFile ? "pipe" : log.fd,
       stderr: diagnostics.fd,
     });
     const owned = child;
+    const copy = async (): Promise<void> => {
+      if (!options.outputFile) return;
+      assert.ok(child?.stdout && typeof child.stdout !== "number" && output);
+      const stream = child.stdout.getReader();
+      reader = stream;
+      let bytes = 0;
+      while (true) {
+        const chunk = await stream.read();
+        if (chunk.done) break;
+        bytes += chunk.value.byteLength;
+        assert.ok(
+          bytes <= options.outputFile.maximumBytes,
+          "Binary output exceeds its limit",
+        );
+        let offset = 0;
+        while (offset < chunk.value.byteLength) {
+          const written: { bytesWritten: number } = await output.write(
+            chunk.value.subarray(offset),
+          );
+          assert.ok(written.bytesWritten > 0);
+          offset += written.bytesWritten;
+        }
+      }
+    };
     timer = setTimeout(() => {
       timedOut = true;
       try {
@@ -102,10 +143,13 @@ export async function boundedCommandResult(
       }
     }, options.timeoutMS);
     const code = await Promise.race([
-      child.exited.then((code) => {
-        observedExit = true;
-        return code;
-      }),
+      Promise.all([
+        child.exited.then((code) => {
+          observedExit = true;
+          return code;
+        }),
+        copy(),
+      ]).then(([code]) => code),
       new Promise<never>((_, reject) => {
         hardDeadline = setTimeout(
           () =>
@@ -137,9 +181,11 @@ export async function boundedCommandResult(
     } catch (error) {
       failures.push(error);
     } finally {
+      if (reader) void reader.cancel().catch(() => {});
       const closed = await Promise.allSettled([
-        log.close(),
-        diagnostics.close(),
+        ...(log ? [log.close()] : []),
+        ...(diagnostics ? [diagnostics.close()] : []),
+        ...(output ? [output.close()] : []),
       ]);
       for (const result of closed)
         if (result.status === "rejected") failures.push(result.reason);

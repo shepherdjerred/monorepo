@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, open, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test } from "vitest";
@@ -115,3 +115,86 @@ test("startup or command stalls have a deadline including forced owned-group exi
   ).rejects.toThrow("timed out");
   expect(Date.now() - before).toBeLessThan(2_500);
 });
+test("binary output preserves every byte and rejects collisions before spawning", async () => {
+  const settings = await options(),
+    output = path.join(settings.logs, "owned.bin");
+  const binary = {
+    ...settings,
+    capture: false,
+    outputFile: { path: output, maximumBytes: 4 },
+  };
+  await boundedCommand(
+    [
+      process.execPath,
+      "-e",
+      "await Bun.write(Bun.stdout, new Uint8Array([0,255,10,13]))",
+    ],
+    binary,
+  );
+  expect(await Bun.file(output).bytes()).toEqual(
+    new Uint8Array([0, 255, 10, 13]),
+  );
+  await expect(
+    boundedCommandResult(["must-not-spawn"], binary, {
+      retire: () => {
+        throw Error("Unexpected retirement");
+      },
+      spawn: () => {
+        throw Error("Unexpected spawn");
+      },
+    }),
+  ).rejects.toThrow("EEXIST");
+});
+test("diagnostic open failure closes the previously acquired output descriptor", async () => {
+  let acquired: Awaited<ReturnType<typeof open>> | undefined;
+  await expect(
+    boundedCommandResult(["must-not-spawn"], await options(), {
+      retire: () => {
+        throw Error("Unexpected retirement");
+      },
+      open: async (...args) => {
+        if (acquired) throw Error("Injected diagnostic open failure");
+        acquired = await open(...args);
+        return acquired;
+      },
+      spawn: () => {
+        throw Error("Unexpected spawn");
+      },
+    }),
+  ).rejects.toThrow("Injected diagnostic open failure");
+  expect(acquired?.fd).toBe(-1);
+});
+test.each(["oversize", "timeout"])(
+  "binary %s retires its owned writer and closes output",
+  async (kind) => {
+    const settings = await options(200),
+      output = path.join(settings.logs, "owned.bin");
+    const pids: number[] = [];
+    await expect(
+      boundedCommandResult(
+        [
+          process.execPath,
+          "-e",
+          kind === "oversize"
+            ? "await Bun.write(Bun.stdout,new Uint8Array(65536));setInterval(()=>{},1000)"
+            : "setInterval(()=>{},1000)",
+        ],
+        {
+          ...settings,
+          capture: false,
+          outputFile: { path: output, maximumBytes: 8 },
+        },
+        {
+          retire: (pid) => {
+            pids.push(pid);
+            process.kill(-pid, "SIGKILL");
+          },
+        },
+      ),
+    ).rejects.toThrow(kind === "oversize" ? "exceeds its limit" : "timed out");
+    expect(pids).toHaveLength(1);
+    expect(Bun.file(output).size).toBeLessThanOrEqual(8);
+    await rm(output);
+    expect(await Bun.file(output).exists()).toBe(false);
+  },
+);

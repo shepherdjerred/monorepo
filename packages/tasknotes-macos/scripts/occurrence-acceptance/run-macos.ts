@@ -30,18 +30,8 @@ const packageRoot = path.resolve(import.meta.dir, "../..");
 const test = "testGenerationRepairUndoAndColdRelaunch";
 const selector = `TaskNotesAcceptanceUITests/OccurrenceVaultUITests/${test}`;
 
-/** Compile first, then run one owned window journey without opening a folder picker. */
-export async function runMacOccurrenceAcceptance(): Promise<void> {
-  assert.equal(process.platform, "darwin");
-  assert.equal(Bun.argv.length, 2, "The recurrence runner takes no arguments");
-  const runID = crypto.randomUUID();
-  const evidence = path.join(
-    packageRoot,
-    ".build/occurrence-acceptance",
-    runID,
-  );
-  const derived = path.join(evidence, "macos");
-  const command = (argv: string[], capture = false, cwd = packageRoot) =>
+export function occurrenceCommand(root: string, evidence: string) {
+  return (argv: string[], capture = false, cwd = root) =>
     boundedCommand(argv, {
       cwd,
       capture,
@@ -52,10 +42,61 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
           ? 240_000
           : 60_000,
     });
+}
+
+/** Compile first, then run one owned window journey without opening a folder picker. */
+export async function runMacOccurrenceAcceptance(): Promise<void> {
+  assert.equal(process.platform, "darwin");
+  assert.deepEqual(
+    Bun.argv.slice(2),
+    ["--host-ui"],
+    "Foreground native testing requires explicit --host-ui",
+  );
+  const runID = crypto.randomUUID();
+  const evidence = path.join(
+    packageRoot,
+    ".build/occurrence-acceptance",
+    runID,
+  );
+  const derived = path.join(evidence, "macos");
+  const command = occurrenceCommand(packageRoot, evidence);
   const fingerprints = () =>
     sourceFingerprints(path.resolve(packageRoot, "../.."), (argv) =>
       command(argv, true, path.resolve(packageRoot, "../..")),
     );
+  await mkdir(evidence, { recursive: true });
+  const sources = await fingerprints();
+  await buildMacAcceptance(
+    derived,
+    command,
+    Bun.env["TASKNOTES_UITEST_IDENTITY"],
+  );
+  await runPreparedMacOccurrence({
+    packageRoot,
+    runID,
+    sources,
+    verifyInputs: async () =>
+      requireStableSources(sources, await fingerprints()),
+  });
+}
+
+/** Host and VM transports execute exactly the same fixture, UI and retained-owner gates. */
+export async function runPreparedMacOccurrence(run: {
+  packageRoot: string;
+  runID: string;
+  sources: Record<string, string>;
+  verifyInputs: () => Promise<void>;
+  provenance?: Record<string, unknown>;
+}): Promise<void> {
+  const { packageRoot, runID, sources } = run;
+  const evidence = path.join(
+    packageRoot,
+    ".build/occurrence-acceptance",
+    runID,
+  );
+  const derived = path.join(evidence, "macos");
+  const command = occurrenceCommand(packageRoot, evidence);
+  await run.verifyInputs();
   const state = path.join(
     homedir(),
     "Library/Containers/red.sjer.tasknotes.mac.acceptance/Data/Library/Application Support/FacetAcceptance",
@@ -68,14 +109,6 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
     derived,
     "Build/Products/Debug/FacetAcceptance.app/Contents/MacOS/FacetAcceptance",
   );
-  await mkdir(evidence, { recursive: true });
-  const sources = await fingerprints();
-  await buildMacAcceptance(
-    derived,
-    command,
-    Bun.env["TASKNOTES_UITEST_IDENTITY"],
-  );
-  requireStableSources(sources, await fingerprints());
   const binding = { runID, descriptor, executable };
   await retireMacRun(binding, null, evidence);
   const day = viewerDay();
@@ -92,6 +125,7 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
     command,
   );
   const receipt = {
+    ...run.provenance,
     schemaVersion: 1,
     runID,
     day,
@@ -156,7 +190,7 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
       day,
       "The viewer's civil day changed during the journey",
     );
-    requireStableSources(sources, await fingerprints());
+    await run.verifyInputs();
     const proof = launchJournal(
       await Bun.file(path.join(state, "occurrence-launches.json")).json(),
       binding,
