@@ -9,6 +9,7 @@ import { FilePlanEntrySchema, GenerationsSchema } from "#shared/file-plan.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
+import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
 import { assertMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { assertArchiveAuthority } from "#infrastructure/native-archive/authority.ts";
@@ -179,6 +180,17 @@ async function existingParent(
   return [parent.assetId];
 }
 
+function completeRequestCoverage(
+  rawIdentity: unknown,
+  mediaIds: string[],
+  claimed: Set<string>,
+) {
+  return (
+    managedSeriesIdentity(rawIdentity) !== null ||
+    mediaIds.every((id) => claimed.has(id))
+  );
+}
+
 async function acquisitionParent(
   tx: Prisma.TransactionClient,
   parent: Extract<PlexPublicationParent, { kind: "acquisition" }>,
@@ -236,7 +248,11 @@ async function acquisitionParent(
         row.automationEpoch !== parent.recoveryEpoch ||
         row.generation !== parent.generations[row.mediaId],
     ) ||
-    attempt.mediaIds.some((id) => !claimed.has(id))
+    !completeRequestCoverage(
+      attempt.identityEvidence,
+      attempt.mediaIds,
+      claimed,
+    )
   )
     throw new PlexBindingProtection("scope_changed");
   const access = expected.access[0];
@@ -253,6 +269,7 @@ async function acquisitionParent(
   await assertAttemptIdentity(tx, attempt, {
     serverMachineId: access.serverMachineId,
     movieAccess,
+    libraryManagement: { access, freshness, budget: context.budget },
   });
   if (movieAccess !== undefined) {
     const choice = await assertMovieAttemptChoice(tx, {

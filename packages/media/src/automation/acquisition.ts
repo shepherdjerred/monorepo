@@ -23,7 +23,8 @@ import {
   adoptReservation,
 } from "./acquisition-reservation.ts";
 import { validAttempt, submit } from "./acquisition-submission.ts";
-import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
+import { acquisitionInvocation } from "./acquisition-management/invocation.ts";
+import { acknowledgeManagedAcquisition } from "./acquisition-management/acknowledgement.ts";
 type AcquisitionActivities = Pick<
   MediaNetworkActivities,
   "reconcileMediaIntent" | "submitMediaTorrent" | "observeMediaAcquisition"
@@ -133,11 +134,12 @@ async function reconcile(
 }
 
 export function createAcquisitionActivities(
-  context: MediaAutomationContext,
+  initialContext: MediaAutomationContext,
 ): AcquisitionActivities {
   return {
     async reconcileMediaIntent(input) {
       try {
+        const context = await acquisitionInvocation(initialContext, input);
         return await reconcile(context, input);
       } catch (error) {
         if (error instanceof MediaError)
@@ -147,6 +149,7 @@ export function createAcquisitionActivities(
     },
     async submitMediaTorrent(input) {
       try {
+        const context = await acquisitionInvocation(initialContext, input);
         return await submit(context, input);
       } catch (error) {
         if (error instanceof MediaError)
@@ -155,15 +158,18 @@ export function createAcquisitionActivities(
       }
     },
     async observeMediaAcquisition(input) {
+      const context = await acquisitionInvocation(initialContext, input);
       const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
         where: { id: input.attemptId },
         include: { torrent: true },
       });
       try {
+        if (await acknowledgeManagedAcquisition(context, input, attempt))
+          return { status: "ready", reason: "resume_committed_publication" };
         if (!(await validAttempt(context, attempt.id)))
           return { status: "obsolete", reason: "intent_changed" };
       } catch (error) {
-        if (error instanceof MovieChoiceProtection)
+        if (error instanceof MediaError)
           return { status: "blocked", reason: error.code };
         throw error;
       }

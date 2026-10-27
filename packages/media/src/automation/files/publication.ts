@@ -41,6 +41,8 @@ import { compensateRecordedPublication } from "#automation/publication-proof/loc
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { assertPlanEdition } from "./editions/acquisition.ts";
+import { libraryFileInvocation } from "#automation/acquisition-management/files.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   assertMeasuredUpgrade,
   storedMeasuredRelease,
@@ -52,9 +54,29 @@ export async function promote(
 ): Promise<void> {
   const execution = initialContext.publicationExecution?.();
   execution?.assertActive();
+  const budget =
+    initialContext.libraryManagement?.budget ??
+    new PublicationAuthorityReadBudget();
+  if (
+    await resumeCommittedPublication({
+      context: initialContext,
+      attemptId,
+      budget,
+      managedOnly: true,
+      ...(execution === undefined ? {} : { execution }),
+    })
+  )
+    return;
   if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
-  if (await resumeCommittedPublication({ context: initialContext, attemptId }))
+  if (
+    await resumeCommittedPublication({
+      context: initialContext,
+      attemptId,
+      budget,
+      ...(execution === undefined ? {} : { execution }),
+    })
+  )
     return;
   const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
@@ -63,9 +85,13 @@ export async function promote(
   const movieAccess = await fileMovieAccess(initialContext, attempt.mediaIds);
   const plan = FilePlanSchema.parse(attempt.filePlan);
   const context = await prepareRecordedPublicationProof(
-    publicationInvocation(
-      initialContext,
-      requirePublicationExecution(execution),
+    await libraryFileInvocation(
+      publicationInvocation(
+        initialContext,
+        requirePublicationExecution(execution),
+      ),
+      attempt.identityEvidence,
+      budget,
     ),
     plan,
     attemptId,
@@ -83,6 +109,7 @@ export async function promote(
         const choice = await assertAcquisition(tx, attemptId, {
           serverMachineId: context.serverMachineId,
           movieAccess,
+          libraryManagement: context.libraryManagement,
         });
         await assertPlanEdition(tx, current, plan);
         return () => choice?.assertActive();
@@ -127,7 +154,13 @@ export async function promote(
     await context.db.$transaction(
       async (tx) => {
         await lockAcquisitionMedia(tx, attempt.mediaIds);
-        if ((await loadPublicationIntent(tx, attemptId)) !== null)
+        if (
+          (await loadPublicationIntent(
+            tx,
+            attemptId,
+            context.libraryManagement?.budget,
+          )) !== null
+        )
           throw new FileGuardError(
             "publication_recorded_compensation_required",
           );

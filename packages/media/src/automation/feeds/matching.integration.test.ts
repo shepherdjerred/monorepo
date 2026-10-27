@@ -170,22 +170,25 @@ test.each(MovieEditionKeySchema.options)(
   "a native %s movie source queues its acquisition scope without selecting another cut",
   async (edition) => {
     const f = await h.fixture();
-    await h.database().qualityProfileDefault.upsert({
+    const db = h.database();
+    // Distinct canonical works must not compete for one synthetic same-title
+    // source; retained candidate identity is intentionally immutable.
+    const workTitle = `Source ${z.string().parse(["Cardinal", "Osprey", "Falcon", "Heron", "Raven", "Swift", "Finch"][MovieEditionKeySchema.options.indexOf(edition)])}`;
+    await h.database().mediaItem.update({
+      where: { id: f.media.id },
+      data: { title: workTitle },
+    });
+    await db.qualityProfileDefault.upsert({
       where: { kind: "movie" },
       create: { kind: "movie", profileId: f.profile.id },
       update: { profileId: f.profile.id },
     });
-    const requested = await requestTestMovieV4(
-      h.database(),
-      f.user,
-      f.media.id,
-      edition,
-    );
+    const requested = await requestTestMovieV4(db, f.user, f.media.id, edition);
     const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
-    const title = `Example.2020.${label === "" ? "" : `${label.replaceAll(" ", ".")}.`}WEB-DL.1080p`;
+    const title = `${workTitle.replaceAll(" ", ".")}.2020.${label === "" ? "" : `${label.replaceAll(" ", ".")}.`}WEB-DL.1080p`;
     const feed = await captured(title);
     await matchProviderFeedSourceV1(feed.context, feed.input);
-    const release = await h.database().releaseCandidate.findUniqueOrThrow({
+    const release = await db.releaseCandidate.findUniqueOrThrow({
       where: {
         providerId_providerReleaseId: {
           providerId: "knaben",
@@ -193,7 +196,7 @@ test.each(MovieEditionKeySchema.options)(
         },
       },
     });
-    const command = await h.database().operation.findFirstOrThrow({
+    const command = await db.operation.findFirstOrThrow({
       where: {
         kind:
           edition === "default"

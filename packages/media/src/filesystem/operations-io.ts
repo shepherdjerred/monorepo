@@ -108,10 +108,14 @@ export async function verifyControlExclusion(
   verify?: (roots: MediaFileRoots) => Promise<void>,
 ): Promise<void> {
   if (roots.controlPolicy !== "plex-excluded") return;
-  const rootMarker = await safePath(roots.library, ".plexignore", false);
-  const controlMarker = await safePath(roots.control, ".plexignore", false);
-  const rootText = await readFile(rootMarker, "utf8");
-  const controlText = await readFile(controlMarker, "utf8");
+  const [rootMarker, controlMarker] = await Promise.all([
+    safePath(roots.library, ".plexignore", false),
+    safePath(roots.control, ".plexignore", false),
+  ]);
+  const [rootText, controlText] = await Promise.all([
+    readFile(rootMarker, "utf8"),
+    readFile(controlMarker, "utf8"),
+  ]);
   if (
     !rootText.split(/\r?\n/u).includes(".media-control/*") ||
     !controlText.split(/\r?\n/u).includes("*")

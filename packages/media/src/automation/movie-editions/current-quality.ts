@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
-import { ResolvedEvidenceSchema } from "#domain/resolved-evidence.ts";
+import { projectResolvedCatalog } from "#domain/resolved-evidence.ts";
 
 /** Fresh catalog policy metadata reinterprets measured bytes without changing their literal owner evidence. */
 export function movieCurrentQuality(
@@ -16,13 +16,6 @@ export function movieCurrentQuality(
   if (original === undefined) return attributes;
   return {
     ...attributes,
-    resolvedEvidence: ResolvedEvidenceSchema.parse({
-      ...original,
-      release: {
-        ...original.release,
-        runtimeMinutes: metadata.runtimeMinutes,
-        originalLanguage: metadata.originalLanguage,
-      },
-    }),
+    resolvedEvidence: projectResolvedCatalog(original, metadata),
   };
 }

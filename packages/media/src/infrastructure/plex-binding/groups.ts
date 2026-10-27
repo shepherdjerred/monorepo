@@ -8,7 +8,7 @@ import { parsePlexRecord } from "./records.ts";
 import { readPlexPhysicalGroup } from "./read.ts";
 import { PlexBindingProtection } from "./errors.ts";
 import type { PlexPublicationParent } from "#shared/plex-binding/expected.ts";
-import { AcquisitionIdentitySnapshotSchema } from "#shared/acquisition/identity.ts";
+import { DefaultAcquisitionIdentitySchema } from "#shared/acquisition/library-management.ts";
 import { FilePlanEntrySchema } from "#shared/file-plan.ts";
 import { z } from "zod";
 
@@ -160,11 +160,13 @@ export async function readPlexIdentityCohort(
   });
   for (const attempt of attempts) {
     if (attempt.identityEvidence === null) continue;
-    const identity = AcquisitionIdentitySnapshotSchema.parse(
+    const identity = DefaultAcquisitionIdentitySchema.parse(
       attempt.identityEvidence,
     );
-    ids.add(identity.sponsorAuthority.actorId);
-    ids.add(identity.sponsorAuthority.userId);
+    if (identity.schemaVersion === 1) {
+      ids.add(identity.sponsorAuthority.actorId);
+      ids.add(identity.sponsorAuthority.userId);
+    } else ids.add(identity.management.actorId);
   }
   return [...ids].sort();
 }

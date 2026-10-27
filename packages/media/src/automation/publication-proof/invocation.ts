@@ -67,6 +67,7 @@ export function requirePublicationExecution(
 export function assertPublicationActive(context: PublicationContext): void {
   context.execution.assertActive();
   context.execution.signal.throwIfAborted();
+  context.libraryManagement?.freshness.assertActive();
   context.contentProof?.assertActive();
 }
 

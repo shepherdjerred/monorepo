@@ -14,10 +14,14 @@ import type { VerifiedServingPlex } from "#shared/plex-binding/observations.ts";
 import {
   AcquisitionPlexPublicationEnvelopeSchema,
   AcquisitionPlexPublicationInputSchema,
-  AcquisitionPlexPublicationReceiptSchema,
   type AcquisitionPlexPublicationInput,
-  type AcquisitionPlexPublicationReceipt,
 } from "#shared/plex-binding/publication.ts";
+import {
+  DefaultAcquisitionPlexReceiptSchema,
+  acquisitionPlexReceiptMarker,
+  type DefaultAcquisitionPlexReceipt,
+} from "#shared/acquisition/library-publication.ts";
+import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
 import { parsePlexRecord } from "./records.ts";
 import { bindPlexTransactionDeadline } from "./freshness.ts";
 import { assertAcquisitionPlexEvidence } from "./publication-evidence.ts";
@@ -58,7 +62,7 @@ function commandParent(operation: Operation) {
 }
 
 function assertReceiptCommand(
-  receipt: AcquisitionPlexPublicationReceipt,
+  receipt: DefaultAcquisitionPlexReceipt,
   operation: Operation,
   attempt: AcquisitionAttempt,
 ) {
@@ -81,7 +85,7 @@ function assertReceiptCommand(
 }
 
 function assertReceiptParents(
-  receipt: AcquisitionPlexPublicationReceipt,
+  receipt: DefaultAcquisitionPlexReceipt,
   operation: Operation,
   attempt: AcquisitionAttempt,
 ) {
@@ -151,12 +155,9 @@ export async function readCompletedAcquisitionPlexPublication(
     where: { id: input.operationId },
   });
   budget.consume(1);
-  const raw = z
-    .object({ acquisitionPlexReceipt: z.unknown().optional() })
-    .nullable()
-    .parse(operation.result)?.acquisitionPlexReceipt;
-  if (raw === undefined) return null;
-  const envelope = AcquisitionPlexPublicationEnvelopeSchema.parse(raw);
+  const marker = acquisitionPlexReceiptMarker(operation.result);
+  if (marker === null) return null;
+  const envelope = AcquisitionPlexPublicationEnvelopeSchema.parse(marker.raw);
   // Hash the literal receipt and its literal expected subtree before strict parser projections.
   if (identityHash(envelope.receipt) !== envelope.receiptHash)
     throw new Error("Acquisition Plex receipt raw hash changed");
@@ -169,10 +170,12 @@ export async function readCompletedAcquisitionPlexPublication(
   if (identityHash(literal.expected) !== literal.completion.expectedHash)
     throw new Error("Acquisition Plex receipt raw expected hash changed");
   const receipt = parsePlexRecord(
-    AcquisitionPlexPublicationReceiptSchema,
+    DefaultAcquisitionPlexReceiptSchema,
     envelope.receipt,
     envelope.receiptHash,
   );
+  if (receipt.schemaVersion !== marker.version)
+    throw new Error("Acquisition Plex receipt family changed");
   if (identityHash(receipt.input) !== identityHash(input))
     throw new Error(
       "Acquisition Plex receipt raw input or expected hash changed",
@@ -208,8 +211,9 @@ export async function recordCompletedAcquisitionPlexPublication(
     where: { id: command.attemptId },
   });
   freshness.assertActive();
-  const receipt = AcquisitionPlexPublicationReceiptSchema.parse({
-    schemaVersion: 1,
+  const managed = managedSeriesIdentity(attempt.identityEvidence) !== null;
+  const receipt = DefaultAcquisitionPlexReceiptSchema.parse({
+    schemaVersion: managed ? 2 : 1,
     input: command,
     command: commandParent(operation),
     attempt: attemptParent(attempt),
@@ -234,9 +238,12 @@ export async function recordCompletedAcquisitionPlexPublication(
     receiptHash: identityHash(receipt),
     receipt: z.json().parse(receipt),
   };
+  const marker = managed
+    ? "managedEpisodePlexReceiptV2"
+    : "acquisitionPlexReceipt";
   const count =
-    await tx.$executeRaw`UPDATE "Operation" SET result=COALESCE(result,'{}'::jsonb) || jsonb_build_object('acquisitionPlexReceipt',${JSON.stringify(envelope)}::jsonb)
-    WHERE id=${operation.id} AND NOT (COALESCE(result,'{}'::jsonb) ? 'acquisitionPlexReceipt')`;
+    await tx.$executeRaw`UPDATE "Operation" SET result=COALESCE(result,'{}'::jsonb) || jsonb_build_object(${marker}::text,${JSON.stringify(envelope)}::jsonb)
+    WHERE id=${operation.id} AND NOT (COALESCE(result,'{}'::jsonb) ?| ARRAY['acquisitionPlexReceipt','managedEpisodePlexReceiptV2'])`;
   freshness.assertActive();
   if (count !== 1)
     throw new Error("Acquisition Plex completion was already recorded");
@@ -248,8 +255,7 @@ export async function recordCompletedAcquisitionPlexPublication(
   freshness.assertActive();
   if (
     identityHash(
-      z.object({ acquisitionPlexReceipt: z.json() }).parse(stored.result)
-        .acquisitionPlexReceipt,
+      z.record(z.string(), z.json()).parse(stored.result)[marker],
     ) !== identityHash(envelope)
   )
     throw new Error("Acquisition Plex receipt insert changed");

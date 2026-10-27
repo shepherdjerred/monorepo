@@ -11,6 +11,7 @@ import { assertNoPublicationCompensationFence } from "#infrastructure/native-com
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
 import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
+import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
 import {
   effectiveRequestWhere,
   lockEffectiveRequests,
@@ -22,6 +23,11 @@ export async function authorizedSubmission(
   attempt: AcquisitionAttempt,
   effect: (signal: AbortSignal, beforeMutation: () => void) => Promise<void>,
 ): Promise<boolean> {
+  const execution =
+    context.libraryManagement === undefined
+      ? undefined
+      : context.plexBindingExecution();
+  execution?.assertActive();
   const movieAccess = await networkMovieAccess(context, attempt.mediaIds);
   return context.db.$transaction(
     async (tx) => {
@@ -48,6 +54,7 @@ export async function authorizedSubmission(
         !(await submissionIdentityAuthorized(tx, current, {
           serverMachineId: context.serverMachineId,
           movieAccess,
+          libraryManagement: context.libraryManagement,
         }))
       )
         return false;
@@ -95,17 +102,45 @@ export async function authorizedSubmission(
         select: { mediaId: true },
       });
       if (
-        claims.length !== attempt.mediaIds.length ||
+        (managedSeriesIdentity(current.identityEvidence) === null &&
+          claims.length !== attempt.mediaIds.length) ||
         !(await context.gates.acquisition())
       )
         return false;
-      const signal = AbortSignal.timeout(10_000);
+      const lease =
+        execution === undefined
+          ? null
+          : await tx.legacyWriterLease.findUniqueOrThrow({
+              where: { id: "singleton" },
+            });
+      const signal =
+        execution === undefined
+          ? AbortSignal.timeout(10_000)
+          : AbortSignal.any([execution.signal, AbortSignal.timeout(10_000)]);
       const beforeMutation = () => {
         signal.throwIfAborted();
+        execution?.assertActive();
+        context.libraryManagement?.freshness.assertActive();
+        if (
+          execution !== undefined &&
+          lease !== null &&
+          (Date.now() < lease.observedAt.getTime() ||
+            Date.now() >= lease.expiresAt.getTime() ||
+            performance.now() >=
+              execution.observed.monotonic +
+                lease.expiresAt.getTime() -
+                execution.observed.wall)
+        )
+          throw new MediaError(
+            "submission_authority_expired",
+            "Original writer observation expired before torrent submission",
+            409,
+          );
         choice?.assertActive();
       };
       beforeMutation();
       await effect(signal, beforeMutation);
+      execution?.assertActive();
       return true;
     },
     { timeout: 20_000 },
@@ -125,6 +160,7 @@ async function submissionIdentityAuthorized(
     if (
       error instanceof MediaError &&
       (error.code === "acquisition_sponsor_changed" ||
+        error.code === "library_management_unconfirmed" ||
         error.code.startsWith("edition_"))
     )
       return false;

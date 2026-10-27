@@ -8,9 +8,9 @@ import { requireActiveRuntime } from "#automation/runtime.ts";
 import { StoredCandidateSchema } from "#automation/providers.ts";
 import {
   prepareTorrent,
-  ownedTorrent,
   submitNew,
 } from "#automation/acquisition-submission.ts";
+import { ownedTorrent } from "#automation/acquisition-management/ownership.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";

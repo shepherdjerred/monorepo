@@ -7,7 +7,7 @@ import { inspectMedia, type MediaProbe } from "#filesystem/media-tools.ts";
 import { sha256File } from "#filesystem/operations-io.ts";
 import { parseReleaseName } from "#domain/release-parser.ts";
 import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
-import { AcquisitionIdentitySnapshotSchema } from "#shared/acquisition/identity.ts";
+import { DefaultAcquisitionIdentitySchema } from "#shared/acquisition/library-management.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import {
   fileIdentityEvidence,
@@ -41,6 +41,8 @@ import {
   assertObservedEdition,
   assertPlanEdition,
 } from "./editions/acquisition.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { libraryFileInvocation } from "#automation/acquisition-management/files.ts";
 
 const ObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -159,17 +161,41 @@ export async function inspectAndStage(
 ): Promise<void> {
   const execution = initialContext.publicationExecution?.();
   execution?.assertActive();
+  const budget =
+    initialContext.libraryManagement?.budget ??
+    new PublicationAuthorityReadBudget();
+  if (
+    await resumeCommittedPublication({
+      context: initialContext,
+      attemptId,
+      budget,
+      managedOnly: true,
+      ...(execution === undefined ? {} : { execution }),
+    })
+  )
+    return;
   if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
   const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
     include: { release: true, torrent: true },
   });
-  if (await resumeCommittedPublication({ context: initialContext, attemptId }))
+  if (
+    await resumeCommittedPublication({
+      context: initialContext,
+      attemptId,
+      budget,
+      ...(execution === undefined ? {} : { execution }),
+    })
+  )
     return;
-  const context = publicationInvocation(
-    initialContext,
-    requirePublicationExecution(execution),
+  const context = await libraryFileInvocation(
+    publicationInvocation(
+      initialContext,
+      requirePublicationExecution(execution),
+    ),
+    attempt.identityEvidence,
+    budget,
   );
   const movieAccess = await fileMovieAccess(context, attempt.mediaIds);
   const alreadyCommitted = await authorizeInspection(context, attemptId, {
@@ -220,6 +246,7 @@ export async function inspectAndStage(
       await assertAcquisition(tx, attemptId, {
         serverMachineId: context.serverMachineId,
         movieAccess,
+        libraryManagement: context.libraryManagement,
       });
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
@@ -257,11 +284,19 @@ function assertCandidateCount(
 }
 
 async function authorizeInspection(
-  context: FileContext,
+  context: Awaited<ReturnType<typeof libraryFileInvocation>>,
   attemptId: string,
   authority: { mediaIds: string[]; movieAccess: MovieChoiceAccess | undefined },
 ): Promise<boolean> {
-  if (await resumeCommittedPublication({ context, attemptId })) return true;
+  const acknowledgement = {
+    context,
+    attemptId,
+    execution: context.execution,
+    ...(context.libraryManagement === undefined
+      ? {}
+      : { budget: context.libraryManagement.budget }),
+  };
+  if (await resumeCommittedPublication(acknowledgement)) return true;
   const committedWhileWaiting = await context.db.$transaction(
     async (tx) => {
       await lockAcquisitionMedia(tx, authority.mediaIds);
@@ -272,18 +307,19 @@ async function authorizeInspection(
       await assertAcquisition(tx, attemptId, {
         serverMachineId: context.serverMachineId,
         movieAccess: authority.movieAccess,
+        libraryManagement: context.libraryManagement,
       });
       return false;
     },
     { timeout: 30_000, maxWait: 10_000 },
   );
   if (!committedWhileWaiting) return false;
-  if (!(await resumeCommittedPublication({ context, attemptId })))
+  if (!(await resumeCommittedPublication(acknowledgement)))
     throw new FileGuardError("committed_plan_changed");
   return true;
 }
 async function inspectEntry(input: {
-  context: FileContext;
+  context: Awaited<ReturnType<typeof libraryFileInvocation>>;
   attempt: AttemptWithRelease;
   file: IdentityTorrentFile;
   media: NamingItem[];
@@ -294,7 +330,7 @@ async function inspectEntry(input: {
   const identity =
     attempt.identityEvidence === null
       ? null
-      : AcquisitionIdentitySnapshotSchema.parse(attempt.identityEvidence);
+      : DefaultAcquisitionIdentitySchema.parse(attempt.identityEvidence);
   const evidence =
     identity === null ? undefined : fileIdentityEvidence(identity, file);
   const mediaIds = evidence?.coverage ?? fileCoverage(file.name, media);

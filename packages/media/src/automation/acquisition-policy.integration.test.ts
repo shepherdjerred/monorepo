@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createAcquisitionActivities } from "./acquisition.ts";
-import { reconcileUnconfirmedSubmission } from "./acquisition-submission.ts";
+import { reconcileUnconfirmedSubmission } from "./acquisition-management/recovery.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 
 const { database, context, fixture } = automationTestHarness();

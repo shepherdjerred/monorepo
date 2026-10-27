@@ -60,7 +60,11 @@ async function captureEntry(
   const predecessor =
     entry.previousAssetId === null
       ? null
-      : await snapshotPublicationAsset(tx, entry.previousAssetId);
+      : await snapshotPublicationAsset(
+          tx,
+          entry.previousAssetId,
+          context.libraryManagement?.budget,
+        );
   const participants = await observePublicationParticipants(context, entry);
   assertInitialParticipants(entry, participants);
   for (const id of [
@@ -85,10 +89,14 @@ async function captureEntry(
   const originalGrant =
     predecessor === null
       ? null
-      : await findPublicationOriginalGrant(tx, {
-          asset: predecessor,
-          libraryKind: entry.libraryKind,
-        });
+      : await findPublicationOriginalGrant(
+          tx,
+          {
+            asset: predecessor,
+            libraryKind: entry.libraryKind,
+          },
+          context.libraryManagement?.budget,
+        );
   const lineage = originalGrant?.subtitleLineage;
   const prepared =
     predecessor === null

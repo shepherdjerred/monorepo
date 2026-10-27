@@ -21,7 +21,11 @@ export async function prepareRecordedPublicationProof(
   plan: readonly FilePlanEntry[],
   attemptId: string,
 ): Promise<PublicationContext> {
-  const existing = await loadPublicationIntent(context.db, attemptId);
+  const existing = await loadPublicationIntent(
+    context.db,
+    attemptId,
+    context.libraryManagement?.budget,
+  );
   const lineages: PreparedSubtitleLineages =
     existing === null
       ? await preparePublicationSubtitleLineages(context, plan)

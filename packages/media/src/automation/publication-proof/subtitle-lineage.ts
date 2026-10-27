@@ -131,11 +131,16 @@ export async function preparePublicationSubtitleLineages(
     const asset = await snapshotPublicationAsset(
       context.db,
       entry.previousAssetId,
+      context.libraryManagement?.budget,
     );
-    const grant = await findPublicationOriginalGrant(context.db, {
-      asset,
-      libraryKind: entry.libraryKind,
-    });
+    const grant = await findPublicationOriginalGrant(
+      context.db,
+      {
+        asset,
+        libraryKind: entry.libraryKind,
+      },
+      context.libraryManagement?.budget,
+    );
     if (grant?.subtitleLineage === undefined) continue;
     prepared.set(
       asset.id,

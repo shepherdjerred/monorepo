@@ -1,6 +1,6 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
-import { ownedTorrent } from "#automation/acquisition-submission.ts";
+import { ownedTorrent } from "#automation/acquisition-management/ownership.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";

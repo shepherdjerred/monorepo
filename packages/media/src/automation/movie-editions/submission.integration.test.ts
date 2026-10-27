@@ -8,6 +8,7 @@ import { storeMovieCandidateV4 } from "./candidates.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { submitMovieTorrentV4 } from "./submission.ts";
 import { observeMovieAcquisitionV4 } from "./observation.ts";
+import { reconcileUnconfirmedSubmission } from "#automation/acquisition-management/recovery.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import {
@@ -501,48 +502,48 @@ test("cancelling one cut preserves the other cut's actual reservation", async ()
   ).toBe(0);
 });
 
-test("lost add reply is observed after cancellation without a second add, preserving literal birth and independent seeding", async () => {
-  const f = await fixture();
-  f.wire.state.loseReply = true;
-  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
-    status: "blocked",
-    reason: "outcome-unknown",
-  });
-  expect(
-    await f.db.acquisitionAttempt.findUniqueOrThrow({
-      where: { id: f.attempt.id },
-    }),
-  ).toMatchObject({ state: "submission_unknown", torrentId: null });
-  await f.cancel();
-  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
-    status: "submitted",
-    reason: null,
-  });
-  expect(f.wire.state.adds).toBe(1);
-  const torrent = await f.db.torrent.findUniqueOrThrow({
-    where: { infoHash: f.candidate.source.infoHash },
-  });
-  expect(
-    await f.db.acquisitionAttempt.findUniqueOrThrow({
-      where: { id: f.attempt.id },
-    }),
-  ).toMatchObject({
-    state: "cancelled",
-    torrentId: torrent.id,
-    movieEditionAuthority: f.attempt.movieEditionAuthority,
-    identityEvidence: f.attempt.identityEvidence,
-  });
-  expect(
-    await f.db.operation.count({
-      where: { idempotencyKey: `seed:${torrent.id}` },
-    }),
-  ).toBe(1);
-  expect(
-    await f.db.acquisitionReservation.count({
-      where: { attemptId: f.attempt.id },
-    }),
-  ).toBe(0);
-});
+test.each(MovieEditionKeySchema.options)(
+  "lost %s add reply is observed by download reconciliation after cancellation without a second add, preserving literal birth and independent seeding",
+  async (edition) => {
+    const f = await fixture(edition);
+    f.wire.state.loseReply = true;
+    expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+      status: "blocked",
+      reason: "outcome-unknown",
+    });
+    expect(
+      await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: f.attempt.id },
+      }),
+    ).toMatchObject({ state: "submission_unknown", torrentId: null });
+    await f.cancel();
+    await reconcileUnconfirmedSubmission(f.context, f.attempt.id);
+    expect(f.wire.state.adds).toBe(1);
+    const torrent = await f.db.torrent.findUniqueOrThrow({
+      where: { infoHash: f.candidate.source.infoHash },
+    });
+    expect(
+      await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: f.attempt.id },
+      }),
+    ).toMatchObject({
+      state: "cancelled",
+      torrentId: torrent.id,
+      movieEditionAuthority: f.attempt.movieEditionAuthority,
+      identityEvidence: f.attempt.identityEvidence,
+    });
+    expect(
+      await f.db.operation.count({
+        where: { idempotencyKey: `seed:${torrent.id}` },
+      }),
+    ).toBe(1);
+    expect(
+      await f.db.acquisitionReservation.count({
+        where: { attemptId: f.attempt.id },
+      }),
+    ).toBe(0);
+  },
+);
 
 test("an uncertain absent torrent is protected and never blindly submitted again", async () => {
   const f = await fixture();

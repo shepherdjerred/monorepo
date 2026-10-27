@@ -14,6 +14,7 @@ import { chooseUpgrade } from "#domain/quality.ts";
 import { ProviderIdSchema } from "./providers.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
+import { currentMeasuredQuality } from "./acquisition-management/current-quality.ts";
 import { EpisodeNumberingSchema } from "#shared/numbering.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { persistCandidateSnapshot } from "./candidate-evidence.ts";
@@ -53,7 +54,18 @@ export async function currentRelease(
 ): Promise<ReleaseAttributes | null> {
   const coverage = await context.db.assetCoverage.findFirst({
     where: { mediaId, edition: "default", current: true },
-    include: { asset: true },
+    include: {
+      asset: {
+        include: {
+          coverage: {
+            where: { current: true },
+            include: {
+              media: { include: { parent: { include: { parent: true } } } },
+            },
+          },
+        },
+      },
+    },
   });
   if (coverage === null) return null;
   const measured = PublicReleaseAttributesSchema.extend({
@@ -61,7 +73,11 @@ export async function currentRelease(
     providerId: z.string(),
     title: z.string(),
   }).safeParse(coverage.asset.properties);
-  if (measured.success) return measured.data;
+  if (measured.success)
+    return currentMeasuredQuality(
+      measured.data,
+      coverage.asset.coverage.map((item) => item.media),
+    );
   const properties = z
     .object({ releaseId: z.string().optional() })
     .parse(coverage.asset.properties);
@@ -133,6 +149,9 @@ async function searchTarget(context: MediaAutomationContext, mediaId: string) {
     originalLanguage:
       media.originalLanguage ?? series?.originalLanguage ?? null,
     knownEpisodes,
+    episodeRuntimes: new Map(
+      episodes.map((episode) => [episode.id, episode.runtimeMinutes]),
+    ),
     query: series?.title ?? media.title,
     kind: media.kind === "movie" ? ("movie" as const) : ("tv" as const),
   };
@@ -195,7 +214,9 @@ async function storeCandidate(
         sizeBytes: candidate.sizeBytes,
         // Pack runtime is the sum of known episodes, never the requested leaf's duration.
         runtimeMinutes:
-          attributes.mediaIds.length === 1 ? target.runtimeMinutes : null,
+          attributes.mediaIds.length === 1
+            ? target.runtimeMinutes
+            : packRuntime(target.episodeRuntimes, attributes.mediaIds),
         originalLanguage: target.originalLanguage,
         audioLanguages:
           attributes.audioLanguages.length > 0
@@ -235,6 +256,19 @@ async function storeCandidate(
         score: authoritative.evaluation.score,
       }
     : null;
+}
+function packRuntime(
+  runtimes: ReadonlyMap<string, number | null>,
+  coverage: readonly string[],
+) {
+  let sum = 0;
+  if (coverage.length === 0) return null;
+  for (const id of coverage) {
+    const runtime = runtimes.get(id);
+    if (runtime == null) return null;
+    sum += runtime;
+  }
+  return sum;
 }
 
 /** A broad feed must prove canonical coverage before retaining a target-specific interpretation. */
