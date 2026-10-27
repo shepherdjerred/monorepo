@@ -12,7 +12,7 @@ import { SCOUT_CONTRACT_VERSION } from "./pipeline-contracts.ts";
  *
  * These are STAGE receipts, and they are a different claim from the
  * evidence-bearing receipts the pipeline already writes. `settlement` says
- * which bets, Dares and awards a commit moved; `v2-match-settlement` says that
+ * which Dares a commit resolved; `v2-match-settlement` says that
  * the V2 core's settlement phase completed for this match. The distinction is
  * load-bearing in two directions.
  *

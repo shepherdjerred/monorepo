@@ -12,7 +12,7 @@ import { prisma } from "#src/database/index.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { buildMatchReceipt } from "#src/durable/match/receipt-evidence.ts";
 import { createLogger } from "#src/logger.ts";
-import { prematchGuildOfChannel } from "#src/temporal/prematch/prematch-markets.ts";
+import { subscriptionGuildOfChannel } from "#src/temporal/notification/subscription-guild.ts";
 
 const logger = createLogger("scout-v2-postmatch-follow-up");
 
@@ -62,7 +62,7 @@ export async function afterPostmatchDelivered(
   const state = record.intent.state;
   const target = record.intent.target;
   if (state.kind !== "delivered" || target.kind !== "channel") return;
-  const guildId = await prematchGuildOfChannel(target.channelId);
+  const guildId = await subscriptionGuildOfChannel(target.channelId);
   if (guildId === null) {
     logger.warn(
       `Post-match intent ${record.intent.key} was delivered to channel ${target.channelId}, which no subscription names any more; no guild to count the core output against`,

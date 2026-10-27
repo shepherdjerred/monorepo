@@ -81,9 +81,7 @@ describe("the post-delivery follow-up", () => {
   });
 
   test("hands a delivered prematch to its own follow-up and lets it throw", async () => {
-    // The prematch step records the Bryan Bucks message ref, the settlement
-    // announcement's only destination; a failure must reach the Activity's
-    // retry rather than be reported and dropped.
+    // Required follow-up failures reach the Activity's retry.
     stubs.requireIntentRecord.mockResolvedValue(
       intentRecord("channel", "prematch"),
     );
@@ -125,20 +123,6 @@ describe("the post-delivery follow-up", () => {
     });
     expect(stubs.afterPrematchDelivered).not.toHaveBeenCalled();
   });
-
-  test.each(["settlement"] as const)(
-    "has nothing to do for a %s intent",
-    async (kind) => {
-      stubs.requireIntentRecord.mockResolvedValue(
-        intentRecord("channel", kind),
-      );
-
-      expect(await afterNotificationDelivered(ATTEMPT)).toEqual({
-        outcome: "skipped",
-      });
-      expect(stubs.afterDareStatusDelivered).not.toHaveBeenCalled();
-    },
-  );
 
   test("runs the hall bookkeeping after a delivered record break, and reports its failure", async () => {
     stubs.requireIntentRecord.mockResolvedValue(

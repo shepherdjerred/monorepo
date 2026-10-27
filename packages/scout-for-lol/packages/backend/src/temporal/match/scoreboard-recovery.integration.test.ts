@@ -206,9 +206,9 @@ test("accepted Classic scoreboard reaches an ordinary pending report intent with
   await reconcileMatchHistory();
   expect(io.render).toHaveBeenCalledTimes(1);
   expect(await prisma.matchNotificationIntent.count()).toBe(1);
-  await expect(matchMayAnnounce(prisma, matchId, "settlement")).rejects.toThrow(
-    "no observation",
-  );
+  await expect(
+    matchMayAnnounce(prisma, matchId, "hall-record-break"),
+  ).rejects.toThrow("no observation");
 });
 
 test("a forbidden Riot read cannot block the real resolver from recovering a client scoreboard", async () => {

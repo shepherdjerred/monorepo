@@ -5,10 +5,6 @@ import type {
   RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/domain/identity/discord.ts";
-import {
   ReceiptKindSchema,
   type ReceiptKind,
   type ReceiptScope,
@@ -51,23 +47,10 @@ export const MATCH_RECEIPT_KINDS = {
 /** A database row identity, including retained settlement receipt IDs. */
 const DatabaseRowIdSchema = z.int().positive();
 
-const LegacySettlementEvidenceSchema = z.strictObject({
-  closedBetIds: z.array(DatabaseRowIdSchema),
-  settledBetIds: z.array(DatabaseRowIdSchema),
-  resolvedDareIds: z.array(DatabaseRowIdSchema),
-  settledParlayGuildIds: z.array(DiscordGuildIdSchema),
-  earnedDiscordIds: z.array(DiscordAccountIdSchema),
-});
 export const settlementEvidenceCodec = defineVersionedCodec({
   kind: "settlement-evidence",
   version: 2,
   schema: z.strictObject({ resolvedDareIds: z.array(DatabaseRowIdSchema) }),
-  migrations: {
-    1: (old) => ({
-      resolvedDareIds:
-        LegacySettlementEvidenceSchema.parse(old).resolvedDareIds,
-    }),
-  },
 });
 
 /**

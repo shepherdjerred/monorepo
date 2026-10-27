@@ -41,7 +41,7 @@ import { scoutDurableNotificationIntentsRetired } from "#src/metrics/durable-pip
  *   attempted intent" fails on `selected`.
  * - Drop the `freshnessDeadline` filter: "leaves overdue intents to expiry"
  *   fails on `selected`.
- * - Drop the `kind` filter: "never judges a settlement by subscriptions"
+ * - Drop the `kind` filter: "never judges a Hall announcement by subscriptions"
  *   fails on `selected`.
  * - Replace the tracked-account `some` clause with the channel-only where:
  *   "a subscription to someone else in the channel is not this match's
@@ -240,10 +240,10 @@ describe("retireOrphanedNotificationIntents: whose audience is gone", () => {
 });
 
 describe("retireOrphanedNotificationIntents: what it never touches", () => {
-  test("never judges a settlement by subscriptions", async () => {
-    const settlement = await seedChannelIntent(prisma, {
-      name: "settlement",
-      kind: "settlement",
+  test("never judges a Hall announcement by subscriptions", async () => {
+    const announcement = await seedChannelIntent(prisma, {
+      name: "hall-record-break",
+      kind: "hall-record-break",
       matchId: MATCH_ID,
       channelId: CHANNEL,
       state: "ready",
@@ -252,7 +252,7 @@ describe("retireOrphanedNotificationIntents: what it never touches", () => {
     const counts = await sweep();
 
     expect(counts.selected).toBe(0);
-    expect(await stateOf(settlement)).toEqual({ kind: "ready" });
+    expect(await stateOf(announcement)).toEqual({ kind: "ready" });
   });
 
   test("leaves overdue intents to expiry", async () => {

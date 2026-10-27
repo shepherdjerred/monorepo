@@ -47,7 +47,7 @@ describe("stage-aware Discord links", () => {
     ).toBe("https://beta.scout-for-lol.com/app/halls/100000000000000001");
   });
 
-  test("keeps Scout and Bryan Bucks conversation buttons slashless", () => {
+  test("keeps Scout conversation buttons slashless", () => {
     Bun.env["WEB_APP_ORIGIN"] = "https://beta.scout-for-lol.com/";
     resetConfigurationForTests();
     const conversationId = "10000000-0000-4000-8000-000000000001";

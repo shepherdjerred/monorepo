@@ -14,7 +14,6 @@ import {
 } from "#src/temporal/notification/notification-artifact.ts";
 import { buildPostmatchNotificationMessage } from "#src/temporal/notification/postmatch-notification.ts";
 import { buildPrematchNotificationMessage } from "#src/temporal/notification/prematch-notification.ts";
-import { buildSettlementNotificationMessage } from "#src/temporal/notification/settlement-notification.ts";
 
 /**
  * The message this intent delivers, assembled from what the render Activity
@@ -70,8 +69,6 @@ export async function buildAttestedMessage(
   switch (record.intent.kind) {
     // The announcement kinds have no artifact: their render attested
     // `text-only`, and their message is built from the intent's own payload.
-    case "settlement":
-      return await buildSettlementNotificationMessage(record);
     case "hall-record-break":
       return buildHallRecordBreakNotificationMessage(record);
     case "postmatch":

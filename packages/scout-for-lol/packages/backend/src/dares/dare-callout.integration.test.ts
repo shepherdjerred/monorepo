@@ -48,7 +48,7 @@ const { postDareCallout, refreshDareCallout, refreshPendingDareCallouts } =
 const { settleDaresForMatch } =
   await import("#src/dares/settlement/dare-settle.ts");
 
-const { prisma: db } = createTestDatabase("bucks-dare-callout");
+const { prisma: db } = createTestDatabase("dare-callout");
 const SERVER = testGuildId("951");
 const CHANNEL = testChannelId("952");
 const CHALLENGER = testAccountId("953");

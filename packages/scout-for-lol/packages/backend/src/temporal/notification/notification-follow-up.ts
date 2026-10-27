@@ -29,7 +29,6 @@ function bestEffortFollowUpOf(
     case "postmatch":
       return afterPostmatchDelivered;
     case "prematch":
-    case "settlement":
     case "duel-status":
     case "dare-status":
     case "product-announcement":
@@ -62,11 +61,8 @@ export async function afterNotificationDelivered(
   if (record.intent.kind === "prematch" || record.intent.kind === "postmatch")
     await confirmNotificationTip(record);
   if (record.intent.kind === "prematch") {
-    // Not caught here, unlike the Dare refresh: the pool's message ref is the
-    // settlement announcement's only destination, so a failure to record it
-    // is thrown for the Activity's retry to repair. Every step it holds is
-    // idempotent, and its genuinely best-effort steps report their own
-    // failures (see `prematch-follow-up.ts`).
+    // Each follow-up step is idempotent. Required bookkeeping failures reach
+    // the Activity retry; best-effort steps report their own failures.
     return await afterPrematchDelivered(record);
   }
   const bestEffort = bestEffortFollowUpOf(record.intent.kind);

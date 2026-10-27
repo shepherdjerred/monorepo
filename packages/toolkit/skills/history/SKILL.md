@@ -42,7 +42,7 @@ Supported sources are `conductor`, `claude`, `codex`, `cursor`,
 `opencode-conductor`, and `opencode-standalone`. Search uses BM25 relevance;
 recency only breaks ties. Unquoted terms are AND-prefix matches. To request an
 exact phrase, preserve literal quotes in the query, for example
-`toolkit history search '"Bryan Bucks"'`.
+`toolkit history search '"Match Reports"'`.
 
 Search and recent hide the current Conductor/Codex run and group parallel
 sessions that opened with the same normalized prompt. Use `--include-current`

@@ -85,22 +85,22 @@ describe("isCountedPath", () => {
 
 describe("budgetOf", () => {
   test("routes colocated tests to the test budget", () => {
-    expect(budgetOf("src/betting/settle.test.ts")).toBe("test");
-    expect(budgetOf("src/betting/settle.spec.tsx")).toBe("test");
+    expect(budgetOf("src/challenges/settle.test.ts")).toBe("test");
+    expect(budgetOf("src/challenges/settle.spec.tsx")).toBe("test");
   });
 
   test("routes everything else to the source budget", () => {
-    expect(budgetOf("src/betting/settle.ts")).toBe("source");
+    expect(budgetOf("src/challenges/settle.ts")).toBe("source");
   });
 
   test("does not treat an integration test as a source file", () => {
     // `.integration.test.ts` still ends in `.test.ts`.
-    expect(budgetOf("src/betting/settle.integration.test.ts")).toBe("test");
+    expect(budgetOf("src/challenges/settle.integration.test.ts")).toBe("test");
   });
 
   test("does not misread a module whose name merely contains 'test'", () => {
-    expect(budgetOf("src/betting/test-fixtures.ts")).toBe("source");
-    expect(budgetOf("src/betting/latest.ts")).toBe("source");
+    expect(budgetOf("src/challenges/test-fixtures.ts")).toBe("source");
+    expect(budgetOf("src/challenges/latest.ts")).toBe("source");
   });
 
   /**
@@ -163,11 +163,11 @@ describe("directoryOf", () => {
 describe("tallyDirectories", () => {
   test("keeps the two budgets independent", () => {
     const tallies = tallyDirectories([
-      ...filesIn("src/betting", 30),
-      ...filesIn("src/betting", 40, ".test.ts"),
+      ...filesIn("src/challenges", 30),
+      ...filesIn("src/challenges", 40, ".test.ts"),
     ]);
-    expect(tallies.get("src/betting")).toEqual({
-      directory: "src/betting",
+    expect(tallies.get("src/challenges")).toEqual({
+      directory: "src/challenges",
       source: 30,
       test: 40,
     });
@@ -175,12 +175,12 @@ describe("tallyDirectories", () => {
 
   test("counts direct children only, not descendants", () => {
     const tallies = tallyDirectories([
-      "src/betting/a.ts",
-      "src/betting/dares/b.ts",
-      "src/betting/dares/c.ts",
+      "src/challenges/a.ts",
+      "src/challenges/dares/b.ts",
+      "src/challenges/dares/c.ts",
     ]);
-    expect(tallies.get("src/betting")?.source).toBe(1);
-    expect(tallies.get("src/betting/dares")?.source).toBe(2);
+    expect(tallies.get("src/challenges")?.source).toBe(1);
+    expect(tallies.get("src/challenges/dares")?.source).toBe(2);
   });
 
   test("omits directories holding no code files", () => {
@@ -190,14 +190,14 @@ describe("tallyDirectories", () => {
 
 describe("findErrors", () => {
   test("fails a directory over the limit", () => {
-    const tallies = tallyDirectories(filesIn("src/betting", LIMIT + 1));
+    const tallies = tallyDirectories(filesIn("src/challenges", LIMIT + 1));
     expect(findErrors(tallies.values())).toEqual([
-      { directory: "src/betting", budget: "source", count: LIMIT + 1 },
+      { directory: "src/challenges", budget: "source", count: LIMIT + 1 },
     ]);
   });
 
   test("passes a directory exactly at the limit", () => {
-    const tallies = tallyDirectories(filesIn("src/betting", LIMIT));
+    const tallies = tallyDirectories(filesIn("src/challenges", LIMIT));
     expect(findErrors(tallies.values())).toEqual([]);
   });
 
@@ -213,8 +213,8 @@ describe("findErrors", () => {
 
   test("a directory at the limit in both budgets still passes", () => {
     const tallies = tallyDirectories([
-      ...filesIn("src/betting", LIMIT),
-      ...filesIn("src/betting", LIMIT, ".test.ts"),
+      ...filesIn("src/challenges", LIMIT),
+      ...filesIn("src/challenges", LIMIT, ".test.ts"),
     ]);
     expect(findErrors(tallies.values())).toEqual([]);
   });
@@ -231,7 +231,7 @@ describe("findErrors", () => {
   });
 
   test("honours an explicit limit", () => {
-    const tallies = tallyDirectories(filesIn("src/betting", LIMIT + 1));
+    const tallies = tallyDirectories(filesIn("src/challenges", LIMIT + 1));
     expect(findErrors(tallies.values(), LIMIT)).toHaveLength(1);
     expect(findErrors(tallies.values(), LIMIT + 1)).toEqual([]);
   });
@@ -270,11 +270,11 @@ describe("reportedDirectories — staged-file scoping", () => {
   test("selects the directories the staged files live in", () => {
     expect([
       ...(reportedDirectories([
-        "src/betting/a.ts",
-        "src/betting/b.ts",
+        "src/challenges/a.ts",
+        "src/challenges/b.ts",
         "src/reports/c.ts",
       ]) ?? []),
-    ]).toEqual(["src/betting", "src/reports"]);
+    ]).toEqual(["src/challenges", "src/reports"]);
   });
 
   test("ignores staged files that carry no budget", () => {
@@ -287,13 +287,13 @@ describe("reportedDirectories — staged-file scoping", () => {
    * would report `1` for a single file added to an over-limit directory.
    */
   test("staging one file into an over-limit directory still fails", () => {
-    const staged = ["src/betting/newly-added.ts"];
+    const staged = ["src/challenges/newly-added.ts"];
     const selected = reportedDirectories(staged);
-    expect(selected?.has("src/betting")).toBe(true);
+    expect(selected?.has("src/challenges")).toBe(true);
 
     // Counts come from the directory's full contents, not from `staged`.
     const wholeRepository = [
-      ...filesIn("src/betting", LIMIT + 1),
+      ...filesIn("src/challenges", LIMIT + 1),
       ...staged,
       ...filesIn("src/elsewhere", 3),
     ];
@@ -310,7 +310,7 @@ describe("reportedDirectories — staged-file scoping", () => {
     const selected = reportedDirectories(["src/elsewhere/a.ts"]);
     const tallies = [
       ...tallyDirectories([
-        ...filesIn("src/betting", LIMIT + 1),
+        ...filesIn("src/challenges", LIMIT + 1),
         ...filesIn("src/elsewhere", 3),
       ]).values(),
     ].filter((tally) => selected?.has(tally.directory) ?? true);

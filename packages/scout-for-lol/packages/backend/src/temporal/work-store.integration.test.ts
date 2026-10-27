@@ -23,7 +23,7 @@ afterAll(async () => {
 describe("Scout Temporal work ownership", () => {
   test("reports only the first durable insertion as newly created", async () => {
     const work = {
-      id: "parlay:NA1_1",
+      id: "champion-mastery:NA1_1",
       kind: "champion-mastery-refresh" as const,
       payload: "{}",
     };
@@ -91,7 +91,7 @@ describe("Scout Temporal work ownership", () => {
   test("atomically requeues only failed work with an operator reason", async () => {
     await prisma.scoutTemporalWork.create({
       data: {
-        id: "parlay:NA1_2",
+        id: "champion-mastery:NA1_2",
         kind: "champion-mastery-refresh",
         payload: "{}",
         state: "failed",
@@ -101,13 +101,13 @@ describe("Scout Temporal work ownership", () => {
     });
 
     await requeueFailedScoutTemporalWork(
-      "parlay:NA1_2",
+      "champion-mastery:NA1_2",
       "OpenAI capacity restored by operator",
       prisma,
     );
     await expect(
       prisma.scoutTemporalWork.findUniqueOrThrow({
-        where: { id: "parlay:NA1_2" },
+        where: { id: "champion-mastery:NA1_2" },
       }),
     ).resolves.toMatchObject({
       state: "queued",
@@ -117,7 +117,7 @@ describe("Scout Temporal work ownership", () => {
 
     await expect(
       requeueFailedScoutTemporalWork(
-        "parlay:NA1_2",
+        "champion-mastery:NA1_2",
         "Duplicate operator requeue is forbidden",
         prisma,
       ),
@@ -128,14 +128,14 @@ describe("Scout Temporal work ownership", () => {
     await prisma.scoutTemporalWork.createMany({
       data: [
         {
-          id: "parlay:failed",
+          id: "champion-mastery:failed",
           kind: "champion-mastery-refresh",
           payload: "{}",
           state: "failed",
           failedAt: new Date("2026-08-30T00:00:00Z"),
         },
         {
-          id: "parlay:queued",
+          id: "champion-mastery:queued",
           kind: "champion-mastery-refresh",
           payload: "{}",
         },
@@ -143,7 +143,7 @@ describe("Scout Temporal work ownership", () => {
     });
 
     await expect(findQueuedScoutTemporalWork(prisma)).resolves.toEqual([
-      { id: "parlay:queued", kind: "champion-mastery-refresh" },
+      { id: "champion-mastery:queued", kind: "champion-mastery-refresh" },
     ]);
   });
 
@@ -151,7 +151,7 @@ describe("Scout Temporal work ownership", () => {
     const startedAt = new Date("2026-08-29T22:47:35Z");
     await prisma.scoutTemporalWork.createMany({
       data: Array.from({ length: 42 }, (_, index) => ({
-        id: `parlay:incident-${index.toString()}`,
+        id: `champion-mastery:incident-${index.toString()}`,
         kind: "champion-mastery-refresh",
         payload: "{}",
         state: "queued",
@@ -161,7 +161,7 @@ describe("Scout Temporal work ownership", () => {
     });
     await prisma.scoutTemporalWork.create({
       data: {
-        id: "parlay:unaccepted-handoff",
+        id: "champion-mastery:unaccepted-handoff",
         kind: "champion-mastery-refresh",
         payload: "{}",
       },

@@ -30,7 +30,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
  * one-game cap is reached, exercising the notification branch.
  */
 
-const { prisma: db } = createTestDatabase("bucks-dare-settlement-silence");
+const { prisma: db } = createTestDatabase("dare-settlement-silence");
 const SERVER = testGuildId("931");
 const CHANNEL = testChannelId("932");
 const HASH = "b".repeat(64);

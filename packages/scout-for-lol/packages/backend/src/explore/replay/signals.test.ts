@@ -91,12 +91,10 @@ describe("declinedToAnswer", () => {
   });
 
   test("does not treat a long capability overview as a decline", () => {
-    // From the first live beta run: "What can you do?" answered with an
-    // 862-character overview that says "I can't access private balances",
-    // which is the answer doing its job, not declining.
+    // A capability overview can explain a privacy boundary without declining.
     const overview = `I can help with League match analysis, current League
-      reference, Bryan Bucks, dares and challenges. ${"Detail. ".repeat(60)}
-      I can't access private balances for other members.`;
+      reference, dares and challenges. ${"Detail. ".repeat(60)}
+      I can't access private conversations for other members.`;
     expect(overview.length).toBeGreaterThan(400);
     expect(declinedToAnswer({ answer: overview, rowsReturned: null })).toBe(
       false,
@@ -104,9 +102,8 @@ describe("declinedToAnswer", () => {
   });
 
   test("still accepts a real decline of ordinary length", () => {
-    // Also from the first live run, at 190 characters.
     const real =
-      "I can't provide a server-wide Bryan Bucks balance leaderboard or another member's current balance. I can show your own balance, or summarize guild-wide earnings instead.";
+      "I can't provide another member's private Explore conversations. I can show your own conversations, or summarize shared guild match reports instead.";
     expect(real.length).toBeLessThan(400);
     expect(declinedToAnswer({ answer: real, rowsReturned: null })).toBe(true);
   });
@@ -213,7 +210,7 @@ describe("replaySignals profile assertions", () => {
   test("flags a gated chip that never said the feature was unavailable", () => {
     const result = signals({
       chipExpectation: "gated-off",
-      answer: "You have 400 Bryan Bucks.",
+      answer: "You have 12 active dares.",
     });
     expect(result).toContain("gated_chip_did_not_refuse");
   });
@@ -280,7 +277,7 @@ describe("replaySignals profile assertions", () => {
   test("does not let a question mark excuse an answer built on rows", () => {
     const result = signals({
       chipExpectation: "gated-off",
-      answer: "You have 400 Bryan Bucks. Want the full ledger?",
+      answer: "You have 12 active dares. Want to see them?",
       candidateRowsReturned: 12,
     });
     expect(result).toContain("gated_chip_did_not_refuse");

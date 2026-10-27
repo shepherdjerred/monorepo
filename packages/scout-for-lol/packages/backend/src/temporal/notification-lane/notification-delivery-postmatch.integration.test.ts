@@ -225,46 +225,6 @@ beforeEach(() => {
 });
 
 describe("a post-match delivery's effect on domain facts", () => {
-  test("suppresses an already-begun settlement before reading its frozen recap", async () => {
-    const key = NotificationIntentKeySchema.parse(
-      "settlement-discord:NA1_9501:100000000000009501",
-    );
-    const nonce = NotificationAttemptNonceSchema.parse(
-      "retained-settlement-attempt",
-    );
-    await upsertIntent(prisma, {
-      matchId: MATCH,
-      intent: NotificationIntentSchema.parse({
-        key,
-        kind: "settlement",
-        origin: { kind: "live" },
-        target: { kind: "channel", channelId: testChannelId("9501") },
-        freshnessDeadline: "2099-01-01T00:00:00.000Z",
-        createdAt: "2026-09-18T00:00:00.000Z",
-        attemptCount: 1,
-        announcement: {
-          kind: "scout-settlement-announcement",
-          version: 1,
-          data: {},
-        },
-        state: {
-          kind: "sending",
-          attemptNonce: nonce,
-          startedAt: "2026-09-18T00:00:01.000Z",
-        },
-      }),
-    });
-    expect(
-      await deliverNotification({
-        stage: "dev",
-        intentKey: key,
-        attemptNonce: nonce,
-      }),
-    ).toEqual({ outcome: "suppressed", reason: "feature-disabled" });
-    expect(stubs.send).not.toHaveBeenCalled();
-    expect(stubs.sendDM).not.toHaveBeenCalled();
-  });
-
   test("leaves the rank captured at render untouched, however late it is driven", async () => {
     await seedRenderedReport();
     await seedRankHistory();

@@ -5,16 +5,13 @@ import { hallBreakRecords } from "#src/temporal/notification/hall-record-break.t
 import {
   attemptRef,
   CHANNEL_ID,
-  intentKey,
-  intentRecord,
 } from "#src/temporal/notification-lane/notification-delivery.test-fixtures.ts";
 
-/** Retired settlements never send; Hall announcements retain their guild boundary. */
+/** Hall announcements retain their guild boundary. */
 
 const stubs = vi.hoisted(() => ({
   requireIntentRecord: vi.fn(),
   resolveNotificationGate: vi.fn(),
-  buildSettlementNotificationMessage: vi.fn(),
   readAttestedReportArtifact: vi.fn(),
   readAttestedPrematchArtifact: vi.fn(),
   resolveScoutObservedMatchContext: vi.fn(),
@@ -38,9 +35,6 @@ vi.mock("#src/temporal/notification-lane/notification-reads.ts", () => ({
 }));
 vi.mock("#src/temporal/notification/notification-policy.ts", () => ({
   resolveNotificationGate: stubs.resolveNotificationGate,
-}));
-vi.mock("#src/temporal/notification/settlement-notification.ts", () => ({
-  buildSettlementNotificationMessage: stubs.buildSettlementNotificationMessage,
 }));
 vi.mock("#src/temporal/notification/prematch-notification.ts", () => ({
   buildPrematchNotificationMessage: vi.fn(),
@@ -79,8 +73,6 @@ vi.mock("#src/league/discord/channel.ts", async () => {
   return await channelModuleWithSend(stubs.send);
 });
 
-const { MalformedAnnouncementIntentError } =
-  await import("#src/temporal/notification/announcement-codecs.ts");
 const { deliverNotification } =
   await import("#src/temporal/notification-lane/notification-delivery.ts");
 
@@ -91,57 +83,6 @@ beforeEach(() => {
   stubs.hallInstallationRetirementOf.mockResolvedValue(undefined);
   stubs.freshBotMember.mockResolvedValue({
     joined_at: "2026-09-01T00:00:00.000Z",
-  });
-  stubs.buildSettlementNotificationMessage.mockResolvedValue({
-    content: "the pool settled",
-    embeds: [],
-    allowedMentions: { parse: [] },
-    reply: { messageReference: "400000000000000777", failIfNotExists: false },
-  });
-});
-
-function gateFor(kind: "settlement", target: "channel" | "dm") {
-  stubs.requireIntentRecord.mockResolvedValue(intentRecord(target, kind));
-  stubs.resolveNotificationGate.mockResolvedValue({
-    kind,
-    target,
-    policy: "normal",
-    decision: "permitted",
-  });
-}
-
-describe("retired settlements", () => {
-  test.each(["channel", "dm"] as const)(
-    "suppresses a persisted %s settlement before building or sending",
-    async (target) => {
-      gateFor("settlement", target);
-
-      expect(await deliverNotification(attemptRef())).toEqual({
-        outcome: "suppressed",
-        reason: "feature-disabled",
-      });
-      expect(stubs.buildSettlementNotificationMessage).not.toHaveBeenCalled();
-      expect(stubs.readAttestedReportArtifact).not.toHaveBeenCalled();
-      expect(stubs.readAttestedPrematchArtifact).not.toHaveBeenCalled();
-      expect(stubs.generateMatchReport).not.toHaveBeenCalled();
-      expect(stubs.send).not.toHaveBeenCalled();
-    },
-  );
-
-  test("suppresses malformed old payloads without trying to decode or retry them", async () => {
-    gateFor("settlement", "channel");
-    stubs.buildSettlementNotificationMessage.mockRejectedValue(
-      new MalformedAnnouncementIntentError({
-        intentKey,
-        detail: "retired payload",
-      }),
-    );
-    expect(await deliverNotification(attemptRef())).toEqual({
-      outcome: "suppressed",
-      reason: "feature-disabled",
-    });
-    expect(stubs.buildSettlementNotificationMessage).not.toHaveBeenCalled();
-    expect(stubs.send).not.toHaveBeenCalled();
   });
 });
 

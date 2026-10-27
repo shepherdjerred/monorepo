@@ -720,7 +720,7 @@ omitting it defaults to the last 7 days on every `history` subcommand.
 Search ranks title, dialogue, and tool text separately and uses recency only to
 break relevance ties. Unquoted terms keep AND-prefix behavior; pass literal
 quotes inside the query for an exact phrase, for example
-`toolkit history search '"Bryan Bucks"'`. The current Conductor/Codex run and
+`toolkit history search '"Match Reports"'`. The current Conductor/Codex run and
 30-minute parallel duplicates are hidden/grouped by default; use
 `--include-current` or `--include-duplicates` when needed. Source failures are
 warnings on stderr, or in the JSON `warnings` array.

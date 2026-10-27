@@ -57,8 +57,8 @@ as the older `gen_ai.system` attribute.
 `./subject` carries the vocabulary for _who_ a call was made on behalf of:
 `LlmSubject` is a `{ kind, id }` pair over `discord_user`, `guild`,
 `tracked_player`, and `system`. Not every workload has a requester — match
-reports are generated for a tracked player and scheduled betting runs for a whole
-guild — so the kind travels with the id rather than every caller pretending to
+reports are generated for a tracked player and scheduled summaries can cover a
+whole guild — so the kind travels with the id rather than every caller pretending to
 have a user.
 
 `withLlmSubjectSpan(name, subject, fn)` opens an **active** span carrying those

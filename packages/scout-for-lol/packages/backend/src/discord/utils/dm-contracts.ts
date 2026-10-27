@@ -18,9 +18,6 @@ export const DmKindSchema = z.enum([
   "outreach_30d",
   "outreach_manual",
   "data_validation",
-  // Retired kinds only decode historical audit rows.
-  "betting_settlement_receipt",
-  "betting_player_bet_outcome",
   "dare_notification",
   // The V2 durable pipeline's DM target. A notification intent whose target is
   // an account rather than a channel delivers through here, so it gets the same

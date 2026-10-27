@@ -124,23 +124,11 @@ export type ScoutPrematchStore = {
    * intent is not drivable.
    */
   delivered: NotificationIntentKey[];
-  /**
-   * Guilds holding a Bryan Bucks pool for the game, one entry per pool. The
-   * markets stub opens one pool per announced channel's guild only where
-   * none stands, as `BucksMatchPool`'s unique (match, guild) makes the real
-   * open do, so a pool opened twice shows up as a duplicate entry.
-   */
-  pools: string[];
-  /** Fail the markets Activity, to prove the announcement goes out anyway. */
-  marketsFail: boolean;
   /** Intent keys a started notification child read, in arrival order. */
   childReads: NotificationIntentKey[];
   /** The stage of each maintenance pass a discovery ran, in order. */
   maintenanceStages: string[];
 };
-
-/** Every test channel sits in one guild, which is the case pools dedupe on. */
-export const GUILD_ID = "300000000000000001";
 
 export function createScoutPrematchStore(
   overrides: Partial<ScoutPrematchStore> = {},
@@ -156,8 +144,6 @@ export function createScoutPrematchStore(
     failAt: null,
     crashAfterCapture: false,
     delivered: [],
-    pools: [],
-    marketsFail: false,
     childReads: [],
     maintenanceStages: [],
     ...overrides,
@@ -176,7 +162,6 @@ export function captured(
     intentKeys: CHANNEL_IDS.map((channelId) =>
       prematchIntentKeyOf(gameRef, channelId),
     ),
-    pools: [GUILD_ID],
   });
 }
 
@@ -280,25 +265,10 @@ export function scoutPrematchActivityStubs(
     },
     openPrematchMarkets: (): ScoutGuardedEffectResult => {
       record("openPrematchMarkets");
-      if (store.marketsFail) {
-        throw ApplicationFailure.nonRetryable(
-          "injected markets failure",
-          "InjectedCrash",
-        );
-      }
-      if (store.intentKeys.length === 0 || store.pools.includes(GUILD_ID)) {
-        return {
-          guard: { outcome: "already-applied" },
-          fact: { outcome: "already-applied" },
-          effects: 0,
-        };
-      }
-      store.pools.push(GUILD_ID);
-      store.applied.push(`pool:${GUILD_ID}`);
       return {
-        guard: { outcome: "applied" },
-        fact: { outcome: "applied" },
-        effects: 1,
+        guard: { outcome: "already-applied" },
+        fact: { outcome: "already-applied" },
+        effects: 0,
       };
     },
     /**

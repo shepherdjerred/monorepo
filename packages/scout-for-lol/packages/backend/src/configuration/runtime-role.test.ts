@@ -189,7 +189,7 @@ describe("scout runtime roles", () => {
   test("every role that runs an activity queue declares lake access", () => {
     // Every embedded activity queue reads the lake somewhere: realtime settles
     // SQL dares and evaluates hall progression, interactive runs Explore
-    // queries, background runs reports and parlays, lake is the compactor. A
+    // queries, background runs reports and maintenance, lake is the compactor. A
     // role that polls any of them without the lake mounted would answer those
     // queries with nothing and call it success.
     for (const role of SCOUT_RUNTIME_ROLES) {

@@ -45,8 +45,6 @@ export async function productAnnouncementSuppression(
   )
     return "recipient-preference";
   switch (effect.kind) {
-    case "weekly-bucks":
-      return "feature-disabled";
     case "customs-recruitment":
       // Customs live nights were retired with the Discord Activity. Retained
       // recruitment intents still parse, but none may announce a night.

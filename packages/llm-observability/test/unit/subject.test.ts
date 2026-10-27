@@ -18,14 +18,14 @@ test("withLlmSubjectSpan records the subject on the span", async () => {
   exporter.reset();
 
   await withLlmSubjectSpan(
-    "scout.bucks-ask",
+    "scout.explore",
     { kind: "discord_user", id: "160509172704739328" },
     () => Promise.resolve("answered"),
   );
 
   const spans = exporter.getFinishedSpans();
   expect(spans.length).toBe(1);
-  expect(spans[0]?.name).toBe("scout.bucks-ask");
+  expect(spans[0]?.name).toBe("scout.explore");
   expect(spans[0]?.attributes[LLM_SUBJECT_KIND_ATTRIBUTE]).toBe("discord_user");
   expect(spans[0]?.attributes[LLM_SUBJECT_ID_ATTRIBUTE]).toBe(
     "160509172704739328",
@@ -78,10 +78,10 @@ test("a blank subject id is rejected rather than attributed to an empty key", ()
 test("system is a first-class subject kind for workloads with no requester", () => {
   // Scheduled work must be able to say so honestly instead of inventing a user.
   expect(
-    llmSubjectAttributes({ kind: "system", id: "scout.betting.parlay" }),
+    llmSubjectAttributes({ kind: "system", id: "scout.maintenance" }),
   ).toEqual({
     [LLM_SUBJECT_KIND_ATTRIBUTE]: "system",
-    [LLM_SUBJECT_ID_ATTRIBUTE]: "scout.betting.parlay",
+    [LLM_SUBJECT_ID_ATTRIBUTE]: "scout.maintenance",
   });
 });
 

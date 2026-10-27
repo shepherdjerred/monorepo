@@ -410,7 +410,9 @@ export type ScoutLegacyMatchCompletionV2Result = z.infer<
  * renderer. All four travel so a Workflow history explains itself.
  */
 export const ScoutNotificationGateSchema = z.strictObject({
-  kind: NotificationIntentKindSchema,
+  // Activity results are also replayed from closed histories. The application
+  // domain rejects the retired kind; this wire boundary still reads it.
+  kind: z.enum([...NotificationIntentKindSchema.options, "settlement"]),
   target: NotificationTargetKindSchema,
   policy: RecoveryPolicySchema,
   decision: z.enum(["permitted", "held"]),

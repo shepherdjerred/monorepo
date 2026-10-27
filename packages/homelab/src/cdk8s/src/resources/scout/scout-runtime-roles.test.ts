@@ -470,9 +470,7 @@ describe("Scout gateway network boundary", () => {
    * matches `app` exactly — the gateway's own egress rule is not enough, which
    * is why the split had to add an identity here at all. But an
    * `arrayContaining` check on just that addition would not notice one of the
-   * OTHER identities disappearing, and the test that used to pin the backend
-   * pair lived in scout-weekly-parlay-boundary.test.ts, which main deleted when
-   * it retired the weekly parlay. So this asserts the exact set: a removed
+   * other identities disappearing. This asserts the exact set: a removed
    * identity fails just as loudly as an unexpected new one.
    */
   test("Temporal admits exactly the expected Scout identities on gRPC", () => {

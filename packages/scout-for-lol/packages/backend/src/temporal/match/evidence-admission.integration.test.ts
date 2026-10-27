@@ -211,11 +211,11 @@ test("direct effect Activities reject history before fetching inputs or entering
     completedAt: Date.now(),
     historical: true,
   });
-  const { settleMatchMarkets, applyMatchProgression } =
+  const { settleMatchDares, applyMatchProgression } =
     await import("#src/temporal/match/match-effects.ts");
   const { finalizeTournamentResult } =
     await import("#src/temporal/match/match-tournament.ts");
-  await expect(settleMatchMarkets({ riotMatchId: history })).rejects.toThrow(
+  await expect(settleMatchDares({ riotMatchId: history })).rejects.toThrow(
     "cannot resolve dares",
   );
   await expect(applyMatchProgression({ riotMatchId: history })).rejects.toThrow(

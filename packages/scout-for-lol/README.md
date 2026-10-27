@@ -113,6 +113,10 @@ are one-shot and each command starts a new saved conversation.
 - Queue-canary replay retains its original capability inventory behind a Temporal
   patch marker. New canaries use the current background-job contract; retired
   kinds are accepted only when replaying the corresponding unpatched history.
+- Applied migrations preserve database upgrade history. Current schemas exclude
+  the retired economy, and migration removes its terminal delivery/work metadata
+  while retaining Dare receipts and refusing unfinished or uncertain deliveries.
+  Temporal wire aliases and historical result vocabulary remain solely for replay.
 - PostHog for privacy-scoped server-side product analytics
 - CI builds and publishes the image; Delivery releases beta automatically and
   promotes prod with human approval

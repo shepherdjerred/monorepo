@@ -40,8 +40,6 @@ export async function afterProductAnnouncementDelivered(
             },
           });
         break;
-      case "weekly-bucks":
-        break;
       case "customs-recruitment":
         if (stored.messageId === null)
           throw new Error(
