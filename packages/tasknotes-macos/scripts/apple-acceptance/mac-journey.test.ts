@@ -3,6 +3,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test } from "vitest";
 import { MacSessionPreflightError } from "./mac-session.ts";
+import { materializeMacArtifact, readMacArtifact } from "./mac-artifact.ts";
+import { readMacEvidence } from "./mac-evidence.ts";
 import {
   buildMacAcceptance,
   configureMacAcceptanceTestRun,
@@ -14,6 +16,55 @@ import {
 } from "./mac-journey.ts";
 
 const directories: string[] = [];
+const proofRunID = "12345678-1234-1234-1234-123456789abc";
+const proofSHA = "a".repeat(64);
+test("VM result manifest rejects traversal, collisions, foreign identity and byte overflow", () => {
+  const file = { path: "state/vault/task.md", bytes: 4, sha256: proofSHA };
+  const manifest = { schemaVersion: 1, runID: proofRunID, files: [file] };
+  expect(readMacEvidence(manifest, proofRunID)).toEqual([file]);
+  for (const files of [
+    [{ ...file, path: "../foreign" }],
+    [file, file],
+    [{ ...file, bytes: 65 * 1024 * 1024 }],
+    [file, { ...file, path: "state/vault" }],
+  ])
+    expect(() => readMacEvidence({ ...manifest, files }, proofRunID)).toThrow();
+  expect(() => readMacEvidence(manifest, crypto.randomUUID())).toThrow();
+});
+test("artifact input graph rejects escaping/dangling links before destination writes", async () => {
+  const root = await directory(),
+    destination = path.join(root, "fresh");
+  const artifact = {
+    schemaVersion: 1 as const,
+    runID: proofRunID,
+    packageRoot: root,
+    sourceHead: "a".repeat(40),
+    xcodeVersion: "Xcode owned",
+    sources: { "owned.swift": proofSHA },
+    files: {
+      "Debug/FacetAcceptance.app/Contents/binary": {
+        sha256: proofSHA,
+        mode: 0o755,
+      },
+    },
+    links: { "Debug/FacetAcceptance.app/Contents/link": "missing" },
+  };
+  expect(() => readMacArtifact(artifact)).toThrow("Dangling");
+  await expect(
+    materializeMacArtifact(artifact, root, destination),
+  ).rejects.toThrow();
+  expect(
+    await Bun.file(
+      path.join(destination, "Debug/FacetAcceptance.app/Contents/binary"),
+    ).exists(),
+  ).toBe(false);
+  expect(() =>
+    readMacArtifact({
+      ...artifact,
+      links: { "Debug/FacetAcceptance.app/Contents/link": "../escape" },
+    }),
+  ).toThrow();
+});
 async function directory(): Promise<string> {
   const root = await mkdtemp(path.join(tmpdir(), "facet-mac-journey-control-"));
   directories.push(root);

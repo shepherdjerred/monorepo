@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
-import { cp, mkdir } from "node:fs/promises";
+import { cp, lstat, mkdir, readlink } from "node:fs/promises";
 import path from "node:path";
 import { acceptanceSigningArguments } from "../acceptance-test-plan.ts";
+import {
+  macFileSHA,
+  readMacArtifact,
+  verifyMacArtifact,
+  type MacArtifact,
+} from "./mac-artifact.ts";
+import {
+  requireStableSources,
+  sourceFingerprints,
+} from "./source-provenance.ts";
 import {
   isMacSessionPreflightFailure,
   requireUnlockedMac,
@@ -12,6 +22,72 @@ export type MacJourneyCommand = (
   capture?: boolean,
   cwd?: string,
 ) => Promise<string>;
+
+export async function buildMacArtifact(
+  root: string,
+  evidence: string,
+  command: MacJourneyCommand,
+): Promise<MacArtifact> {
+  const workspace = path.resolve(root, "../..");
+  const inputs = () =>
+    sourceFingerprints(workspace, (argv) => command(argv, true, workspace));
+  const sources = await inputs(),
+    sourceHead = (
+      await command(["git", "rev-parse", "HEAD"], true, workspace)
+    ).trim();
+  await Bun.write(
+    path.join(evidence, "sources-before.json"),
+    JSON.stringify(sources),
+  );
+  await buildMacAcceptance(
+    path.join(evidence, "macos"),
+    command,
+    Bun.env["TASKNOTES_UITEST_IDENTITY"],
+  );
+  requireStableSources(sources, await inputs());
+  assert.equal(
+    (await command(["git", "rev-parse", "HEAD"], true, workspace)).trim(),
+    sourceHead,
+  );
+  const products = path.join(evidence, "macos/Build/Products"),
+    files: MacArtifact["files"] = {},
+    links: MacArtifact["links"] = {};
+  for await (const file of new Bun.Glob("**/*").scan({
+    cwd: products,
+    onlyFiles: false,
+    dot: true,
+  })) {
+    const absolute = path.join(products, file),
+      metadata = await lstat(absolute);
+    if (metadata.isSymbolicLink()) links[file] = await readlink(absolute);
+    else if (metadata.isFile())
+      files[file] = {
+        sha256: await macFileSHA(absolute),
+        mode: metadata.mode & 0o777,
+      };
+  }
+  const artifact = readMacArtifact({
+    schemaVersion: 1,
+    runID: path.basename(evidence),
+    packageRoot: root,
+    sourceHead,
+    xcodeVersion: await command(["xcodebuild", "-version"], true),
+    sources,
+    files,
+    links,
+  });
+  await verifyMacArtifact(artifact, products, command);
+  requireStableSources(sources, await inputs());
+  assert.equal(
+    (await command(["git", "rev-parse", "HEAD"], true, workspace)).trim(),
+    sourceHead,
+  );
+  await Bun.write(
+    path.join(evidence, "artifact.json"),
+    JSON.stringify(artifact),
+  );
+  return artifact;
+}
 
 export async function runMacAcceptanceCase(
   run: {

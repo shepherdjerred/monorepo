@@ -37,6 +37,9 @@ host used by iOS. Load `tasknotes-development` for the cross-package workflow.
 
 ## Verification and release
 
+Automated Mac UI checks use a preprovisioned headless guest, never a host-desktop fallback.
+Run foreground host UI only when the user explicitly requests it.
+
 ```bash
 cd ../tasknotes-core && cargo xtask build-xcframework
 cd ../tasknotes-macos

@@ -332,7 +332,7 @@ of the original task, reference note and configuration. To diagnose one flow,
 use `bun run mac:acceptance:e2e --only-testing=testQuickAddRetainsHiddenDraftAndAddsAnother`;
 a narrowed run is recorded as such and does not establish the full suite.
 
-`bun scripts/occurrence-acceptance/run-macos.ts` runs a separate local recurrence
+`bun run mac:occurrences:e2e --vm <running-VM>` runs a separate local recurrence
 journey in a fresh `Native acceptance` vault. It checks automatic rolling
 generation, the production Generate button preserving completion Undo when it has
 nothing to create, and a missing-template failure that preserves a completed
@@ -342,6 +342,24 @@ restore the exact committed parent and child, and a second repair must survive
 cold relaunch. It retains source fingerprints, exact XCTest results, persisted
 Markdown and app-only captures in `.build/occurrence-acceptance/<UUID>`. It uses
 the same signing, capture and process ownership checks as ordinary acceptance.
+The command requires an already running, preprovisioned Tart guest with Guest
+Agent, a matching selected Xcode, an unlocked GUI session, and normal XCTest,
+Accessibility and Screen Recording permissions for the signed acceptance runner.
+It never downloads, installs, boots a VM, starts VNC, or falls back to host UI.
+
+Provision three read-only named shares once: `tasknotes-xcode` for the selected
+host Xcode bundle, `tools` for this package's `.build/occurrence-vm/tools`, and
+`exports` for `.build/occurrence-vm/exports`. The guest must select its canonical
+Xcode path and have real, guest-owned directories at the host package's compiled
+absolute path. Do not share a home directory, Keychain, credentials or the full
+workspace. The producer copies the installed Bun runtime and generates persistent
+per-run bundles and strict source/artifact receipts beneath `.build/occurrence-vm`;
+no private `/tmp` helper is required after reboot. Fresh host and guest UUIDs
+protect existing state. Owned regular result files return through a size-limited,
+SHA-256 verified manifest and binary Guest Agent copies, without a writable share.
+
+Foreground manual testing requires explicit opt-in:
+`bun scripts/occurrence-acceptance/run-macos.ts --host-ui`.
 The four ordinary workflows and their fixture remain a separate required gate.
 Series repair controls match the core's current canonical `sourceTaskPaths`.
 An explicit empty array excludes historical child paths; older responses without
