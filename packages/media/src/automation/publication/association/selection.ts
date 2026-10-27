@@ -71,7 +71,12 @@ export async function groupDetails(
           : null,
     });
   }
-  if (new Set(details.map((row) => row.part.id)).size !== 1) {
+  // PMS may assign one Part row per episode for the same physical file.
+  // Complete distinct items still need the exact path, size and canonical hierarchy above/below.
+  if (
+    new Set(details.map((row) => row.item.ratingKey)).size !==
+    group.coverage.length
+  ) {
     throw new PlexBindingProtection("ambiguous_item");
   }
   return details;

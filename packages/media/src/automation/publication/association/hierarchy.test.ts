@@ -2,6 +2,28 @@ import { expect, test } from "vitest";
 import { verifyPlexAssociations } from "#automation/publication/association.ts";
 import { associationFixture } from "./test-fixture.ts";
 
+test("one shared TV file can expose distinct per-episode Plex Parts", async () => {
+  const f = associationFixture("episode", 2);
+  for (const [index, item] of f.items.entries()) {
+    const part = item.Media?.[0]?.Part[0];
+    if (part === undefined) throw new Error("Shared TV fixture Part missing");
+    part.id = 500 + index;
+  }
+  const result = await verifyPlexAssociations(
+    { plex: f.createClient() },
+    f.input,
+    f.execution,
+  );
+  if ("status" in result)
+    throw new Error(`Expected shared-file serving proof: ${result.reason}`);
+  expect(
+    result.associations.map((row) => row.item.media[0].parts[0].id),
+  ).toEqual(["500", "501"]);
+  expect(result.associations.map((row) => row.scope)).toEqual(
+    f.input.expected.newGroups[0]?.coverage,
+  );
+});
+
 test("shared TV file binds every canonical episode through actual season and show metadata in both passes", async () => {
   const f = associationFixture("episode", 2);
   const result = await verifyPlexAssociations(

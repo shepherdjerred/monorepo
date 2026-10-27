@@ -523,6 +523,11 @@ the same server, section, item, Part, path and identity, with no decrease in wat
 count or progress. An uncertain write fences later ownership of that file until
 confirmed. Failed or cancelled application requires owner review. Historical
 completed acknowledgements retain their original sources and SDK expiry.
+Shared TV/anime files retain every exact episode association. Plex can assign
+distinct Part IDs to those episode items despite their identical physical path;
+each item retains its own Part identity. Serving verification still requires
+complete coverage, the exact path and size, and the canonical show/season/episode
+hierarchy in both stable passes.
 The receipt retains the initial asset and caption snapshots as well as the
 reviewed filesystem and Plex evidence, plus actual label-edit checkpoints for
 schema version 3. Caption ownership does not establish
