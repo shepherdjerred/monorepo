@@ -25,7 +25,7 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: false
-    # Tracks grants levels as LuckPerms groups; LuckPerms must be enabled first.
+    # Tracks grants levels and reset clears per-user data; LuckPerms enables first.
     LuckPerms:
       load: BEFORE
       required: true

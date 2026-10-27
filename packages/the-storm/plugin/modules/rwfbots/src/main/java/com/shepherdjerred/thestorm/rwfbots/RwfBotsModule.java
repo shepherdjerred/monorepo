@@ -88,6 +88,10 @@ public final class RwfBotsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .stateless(id());
     var models =
         new DiagnosticModels(
             new DiagnosticModels.Parts(

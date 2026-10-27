@@ -28,8 +28,12 @@ public final class SpellsModule implements StormModule {
     var config = context.loadConfig("spells.yml", SpellsConfig.class);
     context.database().migrate(id(), SpellsModule.class.getClassLoader());
     var protection = context.services().require(Protection.class);
-    var installed =
-        SpellsPaper.install(context, config, new JooqSpellStore(context.database()), protection);
+    var store = new JooqSpellStore(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), store::reset);
+    var installed = SpellsPaper.install(context, config, store, protection);
     paper = installed;
     context.services().provide(SpellScrolls.class, installed.scrolls());
   }

@@ -98,6 +98,10 @@ public final class TheStormPlugin extends JavaPlugin {
     db.migrate("core", getClass().getClassLoader());
     var players = new SqlPlayerDirectory(db);
     services.provide(PlayerDirectory.class, players);
+    var resets = new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry();
+    services.provide(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class, resets);
+    resets.diagnostics(message -> getComponentLogger().info("{}", message));
+    resets.register("core", players::reset);
     var visibilityControl = new PlayerVisibilityControl(this);
     visibility = visibilityControl;
     services.provide(PlayerVisibilityControl.class, visibilityControl);
@@ -143,6 +147,7 @@ public final class TheStormPlugin extends JavaPlugin {
       module.enable(context);
       enabled.add(module);
     }
+    resets.complete(ModuleRegistry.ids(selected));
     analyticsPaper.start(rollout);
     getComponentLogger().info("Enabled modules: {}", ModuleRegistry.ids(selected));
   }

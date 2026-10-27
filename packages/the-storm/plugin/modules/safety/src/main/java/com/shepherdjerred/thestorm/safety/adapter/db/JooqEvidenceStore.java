@@ -63,6 +63,26 @@ public final class JooqEvidenceStore implements EvidenceStore {
                 .execute());
   }
 
+  /** Erases one player's submissions and their dependent evidence events. */
+  public CompletableFuture<Void> reset(UUID player) {
+    return database
+        .write(
+            dsl -> {
+              var submissions =
+                  dsl.select(field("id", String.class))
+                      .from(table("safety_submission"))
+                      .where(field("player", String.class).eq(player.toString()));
+              dsl.deleteFrom(table("safety_event"))
+                  .where(field("submission_id", String.class).in(submissions))
+                  .execute();
+              dsl.deleteFrom(table("safety_submission"))
+                  .where(field("player", String.class).eq(player.toString()))
+                  .execute();
+              return true;
+            })
+        .thenAccept(ignored -> {});
+  }
+
   @Override
   public CompletableFuture<Void> attempt(ContentSubmission submission, Instant at) {
     return database

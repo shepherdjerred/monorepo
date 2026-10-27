@@ -138,6 +138,27 @@ public final class JooqLedgerStore implements LedgerStore {
         });
   }
 
+  /** Removes balances, transfer history and the starting-balance receipt for one player. */
+  public CompletableFuture<Void> reset(UUID player) {
+    var id = player.toString();
+    return database
+        .write(
+            dsl -> {
+              dsl.deleteFrom(ECONOMY_LEDGER)
+                  .where(ECONOMY_LEDGER.FROM_KIND.eq("player").and(ECONOMY_LEDGER.FROM_ID.eq(id)))
+                  .or(ECONOMY_LEDGER.TO_KIND.eq("player").and(ECONOMY_LEDGER.TO_ID.eq(id)))
+                  .execute();
+              dsl.deleteFrom(ECONOMY_ACCOUNT)
+                  .where(ECONOMY_ACCOUNT.KIND.eq("player"), ECONOMY_ACCOUNT.ID.eq(id))
+                  .execute();
+              dsl.deleteFrom(ECONOMY_PLAYER_SEEN)
+                  .where(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(id))
+                  .execute();
+              return true;
+            })
+        .thenAccept(ignored -> {});
+  }
+
   @Override
   public CompletableFuture<Optional<SeenPlayer>> findPlayer(String name) {
     return database.read(

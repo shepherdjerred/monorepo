@@ -97,6 +97,12 @@ public final class BeginnerClock {
     return entry != null && entry.enabled;
   }
 
+  /** Forgets one account before deleting its saved allowance. */
+  public synchronized CompletableFuture<Void> reset(UUID id) {
+    entries.remove(id);
+    return store.reset(id);
+  }
+
   public synchronized void close() {
     entries.forEach(
         (id, entry) -> {

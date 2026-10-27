@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
+import type { Bot } from "mineflayer";
 import { describe, expect } from "vitest";
 import { test } from "./fixtures.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import {
   collectMessages,
   connectBot,
@@ -191,5 +193,82 @@ describe("onboarding", () => {
     } finally {
       await disconnectBot(again);
     }
+  });
+});
+
+describe("player reset", () => {
+  test("reset kicks a player and replays the complete first-join experience", async ({
+    server,
+    secondBot,
+    rcon,
+  }) => {
+    const name = username("reset");
+    let dialogs = 0;
+    const prepare = (bot: Bot) => {
+      bot._client.on("packet", (_data: unknown, meta: { name: string }) => {
+        if (meta.name === "show_dialog") dialogs += 1;
+      });
+    };
+    const connect = () =>
+      connectBot({
+        host: server.host,
+        port: server.gamePort,
+        username: name,
+        prepare,
+      });
+
+    const first = await connect();
+    await waitUntil("first starter kit", () =>
+      first.inventory.items().some((item) => item.name === "cooked_porkchop"),
+    );
+    await waitUntil("first-join biome dialog", () => dialogs === 1);
+    expect(dialogs).toBe(1);
+    await rcon.command(
+      `item replace entity ${name} hotbar.0 with minecraft:diamond 3`,
+    );
+    await waitUntil("old inventory delivered", () =>
+      first.inventory.items().some((item) => item.name === "diamond"),
+    );
+    first.chat("/sethome old");
+    await Bun.sleep(500);
+    await disconnectBot(first);
+
+    const returning = await connect();
+    expect(dialogs).toBe(1);
+    expect(
+      returning.inventory.items().some((item) => item.name === "diamond"),
+    ).toBe(true);
+
+    secondBot.chat(`/reset ${name}`);
+    const deniedMessages = await collectMessages(secondBot, 500);
+    expect(deniedMessages.some((line) => line.includes("Repeat /reset"))).toBe(
+      false,
+    );
+    expect(
+      returning.inventory.items().some((item) => item.name === "diamond"),
+    ).toBe(true);
+    await rcon.command(
+      `lp user ${secondBot.username} permission set thestorm.reset true`,
+    );
+    await rcon.command(`reset ${name}`);
+    const kicked = new Promise<void>((resolve) =>
+      returning.once("end", (_reason) => resolve()),
+    );
+    await rcon.command(`reset ${name}`);
+    await kicked;
+    await waitUntil("reset completed", async () => {
+      const logs = await serverLogs(server);
+      return logs.includes("Permissions reset complete for ");
+    });
+
+    const fresh = await connect();
+    await waitUntil("replacement starter kit", () =>
+      fresh.inventory.items().some((item) => item.name === "cooked_porkchop"),
+    );
+    expect(dialogs).toBe(2);
+    expect(
+      fresh.inventory.items().some((item) => item.name === "diamond"),
+    ).toBe(false);
+    await disconnectBot(fresh);
   });
 });

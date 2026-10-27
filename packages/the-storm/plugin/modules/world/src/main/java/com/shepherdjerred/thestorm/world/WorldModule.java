@@ -79,6 +79,10 @@ public final class WorldModule implements StormModule {
       context.database().migrate(id(), WorldModule.class.getClassLoader());
       var ledger = new JooqDailyLedger(context.database());
       context
+          .services()
+          .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+          .register(id(), ledger::reset);
+      context
           .plugin()
           .getServer()
           .getPluginManager()
@@ -91,6 +95,11 @@ public final class WorldModule implements StormModule {
                   new DailyDigestCommands.Dependencies(
                       config.digest(), ledger, context.time(), context.scheduler()),
                   context.logger()));
+    } else {
+      context
+          .services()
+          .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+          .stateless(id());
     }
     var crier =
         new CrierCommands(

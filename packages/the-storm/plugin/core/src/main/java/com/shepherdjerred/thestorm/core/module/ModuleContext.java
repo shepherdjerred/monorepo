@@ -41,6 +41,13 @@ public record ModuleContext(
     RandomGenerator random,
     ComponentLogger logger,
     ProductAnalytics analytics) {
+  public ModuleContext {
+    if (services.find(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class).isEmpty()) {
+      services.provide(
+          com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class,
+          new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry());
+    }
+  }
 
   /** Loads {@code plugins/TheStorm/<fileName>}, which the repository owns. */
   public <T> T loadConfig(String fileName, Class<T> type) {

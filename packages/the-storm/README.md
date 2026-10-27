@@ -331,6 +331,17 @@ Jail sentences preserve the return location, survive restart and expire
 through the online enforcement sweep. Jailed players retain communication
 commands while travel and item/world interactions are blocked.
 
+`/reset <player>` returns an online or offline account to its first-join state
+for new-user playtesting. It requires the default-false `thestorm.reset`
+permission, independent of the staff-tools rollout; grant it only to
+XiguaJerred with `lp user XiguaJerred permission set thestorm.reset true`.
+Repeat the identical command to confirm. The target is kicked while vanilla
+files, TheStorm state, mutable ownership and direct LuckPerms user data are
+erased. Login stays closed until the complete reset succeeds, and interrupted
+resets resume on startup. Product analytics and CoreProtect world history are
+retained; physical world edits are not rolled back. A self-reset also removes
+the executor's user-specific permission grant.
+
 `/mail` lists reward deliveries and player letters separately. Existing reward
 claims remain `/mail claim <reward-id> <choice>`. Letters use
 `/mail send <username> <text>`, `/mail read <letter-id>`,
@@ -435,8 +446,9 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 28 modules and enables all of them,
-including `creative` (the recovered plot world, which must already be loaded
+The shipped `config.yml` registers 29 modules and enables all of them. Every
+module must also declare its player-reset cleanup or explicitly declare itself
+stateless; startup fails if a module is omitted. This includes `creative` (the recovered plot world, which must already be loaded
 with generator `TheStorm:creative`, and whose CoreProtect block and WorldEdit
 history must stay on; players enter with `/creative` and leave with
 `/creative leave`, swapping a stored survival body for an empty creative one;

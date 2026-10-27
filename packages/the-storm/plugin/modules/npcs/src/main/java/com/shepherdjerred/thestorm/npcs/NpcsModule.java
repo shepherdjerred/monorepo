@@ -79,6 +79,10 @@ public final class NpcsModule implements StormModule {
                 new JooqNpcStateStore(context.database())),
             NpcsPaper.Hooks.paper(context, config));
     running = installed.shutdown();
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), installed.reset());
     context.services().provide(NpcDirectory.class, catalog);
     context.services().provide(NpcDialogs.class, dialogues);
     context.services().provide(NpcActions.class, actions);

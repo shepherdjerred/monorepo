@@ -20,6 +20,10 @@ public final class MechanicsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .stateless(id());
     var config = context.loadConfig("mechanics.yml", MechanicsConfig.class);
     var protection = context.services().require(Protection.class);
     MechanicsPaper.install(context, config, protection);

@@ -43,6 +43,13 @@ public final class SqlPlayerDirectory implements PlayerDirectory {
         .thenAccept(rows -> {});
   }
 
+  /** Forgets a player without touching retained product analytics. */
+  public CompletableFuture<Void> reset(UUID uuid) {
+    return database
+        .write(dsl -> dsl.deleteFrom(PLAYER).where(UUID_FIELD.eq(uuid.toString())).execute())
+        .thenAccept(rows -> {});
+  }
+
   @Override
   public CompletableFuture<Optional<KnownPlayer>> byName(String name) {
     var lowered = name.toLowerCase(Locale.ROOT);

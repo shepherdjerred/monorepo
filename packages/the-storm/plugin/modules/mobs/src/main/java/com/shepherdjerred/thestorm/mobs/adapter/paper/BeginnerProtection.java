@@ -193,6 +193,16 @@ final class BeginnerProtection implements BeginnerStatus {
     phases.remove(player.getUniqueId());
   }
 
+  /** Clears both the live allowance and its durable checkpoint. */
+  public java.util.concurrent.CompletableFuture<Void> reset(UUID id) {
+    refreshAt.remove(id);
+    evaluated.remove(id);
+    pending.remove(id);
+    phases.remove(id);
+    minutes.remove(id);
+    return clock.reset(id);
+  }
+
   void stop() {
     stopped = true;
     unsubscribe.run();

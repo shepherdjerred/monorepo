@@ -108,6 +108,19 @@ public final class JooqSkillLevels implements SkillLevels {
         });
   }
 
+  /** Deletes only account progression; block provenance belongs to the world. */
+  public CompletableFuture<Void> reset(UUID player) {
+    var id = player.toString();
+    return database
+        .write(
+            dsl -> {
+              dsl.deleteFrom(SKILLS_EXPERIENCE).where(SKILLS_EXPERIENCE.PLAYER_ID.eq(id)).execute();
+              dsl.deleteFrom(SKILLS_PLAYER).where(SKILLS_PLAYER.PLAYER_ID.eq(id)).execute();
+              return true;
+            })
+        .thenAccept(ignored -> {});
+  }
+
   @Override
   public CompletableFuture<Boolean> markPlaced(BlockPosition position) {
     return database.write(

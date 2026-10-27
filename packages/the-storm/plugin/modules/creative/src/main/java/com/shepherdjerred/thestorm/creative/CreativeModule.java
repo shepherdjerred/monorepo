@@ -120,6 +120,23 @@ public final class CreativeModule implements StormModule {
     var store = new JooqClaimStore(context.database());
     var reviews = new ReviewBook();
     var reviewStore = new JooqReviewStore(context.database());
+    var reset =
+        new com.shepherdjerred.thestorm.creative.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenCompose(ignored -> store.loadAll())
+                    .thenAcceptAsync(book::replace, context.scheduler().mainThread())
+                    .thenCompose(ignored -> reviewStore.load())
+                    .thenAcceptAsync(
+                        snapshot -> reviews.replace(snapshot.ratings(), snapshot.comments()),
+                        context.scheduler().mainThread())
+                    .thenRunAsync(this::redraw, context.scheduler().mainThread()));
     PlotFootprint.States template = generator.template()::stateAt;
     context
         .plugin()

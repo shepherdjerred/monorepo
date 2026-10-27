@@ -240,6 +240,7 @@ async function profileFixtures(
           "tickets",
           "agent",
           "rwf",
+          "reset",
         ]),
         fixturesJar,
         rwf: { ...rwfTestSettings, maps: suiteMaps },

@@ -19,6 +19,10 @@ public final class SkylandsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .stateless(id());
     var config = context.loadConfig("skylands.yml", SkylandsConfig.class);
     var world = SkylandsWorlds.install(context.plugin(), config);
     context.services().provide(SkylandsWorld.class, new SkylandsWorld(world.getName()));

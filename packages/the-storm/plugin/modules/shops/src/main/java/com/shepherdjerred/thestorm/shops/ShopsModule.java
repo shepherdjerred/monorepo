@@ -48,6 +48,13 @@ public final class ShopsModule implements StormModule {
     var installed =
         ShopsPaper.install(context, config, new ShopsPaper.State(registry, store, catalogs));
     context.services().provide(ServerShops.class, installed.serverShops());
+    var reset =
+        new com.shepherdjerred.thestorm.shops.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(
+            id(), player -> reset.reset(player).thenRun(() -> installed.forget().accept(player)));
     this.drain = installed.drain();
     this.logger = context.logger();
     var _ =

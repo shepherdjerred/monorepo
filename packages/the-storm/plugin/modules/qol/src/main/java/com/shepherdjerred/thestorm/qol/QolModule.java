@@ -35,10 +35,16 @@ public final class QolModule implements StormModule {
     context.database().migrate(id(), getClass().getClassLoader());
     var services = context.services();
     var combat = new CombatTracker(context.time(), config.combat().tagFor());
+    var graves = new GraveRegistry();
+    var reset = new com.shepherdjerred.thestorm.qol.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), player -> reset.reset(player).thenRun(() -> graves.reset(player)));
     var app =
         new QolPaper.App(
             new JooqGraveStore(context.database()),
-            new GraveRegistry(),
+            graves,
             combat,
             services.require(Protection.class),
             services.require(TeleportGuards.class),

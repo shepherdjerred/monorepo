@@ -96,6 +96,22 @@ public final class StaffState {
         .thenRun(() -> entries.forEach(this::apply));
   }
 
+  /** Evicts player-scoped jail and session values after a reset. */
+  public void forget(String player) {
+    values.computeIfPresent(
+        "jail",
+        (kind, entries) -> {
+          entries.remove(player);
+          return entries;
+        });
+    values.computeIfPresent(
+        "session",
+        (kind, entries) -> {
+          entries.remove(player);
+          return entries;
+        });
+  }
+
   private void apply(StaffStore.Entry entry) {
     validate(entry);
     values

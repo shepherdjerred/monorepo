@@ -83,6 +83,14 @@ public final class ChatService {
             });
   }
 
+  /** Evicts an account after its durable chat state has been erased. */
+  public void forget(UUID player) {
+    profiles.remove(player);
+    mutes.remove(player);
+    recent.remove(player);
+    lastCorrespondent.remove(player);
+  }
+
   /** Whether stored mutes, ignores and channel preferences are ready for use. */
   public boolean ready() {
     return ready;

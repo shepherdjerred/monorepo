@@ -46,6 +46,37 @@ final class SqlPlayerDirectoryTest {
     }
   }
 
+  @Test
+  void resetForgetsOnlyTheDirectoryEntryAndRetainsAnalytics(@TempDir Path directory)
+      throws Exception {
+    try (var database = open(directory)) {
+      var players = new SqlPlayerDirectory(database);
+      players.recordJoin(RIOT, "RiotShielder", Instant.EPOCH).get(5, TimeUnit.SECONDS);
+      players.recordJoin(OTHER, "Other", Instant.EPOCH).get(5, TimeUnit.SECONDS);
+      database
+          .write(
+              dsl ->
+                  dsl.insertInto(
+                          org.jooq.impl.DSL.table("core_analytics_player"),
+                          org.jooq.impl.DSL.field("player_uuid"),
+                          org.jooq.impl.DSL.field("stage"),
+                          org.jooq.impl.DSL.field("first_seen"))
+                      .values(RIOT.toString(), "survival", 1L)
+                      .execute())
+          .get(5, TimeUnit.SECONDS);
+
+      players.reset(RIOT).get(5, TimeUnit.SECONDS);
+
+      assertThat(players.byId(RIOT).get(5, TimeUnit.SECONDS)).isEmpty();
+      assertThat(players.byId(OTHER).get(5, TimeUnit.SECONDS)).isPresent();
+      assertThat(
+              database
+                  .read(dsl -> dsl.fetchCount(org.jooq.impl.DSL.table("core_analytics_player")))
+                  .get(5, TimeUnit.SECONDS))
+          .isEqualTo(1);
+    }
+  }
+
   private static StormDatabase open(Path directory) {
     var database = StormDatabase.open(directory.resolve("t.db"));
     database.migrate("core", SqlPlayerDirectoryTest.class.getClassLoader());

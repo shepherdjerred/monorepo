@@ -73,6 +73,11 @@ public final class DailyUsage {
     day.used().merge(key, quantity, Integer::sum);
   }
 
+  /** Evicts a reset account's cached catalog usage. */
+  public void reset(UUID player) {
+    players.remove(player);
+  }
+
   private CompletableFuture<Day> load(UUID player) {
     var today = today();
     var cached = players.get(player);

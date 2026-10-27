@@ -62,6 +62,7 @@ val modules =
         "npcs",
         "companions",
         "quests",
+        "reset",
         "spells",
         "mechanics",
         "arena",

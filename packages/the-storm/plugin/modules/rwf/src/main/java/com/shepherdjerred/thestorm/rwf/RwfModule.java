@@ -138,6 +138,11 @@ public final class RwfModule implements StormModule {
         .provide(com.shepherdjerred.thestorm.rwf.app.map.MapResources.class, resources);
     var config = content.config();
     context.database().migrate(id(), getClass().getClassLoader());
+    var reset = new com.shepherdjerred.thestorm.rwf.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), reset::reset);
     var matches = new JooqMatchStore(context.database());
     var wallets = context.services().require(Wallets.class);
     var payouts = new PayoutService(wallets, matches, context.time());

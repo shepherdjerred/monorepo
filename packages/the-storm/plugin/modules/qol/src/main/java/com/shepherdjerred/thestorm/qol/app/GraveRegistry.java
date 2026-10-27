@@ -93,6 +93,12 @@ public final class GraveRegistry {
         .toList();
   }
 
+  /** Evicts every grave owned by a reset account. */
+  public void reset(UUID owner) {
+    ownedBy(owner).forEach(grave -> remove(grave.id()));
+    reserved.values().removeIf(id -> byId.get(id) == null);
+  }
+
   public void remove(UUID id) {
     var removed = byId.remove(id);
     if (removed != null) {

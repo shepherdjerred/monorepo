@@ -117,6 +117,12 @@ final class BeginnerLuckListenerTest {
             saved.merge(id, millis, Math::max);
             return CompletableFuture.completedFuture(null);
           }
+
+          @Override
+          public CompletableFuture<Void> reset(UUID id) {
+            saved.remove(id);
+            return CompletableFuture.completedFuture(null);
+          }
         };
     protection = new BeginnerProtection(context, config.beginnerLuck(), store);
     listener = new BeginnerLuckListener(context, config, levels, protection);

@@ -49,6 +49,20 @@ public final class ChatModule implements StormModule {
             new com.shepherdjerred.thestorm.chat.adapter.db.JooqIdentityStore(context.database()));
     service.identities(identities::effective);
     service.storedIdentities(identities::identity);
+    var reset = new com.shepherdjerred.thestorm.chat.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenRun(
+                        () -> {
+                          service.forget(player);
+                          identities.forget(player);
+                        }));
     context
         .services()
         .provide(com.shepherdjerred.thestorm.chat.app.IdentityService.class, identities);

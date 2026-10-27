@@ -373,6 +373,12 @@ final class NpcCombat {
     return true;
   }
 
+  /** Persists a snapshot without this player's combat history. */
+  public java.util.concurrent.CompletableFuture<Void> reset(UUID player) {
+    ledger.reset(player);
+    return store.save(ledger.snapshot());
+  }
+
   private void persist() {
     var _ =
         store

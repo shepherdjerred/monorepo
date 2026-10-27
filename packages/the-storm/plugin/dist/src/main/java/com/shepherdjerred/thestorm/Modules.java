@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.mobs.MobsModule;
 import com.shepherdjerred.thestorm.npcs.NpcsModule;
 import com.shepherdjerred.thestorm.qol.QolModule;
 import com.shepherdjerred.thestorm.quests.QuestsModule;
+import com.shepherdjerred.thestorm.reset.ResetModule;
 import com.shepherdjerred.thestorm.rwf.RwfModule;
 import com.shepherdjerred.thestorm.rwfbots.RwfBotsModule;
 import com.shepherdjerred.thestorm.safety.SafetyModule;
@@ -75,6 +76,7 @@ final class Modules {
         new SeasonalModule(),
         new WorldModule(),
         new QolModule(),
-        new CompanionsModule());
+        new CompanionsModule(),
+        new ResetModule());
   }
 }

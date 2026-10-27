@@ -40,6 +40,10 @@ public final class SafetyModule implements StormModule {
     classifier = client;
     context.database().migrate(id(), getClass().getClassLoader());
     var store = new JooqEvidenceStore(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), store::reset);
     var _ =
         store
             .recover(context.time().instant())

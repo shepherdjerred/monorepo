@@ -20,6 +20,7 @@ modules:
   spells: true
   npcs: true
   quests: true
+  reset: true
   arena: true
   mobs: true
   qol: true

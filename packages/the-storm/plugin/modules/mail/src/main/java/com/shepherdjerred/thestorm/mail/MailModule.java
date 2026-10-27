@@ -18,6 +18,11 @@ public final class MailModule implements StormModule {
   @Override
   public void enable(ModuleContext context) {
     context.database().migrate(id(), MailModule.class.getClassLoader());
+    var reset = new com.shepherdjerred.thestorm.mail.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), reset::reset);
     var mail = new JooqMail(context.database());
     context.services().provide(Mail.class, mail);
     var letters = new com.shepherdjerred.thestorm.mail.adapter.db.JooqLetters(context.database());

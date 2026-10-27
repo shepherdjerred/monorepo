@@ -145,6 +145,24 @@ public final class TownsModule implements StormModule {
             });
     var pvp = new PvpService(pvpStore, config.pvp(), clocks);
     pvp.load(await(pvpStore.loadAll(), "PvP switches"));
+    var reset =
+        new com.shepherdjerred.thestorm.towns.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenCompose(ignored -> store.loadAll())
+                    .thenAcceptAsync(state::reload, context.scheduler().mainThread())
+                    .thenCompose(ignored -> lockStore.loadAll())
+                    .thenAcceptAsync(book::reload, context.scheduler().mainThread())
+                    .thenCompose(ignored -> leases.load())
+                    .thenAcceptAsync(parcels::load, context.scheduler().mainThread())
+                    .thenCompose(ignored -> pvpStore.loadAll())
+                    .thenAcceptAsync(pvp::load, context.scheduler().mainThread()));
     var settling = new Settling(state, store, clocks, mapEvents(context, state));
     var locks =
         new LockService(

@@ -29,6 +29,18 @@ public final class JooqBeginnerTimeStore implements BeginnerTimeStore {
                     row -> requireNonNull(row.value2())));
   }
 
+  /** Deletes one player's durable beginner allowance. */
+  @Override
+  public CompletableFuture<Void> reset(UUID player) {
+    return database
+        .write(
+            dsl ->
+                dsl.deleteFrom(table("mobs_beginner_time"))
+                    .where(field("player", String.class).eq(player.toString()))
+                    .execute())
+        .thenAccept(ignored -> {});
+  }
+
   @Override
   public CompletableFuture<Void> save(UUID player, long activeMillis) {
     return database

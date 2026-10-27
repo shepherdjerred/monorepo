@@ -26,7 +26,12 @@ public final class SkillsModule implements StormModule {
   public void enable(ModuleContext context) {
     var config = context.loadConfig("skills.yml", SkillsConfig.class);
     context.database().migrate(id(), SkillsModule.class.getClassLoader());
-    SkillLevels levels = new JooqSkillLevels(context.database());
+    var store = new JooqSkillLevels(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), store::reset);
+    SkillLevels levels = store;
     context.services().provide(SkillLevels.class, levels);
     var server = context.plugin().getServer();
     Consumer<SkillLevelUp> levelUps =

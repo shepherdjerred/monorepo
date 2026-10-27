@@ -69,6 +69,13 @@ public final class IdentityService {
         .findFirst();
   }
 
+  /** Evicts an account after its durable identity has been erased. */
+  public void forget(UUID player) {
+    identities.remove(player);
+    writing.remove(player);
+    displaying.remove(player);
+  }
+
   public CompletableFuture<Identity> change(
       UUID player, UnaryOperator<Identity> action, IdentityStore.Audit audit) {
     if (!ready)
