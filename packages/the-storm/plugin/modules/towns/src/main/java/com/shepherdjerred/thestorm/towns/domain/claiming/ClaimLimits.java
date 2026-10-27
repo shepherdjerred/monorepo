@@ -18,4 +18,15 @@ public interface ClaimLimits {
     }
     return town -> max;
   }
+
+  /**
+   * Towns use {@code allowance}, including the Governor bonus. A camp uses {@code campChunks} and
+   * ignores that bonus.
+   */
+  static ClaimLimits holding(ClaimAllowance allowance, int campChunks) {
+    if (campChunks < 1) {
+      throw new IllegalArgumentException("a camp chunk cap must be at least 1: " + campChunks);
+    }
+    return town -> town.isCamp() ? campChunks : allowance.maxClaims(town);
+  }
 }

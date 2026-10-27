@@ -360,7 +360,7 @@ final class ProtectionListenersTest extends AegisServer {
     // Arrange positions directly; protected arrivals themselves are covered by teleport checks.
     bob.setLocation(new Location(world, 165, Y, Z));
     server.dispatchCommand(bob, "unclaim");
-    awaitLine(bob, "You are not in a town.");
+    awaitLine(bob, "You have no camp or town.");
 
     server.dispatchCommand(bob, "town create Bastion");
     awaitLine(bob, "Founding a town takes Governor I.");

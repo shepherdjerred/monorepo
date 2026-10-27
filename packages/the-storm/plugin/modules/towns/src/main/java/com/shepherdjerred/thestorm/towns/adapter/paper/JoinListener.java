@@ -18,11 +18,13 @@ final class JoinListener implements Listener {
   private final TownService towns;
   private final GovernorLevels levels;
   private final MemberCommands members;
+  private final CampLife camps;
 
-  JoinListener(TownService towns, GovernorLevels levels, MemberCommands members) {
+  JoinListener(TownService towns, GovernorLevels levels, MemberCommands members, CampLife camps) {
     this.towns = towns;
     this.levels = levels;
     this.members = members;
+    this.camps = camps;
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -30,6 +32,7 @@ final class JoinListener implements Listener {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     record(event.getPlayer());
     members.tellInvitations(event.getPlayer());
+    camps.onJoin(event.getPlayer());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)

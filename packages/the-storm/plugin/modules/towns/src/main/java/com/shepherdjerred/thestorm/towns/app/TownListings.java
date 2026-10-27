@@ -103,6 +103,9 @@ public final class TownListings implements TownRead {
               "Reconstructed from the 2015 archive; original Towny claims unavailable"));
     }
     for (var town : state.towns()) {
+      if (town.isCamp()) {
+        continue;
+      }
       if (state.heritage().sites().stream()
           .noneMatch(site -> site.activeTownId().equals(Optional.of(town.id())))) {
         result.add(

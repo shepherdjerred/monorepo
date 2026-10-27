@@ -1,8 +1,10 @@
 package com.shepherdjerred.thestorm.towns.app;
 
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.NOMAD;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.OWNER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_A;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_B;
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TRUSTED_OUTSIDER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.chunk;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.claim;
 import static java.util.Objects.requireNonNull;
@@ -21,6 +23,7 @@ import com.shepherdjerred.thestorm.towns.domain.region.Cuboid;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.town.MembershipPolicy;
+import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.InstantSource;
@@ -41,7 +44,7 @@ final class MapSyncTest {
   private final FakeTownsStore store = new FakeTownsStore();
   private final TownsState state = new TownsState(new RegionIndex(List.of()));
   private final FakeMap map = new FakeMap();
-  private final MapSync sync = new MapSync(state, map);
+  private final MapSync sync = new MapSync(state, map, MapSyncTest::playerName);
   private final Settling settling =
       new Settling(
           state,
@@ -114,6 +117,71 @@ final class MapSyncTest {
     store.succeed();
 
     assertThat(map.names).containsEntry(TOWN_A, "Arcadia");
+  }
+
+  @Test
+  void aCampIsLabelledWithItsOwnerAndAPersonalChunkWithItsResident() {
+    var camp = campWithAPersonalChunk();
+
+    assertThat(map.names).containsEntry(camp, "Camp Ada");
+    assertThat(pieces(personalMarker()).getFirst().ring())
+        .containsExactly(
+            new Outline.Corner(656, 640),
+            new Outline.Corner(672, 640),
+            new Outline.Corner(672, 656),
+            new Outline.Corner(656, 656));
+  }
+
+  @Test
+  void graduatingKeepsTheChunksAndResidentsAndRelabelsTheMap() {
+    var camp = campWithAPersonalChunk();
+    var before = state.claimsOf(camp);
+
+    assertThat(towns.graduate(NOMAD, "Harbor", 1).isOk()).isTrue();
+    store.succeed();
+
+    assertThat(state.claimsOf(camp)).usingRecursiveComparison().isEqualTo(before);
+    assertThat(state.claimsOf(camp))
+        .filteredOn(claim -> claim.chunk().equals(chunk(41, 40)))
+        .singleElement()
+        .extracting(claim -> claim.resident())
+        .isEqualTo(java.util.Optional.of(TRUSTED_OUTSIDER));
+    assertThat(state.town(camp).orElseThrow().isCamp()).isFalse();
+    assertThat(map.names).containsEntry(camp, "Harbor");
+  }
+
+  private UUID campWithAPersonalChunk() {
+    assertThat(towns.foundCamp(NOMAD).isOk()).isTrue();
+    store.succeed();
+    assertThat(towns.claim(NOMAD, chunk(40, 40)).isOk()).isTrue();
+    store.succeed();
+    assertThat(members.invite(NOMAD, new PlayerRef(TRUSTED_OUTSIDER, "Bea")).isOk()).isTrue();
+    assertThat(members.accept(TRUSTED_OUTSIDER, state.townOf(NOMAD).orElseThrow().name()).isOk())
+        .isTrue();
+    store.succeed();
+    assertThat(towns.claim(TRUSTED_OUTSIDER, chunk(41, 40)).isOk()).isTrue();
+    store.succeed();
+    assertThat(towns.personal(TRUSTED_OUTSIDER, chunk(41, 40)).isOk()).isTrue();
+    store.succeed();
+    return state.townOf(NOMAD).orElseThrow().id();
+  }
+
+  private UUID personalMarker() {
+    return map.names.entrySet().stream()
+        .filter(entry -> entry.getValue().equals("Bea"))
+        .map(java.util.Map.Entry::getKey)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  private static String playerName(UUID id) {
+    if (id.equals(NOMAD)) {
+      return "Ada";
+    }
+    if (id.equals(TRUSTED_OUTSIDER)) {
+      return "Bea";
+    }
+    return "a player";
   }
 
   @Test

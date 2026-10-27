@@ -25,6 +25,14 @@ claims:
   # locks grant explicit access to their owners and trusted players.
   defaultFlags: [PVP]
 
+camps:
+  chunks: 16
+  members: 8
+  idleDays: 90
+  warnDays: 14
+  settleBlocks: 24
+  settleStayMinutes: 5
+
 membership:
   # How long an invitation may be accepted. Invitations are kept in memory, so
   # a restart withdraws them.

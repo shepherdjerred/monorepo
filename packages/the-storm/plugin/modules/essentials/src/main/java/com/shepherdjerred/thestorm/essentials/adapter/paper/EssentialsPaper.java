@@ -97,6 +97,12 @@ public final class EssentialsPaper {
         .provide(
             com.shepherdjerred.thestorm.essentials.app.StarterSupplies.class,
             kitItems.starter(config.kits().starter()));
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.core.home.DefaultHome.class,
+            new PaperDefaultHome(
+                app.stores().homes(), app.protection(), app.sealed(), config.homeLimit()));
     var kits =
         new PlayerCommands.Kits(
             config.kits(),

@@ -18,9 +18,14 @@ public final class Membership {
 
   private Membership() {}
 
-  /** The town {@code inviter} invites {@code invitee} to. */
   public static Result<Town, List<TownProblem>> invite(
       UUID inviter, PlayerRef invitee, TownDirectory towns) {
+    return invite(inviter, invitee, towns, Integer.MAX_VALUE);
+  }
+
+  /** The town {@code inviter} invites {@code invitee} to. A camp stops at {@code campMembers}. */
+  public static Result<Town, List<TownProblem>> invite(
+      UUID inviter, PlayerRef invitee, TownDirectory towns, int campMembers) {
     return managerOf(inviter, towns)
         .flatMap(
             town -> {
@@ -30,22 +35,42 @@ public final class Membership {
               if (towns.townOf(invitee.id()).isPresent()) {
                 return err(new TownProblem.TargetInTown(invitee.name()));
               }
+              if (town.isCamp() && town.members().size() >= campMembers) {
+                return err(new TownProblem.CampFull(campMembers));
+              }
               return Result.ok(town);
             });
   }
 
-  /** {@code town} with {@code player} joined as a member, if they were invited. */
   public static Result<Town, List<TownProblem>> join(
       UUID player, Town town, boolean invited, TownDirectory towns) {
+    return join(player, town, towns, new JoinTerms(invited, Integer.MAX_VALUE));
+  }
+
+  /**
+   * {@code town} with {@code player} joined as a member. {@code terms} says whether they were
+   * invited and how many people a camp may hold.
+   */
+  public static Result<Town, List<TownProblem>> join(
+      UUID player, Town town, TownDirectory towns, JoinTerms terms) {
     var current = towns.townOf(player);
     if (current.isPresent()) {
-      return err(new TownProblem.AlreadyInTown(current.get().name()));
+      return err(
+          current.get().isCamp()
+              ? new TownProblem.AlreadyInCamp()
+              : new TownProblem.AlreadyInTown(current.get().name()));
     }
-    if (!invited) {
+    if (!terms.invited()) {
       return err(new TownProblem.NotInvited(town.name()));
+    }
+    if (town.isCamp() && town.members().size() >= terms.campMembers()) {
+      return err(new TownProblem.CampFull(terms.campMembers()));
     }
     return Result.ok(town.withMember(player, TownRole.MEMBER));
   }
+
+  /** Whether a join was invited, and the camp's member cap. Towns ignore the cap. */
+  public record JoinTerms(boolean invited, int campMembers) {}
 
   /** {@code player}'s town without them. */
   public static Result<Town, List<TownProblem>> leave(UUID player, TownDirectory towns) {
@@ -93,6 +118,7 @@ public final class Membership {
   public static Result<Town, List<TownProblem>> transfer(
       UUID actor, PlayerRef target, Successor successor, TownDirectory towns) {
     return ownerOf(actor, towns)
+        .flatMap(Membership::townsOnly)
         .flatMap(town -> memberOf(town, actor, target))
         .flatMap(
             town -> {
@@ -114,7 +140,9 @@ public final class Membership {
   /** {@code actor}'s town, when they own it and {@code target} is another of its members. */
   public static Result<Town, List<TownProblem>> transferable(
       UUID actor, PlayerRef target, TownDirectory towns) {
-    return ownerOf(actor, towns).flatMap(town -> memberOf(town, actor, target));
+    return ownerOf(actor, towns)
+        .flatMap(Membership::townsOnly)
+        .flatMap(town -> memberOf(town, actor, target));
   }
 
   /**
@@ -131,10 +159,14 @@ public final class Membership {
   public static Result<Town, List<TownProblem>> rename(
       UUID actor, String name, TownDirectory towns) {
     return ownerOf(actor, towns)
+        .flatMap(town -> townsOnly(town))
         .flatMap(
             town -> {
               if (!TownNames.isValid(name)) {
                 return err(new TownProblem.InvalidName(name));
+              }
+              if (!TownNames.isPublic(name)) {
+                return err(new TownProblem.ReservedName(name));
               }
               var holder = towns.named(name);
               if (holder.isPresent() && !holder.get().id().equals(town.id())) {
@@ -147,6 +179,7 @@ public final class Membership {
   private static Result<Town, List<TownProblem>> rank(
       UUID actor, PlayerRef target, TownDirectory towns, TownRole to) {
     return ownerOf(actor, towns)
+        .flatMap(Membership::townsOnly)
         .flatMap(town -> memberOf(town, actor, target))
         .flatMap(
             town -> {
@@ -184,6 +217,10 @@ public final class Membership {
               var role = town.roleOf(actor).orElseThrow();
               return role == TownRole.OWNER ? Result.ok(town) : err(new TownProblem.NotOwner(role));
             });
+  }
+
+  private static Result<Town, List<TownProblem>> townsOnly(Town town) {
+    return town.isCamp() ? err(new TownProblem.TownsOnly()) : Result.ok(town);
   }
 
   private static Result<Town, List<TownProblem>> memberOf(Town town, UUID actor, PlayerRef target) {

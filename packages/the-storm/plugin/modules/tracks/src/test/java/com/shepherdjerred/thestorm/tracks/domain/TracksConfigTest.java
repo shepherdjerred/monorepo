@@ -64,7 +64,8 @@ final class TracksConfigTest {
     assertThat(config.pricing()).isEqualTo(DEFAULT_PRICING);
     assertThat(config.purchaseCooldown()).isEqualTo(Duration.ofHours(24));
     assertThat(config.confirmWindow()).isEqualTo(Duration.ofSeconds(30));
-    assertThat(config.info(Track.GOVERNOR).level(1).unlocks()).contains("Found a town.");
+    assertThat(config.info(Track.GOVERNOR).level(1).unlocks())
+        .contains("Found a town, or graduate a camp into one.");
   }
 
   @ParameterizedTest

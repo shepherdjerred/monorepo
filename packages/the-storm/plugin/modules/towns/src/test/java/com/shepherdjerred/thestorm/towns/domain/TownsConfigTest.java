@@ -25,6 +25,13 @@ final class TownsConfigTest {
           base: 16
           governorBonus: [8, 16, 32, 48, 64]
         defaultFlags: [PUBLIC_SWITCHES]
+      camps:
+        chunks: 16
+        members: 8
+        idleDays: 90
+        warnDays: 14
+        settleBlocks: 24
+        settleStayMinutes: 5
       membership:
         inviteExpiryMinutes: 1440
         transferConfirmSeconds: 60
@@ -101,7 +108,7 @@ final class TownsConfigTest {
         "  autoLockOnPlace: true\n",
         "  toggleCooldownHours: 168\n",
         "  combatLockSeconds: 30\n",
-        "  transferConfirmSeconds: 60\n",
+        "  idleDays: 90\n",
         "    limited: false\n",
         "  governorBonus: [8, 16, 32, 48, 64]\n",
         "  buffer: 2\n",

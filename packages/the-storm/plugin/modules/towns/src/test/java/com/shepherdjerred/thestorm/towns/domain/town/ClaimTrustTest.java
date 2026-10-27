@@ -69,6 +69,15 @@ final class ClaimTrustTest {
   }
 
   @Test
+  void aPersonalChunkTrustsOnlyItsResident() {
+    var personal = claim(TOWN_A, 0, 0).withResident(java.util.Optional.of(MEMBER));
+    var build = new Act(Action.BUILD, Subject.BLOCK);
+
+    assertThat(ClaimTrust.of(aegis, personal, MEMBER, build)).isEqualTo(TrustLevel.TRUSTED);
+    assertThat(ClaimTrust.of(aegis, personal, OWNER, build)).isEqualTo(TrustLevel.OUTSIDER);
+  }
+
+  @Test
   void theClaimMustBeTheTowns() {
     assertThatThrownBy(
             () ->

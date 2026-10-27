@@ -125,7 +125,7 @@ tracks:
     levels:
       - title: Founder
         unlocks:
-          - Found a town.
+          - Found a town, or graduate a camp into one.
       - title: Mayor
         unlocks:
           - More chunks your town can claim.

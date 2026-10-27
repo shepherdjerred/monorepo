@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownService;
 import com.shepherdjerred.thestorm.towns.app.Treasury;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
+import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimLimits;
 import com.shepherdjerred.thestorm.towns.domain.claiming.Claiming;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockAccess;
 import com.shepherdjerred.thestorm.towns.domain.parcel.ParcelsConfig;
@@ -77,7 +78,10 @@ public final class TownsPaper {
     var levels = new GovernorLevels(server, services.require(TrackLevels.class));
     var names = new Names(server, services.require(PlayerDirectory.class), context.scheduler());
     var state = loaded.settling().state();
-    var claiming = new Claiming(config.claims());
+    var claiming =
+        new Claiming(
+            config.claims(),
+            ClaimLimits.holding(config.claims().limits(), config.camps().chunks()));
     var towns = new TownService(loaded.settling(), claiming, levels);
     var members =
         new MembershipService(
@@ -90,7 +94,8 @@ public final class TownsPaper {
                   var owner = state.town(townId).orElseThrow().owner();
                   loaded.locks().applyCommittedHandover(lockIds, player, owner);
                 },
-                loaded.locks()::isSettling));
+                loaded.locks()::isSettling),
+            config.camps().members());
     var treasury = new Treasury(towns, members, services.require(Wallets.class));
     var _ =
         treasury
@@ -202,6 +207,11 @@ public final class TownsPaper {
     var runtime =
         new TownCommands.Services(context.scheduler(), context.logger(), context.analytics());
     var memberCommands = new MemberCommands(members, towns, names, runtime);
+    var campLife =
+        new CampLife(
+            new CampLife.Parts(
+                context, towns, state, config.camps(), sealed, config.claims().worlds()));
+    campLife.start();
     List<Listener> listeners =
         List.of(
             new SpawnRegions(server, state, config),
@@ -224,7 +234,8 @@ public final class TownsPaper {
                 loaded.locks(),
                 kinds,
                 new LockListener.PlacementTools(placers, context.random())),
-            new JoinListener(towns, levels, memberCommands));
+            new JoinListener(towns, levels, memberCommands, campLife),
+            campLife);
     for (var listener : listeners) {
       server.getPluginManager().registerEvents(listener, plugin);
     }
@@ -250,6 +261,18 @@ public final class TownsPaper {
             LifecycleEvents.COMMANDS,
             event -> {
               townCommands.register(event.registrar());
+              new CampCommands(
+                      new CampCommands.Parts(
+                          towns,
+                          state,
+                          members,
+                          names,
+                          runtime,
+                          levels,
+                          config.camps(),
+                          context.time(),
+                          campLife))
+                  .register(event.registrar());
               lockCommands.register(event.registrar());
               pvpCommands.register(event.registrar());
               regionCommands.register(event.registrar());

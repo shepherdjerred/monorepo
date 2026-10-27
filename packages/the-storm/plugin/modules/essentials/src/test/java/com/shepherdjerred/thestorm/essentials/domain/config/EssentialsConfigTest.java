@@ -82,7 +82,7 @@ final class EssentialsConfigTest {
     assertThat(config.kits().guide()).isSameAs(config.kits().starterKit().books().getFirst());
     assertThat(config.kits().guide().pages()).hasSize(3);
     assertThat(String.join("\n", config.kits().guide().pages()))
-        .contains("/guide", "compass", "/sethome", "/town create", "/claim", "/pvp off", "/graves");
+        .contains("/guide", "compass", "/sethome", "/camp", "/claim", "/pvp off", "/graves");
     assertThat(config.kits().starterKit().items().getLast().amount()).isEqualTo(16);
     assertThat(config.spawn().yaw()).isEqualTo(90);
   }

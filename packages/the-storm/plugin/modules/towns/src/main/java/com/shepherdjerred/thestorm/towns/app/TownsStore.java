@@ -5,6 +5,8 @@ import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +31,17 @@ public interface TownsStore {
 
   /** Deletes a town and records its treasury payout intent in the same transaction. */
   CompletableFuture<Void> deleteTown(TownPayout payout);
+
+  /** Deletes a camp, releases its claims, and leaves {@code notices} for the next login. */
+  CompletableFuture<Void> deleteCamp(UUID townId, Map<UUID, String> notices);
+
+  /**
+   * The notice waiting for {@code player}, if a camp lapsed or was deleted while they were away.
+   */
+  CompletableFuture<Optional<String>> notice(UUID player);
+
+  /** Forgets {@code player}'s camp notice once they have been told. */
+  CompletableFuture<Void> clearNotice(UUID player);
 
   /** Payout intents left by deleted towns, including after a crash. */
   CompletableFuture<List<TownPayout>> pendingPayouts();

@@ -6,8 +6,32 @@ public sealed interface TownProblem {
   /** The founder already belongs to a town. */
   record AlreadyInTown(String townName) implements TownProblem {}
 
+  /** The player already has a camp. */
+  record AlreadyInCamp() implements TownProblem {}
+
+  /** Founding or graduating a town takes Governor I. */
+  record NeedsGovernor() implements TownProblem {}
+
+  /** A camp already has as many members as it may. */
+  record CampFull(int limit) implements TownProblem {}
+
+  /** The player has a town, and the command is for a camp. */
+  record NotACamp() implements TownProblem {}
+
+  /** Delete a camp with {@code /camp delete}, not {@code /town delete}. */
+  record UseCampDelete() implements TownProblem {}
+
+  /** Deleting a camp requires the word {@code delete}. */
+  record ConfirmCamp() implements TownProblem {}
+
+  /** Ranks, transfer, rename and the treasury belong to towns. */
+  record TownsOnly() implements TownProblem {}
+
   /** The name breaks {@link TownNames}. */
   record InvalidName(String name) implements TownProblem {}
+
+  /** The name is valid but reserved for camps. */
+  record ReservedName(String name) implements TownProblem {}
 
   /** Another town has this name, ignoring case. */
   record NameTaken(String name) implements TownProblem {}

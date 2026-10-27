@@ -16,11 +16,13 @@ import com.shepherdjerred.thestorm.towns.domain.region.RegionAreas;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionSpawns;
 import com.shepherdjerred.thestorm.towns.domain.town.ClaimTrust;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownKind;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -57,7 +59,10 @@ public final class Fixtures {
         "Aegis",
         FOUNDED,
         Map.of(OWNER, TownRole.OWNER, ASSISTANT, TownRole.ASSISTANT, MEMBER, TownRole.MEMBER),
-        0);
+        0,
+        TownKind.TOWN,
+        Optional.empty(),
+        false);
   }
 
   public static Town townB() {

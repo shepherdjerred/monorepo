@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,7 +33,7 @@ public final class Claiming {
     this.limits = limits;
     this.claimRules =
         List.of(
-            new ManagerRule(),
+            new ClaimPermissionRule(),
             new ClaimableWorldRule(policy.worlds()),
             new OutsideRegionsRule(),
             new UnclaimedRule(),
@@ -95,6 +96,40 @@ public final class Claiming {
               }
               return Result.ok(claim.withTrust(player.id(), on));
             });
+  }
+
+  /** The claim with {@code attempt}'s player as its resident. */
+  public Result<Claim, List<ClaimProblem>> personal(ClaimAttempt attempt) {
+    return check(List.of(new OwnClaimRule()), attempt)
+        .flatMap(
+            ok -> {
+              var claim = held(attempt);
+              if (claim.resident().equals(Optional.of(attempt.player()))) {
+                return Result.err(List.of(new ClaimProblem.AlreadyPersonal()));
+              }
+              if (claim.resident().isPresent()) {
+                return Result.err(List.of(new ClaimProblem.NotYourChunk()));
+              }
+              return Result.ok(claim.withResident(Optional.of(attempt.player())));
+            });
+  }
+
+  /** The claim shared by the whole group again. The resident or the owner may do this. */
+  public Result<Claim, List<ClaimProblem>> shared(ClaimAttempt attempt) {
+    var held = attempt.map().claimAt(attempt.chunk());
+    if (held.isEmpty() || !held.get().townId().equals(attempt.town().id())) {
+      return check(List.of(new OwnClaimRule()), attempt).map(ok -> held(attempt));
+    }
+    var claim = held.get();
+    if (claim.resident().isEmpty()) {
+      return Result.err(List.of(new ClaimProblem.AlreadyShared()));
+    }
+    var owner = attempt.role() == TownRole.OWNER;
+    var resident = claim.resident().orElseThrow().equals(attempt.player());
+    if (!owner && !resident) {
+      return Result.err(List.of(new ClaimProblem.NotYourChunk()));
+    }
+    return Result.ok(claim.withResident(Optional.empty()));
   }
 
   private static Claim held(ClaimAttempt attempt) {

@@ -246,6 +246,27 @@ final class ClaimingTest {
   }
 
   @Test
+  void aCampStaysAtItsOwnCapWhenTheOwnerIsAHighGovernor() {
+    var allowance = new ClaimAllowance(16, List.of(8, 16, 32, 48, 64));
+    var limits = ClaimLimits.holding(allowance, 16);
+    var camp = Town.camp(UUID.randomUUID(), Fixtures.FOUNDED, OWNER).withGovernorLevel(5);
+    var town = Fixtures.townA().withGovernorLevel(5);
+
+    assertThat(limits.maxClaims(camp)).isEqualTo(16);
+    assertThat(limits.maxClaims(town)).isEqualTo(80);
+    assertThatThrownBy(() -> ClaimLimits.holding(allowance, 0))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    var capped =
+        new Claiming(new ClaimPolicy(Set.of(Fixtures.WORLD), 2, allowance, Set.of()), limits);
+    for (var x = 0; x < 16; x++) {
+      hold(claim(camp.id(), x, 0));
+    }
+    assertThat(problems(capped.claim(new ClaimAttempt(OWNER, camp, chunk(16, 0), map))))
+        .containsExactly(new ClaimProblem.LimitReached(16));
+  }
+
+  @Test
   void aHeldChunkCannotBeClaimedAgain() {
     hold(claim(TOWN_A, 0, 0));
 

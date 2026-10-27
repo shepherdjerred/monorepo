@@ -103,6 +103,8 @@ final class TreasuryCommands {
   private String explain(TreasuryProblem problem) {
     return switch (problem) {
       case TreasuryProblem.NotInTown() -> "You are not in a town.";
+      case TreasuryProblem.TownsOnly() ->
+          "Camps have no treasury. Graduate with /camp graduate <name> once you have Governor I.";
       case TreasuryProblem.CannotWithdraw(var _) ->
           "Only a town's owner or assistants take money out; members pay in.";
       case TreasuryProblem.Insufficient(var balance) ->

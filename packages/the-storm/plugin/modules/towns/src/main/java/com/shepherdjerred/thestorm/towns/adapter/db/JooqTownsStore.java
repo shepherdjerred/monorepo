@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.adapter.db;
 
+import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CAMP_NOTICE;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM_FLAG;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM_TRUST;
@@ -21,6 +22,7 @@ import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownKind;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.time.Instant;
 import java.util.EnumSet;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -71,12 +74,16 @@ public final class JooqTownsStore implements TownsStore {
             .fetch(
                 row -> {
                   var id = UUID.fromString(row.getId());
+                  var active = row.getLastActiveAt();
                   return new Town(
                       id,
                       row.getName(),
                       Instant.ofEpochMilli(row.getCreatedAt()),
                       members.getOrDefault(id, Map.of()),
-                      row.getGovernorLevel());
+                      row.getGovernorLevel(),
+                      TownKind.valueOf(row.getKind()),
+                      active == null ? Optional.empty() : Optional.of(Instant.ofEpochMilli(active)),
+                      row.getExpiryWarned() != 0);
                 });
     var flags = new HashMap<ChunkPos, Set<ClaimFlag>>();
     for (var row : dsl.selectFrom(TOWNS_CLAIM_FLAG).fetch()) {
@@ -104,7 +111,8 @@ public final class JooqTownsStore implements TownsStore {
                       chunk,
                       UUID.fromString(row.getTownId()),
                       new ClaimFlags(flags.getOrDefault(chunk, Set.of())),
-                      trusted.getOrDefault(chunk, Set.of()));
+                      trusted.getOrDefault(chunk, Set.of()),
+                      Optional.ofNullable(row.getResidentId()).map(UUID::fromString));
                 });
     return new TownsSnapshot(towns, claims);
   }
@@ -119,6 +127,11 @@ public final class JooqTownsStore implements TownsStore {
               .set(TOWNS_TOWN.NAME, town.name())
               .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
               .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
+              .set(TOWNS_TOWN.KIND, town.kind().name())
+              .set(
+                  TOWNS_TOWN.LAST_ACTIVE_AT,
+                  town.lastActive().map(Instant::toEpochMilli).orElse(null))
+              .set(TOWNS_TOWN.EXPIRY_WARNED, town.expiryWarned() ? 1 : 0)
               .execute();
           insertMembers(dsl, town);
         });
@@ -198,6 +211,11 @@ public final class JooqTownsStore implements TownsStore {
                 .and(TOWNS_LOCK_TRUST.PLAYER_ID.eq(town.owner().toString()))
                 .execute();
           }
+          dsl.update(TOWNS_CLAIM)
+              .set(TOWNS_CLAIM.RESIDENT_ID, (String) null)
+              .where(TOWNS_CLAIM.TOWN_ID.eq(town.id().toString()))
+              .and(TOWNS_CLAIM.RESIDENT_ID.eq(departed.toString()))
+              .execute();
           return ids.stream().map(UUID::fromString).collect(toUnmodifiableSet());
         });
   }
@@ -208,6 +226,11 @@ public final class JooqTownsStore implements TownsStore {
         dsl.update(TOWNS_TOWN)
             .set(TOWNS_TOWN.NAME, town.name())
             .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
+            .set(TOWNS_TOWN.KIND, town.kind().name())
+            .set(
+                TOWNS_TOWN.LAST_ACTIVE_AT,
+                town.lastActive().map(Instant::toEpochMilli).orElse(null))
+            .set(TOWNS_TOWN.EXPIRY_WARNED, town.expiryWarned() ? 1 : 0)
             .where(TOWNS_TOWN.ID.eq(id))
             .execute();
     if (updated != 1) {
@@ -264,6 +287,73 @@ public final class JooqTownsStore implements TownsStore {
               .set(TOWNS_PENDING_PAYOUT.TOWN_ID, id)
               .set(TOWNS_PENDING_PAYOUT.OWNER_ID, payout.ownerId().toString())
               .set(TOWNS_PENDING_PAYOUT.TRANSFER_KEY, payout.transferKey().toString())
+              .execute();
+        });
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteCamp(UUID townId, Map<UUID, String> notices) {
+    return write(
+        dsl -> {
+          var id = townId.toString();
+          dsl.deleteFrom(TOWNS_CLAIM_TRUST)
+              .where(
+                  DSL.row(
+                          TOWNS_CLAIM_TRUST.WORLD,
+                          TOWNS_CLAIM_TRUST.CHUNK_X,
+                          TOWNS_CLAIM_TRUST.CHUNK_Z)
+                      .in(
+                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                              .from(TOWNS_CLAIM)
+                              .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
+              .execute();
+          dsl.deleteFrom(TOWNS_CLAIM_FLAG)
+              .where(
+                  DSL.row(
+                          TOWNS_CLAIM_FLAG.WORLD,
+                          TOWNS_CLAIM_FLAG.CHUNK_X,
+                          TOWNS_CLAIM_FLAG.CHUNK_Z)
+                      .in(
+                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                              .from(TOWNS_CLAIM)
+                              .where(TOWNS_CLAIM.TOWN_ID.eq(id))))
+              .execute();
+          dsl.deleteFrom(TOWNS_CLAIM).where(TOWNS_CLAIM.TOWN_ID.eq(id)).execute();
+          dsl.deleteFrom(TOWNS_MEMBER).where(TOWNS_MEMBER.TOWN_ID.eq(id)).execute();
+          var deleted = dsl.deleteFrom(TOWNS_TOWN).where(TOWNS_TOWN.ID.eq(id)).execute();
+          if (deleted != 1) {
+            throw new IllegalStateException("camp " + townId + " is not stored");
+          }
+          for (var notice : notices.entrySet()) {
+            var player = notice.getKey().toString();
+            dsl.deleteFrom(TOWNS_CAMP_NOTICE)
+                .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player))
+                .execute();
+            dsl.insertInto(TOWNS_CAMP_NOTICE)
+                .set(TOWNS_CAMP_NOTICE.PLAYER_ID, player)
+                .set(TOWNS_CAMP_NOTICE.MESSAGE, notice.getValue())
+                .execute();
+          }
+        });
+  }
+
+  @Override
+  public CompletableFuture<Optional<String>> notice(UUID player) {
+    return database.write(
+        dsl ->
+            Optional.ofNullable(
+                dsl.select(TOWNS_CAMP_NOTICE.MESSAGE)
+                    .from(TOWNS_CAMP_NOTICE)
+                    .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player.toString()))
+                    .fetchOne(TOWNS_CAMP_NOTICE.MESSAGE)));
+  }
+
+  @Override
+  public CompletableFuture<Void> clearNotice(UUID player) {
+    return write(
+        dsl -> {
+          dsl.deleteFrom(TOWNS_CAMP_NOTICE)
+              .where(TOWNS_CAMP_NOTICE.PLAYER_ID.eq(player.toString()))
               .execute();
         });
   }
@@ -326,6 +416,7 @@ public final class JooqTownsStore implements TownsStore {
         .set(TOWNS_CLAIM.CHUNK_Z, chunk.z())
         .set(TOWNS_CLAIM.TOWN_ID, claim.townId().toString())
         .set(TOWNS_CLAIM.CLAIMED_AT, at.toEpochMilli())
+        .set(TOWNS_CLAIM.RESIDENT_ID, claim.resident().map(UUID::toString).orElse(null))
         .execute();
     insertSettings(dsl, claim);
   }
@@ -365,6 +456,13 @@ public final class JooqTownsStore implements TownsStore {
           }
           deleteSettings(dsl, chunk);
           insertSettings(dsl, claim);
+          dsl.update(TOWNS_CLAIM)
+              .set(TOWNS_CLAIM.RESIDENT_ID, claim.resident().map(UUID::toString).orElse(null))
+              .where(
+                  TOWNS_CLAIM.WORLD.eq(chunk.world()),
+                  TOWNS_CLAIM.CHUNK_X.eq(chunk.x()),
+                  TOWNS_CLAIM.CHUNK_Z.eq(chunk.z()))
+              .execute();
         });
   }
 

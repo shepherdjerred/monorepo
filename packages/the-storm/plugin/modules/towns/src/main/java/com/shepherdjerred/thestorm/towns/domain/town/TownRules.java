@@ -17,9 +17,19 @@ public final class TownRules {
     var problems = new ArrayList<TownProblem>();
     towns
         .townOf(founding.founder())
-        .ifPresent(town -> problems.add(new TownProblem.AlreadyInTown(town.name())));
+        .ifPresent(
+            town ->
+                problems.add(
+                    town.isCamp()
+                        ? new TownProblem.AlreadyInCamp()
+                        : new TownProblem.AlreadyInTown(town.name())));
+    if (founding.governorLevel() < 1) {
+      problems.add(new TownProblem.NeedsGovernor());
+    }
     if (!TownNames.isValid(founding.name())) {
       problems.add(new TownProblem.InvalidName(founding.name()));
+    } else if (!TownNames.isPublic(founding.name())) {
+      problems.add(new TownProblem.ReservedName(founding.name()));
     } else if (towns.named(founding.name()).isPresent()) {
       problems.add(new TownProblem.NameTaken(founding.name()));
     }
@@ -42,6 +52,9 @@ public final class TownRules {
       return Result.err(List.of(new TownProblem.NotInTown()));
     }
     var town = found.get();
+    if (town.isCamp()) {
+      return Result.err(List.of(new TownProblem.UseCampDelete()));
+    }
     var role = town.roleOf(player).orElseThrow();
     if (role != TownRole.OWNER) {
       return Result.err(List.of(new TownProblem.NotOwner(role)));
@@ -50,6 +63,64 @@ public final class TownRules {
       return Result.err(List.of(new TownProblem.ConfirmationMismatch(town.name())));
     }
     return Result.ok(town);
+  }
+
+  /**
+   * The camp {@code player} may delete. Only the owner may, and only by repeating {@code delete}.
+   */
+  public static Result<Town, List<TownProblem>> disbandCamp(
+      UUID player, String confirmation, TownDirectory towns) {
+    var found = towns.townOf(player);
+    if (found.isEmpty()) {
+      return Result.err(List.of(new TownProblem.NotInTown()));
+    }
+    var town = found.get();
+    if (!town.isCamp()) {
+      return Result.err(List.of(new TownProblem.NotACamp()));
+    }
+    var role = town.roleOf(player).orElseThrow();
+    if (role != TownRole.OWNER) {
+      return Result.err(List.of(new TownProblem.NotOwner(role)));
+    }
+    if (!"delete".equalsIgnoreCase(confirmation)) {
+      return Result.err(List.of(new TownProblem.ConfirmCamp()));
+    }
+    return Result.ok(town);
+  }
+
+  /**
+   * {@code player}'s camp as a town named {@code name}. The owner needs Governor {@code level} of
+   * at least I. Chunks and members stay.
+   */
+  public static Result<Town, List<TownProblem>> graduate(
+      UUID player, String name, int governorLevel, TownDirectory towns) {
+    var found = towns.townOf(player);
+    if (found.isEmpty()) {
+      return Result.err(List.of(new TownProblem.NotInTown()));
+    }
+    var town = found.get();
+    if (!town.isCamp()) {
+      return Result.err(List.of(new TownProblem.NotACamp()));
+    }
+    var role = town.roleOf(player).orElseThrow();
+    if (role != TownRole.OWNER) {
+      return Result.err(List.of(new TownProblem.NotOwner(role)));
+    }
+    var problems = new ArrayList<TownProblem>();
+    if (governorLevel < 1) {
+      problems.add(new TownProblem.NeedsGovernor());
+    }
+    if (!TownNames.isValid(name)) {
+      problems.add(new TownProblem.InvalidName(name));
+    } else if (!TownNames.isPublic(name)) {
+      problems.add(new TownProblem.ReservedName(name));
+    } else if (towns.named(name).filter(holder -> !holder.id().equals(town.id())).isPresent()) {
+      problems.add(new TownProblem.NameTaken(name));
+    }
+    if (!problems.isEmpty()) {
+      return Result.err(List.copyOf(problems));
+    }
+    return Result.ok(town.graduated(name, governorLevel));
   }
 
   /** A random (version 4) town id drawn from {@code random}. */
