@@ -30,7 +30,6 @@ export async function tvBindingContext(
     where: { kind: "episode", parentId: series.id },
     orderBy: { episodeNumber: "asc" },
   });
-  const assetKeys = [...new Set(rows.map((row) => row.assetId))].sort();
   const items: PlexItem[] = catalog.map((media, index) => {
     if (media.episodeNumber === null || media.seasonNumber !== 1)
       throw new Error("Unexpected TV fixture coordinate");
@@ -47,10 +46,7 @@ export async function tvBindingContext(
         {
           Part: [
             {
-              id:
-                coverage === undefined
-                  ? 20_000 + index
-                  : 10_000 + assetKeys.indexOf(coverage.assetId),
+              id: coverage === undefined ? 20_000 + index : 10_000 + index,
               file: coverage?.asset.path ?? `/data/tv/foreign/${media.id}.mkv`,
               size: Number(coverage?.asset.sizeBytes ?? 1n),
             },
