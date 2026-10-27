@@ -29,6 +29,7 @@ import { createAcquisitionActivities } from "./acquisition.ts";
 import { createPublicationActivities } from "./publication.ts";
 import { createSeedingActivities } from "./seeding.ts";
 import { createSweepActivities } from "./sweeps.ts";
+import { matchProviderFeedSourceV1 } from "./feeds/matching.ts";
 import { createCoverageActivities } from "./reconciliation/coverage.ts";
 import { createCatalogActivities } from "./reconciliation/catalog.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
@@ -94,6 +95,8 @@ export function createMediaNetworkActivities(
     ...createPublicationActivities(context),
     ...createSeedingActivities(context),
     ...createSweepActivities(context),
+    matchProviderFeedSource: (input) =>
+      matchProviderFeedSourceV1(context, input),
     ...createCoverageActivities(context),
     ...createCatalogActivities(context),
     ...outbox,

@@ -182,10 +182,17 @@ test("inventory persists bounded Plex pages without adopting foreign files; abse
 test("feed sweep records unsupported capability and never disguises title searches as a feed", async () => {
   await fixture();
   const ctx = context();
-  await sweepFeeds(ctx, null);
+  await database().mediaProvider.update({
+    where: { id: "knaben" },
+    data: { enabled: false },
+  });
+  await database().mediaProvider.create({
+    data: { id: "thepiratebay", enabled: true },
+  });
+  await sweepFeeds(ctx, null, crypto.randomUUID());
   expect(
     await database().mediaProvider.findUniqueOrThrow({
-      where: { id: "knaben" },
+      where: { id: "thepiratebay" },
     }),
   ).toMatchObject({
     feedState: "unsupported_recent_feed",

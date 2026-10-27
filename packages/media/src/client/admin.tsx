@@ -26,6 +26,17 @@ const credentialFields: Readonly<Record<string, readonly string[]>> = {
   subhd: ["baseUrl", "token", "instanceId"],
 };
 
+const feedDescriptions: Record<ProviderStatus["feedState"], string> = {
+  unconfigured: "Not configured",
+  unsupported_recent_feed:
+    "This adapter supports scheduled title searches only.",
+  current: "Recent listing received.",
+  catching_up: "Checking earlier recent releases to catch up.",
+  error: "Recent listing could not be refreshed. See the last provider result.",
+  paused:
+    "Paused while the provider or acquisition is disabled, or library ownership is unconfirmed.",
+};
+
 function text(form: FormData, key: string): string {
   const value = form.get(key);
   if (typeof value !== "string") throw new TypeError(`Missing ${key}`);
@@ -104,12 +115,7 @@ function ProviderEditor({
           : `Last result: ${humanize(provider.lastError)}`}
       </p>
       {provider.kind === "tracker" && (
-        <p>
-          Recent-release feed:{" "}
-          {provider.feedState === "unsupported_recent_feed"
-            ? "This adapter does not support a verified recent-release feed. Scheduled searches remain available."
-            : "Not configured"}
-        </p>
+        <p>Recent-release feed: {feedDescriptions[provider.feedState]}</p>
       )}
       {provider.nextAllowedAt !== null && (
         <p>

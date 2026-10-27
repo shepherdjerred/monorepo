@@ -876,9 +876,18 @@ configured libraries to finish enumeration. Knaben exposes a date-ordered native
 recent-page reader; the AvistaZ family exposes empty-query recent pages with
 separate AnimeZ parameters. Readers retain the source-row count for pagination,
 reject oversized pages and keep private download URLs inside Activities. The
-periodic sweep still reports `unsupported_recent_feed` until its durable
-ingestion and matching path is connected. Six-hour due searches remain separate;
-TPB and MagnetDownload provide title searches only.
+periodic sweep captures encrypted source snapshots, immutable page receipts and
+resumable per-provider checkpoints together. Matching runs in bounded pages on
+the Network worker, checks current exact-title/cut/quality and requester authority,
+and queues proposals through the existing acquisition paths. Workflow histories
+carry source IDs and cursors rather than private releases. A first pass captures
+the current page; later passes page back to the previous retained head. Disabled
+automation pauses capture and matching. Provider status distinguishes received,
+catching-up, paused and failed feeds. Six-hour due searches remain separate;
+TPB and MagnetDownload provide title searches only and report
+`unsupported_recent_feed`. Private tracker tokens remain in worker memory,
+bound to the current credential. Each invocation retains its own database lease
+and pacing; a deferred listing can reuse authentication on its next invocation.
 
 Catalog adoption and refresh store a versioned `externalIds.catalogIdentity`
 snapshot with namespace-qualified TMDB/IMDb/TVDB references, original titles and

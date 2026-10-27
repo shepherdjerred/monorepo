@@ -138,7 +138,7 @@ export class KnabenProvider {
   }
 
   private async readPage(url: URL, signal?: AbortSignal) {
-    const response = KnabenResponseSchema.parse(
+    const response = KnabenResponseSchema.safeParse(
       await json(
         await request(this.transport, "knaben", url, {
           ...(signal === undefined ? {} : { signal }),
@@ -146,7 +146,9 @@ export class KnabenProvider {
         "knaben",
       ),
     );
-    return response;
+    if (!response.success)
+      throw new IntegrationError("knaben", "invalid-response");
+    return response.data;
   }
 
   private candidates(
@@ -244,9 +246,8 @@ const PrivateResponseSchema = z.object({
   ),
 });
 
-/** Shared direct tracker protocol. Authentication tokens remain in the client instance. */
+/** Shared direct tracker protocol. Authentication tokens remain in worker memory. */
 export class AvistazFamilyProvider {
-  private token: string | undefined;
   private readonly baseUrl: string;
   constructor(
     private readonly config: {
@@ -256,11 +257,12 @@ export class AvistazFamilyProvider {
       pid: string;
     },
     private readonly transport: FetchTransport = fetch,
+    private token?: string,
   ) {
     this.baseUrl = `https://${config.providerId}.to`;
   }
 
-  async login(signal?: AbortSignal): Promise<void> {
+  async login(signal?: AbortSignal): Promise<string> {
     const response = await request(
       this.transport,
       this.config.providerId,
@@ -285,6 +287,7 @@ export class AvistazFamilyProvider {
     if (parsed.token === undefined)
       throw new IntegrationError(this.config.providerId, "authentication");
     this.token = parsed.token;
+    return parsed.token;
   }
 
   async search(
@@ -342,10 +345,12 @@ export class AvistazFamilyProvider {
       },
     );
     if (response.status === 404) return [];
-    const parsed = PrivateResponseSchema.parse(
+    const parsed = PrivateResponseSchema.safeParse(
       await json(response, this.config.providerId),
     );
-    return parsed.data.map((item) => {
+    if (!parsed.success)
+      throw new IntegrationError(this.config.providerId, "invalid-response");
+    return parsed.data.data.map((item) => {
       const details = sameOriginUrl(item.url, this.baseUrl);
       const download = sameOriginUrl(item.download, this.baseUrl);
       return {

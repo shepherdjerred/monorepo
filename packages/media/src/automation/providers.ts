@@ -16,6 +16,10 @@ import {
 import { MagnetDownloadProvider } from "#integrations/magnetdownload.ts";
 import { IntegrationError, type FetchTransport } from "#integrations/http.ts";
 import { setTimeout } from "node:timers/promises";
+import {
+  ProviderConfigurationSchema,
+  defaultProviderConfiguration,
+} from "#shared/admin.ts";
 
 export const ProviderIdSchema = z.enum([
   "knaben",
@@ -53,9 +57,15 @@ export type ProviderRegistry = {
 };
 
 export class DatabaseProviderRegistry implements ProviderRegistry {
+  private readonly sessions = new Map<
+    string,
+    { credentialFingerprint: string; token: string }
+  >();
+
   constructor(
     private readonly db: Database,
     private readonly cipher: CredentialCipher,
+    private readonly fetchTransport: FetchTransport = fetch,
   ) {}
 
   private async client(
@@ -86,6 +96,16 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
     const credential = await this.db.credential.findUniqueOrThrow({
       where: { id: provider.credentialId },
     });
+    const credentialFingerprint = this.cipher.fingerprint(
+      JSON.stringify([credential.id, credential.ciphertext]),
+      `provider-session:${id}`,
+    );
+    const session = this.sessions.get(id);
+    const token =
+      session?.credentialFingerprint === credentialFingerprint
+        ? session.token
+        : undefined;
+    if (token === undefined) this.sessions.delete(id);
     const authentication = z
       .object({ username: z.string(), password: z.string(), pid: z.string() })
       .parse(
@@ -96,8 +116,13 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
     const client = new AvistazFamilyProvider(
       { providerId: id, ...authentication },
       transport,
+      token,
     );
-    await client.login();
+    if (token === undefined)
+      this.sessions.set(id, {
+        credentialFingerprint,
+        token: await client.login(),
+      });
     return client;
   }
 
@@ -110,11 +135,10 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
     });
     if (!configuration.enabled)
       throw new IntegrationError(providerId, "interaction-required");
-    const policy = z
-      .object({
-        minimumIntervalSeconds: z.number().int().min(1).max(3600).default(10),
-      })
-      .parse(configuration.configuration);
+    const policy = ProviderConfigurationSchema.parse({
+      ...defaultProviderConfiguration,
+      ...z.record(z.string(), z.unknown()).parse(configuration.configuration),
+    });
     const ownerId = crypto.randomUUID();
     const now = new Date();
     await this.db.providerLease.upsert({
@@ -147,6 +171,7 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
       return result;
     } catch (error) {
       if (error instanceof IntegrationError) {
+        if (error.kind === "authentication") this.sessions.delete(providerId);
         backoffSeconds = Math.max(
           backoffSeconds,
           error.retryAfterSeconds ?? 60,
@@ -206,7 +231,7 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
       });
       if (changed.count !== 1)
         throw new IntegrationError(providerId, "conflict");
-      return fetch(url, init);
+      return this.fetchTransport(url, init);
     };
   }
 }

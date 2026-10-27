@@ -1,3 +1,5 @@
+import type { MatchFeedSourceV1 } from "./feeds/contract.ts";
+
 export type MediaOperation = {
   operationId: string;
   mediaId: string;
@@ -93,6 +95,11 @@ export type MediaNetworkActivities = PlexBindingActivities & {
     cursor: string | null;
   }) => Promise<{ processed: number; nextCursor: string | null }>;
   dispatchMediaOutbox: () => Promise<{ dispatched: number; deferred: number }>;
+  matchProviderFeedSource: (input: MatchFeedSourceV1) => Promise<{
+    status: "processed" | "paused";
+    processed: number;
+    nextCursor: MatchFeedSourceV1["cursor"];
+  }>;
   sweepMediaWork: (input: {
     sweepId: string;
     kind: "downloads" | "watch" | "feeds" | "due" | "inventory";
