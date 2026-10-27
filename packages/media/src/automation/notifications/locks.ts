@@ -12,7 +12,7 @@ import {
 } from "#automation/retention/binding.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
-import { readMoviePublicationNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
+import { readMovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 
 /** Match Keep/unwatch and root-cancellation ordering before locking delivery authority. */
@@ -31,7 +31,7 @@ export async function lockDelivery(
       ...(binding?.cohort.mediaIds ?? []),
     ]),
   ].sort();
-  const movieNotice = readMoviePublicationNoticeV4(snapshot.event.payload);
+  const movieNotice = readMovieNoticeV4(snapshot.event.payload);
   if (movieNotice === null)
     await lockDefaultScopes(
       tx,

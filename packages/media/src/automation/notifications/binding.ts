@@ -5,7 +5,7 @@ import { prepareBoundMediaCohort } from "#automation/retention/binding.ts";
 import { retentionDeadline } from "#automation/retention/deadline.ts";
 import { isReadiness } from "./readiness.ts";
 import { eventMediaIds, type Delivery } from "./message.ts";
-import { readMoviePublicationNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
+import { readMovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 
 export async function prepareNotificationBinding(
   context: Pick<MediaAutomationContext, "db" | "plexAccess">,
@@ -15,7 +15,7 @@ export async function prepareNotificationBinding(
     "observed" | "expiresAtMs" | "assertActive"
   >,
 ) {
-  if (readMoviePublicationNoticeV4(delivery.event.payload) !== null) return;
+  if (readMovieNoticeV4(delivery.event.payload) !== null) return;
   if (
     !isReadiness(delivery.event.kind) &&
     delivery.event.kind !== "retention_warning"

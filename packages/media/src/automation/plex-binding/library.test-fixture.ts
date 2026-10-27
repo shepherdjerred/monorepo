@@ -21,6 +21,7 @@ import {
 import { createAutomationTestContext } from "#testing/automation.ts";
 import { PlexClient, type PlexEditionItem } from "#integrations/plex.ts";
 import type { MigrationRecord } from "#shared/migration.ts";
+import { inspectMedia } from "#filesystem/media-tools.ts";
 
 type SourceMedia = Extract<MigrationRecord, { kind: "media" }>;
 type Base = Awaited<ReturnType<typeof handoffFixture>>;
@@ -30,13 +31,34 @@ export async function libraryBindingFixture(
   db: Database,
   edition: MovieEditionKey,
   directoryCreated: (directory: string) => void,
+  options: { bytes?: Uint8Array } = {},
 ) {
   const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
   const f = await handoffFixture(db, {
+    ...options,
     initialEdition: edition,
     fileName: `Synthetic Film${edition === "default" ? "" : ` {edition-${label}}`}.mkv`,
   });
   directoryCreated(f.directory);
+  if (options.bytes !== undefined) f.context.files.inspect = inspectMedia;
+  f.context.files.pathMapping = {
+    canonical(kind, root, relative) {
+      return root === "control"
+        ? path.join(`/data/${kind}/.media-control`, relative)
+        : path.join(f.context.files.roots[kind][root], relative);
+    },
+    local(stored) {
+      for (const kind of ["movies", "tv"] as const) {
+        const prefix = `/data/${kind}/.media-control/`;
+        if (stored.startsWith(prefix))
+          return path.join(
+            f.context.files.roots[kind].control,
+            stored.slice(prefix.length),
+          );
+      }
+      return stored;
+    },
+  };
   const source = await adoptLibraryBindingSource(f, {
     kind: "movies",
     edition,
@@ -277,6 +299,7 @@ async function movieLibraryWire(
   );
   return {
     ...f,
+    files: f.context.files,
     context,
     ...source,
     calls,

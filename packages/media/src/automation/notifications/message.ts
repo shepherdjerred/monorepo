@@ -21,7 +21,7 @@ import {
 } from "#automation/subtitles/authority.ts";
 import { assertBoundMediaCohort } from "#automation/retention/binding.ts";
 import { assertRetentionPlexProjection } from "#infrastructure/plex-binding/retention.ts";
-import { readMoviePublicationNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
+import { readMovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 import { composeMovieNoticeV4 } from "#automation/movie-editions/notifications/message.ts";
 import type { PreparedMovieNoticeV4 } from "#automation/movie-editions/notifications/authority.ts";
 
@@ -78,7 +78,7 @@ export async function composeMessage(
   context: Context,
   delivery: Delivery,
 ): Promise<Message | null> {
-  if (readMoviePublicationNoticeV4(delivery.event.payload) !== null)
+  if (readMovieNoticeV4(delivery.event.payload) !== null)
     return composeMovieNoticeV4(
       tx,
       {

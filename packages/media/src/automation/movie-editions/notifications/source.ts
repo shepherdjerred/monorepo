@@ -4,6 +4,52 @@ import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
 import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/receipt.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { readMovieSubtitleCompletionV4 } from "#infrastructure/movie-editions/subtitle-receipt.ts";
+import type { MovieSubtitleInstallV4 } from "#shared/movie-editions/subtitles-v4.ts";
+import type { MovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
+import { PlexPhysicalGroupSchema } from "#shared/plex-binding/contract.ts";
+
+export async function readMovieNoticeProof(
+  tx: Prisma.TransactionClient,
+  payload: MovieNoticeV4,
+  budget: PublicationAuthorityReadBudget,
+) {
+  return payload.kind === "movie_publication"
+    ? readMovieNoticeSource(tx, payload.source, budget)
+    : readMovieCaptionNoticeSource(tx, payload.source, budget);
+}
+
+export async function readMovieCaptionNoticeSource(
+  tx: Prisma.TransactionClient,
+  input: MovieSubtitleInstallV4,
+  budget: PublicationAuthorityReadBudget,
+) {
+  const completion = await readMovieSubtitleCompletionV4(tx, input, budget);
+  if (completion === null)
+    throw new Error("Movie caption notice has no actual installation receipt");
+  const { asset, receipt } = completion;
+  const coverage = asset.coverage.map(({ mediaId, edition }) => ({
+    mediaId,
+    edition,
+  }));
+  const group = PlexPhysicalGroupSchema.parse({
+    assetId: asset.id,
+    assetVersion: asset.version,
+    checksum: asset.checksum,
+    sizeBytes: asset.sizeBytes,
+    canonicalPath: asset.path,
+    ownershipEpoch: asset.ownershipEpoch,
+    canonicalRootId: asset.editionRootId,
+    edition: asset.edition,
+    coverage,
+    coverageHash: identityHash(coverage),
+  });
+  return {
+    group,
+    publicationHash: identityHash(receipt),
+    eventKind: "subtitles_ready" as const,
+  };
+}
 
 /** The producer and consumer resolve the real completed publication, not a serialized availability claim. */
 export async function readMovieNoticeSource(

@@ -2,8 +2,9 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import {
-  readMoviePublicationNoticeV4,
-  type MoviePublicationNoticeV4,
+  readMovieNoticeV4,
+  movieNoticeSourceHash,
+  type MovieNoticeV4,
 } from "#shared/movie-editions/notifications-v4.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type {
@@ -21,13 +22,16 @@ import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts"
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import { readMovieNoticeSource } from "./source.ts";
+import { readMovieNoticeProof } from "./source.ts";
+import { currentMovieSubtitleWorkV4 } from "#automation/movie-editions/subtitles/authority.ts";
+import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
 
 export type MovieNoticeDelivery = Prisma.NotificationDeliveryGetPayload<{
   include: { event: true; user: { include: { notificationPreference: true } } };
 }>;
 export type PreparedMovieNoticeV4 = {
-  payload: MoviePublicationNoticeV4;
+  payload: MovieNoticeV4;
+  source: Awaited<ReturnType<typeof readMovieNoticeProof>>;
   access: MovieChoiceAccess;
   binding: PlexBindingSnapshot;
   freshness: PlexBindingFreshness;
@@ -42,13 +46,14 @@ export async function prepareMovieNoticeV4(
     access: MovieChoiceAccess | undefined;
   },
 ): Promise<PreparedMovieNoticeV4 | undefined> {
-  const payload = readMoviePublicationNoticeV4(input.delivery.event.payload);
+  const payload = readMovieNoticeV4(input.delivery.event.payload);
   if (payload === null) return;
   const access = requireMovieChoiceAccess(input.access ?? {});
   const budget = new PublicationAuthorityReadBudget();
+  const source = await readMovieNoticeProof(context.db, payload, budget);
   const current = await readMovieNoticeAuthorityV4(
     context.db,
-    { delivery: input.delivery, payload, access },
+    { delivery: input.delivery, payload, access, source },
     budget,
   );
   const freshness = plexBindingFreshness({
@@ -56,12 +61,13 @@ export async function prepareMovieNoticeV4(
     expiresAtMs: Math.min(
       input.execution.expiresAtMs,
       current.writerExpiresAtMs,
-      current.choice.freshness.expiresAtMs,
+      current.freshness.expiresAtMs,
     ),
-    guards: [input.execution, current.choice.freshness],
+    guards: [input.execution, current.freshness],
   });
   return {
     payload,
+    source,
     access,
     budget,
     freshness,
@@ -93,7 +99,7 @@ export async function assertPreparedMovieNoticeV4(
   prepared: PreparedMovieNoticeV4,
 ) {
   prepared.freshness.assertActive();
-  const payload = readMoviePublicationNoticeV4(delivery.event.payload);
+  const payload = readMovieNoticeV4(delivery.event.payload);
   if (
     payload === null ||
     identityHash(payload) !== identityHash(prepared.payload)
@@ -101,13 +107,13 @@ export async function assertPreparedMovieNoticeV4(
     throw new Error("Movie notification selected payload changed");
   const current = await readMovieNoticeAuthorityV4(
     tx,
-    { delivery, payload, access: prepared.access },
+    { delivery, payload, access: prepared.access, source: prepared.source },
     prepared.budget,
   );
   if (identityHash(current.binding.snapshot) !== identityHash(prepared.binding))
     throw new PlexBindingProtection("binding_changed");
   prepared.freshness.assertActive();
-  current.choice.freshness.assertActive();
+  current.freshness.assertActive();
   return current;
 }
 
@@ -115,13 +121,13 @@ async function readMovieNoticeAuthorityV4(
   tx: Prisma.TransactionClient,
   input: {
     delivery: MovieNoticeDelivery;
-    payload: MoviePublicationNoticeV4;
+    payload: MovieNoticeV4;
     access: MovieChoiceAccess;
+    source: PreparedMovieNoticeV4["source"];
   },
   budget: PublicationAuthorityReadBudget,
 ) {
-  const { payload, delivery, access } = input;
-  const source = await readMovieNoticeSource(tx, payload.source, budget);
+  const { payload, delivery, access, source } = input;
   assertNoticeSource(delivery, payload, source);
   const runtime = await runtimeAuthority(tx);
   if (!runtime.active || runtime.epoch !== payload.recoveryEpoch)
@@ -164,16 +170,51 @@ async function readMovieNoticeAuthorityV4(
     throw new PlexBindingProtection(binding.reason);
   if (identityHash(binding.association.group) !== identityHash(source.group))
     throw new PlexBindingProtection("binding_changed");
+  let freshness = choice.freshness;
+  if (payload.kind === "movie_subtitles") {
+    const work = await currentMovieSubtitleWorkV4(
+      tx,
+      {
+        scope: payload.source.scope,
+        assetId: payload.asset.id,
+        epoch: payload.recoveryEpoch,
+        access,
+      },
+      budget,
+    );
+    if (
+      work.authority !== payload.targetAuthority ||
+      work.targets.length === 0 ||
+      !subtitleTargetsReady(work, payload.recoveryEpoch)
+    )
+      throw new PlexBindingProtection("scope_changed");
+    work.freshness.assertActive();
+    freshness = {
+      expiresAtMs: Math.min(
+        choice.freshness.expiresAtMs,
+        work.freshness.expiresAtMs,
+      ),
+      assertActive: () => {
+        choice.freshness.assertActive();
+        work.freshness.assertActive();
+      },
+    };
+  }
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
   });
-  return { choice, binding, writerExpiresAtMs: lease.expiresAt.getTime() };
+  return {
+    choice,
+    binding,
+    freshness,
+    writerExpiresAtMs: lease.expiresAt.getTime(),
+  };
 }
 
 function assertNoticeSource(
   delivery: MovieNoticeDelivery,
-  payload: MoviePublicationNoticeV4,
-  source: Awaited<ReturnType<typeof readMovieNoticeSource>>,
+  payload: MovieNoticeV4,
+  source: PreparedMovieNoticeV4["source"],
 ) {
   if (
     delivery.event.kind !== payload.eventKind ||
@@ -181,7 +222,7 @@ function assertNoticeSource(
     delivery.event.mediaId !== payload.source.scope.mediaId ||
     delivery.recoveryEpoch !== payload.recoveryEpoch ||
     source.group.ownershipEpoch !== payload.recoveryEpoch ||
-    source.publicationHash !== payload.publicationHash ||
+    source.publicationHash !== movieNoticeSourceHash(payload) ||
     identityHash(payload.asset) !==
       identityHash({
         id: source.group.assetId,
