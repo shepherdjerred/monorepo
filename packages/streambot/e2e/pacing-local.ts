@@ -162,12 +162,15 @@ async function observeFailure() {
   }
 }
 void observeFailure();
-const timeout = setTimeout(
-  () => {
-    throw new Error("Pacing probe timed out");
-  },
-  (seconds + 45) * 1000,
-);
+let timeout: ReturnType<typeof setTimeout> | undefined;
+const timedOut = new Promise<never>((_resolve, reject) => {
+  timeout = setTimeout(
+    () => {
+      reject(new Error("Pacing probe timed out"));
+    },
+    (seconds + 45) * 1000,
+  );
+});
 
 function percentile(values: number[], fraction: number): number {
   assert.ok(values.length > 0);
@@ -232,8 +235,13 @@ function summarize(kind: "video" | "audio") {
   };
 }
 try {
-  await player.start();
-  await player.finished;
+  await Promise.race([
+    (async () => {
+      await player.start();
+      await player.finished;
+    })(),
+    timedOut,
+  ]);
   const video = summarize("video");
   const audio = summarize("audio");
   let audioIndex = 0;
@@ -266,7 +274,7 @@ try {
     })}`,
   );
 } finally {
-  clearTimeout(timeout);
+  if (timeout !== undefined) clearTimeout(timeout);
   player.stop();
   connection.stop();
   streamer.dispose();
