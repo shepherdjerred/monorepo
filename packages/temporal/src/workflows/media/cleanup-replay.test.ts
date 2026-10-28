@@ -4,15 +4,28 @@ import { Context } from "@temporalio/activity";
 import { expect, test } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
-const oldWorkflowsPath = new URL(
-  "fixtures/cleanup-before-observation.ts",
-  import.meta.url,
-).pathname;
 const workflowsPath = new URL("../index.ts", import.meta.url).pathname;
+const histories = [
+  {
+    name: "pre-observation",
+    fixture: "cleanup-before-observation",
+    observes: false,
+  },
+  {
+    name: "pre-input-normalization",
+    fixture: "cleanup-before-input",
+    observes: true,
+  },
+].flatMap((history) =>
+  (["terminal", "protected_then_terminal"] as const).map((mode) => ({
+    ...history,
+    mode,
+  })),
+);
 
-test.each(["terminal", "protected_then_terminal"] as const)(
-  "retained pre-observation cleanup history %s replays without a new Network observation command",
-  async (mode) => {
+test.each(histories)(
+  "retained $name cleanup history $mode preserves its original Activity inputs on replay",
+  async ({ fixture, observes, mode }) => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const started: { worker: Worker; running: Promise<void> }[] = [];
     const calls: { kind: string; input: unknown }[] = [];
@@ -21,7 +34,8 @@ test.each(["terminal", "protected_then_terminal"] as const)(
       const workflow = await Worker.create({
         connection: environment.nativeConnection,
         taskQueue: TASK_QUEUES.WORKFLOWS,
-        workflowsPath: oldWorkflowsPath,
+        workflowsPath: new URL(`fixtures/${fixture}.ts`, import.meta.url)
+          .pathname,
       });
       const files = await Worker.create({
         connection: environment.nativeConnection,
@@ -50,10 +64,14 @@ test.each(["terminal", "protected_then_terminal"] as const)(
             calls.push({ kind: "finish", input });
             return Promise.resolve();
           },
-          observeMediaUpgradeCleanup: () => {
-            throw new Error(
-              "Pre-observation Workflow scheduled a new Activity",
-            );
+          observeMediaUpgradeCleanup: (input: unknown) => {
+            if (!observes)
+              throw new Error(
+                "Pre-observation Workflow scheduled a new Activity",
+              );
+            expect(Context.current().info.startToCloseTimeoutMs).toBe(120_000);
+            calls.push({ kind: "observe", input });
+            return Promise.resolve({ status: "observed" });
           },
         },
       });
@@ -62,6 +80,8 @@ test.each(["terminal", "protected_then_terminal"] as const)(
       const input = {
         operationId: crypto.randomUUID(),
         cleanupId: crypto.randomUUID(),
+        kind: "cleanup_upgrade",
+        recoveryEpoch: 0,
       };
       const handle = await environment.client.workflow.start(
         "cleanupMediaUpgradeWorkflow",
@@ -75,6 +95,7 @@ test.each(["terminal", "protected_then_terminal"] as const)(
         status: "completed",
       });
       const terminal = [
+        ...(observes ? [{ kind: "observe", input }] : []),
         { kind: "files", input },
         {
           kind: "finish",
@@ -89,6 +110,7 @@ test.each(["terminal", "protected_then_terminal"] as const)(
         mode === "terminal"
           ? terminal
           : [
+              ...(observes ? [{ kind: "observe", input }] : []),
               { kind: "files", input },
               {
                 kind: "finish",
@@ -102,8 +124,12 @@ test.each(["terminal", "protected_then_terminal"] as const)(
             ],
       );
       const history = await handle.fetchHistory();
+      if (!observes)
+        expect(JSON.stringify(history)).not.toContain(
+          "observeMediaUpgradeCleanup",
+        );
       expect(JSON.stringify(history)).not.toContain(
-        "observeMediaUpgradeCleanup",
+        "media-upgrade-cleanup-input-v2",
       );
       await Worker.runReplayHistory({ workflowsPath }, history);
     } finally {

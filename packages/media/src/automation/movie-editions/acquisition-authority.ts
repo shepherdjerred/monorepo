@@ -2,10 +2,8 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
-import {
-  readLibraryMovieManagement,
-  type MovieManagementInvocation,
-} from "#infrastructure/movie-editions/management/authority.ts";
+import { readLibraryMovieManagement } from "#infrastructure/movie-editions/management/authority.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 
 /** Real personal consent and owner-approved library management are distinct sources of new acquisition authority. */

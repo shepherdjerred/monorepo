@@ -25,7 +25,7 @@ import { ObserveMoviePlexHintV4Schema } from "#shared/plex-events/contract.ts";
 /** Full producer journey starts at real consent/outbox, before any attempt, torrent or file publication. */
 export async function createMovieWorkflowFixture(
   edition: MovieEditionKey,
-  options: { missingEnglish?: boolean } = {},
+  options: { missingEnglish?: boolean; bytes?: Uint8Array } = {},
 ) {
   const cluster = await startMediaTestPostgres();
   const db = cluster.database;
@@ -86,9 +86,10 @@ export async function createMovieWorkflowFixture(
     });
     files = await movieWorkflowFiles(db, owner.id);
     const bytes =
-      options.missingEnglish === true
+      options.bytes ??
+      (options.missingEnglish === true
         ? await movieVideoFixture(1920, [])
-        : await movieVideoFixture();
+        : await movieVideoFixture());
     const wire = movieWorkflowWire(db, {
       mediaId: media.id,
       edition,
@@ -122,6 +123,7 @@ export async function createMovieWorkflowFixture(
     );
     const owned = files;
     return {
+      source: { db, files, context, profile, wire, media, user, bytes },
       input: request.input,
       movie: createMovieNetworkFacetV4(context, sources),
       movieWatch: createMovieWatchFacetV4(context, () => Promise.resolve(true)),

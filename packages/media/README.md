@@ -1170,6 +1170,17 @@ restores predecessors as importing, then rescans Plex and verifies every covered
 title before making them available. A retry resumes this verification without
 submitting the failed acquisition again.
 
+Scoped movie publication creates cleanup from the exact verified successor,
+including its edition and original physical publication. Cleanup observation
+version 2 retains one movie edition, its current serving binding and the actual
+immutable Plex completion; historical observation version 1 remains literal.
+Network verifies that serving edition and active sessions before Files checks
+the same snapshot, archive membership and journals. Keep and generation changes
+protect the selected cut. Other editions retain their own requests and holds.
+Imported-library household-history holds still require review before cleanup.
+Cleanup policy time is independent of the original SDK, verification, storage,
+writer and SQL deadlines; advancing policy time cannot renew an effect's proof.
+
 Acquisition, source cleanup, quarantine, and permanent purge have separate
 configuration gates, all disabled by default. Each effect still requires current
 ownership, intent, and policy checks. Tests against injected service responses

@@ -8,7 +8,6 @@ import {
 } from "#shared/native-recovery/archive-plan.ts";
 import { deriveUpgradeCleanupPlan } from "#automation/files/upgrade-cleanup-plan.ts";
 import { videoSubtitleWhere } from "#automation/files/subtitle-lifecycle/ownership.ts";
-import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
   lockCanonicalMedia,
@@ -36,6 +35,11 @@ import { readPlexGroupUnion, readPlexIdentityCohort } from "./groups.ts";
 import { readCurrentPlexBindings } from "./read.ts";
 import { PlexBindingProtection } from "./errors.ts";
 import { captureExistingPlexBindingExpected } from "./cold.ts";
+import { captureMovieUpgradeCleanupExpected } from "#infrastructure/movie-editions/cleanup/expected.ts";
+import type { CleanupReadInvocation } from "./cleanup/invocation.ts";
+import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
+import { movieCleanupRecordsAuthorized } from "#infrastructure/movie-editions/cleanup/authority.ts";
+import { cleanupAuthorityDeadline } from "./cleanup/deadline.ts";
 
 /** Exact existing purged-row ACK, not a new immutable purge receipt. No fresh access lookup. */
 export async function readUpgradeCleanupCommand(
@@ -73,10 +77,18 @@ export async function captureUpgradeCleanupExpected(
   tx: Prisma.TransactionClient,
   input: UpgradeCleanupPlexInput,
   rawAccess: readonly PlexAccess[],
+  invocation: CleanupReadInvocation,
 ) {
   const { operation, cleanup } = await readUpgradeCleanupCommand(tx, input);
-  if (cleanup.state !== "pending" || cleanup.expiresAt.getTime() > Date.now())
+  if (cleanup.state !== "pending" || cleanup.expiresAt > invocation.policyTime)
     throw new PlexBindingProtection("reconciliation_required");
+  const movie = await captureMovieUpgradeCleanupExpected(
+    tx,
+    { operation, cleanup },
+    rawAccess,
+    invocation.budget,
+  );
+  if (movie !== null) return movie;
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: cleanup.assetId },
     include: {
@@ -306,57 +318,6 @@ function cleanupPlanMembership(plan: UpgradeCleanupPlan) {
   };
 }
 
-async function cleanupAuthorityDeadline(
-  tx: Prisma.TransactionClient,
-  epoch: number,
-  access: readonly PlexAccess[],
-) {
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
-  if (
-    lease.revokedAt !== null ||
-    lease.recoveryEpoch !== epoch ||
-    lease.observedAt.getTime() > Date.now() ||
-    lease.expiresAt.getTime() <= Date.now()
-  )
-    throw new PlexBindingProtection("verification_expired");
-  const deadlines = [lease.expiresAt.getTime()];
-  for (const item of access) {
-    const library =
-      CAPACITY_ROOTS[item.sectionType === "movie" ? "movies" : "tv"];
-    const storage = await tx.mediaStorageAuthority.findUniqueOrThrow({
-      where: { rootPath: library },
-    });
-    if (
-      storage.revokedAt !== null ||
-      storage.recoveryEpoch !== epoch ||
-      storage.observedAt.getTime() > Date.now() ||
-      storage.expiresAt.getTime() <= Date.now() ||
-      storage.expiresAt.getTime() - storage.observedAt.getTime() > 120_000
-    )
-      throw new PlexBindingProtection("verification_expired");
-    const exclusion = await requirePlexExclusionDatabaseProof(tx, {
-      library,
-      control: `${library}/.media-control`,
-    });
-    if (
-      exclusion.serverMachineId !== item.serverMachineId ||
-      exclusion.sectionId !== item.sectionId
-    )
-      throw new PlexBindingProtection("wrong_section");
-    deadlines.push(
-      storage.expiresAt.getTime(),
-      Date.parse(
-        z
-          .object({ topologyCheckedAt: z.iso.datetime() })
-          .parse(exclusion.evidence).topologyCheckedAt,
-      ) + 900_000,
-    );
-  }
-  return Math.min(...deadlines);
-}
-
 /** Complete union first, server mutex last. Call before any independent leaf/asset locks. */
 export async function lockUpgradeCleanupObservation(
   tx: Prisma.TransactionClient,
@@ -364,9 +325,12 @@ export async function lockUpgradeCleanupObservation(
   freshness: PlexBindingFreshness,
 ) {
   freshness.assertActive();
-  await lockCanonicalMedia(tx, expected.mediaIds);
-  await lockExistingDefaultTargets(tx, expected.mediaIds);
-  await lockEffectiveRequests(tx, expected.mediaIds);
+  if (expected.schemaVersion === 2) await lockMovieCommand(tx, expected.scope);
+  else {
+    await lockCanonicalMedia(tx, expected.mediaIds);
+    await lockExistingDefaultTargets(tx, expected.mediaIds);
+    await lockEffectiveRequests(tx, expected.mediaIds);
+  }
   if (!(await lockRuntimeAuthority(tx, expected.recoveryEpoch)))
     throw new PlexBindingProtection("ownership_changed");
   if (expected.userIds.length > 0) {
@@ -390,11 +354,13 @@ export async function lockUpgradeCleanupObservation(
   );
   await assertNoPublicationCompensationFence(tx, expected);
   if (
-    !(await recordsAuthorized(tx, {
-      epoch: expected.recoveryEpoch,
-      mediaIds: expected.mediaIds,
-      assetIds: expected.assetIds,
-    }))
+    !(await (expected.schemaVersion === 2
+      ? movieCleanupRecordsAuthorized(tx, expected)
+      : recordsAuthorized(tx, {
+          epoch: expected.recoveryEpoch,
+          mediaIds: expected.mediaIds,
+          assetIds: expected.assetIds,
+        })))
   )
     throw new PlexBindingProtection("ownership_changed");
   const server = expected.access[0]?.serverMachineId;

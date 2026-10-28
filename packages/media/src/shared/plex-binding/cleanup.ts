@@ -11,6 +11,7 @@ import {
 import { PLEX_BINDING_RESULT_MAX_BYTES } from "./activities.ts";
 import { PlexBindingExpectedSchema } from "./expected.ts";
 import { PlexVerificationFactsSchema } from "./observations.ts";
+import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 
 const Ids = z.array(z.uuid()).min(1).max(10_000).refine(plexSortedUnique);
 const Plan = UpgradeCleanupPlanSchema.strict().extend({
@@ -42,7 +43,7 @@ export const ObserveMediaUpgradeCleanupResultSchema = z
 export type ObserveMediaUpgradeCleanupResult = z.infer<
   typeof ObserveMediaUpgradeCleanupResultSchema
 >;
-export const UpgradeCleanupPlexExpectedSchema = z.strictObject({
+export const UpgradeCleanupPlexExpectedV1Schema = z.strictObject({
   schemaVersion: z.literal(1),
   operationId: z.uuid(),
   cleanupId: z.uuid(),
@@ -88,9 +89,37 @@ export const UpgradeCleanupPlexExpectedSchema = z.strictObject({
   pathsHash: Hash,
   authorityExpiresAt: z.iso.datetime(),
 });
+export const MovieUpgradeCleanupPlexExpectedV2Schema =
+  UpgradeCleanupPlexExpectedV1Schema.extend({
+    schemaVersion: z.literal(2),
+    scope: MovieEditionScopeSchema,
+  }).refine(
+    (value) =>
+      value.mediaIds.length === 1 &&
+      value.mediaIds[0] === value.scope.mediaId &&
+      value.scope.rootMediaId === value.scope.mediaId &&
+      value.groups.length === 1 &&
+      value.bindings.length === 1 &&
+      value.targets.length === 1 &&
+      value.targets[0]?.mediaId === value.scope.mediaId &&
+      value.groups.every(
+        (group) =>
+          group.edition === value.scope.edition &&
+          group.canonicalRootId === value.scope.rootMediaId &&
+          group.coverage.length === 1 &&
+          group.coverage[0]?.mediaId === value.scope.mediaId,
+      ) &&
+      value.bindings[0]?.scope.mediaId === value.scope.mediaId &&
+      value.bindings[0].scope.edition === value.scope.edition,
+    "Movie cleanup must retain one exact serving edition",
+  );
+export const UpgradeCleanupPlexExpectedSchema = z.discriminatedUnion(
+  "schemaVersion",
+  [UpgradeCleanupPlexExpectedV1Schema, MovieUpgradeCleanupPlexExpectedV2Schema],
+);
 export const UpgradeCleanupPlexEvidenceSchema = z
   .strictObject({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.union([z.literal(1), z.literal(2)]),
     expected: UpgradeCleanupPlexExpectedSchema,
     expectedHash: Hash,
     sessions: z.strictObject({
@@ -109,6 +138,7 @@ export const UpgradeCleanupPlexEvidenceSchema = z
       checked = Date.parse(value.sessions.checkedAt),
       expiry = Date.parse(value.expiresAt);
     return (
+      value.schemaVersion === value.expected.schemaVersion &&
       start <= checked &&
       checked <= complete &&
       complete < expiry &&

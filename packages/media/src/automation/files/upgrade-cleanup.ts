@@ -1,6 +1,9 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { workerFilePath } from "./paths/locations.ts";
-import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
+import {
+  assertCleanupPhysicalAsset,
+  movieCleanupRecordsAuthorized,
+} from "#infrastructure/movie-editions/cleanup/authority.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
 import {
   ownedSubtitleSidecars,
@@ -17,13 +20,16 @@ import {
   publicationInvocation,
   requirePublicationExecution,
 } from "#automation/publication-proof/invocation.ts";
-import { captureCleanupPlex, lockCleanupPlex } from "./plex-binding/cleanup.ts";
+import {
+  captureCleanupPlex,
+  lockCleanupPlex,
+  assertCleanupClaims,
+} from "./plex-binding/cleanup.ts";
 import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { videoSubtitleWhere } from "./subtitle-lifecycle/ownership.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import {
-  assertLegacyClaimsResolved,
   PendingLegacyClaimsError,
   reopenLegacyClaimProtection,
 } from "#infrastructure/recovery/legacy-claims/protection.ts";
@@ -78,13 +84,21 @@ export async function cleanupUpgrade(
   const plan = await prepareUpgradeCleanupPlan(invocation, cleanupId);
   proof.freshness.assertActive();
   const mediaIds = proof.evidence.expected.mediaIds;
-  if (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
+  const movieScope =
+    proof.evidence.expected.schemaVersion === 2
+      ? proof.evidence.expected.scope
+      : undefined;
+  const edition = movieScope?.edition ?? "default";
+  if (
+    (movieScope === undefined || movieScope.edition === "default") &&
+    (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
+  )
     throw new PendingLegacyClaimsError(mediaIds);
   const intents = proof.evidence.expected.targets;
   const generations = new Map(
     intents.map((intent) => [intent.mediaId, intent.generation]),
   );
-  const playback = await currentPlayback(invocation, plan.mediaIds);
+  const playback = await currentPlayback(invocation, plan.mediaIds, movieScope);
   proof.freshness.assertActive();
   const access = [
     ...new Map(
@@ -119,29 +133,43 @@ export async function cleanupUpgrade(
           current.successorAssetId,
           ...playback.map((item) => item.id),
         ]);
-        await assertDefaultPhysicalAsset(tx, current.assetId);
-        await assertDefaultPhysicalAsset(tx, current.successorAssetId);
+        await assertCleanupPhysicalAsset(tx, current.assetId, movieScope);
+        await assertCleanupPhysicalAsset(
+          tx,
+          current.successorAssetId,
+          movieScope,
+        );
         if (!(await context.enabled.purge()))
           throw new FileGuardError("purge_disabled");
         await assertRuntime(tx, snapshot.recoveryEpoch);
-        await assertLegacyClaimsResolved(tx, mediaIds);
+        await assertCleanupClaims(tx, mediaIds, movieScope);
         if (
-          !(await recordsAuthorized(tx, {
-            epoch: snapshot.recoveryEpoch,
-            mediaIds,
-            assetIds: [
-              current.assetId,
-              current.successorAssetId,
-              ...playback.map((item) => item.id),
-            ],
-          }))
+          !(await (movieScope === undefined
+            ? recordsAuthorized(tx, {
+                epoch: snapshot.recoveryEpoch,
+                mediaIds,
+                assetIds: [
+                  current.assetId,
+                  current.successorAssetId,
+                  ...playback.map((item) => item.id),
+                ],
+              })
+            : movieCleanupRecordsAuthorized(tx, {
+                scope: movieScope,
+                recoveryEpoch: snapshot.recoveryEpoch,
+                assetIds: [
+                  current.assetId,
+                  current.successorAssetId,
+                  ...playback.map((item) => item.id),
+                ],
+              })))
         )
           throw new FileGuardError("record_ownership_unconfirmed");
         if (
           await tx.recoveryHold.count({
             where: {
               mediaId: { in: mediaIds },
-              edition: "default",
+              edition,
               releasedAt: null,
             },
           })
@@ -158,7 +186,7 @@ export async function cleanupUpgrade(
         await assertCleanupAssets({ tx, context, cleanup: current, plan });
         await assertCurrentPlayback(tx, context, playback, freshness);
         const latest = await tx.mediaIntent.findMany({
-          where: { mediaId: { in: mediaIds }, edition: "default" },
+          where: { mediaId: { in: mediaIds }, edition },
         });
         if (
           latest.length !== mediaIds.length ||
@@ -170,7 +198,7 @@ export async function cleanupUpgrade(
         const held = await tx.retentionHold.count({
           where: {
             mediaId: { in: mediaIds },
-            edition: "default",
+            edition,
             OR: [
               { isPin: true },
               { until: null },
@@ -350,7 +378,7 @@ async function assertNoRecoveryReference(
 ): Promise<void> {
   const attempts = await tx.$queryRaw<
     { id: string }[]
-  >`SELECT id FROM "AcquisitionAttempt" WHERE state NOT IN ('completed', 'obsolete', 'rolled_back') AND ("filePlan" @> ${JSON.stringify([{ assetId }])}::jsonb OR "filePlan" @> ${JSON.stringify([{ previousAssetId: assetId }])}::jsonb) LIMIT 1`;
+  >`SELECT id FROM "AcquisitionAttempt" WHERE state NOT IN ('completed', 'obsolete', 'rolled_back') AND ("filePlan" @> ${JSON.stringify([{ assetId }])}::jsonb OR "filePlan" @> ${JSON.stringify([{ previousAssetId: assetId }])}::jsonb OR "filePlan"->'entries' @> ${JSON.stringify([{ assetId }])}::jsonb OR "filePlan"->'entries' @> ${JSON.stringify([{ previousAssetId: assetId }])}::jsonb) LIMIT 1`;
   if (attempts.length > 0)
     throw new FileGuardError("cleanup_recovery_dependency");
   const decisions = await tx.$queryRaw<

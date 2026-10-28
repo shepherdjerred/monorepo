@@ -103,6 +103,7 @@ type CoreFileActivities = Omit<
   | keyof MovieFileActivitiesV4
   | "inspectAndStageMedia"
   | "promoteMediaFiles"
+  | "cleanupSupersededMediaFile"
 >;
 export async function getMediaNetworkRuntime() {
   networkRuntime ??= createMediaNetworkRuntime(
@@ -272,8 +273,6 @@ export const mediaFileWorkerActivities: FileActivities = {
     withFiles((activities) => activities.prepareMediaHandoffFiles(input)),
   applyMediaHandoffFiles: (input) =>
     withFiles((activities) => activities.applyMediaHandoffFiles(input)),
-  cleanupSupersededMediaFile: (input) =>
-    withFiles((activities) => activities.cleanupSupersededMediaFile(input)),
   rollbackMediaPromotion: (input) =>
     withFiles((activities) => activities.rollbackMediaPromotion(input)),
   quarantineMediaFiles: (input) =>

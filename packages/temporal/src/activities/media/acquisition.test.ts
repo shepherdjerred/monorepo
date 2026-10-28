@@ -9,6 +9,7 @@ import {
 
 afterEach(() => vi.restoreAllMocks());
 const input = {
+  cleanupId: "00000000-0000-4000-8000-000000000004",
   operationId: "00000000-0000-4000-8000-000000000001",
   attemptId: "00000000-0000-4000-8000-000000000002",
   mediaId: "00000000-0000-4000-8000-000000000003",
@@ -19,7 +20,11 @@ const networkMethods = [
   "submitMediaTorrent",
   "observeMediaAcquisition",
 ] as const;
-const fileMethods = ["inspectAndStageMedia", "promoteMediaFiles"] as const;
+const fileMethods = [
+  "inspectAndStageMedia",
+  "promoteMediaFiles",
+  "cleanupSupersededMediaFile",
+] as const;
 type FileExecution = Parameters<
   Awaited<
     ReturnType<typeof createMediaFileRuntime>
@@ -69,6 +74,13 @@ function networkRuntime(check: (execution: PlexBindingExecution) => void) {
 function fileRuntime(check: (execution: FileExecution) => void) {
   return {
     acquisition: {
+      cleanupSupersededMediaFile: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "purged" as const });
+      },
       inspectAndStageMedia: (_input: unknown, execution: FileExecution) => {
         check(execution);
         return Promise.resolve({ status: "staged" as const });
