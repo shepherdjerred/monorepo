@@ -3,6 +3,7 @@ import { lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { readOwnedMacVMJSON } from "tasknotes-macos/scripts/apple-acceptance/mac-vm-export.ts";
+import { assertFreshInitialStatus } from "tasknotes-macos/scripts/mac-account-contract.ts";
 import { runDirectory, type Manifest } from "../apple-sync-live/model";
 import { fingerprintApp } from "../apple-sync-live/prepare";
 import {
@@ -19,6 +20,12 @@ import {
 import { executePrivateAccountSession } from "./run-session";
 import { privateAccountSelector } from "./runtime";
 import { inputArtifacts } from "./app-input-artifacts";
+import { launch } from "../apple-sync-live/platform";
+import { iosControlStatus, validateAccountState } from "./state";
+import {
+  awaitFreshIOSPublication,
+  prepareNormalAccountAfterProof,
+} from "./phases/readiness";
 
 type Phase = "credentials" | "verification";
 const proofRelative = (phase: Phase) =>
@@ -28,7 +35,23 @@ export async function runIosAccountProbe(manifest: Manifest) {
   await runPhase(manifest, "credentials");
   const first = await requirePhase(manifest, "credentials");
   await runPhase(manifest, "verification", first.runnerFiles);
-  await requireIosPrivateInputProof(manifest);
+  const normal = await prepareNormalAccountAfterProof({
+    verifyProofs: async () => {
+      await requireIosPrivateInputProof(manifest);
+    },
+    launchNormalIos: () =>
+      launch(manifest, manifest.allowedRemoteVaultID === null, "ios"),
+    awaitPublication: (launchedAt) =>
+      awaitFreshIOSPublication(manifest, launchedAt),
+    validateAccount: async () => {
+      if (manifest.allowedRemoteVaultID !== null)
+        return validateAccountState(manifest, undefined);
+      await assertUnchangedBuild(manifest);
+      const status = await iosControlStatus(manifest);
+      assertFreshInitialStatus(status, manifest.runID);
+      return status;
+    },
+  });
   return {
     runID: manifest.runID,
     status: "both-private-input-phases-ready",
@@ -36,6 +59,9 @@ export async function runIosAccountProbe(manifest: Manifest) {
     realAccountSubmits: 0,
     fixtureAccountSubmits: 1,
     verificationCodeSubmits: 0,
+    normalAccountReady: true,
+    normalAccountCapturedAt: normal.capturedAt,
+    remoteVaultBound: manifest.allowedRemoteVaultID !== null,
   };
 }
 
