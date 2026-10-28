@@ -1,26 +1,37 @@
 """Strict saved-Anvil reader for extended native acceptance, including 26.3 palettes."""
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["nbtlib>=2.0.4,<3", "numpy>=2.2,<3"]
+# ///
+
 import gzip
 import io
 import zlib
+from collections.abc import Iterator
 from pathlib import Path
 
 import nbtlib
 import numpy as np
+from numpy.typing import NDArray
+
+type Position = tuple[int, int, int]
+type Properties = dict[str, str]
+type StateKey = tuple[str, tuple[tuple[str, str], ...]]
 
 
 class Anvil:
-    def __init__(self, dimension, defaults=None):
+    def __init__(self, dimension: Path | str, defaults: dict[str, Properties] | None = None) -> None:
         self.dimension = Path(dimension)
         self.defaults = defaults if defaults is not None else {}
-        self.regions = {}
-        self.chunks = {}
-        self.sections = {}
-        self.states = [("minecraft:air", {})]
-        self.state_ids = {("minecraft:air", ()): 0}
+        self.regions: dict[tuple[int, int], dict[int, nbtlib.File]] = {}
+        self.chunks: dict[tuple[int, int], nbtlib.File] = {}
+        self.sections: dict[Position, NDArray[np.uint16]] = {}
+        self.states: list[tuple[str, Properties]] = [("minecraft:air", {})]
+        self.state_ids: dict[StateKey, int] = {("minecraft:air", ()): 0}
 
     @staticmethod
-    def records(path):
+    def records(path: Path) -> Iterator[tuple[int, nbtlib.File]]:
         data = Path(path).read_bytes()
         for i in range(1024):
             offset = (int.from_bytes(data[i * 4 : i * 4 + 4], "big") >> 8) * 4096
@@ -32,7 +43,7 @@ class Anvil:
             decompress = {1: gzip.decompress, 2: zlib.decompress, 3: lambda b: b}[compression]
             yield i, nbtlib.File.parse(io.BytesIO(decompress(payload)))
 
-    def chunk(self, x, z):
+    def chunk(self, x: int, z: int) -> nbtlib.File:
         key = (x, z)
         if key not in self.chunks:
             region = (x // 32, z // 32)
@@ -45,7 +56,7 @@ class Anvil:
             self.chunks[key] = self.regions[region][index]
         return self.chunks[key]
 
-    def section(self, cx, sy, cz):
+    def section(self, cx: int, sy: int, cz: int) -> NDArray[np.uint16]:
         key = cx, sy, cz
         if key in self.sections:
             return self.sections[key]
@@ -80,13 +91,13 @@ class Anvil:
         self.sections[key] = result
         return result
 
-    def block(self, p):
+    def block(self, p: Position) -> tuple[str, Properties]:
         x, y, z = p
         identifier = self.section(x // 16, y // 16, z // 16)[y % 16, z % 16, x % 16]
         name, props = self.states[int(identifier)]
         return name, {**self.defaults.get(name, {}), **props}
 
-    def light(self, p):
+    def light(self, p: Position) -> int:
         x, y, z = p
         section = next(s for s in self.chunk(x // 16, z // 16)["sections"] if int(s["Y"]) == y // 16)
         values = section.get("BlockLight")
@@ -95,7 +106,7 @@ class Anvil:
         i = (y % 16) * 256 + (z % 16) * 16 + x % 16
         return ((int(values[i // 2]) & 255) >> ((i % 2) * 4)) & 15
 
-    def entities(self):
+    def entities(self) -> Iterator[nbtlib.Compound]:
         for path in sorted((self.dimension / "entities").glob("*.mca")):
             for _, chunk in self.records(path):
                 yield from chunk["Entities"]

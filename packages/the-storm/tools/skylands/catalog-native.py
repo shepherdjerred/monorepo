@@ -1,5 +1,10 @@
 """Export relative jigsaw metadata from a locally licensed, pinned Paper jar. No game assets are copied."""
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["nbtlib>=2.0.4,<3"]
+# ///
+
 import argparse
 import gzip
 import io

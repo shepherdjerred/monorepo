@@ -31,6 +31,10 @@ final class SkyEdits {
     return values.containsKey(p);
   }
 
+  boolean owns(SkyBounds bounds) {
+    return area.contains(bounds.min()) && area.contains(bounds.max());
+  }
+
   private SkyPlan.Edit connections(SkyPlan.Edit edit) {
     if (!edit.block().endsWith("_fence")) return edit;
     var p = edit.position();

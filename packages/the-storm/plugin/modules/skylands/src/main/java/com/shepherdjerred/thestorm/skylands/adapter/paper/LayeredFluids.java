@@ -64,10 +64,17 @@ final class LayeredFluids {
     for (var dx = -4; dx <= 4; dx++) {
       for (var dz = -4; dz <= 4; dz++) {
         if (!soil(slice.region().getType(p.x() + dx, p.y() - 1, p.z() + dz))
-            || !soil(slice.region().getType(p.x() + dx, p.y() - 2, p.z() + dz))) return false;
+            || !soil(slice.region().getType(p.x() + dx, p.y() - 2, p.z() + dz))
+            || (dx * dx + dz * dz < 10 && !pondClearance(slice, p.add(new SkyPosition(dx, 0, dz)))))
+          return false;
       }
     }
     return true;
+  }
+
+  private static boolean pondClearance(LayeredSlice slice, SkyPosition p) {
+    return slice.region().getBlockData(p.x(), p.y() + 1, p.z()).isReplaceable()
+        && slice.region().getBlockData(p.x(), p.y() + 2, p.z()).isReplaceable();
   }
 
   private static boolean soil(Material type) {
@@ -86,7 +93,8 @@ final class LayeredFluids {
         var q = p.add(new SkyPosition(dx, 0, dz));
         slice.region().setBlockData(q.x(), q.y() - 2, q.z(), blocks.get("minecraft:clay"));
         slice.region().setBlockData(q.x(), q.y() - 1, q.z(), blocks.get("minecraft:water"));
-        slice.region().setBlockData(q.x(), q.y(), q.z(), blocks.get("minecraft:air"));
+        for (var dy = 0; dy <= 2; dy++)
+          slice.region().setBlockData(q.x(), q.y() + dy, q.z(), blocks.get("minecraft:air"));
       }
     }
   }

@@ -70,6 +70,7 @@ final class SkyDistrictPlanner {
       var plaza = center.orElseThrow();
       pieces.add(plaza);
       exits();
+      if (network.isEmpty()) return SkyPlan.empty(cell, kind);
       for (var building : palette.buildings(family, cell)) {
         if (pieces.size() >= 17) break;
         addPlot(building.key(), plaza.entrance(), 58, List.of());

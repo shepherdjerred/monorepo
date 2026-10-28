@@ -1,5 +1,10 @@
 """Inspect actual saved native generation. Run with uv --with nbtlib --with numpy."""
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["nbtlib>=2.0.4,<3", "numpy>=2.2,<3"]
+# ///
+
 import argparse
 import collections
 import hashlib

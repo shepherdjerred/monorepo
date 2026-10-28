@@ -37,7 +37,7 @@
     <properties>
       <property name="minimum" value="5"/>
       <property name="violationSuppressXPath"
-          value="./ancestor-or-self::MethodDeclaration[pmd-java:hasAnnotation('java.lang.Override')][parent::ClassBody/parent::ClassDeclaration/ExtendsList/ClassType[@SimpleName=('ChunkGenerator', 'BlockPopulator')]]"/>
+          value="./ancestor-or-self::MethodDeclaration[pmd-java:hasAnnotation('java.lang.Override')][(@Name=('generateNoise', 'generateSurface', 'generateBedrock', 'generateCaves', 'getBaseHeight', 'generateChunkData') and parent::ClassBody/parent::ClassDeclaration/ExtendsList/ClassType[@SimpleName='ChunkGenerator']) or (@Name='populate' and parent::ClassBody/parent::ClassDeclaration/ExtendsList/ClassType[@SimpleName='BlockPopulator'])]"/>
     </properties>
   </rule>
   <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>

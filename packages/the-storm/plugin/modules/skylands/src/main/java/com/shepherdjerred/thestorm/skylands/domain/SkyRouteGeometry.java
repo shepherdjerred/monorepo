@@ -92,7 +92,8 @@ final class SkyRouteGeometry {
   }
 
   private boolean side(SkyPosition p) {
-    return !walking.contains(p)
+    return edits.owns(new SkyBounds(p.above(-1), p.above(2)))
+        && !walking.contains(p)
         && !edits.contains(p)
         && !plot(p)
         && !plot(p.above(-1))
