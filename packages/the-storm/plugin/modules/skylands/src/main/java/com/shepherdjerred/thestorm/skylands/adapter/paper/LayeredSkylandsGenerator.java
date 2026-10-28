@@ -19,9 +19,8 @@ import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.Plugin;
 
 /**
- * Version-one layered world generation. This is a new world format, not an in-place replacement for
- * the classic generator. The existing production bootstrap deliberately continues using {@link
- * SkylandsGenerator} until a separately reviewed regeneration/cutover.
+ * Production layered world generation. This is a new world format; classic saves require an offline
+ * replacement, approved by the server image's pre-start generation guard.
  */
 public final class LayeredSkylandsGenerator extends ChunkGenerator {
   private final LayeredLandscape landscape;
@@ -61,6 +60,11 @@ public final class LayeredSkylandsGenerator extends ChunkGenerator {
 
   public LayeredLandscape landscape() {
     return landscape;
+  }
+
+  /** The selected shelf, also used by the startup lifecycle without drawing randomness. */
+  public Location spawnLocation(World world) {
+    return new Location(world, spawn.x() + .5, spawn.y(), spawn.z() + .5);
   }
 
   @Override
@@ -125,7 +129,7 @@ public final class LayeredSkylandsGenerator extends ChunkGenerator {
 
   @Override
   public Location getFixedSpawnLocation(World world, Random random) {
-    return new Location(world, spawn.x() + .5, spawn.y(), spawn.z() + .5);
+    return spawnLocation(world);
   }
 
   @Override

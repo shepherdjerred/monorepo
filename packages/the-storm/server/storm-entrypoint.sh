@@ -130,6 +130,7 @@ install_world_protection() {
 
 main() {
   python3 /opt/the-storm/world-retirement.py --data /data
+  python3 /opt/the-storm/skylands-startup.py --data /data --config /plugins/TheStorm/skylands.json
   install -m 0664 /opt/the-storm/server-icon.png /data/server-icon.png
   remove_stale_files
   mirror_owned_roots

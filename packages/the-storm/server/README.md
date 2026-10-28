@@ -32,6 +32,15 @@ Scheduled Velero backups are the only backup. There is no verified-restore
 mode, preservation controller, or operator restore procedure in this
 repository.
 
+The layered Skylands image has an additional pre-start gate. It compares the
+shipped `plugins/TheStorm/skylands.json` identity with
+`.the-storm-skylands-generation.json` on the data volume before syncing files or
+starting Paper. Existing classic Skylands terrain has no such identity and stops
+startup until its offline replacement is complete. A genuinely absent dimension
+receives the identity without pre-creating its directory. Restarts require the
+same world, seed and format. This gate performs no world or BlueMap deletion;
+publishing this image does not authorize an automatic reset.
+
 ## Plugin and configuration ownership
 
 `owned/plugins/TheStorm/config.yml` registers and enables all 31 Storm modules,
