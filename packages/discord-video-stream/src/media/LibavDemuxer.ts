@@ -11,10 +11,7 @@ import { AVCodecID } from "./LibavCodecId.js";
 import { PassThrough } from "node:stream";
 import type { CodecParameters, Packet } from "node-av";
 import type { Readable } from "node:stream";
-import type {
-  PacketReadyStats,
-  StreamObserver,
-} from "./StreamObserver.js";
+import type { PacketReadyStats, StreamObserver } from "./StreamObserver.js";
 
 type MediaStreamInfoCommon = {
   index: number;
@@ -116,10 +113,12 @@ export class PacketTimestampNormalizer {
   private videoPts = 0n;
   private audioPts = 0n;
 
-  constructor(private readonly videoTimeBase?: {
-    num: number;
-    den: number;
-  }) {}
+  constructor(
+    private readonly videoTimeBase?: {
+      num: number;
+      den: number;
+    },
+  ) {}
 
   video(packet: Packet): void {
     if (this.videoTimeBase === undefined) {
@@ -155,7 +154,8 @@ function audioDurationSamples(packet: Packet): bigint {
     }
     return samples;
   }
-  if (!packet.data) throw new Error("cannot normalize audio without a duration");
+  if (!packet.data)
+    throw new Error("cannot normalize audio without a duration");
   return BigInt(parseOpusPacketDuration(packet.data));
 }
 
@@ -193,11 +193,22 @@ export async function demux(
   // Natural EOF ends the pipes (graceful stream end downstream). A demux error instead destroys
   // them WITH the error so consumers can tell a mid-stream failure from a completed source —
   // `.end()` on error would be indistinguishable from real EOF (the silent-truncation bug).
-  const cleanup = (err?: unknown) => {
+  let stopped = false;
+  const cleanup = async (err?: unknown) => {
+    if (stopped) return;
+    stopped = true;
+    vPipe.removeAllListeners("drain");
+    aPipe.removeAllListeners("drain");
     input.destroy();
-    demuxer.close();
-    vPipe.off("drain", readFrame);
-    aPipe.off("drain", readFrame);
+    for (const filter of [...vbsf].reverse()) filter.close();
+    try {
+      await demuxer.close();
+    } catch (closeError) {
+      err =
+        err === undefined
+          ? closeError
+          : new AggregateError([err, closeError], "Demux teardown failed");
+    }
     if (err === undefined) {
       vPipe.end();
       aPipe.end();
@@ -214,9 +225,6 @@ export async function demux(
       if (aInfo) aPipe.destroy(error);
       else aPipe.destroy();
     }
-    vbsf.forEach((e) => {
-      e.close();
-    });
   };
 
   const vStream = demuxer.video();
@@ -238,45 +246,45 @@ export async function demux(
     const codecId = vStream.codecpar.codecId;
     if (!allowedVideoCodec.has(codecId)) {
       const codecName = avGetCodecName(codecId);
-      cleanup();
+      await cleanup();
       throw new Error(`Video codec ${codecName} is not allowed`);
     }
     try {
       switch (codecId) {
-        case AVCodecID.AV_CODEC_ID_H264:
-          vbsf.push(BitStreamFilterAPI.create("h264_mp4toannexb", vStream));
-          vbsf.push(
-            BitStreamFilterAPI.create("h264_metadata", vStream, {
-              options: {
-                aud: "remove",
-              },
-            }),
-          );
-          vbsf.push(BitStreamFilterAPI.create("dump_extra", vStream));
+        case AVCodecID.AV_CODEC_ID_H264: {
+          const annexb = BitStreamFilterAPI.create("h264_mp4toannexb", vStream);
+          vbsf.push(annexb);
+          const metadata = BitStreamFilterAPI.create("h264_metadata", annexb, {
+            options: { aud: "remove" },
+          });
+          vbsf.push(metadata);
+          vbsf.push(BitStreamFilterAPI.create("dump_extra", metadata));
           break;
-        case AVCodecID.AV_CODEC_ID_HEVC:
-          vbsf.push(BitStreamFilterAPI.create("hevc_mp4toannexb", vStream));
-          vbsf.push(
-            BitStreamFilterAPI.create("hevc_metadata", vStream, {
-              options: {
-                aud: "remove",
-              },
-            }),
-          );
-          vbsf.push(BitStreamFilterAPI.create("dump_extra", vStream));
+        }
+        case AVCodecID.AV_CODEC_ID_HEVC: {
+          const annexb = BitStreamFilterAPI.create("hevc_mp4toannexb", vStream);
+          vbsf.push(annexb);
+          const metadata = BitStreamFilterAPI.create("hevc_metadata", annexb, {
+            options: { aud: "remove" },
+          });
+          vbsf.push(metadata);
+          vbsf.push(BitStreamFilterAPI.create("dump_extra", metadata));
           break;
+        }
         default:
           vbsf.push(BitStreamFilterAPI.create("null", vStream));
           break;
       }
     } catch (e) {
-      cleanup();
+      await cleanup();
       throw new Error(`Failed to construct bitstream filterchain`, {
         cause: e instanceof Error ? e.cause : e,
       });
     }
 
-    const codecpar = vbsf.at(-1)?.outputCodecParameters ?? vStream.codecpar;
+    // node-av initializes filters on their first packet. Their output parameters
+    // exist but are empty here; geometry and timing belong to the source stream.
+    const codecpar = vStream.codecpar;
     vInfo = {
       index: vStream.index,
       codec: codecId,
@@ -298,7 +306,7 @@ export async function demux(
     const codecId = aStream.codecpar.codecId;
     if (!allowedAudioCodec.has(codecId)) {
       const codecName = avGetCodecName(codecId);
-      cleanup();
+      await cleanup();
       throw new Error(`Audio codec ${codecName} is not allowed`);
     }
     aInfo = {
@@ -330,10 +338,19 @@ export async function demux(
   ) => {
     let packets = [input];
     for (const filter of filters) {
-      let newPackets: (Packet | null)[] = [];
-      for (const packet of packets) {
-        newPackets = [...newPackets, ...(await filter.filterAll(packet))];
-        packet?.free();
+      const newPackets: (Packet | null)[] = [];
+      try {
+        while (packets.length > 0) {
+          const packet = packets.shift() ?? null;
+          try {
+            newPackets.push(...(await filter.filterAll(packet)));
+          } finally {
+            packet?.free();
+          }
+        }
+      } catch (error) {
+        for (const packet of [...packets, ...newPackets]) packet?.free();
+        throw error;
       }
       if (!input) newPackets.push(null);
       packets = newPackets;
@@ -342,7 +359,7 @@ export async function demux(
   };
   const readFrame = pDebounce.promise(async () => {
     let resume = true;
-    while (resume) {
+    while (resume && !stopped) {
       try {
         const { value: inPacket, done } = await packetIterator.next();
         if (done) {
@@ -351,48 +368,73 @@ export async function demux(
           for (const packet of packets) {
             if (packet) vPipe.write(packet);
           }
-          cleanup();
+          await cleanup();
           return;
         } else if (inPacket) {
-          const streamIndex = inPacket.streamIndex;
-          if (vInfo && vInfo.index === streamIndex) {
-            loggerFrameVideo.trace("Received a video packet");
-            const packets = await applyBitStreamFilters(inPacket.clone(), vbsf);
-            // Write every packet the filter chain produced, even after backpressure fires:
-            // short-circuiting on the first `false` would drop (and leak) every subsequent
-            // packet in this array. `resume &&= write(...)` would also short-circuit if
-            // `resume` was already false from an earlier iteration's audio write, silently
-            // dropping these video packets. Track backpressure separately.
-            for (const packet of packets) {
-              if (!packet) continue;
-              normalizer?.video(packet);
-              observer?.onPacketReady?.(packetReadyStats("video", packet));
-              if (!vPipe.write(packet)) resume = false;
+          try {
+            const streamIndex = inPacket.streamIndex;
+            if (vInfo && vInfo.index === streamIndex) {
+              loggerFrameVideo.trace("Received a video packet");
+              const packets = await applyBitStreamFilters(
+                inPacket.clone(),
+                vbsf,
+              );
+              // Write every packet the filter chain produced, even after backpressure fires:
+              // short-circuiting on the first `false` would drop (and leak) every subsequent
+              // packet in this array. `resume &&= write(...)` would also short-circuit if
+              // `resume` was already false from an earlier iteration's audio write, silently
+              // dropping these video packets. Track backpressure separately.
+              try {
+                while (packets.length > 0) {
+                  const packet = packets.shift();
+                  if (!packet) continue;
+                  try {
+                    normalizer?.video(packet);
+                    observer?.onPacketReady?.(
+                      packetReadyStats("video", packet),
+                    );
+                    if (!vPipe.write(packet)) resume = false;
+                  } catch (error) {
+                    packet.free();
+                    throw error;
+                  }
+                }
+              } catch (error) {
+                for (const packet of packets) packet?.free();
+                throw error;
+              }
+            } else if (aInfo && aInfo.index === streamIndex) {
+              const packet = inPacket.clone();
+              if (!packet) {
+                continue;
+              }
+              if (!packet.data) {
+                packet.free();
+                continue;
+              }
+              try {
+                if (normalizer) normalizer.audio(packet);
+                else
+                  packet.duration ||= BigInt(
+                    parseOpusPacketDuration(packet.data),
+                  );
+                observer?.onPacketReady?.(packetReadyStats("audio", packet));
+                if (!aPipe.write(packet)) resume = false;
+              } catch (error) {
+                packet.free();
+                throw error;
+              }
             }
-          } else if (aInfo && aInfo.index === streamIndex) {
-            const packet = inPacket.clone();
-            if (!packet) {
-              inPacket.free();
-              continue;
-            }
-            if (!packet.data) {
-              packet.free();
-              inPacket.free();
-              continue;
-            }
-            if (normalizer) normalizer.audio(packet);
-            else packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
-            observer?.onPacketReady?.(packetReadyStats("audio", packet));
-            if (!aPipe.write(packet)) resume = false;
+          } finally {
+            inPacket.free();
           }
-          inPacket.free();
         }
       } catch (e) {
         loggerFrameCommon.error(
           { error: e },
           "Received an error during frame extraction. Stopping",
         );
-        cleanup(e);
+        await cleanup(e);
         return;
       }
     }

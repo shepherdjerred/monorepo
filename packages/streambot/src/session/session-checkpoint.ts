@@ -23,6 +23,7 @@ export async function writeSessionSnapshot(
   config: Config,
   session: Session,
   rooms: RoomPersistence,
+  positionOverrideSeconds?: number,
 ): Promise<void> {
   // A checkpoint queued on the tail before teardown must not re-create the deleted state file.
   if (session.torndown) {
@@ -30,7 +31,11 @@ export async function writeSessionSnapshot(
   }
   const { context } = session.actor.getSnapshot();
   const live = session.entry.userbot.getPosition();
-  if (context.pausedPositionSeconds !== null) {
+  if (positionOverrideSeconds !== undefined) {
+    // The upcoming attempt has not started its clock. Neither a stale live
+    // position nor the previous track's cached position belongs to this item.
+    session.lastKnownPositionSeconds = positionOverrideSeconds;
+  } else if (context.pausedPositionSeconds !== null) {
     session.lastKnownPositionSeconds = context.pausedPositionSeconds;
   } else if (context.current === null) {
     session.lastKnownPositionSeconds = 0;

@@ -26,6 +26,7 @@ import {
   type UserToken,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import { redactMediaUrls } from "@shepherdjerred/discord-video-stream";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
   createStreamObserver,
@@ -562,6 +563,7 @@ export class StreambotStreamer implements StreamerLike {
           positionSeconds,
           pipelineMode,
           exitCode: crash.exitCode,
+          error: redactMediaUrls(getErrorMessage(error)),
           // The tail is bounded (≤50 lines) but still noisy; the last lines carry the error.
           stderrTail: crash.stderrTail.slice(-15),
         });

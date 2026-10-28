@@ -418,7 +418,8 @@ export class SessionManager {
       updateStates: () => {
         this.updatePlaybackStates();
       },
-      saveSnapshot: (session) => this.saveSnapshot(session),
+      saveSnapshot: (session, positionOverrideSeconds) =>
+        this.saveSnapshot(session, positionOverrideSeconds),
       refreshAssistant: (guildId, channelId) =>
         this.numbered.refreshAssistant(guildId, channelId),
     });
@@ -518,21 +519,28 @@ export class SessionManager {
   }
 
   /** Serialize snapshot writes per session so a fired interval and the shutdown flush don't race. */
-  private saveSnapshot(session: Session): Promise<void> {
+  private saveSnapshot(
+    session: Session,
+    positionOverrideSeconds?: number,
+  ): Promise<void> {
     const previous = session.snapshotTail;
     const run = (async (): Promise<void> => {
       await previous;
-      await this.writeSnapshot(session);
+      await this.writeSnapshot(session, positionOverrideSeconds);
     })();
     session.snapshotTail = run;
     return run;
   }
 
-  private writeSnapshot(session: Session): Promise<void> {
+  private writeSnapshot(
+    session: Session,
+    positionOverrideSeconds?: number,
+  ): Promise<void> {
     return writeSessionSnapshot(
       this.deps.config,
       session,
       this.numbered.persistence,
+      positionOverrideSeconds,
     );
   }
 }

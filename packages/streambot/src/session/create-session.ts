@@ -30,7 +30,10 @@ type CreateSessionOptions = {
   beginVoiceRecovery: (session: Session) => void;
   totalQueueLength: () => number;
   updateStates: () => void;
-  saveSnapshot: (session: Session) => Promise<void>;
+  saveSnapshot: (
+    session: Session,
+    positionOverrideSeconds?: number,
+  ) => Promise<void>;
   refreshAssistant: (guildId: GuildId, channelId: ChannelId) => Promise<void>;
 };
 export function createSession(
@@ -49,6 +52,7 @@ export function createSession(
     entry,
     resolveSource: options.deps.resolveSource,
     teardownHold: () => session.teardownHold,
+    beforeStream: (input) => options.saveSnapshot(session, input.seekSeconds),
   });
   const actor = createActor(createPlaybackMachine(actors), {
     input: params.input,

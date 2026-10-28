@@ -2,6 +2,7 @@ import type { PlaybackActors } from "@shepherdjerred/streambot/machine/playback-
 import type {
   ResolvedSource,
   ResolveSourceInput,
+  RunStreamInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
@@ -14,6 +15,8 @@ export type PlaybackActorDeps = {
   ) => Promise<ResolvedSource>;
   /** Read lazily: the hold belongs to the session record, which needs the actors to exist first. */
   readonly teardownHold: () => TeardownHold;
+  /** Persist recoverable state before entering native playback code. */
+  readonly beforeStream?: (input: RunStreamInput) => Promise<void>;
 };
 
 /**
@@ -30,7 +33,11 @@ export function buildPlaybackActors(deps: PlaybackActorDeps): PlaybackActors {
   return {
     joinVoice: deps.entry.userbot.joinVoice,
     resolveSource: deps.resolveSource,
-    runStream: deps.entry.userbot.runStream,
+    runStream: async (input, signal) => {
+      await deps.beforeStream?.(input);
+      signal.throwIfAborted();
+      await deps.entry.userbot.runStream(input, signal);
+    },
     leaveVoice: async (input, signal) => {
       // The drain must honor the invoke's abort: a voice-transaction hold can legitimately last
       // longer (30 s budget) than the machine's leaving-state wedge guard (10 s), and a leave
