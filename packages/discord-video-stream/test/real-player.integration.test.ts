@@ -1,9 +1,12 @@
 import { expect, test } from "vitest";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 test("real ffmpeg, demux, and paced audio/video survive playback, seeking, and repeated stops", async () => {
   const child = Bun.spawn(
-    [process.execPath, path.resolve("test/fixtures/playback-smoke.ts")],
+    [
+      process.execPath,
+      fileURLToPath(new URL("./fixtures/playback-smoke.ts", import.meta.url)),
+    ],
     {
       stdout: "pipe",
       stderr: "pipe",

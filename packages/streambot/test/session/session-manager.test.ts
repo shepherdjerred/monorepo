@@ -303,6 +303,7 @@ describe("SessionManager", () => {
     const { manager, pool, config } = await sessionHarness(1);
     const streamer = pool.streamers[0];
     if (!streamer) throw new Error("Missing fake streamer");
+    streamer.positionSeconds.value = 999; // A clock left over from a previous item.
     const original = streamer.runStream;
     let saved: PersistedState | null = null;
     streamer.runStream = async (input, signal) => {
@@ -316,7 +317,10 @@ describe("SessionManager", () => {
       addFile(manager);
       await waitUntil(() => streamer.lastRunStreamInput.value !== null);
       expect(saved).toMatchObject({
-        current: { source: { kind: "file", path: "/clip.mkv" } },
+        current: {
+          source: { kind: "file", path: "/clip.mkv" },
+          positionSeconds: 0,
+        },
       });
     } finally {
       await manager.destroyAll();
@@ -596,12 +600,16 @@ describe("SessionManager voice-loss recovery", () => {
       ),
     );
 
+    // A stale clock must not overwrite the requested resume position before playback starts.
+    streamer.positionSeconds.value = 999;
     // After the delay, it re-acquires the userbot and resumes at the checkpointed position.
     await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) !== null, 5000);
     expect(pool.acquireCount()).toBe(2);
     await waitUntil(
       () => streamer.lastRunStreamInput.value?.seekSeconds === 123,
     );
+    const checkpoint = await loadState(file, config.state.resumeMaxAgeSeconds);
+    expect(checkpoint?.current?.positionSeconds).toBe(123);
 
     await manager.destroyAll();
   });
