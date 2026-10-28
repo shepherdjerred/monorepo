@@ -4,7 +4,8 @@ description: What The Storm's Discord shows, its commands, and linking your acco
 ---
 
 The Storm's Discord has a channel linked to the server while it is awake. Chat
-there reaches Global chat in game, and the game posts back to it.
+there reaches Global chat in game, and Global chat posts back to it. Private
+messages and other in-game channels are separate from this relay.
 
 ## What gets posted
 
@@ -42,7 +43,7 @@ only shown to you.
    minutes.
 2. In game, type `/discord link <code>`.
 
-Once linked, you can file tickets and send letters from Discord. They count as
+Once linked, you can file tickets and, where letters are enabled, send letters from Discord. They count as
 coming from your player and follow the same rules as in game; you can file a
 ticket every two minutes and send a letter every thirty seconds.
 

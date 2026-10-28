@@ -9,7 +9,7 @@
       "date": "2016-01-10",
       "minecraft": "1.8-era (use 1.8.9)",
       "credit": "The Storm community",
-      "description": "The later survival main world."
+      "description": "Explore the survival world as it was in 2016."
     },
     {
       "id": "main-map1-2015-07-09",
@@ -19,7 +19,7 @@
       "date": "2015-07-09",
       "minecraft": "1.8-era (use 1.8.9)",
       "credit": "The Storm community",
-      "description": "The original first survival main-world snapshot."
+      "description": "Visit the original survival world as it was in 2015."
     },
     {
       "id": "skylands-map2-2016-01-10",
@@ -29,7 +29,7 @@
       "date": "2016-01-10",
       "minecraft": "1.8-era (use 1.8.9)",
       "credit": "The Storm community",
-      "description": "The later Skylands survival world."
+      "description": "Explore the 2016 Skylands survival world."
     },
     {
       "id": "skylands-map1-2015-07-09",
@@ -39,7 +39,7 @@
       "date": "2015-07-09",
       "minecraft": "1.8-era (use 1.8.9)",
       "credit": "The Storm community",
-      "description": "The original Skylands snapshot."
+      "description": "Visit the original Skylands world as it was in 2015."
     },
     {
       "id": "creative-2016-01-10",
@@ -49,7 +49,7 @@
       "date": "2016-01-10",
       "minecraft": "1.8-era (use 1.8.9)",
       "credit": "The Storm community",
-      "description": "The creative server's plot world."
+      "description": "Explore builds from the creative server's plot world."
     },
     {
       "id": "asterism-2016-02",
@@ -59,7 +59,7 @@
       "date": "2016-02",
       "minecraft": "1.8-era (use 1.8.9)",
       "credit": "WinterSolstice8 / BlueAsterismSolstice",
-      "description": "A recovered town export from the survival world."
+      "description": "Visit Asterism, a recovered town from the survival world."
     },
     {
       "id": "kargeth-2012-09-11",

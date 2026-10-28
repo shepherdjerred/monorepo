@@ -26,6 +26,6 @@ These items apply specifically to the survival Minecraft server.
 - PvP is enabled by default outside protected spawn. `/pvp off` opts out; you can change your setting once a week.
 - No hacks or bug exploits.
 
-Your grave is protected for two hours. After that, other players can take its contents; `/graves` lists your graves.
+Your grave is protected for two hours. After that, other players can take its contents; `/graves` lists your graves. See [graves](/survival/graves/) for recovery details.
 
-What you type to NPCs may be sent to an AI provider to write their replies. See [transparency](/survival/transparency/) for more about the server.
+What you type to NPCs may be sent to an external provider to generate their replies. See [transparency](/survival/transparency/) for more about the server.

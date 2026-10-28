@@ -1731,7 +1731,7 @@ next lobby opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits` (the kit menu), `/
 <kit>`, `/rwf rotation`, `/rwf credits`, `/rwf who`, `/rwf size`,
 `/rwf maps` (candidate descriptions, visits and voting), `/rwf visit <map>`,
 `/rwf return`, `/rwf vote <map>`, `/rwf time`, `/rwf teamchat`, `/rwf stats [player]`,
-`/rwf stats top <stat>`, `/rwf stats history`, `/suicide`, `/rwf spectate`,
+`/rwf top <stat>`, `/rwf history`, `/suicide`, `/rwf spectate`,
 `/rwf spectate next|previous` and `/rwf goto <player>`
 (`thestorm.rwf.spectate`, granted by default), and
 for `thestorm.rwf.admin`: `/rwf admin status` (including the match features
