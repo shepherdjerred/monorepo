@@ -446,7 +446,7 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 30 modules and enables all of them. Every
+The shipped `config.yml` registers 31 modules and enables all of them. Every
 module must also declare its player-reset cleanup or explicitly declare itself
 stateless; startup fails if a module is omitted. This includes `creative` (the recovered plot world, which must already be loaded
 with generator `TheStorm:creative`, and whose CoreProtect block and WorldEdit
