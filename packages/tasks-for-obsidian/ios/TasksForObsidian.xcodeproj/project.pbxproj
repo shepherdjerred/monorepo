@@ -25,6 +25,7 @@
 		5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */; };
 		5FD7C4C5B836E6573B5BC8D6 /* native-license-inventory.json in Resources */ = {isa = PBXBuildFile; fileRef = 8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */; };
 		627CDAC192B0737973D4B7D7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */; };
+		6324DF8BA776C39EC9A290AB /* account-input.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = 7BBCFDC4D36E629D7344ECB7 /* account-input.schema.json */; };
 		63504C4BB80245E60E2A8272 /* FacetKeyboardBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1C5B84F4C7CA48E82226A9 /* FacetKeyboardBootstrap.swift */; };
 		64907EA8AEB3D46D7849F719 /* FacetSurfaceFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */; };
 		653D4BE33D88FAB27BA1D25F /* TaskNotesFacetUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5E72BC67665E5578FA52DD2C /* TaskNotesFacetUI */; };
@@ -509,6 +510,7 @@
 				A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */,
 				627CDAC192B0737973D4B7D7 /* PrivacyInfo.xcprivacy in Resources */,
 				E3D436BA38277C0B7D67D49C /* ThirdPartyNotices.txt in Resources */,
+				6324DF8BA776C39EC9A290AB /* account-input.schema.json in Resources */,
 				5FD7C4C5B836E6573B5BC8D6 /* native-license-inventory.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

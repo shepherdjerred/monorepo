@@ -9,11 +9,12 @@ import {
   type AccountIdentity,
   type AccountReply,
 } from "./contract";
+import type { AppInput } from "./app-input";
 
 type Ready = Extract<AccountReply, { kind: "ready" }>;
 let active = false;
 
-class PrivateAccountSession {
+export class PrivateAccountSession {
   private readonly decoder: AccountFrameDecoder;
   private readonly queued: AccountReply[] = [];
   private pending:
@@ -40,6 +41,7 @@ class PrivateAccountSession {
     private readonly socket: Socket,
     private readonly identity: AccountIdentity,
     private readonly validateOwner: (ready: Ready) => Promise<void>,
+    private readonly app: AppInput,
   ) {
     this.decoder = new AccountFrameDecoder(identity);
     this.timer = setTimeout(() => {
@@ -106,6 +108,11 @@ class PrivateAccountSession {
     this.currentStage = reply.stage;
     this.connectEnabled = reply.connectEnabled ?? false;
     await this.validateOwner(reply);
+    assert.equal(
+      this.app.stage,
+      reply.stage,
+      "Private app and owned UI disagree about their initial stage",
+    );
   }
 
   get stage() {
@@ -117,7 +124,7 @@ class PrivateAccountSession {
 
   private async exchange(command: AccountCommand) {
     assert.ok(
-      this.ready !== undefined && !this.completed && ++this.commands <= 12,
+      this.ready !== undefined && !this.completed && ++this.commands <= 13,
     );
     assert.equal(
       this.queued.length,
@@ -152,12 +159,16 @@ class PrivateAccountSession {
         !this.credentialsSubmitted,
       "A private session cannot repeat credential entry",
     );
+    await this.app.apply("clear", "credentials");
+    await this.checkpoint("checkpoint-empty", "empty");
+    await this.app.apply("email", "credentials", credentials.email);
+    await this.checkpoint("checkpoint-email", "email");
+    await this.app.apply("password", "credentials", credentials.password);
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
       requestID: crypto.randomUUID(),
       kind: "fill",
-      ...credentials,
     });
     if (reply.kind !== "filled")
       throw new Error("Private iOS credential entry was not acknowledged");
@@ -174,6 +185,7 @@ class PrivateAccountSession {
       this.filled && !this.completed && !this.credentialsSubmitted,
       "Submission requires acknowledged credential entry",
     );
+    await this.app.validate();
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
@@ -207,12 +219,12 @@ class PrivateAccountSession {
         !this.verificationFilled &&
         !this.verificationSubmitted,
     );
+    await this.app.apply("verification", "verification", code);
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
       requestID: crypto.randomUUID(),
       kind: "fill-verification",
-      code,
     });
     if (reply.kind !== "verification-filled")
       throw new Error("Private verification entry was not acknowledged");
@@ -221,6 +233,7 @@ class PrivateAccountSession {
 
   async submitVerification() {
     assert.ok(this.verificationFilled && !this.verificationSubmitted);
+    await this.app.validate();
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
@@ -239,12 +252,14 @@ class PrivateAccountSession {
         !this.vaultFilled &&
         !this.connectSubmitted,
     );
+    await this.app.apply("clear-vault", "vaults");
+    await this.checkpoint("checkpoint-vault-empty", "vault-empty");
+    await this.app.apply("vault-password", "vaults", vaultPassword);
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
       requestID: crypto.randomUUID(),
       kind: "fill-vault-password",
-      vaultPassword,
     });
     if (reply.kind !== "vault-password-filled")
       throw new Error("Private vault password entry was not acknowledged");
@@ -257,6 +272,8 @@ class PrivateAccountSession {
         (this.vaultFilled || this.connectEnabled) &&
         !this.connectSubmitted,
     );
+    await this.app.validate();
+    this.app.expectClose();
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
@@ -272,6 +289,13 @@ class PrivateAccountSession {
   }
 
   async finish() {
+    await this.app.finish(
+      this.currentStage === "verification"
+        ? "verification"
+        : this.currentStage === "vaults"
+          ? "vaults"
+          : "credentials",
+    );
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
@@ -292,6 +316,22 @@ class PrivateAccountSession {
   close() {
     clearTimeout(this.timer);
     this.socket.destroy();
+  }
+
+  private async checkpoint(
+    kind: "checkpoint-empty" | "checkpoint-email" | "checkpoint-vault-empty",
+    point: "empty" | "email" | "vault-empty",
+  ) {
+    const reply = await this.exchange({
+      schemaVersion: 1,
+      ...this.identity,
+      requestID: crypto.randomUUID(),
+      kind,
+    });
+    assert.ok(
+      reply.kind === "checkpoint" && reply.point === point,
+      "Owned UI did not acknowledge the disabled control checkpoint",
+    );
   }
 }
 
@@ -314,6 +354,7 @@ export async function withPrivateAccountInput<T>(
     directory: string;
     identity: AccountIdentity;
     validateOwner: (ready: Ready) => Promise<void>;
+    app: AppInput;
   },
   work: (session: PrivateAccountSession) => Promise<T>,
 ): Promise<T> {
@@ -351,6 +392,7 @@ export async function withPrivateAccountInput<T>(
       socket,
       options.identity,
       options.validateOwner,
+      options.app,
     );
     await session.bind();
     return await work(session);

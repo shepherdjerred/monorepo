@@ -180,6 +180,7 @@ export async function authorizeGuestExecution(
   if (
     request.operation.kind === "official-launch" ||
     request.operation.kind === "official-account" ||
+    request.operation.kind === "official-verification-prepare" ||
     request.operation.kind === "official-plugin"
   ) {
     assert.ok(

@@ -48,6 +48,28 @@ export async function retainOfficialSubmission(
   });
 }
 
+export async function requireOfficialPasswordSubmission(
+  runtime: GuestRuntime,
+  lifetime: {
+    pid: number;
+    startSeconds: number;
+    startMicroseconds: number;
+    launchDate: number;
+  },
+) {
+  const value = SubmissionSchema.parse(
+    await readOwnedMacVMJSON(submissionPath(runtime), 8192),
+  );
+  assert.deepEqual(value.identity, identityFor(runtime));
+  for (const key of [
+    "pid",
+    "startSeconds",
+    "startMicroseconds",
+    "launchDate",
+  ] as const)
+    assert.equal(value[key], lifetime[key]);
+}
+
 export const OfficialProbeIdentitySchema = z.strictObject({
   runID: UuidSchema,
   guestConfigSHA256: SHA256Schema,

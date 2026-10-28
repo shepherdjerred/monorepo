@@ -23,6 +23,8 @@ export const helperFiles = [
   "AccountLifecycle.swift",
   "official-account.swift",
   "OfficialOwner.swift",
+  "OfficialVerification.swift",
+  "official-verification.protocol.json",
 ] as const;
 export const LiveConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),

@@ -31,6 +31,8 @@ targets:
         buildPhase: resources
       - path: ../../tasknotes-macos/Resources/ios/native-license-inventory.json
         buildPhase: resources
+      - path: ../scripts/ios-account/account-input.schema.json
+        buildPhase: resources
     dependencies:
       - package: FacetApple
         product: TaskNotesFacetUI

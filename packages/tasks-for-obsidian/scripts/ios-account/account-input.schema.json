@@ -6,274 +6,1783 @@
       "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
     },
     "command": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "sessionID",
-        "runID",
-        "deviceID",
-        "requestID",
-        "kind"
-      ],
-      "properties": {
-        "schemaVersion": { "const": 1 },
-        "sessionID": { "$ref": "#/$defs/uuid" },
-        "runID": { "$ref": "#/$defs/uuid" },
-        "deviceID": { "$ref": "#/$defs/uuid" },
-        "requestID": { "$ref": "#/$defs/uuid" },
-        "kind": {
-          "enum": [
-            "fill",
-            "submit",
-            "observe",
-            "fill-verification",
-            "submit-verification",
-            "fill-vault-password",
-            "connect",
-            "finish"
-          ]
-        },
-        "email": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 256,
-          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
-        },
-        "password": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512,
-          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
-        },
-        "code": { "type": "string", "pattern": "^[0-9]{6}$" },
-        "vaultPassword": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512,
-          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
-        },
-        "remoteVaultID": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 256,
-          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
-        },
-        "profileID": { "$ref": "#/$defs/uuid" }
-      },
-      "anyOf": [
+      "oneOf": [
         {
-          "properties": { "kind": { "const": "fill" } },
-          "required": ["email", "password"],
-          "not": {
-            "anyOf": [
-              { "required": ["code"] },
-              { "required": ["vaultPassword"] },
-              { "required": ["remoteVaultID"] },
-              { "required": ["profileID"] }
-            ]
-          }
-        },
-        {
-          "properties": { "kind": { "const": "fill-verification" } },
-          "required": ["code"],
-          "not": {
-            "anyOf": [
-              { "required": ["email"] },
-              { "required": ["password"] },
-              { "required": ["vaultPassword"] },
-              { "required": ["remoteVaultID"] },
-              { "required": ["profileID"] }
-            ]
-          }
-        },
-        {
-          "properties": { "kind": { "const": "fill-vault-password" } },
-          "required": ["vaultPassword"],
-          "not": {
-            "anyOf": [
-              { "required": ["email"] },
-              { "required": ["password"] },
-              { "required": ["code"] },
-              { "required": ["remoteVaultID"] },
-              { "required": ["profileID"] }
-            ]
-          }
-        },
-        {
-          "properties": { "kind": { "const": "connect" } },
-          "required": ["remoteVaultID"],
-          "not": {
-            "anyOf": [
-              { "required": ["email"] },
-              { "required": ["password"] },
-              { "required": ["code"] },
-              { "required": ["vaultPassword"] }
-            ]
-          }
-        },
-        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
           "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
             "kind": {
-              "enum": ["submit", "submit-verification", "observe", "finish"]
+              "const": "checkpoint-empty"
             }
-          },
-          "not": {
-            "anyOf": [
-              { "required": ["email"] },
-              { "required": ["password"] },
-              { "required": ["code"] },
-              { "required": ["vaultPassword"] },
-              { "required": ["remoteVaultID"] },
-              { "required": ["profileID"] }
-            ]
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "checkpoint-email"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "checkpoint-vault-empty"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "fill"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "submit"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "observe"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "fill-verification"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "submit-verification"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "fill-vault-password"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "finish"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "remoteVaultID"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "connect"
+            },
+            "remoteVaultID": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "profileID": {
+              "$ref": "#/$defs/uuid"
+            }
           }
         }
       ]
     },
     "reply": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schemaVersion", "sessionID", "runID", "deviceID", "kind"],
-      "properties": {
-        "schemaVersion": { "const": 1 },
-        "sessionID": { "$ref": "#/$defs/uuid" },
-        "runID": { "$ref": "#/$defs/uuid" },
-        "deviceID": { "$ref": "#/$defs/uuid" },
-        "requestID": { "$ref": "#/$defs/uuid" },
-        "kind": {
-          "enum": [
-            "ready",
-            "filled",
-            "submitted",
-            "observed",
-            "verification-filled",
-            "verification-submitted",
-            "vault-password-filled",
-            "connect-submitted",
-            "finished",
-            "rejected"
-          ]
-        },
-        "runnerPID": { "type": "integer", "minimum": 1 },
-        "stage": {
-          "enum": [
-            "credentials",
-            "verification",
-            "vaults",
-            "connected",
-            "rejected"
-          ]
-        },
-        "signInEnabled": { "type": "boolean" },
-        "connectEnabled": { "type": "boolean" },
-        "busy": { "const": false },
-        "disabledCheckpoints": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 2
-        },
-        "submitActionCount": { "type": "integer", "minimum": 0, "maximum": 3 },
-        "reason": {
-          "enum": ["input", "ownership", "form", "focus", "deadline", "socket"]
-        }
-      },
-      "anyOf": [
+      "oneOf": [
         {
-          "properties": {
-            "kind": { "const": "ready" },
-            "stage": { "enum": ["credentials", "verification", "vaults"] }
-          },
-          "required": ["runnerPID", "stage", "signInEnabled"],
-          "anyOf": [
-            {
-              "properties": {
-                "stage": { "enum": ["credentials", "verification"] }
-              }
-            },
-            {
-              "properties": { "stage": { "const": "vaults" } },
-              "required": ["connectEnabled"]
-            }
-          ]
-        },
-        {
-          "properties": {
-            "kind": { "const": "filled" },
-            "disabledCheckpoints": { "const": 2 },
-            "signInEnabled": { "const": true },
-            "submitActionCount": { "const": 0 }
-          },
+          "type": "object",
+          "additionalProperties": false,
           "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "kind",
+            "runnerPID",
+            "stage",
+            "signInEnabled"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "ready"
+            },
+            "runnerPID": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "stage": {
+              "const": "credentials"
+            },
+            "signInEnabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "kind",
+            "runnerPID",
+            "stage",
+            "signInEnabled"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "ready"
+            },
+            "runnerPID": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "stage": {
+              "const": "verification"
+            },
+            "signInEnabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "kind",
+            "runnerPID",
+            "stage",
+            "signInEnabled",
+            "connectEnabled"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "ready"
+            },
+            "runnerPID": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "stage": {
+              "const": "vaults"
+            },
+            "signInEnabled": {
+              "type": "boolean"
+            },
+            "connectEnabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
             "requestID",
+            "kind",
+            "point",
+            "signInEnabled",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "checkpoint"
+            },
+            "point": {
+              "const": "empty"
+            },
+            "signInEnabled": {
+              "const": false
+            },
+            "submitActionCount": {
+              "const": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "point",
+            "signInEnabled",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "checkpoint"
+            },
+            "point": {
+              "const": "email"
+            },
+            "signInEnabled": {
+              "const": false
+            },
+            "submitActionCount": {
+              "const": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "point",
+            "connectEnabled",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "checkpoint"
+            },
+            "point": {
+              "const": "vault-empty"
+            },
+            "connectEnabled": {
+              "const": false
+            },
+            "submitActionCount": {
+              "const": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
             "disabledCheckpoints",
             "signInEnabled",
             "submitActionCount"
-          ]
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "filled"
+            },
+            "disabledCheckpoints": {
+              "const": 2
+            },
+            "signInEnabled": {
+              "const": true
+            },
+            "submitActionCount": {
+              "const": 0
+            }
+          }
         },
         {
-          "properties": {
-            "kind": { "const": "submitted" },
-            "submitActionCount": { "const": 1 }
-          },
-          "required": ["requestID", "submitActionCount"]
-        },
-        {
-          "properties": {
-            "kind": { "const": "verification-filled" },
-            "signInEnabled": { "const": true },
-            "submitActionCount": { "const": 0 }
-          },
-          "required": ["requestID", "signInEnabled", "submitActionCount"]
-        },
-        {
-          "properties": {
-            "kind": { "enum": ["verification-submitted", "connect-submitted"] },
-            "submitActionCount": { "const": 1 }
-          },
-          "required": ["requestID", "submitActionCount"]
-        },
-        {
-          "properties": {
-            "kind": { "const": "vault-password-filled" },
-            "disabledCheckpoints": { "const": 1 },
-            "connectEnabled": { "const": true },
-            "submitActionCount": { "const": 0 }
-          },
+          "type": "object",
+          "additionalProperties": false,
           "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
             "requestID",
+            "kind",
+            "signInEnabled",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "verification-filled"
+            },
+            "signInEnabled": {
+              "const": true
+            },
+            "submitActionCount": {
+              "const": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
             "disabledCheckpoints",
             "connectEnabled",
             "submitActionCount"
-          ]
-        },
-        {
+          ],
           "properties": {
-            "kind": { "const": "observed" },
-            "stage": {
-              "enum": ["verification", "vaults", "connected", "rejected"]
-            }
-          },
-          "required": ["requestID", "stage", "busy"],
-          "anyOf": [
-            {
-              "properties": {
-                "stage": { "enum": ["verification", "connected", "rejected"] }
-              }
+            "schemaVersion": {
+              "const": 1
             },
-            {
-              "properties": { "stage": { "const": "vaults" } },
-              "required": ["connectEnabled"]
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "vault-password-filled"
+            },
+            "disabledCheckpoints": {
+              "const": 1
+            },
+            "connectEnabled": {
+              "const": true
+            },
+            "submitActionCount": {
+              "const": 0
             }
-          ]
+          }
         },
         {
-          "properties": { "kind": { "const": "finished" } },
-          "required": ["requestID", "submitActionCount"]
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "submitted"
+            },
+            "submitActionCount": {
+              "const": 1
+            }
+          }
         },
         {
-          "properties": { "kind": { "const": "rejected" } },
-          "required": ["reason"]
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "verification-submitted"
+            },
+            "submitActionCount": {
+              "const": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "connect-submitted"
+            },
+            "submitActionCount": {
+              "const": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "submitActionCount"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "finished"
+            },
+            "submitActionCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "stage",
+            "busy"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "observed"
+            },
+            "stage": {
+              "const": "verification"
+            },
+            "busy": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "stage",
+            "busy",
+            "connectEnabled"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "observed"
+            },
+            "stage": {
+              "const": "vaults"
+            },
+            "busy": {
+              "const": false
+            },
+            "connectEnabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "stage",
+            "busy"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "observed"
+            },
+            "stage": {
+              "const": "connected"
+            },
+            "busy": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "requestID",
+            "kind",
+            "stage",
+            "busy"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "observed"
+            },
+            "stage": {
+              "const": "rejected"
+            },
+            "busy": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "rejected"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "reason": {
+              "enum": [
+                "input",
+                "ownership",
+                "form",
+                "focus",
+                "deadline",
+                "socket"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "app-command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "bind"
+            },
+            "expectedStage": {
+              "enum": ["credentials", "verification", "vaults"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "clear"
+            },
+            "expectedStage": {
+              "const": "credentials"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage",
+            "value"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "email"
+            },
+            "expectedStage": {
+              "const": "credentials"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage",
+            "value"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "password"
+            },
+            "expectedStage": {
+              "const": "credentials"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage",
+            "value"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "verification"
+            },
+            "expectedStage": {
+              "const": "verification"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "clear-vault"
+            },
+            "expectedStage": {
+              "const": "vaults"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage",
+            "value"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "vault-password"
+            },
+            "expectedStage": {
+              "const": "vaults"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "requestID",
+            "kind",
+            "expectedStage"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "kind": {
+              "const": "finish"
+            },
+            "expectedStage": {
+              "enum": ["credentials", "verification", "vaults"]
+            }
+          }
+        }
+      ]
+    },
+    "app-reply": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "kind",
+            "appPID",
+            "stage"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "kind": {
+              "const": "hello"
+            },
+            "appPID": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "stage": {
+              "enum": ["credentials", "verification", "vaults"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "kind",
+            "requestID",
+            "stage"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "kind": {
+              "const": "ready"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "stage": {
+              "enum": ["credentials", "verification", "vaults"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "kind",
+            "requestID",
+            "stage",
+            "action"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "kind": {
+              "const": "applied"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "stage": {
+              "enum": ["credentials", "verification", "vaults"]
+            },
+            "action": {
+              "enum": [
+                "clear",
+                "email",
+                "password",
+                "verification",
+                "clear-vault",
+                "vault-password",
+                "finish"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "sessionID",
+            "runID",
+            "deviceID",
+            "formEpoch",
+            "token",
+            "kind",
+            "stage",
+            "reason"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "formEpoch": {
+              "$ref": "#/$defs/uuid"
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "kind": {
+              "const": "rejected"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "stage": {
+              "enum": ["credentials", "verification", "vaults"]
+            },
+            "reason": {
+              "enum": [
+                "input",
+                "ownership",
+                "form",
+                "focus",
+                "deadline",
+                "socket"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "bridge-packet": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "pid", "uid"],
+          "properties": {
+            "kind": {
+              "const": "listening"
+            },
+            "pid": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "uid": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "pid", "uid"],
+          "properties": {
+            "kind": {
+              "const": "peer"
+            },
+            "pid": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "uid": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "phase", "reason", "errno"],
+          "properties": {
+            "kind": {
+              "const": "rejected"
+            },
+            "phase": {
+              "enum": [
+                "bootstrap",
+                "stdio",
+                "directory",
+                "socket",
+                "peer",
+                "authorization",
+                "pump"
+              ]
+            },
+            "reason": {
+              "enum": ["boundary", "peer", "deadline", "frame", "io"]
+            },
+            "errno": {
+              "type": "integer"
+            }
+          }
         }
       ]
     }

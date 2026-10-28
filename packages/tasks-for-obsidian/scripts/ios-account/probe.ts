@@ -17,6 +17,7 @@ import {
 } from "./leak-check";
 import { executePrivateAccountSession } from "./run-session";
 import { privateAccountSelector } from "./runtime";
+import { inputArtifacts } from "./app-input-artifacts";
 
 const proofRelative = "ios-account/private-input-ready.json";
 
@@ -71,6 +72,7 @@ export async function runIosAccountProbe(manifest: Manifest) {
     sourceHead: observed.sourceHead,
     sourceFiles: observed.sourceFiles,
     runnerFiles: observed.runnerFiles,
+    appInputFiles: observed.appInputFiles,
     status: "private-input-ready",
     nativeCaseCount: 1,
     disabledCheckpoints: 2,
@@ -116,6 +118,7 @@ export async function requireIosPrivateInputProof(manifest: Manifest) {
       sourceHead: provenance.sourceHead,
       sourceFiles: provenance.sourceFiles,
       runnerFiles,
+      appInputFiles: await inputArtifacts(manifest.runID),
     },
   );
   const evidence = path.join(directory, "ios-account/probes", proof.probeID);

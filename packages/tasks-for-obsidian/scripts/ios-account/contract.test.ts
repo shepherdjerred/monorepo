@@ -4,6 +4,8 @@ import {
   AccountFrameDecoder,
   decodeAccountReply,
   encodeAccountCommand,
+  encodeAppCommand,
+  decodeAppReply,
 } from "./contract";
 
 const identity = {
@@ -156,7 +158,64 @@ describe("private iOS account boundary", () => {
     ).toThrow("invalid frame");
     const frame = JSON.stringify(ready) + "\n";
     expect(() =>
-      new AccountFrameDecoder(identity).push(Buffer.from(frame.repeat(14))),
+      new AccountFrameDecoder(identity).push(Buffer.from(frame.repeat(15))),
     ).toThrow("frame bound");
   });
+});
+
+test("app-only values cannot cross the Runner boundary and remain bound to an explicit stage", () => {
+  const envelope = {
+    ...base,
+    requestID,
+    formEpoch: "52345678-1234-4234-9234-123456789abc",
+    token: "a".repeat(64),
+    expectedStage: "credentials",
+  };
+  for (const [kind, value, stage] of [
+    ["email", "synthetic@example.invalid", "credentials"],
+    ["password", "synthetic-only-password", "credentials"],
+    ["verification", "123456", "verification"],
+    ["vault-password", "synthetic-vault-only", "vaults"],
+  ] as const) {
+    const frame = { ...envelope, kind, value, expectedStage: stage };
+    expect(encodeAppCommand(frame).toString()).toContain(value);
+    expect(() => encodeAccountCommand(frame)).toThrow("closed contract");
+    expect(() =>
+      encodeAppCommand({
+        ...frame,
+        expectedStage: stage === "credentials" ? "vaults" : "credentials",
+      }),
+    ).toThrow("closed contract");
+  }
+  for (const key of ["email", "password", "code", "vaultPassword"])
+    expect(() =>
+      encodeAccountCommand({
+        ...base,
+        requestID,
+        kind: "fill",
+        [key]: "synthetic-only-value",
+      }),
+    ).toThrow("closed contract");
+  expect(() => encodeAppCommand({ ...envelope, kind: "submit" })).toThrow(
+    "closed contract",
+  );
+  expect(() =>
+    encodeAppCommand({
+      ...envelope,
+      kind: "password",
+      value: "synthetic-only-password",
+      token: "short",
+    }),
+  ).toThrow("closed contract");
+  expect(() =>
+    decodeAppReply({
+      ...base,
+      kind: "hello",
+      formEpoch: envelope.formEpoch,
+      token: envelope.token,
+      stage: "credentials",
+      appPID: 501,
+      value: "synthetic-only-secret",
+    }),
+  ).toThrow("closed contract");
 });

@@ -39,7 +39,7 @@ export async function runIosAccountAuthentication(
       manifest.allowedRemoteVaultID !== null,
   );
   const settings = IOSAccountOptionsSchema.parse(options);
-  await requireIosPrivateInputProof(manifest);
+  const proof = await requireIosPrivateInputProof(manifest);
   const checkpoint = await accountCheckpoint(manifest, settings.lifecycleRound);
   await validateAccountState(manifest, checkpoint);
   const locators = {
@@ -50,6 +50,7 @@ export async function runIosAccountAuthentication(
   const remoteVaultID = manifest.allowedRemoteVaultID;
   const observed = await executePrivateAccountSession(manifest, {
     operation: "credentials",
+    runnerFiles: proof.runnerFiles,
     ...(checkpoint === undefined
       ? {}
       : { originalProfileID: checkpoint.profileID }),

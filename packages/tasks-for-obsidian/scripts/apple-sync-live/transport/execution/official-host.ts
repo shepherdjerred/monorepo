@@ -8,12 +8,23 @@ import type { ExecutionOperation } from "./contract.ts";
 import { readHostCredentialItem } from "./credential-host.ts";
 import { PasswordManagerFailure } from "./credential-host.ts";
 import { credentialBackend } from "tasknotes-macos/scripts/mac-account-contract.ts";
+import type { CredentialBackend } from "tasknotes-macos/scripts/mac-account-contract.ts";
+import type { Manifest } from "../../model";
+import { runOfficialVerification } from "./official-verification-host";
 
 export function parseOfficialAccountArguments(args: string[]) {
   const [run, mode, ...parameters] = args;
   const runID = UuidSchema.parse(run);
   const operation = z
-    .enum(["launch", "plugin", "present", "probe", "credentials"])
+    .enum([
+      "launch",
+      "plugin",
+      "present",
+      "probe",
+      "credentials",
+      "verification-probe",
+      "verification",
+    ])
     .parse(mode);
   const options: Record<string, string> = {};
   for (let index = 0; index < parameters.length; index += 2) {
@@ -41,18 +52,62 @@ export function parseOfficialAccountArguments(args: string[]) {
     options[key] = value;
   }
   const backend = credentialBackend(options["--credential-backend"]);
-  if (operation !== "credentials")
+  const credentialOperation =
+    operation === "credentials" || operation === "verification";
+  if (!credentialOperation)
     assert.equal(options["--credential-backend"], undefined);
   delete options["--credential-backend"];
   assert.deepEqual(
     Object.keys(options).sort(),
-    operation === "credentials"
+    credentialOperation
       ? ["--account", "--item", "--vault"]
       : operation === "plugin"
         ? ["--plugin-export"]
         : [],
   );
   return { runID, operation, options, credentialBackend: backend };
+}
+
+async function invokeVerification(options: {
+  initial: Extract<Manifest, { schemaVersion: 3 }>;
+  operation: "verification-probe" | "verification";
+  backend: CredentialBackend;
+  locators: Record<string, string>;
+  fresh: () => Promise<unknown>;
+  markSubmitting: () => void;
+}) {
+  assert.equal(
+    options.backend,
+    "keychain",
+    "Official OTP verification supports only the enrolled local Keychain",
+  );
+  const operation =
+    options.operation === "verification-probe" ? "probe" : "verify";
+  const result = await runOfficialVerification(options.initial, operation, {
+    fresh: async () => {
+      await options.fresh();
+    },
+    ...(operation === "verify"
+      ? {
+          locators: {
+            "--account": options.locators["--account"] ?? "",
+            "--vault": options.locators["--vault"] ?? "",
+            "--item": options.locators["--item"] ?? "",
+          },
+        }
+      : {}),
+    markSubmitting: options.markSubmitting,
+  });
+  console.log(
+    JSON.stringify({
+      phase:
+        operation === "probe"
+          ? "official-verification-probed"
+          : "official-verification-submitted",
+      authenticationResult: "not-yet-inspected",
+      submitActionCount: result["submitActionCount"],
+    }),
+  );
 }
 /** Host-only private broker; source, run and native form are checked again after password-manager approval. */
 export async function runOfficialAccountCLI(args: string[]): Promise<number> {
@@ -65,7 +120,8 @@ export async function runOfficialAccountCLI(args: string[]): Promise<number> {
       credentialBackend: backend,
     } = parseOfficialAccountArguments(args);
     const initial = await readManifest(runID);
-    assert.equal(initial.schemaVersion, 3);
+    if (initial.schemaVersion !== 3)
+      throw new Error("Official input requires a guest live run");
     const fresh = async () => {
       const manifest = await readManifest(runID);
       assert.equal(manifest.schemaVersion, 3);
@@ -112,6 +168,19 @@ export async function runOfficialAccountCLI(args: string[]): Promise<number> {
         operation === "launch" ? "official-launch" : "official-plugin",
       );
       console.log(JSON.stringify(result));
+      return 0;
+    }
+    if (operation === "verification-probe" || operation === "verification") {
+      await invokeVerification({
+        initial,
+        operation,
+        backend,
+        locators: options,
+        fresh,
+        markSubmitting: () => {
+          submitting = true;
+        },
+      });
       return 0;
     }
     const inspected = await invoke({

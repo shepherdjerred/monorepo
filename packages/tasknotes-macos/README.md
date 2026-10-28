@@ -322,6 +322,16 @@ checkpoint, original profile, unchanged replica and immutable pending outbox;
 interruption. Then run `lifecycle-finish <runID> macos` through the live harness.
 These account commands do not establish Sync or native-workflow acceptance.
 
+The official Obsidian reference uses the phase-specific commands in the
+[live Apple Sync setup](../tasks-for-obsidian/README.md#live-apple-sync-acceptance).
+Its authenticator step requires a separate zero-submit fake-code probe against
+the same owned form and process. The real step uses only the enrolled local OTP
+seed, prepares its private native channel before generating the code, and retains
+an exclusive verification intent before entry and the normal click. Expired codes,
+changed forms and unknown outcomes stop without automatic resubmission or backend
+fallback. Account captures remain off. A submitted code still requires observed
+authentication and replica acceptance afterward.
+
 `bun run mac:acceptance:e2e` builds once, checks initial and cold-launch window
 isolation, then runs four local standalone workflows sequentially with
 a new descriptor, synthetic Markdown, and no live account: capture/edit/cold

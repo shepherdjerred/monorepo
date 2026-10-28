@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OfficialVerificationPreparedSchema } from "./official-verification-protocol";
 import {
   FileBlobSchema,
   FileFingerprintSchema,
@@ -94,6 +95,8 @@ export const OfficialAccountFailureSchema = z.strictObject({
     "focus-password",
     "deliver-email",
     "deliver-password",
+    "focus-code",
+    "deliver-code",
   ]),
   submitActionCount: z.literal(0),
 });
@@ -188,6 +191,10 @@ const privateAccount = z.discriminatedUnion("mode", [
 ]);
 export const ExecutionOperationSchema = z.discriminatedUnion("kind", [
   z.strictObject({
+    kind: z.literal("official-verification-prepare"),
+    operation: z.enum(["probe", "verify"]),
+  }),
+  z.strictObject({
     kind: z.literal("official-account"),
     action: OfficialAccountActionSchema,
   }),
@@ -280,6 +287,10 @@ export const ClosedAccountReceiptSchema = z.strictObject({
     .optional(),
 });
 export const ExecutionResultSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("official-verification-prepare"),
+    prepared: OfficialVerificationPreparedSchema,
+  }),
   z.strictObject({
     kind: z.literal("official-account"),
     receipt: z.union([

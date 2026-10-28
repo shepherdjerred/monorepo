@@ -15,6 +15,13 @@ import { fingerprintApp } from "../apple-sync-live/prepare";
 import { configureIosJourneyTests } from "../native-acceptance/selected-tests";
 import type { AccountIdentity } from "./contract";
 import { boundedCommand } from "tasknotes-macos/scripts/apple-acceptance/bounded-command.ts";
+import {
+  inputArtifactDirectory,
+  inputBundle,
+  inspectInputOwner,
+  type InputArtifacts,
+  type ProcessLifetime,
+} from "./app-input-artifacts";
 
 export const privateAccountSelector =
   "AccountInputUITests/testPrivateAccountInput";
@@ -24,6 +31,11 @@ const runnerExecutableName = "TasksForObsidianUITests-Runner";
 export async function prepareAccountInvocation(
   manifest: Manifest,
   sessionID: string,
+  appBootstrap: {
+    FACET_E2E_ACCOUNT_SOCKET: string;
+    FACET_E2E_ACCOUNT_HELPER_PID: string;
+    FACET_E2E_ACCOUNT_OPERATION: "probe" | "credentials";
+  },
   originalProfileID?: string,
 ) {
   clientState(manifest, "ios");
@@ -54,6 +66,7 @@ export async function prepareAccountInvocation(
       FACET_E2E_SIMULATOR: device,
       FACET_E2E_RUN_ID: manifest.runID,
       FACET_E2E_ACCOUNT_SESSION: sessionID,
+      ...appBootstrap,
       FACET_E2E_DESCRIPTOR: "@documents/acceptance.json",
       FACET_E2E_DESCRIPTOR_JSON: JSON.stringify(
         descriptor(manifest, "ios", manifest.allowedRemoteVaultID),
@@ -127,8 +140,16 @@ export async function waitForPrivateSocket(
   throw new Error("Owned iOS private input socket did not become available");
 }
 
-export function runnerOwnerValidator(device: string, expectedHash: string) {
-  let lifetime: string | undefined;
+export function runnerOwnerValidator(
+  device: string,
+  expectedHash: string,
+  binding: {
+    runID: string;
+    artifacts: InputArtifacts;
+    files: Record<string, string>;
+  },
+) {
+  let lifetime: ProcessLifetime | undefined;
   return async (ready: { runnerPID: number }) => {
     const app = await command(
       ["xcrun", "simctl", "get_app_container", device, runnerBundleID, "app"],
@@ -152,30 +173,17 @@ export function runnerOwnerValidator(device: string, expectedHash: string) {
       expectedHash,
       "Installed iOS input runner differs from its exact artifact",
     );
-    const observed = await command(
-      ["ps", "-p", String(ready.runnerPID), "-o", "uid=,lstart=,comm="],
-      packageRoot,
-      {},
-      { timeoutMS: 5000 },
+    assert.deepEqual(
+      await inputBundle(app),
+      binding.files,
+      "Installed iOS Runner bundle differs from its exact artifact",
     );
-    const separator = observed.indexOf(" ");
-    const uid = Number(observed.slice(0, separator));
-    const details = observed.slice(separator).trimStart();
-    assert.ok(
-      separator > 0 &&
-        !observed.includes("\n") &&
-        uid === metadata.uid &&
-        details.length > 24 &&
-        details.slice(24).trimStart() === executable,
-      "Private input is not served by its owned Runner process",
+    lifetime = await inspectInputOwner(
+      inputArtifactDirectory(binding.runID),
+      binding.artifacts,
+      ready.runnerPID,
+      { executable, expected: lifetime },
     );
-    if (lifetime === undefined) lifetime = observed;
-    else
-      assert.equal(
-        observed,
-        lifetime,
-        "Private input Runner process lifetime changed",
-      );
   };
 }
 
