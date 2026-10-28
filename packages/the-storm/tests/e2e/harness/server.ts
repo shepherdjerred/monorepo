@@ -371,6 +371,7 @@ async function bootContainer(
     host: rcon.host,
     port: rcon.port,
     password: rconPassword,
+    timeoutMs: Math.max(1, deadline - Date.now()),
   });
   await client.command("list");
   client.close();
