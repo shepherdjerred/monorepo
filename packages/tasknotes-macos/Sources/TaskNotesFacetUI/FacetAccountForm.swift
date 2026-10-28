@@ -1,6 +1,10 @@
 import SwiftUI
 import TaskNotesKit
 
+#if DEBUG && os(iOS) && targetEnvironment(simulator)
+    import UIKit
+#endif
+
 struct FacetAccountForm: View {
     @Bindable var store: FacetStore
     var ownsPresentation: @MainActor () -> Bool = { true }
@@ -13,6 +17,10 @@ struct FacetAccountForm: View {
     @State private var submitting = false
     @State private var request: _Concurrency.Task<Void, Never>?
     @State private var requestID: UUID?
+    #if DEBUG && os(iOS) && targetEnvironment(simulator)
+        @State private var acceptanceInput: FacetAcceptanceAccountInput?
+        @State private var acceptanceMount: UUID?
+    #endif
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     private var accountBusy: Bool { submitting || store.accountPresentation.isBusy }
@@ -146,10 +154,43 @@ struct FacetAccountForm: View {
                 code = ""
             }
             .onChange(of: scenePhase) {
-                if scenePhase == .background { cancel() }
+                #if DEBUG && os(iOS) && targetEnvironment(simulator)
+                    if scenePhase != .active {
+                        acceptanceMount = nil
+                        acceptanceInput?.stop()
+                        acceptanceInput = nil
+                    }
+                #endif
+                if scenePhase == .background {
+                    cancel()
+                }
             }
-            .onAppear { didAppear?() }
+            .onAppear {
+                didAppear?()
+                #if DEBUG && os(iOS) && targetEnvironment(simulator)
+                    let mount = UUID()
+                    acceptanceInput?.stop()
+                    acceptanceMount = mount
+                    do {
+                        acceptanceInput = try FacetAcceptanceAccountInput.start(
+                            configuration: store.acceptanceConfiguration,
+                            formEpoch: mount,
+                            stage: { acceptanceStage(mount: mount) },
+                            apply: { action, value, expected in
+                                applyAcceptanceInput(
+                                    action, value: value, expected: expected, mount: mount)
+                            })
+                    } catch {
+                        store.reportNativeFailure(FacetAcceptanceError.invalidDescriptor)
+                    }
+                #endif
+            }
             .onDisappear {
+                #if DEBUG && os(iOS) && targetEnvironment(simulator)
+                    acceptanceMount = nil
+                    acceptanceInput?.stop()
+                    acceptanceInput = nil
+                #endif
                 cancel()
                 password = ""
                 vaultPassword = ""
@@ -185,3 +226,61 @@ struct FacetAccountForm: View {
         return store.profiles.filter { ids.contains($0.id) }
     }
 }
+
+#if DEBUG && os(iOS) && targetEnvironment(simulator)
+    extension FacetAccountForm {
+        private func acceptanceStage(mount: UUID) -> String? {
+            guard acceptanceMount == mount, ownsPresentation(),
+                UIApplication.shared.applicationState == .active
+            else { return nil }
+            switch store.accountPresentation.stage {
+            case .credentials: return "credentials"
+            case .verification: return "verification"
+            case .vaults: return "vaults"
+            }
+        }
+
+        private func applyAcceptanceInput(
+            _ action: FacetAcceptanceInputAction, value: String?, expected: String, mount: UUID
+        ) -> Bool {
+            guard !busy, acceptanceStage(mount: mount) == expected else { return false }
+            switch action {
+            case .clear, .finish:
+                guard action == .finish || expected == "credentials" else { return false }
+                email = ""
+                password = ""
+                code = ""
+                vaultPassword = ""
+            case .email, .password, .verification:
+                return fillAcceptanceCredentials(action, value: value, expected: expected)
+            case .clearVault:
+                guard expected == "vaults" else { return false }
+                vaultPassword = ""
+            case .vaultPassword:
+                guard let value, expected == "vaults" else { return false }
+                vaultPassword = value
+            }
+            return true
+        }
+
+        private func fillAcceptanceCredentials(
+            _ action: FacetAcceptanceInputAction, value: String?, expected: String
+        ) -> Bool {
+            switch action {
+            case .email:
+                guard let value, expected == "credentials" else { return false }
+                email = value
+            case .password:
+                guard let value, expected == "credentials" else { return false }
+                password = value
+            case .verification:
+                guard let value, expected == "verification", store.accountNeedsCode else {
+                    return false
+                }
+                code = value
+            case .clear, .finish, .clearVault, .vaultPassword: return false
+            }
+            return true
+        }
+    }
+#endif

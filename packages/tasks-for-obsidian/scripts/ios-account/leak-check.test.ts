@@ -106,6 +106,7 @@ test("proof binds exact native source, Runner and raw evidence inventory before 
     sourceHead: "a".repeat(40),
     sourceFiles: { "owned.ts": "b".repeat(64) },
     runnerFiles: { Runner: "c".repeat(64) },
+    appInputFiles: { bridge: "f".repeat(64), owner: "1".repeat(64) },
   };
   const proof = {
     schemaVersion: 1,
@@ -147,6 +148,12 @@ test("proof binds exact native source, Runner and raw evidence inventory before 
       runnerFiles: { Runner: "e".repeat(64) },
     }),
   ).toThrow("runner changed");
+  expect(() =>
+    assertPrivateInputProof(proof, {
+      ...expected,
+      appInputFiles: { ...expected.appInputFiles, bridge: "2".repeat(64) },
+    }),
+  ).toThrow("helper changed");
   await writeFile(path.join(root, "unexpected.txt"), "extra", { mode: 0o600 });
   await expect(verifyPrivateInputEvidence(root, parsed)).rejects.toThrow(
     "inventory changed",

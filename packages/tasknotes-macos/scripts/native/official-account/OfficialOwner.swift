@@ -6,6 +6,7 @@ import Foundation
 
 enum GuardFailure: Error { case input, binding, process, session, form, focus, delivery }
 var inputPhase = "input"
+enum OfficialFormKind: String { case credentials, totp }
 
 func attribute(_ element: AXUIElement, _ name: String) -> CFTypeRef? {
     var value: CFTypeRef?
@@ -85,8 +86,13 @@ struct OfficialOwner {
     let formBinding: String
     let root: AXUIElement
     let window: AXUIElement
+    let formKind: OfficialFormKind
+    let challengeID: String?
 
-    init(_ input: [String: Any]) throws {
+    init(_ input: [String: Any], formKind: OfficialFormKind = .credentials) throws {
+        self.formKind = formKind
+        challengeID = input["challengeID"] as? String
+        if formKind == .totp, challengeID == nil { throw GuardFailure.input }
         guard let rawPID = input["pid"] as? Int, rawPID > 0, rawPID <= Int(Int32.max),
             let program = input["executable"] as? String,
             let reference = input["referenceDirectory"] as? String,
@@ -121,14 +127,14 @@ struct OfficialOwner {
         let expectedStart = OfficialProcessLifetime(
             seconds: info.pbi_start_tvsec, microseconds: info.pbi_start_tvusec,
             launchDate: date.timeIntervalSince1970)
-        self.window = try Self.selectWindow(root) {
+        self.window = try Self.selectWindow(root, formKind: formKind) {
             try expectedStart.requireOwner(pid: pid_t(rawPID), program: program)
         }
         try validate()
     }
 
     private static func selectWindow(
-        _ appRoot: AXUIElement, requireOwner: () throws -> Void
+        _ appRoot: AXUIElement, formKind: OfficialFormKind, requireOwner: () throws -> Void
     ) throws -> AXUIElement {
         try requireOwner()
         // Electron's documented request exposes Chromium's real accessibility tree.
@@ -142,17 +148,71 @@ struct OfficialOwner {
         repeat {
             try requireOwner()
             if let windows = attribute(appRoot, "AXWindows") as? [AXUIElement] {
-                let candidates = try windows.filter { candidate in
-                    try descendants(candidate).filter {
-                        attribute($0, "AXPlaceholderValue") as? String == "Your email..."
-                    }.count == 1
-                }
+                let candidates = try windows.filter { try completeForm($0, kind: formKind) }
                 if candidates.count == 1, let selected = candidates.first { return selected }
                 guard candidates.isEmpty else { throw GuardFailure.form }
             }
             RunLoop.current.run(until: Date().addingTimeInterval(0.02))
         } while Date() < deadline
         throw GuardFailure.form
+    }
+
+    private static func completeForm(_ candidate: AXUIElement, kind: OfficialFormKind) throws
+        -> Bool
+    {
+        let nodes = try descendants(candidate)
+        let textFields = nodes.filter { attribute($0, "AXRole") as? String == "AXTextField" }
+        let anchors: [AXUIElement]
+        if kind == .credentials {
+            let email = textFields.filter {
+                attribute($0, "AXPlaceholderValue") as? String == "Your email..."
+            }
+            let password = textFields.filter {
+                attribute($0, "AXPlaceholderValue") as? String == "Your password..."
+            }
+            guard email.count <= 1, password.count <= 1 else { throw GuardFailure.form }
+            guard let emailField = email.first, let passwordField = password.first,
+                attribute(emailField, "AXSubrole") as? String != "AXSecureTextField",
+                attribute(passwordField, "AXSubrole") as? String == "AXSecureTextField",
+                attribute(passwordField, "AXEnabled") as? Bool == true,
+                sameElement(attribute(passwordField, "AXWindow"), candidate)
+            else { return false }
+            anchors = [emailField]
+        } else {
+            guard textFields.count == 1 else { return false }
+            anchors = textFields
+        }
+        guard let anchor = anchors.first, attribute(anchor, "AXEnabled") as? Bool == true,
+            sameElement(attribute(anchor, "AXWindow"), candidate),
+            attribute(anchor, "AXSubrole") as? String != "AXSecureTextField"
+        else { return false }
+        return try controlsReady(anchor, window: candidate)
+    }
+
+    private static func controlsReady(_ anchor: AXUIElement, window: AXUIElement) throws -> Bool {
+        var parent = anchor
+        let windowNodes = try descendants(window)
+        for _ in 0..<12 {
+            let nodes = try descendants(parent)
+            let login = nodes.filter {
+                attribute($0, "AXRole") as? String == "AXButton"
+                    && attribute($0, "AXTitle") as? String == "Log in"
+            }
+            let cancel = nodes.filter {
+                attribute($0, "AXRole") as? String == "AXButton"
+                    && attribute($0, "AXTitle") as? String == "Cancel"
+            }
+            if login.count == 1, cancel.count == 1, let button = login.first {
+                return attribute(button, "AXEnabled") as? Bool == true
+            }
+            guard
+                let next = windowNodes.first(where: {
+                    sameElement(attribute(parent, "AXParent"), $0)
+                })
+            else { return false }
+            parent = next
+        }
+        return false
     }
 
     func validate() throws {
@@ -168,9 +228,13 @@ struct OfficialOwner {
 
     func field(_ placeholder: String, secure: Bool) throws -> AXUIElement {
         try validate()
+        guard formKind == .credentials || (placeholder.isEmpty && !secure) else {
+            throw GuardFailure.input
+        }
         let fields = try descendants(window).filter {
-            attribute($0, "AXPlaceholderValue") as? String == placeholder
-                && attribute($0, "AXRole") as? String == "AXTextField"
+            attribute($0, "AXRole") as? String == "AXTextField"
+                && (formKind == .totp
+                    || attribute($0, "AXPlaceholderValue") as? String == placeholder)
         }
         guard fields.count == 1, let field = fields.first,
             attribute(field, "AXEnabled") as? Bool == true,
@@ -179,7 +243,9 @@ struct OfficialOwner {
         else { throw GuardFailure.form }
         return field
     }
+}
 
+extension OfficialOwner {
     func activate() throws {
         try validate()
         guard let app = NSRunningApplication(processIdentifier: pid) else {
@@ -199,27 +265,8 @@ struct OfficialOwner {
     }
 
     func loginEnabled() throws -> Bool {
-        let email = try field("Your email...", secure: false)
-        var parent: AXUIElement = email
-        for _ in 0..<12 {
-            let nodes = try descendants(parent)
-            let buttons = nodes.filter {
-                attribute($0, "AXRole") as? String == "AXButton"
-                    && attribute($0, "AXTitle") as? String == "Log in"
-            }
-            let cancel = nodes.filter {
-                attribute($0, "AXRole") as? String == "AXButton"
-                    && attribute($0, "AXTitle") as? String == "Cancel"
-            }
-            if buttons.count == 1, cancel.count == 1, let button = buttons.first {
-                return attribute(button, "AXEnabled") as? Bool == true
-            }
-            let value = attribute(parent, "AXParent")
-            guard let next = try descendants(window).first(where: { sameElement(value, $0) })
-            else { throw GuardFailure.form }
-            parent = next
-        }
-        throw GuardFailure.form
+        try Self.controlsReady(
+            field(formKind == .totp ? "" : "Your email...", secure: false), window: window)
     }
 
     func length(_ placeholder: String, secure: Bool) throws -> Int {
@@ -228,11 +275,13 @@ struct OfficialOwner {
         return value.utf16.count
     }
 
-    func enter(_ placeholder: String, value: String, secure: Bool) throws {
+    func enter(_ placeholder: String, value: String, secure: Bool, alreadyFocused: Bool = false)
+        throws
+    {
         try requireForeground()
         let target = try field(placeholder, secure: secure)
-        inputPhase = secure ? "focus-password" : "focus-email"
-        try normalFocus(placeholder, secure: secure)
+        inputPhase = formKind == .totp ? "focus-code" : (secure ? "focus-password" : "focus-email")
+        if !alreadyFocused { try normalFocus(placeholder, secure: secure) }
         func focused() throws {
             try requireForeground()
             guard CFEqual(try field(placeholder, secure: secure), target),
@@ -261,7 +310,8 @@ struct OfficialOwner {
             try focused()
         }
         try waitForFocus(target)
-        inputPhase = secure ? "deliver-password" : "deliver-email"
+        inputPhase =
+            formKind == .totp ? "deliver-code" : (secure ? "deliver-password" : "deliver-email")
         try pair(0, flags: .maskCommand)
         try pair(51)
         for scalar in value.unicodeScalars {
@@ -288,6 +338,11 @@ struct OfficialOwner {
     }
 
     private func normalFocus(_ placeholder: String, secure: Bool) throws {
+        if formKind == .totp {
+            guard let challengeID else { throw GuardFailure.input }
+            try verificationDOM(.focus, challenge: challengeID)
+            return
+        }
         func quoted(_ text: String) throws -> String {
             let bytes = try JSONSerialization.data(
                 withJSONObject: text, options: [.fragmentsAllowed])
@@ -310,14 +365,21 @@ struct OfficialOwner {
             + "if(f.length!==1||f[0].disabled||f[0].type!=='" + (secure ? "password" : "email")
             + "')throw Error('field');m[0].setAttribute('data-facet-official-input',"
             + bindingLiteral + ");f[0].focus();return true})()"
+        try runDOM(code)
+    }
+
+    func runDOM(_ code: String) throws {
+        try validate()
         let child = Process()
         child.executableURL = URL(fileURLWithPath: executable).deletingLastPathComponent()
             .appendingPathComponent("obsidian-cli")
         child.arguments = ["eval", "code=" + code]
         child.currentDirectoryURL = URL(fileURLWithPath: referenceDirectory)
         child.standardInput = FileHandle.nullDevice
-        child.standardOutput = FileHandle.nullDevice
-        child.standardError = FileHandle.nullDevice
+        let output = Pipe()
+        let errors = Pipe()
+        child.standardOutput = output
+        child.standardError = errors
         try child.run()
         let deadline = Date().addingTimeInterval(5)
         while child.isRunning && Date() < deadline {
@@ -334,6 +396,12 @@ struct OfficialOwner {
             throw GuardFailure.focus
         }
         child.waitUntilExit()
-        guard child.terminationStatus == 0 else { throw GuardFailure.focus }
+        let response = output.fileHandleForReading.readDataToEndOfFile()
+        let errorBytes = errors.fileHandleForReading.readDataToEndOfFile()
+        guard child.terminationStatus == 0, errorBytes.isEmpty, response.count <= 1024,
+            String(data: response, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                == "=> true"
+        else { throw GuardFailure.focus }
+        try validate()
     }
 }

@@ -18,23 +18,18 @@ const correlated = { ...envelope, requestID: z.uuid() };
 export const AccountCommandSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     ...correlated,
-    kind: z.literal("fill"),
-    email: z.string().min(1).max(256),
-    password: z.string().min(1).max(512),
-  }),
-  z.strictObject({
-    ...correlated,
-    kind: z.enum(["submit", "submit-verification", "observe", "finish"]),
-  }),
-  z.strictObject({
-    ...correlated,
-    kind: z.literal("fill-verification"),
-    code: z.string().regex(/^\d{6}$/u),
-  }),
-  z.strictObject({
-    ...correlated,
-    kind: z.literal("fill-vault-password"),
-    vaultPassword: z.string().min(1).max(512),
+    kind: z.enum([
+      "checkpoint-empty",
+      "checkpoint-email",
+      "checkpoint-vault-empty",
+      "fill",
+      "fill-verification",
+      "fill-vault-password",
+      "submit",
+      "submit-verification",
+      "observe",
+      "finish",
+    ]),
   }),
   z.strictObject({
     ...correlated,
@@ -45,6 +40,14 @@ export const AccountCommandSchema = z.discriminatedUnion("kind", [
 ]);
 export type AccountCommand = z.infer<typeof AccountCommandSchema>;
 const AccountReplySchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    ...correlated,
+    kind: z.literal("checkpoint"),
+    point: z.enum(["empty", "email", "vault-empty"]),
+    signInEnabled: z.literal(false).optional(),
+    connectEnabled: z.literal(false).optional(),
+    submitActionCount: z.literal(0),
+  }),
   z.strictObject({
     ...envelope,
     kind: z.literal("ready"),
@@ -116,18 +119,66 @@ const schema = z.record(z.string(), z.unknown()).parse(accountDefinition);
 const validators = {
   command: contract.compile({ ...schema, $ref: "#/$defs/command" }),
   reply: contract.compile({ ...schema, $ref: "#/$defs/reply" }),
+  "app-command": contract.compile({ ...schema, $ref: "#/$defs/app-command" }),
+  "app-reply": contract.compile({ ...schema, $ref: "#/$defs/app-reply" }),
+  "bridge-packet": contract.compile({
+    ...schema,
+    $ref: "#/$defs/bridge-packet",
+  }),
 };
 
-function boundaryCheck(definition: "command" | "reply", value: unknown) {
+export function boundaryCheck(
+  definition: keyof typeof validators,
+  value: unknown,
+) {
   if (!validators[definition](value))
     throw new Error("Private iOS input violated its closed contract");
 }
 
-export function encodeAccountCommand(command: AccountCommand) {
+export function encodeAccountCommand(command: unknown) {
   boundaryCheck("command", command);
   const encoded = Buffer.from(JSON.stringify(command) + "\n");
   assert.ok(encoded.length <= 8192, "Private iOS command exceeds its bound");
   return encoded;
+}
+
+export const AppReplySchema = z.strictObject({
+  ...envelope,
+  formEpoch: z.uuid(),
+  token: z.string().regex(/^[a-f0-9]{64}$/u),
+  kind: z.enum(["hello", "ready", "applied", "rejected"]),
+  stage: z.enum(["credentials", "verification", "vaults"]),
+  requestID: z.uuid().optional(),
+  appPID: z.number().int().positive().optional(),
+  action: z
+    .enum([
+      "clear",
+      "email",
+      "password",
+      "verification",
+      "clear-vault",
+      "vault-password",
+      "finish",
+    ])
+    .optional(),
+  reason: z
+    .enum(["input", "ownership", "form", "focus", "deadline", "socket"])
+    .optional(),
+});
+export type AppReply = z.infer<typeof AppReplySchema>;
+export function decodeAppReply(value: unknown): AppReply {
+  boundaryCheck("app-reply", value);
+  const parsed = AppReplySchema.safeParse(value);
+  if (!parsed.success)
+    throw new Error("Private app input returned an invalid frame");
+  return parsed.data;
+}
+export function encodeAppCommand(value: unknown) {
+  boundaryCheck("app-command", value);
+  const bytes = Buffer.from(JSON.stringify(value) + "\n");
+  if (bytes.length > 8192)
+    throw new Error("Private app input exceeded its frame bound");
+  return bytes;
 }
 
 export function decodeAccountReply(
@@ -169,7 +220,7 @@ export class AccountFrameDecoder {
       const end = this.bytes.indexOf(10);
       if (end === -1) break;
       assert.ok(
-        end > 0 && end <= 8192 && ++this.frames <= 13,
+        end > 0 && end <= 8192 && ++this.frames <= 14,
         "Private iOS input exceeds its frame bound",
       );
       replies.push(

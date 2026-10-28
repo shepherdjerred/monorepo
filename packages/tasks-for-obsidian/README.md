@@ -168,6 +168,11 @@ bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> probe
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> credentials \
   --credential-backend keychain \
   --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
+# Only when the official app requests an authenticator verification code:
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> verification-probe
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> verification \
+  --credential-backend keychain \
+  --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
 ```
 
 Account and verification-code reads default to a local, nonsynchronizing macOS
@@ -216,6 +221,25 @@ The probe uses synthetic values and zero submits; real entry requires its measur
 privacy proof and performs one normal submit. Account success, conditional MFA,
 and selection of the designated remote vault require observed follow-up; a submit
 receipt alone proves none of them. No unknown submission is repeated automatically.
+
+Official authenticator verification has its own form-bound probe and exclusive
+submission record. `verification-probe` fills and clears a public six-digit value
+without submitting. The host retains the unredacted fake stdout/stderr and
+publishes approval only after full channel/exit validation and sentinel checks.
+Real verification requires both the native phase proof and this source-bound host
+approval; real codes and code-frame hashes never enter artifacts. The real
+`verification` operation accepts only the local Keychain backend and requires the
+enrolled OTP seed. It prepares and validates
+the native helper, exact authenticator form, process lifetime and empty-field
+focus before generating a code. The pinned official app bytes bind the helper's
+input-behavior assumptions. After final source/artifact checks, the code
+crosses the already prepared private channel for normal entry and submission.
+Validity is checked before typing and clicking; a separate durable intent is
+written before real code entry. An unknown outcome remains retained without
+automatic regeneration or resubmission. Email or recovery-code challenges do not
+use this authenticator path. Source changes require fresh artifacts and probes;
+an earlier password or verification proof cannot authorize changed input code.
+
 Manual host execution requires opening the owned reference and installing
 TaskNotes **4.13.8** explicitly. Both modes must connect only the designated
 synthetic encrypted remote vault. Preserve existing remote vaults; provision a new
@@ -223,19 +247,34 @@ one only when explicitly authorized. Enable all other attachment types and vault
 configuration/plugin data in Sync, including **Installed community plugins**
 (which also synchronizes plugin settings), restart Obsidian, and verify synchronization.
 Store the separate vault password in 1Password. Account captures stay off.
-The reviewed [`mac:account` driver](../tasknotes-macos/README.md#isolated-native-acceptance)
+Use the [`mac:account` driver](../tasknotes-macos/README.md#isolated-native-acceptance)
 for normal account controls and existing-profile lifecycle reauthorization through
-1Password. Recording stays off; driver receipts do not establish live acceptance.
+the selected credential backend. Recording stays off; driver receipts do not
+establish live acceptance.
 
-The iOS private input driver uses the prepared run's exact signed UI Runner and
-an owned, bounded Unix socket inside its simulator container. It never uses a
-clipboard, credential arguments, environment values or credential files. First
-run the synthetic-only privacy probe against that exact artifact:
+The iOS driver separates control from field values. The prepared run's exact
+signed UI Runner receives only nonsecret control frames through its owned
+simulator socket. Field values travel from the host through a private native
+socket bridge into the mounted account form's existing state. This input adapter
+exists only in Debug simulator builds with a valid acceptance descriptor. It
+binds the session and form instance, verifies kernel peer identity, and closes
+when the app leaves the foreground or the form is dismissed. Normal button taps
+still perform authentication and vault connection through the existing app code. The Runner establishes secure
+keyboard focus while fields are empty and observes the real disabled/enabled
+button checkpoints without receiving credential values.
+
+The input path never uses the clipboard, credential arguments, environment values
+or credential files. First run the synthetic-only privacy probe against the exact
+prepared artifacts:
 
 ```bash
 bun run ios:account <runID> probe
 ```
 
+The probe compiles the native bridge and canonical process-owner helper once
+under the run's `ios-account/native` directory. It pins their bytes along with the
+app, Runner and source inventory. Real credential entry reuses those verified
+helpers without rebuilding or repairing them; missing or changed inputs stop.
 The probe fills generated email and password sentinels, finishes with zero submit
 actions, and scans stdout, stderr, decoded XCTest activities, every SDK-declared
 log, exported diagnostics, raw result files and attachments. The proof retains
@@ -244,7 +283,10 @@ from confirmed absence; missing or unreadable declared content fails closed.
 Any sentinel leakage, unexpected visual artifact,
 failed native assertion or incomplete evidence blocks real credential reads.
 Results are retained without redaction. A successful proof is bound to the run,
-full source inventory, exact Runner bytes and immutable retained evidence.
+full source inventory, exact app/Runner/helper bytes and immutable retained
+evidence. Closed stage observations and independent cleanup results exclude raw
+value frames. A source change requires fresh preparation and a new passing probe;
+an earlier run's proof cannot authorize changed input code.
 
 Only after that proof may the operator invoke:
 
@@ -256,10 +298,10 @@ bun run ios:account <runID> credentials \
 # Reauthorization adds --lifecycle-round <1|2|3> and uses the original profile.
 ```
 
-The host reads 1Password only after the owned form is ready, rechecks ownership
-after the read, and sends values through private memory-only input. Credential
-entry, optional verification, and connection each have separate submit actions;
-only the descriptor-bound remote vault and retained reconnect profile are allowed.
+The host reads the selected credential backend only after the owned form is ready,
+rechecks ownership after the read, and sends values through private memory-only
+input. Credential entry, optional verification, and connection each have separate
+submit actions; only the descriptor-bound remote vault and retained reconnect profile are allowed.
 The session stays alive until actual UI and control status settle. A successful
 finish relaunches the same owned app to resume Sync; replica convergence remains
 the matrix's responsibility. Unknown submission outcomes retain inspectable

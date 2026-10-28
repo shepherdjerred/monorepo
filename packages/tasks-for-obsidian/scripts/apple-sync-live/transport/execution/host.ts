@@ -267,7 +267,10 @@ export async function verifyGuestLiveRun(
 function helperSource(name: (typeof helperFiles)[number]): string {
   return name.startsWith("mac-process-owner")
     ? path.join(macRoot, "scripts/apple-acceptance", name)
-    : name === "official-account.swift" || name === "OfficialOwner.swift"
+    : name === "official-account.swift" ||
+        name === "OfficialOwner.swift" ||
+        name === "OfficialVerification.swift" ||
+        name === "official-verification.protocol.json"
       ? path.join(
           macRoot,
           "scripts/native/official-account",

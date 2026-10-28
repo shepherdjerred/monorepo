@@ -50,11 +50,19 @@ func validateBinding(_ input: [String: Any]) throws {
 }
 
 do {
-    guard CommandLine.arguments.count == 1, AXIsProcessTrusted(),
-        let bytes = try FileHandle.standardInput.read(upToCount: 8193), bytes.count <= 8192,
-        let input = try JSONSerialization.jsonObject(with: bytes) as? [String: Any],
-        let mode = input["mode"] as? String, ["inspect", "fill", "clear", "probe"].contains(mode)
+    guard CommandLine.arguments.count == 1, AXIsProcessTrusted()
     else { throw GuardFailure.input }
+    let input = try readOfficialFrame()
+    guard let mode = input["mode"] as? String else { throw GuardFailure.input }
+    if mode == "verification-prepare" {
+        try prepareOfficialVerification(input)
+        exit(0)
+    }
+    if mode == "verification-session" {
+        try runOfficialVerificationSession(input)
+        exit(0)
+    }
+    guard ["inspect", "fill", "clear", "probe"].contains(mode) else { throw GuardFailure.input }
     var keys: Set<String> = [
         "purpose", "mode", "runID", "referenceDirectory", "officialExportID", "executable", "pid",
     ]

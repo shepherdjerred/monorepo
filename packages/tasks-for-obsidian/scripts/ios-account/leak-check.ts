@@ -4,6 +4,7 @@ import path from "node:path";
 import { z } from "zod";
 import { RelativePathSchema } from "../apple-sync-live/transport/fields";
 import { InputLogAvailabilitySchema } from "./retention";
+import { InputArtifactsSchema } from "./app-input-artifacts";
 
 function sentinelPatterns(needles: string[]) {
   assert.ok(
@@ -97,6 +98,7 @@ export const InputProbeProofSchema = z
     selector: z.literal("AccountInputUITests/testPrivateAccountInput"),
     sourceFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
     runnerFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
+    appInputFiles: InputArtifactsSchema,
     status: z.literal("private-input-ready"),
     nativeCaseCount: z.literal(1),
     disabledCheckpoints: z.literal(2),
@@ -130,6 +132,7 @@ export function assertPrivateInputProof(
     sourceHead: string;
     sourceFiles: Record<string, string>;
     runnerFiles: Record<string, string>;
+    appInputFiles: z.infer<typeof InputArtifactsSchema>;
   },
 ) {
   const parsed = InputProbeProofSchema.safeParse(value);
@@ -157,6 +160,11 @@ export function assertPrivateInputProof(
     proof.runnerFiles,
     expected.runnerFiles,
     "Private input runner changed after its probe",
+  );
+  assert.deepEqual(
+    proof.appInputFiles,
+    expected.appInputFiles,
+    "Private app helper changed after its probe",
   );
   assert.ok(
     Object.keys(proof.sourceFiles).length > 0 &&

@@ -8,6 +8,7 @@ import { runGuestNative } from "./native.ts";
 import { runGuestAccount } from "./account.ts";
 import { runGuestOfficial } from "./official.ts";
 import { runGuestOfficialAccount } from "./official-account.ts";
+import { prepareGuestOfficialVerification } from "./official-verification-guest";
 import {
   authorizeGuestExecution,
   bindGuestVault,
@@ -37,6 +38,12 @@ export async function runGuestTransport(
     execute: async (operation, request) => {
       let result;
       switch (operation.kind) {
+        case "official-verification-prepare":
+          result = await prepareGuestOfficialVerification(
+            runtime,
+            operation.operation,
+          );
+          break;
         case "checkpoint": {
           const checkpoint = StoredCheckpointSchema.parse({
             schemaVersion: 1,

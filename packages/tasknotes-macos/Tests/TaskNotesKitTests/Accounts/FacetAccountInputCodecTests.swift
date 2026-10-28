@@ -1,4 +1,5 @@
 import Foundation
+import TaskNotesKit
 import Testing
 
 struct FacetAccountInputCodecTests {
@@ -30,13 +31,14 @@ struct FacetAccountInputCodecTests {
     @Test func everyCommandUsesTheActualDecoderAndNeutralSchema() throws {
         let codec = try boundary()
         let additions: [String: [String: Any]] = [
-            "fill": ["email": "synthetic@example.invalid", "password": "synthetic-only"],
+            "fill": [:],
             "submit": [:], "observe": [:], "finish": [:],
-            "fill-verification": ["code": "123456"], "submit-verification": [:],
-            "fill-vault-password": ["vaultPassword": "synthetic-vault-only"],
+            "fill-verification": [:], "submit-verification": [:],
+            "fill-vault-password": [:],
+            "checkpoint-empty": [:], "checkpoint-email": [:], "checkpoint-vault-empty": [:],
             "connect": ["remoteVaultID": "owned-remote", "profileID": run],
         ]
-        #expect(additions.count == 8)
+        #expect(additions.count == 11)
         for (kind, fields) in additions {
             let value = envelope(kind).merging(fields) { _, replacement in replacement }
             let command = try codec.command(JSONSerialization.data(withJSONObject: value))
@@ -62,14 +64,23 @@ struct FacetAccountInputCodecTests {
             try assertReply(codec, reply: reply)
             count += 1
         }
+        for point in ["empty", "email", "vault-empty"] {
+            var reply = AccountInputReply(codec.identity, kind: .checkpoint, requestID: request)
+            reply.point = point
+            reply.submitActionCount = 0
+            try assertReply(codec, reply: reply)
+            count += 1
+        }
         for kind: AccountInputReply.Kind in [
             .filled, .submitted, .verificationFilled, .verificationSubmitted,
             .vaultPasswordFilled, .connectSubmitted, .finished, .rejected,
         ] {
             var reply = AccountInputReply(codec.identity, kind: kind, requestID: request)
-            reply.submitActionCount =
-                [.submitted, .verificationSubmitted, .connectSubmitted]
-                    .contains(kind) ? 1 : 0
+            if kind != .rejected {
+                reply.submitActionCount =
+                    [.submitted, .verificationSubmitted, .connectSubmitted]
+                        .contains(kind) ? 1 : 0
+            }
             if kind == .filled || kind == .verificationFilled { reply.signInEnabled = true }
             if kind == .filled { reply.disabledCheckpoints = 2 }
             if kind == .vaultPasswordFilled {
@@ -80,7 +91,7 @@ struct FacetAccountInputCodecTests {
             try assertReply(codec, reply: reply)
             count += 1
         }
-        #expect(count == 15)
+        #expect(count == 18)
     }
 
     private func assertReply(_ codec: AccountInputProtocol, reply: AccountInputReply) throws {
@@ -100,9 +111,7 @@ struct FacetAccountInputCodecTests {
 
     @Test func malformedForeignAndExtraFieldsFailBeforeDispatch() throws {
         let codec = try boundary()
-        let valid = envelope("fill").merging([
-            "email": "synthetic@example.invalid", "password": "synthetic-only",
-        ]) { _, replacement in replacement }
+        let valid = envelope("fill")
         for changes: [String: Any] in [
             ["sessionID": request], ["runID": request], ["deviceID": request],
             ["requestID": "malformed"], ["extra": true], ["kind": "unknown"],
@@ -114,7 +123,7 @@ struct FacetAccountInputCodecTests {
             }
         }
         var incomplete = valid
-        incomplete.removeValue(forKey: "password")
+        incomplete.removeValue(forKey: "requestID")
         #expect(throws: AccountInputFailure.self) {
             try codec.command(JSONSerialization.data(withJSONObject: incomplete))
         }
@@ -122,5 +131,107 @@ struct FacetAccountInputCodecTests {
         var reply = AccountInputReply(codec.identity, kind: .finished, requestID: request)
         reply.submitActionCount = 4
         #expect(throws: AccountInputFailure.self) { try codec.reply(reply) }
+    }
+
+    @Test func runnerReplayAndThirteenCommandBoundUseProductionAdmission() throws {
+        var requests = AccountInputRequests(operation: .credentials)
+        for _ in 0..<13 { try requests.admit(UUID().uuidString, kind: .observe) }
+        #expect(throws: AccountInputFailure.self) {
+            try requests.admit(UUID().uuidString, kind: .observe)
+        }
+        var repeated = AccountInputRequests(operation: .credentials)
+        try repeated.admit(request, kind: .observe)
+        #expect(throws: AccountInputFailure.self) { try repeated.admit(request, kind: .observe) }
+        for kind: AccountInputCommand.Kind in [.submit, .submitVerification, .connect] {
+            var probe = AccountInputRequests(operation: .probe)
+            var willSubmitCalled = false
+            do {
+                try probe.admit(UUID().uuidString, kind: kind)
+                willSubmitCalled = true
+            } catch {}
+            #expect(!willSubmitCalled)
+        }
+    }
+
+    @Test func appValueAdmissionIsFiniteStageBoundAndBurnsAfterFinishOrOwnerLoss() {
+        var state = FacetAcceptanceInputAdmission(initialStage: "credentials", bindRequest: request)
+        for (action, stage) in [
+            ("clear", "credentials"), ("email", "credentials"), ("password", "credentials"),
+            ("verification", "verification"), ("clear-vault", "vaults"),
+            ("vault-password", "vaults"), ("finish", "vaults"),
+        ] {
+            let admitted = state.admit(request: UUID().uuidString, action: action, stage: stage)
+            #expect(admitted)
+        }
+        let afterFinish = state.admit(
+            request: UUID().uuidString, action: "email", stage: "credentials")
+        #expect(!afterFinish)
+        for (action, stage) in [
+            ("password", "credentials"), ("email", "vaults"), ("verification", "credentials"),
+            ("vault-password", "vaults"),
+        ] {
+            var wrong = FacetAcceptanceInputAdmission(
+                initialStage: "credentials", bindRequest: request)
+            let admitted = wrong.admit(request: UUID().uuidString, action: action, stage: stage)
+            #expect(!admitted)
+        }
+        var background = FacetAcceptanceInputAdmission(
+            initialStage: "credentials", bindRequest: request)
+        background.invalidate()
+        let afterBackground = background.admit(
+            request: UUID().uuidString, action: "clear", stage: "credentials")
+        #expect(!afterBackground)
+    }
+
+    @Test func appAndBridgeFramesUseTheActualNativeSchemaValidator() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent(
+                "../../../../tasks-for-obsidian/scripts/ios-account/account-input.schema.json"
+            )
+            .standardizedFileURL
+        let schema = try FacetSchema(data: Data(contentsOf: url))
+        struct FrameFixture {
+            let action: String
+            let stage: String
+            var value: String?
+        }
+        for fixture in [
+            FrameFixture(action: "bind", stage: "credentials"),
+            FrameFixture(action: "clear", stage: "credentials"),
+            FrameFixture(action: "email", stage: "credentials", value: "synthetic@example.invalid"),
+            FrameFixture(
+                action: "password", stage: "credentials", value: "synthetic-only-password"),
+            FrameFixture(action: "verification", stage: "verification", value: "123456"),
+            FrameFixture(action: "clear-vault", stage: "vaults"),
+            FrameFixture(action: "vault-password", stage: "vaults", value: "synthetic-vault-only"),
+            FrameFixture(action: "finish", stage: "vaults"),
+        ] {
+            let action = fixture.action
+            let stage = fixture.stage
+            var frame = envelope(action)
+            frame["formEpoch"] = request
+            frame["token"] = String(repeating: "a", count: 64)
+            frame["expectedStage"] = stage
+            if let value = fixture.value { frame["value"] = value }
+            try schema.validate(
+                data: JSONSerialization.data(withJSONObject: frame), definition: "app-command")
+            #expect(throws: (any Error).self) {
+                try schema.validate(
+                    data: JSONSerialization.data(withJSONObject: frame), definition: "command")
+            }
+            if action != "bind" && action != "finish" {
+                frame["expectedStage"] = stage == "credentials" ? "vaults" : "credentials"
+                #expect(throws: (any Error).self) {
+                    try schema.validate(
+                        data: JSONSerialization.data(withJSONObject: frame),
+                        definition: "app-command")
+                }
+            }
+        }
+        for kind in ["listening", "peer"] {
+            try schema.validate(
+                data: JSONSerialization.data(withJSONObject: ["kind": kind, "pid": 501, "uid": 501]
+                ), definition: "bridge-packet")
+        }
     }
 }
