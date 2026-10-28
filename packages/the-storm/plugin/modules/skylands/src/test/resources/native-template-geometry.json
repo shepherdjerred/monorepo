@@ -1,0 +1,309 @@
+{
+  "templates": [
+    {
+      "key": "ancient_city/city_center/city_center_1",
+      "size": {
+        "x": 18,
+        "y": 31,
+        "z": 41
+      },
+      "entrance": {
+        "x": -1,
+        "y": 1,
+        "z": 0
+      },
+      "residents": [],
+      "embeddedHeight": 9
+    },
+    {
+      "key": "ancient_city/structures/barracks",
+      "size": {
+        "x": 21,
+        "y": 12,
+        "z": 17
+      },
+      "entrance": {
+        "x": -1,
+        "y": 1,
+        "z": 8
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/chamber_1",
+      "size": {
+        "x": 19,
+        "y": 10,
+        "z": 15
+      },
+      "entrance": {
+        "x": 19,
+        "y": 1,
+        "z": 7
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/chamber_2",
+      "size": {
+        "x": 12,
+        "y": 6,
+        "z": 11
+      },
+      "entrance": {
+        "x": 12,
+        "y": 1,
+        "z": 6
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/chamber_3",
+      "size": {
+        "x": 10,
+        "y": 6,
+        "z": 11
+      },
+      "entrance": {
+        "x": 10,
+        "y": 1,
+        "z": 5
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/ice_box_1",
+      "size": {
+        "x": 19,
+        "y": 10,
+        "z": 15
+      },
+      "entrance": {
+        "x": 19,
+        "y": 1,
+        "z": 7
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/medium_ruin_1",
+      "size": {
+        "x": 8,
+        "y": 5,
+        "z": 13
+      },
+      "entrance": {
+        "x": -1,
+        "y": 1,
+        "z": 6
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/medium_ruin_2",
+      "size": {
+        "x": 16,
+        "y": 5,
+        "z": 11
+      },
+      "entrance": {
+        "x": -1,
+        "y": 1,
+        "z": 5
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/small_statue",
+      "size": {
+        "x": 10,
+        "y": 8,
+        "z": 8
+      },
+      "entrance": {
+        "x": -1,
+        "y": 1,
+        "z": 3
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "ancient_city/structures/tall_ruin_2",
+      "size": {
+        "x": 17,
+        "y": 23,
+        "z": 17
+      },
+      "entrance": {
+        "x": 9,
+        "y": 1,
+        "z": -1
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_big_house_1",
+      "size": {
+        "x": 7,
+        "y": 11,
+        "z": 11
+      },
+      "entrance": {
+        "x": 7,
+        "y": 1,
+        "z": 5
+      },
+      "residents": [
+        {
+          "x": 3,
+          "y": 1,
+          "z": 8
+        },
+        {
+          "x": 4,
+          "y": 1,
+          "z": 3
+        },
+        {
+          "x": 3,
+          "y": 5,
+          "z": 2
+        },
+        {
+          "x": 3,
+          "y": 5,
+          "z": 8
+        }
+      ],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_library_2",
+      "size": {
+        "x": 8,
+        "y": 10,
+        "z": 9
+      },
+      "entrance": {
+        "x": 8,
+        "y": 1,
+        "z": 3
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_medium_house_2",
+      "size": {
+        "x": 7,
+        "y": 6,
+        "z": 13
+      },
+      "entrance": {
+        "x": 7,
+        "y": 1,
+        "z": 6
+      },
+      "residents": [
+        {
+          "x": 3,
+          "y": 1,
+          "z": 2
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "z": 10
+        }
+      ],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_small_farm_1",
+      "size": {
+        "x": 7,
+        "y": 6,
+        "z": 9
+      },
+      "entrance": {
+        "x": -1,
+        "y": 1,
+        "z": 4
+      },
+      "residents": [],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_small_house_3",
+      "size": {
+        "x": 7,
+        "y": 7,
+        "z": 7
+      },
+      "entrance": {
+        "x": 7,
+        "y": 1,
+        "z": 3
+      },
+      "residents": [
+        {
+          "x": 4,
+          "y": 1,
+          "z": 3
+        }
+      ],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_small_house_4",
+      "size": {
+        "x": 7,
+        "y": 7,
+        "z": 7
+      },
+      "entrance": {
+        "x": 7,
+        "y": 1,
+        "z": 3
+      },
+      "residents": [
+        {
+          "x": 4,
+          "y": 1,
+          "z": 3
+        }
+      ],
+      "embeddedHeight": 0
+    },
+    {
+      "key": "village/plains/houses/plains_small_house_6",
+      "size": {
+        "x": 7,
+        "y": 7,
+        "z": 7
+      },
+      "entrance": {
+        "x": 7,
+        "y": 1,
+        "z": 3
+      },
+      "residents": [
+        {
+          "x": 3,
+          "y": 1,
+          "z": 4
+        }
+      ],
+      "embeddedHeight": 0
+    }
+  ]
+}

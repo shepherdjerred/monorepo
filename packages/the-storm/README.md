@@ -507,6 +507,54 @@ tops bare stone, because vanilla grows grass only above its own surface height.
 Other modules require the `SkylandsWorld` app port to treat the world as
 declared and loaded.
 
+### Layered generator preview
+
+`LayeredSkylandsGenerator.create(plugin, worldName, seed)` prepares a fresh-world
+generator before `WorldCreator` runs. This version expands the original Beta
+density into separate shelves across y -28..259. Land biomes vary in three
+dimensions; ores use depth within each island. Rare closed ocean vessels add
+seabeds, water and shores without replacing the original islands.
+
+Villages, mines and ancient-city ruins use deterministic 512-block feature cells.
+Each cell has a clear perimeter and may remain empty when its terrain cannot
+support a complete feature. Village buildings and city ruins reuse native Paper
+26.3 templates, fitted individually to real shelves. Seeded searches choose their
+positions, rotations and elevations. Bounded pathfinding connects accepted plots;
+mines follow existing rock and can bridge actual gaps. There are no fixed demo
+locations, district-sized terrain reservations or post-generation pastes. Template
+coordinates describe reusable buildings, never world locations.
+
+Plans are immutable and cached with bounded memory. Each population call writes
+only its own chunk, including native loot snapshots, distributed village jobs,
+villagers, crop lights and cave-spider spawners. Native decoration is disabled in
+a bounded halo around planned features; captured native trees are accepted only
+as whole, chunk-local trees outside the planned buildings and routes. This prevents
+later neighbouring decoration from overwriting completed paths.
+
+The existing production bootstrap still uses the classic generator above. The
+layered factory requires a fresh world directory; it is not an in-place upgrade.
+The preview blocks vanilla villages, mineshafts and ancient cities in favour of
+the adapted layouts. Trial chambers and strongholds are also blocked until
+adaptations are available. Launch-tower gameplay is not part of this generator.
+Consequently this preview does not yet certify standalone survival progression.
+
+Unit checks and extended real-Paper acceptance are separate:
+
+```bash
+mise exec -- gradle -p packages/the-storm/plugin :skylands:test :skylands:pmdMain :skylands:pmdTest :skylands:spotlessCheck :architecture:test :skylands:jar
+python3 packages/the-storm/tools/skylands/native-preview.py --output /tmp/skylands-native-forward --seed 1731
+uv run --no-project --with nbtlib --with numpy python packages/the-storm/tools/skylands/audit-generated.py /tmp/skylands-native-forward
+```
+
+The extended fixture requires the local licensed Paper 26.3 build 223 and its
+matching API in the toolkit/Gradle caches. It creates an isolated loopback-only
+server, discovers one complete feature of each kind, generates surrounding chunks
+and shuts down after saving. The requested plans, chunks, generator artifact hash
+and saved-block audit remain in the output directory. Wait for
+`PROCEDURAL_NATIVE_READY` and process exit before auditing. Use a different fresh
+output with `--order reverse` to compare plans and saved feature digests, or
+`--cell-x`/`--cell-z` to sample distant terrain. These extended checks stay outside CI.
+
 ## NPCs and the town watch
 
 The NPC module reads strict content from `server/owned/plugins/TheStorm/npcs/`
