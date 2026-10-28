@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  MacInputOperationSchema,
+  MacInputApprovalSchema,
+  MacInputPreparedSchema,
+  MacInputCollectedSchema,
+  MacInputInstalledSchema,
+} from "./account-input/protocol";
 import { OfficialVerificationPreparedSchema } from "./official-verification-protocol";
 import {
   FileBlobSchema,
@@ -137,42 +144,35 @@ export const AccountModeSchema = z.enum([
   "present_account",
   "inspect_credentials",
   "activate_credentials",
-  "fill_credentials",
-  "submit_credentials",
   "inspect_verification",
   "activate_verification",
-  "verify",
   "inspect_vault",
   "activate_vault",
-  "connect",
+  "input_prepare",
+  "input_collect",
+  "input_approve",
   "inspect_workspace",
   "present_lifecycle_account",
 ]);
-// Secrets exist only in this private stdin request, never an argv, receipt or journal digest.
+// Field values never enter the RPC/journal. Only the separately pinned private stream carries them.
 const privateAccount = z.discriminatedUnion("mode", [
   z.strictObject({
-    mode: z.literal("fill_credentials"),
-    email: text,
-    password: text,
-    lifetime,
+    mode: z.literal("input_prepare"),
+    operation: MacInputOperationSchema,
+    sessionID: UuidSchema,
   }),
   z.strictObject({
-    mode: z.literal("verify"),
-    code: z.string().regex(/^\d{6}$/u),
-    requestID: UuidSchema,
-    lifetime,
+    mode: z.literal("input_collect"),
+    sessionID: UuidSchema,
   }),
   z.strictObject({
-    mode: z.literal("connect"),
-    vaultPassword: text,
-    requestID: UuidSchema,
-    lifetime,
+    mode: z.literal("input_approve"),
+    approval: MacInputApprovalSchema,
   }),
   z.strictObject({
     mode: z.enum([
       "present_account",
       "activate_credentials",
-      "submit_credentials",
       "activate_verification",
       "activate_vault",
       "present_lifecycle_account",
@@ -375,7 +375,12 @@ export const ExecutionResultSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({
     kind: z.literal("account"),
-    receipt: ClosedAccountReceiptSchema,
+    receipt: z.union([
+      ClosedAccountReceiptSchema,
+      MacInputPreparedSchema,
+      MacInputCollectedSchema,
+      MacInputInstalledSchema,
+    ]),
   }),
 ]);
 export type ExecutionOperation = z.infer<typeof ExecutionOperationSchema>;

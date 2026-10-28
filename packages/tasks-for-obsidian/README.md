@@ -335,10 +335,34 @@ ownership, then issues one code immediately before private delivery. App and Run
 clocks must agree; expiry is checked in the same MainActor turn as field mutation
 and immediately before the normal verification tap. A short or expired window
 stops without code regeneration or resubmission.
-The session stays alive until actual UI and control status settle. A successful
-finish relaunches the same owned app to resume Sync; replica convergence remains
-the matrix's responsibility. Unknown submission outcomes retain inspectable
-state and stop without automatic resubmission.
+The command uses two separately bounded sessions in the same prepared run.
+Authentication alone settles at vault selection, records its owner-bound
+checkpoint and finishes without Connect. The next cold launch restores the
+account through its existing run-scoped Keychain token and the normal HTTP/Rust
+vault-list exchange. Connection-only admission requires settled vault selection,
+zero profiles and the exact allowed remote before reading its encryption
+password; it has no account-password or OTP read path and cannot fall back to
+login. Each session keeps the original 120-second limit and its own command
+budget. Host and native submission intents precede each normal tap; uncertain
+outcomes stop without automatic resubmission. A successful connection finish
+relaunches the same owned app to resume Sync; replica convergence remains the
+matrix's responsibility. A new prepared run has a new Keychain namespace and
+does not inherit or copy an older run's account token.
+
+For an already authenticated run, `ios:account <runID> connect-only` accepts
+only `--vault-password-ref`, `--vault-password-backend service-account` and an
+optional `--lifecycle-round`. It rejects account/OTP locators and cannot sign in
+again. An expired cached session requires a separately admitted authentication
+step.
+
+A previously verified synthetic reference can supply data to a fresh guest run
+using paired preparation options `--reference-archive <absolute-directory>` and
+`--reference-archive-sha256 <archive.json-SHA256>`. The archive contains exactly
+five sealed data files and explicit historical lineage. Import validates their
+bytes and credential absence, writes a fresh private copy, and restricts binding
+to the same remote vault. It does not import account tokens, profiles, Sync
+configuration or earlier input proofs. Fresh-source privacy probes and reference
+acceptance are still required.
 
 ```bash
 bun run apple:sync:live seal-reference <runID>

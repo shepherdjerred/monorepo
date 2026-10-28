@@ -100,6 +100,11 @@ struct Owner {
             && CFEqual(hostAnchors[0], sheetAnchors[0])
     }
     func validate() throws -> [String: Any] {
+        try validateOwnership()
+        return try validateStatus(
+            stage: stage, launch: launch, expectedRequestID: expectedRequestID)
+    }
+    func validateOwnership() throws {
         try requireUnlockedSession()
         phase = "process"
         var info = proc_bsdinfo()
@@ -127,8 +132,6 @@ struct Owner {
             else { throw Failure.window }
         }
         try validateManifest()
-        return try validateStatus(
-            stage: stage, launch: launch, expectedRequestID: expectedRequestID)
     }
 
     func element(
@@ -181,7 +184,14 @@ struct Owner {
         ])
         guard result == .success else { throw Failure.action }
     }
-    func set(_ identifier: String, value: String, secure: Bool = false) throws {
+}
+
+extension Owner {
+    func set(
+        _ identifier: String, value: String, secure: Bool = false,
+        requireLive: () throws -> Void = {}
+    ) throws {
+        try requireLive()
         let target = try element(identifier, role: "AXTextField", secure: secure)
         guard attr(target, "AXEnabled") as? Bool == true else { throw Failure.field }
         guard value.utf8.count <= 512,
@@ -193,6 +203,7 @@ struct Owner {
                 == .success
         else { throw Failure.setter }
         func exactFocusedField() throws {
+            try requireLive()
             _ = try validate()
             let current = try element(identifier, role: "AXTextField", secure: secure)
             guard CFEqual(current, target), attr(current, "AXEnabled") as? Bool == true,
@@ -238,16 +249,22 @@ struct Owner {
         } while Date() < deadline
         throw Failure.field
     }
-    func press(_ identifier: String) throws {
+    func press(
+        _ identifier: String, emitReceipt: Bool = true, requireLive: () throws -> Void = {}
+    ) throws {
+        try requireLive()
         let button = try element(identifier, role: "AXButton")
         guard attr(button, "AXEnabled") as? Bool == true else { throw Failure.field }
         _ = try validate()
+        try requireLive()
         submitCount += 1
         let outcome = AXUIElementPerformAction(button, kAXPressAction as CFString)
-        emit([
-            "runID": runID, "submitActionCount": submitCount,
-            "normalAXPressResult": outcome.rawValue,
-        ])
+        if emitReceipt {
+            emit([
+                "runID": runID, "submitActionCount": submitCount,
+                "normalAXPressResult": outcome.rawValue,
+            ])
+        }
         guard outcome == .success else { throw Failure.action }
     }
 }

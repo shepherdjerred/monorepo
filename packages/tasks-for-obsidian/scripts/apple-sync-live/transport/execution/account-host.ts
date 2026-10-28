@@ -18,168 +18,236 @@ import {
   credentialBackend,
   vaultPasswordBackend,
 } from "tasknotes-macos/scripts/mac-account-contract.ts";
-import type {
-  ClosedAccountReceiptSchema,
-  ExecutionOperation,
-} from "./contract.ts";
 import {
   readHostCredentialItem,
   readHostVaultPassword,
-  readHostVerificationCode,
+  prepareHostVerificationCode,
   PasswordManagerFailure,
 } from "./credential-host.ts";
+import { runMacInputProbe, runMacPrivateAction } from "./account-input/host.ts";
+import { macVerificationTiming } from "./account-input/protocol.ts";
 
-type GuestAccount = Extract<ExecutionOperation, { kind: "account" }>;
 const LifetimeSchema = z.strictObject({
   startSeconds: z.number().int().nonnegative(),
   startMicroseconds: z.number().int().nonnegative(),
   launchDate: z.number().positive(),
 });
-/** Host-only 1Password broker. The guest never receives a vault session or secret locator. */
-export async function runHostGuestAccount(options: {
+
+type Options = {
   manifest: Extract<Manifest, { schemaVersion: 3 }>;
   operation: Operation;
   parameters: Record<string, string>;
   lifecycleRound?: number;
-}): Promise<number> {
-  const { manifest, operation, parameters, lifecycleRound } = options;
+};
+type Prepared = Awaited<ReturnType<typeof prepareContext>>;
+type PrivateOperation = Exclude<Operation, "present" | "probe">;
+type PrivateContext = { fresh: () => Promise<void>; live: () => void };
+
+/** Real values are read only inside the prepared, both-phase-proved private session callback. */
+export async function runHostGuestAccount(options: Options): Promise<number> {
   const submission = { possible: false };
   try {
-    assert.ok(manifest.allowedRemoteVaultID !== null);
-    const directory = runDirectory(manifest.runID);
-    const checkpoint =
-      lifecycleRound === undefined
-        ? null
-        : lifecycleCheckpoint(
-            manifest,
-            JSON.parse(await readFile(checkpointPath(directory), "utf8")),
-            lifecycleRound,
-          );
-    const checkpointBytes =
-      checkpoint === null
-        ? undefined
-        : await readFile(checkpointPath(directory));
-    const checkpointSHA =
-      checkpointBytes === undefined ? undefined : digest(checkpointBytes);
-    const status = async () => {
-      const result = await requestGuest(manifest, { kind: "status" });
-      if (result.kind !== "status")
-        throw new Error("Wrong private account status reply");
-      return result.status;
-    };
-    const validateState = (reauthorized = false) =>
-      validateAccountState(
-        {
-          manifest,
-          directory,
-          checkpoint,
-          checkpointSHA,
-          lifecycleRound,
-          status,
-        },
-        reauthorized,
-      );
-    async function native(action: GuestAccount["action"]) {
-      await validateState();
-      const response = await requestGuest(manifest, {
-        kind: "account",
-        action,
-        ...(lifecycleRound === undefined ? {} : { lifecycleRound }),
-        ...(checkpointBytes === undefined
-          ? {}
-          : { lifecycleCheckpoint: encodeBlob(checkpointBytes) }),
-      });
-      if (response.kind !== "account")
-        throw new Error("Wrong private native account receipt");
-      console.log(JSON.stringify(response.receipt));
-      return response.receipt;
-    }
-    const inspecting =
-      operation === "present"
-        ? checkpoint === null
-          ? "inspect_onboarding"
-          : "inspect_workspace"
-        : `inspect_${operation}`;
-    const action = GuestAccountActionInspectSchema.parse({ mode: inspecting });
-    const inspected = await native(action);
-    assert.equal(inspected.ready, true);
-    const lifetime = LifetimeSchema.parse({
-      startSeconds: inspected.startSeconds,
-      startMicroseconds: inspected.startMicroseconds,
-      launchDate: inspected.launchDate,
-    });
-    if (operation === "present") {
-      await native({
-        mode:
-          checkpoint === null ? "present_account" : "present_lifecycle_account",
-        lifetime,
-      });
+    const context = await prepareContext(options);
+    if (options.operation === "probe") {
+      await runMacInputProbe(options.manifest, context.fresh);
       return 0;
     }
-    await submitAccountInput({
+    if (options.operation === "present") {
+      await presentAccount(context);
+      return 0;
+    }
+    const operation = options.operation;
+    const finished = await runMacPrivateAction({
+      manifest: options.manifest,
       operation,
-      parameters,
-      lifetime,
-      inspected,
-      native,
-      validateState,
-      status,
-      checkpoint,
-      manifest,
+      ...context.lifecycleOptions,
+      fresh: context.fresh,
       markSubmitting: () => {
         submission.possible = true;
       },
+      action: (ctx) => readPreparedAction(operation, context, ctx),
     });
+    console.log(JSON.stringify(finished));
+    if (operation === "vault" && context.checkpoint !== null) {
+      await waitReauthorization(context.status, context.checkpoint.profileID);
+      await context.validateState(true);
+      console.log(
+        JSON.stringify({
+          runID: options.manifest.runID,
+          lifecycleRound: context.checkpoint.round,
+          originalProfileRetained: true,
+          immutableOutboxRetained: true,
+          transportRemainsInterrupted: true,
+        }),
+      );
+    }
     return 0;
   } catch (error) {
-    const classified =
-      error instanceof PasswordManagerFailure
-        ? error.classification
-        : "guest_account_guard";
     console.log(
       JSON.stringify({
-        blocked: classified,
+        blocked:
+          error instanceof PasswordManagerFailure
+            ? error.classification
+            : "guest_account_guard",
         submissionStatus: submission.possible ? "unknown" : "not_attempted",
       }),
     );
     return 3;
   }
 }
-function readAccountSecret(
-  operation: Exclude<Operation, "present">,
-  parameters: Record<string, string>,
-):
-  | { kind: "credentials"; value: { email: string; password: string } }
-  | { kind: "text"; value: string } {
-  if (operation === "vault")
-    return {
-      kind: "text",
-      value: readHostVaultPassword(
-        parameters["--vault-password-ref"] ?? "",
-        vaultPasswordBackend(parameters["--vault-password-backend"]),
-      ),
-    };
-  const selected = {
+
+async function prepareContext(options: Options) {
+  const { manifest, operation, parameters, lifecycleRound } = options;
+  assert.ok(manifest.allowedRemoteVaultID !== null);
+  if (operation === "probe") {
+    assert.deepEqual(parameters, {});
+    assert.equal(lifecycleRound, undefined);
+  }
+  if (operation === "verification")
+    assert.equal(
+      credentialBackend(parameters["--credential-backend"]),
+      "keychain",
+    );
+  const directory = runDirectory(manifest.runID);
+  const checkpoint =
+    lifecycleRound === undefined
+      ? null
+      : lifecycleCheckpoint(
+          manifest,
+          JSON.parse(await readFile(checkpointPath(directory), "utf8")),
+          lifecycleRound,
+        );
+  const checkpointBytes =
+    checkpoint === null ? undefined : await readFile(checkpointPath(directory));
+  const checkpointSHA =
+    checkpointBytes === undefined ? undefined : digest(checkpointBytes);
+  const status = async () => {
+    const result = await requestGuest(manifest, { kind: "status" });
+    if (result.kind !== "status")
+      throw new Error("Wrong private account status reply");
+    return result.status;
+  };
+  const validateState = (reauthorized = false) =>
+    validateAccountState(
+      {
+        manifest,
+        directory,
+        checkpoint,
+        checkpointSHA,
+        lifecycleRound,
+        status,
+      },
+      reauthorized,
+    );
+  const fresh = async () => {
+    await validateState();
+  };
+  const lifecycleOptions = {
+    ...(lifecycleRound === undefined ? {} : { lifecycleRound }),
+    ...(checkpointBytes === undefined
+      ? {}
+      : { lifecycleCheckpoint: encodeBlob(checkpointBytes) }),
+  };
+  return {
+    ...options,
+    checkpoint,
+    status,
+    validateState,
+    fresh,
+    lifecycleOptions,
+  };
+}
+
+async function presentAccount(context: Prepared) {
+  const { manifest, checkpoint, lifecycleOptions, fresh } = context;
+  await fresh();
+  const inspected = await requestGuest(manifest, {
+    kind: "account",
+    action: {
+      mode: checkpoint === null ? "inspect_onboarding" : "inspect_workspace",
+    },
+    ...lifecycleOptions,
+  });
+  assert.equal(inspected.kind, "account");
+  const receipt = z
+    .object({ ready: z.literal(true), ...LifetimeSchema.shape })
+    .parse(inspected.receipt);
+  const lifetime = LifetimeSchema.parse(receipt);
+  await fresh();
+  const presented = await requestGuest(manifest, {
+    kind: "account",
+    action: {
+      mode:
+        checkpoint === null ? "present_account" : "present_lifecycle_account",
+      lifetime,
+    },
+    ...lifecycleOptions,
+  });
+  assert.equal(presented.kind, "account");
+  console.log(JSON.stringify(presented.receipt));
+}
+
+async function readPreparedAction(
+  operation: PrivateOperation,
+  context: Prepared,
+  ctx: PrivateContext,
+) {
+  const { parameters } = context;
+  const phase = operation === "vault" ? "vaults" : operation;
+  const phaseState = async () => {
+    const value = z
+      .object({
+        accountStage: z.literal(phase),
+        accountBusy: z.literal(false),
+        accountExchange: z.unknown(),
+      })
+      .parse(await context.validateState());
+    return value.accountExchange;
+  };
+  const locators = {
     "--account": parameters["--account"] ?? "",
     "--vault": parameters["--vault"] ?? "",
     "--item": parameters["--item"] ?? "",
   };
-  return operation === "credentials"
-    ? {
-        kind: "credentials",
-        value: readHostCredentialItem(
-          selected,
+  const before = await phaseState();
+  if (operation === "verification") {
+    const source = prepareHostVerificationCode(
+      locators,
+      "keychain",
+      macVerificationTiming,
+    );
+    await ctx.fresh();
+    assert.deepEqual(
+      await phaseState(),
+      before,
+      "Account exchange changed after cached OTP read",
+    );
+    await source.waitUntilFresh();
+    ctx.live();
+    return source.issue();
+  }
+  const value =
+    operation === "credentials"
+      ? readHostCredentialItem(
+          locators,
           credentialBackend(parameters["--credential-backend"]),
-        ),
-      }
-    : {
-        kind: "text",
-        value: readHostVerificationCode(
-          selected,
-          credentialBackend(parameters["--credential-backend"]),
-        ),
-      };
+        )
+      : {
+          vaultPassword: readHostVaultPassword(
+            parameters["--vault-password-ref"] ?? "",
+            vaultPasswordBackend(parameters["--vault-password-backend"]),
+          ),
+        };
+  await ctx.fresh();
+  assert.deepEqual(
+    await phaseState(),
+    before,
+    "Account exchange changed after private read",
+  );
+  ctx.live();
+  return value;
 }
+
 async function waitReauthorization(
   status: () => Promise<unknown>,
   profileID: string,
@@ -207,15 +275,6 @@ async function waitReauthorization(
     await Bun.sleep(250);
   }
 }
-const GuestAccountActionInspectSchema = z.strictObject({
-  mode: z.enum([
-    "inspect_onboarding",
-    "inspect_credentials",
-    "inspect_verification",
-    "inspect_vault",
-    "inspect_workspace",
-  ]),
-});
 
 async function validateAccountState(
   context: {
@@ -280,89 +339,5 @@ async function validateAccountState(
       reauthorized,
     );
   }
-}
-
-type NativeAccountReceipt = z.infer<typeof ClosedAccountReceiptSchema>;
-async function submitAccountInput(context: {
-  operation: Exclude<Operation, "present">;
-  parameters: Record<string, string>;
-  lifetime: z.infer<typeof LifetimeSchema>;
-  inspected: NativeAccountReceipt;
-  native: (action: GuestAccount["action"]) => Promise<NativeAccountReceipt>;
-  validateState: (reauthorized?: boolean) => Promise<void>;
-  status: () => Promise<unknown>;
-  checkpoint: ReturnType<typeof lifecycleCheckpoint> | null;
-  manifest: Extract<Manifest, { schemaVersion: 3 }>;
-  markSubmitting: () => void;
-}) {
-  const {
-    operation,
-    parameters,
-    lifetime,
-    inspected,
-    native,
-    validateState,
-    status,
-    checkpoint,
-    manifest,
-    markSubmitting,
-  } = context;
-  const activate = () =>
-    native({
-      mode:
-        operation === "credentials"
-          ? "activate_credentials"
-          : operation === "verification"
-            ? "activate_verification"
-            : "activate_vault",
-      lifetime,
-    });
-  await activate();
-  await validateState();
-  console.log(
-    JSON.stringify({
-      phase: "password_manager_read",
-      operation,
-      submissionStatus: "not_attempted",
-    }),
-  );
-  const secret = readAccountSecret(operation, parameters);
-  await validateState();
-  await activate();
-  if (operation === "credentials") {
-    assert.equal(secret.kind, "credentials");
-    const filled = await native({
-      mode: "fill_credentials",
-      ...secret.value,
-      lifetime,
-    });
-    assert.equal(filled.clearDisabledCheckpointCount, 2);
-    assert.equal(filled.signInEnabled, true);
-    assert.equal(filled.submitActionCount, 0);
-    markSubmitting();
-    await native({ mode: "submit_credentials", lifetime });
-  } else {
-    const requestID = z.uuid().parse(inspected.requestID);
-    assert.equal(secret.kind, "text");
-    const value = secret.value;
-    markSubmitting();
-    await native(
-      operation === "verification"
-        ? { mode: "verify", code: value, requestID, lifetime }
-        : { mode: "connect", vaultPassword: value, requestID, lifetime },
-    );
-    if (operation === "vault" && checkpoint !== null) {
-      await waitReauthorization(status, checkpoint.profileID);
-      await validateState(true);
-      console.log(
-        JSON.stringify({
-          runID: manifest.runID,
-          lifecycleRound: checkpoint.round,
-          originalProfileRetained: true,
-          immutableOutboxRetained: true,
-          transportRemainsInterrupted: true,
-        }),
-      );
-    }
-  }
+  return value;
 }

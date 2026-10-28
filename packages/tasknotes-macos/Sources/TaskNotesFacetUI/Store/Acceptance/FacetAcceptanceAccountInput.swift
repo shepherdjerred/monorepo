@@ -37,7 +37,7 @@
                 let mode = environment["FACET_E2E_ACCOUNT_MODE"],
                 ["account", "fixture-verification"].contains(mode),
                 let operation = environment["FACET_E2E_ACCOUNT_OPERATION"],
-                ["probe", "fixture-verification", "credentials"].contains(operation),
+                ["probe", "fixture-verification", "auth-only", "connect-only"].contains(operation),
                 mode == (operation == "fixture-verification" ? operation : "account"),
                 Bundle.main.bundleIdentifier == "org.reactjs.native.example.TasksForObsidian",
                 endpoint == "/private/tmp/facet-account-\(session.lowercased())/input.sock",
@@ -50,7 +50,7 @@
                     "deviceID": device.lowercased(),
                 ],
                 endpoint: endpoint, helperPID: pid, formEpoch: formEpoch,
-                schema: Data(contentsOf: protocolURL), mode: mode,
+                schema: Data(contentsOf: protocolURL), mode: mode, operation: operation,
                 fixtureIdentity: fixtureIdentity)
             let input = FacetAcceptanceAccountInput(peer: selectedPeer)
             input.worker = _Concurrency.Task {

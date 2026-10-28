@@ -4,15 +4,50 @@ import Darwin
 import Foundation
 
 do {
-    guard CommandLine.arguments.count == 1, AXIsProcessTrusted(),
-        let data = try FileHandle.standardInput.read(upToCount: 8193), data.count <= 8192,
-        let input = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+    guard CommandLine.arguments.count == 1, AXIsProcessTrusted() else { throw Failure.input }
+    let stream = try MacInputStream()
+    let input = try stream.next(allowEOF: true)
+    if input["mode"] as? String == "private_session" {
+        var session: MacAccountSession?
+        do {
+            let prepared = try MacAccountSession(input, stream: stream)
+            session = prepared
+            try prepared.run()
+            exit(0)
+        } catch {
+            let reason: String
+            if let failure = error as? MacInputFailure {
+                reason = failure.rawValue
+            } else if let failure = error as? Failure {
+                reason = String(describing: failure)
+            } else {
+                reason = "input"
+            }
+            let knownOperation = input["operation"] as? String ?? "invalid"
+            let operation =
+                ["credentials-probe", "verification-probe", "credentials", "verification", "vault"]
+                    .contains(knownOperation)
+                ? knownOperation : "invalid"
+            emit([
+                "schemaVersion": 1, "kind": "rejected",
+                "sessionID": (input["sessionID"] as? String).flatMap(UUID.init(uuidString:))?
+                    .uuidString.lowercased() as Any? ?? NSNull(),
+                "runID": (input["runID"] as? String).flatMap(UUID.init(uuidString:))?.uuidString
+                    .lowercased() as Any? ?? NSNull(),
+                "operation": operation, "phase": session?.request.phase ?? "input",
+                "reason": reason,
+                "intentRecorded": session?.intentRecorded ?? false,
+                "submitActionCount": submitCount,
+            ])
+            exit(3)
+        }
+    }
+    guard
         let mode = input["mode"] as? String,
         let pid = input["pid"] as? Int, pid > 0, pid <= Int(Int32.max),
         [
             "inspect_onboarding", "present_account", "inspect_credentials", "activate_credentials",
-            "fill_credentials", "submit_credentials", "inspect_verification",
-            "activate_verification", "verify", "inspect_vault", "activate_vault", "connect",
+            "inspect_verification", "activate_verification", "inspect_vault", "activate_vault",
             "inspect_workspace", "present_lifecycle_account",
         ].contains(mode)
     else { throw Failure.input }
@@ -24,16 +59,12 @@ do {
     let stage =
         mode.contains("credentials") || onboarding || workspace
         ? "credentials"
-        : ["verify", "inspect_verification", "activate_verification"].contains(mode)
+        : ["inspect_verification", "activate_verification"].contains(mode)
             ? "verification" : "vaults"
     var keys: Set<String> = bindingKeys.union(["pid", "mode"])
     if !inspect { keys.formUnion(["startSeconds", "startMicroseconds", "launchDate"]) }
-    if mode == "fill_credentials" { keys.formUnion(["email", "password"]) }
-    if mode == "verify" { keys.formUnion(["code", "requestID"]) }
-    if mode == "connect" { keys.formUnion(["vaultPassword", "requestID"]) }
     guard Set(input.keys) == keys else { throw Failure.input }
     let requestID = (input["requestID"] as? String).flatMap(UUID.init(uuidString:))
-    if ["verify", "connect"].contains(mode), requestID == nil { throw Failure.input }
     let owner = try Owner(
         pid: pid_t(pid), stage: stage,
         mutating: !inspect && !activating && !onboarding && !workspace,
@@ -44,12 +75,6 @@ do {
             (input["startMicroseconds"] as? NSNumber)?.uint64Value == owner.microseconds,
             (input["launchDate"] as? NSNumber)?.doubleValue == owner.launch
         else { throw Failure.process }
-    }
-    func secret(_ key: String, maximum: Int) throws -> String {
-        guard let value = input[key] as? String, !value.isEmpty, value.utf8.count <= maximum,
-            !value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
-        else { throw Failure.input }
-        return value
     }
     let vaultButton =
         lifecycle.map { "facet.account.reconnect." + $0.profileID } ?? "facet.account.vault."
@@ -132,36 +157,6 @@ do {
             result["requestID"] = request
         }
         emit(result)
-    } else if mode == "fill_credentials" {
-        let email = try secret("email", maximum: 256)
-        let password = try secret("password", maximum: 512)
-        try owner.set("facet.account.email", value: "")
-        try owner.wait(button, enabled: false)
-        try owner.set("facet.account.email", value: email)
-        try owner.set("facet.account.password", value: "", secure: true)
-        try owner.wait(button, enabled: false)
-        try owner.set("facet.account.password", value: password, secure: true)
-        try owner.wait(button, enabled: true)
-        emit([
-            "runID": runID, "credentialsEntered": true, "clearDisabledCheckpointCount": 2,
-            "signInEnabled": true, "submitActionCount": 0,
-        ])
-    } else if mode == "submit_credentials" {
-        try owner.press(button)
-    } else if mode == "verify" {
-        let code = try secret("code", maximum: 6)
-        guard code.utf8.count == 6, code.utf8.allSatisfy({ (48...57).contains($0) }) else {
-            throw Failure.input
-        }
-        try owner.set("facet.account.code", value: code)
-        try owner.press(button)
-    } else {
-        let password = try secret("vaultPassword", maximum: 512)
-        try owner.set("facet.account.vault-password", value: "", secure: true)
-        try owner.wait(button, enabled: false)
-        try owner.set("facet.account.vault-password", value: password, secure: true)
-        try owner.wait(button, enabled: true)
-        try owner.press(button)
     }
 } catch let failure as Failure {
     let labels: [Failure: String] = [

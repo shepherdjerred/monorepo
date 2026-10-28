@@ -30,6 +30,11 @@ import { fingerprintOutbox } from "../../outbox.ts";
 import { verifyReplica } from "../../model.ts";
 import { macFileSHA } from "tasknotes-macos/scripts/apple-acceptance/mac-artifact.ts";
 import { readCheckpoint } from "./state.ts";
+import { prepareGuestMacInput } from "./account-input/prepare";
+import {
+  collectGuestMacInput,
+  installGuestMacInputApproval,
+} from "./account-input/collect";
 
 const LifecyclePacketSchema = z.strictObject({
   schemaVersion: z.literal(1),
@@ -98,6 +103,33 @@ export async function runGuestAccount(
       checkpointSHA256: operation.lifecycleCheckpoint.sha256,
     };
   }
+  await verifyPending();
+  if (operation.action.mode === "input_prepare") {
+    return {
+      kind: "account",
+      receipt: await prepareGuestMacInput(
+        runtime,
+        operation.action.operation,
+        operation.action.sessionID,
+        { remoteID: request.binding.allowedRemoteVaultID, lifecycle },
+      ),
+    };
+  }
+  if (operation.action.mode === "input_collect") {
+    return {
+      kind: "account",
+      receipt: await collectGuestMacInput(runtime, operation.action.sessionID),
+    };
+  }
+  if (operation.action.mode === "input_approve") {
+    return {
+      kind: "account",
+      receipt: await installGuestMacInputApproval(
+        runtime,
+        new TextEncoder().encode(JSON.stringify(operation.action.approval)),
+      ),
+    };
+  }
   const directory = path.join(
     runtime.paths.evidenceDirectory,
     `account-helper-${request.requestID}`,
@@ -109,6 +141,9 @@ export async function runGuestAccount(
     "AccountRuntime.swift",
     "AccountOwner.swift",
     "AccountLifecycle.swift",
+    "MacAccountProtocol.swift",
+    "MacAccountIO.swift",
+    "MacAccountSession.swift",
   ] as const) {
     const destination = path.join(
       directory,
@@ -153,7 +188,7 @@ export async function runGuestAccount(
     ...lifetime,
   };
   assert.equal(await macFileSHA(helper), binarySHA);
-  const verifyPending = async () => {
+  async function verifyPending() {
     if (lifecyclePacket === null) return;
     await verifyReplica(
       path.join(
@@ -180,7 +215,7 @@ export async function runGuestAccount(
     } finally {
       database.close();
     }
-  };
+  }
   await verifyPending();
   const result = await executePrivateTransport(
     [helper],

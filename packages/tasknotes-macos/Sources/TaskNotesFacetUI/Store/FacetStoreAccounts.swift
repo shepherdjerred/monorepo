@@ -41,6 +41,7 @@ extension FacetStore {
         accountPresentation.requestID = request
         accountPresentation.cancelled = false
         accountPresentation.operation = .signingIn
+        accountPresentation.restoreFailed = false
         accountPresentation.error = nil
         accountPresentation.notice = nil
         accountTransition = true
@@ -119,7 +120,7 @@ extension FacetStore {
     internal func cancelAccountRequest(id: UUID) {
         guard accountPresentation.isBusy, accountPresentation.requestID == id else { return }
         accountPresentation.cancelled = true
-        account?.fenceSessionAccess()
+        if accountPresentation.operation != .restoring { account?.fenceSessionAccess() }
         accountPresentation.notice = "Account request cancelled. You can try again."
         accountPresentation.error = nil
     }

@@ -23,15 +23,26 @@ import {
 import {
   inputArtifactDirectory,
   inputArtifacts,
-  inputBinary,
   assertInputBundle,
   inspectInputOwner,
+  inspectInputPeers,
   type InputArtifacts,
   type ProcessLifetime,
   type HelperDiagnosticSchema,
   InputStages,
   inputBootstrap,
 } from "./app-input-artifacts";
+import { phasePolicy } from "./phases/policy";
+import {
+  closedFailure,
+  phaseTiming,
+  PrivatePhaseFailure,
+  type InputPhase,
+  type FailureKind,
+} from "./phases/failure";
+
+import { closePrivateApp } from "./phases/app-cleanup";
+import { AppInputFrames } from "./phases/app-frames";
 
 type Stage = "credentials" | "verification" | "vaults";
 type Action =
@@ -56,8 +67,7 @@ export type AppInput = Pick<
 export class PrivateAppInput {
   private readonly child;
   private readonly reader;
-  private buffered = Buffer.alloc(0);
-  private frames = 0;
+  private readonly frames: AppInputFrames;
   private steps = 0;
   private hello: AppReply | undefined;
   private helperLifetime: ProcessLifetime | undefined;
@@ -68,7 +78,9 @@ export class PrivateAppInput {
   private appDirectory: string | undefined;
   private closingExpected = false;
   private readonly stages: InputStages;
-  private readonly deadline = performance.now() + 120_000;
+  private readonly started = performance.now();
+  private readonly deadline = this.started + 120_000;
+  private phase: InputPhase = "prepare";
   private closeResult:
     Promise<{ status: "closed" | "cleanup-incomplete" }> | undefined;
   private readonly artifacts: InputArtifacts;
@@ -103,6 +115,13 @@ export class PrivateAppInput {
     );
     this.reader = this.child.stdout.getReader();
     this.stages = new InputStages(evidence, identity.runID, this.child.pid);
+    this.frames = new AppInputFrames(
+      this.reader,
+      () => this.deadline,
+      () => this.phase,
+      () =>
+        this.stages.readRejection(() => this.readStderr(), this.hello?.appPID),
+    );
   }
   static async start(
     manifest: Manifest,
@@ -177,58 +196,25 @@ export class PrivateAppInput {
     stage: string,
     diagnostic?: z.infer<typeof HelperDiagnosticSchema>,
   ) {
-    await this.stages.add(stage, this.hello?.appPID, diagnostic);
+    await this.stages.add(
+      stage,
+      this.hello?.appPID,
+      diagnostic,
+      phaseTiming(this.started, this.deadline),
+    );
   }
-  private async line(): Promise<unknown> {
-    for (;;) {
-      const newline = this.buffered.indexOf(10);
-      if (newline !== -1) {
-        assert.ok(
-          newline > 0 && newline <= 8192 && ++this.frames <= 11,
-          "Private app frame bound exceeded",
-        );
-        const frame = this.buffered.subarray(0, newline);
-        this.buffered = this.buffered.subarray(newline + 1);
-        try {
-          return JSON.parse(
-            new TextDecoder("utf-8", { fatal: true }).decode(frame),
-          );
-        } catch {
-          throw new Error("Private app returned an invalid frame");
-        }
-      }
-      assert.ok(
-        this.buffered.length <= 8192,
-        "Private app frame bound exceeded",
-      );
-      const left = this.deadline - performance.now();
-      if (left <= 0) throw new Error("Private app input deadline expired");
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      const next = await Promise.race([
-        this.reader.read(),
-        new Promise<never>((_resolve, reject) => {
-          timeout = setTimeout(() => {
-            reject(new Error("Private app input deadline expired"));
-          }, left);
-        }),
-      ]).finally(() => {
-        if (timeout !== undefined) clearTimeout(timeout);
-      });
-      if (next.done) {
-        await this.recordRejection();
-        throw new Error("Private app peer closed before its acknowledgment");
-      }
-      this.buffered = Buffer.concat([this.buffered, next.value]);
-    }
+  failure(error: unknown, kind: z.infer<typeof FailureKind> = "internal") {
+    return closedFailure(
+      error,
+      { kind, phase: this.phase },
+      phaseTiming(this.started, this.deadline),
+    );
   }
-  private async recordRejection() {
-    try {
-      await this.stages.rejection(await this.readStderr(), this.hello?.appPID);
-    } catch {
-      /* A missing diagnostic never replaces the primary protocol failure. */
-    }
+  private line() {
+    return this.frames.next();
   }
   async bind(): Promise<AppInput> {
+    this.phase = "owner";
     const packet = await this.line();
     boundaryCheck("bridge-packet", packet);
     const peer = z
@@ -331,42 +317,54 @@ export class PrivateAppInput {
       this.appExecutable,
     );
   }
-  async validate() {
-    await assertUnchangedBuild(this.manifest);
+  async validate(phase?: InputPhase) {
+    if (phase !== undefined) this.phase = phase;
+    try {
+      await assertUnchangedBuild(this.manifest);
+    } catch {
+      throw new PrivatePhaseFailure("authority", this.phase);
+    }
     await this.validateLive();
   }
   private async validateLive() {
-    assert.ok(
-      performance.now() < this.deadline,
-      "Private app input deadline expired",
-    );
-    assert.ok(
-      this.hello?.appPID !== undefined &&
-        this.appExecutable !== undefined &&
-        this.appLifetime !== undefined &&
-        this.helperLifetime !== undefined &&
-        !this.closingExpected,
-    );
-    const directory = inputArtifactDirectory(this.manifest.runID);
-    assert.equal(
-      await inputBinary(path.join(directory, "bridge")),
-      this.artifacts.bridge,
-    );
-    await inspectInputOwner(directory, this.artifacts, this.child.pid, {
-      executable: path.join(directory, "bridge"),
-      expected: this.helperLifetime,
-    });
-    await inspectInputOwner(directory, this.artifacts, this.hello.appPID, {
-      executable: this.appExecutable,
-      expected: this.appLifetime,
-    });
-    await this.validateAppBytes();
-    assert.ok(
-      performance.now() < this.deadline,
-      "Private app input deadline expired",
-    );
+    this.requireDeadline();
+    try {
+      assert.ok(
+        this.hello?.appPID !== undefined &&
+          this.appExecutable !== undefined &&
+          this.appLifetime !== undefined &&
+          this.helperLifetime !== undefined &&
+          !this.closingExpected,
+      );
+      const directory = inputArtifactDirectory(this.manifest.runID);
+      await inspectInputPeers(
+        directory,
+        this.artifacts,
+        { pid: this.child.pid, lifetime: this.helperLifetime },
+        {
+          pid: this.hello.appPID,
+          executable: this.appExecutable,
+          lifetime: this.appLifetime,
+        },
+      );
+      await this.validateAppBytes();
+      this.requireDeadline();
+    } catch (error) {
+      if (error instanceof PrivatePhaseFailure) throw error;
+      throw new PrivatePhaseFailure("ownership", this.phase);
+    }
+  }
+  private requireDeadline() {
+    if (performance.now() >= this.deadline)
+      throw new PrivatePhaseFailure("deadline", this.phase);
   }
   async apply(action: Action, expectedStage: Stage, value?: string) {
+    this.phase =
+      action === "finish"
+        ? "finish"
+        : action === "clear-vault" || action === "vault-password"
+          ? "vault-password"
+          : "credentials";
     assert.notEqual(
       action,
       "verification",
@@ -376,6 +374,7 @@ export class PrivateAppInput {
     await this.deliver(action, expectedStage, value);
   }
   async applyVerification(source: VerificationSource) {
+    this.phase = "verification";
     const value = await issueVerificationAfterValidation(
       () => this.validate(),
       source,
@@ -395,7 +394,12 @@ export class PrivateAppInput {
     value?: string,
     expiresAtUnixMilliseconds?: number,
   ) {
-    assert.ok(++this.steps <= 7 && !this.closingExpected);
+    const policy = phasePolicy(this.operation);
+    assert.ok(
+      policy.allowedAppKinds.includes(action) &&
+        ++this.steps <= policy.appCommandLimit &&
+        !this.closingExpected,
+    );
     if (expiresAtUnixMilliseconds !== undefined)
       assertVerificationFresh(expiresAtUnixMilliseconds);
     const hello = this.hello;
@@ -456,47 +460,17 @@ export class PrivateAppInput {
   private async cleanup(): Promise<{
     status: "closed" | "cleanup-incomplete";
   }> {
-    let incomplete = false;
-    try {
-      await this.record("closing");
-    } catch {
-      incomplete = true;
-    }
-    try {
-      await this.child.stdin.end();
-    } catch {
-      incomplete = true;
-    }
-    try {
-      await this.reader.cancel();
-    } catch {
-      incomplete = true;
-    }
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const code = await Promise.race([
-        this.child.exited,
-        new Promise<never>((_resolve, reject) => {
-          timeout = setTimeout(() => {
-            reject(new Error("Private helper cleanup deadline"));
-          }, 5000);
-        }),
-      ]);
-      const stderr = await this.readStderr();
-      if (code !== 0 || stderr !== "") incomplete = true;
-      await rmdir(this.socketDirectory);
-    } catch {
-      incomplete = true;
-    } finally {
-      if (timeout !== undefined) clearTimeout(timeout);
-    }
-    this.buffered.fill(0);
-    this.hello = undefined;
-    try {
-      await this.record(incomplete ? "cleanup-incomplete" : "closed");
-    } catch {
-      incomplete = true;
-    }
-    return { status: incomplete ? "cleanup-incomplete" : "closed" };
+    return closePrivateApp({
+      record: (stage) => this.record(stage),
+      child: this.child,
+      reader: this.reader,
+      readStderr: () => this.readStderr(),
+      rejection: (stderr) => this.stages.rejection(stderr, this.hello?.appPID),
+      socketDirectory: this.socketDirectory,
+      clear: () => {
+        this.frames.clear();
+        this.hello = undefined;
+      },
+    });
   }
 }

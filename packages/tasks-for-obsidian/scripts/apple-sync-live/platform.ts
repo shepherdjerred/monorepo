@@ -21,6 +21,10 @@ import {
   hasIOS,
 } from "./model";
 import { guestStatus, requestGuest } from "./transport/client";
+import {
+  ArchiveLineageSchema,
+  assertArchiveBinding,
+} from "./reference-archive/contract";
 
 export async function command(
   argv: string[],
@@ -283,9 +287,25 @@ export async function writeDescriptors(
 }
 
 export async function bindVault(manifest: Manifest, vaultID: string) {
-  if (manifest.stage !== "owner-setup" || manifest.clients === null)
+  if (
+    manifest.stage !== "owner-setup" ||
+    manifest.clients === null ||
+    manifest.cases["official-reference"] !== "pass"
+  )
     throw new Error("Run is not ready for vault binding");
   z.string().min(1).max(256).parse(vaultID);
+  const provenance = z
+    .object({ referenceArchive: ArchiveLineageSchema.optional() })
+    .parse(
+      await Bun.file(
+        path.join(runDirectory(manifest.runID), "provenance.json"),
+      ).json(),
+    );
+  assertArchiveBinding(
+    manifest.referenceArchive,
+    provenance.referenceArchive,
+    vaultID,
+  );
   await writeDescriptors(manifest, vaultID);
   manifest.allowedRemoteVaultID = vaultID;
   manifest.stage = "bound";

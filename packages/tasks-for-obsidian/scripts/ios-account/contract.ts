@@ -7,7 +7,8 @@ import accountDefinition from "./account-input.schema.json";
 export const AccountOperationSchema = z.enum([
   "probe",
   "fixture-verification",
-  "credentials",
+  "auth-only",
+  "connect-only",
 ]);
 export type AccountOperation = z.infer<typeof AccountOperationSchema>;
 export const VerificationTiming = z
@@ -132,6 +133,7 @@ const AccountReplySchema = z.discriminatedUnion("kind", [
     ...correlated,
     kind: z.literal("submitted"),
     submitActionCount: z.literal(1),
+    intentRecorded: z.literal(true),
   }),
   z.strictObject({
     ...correlated,
@@ -150,6 +152,7 @@ const AccountReplySchema = z.discriminatedUnion("kind", [
     ...correlated,
     kind: z.enum(["verification-submitted", "connect-submitted"]),
     submitActionCount: z.literal(1),
+    intentRecorded: z.literal(true),
   }),
   z.strictObject({
     ...correlated,
@@ -189,6 +192,10 @@ const validators = {
   "bridge-packet": contract.compile({
     ...schema,
     $ref: "#/$defs/bridge-packet",
+  }),
+  "submit-intent": contract.compile({
+    ...schema,
+    $ref: "#/$defs/submit-intent",
   }),
 };
 

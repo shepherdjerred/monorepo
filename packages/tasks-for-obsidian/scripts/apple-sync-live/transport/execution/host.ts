@@ -265,6 +265,11 @@ export async function verifyGuestLiveRun(
 }
 
 function helperSource(name: (typeof helperFiles)[number]): string {
+  if (name === "account-input.schema.json")
+    return path.resolve(
+      macRoot,
+      "../tasks-for-obsidian/scripts/ios-account/account-input.schema.json",
+    );
   return name.startsWith("mac-process-owner")
     ? path.join(macRoot, "scripts/apple-acceptance", name)
     : name === "official-account.swift" ||

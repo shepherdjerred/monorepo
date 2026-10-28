@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import TaskNotesKit
 
@@ -5,12 +6,14 @@ enum AccountInputFailure: String, Error {
   case input, ownership, form, focus, deadline, socket
 }
 
-enum AccountInputOperation: String, Encodable {
-  case probe, credentials
+enum AccountInputOperation: String, Encodable, CaseIterable {
+  case probe
   case fixtureVerification = "fixture-verification"
+  case authOnly = "auth-only"
+  case connectOnly = "connect-only"
   var appMode: String {
     switch self {
-    case .probe, .credentials: "account"
+    case .probe, .authOnly, .connectOnly: "account"
     case .fixtureVerification: "fixture-verification"
     }
   }
@@ -18,19 +21,60 @@ enum AccountInputOperation: String, Encodable {
 
 struct AccountInputRequests {
   let operation: AccountInputOperation
+  let limits: AccountInputPhaseContract.Limits
   private var seen: Set<String> = []
-  private var fixtureSubmitted = false
+  private var submissions: [String: Int] = [:]
   mutating func admit(_ request: String, kind: AccountInputCommand.Kind) throws {
-    guard operation != .probe || ![.submit, .submitVerification, .connect].contains(kind) else {
+    guard limits.allowedRunnerKinds.contains(kind.rawValue),
+      seen.count < limits.runnerCommandLimit, seen.insert(request).inserted
+    else {
       throw AccountInputFailure.input
     }
-    if operation == .fixtureVerification {
-      guard kind != .submitVerification, kind != .connect,
-        kind != .submit || !fixtureSubmitted
-      else { throw AccountInputFailure.input }
-      if kind == .submit { fixtureSubmitted = true }
+    let action = kind.submissionAction
+    if let action {
+      let count = submissions[action, default: 0]
+      guard let maximum = limits.maximumSubmissions[action], count < maximum else {
+        throw AccountInputFailure.input
+      }
+      submissions[action] = count + 1
     }
-    guard seen.count < 13, seen.insert(request).inserted else { throw AccountInputFailure.input }
+  }
+}
+
+struct AccountInputPhaseContract: Decodable {
+  struct Limits: Decodable {
+    let initialStages: [String]
+    let finishStages: [String]
+    let allowedRunnerKinds: [String]
+    let allowedAppKinds: [String]
+    let runnerCommandLimit: Int
+    let appCommandLimit: Int
+    let maximumSubmissions: [String: Int]
+  }
+  let sessionSeconds: Int
+  private let operations: [String: Limits]
+
+  init(schemaData: Data) throws {
+    guard let root = try JSONSerialization.jsonObject(with: schemaData) as? [String: Any],
+      let definitions = root["$defs"] as? [String: Any],
+      let definition = definitions["phase-contract"] as? [String: Any],
+      let value = definition["const"] as? [String: Any]
+    else { throw AccountInputFailure.input }
+    let data = try JSONSerialization.data(withJSONObject: value)
+    try FacetSchema(data: schemaData).validate(data: data, definition: "phase-contract")
+    self = try JSONDecoder().decode(Self.self, from: data)
+    guard sessionSeconds == 120,
+      Set(operations.keys) == Set(AccountInputOperation.allCases.map(\.rawValue)),
+      operations.values.allSatisfy({
+        (1...13).contains($0.runnerCommandLimit) && (1...7).contains($0.appCommandLimit)
+          && Set($0.maximumSubmissions.keys) == ["credentials", "verification", "connect"]
+      })
+    else { throw AccountInputFailure.input }
+  }
+
+  func limits(for operation: AccountInputOperation) throws -> Limits {
+    guard let result = operations[operation.rawValue] else { throw AccountInputFailure.input }
+    return result
   }
 }
 
@@ -70,6 +114,17 @@ struct AccountInputCommand: Decodable {
     case checkpointEmpty = "checkpoint-empty"
     case checkpointEmail = "checkpoint-email"
     case checkpointVaultEmpty = "checkpoint-vault-empty"
+
+    var submissionAction: String? {
+      switch self {
+      case .submit: "credentials"
+      case .submitVerification: "verification"
+      case .connect: "connect"
+      case .fill, .observe, .finish, .fillVerification, .fillVaultPassword,
+        .checkpointEmpty, .checkpointEmail, .checkpointVaultEmpty:
+        nil
+      }
+    }
   }
   let schemaVersion: Int
   let sessionID: String
@@ -107,6 +162,7 @@ struct AccountInputReply: Encodable {
   var point: String?
   var operation: AccountInputOperation?
   var clockUnixMilliseconds: Int64?
+  var intentRecorded = false
 
   init(_ identity: AccountInputIdentity, kind: Kind, requestID: String? = nil) {
     sessionID = identity.sessionID
@@ -119,7 +175,7 @@ struct AccountInputReply: Encodable {
   private enum CodingKeys: String, CodingKey {
     case schemaVersion, sessionID, runID, deviceID, requestID, kind, runnerPID, stage
     case signInEnabled, connectEnabled, disabledCheckpoints, submitActionCount, reason, busy, point
-    case operation, clockUnixMilliseconds
+    case operation, clockUnixMilliseconds, intentRecorded
   }
 
   func encode(to encoder: any Encoder) throws {
@@ -155,7 +211,9 @@ struct AccountInputReply: Encodable {
     case .observed:
       try output.encode(false, forKey: .busy)
       if stage == "vaults" { try output.encode(connectEnabled, forKey: .connectEnabled) }
-    case .submitted, .verificationSubmitted, .connectSubmitted, .finished, .rejected: break
+    case .submitted, .verificationSubmitted, .connectSubmitted:
+      try output.encode(intentRecorded, forKey: .intentRecorded)
+    case .finished, .rejected: break
     }
   }
 }
@@ -164,6 +222,7 @@ struct AccountInputProtocol {
   private let schema: FacetSchema
   let identity: AccountInputIdentity
   let verificationTiming: AccountInputVerificationTiming
+  let phases: AccountInputPhaseContract
 
   init(identity: AccountInputIdentity, bundle: Bundle) throws {
     guard let url = bundle.url(forResource: "account-input.schema", withExtension: "json")
@@ -178,6 +237,7 @@ struct AccountInputProtocol {
     do {
       schema = try FacetSchema(data: schemaData)
       verificationTiming = try AccountInputVerificationTiming(schemaData: schemaData)
+      phases = try AccountInputPhaseContract(schemaData: schemaData)
     } catch {
       throw AccountInputFailure.input
     }
@@ -201,6 +261,79 @@ struct AccountInputProtocol {
       guard data.count < 8192 else { throw AccountInputFailure.input }
       return data + Data([10])
     } catch { throw AccountInputFailure.input }
+  }
+
+  func intent(operation: AccountInputOperation, command: AccountInputCommand) throws -> Data {
+    guard let action = command.kind.submissionAction else { throw AccountInputFailure.input }
+    let value: [String: Any] = [
+      "schemaVersion": 1, "runID": identity.runID, "sessionID": identity.sessionID,
+      "deviceID": identity.deviceID, "requestID": command.requestID,
+      "operation": operation.rawValue, "action": action,
+      "remoteVaultID": action == "connect"
+        ? command.remoteVaultID.map { $0 as Any } ?? NSNull() : NSNull(),
+      "profileID": action == "connect"
+        ? command.profileID.map { $0 as Any } ?? NSNull() : NSNull(),
+    ]
+    let data = try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
+    try schema.validate(data: data, definition: "submit-intent")
+    return data
+  }
+}
+
+/// Public action metadata survives socket cleanup and uncertain submission outcomes.
+struct AccountInputIntents {
+  private let directory: URL
+
+  init(sessionID: String) throws {
+    let manager = FileManager.default
+    let home = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+    let temporary = manager.temporaryDirectory.standardizedFileURL
+    guard UUID(uuidString: sessionID)?.uuidString.lowercased() == sessionID,
+      temporary.path == home.appendingPathComponent("tmp").path,
+      temporary.resolvingSymlinksInPath().path == temporary.path
+    else { throw AccountInputFailure.ownership }
+    let parent = temporary.appendingPathComponent("FacetAccountIntents", isDirectory: true)
+    try Self.privateDirectory(parent, fresh: false)
+    directory = parent.appendingPathComponent(sessionID, isDirectory: true)
+    try Self.privateDirectory(directory, fresh: true)
+  }
+
+  init(testDirectory: URL) throws {
+    directory = testDirectory
+    try Self.privateDirectory(directory, fresh: true)
+  }
+
+  func record(_ data: Data, action: String) throws {
+    guard ["credentials", "verification", "connect"].contains(action),
+      data.count > 0, data.count <= 8192
+    else { throw AccountInputFailure.input }
+    let file = directory.appendingPathComponent(action + ".json")
+    let descriptor = unsafe Darwin.open(
+      file.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, S_IRUSR | S_IWUSR)
+    guard descriptor >= 0 else { throw AccountInputFailure.ownership }
+    let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    guard fchmod(descriptor, 0o600) == 0 else { throw AccountInputFailure.ownership }
+    try handle.write(contentsOf: data)
+    try handle.synchronize()
+    try handle.close()
+    let parentDescriptor = unsafe Darwin.open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+    guard parentDescriptor >= 0 else { throw AccountInputFailure.ownership }
+    let parent = FileHandle(fileDescriptor: parentDescriptor, closeOnDealloc: true)
+    try parent.synchronize()
+    try parent.close()
+  }
+
+  private static func privateDirectory(_ url: URL, fresh: Bool) throws {
+    let created = unsafe Darwin.mkdir(url.path, 0o700)
+    guard created == 0 || (!fresh && errno == EEXIST) else {
+      throw AccountInputFailure.ownership
+    }
+    var metadata = stat()
+    guard unsafe Darwin.lstat(url.path, &metadata) == 0,
+      metadata.st_mode & S_IFMT == S_IFDIR, metadata.st_uid == getuid(),
+      metadata.st_mode & 0o777 == 0o700,
+      url.resolvingSymlinksInPath().path == url.path
+    else { throw AccountInputFailure.ownership }
   }
 }
 

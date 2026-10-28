@@ -25,21 +25,23 @@ import {
   prepareGuestClients,
   preparedScopeProvenance,
   parsePreparationArguments as parseScope,
-  parseExecutionArguments as parseExecution,
   type OfficialAppInput,
 } from "./replicas/preparation";
 export type PreparationScope = "apple" | "macos";
 export function parsePreparationArguments(args: string[]): PreparationScope {
   return parseScope(args);
 }
+import { parseExecutionArguments as parseArchivedExecution } from "./reference-archive/arguments";
 export function parseExecutionArguments(args: string[]) {
-  return parseExecution(args);
+  return parseArchivedExecution(args);
 }
 import {
   currentOfficialPlugin,
   currentOfficialVersion,
 } from "./replicas/official";
 import { readVaultFile, verifyVaultEndpoint } from "./replicas/access";
+import { importReferenceArchive } from "./reference-archive/import";
+import type { ArchiveInput } from "./reference-archive/contract";
 
 export async function seed(directory: string) {
   await cp(path.join(fixtures, "e2e/local-vault"), directory, {
@@ -156,7 +158,12 @@ export async function prepare(
   scope: PreparationScope = "apple",
   vm?: string,
   officialApp?: OfficialAppInput,
+  referenceArchive?: ArchiveInput,
 ) {
+  if (referenceArchive !== undefined && vm === undefined)
+    throw new Error(
+      "Historical reference archives require headless guest execution",
+    );
   const runnerIdentity = z
     .string()
     .regex(/^[a-f0-9]{40}$/iu)
@@ -165,7 +172,16 @@ export async function prepare(
   const runID = crypto.randomUUID().toLowerCase();
   const directory = runDirectory(runID);
   await mkdir(directory, { recursive: false, mode: 0o700 });
-  const seeded = await seed(path.join(directory, "reference-vault"));
+  const seedDirectory = path.join(directory, "reference-vault");
+  const seeded =
+    referenceArchive === undefined
+      ? await seed(seedDirectory)
+      : {
+          ...(await importReferenceArchive(referenceArchive, seedDirectory)),
+          pluginFixtureSHA256: digest(
+            await readFile(path.join(fixtures, "vault/upstream/config.json")),
+          ),
+        };
   let manifest = ManifestSchema.parse({
     ...(scope === "macos" ? { schemaVersion: 2, scope } : { schemaVersion: 1 }),
     runID,
@@ -227,6 +243,9 @@ export async function prepare(
       },
       expectedTaskNotesVersion: "4.13.8",
       officialObsidianVersion: null,
+      ...(manifest.referenceArchive === undefined
+        ? {}
+        : { referenceArchive: manifest.referenceArchive }),
     });
     manifest.stage = "owner-setup";
     await save(manifest);

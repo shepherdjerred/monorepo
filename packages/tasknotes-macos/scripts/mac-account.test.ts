@@ -14,6 +14,10 @@ import {
 } from "./mac-account-contract.ts";
 import { requiredCases } from "../../tasks-for-obsidian/scripts/apple-sync-live/model.ts";
 import { closedReceipt, main } from "./mac-account.ts";
+import {
+  assertMacInputCorrelation,
+  MacInputPreparedSchema,
+} from "../../tasks-for-obsidian/scripts/apple-sync-live/transport/execution/account-input/protocol";
 
 const runID = "11111111-1111-4111-a111-111111111abc";
 const remote = "synthetic-remote";
@@ -162,9 +166,98 @@ describe("Mac account runtime confinement", () => {
     ])
       expect(() => parseArguments(args)).toThrow();
   });
+
+  test("two-phase Mac probe accepts no credential locators, backend or lifecycle override", () => {
+    expect(parseArguments([runID, "probe"])).toEqual({
+      runID,
+      operation: "probe",
+      parameters: {},
+      lifecycleRound: undefined,
+    });
+    for (const option of [
+      "--account",
+      "--credential-backend",
+      "--vault-password-ref",
+      "--lifecycle-round",
+    ])
+      expect(() =>
+        parseArguments([runID, "probe", option, "synthetic"]),
+      ).toThrow();
+  });
+
+  test("Mac verification requires the cached expiry-bearing backend before any input", () => {
+    const options = [
+      "--account",
+      "A".repeat(26),
+      "--vault",
+      "b".repeat(26),
+      "--item",
+      "c".repeat(26),
+    ];
+    expect(
+      parseArguments([runID, "verification", ...options]).parameters[
+        "--credential-backend"
+      ],
+    ).toBe("keychain");
+    for (const backend of ["desktop", "service-account"])
+      expect(() =>
+        parseArguments([
+          runID,
+          "verification",
+          ...options,
+          "--credential-backend",
+          backend,
+        ]),
+      ).toThrow();
+  });
 });
 
 describe("credential and output hygiene", () => {
+  test("private preparation must match the requested operation and session before input", () => {
+    const prepared = MacInputPreparedSchema.parse({
+      kind: "mac-input-prepared",
+      program: "/private/tmp/synthetic/helper",
+      evidenceDirectory: "/private/tmp/synthetic/evidence",
+      probe: false,
+      input: {
+        schemaVersion: 1,
+        kind: "mac-private-account-input",
+        mode: "private_session",
+        operation: "credentials",
+        sessionID: runID,
+        runID,
+        remoteID: remote,
+        runDirectory: "/private/tmp/synthetic",
+        executable: "/private/tmp/synthetic/app",
+        container: "/private/tmp/synthetic/container",
+        stateDirectory: "/private/tmp/synthetic/state",
+        lifecycle: null,
+        guestConfigSHA256: "a".repeat(64),
+        pid: 123,
+        startSeconds: 456,
+        startMicroseconds: 789,
+        launchDate: 456.000789,
+        requestID: null,
+        helperSHA256: "b".repeat(64),
+        protocolSHA256: "c".repeat(64),
+        timingSHA256: "d".repeat(64),
+        approvalSHA256: "e".repeat(64),
+      },
+    });
+    expect(() =>
+      assertMacInputCorrelation(prepared, "credentials", runID),
+    ).not.toThrow();
+    expect(() =>
+      assertMacInputCorrelation(prepared, "verification", runID),
+    ).toThrow("operation changed");
+    expect(() =>
+      assertMacInputCorrelation(
+        prepared,
+        "credentials",
+        "22222222-2222-4222-a222-222222222abc",
+      ),
+    ).toThrow("request changed");
+  });
   test("selects exactly one credential field from the exact item and vault", () => {
     const item = {
       id: "item",
@@ -265,6 +358,9 @@ describe("credential and output hygiene", () => {
           "AccountRuntime.swift",
           "AccountOwner.swift",
           "AccountLifecycle.swift",
+          "MacAccountProtocol.swift",
+          "MacAccountIO.swift",
+          "MacAccountSession.swift",
         ].map((name) =>
           readFile(
             path.join(import.meta.dir, "native/mac-account", name),

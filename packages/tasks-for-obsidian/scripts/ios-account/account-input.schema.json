@@ -805,7 +805,8 @@
             "deviceID",
             "requestID",
             "kind",
-            "submitActionCount"
+            "submitActionCount",
+            "intentRecorded"
           ],
           "properties": {
             "schemaVersion": {
@@ -828,6 +829,9 @@
             },
             "submitActionCount": {
               "const": 1
+            },
+            "intentRecorded": {
+              "const": true
             }
           }
         },
@@ -841,7 +845,8 @@
             "deviceID",
             "requestID",
             "kind",
-            "submitActionCount"
+            "submitActionCount",
+            "intentRecorded"
           ],
           "properties": {
             "schemaVersion": {
@@ -864,6 +869,9 @@
             },
             "submitActionCount": {
               "const": 1
+            },
+            "intentRecorded": {
+              "const": true
             }
           }
         },
@@ -877,7 +885,8 @@
             "deviceID",
             "requestID",
             "kind",
-            "submitActionCount"
+            "submitActionCount",
+            "intentRecorded"
           ],
           "properties": {
             "schemaVersion": {
@@ -900,6 +909,9 @@
             },
             "submitActionCount": {
               "const": 1
+            },
+            "intentRecorded": {
+              "const": true
             }
           }
         },
@@ -1844,7 +1856,7 @@
       "maximum": 9007199254740991
     },
     "operation": {
-      "enum": ["probe", "fixture-verification", "credentials"]
+      "enum": ["probe", "fixture-verification", "auth-only", "connect-only"]
     },
     "verification-timing": {
       "const": {
@@ -1863,6 +1875,250 @@
           "error": "Please enter your 2FA code"
         }
       }
+    },
+    "phase-contract": {
+      "const": {
+        "sessionSeconds": 120,
+        "operations": {
+          "probe": {
+            "initialStages": ["credentials"],
+            "finishStages": ["credentials"],
+            "allowedRunnerKinds": [
+              "checkpoint-empty",
+              "checkpoint-email",
+              "fill",
+              "finish"
+            ],
+            "allowedAppKinds": ["clear", "email", "password", "finish"],
+            "runnerCommandLimit": 4,
+            "appCommandLimit": 4,
+            "maximumSubmissions": {
+              "credentials": 0,
+              "verification": 0,
+              "connect": 0
+            }
+          },
+          "fixture-verification": {
+            "initialStages": ["credentials"],
+            "finishStages": ["verification"],
+            "allowedRunnerKinds": [
+              "checkpoint-empty",
+              "checkpoint-email",
+              "fill",
+              "submit",
+              "observe",
+              "fill-verification",
+              "finish"
+            ],
+            "allowedAppKinds": [
+              "clear",
+              "email",
+              "password",
+              "verification",
+              "finish"
+            ],
+            "runnerCommandLimit": 7,
+            "appCommandLimit": 5,
+            "maximumSubmissions": {
+              "credentials": 1,
+              "verification": 0,
+              "connect": 0
+            }
+          },
+          "auth-only": {
+            "initialStages": ["credentials", "verification"],
+            "finishStages": ["vaults"],
+            "allowedRunnerKinds": [
+              "checkpoint-empty",
+              "checkpoint-email",
+              "fill",
+              "submit",
+              "observe",
+              "fill-verification",
+              "submit-verification",
+              "finish"
+            ],
+            "allowedAppKinds": [
+              "clear",
+              "email",
+              "password",
+              "verification",
+              "finish"
+            ],
+            "runnerCommandLimit": 9,
+            "appCommandLimit": 5,
+            "maximumSubmissions": {
+              "credentials": 1,
+              "verification": 1,
+              "connect": 0
+            }
+          },
+          "connect-only": {
+            "initialStages": ["vaults"],
+            "finishStages": ["connected"],
+            "allowedRunnerKinds": [
+              "checkpoint-vault-empty",
+              "fill-vault-password",
+              "connect",
+              "observe",
+              "finish"
+            ],
+            "allowedAppKinds": ["clear-vault", "vault-password"],
+            "runnerCommandLimit": 5,
+            "appCommandLimit": 2,
+            "maximumSubmissions": {
+              "credentials": 0,
+              "verification": 0,
+              "connect": 1
+            }
+          }
+        }
+      }
+    },
+    "submit-intent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "runID",
+            "sessionID",
+            "deviceID",
+            "requestID",
+            "operation",
+            "action",
+            "remoteVaultID",
+            "profileID"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "operation": {
+              "enum": ["auth-only", "fixture-verification"]
+            },
+            "action": {
+              "const": "credentials"
+            },
+            "remoteVaultID": {
+              "const": null
+            },
+            "profileID": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "runID",
+            "sessionID",
+            "deviceID",
+            "requestID",
+            "operation",
+            "action",
+            "remoteVaultID",
+            "profileID"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "operation": {
+              "enum": ["auth-only"]
+            },
+            "action": {
+              "const": "verification"
+            },
+            "remoteVaultID": {
+              "const": null
+            },
+            "profileID": {
+              "const": null
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaVersion",
+            "runID",
+            "sessionID",
+            "deviceID",
+            "requestID",
+            "operation",
+            "action",
+            "remoteVaultID",
+            "profileID"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "runID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sessionID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "deviceID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "requestID": {
+              "$ref": "#/$defs/uuid"
+            },
+            "operation": {
+              "enum": ["connect-only"]
+            },
+            "action": {
+              "const": "connect"
+            },
+            "remoteVaultID": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "profileID": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   }
 }

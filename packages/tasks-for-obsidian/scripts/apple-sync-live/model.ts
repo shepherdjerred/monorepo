@@ -5,6 +5,7 @@ import addFormats from "ajv-formats";
 import { z } from "zod";
 import { GuestExecutionSchema } from "./transport/contract";
 import acceptanceDefinition from "@tasknotes/fixtures/schema/facet-acceptance.schema.json";
+import { ArchiveLineageSchema } from "./reference-archive/contract";
 
 export const packageRoot = path.resolve(import.meta.dir, "../..");
 
@@ -95,6 +96,7 @@ const manifestFields = {
   allowedRemoteVaultID: z.string().min(1).max(256).nullable(),
   reference: z.record(z.string(), FileSchema),
   pluginFixtureSHA256: sha256,
+  referenceArchive: ArchiveLineageSchema.optional(),
   cases: z.record(z.enum(requiredCases), z.enum(["pending", "pass", "failed"])),
 };
 

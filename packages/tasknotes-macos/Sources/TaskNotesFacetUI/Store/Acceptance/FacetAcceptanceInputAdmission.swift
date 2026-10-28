@@ -12,14 +12,22 @@ nonisolated internal struct FacetAcceptanceInputAdmission {
     private var requests: Set<String>
     private var actions: Set<String> = []
     private var active = true
-    internal init(initialStage: String, bindRequest: String) {
+    private let allowedActions: Set<String>
+    private let maximumActions: Int
+    internal init(
+        initialStage: String, bindRequest: String, allowedActions: Set<String>, maximumActions: Int
+    ) {
         self.initialStage = initialStage
+        self.allowedActions = allowedActions
+        self.maximumActions = maximumActions
+        active = (1...7).contains(maximumActions)
         requests = [bindRequest]
     }
     internal mutating func invalidate() { active = false }
     internal mutating func admit(request: String, action: String, stage: String) -> Bool {
         guard let kind = FacetAcceptanceInputAction(rawValue: action),
-            active, actions.count < 7, requests.insert(request).inserted,
+            active, actions.count < 7, actions.count < maximumActions,
+            allowedActions.contains(action), requests.insert(request).inserted,
             actions.insert(action).inserted
         else {
             active = false

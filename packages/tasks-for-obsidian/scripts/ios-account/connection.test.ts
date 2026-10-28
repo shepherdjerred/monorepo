@@ -5,6 +5,7 @@ import { boundaryCheck } from "./contract";
 import type { AccountOperation } from "./contract";
 import type { AppInput } from "./app-input";
 import { z } from "zod";
+import type { SubmitIntent } from "./phases/intents";
 
 const identity = {
   sessionID: "12345678-1234-4234-9234-123456789abc",
@@ -159,6 +160,7 @@ class RunnerWire extends Socket {
                 ? "connect-submitted"
                 : "verification-submitted",
           submitActionCount: 1,
+          intentRecorded: true,
         };
         break;
       case "observe": {
@@ -185,6 +187,7 @@ class RunnerWire extends Socket {
     return reply;
   }
   private observeStage() {
+    if (this.operation === "connect-only") return "connected";
     this.observed += 1;
     if (this.mfa && this.observed === 1) return "verification";
     if (this.observed === (this.mfa ? 2 : 1)) return "vaults";
@@ -201,8 +204,11 @@ class RunnerWire extends Socket {
           runnerPID: 501,
           operation: this.operation,
           clockUnixMilliseconds: Date.now(),
-          stage: "credentials",
+          stage: this.operation === "connect-only" ? "vaults" : "credentials",
           signInEnabled: false,
+          ...(this.operation === "connect-only"
+            ? { connectEnabled: !this.encrypted }
+            : {}),
         }) + "\n",
       ),
     );
@@ -211,13 +217,14 @@ class RunnerWire extends Socket {
 function fixture(
   mfa = true,
   encrypted = true,
-  operation: AccountOperation = "credentials",
+  operation: AccountOperation = "auth-only",
 ) {
   const wire = new RunnerWire(mfa, encrypted, operation),
     values: { action: string; value?: string }[] = [];
+  const intents: SubmitIntent[] = [];
   let closingExpected = false;
   const app: AppInput = {
-    stage: "credentials",
+    stage: operation === "connect-only" ? "vaults" : "credentials",
     apply: async (action, _stage, value) => {
       values.push({ action, ...(value === undefined ? {} : { value }) });
     },
@@ -243,17 +250,23 @@ function fixture(
     async () => {
       expect(wire.destroyed).toBe(false);
     },
-    { app, operation },
+    {
+      app,
+      operation,
+      recordIntent: async (intent) => {
+        intents.push(intent);
+      },
+    },
   );
   wire.ready();
-  return { wire, values, app, session };
+  return { wire, values, app, session, intents };
 }
 
 test.each([
-  [true, true, 13],
-  [false, true, 10],
-  [true, false, 11],
-  [false, false, 8],
+  [true, true, 14],
+  [false, true, 11],
+  [true, false, 12],
+  [false, false, 9],
 ] as const)(
   "normal MFA%s/encryption%s flow has exactly%s control-only commands",
   async (mfa, encrypted, count) => {
@@ -277,12 +290,26 @@ test.each([
         await session.submitVerification();
         await session.observe();
       }
-      if (encrypted) await session.fillVaultPassword("synthetic-vault-only");
-      await session.connect("owned-remote");
-      await session.observe();
       await session.finish();
-      expect(wire.frames).toHaveLength(count);
-      const raw = wire.frames.join("");
+      const controlFrames = [...wire.frames];
+      const connection = fixture(false, encrypted, "connect-only");
+      try {
+        await connection.session.bind();
+        if (encrypted)
+          await connection.session.fillVaultPassword("synthetic-vault-only");
+        await connection.session.connect("owned-remote");
+        await connection.session.observe();
+        await connection.session.finish();
+        expect(wire.frames.length + connection.wire.frames.length).toBe(count);
+        expect(wire.commands).not.toContain("connect");
+        expect(connection.wire.commands).not.toContain("submit");
+        expect(connection.wire.commands).not.toContain("submit-verification");
+        values.push(...connection.values);
+        controlFrames.push(...connection.wire.frames);
+      } finally {
+        connection.session.close();
+      }
+      const raw = controlFrames.join("");
       for (const forbidden of [
         "synthetic@example.invalid",
         "synthetic-only-password",
@@ -352,15 +379,9 @@ test("private input loss and duplicate operations cannot cause an automatic subm
 });
 
 test("normal Connect waits for verified private transport closure and never taps after closure failure", async () => {
-  const { session, wire, app } = fixture(false, false);
+  const { session, wire, app } = fixture(false, false, "connect-only");
   try {
     await session.bind();
-    await session.fill({
-      email: "synthetic@example.invalid",
-      password: "synthetic-only-password",
-    });
-    await session.submit();
-    await session.observe();
     let release: (() => void) | undefined;
     app.expectClose = () =>
       new Promise<void>((resolve) => {
@@ -378,15 +399,9 @@ test("normal Connect waits for verified private transport closure and never taps
   } finally {
     session.close();
   }
-  const failed = fixture(false, false);
+  const failed = fixture(false, false, "connect-only");
   try {
     await failed.session.bind();
-    await failed.session.fill({
-      email: "synthetic@example.invalid",
-      password: "synthetic-only-password",
-    });
-    await failed.session.submit();
-    await failed.session.observe();
     failed.app.expectClose = async () => {
       throw new Error("private closure rejected");
     };

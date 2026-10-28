@@ -45,10 +45,20 @@
             responseStatus = response
             responseBody = try JSONSerialization.data(withJSONObject: body, options: [.sortedKeys])
             try Self.createDirectory(directory)
+            let receipt = try JSONSerialization.data(
+                withJSONObject: [
+                    "schemaVersion": 1, "mode": "fixture-verification",
+                    "runID": identity.runID.uuidString.lowercased(),
+                    "sessionID": identity.sessionID.uuidString.lowercased(),
+                ], options: [.sortedKeys])
+            let receiptURL = directory.appendingPathComponent("identity.json")
+            try receipt.write(to: receiptURL, options: .withoutOverwriting)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: 0o600], ofItemAtPath: receiptURL.path)
         }
 
         internal static func launch(directory: URL) throws -> FacetAcceptanceAccountHTTPFixture? {
-            #if os(iOS) && targetEnvironment(simulator)
+            #if os(macOS) || targetEnvironment(simulator)
                 let environment = ProcessInfo.processInfo.environment
                 guard let operation = environment["FACET_E2E_ACCOUNT_OPERATION"] else {
                     guard environment["FACET_E2E_ACCOUNT_MODE"] == nil else {
@@ -56,7 +66,9 @@
                     }
                     return nil
                 }
-                guard ["probe", "credentials", "fixture-verification"].contains(operation),
+                guard
+                    ["probe", "auth-only", "connect-only", "fixture-verification"].contains(
+                        operation),
                     environment["FACET_E2E_ACCOUNT_MODE"]
                         == (operation == "fixture-verification" ? operation : "account")
                 else { throw FacetAcceptanceError.invalidDescriptor }
@@ -166,19 +178,32 @@
         }
     }
 
-    #if os(iOS) && targetEnvironment(simulator)
+    #if os(macOS) || targetEnvironment(simulator)
         extension FacetAcceptanceAccountHTTPFixture {
             private static func launchedFixture(
                 directory: URL, environment: [String: String]
             ) throws -> FacetAcceptanceAccountHTTPFixture {
-                guard Bundle.main.bundleIdentifier == "org.reactjs.native.example.TasksForObsidian",
-                    let configuration = try FacetAcceptanceConfiguration.launch(),
+                #if os(macOS)
+                    var virtualized: Int32 = 0
+                    var size = MemoryLayout<Int32>.size
+                    guard Bundle.main.bundleIdentifier == "red.sjer.tasknotes.mac.acceptance",
+                        unsafe sysctlbyname("kern.hv_vmm_present", &virtualized, &size, nil, 0)
+                            == 0,
+                        size == MemoryLayout<Int32>.size, virtualized == 1
+                    else { throw FacetAcceptanceError.wrongApplication }
+                #else
+                    guard
+                        Bundle.main.bundleIdentifier
+                            == "org.reactjs.native.example.TasksForObsidian",
+                        let device = environment["SIMULATOR_UDID"], UUID(uuidString: device) != nil,
+                        environment["FACET_E2E_SIMULATOR"] == device
+                    else { throw FacetAcceptanceError.wrongApplication }
+                #endif
+                guard let configuration = try FacetAcceptanceConfiguration.launch(),
                     let run = environment["FACET_E2E_RUN_ID"],
                     UUID(uuidString: run) == configuration.runID,
                     let session = environment["FACET_E2E_ACCOUNT_SESSION"],
                     let sessionID = UUID(uuidString: session),
-                    let device = environment["SIMULATOR_UDID"], UUID(uuidString: device) != nil,
-                    environment["FACET_E2E_SIMULATOR"] == device,
                     let resource = Bundle.main.url(
                         forResource: "account-input.schema", withExtension: "json")
                 else { throw FacetAcceptanceError.invalidDescriptor }
