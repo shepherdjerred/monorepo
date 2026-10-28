@@ -1,5 +1,5 @@
 import path from "node:path";
-import { chmod } from "node:fs/promises";
+import { chmod, mkdir } from "node:fs/promises";
 import { request, socketReady, StatusSchema, waitFor } from "./protocol.ts";
 import type { Session } from "./protocol.ts";
 
@@ -11,6 +11,12 @@ export async function startClient(options: {
   onExit: () => void;
 }) {
   const { session, privateDir, packageRoot, onExit } = options;
+  const gameDir = path.join(privateDir, "game");
+  await mkdir(gameDir, { recursive: true });
+  await Bun.write(
+    path.join(gameDir, "options.txt"),
+    "onboardAccessibility:false\ntutorialStep:none\n",
+  );
   const bootstrap = path.join(privateDir, "bootstrap.json");
   const { control: _control, ...config } = session;
   await Bun.write(bootstrap, JSON.stringify(config));
@@ -26,7 +32,7 @@ export async function startClient(options: {
       path.join(packageRoot, "client"),
       "runClient",
       `-PpreviewSession=${bootstrap}`,
-      `-PpreviewGameDir=${path.join(privateDir, "game")}`,
+      `-PpreviewGameDir=${gameDir}`,
       "--console=plain",
       "--no-daemon",
     ],
