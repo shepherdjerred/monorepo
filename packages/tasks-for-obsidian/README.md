@@ -156,6 +156,14 @@ harmless child:
 bun scripts/apple-sync-live/mac-process-owner.native-controls.ts
 ```
 
+Mac account preparation supplies anonymous OS pipes to the native inspection helper;
+its macOS-only controls exercise the original stream decoder through actual Bun
+processes, including EOF, native failure and owned-pipeline timeout cleanup:
+
+```bash
+bun scripts/apple-sync-live/transport/execution/account-input/inspection.native-controls.ts
+```
+
 For guest execution, the owner-setup entry launches only the exact exported
 official app and owned reference, installs the separately exported pinned plugin,
 and presents normal account controls:

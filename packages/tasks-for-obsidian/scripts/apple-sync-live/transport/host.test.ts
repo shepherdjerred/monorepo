@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { GuestExecutionSchema } from "./contract.ts";
+import { GuestExecutionSchema, GuestOperationSchema } from "./contract.ts";
 import {
   executePrivateTransport,
   guestCall,
@@ -16,9 +16,20 @@ const failedChild: TransportCommand = () =>
     stderr: encoder.encode("private-stderr-value"),
   });
 
-test("private stdin carries credentials while argv and closed receipts contain none", async () => {
+test("public account inspection crosses stdin while retired credential RPC is rejected", async () => {
   const secret = "synthetic-private-input-sentinel",
     email = "synthetic@example.invalid";
+  expect(
+    GuestOperationSchema.safeParse({
+      kind: "account",
+      action: {
+        mode: "fill_credentials",
+        email,
+        password: secret,
+        lifetime: { startSeconds: 1, startMicroseconds: 1, launchDate: 1 },
+      },
+    }).success,
+  ).toBe(false);
   let verified = 0;
   const execute: TransportCommand = async (argv, bytes) => {
     expect(argv.slice(0, 4)).toEqual([
@@ -29,7 +40,10 @@ test("private stdin carries credentials while argv and closed receipts contain n
     ]);
     expect(argv.join(" ")).not.toContain(secret);
     const request = JSON.parse(new TextDecoder().decode(bytes));
-    expect(request.operation.action.password).toBe(secret);
+    expect(request.operation).toEqual({
+      kind: "account",
+      action: { mode: "inspect_credentials" },
+    });
     return {
       exitCode: 0,
       stderr: new Uint8Array(),
@@ -39,7 +53,10 @@ test("private stdin carries credentials while argv and closed receipts contain n
           binding: request.binding,
           requestID: request.requestID,
           capturedAt: new Date().toISOString(),
-          result: { kind: "account", receipt: { credentialsEntered: true } },
+          result: {
+            kind: "account",
+            receipt: { ready: true, stage: "credentials", readOnly: true },
+          },
         }),
       ),
     };
@@ -48,12 +65,7 @@ test("private stdin carries credentials while argv and closed receipts contain n
     manifest,
     {
       kind: "account",
-      action: {
-        mode: "fill_credentials",
-        email,
-        password: secret,
-        lifetime: { startSeconds: 1, startMicroseconds: 1, launchDate: 1 },
-      },
+      action: { mode: "inspect_credentials" },
     },
     execute,
     async () => {
@@ -62,7 +74,7 @@ test("private stdin carries credentials while argv and closed receipts contain n
   );
   expect(reply).toEqual({
     kind: "account",
-    receipt: { credentialsEntered: true },
+    receipt: { ready: true, stage: "credentials", readOnly: true },
   });
   expect(verified).toBe(2);
 });

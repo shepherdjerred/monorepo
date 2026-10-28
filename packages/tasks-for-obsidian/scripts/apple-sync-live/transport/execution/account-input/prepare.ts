@@ -155,6 +155,22 @@ export function legacyMacBinding(
     guestConfigSHA256: runtime.expectedConfigSHA,
   };
 }
+/** Guest Bun uses socketpairs for stdio; the native inspection requires OS pipes. */
+export function macInspectionArguments(program: string): string[] {
+  assert.ok(program.startsWith("/") && !/\p{Cc}/u.test(program));
+  return [
+    "/bin/bash",
+    "--noprofile",
+    "--norc",
+    "-o",
+    "pipefail",
+    "-c",
+    '/bin/cat | "$1" | /bin/cat',
+    "facet-mac-inspection",
+    program,
+  ];
+}
+
 export async function inspectMacInput(
   program: string,
   binding: ReturnType<typeof legacyMacBinding>,
@@ -172,7 +188,11 @@ export async function inspectMacInput(
   const bytes = new TextEncoder().encode(
     JSON.stringify({ ...binding, pid, mode, ...lifetime }) + "\n",
   );
-  const result = await executePrivateTransport([program], bytes, 30_000);
+  const result = await executePrivateTransport(
+    macInspectionArguments(program),
+    bytes,
+    30_000,
+  );
   assert.equal(result.stderr.length, 0);
   const receipt = ClosedAccountReceiptSchema.parse(
     JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(result.stdout)),
