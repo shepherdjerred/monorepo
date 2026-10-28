@@ -1,5 +1,24 @@
 import Foundation
 
+extension FacetAccountMetadata {
+    internal static func validateShape(_ bytes: Data) throws {
+        guard let fields = try FacetJSON.parse(bytes).object?.fields,
+            let version = fields["schemaVersion"], FacetJSONNumbers.isInteger(version),
+            FacetJSONNumbers.compare(version, .integer(1)) == 0,
+            Set(fields.keys).isSubset(of: [
+                "schemaVersion", "activeOwner", "identities", "pendingKeyRemoval",
+            ])
+        else { throw FacetContractError.unsupportedResponse }
+        if let pending = fields["pendingKeyRemoval"] {
+            guard let values = pending.array?.elements,
+                Set(values.compactMap(\.text)).count == values.count
+            else {
+                throw FacetContractError.unsupportedResponse
+            }
+        }
+    }
+}
+
 /// Native nonsecret capability ownership and crash-safe key cleanup intents.
 internal struct FacetAccountMetadata: Codable {
     let schemaVersion: UInt32

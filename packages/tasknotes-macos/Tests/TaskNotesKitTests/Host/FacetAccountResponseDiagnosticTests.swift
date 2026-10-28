@@ -172,3 +172,142 @@ import Testing
         #expect(!unknown.chain.contains(privateText) && !unknown.action.contains(privateText))
     }
 }
+
+#if DEBUG
+    @Suite @MainActor struct FacetAcceptanceAccountHTTPFixtureTests {
+        @Test func originalHTTPAndRustDecoderProduceOnlySyntheticMFAChallenge() async throws {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+                "facet-mfa-http-" + UUID().uuidString
+            ).resolvingSymlinksInPath()
+            defer { NativeTestFiles.remove(root) }
+            let (fixture, normalDirectory) = try fixture(root: root)
+            let account = FfiObsidianAccount()
+            let request = try account.signIn(
+                email: "facet-probe-" + UUID().uuidString + "@example.invalid",
+                password: "Facet-private-probe-" + UUID().uuidString + "-q7!", mfa: "")
+            var observed: [FacetAccountExchangeDiagnostic] = []
+            let response = try await FacetAccountHTTP.perform(
+                request, requestKind: .signIn, ownsAttempt: { true },
+                send: { try fixture.response($0) }, diagnostic: { observed.append($0) })
+            let completed = try #require(observed.last)
+            let decoded = try FacetAccountHTTP.decoded(
+                response, diagnostic: completed,
+                decode: {
+                    try account.response(requestId: request.requestId, status: $0, body: $1)
+                },
+                publish: { observed.append($0) })
+            guard case .mfaRequired = decoded else {
+                Issue.record("The original Rust decoder must require MFA, never authenticate.")
+                return
+            }
+            #expect(observed.map(\.stage) == [.preflight, .preflight, .post, .post])
+            #expect(fixture.directory.deletingLastPathComponent().path == normalDirectory.path)
+            #expect(fixture.directory != normalDirectory)
+            #expect(
+                !FileManager.default.fileExists(
+                    atPath: normalDirectory.appendingPathComponent("sync-identities.json").path))
+            #expect(throws: FacetAcceptanceError.self) {
+                _ = try fixture.response(URLRequest(url: #require(URL(string: request.url))))
+            }
+        }
+
+        @Test(arguments: ["wrong-endpoint", "post-first", "extra-header", "real-email", "mfa-code"])
+        func unexpectedRequestBurnsFixtureWithoutNetworkFallback(fault: String) throws {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+                "facet-mfa-reject-" + UUID().uuidString
+            ).resolvingSymlinksInPath()
+            defer { NativeTestFiles.remove(root) }
+            let (fixture, _) = try fixture(root: root)
+            var request = try syntheticRequest()
+            if fault == "post-first" {
+                request.httpMethod = "POST"
+            } else {
+                if fault == "wrong-endpoint" {
+                    request.url = request.url?.appendingPathComponent("unexpected")
+                }
+                if fault == "extra-header" {
+                    request.setValue("synthetic", forHTTPHeaderField: "Authorization")
+                }
+                if fault == "real-email" || fault == "mfa-code" {
+                    _ = try fixture.response(request)
+                    request.httpMethod = "POST"
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = try JSONSerialization.data(withJSONObject: [
+                        "email": fault == "real-email"
+                            ? "someone@example.invalid"
+                            : "facet-probe-" + UUID().uuidString + "@example.invalid",
+                        "password": "Facet-private-probe-" + UUID().uuidString + "-q7!",
+                        "mfa": fault == "mfa-code" ? "246802" : "",
+                    ])
+                }
+            }
+            #expect(throws: FacetAcceptanceError.self) { _ = try fixture.response(request) }
+            #expect(throws: FacetAcceptanceError.self) {
+                _ = try fixture.response(syntheticRequest())
+            }
+        }
+
+        @Test func fixtureCannotRedirectOrReuseAccountDirectoryAndHasNoCredentialStore() throws {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+                "facet-mfa-owner-" + UUID().uuidString
+            ).resolvingSymlinksInPath()
+            defer { NativeTestFiles.remove(root) }
+            let (fixture, directory) = try fixture(root: root)
+            let configuration = try configuration(root: root, run: fixture.identity.runID)
+            #expect(throws: FacetAcceptanceError.self) {
+                try FacetAcceptanceAccountHTTPFixture(
+                    configuration: configuration, accountDirectory: directory,
+                    sessionID: fixture.identity.sessionID, schema: schema())
+            }
+            #expect(throws: FacetAcceptanceError.self) {
+                try FacetAcceptanceAccountHTTPFixture(
+                    configuration: configuration, accountDirectory: root,
+                    sessionID: UUID(), schema: schema())
+            }
+            let secrets = FacetAcceptanceAccountNoAuthStore()
+            #expect(throws: FacetAcceptanceError.self) { try secrets.read("synthetic") }
+            #expect(throws: FacetAcceptanceError.self) {
+                try secrets.write("synthetic", bytes: Data("public".utf8))
+            }
+            #expect(throws: FacetAcceptanceError.self) { try secrets.remove("synthetic") }
+        }
+
+        private func fixture(root: URL) throws -> (FacetAcceptanceAccountHTTPFixture, URL) {
+            let configuration = try configuration(root: root, run: UUID())
+            let accounts = configuration.stateDirectory.appendingPathComponent("accounts")
+            return (
+                try FacetAcceptanceAccountHTTPFixture(
+                    configuration: configuration, accountDirectory: accounts,
+                    sessionID: UUID(), schema: schema()), accounts
+            )
+        }
+
+        private func configuration(root: URL, run: UUID) throws -> FacetAcceptanceConfiguration {
+            let state = root.appendingPathComponent("FacetAcceptance")
+                .appendingPathComponent(run.uuidString.lowercased())
+            let data = try JSONSerialization.data(withJSONObject: [
+                "schemaVersion": 1, "runID": run.uuidString, "stateDirectory": state.path,
+                "allowedRemoteVaultID": NSNull(),
+            ])
+            return try FacetAcceptanceConfiguration.decode(data, applicationSupport: root)
+        }
+
+        private func schema() throws -> Data {
+            try Data(
+                contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+                    .appendingPathComponent(
+                        "../../../../tasks-for-obsidian/scripts/ios-account/account-input.schema.json"
+                    ))
+        }
+
+        private func syntheticRequest() throws -> URLRequest {
+            let generated = try FfiObsidianAccount().signIn(
+                email: "synthetic@example.invalid", password: "synthetic", mfa: "")
+            var request = URLRequest(url: try #require(URL(string: generated.url)))
+            request.httpMethod = "OPTIONS"
+            let origin = try #require(generated.headers.first { $0.name.lowercased() == "origin" })
+            request.setValue(origin.value, forHTTPHeaderField: "Origin")
+            return request
+        }
+    }
+#endif

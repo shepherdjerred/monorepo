@@ -8,6 +8,10 @@ import {
   type AccountCommand,
   type AccountIdentity,
   type AccountReply,
+  type AccountOperation,
+  type VerificationSource,
+  assertInputClock,
+  assertVerificationFresh,
 } from "./contract";
 import type { AppInput } from "./app-input";
 
@@ -26,6 +30,7 @@ export class PrivateAccountSession {
   private credentialsSubmitted = false;
   private verificationFilled = false;
   private verificationSubmitted = false;
+  private verificationExpiry: number | undefined;
   private vaultFilled = false;
   private connectSubmitted = false;
   private submissions = 0;
@@ -36,13 +41,17 @@ export class PrivateAccountSession {
   private completed = false;
   private ready: Ready | undefined;
   private readonly timer: ReturnType<typeof setTimeout>;
+  private readonly app: AppInput;
+  private readonly operation: AccountOperation;
 
   constructor(
     private readonly socket: Socket,
     private readonly identity: AccountIdentity,
     private readonly validateOwner: (ready: Ready) => Promise<void>,
-    private readonly app: AppInput,
+    input: { app: AppInput; operation: AccountOperation },
   ) {
+    this.app = input.app;
+    this.operation = input.operation;
     this.decoder = new AccountFrameDecoder(identity);
     this.timer = setTimeout(() => {
       this.fail();
@@ -105,6 +114,8 @@ export class PrivateAccountSession {
     if (reply.kind !== "ready")
       throw new Error("Private iOS input is not an owned account form");
     this.ready = reply;
+    assert.equal(reply.operation, this.operation);
+    assertInputClock(reply.clockUnixMilliseconds);
     this.currentStage = reply.stage;
     this.connectEnabled = reply.connectEnabled ?? false;
     await this.validateOwner(reply);
@@ -132,6 +143,11 @@ export class PrivateAccountSession {
       "Private input returned unsolicited frames",
     );
     await this.validateOwner(this.ready);
+    if (
+      command.kind === "fill-verification" ||
+      command.kind === "submit-verification"
+    )
+      assertVerificationFresh(command.expiresAtUnixMilliseconds);
     const encoded = encodeAccountCommand(command);
     try {
       await new Promise<void>((resolve, reject) => {
@@ -181,6 +197,7 @@ export class PrivateAccountSession {
   }
 
   async submit() {
+    assert.notEqual(this.operation, "probe");
     assert.ok(
       this.filled && !this.completed && !this.credentialsSubmitted,
       "Submission requires acknowledged credential entry",
@@ -213,18 +230,28 @@ export class PrivateAccountSession {
     return { stage: reply.stage, connectEnabled: reply.connectEnabled };
   }
 
-  async fillVerification(code: string) {
+  async fillVerification(source: VerificationSource) {
     assert.ok(
       this.currentStage === "verification" &&
         !this.verificationFilled &&
         !this.verificationSubmitted,
     );
-    await this.app.apply("verification", "verification", code);
+    const expiresAtUnixMilliseconds = await this.app.applyVerification({
+      waitUntilFresh: async () => {
+        await source.waitUntilFresh();
+        assert.ok(this.ready !== undefined);
+        await this.validateOwner(this.ready);
+      },
+      issue: () => source.issue(),
+    });
+    assertVerificationFresh(expiresAtUnixMilliseconds);
+    this.verificationExpiry = expiresAtUnixMilliseconds;
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
       requestID: crypto.randomUUID(),
       kind: "fill-verification",
+      expiresAtUnixMilliseconds,
     });
     if (reply.kind !== "verification-filled")
       throw new Error("Private verification entry was not acknowledged");
@@ -232,13 +259,17 @@ export class PrivateAccountSession {
   }
 
   async submitVerification() {
+    assert.equal(this.operation, "credentials");
     assert.ok(this.verificationFilled && !this.verificationSubmitted);
     await this.app.validate();
+    assert.ok(this.verificationExpiry !== undefined);
+    assertVerificationFresh(this.verificationExpiry);
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
       requestID: crypto.randomUUID(),
       kind: "submit-verification",
+      expiresAtUnixMilliseconds: this.verificationExpiry,
     });
     if (reply.kind !== "verification-submitted")
       throw new Error("Private verification submission was not acknowledged");
@@ -267,6 +298,7 @@ export class PrivateAccountSession {
   }
 
   async connect(remoteVaultID: string, profileID?: string) {
+    assert.equal(this.operation, "credentials");
     assert.ok(
       this.currentStage === "vaults" &&
         (this.vaultFilled || this.connectEnabled) &&
@@ -355,6 +387,7 @@ export async function withPrivateAccountInput<T>(
     identity: AccountIdentity;
     validateOwner: (ready: Ready) => Promise<void>;
     app: AppInput;
+    operation: AccountOperation;
   },
   work: (session: PrivateAccountSession) => Promise<T>,
 ): Promise<T> {
@@ -392,7 +425,7 @@ export async function withPrivateAccountInput<T>(
       socket,
       options.identity,
       options.validateOwner,
-      options.app,
+      { app: options.app, operation: options.operation },
     );
     await session.bind();
     return await work(session);

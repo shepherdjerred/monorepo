@@ -11,6 +11,7 @@ import path from "node:path";
 import { afterEach, expect, test } from "vitest";
 import {
   assertPrivateInputProof,
+  assertPhaseProofPair,
   scanPrivateInputEvidence,
   verifyPrivateInputEvidence,
 } from "./leak-check";
@@ -102,14 +103,18 @@ test("proof binds exact native source, Runner and raw evidence inventory before 
   await writeFile(path.join(root, "console.json"), "{}", { mode: 0o600 });
   const scan = await scanPrivateInputEvidence(root, [email, password]);
   const expected = {
+    phase: "credentials" as const,
     runID: "12345678-1234-4234-9234-123456789abc",
     sourceHead: "a".repeat(40),
     sourceFiles: { "owned.ts": "b".repeat(64) },
+    appFiles: { App: "3".repeat(64) },
     runnerFiles: { Runner: "c".repeat(64) },
     appInputFiles: { bridge: "f".repeat(64), owner: "1".repeat(64) },
   };
   const proof = {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    mode: "account",
+    verificationCodeSubmitActionCount: 0,
     kind: "ios-private-account-input-probe",
     ...expected,
     probeID: "22345678-1234-4234-9234-123456789abc",
@@ -132,6 +137,22 @@ test("proof binds exact native source, Runner and raw evidence inventory before 
     evidence: scan.files,
   };
   const parsed = assertPrivateInputProof(proof, expected);
+  const verification = {
+    ...proof,
+    phase: "verification",
+    mode: "fixture-verification",
+    submitActionCount: 1,
+  };
+  expect(assertPhaseProofPair(proof, verification).verification.phase).toBe(
+    "verification",
+  );
+  expect(() => assertPhaseProofPair(proof, undefined)).toThrow();
+  expect(() =>
+    assertPhaseProofPair(proof, {
+      ...verification,
+      appFiles: { App: "4".repeat(64) },
+    }),
+  ).toThrow("different prepared bytes");
   expect(() =>
     assertPrivateInputProof({ ...proof, consoleLog: "decoded" }, expected),
   ).toThrow();
@@ -159,3 +180,27 @@ test("proof binds exact native source, Runner and raw evidence inventory before 
     "inventory changed",
   );
 });
+
+test.each(["utf8", "utf16le", "utf16be", "base64"])(
+  "verification-only scan rejects actual six-digit code in all raw %s evidence",
+  async (encoding) => {
+    const root = await directory(),
+      code = "739251";
+    const bytes =
+      encoding === "utf8"
+        ? Buffer.from(code)
+        : encoding === "utf16le"
+          ? Buffer.from(code, "utf16le")
+          : encoding === "utf16be"
+            ? Buffer.from(code, "utf16le").swap16()
+            : Buffer.from(Buffer.from(code).toString("base64"));
+    await writeFile(path.join(root, "raw.log"), bytes, { mode: 0o600 });
+    await expect(
+      scanPrivateInputEvidence(root, [email, password], {
+        phase: "verification",
+        code,
+      }),
+    ).rejects.toThrow("sentinel appeared");
+    await expect(scanPrivateInputEvidence(root, [code])).rejects.toThrow();
+  },
+);

@@ -286,9 +286,21 @@ The probe compiles the native bridge and canonical process-owner helper once
 under the run's `ios-account/native` directory. It pins their bytes along with the
 app, Runner and source inventory. Real credential entry reuses those verified
 helpers without rebuilding or repairing them; missing or changed inputs stop.
-The probe fills generated email and password sentinels, finishes with zero submit
-actions, and scans stdout, stderr, decoded XCTest activities, every SDK-declared
-log, exported diagnostics, raw result files and attachments. The proof retains
+The command runs two sequential synthetic phases against the same prepared
+app, Runner and helpers. The email/password phase makes zero submit actions.
+The verification phase uses a named Debug simulator HTTP fixture bound to the
+validated descriptor and initialized account instance. It permits one normal
+initial Sign in, then the normal Rust response decoder opens the MFA form from
+the fixture's fixed challenge response. The fixture accepts only the expected
+synthetic request sequence, has its own account directory and a nonpersistent
+credential boundary, and cannot reach the real backend or fall back to network
+traffic. It enters a synthetic six-digit code without submitting it or connecting
+a vault. This proves fixture UI/privacy behavior, not Obsidian authentication.
+
+Both phases scan stdout, stderr, decoded XCTest activities, every SDK-declared
+log, exported diagnostics, raw result files and attachments. The verification
+phase also scans the exact six-digit sentinel across all raw bytes and supported
+encodings; no diagnostic file is excluded. The proof retains
 the SDK's content-availability record and distinguishes decoded console output
 from confirmed absence; missing or unreadable declared content fails closed.
 Any sentinel leakage, unexpected visual artifact,
@@ -298,8 +310,9 @@ full source inventory, exact app/Runner/helper bytes and immutable retained
 evidence. Closed stage observations and independent cleanup results exclude raw
 value frames. A source change requires fresh preparation and a new passing probe;
 an earlier run's proof cannot authorize changed input code.
-The email/password probe covers that phase only; it does not establish privacy or
-code-validity acceptance for the separate authenticator-code phase.
+Both distinct phase proofs must match the exact app, Runner, helpers and source
+inventory before any real credential read. A single earlier phase proof cannot
+authorize the automatic workflow.
 
 Only after that proof may the operator invoke:
 
@@ -314,7 +327,14 @@ bun run ios:account <runID> credentials \
 The host reads the selected credential backend only after the owned form is ready,
 rechecks ownership after the read, and sends values through private memory-only
 input. Credential entry, optional verification, and connection each have separate
-submit actions; only the descriptor-bound remote vault and retained reconnect profile are allowed.
+submit actions; only the descriptor-bound remote vault and retained reconnect
+profile are allowed. Automatic authenticator entry uses only the enrolled local
+Keychain seed. The host reads it once, runs its expensive source/artifact/owner
+checks, waits for an eligible validity counter and rechecks live app/helper/Runner
+ownership, then issues one code immediately before private delivery. App and Runner
+clocks must agree; expiry is checked in the same MainActor turn as field mutation
+and immediately before the normal verification tap. A short or expired window
+stops without code regeneration or resubmission.
 The session stays alive until actual UI and control status settle. A successful
 finish relaunches the same owned app to resume Sync; replica convergence remains
 the matrix's responsibility. Unknown submission outcomes retain inspectable

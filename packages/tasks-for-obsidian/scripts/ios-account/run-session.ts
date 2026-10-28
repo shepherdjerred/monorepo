@@ -14,6 +14,7 @@ import { exportIosJourneyAttachments } from "../native-acceptance/attachments";
 import { retainPrivateInputLogs } from "./retention";
 import { withPrivateAccountInput, type AccountInputClient } from "./connection";
 import { PrivateAppInput } from "./app-input";
+import type { AccountOperation } from "./contract";
 import { prepareInputArtifacts } from "./app-input-artifacts";
 import {
   prepareAccountInvocation,
@@ -30,7 +31,7 @@ type SessionAction = (
 export async function executePrivateAccountSession(
   manifest: Manifest,
   options: {
-    operation: "probe" | "credentials";
+    operation: AccountOperation;
     runnerFiles?: Record<string, string>;
     originalProfileID?: string;
     action: SessionAction;
@@ -47,14 +48,14 @@ export async function executePrivateAccountSession(
   const evidence = path.join(
     run,
     "ios-account",
-    options.operation === "probe" ? "probes" : "entries",
+    options.operation === "credentials" ? "entries" : "probes",
     probeID,
   );
   await mkdir(evidence, { recursive: true, mode: 0o700 });
   const appInputFiles = await prepareInputArtifacts(
     manifest,
     evidence,
-    options.operation,
+    options.operation === "probe" ? "probe" : "credentials",
   );
   assert.ok(manifest.simulator !== null && "iosApp" in provenance);
   const sessionID = crypto.randomUUID();
@@ -66,9 +67,12 @@ export async function executePrivateAccountSession(
       deviceID: manifest.simulator.id.toLowerCase(),
     },
     evidence,
-    z
-      .record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u))
-      .parse(provenance.iosApp),
+    {
+      appFiles: z
+        .record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u))
+        .parse(provenance.iosApp),
+      operation: options.operation,
+    },
   );
   let invocation: Awaited<ReturnType<typeof prepareAccountInvocation>>;
   try {
@@ -78,7 +82,7 @@ export async function executePrivateAccountSession(
       { ...appInput.bootstrap, FACET_E2E_ACCOUNT_OPERATION: options.operation },
       options.originalProfileID,
     );
-    if (options.operation === "credentials") {
+    if (options.operation !== "probe") {
       assert.ok(options.runnerFiles !== undefined);
       assert.deepEqual(
         invocation.runnerFiles,
@@ -126,6 +130,7 @@ export async function executePrivateAccountSession(
       {
         directory,
         identity: invocation.identity,
+        operation: options.operation,
         validateOwner: runnerOwnerValidator(invocation.device, hash, {
           runID: manifest.runID,
           artifacts: appInputFiles,
@@ -211,6 +216,9 @@ export async function executePrivateAccountSession(
   assert.ok(retainedLogs !== undefined);
   return {
     evidence,
+    appFiles: z
+      .record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u))
+      .parse(provenance.iosApp),
     probeID,
     runnerFiles: invocation.runnerFiles,
     sourceFiles: provenance.sourceFiles,

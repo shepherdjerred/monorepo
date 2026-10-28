@@ -39,6 +39,7 @@ try {
     [
       "swiftc",
       path.join(source, "OfficialOwner.swift"),
+      path.join(source, "OfficialAccountContainer.swift"),
       path.join(source, "OfficialVerification.swift"),
       path.join(source, "controls/main.swift"),
       "-o",
@@ -135,11 +136,50 @@ try {
         run(kind, { ...value, code }, false);
     if (kind === "ready") run(kind, { ...value, codeFieldSecure: true }, false);
   }
+  const containerBinary = path.join(directory, "container-controls");
+  const containerCompile = spawnSync(
+    "/usr/bin/xcrun",
+    [
+      "swiftc",
+      path.join(source, "OfficialOwner.swift"),
+      path.join(source, "OfficialAccountContainer.swift"),
+      path.join(source, "OfficialVerification.swift"),
+      path.join(source, "controls/container/main.swift"),
+      "-o",
+      containerBinary,
+    ],
+    { encoding: "utf8", timeout: 60_000, maxBuffer: 1_048_576 },
+  );
+  assert.equal(
+    containerCompile.status,
+    0,
+    "Original native account selector must compile",
+  );
+  assert.equal(containerCompile.stderr, "");
+  const containerResult = spawnSync(containerBinary, [], {
+    encoding: "utf8",
+    timeout: 5000,
+    maxBuffer: 8192,
+  });
+  assert.equal(
+    containerResult.status,
+    0,
+    "Original native account selector controls must pass",
+  );
+  assert.equal(containerResult.stderr, "");
+  const containerReceipt: unknown = JSON.parse(containerResult.stdout);
+  assert.deepEqual(containerReceipt, {
+    originalSwiftContainerSelector: true,
+    checked: 13,
+    passed: true,
+    uiActions: 0,
+  });
   console.log(
     JSON.stringify({
       originalSwiftCodec: true,
       sharedDefinition: true,
       checked,
+      originalSwiftContainerControls: 13,
       passed: true,
       uiActions: 0,
       credentialReads: 0,

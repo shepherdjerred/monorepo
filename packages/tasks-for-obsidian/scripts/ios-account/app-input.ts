@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdir, realpath, rmdir, writeFile } from "node:fs/promises";
+import { mkdir, realpath, rmdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { childEnvironment } from "tasknotes-macos/scripts/mac-account-contract.ts";
@@ -8,20 +8,29 @@ import { assertUnchangedBuild } from "../apple-sync-live/ledger";
 import { command } from "../apple-sync-live/platform";
 import {
   decodeAppReply,
+  decodeCorrelatedAppReply,
   AccountIdentitySchema,
   boundaryCheck,
   encodeAppCommand,
   type AccountIdentity,
   type AppReply,
+  type AccountOperation,
+  type VerificationSource,
+  issueVerificationAfterValidation,
+  assertInputClock,
+  assertVerificationFresh,
 } from "./contract";
 import {
   inputArtifactDirectory,
   inputArtifacts,
   inputBinary,
-  inputBundle,
+  assertInputBundle,
   inspectInputOwner,
   type InputArtifacts,
   type ProcessLifetime,
+  type HelperDiagnosticSchema,
+  InputStages,
+  inputBootstrap,
 } from "./app-input-artifacts";
 
 type Stage = "credentials" | "verification" | "vaults";
@@ -33,23 +42,14 @@ type Action =
   | "clear-vault"
   | "vault-password"
   | "finish";
-const HelperDiagnosticSchema = z.strictObject({
-  kind: z.literal("rejected"),
-  phase: z.enum([
-    "bootstrap",
-    "stdio",
-    "directory",
-    "socket",
-    "peer",
-    "authorization",
-    "pump",
-  ]),
-  reason: z.enum(["boundary", "peer", "deadline", "frame", "io"]),
-  errno: z.number().int(),
-});
 export type AppInput = Pick<
   PrivateAppInput,
-  "apply" | "finish" | "expectClose" | "validate" | "stage"
+  | "apply"
+  | "applyVerification"
+  | "finish"
+  | "expectClose"
+  | "validate"
+  | "stage"
 >;
 
 /** Only this host process and the mounted app see private field values. */
@@ -64,9 +64,10 @@ export class PrivateAppInput {
   private appLifetime: ProcessLifetime | undefined;
   private appExecutable: string | undefined;
   private readonly appFiles: Record<string, string>;
+  private readonly operation: AccountOperation;
   private appDirectory: string | undefined;
   private closingExpected = false;
-  private stageNumber = 0;
+  private readonly stages: InputStages;
   private readonly deadline = performance.now() + 120_000;
   private closeResult:
     Promise<{ status: "closed" | "cleanup-incomplete" }> | undefined;
@@ -76,15 +77,17 @@ export class PrivateAppInput {
   private constructor(
     private readonly manifest: Manifest,
     private readonly identity: AccountIdentity,
-    private readonly evidence: string,
+    evidence: string,
     setup: {
       artifacts: InputArtifacts;
       socketDirectory: string;
       appFiles: Record<string, string>;
+      operation: AccountOperation;
     },
   ) {
     this.artifacts = setup.artifacts;
     this.appFiles = Object.freeze({ ...setup.appFiles });
+    this.operation = setup.operation;
     this.socketDirectory = setup.socketDirectory;
     this.child = Bun.spawn(
       [
@@ -99,12 +102,13 @@ export class PrivateAppInput {
       },
     );
     this.reader = this.child.stdout.getReader();
+    this.stages = new InputStages(evidence, identity.runID, this.child.pid);
   }
   static async start(
     manifest: Manifest,
     identity: AccountIdentity,
     evidence: string,
-    appFiles: Record<string, string>,
+    prepared: { appFiles: Record<string, string>; operation: AccountOperation },
   ) {
     AccountIdentitySchema.parse(identity);
     assert.ok(
@@ -121,7 +125,7 @@ export class PrivateAppInput {
       selected = new PrivateAppInput(manifest, identity, evidence, {
         artifacts,
         socketDirectory,
-        appFiles,
+        ...prepared,
       });
       const packet = await selected.line();
       boundaryCheck("bridge-packet", packet);
@@ -163,10 +167,7 @@ export class PrivateAppInput {
     }
   }
   get bootstrap() {
-    return {
-      FACET_E2E_ACCOUNT_SOCKET: path.join(this.socketDirectory, "input.sock"),
-      FACET_E2E_ACCOUNT_HELPER_PID: String(this.child.pid),
-    };
+    return inputBootstrap(this.socketDirectory, this.child.pid, this.operation);
   }
   get stage() {
     assert.ok(this.hello !== undefined);
@@ -176,23 +177,7 @@ export class PrivateAppInput {
     stage: string,
     diagnostic?: z.infer<typeof HelperDiagnosticSchema>,
   ) {
-    const directory = path.join(this.evidence, "app-input-stages");
-    await mkdir(directory, { recursive: true, mode: 0o700 });
-    await writeFile(
-      path.join(
-        directory,
-        String(++this.stageNumber).padStart(2, "0") + ".json",
-      ),
-      JSON.stringify({
-        schemaVersion: 1,
-        runID: this.identity.runID,
-        stage,
-        helperPID: this.child.pid,
-        appPID: this.hello?.appPID ?? null,
-        ...(diagnostic === undefined ? {} : { diagnostic }),
-      }),
-      { flag: "wx", mode: 0o600 },
-    );
+    await this.stages.add(stage, this.hello?.appPID, diagnostic);
   }
   private async line(): Promise<unknown> {
     for (;;) {
@@ -238,13 +223,7 @@ export class PrivateAppInput {
   }
   private async recordRejection() {
     try {
-      const stderr = await this.readStderr();
-      if (stderr === "") return;
-      const packet: unknown = JSON.parse(stderr);
-      boundaryCheck("bridge-packet", packet);
-      const diagnostic = HelperDiagnosticSchema.safeParse(packet);
-      if (diagnostic.success)
-        await this.record("helper-rejected", diagnostic.data);
+      await this.stages.rejection(await this.readStderr(), this.hello?.appPID);
     } catch {
       /* A missing diagnostic never replaces the primary protocol failure. */
     }
@@ -301,6 +280,10 @@ export class PrivateAppInput {
     await this.child.stdin.flush();
     const hello = decodeAppReply(await this.line());
     assert.ok(hello.kind === "hello" && hello.appPID === peer.data.pid);
+    assert.ok(hello.clockUnixMilliseconds !== undefined);
+    const fixture = this.operation === "fixture-verification";
+    assert.equal(hello.mode, fixture ? "fixture-verification" : "account");
+    assert.equal(hello.fixtureConfirmed, fixture);
     for (const [key, value] of Object.entries(this.identity))
       assert.equal(
         Reflect.get(hello, key),
@@ -318,13 +301,18 @@ export class PrivateAppInput {
       kind: "bind",
       expectedStage: hello.stage,
     });
+    const bindStarted = performance.now();
     try {
       await this.child.stdin.write(encoded);
       await this.child.stdin.flush();
     } finally {
       encoded.fill(0);
     }
-    const ready = this.reply(await this.line());
+    const ready = decodeCorrelatedAppReply(await this.line(), hello);
+    assertInputClock(
+      z.number().int().positive().parse(ready.clockUnixMilliseconds),
+      performance.now() - bindStarted,
+    );
     assert.ok(
       ready.kind === "ready" &&
         ready.requestID === requestID &&
@@ -333,38 +321,25 @@ export class PrivateAppInput {
     await this.record("bound");
     return this;
   }
-  private reply(value: unknown) {
-    const reply = decodeAppReply(value),
-      hello = this.hello;
-    assert.ok(hello !== undefined);
-    if (
-      reply.token !== hello.token ||
-      reply.formEpoch !== hello.formEpoch ||
-      reply.runID !== this.identity.runID ||
-      reply.sessionID !== this.identity.sessionID ||
-      reply.deviceID !== this.identity.deviceID
-    )
-      throw new Error("Private app reply ownership changed");
-    return reply;
-  }
   private async validateAppBytes() {
     assert.ok(
       this.appExecutable !== undefined && this.appDirectory !== undefined,
     );
-    const metadata = await lstat(this.appExecutable);
-    assert.ok(
-      metadata.isFile() &&
-        !metadata.isSymbolicLink() &&
-        metadata.uid === process.getuid?.(),
-    );
-    assert.deepEqual(
-      await inputBundle(this.appDirectory),
+    await assertInputBundle(
+      this.appDirectory,
       this.appFiles,
-      "Private app executable changed",
+      this.appExecutable,
     );
   }
   async validate() {
     await assertUnchangedBuild(this.manifest);
+    await this.validateLive();
+  }
+  private async validateLive() {
+    assert.ok(
+      performance.now() < this.deadline,
+      "Private app input deadline expired",
+    );
     assert.ok(
       this.hello?.appPID !== undefined &&
         this.appExecutable !== undefined &&
@@ -386,10 +361,43 @@ export class PrivateAppInput {
       expected: this.appLifetime,
     });
     await this.validateAppBytes();
+    assert.ok(
+      performance.now() < this.deadline,
+      "Private app input deadline expired",
+    );
   }
   async apply(action: Action, expectedStage: Stage, value?: string) {
-    assert.ok(++this.steps <= 7 && !this.closingExpected);
+    assert.notEqual(
+      action,
+      "verification",
+      "Verification requires a fresh one-shot value",
+    );
     await this.validate();
+    await this.deliver(action, expectedStage, value);
+  }
+  async applyVerification(source: VerificationSource) {
+    const value = await issueVerificationAfterValidation(
+      () => this.validate(),
+      source,
+      () => this.validateLive(),
+    );
+    await this.deliver(
+      "verification",
+      "verification",
+      value.code,
+      value.expiresAtUnixMilliseconds,
+    );
+    return value.expiresAtUnixMilliseconds;
+  }
+  private async deliver(
+    action: Action,
+    expectedStage: Stage,
+    value?: string,
+    expiresAtUnixMilliseconds?: number,
+  ) {
+    assert.ok(++this.steps <= 7 && !this.closingExpected);
+    if (expiresAtUnixMilliseconds !== undefined)
+      assertVerificationFresh(expiresAtUnixMilliseconds);
     const hello = this.hello;
     assert.ok(hello !== undefined);
     const requestID = crypto.randomUUID(),
@@ -402,6 +410,9 @@ export class PrivateAppInput {
         kind: action,
         expectedStage,
         ...(value === undefined ? {} : { value }),
+        ...(expiresAtUnixMilliseconds === undefined
+          ? {}
+          : { expiresAtUnixMilliseconds }),
       });
     try {
       await this.child.stdin.write(bytes);
@@ -409,7 +420,7 @@ export class PrivateAppInput {
     } finally {
       bytes.fill(0);
     }
-    const reply = this.reply(await this.line());
+    const reply = decodeCorrelatedAppReply(await this.line(), hello);
     assert.ok(
       reply.kind === "applied" &&
         reply.requestID === requestID &&

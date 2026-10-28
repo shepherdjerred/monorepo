@@ -13,7 +13,7 @@ import {
 import { command, descriptor } from "../apple-sync-live/platform";
 import { fingerprintApp } from "../apple-sync-live/prepare";
 import { configureIosJourneyTests } from "../native-acceptance/selected-tests";
-import type { AccountIdentity } from "./contract";
+import type { AccountIdentity, AccountOperation } from "./contract";
 import { boundedCommand } from "tasknotes-macos/scripts/apple-acceptance/bounded-command.ts";
 import {
   inputArtifactDirectory,
@@ -34,7 +34,8 @@ export async function prepareAccountInvocation(
   appBootstrap: {
     FACET_E2E_ACCOUNT_SOCKET: string;
     FACET_E2E_ACCOUNT_HELPER_PID: string;
-    FACET_E2E_ACCOUNT_OPERATION: "probe" | "credentials";
+    FACET_E2E_ACCOUNT_OPERATION: AccountOperation;
+    FACET_E2E_ACCOUNT_MODE: "account" | "fixture-verification";
   },
   originalProfileID?: string,
 ) {

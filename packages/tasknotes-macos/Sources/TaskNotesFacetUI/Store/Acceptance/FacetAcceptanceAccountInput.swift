@@ -12,6 +12,7 @@
 
         internal static func start(
             configuration: FacetAcceptanceConfiguration?,
+            fixtureIdentity: FacetAcceptanceAccountFixtureIdentity?,
             formEpoch: UUID,
             stage: @escaping FacetAcceptanceAccountPeer.Stage,
             apply: @escaping FacetAcceptanceAccountPeer.Apply
@@ -33,6 +34,11 @@
                 UUID(uuidString: run) == boundConfiguration.runID,
                 let device = environment["SIMULATOR_UDID"], UUID(uuidString: device) != nil,
                 environment["FACET_E2E_SIMULATOR"]?.lowercased() == device.lowercased(),
+                let mode = environment["FACET_E2E_ACCOUNT_MODE"],
+                ["account", "fixture-verification"].contains(mode),
+                let operation = environment["FACET_E2E_ACCOUNT_OPERATION"],
+                ["probe", "fixture-verification", "credentials"].contains(operation),
+                mode == (operation == "fixture-verification" ? operation : "account"),
                 Bundle.main.bundleIdentifier == "org.reactjs.native.example.TasksForObsidian",
                 endpoint == "/private/tmp/facet-account-\(session.lowercased())/input.sock",
                 let protocolURL = Bundle.main.url(
@@ -44,7 +50,8 @@
                     "deviceID": device.lowercased(),
                 ],
                 endpoint: endpoint, helperPID: pid, formEpoch: formEpoch,
-                schema: Data(contentsOf: protocolURL))
+                schema: Data(contentsOf: protocolURL), mode: mode,
+                fixtureIdentity: fixtureIdentity)
             let input = FacetAcceptanceAccountInput(peer: selectedPeer)
             input.worker = _Concurrency.Task {
                 do { try await selectedPeer.run(stage: stage, apply: apply) } catch {

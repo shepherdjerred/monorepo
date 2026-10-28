@@ -23,6 +23,7 @@ export const helperFiles = [
   "AccountLifecycle.swift",
   "official-account.swift",
   "OfficialOwner.swift",
+  "OfficialAccountContainer.swift",
   "OfficialVerification.swift",
   "official-verification.protocol.json",
 ] as const;

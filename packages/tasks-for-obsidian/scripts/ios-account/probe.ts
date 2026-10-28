@@ -11,6 +11,7 @@ import {
 } from "../apple-sync-live/ledger";
 import {
   assertPrivateInputProof,
+  assertPhaseProofPair,
   InputProbeProofSchema,
   scanPrivateInputEvidence,
   verifyPrivateInputEvidence,
@@ -19,10 +20,31 @@ import { executePrivateAccountSession } from "./run-session";
 import { privateAccountSelector } from "./runtime";
 import { inputArtifacts } from "./app-input-artifacts";
 
-const proofRelative = "ios-account/private-input-ready.json";
+type Phase = "credentials" | "verification";
+const proofRelative = (phase: Phase) =>
+  `ios-account/${phase}-private-input-ready.json`;
 
 export async function runIosAccountProbe(manifest: Manifest) {
-  const output = path.join(runDirectory(manifest.runID), proofRelative);
+  await runPhase(manifest, "credentials");
+  const first = await requirePhase(manifest, "credentials");
+  await runPhase(manifest, "verification", first.runnerFiles);
+  await requireIosPrivateInputProof(manifest);
+  return {
+    runID: manifest.runID,
+    status: "both-private-input-phases-ready",
+    nativeCaseCount: 2,
+    realAccountSubmits: 0,
+    fixtureAccountSubmits: 1,
+    verificationCodeSubmits: 0,
+  };
+}
+
+async function runPhase(
+  manifest: Manifest,
+  phase: Phase,
+  runnerFiles?: Record<string, string>,
+) {
+  const output = path.join(runDirectory(manifest.runID), proofRelative(phase));
   assert.equal(
     await Bun.file(output).exists(),
     false,
@@ -30,11 +52,25 @@ export async function runIosAccountProbe(manifest: Manifest) {
   );
   const email = `facet-probe-${crypto.randomUUID()}@example.invalid`;
   const password = `Facet-private-probe-${crypto.randomUUID()}-q7!`;
+  const code = String(
+    100_000 +
+      (z
+        .number()
+        .int()
+        .nonnegative()
+        .parse(crypto.getRandomValues(new Uint32Array(1))[0]) %
+        900_000),
+  );
   let scanned: Awaited<ReturnType<typeof scanPrivateInputEvidence>> | undefined;
   const observed = await executePrivateAccountSession(manifest, {
-    operation: "probe",
+    operation: phase === "credentials" ? "probe" : "fixture-verification",
+    ...(runnerFiles === undefined ? {} : { runnerFiles }),
     inspectEvidence: async (directory) => {
-      scanned = await scanPrivateInputEvidence(directory, [email, password]);
+      scanned = await scanPrivateInputEvidence(
+        directory,
+        [email, password],
+        phase === "verification" ? { phase, code } : undefined,
+      );
     },
     action: async (session) => {
       assert.equal(
@@ -43,8 +79,20 @@ export async function runIosAccountProbe(manifest: Manifest) {
         "The synthetic probe requires a fresh credential form",
       );
       const filled = await session.fill({ email, password });
+      if (phase === "verification") {
+        await session.submit();
+        await session.observe();
+        assert.equal(session.stage, "verification");
+        await session.fillVerification({
+          waitUntilFresh: () => Promise.resolve(),
+          issue: () => ({
+            code,
+            expiresAtUnixMilliseconds: Date.now() + 30_000,
+          }),
+        });
+      }
       const finished = await session.finish();
-      assert.equal(finished.submitActionCount, 0);
+      assert.equal(finished.submitActionCount, phase === "credentials" ? 0 : 1);
       return { ...filled, ...finished };
     },
   });
@@ -64,19 +112,23 @@ export async function runIosAccountProbe(manifest: Manifest) {
   }
   assert.ok(scanned !== undefined, "Private input evidence was not scanned");
   const proof = InputProbeProofSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
+    phase,
+    mode: phase === "credentials" ? "account" : "fixture-verification",
+    verificationCodeSubmitActionCount: 0,
     kind: "ios-private-account-input-probe",
     runID: manifest.runID,
     probeID: observed.probeID,
     selector: privateAccountSelector,
     sourceHead: observed.sourceHead,
     sourceFiles: observed.sourceFiles,
+    appFiles: observed.appFiles,
     runnerFiles: observed.runnerFiles,
     appInputFiles: observed.appInputFiles,
     status: "private-input-ready",
     nativeCaseCount: 1,
     disabledCheckpoints: 2,
-    submitActionCount: 0,
+    submitActionCount: phase === "credentials" ? 0 : 1,
     scannedRawEvidence: true,
     logAvailability: observed.retainedLogs.availability,
     consoleLog: observed.retainedLogs.consoleLog,
@@ -93,13 +145,19 @@ export async function runIosAccountProbe(manifest: Manifest) {
     runID: manifest.runID,
     status: proof.status,
     nativeCaseCount: 1,
-    submitActionCount: 0,
+    submitActionCount: proof.submitActionCount,
     rawEvidenceFiles: Object.keys(scanned.files).length,
   };
 }
 
 /** No secret lookup is permitted until this exact source/Runner/evidence proof is re-read. */
 export async function requireIosPrivateInputProof(manifest: Manifest) {
+  const credentials = await requirePhase(manifest, "credentials");
+  const verification = await requirePhase(manifest, "verification");
+  return assertPhaseProofPair(credentials, verification);
+}
+
+async function requirePhase(manifest: Manifest, phase: Phase) {
   await assertUnchangedBuild(manifest);
   const directory = runDirectory(manifest.runID);
   const provenance = acceptanceProvenance(
@@ -112,11 +170,18 @@ export async function requireIosPrivateInputProof(manifest: Manifest) {
   );
   const runnerFiles = await fingerprintApp(runner);
   const proof = assertPrivateInputProof(
-    await readOwnedMacVMJSON(path.join(directory, proofRelative)),
+    await readOwnedMacVMJSON(path.join(directory, proofRelative(phase))),
     {
+      phase,
       runID: manifest.runID,
       sourceHead: provenance.sourceHead,
       sourceFiles: provenance.sourceFiles,
+      appFiles: await fingerprintApp(
+        path.join(
+          directory,
+          "ios/Build/Products/Debug-iphonesimulator/TasksForObsidian.app",
+        ),
+      ),
       runnerFiles,
       appInputFiles: await inputArtifacts(manifest.runID),
     },

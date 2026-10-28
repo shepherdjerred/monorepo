@@ -208,6 +208,82 @@ export function readHostVerificationCode(
     throw new PasswordManagerFailure("password_manager_invalid_otp");
   }
 }
+
+/** Read once, then issue once only after the caller's expensive post-read guards. */
+export function prepareHostVerificationCode(
+  parameters: HostCredentialParameters,
+  selectedBackend: CredentialBackend,
+  timing: {
+    minimumValidityMilliseconds: number;
+    maximumValidityMilliseconds: number;
+  },
+  readLocal: typeof readInstalledLocalAccount = readInstalledLocalAccount,
+) {
+  if (credentialBackend(selectedBackend) !== "keychain")
+    throw new PasswordManagerFailure(
+      "local_credentials_required_for_fresh_otp",
+    );
+  const selected = ItemParametersSchema.parse(parameters);
+  let account: ReturnType<typeof readInstalledLocalAccount>;
+  try {
+    account = readLocal({
+      account: selected["--account"],
+      vault: selected["--vault"],
+      item: selected["--item"],
+    });
+  } catch {
+    throw new PasswordManagerFailure("local_credentials_unavailable");
+  }
+  const otp = account.otp;
+  if (otp === undefined)
+    throw new PasswordManagerFailure("local_credentials_missing_otp");
+  const period = otp.period * 1000;
+  if (
+    period <= timing.minimumValidityMilliseconds ||
+    period > timing.maximumValidityMilliseconds
+  )
+    throw new PasswordManagerFailure(
+      "local_credentials_otp_period_unsupported",
+    );
+  let issued = false;
+  const expiry = () => (Math.floor(Date.now() / period) + 1) * period;
+  return {
+    async waitUntilFresh() {
+      if (issued)
+        throw new PasswordManagerFailure(
+          "local_credentials_otp_already_issued",
+        );
+      const remaining = expiry() - Date.now();
+      if (remaining <= timing.minimumValidityMilliseconds)
+        await Bun.sleep(remaining + 1);
+    },
+    issue() {
+      if (issued)
+        throw new PasswordManagerFailure(
+          "local_credentials_otp_already_issued",
+        );
+      issued = true;
+      const expiresAtUnixMilliseconds = expiry();
+      if (
+        expiresAtUnixMilliseconds - Date.now() <=
+        timing.minimumValidityMilliseconds
+      )
+        throw new PasswordManagerFailure(
+          "local_credentials_otp_window_insufficient",
+        );
+      return {
+        code: generateTotp(
+          otp.secret,
+          Math.floor(Date.now() / 1000),
+          otp.algorithm,
+          6,
+          otp.period,
+        ),
+        expiresAtUnixMilliseconds,
+      };
+    },
+  };
+}
 /** Choose Desktop explicitly for a Personal item; no backend fallback or credential copying. */
 export function readHostVaultPassword(
   reference: string,

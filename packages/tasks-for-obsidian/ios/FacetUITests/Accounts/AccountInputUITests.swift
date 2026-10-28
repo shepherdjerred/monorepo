@@ -14,6 +14,7 @@ final class AccountInputUITests: XCTestCase {
     var phase: Phase
     let operation: AccountInputOperation
     var submitted = 0
+    var verification = AccountInputVerificationAdmission()
   }
   private enum CredentialAction { case fill, submit, fillVerification, submitVerification }
   private var allowedRemoteVaultID: String?
@@ -31,7 +32,8 @@ final class AccountInputUITests: XCTestCase {
   private func session() throws {
     let environment = ProcessInfo.processInfo.environment
     guard let rawOperation = environment["FACET_E2E_ACCOUNT_OPERATION"],
-      let operation = AccountInputOperation(rawValue: rawOperation)
+      let operation = AccountInputOperation(rawValue: rawOperation),
+      environment["FACET_E2E_ACCOUNT_MODE"] == operation.appMode
     else { throw AccountInputFailure.ownership }
     let identity = try AccountInputIdentity(environment: environment)
     let boundary = try AccountInputProtocol(identity: identity, bundle: Bundle(for: Self.self))
@@ -41,8 +43,12 @@ final class AccountInputUITests: XCTestCase {
     }
     let form = AccountInputForm(
       app: app, remoteVaultID: allowedRemoteVaultID, profileID: expectedProfileID,
-      willSubmit: { self.submissionPossible = true })
+      willSubmit: { self.submissionPossible = true },
+      verificationTiming: boundary.verificationTiming)
     let stage = try form.open()
+    guard operation != .fixtureVerification || stage == .credentials else {
+      throw AccountInputFailure.form
+    }
     if stage == .credentials { try form.prepareEmptyKeyboard() }
     let socket = try AccountInputSocket(sessionID: identity.sessionID)
     defer { socket.close() }
@@ -50,8 +56,10 @@ final class AccountInputUITests: XCTestCase {
     var initial = AccountInputReply(identity, kind: .ready)
     initial.runnerPID = ProcessInfo.processInfo.processIdentifier
     initial.stage = stage.rawValue
+    initial.operation = operation
     initial.signInEnabled = try form.signInEnabled()
     if stage == .vaults { initial.connectEnabled = try form.connectEnabled() }
+    initial.clockUnixMilliseconds = AccountInputVerificationTiming.now
     try socket.send(boundary.reply(initial))
     let phase: Phase
     switch stage {
@@ -125,9 +133,18 @@ extension AccountInputUITests {
       kind = try connect(command, form: form, state: &state)
     case .observe:
       return try observe(command, form: form, state: &state, identity: identity)
-    case .finish: kind = .finished
+    case .finish:
+      kind = try finished(state)
     }
     return actionReply(identity, kind: kind, command: command, state: state)
+  }
+
+  private func finished(_ state: State) throws -> AccountInputReply.Kind {
+    guard
+      state.operation != .fixtureVerification
+        || (state.phase == .verificationFilled && state.submitted == 1)
+    else { throw AccountInputFailure.input }
+    return .finished
   }
 
   private func checkpoint(
@@ -156,7 +173,9 @@ extension AccountInputUITests {
   private func connect(
     _ command: AccountInputCommand, form: AccountInputForm, state: inout State
   ) throws -> AccountInputReply.Kind {
-    guard state.phase == .vaults || state.phase == .vaultPasswordFilled else {
+    guard state.operation == .credentials,
+      state.phase == .vaults || state.phase == .vaultPasswordFilled
+    else {
       throw AccountInputFailure.input
     }
     try form.connect(command)
@@ -206,13 +225,19 @@ extension AccountInputUITests {
       state.submitted += 1
       return .submitted
     case .fillVerification:
-      guard state.phase == .verification else { throw AccountInputFailure.input }
-      try form.fillVerification()
+      guard state.phase == .verification, let expiry = command.expiresAtUnixMilliseconds else {
+        throw AccountInputFailure.input
+      }
+      try form.fillVerification(expiry: expiry)
+      try state.verification.filled(expiry, timing: form.verificationTiming)
       state.phase = .verificationFilled
       return .verificationFilled
     case .submitVerification:
-      guard state.phase == .verificationFilled else { throw AccountInputFailure.input }
-      try form.submitVerification()
+      guard state.operation == .credentials, state.phase == .verificationFilled,
+        let expiry = command.expiresAtUnixMilliseconds
+      else { throw AccountInputFailure.input }
+      try state.verification.requireSubmit(expiry, timing: form.verificationTiming)
+      try form.submitVerification(expiry: expiry)
       state.phase = .verificationSubmitted
       state.submitted += 1
       return .verificationSubmitted
@@ -268,6 +293,8 @@ extension AccountInputUITests {
     for key in [
       "FACET_E2E_ACCOUNT_SOCKET", "FACET_E2E_ACCOUNT_HELPER_PID", "FACET_E2E_ACCOUNT_SESSION",
       "FACET_E2E_RUN_ID",
+      "FACET_E2E_ACCOUNT_MODE",
+      "FACET_E2E_ACCOUNT_OPERATION",
     ] {
       guard let value = environment[key] else { throw AccountInputFailure.ownership }
       app.launchEnvironment[key] = value

@@ -269,6 +269,7 @@ function helperSource(name: (typeof helperFiles)[number]): string {
     ? path.join(macRoot, "scripts/apple-acceptance", name)
     : name === "official-account.swift" ||
         name === "OfficialOwner.swift" ||
+        name === "OfficialAccountContainer.swift" ||
         name === "OfficialVerification.swift" ||
         name === "official-verification.protocol.json"
       ? path.join(

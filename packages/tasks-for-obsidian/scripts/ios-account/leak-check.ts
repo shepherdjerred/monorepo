@@ -44,6 +44,7 @@ function rejectUnsafeEvidence(
 export async function scanPrivateInputEvidence(
   directory: string,
   sentinels: string[],
+  verification?: { phase: "verification"; code: string },
 ) {
   assert.equal(await realpath(directory), directory);
   const root = await lstat(directory);
@@ -53,6 +54,20 @@ export async function scanPrivateInputEvidence(
       root.uid === process.getuid?.(),
   );
   const patterns = sentinelPatterns(sentinels);
+  if (verification !== undefined) {
+    const code = z
+      .strictObject({
+        phase: z.literal("verification"),
+        code: z.string().regex(/^\d{6}$/u),
+      })
+      .parse(verification).code;
+    patterns.push(
+      Buffer.from(code),
+      Buffer.from(code, "utf16le"),
+      Buffer.from(code, "utf16le").swap16(),
+      Buffer.from(Buffer.from(code).toString("base64")),
+    );
+  }
   const inventory: Record<string, { size: number; sha256: string }> = {};
   const pending = [directory];
   let total = 0;
@@ -90,19 +105,23 @@ export async function scanPrivateInputEvidence(
 
 export const InputProbeProofSchema = z
   .strictObject({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
+    phase: z.enum(["credentials", "verification"]),
+    mode: z.enum(["account", "fixture-verification"]),
+    verificationCodeSubmitActionCount: z.literal(0),
     kind: z.literal("ios-private-account-input-probe"),
     runID: z.uuid(),
     sourceHead: z.string().regex(/^[a-f0-9]{40}$/u),
     probeID: z.uuid(),
     selector: z.literal("AccountInputUITests/testPrivateAccountInput"),
     sourceFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
+    appFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
     runnerFiles: z.record(z.string(), z.string().regex(/^[a-f0-9]{64}$/u)),
     appInputFiles: InputArtifactsSchema,
     status: z.literal("private-input-ready"),
     nativeCaseCount: z.literal(1),
     disabledCheckpoints: z.literal(2),
-    submitActionCount: z.literal(0),
+    submitActionCount: z.number().int().min(0).max(1),
     scannedRawEvidence: z.literal(true),
     logAvailability: InputLogAvailabilitySchema,
     consoleLog: z.enum(["decoded", "confirmed-absent"]),
@@ -117,6 +136,11 @@ export const InputProbeProofSchema = z
       }),
     ),
   })
+  .refine((proof) =>
+    proof.phase === "credentials"
+      ? proof.mode === "account" && proof.submitActionCount === 0
+      : proof.mode === "fixture-verification" && proof.submitActionCount === 1,
+  )
   .refine(
     (proof) =>
       proof.consoleLog ===
@@ -128,9 +152,11 @@ export const InputProbeProofSchema = z
 export function assertPrivateInputProof(
   value: unknown,
   expected: {
+    phase: "credentials" | "verification";
     runID: string;
     sourceHead: string;
     sourceFiles: Record<string, string>;
+    appFiles: Record<string, string>;
     runnerFiles: Record<string, string>;
     appInputFiles: z.infer<typeof InputArtifactsSchema>;
   },
@@ -141,6 +167,11 @@ export function assertPrivateInputProof(
       "Real iOS credentials require a complete synthetic private-input proof",
     );
   const proof = parsed.data;
+  assert.equal(
+    proof.phase,
+    expected.phase,
+    "Private input proof covers another phase",
+  );
   assert.equal(
     proof.runID,
     expected.runID,
@@ -162,6 +193,11 @@ export function assertPrivateInputProof(
     "Private input runner changed after its probe",
   );
   assert.deepEqual(
+    proof.appFiles,
+    expected.appFiles,
+    "Private input app changed after its probe",
+  );
+  assert.deepEqual(
     proof.appInputFiles,
     expected.appInputFiles,
     "Private app helper changed after its probe",
@@ -172,6 +208,30 @@ export function assertPrivateInputProof(
       Object.keys(proof.evidence).length > 0,
   );
   return proof;
+}
+
+export function assertPhaseProofPair(
+  credentialsValue: unknown,
+  verificationValue: unknown,
+) {
+  const credentials = InputProbeProofSchema.parse(credentialsValue);
+  const verification = InputProbeProofSchema.parse(verificationValue);
+  assert.equal(credentials.phase, "credentials");
+  assert.equal(verification.phase, "verification");
+  for (const field of [
+    "runID",
+    "sourceHead",
+    "sourceFiles",
+    "appFiles",
+    "runnerFiles",
+    "appInputFiles",
+  ] as const)
+    assert.deepEqual(
+      credentials[field],
+      verification[field],
+      "Private input phases cover different prepared bytes",
+    );
+  return { credentials, verification };
 }
 
 export async function verifyPrivateInputEvidence(
