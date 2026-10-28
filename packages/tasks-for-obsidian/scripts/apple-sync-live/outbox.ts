@@ -16,7 +16,9 @@ const selection = `SELECT o.sequence,o.profile,o.id,o.path,o.bytes,o.revision,o.
 export function fingerprintOutbox(database: Database, profileID: string) {
   uuid.parse(profileID);
   return database.transaction(() => {
-    z.object({ user_version: z.literal(12) }).parse(
+    // Runtime migrations 13–16 add occurrence tables; the selected outbox and
+    // immutable-payload columns retain their schema-12 meanings.
+    z.object({ user_version: z.literal(16) }).parse(
       database.query("PRAGMA user_version").get(),
     );
     z.object({ count: z.literal(1) }).parse(

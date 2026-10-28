@@ -60,6 +60,16 @@ pub fn canonical_role(role: &str) -> Option<&str> {
         "occurrence_template" => "occurrenceTemplate",
         "occurrence_past_horizon" => "occurrencePastHorizon",
         "occurrence_future_horizon" => "occurrenceFutureHorizon",
+        "archive_tag" => "archiveTag",
+        "ics_event_id" => "icsEventId",
+        "ics_event_tag" => "icsEventTag",
+        "google_calendar_event_id" => "googleCalendarEventId",
+        "google_calendar_exception_event_id" => "googleCalendarExceptionEventId",
+        "google_calendar_exception_original_scheduled" => {
+            "googleCalendarExceptionOriginalScheduled"
+        }
+        "google_calendar_moved_original_dates" => "googleCalendarMovedOriginalDates",
+        "sort_order" => "sortOrder",
         other => other,
     };
     ROLES.contains(&canonical).then_some(canonical)

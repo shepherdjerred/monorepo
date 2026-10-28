@@ -69,7 +69,7 @@ test("outbox measurement returns only a read-only digest and enforces actual pro
   const { paths, dispatch } = await fixture(),
     file = path.join(paths.stateDirectory, "facet.sqlite3");
   const database = new Database(file);
-  database.run(`PRAGMA user_version=12;
+  database.run(`PRAGMA user_version=16;
     CREATE TABLE profiles(id TEXT PRIMARY KEY);
     CREATE TABLE outbox(sequence INTEGER,profile TEXT,id TEXT,path TEXT,bytes TEXT,revision TEXT,remote_revision TEXT,created_ms INTEGER,modified_ms INTEGER,related_path TEXT);
     CREATE TABLE transfer_payloads(row_id INTEGER,profile TEXT,id TEXT,size INTEGER,revision TEXT,bytes BLOB);

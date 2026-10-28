@@ -11,6 +11,8 @@ import {
   macInputProtocol,
   type MacInputPrepared,
 } from "./protocol";
+import { prepareNormalMacAccount } from "./readiness";
+import type { MacLifecycle } from "./prepare";
 
 const maximum = 8 * 1024 * 1024;
 type Captured = {
@@ -403,6 +405,7 @@ async function retainIntent(runtime: GuestRuntime, prepared: MacInputPrepared) {
 export async function installGuestMacInputApproval(
   runtime: GuestRuntime,
   raw: Uint8Array,
+  context: { remoteID: string; lifecycle: MacLifecycle },
 ) {
   const { MacInputApprovalSchema } = await import("./protocol");
   const approval = MacInputApprovalSchema.parse(
@@ -414,7 +417,9 @@ export async function installGuestMacInputApproval(
   const stat = await lstat(directory);
   assert.ok(stat.isDirectory() && !stat.isSymbolicLink());
   assert.equal(stat.mode & 0o777, 0o700);
-  const { prepareMacInputNative } = await import("./prepare");
+  assert.equal(context.lifecycle, null);
+  const { prepareMacInputNative, legacyMacBinding, waitInspection } =
+    await import("./prepare");
   const native = await prepareMacInputNative(runtime, false);
   for (const key of ["helperSHA256", "protocolSHA256", "timingSHA256"] as const)
     assert.equal(approval[key], native[key]);
@@ -422,14 +427,38 @@ export async function installGuestMacInputApproval(
     flag: "wx",
     mode: 0o600,
   });
-  await runtime.command([
-    "/usr/bin/open",
-    "-n",
-    runtime.paths.app,
-    "--args",
-    "--facet-acceptance-descriptor",
-    runtime.paths.descriptor,
-  ]);
+  await prepareNormalMacAccount({
+    runID: runtime.config.runID,
+    launch: () =>
+      runtime.command([
+        "/usr/bin/env",
+        "-u",
+        "FACET_E2E_ACCOUNT_OPERATION",
+        "-u",
+        "FACET_E2E_ACCOUNT_MODE",
+        "-u",
+        "FACET_E2E_RUN_ID",
+        "-u",
+        "FACET_E2E_ACCOUNT_SESSION",
+        "/usr/bin/open",
+        "-n",
+        runtime.paths.app,
+        "--args",
+        "--facet-acceptance-descriptor",
+        runtime.paths.descriptor,
+      ]),
+    readStatus: () =>
+      readOwnedMacVMJSON(
+        path.join(runtime.paths.stateDirectory, "control/status.json"),
+        65_536,
+      ),
+    inspectOwner: () =>
+      waitInspection(
+        native.program,
+        legacyMacBinding(runtime, context.remoteID, context.lifecycle),
+        "inspect_onboarding",
+      ),
+  });
   return {
     kind: "mac-input-approved" as const,
     approvalSHA256: new Bun.CryptoHasher("sha256").update(raw).digest("hex"),

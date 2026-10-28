@@ -189,6 +189,7 @@ export async function runMacInputProbe(
     await accountRequest(manifest, { mode: "input_approve", approval }),
   );
   assert.equal(installed.approvalSHA256, digest(JSON.stringify(approval)));
+  await fresh();
 }
 
 function hostIntentPath(manifest: GuestManifest, prepared: MacInputPrepared) {
