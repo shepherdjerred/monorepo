@@ -134,4 +134,18 @@ test("sign-created fixed gate opens automatically and closes when its destinatio
   expect(
     await rcon.command("execute if block 400 70 0 minecraft:obsidian"),
   ).toContain("Test passed");
+  await rcon.command(`tp ${bot.username} 401.5 71 3.5`);
+  await waitUntil(
+    "player reaches source sign",
+    () => Math.abs(bot.entity.position.x - 401.5) < 0.3,
+  );
+  const sourceSign = bot.blockAt(new Vec3(401, 72, 1));
+  if (sourceSign === null) throw new Error("Source sign missing");
+  await bot.dig(sourceSign);
+  await waitUntil("source sign broken", async () => {
+    const result = await rcon.command(
+      "execute if block 401 72 1 minecraft:air",
+    );
+    return result.includes("Test passed");
+  });
 });
