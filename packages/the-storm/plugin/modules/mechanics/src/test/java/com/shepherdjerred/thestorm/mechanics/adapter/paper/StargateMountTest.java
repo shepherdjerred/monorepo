@@ -28,6 +28,16 @@ import org.junit.jupiter.api.Test;
 
 final class StargateMountTest {
   @Test
+  void mountedLandingPreparationCoversTheSafeSearchAndVehicleWidth() {
+    var player = mock(Player.class);
+    var boat = mock(Boat.class);
+    when(player.getWidth()).thenReturn(0.6);
+    when(boat.getWidth()).thenReturn(1.4);
+    assertThat(StargateMount.landingRadius(player, boat)).isEqualTo(10);
+    assertThat(StargateMount.landingRadius(player, null)).isZero();
+  }
+
+  @Test
   void recognisesTheSupportedVehicleFamilies() {
     assertThat(StargateMount.supported(mock(Boat.class))).isTrue();
     assertThat(StargateMount.supported(mock(Minecart.class))).isTrue();

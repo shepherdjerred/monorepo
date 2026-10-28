@@ -86,6 +86,30 @@ test("sign-created fixed gate opens automatically and closes when its destinatio
     );
     return result.includes("Test passed");
   });
+  await rcon.command("setblock 407 72 0 minecraft:air");
+  await waitUntil(
+    "permanent portal closes when the destination frame breaks",
+    async () => {
+      const result = await rcon.command(
+        "execute if block 400 71 0 minecraft:air",
+      );
+      return result.includes("Test passed");
+    },
+  );
+  await rcon.command("setblock 407 72 0 minecraft:obsidian");
+  await rcon.command(
+    "setblock 407 72 1 minecraft:stone_button[face=wall,facing=south]",
+  );
+  await waitUntil(
+    "permanent portal reopens when the destination is repaired",
+    async () => {
+      const result = await rcon.command(
+        "execute if block 400 71 0 minecraft:nether_portal",
+      );
+      return result.includes("Test passed");
+    },
+    15_000,
+  );
   await rcon.command(`tp ${bot.username} 400.5 71 2.5`);
   await rcon.command(
     'summon minecraft:oak_boat 400.5 71 2.5 {Tags:["storm_test_boat"]}',

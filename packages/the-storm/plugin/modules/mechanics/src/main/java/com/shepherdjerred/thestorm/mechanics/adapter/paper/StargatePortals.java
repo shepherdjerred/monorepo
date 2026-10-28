@@ -61,6 +61,7 @@ final class StargatePortals implements Listener {
   private final Map<UUID, OpenGate> active = new HashMap<>();
   private final Map<UUID, Set<WorldChunk>> destinationTickets = new HashMap<>();
   private final Set<UUID> loadingPermanent = new HashSet<>();
+  private final Set<UUID> retryingPermanent = new HashSet<>();
   private final Set<UUID> inside = new HashSet<>();
   private final Cancellable permanentTick;
   private boolean stopped;
@@ -97,8 +98,10 @@ final class StargatePortals implements Listener {
   }
 
   private void reconcilePermanentGate(Stargate gate) {
-    if (!gate.alwaysOpen() || active.containsKey(gate.id()) || loadingPermanent.contains(gate.id()))
-      return;
+    if (!gate.alwaysOpen()
+        || active.containsKey(gate.id())
+        || loadingPermanent.contains(gate.id())
+        || retryingPermanent.contains(gate.id())) return;
     var target = destination(gate);
     var sourceWorld = context.plugin().getServer().getWorld(gate.worldId());
     if (target.isEmpty() || sourceWorld == null || !intact(gate, false)) return;
@@ -129,12 +132,14 @@ final class StargatePortals implements Listener {
                     context
                         .logger()
                         .error("Could not load destination for Stargate {}", gate.name(), failure);
+                    retryPermanentLater(gate.id());
                     return;
                   }
-                  if (stopped
-                      || !book.ready()
-                      || active.containsKey(gate.id())
-                      || !permanentValid(gate, target.id(), false)) return;
+                  if (stopped || !book.ready() || active.containsKey(gate.id())) return;
+                  if (!permanentValid(gate, target.id(), false)) {
+                    retryPermanentLater(gate.id());
+                    return;
+                  }
                   var held = new HashSet<WorldChunk>();
                   try {
                     for (var chunk : chunks) {
@@ -148,9 +153,17 @@ final class StargatePortals implements Listener {
                     context
                         .logger()
                         .error("Could not open permanent Stargate {}", gate.name(), error);
+                    retryPermanentLater(gate.id());
                   }
                 },
                 context.scheduler().mainThread());
+  }
+
+  private void retryPermanentLater(UUID gateId) {
+    if (stopped || !retryingPermanent.add(gateId)) return;
+    context
+        .scheduler()
+        .runOnMainThreadLater(Duration.ofSeconds(5), () -> retryingPermanent.remove(gateId));
   }
 
   private boolean permanentValid(Stargate gate, UUID targetId, boolean open) {

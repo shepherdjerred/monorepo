@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
+import com.shepherdjerred.thestorm.essentials.domain.place.SafeSpots;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Location;
@@ -35,6 +36,12 @@ final class StargateMount {
           Material.END_GATEWAY);
 
   private StargateMount() {}
+
+  static int landingRadius(Player player, @org.jspecify.annotations.Nullable Entity mount) {
+    if (mount == null) return 0;
+    return SafeSpots.HORIZONTAL_SEARCH_DISTANCE
+        + (int) Math.ceil(Math.max(mount.getWidth(), player.getWidth()) / 2 + 0.5);
+  }
 
   private record LandingCheck(
       Player player, Protection protection, org.bukkit.World world, int minY, int maxY) {}

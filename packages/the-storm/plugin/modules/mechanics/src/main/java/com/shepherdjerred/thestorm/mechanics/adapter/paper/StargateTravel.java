@@ -68,7 +68,7 @@ final class StargateTravel {
     if (world == null)
       return CompletableFuture.completedFuture(
           Result.err(Component.text("The destination world is not loaded.")));
-    var chunks = chunks(target);
+    var chunks = chunks(target, Math.max(1, StargateMount.landingRadius(player, mount)));
     var id = player.getUniqueId();
     var trip = trips.start(id, new Trip(source.id(), target.id()));
     var loads =
@@ -178,20 +178,22 @@ final class StargateTravel {
     return gate.frame().origin().offset(Direction.UP).offset(gate.facing());
   }
 
-  private static Set<Chunk> chunks(Stargate gate) {
+  private static Set<Chunk> chunks(Stargate gate, int radius) {
     var positions = new LinkedHashSet<>(gate.frame().frameBlocks());
     positions.addAll(gate.frame().interior());
     positions.add(gate.sign());
     positions.add(gate.button());
     positions.add(landing(gate));
     var mountedLanding = landing(gate).offset(gate.facing());
-    for (var x = -1; x <= 1; x++) {
-      for (var z = -1; z <= 1; z++) {
-        positions.add(new Pos(mountedLanding.x() + x, mountedLanding.y(), mountedLanding.z() + z));
-      }
-    }
     var result = new LinkedHashSet<Chunk>();
     positions.forEach(pos -> result.add(new Chunk(pos.x() >> 4, pos.z() >> 4)));
+    for (var x = (mountedLanding.x() - radius) >> 4; x <= (mountedLanding.x() + radius) >> 4; x++) {
+      for (var z = (mountedLanding.z() - radius) >> 4;
+          z <= (mountedLanding.z() + radius) >> 4;
+          z++) {
+        result.add(new Chunk(x, z));
+      }
+    }
     return Set.copyOf(result);
   }
 }

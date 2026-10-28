@@ -11,7 +11,6 @@ import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.creative.app.CreativeEntry;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
 import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
-import com.shepherdjerred.thestorm.essentials.domain.place.SafeSpots;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
@@ -333,11 +332,7 @@ final class StargateServerHub implements Listener {
       Player player, Hub hub, WorldTrip target) {
     var spawn = target.destination().landing();
     var world = target.world();
-    var radius =
-        target.mount() == null
-            ? 0
-            : SafeSpots.HORIZONTAL_SEARCH_DISTANCE
-                + (int) Math.ceil(Math.max(target.mount().getWidth(), player.getWidth()) / 2 + 0.5);
+    var radius = StargateMount.landingRadius(player, target.mount());
     var chunks = landingChunks(spawn, radius);
     var id = player.getUniqueId();
     var trip = trips.start(id, hub);
