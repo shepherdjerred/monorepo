@@ -5,6 +5,49 @@ import type {
   PlexBindingSnapshot,
   PlexPhysicalGroup,
 } from "#shared/plex-binding/contract.ts";
+import type {
+  MovieEditionScope,
+  MovieEditionKey,
+} from "#shared/movie-editions/registry.ts";
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { MovieRetentionWarningV4Schema } from "#shared/movie-editions/retention-v4.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+
+type WarningDecision = Prisma.RetentionDecisionGetPayload<{
+  include: { media: { include: { intents: true; holds: true } } };
+}>;
+
+/** Delivery rechecks current intent, pending state and holds after its durable claim. */
+export function retentionWarningCurrent(
+  decision: WarningDecision,
+  expected: {
+    mediaId: string | null;
+    edition: MovieEditionKey;
+    generation: number;
+    epoch: number;
+  },
+): boolean {
+  if (
+    decision.mediaId !== expected.mediaId ||
+    decision.edition !== expected.edition
+  )
+    return false;
+  const intent =
+    expected.edition === "default"
+      ? defaultIntent(decision.media.intents)
+      : decision.media.intents.find(
+          (target) => target.edition === expected.edition,
+        );
+  return (
+    decision.generation === expected.generation &&
+    intent?.generation === expected.generation &&
+    intent.automationEpoch === expected.epoch &&
+    ["warning_pending", "grace_period"].includes(decision.state) &&
+    !decision.media.holds.some(
+      (hold) => hold.isPin || hold.until === null || hold.until > new Date(),
+    )
+  );
+}
 
 export async function createWarning(
   tx: Prisma.TransactionClient,
@@ -17,30 +60,57 @@ export async function createWarning(
   authority: {
     generation: number;
     epoch: number;
+    scope?: MovieEditionScope;
+    budget?: PublicationAuthorityReadBudget;
     binding: {
       groups: readonly PlexPhysicalGroup[];
       bindings: readonly PlexBindingSnapshot[];
     };
   },
 ) {
-  const { generation, epoch, binding } = authority;
+  const { generation, epoch, binding, scope } = authority;
+  if (
+    scope !== undefined &&
+    (scope.mediaId !== item.id ||
+      scope.rootMediaId !== item.id ||
+      binding.bindings.length !== 1 ||
+      binding.bindings[0]?.scope.edition !== scope.edition ||
+      item.requests.some((request) => request.edition !== scope.edition))
+  )
+    throw new Error(
+      "Scoped retention warning differs from its selected movie cohort",
+    );
   const decisionId = crypto.randomUUID();
   await tx.retentionDecision.create({
     data: {
       id: decisionId,
       mediaId: item.id,
       generation,
-      edition: "default",
+      edition: scope?.edition ?? "default",
       state: "eligible",
       evidence: { recoveryEpoch: epoch },
     },
   });
-  await captureRetentionPlexProjection(tx, { decisionId, ...binding });
+  await captureRetentionPlexProjection(
+    tx,
+    { decisionId, ...binding },
+    authority.budget,
+  );
   const event = await tx.applicationEvent.create({
     data: {
       mediaId: item.id,
       kind: "retention_warning",
-      payload: { decisionId, generation },
+      payload:
+        scope === undefined
+          ? { decisionId, generation }
+          : MovieRetentionWarningV4Schema.parse({
+              schemaVersion: 4,
+              kind: "movie_retention_warning",
+              scope,
+              decisionId,
+              generation,
+              recoveryEpoch: epoch,
+            }),
     },
   });
   const decision = await tx.retentionDecision.update({

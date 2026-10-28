@@ -24,6 +24,15 @@ import { assertRetentionPlexProjection } from "#infrastructure/plex-binding/rete
 import { readMovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 import { composeMovieNoticeV4 } from "#automation/movie-editions/notifications/message.ts";
 import type { PreparedMovieNoticeV4 } from "#automation/movie-editions/notifications/authority.ts";
+import {
+  readMovieRetentionWarningV4,
+  movieRetentionWarningMatches,
+} from "#shared/movie-editions/retention-v4.ts";
+import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
+import { retentionWarningCurrent } from "./retention-warning.ts";
+import { readMovieRemovalNoticeV4 } from "#shared/movie-editions/removal-v4.ts";
+import { composeMovieRemovalNoticeV4 } from "#automation/movie-editions/notifications/removal-message.ts";
+import type { PreparedMovieRemovalNoticeV4 } from "#automation/movie-editions/notifications/removal-authority.ts";
 
 export const ItemSchema = z.object({
   mediaId: z.string(),
@@ -58,6 +67,7 @@ type Context = {
   cipher: CredentialCipher;
   publicOrigin: string;
   movieNotice?: PreparedMovieNoticeV4 | undefined;
+  movieRemoval?: PreparedMovieRemovalNoticeV4;
 } & RequesterWatchContext &
   Pick<
     MediaAutomationContext,
@@ -78,6 +88,8 @@ export async function composeMessage(
   context: Context,
   delivery: Delivery,
 ): Promise<Message | null> {
+  if (readMovieRemovalNoticeV4(delivery.event.payload) !== null)
+    return composeMovieRemovalNoticeV4(tx, context, delivery);
   if (readMovieNoticeV4(delivery.event.payload) !== null)
     return composeMovieNoticeV4(
       tx,
@@ -385,6 +397,8 @@ async function warning(
   delivery: Delivery,
   target: { channel: "email" | "discord"; recipient: string },
 ): Promise<Message | null> {
+  const scoped = readMovieRetentionWarningV4(delivery.event.payload);
+  const edition = scoped?.scope.edition ?? "default";
   const { decisionId, generation } = z
     .object({ decisionId: z.string(), generation: z.number().int() })
     .parse(delivery.event.payload);
@@ -393,23 +407,30 @@ async function warning(
     include: {
       media: {
         include: {
-          intents: { where: { edition: "default" } },
-          holds: { where: { edition: "default" } },
+          intents: { where: { edition } },
+          holds: { where: { edition } },
         },
       },
     },
   });
   if (
-    decision?.mediaId !== delivery.event.mediaId ||
-    decision.edition !== "default" ||
-    decision.generation !== generation ||
-    defaultIntent(decision.media.intents)?.generation !== generation ||
-    defaultIntent(decision.media.intents)?.automationEpoch !==
-      delivery.recoveryEpoch ||
-    !["warning_pending", "grace_period"].includes(decision.state) ||
-    decision.media.holds.some(
-      (hold) => hold.isPin || hold.until === null || hold.until > new Date(),
-    )
+    decision === null ||
+    !retentionWarningCurrent(decision, {
+      mediaId: delivery.event.mediaId,
+      edition,
+      generation,
+      epoch: delivery.recoveryEpoch,
+    })
+  )
+    return null;
+  if (
+    scoped !== null &&
+    !movieRetentionWarningMatches(scoped, {
+      decision,
+      recoveryEpoch: delivery.recoveryEpoch,
+      eventId: delivery.event.id,
+      scope: context.binding?.cohort.movieScope,
+    })
   )
     return null;
   if (context.binding === undefined) return null;
@@ -422,13 +443,14 @@ async function warning(
     tx,
     { decisionId: decision.id, ...binding },
     context.binding.freshness,
+    context.binding.budget,
   );
   const claim = await tx.mediaRequest.findFirst({
     where: {
       userId: delivery.userId,
       mediaId: decision.mediaId,
       ...effectiveRequestWhere,
-      edition: "default",
+      edition,
     },
   });
   if (
@@ -437,10 +459,14 @@ async function warning(
     !(await allRequestersWatched(tx, context))
   )
     return null;
+  const title =
+    scoped === null
+      ? decision.media.title
+      : `${decision.media.title} (${movieEditionDisplayLabel(edition)})`;
   return {
     ...target,
-    subject: `Media: ${decision.media.title.slice(0, 160)}`,
-    text: `${decision.media.title} is eligible for removal after at least seven days. Open Media to confirm Keep or pin it.\n${new URL(`/media/${encodeURIComponent(decision.mediaId)}`, context.publicOrigin).toString()}`,
+    subject: `Media: ${title.slice(0, 160)}`,
+    text: `${title} is eligible for removal after at least seven days. Open Media to confirm Keep or pin it.\n${new URL(`/media/${encodeURIComponent(decision.mediaId)}`, context.publicOrigin).toString()}`,
   };
 }
 

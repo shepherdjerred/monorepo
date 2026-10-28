@@ -12,6 +12,7 @@ import type { PlexBindingExpected } from "#shared/plex-binding/expected.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { parsePlexRecord, readPlexPointers } from "./records.ts";
 import { PlexBindingProtection } from "./errors.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 type ProjectionInput = {
   decisionId: string;
@@ -43,11 +44,13 @@ function projection(input: ProjectionInput) {
 export async function captureRetentionPlexProjection(
   tx: Prisma.TransactionClient,
   input: ProjectionInput,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const value = projection(input);
   const existing = await tx.retentionPlexProjection.findUnique({
     where: { decisionId: input.decisionId },
   });
+  budget?.consume(existing === null ? 0 : 1);
   if (existing !== null) {
     const stored = parsePlexRecord(
       RetentionPlexProjectionV1Schema,
@@ -83,6 +86,7 @@ export async function captureRetentionPlexProjection(
   const pointers = await readPlexPointers(
     tx,
     input.bindings.map((binding) => binding.scope),
+    budget,
   );
   for (const [index, pointer] of pointers.entries()) {
     const expected = input.bindings[index];
@@ -111,10 +115,12 @@ export async function assertRetentionPlexProjection(
   tx: Prisma.TransactionClient,
   input: ProjectionInput,
   freshness: PlexBindingFreshness,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<void> {
   const row = await tx.retentionPlexProjection.findUnique({
     where: { decisionId: input.decisionId },
   });
+  budget?.consume(row === null ? 0 : 1);
   freshness.assertActive();
   if (row === null) throw new PlexBindingProtection("reconciliation_required");
   const stored = parsePlexRecord(

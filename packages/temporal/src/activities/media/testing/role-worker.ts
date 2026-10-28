@@ -18,6 +18,7 @@ export async function startMovieWorkflowWorker(options: {
   address: string;
   directory: string;
   childEnvironment: { PATH: string };
+  namespace?: "dev" | "default";
 }) {
   const marker = path.join(options.directory, "ready");
   const workflow = Bun.spawn(
@@ -28,6 +29,7 @@ export async function startMovieWorkflowWorker(options: {
       "run",
       options.address.replace(/^localhost:/u, "127.0.0.1:"),
       marker,
+      options.namespace ?? "dev",
     ],
     {
       env: options.childEnvironment,

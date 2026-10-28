@@ -3,23 +3,25 @@ import { deliveryInclude } from "./message.ts";
 import { reconcileDelivery } from "./reconcile.ts";
 import { z } from "zod";
 import { defaultIntent } from "#shared/editions/scope.ts";
+import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 
 /** Read provider state again before removal; delivery acceptance can later bounce. */
 export async function refreshRetentionReceipts(
   context: MediaAutomationContext,
   mediaIds: string[],
+  edition: MovieEditionKey = "default",
 ): Promise<boolean> {
   const decisions = await context.db.retentionDecision.findMany({
     where: {
       mediaId: { in: mediaIds },
-      edition: "default",
+      edition,
       state: { in: ["warning_pending", "grace_period", "quarantined"] },
     },
     include: {
       media: {
         select: {
           intents: {
-            where: { edition: "default" },
+            where: { edition },
             select: { generation: true, edition: true },
           },
         },
@@ -30,7 +32,10 @@ export async function refreshRetentionReceipts(
     .filter(
       (decision) =>
         decision.generation ===
-        defaultIntent(decision.media.intents)?.generation,
+        (edition === "default"
+          ? defaultIntent(decision.media.intents)
+          : decision.media.intents.find((intent) => intent.edition === edition)
+        )?.generation,
     )
     .map(
       (decision) =>

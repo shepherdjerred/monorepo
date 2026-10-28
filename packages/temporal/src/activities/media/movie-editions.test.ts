@@ -49,6 +49,7 @@ const input = {
   schemaVersion: 4 as const,
   operationId: "00000000-0000-4000-8000-000000000001",
   attemptId: "00000000-0000-4000-8000-000000000002",
+  decisionId: "00000000-0000-4000-8000-000000000006",
   mediaId: "00000000-0000-4000-8000-000000000003",
   generation: 1,
   assetId: "00000000-0000-4000-8000-000000000004",
@@ -56,6 +57,7 @@ const input = {
   language: "en",
   recoveryEpoch: 0,
   targetAuthority: "a".repeat(64),
+  stage: "quarantined" as const,
   scope: {
     mediaId: "00000000-0000-4000-8000-000000000003",
     rootMediaId: "00000000-0000-4000-8000-000000000003",
@@ -63,6 +65,10 @@ const input = {
   },
 };
 const networkMethods = [
+  "completeMovieRemovalV4",
+  "finalizeMovieRestorationV4",
+  "publishRestoredMovieToPlexV4",
+  "evaluateMovieRetentionV4",
   "findMovieSubtitlesV4",
   "reconcileMovieIntentV4",
   "submitMovieTorrentV4",
@@ -71,6 +77,9 @@ const networkMethods = [
   "finalizeMovieAcquisitionV4",
 ] as const;
 const fileMethods = [
+  "restoreMovieFilesV4",
+  "purgeMovieFilesV4",
+  "quarantineMovieFilesV4",
   "inspectAndStageMovieV4",
   "promoteMovieFilesV4",
   "installMovieSubtitlesV4",
@@ -132,6 +141,39 @@ test("scoped Plex hints retain original SDK expiry and cancellation across lazy 
 function networkRuntime(check: (execution: PlexBindingExecution) => void) {
   return {
     movie: {
+      completeMovieRemovalV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "completed" as const, reason: null });
+      },
+      finalizeMovieRestorationV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve();
+      },
+      publishRestoredMovieToPlexV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "available" as const, reason: null });
+      },
+      evaluateMovieRetentionV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "protected" as const,
+          decisionId: null,
+          wakeAt: null,
+          reason: "synthetic",
+        });
+      },
       findMovieSubtitlesV4: (
         _input: unknown,
         execution: PlexBindingExecution,
@@ -191,6 +233,24 @@ function networkRuntime(check: (execution: PlexBindingExecution) => void) {
 function fileRuntime(check: (execution: PlexBindingExecution) => void) {
   return {
     movie: {
+      restoreMovieFilesV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "restored" as const });
+      },
+      purgeMovieFilesV4: (_input: unknown, execution: PlexBindingExecution) => {
+        check(execution);
+        return Promise.resolve({ status: "purged" as const });
+      },
+      quarantineMovieFilesV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "quarantined" as const });
+      },
       installMovieSubtitlesV4: (
         _input: unknown,
         execution: PlexBindingExecution,
@@ -215,6 +275,71 @@ function fileRuntime(check: (execution: PlexBindingExecution) => void) {
     },
   };
 }
+
+test.each(["quarantined", "protected"] as const)(
+  "quarantine preserves its exact scoped decision and %s result through the SDK adapter",
+  async (status) => {
+    const decision = {
+      schemaVersion: input.schemaVersion,
+      operationId: input.operationId,
+      decisionId: input.decisionId,
+      scope: input.scope,
+    };
+    const runtime = fileRuntime(vi.fn());
+    const outcome = { status, reason: "synthetic-quarantine-result" };
+    const dispatch = vi.fn(
+      (received: unknown, execution: PlexBindingExecution) => {
+        expect(received).toBe(decision);
+        execution.assertActive();
+        return Promise.resolve(outcome);
+      },
+    );
+    const activities = createMovieFileWorkerActivitiesV4(() =>
+      Promise.resolve({
+        movie: { ...runtime.movie, quarantineMovieFilesV4: dispatch },
+      }),
+    );
+    expect(
+      await environment().run(activities.quarantineMovieFilesV4, decision),
+    ).toEqual(outcome);
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  },
+);
+
+test.each(fileMethods)(
+  "%s refuses queued expiry and cancellation before lazy initialization",
+  async (method) => {
+    const load = vi.fn(() =>
+      Promise.reject(new Error("Runtime must not initialize")),
+    );
+    const activities = createMovieFileWorkerActivitiesV4(load);
+    await expect(
+      environment(Date.now() - 120_001).run(() => activities[method](input)),
+    ).rejects.toThrow("Compensation Activity failed");
+    const cancelled = environment();
+    cancelled.cancel();
+    await expect(
+      cancelled.run(() => activities[method](input)),
+    ).rejects.toThrow("cancelled");
+    expect(load).not.toHaveBeenCalled();
+  },
+);
+
+test.each(fileMethods)(
+  "%s refuses cancellation during runtime loading before any file effect",
+  async (method) => {
+    const activity = environment();
+    const effect = vi.fn();
+    const activities = createMovieFileWorkerActivitiesV4(() => {
+      activity.cancel();
+      return Promise.resolve(fileRuntime(effect));
+    });
+    await expect(activity.run(() => activities[method](input))).rejects.toThrow(
+      "cancelled",
+    );
+    expect(effect).not.toHaveBeenCalled();
+  },
+);
 
 test.each(networkMethods)(
   "%s refuses queued expiry and cancellation before lazy initialization",

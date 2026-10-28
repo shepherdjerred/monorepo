@@ -325,12 +325,11 @@ export async function lockUpgradeCleanupObservation(
   freshness: PlexBindingFreshness,
 ) {
   freshness.assertActive();
-  if (expected.schemaVersion === 2) await lockMovieCommand(tx, expected.scope);
-  else {
+  if (expected.schemaVersion === 1) {
     await lockCanonicalMedia(tx, expected.mediaIds);
     await lockExistingDefaultTargets(tx, expected.mediaIds);
     await lockEffectiveRequests(tx, expected.mediaIds);
-  }
+  } else await lockMovieCommand(tx, expected.scope);
   if (!(await lockRuntimeAuthority(tx, expected.recoveryEpoch)))
     throw new PlexBindingProtection("ownership_changed");
   if (expected.userIds.length > 0) {
@@ -354,13 +353,13 @@ export async function lockUpgradeCleanupObservation(
   );
   await assertNoPublicationCompensationFence(tx, expected);
   if (
-    !(await (expected.schemaVersion === 2
-      ? movieCleanupRecordsAuthorized(tx, expected)
-      : recordsAuthorized(tx, {
+    !(await (expected.schemaVersion === 1
+      ? recordsAuthorized(tx, {
           epoch: expected.recoveryEpoch,
           mediaIds: expected.mediaIds,
           assetIds: expected.assetIds,
-        })))
+        })
+      : movieCleanupRecordsAuthorized(tx, expected)))
   )
     throw new PlexBindingProtection("ownership_changed");
   const server = expected.access[0]?.serverMachineId;

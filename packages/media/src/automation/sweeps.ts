@@ -35,7 +35,7 @@ export function createSweepActivities(
         input.kind === "watch" &&
         input.cursor?.startsWith(MOVIE_WATCH_CURSOR) === true
       )
-        return sweepMovieWatch(context, input.cursor);
+        return sweepMovieWatch(invocation, input.cursor);
       if (input.kind === "downloads")
         return sweepDownloads(invocation, input.cursor);
       if (input.kind === "feeds")

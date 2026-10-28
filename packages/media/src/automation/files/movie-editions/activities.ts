@@ -4,14 +4,64 @@ import { MediaError } from "#application/errors.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import type { PublicationExecution } from "#automation/publication-proof/invocation.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type {
+  MovieAttemptOperationV4,
+  MovieDecisionOperationV4,
+  MovieOperationV4,
+} from "#shared/movie-editions/automation-v4.ts";
 import { inspectAndStageMovieV4 } from "./inspection.ts";
 import { promoteMovieV4 } from "./publication.ts";
 import { installMovieSubtitlesV4 } from "./subtitles.ts";
 import type { MovieSubtitleInstallV4 } from "#shared/movie-editions/subtitles-v4.ts";
+import { quarantineMovieFilesV4 } from "#automation/movie-editions/retention/quarantine.ts";
+import { purgeMovieFilesV4 } from "#automation/movie-editions/retention/purge.ts";
+import { restoreMovieFilesV4 } from "#automation/movie-editions/retention/restore.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export function createMovieFileFacetV4(context: FileContext) {
   return {
+    async restoreMovieFilesV4(
+      input: MovieOperationV4,
+      execution: PublicationExecution,
+    ) {
+      try {
+        await restoreMovieFilesV4(
+          retentionInvocation(context, execution),
+          input,
+        );
+        return { status: "restored" as const };
+      } catch (error) {
+        const blocked = blockedMovieFile(error);
+        return { ...blocked, status: "protected" as const };
+      }
+    },
+    async purgeMovieFilesV4(
+      input: MovieDecisionOperationV4,
+      execution: PublicationExecution,
+    ) {
+      try {
+        await purgeMovieFilesV4(retentionInvocation(context, execution), input);
+        return { status: "purged" as const };
+      } catch (error) {
+        const blocked = blockedMovieFile(error);
+        return { ...blocked, status: "protected" as const };
+      }
+    },
+    async quarantineMovieFilesV4(
+      input: MovieDecisionOperationV4,
+      execution: PublicationExecution,
+    ) {
+      try {
+        await quarantineMovieFilesV4(
+          retentionInvocation(context, execution),
+          input,
+        );
+        return { status: "quarantined" as const };
+      } catch (error) {
+        const blocked = blockedMovieFile(error);
+        return { ...blocked, status: "protected" as const };
+      }
+    },
     async installMovieSubtitlesV4(
       input: MovieSubtitleInstallV4,
       execution: PublicationExecution,
@@ -53,6 +103,21 @@ export function createMovieFileFacetV4(context: FileContext) {
       } catch (error) {
         return blockedMovieFile(error);
       }
+    },
+  };
+}
+
+function retentionInvocation(
+  context: FileContext,
+  execution: PublicationExecution,
+): FileContext {
+  return {
+    ...context,
+    publicationExecution: () => execution,
+    movieManagement: {
+      execution,
+      budget:
+        context.movieManagement?.budget ?? new PublicationAuthorityReadBudget(),
     },
   };
 }

@@ -5,6 +5,7 @@ import type {
   PlexPhysicalGroup,
 } from "#shared/plex-binding/contract.ts";
 import type { BoundWatchAuthority } from "#shared/plex-binding/watch.ts";
+import type { MovieRemovalScope } from "#automation/files/movie-editions/removal-scope.ts";
 import {
   readCurrentPlexBindings,
   readPlexPhysicalGroup,
@@ -89,6 +90,7 @@ export async function readRetentionPlexAuthority(
     purge: boolean;
     access: readonly PlexAccess[];
     freshness: PlexBindingFreshness;
+    movie?: MovieRemovalScope;
   },
 ): Promise<RetentionPlexAuthority> {
   const byMedia = new Map<string, BoundWatchAuthority>();
@@ -118,6 +120,7 @@ export async function readRetentionPlexAuthority(
             assetId: entry.assetId,
             access,
           })),
+          input.movie?.budget,
         );
     input.freshness.assertActive();
     for (const scope of current.group.coverage) {
@@ -128,6 +131,7 @@ export async function readRetentionPlexAuthority(
         purge: input.purge,
         freshness: input.freshness,
         serving,
+        ...(input.movie === undefined ? {} : { movie: input.movie }),
       });
       decisions.push(member.decisionId);
       byMedia.set(scope.mediaId, member.authority);
@@ -141,6 +145,7 @@ export async function readRetentionPlexAuthority(
       tx,
       { decisionId, groups: [...groups.values()], bindings },
       input.freshness,
+      input.movie?.budget,
     );
   input.freshness.assertActive();
   return { byMedia, freshness: input.freshness };
@@ -155,13 +160,20 @@ async function readRetentionMember(
     purge: boolean;
     freshness: PlexBindingFreshness;
     serving: Awaited<ReturnType<typeof readCurrentPlexBindings>>;
+    movie?: MovieRemovalScope;
   },
 ): Promise<{
   decisionId: string;
   authority: BoundWatchAuthority;
   group: PlexPhysicalGroup;
 }> {
-  if (input.scope.edition !== "default")
+  if (input.movie === undefined && input.scope.edition !== "default")
+    throw new FileGuardError("edition_not_available");
+  if (
+    input.movie !== undefined &&
+    (input.scope.mediaId !== input.movie.scope.mediaId ||
+      input.scope.edition !== input.movie.scope.edition)
+  )
     throw new FileGuardError("edition_not_available");
   const decision = await tx.retentionDecision.findMany({
     where: {
@@ -171,20 +183,27 @@ async function readRetentionMember(
     select: { id: true },
     take: 2,
   });
+  input.movie?.budget.consume(decision.length);
   input.freshness.assertActive();
   if (decision.length !== 1 || decision[0] === undefined)
     throw new FileGuardError("retention_decision_ambiguous");
   const decisionId = decision[0].id;
   if (input.purge) {
-    const retained = await readQuarantinedPlexWatchAuthority(tx, {
-      decisionId,
-      scope: input.scope,
-      assetId: input.assetId,
-      access: input.access,
-    });
+    const retained = await readQuarantinedPlexWatchAuthority(
+      tx,
+      {
+        decisionId,
+        scope: input.scope,
+        assetId: input.assetId,
+        access: input.access,
+      },
+      input.movie?.budget,
+    );
     input.freshness.assertActive();
     if (retained.status !== "current")
       throw new FileGuardError(retained.reason);
+    if (input.movie !== undefined && retained.association.schemaVersion !== 2)
+      throw new FileGuardError("edition_not_available");
     return {
       decisionId,
       authority: retained.authority,

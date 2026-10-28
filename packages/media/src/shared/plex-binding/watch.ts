@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PublicationHashSchema as Hash } from "#shared/publication-proof/effects.ts";
+import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 import {
   PlexBindingScopeSchema,
   PlexBindingSnapshotSchema,
@@ -102,6 +103,20 @@ export const QuarantinePlexRefSchema = z.strictObject({
     )
     .max(100),
 });
+/** Explicit scoped authority; the historical unversioned reference remains literal. */
+export const QuarantinePlexRefV2Schema = QuarantinePlexRefSchema.extend({
+  schemaVersion: z.literal(2),
+  scope: MovieEditionScopeSchema,
+}).refine(
+  (value) =>
+    value.nativeReceipts.length === 0 &&
+    value.group.canonicalRootId === value.scope.rootMediaId &&
+    value.group.edition === value.scope.edition &&
+    value.group.coverage.length === 1 &&
+    value.group.coverage[0]?.mediaId === value.scope.mediaId &&
+    value.group.coverage[0].edition === value.scope.edition,
+  "Scoped quarantine watch requires its exact movie group without native rebinding",
+);
 export const BoundWatchAuthoritySchema = z.discriminatedUnion("purpose", [
   z.strictObject({
     purpose: z.literal("current_serving"),
@@ -110,7 +125,7 @@ export const BoundWatchAuthoritySchema = z.discriminatedUnion("purpose", [
   z.strictObject({
     purpose: z.literal("quarantined"),
     binding: PlexBindingSnapshotSchema,
-    quarantine: QuarantinePlexRefSchema,
+    quarantine: z.union([QuarantinePlexRefSchema, QuarantinePlexRefV2Schema]),
     quarantineHash: Hash,
   }),
 ]);
@@ -146,6 +161,7 @@ export const RetentionPlexProjectionV1Schema = z
     "Retention Plex projection requires every distinct covered binding",
   );
 export type QuarantinePlexRef = z.infer<typeof QuarantinePlexRefSchema>;
+export type QuarantinePlexRefV2 = z.infer<typeof QuarantinePlexRefV2Schema>;
 export type BoundWatchAuthority = z.infer<typeof BoundWatchAuthoritySchema>;
 export type PlexWatchProjectionV1 = z.infer<typeof PlexWatchProjectionV1Schema>;
 export type RetentionPlexProjectionV1 = z.infer<

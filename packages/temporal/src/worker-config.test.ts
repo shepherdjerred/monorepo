@@ -83,6 +83,10 @@ describe("Temporal worker role contracts", () => {
     "publishMovieToPlexV4",
     "finalizeMovieAcquisitionV4",
     "observeMoviePlexHintV4",
+    "evaluateMovieRetentionV4",
+    "publishRestoredMovieToPlexV4",
+    "finalizeMovieRestorationV4",
+    "completeMovieRemovalV4",
   ])("registers %s only on the existing network worker", (activity) => {
     const owners = QUEUE_WORKER_DEFINITIONS.filter(
       (definition) =>
@@ -98,6 +102,9 @@ describe("Temporal worker role contracts", () => {
     "inspectAndStageMovieV4",
     "promoteMovieFilesV4",
     "installMovieSubtitlesV4",
+    "quarantineMovieFilesV4",
+    "purgeMovieFilesV4",
+    "restoreMovieFilesV4",
   ])("registers %s only on the existing Files worker", (activity) => {
     const owners = QUEUE_WORKER_DEFINITIONS.filter(
       (definition) =>

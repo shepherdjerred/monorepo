@@ -2,6 +2,10 @@ import { assertDefaultFileEdition } from "#automation/files/editions/guard.ts";
 import { setTimeout } from "node:timers/promises";
 import { z } from "zod";
 import {
+  assertMovieRemovalDecision,
+  type MovieRemovalScope,
+} from "./movie-editions/removal-scope.ts";
+import {
   FileGuardError,
   now,
   type FileContext,
@@ -33,6 +37,7 @@ export async function awaitRetentionFreshness(
     epoch: number;
     purge: boolean;
     assertOriginal?: (() => void) | undefined;
+    movie?: MovieRemovalScope;
   },
 ): Promise<void> {
   const deadline = performance.now() + 30_000;
@@ -47,11 +52,11 @@ export async function awaitRetentionFreshness(
     const decision = await context.db.retentionDecision.findUniqueOrThrow({
       where: { id: input.decisionId },
     });
-    assertDefaultFileEdition(decision.edition);
+    assertDecisionEdition(decision, input.movie);
     if (decision.state === completeState) return;
     if (decision.state !== expectedState)
       throw new FileGuardError("decision_obsolete");
-    await assertCurrentIntents(context, generations, input.epoch);
+    await assertCurrentIntents(context, generations, input.epoch, input.movie);
     input.assertOriginal?.();
     const evidence = RetentionEvidenceSchema.parse(decision.evidence);
     if (evidence.recoveryEpoch !== input.epoch)
@@ -67,13 +72,25 @@ export async function awaitRetentionFreshness(
   }
 }
 
+function assertDecisionEdition(
+  decision: { mediaId: string; edition: string },
+  movie?: MovieRemovalScope,
+) {
+  if (movie === undefined) assertDefaultFileEdition(decision.edition);
+  else assertMovieRemovalDecision(decision, movie.scope);
+}
+
 async function assertCurrentIntents(
   context: FileContext,
   generations: Map<string, number>,
   epoch: number,
+  movie?: MovieRemovalScope,
 ): Promise<void> {
   const intents = await context.db.mediaIntent.findMany({
-    where: { mediaId: { in: [...generations.keys()] }, edition: "default" },
+    where: {
+      mediaId: { in: [...generations.keys()] },
+      edition: movie?.scope.edition ?? "default",
+    },
   });
   if (
     intents.length !== generations.size ||

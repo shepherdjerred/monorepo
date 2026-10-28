@@ -14,7 +14,10 @@ import { reconcileDelivery } from "./notifications/reconcile.ts";
 import { networkMovieAccess } from "./editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
-import { prepareNotificationBinding } from "./notifications/binding.ts";
+import {
+  prepareNotificationBinding,
+  assertNotificationBindingConfiguration,
+} from "./notifications/binding.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 import {
@@ -22,6 +25,14 @@ import {
   assertMovieNoticeConfiguration,
 } from "./movie-editions/notifications/authority.ts";
 import { assertMovieNoticeAcknowledgement } from "./movie-editions/notifications/acknowledgement.ts";
+import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { readMovieRemovalNoticeV4 } from "#shared/movie-editions/removal-v4.ts";
+import {
+  prepareMovieRemovalNoticeV4,
+  assertMovieRemovalNoticeConfiguration,
+} from "./movie-editions/notifications/removal-authority.ts";
+import { assertMovieRemovalAcknowledgement } from "./movie-editions/notifications/removal-acknowledgement.ts";
 
 const result = (
   status: "accepted" | "failed" | "unknown",
@@ -40,11 +51,14 @@ export function createNotificationActivities(
     async deliverMediaNotification(input) {
       const execution = context.plexBindingExecution();
       execution.assertActive();
+      const budget =
+        context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
       const snapshot = await context.db.notificationDelivery.findUniqueOrThrow({
         where: { id: input.notificationId },
         include: deliveryInclude,
       });
       if (["sending", "unknown", "accepted"].includes(snapshot.state)) {
+        await assertMovieRemovalAcknowledgement(context.db, snapshot, budget);
         await assertMovieNoticeAcknowledgement(context.db, snapshot);
         execution.assertActive();
         return reconcileDelivery(context, snapshot);
@@ -53,35 +67,54 @@ export function createNotificationActivities(
         return result("failed", "delivery_requires_explicit_retry");
       if (snapshot.state !== "pending")
         throw new Error("Unknown notification state");
-      const movieAccess = [
-        "media_available",
-        "media_upgraded",
-        "subtitles_ready",
-        "retention_warning",
-      ].includes(snapshot.event.kind)
-        ? await networkMovieAccess(context, eventMediaIds(snapshot))
-        : undefined;
+      const movieAccess =
+        [
+          "media_available",
+          "media_upgraded",
+          "subtitles_ready",
+          "retention_warning",
+        ].includes(snapshot.event.kind) ||
+        readMovieRemovalNoticeV4(snapshot.event.payload) !== null
+          ? await networkMovieAccess(context, eventMediaIds(snapshot))
+          : undefined;
       let binding: Awaited<ReturnType<typeof prepareNotificationBinding>>;
       let movieNotice: Awaited<ReturnType<typeof prepareMovieNoticeV4>>;
+      let movieRemoval: Awaited<ReturnType<typeof prepareMovieRemovalNoticeV4>>;
       try {
+        movieRemoval = await prepareMovieRemovalNoticeV4(context, {
+          delivery: snapshot,
+          execution,
+          access: movieAccess,
+          budget,
+        });
         movieNotice = await prepareMovieNoticeV4(context, {
           delivery: snapshot,
           execution,
           access: movieAccess,
+          budget,
         });
         binding = await prepareNotificationBinding(
           context,
           snapshot,
           execution,
+          budget,
         );
       } catch (error) {
         if (error instanceof PlexBindingProtection)
           return result("failed", error.reason);
         if (error instanceof MovieChoiceProtection)
           return result("failed", error.code);
+        if (error instanceof NativeArchiveScopeProtection)
+          return result("failed", error.code);
         throw error;
       }
-      const messageContext = { ...context, movieAccess, binding, movieNotice };
+      const messageContext = {
+        ...context,
+        movieAccess,
+        binding,
+        movieNotice,
+        movieRemoval,
+      };
       const claim = await context.db
         .$transaction(async (tx) => {
           const guards: MovieChoiceFreshness[] = [];
@@ -146,6 +179,8 @@ export function createNotificationActivities(
             return { protectedReason: error.code };
           if (error instanceof PlexBindingProtection)
             return { protectedReason: error.reason };
+          if (error instanceof NativeArchiveScopeProtection)
+            return { protectedReason: error.code };
           throw error;
         });
       if (claim === null)
@@ -154,7 +189,9 @@ export function createNotificationActivities(
         return result("failed", claim.protectedReason);
       try {
         await context.checkpoint?.("notification-claimed");
+        await assertMovieRemovalNoticeConfiguration(context, movieRemoval);
         await assertMovieNoticeConfiguration(context, movieNotice);
+        await assertNotificationBindingConfiguration(context, binding);
         return await context.db.$transaction(
           async (tx) => {
             const guards: MovieChoiceFreshness[] = [];
@@ -251,8 +288,10 @@ async function settleDeliveryFailure(
   const choiceExpired =
     error instanceof MovieChoiceProtection ||
     error instanceof PlexBindingProtection;
+  const authorityProtected =
+    choiceExpired || error instanceof NativeArchiveScopeProtection;
   const rejected =
-    choiceExpired ||
+    authorityProtected ||
     (error instanceof IntegrationError &&
       ["authentication", "rate-limited", "interaction-required"].includes(
         error.kind,
@@ -270,7 +309,7 @@ async function settleDeliveryFailure(
       where: { id: input.attemptId, state: "sending" },
       data: {
         state: rejected ? "rejected" : "unknown",
-        rejectionReason: choiceExpired
+        rejectionReason: authorityProtected
           ? "authority_changed_before_send"
           : rejected
             ? "provider_rejected"
@@ -282,7 +321,7 @@ async function settleDeliveryFailure(
       where: { id: input.deliveryId, state: "sending" },
       data: {
         state: rejected ? "failed" : "unknown",
-        failureReason: choiceExpired
+        failureReason: authorityProtected
           ? "authority_changed_before_send"
           : rejected
             ? "provider_rejected"
@@ -295,7 +334,7 @@ async function settleDeliveryFailure(
   if (preservedAcceptance) return result("accepted");
   return result(
     rejected ? "failed" : "unknown",
-    choiceExpired
+    authorityProtected
       ? "authority_changed_before_send"
       : rejected
         ? "delivery_rejected"

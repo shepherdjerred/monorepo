@@ -85,9 +85,9 @@ export async function cleanupUpgrade(
   proof.freshness.assertActive();
   const mediaIds = proof.evidence.expected.mediaIds;
   const movieScope =
-    proof.evidence.expected.schemaVersion === 2
-      ? proof.evidence.expected.scope
-      : undefined;
+    proof.evidence.expected.schemaVersion === 1
+      ? undefined
+      : proof.evidence.expected.scope;
   const edition = movieScope?.edition ?? "default";
   if (
     (movieScope === undefined || movieScope.edition === "default") &&

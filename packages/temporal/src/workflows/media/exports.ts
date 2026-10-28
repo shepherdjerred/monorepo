@@ -2,6 +2,12 @@ import * as m from "#workflows/media/core.ts";
 import * as movie from "#workflows/media/movie-editions/acquisition.ts";
 import * as movieSubtitles from "#workflows/media/movie-editions/subtitles.ts";
 import * as movieWatch from "#workflows/media/movie-editions/watch.ts";
+import * as movieRetention from "#workflows/media/movie-editions/retention.ts";
+import * as movieRestore from "#workflows/media/movie-editions/restore.ts";
+export const restoreMovieEditionV4Workflow =
+  movieRestore.restoreMovieEditionV4Workflow;
+export const retainMovieEditionV4Workflow =
+  movieRetention.retainMovieEditionV4Workflow;
 export const observeMoviePlexHintV4Workflow =
   movieWatch.observeMoviePlexHintV4Workflow;
 export const acquireMovieSubtitlesV4Workflow =

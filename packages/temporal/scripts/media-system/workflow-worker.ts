@@ -6,7 +6,7 @@ const workflowsPath = new URL(
   "../../src/workflows/media/exports.ts",
   import.meta.url,
 ).pathname;
-const [mode, target, marker] = process.argv.slice(2);
+const [mode, target, marker, namespace = "dev"] = process.argv.slice(2);
 if (mode === "replay") {
   if (target === undefined) throw new Error("Exact history file required");
   await Worker.runReplayHistory(
@@ -17,7 +17,8 @@ if (mode === "replay") {
   if (
     target === undefined ||
     marker === undefined ||
-    !/^127\.0\.0\.1:\d+$/.test(target)
+    !/^127\.0\.0\.1:\d+$/.test(target) ||
+    !["dev", "default"].includes(namespace)
   )
     throw new Error(
       "An explicit local Temporal address and ready marker are required",
@@ -26,7 +27,7 @@ if (mode === "replay") {
   try {
     const worker = await Worker.create({
       connection,
-      namespace: "dev",
+      namespace,
       workflowsPath,
       taskQueue: TASK_QUEUES.WORKFLOWS,
     });

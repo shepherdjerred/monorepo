@@ -3,6 +3,7 @@ import { defaultIntent, assertDefaultEdition } from "#shared/editions/scope.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { PlexIdentitySchema } from "#automation/watch.ts";
+import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 
 export const mediaInclude = {
   intents: { where: { edition: "default" } },
@@ -33,8 +34,15 @@ export type Media = Prisma.MediaItemGetPayload<{
   include: typeof mediaInclude;
 }>;
 
-export function lineageResolved(item: Media): boolean {
-  const root = defaultIntent(item.intents)?.editionRootId;
+export function lineageResolved(
+  item: Media,
+  edition: MovieEditionKey = "default",
+): boolean {
+  const root = (
+    edition === "default"
+      ? defaultIntent(item.intents)
+      : item.intents.find((target) => target.edition === edition)
+  )?.editionRootId;
   return (
     root != null &&
     item.assets.every(({ asset }) => asset.editionRootId === root)

@@ -14,6 +14,7 @@ import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfill
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export type RequesterWatchContext = {
   movieAccess?: MovieChoiceAccess | undefined;
@@ -23,6 +24,7 @@ export type RequesterWatchContext = {
         cohort: BoundMediaCohort;
         freshness: PlexBindingFreshness;
         observed: { wall: number; monotonic: number };
+        budget?: PublicationAuthorityReadBudget;
       }
     | undefined;
 };
@@ -35,14 +37,23 @@ async function memberRequestersWatched(
   member: BoundMediaCohort["original"][number],
 ): Promise<boolean> {
   const mediaId = member.authority.binding.scope.mediaId;
+  const movieScope = context.binding.cohort.movieScope;
   const media = await tx.mediaItem.findUniqueOrThrow({
     where: { id: mediaId },
   });
   if (media.kind === "movie") {
     const { demands, freshness } = await readMovieDemandAuthority(tx, {
       mediaId,
-      currentAsset: await currentFulfillmentAsset(tx, mediaId),
+      currentAsset: await currentFulfillmentAsset(
+        tx,
+        mediaId,
+        movieScope?.edition,
+      ),
       access: requireMovieChoiceAccess(context.movieAccess ?? {}),
+      ...(movieScope === undefined ? {} : { scope: movieScope }),
+      ...(context.binding.budget === undefined
+        ? {}
+        : { budget: context.binding.budget }),
     });
     if (demands.some((demand) => demand.fulfillment.status !== "fulfilled"))
       return false;
@@ -52,12 +63,14 @@ async function memberRequestersWatched(
     where: {
       mediaId,
       ...effectiveRequestWhere,
-      edition: "default",
+      edition: movieScope?.edition ?? "default",
       user: { role: { not: "owner" } },
     },
   });
   const observations = await Promise.all(
-    claims.map((claim) => boundRequesterWatch(tx, member, claim.userId)),
+    claims.map((claim) =>
+      boundRequesterWatch(tx, member, claim.userId, context.binding.budget),
+    ),
   );
   for (const observation of observations) {
     if (observation !== null)

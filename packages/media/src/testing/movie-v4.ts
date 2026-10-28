@@ -12,8 +12,13 @@ export async function requestTestMovieV4(
   db: Database,
   actor: MediaActor,
   mediaId: string,
-  edition: MovieEditionKey,
+  selection:
+    MovieEditionKey | { edition: MovieEditionKey; subtitleLanguages: string[] },
 ) {
+  const { edition, subtitleLanguages } =
+    typeof selection === "string"
+      ? { edition: selection, subtitleLanguages: ["en", "zh-Hans"] }
+      : selection;
   const commands = new MovieLifecycleCommands(db, {
     keepDays: 30,
     serverMachineId: "fixture-server",
@@ -51,7 +56,7 @@ export async function requestTestMovieV4(
       definitionDigest: option.definitionDigest,
       registryVersion: context.registryVersion,
     },
-    options: { subtitleLanguages: ["en", "zh-Hans"] },
+    options: { subtitleLanguages },
   });
   const result = await commands.requestMovieEditionV4(
     actor,

@@ -105,9 +105,9 @@ export async function lockCleanupPlex(
     where: {
       mediaId: { in: proof.evidence.expected.mediaIds },
       edition:
-        proof.evidence.expected.schemaVersion === 2
-          ? proof.evidence.expected.scope.edition
-          : "default",
+        proof.evidence.expected.schemaVersion === 1
+          ? "default"
+          : proof.evidence.expected.scope.edition,
     },
     select: { mediaId: true, generation: true },
   });

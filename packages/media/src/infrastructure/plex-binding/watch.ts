@@ -19,14 +19,18 @@ import { PlexBindingProtection } from "./errors.ts";
 import { CommittedQuarantinePlexReceiptSchema } from "#shared/plex-binding/watch.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { queueOperation } from "#automation/store.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { queueMovieQuarantinedWatchRestore } from "#infrastructure/movie-editions/retention/quarantine-watch.ts";
 
 async function readImmutableWatchAssociation(
   tx: Prisma.TransactionClient,
   authority: BoundWatchAuthority,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const row = await tx.plexAssociationEvidence.findUniqueOrThrow({
     where: { id: authority.binding.evidenceId },
   });
+  budget?.consume(1);
   const association = parsePlexRecord(
     PlexAssociationSchema,
     row.evidence,
@@ -53,25 +57,38 @@ async function readImmutableWatchAssociation(
 async function assertBoundAuthority(
   tx: Prisma.TransactionClient,
   authority: BoundWatchAuthority,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const association = await readImmutableWatchAssociation(tx, authority);
+  const association = await readImmutableWatchAssociation(
+    tx,
+    authority,
+    budget,
+  );
   if (authority.purpose === "current_serving") {
-    const current = await readCurrentPlexBinding(tx, {
-      scope: authority.binding.scope,
-      assetId: association.group.assetId,
-      access: association.access,
-    });
+    const current = await readCurrentPlexBinding(
+      tx,
+      {
+        scope: authority.binding.scope,
+        assetId: association.group.assetId,
+        access: association.access,
+      },
+      budget,
+    );
     if (current.status !== "current")
       throw new PlexBindingProtection(current.reason);
     if (identityHash(current.snapshot) !== identityHash(authority.binding))
       throw new PlexBindingProtection("binding_changed");
   } else {
-    const current = await readQuarantinedPlexWatchAuthority(tx, {
-      decisionId: authority.quarantine.decisionId,
-      scope: authority.binding.scope,
-      assetId: association.group.assetId,
-      access: association.access,
-    });
+    const current = await readQuarantinedPlexWatchAuthority(
+      tx,
+      {
+        decisionId: authority.quarantine.decisionId,
+        scope: authority.binding.scope,
+        assetId: association.group.assetId,
+        access: association.access,
+      },
+      budget,
+    );
     if (current.status !== "current")
       throw new PlexBindingProtection(current.reason);
     if (identityHash(current.authority) !== identityHash(authority))
@@ -87,8 +104,9 @@ async function assertUnknownWatchClear(
     authority: BoundWatchAuthority;
     watchBatchRevision: bigint;
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  await readImmutableWatchAssociation(tx, input.authority);
+  await readImmutableWatchAssociation(tx, input.authority, budget);
   const row = await tx.plexWatchProjection.findUnique({
     where: {
       userId_mediaId_edition: {
@@ -115,7 +133,7 @@ async function assertUnknownWatchClear(
     throw new Error("Watch projection relational authority changed");
   if (row.watchBatchRevision >= input.watchBatchRevision)
     throw new PlexBindingProtection("scope_changed");
-  await readImmutableWatchAssociation(tx, stored);
+  await readImmutableWatchAssociation(tx, stored, budget);
 }
 
 /** Historical WatchState alone never grants a known value under a different association. */
@@ -125,6 +143,7 @@ export async function readCurrentBoundWatch(
     userId: string;
     authority: BoundWatchAuthority;
   },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<BoundWatchRead> {
   const authority = BoundWatchAuthoritySchema.parse(input.authority);
   const key = { userId: input.userId, ...authority.binding.scope };
@@ -171,7 +190,7 @@ export async function readCurrentBoundWatch(
   if (fence?.settledRevision !== row.watchBatchRevision)
     return { status: "unknown", reason: "authority_changed" };
   try {
-    await assertBoundAuthority(tx, authority);
+    await assertBoundAuthority(tx, authority, budget);
   } catch (error) {
     if (error instanceof PlexBindingProtection)
       return { status: "unknown", reason: "authority_changed" };
@@ -201,6 +220,7 @@ export async function commitBoundWatch(
     watched: boolean | null;
   },
   freshness: PlexBindingFreshness,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<void> {
   freshness.assertActive();
   const authority = BoundWatchAuthoritySchema.parse(input.authority);
@@ -224,8 +244,8 @@ export async function commitBoundWatch(
   )
     throw new PlexBindingProtection("verification_expired");
   if (input.watched === null)
-    await assertUnknownWatchClear(tx, { ...input, authority });
-  else await assertBoundAuthority(tx, authority);
+    await assertUnknownWatchClear(tx, { ...input, authority }, budget);
+  else await assertBoundAuthority(tx, authority, budget);
   freshness.assertActive();
   if (input.watched === null) {
     await tx.plexWatchProjection.deleteMany({ where: key });
@@ -273,12 +293,13 @@ export async function queueQuarantinedUnwatchedRestore(
     watchBatchRevision: bigint;
   },
   freshness: PlexBindingFreshness,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<{ operationId: string; created: boolean }> {
   freshness.assertActive();
   const authority = BoundWatchAuthoritySchema.parse(input.authority);
   if (authority.purpose !== "quarantined")
     throw new Error("Quarantine restore requires quarantined watch authority");
-  await assertBoundAuthority(tx, authority);
+  await assertBoundAuthority(tx, authority, budget);
   freshness.assertActive();
   const key = { userId: input.userId, ...authority.binding.scope };
   const observed = await tx.plexWatchProjection.findUniqueOrThrow({
@@ -296,9 +317,17 @@ export async function queueQuarantinedUnwatchedRestore(
     authority,
     input.watchBatchRevision,
   );
+  if ("schemaVersion" in authority.quarantine)
+    return queueMovieQuarantinedWatchRestore(
+      tx,
+      { quarantine: authority.quarantine, userId: input.userId },
+      freshness,
+      budget,
+    );
   const parent = await tx.operation.findUniqueOrThrow({
     where: { id: authority.quarantine.operationId },
   });
+  budget?.consume(1);
   const raw = z
     .object({ quarantinePlexReceipt: z.json() })
     .parse(parent.result).quarantinePlexReceipt;
