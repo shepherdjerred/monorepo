@@ -3,9 +3,9 @@ title: World Downloads
 description: Explore and download the preserved worlds and builds of The Storm.
 ---
 
-Browse previews of the preserved worlds, or download a copy to play locally.
+Take a trip through The Storm's history. Explore the maps below in your browser, or download a world to play on your own computer.
 
-Explore map opens an interactive, low-resolution overview of each world's saved overworld terrain. ZIP downloads retain their original Minecraft formats.
+Choose **Explore map** for an interactive overview of a world's saved overworld terrain. The overview shows a simplified view of the saved terrain.
 
 ## Play a world
 
@@ -17,13 +17,15 @@ The downloads preserve their original formats, builds, inventories, and historic
 
 Server plugins and custom terrain generators are not included. Existing builds are preserved; new terrain and server features can differ in single-player.
 
-The top-down images show selected areas around spawn, rather than complete maps. Click an image to see it at full size. Keep a backup before opening an old download in a newer Minecraft version.
+Keep a backup before opening an old download in a newer Minecraft version.
+
+The images below show selected areas around spawn. Click one to see it at full size.
 
 ## Archived worlds
 
 ### Main Map 2
 
-The later survival main world.
+Explore the survival world as it was in 2016.
 
 **Snapshot:** 2016-01-10 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 5.52 GiB
 
@@ -51,7 +53,7 @@ Credit: The Storm community.
 
 ### Main Map 1
 
-The original first survival main-world snapshot.
+Visit the original survival world as it was in 2015.
 
 **Snapshot:** 2015-07-09 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 1.68 GiB
 
@@ -79,7 +81,7 @@ Credit: The Storm community.
 
 ### Skylands Map 2
 
-The later Skylands survival world.
+Explore the 2016 Skylands survival world.
 
 **Snapshot:** 2016-01-10 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 449.4 MiB
 
@@ -107,7 +109,7 @@ fd53fe34312f4e7a9765e236868700319c0fd76a0bc8b9c77fa198205381c84f
 
 ### Skylands Map 1
 
-The original Skylands snapshot.
+Visit the original Skylands world as it was in 2015.
 
 **Snapshot:** 2015-07-09 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 201.6 MiB
 
@@ -135,7 +137,7 @@ c6cda6f560d6b6b140741357f64884b222a9e07e4668967cff46032ef71689de
 
 ### Creative
 
-The creative server's plot world.
+Explore builds from the creative server's plot world.
 
 **Snapshot:** 2016-01-10 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 39.7 MiB
 
@@ -163,7 +165,7 @@ f73a784405c6c233558a876f56cb6345bce90967780fa8d997fff29705a05b1e
 
 ### Asterism
 
-A recovered town export from the survival world.
+Visit Asterism, a recovered town from the survival world.
 
 **Snapshot:** 2016-02 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 3.6 MiB
 

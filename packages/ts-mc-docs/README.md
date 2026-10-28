@@ -7,14 +7,14 @@ decommissioned OVH/Netlify-era infrastructure).
 
 ## Content
 
-Player-facing pages only: welcome, joining, first session, norms, world downloads, and the
-survival section. Accuracy fixes applied during the port:
+Player-facing pages cover joining and the first session, survival worlds and
+travel, homes, trading, progression, adventures, games, creative building,
+community, and world downloads. Accuracy fixes applied during the port:
 
 - LiveMap links use `bluemap.ts-mc.net`.
-- World borders corrected against the live ChunkyBorder config
-  (`packages/homelab/src/cdk8s/config/minecraft-tsmc/`): Overworld
-  20,000, Nether 5,000, End 2,500. The stale Amplified section was
-  dropped.
+- World border radii are sourced from the native circular borders in
+  `packages/the-storm/server/owned/plugins/TheStorm/world.yml`, where sizes
+  are diameters. The stale Amplified section was dropped.
 - World downloads are generated from the verified archive catalogue. The
   original formats and player saves are preserved. Bounded 2D previews show
   selected areas around spawn without converting the saves. Static BlueMap

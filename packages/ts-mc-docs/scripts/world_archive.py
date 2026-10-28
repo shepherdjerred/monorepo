@@ -582,7 +582,8 @@ def document(state_path: Path, overview_path: Path | None = None) -> None:
         "description: Explore and download the preserved worlds and builds of The Storm.",
         "---",
         "",
-        "Browse previews of the preserved worlds, or download a copy to play locally.",
+        "Take a trip through The Storm's history. Explore the maps below in your browser, "
+        "or download a world to play on your own computer.",
         "",
         "## Play a world",
         "",
@@ -597,9 +598,9 @@ def document(state_path: Path, overview_path: Path | None = None) -> None:
         "Server plugins and custom terrain generators are not included. Existing builds are preserved; "
         "new terrain and server features can differ in single-player.",
         "",
-        "The top-down images show selected areas around spawn, rather than complete maps. "
-        "Click an image to see it at full size. "
         "Keep a backup before opening an old download in a newer Minecraft version.",
+        "",
+        "The images below show selected areas around spawn. Click one to see it at full size.",
         "",
         "## Archived worlds",
         "",
@@ -607,8 +608,8 @@ def document(state_path: Path, overview_path: Path | None = None) -> None:
     if overviews is not None:
         intro = lines.index("## Play a world")
         lines[intro:intro] = [
-            "Explore map opens an interactive, low-resolution overview of each world's saved overworld terrain. "
-            "ZIP downloads retain their original Minecraft formats.",
+            "Choose **Explore map** for an interactive overview of a world's saved overworld terrain. "
+            "The overview shows a simplified view of the saved terrain.",
             "",
         ]
     for world in listed_worlds(catalog):
