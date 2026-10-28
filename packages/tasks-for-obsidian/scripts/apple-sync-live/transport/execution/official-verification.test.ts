@@ -7,7 +7,10 @@ import {
   requireVerificationProof,
   verificationFrame,
   verificationWire,
+  verificationProtocol,
+  officialTOTPMethodWords,
 } from "./official-verification-protocol";
+import { runVerificationPreparation } from "./official-verification-guest";
 import {
   driveOfficialVerification,
   retainFailedVerification,
@@ -18,6 +21,149 @@ import {
   retainVerificationMeasurement,
 } from "./official-verification-measurement";
 import { parseOfficialAccountArguments } from "./official-host";
+
+test("pinned official TOTP wording accepts the actual canonical label and rejects near misses", () => {
+  for (const words of [
+    "6-digit 2FA code",
+    "Your 2-factor authentication code",
+    "two-factor authentication",
+  ])
+    expect(officialTOTPMethodWords(words)).toBe(true);
+  for (const words of [
+    "2FA",
+    "6-digit 2FA codes",
+    "6 digit 2FA code",
+    "6-digit 2FA code recovery",
+    "6-digit 2FA code sent to email",
+    "Check your email inbox for a 6-digit 2FA code",
+  ])
+    expect(officialTOTPMethodWords(words)).toBe(false);
+});
+
+test.each(["guard", "oversize", "malformed", "retention-failure"])(
+  "no-code preparation retains bounded evidence before %s rejection",
+  async (fault) => {
+    const directory = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "facet-verification-prepare-test-")),
+    );
+    try {
+      const names = verificationProtocol.frames["prepare"];
+      expect(names).toBeDefined();
+      if (names === undefined) throw new Error("Missing prepare definition");
+      const values: Record<string, unknown> = input;
+      const request = Object.fromEntries(
+        names.map((name) => [
+          name,
+          name === "mode" ? "verification-prepare" : values[name],
+        ]),
+      );
+      const evidence = path.join(directory, "preparation-" + sessionID);
+      const diagnostic = {
+        blocked: "form",
+        phase: "verification-form",
+        submitActionCount: 0,
+      };
+      const stdout = Buffer.from(
+        fault === "oversize"
+          ? "x".repeat(9000)
+          : fault === "malformed"
+            ? "{"
+            : JSON.stringify(diagnostic),
+      );
+      await expect(
+        runVerificationPreparation(
+          path.join(directory, "helper"),
+          request,
+          async (_argv, frame) => {
+            expect(
+              JSON.parse(new TextDecoder().decode(frame)),
+            ).not.toHaveProperty("code");
+            if (fault === "retention-failure")
+              await writeFile(
+                path.join(evidence, "stdout"),
+                "existing-public-fixture",
+              );
+            return {
+              stdout,
+              stderr: Buffer.from("public native diagnostic"),
+              exitCode: 3,
+            };
+          },
+        ),
+      ).rejects.toThrow(
+        fault === "retention-failure"
+          ? "evidence retention failed"
+          : fault === "oversize"
+            ? "output exceeded bound"
+            : "preparation failed",
+      );
+      const retainedOutput = await readFile(path.join(evidence, "stdout"));
+      expect(retainedOutput.length).toBeLessThanOrEqual(8192);
+      expect(await readFile(path.join(evidence, "stderr"), "utf8")).toBe(
+        "public native diagnostic",
+      );
+      const exit = JSON.parse(
+        await readFile(path.join(evidence, "exit.json"), "utf8"),
+      );
+      expect(exit.exitCode).toBe(3);
+      expect(exit.binding.configSHA256).toBe(input.configSHA256);
+      expect(exit.stdoutTruncated).toBe(fault === "oversize");
+      if (fault !== "retention-failure") {
+        const retained = JSON.parse(
+          await readFile(path.join(evidence, "diagnostic.json"), "utf8"),
+        );
+        expect(retained.classification).toBe(
+          fault === "guard"
+            ? "native-guard"
+            : fault === "oversize"
+              ? "output-bound"
+              : "unclassified",
+        );
+        if (fault === "guard") expect(retained.native).toEqual(diagnostic);
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+test("no-code preparation transport failure keeps a closed bound receipt without arbitrary errors", async () => {
+  const directory = await realpath(
+    await mkdtemp(path.join(os.tmpdir(), "facet-verification-transport-test-")),
+  );
+  try {
+    const fields = verificationProtocol.frames["prepare"];
+    if (fields === undefined) throw new Error("Missing prepare definition");
+    const values: Record<string, unknown> = input;
+    const request = Object.fromEntries(
+      fields.map((name) => [
+        name,
+        name === "mode" ? "verification-prepare" : values[name],
+      ]),
+    );
+    await expect(
+      runVerificationPreparation(
+        path.join(directory, "helper"),
+        request,
+        async () => {
+          throw new Error("synthetic untrusted child error");
+        },
+      ),
+    ).rejects.toThrow("preparation transport failed");
+    const text = await readFile(
+      path.join(directory, "preparation-" + sessionID, "diagnostic.json"),
+      "utf8",
+    );
+    expect(text).not.toContain("untrusted child error");
+    expect(JSON.parse(text)).toMatchObject({
+      classification: "transport-failed",
+      rawResponseAvailable: false,
+      binding: { configSHA256: input.configSHA256 },
+    });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 test("failed cleanup cannot skip independent fake evidence retention", async () => {
   const calls: string[] = [];

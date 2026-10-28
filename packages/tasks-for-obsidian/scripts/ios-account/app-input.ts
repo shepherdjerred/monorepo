@@ -419,13 +419,19 @@ export class PrivateAppInput {
     );
     await this.record("applied-" + action);
   }
-  expectClose() {
+  async expectClose() {
     this.closingExpected = true;
+    const result = await this.close();
+    assert.equal(
+      result.status,
+      "closed",
+      "Private app transport did not close cleanly",
+    );
   }
   async finish(stage: Stage) {
     if (!this.closingExpected) {
       await this.apply("finish", stage);
-      this.expectClose();
+      await this.expectClose();
     }
   }
   close() {

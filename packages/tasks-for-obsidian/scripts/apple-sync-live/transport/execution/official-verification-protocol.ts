@@ -22,11 +22,24 @@ export const verificationProtocol = z
       minimumRemainingMs: z.number().int().positive(),
     }),
     probeCode: z.string().regex(/^\d{6}$/u),
+    methodWords: z.strictObject({
+      allowedPattern: z.string(),
+      forbiddenPattern: z.string(),
+    }),
+    preparationPhases: z.array(z.string()).nonempty(),
     frameModes: z.record(z.string(), z.string()),
     frames: z.record(z.string(), z.array(z.string())),
     fields: z.record(z.string(), rule),
   })
   .parse(definition);
+
+export function officialTOTPMethodWords(words: string) {
+  const { allowedPattern, forbiddenPattern } = verificationProtocol.methodWords;
+  return (
+    new RegExp(allowedPattern, "i").test(words) &&
+    !new RegExp(forbiddenPattern, "is").test(words)
+  );
+}
 
 function numberSchema(value: z.infer<typeof rule>) {
   let number = z.number();
