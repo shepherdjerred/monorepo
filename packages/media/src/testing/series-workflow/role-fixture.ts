@@ -2,6 +2,7 @@ import { rm } from "node:fs/promises";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { createManagedSeriesFixture } from "./fixture.ts";
+import { extendManagedSeriesBatch } from "./cross-batch-fixture.ts";
 import {
   createAcquisitionNetworkFacet,
   createAcquisitionFileFacet,
@@ -12,7 +13,9 @@ import {
   type WorkflowStarter,
 } from "#automation/store.ts";
 
-export async function createManagedSeriesWorkflowFixture() {
+export async function createManagedSeriesWorkflowFixture(
+  options: { crossBatch?: "series" | "episodes" } = {},
+) {
   const cluster = await startMediaTestPostgres();
   const db = cluster.database;
   const directories: string[] = [];
@@ -32,16 +35,44 @@ export async function createManagedSeriesWorkflowFixture() {
     const f = await createManagedSeriesFixture(
       db,
       (directory) => directories.push(directory),
-      { original, upgrade },
+      {
+        original,
+        upgrade,
+        ...(options.crossBatch === "series"
+          ? { monitorSeries: { includeSpecials: false } }
+          : {}),
+      },
     );
-    const selected = { mediaId: { in: f.ids }, edition: "default" };
+    const second =
+      options.crossBatch === undefined
+        ? null
+        : await extendManagedSeriesBatch(f, upgrade);
+    const context = second === null ? f.context : second.context;
+    const ids = second === null ? f.ids : second.ids;
+    const wire = second === null ? f.wire : second.wire;
+    const originalAssetIds = [
+      f.asset.id,
+      ...(second === null ? [] : [second.asset.id]),
+    ];
+    const selected = { mediaId: { in: ids }, edition: "default" };
     return {
-      mediaIds: f.ids,
+      mediaIds: ids,
       receiptId: f.receiptId,
-      originalAssetId: f.asset.id,
-      acquisition: createAcquisitionNetworkFacet(f.context),
+      originalAssetIds,
+      expectedManagement:
+        second === null
+          ? { schemaVersion: 1, receiptId: f.receiptId }
+          : options.crossBatch === "series"
+            ? { schemaVersion: 2, receiptId: f.receiptId }
+            : {
+                schemaVersion: 3,
+                approvals: [f.receiptId, second.receiptId]
+                  .sort()
+                  .map((receiptId) => ({ receiptId })),
+              },
+      acquisition: createAcquisitionNetworkFacet(context),
       fileAcquisition: createAcquisitionFileFacet(f.files),
-      ...createPlexRuntimeFacets(f.context, () => Promise.resolve(false)),
+      ...createPlexRuntimeFacets(context, () => Promise.resolve(false)),
       finishMediaOperation: createOutboxActivities(db, () =>
         Promise.reject(new Error("Completion cannot dispatch")),
       ).finishMediaOperation,
@@ -54,7 +85,7 @@ export async function createManagedSeriesWorkflowFixture() {
           orderBy: { createdAt: "asc" },
         }),
         attempts: await db.acquisitionAttempt.findMany({
-          where: { mediaIds: { hasSome: f.ids } },
+          where: { mediaIds: { hasSome: ids } },
           include: { reservations: true, torrent: true },
         }),
         assets: await db.libraryAsset.findMany({
@@ -66,9 +97,9 @@ export async function createManagedSeriesWorkflowFixture() {
           orderBy: { mediaId: "asc" },
         }),
         personalRequests: await db.mediaRequest.count({
-          where: { mediaId: { in: [f.series.id, ...f.ids] } },
+          where: { mediaId: { in: [f.series.id, ...ids] } },
         }),
-        adds: f.wire.additions(),
+        adds: wire.additions(),
       }),
       close,
     };

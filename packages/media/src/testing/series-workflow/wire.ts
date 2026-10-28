@@ -18,6 +18,12 @@ export function managedSeriesWire(
     items: PlexItem[];
     show: PlexItem;
     episodeSpan?: { season: number; first: number; last: number };
+    members?: {
+      season: number;
+      first: number;
+      last: number;
+      bytes: Uint8Array;
+    }[];
   },
 ) {
   const hash = randomBytes(20).toString("hex");
@@ -26,6 +32,21 @@ export function managedSeriesWire(
   const episodes = `${season}E${String(span.first).padStart(2, "0")}${span.first === span.last ? "" : `-E${String(span.last).padStart(2, "0")}`}`;
   const title = `${input.title.replaceAll(" ", ".")}.2020.${span.first === span.last ? episodes : season}.1080p.WEB-DL.H264.English-MEDIA`;
   const member = title.replace(`.${season}.`, `.${episodes}.`) + ".mkv";
+  const members =
+    input.members === undefined
+      ? [{ name: member, bytes: input.bytes }]
+      : input.members.map((part) => ({
+          name:
+            title.replace(`.${season}.`, `.${episodeLabel(part)}.`) + ".mkv",
+          bytes: part.bytes,
+        }));
+  const firstMember = members[0];
+  if (
+    firstMember === undefined ||
+    new Set(members.map((part) => part.name)).size !== members.length
+  )
+    throw new Error("Synthetic series members must be nonempty and distinct");
+  const size = members.reduce((sum, part) => sum + part.bytes.byteLength, 0);
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;
   const control = {
@@ -46,7 +67,7 @@ export function managedSeriesWire(
                 {
                   id: `synthetic-series:${input.seriesId}:${episodes}`,
                   title,
-                  bytes: input.bytes.byteLength,
+                  bytes: size,
                   hash,
                   seeders: 2,
                   details: "https://knaben.org/",
@@ -77,15 +98,15 @@ export function managedSeriesWire(
         );
       }
       if (url.pathname.endsWith("/torrents/files"))
-        return Response.json([
-          {
-            index: 0,
-            name: member,
-            size: input.bytes.byteLength,
+        return Response.json(
+          members.map((part, index) => ({
+            index,
+            name: part.name,
+            size: part.bytes.byteLength,
             progress: 1,
             priority: 1,
-          },
-        ]);
+          })),
+        );
       if (
         !url.pathname.endsWith("/torrents/add") ||
         !(init.body instanceof URLSearchParams)
@@ -102,9 +123,10 @@ export function managedSeriesWire(
         savePath.slice("/downloads/".length),
       );
       await mkdir(directory, { recursive: true });
-      await writeFile(path.join(directory, member), input.bytes, {
-        flag: "wx",
-      });
+      for (const part of members)
+        await writeFile(path.join(directory, part.name), part.bytes, {
+          flag: "wx",
+        });
       adds++;
       torrent = {
         hash,
@@ -112,14 +134,15 @@ export function managedSeriesWire(
         infohash_v2: "",
         tags: init.body.get("tags"),
         save_path: savePath,
-        content_path: `${savePath}/${member}`,
-        name: member,
+        content_path:
+          members.length === 1 ? `${savePath}/${firstMember.name}` : savePath,
+        name: members.length === 1 ? firstMember.name : title,
         category: "media",
         state: "uploading",
         progress: 1,
         ratio: 0,
         seeding_time: 0,
-        size: input.bytes.byteLength,
+        size,
         ratio_limit: -1,
         seeding_time_limit: -1,
         inactive_seeding_time_limit: -1,
@@ -227,4 +250,8 @@ export function managedSeriesWire(
     },
   );
   return { providers, qbittorrent, plex, additions: () => adds, control };
+}
+
+function episodeLabel(span: { season: number; first: number; last: number }) {
+  return `S${String(span.season).padStart(2, "0")}E${String(span.first).padStart(2, "0")}${span.first === span.last ? "" : `-E${String(span.last).padStart(2, "0")}`}`;
 }

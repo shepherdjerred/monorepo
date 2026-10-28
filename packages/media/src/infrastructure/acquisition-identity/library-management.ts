@@ -17,14 +17,17 @@ import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import {
   protectLibraryManagement,
   type LibraryManagementInvocation,
+  type LibraryManagementResult,
 } from "./library-policy.ts";
 import { librarySourceAssociation } from "./library-association.ts";
 import { readLibrarySeriesPolicy } from "./series-policy.ts";
+import { readLibraryBatchPolicy } from "./library-batches.ts";
 type Input = {
   mediaIds: readonly string[];
   epoch: number;
   access: PlexAccess;
   expected?: LibrarySeriesManagement;
+  receiptId?: string;
 };
 const hash = (value: unknown) => identityHash(nativeJson(value));
 
@@ -33,7 +36,7 @@ export async function readLibrarySeriesManagement(
   tx: Prisma.TransactionClient,
   input: Input,
   invocation: LibraryManagementInvocation,
-) {
+): Promise<LibraryManagementResult> {
   invocation.freshness.assertActive();
   if (hash(input.access) !== hash(invocation.access))
     protectLibraryManagement();
@@ -43,40 +46,49 @@ export async function readLibrarySeriesManagement(
     orderBy: { id: "asc" },
   });
   const seriesId = managementSeries(leaves, input.mediaIds);
-  if (input.expected?.schemaVersion === 2)
+  const expected = input.expected;
+  if (
+    expected !== undefined &&
+    input.receiptId !== undefined &&
+    (expected.schemaVersion !== 1 || expected.receiptId !== input.receiptId)
+  )
+    throw new Error("Library policy origin selectors disagree");
+  const batches = (
+    captured?: Extract<LibrarySeriesManagement, { schemaVersion: 3 }>,
+  ) =>
+    readLibraryBatchPolicy(
+      tx,
+      {
+        mediaIds: input.mediaIds,
+        seriesId,
+        epoch: input.epoch,
+        ...(captured === undefined ? {} : { expected: captured }),
+      },
+      invocation,
+      (source) =>
+        readLibrarySeriesManagement(
+          tx,
+          { ...source, epoch: input.epoch, access: input.access },
+          invocation,
+        ),
+    );
+  if (expected?.schemaVersion === 3) return batches(expected);
+  if (expected?.schemaVersion === 2)
     return readSeriesManagedCoverage(
       tx,
       { input, seriesId, leaves },
       invocation,
     );
-  const origins =
-    input.expected === undefined
-      ? await tx.mediaHandoffReceipt.findMany({
-          where: {
-            recoveryEpoch: input.epoch,
-            selection: {
-              path: ["scope", "targets"],
-              array_contains: input.mediaIds.map((mediaId) => ({
-                mediaId,
-                edition: "default",
-              })),
-            },
-          },
-          orderBy: { runtimeVersion: "desc" },
-          take: 2,
-          select: { id: true, runtimeVersion: true },
-        })
-      : [{ id: input.expected.receiptId, runtimeVersion: -1 }];
-  if (input.expected === undefined) invocation.budget.consume(origins.length);
-  const origin = origins[0];
-  if (origin === undefined)
-    return readSeriesManagedCoverage(
+  const reference = expected?.receiptId ?? input.receiptId;
+  const origin = await episodeOrigin(tx, input, invocation, reference);
+  if (origin === undefined) {
+    const series = await readSeriesManagedCoverage(
       tx,
       { input, seriesId, leaves },
       invocation,
     );
-  if (origins[1]?.runtimeVersion === origin.runtimeVersion)
-    protectLibraryManagement();
+    return series ?? batches();
+  }
   const approval = await readLibraryHandoffReceipt(
     tx,
     origin.id,
@@ -107,7 +119,7 @@ export async function readLibrarySeriesManagement(
     {
       approval,
       root,
-      ...(input.expected === undefined ? {} : { expected: input.expected }),
+      ...(expected === undefined ? {} : { expected }),
     },
     invocation,
   );
@@ -141,6 +153,38 @@ export async function readLibrarySeriesManagement(
   return { proof, freshness: invocation.freshness };
 }
 
+async function episodeOrigin(
+  tx: Prisma.TransactionClient,
+  input: Input,
+  invocation: LibraryManagementInvocation,
+  reference: string | undefined,
+) {
+  if (reference !== undefined) return { id: reference };
+  const origins = await tx.mediaHandoffReceipt.findMany({
+    where: {
+      recoveryEpoch: input.epoch,
+      selection: {
+        path: ["scope", "targets"],
+        array_contains: input.mediaIds.map((mediaId) => ({
+          mediaId,
+          edition: "default",
+        })),
+      },
+    },
+    orderBy: { runtimeVersion: "desc" },
+    take: 2,
+    select: { id: true, runtimeVersion: true },
+  });
+  invocation.budget.consume(origins.length);
+  const origin = origins[0];
+  if (
+    origin !== undefined &&
+    origins[1]?.runtimeVersion === origin.runtimeVersion
+  )
+    protectLibraryManagement();
+  return origin;
+}
+
 async function readSeriesManagedCoverage(
   tx: Prisma.TransactionClient,
   state: {
@@ -151,7 +195,7 @@ async function readSeriesManagedCoverage(
   invocation: LibraryManagementInvocation,
 ) {
   const { input, seriesId, leaves } = state;
-  if (input.expected?.schemaVersion === 1)
+  if (input.expected !== undefined && input.expected.schemaVersion !== 2)
     throw new Error("Episode approval cannot change its policy family");
   const policy = await readLibrarySeriesPolicy(
     tx,

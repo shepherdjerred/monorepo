@@ -166,6 +166,9 @@ export async function readPlexIdentityCohort(
     if (identity.schemaVersion === 1) {
       ids.add(identity.sponsorAuthority.actorId);
       ids.add(identity.sponsorAuthority.userId);
+    } else if (identity.management.schemaVersion === 3) {
+      for (const approval of identity.management.approvals)
+        ids.add(approval.actorId);
     } else ids.add(identity.management.actorId);
   }
   return [...ids].sort();

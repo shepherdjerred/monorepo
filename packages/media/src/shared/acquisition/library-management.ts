@@ -48,9 +48,56 @@ export const LibrarySeriesManagementV2Schema =
     includeSpecials: z.boolean(),
     rootGenerationAtCapture: z.int().positive(),
   });
+/** Existing leaves may retain several actual approvals without granting future episodes. */
+export const LibraryBatchManagementV3Schema =
+  LibraryEpisodeManagementV1Schema.pick({
+    kind: true,
+    seriesId: true,
+    serverMachineId: true,
+    sectionId: true,
+    profileId: true,
+    profileVersionAtCapture: true,
+    birthEpoch: true,
+    targets: true,
+  })
+    .extend({
+      schemaVersion: z.literal(3),
+      policyScope: z.literal("episodes"),
+      approvals: z.array(LibraryEpisodeManagementV1Schema).min(2).max(25),
+    })
+    .refine((proof) => {
+      const targets = proof.approvals
+        .flatMap((approval) => approval.targets)
+        .sort((a, b) => a.mediaId.localeCompare(b.mediaId));
+      return (
+        targets.length === proof.targets.length &&
+        targets.every(
+          (target, index) =>
+            target.mediaId === proof.targets[index]?.mediaId &&
+            target.generation === proof.targets[index].generation,
+        ) &&
+        proof.approvals.every(
+          (approval, index) =>
+            (index === 0 ||
+              (proof.approvals[index - 1]?.receiptId ?? "") <
+                approval.receiptId) &&
+            approval.seriesId === proof.seriesId &&
+            approval.serverMachineId === proof.serverMachineId &&
+            approval.sectionId === proof.sectionId &&
+            approval.profileId === proof.profileId &&
+            approval.profileVersionAtCapture ===
+              proof.profileVersionAtCapture &&
+            approval.birthEpoch === proof.birthEpoch,
+        )
+      );
+    }, "Library batch policy needs complete disjoint coverage and one current series/profile/access scope");
 export const LibrarySeriesManagementSchema = z.discriminatedUnion(
   "schemaVersion",
-  [LibraryEpisodeManagementV1Schema, LibrarySeriesManagementV2Schema],
+  [
+    LibraryEpisodeManagementV1Schema,
+    LibrarySeriesManagementV2Schema,
+    LibraryBatchManagementV3Schema,
+  ],
 );
 
 /** Additive identity: literal request-sponsored v1 and movie v2/v3 records retain their original shapes. */
