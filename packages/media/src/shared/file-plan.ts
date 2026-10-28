@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FileIdentityEvidenceSchema } from "./acquisition/identity.ts";
+import { DefaultFileIdentityEvidenceSchema } from "./acquisition/tv-file-evidence-v2.ts";
 
 export const GenerationsSchema = z.record(
   z.string(),
@@ -14,7 +14,7 @@ export const EmbeddedSubtitleSchema = z.object({
   streamIndex: z.number().int(),
 });
 export const FilePlanEntrySchema = z.object({
-  identityEvidence: FileIdentityEvidenceSchema.optional(),
+  identityEvidence: DefaultFileIdentityEvidenceSchema.optional(),
   assetId: z.string(),
   mediaIds: z.array(z.string()).min(1),
   generations: GenerationsSchema,

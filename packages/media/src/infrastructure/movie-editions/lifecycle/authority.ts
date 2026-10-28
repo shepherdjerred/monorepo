@@ -15,12 +15,14 @@ import {
 } from "#shared/movie-editions/management/contracts.ts";
 import { readLibraryMovieManagement } from "#infrastructure/movie-editions/management/authority.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 type Input = {
   scope: MovieEditionScope;
   sponsorRequestId: string;
   epoch: number;
   access: MovieChoiceAccess;
+  budget?: PublicationAuthorityReadBudget;
 };
 type RevalidationInput = {
   attemptId: string;
@@ -40,6 +42,7 @@ export async function captureMovieChoiceV4(
     requestId: input.sponsorRequestId,
     expectedScope: scope,
     access: input.access,
+    ...(input.budget === undefined ? {} : { budget: input.budget }),
   });
   if (current.status !== "authorized")
     throw new MovieChoiceProtection(
@@ -85,6 +88,7 @@ export async function assertMovieChoiceV4(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
+  input.invocation?.budget.consume(1);
   const proof = MovieBirthAuthoritySchema.parse(attempt.movieEditionAuthority);
   if (proof.schemaVersion === 2)
     return assertManagedMovieChoice(tx, { ...input, scope }, attempt, proof);
@@ -106,6 +110,9 @@ export async function assertMovieChoiceV4(
   const current = await captureMovieChoiceV4(tx, {
     ...input,
     sponsorRequestId: proof.sponsorRequestId,
+    ...(input.invocation === undefined
+      ? {}
+      : { budget: input.invocation.budget }),
   });
   // Same-choice retries may renew generation and request version; original birth remains literal.
   const semantic = (value: typeof proof) => ({

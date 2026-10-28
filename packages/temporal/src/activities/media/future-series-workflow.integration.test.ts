@@ -120,132 +120,155 @@ async function replayHistory(
   expect(code, error).toBe(0);
 }
 
-test("real role workers discover a later catalog episode, expand actual household approval and publish it with private replayable histories", async () => {
-  const { temporal, node } = pinnedMovieRuntimes();
-  const directory = await mkdtemp(
-    path.join(tmpdir(), "media-future-series-role-"),
-  );
-  const environment = await TestWorkflowEnvironment.createLocal({
-    server: {
-      executable: { type: "existing-path", path: temporal },
-      ip: "127.0.0.1",
-      namespace: "dev",
-      ui: false,
-    },
-  });
-  let fixture: Scenario | undefined;
-  let workflow: Bun.Subprocess | undefined;
-  const workers: Worker[] = [];
-  const running: Promise<void>[] = [];
-  try {
-    fixture = await createFutureSeriesWorkflowFixture();
-    const scenario = fixture;
-    const initial = await scenario.evidence();
-    expect(initial.episode).toBeNull();
-    expect(initial.attempts).toEqual([]);
-    expect(initial.personalRequests).toBe(0);
-    const script = new URL(
-      "../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
-    const runtimePath = Bun.env["PATH"];
-    if (runtimePath === undefined || runtimePath.length === 0)
-      throw new Error("Pinned runtime PATH required");
-    const childEnvironment = { PATH: runtimePath };
-    workflow = await startMovieWorkflowWorker({
-      node,
-      script,
-      address: environment.address,
-      directory,
-      childEnvironment,
-    });
-    const network = await Worker.create({
-      connection: environment.nativeConnection,
-      namespace: "dev",
-      taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-      activities: {
-        ...createAcquisitionNetworkWorkerActivities(scenario.loadAcquisition),
-        ...createCatalogCoverageWorkerActivities(() =>
-          Promise.resolve({ catalogCoverage: scenario.catalogCoverage }),
-        ),
-        ...createPlexPublicationActivities(scenario.loadPublication),
-        ...createPlexBoundConsumerActivities(scenario.loadPublication),
-        refreshMediaCatalog: scenario.refreshMediaCatalog,
-        finishMediaOperation: scenario.finishMediaOperation,
-      },
-    });
-    workers.push(network);
-    running.push(network.run());
-    const files = await Worker.create({
-      connection: environment.nativeConnection,
-      namespace: "dev",
-      taskQueue: TASK_QUEUES.MEDIA_FILES,
-      activities: createAcquisitionFileWorkerActivities(() =>
-        Promise.resolve({ acquisition: scenario.fileAcquisition }),
-      ),
-    });
-    workers.push(files);
-    running.push(files.run());
-    const started = await runStages(scenario, environment);
-    const evidence = await scenario.evidence();
-    expect(evidence.episode).toMatchObject({
-      seasonNumber: 2,
-      episodeNumber: 3,
-      originalLanguage: "en",
-    });
-    expect(evidence.personalRequests).toBe(0);
-    expect(evidence.attempts).toHaveLength(1);
-    const attempt = evidence.attempts[0];
-    if (attempt === undefined)
-      throw new Error("Actual future episode acquisition missing");
-    expect(attempt).toMatchObject({
-      state: "completed",
-      sponsorRequestId: null,
-      identityEvidence: {
-        schemaVersion: 4,
-        management: {
-          schemaVersion: 2,
-          policyScope: "series",
-          receiptId: scenario.receiptId,
-        },
-      },
-      reservations: [],
-      torrent: { owned: true },
-    });
-    expect(evidence.adds).toBe(1);
-    expect(evidence.assets).toHaveLength(2);
-    expect(evidence.assets.every((asset) => asset.state === "published")).toBe(
-      true,
+test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
+  "real role workers discover a later catalog episode and publish member %s with actual household approval and private replayable histories",
+  async (memberPath) => {
+    const { temporal, node } = pinnedMovieRuntimes();
+    const directory = await mkdtemp(
+      path.join(tmpdir(), "media-future-series-role-"),
     );
-    expect(
-      evidence.assets.some((asset) => asset.id === scenario.originalAssetId),
-    ).toBe(true);
-    for (const id of [...started, `media-acquire-${attempt.id}`])
-      await replayHistory(environment, id, {
+    const environment = await TestWorkflowEnvironment.createLocal({
+      server: {
+        executable: { type: "existing-path", path: temporal },
+        ip: "127.0.0.1",
+        namespace: "dev",
+        ui: false,
+      },
+    });
+    let fixture: Scenario | undefined;
+    let workflow: Bun.Subprocess | undefined;
+    const workers: Worker[] = [];
+    const running: Promise<void>[] = [];
+    try {
+      fixture = await createFutureSeriesWorkflowFixture(
+        memberPath === undefined ? {} : { memberPath },
+      );
+      const scenario = fixture;
+      const initial = await scenario.evidence();
+      expect(initial.episode).toBeNull();
+      expect(initial.attempts).toEqual([]);
+      expect(initial.personalRequests).toBe(0);
+      const script = new URL(
+        "../../../scripts/media-system/workflow-worker.ts",
+        import.meta.url,
+      ).pathname;
+      const runtimePath = Bun.env["PATH"];
+      if (runtimePath === undefined || runtimePath.length === 0)
+        throw new Error("Pinned runtime PATH required");
+      const childEnvironment = { PATH: runtimePath };
+      workflow = await startMovieWorkflowWorker({
         node,
         script,
+        address: environment.address,
         directory,
         childEnvironment,
-        privateTitle: scenario.privateTitle,
       });
-  } finally {
-    try {
-      try {
-        for (const worker of workers) worker.shutdown();
-        await Promise.all(running);
-      } finally {
-        if (workflow !== undefined) {
-          workflow.kill("SIGTERM");
-          await workflow.exited;
-        }
-      }
+      const network = await Worker.create({
+        connection: environment.nativeConnection,
+        namespace: "dev",
+        taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+        activities: {
+          ...createAcquisitionNetworkWorkerActivities(scenario.loadAcquisition),
+          ...createCatalogCoverageWorkerActivities(() =>
+            Promise.resolve({ catalogCoverage: scenario.catalogCoverage }),
+          ),
+          ...createPlexPublicationActivities(scenario.loadPublication),
+          ...createPlexBoundConsumerActivities(scenario.loadPublication),
+          refreshMediaCatalog: scenario.refreshMediaCatalog,
+          finishMediaOperation: scenario.finishMediaOperation,
+        },
+      });
+      workers.push(network);
+      running.push(network.run());
+      const files = await Worker.create({
+        connection: environment.nativeConnection,
+        namespace: "dev",
+        taskQueue: TASK_QUEUES.MEDIA_FILES,
+        activities: createAcquisitionFileWorkerActivities(() =>
+          Promise.resolve({ acquisition: scenario.fileAcquisition }),
+        ),
+      });
+      workers.push(files);
+      running.push(files.run());
+      const started = await runStages(scenario, environment);
+      const evidence = await scenario.evidence();
+      expect(evidence.episode).toMatchObject({
+        seasonNumber: 2,
+        episodeNumber: 3,
+        originalLanguage: "en",
+      });
+      expect(evidence.personalRequests).toBe(0);
+      expect(evidence.attempts).toHaveLength(1);
+      const attempt = evidence.attempts[0];
+      if (attempt === undefined)
+        throw new Error("Actual future episode acquisition missing");
+      expect(attempt).toMatchObject({
+        state: "completed",
+        sponsorRequestId: null,
+        identityEvidence: {
+          schemaVersion: 4,
+          management: {
+            schemaVersion: 2,
+            policyScope: "series",
+            receiptId: scenario.receiptId,
+          },
+        },
+        reservations: [],
+        torrent: { owned: true },
+      });
+      expect(evidence.adds).toBe(1);
+      if (memberPath !== undefined)
+        expect(attempt.filePlan).toEqual([
+          expect.objectContaining({
+            identityEvidence: expect.objectContaining({
+              schemaVersion: 2,
+              kind: "tv_season_directory",
+              sourceFile: expect.objectContaining({ relativePath: memberPath }),
+              directory: expect.objectContaining({ season: 2, episode: 3 }),
+            }),
+          }),
+        ]);
+      expect(evidence.physical).toHaveLength(2);
+      expect(
+        evidence.physical.every(
+          (file) => file.checksum === file.expectedChecksum,
+        ),
+      ).toBe(true);
+      expect(evidence.assets).toHaveLength(2);
+      expect(
+        evidence.assets.every((asset) => asset.state === "published"),
+      ).toBe(true);
+      expect(
+        evidence.assets.some((asset) => asset.id === scenario.originalAssetId),
+      ).toBe(true);
+      for (const id of [...started, `media-acquire-${attempt.id}`])
+        await replayHistory(environment, id, {
+          node,
+          script,
+          directory,
+          childEnvironment,
+          privateTitle: scenario.privateTitle,
+        });
     } finally {
       try {
-        await fixture?.close();
+        try {
+          for (const worker of workers) worker.shutdown();
+          await Promise.all(running);
+        } finally {
+          if (workflow !== undefined) {
+            workflow.kill("SIGTERM");
+            await workflow.exited;
+          }
+        }
       } finally {
-        await environment.teardown();
-        await rm(directory, { recursive: true, force: true });
+        try {
+          await fixture?.close();
+        } finally {
+          await environment.teardown();
+          await rm(directory, { recursive: true, force: true });
+        }
       }
     }
-  }
-}, 60_000);
+  },
+  60_000,
+);

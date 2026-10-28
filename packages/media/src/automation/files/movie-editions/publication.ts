@@ -1,4 +1,4 @@
-import type { FileContext } from "#automation/files/types.ts";
+import type { FileContext, Transaction } from "#automation/files/types.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { fileMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
@@ -27,11 +27,20 @@ import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshn
 import { producePublicationWithProtocol } from "#automation/publication-proof/producer.ts";
 import { commitPublication } from "#automation/files/publication.ts";
 import { commitEmbedded } from "#automation/files/embedded.ts";
-import { authorizeMovieFilesV4, assertMovieFilePlanV4 } from "./authority.ts";
+import {
+  authorizeMovieFilesV4,
+  assertMovieFilePlanV4,
+  MovieTorrentObservationSchema,
+  type MovieFileAuthorityV4,
+} from "./authority.ts";
 import { captureMoviePublicationV2 } from "./publication-intent.ts";
 import { prepareMoviePublicationContentV2 } from "./publication-content.ts";
 import { compensateMoviePublicationV2 } from "./publication-compensation.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
+import {
+  matchesMovieDefinition,
+  movieDefinitionRef,
+} from "#infrastructure/movie-editions/definition.ts";
 
 const hash = (value: unknown) => snapshotHash(nativeJson(value));
 
@@ -43,7 +52,8 @@ export async function promoteMovieV4(
   const execution = requirePublicationExecution(
     initial.publicationExecution?.(),
   );
-  const budget = new PublicationAuthorityReadBudget();
+  const budget =
+    initial.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
   const invocation = {
     ...publicationInvocation(initial, execution),
     movieManagement: { execution, budget },
@@ -52,6 +62,7 @@ export async function promoteMovieV4(
   const attempt = await initial.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
+  budget.consume(1);
   const plan = MovieFilePlanSchema.parse(attempt.filePlan);
   if (
     attempt.coordinatorOperationId !== input.operationId ||
@@ -75,6 +86,25 @@ export async function promoteMovieV4(
     existing?.reference ?? null,
     budget,
   );
+  const locked = new WeakMap<
+    Transaction,
+    { authority: MovieFileAuthorityV4; assertActive: () => void }
+  >();
+  const assertHeldAuthority = async (tx: Transaction) => {
+    const held = locked.get(tx);
+    if (held === undefined)
+      throw new Error("Movie publication has no transaction-held authority");
+    await context.checkpoint("publication-authorization");
+    if (!(await context.enabled.acquisition()))
+      throw new FileGuardError("acquisition_disabled");
+    const configured = requireMovieChoiceAccess(
+      (await fileMovieAccess(context, [input.scope.mediaId])) ?? {},
+    );
+    if (hash(configured) !== hash(access))
+      throw new FileGuardError("wrong_section");
+    held.assertActive();
+    return held;
+  };
   try {
     await producePublicationWithProtocol(
       {
@@ -90,7 +120,46 @@ export async function promoteMovieV4(
             input,
             access,
           );
-          await assertMovieFilePlanV4(tx, context, authority, plan);
+          // Freeze the mutable torrent observation for this transaction too;
+          // canonical/target/request/runtime/profile/identity locks are held above.
+          const torrentId = authority.attempt.torrentId;
+          if (torrentId === null) throw new FileGuardError("torrent_unowned");
+          await tx.$queryRaw`SELECT id FROM "Torrent" WHERE id=${torrentId} FOR SHARE`;
+          await tx.$queryRaw`SELECT "rootMediaId",key FROM "MediaEditionDefinition" WHERE "rootMediaId"=${input.scope.rootMediaId} AND key=${input.scope.edition} FOR SHARE`;
+          const definition = await tx.mediaEditionDefinition.findUniqueOrThrow({
+            where: {
+              rootMediaId_key: {
+                rootMediaId: input.scope.rootMediaId,
+                key: input.scope.edition,
+              },
+            },
+          });
+          budget.consume(1);
+          if (
+            !matchesMovieDefinition(
+              definition,
+              movieDefinitionRef(input.scope.rootMediaId, input.scope.edition)
+                .definition,
+            )
+          )
+            throw new FileGuardError("edition_definition_conflict");
+          const torrent = await tx.torrent.findUniqueOrThrow({
+            where: { id: torrentId },
+          });
+          budget.consume(1);
+          if (
+            !torrent.owned ||
+            torrent.ownershipEpoch !== authority.attempt.recoveryEpoch
+          )
+            throw new FileGuardError("torrent_unowned");
+          const heldAuthority = {
+            ...authority,
+            attempt: { ...authority.attempt, torrent },
+            observation: MovieTorrentObservationSchema.parse(
+              torrent.observation,
+            ),
+          };
+          await assertMovieFilePlanV4(tx, context, heldAuthority, plan);
           const physical = await publicationAuthorityDeadline(tx, context, {
             libraryKind: "movies",
             recoveryEpoch: attempt.recoveryEpoch,
@@ -107,16 +176,19 @@ export async function promoteMovieV4(
             },
           };
           await bindPlexTransactionDeadline(tx, freshness);
+          locked.set(tx, {
+            authority: heldAuthority,
+            assertActive: freshness.assertActive,
+          });
           return freshness.assertActive;
         },
         authorizeEntry: async (tx) => {
-          const authority = await authorizeMovieFilesV4(
-            tx,
-            context,
-            input,
-            access,
-          );
-          await assertMovieFilePlanV4(tx, context, authority, plan);
+          await assertHeldAuthority(tx);
+        },
+        authorizeLockedPlan: async (tx) => {
+          const held = await assertHeldAuthority(tx);
+          await assertMovieFilePlanV4(tx, context, held.authority, plan);
+          held.assertActive();
         },
         commit: async (tx, entry) => {
           await commitPublication({

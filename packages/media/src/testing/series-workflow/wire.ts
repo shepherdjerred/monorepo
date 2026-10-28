@@ -23,6 +23,7 @@ export function managedSeriesWire(
       first: number;
       last: number;
       bytes: Uint8Array;
+      relativePath?: string;
     }[];
   },
 ) {
@@ -37,13 +38,24 @@ export function managedSeriesWire(
       ? [{ name: member, bytes: input.bytes }]
       : input.members.map((part) => ({
           name:
+            part.relativePath ??
             title.replace(`.${season}.`, `.${episodeLabel(part)}.`) + ".mkv",
           bytes: part.bytes,
         }));
   const firstMember = members[0];
   if (
     firstMember === undefined ||
-    new Set(members.map((part) => part.name)).size !== members.length
+    new Set(members.map((part) => part.name)).size !== members.length ||
+    members.some(
+      (part) =>
+        path.isAbsolute(part.name) ||
+        part.name
+          .split(/[\\/]/u)
+          .some(
+            (component) =>
+              component === ".." || component === "." || component === "",
+          ),
+    )
   )
     throw new Error("Synthetic series members must be nonempty and distinct");
   const size = members.reduce((sum, part) => sum + part.bytes.byteLength, 0);
@@ -123,10 +135,14 @@ export function managedSeriesWire(
         savePath.slice("/downloads/".length),
       );
       await mkdir(directory, { recursive: true });
-      for (const part of members)
+      for (const part of members) {
+        await mkdir(path.dirname(path.join(directory, part.name)), {
+          recursive: true,
+        });
         await writeFile(path.join(directory, part.name), part.bytes, {
           flag: "wx",
         });
+      }
       adds++;
       torrent = {
         hash,

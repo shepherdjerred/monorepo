@@ -49,6 +49,11 @@ export type PublicationProducer = {
     current: AcquisitionAttempt,
     entry: FilePlanEntry,
   ) => Promise<void>;
+  /** Optional protocol-specific recapture after physical rows are locked. */
+  authorizeLockedPlan?: (
+    tx: Transaction,
+    current: AcquisitionAttempt,
+  ) => Promise<void>;
   commit: (tx: Transaction, entry: FilePlanEntry) => Promise<void>;
 };
 
@@ -305,6 +310,7 @@ async function lockProducer(
     mediaIds: input.attempt.mediaIds,
     entries: input.plan.map((entry) => ({ entry })),
   });
+  await input.authorizeLockedPlan?.(tx, current);
   assertPublicationActive(input.context);
   assertAuthority();
   return { current, assertAuthority };

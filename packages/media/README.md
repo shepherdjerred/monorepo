@@ -466,6 +466,12 @@ Each transaction creates its own reader. Current ownership, requests, holds,
 mounts and expiry checks remain live. Complete current scope snapshots retain
 their separate native video, coverage and sidecar bounds.
 
+Scoped movie publication captures full authority separately in both transactions
+and revalidates its exact file plan after locking the physical rows. Torrent
+observations and the edition definition are locked too. Filesystem callbacks
+retain that transaction's authority and original deadlines while checking current
+configuration and acquisition gates, avoiding repeated reads of immutable parents.
+
 The allowance can reserve a known query cost before SQL executes. A refused
 charge describes admission cost; it does not establish how many rows the query
 returned. Existing conservative charges remain part of the allowance.
@@ -1023,6 +1029,26 @@ runtime, air date, and original language from TMDB; pending metadata is explicit
 Future episodes are expanded from later catalog refreshes only for monitored
 requests, and acquisition waits until a known future air date has passed.
 
+Scoped movie Retry queues an exact selected-scope command with the current media
+and target versions. It retains the original personal choice or library approval,
+generation, profile, release and acquisition attempt. The Network coordinator
+requires observed terminal runs for both predecessor Workflows before recording
+an immutable coordinator renewal and taking over that same attempt. Recovery
+rechecks current scope, permission, quality, cut, runtime and torrent ownership
+under the original execution deadline and shared provenance allowance. An
+uncertain original add is observed and registered before current demand is
+checked, preserving independent seeding responsibility after cancellation. Retry
+does not add another torrent. Prepared publications require their separate
+continuation authority and are protected from this initial retry protocol.
+
+Scoped movie acquisition failures queue distinct personal and owner intervention
+notices from the actual failed command. Personal delivery retains the original
+request choice; owner delivery requires current owner identity and channel
+preferences. Both recheck the exact movie edition, target generation, recovery
+epoch and Plex permission before sending, without requiring a published asset.
+Accepted or uncertain provider attempts reconcile their original source and
+recipient before current configuration and never authorize a second send.
+
 Download recovery queries the exact coordinator and acquisition Workflow identities.
 Only observed terminal runs permit takeover; missing or active child history holds
 ambiguous submissions. Stable recovery keys preserve the existing acquisition and
@@ -1306,6 +1332,16 @@ recorded sponsorship before submission. Series revision fences keep numbering
 and catalog changes visible to waiting transactions. Historical attempts and
 file plans retain their original behavior and hashes; identity evidence cannot
 be added afterward to reinterpret an old acquisition.
+
+New TV member evidence version 2 also accepts `Season 01/01.mkv` and
+`Season01/E01.mkv` when one immediate explicit season directory identifies one
+reserved canonical episode. The proof retains the exact torrent member path,
+index, size and numbering digest. Conflicting filename/directory coordinates,
+multiple season directories, missing mappings and unreserved episodes stay
+protected. This shorthand does not infer absolute numbering or season-zero
+specials. Full canonical and explicitly mapped absolute filenames retain their
+existing interpretation; recorded version-1 plans and movie evidence keep their
+original formats and revalidation behavior.
 
 Requested-edition selection is unavailable; attributed edition text alone
 does not define an edition target or permit replacing a different edition.

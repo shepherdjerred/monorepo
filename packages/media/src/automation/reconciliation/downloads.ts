@@ -14,7 +14,8 @@ import { managedAttemptAuthority } from "#automation/acquisition-management/atte
 import { recordedAcquisitionIdentity } from "#shared/acquisition/recorded-identity.ts";
 import { MediaError } from "#application/errors.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
-import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
+import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
+import { queueTerminalMovieRetryV4 } from "#automation/movie-editions/retry/sweep.ts";
 
 const failedStatuses = new Set([
   "FAILED",
@@ -42,7 +43,11 @@ async function sweepDownloadAttempts(
 ) {
   const attempts = await context.db.acquisitionAttempt.findMany({
     where: {
-      edition: "default",
+      OR: [
+        { edition: "default" },
+        { identityEvidence: { path: ["schemaVersion"], equals: 2 } },
+        { identityEvidence: { path: ["schemaVersion"], equals: 3 } },
+      ],
       ...(cursor === null ? {} : { id: { gt: cursor } }),
       state: { notIn: ["completed", "obsolete", "rejected"] },
     },
@@ -51,47 +56,71 @@ async function sweepDownloadAttempts(
     include: { torrent: true },
   });
   const runtime = await requireActiveRuntime(context.db);
-  for (const attempt of attempts) {
-    if (!runtime.active || attempt.recoveryEpoch !== runtime.epoch) continue;
-    await reconcileUnconfirmedSubmission(context, attempt.id);
-    const observedAttempt =
-      await context.db.acquisitionAttempt.findUniqueOrThrow({
-        where: { id: attempt.id },
-        include: { torrent: true },
-      });
-    if (observedAttempt.torrent !== null)
-      await observeDownload(context, {
-        ...observedAttempt.torrent,
-        attemptId: attempt.id,
-        operationId: attempt.operationId,
-        sourcePath: path.join(context.downloadRoot, "media", attempt.id),
-      });
-    const coordinatorId = attempt.coordinatorOperationId ?? attempt.operationId;
-    const root = await context.describeWorkflow(
-      `media-operation-${coordinatorId}`,
-    );
-    if (root === null || !failedStatuses.has(root.status)) continue;
-    const child = await context.describeWorkflow(`media-acquire-${attempt.id}`);
-    if (
-      child !== null &&
-      child.status !== "COMPLETED" &&
-      !failedStatuses.has(child.status)
-    )
-      continue;
-    // Missing history is only safe before any external effect could begin.
-    if (child === null && observedAttempt.state !== "reserved") continue;
-    await recoverTerminalCoordinator(context, observedAttempt, {
-      coordinatorId,
-      rootRunId: root.runId,
-      rootStatus: root.status,
-      childRunId: child?.runId ?? "unstarted",
-      epoch: runtime.epoch,
-    });
-  }
+  for (const attempt of attempts)
+    await sweepDownloadAttempt(context, attempt, runtime);
   return {
     processed: attempts.length,
     nextCursor: attempts.length === 25 ? (attempts.at(-1)?.id ?? null) : null,
   };
+}
+
+async function sweepDownloadAttempt(
+  context: MediaAutomationContext,
+  attempt: Prisma.AcquisitionAttemptGetPayload<{ include: { torrent: true } }>,
+  runtime: Awaited<ReturnType<typeof requireActiveRuntime>>,
+) {
+  if (!runtime.active || attempt.recoveryEpoch !== runtime.epoch) return;
+  const recorded = recordedAcquisitionIdentity(attempt.identityEvidence);
+  if (
+    recorded !== null &&
+    (recorded.schemaVersion === 2 || recorded.schemaVersion === 3)
+  ) {
+    context.movieManagement?.budget.consume(
+      1 + (attempt.torrent === null ? 0 : 1),
+    );
+    await reconcileUnconfirmedSubmission(
+      context,
+      attempt.id,
+      context.movieManagement?.budget,
+    );
+    await queueTerminalMovieRetryV4(context, {
+      attemptId: attempt.id,
+      scope: recorded.scope,
+    });
+    return;
+  }
+  await reconcileUnconfirmedSubmission(context, attempt.id);
+  const observedAttempt = await context.db.acquisitionAttempt.findUniqueOrThrow(
+    { where: { id: attempt.id }, include: { torrent: true } },
+  );
+  if (observedAttempt.torrent !== null)
+    await observeDownload(context, {
+      ...observedAttempt.torrent,
+      attemptId: attempt.id,
+      operationId: attempt.operationId,
+      sourcePath: path.join(context.downloadRoot, "media", attempt.id),
+    });
+  const coordinatorId = attempt.coordinatorOperationId ?? attempt.operationId;
+  const root = await context.describeWorkflow(
+    `media-operation-${coordinatorId}`,
+  );
+  if (root === null || !failedStatuses.has(root.status)) return;
+  const child = await context.describeWorkflow(`media-acquire-${attempt.id}`);
+  if (
+    child !== null &&
+    child.status !== "COMPLETED" &&
+    !failedStatuses.has(child.status)
+  )
+    return;
+  // Missing history is only safe before any external effect could begin.
+  if (child === null && observedAttempt.state !== "reserved") return;
+  await recoverTerminalCoordinator(context, observedAttempt, {
+    coordinatorId,
+    rootRunId: root.runId,
+    rootStatus: root.status,
+    childRunId: child?.runId ?? "unstarted",
+    epoch: runtime.epoch,
+  });
 }
 
 async function recoverTerminalCoordinator(

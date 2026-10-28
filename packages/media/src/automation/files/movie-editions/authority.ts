@@ -64,6 +64,9 @@ export async function authorizeMovieFilesV4(
     where: { id: input.attemptId },
     include: { torrent: true },
   });
+  context.movieManagement?.budget.consume(
+    1 + (attempt.torrent === null ? 0 : 1),
+  );
   if (
     attempt.coordinatorOperationId !== input.operationId ||
     !["downloading", "validating"].includes(attempt.state)
@@ -335,6 +338,9 @@ async function assertMoviePlanMemberV4(
         sizeBytes: evidence.sourceFile.sizeBytes,
       },
     ],
+    ...(context.movieManagement === undefined
+      ? {}
+      : { budget: context.movieManagement.budget }),
   });
   if (
     identityHash(entry.editionEvidence) !==

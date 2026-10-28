@@ -150,3 +150,127 @@ test("cutoff/text/original-format semantics stay protected and unknown audio can
     }).satisfied,
   ).toBe(true);
 });
+
+// Independently labelled from Bazarr v1.6.2 subtitles/indexer/movies.py,
+// blob 7e533d74e518c3441b5a0fe12df0a33f7666349f, lines 257–286 and 346–370.
+test.each([
+  { hi: "True", installedHi: true, satisfied: true },
+  { hi: "True", installedHi: false, satisfied: false },
+  { hi: "Excluded", installedHi: true, satisfied: false },
+  { hi: "Excluded", installedHi: false, satisfied: true },
+] as const)(
+  "Bazarr regular HI=$hi with installed HI=$installedHi satisfies=$satisfied",
+  ({ hi, installedHi, satisfied }) => {
+    const rules = translateSubtitlePolicy(
+      SubtitleSourceProfileSchema.parse({
+        ...source,
+        items: [
+          {
+            id: 1,
+            language: "en",
+            forced: "False",
+            hi,
+            audio_exclude: "False",
+            audio_only_include: "False",
+          },
+        ],
+      }),
+      "unresolved",
+    );
+    const result = subtitlePolicySatisfaction({
+      rules,
+      asset,
+      epoch: 3,
+      subtitles: [{ ...subtitle, hearingImpaired: installedHi }],
+      audioLanguages: ["en"],
+    });
+    expect(result.satisfied).toBe(satisfied);
+    expect(result.protectedReasons).toEqual([]);
+    expect(result.missing).toHaveLength(satisfied ? 0 : 1);
+  },
+);
+
+test.each([
+  { audio: ["en"], satisfied: false, missing: 1, protectedReasons: [] },
+  { audio: ["ja"], satisfied: true, missing: 0, protectedReasons: [] },
+  { audio: ["en", "ja"], satisfied: false, missing: 1, protectedReasons: [] },
+  { audio: [], satisfied: true, missing: 0, protectedReasons: [] },
+  {
+    audio: null,
+    satisfied: false,
+    missing: 1,
+    protectedReasons: ["subtitle_audio_evidence_unknown"],
+  },
+])(
+  "Bazarr audio-only policy with audio=$audio retains exact missing requirements",
+  ({ audio, satisfied, missing, protectedReasons }) => {
+    const rules = translateSubtitlePolicy(
+      SubtitleSourceProfileSchema.parse({
+        ...source,
+        items: [
+          {
+            id: 1,
+            language: "en",
+            forced: "False",
+            hi: "False",
+            audio_exclude: "False",
+            audio_only_include: "True",
+          },
+        ],
+      }),
+      "unresolved",
+    );
+    const result = subtitlePolicySatisfaction({
+      rules,
+      asset,
+      epoch: 3,
+      subtitles: [],
+      audioLanguages: audio,
+    });
+    expect(result.satisfied).toBe(satisfied);
+    expect(result.missing).toHaveLength(missing);
+    expect(result.protectedReasons).toEqual(protectedReasons);
+  },
+);
+
+test.each([
+  {
+    forced: "False",
+    hi: "False",
+    audio_exclude: "True",
+    audio_only_include: "True",
+    reason: "subtitle_audio_policy_conflict",
+  },
+  {
+    forced: "True",
+    hi: "Excluded",
+    audio_exclude: "False",
+    audio_only_include: "False",
+    reason: "forced_hi_exclusion_source_semantics_require_resolution",
+  },
+] as const)(
+  "unrepresentable Bazarr policy remains protected: $reason",
+  ({ reason, ...item }) => {
+    const rules = translateSubtitlePolicy(
+      SubtitleSourceProfileSchema.parse({
+        ...source,
+        items: [{ id: 1, language: "en", ...item }],
+      }),
+      "unresolved",
+    );
+    for (const audioLanguages of [["en"], ["ja"]]) {
+      const result = subtitlePolicySatisfaction({
+        rules,
+        asset,
+        epoch: 3,
+        subtitles: [subtitle],
+        audioLanguages,
+      });
+      expect(result).toEqual({
+        satisfied: false,
+        missing: [],
+        protectedReasons: [reason],
+      });
+    }
+  },
+);

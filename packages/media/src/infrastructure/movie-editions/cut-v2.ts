@@ -16,6 +16,7 @@ import {
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import type { CutCanonical, CutEvidence } from "#shared/editions/evidence.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 const Member = z.strictObject({
   attemptId: z.uuid(),
@@ -27,6 +28,7 @@ type Input = {
   scope: MovieEditionScope;
   releaseId: string;
   predecessorAssetIds: readonly string[];
+  budget?: PublicationAuthorityReadBudget | undefined;
 } & (
   | { phase: "candidate"; members: readonly [] }
   | { phase: "physical"; members: readonly z.infer<typeof Member>[] }
@@ -103,6 +105,7 @@ export async function assessMovieCutV2(
   const release = await tx.releaseCandidate.findUniqueOrThrow({
     where: { id: input.releaseId },
   });
+  input.budget?.consume(1);
   const candidate = assess(canonical, releaseCut(release, canonical));
   const assets = await tx.libraryAsset.findMany({
     where: {
@@ -140,6 +143,7 @@ export async function assessMovieCutV2(
       : await currentCuts(tx, canonical, {
           mediaIds: [],
           predecessorAssetIds: assets.map((asset) => asset.id),
+          ...(input.budget === undefined ? {} : { budget: input.budget }),
         });
   const current = retained.map((evidence) => assess(canonical, evidence));
   const members = z

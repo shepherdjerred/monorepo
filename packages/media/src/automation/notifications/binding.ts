@@ -13,6 +13,7 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { MediaError } from "#application/errors.ts";
 import { readMovieRemovalNoticeV4 } from "#shared/movie-editions/removal-v4.ts";
+import { readMovieInterventionNoticeV4 } from "#shared/movie-editions/intervention/v4.ts";
 
 export async function prepareNotificationBinding(
   context: Pick<MediaAutomationContext, "db" | "plexAccess">,
@@ -23,6 +24,7 @@ export async function prepareNotificationBinding(
   >,
   invocationBudget?: PublicationAuthorityReadBudget,
 ) {
+  if (readMovieInterventionNoticeV4(delivery.event.payload) !== null) return;
   if (readMovieNoticeV4(delivery.event.payload) !== null) return;
   if (readMovieRemovalNoticeV4(delivery.event.payload) !== null) return;
   if (

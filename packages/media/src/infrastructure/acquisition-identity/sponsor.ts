@@ -12,6 +12,7 @@ import {
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
 import type { LibraryManagementInvocation } from "./library-policy.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,
@@ -255,12 +256,14 @@ export async function assertSponsorAuthority(
     movieAccess?: MovieChoiceAccess | undefined;
     recordedAttemptId?: string;
     movieScope?: MovieEditionScope | undefined;
+    budget?: PublicationAuthorityReadBudget;
   },
 ) {
   const { scope, where } = scopedSponsor(input);
   const operation = await tx.operation.findUnique({
     where: { id: input.operationId },
   });
+  input.budget?.consume(operation === null ? 0 : 1);
   if (operation === null)
     throw new MediaError(
       "acquisition_sponsor_unproven",
@@ -352,6 +355,7 @@ async function assertMovieSponsor(
     movieAccess?: MovieChoiceAccess | undefined;
     recordedAttemptId?: string;
     movieScope?: MovieEditionScope | undefined;
+    budget?: PublicationAuthorityReadBudget;
   },
 ) {
   const choice =
@@ -360,6 +364,7 @@ async function assertMovieSponsor(
       : await readMovieChoice(tx, {
           requestId: input.requestId,
           access: input.movieAccess,
+          ...(input.budget === undefined ? {} : { budget: input.budget }),
           ...(input.movieScope === undefined
             ? {}
             : { expectedScope: input.movieScope }),
@@ -374,6 +379,7 @@ async function assertMovieSponsor(
       ? null
       : await readMovieAttemptSponsor(tx, {
           attemptId: input.recordedAttemptId,
+          ...(input.budget === undefined ? {} : { budget: input.budget }),
           ...(input.movieScope === undefined
             ? {}
             : {

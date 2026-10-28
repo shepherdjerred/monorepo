@@ -44,7 +44,11 @@ export async function movieAttemptEffectAuthorityV4(
   )
     return null;
   await tx.$queryRaw`SELECT id FROM "QualityProfile" WHERE id = ${capturedProfile.profileId} FOR SHARE`;
-  const current = await movieAssessmentContext(tx, scope);
+  const current = await movieAssessmentContext(
+    tx,
+    scope,
+    authority.invocation?.budget,
+  );
   if (
     current.profile.id !== capturedProfile.profileId ||
     current.profile.version !== capturedProfile.profileVersion
