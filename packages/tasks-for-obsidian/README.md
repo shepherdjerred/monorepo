@@ -296,6 +296,9 @@ synthetic request sequence, has its own account directory and a nonpersistent
 credential boundary, and cannot reach the real backend or fall back to network
 traffic. It enters a synthetic six-digit code without submitting it or connecting
 a vault. This proves fixture UI/privacy behavior, not Obsidian authentication.
+After both phases pass, the command launches the normal iOS app once and requires
+fresh, idle credential status with no profiles; an unbound run remains synthetic
+discovery and cannot authorize real entry.
 
 Both phases scan stdout, stderr, decoded XCTest activities, every SDK-declared
 log, exported diagnostics, raw result files and attachments. The verification
