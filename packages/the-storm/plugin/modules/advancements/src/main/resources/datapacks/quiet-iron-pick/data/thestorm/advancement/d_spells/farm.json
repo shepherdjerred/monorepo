@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:wheat"
     },
-    "title": "Ripe, all at once",
+    "title": "Grassy Terrain",
     "description": "Cast Farm.",
     "frame": "task",
     "show_toast": true,

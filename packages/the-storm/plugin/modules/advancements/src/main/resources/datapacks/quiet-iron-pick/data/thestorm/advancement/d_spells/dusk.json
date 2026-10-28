@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:candle"
     },
-    "title": "Evening, privately",
+    "title": "Moonlight",
     "description": "Cast Dusk.",
     "frame": "task",
     "show_toast": true,

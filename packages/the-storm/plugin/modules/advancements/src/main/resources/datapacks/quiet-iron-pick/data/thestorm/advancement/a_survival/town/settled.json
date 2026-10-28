@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:oak_door"
     },
-    "title": "A name on the gate",
+    "title": "A faction is born",
     "description": "Found or join a town.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:bucket"
     },
-    "title": "Rain on the fire",
+    "title": "Rain Dance",
     "description": "Cast Dowse.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:written_book"
     },
-    "title": "The hundredth telling",
+    "title": "The Odyssey",
     "description": "Finish one hundred story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

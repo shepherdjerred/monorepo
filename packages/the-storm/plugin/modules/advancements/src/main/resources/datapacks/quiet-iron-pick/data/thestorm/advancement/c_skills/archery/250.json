@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:bow"
     },
-    "title": "A quiet shot",
+    "title": "The sneak archer",
     "description": "Reach Archery level 250.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:netherite_sword"
     },
-    "title": "The tally won't fit",
+    "title": "The numbers, Mason",
     "description": "Get two hundred fifty kills.",
     "frame": "task",
     "show_toast": true,

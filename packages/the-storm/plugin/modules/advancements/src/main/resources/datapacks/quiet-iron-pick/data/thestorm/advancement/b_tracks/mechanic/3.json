@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:redstone"
     },
-    "title": "True clockwork",
+    "title": "Sticky piston",
     "description": "Reach Mechanic III.",
     "frame": "task",
     "show_toast": true,

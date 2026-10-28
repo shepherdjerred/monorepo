@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:diamond_axe"
     },
-    "title": "A clean split",
+    "title": "A woodcutter's axe",
     "description": "Reach Axes level 100.",
     "frame": "task",
     "show_toast": true,

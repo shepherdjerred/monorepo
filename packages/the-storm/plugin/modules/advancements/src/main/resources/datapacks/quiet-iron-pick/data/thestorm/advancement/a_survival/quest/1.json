@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:writable_book"
     },
-    "title": "The first errand",
+    "title": "May the odds",
     "description": "Finish a story, side, or track quest.",
     "frame": "task",
     "show_toast": true,

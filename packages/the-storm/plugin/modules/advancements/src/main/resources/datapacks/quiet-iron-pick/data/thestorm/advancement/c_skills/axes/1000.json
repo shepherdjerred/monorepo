@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:diamond_axe"
     },
-    "title": "Nothing left standing",
+    "title": "Daedric",
     "description": "Reach Axes level 1000.",
     "frame": "task",
     "show_toast": true,

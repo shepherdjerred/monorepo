@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:ender_pearl"
     },
-    "title": "Back to the Mark",
+    "title": "Teleport",
     "description": "Cast Recall.",
     "frame": "task",
     "show_toast": true,

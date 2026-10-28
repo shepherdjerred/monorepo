@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:bow"
     },
-    "title": "The arrow gets there",
+    "title": "Bound bow",
     "description": "Reach Archery level 500.",
     "frame": "task",
     "show_toast": true,

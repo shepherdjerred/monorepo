@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:ender_eye"
     },
-    "title": "Behind them",
+    "title": "Shadow Sneak",
     "description": "Cast Shadow Step.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:emerald"
     },
-    "title": "Ten rounds taken",
+    "title": "UAV online",
     "description": "Win ten rounds.",
     "frame": "task",
     "show_toast": true,

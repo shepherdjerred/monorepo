@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_axe"
     },
-    "title": "The stand thins",
+    "title": "Punching trees",
     "description": "Reach Woodcutting level 250.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:firework_rocket"
     },
-    "title": "Three straight",
+    "title": "Stay frosty",
     "description": "Win three rounds in a row.",
     "frame": "task",
     "show_toast": true,

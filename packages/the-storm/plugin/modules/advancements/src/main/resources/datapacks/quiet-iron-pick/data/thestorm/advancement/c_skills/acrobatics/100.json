@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:feather"
     },
-    "title": "You meant to fall",
+    "title": "A two-block jump",
     "description": "Reach Acrobatics level 100.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:shears"
     },
-    "title": "The weapon leaves",
+    "title": "Knock Off",
     "description": "Cast Disarm.",
     "frame": "task",
     "show_toast": true,

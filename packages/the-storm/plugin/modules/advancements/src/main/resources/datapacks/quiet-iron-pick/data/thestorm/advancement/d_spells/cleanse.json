@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:milk_bucket"
     },
-    "title": "Washed clean",
+    "title": "Heal Bell",
     "description": "Cast Cleanse.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:ghast_tear"
     },
-    "title": "Life, borrowed",
+    "title": "Giga Drain",
     "description": "Cast Drain Life.",
     "frame": "task",
     "show_toast": true,

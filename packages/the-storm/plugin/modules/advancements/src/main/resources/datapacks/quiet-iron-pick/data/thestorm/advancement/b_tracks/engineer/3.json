@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:piston"
     },
-    "title": "Load-bearing",
+    "title": "A command block",
     "description": "Reach Engineer III.",
     "frame": "task",
     "show_toast": true,

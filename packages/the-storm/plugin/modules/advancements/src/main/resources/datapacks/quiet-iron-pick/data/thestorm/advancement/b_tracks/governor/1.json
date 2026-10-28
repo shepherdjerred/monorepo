@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:golden_helmet"
     },
-    "title": "A voice in the hall",
+    "title": "You're finally awake",
     "description": "Reach Governor I.",
     "frame": "task",
     "show_toast": true,

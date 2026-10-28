@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:fishing_rod"
     },
-    "title": "The lake pays up",
+    "title": "Gyarados",
     "description": "Reach Fishing level 1000.",
     "frame": "task",
     "show_toast": true,

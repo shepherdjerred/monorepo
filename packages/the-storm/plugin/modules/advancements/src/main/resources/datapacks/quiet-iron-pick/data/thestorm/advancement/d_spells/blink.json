@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:amethyst_shard"
     },
-    "title": "Where you were looking",
+    "title": "Extreme Speed",
     "description": "Cast Blink.",
     "frame": "task",
     "show_toast": true,

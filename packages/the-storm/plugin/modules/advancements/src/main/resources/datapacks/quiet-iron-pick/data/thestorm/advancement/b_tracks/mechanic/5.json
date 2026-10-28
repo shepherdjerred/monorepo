@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:redstone"
     },
-    "title": "Nothing stays jammed",
+    "title": "Observer block",
     "description": "Reach Mechanic V.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:diamond_axe"
     },
-    "title": "The chop lands",
+    "title": "Wuuthrad",
     "description": "Reach Axes level 500.",
     "frame": "task",
     "show_toast": true,

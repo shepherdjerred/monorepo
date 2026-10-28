@@ -35,12 +35,12 @@ public final class Catalog {
         out,
         "a_survival/home",
         "a_survival",
-        new Copy("Leave a light on", "Save a home.", "minecraft:red_bed"));
+        new Copy("Spawn set", "Save a home.", "minecraft:red_bed"));
     child(
         out,
         "a_survival/lock",
         "a_survival",
-        new Copy("Hands off", "Lock a container you own.", "minecraft:iron_door"));
+        new Copy("Locked with LWC", "Lock a container you own.", "minecraft:iron_door"));
     chain(
         out,
         "a_survival",
@@ -48,11 +48,7 @@ public final class Catalog {
         new Lines(
             new String[] {"1", "10", "25", "50", "100"},
             new String[] {
-              "The first errand",
-              "Ten errands kept",
-              "The journal thickens",
-              "Known on the road",
-              "The hundredth telling"
+              "May the odds", "Journal 3", "Winter is coming", "Allons-y", "The Odyssey"
             },
             new String[] {
               "Finish a story, side, or track quest.",
@@ -75,12 +71,12 @@ public final class Catalog {
         new Lines(
             new String[] {"settled", "1", "25", "50", "100", "200"},
             new String[] {
-              "A name on the gate",
-              "This ground is ours",
-              "The fence moves out",
-              "A bell in the square",
-              "The border keeps moving",
-              "They steer by you"
+              "A faction is born",
+              "Land claimed",
+              "Power is rising",
+              "A second outpost",
+              "Wilderness Bound",
+              "Beaconator"
             },
             new String[] {
               "Found or join a town.",
@@ -105,11 +101,7 @@ public final class Catalog {
         new Lines(
             new String[] {"1", "2", "3", "4", "5"},
             new String[] {
-              "A crackle in the pack",
-              "Storm, answering",
-              "Thunder, carried",
-              "Dressed for weather",
-              "The storm, worn"
+              "Getting an Upgrade", "Acquire Hardware", "Enchanter", "The Beginning.", "Overpowered"
             },
             new String[] {
               "Carry Storm I gear.",
@@ -163,63 +155,45 @@ public final class Catalog {
         out,
         "d_spells/first",
         "d_spells",
-        new Copy("A first casting", "Cast a spell.", "minecraft:blaze_rod"));
-    spell(out, "mark", new Copy("This place, remembered", "Cast Mark.", "minecraft:compass"));
-    spell(out, "recall", new Copy("Back to the Mark", "Cast Recall.", "minecraft:ender_pearl"));
-    spell(out, "haste", new Copy("Quick hands", "Cast Haste.", "minecraft:sugar"));
-    spell(out, "firenova", new Copy("A ring of flame", "Cast Fire Nova.", "minecraft:fire_charge"));
-    spell(
-        out, "cripple", new Copy("Slowed where you look", "Cast Cripple.", "minecraft:spider_eye"));
+        new Copy("I choose you", "Cast a spell.", "minecraft:blaze_rod"));
+    spell(out, "mark", new Copy("A Pokemon Center", "Cast Mark.", "minecraft:compass"));
+    spell(out, "recall", new Copy("Teleport", "Cast Recall.", "minecraft:ender_pearl"));
+    spell(out, "haste", new Copy("Agility", "Cast Haste.", "minecraft:sugar"));
+    spell(out, "firenova", new Copy("Lava Plume", "Cast Fire Nova.", "minecraft:fire_charge"));
+    spell(out, "cripple", new Copy("String Shot", "Cast Cripple.", "minecraft:spider_eye"));
     spell(
         out,
         "confusion",
-        new Copy("They turn on each other", "Cast Confusion.", "minecraft:fermented_spider_eye"));
-    spell(out, "roar", new Copy("All eyes this way", "Cast Roar.", "minecraft:goat_horn"));
-    spell(out, "silence", new Copy("The cast stops", "Cast Silence.", "minecraft:sculk"));
-    spell(out, "dowse", new Copy("Rain on the fire", "Cast Dowse.", "minecraft:bucket"));
-    spell(out, "cleanse", new Copy("Washed clean", "Cast Cleanse.", "minecraft:milk_bucket"));
-    spell(out, "phase", new Copy("Through that wall", "Cast Phase.", "minecraft:chorus_fruit"));
-    spell(out, "wall", new Copy("A wall, then rubble", "Cast Wall.", "minecraft:cobblestone"));
-    spell(
-        out,
-        "geyser",
-        new Copy("Water, from below", "Cast Geyser.", "minecraft:prismarine_crystals"));
-    spell(
-        out, "stealth", new Copy("Gone from sight", "Cast Stealth.", "minecraft:phantom_membrane"));
-    spell(out, "farm", new Copy("Ripe, all at once", "Cast Farm.", "minecraft:wheat"));
-    spell(
-        out,
-        "forcepush",
-        new Copy("Everything steps back", "Cast Force Push.", "minecraft:piston"));
-    spell(out, "disarm", new Copy("The weapon leaves", "Cast Disarm.", "minecraft:shears"));
-    spell(out, "shadowstep", new Copy("Behind them", "Cast Shadow Step.", "minecraft:ender_eye"));
-    spell(
-        out, "divine", new Copy("The diamonds answer", "Cast Divine.", "minecraft:glowstone_dust"));
-    spell(out, "leap", new Copy("A soft bound", "Cast Leap.", "minecraft:rabbit_foot"));
-    spell(out, "dawn", new Copy("Morning, privately", "Cast Dawn.", "minecraft:clock"));
-    spell(out, "dusk", new Copy("Evening, privately", "Cast Dusk.", "minecraft:candle"));
-    spell(out, "freeze", new Copy("Held in the frost", "Cast Freeze.", "minecraft:ice"));
-    spell(out, "drainlife", new Copy("Life, borrowed", "Cast Drain Life.", "minecraft:ghast_tear"));
-    spell(
-        out,
-        "blink",
-        new Copy("Where you were looking", "Cast Blink.", "minecraft:amethyst_shard"));
-    spell(out, "carpet", new Copy("Held up, briefly", "Cast Carpet.", "minecraft:moss_carpet"));
-    spell(out, "entomb", new Copy("Glass, for a moment", "Cast Entomb.", "minecraft:dirt"));
-    spell(out, "purge", new Copy("Scoured in light", "Cast Purge.", "minecraft:glass_bottle"));
-    spell(
-        out,
-        "stormcall",
-        new Copy("Lightning, where it rains", "Cast Storm Call.", "minecraft:lightning_rod"));
-    spell(out, "ward", new Copy("They cannot come in", "Cast Ward.", "minecraft:shield"));
-    spell(
-        out,
-        "thunderclap",
-        new Copy("Thunder, outward", "Cast Thunderclap.", "minecraft:breeze_rod"));
+        new Copy("Confuse Ray", "Cast Confusion.", "minecraft:fermented_spider_eye"));
+    spell(out, "roar", new Copy("Roar", "Cast Roar.", "minecraft:goat_horn"));
+    spell(out, "silence", new Copy("Disable", "Cast Silence.", "minecraft:sculk"));
+    spell(out, "dowse", new Copy("Rain Dance", "Cast Dowse.", "minecraft:bucket"));
+    spell(out, "cleanse", new Copy("Heal Bell", "Cast Cleanse.", "minecraft:milk_bucket"));
+    spell(out, "phase", new Copy("Phantom Force", "Cast Phase.", "minecraft:chorus_fruit"));
+    spell(out, "wall", new Copy("Reflect", "Cast Wall.", "minecraft:cobblestone"));
+    spell(out, "geyser", new Copy("Water Spout", "Cast Geyser.", "minecraft:prismarine_crystals"));
+    spell(out, "stealth", new Copy("Double Team", "Cast Stealth.", "minecraft:phantom_membrane"));
+    spell(out, "farm", new Copy("Grassy Terrain", "Cast Farm.", "minecraft:wheat"));
+    spell(out, "forcepush", new Copy("Whirlwind", "Cast Force Push.", "minecraft:piston"));
+    spell(out, "disarm", new Copy("Knock Off", "Cast Disarm.", "minecraft:shears"));
+    spell(out, "shadowstep", new Copy("Shadow Sneak", "Cast Shadow Step.", "minecraft:ender_eye"));
+    spell(out, "divine", new Copy("Dowsing Machine", "Cast Divine.", "minecraft:glowstone_dust"));
+    spell(out, "leap", new Copy("Bounce", "Cast Leap.", "minecraft:rabbit_foot"));
+    spell(out, "dawn", new Copy("Morning Sun", "Cast Dawn.", "minecraft:clock"));
+    spell(out, "dusk", new Copy("Moonlight", "Cast Dusk.", "minecraft:candle"));
+    spell(out, "freeze", new Copy("Ice Beam", "Cast Freeze.", "minecraft:ice"));
+    spell(out, "drainlife", new Copy("Giga Drain", "Cast Drain Life.", "minecraft:ghast_tear"));
+    spell(out, "blink", new Copy("Extreme Speed", "Cast Blink.", "minecraft:amethyst_shard"));
+    spell(out, "carpet", new Copy("Magnet Rise", "Cast Carpet.", "minecraft:moss_carpet"));
+    spell(out, "entomb", new Copy("Sand Tomb", "Cast Entomb.", "minecraft:dirt"));
+    spell(out, "purge", new Copy("Luster Purge", "Cast Purge.", "minecraft:glass_bottle"));
+    spell(out, "stormcall", new Copy("Thunder", "Cast Storm Call.", "minecraft:lightning_rod"));
+    spell(out, "ward", new Copy("Protect", "Cast Ward.", "minecraft:shield"));
+    spell(out, "thunderclap", new Copy("Boomburst", "Cast Thunderclap.", "minecraft:breeze_rod"));
     spell(
         out,
         "chainlightning",
-        new Copy("It leaps onward", "Cast Chain Lightning.", "minecraft:iron_chain"));
+        new Copy("Thunderbolt", "Cast Chain Lightning.", "minecraft:iron_chain"));
 
     root(
         out,
@@ -233,11 +207,7 @@ public final class Catalog {
         new Lines(
             new String[] {"1", "10", "25", "40", "60"},
             new String[] {
-              "The first wave breaks",
-              "The tenth wave",
-              "Still in the arena",
-              "Forty waves deep",
-              "Sixty, still up"
+              "The power is on", "Quick Revive", "Juggernog", "Pack-a-Punch", "The Thundergun"
             },
             new String[] {
               "Clear a wave.",
@@ -257,7 +227,8 @@ public final class Catalog {
         out,
         "e_arena/clear",
         "e_arena",
-        new Copy("The last of them", "Clear an arena's final wave.", "minecraft:totem_of_undying"));
+        new Copy(
+            "No more room in hell", "Clear an arena's final wave.", "minecraft:totem_of_undying"));
 
     root(
         out,
@@ -270,7 +241,7 @@ public final class Catalog {
         "f_search/matches",
         new Lines(
             new String[] {"1", "25", "100"},
-            new String[] {"The round is live", "A regular by now", "A hundred rounds in"},
+            new String[] {"Bravo Six, going dark", "Check your corners", "All ghillied up"},
             new String[] {
               "Play a Search and Destroy match.", "Play 25 matches.", "Play 100 matches."
             },
@@ -283,9 +254,7 @@ public final class Catalog {
         "f_search/wins",
         new Lines(
             new String[] {"1", "10", "25", "50"},
-            new String[] {
-              "The round is yours", "Ten rounds taken", "A habit of winning", "Fifty rounds taken"
-            },
+            new String[] {"Target down", "UAV online", "Airstrike inbound", "Helicopter inbound"},
             new String[] {
               "Win a round.", "Win ten rounds.", "Win twenty-five rounds.", "Win fifty rounds."
             },
@@ -301,9 +270,7 @@ public final class Catalog {
         "f_search/kills",
         new Lines(
             new String[] {"1", "25", "100", "250"},
-            new String[] {
-              "First blood", "The lane remembers", "A hundred down", "The tally won't fit"
-            },
+            new String[] {"First blood", "Tango down", "Headshot", "The numbers, Mason"},
             new String[] {
               "Get a kill.",
               "Get twenty-five kills.",
@@ -322,7 +289,7 @@ public final class Catalog {
         "f_search/assists",
         new Lines(
             new String[] {"10", "50"},
-            new String[] {"You set it up", "Always in the play"},
+            new String[] {"On your six", "Price has you"},
             new String[] {"Get ten assists.", "Get fifty assists."},
             new String[] {"minecraft:lead", "minecraft:name_tag"}));
     chain(
@@ -331,14 +298,14 @@ public final class Catalog {
         "f_search/winstreak",
         new Lines(
             new String[] {"3", "5"},
-            new String[] {"Three straight", "Five, unbroken"},
+            new String[] {"Stay frosty", "Not one step back"},
             new String[] {"Win three rounds in a row.", "Win five rounds in a row."},
             new String[] {"minecraft:firework_rocket", "minecraft:firework_star"}));
     child(
         out,
         "f_search/killstreak",
         "f_search",
-        new Copy("The streak pays", "Earn a killstreak reward.", "minecraft:tnt"));
+        new Copy("Care package inbound", "Earn a killstreak reward.", "minecraft:tnt"));
     return out;
   }
 
@@ -361,39 +328,33 @@ public final class Catalog {
     return switch (id) {
       case "shopkeeper" ->
           new String[] {
-            "Open for business",
-            "The emerald sticks",
-            "A shop with regulars",
-            "Name your price",
-            "The market bends"
+            "Dunder Mifflin",
+            "Sell me this pen",
+            "Take my money",
+            "World's best boss",
+            "I declare bankruptcy"
           };
       case "mechanic" ->
           new String[] {
-            "A taste for redstone",
-            "The circuit closes",
-            "True clockwork",
-            "The machine agrees",
-            "Nothing stays jammed"
+            "A line of dust", "The repeater", "Sticky piston", "A BUD switch", "Observer block"
           };
       case "engineer" ->
-          new String[] {
-            "A first piston", "Measured twice", "Load-bearing", "The whole works", "Built to last"
-          };
+          new String[] {"A dirt hut", "//paste", "A command block", "Etho's clock", "SethBling"};
       case "spellcaster" ->
           new String[] {
-            "The page turns",
-            "Reagents ready",
-            "The cast lands clean",
-            "The words stay",
-            "Ink and thunder"
+            "Trust no one",
+            "The cipher wheel",
+            "Not what he seems",
+            "A deal with Bill",
+            "Weirdmageddon"
           };
       case "governor" ->
           new String[] {
-            "A voice in the hall",
-            "The charter holds",
-            "Called to account",
-            "The town listens",
-            "Governor, properly"
+            "You're finally awake",
+            "A stolen sweetroll",
+            "Speak to the jarl",
+            "Dragonsreach",
+            "The Cloud District"
           };
       default -> throw new IllegalStateException("track titles: " + id);
     };
@@ -417,44 +378,28 @@ public final class Catalog {
 
   private static String[] skillTitles(String id) {
     return switch (id) {
-      case "mining" ->
-          new String[] {
-            "The vein gives", "Deeper than comfort", "Ore under the nails", "The mountain yields"
-          };
+      case "mining" -> new String[] {"Time to Mine!", "Branch mining", "DIAMONDS!", "Ice Caves"};
       case "woodcutting" ->
-          new String[] {"A clean fell", "The stand thins", "Among the stumps", "Old growth"};
+          new String[] {"Getting Wood", "Punching trees", "Dark oak", "Treecapitator"};
       case "excavation" ->
-          new String[] {
-            "Earth, moved", "A serious hole", "The ground gives way", "Down through the map"
-          };
+          new String[] {"Straight down", "This is fine", "A mineshaft", "Chaos Cubed"};
       case "herbalism" ->
           new String[] {
-            "The first green", "A careful harvest", "The row knows you", "Green to the elbow"
+            "Blue mountain flower", "Wheat and a toe", "The White Phial", "Jarrin root"
           };
-      case "fishing" ->
-          new String[] {
-            "A tug on the line", "Where they bite", "Patient water", "The lake pays up"
-          };
+      case "fishing" -> new String[] {"Old Rod", "Good Rod", "Super Rod", "Gyarados"};
       case "swords" ->
-          new String[] {
-            "A working edge", "Steel, by habit", "The blade fits", "The point finds them"
-          };
-      case "axes" ->
-          new String[] {
-            "A clean split", "Weight behind it", "The chop lands", "Nothing left standing"
-          };
+          new String[] {"Iron dagger", "The Skyforge", "Dawnbreaker", "Mehrunes' Razor"};
+      case "axes" -> new String[] {"A woodcutter's axe", "Orcish", "Wuuthrad", "Daedric"};
       case "archery" ->
-          new String[] {"Nock and loose", "A quiet shot", "The arrow gets there", "Already aiming"};
+          new String[] {"Arrow in the knee", "The sneak archer", "Bound bow", "Auriel's Bow"};
       case "unarmed" ->
-          new String[] {"Empty hands", "No steel required", "The fist learns", "Armed enough"};
+          new String[] {
+            "Gloves of the Pugilist", "Fists of Steel", "A Khajiit's claws", "Had enough?"
+          };
       case "acrobatics" ->
-          new String[] {
-            "You meant to fall", "The drop negotiates", "Feet first", "Gravity looks away"
-          };
-      case "repair" ->
-          new String[] {
-            "Once across the anvil", "Good as it was", "The crack closes", "Mended for good"
-          };
+          new String[] {"A two-block jump", "Water bucket", "MLG clutch", "The Dropper"};
+      case "repair" -> new String[] {"The anvil", "Prior work", "Too Expensive", "Mending"};
       default -> throw new IllegalStateException("skill titles: " + id);
     };
   }

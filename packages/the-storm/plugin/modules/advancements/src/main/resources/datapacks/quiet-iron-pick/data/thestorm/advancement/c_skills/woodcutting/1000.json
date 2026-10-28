@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_axe"
     },
-    "title": "Old growth",
+    "title": "Treecapitator",
     "description": "Reach Woodcutting level 1000.",
     "frame": "task",
     "show_toast": true,

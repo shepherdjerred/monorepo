@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:phantom_membrane"
     },
-    "title": "Gone from sight",
+    "title": "Double Team",
     "description": "Cast Stealth.",
     "frame": "task",
     "show_toast": true,

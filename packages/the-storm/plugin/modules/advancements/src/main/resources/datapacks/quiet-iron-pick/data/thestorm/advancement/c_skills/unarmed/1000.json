@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:leather"
     },
-    "title": "Armed enough",
+    "title": "Had enough?",
     "description": "Reach Unarmed level 1000.",
     "frame": "task",
     "show_toast": true,

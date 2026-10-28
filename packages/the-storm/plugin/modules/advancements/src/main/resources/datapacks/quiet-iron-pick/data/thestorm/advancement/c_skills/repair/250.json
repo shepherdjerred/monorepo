@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:anvil"
     },
-    "title": "Good as it was",
+    "title": "Prior work",
     "description": "Reach Repair level 250.",
     "frame": "task",
     "show_toast": true,

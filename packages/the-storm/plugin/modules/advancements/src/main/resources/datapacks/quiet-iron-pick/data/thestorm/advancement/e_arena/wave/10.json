@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:diamond_sword"
     },
-    "title": "The tenth wave",
+    "title": "Quick Revive",
     "description": "Clear wave ten.",
     "frame": "task",
     "show_toast": true,

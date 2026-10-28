@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:enchanted_book"
     },
-    "title": "The journal thickens",
+    "title": "Winter is coming",
     "description": "Finish twenty-five story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

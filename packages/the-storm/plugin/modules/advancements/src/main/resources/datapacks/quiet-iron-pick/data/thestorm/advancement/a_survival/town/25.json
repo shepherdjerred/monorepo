@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:bricks"
     },
-    "title": "The fence moves out",
+    "title": "Power is rising",
     "description": "Claim 25 chunks.",
     "frame": "task",
     "show_toast": true,

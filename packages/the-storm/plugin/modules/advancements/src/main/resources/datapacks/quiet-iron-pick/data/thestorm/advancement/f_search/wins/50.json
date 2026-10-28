@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:nether_star"
     },
-    "title": "Fifty rounds taken",
+    "title": "Helicopter inbound",
     "description": "Win fifty rounds.",
     "frame": "task",
     "show_toast": true,

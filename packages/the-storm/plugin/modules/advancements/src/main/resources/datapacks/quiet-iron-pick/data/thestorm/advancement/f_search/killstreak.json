@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:tnt"
     },
-    "title": "The streak pays",
+    "title": "Care package inbound",
     "description": "Earn a killstreak reward.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:knowledge_book"
     },
-    "title": "Known on the road",
+    "title": "Allons-y",
     "description": "Finish fifty story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

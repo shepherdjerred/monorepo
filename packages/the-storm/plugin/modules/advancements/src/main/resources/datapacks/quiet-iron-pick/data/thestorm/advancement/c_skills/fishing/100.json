@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:fishing_rod"
     },
-    "title": "A tug on the line",
+    "title": "Old Rod",
     "description": "Reach Fishing level 100.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:red_bed"
     },
-    "title": "Leave a light on",
+    "title": "Spawn set",
     "description": "Save a home.",
     "frame": "task",
     "show_toast": true,

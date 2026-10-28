@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:redstone"
     },
-    "title": "The machine agrees",
+    "title": "A BUD switch",
     "description": "Reach Mechanic IV.",
     "frame": "task",
     "show_toast": true,

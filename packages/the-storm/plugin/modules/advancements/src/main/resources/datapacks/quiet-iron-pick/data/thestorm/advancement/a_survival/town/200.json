@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:beacon"
     },
-    "title": "They steer by you",
+    "title": "Beaconator",
     "description": "Claim 200 chunks.",
     "frame": "task",
     "show_toast": true,

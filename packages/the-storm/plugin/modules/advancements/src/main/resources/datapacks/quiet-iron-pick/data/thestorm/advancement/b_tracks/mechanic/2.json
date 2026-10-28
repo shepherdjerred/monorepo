@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:redstone"
     },
-    "title": "The circuit closes",
+    "title": "The repeater",
     "description": "Reach Mechanic II.",
     "frame": "task",
     "show_toast": true,

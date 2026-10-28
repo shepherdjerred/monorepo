@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_door"
     },
-    "title": "Hands off",
+    "title": "Locked with LWC",
     "description": "Lock a container you own.",
     "frame": "task",
     "show_toast": true,

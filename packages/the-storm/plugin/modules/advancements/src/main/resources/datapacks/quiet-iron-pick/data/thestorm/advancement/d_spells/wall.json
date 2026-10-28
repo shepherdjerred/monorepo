@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:cobblestone"
     },
-    "title": "A wall, then rubble",
+    "title": "Reflect",
     "description": "Cast Wall.",
     "frame": "task",
     "show_toast": true,

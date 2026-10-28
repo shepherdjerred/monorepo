@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:ice"
     },
-    "title": "Held in the frost",
+    "title": "Ice Beam",
     "description": "Cast Freeze.",
     "frame": "task",
     "show_toast": true,
