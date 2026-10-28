@@ -155,8 +155,8 @@ export function legacyMacBinding(
     guestConfigSHA256: runtime.expectedConfigSHA,
   };
 }
-/** Guest Bun uses socketpairs for stdio; the native inspection requires OS pipes. */
-export function macInspectionArguments(program: string): string[] {
+/** Guest Bun uses socketpairs for stdio; native account controls require OS pipes. */
+export function macAccountControlArguments(program: string): string[] {
   assert.ok(program.startsWith("/") && !/\p{Cc}/u.test(program));
   return [
     "/bin/bash",
@@ -166,7 +166,7 @@ export function macInspectionArguments(program: string): string[] {
     "pipefail",
     "-c",
     '/bin/cat | "$1" | /bin/cat',
-    "facet-mac-inspection",
+    "facet-mac-account-control",
     program,
   ];
 }
@@ -189,7 +189,7 @@ export async function inspectMacInput(
     JSON.stringify({ ...binding, pid, mode, ...lifetime }) + "\n",
   );
   const result = await executePrivateTransport(
-    macInspectionArguments(program),
+    macAccountControlArguments(program),
     bytes,
     30_000,
   );
