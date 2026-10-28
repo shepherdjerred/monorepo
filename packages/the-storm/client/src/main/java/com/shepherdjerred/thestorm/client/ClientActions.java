@@ -36,7 +36,8 @@ final class ClientActions {
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
     var args = request.arguments();
-    if (Set.of("status", "shutdown", "release", "server-list").contains(request.action())) {
+    if (Set.of("status", "shutdown", "release", "server-list", "respawn")
+        .contains(request.action())) {
       return control(client, request);
     }
     if (request.action().startsWith("frame-pacing-")) return framePacing(client, request);
@@ -44,13 +45,49 @@ final class ClientActions {
     if (request.action().startsWith("duel-")) return duel(client, request);
     if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
     if (request.action().equals("capture")) return captures.capture(client, args);
+    if (request.action().equals("sign-write")) return writeSign(client, args);
     requireWorld(client);
     if (request.action().equals("input")) return input(client, peer, args);
     return CompletableFuture.completedFuture(ordinary(client, request));
   }
 
+  private CompletableFuture<Object> writeSign(Minecraft client, JsonNode args) {
+    Protocol.keys(args, Set.of("lines"));
+    var lines = args.required("lines");
+    if (!lines.isArray() || lines.size() != 4) {
+      throw new IllegalArgumentException("Sign text requires four lines");
+    }
+    for (var line : lines) {
+      if (!line.isString() || line.stringValue().length() > 15) {
+        throw new IllegalArgumentException("Invalid sign line");
+      }
+    }
+    if (!(client.gui.screen()
+        instanceof net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen screen)) {
+      throw new IllegalStateException("Open a sign editor first");
+    }
+    for (var line : lines) {
+      line.stringValue()
+          .codePoints()
+          .forEach(code -> screen.charTyped(new net.minecraft.client.input.CharacterEvent(code)));
+      // Minecraft 26.3 uses SDL keycodes; 81 is the down arrow.
+      screen.keyPressed(new net.minecraft.client.input.KeyEvent(81, 0, 0));
+    }
+    screen.onClose();
+    return CompletableFuture.completedFuture("Sign submitted");
+  }
+
   private CompletableFuture<Object> control(Minecraft client, Protocol.Request request) {
     var args = request.arguments();
+    if (request.action().equals("respawn")) {
+      Protocol.keys(args, Set.of());
+      if (!(client.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen)
+          || client.player == null) {
+        throw new IllegalStateException("Respawn requires the death screen");
+      }
+      client.player.respawn();
+      return CompletableFuture.completedFuture("Respawn requested");
+    }
     if (request.action().equals("status")) {
       Protocol.keys(args, Set.of());
       var state = Protocol.JSON.valueToTree(ClientSnapshot.read(client));

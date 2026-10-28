@@ -7,6 +7,10 @@ Player shops use a sign attached to a stocked container. The sign shows the quan
 
 New spawn market shop rentals may not be open to every player. A shop can also be made wherever you have the required permissions.
 
+![A preserved player-built shop in the old market](/screenshots/historic-market-shop.webp)
+
+The old market includes preserved player-built shops. Historical signs may use an older format; use the format below for a new shop.
+
 ## Make a shop
 
 You need Shopkeeper I and permission to build and open the container. Place a sign on a chest or barrel and write four lines:

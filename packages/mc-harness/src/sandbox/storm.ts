@@ -79,6 +79,8 @@ const STORM_IMAGE_REQUIRED_MODULES: readonly string[] = [
   ),
   "safety",
   "companions",
+  "shops",
+  "mechanics",
 ];
 
 /**

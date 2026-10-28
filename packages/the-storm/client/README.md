@@ -30,6 +30,18 @@ addresses are valid only while the preview is running. Ctrl-C or the `stop`
 command closes this session's client and server. Screenshots, command
 transcripts, and logs remain under `.cache/client/<session>/`.
 
+## Connect to live The Storm
+
+On macOS, `bun run client live` builds the mod and launches a temporary Prism
+instance using the existing `XiguaJerred` account. It requires the `26.3` Prism
+instance and a signed-in account. The temporary instance is removed on exit;
+the normal instance is not modified. The session file printed on connection
+works with the same client actions and `stop` command below. `viewpoint`,
+`tour`, `smoke`, and fixture controls are sandbox-only. Client actions and
+commands affect the live server; use them only for authorized work. Captures
+and command transcripts remain under `.cache/client/` and can contain player
+information. The server may need to be awake before connecting.
+
 ## Inspect and control
 
 ```sh
@@ -43,6 +55,8 @@ bun run client use --session <session.json>
 bun run client attack --session <session.json>
 bun run client inventory --session <session.json> --args '{"open":true}'
 bun run client close --session <session.json>
+bun run client respawn --session <session.json>
+bun run client sign-write --session <session.json> --args '{"lines":["[Shelf]","cobblestone","",""]}'
 bun run client release --session <session.json>
 bun run client command --session <session.json> --args '{"text":"arena join settlement"}'
 bun run client stop --session <session.json>
@@ -78,7 +92,10 @@ or state is rejected. Modes are `pickup` and `quick_move`; mouse buttons are
 or hyphens, and the completed response gives the PNG path.
 
 `close` dismisses the current screen through its ordinary close action, including
-the first-arrival dialog. Named viewpoints live in `tools/client/viewpoints.json`. `tour` captures the
+the first-arrival dialog. `respawn` presses the ordinary respawn action when the
+death screen is open. `sign-write` types four lines into an open sign editor and
+submits it; use a freshly placed blank sign, and check the result because the
+game may reject text that does not fit. Named viewpoints live in `tools/client/viewpoints.json`. `tour` captures the
 lobby, market, mystery box, and foundry. This tool supplies scripted inputs and
 inspection; it does not implement autonomous navigation or a full-match player.
 

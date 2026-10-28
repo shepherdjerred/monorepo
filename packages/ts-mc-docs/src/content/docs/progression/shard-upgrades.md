@@ -9,6 +9,8 @@ Use Storm Shards at the spawn windmill during rain to add Storm tiers to support
 2. During rain, hold the equipment in your main hand and right-click the block.
 3. Read the result before trying again. Each attempt spends shards; a failed attempt leaves the item at its previous tier.
 
+![The emerald block set into the floor inside the spawn windmill is the shard altar.](/screenshots/shard-altar.webp)
+
 | Tier attempted | Shards per attempt | Failure chance |
 | -------------- | ------------------ | -------------- |
 | I              | 1                  | 0%             |

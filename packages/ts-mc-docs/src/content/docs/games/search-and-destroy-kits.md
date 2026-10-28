@@ -12,6 +12,8 @@ Pick a kit from the kit menu (right-click the nether star in the lobby, or type
 nothing you play Trooper, and next time you join you start with the kit you
 last played.
 
+![The Search and Destroy kit menu, showing the first page of kit icons.](/screenshots/search-kits.webp)
+
 Every kit carries the Bomb Fuse in the first hotbar slot. When the full kit
 selection is available, six kits are free: Trooper, Longbow, Shortbow, Rewind,
 Medic and Teleporter. The others are bought once with Red Warfare Credits and

@@ -9,6 +9,10 @@ Look at a locked block or object to inspect or change its access. Land rules sti
 
 Use `/lock info` to inspect its owner, access, and options. `/lock trust <player>` allows use, while `/lock trust <player> manage` also allows management and breaking. `/lock untrust <player>` removes the grant. The owner can use `/lock share on` to let town members use the lock, and `/lock share off` to stop sharing; town sharing does not let them break it.
 
+![Lock information for a double chest in spawn: staff custody, nobody else trusted, redstone blocked, and private.](/screenshots/lock-info.webp)
+
+This spawn chest is in staff custody. A player-owned chest instead shows its owner; the rest of the message describes its access and options.
+
 New locks block redstone on dispensers, droppers, and crafters. The owner can use `/lock redstone on` to allow it, or `/lock redstone off` to block it again. To permit item transfers, use `/lock hopper on` on each locked container involved. Use `/lock hopperin on` or `/lock hopperout on` to allow only transfers in or out, respectively.
 
 ## Choose a lock type

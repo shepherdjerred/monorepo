@@ -15,8 +15,8 @@ record Session(Path socket, Path artifacts, String server) {
     if (!socket.isAbsolute() || !artifacts.isAbsolute()) {
       throw new IllegalArgumentException("Session paths must be absolute");
     }
-    if (!server.matches("127\\.0\\.0\\.1:[0-9]{1,5}")) {
-      throw new IllegalArgumentException("Preview requires a loopback server");
+    if (!server.matches("127\\.0\\.0\\.1:[0-9]{1,5}") && !server.equals("mc.ts-mc.net:30000")) {
+      throw new IllegalArgumentException("Client requires a loopback server or The Storm");
     }
     var port = Integer.parseInt(server.substring(server.lastIndexOf(':') + 1));
     if (port < 1 || port > 65_535) throw new IllegalArgumentException("Invalid server port");

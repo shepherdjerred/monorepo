@@ -43,6 +43,10 @@ export const LABELS = {
   keep: "mc-harness.keep",
 } as const;
 
+function isPublishedStorm(profileName: string): boolean {
+  return profileName === "storm-prod" || profileName === "storm-candidate";
+}
+
 /** `docker create` argv for a sandbox; pure so the label/port shape is tested. */
 export function dockerCreateArgs(options: {
   id: string;
@@ -70,6 +74,16 @@ export function dockerCreateArgs(options: {
     `${LABELS.owner}=${options.owner}`,
     "--label",
     `${LABELS.keep}=${options.keep.toString()}`,
+    ...(isPublishedStorm(options.profileName)
+      ? [
+          "--user",
+          "1000:3000",
+          "--group-add",
+          "2000",
+          "--mount",
+          "type=volume,destination=/data,volume-nocopy",
+        ]
+      : []),
     ...options.profile.ports.flatMap((port) => [
       "-p",
       `127.0.0.1::${port.toString()}`,
@@ -214,6 +228,29 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     const containerId = stdout.trim();
     try {
+      if (isPublishedStorm(request.profile)) {
+        // Match the server chart's fsGroup on a fresh volume, as boot-check.sh
+        // does. The server itself stays unprivileged; only these short-lived
+        // helpers touch the disposable volume before the first boot.
+        for (const [command, value] of [
+          ["chown", "1000:2000"],
+          ["chmod", "2775"],
+        ] as const) {
+          await docker([
+            "run",
+            "--rm",
+            "--user",
+            "0:0",
+            "--volumes-from",
+            containerId,
+            "--entrypoint",
+            command,
+            profile.image,
+            value,
+            "/data",
+          ]);
+        }
+      }
       for (const seed of seedFiles) {
         await docker([
           "cp",

@@ -188,12 +188,20 @@ export class ClientManager {
     const bootstrapPath = path.join(privateDir, "bootstrap.json");
     await Bun.write(bootstrapPath, JSON.stringify(bootstrap));
     await chmod(bootstrapPath, 0o600);
+    // This disposable automation profile has no human to answer Minecraft's
+    // first-run accessibility prompt, which otherwise prevents auto-join.
+    const gameDir = path.join(privateDir, "game");
+    await mkdir(gameDir, { recursive: true, mode: 0o700 });
+    await Bun.write(
+      path.join(gameDir, "options.txt"),
+      "onboardAccessibility:false\n",
+    );
     const logPath = path.join(artifacts, "client.log");
     const child = this.options.launcher({
       repoRoot: this.options.repoRoot,
       bootstrapPath,
       bootstrap,
-      gameDir: path.join(privateDir, "game"),
+      gameDir,
       username: name,
       logPath,
     });
