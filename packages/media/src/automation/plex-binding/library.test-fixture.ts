@@ -79,10 +79,18 @@ export async function adoptLibraryBindingSource(
     edition: MovieEditionKey;
     media: SourceMedia[];
     qualitySourceId?: string;
+    targetPath?: string;
     monitorSeries?: { seriesId: string; includeSpecials: boolean };
   },
 ) {
   const db = f.context.files.db;
+  const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
+  const activation =
+    z.enum(["observe", "active"]).parse(runtime.mode) === "observe"
+      ? "activate"
+      : "extend";
   const administration = new PrismaMigrationAdministration(db);
   const bundles = new PrismaMigrationBundles(db);
   const storedProfile = await db.qualityProfile.findUniqueOrThrow({
@@ -94,7 +102,8 @@ export async function adoptLibraryBindingSource(
   const media = structuredClone(options.media);
   for (const root of media.filter((item) => item.parentSourceId === null))
     root.profileSourceId = String(profile.profile.id);
-  const sourcePath = `/${options.kind}/${path.basename(f.target)}`;
+  const targetPath = options.targetPath ?? f.target;
+  const sourcePath = `/${options.kind}/${path.basename(targetPath)}`;
   const records: MigrationRecord[] = [
     ...media,
     {
@@ -149,8 +158,8 @@ export async function adoptLibraryBindingSource(
     expectedVersion: review.version,
     reportHash: review.report.reportHash,
     bundleHash: review.manifest.bundleHash,
-    recoveryEpoch: 0,
-    runtimeVersion: 0,
+    recoveryEpoch: runtime.recoveryEpoch,
+    runtimeVersion: runtime.version,
     action: "approve",
     acknowledgeNoOwnershipTransfer: true,
     selected: review.report.entries
@@ -164,6 +173,9 @@ export async function adoptLibraryBindingSource(
     ...f.request,
     schemaVersion: 2,
     purpose: "migration",
+    activation,
+    recoveryEpoch: runtime.recoveryEpoch,
+    runtimeVersion: runtime.version,
     bundleReviewId: review.id,
     bundleReviewVersion: review.version + 1,
     bundleHash: review.manifest.bundleHash,
@@ -188,7 +200,7 @@ export async function adoptLibraryBindingSource(
         captureId,
         sourceProfileId: String(profile.profile.id),
         profileId: f.profile.id,
-        version: 0,
+        version: storedProfile.version,
         snapshotHash: profile.snapshotHash,
       },
     ],
@@ -259,8 +271,8 @@ export async function adoptLibraryBindingSource(
       schemaVersion: selectedRequest.schemaVersion,
       expectedVersion: detail.version,
       planHash: z.string().parse(detail.planHash),
-      recoveryEpoch: 0,
-      runtimeVersion: 0,
+      recoveryEpoch: runtime.recoveryEpoch,
+      runtimeVersion: runtime.version,
       acknowledgeRecoveryHolds: true,
     },
   );
@@ -271,7 +283,7 @@ export async function adoptLibraryBindingSource(
     await prepareHandoffFiles(f.context, planId),
   );
   const asset = await db.libraryAsset.findUniqueOrThrow({
-    where: { path: f.target },
+    where: { path: targetPath },
   });
   return { asset, receiptId, reviewId: review.id };
 }

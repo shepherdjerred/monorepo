@@ -14,7 +14,7 @@ export async function librarySourceAssociation(
   state: {
     approval: LibraryHandoffReceipt;
     root: MediaItem;
-    expected?: LibrarySeriesManagement;
+    expected?: Exclude<LibrarySeriesManagement, { schemaVersion: 3 }>;
   },
   invocation: LibraryManagementInvocation,
 ) {

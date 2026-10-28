@@ -122,6 +122,7 @@ export async function createManagedSeriesFixture(
     db,
     ids,
     plexShow: f.wire.show,
+    plexItems: f.wire.items,
     wire,
     context,
     files,

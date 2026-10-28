@@ -154,6 +154,7 @@ export async function libraryTvBindingFixture(
   );
   return {
     ...f,
+    handoff: f,
     ...adopted,
     files: f.context.files,
     wire,

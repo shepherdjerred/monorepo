@@ -688,6 +688,20 @@ Series acquisitions use management proof version 2 within acquisition identity
 version 4, retaining the same file and completion formats. Exact episode-only
 approvals retain management proof version 1.
 
+An explicit series approval can cover a complete pack whose episodes were adopted
+in later batches. Existing-episode approvals can also combine across batches:
+management proof version 3 retains each actual approval and its exact targets,
+owner and Plex association, within the same acquisition identity version 4 and
+completion formats. This combination grants no future-episode permission.
+Every constituent uses the invocation's original deadline and shared provenance
+allowance. PostgreSQL checks its actual approval and current policy at creation;
+the acquisition's episode coverage, generations and original proof are immutable.
+Each member must replace one complete existing physical group,
+preserving that group's path and exact episode coverage. A member that would merge
+separately owned groups stays protected with `upgrade_coverage_conflict`; the
+existing files and ownership remain intact. Revoking a covered episode protects
+the whole pack.
+
 `MediaIntent.libraryMonitoring` keeps household monitoring independent from
 personal request consent. Creating or cancelling a request preserves an unchanged
 household acquisition generation; requester and choice guards still protect its
