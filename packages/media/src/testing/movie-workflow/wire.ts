@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import type { Database } from "#infrastructure/database.ts";
 import { KnabenProvider } from "#integrations/providers.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
-import { PlexClient } from "#integrations/plex.ts";
+import { PlexClient, type PlexItem } from "#integrations/plex.ts";
 import type { FetchTransport } from "#integrations/http.ts";
 import {
   MOVIE_EDITION_REGISTRY,
@@ -35,12 +35,15 @@ export function movieWorkflowWire(
   const name = `${title}.mkv`;
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;
+  const sessions: PlexItem[] = [];
   const control = {
+    sessions,
     loseAddReply: false,
     visible: true,
     beforeProvider: () => Promise.resolve(),
     beforeInfo: () => Promise.resolve(),
     beforeAddReply: () => Promise.resolve(),
+    beforeMetadata: () => Promise.resolve(),
   };
   const ratingKey = input.ratingKey ?? "750001";
   let watched = true;
@@ -150,6 +153,13 @@ export function movieWorkflowWire(
     },
   );
   const plexTransport: FetchTransport = async (url, init) => {
+    if (url.pathname === "/status/sessions")
+      return Response.json({
+        MediaContainer: {
+          size: control.sessions.length,
+          Metadata: control.sessions,
+        },
+      });
     if (url.pathname === "/identity")
       return Response.json({
         MediaContainer: { machineIdentifier: "fixture-server" },
@@ -168,6 +178,8 @@ export function movieWorkflowWire(
       url.pathname !== `/library/metadata/${ratingKey}`
     )
       throw new Error("Unexpected synthetic Plex route");
+    if (url.pathname.startsWith("/library/metadata/"))
+      await control.beforeMetadata();
     const coverage = await db.assetCoverage.findMany({
       where: {
         mediaId: input.mediaId,

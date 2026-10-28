@@ -3,7 +3,6 @@ import type {
   PreparedSubtitleLineages,
   PublicationDependencies,
 } from "./subtitle-lineage.ts";
-import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
 
 export type PublicationExecution =
   NonNullable<FileContext["publicationExecution"]> extends () => infer Execution
@@ -13,7 +12,6 @@ export type PublicationContext = FileContext & {
   execution: PublicationExecution;
   preparedSubtitleLineages?: PreparedSubtitleLineages;
   publicationDependencies?: PublicationDependencies;
-  movieManagement?: MovieManagementInvocation;
 };
 
 /** Capture once at entry, before creating the invocation-local SDK adapter. */

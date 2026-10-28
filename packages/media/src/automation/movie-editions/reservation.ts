@@ -29,7 +29,7 @@ import { currentMovieReleaseV4 } from "./candidates.ts";
 import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
 import { movieManagementContext } from "./management-context.ts";
 import { MovieAcquisitionIdentitySchema } from "#shared/movie-editions/management/contracts.ts";
-import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 
 /** Reserve one edition under the same canonical/request/runtime locks used by its command. */

@@ -18,6 +18,8 @@ import { verifyPlexAssociations } from "#automation/publication/association.ts";
 import { observeSessionPlayback } from "#automation/retention/sessions.ts";
 import { serializable } from "#automation/store.ts";
 import { bindingAccess } from "./access.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { verifyMoviePlexV2 } from "#automation/movie-editions/plex-verification.ts";
 
 /** Only Network owns authenticated Plex IO; Files receives the exact durable operation proof. */
 export async function observeMediaUpgradeCleanup(
@@ -26,6 +28,13 @@ export async function observeMediaUpgradeCleanup(
   execution: PlexBindingExecution,
 ): Promise<ObserveMediaUpgradeCleanupResult> {
   execution.assertActive();
+  const invocation = {
+    budget:
+      context.movieManagement?.budget ??
+      context.libraryManagement?.budget ??
+      new PublicationAuthorityReadBudget(),
+    policyTime: context.now?.() ?? new Date(),
+  };
   const input = UpgradeCleanupPlexInputSchema.parse(raw);
   const initial = await readUpgradeCleanupCommand(context.db, input);
   execution.assertActive();
@@ -57,12 +66,10 @@ export async function observeMediaUpgradeCleanup(
     );
     freshness.assertActive();
     const prepared = await serializable(context.db, async (tx) => {
-      const result = await prepareUpgradeCleanupObservation(
-        tx,
-        input,
-        access,
+      const result = await prepareUpgradeCleanupObservation(tx, input, access, {
+        ...invocation,
         freshness,
-      );
+      });
       execution.assertActive();
       if (result.status === "complete") return result;
       const canonicalTargets = await readPlexCanonicalTargets(
@@ -74,7 +81,9 @@ export async function observeMediaUpgradeCleanup(
     });
     if (prepared.status === "complete") return prepared;
     const { expected } = prepared;
-    const verified = await verifyPlexAssociations(
+    const verify =
+      expected.schemaVersion === 2 ? verifyMoviePlexV2 : verifyPlexAssociations;
+    const verified = await verify(
       context,
       {
         purpose: "current_serving",
@@ -117,7 +126,7 @@ export async function observeMediaUpgradeCleanup(
           completedAt,
           expiresAt: new Date(verified.freshness.expiresAtMs).toISOString(),
         },
-        verified.freshness,
+        { ...invocation, freshness: verified.freshness },
       ),
     );
     verified.freshness.assertActive();

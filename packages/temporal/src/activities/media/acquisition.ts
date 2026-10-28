@@ -44,8 +44,23 @@ export function createAcquisitionFileWorkerActivities(
   load: () => Promise<
     Pick<Awaited<ReturnType<typeof createMediaFileRuntime>>, "acquisition">
   >,
-): Pick<MediaFileActivities, "inspectAndStageMedia" | "promoteMediaFiles"> {
+): Pick<
+  MediaFileActivities,
+  "inspectAndStageMedia" | "promoteMediaFiles" | "cleanupSupersededMediaFile"
+> {
   return {
+    cleanupSupersededMediaFile: (input) => {
+      const observed = { wall: Date.now(), monotonic: performance.now() };
+      return compensationCall(async (sdk) => {
+        const runtime = await load();
+        sdk.assertActive();
+        return runtime.acquisition.cleanupSupersededMediaFile(input, {
+          ...sdk,
+          observed,
+          checkpoint: () => sdk.checkpoint("media-upgrade-cleanup"),
+        });
+      });
+    },
     inspectAndStageMedia: (input) => {
       const observed = { wall: Date.now(), monotonic: performance.now() };
       return compensationCall(async (sdk) => {

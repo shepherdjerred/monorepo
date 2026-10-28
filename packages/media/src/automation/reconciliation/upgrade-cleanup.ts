@@ -3,16 +3,20 @@ import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edit
 import { queueOperation } from "#automation/store.ts";
 import { serializable } from "#automation/store.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { assertCleanupPhysicalAsset } from "#infrastructure/movie-editions/cleanup/authority.ts";
 
 /** The rollback clock starts at verified Plex publication, never at filesystem promotion. */
 export async function recordVerifiedPublication(
   tx: Prisma.TransactionClient,
   assetIds: readonly string[],
   recoveryEpoch: number,
+  movieScope?: MovieEditionScope,
 ): Promise<void> {
   const timestamp = new Date();
   for (const assetId of new Set(assetIds)) {
-    await assertDefaultPhysicalAsset(tx, assetId);
+    if (movieScope === undefined) await assertDefaultPhysicalAsset(tx, assetId);
+    else await assertCleanupPhysicalAsset(tx, assetId, movieScope);
     await tx.libraryAsset.updateMany({
       where: { id: assetId, plexPublishedAt: null },
       data: { plexPublishedAt: timestamp },
@@ -28,7 +32,7 @@ export async function recordVerifiedPublication(
     const previous = await tx.libraryAsset.findMany({
       where: {
         supersededByAssetId: assetId,
-        edition: "default",
+        edition: movieScope?.edition ?? "default",
         state: "superseded",
         owned: true,
       },

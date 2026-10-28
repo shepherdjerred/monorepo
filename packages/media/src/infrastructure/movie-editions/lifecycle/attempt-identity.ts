@@ -4,7 +4,7 @@ import {
   MovieAcquisitionIdentitySchema,
   type MovieAcquisitionIdentity,
 } from "#shared/movie-editions/management/contracts.ts";
-import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,

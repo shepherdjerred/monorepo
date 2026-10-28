@@ -59,13 +59,16 @@ async function cleanupPass(
 ): Promise<
   Awaited<ReturnType<MediaFileActivities["cleanupSupersededMediaFile"]>>
 > {
+  const activityInput = patched("media-upgrade-cleanup-input-v2")
+    ? { operationId: input.operationId, cleanupId: input.cleanupId }
+    : input;
   if (patched("media-upgrade-cleanup-network-observation-v1")) {
-    const proof = await observation.observeMediaUpgradeCleanup(input);
+    const proof = await observation.observeMediaUpgradeCleanup(activityInput);
     return proof.status === "protected"
       ? { status: "protected", reason: proof.reason }
-      : await files.cleanupSupersededMediaFile(input);
+      : await files.cleanupSupersededMediaFile(activityInput);
   }
-  return files.cleanupSupersededMediaFile(input);
+  return files.cleanupSupersededMediaFile(activityInput);
 }
 export async function cleanupMediaUpgradeWorkflow(
   input: CleanupInput,

@@ -5,7 +5,7 @@ import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts
 import { movieAssessmentContext } from "#infrastructure/movie-editions/release-assessment.ts";
 import { evaluateRelease } from "#domain/quality.ts";
 import { assertMovieAttemptIdentityV4 } from "./attempt-identity.ts";
-import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 
 /** Complete scope and runtime locks belong to the caller. No version, birth or observation is renewed here. */
 export async function movieAttemptEffectAuthorityV4(

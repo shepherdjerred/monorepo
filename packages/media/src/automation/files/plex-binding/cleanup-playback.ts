@@ -1,6 +1,7 @@
 import nodePath from "node:path";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
-import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
+import { assertCleanupPhysicalAsset } from "#infrastructure/movie-editions/cleanup/authority.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import type { ContentReference } from "#automation/files/content-proof.ts";
 import {
   FileGuardError,
@@ -28,17 +29,19 @@ export type PlaybackSnapshot = {
   mediaIds: string[];
   bindings: PlexBindingSnapshot[];
   access: PlexAccess;
+  movieScope?: MovieEditionScope;
 };
 
 /** Verify the version currently serving each title, even after several upgrades in one rollback window. */
 export async function currentPlayback(
   context: FileContext,
   mediaIds: readonly string[],
+  movieScope?: MovieEditionScope,
 ): Promise<PlaybackSnapshot[]> {
   const coverage = await context.db.assetCoverage.findMany({
     where: {
       current: true,
-      edition: "default",
+      edition: movieScope?.edition ?? "default",
       mediaId: { in: [...mediaIds] },
     },
     include: { asset: true, media: true },
@@ -62,12 +65,21 @@ export async function currentPlayback(
       if (read.status !== "current") throw new FileGuardError(read.reason);
       return read.snapshot;
     });
-    const available = await context.db.mediaItem.count({
-      where: {
-        id: { in: group.coverage.map((scope) => scope.mediaId) },
-        availability: "available",
-      },
-    });
+    const available =
+      movieScope === undefined
+        ? await context.db.mediaItem.count({
+            where: {
+              id: { in: group.coverage.map((scope) => scope.mediaId) },
+              availability: "available",
+            },
+          })
+        : await context.db.mediaIntent.count({
+            where: {
+              mediaId: movieScope.mediaId,
+              edition: movieScope.edition,
+              availability: "available",
+            },
+          });
     if (
       !asset.owned ||
       asset.state !== "published" ||
@@ -84,6 +96,7 @@ export async function currentPlayback(
       mediaIds: group.coverage.map((scope) => scope.mediaId),
       bindings,
       access,
+      ...(movieScope === undefined ? {} : { movieScope }),
     };
     snapshots.set(asset.id, snapshot);
   }
@@ -119,7 +132,7 @@ export async function assertCurrentPlayback(
       { bindings: snapshot.bindings, access: [snapshot.access] },
       freshness,
     );
-    await assertDefaultPhysicalAsset(tx, snapshot.id);
+    await assertCleanupPhysicalAsset(tx, snapshot.id, snapshot.movieScope);
     const asset = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: snapshot.id },
       include: {
@@ -139,9 +152,22 @@ export async function assertCurrentPlayback(
         (id) =>
           !asset.coverage.some(
             (item) =>
-              item.mediaId === id && item.media.availability === "available",
+              item.mediaId === id &&
+              (snapshot.movieScope !== undefined ||
+                item.media.availability === "available"),
           ),
       )
+    )
+      throw new FileGuardError("cleanup_playback_changed");
+    if (
+      snapshot.movieScope !== undefined &&
+      (await tx.mediaIntent.count({
+        where: {
+          mediaId: snapshot.movieScope.mediaId,
+          edition: snapshot.movieScope.edition,
+          availability: "available",
+        },
+      })) !== 1
     )
       throw new FileGuardError("cleanup_playback_changed");
     if (

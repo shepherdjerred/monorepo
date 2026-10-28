@@ -16,16 +16,11 @@ import {
   type LibraryMovieManagementAuthority,
 } from "#shared/movie-editions/management/contracts.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
-import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { readCurrentPlexBinding } from "#infrastructure/plex-binding/read.ts";
 import { PlexMovieAssociationV2Schema } from "#shared/plex-binding/contract.ts";
 import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
 
-export type MovieManagementInvocation = {
-  execution: PlexBindingExecution;
-  budget: PublicationAuthorityReadBudget;
-};
+import type { MovieManagementInvocation } from "./invocation.ts";
 type ManagementInput = {
   scope: MovieEditionScope;
   epoch: number;

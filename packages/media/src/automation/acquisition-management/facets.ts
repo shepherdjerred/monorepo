@@ -1,6 +1,7 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { FileContext } from "#automation/files/types.ts";
 import type {
+  MediaFileActivities,
   MediaOperation,
   MediaAttemptOperation,
 } from "#shared/automation.ts";
@@ -43,6 +44,10 @@ export function createAcquisitionFileFacet(context: FileContext) {
     });
   };
   return {
+    cleanupSupersededMediaFile: (
+      input: Parameters<MediaFileActivities["cleanupSupersededMediaFile"]>[0],
+      execution: PublicationExecution,
+    ) => invocation(execution).cleanupSupersededMediaFile(input),
     inspectAndStageMedia: (
       input: MediaAttemptOperation,
       execution: PublicationExecution,

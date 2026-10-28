@@ -8,10 +8,7 @@ import {
   type UpgradeCleanupPlexExpected,
   type UpgradeCleanupPlexEvidence,
 } from "#shared/plex-binding/cleanup.ts";
-import type {
-  PlexAccess,
-  PlexBindingFreshness,
-} from "#shared/plex-binding/contract.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { VerifiedServingPlex } from "#shared/plex-binding/observations.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
@@ -24,20 +21,29 @@ import {
   plexBindingFreshness,
 } from "./freshness.ts";
 import { PlexBindingProtection } from "./errors.ts";
+import type { VerifiedMovieServingPlexV2 } from "#shared/movie-editions/plex-v2.ts";
+
+import type { CleanupObservationInvocation } from "./cleanup/invocation.ts";
 
 /** Network calls before IO, after resolving only the required trusted section config. */
 export async function prepareUpgradeCleanupObservation(
   tx: Prisma.TransactionClient,
   input: UpgradeCleanupPlexInput,
   access: readonly PlexAccess[],
-  freshness: PlexBindingFreshness,
+  invocation: CleanupObservationInvocation,
 ) {
+  const { freshness } = invocation;
   const observed = { wall: Date.now(), monotonic: performance.now() };
   const command = await readUpgradeCleanupCommand(tx, input);
   if (command.cleanup.state === "purged")
     return { status: "complete" as const };
   freshness.assertActive();
-  const expected = await captureUpgradeCleanupExpected(tx, input, access);
+  const expected = await captureUpgradeCleanupExpected(
+    tx,
+    input,
+    access,
+    invocation,
+  );
   const bounded = plexBindingFreshness({
     observed,
     expiresAtMs: Math.min(
@@ -47,7 +53,10 @@ export async function prepareUpgradeCleanupObservation(
     guards: [freshness],
   });
   await lockUpgradeCleanupObservation(tx, expected, bounded);
-  await assertUpgradeCleanupExpected(tx, expected, access, bounded);
+  await assertUpgradeCleanupExpected(tx, expected, access, {
+    ...invocation,
+    freshness: bounded,
+  });
   return { status: "pending" as const, expected, freshness: bounded };
 }
 
@@ -93,9 +102,10 @@ export async function commitUpgradeCleanupObservation(
   observed: Omit<
     UpgradeCleanupPlexEvidence,
     "schemaVersion" | "expected" | "expectedHash" | "verification"
-  > & { serving: VerifiedServingPlex },
-  freshness: PlexBindingFreshness,
+  > & { serving: VerifiedServingPlex | VerifiedMovieServingPlexV2 },
+  invocation: CleanupObservationInvocation,
 ): Promise<void> {
+  const { freshness } = invocation;
   const { serving, ...timing } = observed;
   serving.freshness.assertActive();
   if (
@@ -111,7 +121,7 @@ export async function commitUpgradeCleanupObservation(
   )
     throw new PlexBindingProtection("binding_changed");
   const evidence = UpgradeCleanupPlexEvidenceSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: expected.schemaVersion,
     expected,
     expectedHash: identityHash(expected),
     ...timing,
@@ -128,7 +138,10 @@ export async function commitUpgradeCleanupObservation(
     guards: [freshness, serving.freshness],
   });
   await lockUpgradeCleanupObservation(tx, expected, bounded);
-  await assertUpgradeCleanupExpected(tx, expected, expected.access, bounded);
+  await assertUpgradeCleanupExpected(tx, expected, expected.access, {
+    ...invocation,
+    freshness: bounded,
+  });
   await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${expected.operationId} FOR UPDATE`;
   bounded.assertActive();
   const { operation } = await readUpgradeCleanupCommand(tx, {
@@ -160,8 +173,9 @@ export async function readUpgradeCleanupObservation(
   tx: Prisma.TransactionClient,
   input: UpgradeCleanupPlexInput,
   current: { plan: UpgradeCleanupPlan; access: readonly PlexAccess[] },
-  original: PlexBindingFreshness,
+  invocation: CleanupObservationInvocation,
 ) {
+  const original = invocation.freshness;
   const observed = { wall: Date.now(), monotonic: performance.now() };
   const result = await loadUpgradeCleanupObservation(tx, input);
   if (result.status === "complete") return result;
@@ -176,12 +190,10 @@ export async function readUpgradeCleanupObservation(
     identityHash(current.plan) !== evidence.expected.descriptorHash
   )
     throw new PlexBindingProtection("scope_changed");
-  await assertUpgradeCleanupExpected(
-    tx,
-    evidence.expected,
-    current.access,
+  await assertUpgradeCleanupExpected(tx, evidence.expected, current.access, {
+    ...invocation,
     freshness,
-  );
+  });
   await bindPlexTransactionDeadline(tx, freshness);
   freshness.assertActive();
   return { status: "observed" as const, evidence, freshness };
@@ -191,13 +203,15 @@ async function assertUpgradeCleanupExpected(
   tx: Prisma.TransactionClient,
   expected: UpgradeCleanupPlexExpected,
   access: readonly PlexAccess[],
-  freshness: PlexBindingFreshness,
+  invocation: CleanupObservationInvocation,
 ) {
+  const { freshness } = invocation;
   freshness.assertActive();
   const current = await captureUpgradeCleanupExpected(
     tx,
     { operationId: expected.operationId, cleanupId: expected.cleanupId },
     access,
+    invocation,
   );
   freshness.assertActive();
   if (

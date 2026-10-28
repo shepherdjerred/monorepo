@@ -13,10 +13,8 @@ import {
   MovieBirthAuthoritySchema,
   type LibraryMovieManagementAuthority,
 } from "#shared/movie-editions/management/contracts.ts";
-import {
-  readLibraryMovieManagement,
-  type MovieManagementInvocation,
-} from "#infrastructure/movie-editions/management/authority.ts";
+import { readLibraryMovieManagement } from "#infrastructure/movie-editions/management/authority.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 
 type Input = {
   scope: MovieEditionScope;

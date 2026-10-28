@@ -20,6 +20,7 @@ import { writePlexBindingPointers } from "#infrastructure/plex-binding/commit.ts
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { captureMoviePlexExpectedV2 } from "./expected.ts";
+import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
 import {
   moviePlexAttemptParentV2,
   moviePlexCommandParentV2,
@@ -155,6 +156,12 @@ export async function commitMoviePlexV2(
   budget.consume(1);
   if (published.plexPublishedAt === null)
     throw new Error("Verified movie publication timestamp missing");
+  await recordVerifiedPublication(
+    tx,
+    [current.asset.id],
+    current.attempt.recoveryEpoch,
+    input.input.scope,
+  );
   await tx.mediaIntent.update({
     where: { mediaId_edition: association.scope },
     data: { availability: "available" },

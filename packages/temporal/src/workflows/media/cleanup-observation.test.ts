@@ -16,6 +16,12 @@ test.each(["observed", "complete", "protected_then_observed"] as const)(
     const input = {
       operationId: crypto.randomUUID(),
       cleanupId: crypto.randomUUID(),
+      kind: "cleanup_upgrade",
+      recoveryEpoch: 0,
+    };
+    const activityInput = {
+      operationId: input.operationId,
+      cleanupId: input.cleanupId,
     };
     let observations = 0;
     try {
@@ -87,8 +93,8 @@ test.each(["observed", "complete", "protected_then_observed"] as const)(
         status: "completed",
       });
       const terminal = [
-        { kind: "observe", input },
-        { kind: "files", input },
+        { kind: "observe", input: activityInput },
+        { kind: "files", input: activityInput },
         {
           kind: "finish",
           input: {
@@ -101,7 +107,7 @@ test.each(["observed", "complete", "protected_then_observed"] as const)(
       expect(calls).toEqual(
         mode === "protected_then_observed"
           ? [
-              { kind: "observe", input },
+              { kind: "observe", input: activityInput },
               {
                 kind: "finish",
                 input: {
@@ -125,6 +131,10 @@ test.each(["observed", "complete", "protected_then_observed"] as const)(
       });
       expect(patches).toContainEqual({
         id: "media-upgrade-cleanup-network-observation-v1",
+        deprecated: false,
+      });
+      expect(patches).toContainEqual({
+        id: "media-upgrade-cleanup-input-v2",
         deprecated: false,
       });
       await Worker.runReplayHistory({ workflowsPath }, history);
