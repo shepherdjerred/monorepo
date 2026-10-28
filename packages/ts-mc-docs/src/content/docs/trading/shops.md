@@ -24,6 +24,10 @@ oak_planks
 
 Leave the first line blank to use your name. In this example, a customer buys 16 oak planks for 50 crystals or sells 16 for 40 crystals. You can leave out either price. Put items in the container to stock your shop, and keep enough crystals in your balance if you want to buy items from customers.
 
+![A registered player shop sign on a barrel, offering 16 oak planks at buy and sell prices.](/screenshots/player-shop-sign.webp)
+
+The server fills in the owner and item names when it opens the shop.
+
 You can write `?` on the item line instead, then right-click the finished sign while holding the item to set it. To change a shop sign, break it and make a new one. Look at a shop and use `/shop info` to see its details.
 
 [Shop sign examples](/trading/shop-sign-examples/) shows how to offer only one trade direction.
