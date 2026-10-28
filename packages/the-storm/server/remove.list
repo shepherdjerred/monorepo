@@ -18,6 +18,9 @@ config/paper-world-defaults.yml
 # Pinned a world UUID; spawn is set in game with /setspawn.
 plugins/Essentials/spawn.yml
 
+# The layered generation identity replaces the classic-only YAML settings.
+plugins/TheStorm/skylands.yml
+
 # Chunky resumes these tasks (continue-on-restart); they re-queued a finished
 # 20000-block pregeneration on every boot.
 plugins/Chunky/tasks/world.properties

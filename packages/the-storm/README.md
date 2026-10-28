@@ -488,24 +488,104 @@ Paper at all because it drives bots from worker threads. ArchUnit tests in
 
 The `skylands` module creates and loads the `skylands` world itself during
 startup, before `towns`, `world` and `qol` enable; it is never a Multiverse world, and
-startup fails if anything loaded the world first. The terrain shape is Beta
-1.7.3 Skylands, ported from Spottedleaf's OldGenerator (MIT, see `NOTICE`) and
-matched block for block against the upstream classes in its tests. Everything
-else is vanilla 26.3: surface rules, carvers, ores, trees, vegetation,
-structures and initial mobs run over the islands.
+startup fails if anything loaded the world first. `SkylandsWorlds.install` uses
+`LayeredSkylandsGenerator` for both fresh worlds and subsequent restarts. Its
+density expands the Beta 1.7.3 Skylands port from Spottedleaf's OldGenerator
+(MIT, see `NOTICE`) into multiple shelves, with adapted terrain, ores and structures.
+The classic port and its upstream block-for-block tests remain as the density baseline.
 
-`skylands.yml` fixes the seed, the world y of Beta's terrain floor
-(`verticalOffset`, so islands sit above the vanilla surface that gates grass),
-the structures never placed, and the water-only biomes remapped to land.
-Structure blocks and entities that would land below `verticalOffset` are
-dropped, so a village projected over the void loses only the pieces over the
-void. Vanilla's own ore bands give islands at y 80-152 coal, iron and copper;
-`ores` places diamond, redstone, lapis and gold into island cores at the rates
-vanilla gives the same islands sunk into its deep band. Lowering
-`verticalOffset` far enough for vanilla's deep ores instead leaves most island
-tops bare stone, because vanilla grows grass only above its own surface height.
+`skylands.json` declares the world name, seed and `layered-v1` format. It is shared
+between the Java startup lifecycle and the image's Python pre-start guard. The
+classic-only YAML settings are retired rather than silently ignored. Spawn stays
+on the selected shelf, with generated solid ground and clear headroom; respawn
+spreading is disabled because surrounding columns may be void.
 Other modules require the `SkylandsWorld` app port to treat the world as
 declared and loaded.
+
+### Layered generation
+
+Paper's early bootstrap reads the pinned built-in native structure bytes on
+`ServerMain`, before the ticking `Server thread` exists. It passes an immutable
+`SkylandsAssets` bundle into the plugin; the world lifecycle decodes only those
+memory buffers into Bukkit snapshots on the primary thread. Missing or mismatched
+assets fail startup. No template file/resource I/O or future waits run in the
+Paper generation adapters.
+
+`LayeredSkylandsGenerator.create(plugin, worldName, seed, assets)` prepares a fresh-world
+generator before `WorldCreator` runs. This version expands the original Beta
+density into separate shelves across y -28..259. Land biomes vary in three
+dimensions; ores use depth within each island. Rare closed ocean vessels add
+seabeds, water and shores without replacing the original islands.
+
+Villages, mines and ancient-city ruins use deterministic 512-block feature cells.
+Each cell has a clear perimeter and may remain empty when its terrain cannot
+support a complete feature. Village buildings and city ruins reuse native Paper
+26.3 templates, fitted individually to real shelves. Villages select complete
+plains, desert, savanna, snowy or taiga architectural families from the local
+climate, with native centres, farms, profession buildings and houses. City centres
+assemble matching native jigsaw sockets before extending into additional ruins
+and wall sections on surrounding shelves. Seeded searches choose their
+positions, rotations and elevations. Bounded pathfinding connects accepted plots;
+mines follow existing rock and can bridge actual gaps. There are no fixed demo
+locations, district-sized terrain reservations or post-generation pastes. Template
+coordinates describe reusable buildings, never world locations.
+
+Native metadata preserves socket directions, names, targets and pools. Geometry
+uses the occupied height rather than empty export padding; horizontal dimensions
+retain the native coordinate system for socket alignment. Central platforms stay
+above the fitted ground, and city sites require at least three native central-wall
+connections. Sparse template cells
+are valid empty standing space only inside the fitted footprint, with an actual
+native floor beneath residents. Roads use continuous surfaces from the village's
+native palette, with coherent wear at the verges and stairs across the supported
+walking width. Gardens and irregular sculk/deepslate patches follow existing surfaces.
+
+Plans are immutable and cached with bounded memory. Each population call writes
+only its own chunk, including native loot snapshots, distributed village jobs,
+villagers in the matching architectural style, native cats/golems/pen animals,
+crop lights and cave-spider spawners. Native decoration is disabled in
+a bounded halo around planned features; captured native trees are accepted only
+as whole, chunk-local trees outside the planned buildings and routes. This prevents
+later neighbouring decoration from overwriting completed paths.
+
+The layered generator requires a fresh world directory; it is not an in-place
+upgrade. Before Paper starts or image configuration is synced, the image refuses
+existing Skylands terrain without a matching `.the-storm-skylands-generation.json`
+identity on the data volume. A fresh dimension records that identity outside its
+directory, allowing Paper to initialize it itself. Changed seeds, world names or
+formats and linked paths fail startup. The guard never deletes terrain or BlueMap
+data; the classic save requires a separately verified offline replacement before
+this image can start against that volume.
+
+The generator blocks vanilla villages, mineshafts and ancient cities in favour of
+the adapted layouts. Trial chambers and strongholds are also blocked until
+adaptations are available. Launch towers are placed manually. Standalone survival
+progression remains uncertified.
+
+Unit checks and extended real-Paper acceptance are separate:
+
+```bash
+mise exec -- gradle -p packages/the-storm/plugin :skylands:test :skylands:pmdMain :skylands:pmdTest :skylands:spotlessCheck :architecture:test :skylands:jar
+python3 packages/the-storm/tools/skylands/native-preview.py --output /tmp/skylands-native-forward --seed 1731
+uv run --script packages/the-storm/tools/skylands/audit-generated.py /tmp/skylands-native-forward
+```
+
+The extended fixture requires the local licensed Paper 26.3 build 223 and its
+matching API in the toolkit/Gradle caches. It creates an isolated loopback-only
+server through the production `SkylandsWorlds.install` lifecycle, validates its
+generator and safe spawn, discovers one complete feature of each kind, generates surrounding chunks
+and shuts down after saving. The requested plans, chunks, generator artifact hash
+and saved-block audit remain in the output directory. Wait for
+`PROCEDURAL_NATIVE_READY` and process exit before auditing. Use a different fresh
+output with `--order reverse` to compare plans and saved feature digests, or
+`--cell-x`/`--cell-z` to sample distant terrain. These extended checks stay outside CI.
+
+`tools/skylands/catalog-native.py` regenerates the relative socket catalog from
+the locally licensed Paper jar; it copies no binary structure assets. Pass
+`--paper-jar` and `--output` explicitly, then run `:skylands:spotlessApply`. The
+extended fixture exports `template-geometry.json`; its wrapped `templates` array
+is the domain test fixture when native assets or geometry rules intentionally
+change. Rebuild and regenerate fresh worlds after such changes.
 
 ## NPCs and the town watch
 

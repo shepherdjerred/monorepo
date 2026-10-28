@@ -1,15 +1,20 @@
 package com.shepherdjerred.thestorm;
 
+import com.shepherdjerred.thestorm.skylands.adapter.resource.NativeSkyAssetSource;
+import com.shepherdjerred.thestorm.skylands.app.SkylandsAssets;
 import io.papermc.paper.datapack.Datapack;
 import io.papermc.paper.datapack.DatapackRegistrar;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
+import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import net.kyori.adventure.text.Component;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Registers the plugin datapack before worlds load. It keeps {@code minecraft:story/iron_tools}
@@ -21,15 +26,29 @@ import net.kyori.adventure.text.Component;
  * so the tabs live in this one pack. Pinning it above vanilla only overrides {@code iron_tools}.
  */
 public final class TheStormBootstrap implements PluginBootstrap {
+  private @Nullable SkylandsAssets skylandsAssets;
 
   static final String PACK_META = "/datapacks/quiet-iron-pick/pack.mcmeta";
 
   @Override
   public void bootstrap(BootstrapContext context) {
+    // Paper calls bootstrap on ServerMain before creating its ticking Server thread.
+    skylandsAssets = NativeSkyAssetSource.read();
     context
         .getLifecycleManager()
         .registerEventHandler(
             LifecycleEvents.DATAPACK_DISCOVERY, event -> discover(event.registrar()));
+  }
+
+  @Override
+  public TheStormPlugin createPlugin(PluginProviderContext context) {
+    var prepared =
+        Objects.requireNonNull(skylandsAssets, "Skylands resources were not bootstrapped");
+    context
+        .getLogger()
+        .info(
+            "Prepared {} native Skylands resources before server startup", prepared.keys().size());
+    return new TheStormPlugin(prepared);
   }
 
   private static void discover(DatapackRegistrar registrar) {

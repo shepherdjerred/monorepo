@@ -27,6 +27,7 @@ import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeGenerator;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
+import com.shepherdjerred.thestorm.skylands.app.SkylandsAssets;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -46,6 +47,11 @@ import org.jspecify.annotations.Nullable;
  * configured modules. A bad config stops the plugin: it never falls back to defaults.
  */
 public final class TheStormPlugin extends JavaPlugin {
+  private final SkylandsAssets skylandsAssets;
+
+  public TheStormPlugin(SkylandsAssets skylandsAssets) {
+    this.skylandsAssets = skylandsAssets;
+  }
 
   private final List<StormModule> enabled = new ArrayList<>();
   private final Services services = new Services();
@@ -108,6 +114,7 @@ public final class TheStormPlugin extends JavaPlugin {
     services.provide(ChunkTickets.class, new ChunkTickets(this));
     services.provide(SealedWorlds.class, new SealedWorlds());
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
+    services.provide(SkylandsAssets.class, skylandsAssets);
     services.provide(
         SavedPlayerData.class,
         PaperSavedPlayerData.locate(
