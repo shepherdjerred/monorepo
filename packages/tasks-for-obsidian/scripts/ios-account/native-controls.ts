@@ -125,6 +125,7 @@ try {
     "bad-authorization",
     "oversize-frame",
     "private-parent-eof",
+    "terminal-ack-parent-eof",
   ] as const) {
     const directory = "/private/tmp/facet-account-" + crypto.randomUUID();
     await mkdir(directory, { mode: 0o700 });
@@ -182,7 +183,7 @@ try {
         });
         await child.stdin.write(operation === "bad-authorization" ? "B" : "A");
         await child.stdin.flush();
-        await controlInput(operation, peer, child.stdin);
+        await controlInput(operation, peer, child.stdin, line);
       }
       const code = await child.exited,
         stderr = await new Response(child.stderr).text();
@@ -241,7 +242,13 @@ async function controlInput(
   operation: string,
   peer: ReturnType<typeof createConnection>,
   input: Bun.FileSink,
+  line: () => Promise<unknown>,
 ) {
   if (operation === "oversize-frame") peer.write("x".repeat(8193) + "\n");
   if (operation === "private-parent-eof") await input.end();
+  if (operation === "terminal-ack-parent-eof") {
+    peer.write('{"public":"terminal-ack"}\n');
+    assert.deepEqual(await line(), { public: "terminal-ack" });
+    await input.end();
+  }
 }

@@ -273,7 +273,7 @@ export class PrivateAccountSession {
         !this.connectSubmitted,
     );
     await this.app.validate();
-    this.app.expectClose();
+    await this.app.expectClose();
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,

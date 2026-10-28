@@ -13,6 +13,7 @@ const identity = {
 type Callback = (error?: Error | null) => void;
 class RunnerWire extends Socket {
   readonly frames: string[] = [];
+  readonly commands: string[] = [];
   private observed = 0;
   private submissions = 0;
   constructor(
@@ -39,6 +40,7 @@ class RunnerWire extends Socket {
     const command = z
       .object({ kind: z.string(), requestID: z.string() })
       .parse(value);
+    this.commands.push(command.kind);
     const envelope = {
       schemaVersion: 1,
       ...identity,
@@ -176,7 +178,7 @@ function fixture(mfa = true, encrypted = true) {
     finish: async () => {
       expect(closingExpected).toBe(true);
     },
-    expectClose: () => {
+    expectClose: async () => {
       closingExpected = true;
     },
   };
@@ -285,5 +287,53 @@ test("private input loss and duplicate operations cannot cause an automatic subm
     expect(normal.wire.frames).toHaveLength(3);
   } finally {
     normal.session.close();
+  }
+});
+
+test("normal Connect waits for verified private transport closure and never taps after closure failure", async () => {
+  const { session, wire, app } = fixture(false, false);
+  try {
+    await session.bind();
+    await session.fill({
+      email: "synthetic@example.invalid",
+      password: "synthetic-only-password",
+    });
+    await session.submit();
+    await session.observe();
+    let release: (() => void) | undefined;
+    app.expectClose = () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    const connected = session.connect("owned-remote");
+    await new Promise<void>((resolve) => {
+      queueMicrotask(resolve);
+    });
+    expect(wire.commands).not.toContain("connect");
+    expect(release).toBeDefined();
+    release?.();
+    await connected;
+    expect(wire.commands).toContain("connect");
+  } finally {
+    session.close();
+  }
+  const failed = fixture(false, false);
+  try {
+    await failed.session.bind();
+    await failed.session.fill({
+      email: "synthetic@example.invalid",
+      password: "synthetic-only-password",
+    });
+    await failed.session.submit();
+    await failed.session.observe();
+    failed.app.expectClose = async () => {
+      throw new Error("private closure rejected");
+    };
+    await expect(failed.session.connect("owned-remote")).rejects.toThrow(
+      "closure rejected",
+    );
+    expect(failed.wire.commands).not.toContain("connect");
+  } finally {
+    failed.session.close();
   }
 });

@@ -88,11 +88,15 @@ struct OfficialOwner {
     let window: AXUIElement
     let formKind: OfficialFormKind
     let challengeID: String?
+    let verificationMethodPolicy: String?
 
     init(_ input: [String: Any], formKind: OfficialFormKind = .credentials) throws {
         self.formKind = formKind
         challengeID = input["challengeID"] as? String
         if formKind == .totp, challengeID == nil { throw GuardFailure.input }
+        verificationMethodPolicy =
+            formKind == .totp
+            ? try OfficialVerificationProtocol(input).methodPolicy() : nil
         guard let rawPID = input["pid"] as? Int, rawPID > 0, rawPID <= Int(Int32.max),
             let program = input["executable"] as? String,
             let reference = input["referenceDirectory"] as? String,

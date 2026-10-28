@@ -9,6 +9,19 @@
     "minimumRemainingMs": 12000
   },
   "probeCode": "135790",
+  "methodWords": {
+    "allowedPattern": "(?:2.factor|two.factor) authentication|\\b6-digit 2FA code\\b",
+    "forbiddenPattern": "recovery|(?:sent|send|inbox).{0,120}email|email.{0,120}(?:sent|send|inbox)"
+  },
+  "preparationPhases": [
+    "input",
+    "verification-protocol",
+    "verification-binding",
+    "verification-owner",
+    "verification-archive",
+    "verification-form",
+    "verification-ready"
+  ],
   "frameModes": {
     "init": "verification-session",
     "prepare": "verification-prepare"

@@ -51,9 +51,22 @@
             for _ in 0..<7 {
                 let finished = try await applyCommand(
                     envelope: envelope, stage: stage, apply: apply)
-                if finished { return }
+                if finished {
+                    try await waitForHostClosure()
+                    return
+                }
             }
             throw Failure.boundary
+        }
+
+        private func waitForHostClosure() async throws {
+            // The final acknowledgment must be drained while this same peer remains alive.
+            // The host closes its authenticated helper before the Runner dismisses the form.
+            guard pending.isEmpty else { throw Failure.boundary }
+            try await ready(Int16(POLLIN))
+            var byte: UInt8 = 0
+            let count = unsafe Darwin.read(descriptor, &byte, 1)
+            guard count == 0 else { throw Failure.boundary }
         }
 
         private func connectSocket() throws {

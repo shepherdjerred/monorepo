@@ -32,6 +32,16 @@ struct OfficialVerificationProtocol {
         SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
     }
 
+    func methodPolicy() throws -> String {
+        guard let policy = definition["methodWords"] as? [String: String],
+            Set(policy.keys) == ["allowedPattern", "forbiddenPattern"],
+            let result = String(
+                data: try JSONSerialization.data(withJSONObject: policy, options: [.sortedKeys]),
+                encoding: .utf8)
+        else { throw GuardFailure.binding }
+        return result
+    }
+
     func verifyOfficialAsar(_ program: String) throws {
         let file = URL(fileURLWithPath: program).deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -168,19 +178,25 @@ private func retainVerificationRecord(
 }
 
 func prepareOfficialVerification(_ input: [String: Any]) throws {
+    inputPhase = "verification-protocol"
     let protocolDefinition = try OfficialVerificationProtocol(input)
     try protocolDefinition.validate(input, frame: "prepare")
+    inputPhase = "verification-binding"
     try validateBinding(input)
     var inspect = input
     inspect["mode"] = "inspect"
+    inputPhase = "verification-owner"
     let owner = try OfficialOwner(inspect, formKind: .totp)
+    inputPhase = "verification-archive"
     try protocolDefinition.verifyOfficialAsar(owner.executable)
     guard let challenge = input["challengeID"] as? String,
         let session = input["sessionID"] as? String,
         let run = input["runID"] as? String
     else { throw GuardFailure.input }
+    inputPhase = "verification-form"
     try owner.verificationDOM(
         input["operation"] as? String == "probe" ? .bind : .inspect, challenge: challenge)
+    inputPhase = "verification-ready"
     try protocolDefinition.write(
         [
             "kind": "ready", "sessionID": session, "runID": run,
@@ -345,6 +361,7 @@ private func encodedVerificationString(_ value: String) throws -> String {
 extension OfficialOwner {
     func verificationDOM(_ action: OfficialVerificationDOMAction, challenge: String) throws {
         try validate()
+        guard let verificationMethodPolicy else { throw GuardFailure.binding }
         let prefix =
             "(()=>{if(app.vault.adapter.getBasePath()!=="
             + (try encodedVerificationString(referenceDirectory))
@@ -357,8 +374,9 @@ extension OfficialOwner {
             + "const walker=d.createTreeWalker(m,NodeFilter.SHOW_TEXT);const text=[];let node,n=0;"
             + "while((node=walker.nextNode())&&n++<2000){if(node.parentElement&&visible(node.parentElement))"
             + "text.push(node.textContent??'');}if(n>=2000)throw Error('bound');const words=text.join(' ');"
-            + "if(!/(?:2.factor|two.factor) authentication/i.test(words)"
-            + "||/recovery|(?:sent|send|inbox).{0,120}email|email.{0,120}(?:sent|send|inbox)/is.test(words))"
+            + "const policy=" + verificationMethodPolicy + ";"
+            + "if(!new RegExp(policy.allowedPattern,'i').test(words)"
+            + "||new RegExp(policy.forbiddenPattern,'is').test(words))"
             + "throw Error('method');const f=Array.from(m.querySelectorAll('input')).filter(visible);"
             + "if(f.length!==1||f[0].type!=='text'||f[0].autocomplete!=='one-time-code'"
             + "||f[0].inputMode!=='numeric'||f[0].maxLength!==6||f[0].disabled)throw Error('field');"

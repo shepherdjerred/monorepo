@@ -11,7 +11,7 @@ import path from "node:path";
 import { z } from "zod";
 import { macFileSHA } from "tasknotes-macos/scripts/apple-acceptance/mac-artifact.ts";
 import { readOwnedMacVMJSON } from "tasknotes-macos/scripts/apple-acceptance/mac-vm-export.ts";
-import { executePrivateTransport } from "../host";
+import { executePrivateTransport, type TransportCommand } from "../host";
 import { inspectOwnedMacProcesses } from "../../mac-process-inspection";
 import {
   officialProbeReady,
@@ -25,6 +25,139 @@ import {
   verificationWire,
 } from "./official-verification-protocol";
 import type { GuestRuntime } from "./runtime";
+
+const preparationLimits = { stdout: 8192, stderr: 4096 };
+const preparationDiagnostic = z.strictObject({
+  blocked: z.enum([
+    "input",
+    "binding",
+    "process",
+    "session",
+    "form",
+    "focus",
+    "delivery",
+    "internal",
+  ]),
+  phase: z.enum(verificationProtocol.preparationPhases),
+  submitActionCount: z.literal(0),
+});
+
+async function retainPreparationFiles(
+  directory: string,
+  files: [string, Uint8Array | string][],
+) {
+  let failed = false;
+  for (const [name, bytes] of files) {
+    try {
+      await writeFile(path.join(directory, name), bytes, {
+        flag: "wx",
+        mode: 0o600,
+      });
+    } catch {
+      failed = true;
+    }
+  }
+  if (failed)
+    throw new Error(
+      "Official verification preparation evidence retention failed",
+    );
+}
+
+/** This boundary accepts only the no-code prepare frame; real session streams never enter it. */
+export async function runVerificationPreparation(
+  program: string,
+  request: Record<string, unknown>,
+  execute: TransportCommand = executePrivateTransport,
+) {
+  const frame = verificationWire("prepare", request);
+  const directory = path.join(
+    path.dirname(program),
+    "preparation-" + z.uuid().parse(request["sessionID"]),
+  );
+  await mkdir(directory, { mode: 0o700 });
+  const binding = Object.fromEntries(
+    [
+      "runID",
+      "sessionID",
+      "challengeID",
+      "pid",
+      "configSHA256",
+      "binarySHA256",
+    ].map((name) => [name, request[name]]),
+  );
+  let reply: Awaited<ReturnType<TransportCommand>>;
+  try {
+    reply = await execute([program], frame, 60_000);
+  } catch {
+    await retainPreparationFiles(directory, [
+      [
+        "diagnostic.json",
+        JSON.stringify({
+          schemaVersion: 1,
+          classification: "transport-failed",
+          rawResponseAvailable: false,
+          binding,
+        }),
+      ],
+    ]);
+    throw new Error(
+      "Official verification preparation transport failed; inspect retained closed diagnostic",
+    );
+  }
+  const receipt = {
+    schemaVersion: 1,
+    phase: "official-verification-no-code-preparation",
+    exitCode: reply.exitCode,
+    stdoutBytes: reply.stdout.length,
+    stderrBytes: reply.stderr.length,
+    stdoutTruncated: reply.stdout.length > preparationLimits.stdout,
+    stderrTruncated: reply.stderr.length > preparationLimits.stderr,
+    binding,
+  };
+  // Retain bounded no-code bytes and exit metadata before parsing or enforcing any native guard.
+  await retainPreparationFiles(directory, [
+    ["stdout", reply.stdout.subarray(0, preparationLimits.stdout)],
+    ["stderr", reply.stderr.subarray(0, preparationLimits.stderr)],
+    ["exit.json", JSON.stringify(receipt)],
+  ]);
+  const bounded = !receipt.stdoutTruncated && !receipt.stderrTruncated;
+  let decoded: unknown;
+  if (bounded) {
+    try {
+      decoded = JSON.parse(
+        new TextDecoder("utf-8", { fatal: true }).decode(reply.stdout),
+      );
+    } catch {
+      decoded = null;
+    }
+  }
+  const diagnostic = preparationDiagnostic.safeParse(decoded);
+  await writeFile(
+    path.join(directory, "diagnostic.json"),
+    JSON.stringify({
+      schemaVersion: 1,
+      classification: diagnostic.success
+        ? "native-guard"
+        : bounded
+          ? "unclassified"
+          : "output-bound",
+      native: diagnostic.success ? diagnostic.data : null,
+    }),
+    { flag: "wx", mode: 0o600 },
+  );
+  assert.ok(bounded, "Official verification preparation output exceeded bound");
+  assert.equal(
+    reply.exitCode,
+    0,
+    "Official verification preparation failed; inspect retained closed diagnostic",
+  );
+  assert.equal(
+    reply.stderr.length,
+    0,
+    "Official verification preparation emitted diagnostics",
+  );
+  return verificationFrame("ready", decoded);
+}
 
 async function absent(file: string) {
   try {
@@ -160,17 +293,7 @@ export async function prepareGuestOfficialVerification(
       name === "mode" ? "verification-prepare" : prepared.input[name],
     ]),
   );
-  const reply = await executePrivateTransport(
-    [prepared.program],
-    verificationWire("prepare", request),
-    60_000,
-  );
-  assert.equal(reply.exitCode, 0, "Official verification preparation failed");
-  assert.equal(reply.stderr.length, 0);
-  const ready = verificationFrame(
-    "ready",
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(reply.stdout)),
-  );
+  const ready = await runVerificationPreparation(prepared.program, request);
   for (const name of ["runID", "sessionID", "challengeID", "pid"])
     assert.equal(ready[name], prepared.input[name]);
   const lifetime = z

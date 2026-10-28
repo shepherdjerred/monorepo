@@ -20,6 +20,8 @@ struct FacetAccountForm: View {
     #if DEBUG && os(iOS) && targetEnvironment(simulator)
         @State private var acceptanceInput: FacetAcceptanceAccountInput?
         @State private var acceptanceMount: UUID?
+        // Retain confinement until these State values are disposed, even after peer teardown.
+        @State private var acceptanceValuesConfined = false
     #endif
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -33,6 +35,11 @@ struct FacetAccountForm: View {
                     Section("Obsidian account") {
                         TextField("Email", text: $email).textContentType(.emailAddress)
                             .accessibilityIdentifier("facet.account.email")
+                            #if DEBUG && os(iOS) && targetEnvironment(simulator)
+                                .accessibilityValue(
+                                    Text(email.isEmpty ? "Empty" : "Entered"),
+                                    isEnabled: acceptanceValuesConfined)
+                            #endif
                             #if os(iOS)
                                 .keyboardType(.emailAddress)
                                 .textInputAutocapitalization(.never)
@@ -45,6 +52,11 @@ struct FacetAccountForm: View {
                                 .oneTimeCode
                             )
                             .accessibilityIdentifier("facet.account.code")
+                            #if DEBUG && os(iOS) && targetEnvironment(simulator)
+                                .accessibilityValue(
+                                    Text(code.isEmpty ? "Empty" : "Entered"),
+                                    isEnabled: acceptanceValuesConfined)
+                            #endif
                             #if os(iOS)
                                 .keyboardType(.numberPad)
                             #endif
@@ -244,6 +256,8 @@ struct FacetAccountForm: View {
             _ action: FacetAcceptanceInputAction, value: String?, expected: String, mount: UUID
         ) -> Bool {
             guard !busy, acceptanceStage(mount: mount) == expected else { return false }
+            // Only the admitted, bound peer can reach this current-mount mutation boundary.
+            acceptanceValuesConfined = true
             switch action {
             case .clear, .finish:
                 guard action == .finish || expected == "credentials" else { return false }

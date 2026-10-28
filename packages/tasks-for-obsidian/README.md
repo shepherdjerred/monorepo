@@ -232,7 +232,10 @@ approval; real codes and code-frame hashes never enter artifacts. The real
 enrolled OTP seed. It prepares and validates
 the native helper, exact authenticator form, process lifetime and empty-field
 focus before generating a code. The pinned official app bytes bind the helper's
-input-behavior assumptions. After final source/artifact checks, the code
+input-behavior assumptions and exact authenticator label. No-code preparation
+retains bounded stdout/stderr, exit status and fixed guard-phase diagnostics
+before enforcing its result; malformed or oversized output remains a failure.
+The real OTP session stream is never captured. After final source/artifact checks, the code
 crosses the already prepared private channel for normal entry and submission.
 Validity is checked before typing and clicking; a separate durable intent is
 written before real code entry. An unknown outcome remains retained without
@@ -263,6 +266,14 @@ still perform authentication and vault connection through the existing app code.
 keyboard focus while fields are empty and observes the real disabled/enabled
 button checkpoints without receiving credential values.
 
+For an admitted private session on that owned form, the Debug simulator adapter
+exposes fixed Empty/Entered accessibility values for the email and verification
+fields. Their rendered text, state, roles, identifiers and normal controls stay
+intact. This confinement remains latched while injected state exists, including
+after peer teardown. The host verifies clean private-helper shutdown before
+ending the native session or requesting normal Connect; unexpected closure blocks
+that action without clearing the vault password before Connect.
+
 The input path never uses the clipboard, credential arguments, environment values
 or credential files. First run the synthetic-only privacy probe against the exact
 prepared artifacts:
@@ -287,6 +298,8 @@ full source inventory, exact app/Runner/helper bytes and immutable retained
 evidence. Closed stage observations and independent cleanup results exclude raw
 value frames. A source change requires fresh preparation and a new passing probe;
 an earlier run's proof cannot authorize changed input code.
+The email/password probe covers that phase only; it does not establish privacy or
+code-validity acceptance for the separate authenticator-code phase.
 
 Only after that proof may the operator invoke:
 

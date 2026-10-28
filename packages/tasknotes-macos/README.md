@@ -331,6 +331,11 @@ an exclusive verification intent before entry and the normal click. Expired code
 changed forms and unknown outcomes stop without automatic resubmission or backend
 fallback. Account captures remain off. A submitted code still requires observed
 authentication and replica acceptance afterward.
+No-code native preparation retains bounded output, exit status and fixed guard
+phases before rejecting a result, so a failed form or ownership check can be
+diagnosed without capturing the real OTP session. The method guard recognizes
+the exact authenticator label from the pinned official app and still rejects
+email and recovery-code challenges.
 
 `bun run mac:acceptance:e2e` builds once, checks initial and cold-launch window
 isolation, then runs four local standalone workflows sequentially with
