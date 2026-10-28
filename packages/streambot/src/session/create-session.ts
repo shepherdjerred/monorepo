@@ -49,6 +49,7 @@ export function createSession(
     entry,
     resolveSource: options.deps.resolveSource,
     teardownHold: () => session.teardownHold,
+    beforeStream: () => options.saveSnapshot(session),
   });
   const actor = createActor(createPlaybackMachine(actors), {
     input: params.input,

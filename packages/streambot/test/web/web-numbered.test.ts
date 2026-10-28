@@ -69,7 +69,9 @@ test("web audio and video commands reach distinct actors and preserve fixed tran
       "streaming",
     );
   });
-  expect(plays.map((entry) => entry.transport)).toEqual(["music", "video"]);
+  await expect
+    .poll(() => plays.map((entry) => entry.transport))
+    .toEqual(["music", "video"]);
   const videoRevision = manager.revision(GUILD, CHANNEL, number(2));
   expect(
     await status(

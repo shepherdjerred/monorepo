@@ -53,6 +53,8 @@ therefore splits identities:
   numbered playback slot, each with its own queue, loop, volume, and clock.
   Slots 1+2 share a connection lease, and only one assistant listens per room.
   A versioned atomic room snapshot restores every slot across restarts.
+  Each playback attempt checkpoints state before entering native media code,
+  including retries, so recovery does not depend on the first periodic checkpoint.
 - **Media history** — `/state/streambot.sqlite` records queue requests and
   playback starts for one year. Discovery combines the requesting user's
   cross-server history with the current guild's history. Favorites and saved
@@ -317,6 +319,21 @@ bun run lint
 bun run docker:build     # build the image (repo-root build context)
 bun run smoke            # smoke script
 ```
+
+Measure local sender pacing without Discord credentials using real ffmpeg,
+native demuxing, and the production software playback options:
+
+```bash
+bun e2e/pacing-local.ts 60 regular
+bun e2e/pacing-local.ts 60 discontinuous
+```
+
+The probe loops generated 1080p video at real time, records audio/video send
+intervals and drift after the configured startup burst, and discards frames at
+the network boundary. `discontinuous` exercises timestamp normalization; it
+does not introduce an actual HLS discontinuity. An optional final `flush`
+argument compares per-packet mux flushing locally. System ffmpeg must support
+H.264, AAC, and Opus. These measurements exclude GPU and Discord delivery.
 
 The live e2e runs need real tokens and test-guild IDs via environment.
 `e2e:sports` additionally needs `E2E_SPORTS_URL`, `PINCHTAB_BASE_URL`, and

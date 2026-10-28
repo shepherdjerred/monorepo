@@ -299,6 +299,30 @@ function addFile(
 }
 
 describe("SessionManager", () => {
+  test("persists a recoverable session before native playback starts", async () => {
+    const { manager, pool, config } = await sessionHarness(1);
+    const streamer = pool.streamers[0];
+    if (!streamer) throw new Error("Missing fake streamer");
+    const original = streamer.runStream;
+    let saved: PersistedState | null = null;
+    streamer.runStream = async (input, signal) => {
+      saved = await loadState(
+        stateFilePath(config.state.dir, GUILD, CHANNEL_A),
+        config.state.resumeMaxAgeSeconds,
+      );
+      await original(input, signal);
+    };
+    try {
+      addFile(manager);
+      await waitUntil(() => streamer.lastRunStreamInput.value !== null);
+      expect(saved).toMatchObject({
+        current: { source: { kind: "file", path: "/clip.mkv" } },
+      });
+    } finally {
+      await manager.destroyAll();
+    }
+  });
+
   test("ensureForPlay returns null when no userbot is available", async () => {
     const config = await makeConfig();
     const pool = fakePool(0);
