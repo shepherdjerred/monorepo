@@ -146,6 +146,9 @@ public final class PaperHarness implements AutoCloseable {
               .replace("  x: 68.5\n", "  x: 0.5\n")
               .replace("  y: 69.0\n", "  y: 5.0\n")
               .replace("  z: 66.5\n", "  z: 0.5\n")
+              .replace("  x: 6.5\n", "  x: 0.5\n")
+              .replace("  y: 73.0\n", "  y: 5.0\n")
+              .replace("  z: 118.5\n", "  z: 0.5\n")
               .replace("warmup: PT3S", "warmup: PT0S")
               .replace("tpaInterval: PT10S", "tpaInterval: PT0S")
               // MockBukkit's written-book mock cannot measure styled pages; plain text works.

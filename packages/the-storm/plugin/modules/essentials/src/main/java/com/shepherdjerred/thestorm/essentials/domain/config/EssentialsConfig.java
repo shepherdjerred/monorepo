@@ -7,7 +7,8 @@ import java.time.Duration;
 /**
  * {@code plugins/TheStorm/essentials.yml}, owned by the repository.
  *
- * @param spawn where {@code /spawn} leads, new players arrive and players without a bed respawn
+ * @param spawn where {@code /spawn} leads and players without a bed respawn
+ * @param newcomerSpawn where first-time players arrive
  * @param teleports warmup, requests, history and pricing
  * @param homeLimit how many homes each player may set
  * @param afkTimeout idle time before a player is marked away
@@ -16,6 +17,7 @@ import java.time.Duration;
  */
 public record EssentialsConfig(
     Position spawn,
+    Position newcomerSpawn,
     TeleportSettings teleports,
     int homeLimit,
     Duration afkTimeout,

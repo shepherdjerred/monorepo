@@ -49,6 +49,9 @@ final class SpawnPreparationTest {
     world.getBlockAt(68, 68, 66).setType(Material.STONE);
     world.getBlockAt(68, 69, 66).setType(Material.AIR);
     world.getBlockAt(68, 70, 66).setType(Material.AIR);
+    world.getBlockAt(6, 72, 118).setType(Material.STONE);
+    world.getBlockAt(6, 73, 118).setType(Material.AIR);
+    world.getBlockAt(6, 74, 118).setType(Material.AIR);
     var plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("test.db"));
     context =
@@ -100,6 +103,16 @@ final class SpawnPreparationTest {
   void stopsIfTheLoadedSpawnIsUnsafe() {
     var preparation = SpawnPreparation.start(context, config, () -> stopped.set(true));
     world.getBlockAt(68, 68, 66).setType(Material.LAVA);
+    world.pending.complete(world.getChunkAt(4, 4));
+    server.getScheduler().performOneTick();
+    assertThat(login(preparation)).isEqualTo(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+    assertThat(stopped.get()).isTrue();
+  }
+
+  @Test
+  void stopsIfTheNewcomerSpawnIsUnsafe() {
+    var preparation = SpawnPreparation.start(context, config, () -> stopped.set(true));
+    world.getBlockAt(6, 72, 118).setType(Material.LAVA);
     world.pending.complete(world.getChunkAt(4, 4));
     server.getScheduler().performOneTick();
     assertThat(login(preparation)).isEqualTo(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);

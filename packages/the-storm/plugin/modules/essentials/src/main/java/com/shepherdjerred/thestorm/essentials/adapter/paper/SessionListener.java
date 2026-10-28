@@ -43,7 +43,7 @@ final class SessionListener implements Listener {
    * @param kits the kits, including the starter kit
    */
   record Arrival(
-      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn,
+      com.shepherdjerred.thestorm.essentials.domain.place.Position spawn,
       PlayerCommands.Kits kits,
       com.shepherdjerred.thestorm.essentials.app.NewcomerPlacements placements) {}
 
@@ -89,7 +89,7 @@ final class SessionListener implements Listener {
 
   private void welcome(Player player) {
     arrival.kits().deliveries().deliver(player.getUniqueId());
-    var spawn = Positions.toLocation(runtime.server(), arrival.spawn().spawn());
+    var spawn = Positions.toLocation(runtime.server(), arrival.spawn());
     if (spawn.isEmpty()) {
       arrival.placements().ready(player);
       return;

@@ -14,6 +14,15 @@ spawn:
   yaw: 90.0
   pitch: 0.0
 
+# First-time players arrive at the welcome plaza; /spawn stays at the windmill.
+newcomerSpawn:
+  world: world
+  x: 6.5
+  y: 73.0
+  z: 118.5
+  yaw: 180.0
+  pitch: 0.0
+
 teleports:
   # Stand still this long before a teleport; moving a block or taking damage
   # cancels it.
