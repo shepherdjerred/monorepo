@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:lightning_rod"
     },
-    "title": "Storm Call",
+    "title": "Lightning, where it rains",
     "description": "Cast Storm Call.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:prismarine_crystals"
     },
-    "title": "Geyser",
+    "title": "Water, from below",
     "description": "Cast Geyser.",
     "frame": "task",
     "show_toast": true,

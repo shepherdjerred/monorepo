@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:book"
     },
-    "title": "Ten errands",
+    "title": "Ten errands kept",
     "description": "Finish ten story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

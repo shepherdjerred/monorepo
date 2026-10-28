@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:diamond_sword"
     },
-    "title": "A hundred kills",
+    "title": "A hundred down",
     "description": "Get a hundred kills.",
     "frame": "task",
     "show_toast": true,

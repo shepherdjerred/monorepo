@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:blaze_rod"
     },
-    "title": "First spell",
+    "title": "A first casting",
     "description": "Cast a spell.",
     "frame": "task",
     "show_toast": true,

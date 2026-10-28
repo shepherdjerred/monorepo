@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:fermented_spider_eye"
     },
-    "title": "Confusion",
+    "title": "They turn on each other",
     "description": "Cast Confusion.",
     "frame": "task",
     "show_toast": true,

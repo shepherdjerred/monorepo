@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:fishing_rod"
     },
-    "title": "Fishing 500",
+    "title": "Patient water",
     "description": "Reach Fishing level 500.",
     "frame": "task",
     "show_toast": true,

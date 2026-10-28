@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:grass_block"
     },
-    "title": "Claimed",
+    "title": "This ground is ours",
     "description": "Claim a chunk.",
     "frame": "task",
     "show_toast": true,

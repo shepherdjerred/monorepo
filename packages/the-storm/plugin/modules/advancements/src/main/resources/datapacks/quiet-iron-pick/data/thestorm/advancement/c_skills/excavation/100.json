@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_shovel"
     },
-    "title": "Excavation 100",
+    "title": "Earth, moved",
     "description": "Reach Excavation level 100.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:phantom_membrane"
     },
-    "title": "Stealth",
+    "title": "Gone from sight",
     "description": "Cast Stealth.",
     "frame": "task",
     "show_toast": true,

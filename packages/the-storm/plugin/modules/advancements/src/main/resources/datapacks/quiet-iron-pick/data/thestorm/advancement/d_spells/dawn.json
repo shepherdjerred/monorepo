@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:clock"
     },
-    "title": "Dawn",
+    "title": "Morning, privately",
     "description": "Cast Dawn.",
     "frame": "task",
     "show_toast": true,

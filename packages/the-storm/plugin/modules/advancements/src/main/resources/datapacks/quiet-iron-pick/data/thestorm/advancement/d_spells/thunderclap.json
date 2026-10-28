@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:breeze_rod"
     },
-    "title": "Thunderclap",
+    "title": "Thunder, outward",
     "description": "Cast Thunderclap.",
     "frame": "task",
     "show_toast": true,

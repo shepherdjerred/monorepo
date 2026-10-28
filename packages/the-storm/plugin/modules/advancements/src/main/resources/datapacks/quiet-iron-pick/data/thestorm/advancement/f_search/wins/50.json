@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:nether_star"
     },
-    "title": "Fifty wins",
+    "title": "Fifty rounds taken",
     "description": "Win fifty rounds.",
     "frame": "task",
     "show_toast": true,

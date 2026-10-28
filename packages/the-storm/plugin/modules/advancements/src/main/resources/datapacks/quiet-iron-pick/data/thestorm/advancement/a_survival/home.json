@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:red_bed"
     },
-    "title": "A place to return",
+    "title": "Leave a light on",
     "description": "Save a home.",
     "frame": "task",
     "show_toast": true,

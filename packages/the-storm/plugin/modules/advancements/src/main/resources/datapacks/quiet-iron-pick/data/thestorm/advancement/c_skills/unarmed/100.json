@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:leather"
     },
-    "title": "Unarmed 100",
+    "title": "Empty hands",
     "description": "Reach Unarmed level 100.",
     "frame": "task",
     "show_toast": true,

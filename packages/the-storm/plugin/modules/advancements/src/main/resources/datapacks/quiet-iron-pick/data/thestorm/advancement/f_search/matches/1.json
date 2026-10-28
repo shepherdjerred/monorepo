@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_sword"
     },
-    "title": "In the fight",
+    "title": "The round is live",
     "description": "Play a Search and Destroy match.",
     "frame": "task",
     "show_toast": true,

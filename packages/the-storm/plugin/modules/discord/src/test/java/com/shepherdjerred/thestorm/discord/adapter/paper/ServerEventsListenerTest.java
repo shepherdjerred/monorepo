@@ -178,9 +178,9 @@ final class ServerEventsListenerTest {
     var alice = server.addPlayer("Alice");
     alice.teleport(new Location(match, 0.5, 5, 0.5));
 
-    listener.onAdvancement(done(alice, "thestorm:f_search/matches/1", "In the fight"));
+    listener.onAdvancement(done(alice, "thestorm:f_search/matches/1", "The round is live"));
 
-    assertThat(posts).containsExactly("**Alice** has made the advancement **In the fight**");
+    assertThat(posts).containsExactly("**Alice** has made the advancement **The round is live**");
   }
 
   @Test
@@ -200,7 +200,7 @@ final class ServerEventsListenerTest {
     var alice = server.addPlayer("Alice");
     PlayerVisibility.set(alice, true);
     try {
-      listener.onAdvancement(done(alice, "thestorm:a_survival/home", "A place to return"));
+      listener.onAdvancement(done(alice, "thestorm:a_survival/home", "Leave a light on"));
       assertThat(posts).isEmpty();
     } finally {
       PlayerVisibility.set(alice, false);

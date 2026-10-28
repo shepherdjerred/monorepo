@@ -118,7 +118,7 @@ final class AdvancementAwarderTest {
     PlayerVisibility.set(alice, true);
 
     awarder.showWhereChatIsHidden(
-        done(alice, "thestorm:f_search/matches/1", Component.text("in the fight")));
+        done(alice, "thestorm:f_search/matches/1", Component.text("The round is live")));
 
     assertThat(alice.nextComponentMessage()).isNull();
   }
@@ -126,7 +126,7 @@ final class AdvancementAwarderTest {
   @Test
   void catchUpInAQuietWorldDoesNotBroadcast() {
     alice.getWorld().setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
-    var event = done(alice, "thestorm:c_skills/mining/100", Component.text("Mining 100"));
+    var event = done(alice, "thestorm:c_skills/mining/100", Component.text("The vein gives"));
     awarder.earnedNow = false;
 
     awarder.quietCatchUp(event);

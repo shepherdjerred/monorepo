@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:shield"
     },
-    "title": "Ward",
+    "title": "They cannot come in",
     "description": "Cast Ward.",
     "frame": "task",
     "show_toast": true,

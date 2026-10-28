@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:gold_ingot"
     },
-    "title": "Round won",
+    "title": "The round is yours",
     "description": "Win a round.",
     "frame": "task",
     "show_toast": true,

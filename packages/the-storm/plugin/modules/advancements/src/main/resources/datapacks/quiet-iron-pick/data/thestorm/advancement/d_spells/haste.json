@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:sugar"
     },
-    "title": "Haste",
+    "title": "Quick hands",
     "description": "Cast Haste.",
     "frame": "task",
     "show_toast": true,

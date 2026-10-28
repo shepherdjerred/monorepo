@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:lodestone"
     },
-    "title": "A large holding",
+    "title": "The border keeps moving",
     "description": "Claim 100 chunks.",
     "frame": "task",
     "show_toast": true,

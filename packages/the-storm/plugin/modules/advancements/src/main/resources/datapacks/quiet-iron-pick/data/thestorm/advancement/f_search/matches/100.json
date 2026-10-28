@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:netherite_chestplate"
     },
-    "title": "Veteran",
+    "title": "A hundred rounds in",
     "description": "Play 100 matches.",
     "frame": "task",
     "show_toast": true,

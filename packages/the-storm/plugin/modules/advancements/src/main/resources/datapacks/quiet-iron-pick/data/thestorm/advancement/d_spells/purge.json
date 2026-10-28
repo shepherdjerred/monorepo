@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:glass_bottle"
     },
-    "title": "Purge",
+    "title": "Scoured in light",
     "description": "Cast Purge.",
     "frame": "task",
     "show_toast": true,

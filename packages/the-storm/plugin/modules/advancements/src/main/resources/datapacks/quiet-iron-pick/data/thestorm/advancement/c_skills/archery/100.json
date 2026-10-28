@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:bow"
     },
-    "title": "Archery 100",
+    "title": "Nock and loose",
     "description": "Reach Archery level 100.",
     "frame": "task",
     "show_toast": true,

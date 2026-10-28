@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:feather"
     },
-    "title": "Acrobatics 100",
+    "title": "You meant to fall",
     "description": "Reach Acrobatics level 100.",
     "frame": "task",
     "show_toast": true,

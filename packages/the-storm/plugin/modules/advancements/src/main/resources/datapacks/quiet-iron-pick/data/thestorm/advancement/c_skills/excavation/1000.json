@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_shovel"
     },
-    "title": "Excavation 1000",
+    "title": "Down through the map",
     "description": "Reach Excavation level 1000.",
     "frame": "task",
     "show_toast": true,

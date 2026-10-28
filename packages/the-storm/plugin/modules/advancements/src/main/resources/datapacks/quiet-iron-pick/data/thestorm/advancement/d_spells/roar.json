@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:goat_horn"
     },
-    "title": "Roar",
+    "title": "All eyes this way",
     "description": "Cast Roar.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:firework_star"
     },
-    "title": "Five straight",
+    "title": "Five, unbroken",
     "description": "Win five rounds in a row.",
     "frame": "task",
     "show_toast": true,

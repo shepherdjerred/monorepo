@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:dirt"
     },
-    "title": "Entomb",
+    "title": "Glass, for a moment",
     "description": "Cast Entomb.",
     "frame": "task",
     "show_toast": true,

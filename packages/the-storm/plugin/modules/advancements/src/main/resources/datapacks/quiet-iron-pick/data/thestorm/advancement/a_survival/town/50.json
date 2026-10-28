@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:bell"
     },
-    "title": "Established",
+    "title": "A bell in the square",
     "description": "Claim 50 chunks.",
     "frame": "task",
     "show_toast": true,

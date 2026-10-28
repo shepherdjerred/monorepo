@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:piston"
     },
-    "title": "Force Push",
+    "title": "Everything steps back",
     "description": "Cast Force Push.",
     "frame": "task",
     "show_toast": true,

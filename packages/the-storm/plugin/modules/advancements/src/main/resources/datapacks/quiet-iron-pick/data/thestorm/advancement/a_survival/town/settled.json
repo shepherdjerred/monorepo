@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:oak_door"
     },
-    "title": "Settled",
+    "title": "A name on the gate",
     "description": "Found or join a town.",
     "frame": "task",
     "show_toast": true,

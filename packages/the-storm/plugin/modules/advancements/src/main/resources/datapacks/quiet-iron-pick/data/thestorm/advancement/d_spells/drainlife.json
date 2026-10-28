@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:ghast_tear"
     },
-    "title": "Drain Life",
+    "title": "Life, borrowed",
     "description": "Cast Drain Life.",
     "frame": "task",
     "show_toast": true,

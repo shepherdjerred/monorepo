@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:anvil"
     },
-    "title": "Repair 100",
+    "title": "Once across the anvil",
     "description": "Reach Repair level 100.",
     "frame": "task",
     "show_toast": true,

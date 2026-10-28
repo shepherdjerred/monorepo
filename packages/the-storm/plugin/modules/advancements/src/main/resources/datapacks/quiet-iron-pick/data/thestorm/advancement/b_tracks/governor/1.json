@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:golden_helmet"
     },
-    "title": "Governor I",
+    "title": "A voice in the hall",
     "description": "Reach Governor I.",
     "frame": "task",
     "show_toast": true,

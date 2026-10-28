@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:written_book"
     },
-    "title": "A hundred errands",
+    "title": "The hundredth telling",
     "description": "Finish one hundred story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

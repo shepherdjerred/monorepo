@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:knowledge_book"
     },
-    "title": "Fifty errands",
+    "title": "Known on the road",
     "description": "Finish fifty story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

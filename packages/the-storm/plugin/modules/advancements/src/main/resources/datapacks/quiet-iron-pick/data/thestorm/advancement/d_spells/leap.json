@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:rabbit_foot"
     },
-    "title": "Leap",
+    "title": "A soft bound",
     "description": "Cast Leap.",
     "frame": "task",
     "show_toast": true,

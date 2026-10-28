@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:amethyst_shard"
     },
-    "title": "Blink",
+    "title": "Where you were looking",
     "description": "Cast Blink.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:wheat"
     },
-    "title": "Herbalism 250",
+    "title": "A careful harvest",
     "description": "Reach Herbalism level 250.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:wheat"
     },
-    "title": "Herbalism 500",
+    "title": "The row knows you",
     "description": "Reach Herbalism level 500.",
     "frame": "task",
     "show_toast": true,

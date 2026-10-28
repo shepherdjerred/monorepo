@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:diamond_axe"
     },
-    "title": "Axes 250",
+    "title": "Weight behind it",
     "description": "Reach Axes level 250.",
     "frame": "task",
     "show_toast": true,

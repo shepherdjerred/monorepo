@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:moss_carpet"
     },
-    "title": "Carpet",
+    "title": "Held up, briefly",
     "description": "Cast Carpet.",
     "frame": "task",
     "show_toast": true,

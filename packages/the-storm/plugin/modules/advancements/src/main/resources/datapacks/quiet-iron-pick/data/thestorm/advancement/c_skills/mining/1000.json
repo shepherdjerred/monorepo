@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:iron_pickaxe"
     },
-    "title": "Mining 1000",
+    "title": "The mountain yields",
     "description": "Reach Mining level 1000.",
     "frame": "task",
     "show_toast": true,

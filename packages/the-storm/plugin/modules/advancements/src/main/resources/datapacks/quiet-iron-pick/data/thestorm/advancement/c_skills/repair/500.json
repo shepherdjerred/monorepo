@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:anvil"
     },
-    "title": "Repair 500",
+    "title": "The crack closes",
     "description": "Reach Repair level 500.",
     "frame": "task",
     "show_toast": true,

@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:enchanted_book"
     },
-    "title": "Twenty-five errands",
+    "title": "The journal thickens",
     "description": "Finish twenty-five story, side, or track quests.",
     "frame": "task",
     "show_toast": true,

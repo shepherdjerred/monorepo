@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:feather"
     },
-    "title": "Acrobatics 1000",
+    "title": "Gravity looks away",
     "description": "Reach Acrobatics level 1000.",
     "frame": "task",
     "show_toast": true,

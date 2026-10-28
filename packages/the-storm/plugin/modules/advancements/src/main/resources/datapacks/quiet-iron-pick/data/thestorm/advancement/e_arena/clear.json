@@ -4,7 +4,7 @@
     "icon": {
       "id": "minecraft:totem_of_undying"
     },
-    "title": "Last wave",
+    "title": "The last of them",
     "description": "Clear an arena's final wave.",
     "frame": "task",
     "show_toast": true,
