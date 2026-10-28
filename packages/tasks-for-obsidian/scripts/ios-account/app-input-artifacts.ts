@@ -61,10 +61,21 @@ export class InputStages {
     if (diagnostic.success)
       await this.add("helper-rejected", appPID, diagnostic.data);
   }
+  async readRejection(read: () => Promise<string>, appPID: number | undefined) {
+    try {
+      await this.rejection(await read(), appPID);
+    } catch {
+      // A missing diagnostic never replaces the original protocol failure.
+    }
+  }
   async add(
     stage: string,
     appPID: number | undefined,
     diagnostic?: z.infer<typeof HelperDiagnosticSchema>,
+    timing?: {
+      elapsedMilliseconds: number;
+      deadlineRemainingMilliseconds: number;
+    },
   ) {
     const directory = path.join(this.evidence, "app-input-stages");
     await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -76,6 +87,7 @@ export class InputStages {
         stage,
         helperPID: this.helperPID,
         appPID: appPID ?? null,
+        ...(timing === undefined ? {} : { timing }),
         ...(diagnostic === undefined ? {} : { diagnostic }),
       }),
       { flag: "wx", mode: 0o600 },
@@ -325,4 +337,24 @@ export async function inspectInputOwner(
   } finally {
     clearTimeout(timer);
   }
+}
+
+export async function inspectInputPeers(
+  directory: string,
+  artifacts: InputArtifacts,
+  helper: { pid: number; lifetime: ProcessLifetime },
+  app: { pid: number; executable: string; lifetime: ProcessLifetime },
+) {
+  assert.equal(
+    await inputBinary(path.join(directory, "bridge")),
+    artifacts.bridge,
+  );
+  await inspectInputOwner(directory, artifacts, helper.pid, {
+    executable: path.join(directory, "bridge"),
+    expected: helper.lifetime,
+  });
+  await inspectInputOwner(directory, artifacts, app.pid, {
+    executable: app.executable,
+    expected: app.lifetime,
+  });
 }

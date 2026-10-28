@@ -1,6 +1,27 @@
 public import Foundation
 import TaskNotesUniFFI
 
+extension FacetAccountHTTP {
+    internal static func response(_ request: URLRequest, transport: URLSession) async throws
+        -> (UInt16, Data)
+    {
+        let (stream, nativeResponse) = try await transport.bytes(for: request)
+        guard let response = nativeResponse as? HTTPURLResponse,
+            let status = UInt16(exactly: response.statusCode)
+        else { throw FacetSyncError.transport }
+        let limit = 4 * 1024 * 1024
+        guard response.expectedContentLength <= Int64(limit) else {
+            throw FacetSyncError.responseTooLarge
+        }
+        var bytes = Data()
+        for try await byte in stream {
+            guard bytes.count < limit else { throw FacetSyncError.responseTooLarge }
+            bytes.append(byte)
+        }
+        return (status, bytes)
+    }
+}
+
 internal final class FacetAccountRedirectPolicy: NSObject, URLSessionTaskDelegate {
     func urlSession(
         _ session: URLSession, task: URLSessionTask,

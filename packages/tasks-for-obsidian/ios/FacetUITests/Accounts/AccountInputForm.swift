@@ -44,6 +44,18 @@ struct AccountInputForm {
     guard app.buttons["facet.account.done"].waitForExistence(timeout: 10) else {
       throw AccountInputFailure.form
     }
+    let settled = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        app.state == .runningForeground && app.alerts.count == 0
+          && !app.descendants(matching: .any)["facet.account.progress"].firstMatch.exists
+          && app.buttons["facet.account.done"].exists
+          && (app.secureTextFields["facet.account.vault-password"].exists
+            || (app.textFields["facet.account.email"].exists
+              && app.secureTextFields["facet.account.password"].exists))
+      }, object: app)
+    guard XCTWaiter.wait(for: [settled], timeout: 20) == .completed else {
+      throw AccountInputFailure.form
+    }
     return try currentStage()
   }
 

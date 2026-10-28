@@ -4,11 +4,12 @@ import TaskNotesKit
 internal struct FacetAccountPresentation {
     enum Stage { case credentials, verification, vaults }
     enum Operation {
-        case signingIn, connecting
+        case signingIn, connecting, restoring
         var message: String {
             switch self {
             case .signingIn: "Signing in to Obsidian…"
             case .connecting: "Connecting your Sync vault…"
+            case .restoring: "Restoring your Obsidian session…"
             }
         }
     }
@@ -18,6 +19,8 @@ internal struct FacetAccountPresentation {
     var notice: String?
     var requestID: UUID?
     var cancelled = false
+    var restoreFailed = false
+    var restoreAttempted = false
     var isBusy: Bool { operation != nil }
 
     static func failureMessage(_ failure: any Error) -> String {

@@ -13,6 +13,7 @@ final class AccountInputUITests: XCTestCase {
   private struct State {
     var phase: Phase
     let operation: AccountInputOperation
+    let limits: AccountInputPhaseContract.Limits
     var submitted = 0
     var verification = AccountInputVerificationAdmission()
   }
@@ -21,6 +22,8 @@ final class AccountInputUITests: XCTestCase {
   private var expectedProfileID: String?
   private var submissionPossible = false
   private var explicitlyFinished = false
+  private var intents: AccountInputIntents?
+  private var inputBoundary: AccountInputProtocol?
 
   func testPrivateAccountInput() {
     continueAfterFailure = false
@@ -37,6 +40,8 @@ final class AccountInputUITests: XCTestCase {
     else { throw AccountInputFailure.ownership }
     let identity = try AccountInputIdentity(environment: environment)
     let boundary = try AccountInputProtocol(identity: identity, bundle: Bundle(for: Self.self))
+    inputBoundary = boundary
+    let limits = try boundary.phases.limits(for: operation)
     let app = try launch(identity: identity, environment: environment)
     defer {
       if !submissionPossible || explicitlyFinished { app.terminate() }
@@ -46,11 +51,12 @@ final class AccountInputUITests: XCTestCase {
       willSubmit: { self.submissionPossible = true },
       verificationTiming: boundary.verificationTiming)
     let stage = try form.open()
-    guard operation != .fixtureVerification || stage == .credentials else {
+    guard limits.initialStages.contains(stage.rawValue) else {
       throw AccountInputFailure.form
     }
     if stage == .credentials { try form.prepareEmptyKeyboard() }
     let socket = try AccountInputSocket(sessionID: identity.sessionID)
+    intents = try AccountInputIntents(sessionID: identity.sessionID)
     defer { socket.close() }
     try socket.acceptPeer()
     var initial = AccountInputReply(identity, kind: .ready)
@@ -69,7 +75,8 @@ final class AccountInputUITests: XCTestCase {
     case .connected, .rejected: throw AccountInputFailure.form
     }
     try exchange(
-      form: form, state: State(phase: phase, operation: operation), boundary: boundary,
+      form: form, state: State(phase: phase, operation: operation, limits: limits),
+      boundary: boundary,
       socket: socket)
   }
 
@@ -78,7 +85,7 @@ final class AccountInputUITests: XCTestCase {
     socket: AccountInputSocket
   ) throws {
     var current = state
-    var requests = AccountInputRequests(operation: state.operation)
+    var requests = AccountInputRequests(operation: state.operation, limits: state.limits)
     for _ in 0..<13 {
       var requestID: String?
       do {
@@ -140,9 +147,21 @@ extension AccountInputUITests {
   }
 
   private func finished(_ state: State) throws -> AccountInputReply.Kind {
-    guard
-      state.operation != .fixtureVerification
-        || (state.phase == .verificationFilled && state.submitted == 1)
+    let stage: String
+    switch state.phase {
+    case .credentialsFilled: stage = "credentials"
+    case .verificationFilled: stage = "verification"
+    case .vaults: stage = "vaults"
+    case .connected: stage = "connected"
+    case .credentials, .credentialsCleared, .emailFilled, .credentialsSubmitted,
+      .verification, .verificationSubmitted, .vaultPasswordFilled, .vaultCleared,
+      .connectSubmitted, .rejected:
+      throw AccountInputFailure.input
+    }
+    guard state.limits.finishStages.contains(stage),
+      state.operation != .fixtureVerification || state.submitted == 1,
+      state.operation != .authOnly || (1...2).contains(state.submitted),
+      state.operation != .connectOnly || state.submitted == 1
     else { throw AccountInputFailure.input }
     return .finished
   }
@@ -173,11 +192,12 @@ extension AccountInputUITests {
   private func connect(
     _ command: AccountInputCommand, form: AccountInputForm, state: inout State
   ) throws -> AccountInputReply.Kind {
-    guard state.operation == .credentials,
+    guard state.operation == .connectOnly,
       state.phase == .vaults || state.phase == .vaultPasswordFilled
     else {
       throw AccountInputFailure.input
     }
+    try recordIntent(command, operation: state.operation)
     try form.connect(command)
     state.phase = .connectSubmitted
     state.submitted += 1
@@ -205,6 +225,7 @@ extension AccountInputUITests {
       reply.disabledCheckpoints = 1
       reply.connectEnabled = true
     }
+    if command.kind.submissionAction != nil { reply.intentRecorded = true }
     return reply
   }
 
@@ -220,6 +241,7 @@ extension AccountInputUITests {
       return .filled
     case .submit:
       guard state.phase == .credentialsFilled else { throw AccountInputFailure.input }
+      try recordIntent(command, operation: state.operation)
       try form.submitCredentials()
       state.phase = .credentialsSubmitted
       state.submitted += 1
@@ -233,15 +255,26 @@ extension AccountInputUITests {
       state.phase = .verificationFilled
       return .verificationFilled
     case .submitVerification:
-      guard state.operation == .credentials, state.phase == .verificationFilled,
+      guard state.operation == .authOnly, state.phase == .verificationFilled,
         let expiry = command.expiresAtUnixMilliseconds
       else { throw AccountInputFailure.input }
       try state.verification.requireSubmit(expiry, timing: form.verificationTiming)
+      try recordIntent(command, operation: state.operation)
       try form.submitVerification(expiry: expiry)
       state.phase = .verificationSubmitted
       state.submitted += 1
       return .verificationSubmitted
     }
+  }
+
+  private func recordIntent(
+    _ command: AccountInputCommand, operation: AccountInputOperation
+  ) throws {
+    guard let inputBoundary, let intents, let action = command.kind.submissionAction else {
+      throw AccountInputFailure.input
+    }
+    try intents.record(
+      try inputBoundary.intent(operation: operation, command: command), action: action)
   }
 
   private func actionCount(_ kind: AccountInputCommand.Kind) -> Int {

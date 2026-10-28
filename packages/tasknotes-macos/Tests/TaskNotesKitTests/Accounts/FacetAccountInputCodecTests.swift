@@ -7,6 +7,14 @@ struct FacetAccountInputCodecTests {
     private let session = "22345678-1234-4234-9234-123456789abc"
     private let device = "32345678-1234-4234-9234-123456789abc"
     private let request = "42345678-1234-4234-9234-123456789abc"
+    private var allAppActions: Set<String> {
+        ["clear", "email", "password", "verification", "clear-vault", "vault-password", "finish"]
+    }
+
+    private func requests(_ operation: AccountInputOperation) throws -> AccountInputRequests {
+        AccountInputRequests(
+            operation: operation, limits: try boundary().phases.limits(for: operation))
+    }
 
     private func boundary() throws -> AccountInputProtocol {
         let identity = try AccountInputIdentity(environment: [
@@ -91,6 +99,9 @@ struct FacetAccountInputCodecTests {
                 reply.connectEnabled = true
             }
             if kind == .rejected { reply.reason = "form" }
+            if [.submitted, .verificationSubmitted, .connectSubmitted].contains(kind) {
+                reply.intentRecorded = true
+            }
             try assertReply(codec, reply: reply)
             count += 1
         }
@@ -137,17 +148,18 @@ struct FacetAccountInputCodecTests {
         #expect(throws: AccountInputFailure.self) { try codec.reply(reply) }
     }
 
-    @Test func runnerReplayAndThirteenCommandBoundUseProductionAdmission() throws {
-        var requests = AccountInputRequests(operation: .credentials)
-        for _ in 0..<13 { try requests.admit(UUID().uuidString, kind: .observe) }
+    @Test func runnerReplayAndPerOperationCommandBoundUseProductionAdmission() throws {
+        var admission = try requests(.authOnly)
+        let limit = try boundary().phases.limits(for: .authOnly).runnerCommandLimit
+        for _ in 0..<limit { try admission.admit(UUID().uuidString, kind: .observe) }
         #expect(throws: AccountInputFailure.self) {
-            try requests.admit(UUID().uuidString, kind: .observe)
+            try admission.admit(UUID().uuidString, kind: .observe)
         }
-        var repeated = AccountInputRequests(operation: .credentials)
+        var repeated = try self.requests(.authOnly)
         try repeated.admit(request, kind: .observe)
         #expect(throws: AccountInputFailure.self) { try repeated.admit(request, kind: .observe) }
         for kind: AccountInputCommand.Kind in [.submit, .submitVerification, .connect] {
-            var probe = AccountInputRequests(operation: .probe)
+            var probe = try self.requests(.probe)
             var willSubmitCalled = false
             do {
                 try probe.admit(UUID().uuidString, kind: kind)
@@ -160,7 +172,7 @@ struct FacetAccountInputCodecTests {
 
 extension FacetAccountInputCodecTests {
     @Test func fixtureAllowsOneInitialSubmitAndForbidsCodeSubmitOrConnectBeforeDispatch() throws {
-        var fixture = AccountInputRequests(operation: .fixtureVerification)
+        var fixture = try requests(.fixtureVerification)
         try fixture.admit(UUID().uuidString, kind: .submit)
         for kind: AccountInputCommand.Kind in [.submit, .submitVerification, .connect] {
             var wouldSubmit = false
@@ -210,7 +222,9 @@ extension FacetAccountInputCodecTests {
     }
 
     @Test func appValueAdmissionIsFiniteStageBoundAndBurnsAfterFinishOrOwnerLoss() {
-        var state = FacetAcceptanceInputAdmission(initialStage: "credentials", bindRequest: request)
+        var state = FacetAcceptanceInputAdmission(
+            initialStage: "credentials", bindRequest: request,
+            allowedActions: allAppActions, maximumActions: 7)
         for (action, stage) in [
             ("clear", "credentials"), ("email", "credentials"), ("password", "credentials"),
             ("verification", "verification"), ("clear-vault", "vaults"),
@@ -227,12 +241,14 @@ extension FacetAccountInputCodecTests {
             ("vault-password", "vaults"),
         ] {
             var wrong = FacetAcceptanceInputAdmission(
-                initialStage: "credentials", bindRequest: request)
+                initialStage: "credentials", bindRequest: request,
+                allowedActions: allAppActions, maximumActions: 7)
             let admitted = wrong.admit(request: UUID().uuidString, action: action, stage: stage)
             #expect(!admitted)
         }
         var background = FacetAcceptanceInputAdmission(
-            initialStage: "credentials", bindRequest: request)
+            initialStage: "credentials", bindRequest: request,
+            allowedActions: allAppActions, maximumActions: 7)
         background.invalidate()
         let afterBackground = background.admit(
             request: UUID().uuidString, action: "clear", stage: "credentials")

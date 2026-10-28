@@ -9,7 +9,8 @@ import {
   validate,
 } from "../../tasks-for-obsidian/scripts/apple-sync-live/model.ts";
 
-export type Operation = "present" | "credentials" | "verification" | "vault";
+export type Operation =
+  "present" | "probe" | "credentials" | "verification" | "vault";
 export type PasswordManagerBackend = "service-account" | "desktop";
 export type CredentialBackend = PasswordManagerBackend | "keychain";
 
@@ -44,10 +45,12 @@ export function parseArguments(args: string[]): {
   const runID = uuid.parse(run).toLowerCase();
   assert.ok(
     operation === "present" ||
+      operation === "probe" ||
       operation === "credentials" ||
       operation === "verification" ||
       operation === "vault",
   );
+  if (operation === "probe") assert.equal(options.length, 0);
   const parameters: Record<string, string> = {};
   for (let index = 0; index < options.length; index += 2) {
     const key = options[index];
@@ -82,11 +85,18 @@ export function parseArguments(args: string[]): {
   const otherBackendKey =
     operation === "vault" ? "--credential-backend" : "--vault-password-backend";
   assert.equal(parameters[otherBackendKey], undefined);
-  if (operation === "present") assert.equal(parameters[backendKey], undefined);
+  if (operation === "present" || operation === "probe")
+    assert.equal(parameters[backendKey], undefined);
   const backend =
     operation === "vault"
       ? vaultPasswordBackend(parameters[backendKey])
       : credentialBackend(parameters[backendKey]);
+  if (operation === "verification")
+    assert.equal(
+      backend,
+      "keychain",
+      "Mac verification requires cached expiry-bearing OTP",
+    );
   delete parameters[backendKey];
   if (operation === "credentials" || operation === "verification") {
     assert.deepEqual(Object.keys(parameters).sort(), [
@@ -106,7 +116,8 @@ export function parseArguments(args: string[]): {
       /^op:\/\/[a-zA-Z0-9]{20,32}\/[a-zA-Z0-9]{20,32}\/password$/u,
     );
   } else assert.deepEqual(parameters, {});
-  if (operation !== "present") parameters[backendKey] = backend;
+  if (operation !== "present" && operation !== "probe")
+    parameters[backendKey] = backend;
   return { runID, operation, parameters, lifecycleRound };
 }
 

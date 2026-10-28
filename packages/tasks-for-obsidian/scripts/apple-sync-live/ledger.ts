@@ -24,6 +24,7 @@ import { command, save } from "./platform";
 import { waitForConvergence } from "./native";
 import { fingerprintApp } from "./prepare";
 import { assertSealedOfficialPlugin } from "./official-plugin";
+import { ArchiveLineageSchema } from "./reference-archive/contract";
 
 export function assertRoundComplete(manifest: Manifest): void {
   if (manifest.failures.length > 0 || manifest.stage === "failed")
@@ -112,6 +113,11 @@ export function acceptanceProvenance(manifest: Manifest, value: unknown) {
     pluginSettingsFixture: z.unknown(),
     expectedTaskNotesVersion: z.literal("4.13.8"),
     officialObsidianVersion: z.string().nullable(),
+    referenceArchive: ArchiveLineageSchema.optional().refine(
+      (lineage) =>
+        JSON.stringify(lineage) === JSON.stringify(manifest.referenceArchive),
+      "Reference archive lineage differs from the manifest",
+    ),
   };
   if (manifest.schemaVersion === 3)
     return z

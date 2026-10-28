@@ -88,6 +88,7 @@ extension FacetStore {
             pendingImports = ready.pendingImports
             profiles = ready.profiles
             pendingActions = ready.pendingActions
+            await restoreAccountSession(startup: true)
             let saved = preferences.string(forKey: "Facet.selectedProfile")
             selectedProfileID = profiles.first(where: { $0.id == saved })?.id ?? profiles.first?.id
             await refresh()

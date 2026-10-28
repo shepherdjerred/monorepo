@@ -1,24 +1,22 @@
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { readAcceptanceResultReports } from "tasknotes-macos/scripts/acceptance-execution.ts";
 import {
   assertUnchangedBuild,
   acceptanceProvenance,
 } from "../apple-sync-live/ledger";
-import { assertExactNativeJourney } from "../apple-sync-live/native-evidence";
 import { runDirectory, type Manifest } from "../apple-sync-live/model";
 import { runSelectedIosJourneyTest } from "../native-acceptance/selected-tests";
-import { exportIosJourneyAttachments } from "../native-acceptance/attachments";
-import { retainPrivateInputLogs } from "./retention";
 import { withPrivateAccountInput, type AccountInputClient } from "./connection";
 import { PrivateAppInput } from "./app-input";
 import type { AccountOperation } from "./contract";
 import { prepareInputArtifacts } from "./app-input-artifacts";
+import { recordHostIntent } from "./phases/intents";
+import { finalizePrivatePhase } from "./phases/result";
+import { PrivatePhaseFailure } from "./phases/failure";
 import {
   prepareAccountInvocation,
-  privateAccountSelector,
   privateNativeCommand,
   runnerOwnerValidator,
   waitForPrivateSocket,
@@ -48,7 +46,9 @@ export async function executePrivateAccountSession(
   const evidence = path.join(
     run,
     "ios-account",
-    options.operation === "credentials" ? "entries" : "probes",
+    options.operation === "auth-only" || options.operation === "connect-only"
+      ? "entries"
+      : "probes",
     probeID,
   );
   await mkdir(evidence, { recursive: true, mode: 0o700 });
@@ -98,6 +98,8 @@ export async function executePrivateAccountSession(
   }
   const command = privateNativeCommand(evidence);
   const result = path.join(evidence, "AccountInput.xcresult");
+  let mountedDirectory: string | undefined;
+  let inputFailure: ReturnType<PrivateAppInput["failure"]> | undefined;
   let nativeEnded = false;
   const native = (async () => {
     try {
@@ -116,104 +118,65 @@ export async function executePrivateAccountSession(
     }
   })();
   const input = (async () => {
-    const directory = await waitForPrivateSocket(
-      invocation.device,
-      invocation.identity.sessionID,
-      () => nativeEnded,
-    );
-    const hash = invocation.runnerFiles["TasksForObsidianUITests-Runner"];
-    assert.ok(
-      hash !== undefined,
-      "Private input runner lacks its expected executable fingerprint",
-    );
-    return withPrivateAccountInput(
-      {
-        directory,
-        identity: invocation.identity,
-        operation: options.operation,
-        validateOwner: runnerOwnerValidator(invocation.device, hash, {
-          runID: manifest.runID,
-          artifacts: appInputFiles,
-          files: invocation.runnerFiles,
-        }),
-        app: await appInput.bind(),
-      },
-      options.action,
-    );
+    try {
+      const directory = await waitForPrivateSocket(
+        invocation.device,
+        invocation.identity.sessionID,
+        () => nativeEnded,
+      );
+      mountedDirectory = directory;
+      const hash = invocation.runnerFiles["TasksForObsidianUITests-Runner"];
+      assert.ok(
+        hash !== undefined,
+        "Private input runner lacks its expected executable fingerprint",
+      );
+      return await withPrivateAccountInput(
+        {
+          directory,
+          identity: invocation.identity,
+          operation: options.operation,
+          recordIntent: async (intent) => {
+            try {
+              await recordHostIntent(evidence, intent);
+            } catch {
+              throw new PrivatePhaseFailure(
+                "intent",
+                intent.action === "connect"
+                  ? "connect"
+                  : intent.action === "verification"
+                    ? "verification"
+                    : "credentials",
+              );
+            }
+          },
+          validateOwner: runnerOwnerValidator(invocation.device, hash, {
+            runID: manifest.runID,
+            artifacts: appInputFiles,
+            files: invocation.runnerFiles,
+          }),
+          app: await appInput.bind(),
+        },
+        options.action,
+      );
+    } catch (error) {
+      inputFailure = appInput.failure(error);
+      throw error;
+    }
   })();
   const outcomes = await Promise.allSettled([native, input]);
-  const failures: unknown[] = [];
-  try {
-    await writeFile(
-      path.join(evidence, "input-stages.json"),
-      JSON.stringify({
-        schemaVersion: 1,
-        runID: manifest.runID,
-        native: outcomes[0].status,
-        input: outcomes[1].status,
-      }),
-      { flag: "wx", mode: 0o600 },
-    );
-  } catch {
-    failures.push(new Error("Private input primary receipt is incomplete"));
-  }
-  const closed = await appInput.close();
-  if (closed.status !== "closed")
-    failures.push(new Error("Private input cleanup is incomplete"));
-  let retainedLogs:
-    Awaited<ReturnType<typeof retainPrivateInputLogs>> | undefined;
-  for (const outcome of outcomes) {
-    if (outcome.status === "rejected") failures.push(outcome.reason);
-  }
-  try {
-    const reports = await readAcceptanceResultReports(
-      result,
-      {
-        summary: path.join(evidence, "summary.json"),
-        tests: path.join(evidence, "tests.json"),
-      },
-      command,
-    );
-    await exportIosJourneyAttachments(
-      result,
-      path.join(evidence, "attachments"),
-      command,
-    );
-    retainedLogs = await retainPrivateInputLogs(result, evidence, command);
-    assertExactNativeJourney(
-      JSON.parse(reports.summaryJSON),
-      JSON.parse(reports.testsJSON),
-      "TasksForObsidianUITests",
-      privateAccountSelector,
-    );
-    await assertUnchangedBuild(manifest);
-  } catch (error) {
-    failures.push(error);
-  }
-  try {
-    await options.inspectEvidence?.(evidence);
-  } catch (error) {
-    failures.push(error);
-  }
-  if (failures.length > 0) {
-    await writeFile(
-      path.join(evidence, "outcome.json"),
-      JSON.stringify({
-        schemaVersion: 1,
-        runID: manifest.runID,
-        operation: options.operation,
-        status: "failed",
-        credentialsReady: false,
-      }),
-      { flag: "wx", mode: 0o600 },
-    );
-    throw new Error(
-      "Private iOS input failed; inspect private synthetic evidence and do not repeat an uncertain submission",
-    );
-  }
-  const reply = outcomes[1];
-  assert.equal(reply.status, "fulfilled");
-  assert.ok(retainedLogs !== undefined);
+  const finalized = await finalizePrivatePhase({
+    manifest,
+    operation: options.operation,
+    evidence,
+    result,
+    command,
+    appInput,
+    identity: invocation.identity,
+    mountedDirectory,
+    outcomes,
+    inputFailure,
+    inspectEvidence: options.inspectEvidence,
+  });
   return {
     evidence,
     appFiles: z
@@ -223,8 +186,10 @@ export async function executePrivateAccountSession(
     runnerFiles: invocation.runnerFiles,
     sourceFiles: provenance.sourceFiles,
     sourceHead: provenance.sourceHead,
-    receipt: reply.value,
-    retainedLogs,
+    receipt: finalized.receipt,
+    retainedLogs: finalized.retainedLogs,
     appInputFiles,
+    sessionID,
+    nativeIntents: finalized.nativeIntents,
   };
 }

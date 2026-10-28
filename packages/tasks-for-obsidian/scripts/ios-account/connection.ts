@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, realpath } from "node:fs/promises";
-import { createConnection, type Socket } from "node:net";
-import path from "node:path";
+import type { Socket } from "node:net";
 import {
   AccountFrameDecoder,
   encodeAccountCommand,
@@ -14,9 +12,13 @@ import {
   assertVerificationFresh,
 } from "./contract";
 import type { AppInput } from "./app-input";
+import { phasePolicy } from "./phases/policy";
+import { submissionIntent, type SubmitIntent } from "./phases/intents";
+import { PrivatePhaseFailure, type InputPhase } from "./phases/failure";
+
+import { withOwnedAccountSocket } from "./phases/socket-owner";
 
 type Ready = Extract<AccountReply, { kind: "ready" }>;
-let active = false;
 
 export class PrivateAccountSession {
   private readonly decoder: AccountFrameDecoder;
@@ -43,18 +45,26 @@ export class PrivateAccountSession {
   private readonly timer: ReturnType<typeof setTimeout>;
   private readonly app: AppInput;
   private readonly operation: AccountOperation;
+  private readonly recordIntent: (intent: SubmitIntent) => Promise<void>;
+  private readonly recorded = new Set<SubmitIntent["action"]>();
+  private phase: InputPhase = "prepare";
 
   constructor(
     private readonly socket: Socket,
     private readonly identity: AccountIdentity,
     private readonly validateOwner: (ready: Ready) => Promise<void>,
-    input: { app: AppInput; operation: AccountOperation },
+    input: {
+      app: AppInput;
+      operation: AccountOperation;
+      recordIntent: (intent: SubmitIntent) => Promise<void>;
+    },
   ) {
     this.app = input.app;
     this.operation = input.operation;
+    this.recordIntent = input.recordIntent;
     this.decoder = new AccountFrameDecoder(identity);
     this.timer = setTimeout(() => {
-      this.fail();
+      this.fail("deadline");
     }, 120_000);
     socket.on("data", (chunk) => {
       try {
@@ -64,7 +74,7 @@ export class PrivateAccountSession {
         }
         for (const reply of this.decoder.push(chunk)) {
           if (reply.kind === "rejected") {
-            this.fail();
+            this.fail(reply.reason === "input" ? "protocol" : reply.reason);
             return;
           }
           if (this.pending === undefined) this.queued.push(reply);
@@ -86,10 +96,16 @@ export class PrivateAccountSession {
     });
   }
 
-  private fail() {
-    this.failure = new Error(
-      "Private iOS account input stopped; submission outcome may be unknown",
-    );
+  private fail(
+    kind:
+      | "deadline"
+      | "ownership"
+      | "form"
+      | "focus"
+      | "socket"
+      | "protocol" = "socket",
+  ) {
+    this.failure ??= new PrivatePhaseFailure(kind, this.phase);
     this.pending?.reject(this.failure);
     this.pending = undefined;
     this.socket.destroy();
@@ -115,6 +131,10 @@ export class PrivateAccountSession {
       throw new Error("Private iOS input is not an owned account form");
     this.ready = reply;
     assert.equal(reply.operation, this.operation);
+    assert.ok(
+      phasePolicy(this.operation).initialStages.includes(reply.stage),
+      "Private input initial stage is not authorized for this phase",
+    );
     assertInputClock(reply.clockUnixMilliseconds);
     this.currentStage = reply.stage;
     this.connectEnabled = reply.connectEnabled ?? false;
@@ -134,8 +154,15 @@ export class PrivateAccountSession {
   }
 
   private async exchange(command: AccountCommand) {
+    const policy = phasePolicy(this.operation);
     assert.ok(
-      this.ready !== undefined && !this.completed && ++this.commands <= 13,
+      policy.allowedRunnerKinds.includes(command.kind),
+      "Private account phase forbids this command",
+    );
+    assert.ok(
+      this.ready !== undefined &&
+        !this.completed &&
+        ++this.commands <= policy.runnerCommandLimit,
     );
     assert.equal(
       this.queued.length,
@@ -148,6 +175,16 @@ export class PrivateAccountSession {
       command.kind === "submit-verification"
     )
       assertVerificationFresh(command.expiresAtUnixMilliseconds);
+    const intent = submissionIntent(this.operation, command);
+    if (intent !== undefined) {
+      assert.ok(
+        !this.recorded.has(intent.action) &&
+          policy.maximumSubmissions[intent.action] === 1,
+        "A private phase cannot repeat a submission intent",
+      );
+      await this.recordIntent(intent);
+      this.recorded.add(intent.action);
+    }
     const encoded = encodeAccountCommand(command);
     try {
       await new Promise<void>((resolve, reject) => {
@@ -169,6 +206,8 @@ export class PrivateAccountSession {
   }
 
   async fill(credentials: { email: string; password: string }) {
+    this.phase = "credentials";
+    assert.ok(phasePolicy(this.operation).allowedAppKinds.includes("email"));
     assert.ok(
       this.currentStage === "credentials" &&
         !this.filled &&
@@ -197,12 +236,16 @@ export class PrivateAccountSession {
   }
 
   async submit() {
-    assert.notEqual(this.operation, "probe");
+    this.phase = "credentials";
+    assert.ok(
+      this.operation === "auth-only" ||
+        this.operation === "fixture-verification",
+    );
     assert.ok(
       this.filled && !this.completed && !this.credentialsSubmitted,
       "Submission requires acknowledged credential entry",
     );
-    await this.app.validate();
+    await this.app.validate("credentials");
     const reply = await this.exchange({
       schemaVersion: 1,
       ...this.identity,
@@ -231,6 +274,11 @@ export class PrivateAccountSession {
   }
 
   async fillVerification(source: VerificationSource) {
+    this.phase = "verification";
+    assert.ok(
+      this.operation === "auth-only" ||
+        this.operation === "fixture-verification",
+    );
     assert.ok(
       this.currentStage === "verification" &&
         !this.verificationFilled &&
@@ -259,9 +307,10 @@ export class PrivateAccountSession {
   }
 
   async submitVerification() {
-    assert.equal(this.operation, "credentials");
+    this.phase = "verification";
+    assert.equal(this.operation, "auth-only");
     assert.ok(this.verificationFilled && !this.verificationSubmitted);
-    await this.app.validate();
+    await this.app.validate("verification");
     assert.ok(this.verificationExpiry !== undefined);
     assertVerificationFresh(this.verificationExpiry);
     const reply = await this.exchange({
@@ -278,6 +327,8 @@ export class PrivateAccountSession {
   }
 
   async fillVaultPassword(vaultPassword: string) {
+    this.phase = "vault-password";
+    assert.equal(this.operation, "connect-only");
     assert.ok(
       this.currentStage === "vaults" &&
         !this.vaultFilled &&
@@ -298,13 +349,14 @@ export class PrivateAccountSession {
   }
 
   async connect(remoteVaultID: string, profileID?: string) {
-    assert.equal(this.operation, "credentials");
+    this.phase = "connect";
+    assert.equal(this.operation, "connect-only");
     assert.ok(
       this.currentStage === "vaults" &&
         (this.vaultFilled || this.connectEnabled) &&
         !this.connectSubmitted,
     );
-    await this.app.validate();
+    await this.app.validate("connect");
     await this.app.expectClose();
     const reply = await this.exchange({
       schemaVersion: 1,
@@ -321,6 +373,12 @@ export class PrivateAccountSession {
   }
 
   async finish() {
+    this.phase = "finish";
+    assert.ok(
+      this.currentStage !== "rejected" &&
+        phasePolicy(this.operation).finishStages.includes(this.currentStage),
+      "A private phase cannot finish before its settled outcome",
+    );
     await this.app.finish(
       this.currentStage === "verification"
         ? "verification"
@@ -388,50 +446,30 @@ export async function withPrivateAccountInput<T>(
     validateOwner: (ready: Ready) => Promise<void>;
     app: AppInput;
     operation: AccountOperation;
+    recordIntent: (intent: SubmitIntent) => Promise<void>;
   },
   work: (session: PrivateAccountSession) => Promise<T>,
 ): Promise<T> {
-  assert.equal(
-    active,
-    false,
-    "Only one private account session may own the process directory",
+  return withOwnedAccountSocket(
+    options.directory,
+    options.identity.sessionID,
+    async (socket) => {
+      const session = new PrivateAccountSession(
+        socket,
+        options.identity,
+        options.validateOwner,
+        {
+          app: options.app,
+          operation: options.operation,
+          recordIntent: options.recordIntent,
+        },
+      );
+      try {
+        await session.bind();
+        return await work(session);
+      } finally {
+        session.close();
+      }
+    },
   );
-  const original = process.cwd();
-  active = true;
-  let session: PrivateAccountSession | undefined;
-  try {
-    const uid = process.getuid?.();
-    assert.ok(uid !== undefined && uid !== 0);
-    const directory = await lstat(options.directory);
-    assert.ok(
-      directory.isDirectory() &&
-        !directory.isSymbolicLink() &&
-        directory.uid === uid &&
-        (directory.mode & 0o777) === 0o700,
-    );
-    assert.equal(await realpath(options.directory), options.directory);
-    const name = `facet-account-${options.identity.sessionID}.sock`;
-    const file = path.join(options.directory, name),
-      metadata = await lstat(file);
-    assert.ok(
-      metadata.isSocket() &&
-        !metadata.isSymbolicLink() &&
-        metadata.uid === uid &&
-        (metadata.mode & 0o777) === 0o600,
-    );
-    process.chdir(options.directory);
-    const socket = createConnection({ path: name });
-    session = new PrivateAccountSession(
-      socket,
-      options.identity,
-      options.validateOwner,
-      { app: options.app, operation: options.operation },
-    );
-    await session.bind();
-    return await work(session);
-  } finally {
-    session?.close();
-    process.chdir(original);
-    active = false;
-  }
 }

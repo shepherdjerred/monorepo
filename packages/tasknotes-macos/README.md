@@ -71,6 +71,14 @@ reads succeed. A failed preparation closes its unpublished engine and permits a
 fresh startup attempt. Account requests check cancellation and their original
 session generation before and after each HTTP operation, including between the
 OPTIONS preflight and the credential POST, then again before decoding a response.
+When an account token is retained in this app's Keychain namespace, startup
+rediscovers vault choices through the normal authenticated HTTP/Rust boundary.
+Owner metadata alone cannot produce a vault list. Missing or rejected tokens
+return to sign-in without deleting profile identities, vault keys or outboxes;
+network failures offer session-restoration Retry. Late responses cannot publish
+after cancellation, account replacement or lifecycle ownership loss. A successful
+restore returns directly to vault selection, so connection can resume after cold
+launch without another password or authenticator submission.
 `FacetWindowState` owns each window's query, search, saved-view constraints,
 selection and pagination. Each Mac workspace owns its capture-sheet presentation
 and draft; opening capture in one window does not present sheets in other windows.
@@ -261,8 +269,8 @@ vault. Do not inspect account tokens, browser storage, or Obsidian secret files
 to obtain the ID, and do not capture the account-entry screen.
 
 For a prepared, sealed and bound Mac-only live run, `mac:account` drives normal
-account controls through an addressed native helper and the configured 1Password
-CLI. It verifies the exact run, descriptor, frozen source/artifact provenance,
+account controls through an addressed native helper and the selected credential
+backend. It verifies the exact run, descriptor, frozen source/artifact provenance,
 process lifetime and account sheet before reading credentials.
 
 Field entry uses normal keyboard events addressed to the verified process, with
@@ -273,6 +281,7 @@ checkpoints so successful event delivery alone cannot establish ready credential
 From this package:
 
 ```bash
+bun run mac:account <runID> probe
 bun run mac:account <runID> present
 bun run mac:account <runID> credentials --credential-backend keychain \
   --account <accountID> --vault <vaultID> --item <itemID>
@@ -310,12 +319,36 @@ The vault encryption password remains a separate `service-account` read through
 An explicitly attended invocation can select `--vault-password-backend desktop`.
 Backend failures emit closed errors and never trigger a fallback.
 
+The probe runs separate synthetic email/password and authenticator phases before
+any real account read. The Mac fixture requires the dedicated Debug acceptance
+bundle, validated isolated descriptor and a virtualized guest. Its fresh account
+directory has no credential store or network fallback. A receipt produced by the
+actual fixture instance binds the run and session; mode environment values alone
+cannot confirm fixture ownership. The first phase submits nothing; the second
+uses one normal synthetic Sign in to reach the original Rust MFA decoder and
+enters a fake code without submitting it. Each phase retains native and transport
+output, the app's declared stdout/stderr with descriptor checks, and raw unified
+logs bounded to that fresh fixture process and lifetime at info/debug levels.
+Missing or incomplete output, media or a sentinel match blocks approval. These
+are owned-process privacy checks; they do not claim coverage of every OS process
+or a separate XCTest SDK. Both complete raw-evidence gates bind
+the exact prepared source, app and helper bytes. They establish input privacy for
+email/password and verification fields, not a separate vault-password sentinel
+proof or real authentication.
+
+Each real invocation revalidates those two measured proofs before reading its
+selected backend. Authenticator entry accepts only the enrolled local Keychain
+seed. It prepares and binds the native channel, completes expensive checks, then
+issues one code with expiry checks before entry and the normal click. It retains
+an exclusive intent before submission; no code or value-derived digest enters
+the receipt. Every session keeps its original 120-second limit.
 Each invocation performs only its selected action and emits a closed receipt.
 If a receipt reports an unknown submission outcome, inspect the current
 app/status before invoking it again. These credential backends configure the
 acceptance harness; installed apps retain their normal sign-in UI and Keychain.
 
-After `lifecycle-begin <runID> macos`, add `--lifecycle-round <1|2|3>` to every
+Run `probe` without credential options or a lifecycle round. After
+`lifecycle-begin <runID> macos`, add `--lifecycle-round <1|2|3>` to each real
 account invocation, including `present`. The driver requires that round's retained
 checkpoint, original profile, unchanged replica and immutable pending outbox;
 `vault` reconnects the existing profile. It refuses an already released transport

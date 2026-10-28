@@ -143,11 +143,26 @@ struct FacetAccountForm: View {
                             .foregroundStyle(.red)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("facet.account.error")
+                        if store.accountPresentation.restoreFailed {
+                            Button("Retry session restoration") {
+                                begin { await store.restoreAccountSession(requestID: $0) }
+                            }
+                            .disabled(busy)
+                            .accessibilityIdentifier("facet.account.restore.retry")
+                        }
                     }
                 }
             }
             .formStyle(.grouped)
             .navigationTitle("Obsidian Sync")
+            .task(id: scenePhase) {
+                await store.start()
+                if scenePhase == .active, ownsPresentation(),
+                    !store.accountPresentation.restoreAttempted
+                {
+                    await store.restoreAccountSession()
+                }
+            }
             .toolbar {
                 Button(busy ? "Cancel" : "Done") {
                     cancel()

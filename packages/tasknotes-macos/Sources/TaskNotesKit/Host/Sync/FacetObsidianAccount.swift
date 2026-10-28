@@ -3,22 +3,6 @@ public import Foundation
 import Synchronization
 import TaskNotesUniFFI
 
-public enum FacetAccountSignIn: Sendable {
-    case needsCode, rejectedCode
-    case vaults([FacetRemoteVault])
-}
-internal struct FacetSyncIdentity: Codable, Sendable {
-    let owner: String
-    let vault: FacetRemoteVault
-}
-internal struct FacetSyncAccess: Sendable {
-    let profileID: String
-    let identity: FacetSyncIdentity
-    let token: String
-    let key: Data
-    let generation: UInt64
-}
-
 /// Account HTTP and secure ownership are independent of presentation selection.
 public actor FacetObsidianAccount {
     public private(set) var lastExchangeDiagnostic: FacetAccountExchangeDiagnostic?
@@ -27,6 +11,7 @@ public actor FacetObsidianAccount {
     private let remoteVaultAccess: FacetRemoteVaultAccess
     private let metadataURL: URL
     private let transport: URLSession
+    private let send: (@Sendable (URLRequest) async throws -> (UInt16, Data))?
     #if DEBUG
         public nonisolated let acceptanceFixtureIdentity: FacetAcceptanceAccountFixtureIdentity?
         private let acceptanceHTTPFixture: FacetAcceptanceAccountHTTPFixture?
@@ -42,6 +27,17 @@ public actor FacetObsidianAccount {
         directory: URL, secrets: any FacetSecureStore = FacetKeychainStore(),
         remoteVaultAccess: FacetRemoteVaultAccess = .unrestricted
     ) throws {
+        try self.init(
+            directory: directory, secrets: secrets, remoteVaultAccess: remoteVaultAccess,
+            send: nil)
+    }
+
+    internal init(
+        directory: URL, secrets: any FacetSecureStore,
+        remoteVaultAccess: FacetRemoteVaultAccess,
+        send: (@Sendable (URLRequest) async throws -> (UInt16, Data))?
+    ) throws {
+        self.send = send
         let accountDirectory: URL
         #if DEBUG
             let fixture = try FacetAcceptanceAccountHTTPFixture.launch(directory: directory)
@@ -255,10 +251,7 @@ public actor FacetObsidianAccount {
     }
 
     private func clear(owner: String) throws {
-        try secrets.remove("account.\(owner).token")
-        for (id, identity) in identities where identity.owner == owner {
-            try secrets.remove("vault.\(id).key")
-        }
+        try FacetCachedAccountSession.clear(owner, secrets: secrets, identities: identities)
     }
     private func persist() throws {
         let bytes = try JSONEncoder().encode(
@@ -271,6 +264,43 @@ public actor FacetObsidianAccount {
 }
 
 extension FacetObsidianAccount {
+    /// Rediscovery never removes identities, keys or durable outboxes.
+    public func restoreSession() async throws -> FacetAccountSessionRestore {
+        try _Concurrency.Task.checkCancellation()
+        let attempt = generation
+        let owner = activeOwner
+        choices = []
+        lastExchangeDiagnostic = nil
+        do {
+            let restored = try await FacetCachedAccountSession.restore(
+                owner: owner, secrets: secrets
+            ) {
+                try await self.perform(
+                    self.account.listVaults(token: $0), requestKind: .listVaults,
+                    generation: attempt)
+            }
+            try requireRestoreOwner(owner, attempt: attempt)
+            if case .vaults(let vaults) = restored {
+                choices = vaults.filter { remoteVaultAccess.displays($0.id) }
+                return .vaults(choices)
+            }
+            return restored
+        } catch {
+            try requireRestoreOwner(owner, attempt: attempt)
+            if lastExchangeDiagnostic?.requestKind == .listVaults,
+                lastExchangeDiagnostic?.stage == .post, lastExchangeDiagnostic?.statusCode == 401
+            {
+                return .expired
+            }
+            throw error
+        }
+    }
+
+    private func requireRestoreOwner(_ owner: String?, attempt: UInt64) throws {
+        try _Concurrency.Task.checkCancellation()
+        guard attempt == generation, activeOwner == owner else { throw FacetSyncError.cancelled }
+    }
+
     private func perform(
         _ request: ObsidianHttpRequest, requestKind: FacetAccountExchangeDiagnostic.RequestKind,
         generation attempt: UInt64
@@ -312,26 +342,9 @@ extension FacetObsidianAccount {
                 return try acceptanceHTTPFixture.response(request)
             }
         #endif
-        let (stream, nativeResponse) = try await transport.bytes(for: request)
-        guard let response = nativeResponse as? HTTPURLResponse,
-            let status = UInt16(exactly: response.statusCode)
-        else { throw FacetSyncError.transport }
-        let limit = 4 * 1024 * 1024
-        guard response.expectedContentLength <= Int64(limit) else {
-            throw FacetSyncError.responseTooLarge
-        }
-        var bytes = Data()
-        for try await byte in stream {
-            guard bytes.count < limit else { throw FacetSyncError.responseTooLarge }
-            bytes.append(byte)
-        }
-        return (status, bytes)
+        if let send { return try await send(request) }
+        return try await FacetAccountHTTP.response(request, transport: transport)
     }
-}
-
-public struct FacetVaultConnection: Sendable {
-    public let profileID: String
-    public let vaultID: String
 }
 
 extension FacetObsidianAccount {

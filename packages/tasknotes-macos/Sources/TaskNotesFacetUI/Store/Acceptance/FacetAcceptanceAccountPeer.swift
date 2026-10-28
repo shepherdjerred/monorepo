@@ -18,6 +18,7 @@
         private let mode: String
         private let fixtureConfirmed: Bool
         private let maximumValidityMilliseconds: Int64
+        private let phase: Phase
         private var descriptor: Int32 = -1
         private var audit: Data?
         private var pending = Data()
@@ -27,7 +28,7 @@
 
         internal init(
             identity: [String: String], endpoint: String, helperPID: pid_t, formEpoch: UUID,
-            schema: Data, mode: String,
+            schema: Data, mode: String, operation: String,
             fixtureIdentity: FacetAcceptanceAccountFixtureIdentity?
         ) throws {
             let confirmed =
@@ -47,6 +48,7 @@
             self.mode = mode
             fixtureConfirmed = confirmed
             maximumValidityMilliseconds = try Self.maximumValidity(schema)
+            phase = try Self.phase(schema, operation: operation)
         }
 
         internal func stop() {
@@ -117,7 +119,8 @@
             guard
                 unsafe SecRandomCopyBytes(kSecRandomDefault, random.count, &random)
                     == errSecSuccess,
-                let initialStage = await stage()
+                let initialStage = await stage(),
+                phase.initialStages.contains(initialStage)
             else { throw Failure.form }
             let token = random.map { ($0 < 16 ? "0" : "") + String($0, radix: 16) }.joined()
             for index in random.indices { random[index] = 0 }
@@ -146,7 +149,8 @@
                     _, new in new
                 })
             admission = FacetAcceptanceInputAdmission(
-                initialStage: initialStage, bindRequest: firstID)
+                initialStage: initialStage, bindRequest: firstID,
+                allowedActions: phase.allowedActions, maximumActions: phase.maximumActions)
             return envelope
         }
 
@@ -158,7 +162,8 @@
                 let rawAction = frame["kind"] as? String,
                 let action = FacetAcceptanceInputAction(rawValue: rawAction),
                 let expected = frame["expectedStage"] as? String,
-                await stage() == expected
+                await stage() == expected,
+                action != .finish || phase.finishStages.contains(expected)
             else { throw Failure.boundary }
             try _Concurrency.Task.checkCancellation()
             guard !stopped else { throw Failure.form }
@@ -261,6 +266,36 @@
     }
 
     extension FacetAcceptanceAccountPeer {
+        private struct Phase {
+            let initialStages: Set<String>
+            let finishStages: Set<String>
+            let allowedActions: Set<String>
+            let maximumActions: Int
+        }
+
+        private static func phase(_ data: Data, operation: String) throws -> Phase {
+            guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let definitions = root["$defs"] as? [String: Any],
+                let definition = definitions["phase-contract"] as? [String: Any],
+                let contract = definition["const"] as? [String: Any],
+                contract["sessionSeconds"] as? Int == 120,
+                let operations = contract["operations"] as? [String: [String: Any]],
+                let selected = operations[operation],
+                let initial = selected["initialStages"] as? [String],
+                let finish = selected["finishStages"] as? [String],
+                let allowed = selected["allowedAppKinds"] as? [String],
+                let maximum = selected["appCommandLimit"] as? Int,
+                (1...7).contains(maximum),
+                allowed.allSatisfy({ FacetAcceptanceInputAction(rawValue: $0) != nil })
+            else { throw Failure.boundary }
+            try FacetSchema(data: data).validate(
+                data: JSONSerialization.data(withJSONObject: contract), definition: "phase-contract"
+            )
+            return Phase(
+                initialStages: Set(initial), finishStages: Set(finish),
+                allowedActions: Set(allowed), maximumActions: maximum)
+        }
+
         private static func maximumValidity(_ data: Data) throws -> Int64 {
             guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                 let definitions = root["$defs"] as? [String: Any],

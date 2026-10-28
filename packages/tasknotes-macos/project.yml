@@ -205,6 +205,8 @@ targets:
     platform: macOS
     sources:
       - path: App/TaskNotesApp.swift
+      - path: ../tasks-for-obsidian/scripts/ios-account/account-input.schema.json
+        buildPhase: resources
     dependencies:
       - package: TaskNotesPackage
         product: TaskNotesMac

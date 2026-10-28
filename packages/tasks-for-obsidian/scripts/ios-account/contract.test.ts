@@ -24,7 +24,7 @@ const ready = {
   ...base,
   kind: "ready",
   runnerPID: 123,
-  operation: "credentials",
+  operation: "auth-only",
   clockUnixMilliseconds: Date.now(),
   stage: "credentials",
   signInEnabled: false,

@@ -253,6 +253,18 @@ import Testing
             ).resolvingSymlinksInPath()
             defer { NativeTestFiles.remove(root) }
             let (fixture, directory) = try fixture(root: root)
+            let receipt = fixture.directory.appendingPathComponent("identity.json")
+            let fields = try #require(
+                JSONSerialization.jsonObject(with: Data(contentsOf: receipt)) as? [String: Any])
+            #expect(Set(fields.keys) == ["schemaVersion", "mode", "runID", "sessionID"])
+            #expect(fields["schemaVersion"] as? Int == 1)
+            #expect(fields["mode"] as? String == "fixture-verification")
+            #expect(fields["runID"] as? String == fixture.identity.runID.uuidString.lowercased())
+            #expect(
+                fields["sessionID"] as? String == fixture.identity.sessionID.uuidString.lowercased()
+            )
+            let attributes = try FileManager.default.attributesOfItem(atPath: receipt.path)
+            #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600)
             let configuration = try configuration(root: root, run: fixture.identity.runID)
             #expect(throws: FacetAcceptanceError.self) {
                 try FacetAcceptanceAccountHTTPFixture(

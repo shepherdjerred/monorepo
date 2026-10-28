@@ -156,9 +156,10 @@ func validateManifest() throws {
 
 private func validateGuestCheckpoint(_ descriptor: [String: Any], configHash: String) throws {
     let stored = try json(directory + "/account-checkpoint.json")
-    guard Set(stored.keys) == [
-        "schemaVersion", "kind", "binding", "checkpoint", "guestConfigSHA256",
-    ], stored["schemaVersion"] as? Int == 1,
+    guard
+        Set(stored.keys) == [
+            "schemaVersion", "kind", "binding", "checkpoint", "guestConfigSHA256",
+        ], stored["schemaVersion"] as? Int == 1,
         stored["kind"] as? String == "tart-guest-account-checkpoint",
         stored["guestConfigSHA256"] as? String == configHash,
         let binding = stored["binding"] as? [String: Any],
@@ -174,7 +175,9 @@ private func validateGuestCheckpoint(_ descriptor: [String: Any], configHash: St
         checkpoint["failuresCount"] as? Int == 0,
         checkpoint["officialReferencePassed"] as? Bool == true,
         checkpoint["stage"] as? String == (lifecycle == nil ? "bound" : "initial-verified"),
-        Set(descriptor.keys) == ["schemaVersion", "runID", "stateDirectory", "allowedRemoteVaultID"],
+        Set(descriptor.keys) == [
+            "schemaVersion", "runID", "stateDirectory", "allowedRemoteVaultID",
+        ],
         descriptor["schemaVersion"] as? Int == 1, descriptor["runID"] as? String == runID,
         descriptor["stateDirectory"] as? String == state,
         descriptor["allowedRemoteVaultID"] as? String == remoteID

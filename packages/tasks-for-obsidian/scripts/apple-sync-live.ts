@@ -144,9 +144,10 @@ async function main() {
   if (operation === undefined)
     throw new Error("Specify a live acceptance stage");
   if (operation === "prepare") {
-    const { scope, vm, officialApp } = parseExecutionArguments(raw.slice(1));
+    const { scope, vm, officialApp, referenceArchive } =
+      parseExecutionArguments(raw.slice(1));
     await mkdir(runs, { recursive: true, mode: 0o700 });
-    await prepare(scope, vm, officialApp);
+    await prepare(scope, vm, officialApp, referenceArchive);
     return;
   }
   if (runID === undefined)
