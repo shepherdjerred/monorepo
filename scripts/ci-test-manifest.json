@@ -1197,6 +1197,10 @@
           "reason": "The committer runs fresh and restarted Paper lobby acceptance locally through test:startup. This extended Minecraft suite does not run in CI."
         },
         {
+          "path": "tests/stargate-restart",
+          "reason": "The committer runs persisted Stargate acceptance locally through test:stargate-restart with an owned disposable Paper server. This extended Minecraft restart suite does not run in CI."
+        },
+        {
           "path": "tests/load",
           "reason": "The committer runs the 20/50/100-bot rwf load profile locally through test:load on a 4-CPU, 8G-heap Paper container when applicable; it measures tick time and does not run in CI."
         },

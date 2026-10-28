@@ -1,4 +1,3 @@
-import { once } from "node:events";
 import { Vec3 } from "vec3";
 import { expect } from "vitest";
 import {
@@ -15,6 +14,10 @@ import {
 } from "#e2e/harness/bot.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { eventually } from "#e2e/harness/rwf-match.ts";
+import {
+  buildClassicStargateFrame,
+  openStargateSign,
+} from "#e2e/harness/stargates/gates.ts";
 
 test("an always-open Stargate recovers after Paper restarts", async ({
   bot,
@@ -31,35 +34,10 @@ test("an always-open Stargate recovers after Paper restarts", async ({
   await rcon.command("forceload add 384 -16 416 0");
   await rcon.command("fill 395 69 0 415 69 5 minecraft:stone");
   for (const x of [400, 410]) {
-    const bottom = String(x - 1),
-      origin = String(x),
-      left = String(x - 2),
-      right = String(x + 1);
-    await rcon.command(`fill ${bottom} 71 0 ${origin} 73 0 minecraft:air`);
-    await rcon.command(`fill ${bottom} 70 1 ${origin} 70 3 minecraft:stone`);
-    await rcon.command(`fill ${bottom} 70 0 ${origin} 70 0 minecraft:obsidian`);
-    await rcon.command(`fill ${bottom} 74 0 ${origin} 74 0 minecraft:obsidian`);
-    await rcon.command(`fill ${left} 71 0 ${left} 73 0 minecraft:obsidian`);
-    await rcon.command(`fill ${right} 71 0 ${right} 73 0 minecraft:obsidian`);
-    await rcon.command(
-      `setblock ${left} 72 1 minecraft:stone_button[face=wall,facing=south]`,
-    );
-    await rcon.command(
-      `setblock ${right} 72 1 minecraft:birch_wall_sign[facing=south]`,
-    );
+    const { right } = await buildClassicStargateFrame(rcon, x, "birch");
     await rcon.command(`tp ${bot.username} ${right}.5 71 3.5`);
     const signPos = new Vec3(x + 1, 72, 1);
-    await waitUntil(
-      "gate sign loaded",
-      () => bot.blockAt(signPos)?.name === "birch_wall_sign",
-    );
-    const sign = bot.blockAt(signPos);
-    if (sign === null) throw new Error("Gate sign missing");
-    const editor = once(bot._client, "open_sign_entity", {
-      signal: AbortSignal.timeout(5000),
-    });
-    await bot.activateBlock(sign);
-    await editor;
+    const sign = await openStargateSign(bot, signPos, "birch");
     const name = x === 400 ? "First" : "Second";
     const saved = waitForMessage(
       bot,

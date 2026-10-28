@@ -1,4 +1,3 @@
-import { once } from "node:events";
 import type { Bot } from "mineflayer";
 import { Vec3 } from "vec3";
 import { expect } from "vitest";
@@ -6,6 +5,10 @@ import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import {
+  buildClassicStargateFrame,
+  openStargateSign,
+} from "#e2e/harness/stargates/gates.ts";
 
 async function verifyInviteeCannotRemove(
   visitor: Bot,
@@ -81,35 +84,10 @@ test("a private Stargate network admits its invited players and denies others", 
     await rcon.command("execute if block 401 69 3 minecraft:stone"),
   ).toContain("Test passed");
   for (const x of [400, 410]) {
-    const left = String(x - 2),
-      right = String(x + 1);
-    const bottom = String(x - 1),
-      origin = String(x);
-    await rcon.command(`fill ${bottom} 71 0 ${origin} 73 0 minecraft:air`);
-    await rcon.command(`fill ${bottom} 70 1 ${origin} 70 3 minecraft:stone`);
-    await rcon.command(`fill ${bottom} 70 0 ${origin} 70 0 minecraft:obsidian`);
-    await rcon.command(`fill ${bottom} 74 0 ${origin} 74 0 minecraft:obsidian`);
-    await rcon.command(`fill ${left} 71 0 ${left} 73 0 minecraft:obsidian`);
-    await rcon.command(`fill ${right} 71 0 ${right} 73 0 minecraft:obsidian`);
-    await rcon.command(
-      `setblock ${left} 72 1 minecraft:stone_button[face=wall,facing=south]`,
-    );
-    await rcon.command(
-      `setblock ${right} 72 1 minecraft:oak_wall_sign[facing=south]`,
-    );
+    const { right } = await buildClassicStargateFrame(rcon, x, "oak");
     await rcon.command(`tp ${bot.username} ${right}.5 71 3.5`);
     const signPos = new Vec3(x + 1, 72, 1);
-    await waitUntil(
-      "Stargate sign loaded",
-      () => bot.blockAt(signPos)?.name === "oak_wall_sign",
-    );
-    const sign = bot.blockAt(signPos);
-    if (sign === null) throw new Error("Stargate sign is missing");
-    const editor = once(bot._client, "open_sign_entity", {
-      signal: AbortSignal.timeout(5000),
-    });
-    await bot.activateBlock(sign);
-    await editor;
+    const sign = await openStargateSign(bot, signPos, "oak");
     const named = x === 400 ? "First" : "Second";
     const saved = waitForMessage(
       bot,

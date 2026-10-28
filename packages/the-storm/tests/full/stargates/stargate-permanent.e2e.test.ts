@@ -5,6 +5,11 @@ import type { Bot } from "mineflayer";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import {
+  buildClassicStargateFrame,
+  openStargateSign,
+  placeStargateControls,
+} from "#e2e/harness/stargates/gates.ts";
 
 async function carrySaddledMob(
   bot: Bot,
@@ -94,29 +99,20 @@ async function carryMinecart(bot: Bot, rcon: RconClient) {
 }
 
 async function buildFrame(rcon: RconClient, x: number) {
-  const origin = String(x),
-    bottom = String(x - 1),
-    left = String(x === 400 ? x - 2 : x - 3),
-    right = String(x === 400 ? x + 1 : x + 3);
-  if (x === 400) {
-    await rcon.command(`fill ${bottom} 71 0 ${origin} 73 0 minecraft:air`);
-    await rcon.command(`fill ${bottom} 70 1 ${origin} 70 3 minecraft:stone`);
-    await rcon.command(`fill ${bottom} 70 0 ${origin} 70 0 minecraft:obsidian`);
-    await rcon.command(`fill ${bottom} 74 0 ${origin} 74 0 minecraft:obsidian`);
-    await rcon.command(`fill ${left} 71 0 ${left} 73 0 minecraft:obsidian`);
-    await rcon.command(`fill ${right} 71 0 ${right} 73 0 minecraft:obsidian`);
-  } else {
-    await rcon.command("fill 407 70 0 413 76 0 minecraft:air");
-    await rcon.command("fill 409 70 1 411 70 3 minecraft:stone");
-    await rcon.command("fill 409 70 0 411 70 0 minecraft:obsidian");
-    await rcon.command("fill 409 76 0 411 76 0 minecraft:obsidian");
-    for (const y of ["71", "75"]) {
-      await rcon.command(`setblock 408 ${y} 0 minecraft:obsidian`);
-      await rcon.command(`setblock 412 ${y} 0 minecraft:obsidian`);
-    }
-    await rcon.command("fill 407 72 0 407 74 0 minecraft:obsidian");
-    await rcon.command("fill 413 72 0 413 74 0 minecraft:obsidian");
+  if (x === 400) return buildClassicStargateFrame(rcon, x, "birch");
+  const left = String(x - 3),
+    right = String(x + 3);
+  await rcon.command("fill 407 70 0 413 76 0 minecraft:air");
+  await rcon.command("fill 409 70 1 411 70 3 minecraft:stone");
+  await rcon.command("fill 409 70 0 411 70 0 minecraft:obsidian");
+  await rcon.command("fill 409 76 0 411 76 0 minecraft:obsidian");
+  for (const y of ["71", "75"]) {
+    await rcon.command(`setblock 408 ${y} 0 minecraft:obsidian`);
+    await rcon.command(`setblock 412 ${y} 0 minecraft:obsidian`);
   }
+  await rcon.command("fill 407 72 0 407 74 0 minecraft:obsidian");
+  await rcon.command("fill 413 72 0 413 74 0 minecraft:obsidian");
+  await placeStargateControls(rcon, left, right, "birch");
   return { left, right };
 }
 
@@ -130,26 +126,10 @@ test("sign-created fixed gate opens automatically and closes when its destinatio
   await rcon.command("minecraft:forceload add 384 -16 416 0");
   await rcon.command("fill 395 69 0 415 69 5 minecraft:stone");
   for (const x of [400, 410]) {
-    const { left, right } = await buildFrame(rcon, x);
-    await rcon.command(
-      `setblock ${left} 72 1 minecraft:stone_button[face=wall,facing=south]`,
-    );
-    await rcon.command(
-      `setblock ${right} 72 1 minecraft:birch_wall_sign[facing=south]`,
-    );
+    const { right } = await buildFrame(rcon, x);
     await rcon.command(`tp ${bot.username} ${right}.5 71 3.5`);
     const signPos = new Vec3(x === 400 ? x + 1 : x + 3, 72, 1);
-    await waitUntil(
-      "gate sign loaded",
-      () => bot.blockAt(signPos)?.name === "birch_wall_sign",
-    );
-    const sign = bot.blockAt(signPos);
-    if (sign === null) throw new Error("Gate sign missing");
-    const editor = once(bot._client, "open_sign_entity", {
-      signal: AbortSignal.timeout(5000),
-    });
-    await bot.activateBlock(sign);
-    await editor;
+    const sign = await openStargateSign(bot, signPos, "birch");
     const name = x === 400 ? "First" : "Second";
     if (x === 400) {
       const invalid = waitForMessage(bot, /Leave line four blank or use A/u);
