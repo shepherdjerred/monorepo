@@ -78,10 +78,26 @@ export const MovieLibraryReferenceV2Schema = z.strictObject({
   physicalEvidenceHash: Hash,
   subtitleLineage: PublicationSubtitleLineageSchema.optional(),
 });
+/** Restored bytes have their own physical receipt; their original acquisition remains literal. */
+export const MovieRestoreReferenceV1Schema = z.strictObject({
+  kind: z.literal("movie_restore_publication_v1"),
+  scope: MovieEditionScopeSchema,
+  operationId: z.uuid(),
+  receiptHash: Hash,
+  assetId: z.uuid(),
+  assetVersion: z.int().min(2),
+  bindingHash: Hash,
+  physicalEvidenceHash: Hash,
+  subtitleLineage: PublicationSubtitleLineageSchema.optional(),
+});
 export const MoviePublicationReferenceV2Schema = z.discriminatedUnion("kind", [
   MovieTransitionReferenceV2Schema,
   MovieLibraryReferenceV2Schema,
+  MovieRestoreReferenceV1Schema,
 ]);
+export type MovieRestoreReferenceV1 = z.infer<
+  typeof MovieRestoreReferenceV1Schema
+>;
 export type MovieTransitionReferenceV2 = z.infer<
   typeof MovieTransitionReferenceV2Schema
 >;

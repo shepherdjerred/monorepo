@@ -17,6 +17,7 @@ import { loadMoviePublicationV2 } from "./publication/records.ts";
 import { loadMovieLibraryParentV2 } from "./library-records.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import type { MoviePublicationOutcomeV2 } from "#shared/movie-editions/publication-v2.ts";
+import { loadMovieRestorePublicationParentV1 } from "./publication/restore-records.ts";
 
 /** Completed ACKs read original immutable parents before dynamic configuration or current target state. */
 export async function readMovieSubtitleReceiptV4(
@@ -75,6 +76,23 @@ async function assertReceiptParent(
   budget: PublicationAuthorityReadBudget,
 ) {
   const reference = receipt.publication;
+  if (reference.kind === "movie_restore_publication_v1") {
+    const parent = await loadMovieRestorePublicationParentV1(
+      tx,
+      reference,
+      budget,
+    );
+    if (
+      parent.asset.id !== receipt.input.assetId ||
+      parent.asset.path !== receipt.videoPath ||
+      parent.asset.version !== receipt.after.videoVersion ||
+      parent.asset.checksum !== receipt.after.videoChecksum
+    )
+      throw new Error(
+        "Movie subtitle completion lost its actual restored physical parent",
+      );
+    return parent.asset;
+  }
   if (reference.kind === "movie_library_adoption_v2") {
     const parent = await loadMovieLibraryParentV2(
       tx,

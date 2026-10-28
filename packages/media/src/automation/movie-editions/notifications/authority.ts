@@ -20,11 +20,12 @@ import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { readCurrentPlexBinding } from "#infrastructure/plex-binding/read.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { readMovieNoticeProof } from "./source.ts";
 import { currentMovieSubtitleWorkV4 } from "#automation/movie-editions/subtitles/authority.ts";
 import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
+import { MediaError } from "#application/errors.ts";
 
 export type MovieNoticeDelivery = Prisma.NotificationDeliveryGetPayload<{
   include: { event: true; user: { include: { notificationPreference: true } } };
@@ -44,12 +45,13 @@ export async function prepareMovieNoticeV4(
     delivery: MovieNoticeDelivery;
     execution: PlexBindingExecution;
     access: MovieChoiceAccess | undefined;
+    budget: PublicationAuthorityReadBudget;
   },
 ): Promise<PreparedMovieNoticeV4 | undefined> {
   const payload = readMovieNoticeV4(input.delivery.event.payload);
   if (payload === null) return;
   const access = requireMovieChoiceAccess(input.access ?? {});
-  const budget = new PublicationAuthorityReadBudget();
+  const budget = input.budget;
   const source = await readMovieNoticeProof(context.db, payload, budget);
   const current = await readMovieNoticeAuthorityV4(
     context.db,
@@ -86,7 +88,12 @@ export async function assertMovieNoticeConfiguration(
   prepared.freshness.assertActive();
   const access = await networkMovieAccess(context, [
     prepared.payload.source.scope.mediaId,
-  ]);
+  ]).catch((error: unknown) => {
+    prepared.freshness.assertActive();
+    if (error instanceof MediaError && error.code === "plex_scope_unconfigured")
+      throw new PlexBindingProtection("wrong_section");
+    throw error;
+  });
   prepared.freshness.assertActive();
   if (identityHash(access) !== identityHash(prepared.access))
     throw new PlexBindingProtection("wrong_section");

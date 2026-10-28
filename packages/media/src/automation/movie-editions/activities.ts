@@ -19,6 +19,11 @@ import { FileGuardError } from "#automation/files/types.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import type { MovieSubtitleOperationV4 } from "#shared/movie-editions/subtitles-v4.ts";
 import { movieManagementContext } from "./management-context.ts";
+import { evaluateMovieRetentionV4 } from "./retention/evaluate.ts";
+import { publishRestoredMovieToPlexV4 } from "./retention/restore-plex.ts";
+import { finalizeMovieRestorationV4 } from "./retention/restore-finalization.ts";
+import { completeMovieRemovalV4 } from "./retention/removal-completion.ts";
+import type { MovieRemovalCompletionV4 } from "#shared/movie-editions/removal-v4.ts";
 
 /** Credentials may be cached; every dispatch supplies its original invocation capability. */
 export function createMovieNetworkFacetV4(
@@ -31,6 +36,22 @@ export function createMovieNetworkFacetV4(
       plexBindingExecution: () => execution,
     });
   return {
+    completeMovieRemovalV4: (
+      input: MovieRemovalCompletionV4,
+      execution: PlexBindingExecution,
+    ) => completeMovieRemovalV4(context, input, execution),
+    finalizeMovieRestorationV4: (
+      input: MovieOperationV4,
+      execution: PlexBindingExecution,
+    ) => finalizeMovieRestorationV4(context, input, execution),
+    publishRestoredMovieToPlexV4: (
+      input: MovieOperationV4,
+      execution: PlexBindingExecution,
+    ) => publishRestoredMovieToPlexV4(context, input, execution),
+    evaluateMovieRetentionV4: (
+      input: MovieOperationV4,
+      execution: PlexBindingExecution,
+    ) => evaluateMovieRetentionV4(context, input, execution),
     async findMovieSubtitlesV4(
       input: MovieSubtitleOperationV4,
       execution: PlexBindingExecution,

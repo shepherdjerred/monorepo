@@ -13,26 +13,50 @@ import {
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { readCurrentBoundWatch } from "#infrastructure/plex-binding/watch.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export type BoundMediaCohort = {
   mediaIds: string[];
   scopes: WatchBindingScope[];
   original: WatchBinding[];
   access: PlexAccess[];
+  movieScope?: MovieEditionScope;
+  budget?: PublicationAuthorityReadBudget;
 };
 
-function boundSectionType(kind: string): "movie" | "show" {
+function boundSectionType(
+  kind: string,
+  movieScope?: MovieEditionScope,
+): "movie" | "show" {
   if (kind !== "movie" && kind !== "episode")
     throw new PlexBindingProtection("scope_changed");
+  if (movieScope !== undefined && kind !== "movie")
+    throw new PlexBindingProtection("scope_changed");
   return kind === "movie" ? "movie" : "show";
+}
+
+function assertMovieCohort(
+  mediaIds: readonly string[],
+  scope?: MovieEditionScope,
+) {
+  if (
+    scope !== undefined &&
+    (mediaIds.length !== 1 ||
+      mediaIds[0] !== scope.mediaId ||
+      scope.rootMediaId !== scope.mediaId)
+  )
+    throw new PlexBindingProtection("scope_changed");
 }
 
 /** Expand complete current/retained groups before any root, never during final authorization. */
 export async function prepareBoundMediaCohort(
   context: Pick<MediaAutomationContext, "db" | "plexAccess">,
   mediaIds: readonly string[],
-  guard: { assertActive: () => void },
+  guard: { assertActive: () => void; budget?: PublicationAuthorityReadBudget },
+  movieScope?: MovieEditionScope,
 ): Promise<BoundMediaCohort> {
+  assertMovieCohort(mediaIds, movieScope);
   const pending = new Set(mediaIds);
   const scopes = new Map<string, WatchBindingScope>();
   const original = new Map<string, WatchBinding>();
@@ -45,7 +69,7 @@ export async function prepareBoundMediaCohort(
       select: { kind: true },
     });
     guard.assertActive();
-    const kind = boundSectionType(media.kind);
+    const kind = boundSectionType(media.kind, movieScope);
     let configured = access.get(kind);
     if (configured === undefined) {
       configured = await context.plexAccess(kind);
@@ -56,11 +80,13 @@ export async function prepareBoundMediaCohort(
       context.db,
       mediaId,
       configured,
+      { edition: movieScope?.edition, budget: guard.budget },
     );
     guard.assertActive();
     if (scope === null)
       throw new PlexBindingProtection("reconciliation_required");
-    const binding = await readWatchBinding(context.db, scope);
+    assertMovieCohort(scope.mediaIds, movieScope);
+    const binding = await readWatchBinding(context.db, scope, guard.budget);
     guard.assertActive();
     if (binding === null) throw new PlexBindingProtection("missing_binding");
     scopes.set(mediaId, scope);
@@ -84,6 +110,8 @@ export async function prepareBoundMediaCohort(
     access: [...access.values()].sort((a, b) =>
       a.sectionType.localeCompare(b.sectionType),
     ),
+    ...(movieScope === undefined ? {} : { movieScope }),
+    ...(guard.budget === undefined ? {} : { budget: guard.budget }),
   };
 }
 
@@ -95,7 +123,7 @@ export async function assertBoundMediaCohort(
 ) {
   const bindings: WatchBinding[] = [];
   for (const [index, scope] of prepared.scopes.entries()) {
-    const current = await readWatchBinding(tx, scope);
+    const current = await readWatchBinding(tx, scope, prepared.budget);
     guard.assertActive();
     const original = prepared.original[index];
     if (
@@ -127,11 +155,13 @@ export async function boundRequesterWatch(
   tx: Prisma.TransactionClient,
   binding: WatchBinding,
   userId: string,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const watch = await readCurrentBoundWatch(tx, {
-    userId,
-    authority: binding.authority,
-  });
+  const watch = await readCurrentBoundWatch(
+    tx,
+    { userId, authority: binding.authority },
+    budget,
+  );
   return watch.status === "known" ? watch.projection : null;
 }
 
@@ -164,7 +194,7 @@ export async function lockBoundCohortRows(
     );
   guard.assertActive();
   await tx.$queryRaw(
-    Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(cohort.mediaIds)}) AND edition='default' ORDER BY "mediaId" FOR SHARE`,
+    Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(cohort.mediaIds)}) AND edition=${cohort.movieScope?.edition ?? "default"} ORDER BY "mediaId" FOR SHARE`,
   );
   guard.assertActive();
 }

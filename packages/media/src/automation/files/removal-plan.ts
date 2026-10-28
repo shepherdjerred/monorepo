@@ -1,9 +1,13 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
-import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import nodePath from "node:path";
 import { workerFilePath } from "./paths/locations.ts";
 import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
+import { assertCleanupPhysicalAsset } from "#infrastructure/movie-editions/cleanup/authority.ts";
+import {
+  assertMovieRemovalDecision,
+  type MovieRemovalScope,
+} from "./movie-editions/removal-scope.ts";
 import {
   FileGuardError,
   RemovalPlanSchema,
@@ -36,10 +40,15 @@ export async function removalPlan(
   tx: Transaction,
   context: FileContext,
   decisionId: string,
+  movie?: MovieRemovalScope,
 ): Promise<RemovalEntry[]> {
   const decision = await tx.retentionDecision.findUniqueOrThrow({
     where: { id: decisionId },
   });
+  if (movie !== undefined) {
+    movie.budget.consume(1);
+    assertMovieRemovalDecision(decision, movie.scope);
+  }
   if (decision.manifest !== null)
     return RemovalPlanSchema.parse(decision.manifest).assets;
   const override = z
@@ -57,7 +66,11 @@ export async function removalPlan(
       }
     : { mediaId: decision.mediaId };
   const coverage = await tx.assetCoverage.findMany({
-    where: { ...scope, edition: "default", current: true },
+    where: {
+      ...scope,
+      edition: movie?.scope.edition ?? "default",
+      current: true,
+    },
     distinct: ["assetId"],
     include: {
       asset: {
@@ -66,7 +79,11 @@ export async function removalPlan(
             where: { current: true },
             include: {
               media: {
-                include: { intents: { where: { edition: "default" } } },
+                include: {
+                  intents: {
+                    where: { edition: movie?.scope.edition ?? "default" },
+                  },
+                },
               },
             },
           },
@@ -77,14 +94,14 @@ export async function removalPlan(
   });
   const assets: RemovalEntry[] = [];
   for (const { asset } of coverage) {
-    await assertDefaultPhysicalAsset(tx, asset.id);
+    await assertCleanupPhysicalAsset(tx, asset.id, movie?.scope);
     if (!asset.owned || asset.checksum === null || asset.state !== "published")
       throw new FileGuardError("asset_not_owned");
     const location = libraryLocation(context, asset.path);
     const generations: Record<string, number> = {};
     for (const item of asset.coverage) {
-      const intent = defaultIntent(item.media.intents);
-      if (intent === null) throw new FileGuardError("intent_missing");
+      const intent = removalIntent(item.media.intents, movie);
+      if (intent == null) throw new FileGuardError("intent_missing");
       generations[item.mediaId] = intent.generation;
     }
     const sidecars = planSidecars(
@@ -145,6 +162,7 @@ export async function assertOwnedAsset(
   tx: Transaction,
   entry: RemovalEntry,
   state: "published" | "quarantined",
+  movie?: MovieRemovalScope,
 ): Promise<void> {
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: entry.assetId },
@@ -154,7 +172,7 @@ export async function assertOwnedAsset(
     },
   });
   const version = entry.assetVersion + (state === "quarantined" ? 1 : 0);
-  await assertDefaultPhysicalAsset(tx, asset.id);
+  await assertCleanupPhysicalAsset(tx, asset.id, movie?.scope);
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
@@ -181,4 +199,13 @@ export async function assertOwnedAsset(
     )
   )
     throw new FileGuardError("subtitle_manifest_changed");
+}
+
+function removalIntent<T extends { edition: string }>(
+  intents: readonly T[],
+  movie?: MovieRemovalScope,
+) {
+  return movie === undefined
+    ? defaultIntent(intents)
+    : intents.find((target) => target.edition === movie.scope.edition);
 }

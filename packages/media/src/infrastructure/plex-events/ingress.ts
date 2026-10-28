@@ -177,34 +177,32 @@ export class PrismaPlexEventIngress {
         sectionId: hint.sectionId,
         ratingKey: hint.ratingKey,
       };
-      const payload =
-        match.edition === "default"
-          ? { schemaVersion: 1, edition: "default", ...identity }
-          : {
-              schemaVersion: 4,
-              scope: {
-                rootMediaId: media.id,
-                mediaId: media.id,
-                edition: match.edition,
-              },
-              ...identity,
-            };
-      const key = `${match.edition === "default" ? "plex-hint" : "movie-plex-hint-v4"}:${snapshotHash({ ...payload, recoveryEpoch: runtime.recoveryEpoch, bucket })}`;
+      const scopedMovie = current.association.schemaVersion === 2;
+      if (!scopedMovie && match.edition !== "default")
+        throw new Error("Named movie hint requires its scoped association");
+      const payload = scopedMovie
+        ? {
+            schemaVersion: 4,
+            scope: {
+              rootMediaId: media.id,
+              mediaId: media.id,
+              edition: match.edition,
+            },
+            ...identity,
+          }
+        : { schemaVersion: 1, edition: "default", ...identity };
+      const key = `${scopedMovie ? "movie-plex-hint-v4" : "plex-hint"}:${snapshotHash({ ...payload, recoveryEpoch: runtime.recoveryEpoch, bucket })}`;
       const operationId = await queueOperation(tx, {
         key,
-        kind:
-          match.edition === "default"
-            ? "observe_plex_hint"
-            : "observe_movie_plex_hint_v4",
+        kind: scopedMovie ? "observe_movie_plex_hint_v4" : "observe_plex_hint",
         targetId: media.id,
         payload,
       });
       const operation = await tx.operation.findUniqueOrThrow({
         where: { id: operationId },
       });
-      if (match.edition === "default")
-        ObservePlexHintInputSchema.parse(operation.payload);
-      else ObserveMoviePlexHintV4Schema.parse(operation.payload);
+      if (scopedMovie) ObserveMoviePlexHintV4Schema.parse(operation.payload);
+      else ObservePlexHintInputSchema.parse(operation.payload);
     });
   }
 }

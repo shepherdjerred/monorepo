@@ -249,7 +249,7 @@ export async function removeFiles(
   );
 }
 
-async function commitRemovalEntries(
+export async function commitRemovalEntries(
   tx: Transaction,
   input: {
     plan: readonly RemovalEntry[];
@@ -325,7 +325,7 @@ async function removeAuthorizedEntry(
   return choice.current;
 }
 
-async function removeEntry(
+export async function removeEntry(
   operations: ReturnType<typeof fileOperations>,
   entry: RemovalEntry,
   operationId: string,

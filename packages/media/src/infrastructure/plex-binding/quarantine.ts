@@ -12,6 +12,7 @@ import {
   plexScopeKey,
   type PlexAccess,
   type PlexAssociationV1,
+  type PlexAssociation,
   type PlexBindingReason,
   type PlexBindingScope,
   type PlexPhysicalGroup,
@@ -26,6 +27,10 @@ import { assertQuarantineOperation } from "./quarantine-commit.ts";
 import { quarantinePlexRebindings } from "./native/quarantine-native.ts";
 import { PlexBindingProtection } from "./errors.ts";
 import { NativeQuarantineContinuationSchema } from "#shared/native-recovery/quarantine.ts";
+import {
+  readMovieQuarantinedPlexWatchAuthority,
+  assertCapturedMovieQuarantinedPlexWatchScope,
+} from "#infrastructure/movie-editions/retention/quarantine-watch.ts";
 
 type QuarantineWatchInput = {
   decisionId: string;
@@ -46,16 +51,34 @@ export type QuarantinedPlexWatchScope = {
 export async function captureQuarantinedPlexWatchScope(
   tx: Prisma.TransactionClient,
   input: QuarantineWatchInput,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<
   | { status: "current"; scope: QuarantinedPlexWatchScope }
   | { status: "protected"; reason: PlexBindingReason }
 > {
-  const current = await readQuarantinedPlexWatchAuthority(tx, input);
+  const current = await readQuarantinedPlexWatchAuthority(tx, input, budget);
   if (current.status !== "current") return current;
   const ref = current.authority.quarantine;
+  if ("schemaVersion" in ref) {
+    const cohort = {
+      mediaIds: [ref.scope.mediaId],
+      assetIds: [ref.group.assetId],
+      continuationIds: [],
+    };
+    return {
+      status: "current",
+      scope: {
+        input,
+        authority: current.authority,
+        ...cohort,
+        cohortHash: identityHash({ authority: current.authority, ...cohort }),
+      },
+    };
+  }
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: ref.operationId },
   });
+  budget?.consume(1);
   const raw = z
     .object({ quarantinePlexReceipt: z.json() })
     .parse(operation.result).quarantinePlexReceipt;
@@ -76,6 +99,7 @@ export async function captureQuarantinedPlexWatchScope(
   const rows = await tx.nativeQuarantineContinuation.findMany({
     where: { id: { in: continuationIds } },
   });
+  budget?.consume(rows.length);
   if (rows.length !== continuationIds.length)
     throw new Error("Quarantine watch lock parent disappeared");
   const parents = new Map(
@@ -121,8 +145,24 @@ export async function captureQuarantinedPlexWatchScope(
 export async function assertQuarantinedPlexWatchScope(
   tx: Prisma.TransactionClient,
   expected: QuarantinedPlexWatchScope,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const captured = await captureQuarantinedPlexWatchScope(tx, expected.input);
+  if ("schemaVersion" in expected.authority.quarantine) {
+    const current = await readQuarantinedPlexWatchAuthority(
+      tx,
+      expected.input,
+      budget,
+    );
+    if (current.status !== "current")
+      throw new PlexBindingProtection(current.reason);
+    assertCapturedMovieQuarantinedPlexWatchScope(expected, current);
+    return current.authority;
+  }
+  const captured = await captureQuarantinedPlexWatchScope(
+    tx,
+    expected.input,
+    budget,
+  );
   if (captured.status !== "current")
     throw new PlexBindingProtection(captured.reason);
   if (
@@ -142,7 +182,7 @@ export type QuarantinedPlexWatchRead =
   | {
       status: "current";
       authority: Extract<BoundWatchAuthority, { purpose: "quarantined" }>;
-      association: PlexAssociationV1;
+      association: PlexAssociation;
     }
   | { status: "protected"; reason: PlexBindingReason };
 
@@ -155,9 +195,10 @@ export async function readQuarantinedPlexWatchAuthority(
     assetId: string;
     access: PlexAccess;
   },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<QuarantinedPlexWatchRead> {
   try {
-    return await resolveQuarantine(tx, input);
+    return await resolveQuarantine(tx, input, budget);
   } catch (error) {
     if (error instanceof PlexBindingProtection)
       return { status: "protected", reason: error.reason };
@@ -173,13 +214,13 @@ async function resolveQuarantine(
     assetId: string;
     access: PlexAccess;
   },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<Extract<QuarantinedPlexWatchRead, { status: "current" }>> {
-  if (input.scope.edition !== "default")
-    throw new PlexBindingProtection("reconciliation_required");
   const decision = await tx.retentionDecision.findUniqueOrThrow({
     where: { id: input.decisionId },
     include: { plexProjection: true },
   });
+  budget?.consume(1 + (decision.plexProjection === null ? 0 : 1));
   if (
     decision.state !== "quarantined" ||
     decision.mediaId !== input.scope.mediaId ||
@@ -189,19 +230,39 @@ async function resolveQuarantine(
     throw new PlexBindingProtection("reconciliation_required");
   const operations = await tx.operation.findMany({
     where: {
-      kind: "retain_media",
-      result: {
-        path: ["quarantinePlexReceipt", "decisions"],
-        array_contains: [{ decisionId: decision.id }],
-      },
+      OR: [
+        {
+          kind: "retain_media",
+          result: {
+            path: ["quarantinePlexReceipt", "decisions"],
+            array_contains: [{ decisionId: decision.id }],
+          },
+        },
+        {
+          kind: "retain_movie_edition_v4",
+          result: {
+            path: ["movieQuarantinePlexReceiptV2", "decisions"],
+            array_contains: [{ decisionId: decision.id }],
+          },
+        },
+      ],
     },
     take: 2,
   });
+  budget?.consume(operations.length);
   const operation = operations[0];
   if (operation === undefined)
     throw new PlexBindingProtection("reconciliation_required");
   if (operations.length !== 1)
     throw new Error("Quarantine has ambiguous committed association receipts");
+  if (operation.kind === "retain_movie_edition_v4")
+    return readMovieQuarantinedPlexWatchAuthority(
+      tx,
+      { ...input, decision, operation },
+      budget,
+    );
+  if (input.scope.edition !== "default")
+    throw new PlexBindingProtection("reconciliation_required");
   const rawReceipt = z
     .object({ quarantinePlexReceipt: z.json() })
     .parse(operation.result).quarantinePlexReceipt;
@@ -218,34 +279,14 @@ async function resolveQuarantine(
     rawManifest,
     receipt.manifestHash,
   );
-  const selectedDecision = receipt.decisions.find(
-    (row) => row.decisionId === decision.id,
-  );
-  const original = receipt.groups.find(
-    (group) => group.assetId === input.assetId,
-  );
-  const binding = receipt.bindings.find(
-    (row) => plexScopeKey(row.scope) === plexScopeKey(input.scope),
-  );
-  if (
-    selectedDecision === undefined ||
-    original === undefined ||
-    binding === undefined ||
-    selectedDecision.mediaId !== decision.mediaId ||
-    decision.version < selectedDecision.quarantinedVersion ||
-    !original.coverage.some(
-      (scope) => plexScopeKey(scope) === plexScopeKey(input.scope),
-    )
-  )
-    throw new Error(
-      "Quarantine receipt omitted its selected complete physical group",
-    );
+  const { selectedDecision, original, binding } =
+    selectQuarantineReceiptParents(receipt, decision, input);
   assertQuarantineProjection(decision.plexProjection, {
     decisionId: decision.id,
     projectionHash: selectedDecision.projectionHash,
     receipt,
   });
-  const associations = await readOriginalAssociations(tx, receipt);
+  const associations = await readOriginalAssociations(tx, receipt, budget);
   const association = associations.get(binding.evidenceId);
   if (association?.group.assetId !== original.assetId)
     throw new Error("Quarantine original association is missing");
@@ -279,7 +320,7 @@ async function resolveQuarantine(
   const nativeReceipts = await quarantinePlexRebindings(
     tx,
     { original, current: group, decisionId: decision.id },
-    new PublicationAuthorityReadBudget(),
+    budget ?? new PublicationAuthorityReadBudget(),
   );
   await assertQuarantineIdentity(tx, association, input.access);
   const assets = receipt.groups.map((value) =>
@@ -310,13 +351,45 @@ async function resolveQuarantine(
   };
 }
 
+function selectQuarantineReceiptParents(
+  receipt: z.infer<typeof CommittedQuarantinePlexReceiptSchema>,
+  decision: { id: string; mediaId: string; version: number },
+  input: Pick<QuarantineWatchInput, "assetId" | "scope">,
+) {
+  const selectedDecision = receipt.decisions.find(
+    (row) => row.decisionId === decision.id,
+  );
+  const original = receipt.groups.find(
+    (group) => group.assetId === input.assetId,
+  );
+  const binding = receipt.bindings.find(
+    (row) => plexScopeKey(row.scope) === plexScopeKey(input.scope),
+  );
+  if (
+    selectedDecision === undefined ||
+    original === undefined ||
+    binding === undefined ||
+    selectedDecision.mediaId !== decision.mediaId ||
+    decision.version < selectedDecision.quarantinedVersion ||
+    !original.coverage.some(
+      (scope) => plexScopeKey(scope) === plexScopeKey(input.scope),
+    )
+  )
+    throw new Error(
+      "Quarantine receipt omitted its selected complete physical group",
+    );
+  return { selectedDecision, original, binding };
+}
+
 async function readOriginalAssociations(
   tx: Prisma.TransactionClient,
   receipt: z.infer<typeof CommittedQuarantinePlexReceiptSchema>,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const rows = await tx.plexAssociationEvidence.findMany({
     where: { id: { in: receipt.bindings.map((row) => row.evidenceId) } },
   });
+  budget?.consume(rows.length);
   const byId = new Map(rows.map((row) => [row.id, row]));
   const associations = new Map<string, PlexAssociationV1>();
   const groups = new Map(

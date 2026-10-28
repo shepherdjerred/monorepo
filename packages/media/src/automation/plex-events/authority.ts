@@ -25,6 +25,7 @@ import {
   type WatchBindingScope,
 } from "./binding.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export const PlexIdentitySchema = z.object({
   plexRatingKey: z.string().regex(/^\d+$/u).optional(),
@@ -39,6 +40,8 @@ export type WatchScope = WatchObservationOptions & {
   serverMachineId: string;
   sections: { movie: string; series: string };
   bindingScope: WatchBindingScope | null;
+  /** Invocation-local accounting; excluded from signatures and persisted authority. */
+  budget?: PublicationAuthorityReadBudget;
 };
 
 function hintTargetMatches(
@@ -93,9 +96,15 @@ export async function watchScope(
     execution,
     context.plexAccess(media.kind === "movie" ? "movie" : "show"),
   );
+  const budget = context.movieManagement?.budget;
   const bindingScope = await watchAwait(
     execution,
-    captureWatchBindingScope(context.db, mediaId, access, edition),
+    captureWatchBindingScope(
+      context.db,
+      mediaId,
+      access,
+      budget === undefined ? edition : { edition, budget },
+    ),
   );
   const sections = {
     movie: access.sectionType === "movie" ? access.sectionId : "",
@@ -107,6 +116,7 @@ export async function watchScope(
     sections,
     bindingScope,
     ...options,
+    ...(budget === undefined ? {} : { budget }),
   };
 }
 
@@ -249,7 +259,7 @@ export async function lockWatchAuthority(
     );
   const binding = await watchAwait(
     execution,
-    readWatchBinding(tx, scope.bindingScope),
+    readWatchBinding(tx, scope.bindingScope, scope.budget),
   );
   const identity: z.infer<typeof PlexIdentitySchema> =
     binding === null
@@ -369,6 +379,8 @@ async function validHint(
     execution,
     tx.operation.findUnique({ where: { id: hint.operationId } }),
   );
+  if (hint.schemaVersion === 4)
+    scope.budget?.consume(operation === null ? 0 : 1);
   const schema =
     hint.schemaVersion === 1
       ? ObservePlexHintInputSchema

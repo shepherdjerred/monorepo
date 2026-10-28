@@ -16,6 +16,30 @@ export function createMovieNetworkWorkerActivitiesV4(
   >,
 ): MovieNetworkActivitiesV4 {
   return {
+    completeMovieRemovalV4: (input) =>
+      plexBindingCall(async (execution) => {
+        const runtime = await load();
+        execution.assertActive();
+        return runtime.movie.completeMovieRemovalV4(input, execution);
+      }),
+    finalizeMovieRestorationV4: (input) =>
+      plexBindingCall(async (execution) => {
+        const runtime = await load();
+        execution.assertActive();
+        return runtime.movie.finalizeMovieRestorationV4(input, execution);
+      }),
+    publishRestoredMovieToPlexV4: (input) =>
+      plexBindingCall(async (execution) => {
+        const runtime = await load();
+        execution.assertActive();
+        return runtime.movie.publishRestoredMovieToPlexV4(input, execution);
+      }),
+    evaluateMovieRetentionV4: (input) =>
+      plexBindingCall(async (execution) => {
+        const runtime = await load();
+        execution.assertActive();
+        return runtime.movie.evaluateMovieRetentionV4(input, execution);
+      }),
     findMovieSubtitlesV4: (input) =>
       plexBindingCall(async (execution) => {
         const runtime = await load();
@@ -61,6 +85,42 @@ export function createMovieFileWorkerActivitiesV4(
   >,
 ): MovieFileActivitiesV4 {
   return {
+    restoreMovieFilesV4: (input) => {
+      const observed = { wall: Date.now(), monotonic: performance.now() };
+      return compensationCall(async (sdk) => {
+        const runtime = await load();
+        sdk.assertActive();
+        return runtime.movie.restoreMovieFilesV4(input, {
+          ...sdk,
+          observed,
+          checkpoint: () => sdk.checkpoint("movie-restore"),
+        });
+      });
+    },
+    purgeMovieFilesV4: (input) => {
+      const observed = { wall: Date.now(), monotonic: performance.now() };
+      return compensationCall(async (sdk) => {
+        const runtime = await load();
+        sdk.assertActive();
+        return runtime.movie.purgeMovieFilesV4(input, {
+          ...sdk,
+          observed,
+          checkpoint: () => sdk.checkpoint("movie-purge"),
+        });
+      });
+    },
+    quarantineMovieFilesV4: (input) => {
+      const observed = { wall: Date.now(), monotonic: performance.now() };
+      return compensationCall(async (sdk) => {
+        const runtime = await load();
+        sdk.assertActive();
+        return runtime.movie.quarantineMovieFilesV4(input, {
+          ...sdk,
+          observed,
+          checkpoint: () => sdk.checkpoint("movie-quarantine"),
+        });
+      });
+    },
     installMovieSubtitlesV4: (input) => {
       const observed = { wall: Date.now(), monotonic: performance.now() };
       return compensationCall(async (sdk) => {

@@ -82,7 +82,7 @@ export async function observeMediaUpgradeCleanup(
     if (prepared.status === "complete") return prepared;
     const { expected } = prepared;
     const verify =
-      expected.schemaVersion === 2 ? verifyMoviePlexV2 : verifyPlexAssociations;
+      expected.schemaVersion === 1 ? verifyPlexAssociations : verifyMoviePlexV2;
     const verified = await verify(
       context,
       {

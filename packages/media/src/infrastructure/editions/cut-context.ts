@@ -13,6 +13,7 @@ import {
   numberingOf,
 } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function cutCanonical(
   tx: Prisma.TransactionClient,
@@ -109,8 +110,10 @@ export async function currentCuts(
   input: {
     mediaIds: readonly string[];
     predecessorAssetIds?: readonly string[];
+    budget?: PublicationAuthorityReadBudget;
   },
 ): Promise<CutEvidence[]> {
+  input.budget?.consume(0);
   const assets = await tx.libraryAsset.findMany({
     where: {
       OR: [
@@ -127,7 +130,9 @@ export async function currentCuts(
       ],
     },
     orderBy: { id: "asc" },
+    ...(input.budget === undefined ? {} : { take: input.budget.take }),
   });
+  input.budget?.consume(assets.length);
   const result: CutEvidence[] = [];
   assertPredecessorPresence(assets, input.predecessorAssetIds);
   for (const asset of assets) {
@@ -140,15 +145,7 @@ export async function currentCuts(
           .optional(),
       })
       .parse(asset.properties);
-    const texts: EditionText[] = [];
-    if (hasOriginalTitle(properties))
-      texts.push({
-        text: z.string().parse(properties.title),
-        provenance: {
-          kind: "release-title",
-          field: "retained.properties.title",
-        },
-      });
+    const texts = originalTitleTexts(properties);
     const originalPath =
       asset.sourcePath !== null && asset.sourcePath !== asset.path
         ? asset.sourcePath
@@ -183,6 +180,7 @@ export async function currentCuts(
       const release = await tx.releaseCandidate.findUniqueOrThrow({
         where: { id: properties.releaseId },
       });
+      input.budget?.consume(1);
       result.push(releaseCut(release, canonical));
     }
     if (
@@ -237,4 +235,20 @@ function hasOriginalTitle(properties: {
     properties.title !== undefined &&
     properties.resolvedEvidence?.parserVersion !== "handoff-v1"
   );
+}
+
+function originalTitleTexts(properties: {
+  title?: string | undefined;
+  resolvedEvidence?: { parserVersion: string } | undefined;
+}): EditionText[] {
+  if (!hasOriginalTitle(properties)) return [];
+  return [
+    {
+      text: z.string().parse(properties.title),
+      provenance: {
+        kind: "release-title",
+        field: "retained.properties.title",
+      },
+    },
+  ];
 }

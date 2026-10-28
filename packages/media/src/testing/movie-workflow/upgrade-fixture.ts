@@ -13,16 +13,16 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { MovieSubtitleOperationV4Schema } from "#shared/movie-editions/subtitles-v4.ts";
 import type { Database } from "#infrastructure/database.ts";
 
-/** Both versions start at actual personal consent; no imported request-history hold is removed. */
-export async function createAcquiredMovieUpgradeFixture(
+/** Actual personal request, transfer, physical publication, Plex receipt and installed captions. */
+export async function createPublishedMovieFixture(
   edition: MovieEditionKey,
-  bytes: { original: Uint8Array; upgrade: Uint8Array },
+  bytes: Uint8Array,
 ) {
   const f = await createMovieWorkflowFixture(edition, {
-    bytes: bytes.original,
+    bytes,
   });
   try {
-    const { db, files, context, media, user } = f.source;
+    const { db } = f.source;
     const reserved = await f.movie.reconcileMovieIntentV4(
       f.input,
       testPlexBindingExecution(),
@@ -64,6 +64,22 @@ export async function createAcquiredMovieUpgradeFixture(
       where: { id: plan.entries[0].assetId },
     });
     await installMovieFixtureCaptions(db, asset.id, f.movie, f.fileMovie);
+    return { ...f, asset, scope: f.input.scope };
+  } catch (error) {
+    await f.close();
+    throw error;
+  }
+}
+
+/** Both versions start at actual personal consent; no imported request-history hold is removed. */
+export async function createAcquiredMovieUpgradeFixture(
+  edition: MovieEditionKey,
+  bytes: { original: Uint8Array; upgrade: Uint8Array },
+) {
+  const f = await createPublishedMovieFixture(edition, bytes.original);
+  try {
+    const { db, files, context, media, user } = f.source;
+    const { asset } = f;
     const request = await requestTestMovieV4(db, user, media.id, edition);
     const wire = movieWorkflowWire(db, {
       mediaId: media.id,

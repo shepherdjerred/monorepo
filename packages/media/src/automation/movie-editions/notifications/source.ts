@@ -1,5 +1,8 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type {
+  MovieAttemptOperationV4,
+  MovieOperationV4,
+} from "#shared/movie-editions/automation-v4.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/receipt.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
@@ -8,15 +11,34 @@ import { readMovieSubtitleCompletionV4 } from "#infrastructure/movie-editions/su
 import type { MovieSubtitleInstallV4 } from "#shared/movie-editions/subtitles-v4.ts";
 import type { MovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 import { PlexPhysicalGroupSchema } from "#shared/plex-binding/contract.ts";
+import { readMovieRestorePlexReceiptV1 } from "#infrastructure/movie-editions/retention/restore-plex-receipt.ts";
 
 export async function readMovieNoticeProof(
   tx: Prisma.TransactionClient,
   payload: MovieNoticeV4,
   budget: PublicationAuthorityReadBudget,
 ) {
-  return payload.kind === "movie_publication"
-    ? readMovieNoticeSource(tx, payload.source, budget)
+  if (payload.kind === "movie_publication")
+    return readMovieNoticeSource(tx, payload.source, budget);
+  return payload.kind === "movie_restoration"
+    ? readMovieRestorationNoticeSource(tx, payload.source, budget)
     : readMovieCaptionNoticeSource(tx, payload.source, budget);
+}
+
+export async function readMovieRestorationNoticeSource(
+  tx: Prisma.TransactionClient,
+  input: MovieOperationV4,
+  budget: PublicationAuthorityReadBudget,
+) {
+  const receipt = await readMovieRestorePlexReceiptV1(tx, input, budget);
+  if (receipt === null)
+    throw new Error("Movie restoration notice has no committed Plex rebinding");
+  return {
+    receipt,
+    group: receipt.expected.newGroups[0],
+    publicationHash: identityHash(receipt),
+    eventKind: "media_available" as const,
+  };
 }
 
 export async function readMovieCaptionNoticeSource(

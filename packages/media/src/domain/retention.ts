@@ -18,6 +18,8 @@ export type RetentionRequester = {
 
 export type RetentionInput = {
   now: number;
+  /** Retention policy time is independent of the real observation/authority clock. */
+  policyNow?: number;
   generation: number;
   decisionGeneration: number;
   owned: boolean;
@@ -35,6 +37,7 @@ export type RetentionEvaluation =
   | { state: "quarantine_eligible"; graceUntil: number; purgeAfter: number };
 
 export function evaluateRetention(input: RetentionInput): RetentionEvaluation {
+  const policyNow = input.policyNow ?? input.now;
   const protect = (reason: string): RetentionEvaluation => ({
     state: "protected",
     reason,
@@ -47,7 +50,7 @@ export function evaluateRetention(input: RetentionInput): RetentionEvaluation {
   if (input.operationInProgress) return protect("operation_in_progress");
   if (
     input.holds.some(
-      (hold) => hold.isPin || hold.until === null || hold.until > input.now,
+      (hold) => hold.isPin || hold.until === null || hold.until > policyNow,
     )
   )
     return protect("keep_hold");
@@ -73,12 +76,12 @@ export function evaluateRetention(input: RetentionInput): RetentionEvaluation {
   );
   if (latestWarning > input.now) return protect("warning_timestamp_invalid");
   const graceUntil = latestWarning + RETENTION_DEFAULTS.graceMs;
-  return input.now < graceUntil
+  return policyNow < graceUntil
     ? { state: "grace_period", graceUntil }
     : {
         state: "quarantine_eligible",
         graceUntil,
-        purgeAfter: input.now + RETENTION_DEFAULTS.quarantineMs,
+        purgeAfter: policyNow + RETENTION_DEFAULTS.quarantineMs,
       };
 }
 

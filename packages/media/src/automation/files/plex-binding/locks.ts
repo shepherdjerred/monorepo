@@ -5,6 +5,8 @@ import { lockMovieChoiceIdentities } from "#infrastructure/movie-editions/access
 import { assertRuntime, lockMedia } from "#automation/files/guards.ts";
 import type { RemovalEntry, Transaction } from "#automation/files/types.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import {
   assertQuarantinedPlexWatchScope,
   type QuarantinedPlexWatchScope,
@@ -19,6 +21,7 @@ export async function lockRemovalAuthority(
     access: readonly PlexAccess[];
     evidence: unknown;
     quarantinedScopes?: readonly QuarantinedPlexWatchScope[];
+    movieScope?: MovieEditionScope;
   },
 ) {
   const quarantined = input.quarantinedScopes ?? [];
@@ -37,7 +40,12 @@ export async function lockRemovalAuthority(
   const owner = z
     .object({ ownerOverride: z.object({ ownerId: z.string() }).optional() })
     .parse(input.evidence).ownerOverride;
-  await lockMedia(tx, mediaIds);
+  if (input.movieScope === undefined) await lockMedia(tx, mediaIds);
+  else {
+    if (mediaIds.length !== 1 || mediaIds[0] !== input.movieScope.mediaId)
+      throw new Error("Scoped movie removal exceeded its exact lock closure");
+    await lockMovieCommand(tx, input.movieScope);
+  }
   await lockEffectiveRequests(tx, mediaIds);
   await assertRuntime(tx, input.epoch);
   await lockMovieChoiceIdentities(tx, {
@@ -65,7 +73,7 @@ export async function lockRemovalAuthority(
   ].sort())
     await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${"media-plex-binding:" + server},0))::text`;
   await tx.$queryRaw(
-    Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(mediaIds)}) AND edition='default' ORDER BY "mediaId" FOR UPDATE`,
+    Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(mediaIds)}) AND edition=${input.movieScope?.edition ?? "default"} ORDER BY "mediaId" FOR UPDATE`,
   );
   for (const scope of quarantined)
     await assertQuarantinedPlexWatchScope(tx, scope);

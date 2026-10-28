@@ -3,6 +3,7 @@ import {
   MovieNoticeV4Schema,
   type MovieCaptionNoticeV4,
   type MoviePublicationNoticeV4,
+  type MovieRestorationNoticeV4,
   type MovieNoticeV4,
 } from "#shared/movie-editions/notifications-v4.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
@@ -14,6 +15,7 @@ import { queueDelivery } from "#automation/notifications/events.ts";
 
 type Draft =
   | Omit<MoviePublicationNoticeV4, "request" | "generation">
+  | Omit<MovieRestorationNoticeV4, "request" | "generation">
   | Omit<MovieCaptionNoticeV4, "request" | "generation">;
 
 /** Classification and household policy do not create personal notification consent. */
@@ -49,10 +51,7 @@ export async function queueMovieNoticesV4(
         choiceRevision: sponsor.choice.choiceRevision,
       },
     });
-    const sourceKey =
-      draft.kind === "movie_publication"
-        ? draft.source.attemptId
-        : `captions:${draft.source.assetId}:${draft.targetAuthority}`;
+    const sourceKey = noticeSourceKey(draft);
     const key = `movie-notice-v4:${sourceKey}:${draft.eventKind}:${sponsor.request.id}:${String(sponsor.choice.choiceRevision)}:${String(sponsor.target.generation)}`;
     const event = await tx.applicationEvent.upsert({
       where: { dedupeKey: key },
@@ -109,11 +108,18 @@ export async function queueMovieNoticesV4(
 
 /** A readiness cohort keeps its first real caption receipt when another accepted caption arrives. */
 function noticeSelection(payload: MovieNoticeV4) {
-  if (payload.kind === "movie_publication") return payload;
+  if (payload.kind !== "movie_subtitles") return payload;
   const {
     captionHash: _hash,
     source: { operationId: _operationId, subtitleId: _subtitleId, ...source },
     ...notice
   } = payload;
   return { ...notice, source };
+}
+
+function noticeSourceKey(draft: Draft) {
+  if (draft.kind === "movie_publication") return draft.source.attemptId;
+  return draft.kind === "movie_restoration"
+    ? `restore:${draft.source.operationId}`
+    : `captions:${draft.source.assetId}:${draft.targetAuthority}`;
 }

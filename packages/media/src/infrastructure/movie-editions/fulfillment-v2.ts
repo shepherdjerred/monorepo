@@ -8,18 +8,21 @@ import { parseMovieCutV2 } from "#domain/editions/parse-v2.ts";
 import { evaluateMovieCutV2 } from "#domain/editions/selection-v2.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import type { MovieEditionFulfillment } from "#shared/movie-editions/fulfillment.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Current owned bytes and exact v2 Plex binding are checked by the caller; retain all original cut facts. */
 export async function movieCutFulfillmentV2(
   tx: Prisma.TransactionClient,
   scope: MovieEditionScope,
   assetId: string,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<MovieEditionFulfillment> {
   try {
     const canonical = await cutCanonical(tx, [scope.mediaId]);
     const retained = await currentCuts(tx, canonical, {
       mediaIds: [],
       predecessorAssetIds: [assetId],
+      ...(budget === undefined ? {} : { budget }),
     });
     const evidence = retained.map((prior) =>
       parseMovieCutV2({

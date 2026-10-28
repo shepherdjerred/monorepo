@@ -120,6 +120,42 @@ describe("watched retention", () => {
       graceUntil: now + 6 * DAY_MS,
     });
   });
+  it("advances policy deadlines independently of real watch freshness and receipt timestamps", () => {
+    const simulated = {
+      ...input,
+      policyNow: now + 8 * DAY_MS,
+      requesters: [{ ...requester, warningAcceptedAt: now }],
+    };
+    expect(evaluateRetention(simulated)).toEqual({
+      state: "quarantine_eligible",
+      graceUntil: now + 7 * DAY_MS,
+      purgeAfter: now + 15 * DAY_MS,
+    });
+    expect(
+      evaluateRetention({
+        ...simulated,
+        requesters: [
+          {
+            ...requester,
+            warningAcceptedAt: now,
+            observedAt: now - RETENTION_DEFAULTS.maximumWatchAgeMs - 1,
+          },
+        ],
+      }),
+    ).toEqual({ state: "protected", reason: "watch_stale" });
+    expect(
+      evaluateRetention({
+        ...simulated,
+        requesters: [{ ...requester, warningAcceptedAt: now + 1 }],
+      }),
+    ).toEqual({ state: "protected", reason: "warning_timestamp_invalid" });
+    expect(
+      evaluateRetention({
+        ...simulated,
+        holds: [{ until: now + 30 * DAY_MS, isPin: false }],
+      }),
+    ).toEqual({ state: "protected", reason: "keep_hold" });
+  });
   it("holds failed warning delivery and rejects obsolete decisions", () => {
     expect(
       evaluateRetention({

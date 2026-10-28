@@ -9,6 +9,7 @@ import type { PreparedWatchBatch } from "./prepare.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import { queueMovieRetentionFromWatch } from "#automation/movie-editions/retention/queue.ts";
 import {
   commitBoundWatch,
   queueQuarantinedUnwatchedRestore,
@@ -37,6 +38,8 @@ export async function queueCurrentRetention(
   bucket: string,
   execution: WatchExecution,
 ): Promise<void> {
+  if (await queueMovieRetentionFromWatch(tx, authority, bucket, execution))
+    return;
   const intent = await watchAwait(
     execution,
     tx.mediaIntent.findUniqueOrThrow({
@@ -171,7 +174,6 @@ async function queueHintRetention(
   authority: WatchAuthority,
   execution: WatchExecution,
 ) {
-  if ((prepared.authority.scope.edition ?? "default") !== "default") return;
   if (prepared.expectedHint === undefined) return;
   await queueCurrentRetention(
     tx,
@@ -209,6 +211,7 @@ async function applyOutcome(
           watched: null,
         },
         prepared.freshness,
+        prepared.authority.scope.budget,
       ),
     );
     return;
@@ -229,6 +232,7 @@ async function applyOutcome(
         watched: result.outcome.watched,
       },
       result.outcome.freshness,
+      prepared.authority.scope.budget,
     ),
   );
   if (result.outcome.watched) return;
@@ -243,6 +247,7 @@ async function applyOutcome(
           watchBatchRevision: prepared.revision,
         },
         result.outcome.freshness,
+        prepared.authority.scope.budget,
       ),
     );
     return;

@@ -6,6 +6,7 @@ import {
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { watchCheckpoint } from "./execution.ts";
 import { observeWatchBatch } from "./observe.ts";
+import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
 
 /** Hints identify a binding; only a fresh authenticated requester read supplies watch state. */
 export function createMovieWatchFacetV4(
@@ -17,13 +18,17 @@ export function createMovieWatchFacetV4(
       raw: ObserveMoviePlexHintV4,
       execution: PlexBindingExecution,
     ) {
+      const invocation = movieManagementContext({
+        ...context,
+        plexBindingExecution: () => execution,
+      });
       await watchCheckpoint(execution);
       const allowed = await enabled();
       await watchCheckpoint(execution);
       if (!allowed) return { status: "disabled" as const, complete: false };
       const input = ObserveMoviePlexHintV4Schema.parse(raw);
       const result = await observeWatchBatch(
-        context,
+        invocation,
         input.mediaId,
         { expectedHint: input, edition: input.scope.edition },
         execution,

@@ -1,8 +1,7 @@
 import { z } from "zod";
 import type { Prisma, RetentionDecision } from "#generated/prisma/client.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
-import { defaultIntent, defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultIntent } from "#shared/editions/scope.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { evaluateRetention, RETENTION_DEFAULTS } from "#domain/retention.ts";
@@ -13,11 +12,26 @@ import {
 import { createWarning } from "#automation/notifications/retention-warning.ts";
 import { boundRequesterWatch, type assertBoundMediaCohort } from "./binding.ts";
 import { lineageResolved, type Media } from "./scope.ts";
+import type {
+  MovieEditionKey,
+  MovieEditionScope,
+} from "#shared/movie-editions/registry.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export type RetentionResult = Awaited<
   ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>
 >;
 type Result = RetentionResult;
+type RetentionEvaluationAuthority = {
+  epoch: number;
+  timestamp: Date;
+  policyTime?: Date;
+  movieAccess: MovieChoiceAccess | undefined;
+  captureFreshness: (freshness: MovieChoiceFreshness) => void;
+  binding: Awaited<ReturnType<typeof assertBoundMediaCohort>>;
+  scope?: MovieEditionScope;
+  budget?: PublicationAuthorityReadBudget;
+};
 export const RetentionEvidenceSchema = z
   .object({ warningEventId: z.string() })
   .catchall(z.json());
@@ -28,6 +42,19 @@ const protect = (reason: string): Result => ({
   decisionId: null,
   wakeAt: null,
 });
+
+function warningAuthority(
+  authority: RetentionEvaluationAuthority,
+  generation: number,
+) {
+  return {
+    generation,
+    epoch: authority.epoch,
+    binding: authority.binding,
+    ...(authority.scope === undefined ? {} : { scope: authority.scope }),
+    ...(authority.budget === undefined ? {} : { budget: authority.budget }),
+  };
+}
 
 function quarantineDeadline(decision: RetentionDecision): number | null {
   return decision.quarantinedAt === null ||
@@ -40,13 +67,13 @@ function quarantineDeadline(decision: RetentionDecision): number | null {
       );
 }
 
-function ownedRetentionAssets(item: Media): boolean {
+function ownedRetentionAssets(item: Media, edition: MovieEditionKey): boolean {
   return (
     item.assets.length > 0 &&
     item.assets.every(
       ({ asset }) =>
         asset.owned &&
-        asset.edition === "default" &&
+        asset.edition === edition &&
         asset.checksum !== null &&
         ["published", "quarantined"].includes(asset.state),
     )
@@ -56,22 +83,21 @@ function ownedRetentionAssets(item: Media): boolean {
 export async function evaluateRetentionItem(
   tx: Prisma.TransactionClient,
   item: Media,
-  authority: {
-    epoch: number;
-    timestamp: Date;
-    movieAccess: MovieChoiceAccess | undefined;
-    captureFreshness: (freshness: MovieChoiceFreshness) => void;
-    binding: Awaited<ReturnType<typeof assertBoundMediaCohort>>;
-  },
+  authority: RetentionEvaluationAuthority,
 ): Promise<Result> {
   const { epoch, timestamp } = authority;
-  const generation = defaultIntent(item.intents)?.generation;
+  const edition = authority.scope?.edition ?? "default";
+  const generation = (
+    edition === "default"
+      ? defaultIntent(item.intents)
+      : item.intents.find((target) => target.edition === edition)
+  )?.generation;
   if (generation === undefined) return protect("intent_missing");
-  if (!lineageResolved(item)) return protect("lineage_unresolved");
+  if (!lineageResolved(item, edition)) return protect("lineage_unresolved");
   let decision = await tx.retentionDecision.findFirst({
     where: {
       mediaId: item.id,
-      edition: "default",
+      edition,
       generation,
       state: { in: ["warning_pending", "grace_period", "quarantined"] },
     },
@@ -102,43 +128,19 @@ export async function evaluateRetentionItem(
           orderBy: { acceptedAt: "asc" },
         });
   const reserved = await tx.acquisitionReservation.findUnique({
-    where: targetWhere(defaultScope(item.id)),
+    where: { mediaId_edition: { mediaId: item.id, edition } },
   });
-  const currentAsset = await currentFulfillmentAsset(tx, item.id);
-  const fulfillment = new Map<
-    string,
-    Awaited<ReturnType<typeof requestFulfillment>>
-  >();
-  for (const request of item.requests)
-    fulfillment.set(
-      request.id,
-      await requestFulfillment(tx, {
-        kind: item.kind,
-        requestId: request.id,
-        currentAsset,
-        access: authority.movieAccess,
-        captureFreshness: authority.captureFreshness,
-      }),
-    );
-  const binding = authority.binding.members.find(
-    (value) => value.authority.binding.scope.mediaId === item.id,
+  const { fulfillment, watches } = await retentionDemandFacts(
+    tx,
+    item,
+    authority,
   );
-  if (binding === undefined)
-    throw new Error("Retention omitted a bound cohort member");
-  const watches = new Map<
-    string,
-    Awaited<ReturnType<typeof boundRequesterWatch>>
-  >();
-  for (const request of item.requests)
-    watches.set(
-      request.userId,
-      await boundRequesterWatch(tx, binding, request.userId),
-    );
   const evaluation = evaluateRetention({
     now: timestamp.getTime(),
+    policyNow: (authority.policyTime ?? timestamp).getTime(),
     generation,
     decisionGeneration: decision?.generation ?? generation,
-    owned: ownedRetentionAssets(item),
+    owned: ownedRetentionAssets(item, edition),
     identityConfirmed: true,
     activePlayback: false,
     operationInProgress: reserved !== null,
@@ -171,11 +173,11 @@ export async function evaluateRetentionItem(
       }),
   });
   if (evaluation.state === "protected") return protect(evaluation.reason);
-  decision ??= await createWarning(tx, item, {
-    generation,
-    epoch,
-    binding: authority.binding,
-  });
+  decision ??= await createWarning(
+    tx,
+    item,
+    warningAuthority(authority, generation),
+  );
   if (evaluation.state === "warning_pending")
     return {
       status: "warning",
@@ -202,7 +204,10 @@ export async function evaluateRetentionItem(
       data: { evidence },
     });
     return {
-      status: timestamp.getTime() < purgeAt ? "grace" : "purge",
+      status:
+        (authority.policyTime ?? timestamp).getTime() < purgeAt
+          ? "grace"
+          : "purge",
       decisionId: decision.id,
       wakeAt: new Date(purgeAt).toISOString(),
       reason: null,
@@ -224,4 +229,49 @@ export async function evaluateRetentionItem(
     wakeAt: graceUntil.toISOString(),
     reason: null,
   };
+}
+
+/** Every demand and watch row belongs to the selected edition's complete cohort. */
+async function retentionDemandFacts(
+  tx: Prisma.TransactionClient,
+  item: Media,
+  authority: RetentionEvaluationAuthority,
+) {
+  const currentAsset = await currentFulfillmentAsset(
+    tx,
+    item.id,
+    authority.scope?.edition,
+  );
+  const binding = authority.binding.members.find(
+    (value) => value.authority.binding.scope.mediaId === item.id,
+  );
+  if (binding === undefined)
+    throw new Error("Retention omitted a bound cohort member");
+  const fulfillment = new Map<
+    string,
+    Awaited<ReturnType<typeof requestFulfillment>>
+  >();
+  const watches = new Map<
+    string,
+    Awaited<ReturnType<typeof boundRequesterWatch>>
+  >();
+  for (const request of item.requests) {
+    fulfillment.set(
+      request.id,
+      await requestFulfillment(tx, {
+        kind: item.kind,
+        requestId: request.id,
+        currentAsset,
+        access: authority.movieAccess,
+        captureFreshness: authority.captureFreshness,
+        ...(authority.scope === undefined ? {} : { scope: authority.scope }),
+        ...(authority.budget === undefined ? {} : { budget: authority.budget }),
+      }),
+    );
+    watches.set(
+      request.userId,
+      await boundRequesterWatch(tx, binding, request.userId, authority.budget),
+    );
+  }
+  return { fulfillment, watches };
 }

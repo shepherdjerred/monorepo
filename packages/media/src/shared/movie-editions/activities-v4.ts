@@ -1,6 +1,7 @@
 import type {
   MovieOperationV4,
   MovieAttemptOperationV4,
+  MovieDecisionOperationV4,
 } from "./automation-v4.ts";
 import type {
   MovieSubtitleOperationV4,
@@ -10,6 +11,8 @@ import type {
   ObserveMoviePlexHintV4,
   ObservePlexHintResult,
 } from "#shared/plex-events/contract.ts";
+import type { MovieRetentionResultV4 } from "./retention-v4.ts";
+import type { MovieRemovalCompletionV4 } from "./removal-v4.ts";
 
 export type MovieWatchActivitiesV4 = {
   observeMoviePlexHintV4: (
@@ -19,6 +22,18 @@ export type MovieWatchActivitiesV4 = {
 
 /** Scoped IDs only; private releases, file plans and credentials stay in Activities. */
 export type MovieNetworkActivitiesV4 = {
+  completeMovieRemovalV4: (input: MovieRemovalCompletionV4) => Promise<{
+    status: "completed" | "obsolete";
+    reason: string | null;
+  }>;
+  finalizeMovieRestorationV4: (input: MovieOperationV4) => Promise<void>;
+  publishRestoredMovieToPlexV4: (input: MovieOperationV4) => Promise<{
+    status: "available" | "waiting" | "blocked" | "obsolete";
+    reason: string | null;
+  }>;
+  evaluateMovieRetentionV4: (
+    input: MovieOperationV4,
+  ) => Promise<MovieRetentionResultV4>;
   findMovieSubtitlesV4: (input: MovieSubtitleOperationV4) => Promise<{
     status: "found" | "waiting" | "blocked" | "obsolete";
     subtitleId: string | null;
@@ -44,6 +59,18 @@ export type MovieNetworkActivitiesV4 = {
   finalizeMovieAcquisitionV4: (input: MovieAttemptOperationV4) => Promise<void>;
 };
 export type MovieFileActivitiesV4 = {
+  restoreMovieFilesV4: (input: MovieOperationV4) => Promise<{
+    status: "restored" | "protected";
+    reason?: string;
+  }>;
+  purgeMovieFilesV4: (input: MovieDecisionOperationV4) => Promise<{
+    status: "purged" | "protected";
+    reason?: string;
+  }>;
+  quarantineMovieFilesV4: (input: MovieDecisionOperationV4) => Promise<{
+    status: "quarantined" | "protected";
+    reason?: string;
+  }>;
   installMovieSubtitlesV4: (input: MovieSubtitleInstallV4) => Promise<{
     status: "installed" | "blocked";
     reason?: string;

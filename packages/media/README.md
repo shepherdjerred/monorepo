@@ -95,15 +95,47 @@ Observation fences, known/unknown projections and unwatched intent changes stay
 within that edition. Unknown metadata clears the bound value without crediting
 another cut, and an older batch cannot overwrite a newer observation.
 
-The periodic watch sweep follows its existing default/TV phase with bounded,
-ordered pages of available named movie targets. Initial-library files use their
-actual adoption binding without constructing acquisition history. Plex hints
-resolve the exact current item claim; named cuts queue version-4 scoped watch
-work, while default hints retain their original payloads and hashes. Each hint
-checks its stored operation, generation, epoch and binding before reading the
-requester's current metadata. A scrobble event alone never proves watched state.
-Named hints cannot enqueue default-edition retention work. Committed-quarantine
-watch retains its separate default-scope contract.
+Scoped movie retention evaluates the selected target's generation, complete
+requester cohort, holds and current serving binding. Each requester needs a
+fulfilled choice for that cut and fresh authenticated watch evidence. Requests
+and holds for another edition retain their own authority. Unclaimed files and
+unresolved household request-history holds remain protected.
+Version-4 removal warnings retain the selected edition and original decision's
+Plex projection. Delivery rechecks watch evidence, Keep, generation and configured
+access after its durable claim. Receipt reconciliation preserves the original
+warning and acceptance; quarantine eligibility follows seven full days of grace.
+The original SDK, writer, storage and mapping deadlines remain in force across
+the evaluation and send. Historical default warning bodies remain literal.
+
+Quarantine moves the exact video and its owned caption files through the existing
+filesystem journals. Its scoped receipt retains the original decision, manifest
+and Plex projection before retiring that binding. Quarantined requester reads
+use this committed parent; they cannot borrow a serving pointer from another cut.
+Purge requires a further seven days from the actual quarantine commit and fresh
+watch, warning, hold and ownership checks. A later retention command can continue
+the same decision. Missing bytes without that purge's own journal remain protected.
+Database settlement failures resume the same physical journals.
+
+Restoration records an actual physical successor without changing acquisition or
+initial-library history. It restores the same video and captions, then verifies
+the original Plex item and Part before publishing a fresh binding. A separate
+rebinding timestamp preserves the asset's original publication time. Subtitle
+work and later upgrades follow the exact restored version and its receipt;
+restoring the serving copy does not renew an earlier upgrade's rollback deadline.
+Logical completion queues current caption requirements and personal availability
+notices without creating a transfer or seeding record.
+
+The periodic watch sweep follows its existing default/TV phase with ordered
+available and quarantined named movie targets. Each Activity observes one complete
+cohort using its original provenance allowance, then continues its cursor.
+Initial-library files use their actual adoption binding without constructing
+acquisition history. Plex hints resolve the exact current item claim. Version-2
+movie associations, including the unmarked choice, queue scoped v4 watch and
+retention work; version-1 associations retain their original payloads and hashes.
+Each hint checks its stored operation, generation, epoch and binding before reading
+the requester's current metadata. A scrobble event alone never proves watched
+state. An authenticated unwatched observation of quarantined v4 bytes queues
+restoration for that exact edition.
 
 The internal movie Files contract is a version-2 object, separate from the
 historical array file plan. It records exact edition scope, original request

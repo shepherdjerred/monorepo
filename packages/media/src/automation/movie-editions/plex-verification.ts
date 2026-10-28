@@ -18,6 +18,22 @@ import type {
   AssociationExecution,
 } from "#automation/publication/association/types.ts";
 import type { PlexClient } from "#integrations/plex.ts";
+import type { PlexServingExpected } from "#shared/plex-binding/library.ts";
+import type { PlexMovieAssociationV2 } from "#shared/plex-binding/contract.ts";
+
+function assertRestoredItem(
+  expected: PlexServingExpected,
+  association: PlexMovieAssociationV2,
+) {
+  if (expected.schemaVersion !== 3) return;
+  const part = association.item.media[0].parts[0];
+  if (
+    association.item.ratingKey !== expected.originalItem.ratingKey ||
+    part.id !== expected.originalItem.part.id ||
+    part.file !== expected.originalItem.part.file
+  )
+    throw new PlexBindingProtection("metadata_changed");
+}
 
 /** Two complete stable inventories and exact metadata readbacks; no ownership or request effects. */
 export async function verifyMoviePlexV2(
@@ -48,12 +64,14 @@ export async function verifyMoviePlexV2(
       scope,
       first.inventory,
     );
+    assertRestoredItem(scope.expected, firstSelected);
     const second = await scanInventory(current, sections, true);
     const selected = await selectMovieAssociationV2(
       current,
       scope,
       second.inventory,
     );
+    assertRestoredItem(scope.expected, selected);
     if (
       first.inventoryHash !== second.inventoryHash ||
       associationHash(firstSelected) !== associationHash(selected)

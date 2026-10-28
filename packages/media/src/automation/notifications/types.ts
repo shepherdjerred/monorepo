@@ -13,6 +13,7 @@ export type NotificationContext = Pick<
   | "permittedSections"
   | "plexAccess"
   | "plexBindingExecution"
+  | "movieManagement"
 > & {
   /** Activity cancellation/heartbeat boundary after the durable claim, with no authority locks held. */
   checkpoint?: (phase: "notification-claimed") => Promise<void>;

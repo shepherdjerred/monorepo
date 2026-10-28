@@ -13,6 +13,7 @@ import { LibraryPlexBindingInputV1Schema } from "./activities.ts";
 import { ServingPlexObservationSchema } from "./observations.ts";
 import { MovieServingPlexV2Schema } from "#shared/movie-editions/plex-v2.ts";
 import { PublicationHashSchema as Hash } from "#shared/publication-proof/effects.ts";
+import { MovieRestorePlexExpectedV1Schema } from "#shared/movie-editions/restore-plex-v1.ts";
 
 /** New source format; literal acquisition/native expected bodies remain version 1. */
 export const LibraryPlexExpectedV2Schema = z
@@ -35,6 +36,7 @@ export const LibraryPlexExpectedV2Schema = z
 export const PlexServingExpectedProtocolSchema = z.union([
   PlexBindingExpectedSchema,
   LibraryPlexExpectedV2Schema,
+  MovieRestorePlexExpectedV1Schema,
 ]);
 export type PlexServingExpected = z.infer<
   typeof PlexServingExpectedProtocolSchema
