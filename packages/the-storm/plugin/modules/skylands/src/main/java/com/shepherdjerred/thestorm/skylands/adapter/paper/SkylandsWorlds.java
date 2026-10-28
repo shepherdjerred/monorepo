@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.skylands.adapter.paper;
 
+import com.shepherdjerred.thestorm.skylands.app.SkylandsAssets;
 import com.shepherdjerred.thestorm.skylands.domain.SkylandsConfig;
 import org.bukkit.GameRules;
 import org.bukkit.Location;
@@ -19,7 +20,7 @@ public final class SkylandsWorlds {
    * its saved generation identity first; classic worlds require an offline replacement. Nothing
    * else (Multiverse or bukkit.yml) may load this world before the module.
    */
-  public static World install(Plugin plugin, SkylandsConfig config) {
+  public static World install(Plugin plugin, SkylandsConfig config, SkylandsAssets assets) {
     var server = plugin.getServer();
     if (!server.isPrimaryThread()) {
       throw new IllegalStateException("Skylands world creation requires the primary server thread");
@@ -34,7 +35,7 @@ public final class SkylandsWorlds {
       throw new IllegalStateException("Skylands world creation must run before worlds tick");
     }
     // Register the layered structure policy before WorldCreator can generate chunks.
-    var generator = LayeredSkylandsGenerator.create(plugin, config.world(), config.seed());
+    var generator = LayeredSkylandsGenerator.create(plugin, config.world(), config.seed(), assets);
     var world = create(server, config, generator);
     placeSpawn(world, generator.spawnLocation(world));
     return world;

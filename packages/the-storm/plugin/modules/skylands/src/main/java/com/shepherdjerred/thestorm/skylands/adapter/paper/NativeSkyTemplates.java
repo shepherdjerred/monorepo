@@ -1,16 +1,20 @@
 package com.shepherdjerred.thestorm.skylands.adapter.paper;
 
+import com.shepherdjerred.thestorm.skylands.app.SkylandsAssets;
 import com.shepherdjerred.thestorm.skylands.domain.SkyPosition;
 import com.shepherdjerred.thestorm.skylands.domain.SkyTemplate;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 
@@ -30,19 +34,31 @@ public final class NativeSkyTemplates {
     this.templates = Map.copyOf(templates);
   }
 
-  public static NativeSkyTemplates load() {
+  /** Catalog access is pure; bootstrap can enumerate bytes before Bukkit is initialized. */
+  public static Set<String> keys() {
+    return Set.copyOf(NativeSkyConnectors.LINKS.keySet());
+  }
+
+  /** Constructs Bukkit snapshots from already prepared memory, with no file/resource reads. */
+  public static NativeSkyTemplates load(SkylandsAssets assets) {
+    if (!assets.keys().equals(keys())) {
+      throw new IllegalStateException(
+          "Native Skylands resource catalog differs from this generator");
+    }
     var result = new TreeMap<String, Template>();
     for (var key : new java.util.TreeSet<>(NativeSkyConnectors.LINKS.keySet())) {
-      result.put(key, load(key));
+      result.put(key, load(key, assets));
     }
     return new NativeSkyTemplates(result);
   }
 
-  private static Template load(String key) {
-    var structure =
-        Objects.requireNonNull(
-            Bukkit.getStructureManager().loadStructure(NamespacedKey.minecraft(key)),
-            "Missing native Skylands template " + key);
+  private static Template load(String key, SkylandsAssets assets) {
+    org.bukkit.structure.Structure structure;
+    try (var input = new ByteArrayInputStream(assets.template(key))) {
+      structure = Bukkit.getStructureManager().loadStructure(input);
+    } catch (IOException failure) {
+      throw new UncheckedIOException("Invalid native Skylands template " + key, failure);
+    }
     var links = new HashMap<SkyPosition, BlockData>();
     for (var link : Objects.requireNonNull(NativeSkyConnectors.LINKS.get(key))) {
       links.put(link.position(), Bukkit.createBlockData(link.block()));

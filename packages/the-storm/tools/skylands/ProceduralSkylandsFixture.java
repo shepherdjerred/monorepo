@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.skylands.adapter.paper.SkylandsWorlds;
 import com.shepherdjerred.thestorm.skylands.domain.SkyCell;
 import com.shepherdjerred.thestorm.skylands.domain.SkyPlan;
 import com.shepherdjerred.thestorm.skylands.domain.SkylandsConfig;
+import com.shepherdjerred.thestorm.skylands.app.SkylandsAssets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
@@ -27,6 +28,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /** Extended native acceptance, outside CI. Every block is produced by the repository generator. */
 public final class ProceduralSkylandsFixture extends JavaPlugin {
+  private final SkylandsAssets assets;
+  private final String preparationThread;
+
+  public ProceduralSkylandsFixture(SkylandsAssets assets, String preparationThread) {
+    this.assets = assets;
+    this.preparationThread = preparationThread;
+  }
   private record Chunk(int x, int z) {}
   private final ExecutorService planning = Executors.newSingleThreadExecutor();
   private final ArrayDeque<Chunk> pending = new ArrayDeque<>();
@@ -45,12 +53,14 @@ public final class ProceduralSkylandsFixture extends JavaPlugin {
   private void prepare() {
     long seed = Long.parseLong(System.getProperty("sky.fixture.seed"));
     String name = "sky_generated";
-    world = SkylandsWorlds.install(this, new SkylandsConfig(name, seed, SkylandsConfig.FORMAT));
+    world = SkylandsWorlds.install(this, new SkylandsConfig(name, seed, SkylandsConfig.FORMAT), assets);
     generator = (LayeredSkylandsGenerator) world.getGenerator();
     write("startup.json", Map.of("generator", generator.getClass().getName(),
         "world", world.getName(), "seed", world.getSeed(), "uuid", world.getUID().toString(),
         "spawn", world.getSpawnLocation().toVector().toString(),
-        "respawnRadius", world.getGameRuleValue(GameRules.RESPAWN_RADIUS)));
+        "respawnRadius", world.getGameRuleValue(GameRules.RESPAWN_RADIUS),
+        "preparationThread", preparationThread, "snapshotThread", Thread.currentThread().getName(),
+        "snapshotOnPrimaryThread", Bukkit.isPrimaryThread()));
     if (Boolean.getBoolean("sky.fixture.startupOnly")) {
       world.save();
       getLogger().info("LAYERED_STARTUP_READY " + world.getUID());
@@ -60,10 +70,11 @@ public final class ProceduralSkylandsFixture extends JavaPlugin {
     world.setAutoSave(false);
     world.setGameRule(GameRules.ADVANCE_TIME, false);
     world.setTime(6000);
-    write("template-geometry.json", NativeSkyTemplates.load().geometry());
+    write("template-geometry.json", NativeSkyTemplates.load(assets).geometry());
     var defaults = new TreeMap<String, String>();
-    for (var material : org.bukkit.Material.values()) {
-      if (material.isBlock()) defaults.put(material.getKey().toString(), material.createBlockData().getAsString());
+    for (var block : io.papermc.paper.registry.RegistryAccess.registryAccess()
+        .getRegistry(io.papermc.paper.registry.RegistryKey.BLOCK)) {
+      defaults.put(block.getKey().toString(), block.createBlockData().getAsString());
     }
     write("block-defaults.json", defaults);
     CompletableFuture.supplyAsync(this::discover, planning).whenComplete((plans, error) ->

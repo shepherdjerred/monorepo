@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.skylands.adapter.paper;
 
+import com.shepherdjerred.thestorm.skylands.app.SkylandsAssets;
 import com.shepherdjerred.thestorm.skylands.domain.LayeredClimate;
 import com.shepherdjerred.thestorm.skylands.domain.LayeredLandscape;
 import com.shepherdjerred.thestorm.skylands.domain.LayeredOres;
@@ -43,10 +44,11 @@ public final class LayeredSkylandsGenerator extends ChunkGenerator {
   }
 
   /** Prepare before WorldCreator runs. Use only with a fresh world directory. */
-  public static LayeredSkylandsGenerator create(Plugin plugin, String world, long seed) {
+  public static LayeredSkylandsGenerator create(
+      Plugin plugin, String world, long seed, SkylandsAssets assets) {
     if (!plugin.getServer().isPrimaryThread())
       throw new IllegalStateException("Load native assets on the main thread");
-    var generator = new LayeredSkylandsGenerator(seed, NativeSkyTemplates.load());
+    var generator = new LayeredSkylandsGenerator(seed, NativeSkyTemplates.load(assets));
     plugin
         .getServer()
         .getPluginManager()

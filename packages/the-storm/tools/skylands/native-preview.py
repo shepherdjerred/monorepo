@@ -40,7 +40,17 @@ root.mkdir(parents=True)
 classes = root / "classes"
 classes.mkdir()
 subprocess.run(
-    ["javac", "--release", "25", "-cp", classpath, "-d", str(classes), str(HERE / "ProceduralSkylandsFixture.java")],
+    [
+        "javac",
+        "--release",
+        "25",
+        "-cp",
+        classpath,
+        "-d",
+        str(classes),
+        str(HERE / "ProceduralSkylandsFixture.java"),
+        str(HERE / "ProceduralSkylandsBootstrap.java"),
+    ],
     check=True,
 )
 (root / "plugins").mkdir()
@@ -51,9 +61,10 @@ with zipfile.ZipFile(root / "plugins/ProceduralSkylands.jar", "w", zipfile.ZIP_D
     for file in classes.rglob("*.class"):
         out.write(file, file.relative_to(classes))
     out.writestr(
-        "plugin.yml",
+        "paper-plugin.yml",
         "name: ProceduralSkylands\nversion: 1.0\n"
-        'main: dev.tsmc.skylands.ProceduralSkylandsFixture\napi-version: "26.3"\n',
+        "main: dev.tsmc.skylands.ProceduralSkylandsFixture\n"
+        'bootstrapper: dev.tsmc.skylands.ProceduralSkylandsBootstrap\napi-version: "26.3"\n',
     )
 (root / "eula.txt").write_text("eula=true\n")
 flat = json.dumps(

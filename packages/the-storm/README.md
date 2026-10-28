@@ -504,7 +504,14 @@ declared and loaded.
 
 ### Layered generation
 
-`LayeredSkylandsGenerator.create(plugin, worldName, seed)` prepares a fresh-world
+Paper's early bootstrap reads the pinned built-in native structure bytes on
+`ServerMain`, before the ticking `Server thread` exists. It passes an immutable
+`SkylandsAssets` bundle into the plugin; the world lifecycle decodes only those
+memory buffers into Bukkit snapshots on the primary thread. Missing or mismatched
+assets fail startup. No template file/resource I/O or future waits run in the
+Paper generation adapters.
+
+`LayeredSkylandsGenerator.create(plugin, worldName, seed, assets)` prepares a fresh-world
 generator before `WorldCreator` runs. This version expands the original Beta
 density into separate shelves across y -28..259. Land biomes vary in three
 dimensions; ores use depth within each island. Rare closed ocean vessels add
@@ -560,7 +567,7 @@ Unit checks and extended real-Paper acceptance are separate:
 ```bash
 mise exec -- gradle -p packages/the-storm/plugin :skylands:test :skylands:pmdMain :skylands:pmdTest :skylands:spotlessCheck :architecture:test :skylands:jar
 python3 packages/the-storm/tools/skylands/native-preview.py --output /tmp/skylands-native-forward --seed 1731
-uv run --no-project --with nbtlib --with numpy python packages/the-storm/tools/skylands/audit-generated.py /tmp/skylands-native-forward
+uv run --script packages/the-storm/tools/skylands/audit-generated.py /tmp/skylands-native-forward
 ```
 
 The extended fixture requires the local licensed Paper 26.3 build 223 and its
