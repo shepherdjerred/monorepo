@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.creative.app.CreativeEntry;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
 import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
+import com.shepherdjerred.thestorm.essentials.domain.place.SafeSpots;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
@@ -62,7 +63,7 @@ import org.bukkit.inventory.EquipmentSlot;
 
 /** Repository-owned sign-and-button gate to the four server worlds. */
 final class StargateServerHub implements Listener {
-  private record Chunk(int x, int z) {}
+  record Chunk(int x, int z) {}
 
   private record Hub(ServerGate config, Stargate gate, StargateNetwork network) {}
 
@@ -332,19 +333,26 @@ final class StargateServerHub implements Listener {
       Player player, Hub hub, WorldTrip target) {
     var spawn = target.destination().landing();
     var world = target.world();
-    var x = spawn.x() >> 4;
-    var z = spawn.z() >> 4;
+    var radius =
+        target.mount() == null
+            ? 0
+            : SafeSpots.HORIZONTAL_SEARCH_DISTANCE
+                + (int) Math.ceil(Math.max(target.mount().getWidth(), player.getWidth()) / 2 + 0.5);
+    var chunks = landingChunks(spawn, radius);
     var id = player.getUniqueId();
     var trip = trips.start(id, hub);
-    return world
-        .getChunkAtAsync(x, z)
+    var loads =
+        chunks.stream()
+            .map(chunk -> world.getChunkAtAsync(chunk.x(), chunk.z()))
+            .toArray(CompletableFuture<?>[]::new);
+    return CompletableFuture.allOf(loads)
         .thenApplyAsync(
-            chunk -> {
-              tickets.hold(world, x, z);
+            ignored -> {
+              var held = holdLanding(world, chunks);
               Runnable release =
                   () -> {
                     trips.finish(id, trip);
-                    tickets.release(world, x, z);
+                    for (var chunk : held) tickets.release(world, chunk.x(), chunk.z());
                   };
               try {
                 if (!player.isOnline()
@@ -373,6 +381,30 @@ final class StargateServerHub implements Listener {
               if (failure != null) trips.finish(id, trip);
             },
             context.scheduler().mainThread());
+  }
+
+  static Set<Chunk> landingChunks(Pos spawn, int radius) {
+    var chunks = new HashSet<Chunk>();
+    for (var x = (spawn.x() - radius) >> 4; x <= (spawn.x() + radius) >> 4; x++) {
+      for (var z = (spawn.z() - radius) >> 4; z <= (spawn.z() + radius) >> 4; z++) {
+        chunks.add(new Chunk(x, z));
+      }
+    }
+    return Set.copyOf(chunks);
+  }
+
+  private Set<Chunk> holdLanding(World world, Set<Chunk> chunks) {
+    var held = new HashSet<Chunk>();
+    try {
+      for (var chunk : chunks) {
+        tickets.hold(world, chunk.x(), chunk.z());
+        held.add(chunk);
+      }
+      return held;
+    } catch (RuntimeException failure) {
+      for (var chunk : held) tickets.release(world, chunk.x(), chunk.z());
+      throw failure;
+    }
   }
 
   private Optional<Component> tripRefusal(UUID playerId, Location destination) {

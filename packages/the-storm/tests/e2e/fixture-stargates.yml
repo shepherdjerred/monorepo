@@ -12,7 +12,7 @@ serverGates:
           label: "2026",
           world: frontier,
           kind: WORLD,
-          landing: { x: 970, y: 71, z: 1 },
+          landing: { x: 970, y: 71, z: 0 },
         }
       - {
           label: "2015",

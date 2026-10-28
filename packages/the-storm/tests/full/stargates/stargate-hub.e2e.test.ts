@@ -35,6 +35,16 @@ async function buildHub(rcon: RconClient): Promise<void> {
       `execute in minecraft:${dimension} run fill 969 71 0 971 73 2 minecraft:air`,
     );
   }
+  await rcon.command("execute in minecraft:frontier run forceload add 960 -16");
+  await rcon.command(
+    "execute in minecraft:frontier run fill 969 70 -1 971 70 -1 minecraft:stone",
+  );
+  await rcon.command(
+    "execute in minecraft:frontier run fill 969 71 -1 971 73 -1 minecraft:air",
+  );
+  await rcon.command(
+    "execute in minecraft:frontier run forceload remove 960 -16",
+  );
   for (const y of ["70", "76"])
     await rcon.command(`fill 959 ${y} 0 961 ${y} 0 minecraft:obsidian`);
   for (const y of ["71", "75"])
@@ -200,6 +210,16 @@ test("world gate carries a boat and rider to the 2026 world", async ({
     messages.push(message);
   });
   await buildHub(rcon);
+  await waitUntil(
+    "adjacent destination chunk unloads before mounted travel",
+    async () => {
+      const result = await rcon.command(
+        "execute in minecraft:frontier unless loaded 970 71 -1",
+      );
+      return result.includes("Test passed");
+    },
+    30_000,
+  );
   try {
     await enterHub(bot, rcon, "2026", true);
   } catch (error) {
