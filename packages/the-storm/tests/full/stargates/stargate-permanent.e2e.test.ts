@@ -1,9 +1,97 @@
 import { once } from "node:events";
 import { Vec3 } from "vec3";
 import { expect } from "vitest";
+import type { Bot } from "mineflayer";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+
+async function carrySaddledMob(
+  bot: Bot,
+  rcon: RconClient,
+  kind: "horse" | "pig" | "strider",
+) {
+  await rcon.command(`tp ${bot.username} 400.5 71 2.5`);
+  const tame = kind === "horse" ? ",Tame:1b" : "";
+  const steering =
+    kind === "pig" ? "carrot_on_a_stick" : "warped_fungus_on_a_stick";
+  if (kind !== "horse")
+    await rcon.command(
+      `item replace entity ${bot.username} weapon.mainhand with minecraft:${steering}`,
+    );
+  await rcon.command(
+    `summon minecraft:${kind} 400.5 71 2.5 {Tags:["storm_test_mount"]${tame},equipment:{saddle:{id:"minecraft:saddle",count:1}}}`,
+  );
+  await rcon.command(
+    `ride ${bot.username} mount @e[tag=storm_test_mount,limit=1]`,
+  );
+  await waitUntil(`player mounts ${kind}`, async () => {
+    const result = await rcon.command(
+      `execute as ${bot.username} on vehicle if entity @s[tag=storm_test_mount]`,
+    );
+    return result.includes("Test passed");
+  });
+  let z = 2.5;
+  await waitUntil(
+    `${kind} and rider arrive at destination`,
+    async () => {
+      const result = await rcon.command(
+        `execute as ${bot.username} on vehicle if entity @s[tag=storm_test_mount,x=410,y=71,z=2,distance=..4]`,
+      );
+      if (result.includes("Test passed")) return true;
+      z = Math.max(0.5, z - 0.2);
+      bot._client.write("vehicle_move", {
+        x: 400.5,
+        y: 71,
+        z,
+        yaw: 180,
+        pitch: 0,
+        onGround: true,
+      });
+      return false;
+    },
+    20_000,
+  );
+  await rcon.command(`ride ${bot.username} dismount`);
+  await rcon.command("kill @e[tag=storm_test_mount]");
+}
+
+async function carryMinecart(bot: Bot, rcon: RconClient) {
+  await rcon.command(`tp ${bot.username} 400.5 71 2.5`);
+  await rcon.command("fill 400 70 1 400 70 3 minecraft:redstone_block");
+  await rcon.command(
+    "fill 400 71 1 400 71 3 minecraft:powered_rail[shape=north_south,powered=true]",
+  );
+  await rcon.command(
+    'summon minecraft:minecart 400.5 71.1 2.5 {Tags:["storm_test_cart"]}',
+  );
+  await rcon.command(
+    `ride ${bot.username} mount @e[tag=storm_test_cart,limit=1]`,
+  );
+  await waitUntil("player mounts minecart", async () => {
+    const result = await rcon.command(
+      `execute as ${bot.username} on vehicle if entity @s[tag=storm_test_cart]`,
+    );
+    return result.includes("Test passed");
+  });
+  await rcon.command(
+    "data merge entity @e[tag=storm_test_cart,limit=1] {Motion:[0.0d,0.0d,-0.3d]}",
+  );
+  await waitUntil(
+    "minecart and rider arrive at destination",
+    async () => {
+      const result = await rcon.command(
+        `execute as ${bot.username} on vehicle if entity @s[tag=storm_test_cart,x=410,y=71,z=2,distance=..4]`,
+      );
+      return result.includes("Test passed");
+    },
+    20_000,
+  );
+  await rcon.command(`ride ${bot.username} dismount`);
+  await rcon.command("kill @e[tag=storm_test_cart]");
+  await rcon.command("fill 400 71 1 400 71 3 minecraft:air");
+  await rcon.command("fill 400 70 1 400 70 3 minecraft:stone");
+}
 
 async function buildFrame(rcon: RconClient, x: number) {
   const origin = String(x),
@@ -145,6 +233,9 @@ test("sign-created fixed gate opens automatically and closes when its destinatio
     20_000,
   );
   await rcon.command(`ride ${bot.username} dismount`);
+  for (const kind of ["horse", "pig", "strider"] as const)
+    await carrySaddledMob(bot, rcon, kind);
+  await carryMinecart(bot, rcon);
   await rcon.command(`tp ${bot.username} 413.5 71 3.5`);
   await waitUntil(
     "player reaches destination sign",
