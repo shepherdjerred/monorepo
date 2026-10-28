@@ -7,7 +7,7 @@ import { z } from "zod";
 import { childEnvironment } from "tasknotes-macos/scripts/mac-account-contract";
 import { root } from "../../../model";
 import { executePrivateTransport } from "../../host";
-import { macInspectionArguments } from "./prepare";
+import { macAccountControlArguments } from "./prepare";
 
 // Explicit macOS controls, never discovered by Vitest or allowed to touch an app.
 assert.equal(
@@ -84,7 +84,7 @@ async function compileFixture() {
 }
 
 async function runStreamControls(program: string) {
-  const argv = macInspectionArguments(program);
+  const argv = macAccountControlArguments(program);
   assert.equal(argv.at(-1), program);
   assert.equal(argv.filter((entry) => entry.includes(program)).length, 1);
   const payload = "public binary-exact value\0\r\né🙂";
@@ -150,7 +150,7 @@ async function runDeadlineControl(program: string) {
   const started = performance.now();
   await assert.rejects(
     executePrivateTransport(
-      macInspectionArguments(program),
+      macAccountControlArguments(program),
       frame({ action: "wait", pidFile }),
       1000,
     ),

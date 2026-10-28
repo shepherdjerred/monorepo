@@ -30,7 +30,10 @@ import { fingerprintOutbox } from "../../outbox.ts";
 import { verifyReplica } from "../../model.ts";
 import { macFileSHA } from "tasknotes-macos/scripts/apple-acceptance/mac-artifact.ts";
 import { readCheckpoint } from "./state.ts";
-import { prepareGuestMacInput } from "./account-input/prepare";
+import {
+  macAccountControlArguments,
+  prepareGuestMacInput,
+} from "./account-input/prepare";
 import {
   collectGuestMacInput,
   installGuestMacInputApproval,
@@ -219,7 +222,7 @@ export async function runGuestAccount(
   }
   await verifyPending();
   const result = await executePrivateTransport(
-    [helper],
+    macAccountControlArguments(helper),
     new TextEncoder().encode(JSON.stringify(input)),
     60_000,
   );
