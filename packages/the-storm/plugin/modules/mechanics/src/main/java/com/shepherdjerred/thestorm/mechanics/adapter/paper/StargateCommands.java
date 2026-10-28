@@ -115,12 +115,8 @@ final class StargateCommands {
     var gate = book.registry().gate(network.orElseThrow().id(), gateName);
     if (gate.isEmpty()) return fail(sender, "No such Stargate on that network.");
     var value = gate.orElseThrow();
-    var policy = network.orElseThrow().access();
-    var authorized =
-        policy instanceof NetworkAccess.Public
-            ? player.getUniqueId().equals(value.ownerId())
-            : access.mayUse(player, policy);
-    if (!authorized) return fail(sender, "You cannot manage this Stargate.");
+    if (!player.getUniqueId().equals(value.ownerId()))
+      return fail(sender, "You cannot manage this Stargate.");
     var world = context.plugin().getServer().getWorld(value.worldId());
     if (world == null || !portals.canRemove(value)) {
       return fail(sender, "Visit the gate and wait for its portal to close before removing it.");

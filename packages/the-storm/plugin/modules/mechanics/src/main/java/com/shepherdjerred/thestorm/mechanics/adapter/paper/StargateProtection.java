@@ -3,9 +3,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
-import com.shepherdjerred.thestorm.mechanics.app.StargateAccess;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
-import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.Stargate;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -29,16 +27,13 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 final class StargateProtection implements Listener {
   private final StargateBook book;
   private final ModuleContext context;
-  private final StargateAccess access;
   private final StargatePortals portals;
   private final Protection protection;
   private final ChunkTickets tickets;
 
-  StargateProtection(
-      ModuleContext context, StargateBook book, StargateAccess access, StargatePortals portals) {
+  StargateProtection(ModuleContext context, StargateBook book, StargatePortals portals) {
     this.context = context;
     this.book = book;
-    this.access = access;
     this.portals = portals;
     this.protection = context.services().require(Protection.class);
     this.tickets = context.services().require(ChunkTickets.class);
@@ -73,16 +68,11 @@ final class StargateProtection implements Listener {
   }
 
   private boolean mayRemove(Player player, Block block, Stargate gate) {
-    var policy = book.registry().network(gate.networkId()).orElseThrow().access();
-    var authorized =
-        policy instanceof NetworkAccess.Public
-            ? player.getUniqueId().equals(gate.ownerId())
-            : access.mayUse(player, policy);
     var cells = new java.util.ArrayList<>(gate.frame().frameBlocks());
     cells.addAll(gate.frame().interior());
     cells.add(gate.sign());
     cells.add(gate.button());
-    return authorized
+    return player.getUniqueId().equals(gate.ownerId())
         && new Guard(protection)
             .cells(player.getUniqueId(), new PaperGrid(block.getWorld()), cells)
             .isAllowed();

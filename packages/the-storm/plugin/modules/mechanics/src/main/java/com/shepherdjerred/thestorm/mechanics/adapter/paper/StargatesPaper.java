@@ -48,7 +48,7 @@ public final class StargatesPaper {
         .registerEarly("stargates", portals::resetPlayer);
     var serverHub = new StargateServerHub(context, book, settings, config.serverGates());
     var events = context.plugin().getServer().getPluginManager();
-    events.registerEvents(new StargateProtection(context, book, access, portals), context.plugin());
+    events.registerEvents(new StargateProtection(context, book, portals), context.plugin());
     events.registerEvents(
         new StargateCreation(context, book, access, enabled::get), context.plugin());
     events.registerEvents(portals, context.plugin());

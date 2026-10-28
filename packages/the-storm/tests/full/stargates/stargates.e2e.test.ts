@@ -7,6 +7,28 @@ import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 
+async function verifyInviteeCannotRemove(
+  visitor: Bot,
+  rcon: RconClient,
+  sign: NonNullable<ReturnType<Bot["blockAt"]>>,
+) {
+  const refusedRemoval = waitForMessage(
+    visitor,
+    /You cannot manage this Stargate/u,
+  );
+  visitor.chat("/stargate remove Testgate First");
+  await refusedRemoval;
+  const refusedBreak = waitForMessage(
+    visitor,
+    /You cannot remove this Stargate/u,
+  );
+  await visitor.dig(sign);
+  await refusedBreak;
+  expect(
+    await rcon.command("execute if block 401 72 1 minecraft:oak_wall_sign"),
+  ).toContain("Test passed");
+}
+
 async function verifyResetCompleted(
   secondBot: Bot,
   rcon: RconClient,
@@ -126,6 +148,7 @@ test("a private Stargate network admits its invited players and denies others", 
   const allowed = waitForMessage(secondBot, /Destination: Second/u);
   await secondBot.activateBlock(visitorSign);
   await allowed;
+  await verifyInviteeCannotRemove(secondBot, rcon, visitorSign);
   await rcon.command(`tp ${bot.username} 401.5 71 3.5`);
   await waitUntil(
     "owner reaches Stargate",

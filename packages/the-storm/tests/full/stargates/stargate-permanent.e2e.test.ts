@@ -63,6 +63,16 @@ test("sign-created fixed gate opens automatically and closes when its destinatio
     await bot.activateBlock(sign);
     await editor;
     const name = x === 400 ? "First" : "Second";
+    if (x === 400) {
+      const invalid = waitForMessage(bot, /Leave line four blank or use A/u);
+      bot.updateSign(sign, "First\nSecond\n\nB");
+      await invalid;
+      const retry = once(bot._client, "open_sign_entity", {
+        signal: AbortSignal.timeout(5000),
+      });
+      await bot.activateBlock(sign);
+      await retry;
+    }
     const saved = waitForMessage(
       bot,
       new RegExp(`Stargate ${name} created`, "u"),

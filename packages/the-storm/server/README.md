@@ -120,7 +120,7 @@ Private and town networks are created with `/stargate network create`; private
 network owners manage invitations with `/stargate network invite` and `uninvite`.
 Right-click the sign to select another gate, press the button and enter. To fix
 the destination, put its name on line two; add `A` on line four to keep that
-gate open when its destination and permissions allow. An authorized player can
+gate open when its destination and permissions allow. The gate owner can
 break a gate's frame, sign or button to unregister it, or use `/stargate remove
 <network> <gate>`. Network and gate records persist in the Storm database.
 

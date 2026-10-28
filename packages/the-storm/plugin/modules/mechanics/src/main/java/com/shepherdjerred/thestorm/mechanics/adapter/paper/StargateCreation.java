@@ -68,7 +68,8 @@ final class StargateCreation implements Listener {
     var facing = view.facing().orElseThrow();
     var frame = StargateFrame.find(grid, sign, facing);
     if (frame.isEmpty()) return;
-    if (!available(event)) return;
+    var option = lines.get(3).strip();
+    if (!available(event, option)) return;
     var choice = networkChoice(event, lines.get(2));
     if (choice.isEmpty()) return;
     var network = choice.orElseThrow().network();
@@ -107,7 +108,7 @@ final class StargateCreation implements Listener {
               sign,
               frame.orElseThrow(),
               lines.get(1).isBlank() ? null : lines.get(1).strip(),
-              lines.get(3).strip().equalsIgnoreCase("A"));
+              option.equalsIgnoreCase("A"));
       if (lines.get(2).isBlank()) event.line(2, Component.text(network.name()));
       pending.put(event, new Pending(gate, network, choice.orElseThrow().created()));
     } catch (IllegalArgumentException error) {
@@ -115,7 +116,7 @@ final class StargateCreation implements Listener {
     }
   }
 
-  private boolean available(SignChangeEvent event) {
+  private boolean available(SignChangeEvent event, String option) {
     if (!enabled.getAsBoolean()) {
       reject(event, "Stargates are not available right now.");
       return false;
@@ -124,7 +125,13 @@ final class StargateCreation implements Listener {
       reject(event, "Stargates are loading or saving; try again.");
       return false;
     }
-    return true;
+    return validOption(event, option);
+  }
+
+  private static boolean validOption(SignChangeEvent event, String option) {
+    if (option.isEmpty() || option.equalsIgnoreCase("A")) return true;
+    reject(event, "Leave line four blank or use A for an always-open gate.");
+    return false;
   }
 
   private java.util.Optional<NetworkChoice> networkChoice(SignChangeEvent event, String line) {
