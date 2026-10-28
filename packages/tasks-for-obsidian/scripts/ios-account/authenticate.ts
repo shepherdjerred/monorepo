@@ -17,8 +17,8 @@ export const IOSAccountOptionsSchema = z.strictObject({
   vault: locator,
   item: locator,
   credentialBackend: z
-    .enum(["service-account", "desktop"])
-    .default("service-account"),
+    .enum(["keychain", "service-account", "desktop"])
+    .default("keychain"),
   vaultPasswordRef: z
     .string()
     .regex(/^op:\/\/[A-Za-z0-9]{20,32}\/[A-Za-z0-9]{20,32}\/password$/u),

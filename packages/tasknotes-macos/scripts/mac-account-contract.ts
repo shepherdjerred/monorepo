@@ -10,11 +10,24 @@ import {
 } from "../../tasks-for-obsidian/scripts/apple-sync-live/model.ts";
 
 export type Operation = "present" | "credentials" | "verification" | "vault";
-export type CredentialBackend = "service-account" | "desktop";
+export type PasswordManagerBackend = "service-account" | "desktop";
+export type CredentialBackend = PasswordManagerBackend | "keychain";
 
 export function credentialBackend(
   value: string | undefined,
 ): CredentialBackend {
+  assert.ok(
+    value === undefined ||
+      value === "service-account" ||
+      value === "desktop" ||
+      value === "keychain",
+  );
+  return value ?? "keychain";
+}
+
+export function vaultPasswordBackend(
+  value: string | undefined,
+): PasswordManagerBackend {
   assert.ok(
     value === undefined || value === "service-account" || value === "desktop",
   );
@@ -70,7 +83,10 @@ export function parseArguments(args: string[]): {
     operation === "vault" ? "--credential-backend" : "--vault-password-backend";
   assert.equal(parameters[otherBackendKey], undefined);
   if (operation === "present") assert.equal(parameters[backendKey], undefined);
-  const backend = credentialBackend(parameters[backendKey]);
+  const backend =
+    operation === "vault"
+      ? vaultPasswordBackend(parameters[backendKey])
+      : credentialBackend(parameters[backendKey]);
   delete parameters[backendKey];
   if (operation === "credentials" || operation === "verification") {
     assert.deepEqual(Object.keys(parameters).sort(), [

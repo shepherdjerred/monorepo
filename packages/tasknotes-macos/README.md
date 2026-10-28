@@ -274,10 +274,10 @@ From this package:
 
 ```bash
 bun run mac:account <runID> present
-bun run mac:account <runID> credentials --credential-backend service-account \
+bun run mac:account <runID> credentials --credential-backend keychain \
   --account <accountID> --vault <vaultID> --item <itemID>
 # Only when the app currently requests a verification code:
-bun run mac:account <runID> verification --credential-backend service-account \
+bun run mac:account <runID> verification --credential-backend keychain \
   --account <accountID> --vault <vaultID> --item <itemID>
 bun run mac:account <runID> vault --vault-password-backend service-account \
   --vault-password-ref op://<vaultID>/<itemID>/password
@@ -285,22 +285,30 @@ bun run mac:account <runID> vault --vault-password-backend service-account \
 
 Identifiers and password references are nonsecret. Passwords and generated codes
 stay in memory/private helper input; they never belong in command arguments,
-environment variables, logs, captures or the clipboard. Account-item,
-verification-code and vault-password reads default to the enrolled machine
-service account through `scripts/onepassword/with-service-account.sh`, without
-1Password Desktop approval. A failed read stops with a closed backend error;
-there is no automatic Desktop fallback. An explicitly attended invocation can
-select `--credential-backend desktop` for account/verification reads or
-`--vault-password-backend desktop` for the encryption password.
+environment variables, logs, captures or the clipboard. Account and verification
+reads default to the local, nonsynchronizing classic macOS Keychain. Follow the
+one-time signed-helper installation and explicit 1Password enrollment commands
+in the [live Apple Sync setup](../tasks-for-obsidian/README.md#live-apple-sync-acceptance).
+The stable helper lives at
+`~/Library/Application Support/FacetAcceptanceCredentials/bin/facet-credentials`;
+only that helper is trusted to read its credential item. Enrollment stores selected
+login credentials and any OTP seed locally while leaving the original 1Password
+item unchanged. It does not copy the login to Homelab or grant machine access to
+the Personal vault.
 
-Live acceptance requires a designated test login and separate vault-password item
-readable by that service account. Enrollment or a Personal-vault locator alone
-does not establish access. Credential owners must authorize provisioning into a
-service-account-accessible vault; the driver never copies or moves items, grants
-broad Personal-vault access or changes 1Password protections. The required
-`--account`, `--vault` and `--item` locators remain validated, but service-account
-reads use the token's account rather than passing `op --account`. Missing
-enrollment, denied access or absent items fail before credential input.
+Routine Keychain reads disable authentication UI and fail on missing, locked or
+denied items without prompting, changing trust or trying another backend. Keep
+the selected Apple Development signing identity stable; a helper replacement
+does not silently broaden an existing item's access policy. The required
+`--account`, `--vault` and `--item` locators bind the local record to its original
+item. Explicit `--credential-backend desktop` selects attended reads;
+`--credential-backend service-account` requires separately provisioned machine
+access and uses the token's account rather than passing `op --account`.
+
+The vault encryption password remains a separate `service-account` read through
+`scripts/onepassword/with-service-account.sh`; login enrollment does not copy it.
+An explicitly attended invocation can select `--vault-password-backend desktop`.
+Backend failures emit closed errors and never trigger a fallback.
 
 Each invocation performs only its selected action and emits a closed receipt.
 If a receipt reports an unknown submission outcome, inspect the current

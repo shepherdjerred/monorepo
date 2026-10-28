@@ -28,7 +28,9 @@ export function parseOfficialAccountArguments(args: string[]) {
       .parse(parameters[index]);
     const value =
       key === "--credential-backend"
-        ? z.enum(["service-account", "desktop"]).parse(parameters[index + 1])
+        ? z
+            .enum(["keychain", "service-account", "desktop"])
+            .parse(parameters[index + 1])
         : key === "--plugin-export"
           ? UuidSchema.parse(parameters[index + 1])
           : z
