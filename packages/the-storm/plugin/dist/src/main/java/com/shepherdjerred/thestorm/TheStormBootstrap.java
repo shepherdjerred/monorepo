@@ -12,9 +12,13 @@ import java.net.URISyntaxException;
 import net.kyori.adventure.text.Component;
 
 /**
- * Registers the quiet iron-pick datapack before worlds load. The starter kit hands every new player
- * an iron pickaxe, which completes {@code minecraft:story/iron_tools} ("Isn't It Iron Pick?"). The
- * pack keeps that advancement and turns off its toast and chat line.
+ * Registers the plugin datapack before worlds load. It keeps {@code minecraft:story/iron_tools}
+ * ("Isn't It Iron Pick?") from toasting or announcing, because the starter kit hands every new
+ * player an iron pickaxe, and it adds The Storm advancement tabs under {@code thestorm:}.
+ *
+ * <p>Paper 26.2 compares plugin-pack titles while selecting datapacks, before the registry exists.
+ * A second plugin pack makes that comparison throw, and the CI smoke image still runs that build,
+ * so the tabs live in this one pack. Pinning it above vanilla only overrides {@code iron_tools}.
  */
 public final class TheStormBootstrap implements PluginBootstrap {
 
@@ -29,34 +33,56 @@ public final class TheStormBootstrap implements PluginBootstrap {
   }
 
   private static void discover(DatapackRegistrar registrar) {
+    discover(
+        registrar,
+        new Pack(
+            packRoot(),
+            "quiet_iron_pick",
+            "Quiet iron pick",
+            true,
+            "the quiet iron pick datapack was rejected",
+            "the quiet iron pick datapack could not be read"));
+  }
+
+  /** A datapack registered before worlds load. {@code top} pins it above vanilla packs. */
+  private record Pack(
+      URI root, String id, String title, boolean top, String rejected, String unreadable) {}
+
+  private static void discover(DatapackRegistrar registrar, Pack pack) {
     try {
-      var pack =
+      var discovered =
           registrar.discoverPack(
-              packRoot(),
-              "quiet_iron_pick",
+              pack.root(),
+              pack.id(),
               config -> {
-                config.title(Component.text("Quiet iron pick"));
+                config.title(Component.text(pack.title()));
                 config.autoEnableOnServerStart(true);
-                config.position(true, Datapack.Position.TOP);
+                if (pack.top()) {
+                  config.position(true, Datapack.Position.TOP);
+                }
               });
-      if (pack == null) {
-        throw new IllegalStateException("the quiet iron pick datapack was rejected");
+      if (discovered == null) {
+        throw new IllegalStateException(pack.rejected());
       }
     } catch (IOException failure) {
-      throw new UncheckedIOException("the quiet iron pick datapack could not be read", failure);
+      throw new UncheckedIOException(pack.unreadable(), failure);
     }
   }
 
-  /** The pack directory that contains {@code pack.mcmeta}. */
+  /** The quiet iron-pick directory that contains {@code pack.mcmeta}. */
   static URI packRoot() {
-    var meta = TheStormBootstrap.class.getResource(PACK_META);
+    return resourceRoot(PACK_META, "quiet iron pick datapack URI");
+  }
+
+  private static URI resourceRoot(String metaPath, String uriProblem) {
+    var meta = TheStormBootstrap.class.getResource(metaPath);
     if (meta == null) {
-      throw new IllegalStateException("missing " + PACK_META);
+      throw new IllegalStateException("missing " + metaPath);
     }
     try {
       return packRoot(meta.toURI());
     } catch (URISyntaxException failure) {
-      throw new IllegalStateException("quiet iron pick datapack URI", failure);
+      throw new IllegalStateException(uriProblem, failure);
     }
   }
 
@@ -68,7 +94,7 @@ public final class TheStormBootstrap implements PluginBootstrap {
     var text = meta.toString();
     var file = "pack.mcmeta";
     if (!text.endsWith("/" + file)) {
-      throw new IllegalStateException("quiet iron pick datapack URI");
+      throw new IllegalStateException("datapack URI");
     }
     return URI.create(text.substring(0, text.length() - file.length()));
   }

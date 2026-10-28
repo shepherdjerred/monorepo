@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:lightning_rod"
+    },
+    "title": "The Storm",
+    "description": "Homes, quests, towns, and storm gear.",
+    "background": "minecraft:block/deepslate",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "sends_telemetry_event": false
+}

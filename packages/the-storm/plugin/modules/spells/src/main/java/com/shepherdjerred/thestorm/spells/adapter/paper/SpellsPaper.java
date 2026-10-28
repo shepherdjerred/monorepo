@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Spells;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Toolbox;
+import com.shepherdjerred.thestorm.spells.app.SpellCasts;
 import com.shepherdjerred.thestorm.spells.app.SpellScrolls;
 import com.shepherdjerred.thestorm.spells.app.SpellStore;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
@@ -39,13 +40,16 @@ public final class SpellsPaper {
     this.ticker = ticker;
   }
 
+  /** Land protection and the signal published when a spell goes off. */
+  public record Hooks(Protection protection, SpellCasts casts) {}
+
   /**
    * Validates {@code config}'s Paper names, wires everything and starts loading stored state.
    *
    * @throws IllegalStateException listing every unknown material, particle, sound, entity or model
    */
   public static SpellsPaper install(
-      ModuleContext context, SpellsConfig config, SpellStore store, Protection protection) {
+      ModuleContext context, SpellsConfig config, SpellStore store, Hooks hooks) {
     var problems = PaperNames.problems(config);
     if (!problems.isEmpty()) {
       throw new IllegalStateException("Invalid spells.yml:\n" + String.join("\n", problems));
@@ -53,6 +57,7 @@ public final class SpellsPaper {
     var server = context.plugin().getServer();
     var async = new Async(context.scheduler(), context.logger());
     var state = new SpellState();
+    var protection = hooks.protection();
     var guard = new Guard(protection);
     var say = new Say(config.label());
     var waypoints = new Waypoints(store, async);
@@ -81,7 +86,10 @@ public final class SpellsPaper {
     var items = new SpellItems(context.plugin(), config);
     var flow =
         new CastFlow(
-            Spells.create(config.spells(), tools), config.spells(), tools, context.analytics());
+            Spells.create(config.spells(), tools),
+            config.spells(),
+            tools,
+            new CastFlow.Reported(context.analytics(), hooks.casts()));
     var binder = new Binder(items, state, config.spells(), new Binder.Storage(store, async));
     var plugins = server.getPluginManager();
     plugins.registerEvents(new CastListener(items, state, flow, say), context.plugin());

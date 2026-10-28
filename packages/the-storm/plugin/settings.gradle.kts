@@ -76,6 +76,7 @@ val modules =
         "agent",
         "rwf",
         "rwfbots",
+        "advancements",
     )
 
 include("core", "architecture", "dist")

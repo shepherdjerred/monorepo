@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:a_survival",
+  "display": {
+    "icon": {
+      "id": "minecraft:writable_book"
+    },
+    "title": "May the odds",
+    "description": "Finish a story, side, or track quest.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

@@ -8,7 +8,7 @@ there reaches Global chat in game, and the game posts back to it.
 
 ## What gets posted
 
-- Global chat, joins, leaves, deaths and advancements.
+- Global chat, joins, leaves, deaths and advancements, including Storm milestones.
 - Search and Destroy and Mob Arena lobbies as they open, and their results:
   the winning team, how far an arena run got, and new arena records.
 - Mob Arena boss waves that pay rewards.

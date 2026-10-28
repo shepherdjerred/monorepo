@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:c_skills",
+  "display": {
+    "icon": {
+      "id": "minecraft:feather"
+    },
+    "title": "A two-block jump",
+    "description": "Reach Acrobatics level 100.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

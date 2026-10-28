@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.adapter.files.SavedRespawn;
+import com.shepherdjerred.thestorm.essentials.app.HomeSignals;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import java.time.Duration;
@@ -38,13 +39,15 @@ final class BedBackfill implements Cancellable {
    * @param beds in-memory respawn spots
    * @param savedRespawns off-main-thread file reading
    * @param sealed worlds whose respawns are not survival beds
+   * @param signals told when a bed home is inserted
    */
   record Sources(
       PaperRuntime runtime,
       HomeStore homes,
       BedHomes beds,
       CompletableFuture<SavedRespawn.Scan> savedRespawns,
-      SealedWorlds sealed) {}
+      SealedWorlds sealed,
+      HomeSignals signals) {}
 
   BedBackfill(Sources sources) {
     this.sources = sources;
@@ -140,6 +143,7 @@ final class BedBackfill implements Cancellable {
             inserted -> {
               if (inserted) {
                 saved++;
+                sources.signals().saved(found.player());
                 var online = sources.runtime().server().getPlayer(found.player());
                 if (online != null) {
                   sources.beds().keep(online, position);

@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:c_skills/axes/500",
+  "display": {
+    "icon": {
+      "id": "minecraft:diamond_axe"
+    },
+    "title": "Daedric",
+    "description": "Reach Axes level 1000.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

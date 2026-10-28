@@ -28,6 +28,15 @@ final class QuietIronPickTest {
   }
 
   @Test
+  void stormAdvancementsShareThisPack() {
+    assertThat(TheStormBootstrap.class.getResource("/datapacks/the-storm/pack.mcmeta")).isNull();
+    assertThat(
+            TheStormBootstrap.class.getResource(
+                "/datapacks/quiet-iron-pick/data/thestorm/advancement/a_survival.json"))
+        .isNotNull();
+  }
+
+  @Test
   void aPackagedJarUriKeepsTheDatapackDirectory() {
     var meta = URI.create("jar:file:/servers/TheStorm.jar!/datapacks/quiet-iron-pick/pack.mcmeta");
     assertThat(meta.isOpaque()).isTrue();

@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -52,7 +53,7 @@ import org.jspecify.annotations.Nullable;
  * after every change (saves run in order on the database writer). Every change goes through the
  * pure {@link QuestEngine}; this class only loads, saves, draws boards, and carries out effects.
  */
-public final class QuestService implements QuestHooks, QuestProgress {
+public final class QuestService implements QuestHooks, QuestProgress, QuestCompletions {
 
   /**
    * What the service needs.
@@ -89,6 +90,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final QuestTextRenderer textRenderer;
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
   private final List<Consumer<QuestMilestone>> milestones = new ArrayList<>();
+  private final List<Consumer<Standing>> standings = new ArrayList<>();
   private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
   private final Map<UUID, Set<String>> deferredDiscoveries = new HashMap<>();
@@ -152,6 +154,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
                   pendingHandins.put(player, handins(loaded.pending()));
                   handinNoticeSent.remove(player);
                   sessions.put(player, loaded.state());
+                  publishStanding(player, Standing.Origin.LOADED);
                   deliverPending(player);
                   flushDiscoveries(player);
                   refresh(player);
@@ -956,7 +959,20 @@ public final class QuestService implements QuestHooks, QuestProgress {
     milestones.add(listener);
   }
 
+  @Override
+  public Subscription subscribe(Consumer<Standing> listener) {
+    standings.add(listener);
+    return () -> standings.remove(listener);
+  }
+
+  @Override
+  public OptionalInt counted(UUID player) {
+    var state = sessions.get(player);
+    return state == null ? OptionalInt.empty() : OptionalInt.of(count(state));
+  }
+
   private void measure(UUID player, Outcome outcome, Catalog catalog) {
+    var counted = false;
     for (var effect : outcome.effects()) {
       switch (effect) {
         case Effect.Accepted _ ->
@@ -971,12 +987,41 @@ public final class QuestService implements QuestHooks, QuestProgress {
                     var milestone = new QuestMilestone(player, quest.name());
                     List.copyOf(milestones).forEach(listener -> listener.accept(milestone));
                   });
+          if (catalog
+              .quest(id)
+              .filter(quest -> QuestCompletions.counts(quest.category()))
+              .isPresent()) {
+            counted = true;
+          }
         }
         default -> {
           /* Progress ticks and automatic rewards are not product interactions. */
         }
       }
     }
+    if (counted) {
+      publishStanding(player, Standing.Origin.EARNED);
+    }
+  }
+
+  private void publishStanding(UUID player, Standing.Origin origin) {
+    var state = sessions.get(player);
+    if (state == null) {
+      return;
+    }
+    var standing = new Standing(player, count(state), origin);
+    List.copyOf(standings).forEach(listener -> listener.accept(standing));
+  }
+
+  private int count(PlayerQuests state) {
+    var counted = 0;
+    for (var id : state.completions().keySet()) {
+      var quest = wiring.content().quests().get(id);
+      if (quest != null && QuestCompletions.counts(quest.category())) {
+        counted++;
+      }
+    }
+    return counted;
   }
 
   private void effects(UUID player, Outcome outcome, Catalog catalog) {

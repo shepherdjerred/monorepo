@@ -97,7 +97,8 @@ public final class TownsPaper {
                   var owner = state.town(townId).orElseThrow().owner();
                   loaded.locks().applyCommittedHandover(lockIds, player, owner);
                 },
-                loaded.locks()::isSettling),
+                loaded.locks()::isSettling,
+                towns::memberJoined),
             config.camps().members());
     var treasury = new Treasury(towns, members, services.require(Wallets.class));
     var _ =

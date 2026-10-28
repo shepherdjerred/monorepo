@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
+import com.shepherdjerred.thestorm.essentials.app.HomeSignals;
 import com.shepherdjerred.thestorm.essentials.app.WarpDirectory;
 import com.shepherdjerred.thestorm.essentials.app.store.BackStore;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
@@ -43,6 +44,7 @@ final class TeleportCommands {
   private final EssentialsConfig config;
   private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations;
   private final BedHomes beds;
+  private final HomeSignals homesSaved;
 
   /**
    * Where players can go.
@@ -52,6 +54,7 @@ final class TeleportCommands {
    * @param back {@code /back} history
    * @param protection land protection, asked before a home is set
    * @param beds saved bed homes, cleared when {@code /delhome bed} runs
+   * @param homesSaved told when a home is saved
    */
   record Places(
       HomeStore homes,
@@ -60,7 +63,8 @@ final class TeleportCommands {
       Protection protection,
       SealedWorlds sealed,
       com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations,
-      BedHomes beds) {}
+      BedHomes beds,
+      HomeSignals homesSaved) {}
 
   TeleportCommands(
       PaperRuntime runtime, TeleportFlow flow, Places places, EssentialsConfig config) {
@@ -70,6 +74,7 @@ final class TeleportCommands {
     this.config = config;
     this.destinations = places.destinations();
     this.beds = places.beds();
+    this.homesSaved = places.homesSaved();
   }
 
   void register(Commands commands) {
@@ -261,6 +266,7 @@ final class TeleportCommands {
               runtime
                   .analytics()
                   .interaction(player.getUniqueId(), ProductAnalytics.Action.HOME_SET);
+              homesSaved.saved(player.getUniqueId());
             }
             case Result.Err<HomeRules.Change, HomeError>(var error) ->
                 Say.error(player, Say.HOMES, describe(error));

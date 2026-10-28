@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shards.adapter.paper;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.shards.app.ShardUpgrades;
 import com.shepherdjerred.thestorm.shards.domain.AltarSky;
 import com.shepherdjerred.thestorm.shards.domain.Altars;
 import com.shepherdjerred.thestorm.shards.domain.BlockPos;
@@ -38,13 +39,19 @@ final class AltarListener implements Listener {
   private final Scheduler scheduler;
   private final Function<Block, AltarSky> sky;
   private final ShardKit kit;
+  private final ShardUpgrades reachedTiers;
 
   AltarListener(AltarSetup setup, ShardKit kit) {
+    this(setup, kit, new ShardUpgrades());
+  }
+
+  AltarListener(AltarSetup setup, ShardKit kit, ShardUpgrades reachedTiers) {
     this.altars = setup.altars();
     this.upgrades = setup.upgrades();
     this.scheduler = setup.scheduler();
     this.sky = setup.sky();
     this.kit = kit;
+    this.reachedTiers = reachedTiers;
   }
 
   /**
@@ -108,14 +115,15 @@ final class AltarListener implements Listener {
     var itemName = ShardText.itemName(item);
     var tier = ShardText.tier(outcome.tier());
     switch (outcome) {
-      case UpgradeOutcome.Upgraded(var reached, _) -> {
-        kit.gear().apply(item, reached);
+      case UpgradeOutcome.Upgraded(var stormTier, _) -> {
+        kit.gear().apply(item, stormTier);
         player.getInventory().setItemInMainHand(item);
         kit.text().success(player, messages.upgraded(), itemName, tier);
-        strikeLightning(altar, Upgrades.lightningStrikes(reached));
-        if (upgrades.broadcasts(reached)) {
+        strikeLightning(altar, Upgrades.lightningStrikes(stormTier));
+        if (upgrades.broadcasts(stormTier)) {
           announce(player, itemName, tier);
         }
+        reachedTiers.reached(player.getUniqueId(), stormTier.level());
       }
       case UpgradeOutcome.Failed _ -> kit.text().error(player, messages.failed(), itemName, tier);
       case UpgradeOutcome.Shattered _ -> {

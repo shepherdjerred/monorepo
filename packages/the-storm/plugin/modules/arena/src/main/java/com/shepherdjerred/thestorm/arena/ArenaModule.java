@@ -11,7 +11,9 @@ import com.shepherdjerred.thestorm.arena.adapter.paper.ArenaPaper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.arena.adapter.remote.FliptSurvivalGate;
+import com.shepherdjerred.thestorm.arena.app.ArenaCatalog;
 import com.shepherdjerred.thestorm.arena.app.ArenaEvents;
+import com.shepherdjerred.thestorm.arena.app.ArenaIds;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.arena.app.RewardPayer;
@@ -34,9 +36,9 @@ import org.jspecify.annotations.Nullable;
  * content under {@code plugins/TheStorm/arena}. Rewards are paid through the economy module, which
  * must be enabled first.
  *
- * <p>Publishes {@link ArenaPresence} (who is in an arena), {@link ArenaRecords} (best waves) and
- * {@link ArenaEvents} (game transitions). When the discord module is on, lobbies, rewarding boss
- * waves and finished runs are announced there.
+ * <p>Publishes {@link ArenaPresence} (who is in an arena), {@link ArenaRecords} (best waves),
+ * {@link ArenaCatalog} (mob-arena ids) and {@link ArenaEvents} (game transitions). When the discord
+ * module is on, lobbies, rewarding boss waves and finished runs are announced there.
  */
 public final class ArenaModule implements StormModule {
 
@@ -123,6 +125,11 @@ public final class ArenaModule implements StormModule {
                 safety.evidenceContext(
                     "arena", player -> started.presence().arenaOf(player).orElse("none")));
     context.services().provide(ArenaRecords.class, leaderboard);
+    context
+        .services()
+        .provide(
+            ArenaCatalog.class,
+            new ArenaIds(content.arenas().stream().map(ArenaDefinition::id).toList()));
     context.services().provide(ArenaEvents.class, started.events());
     discordPosts =
         context

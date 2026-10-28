@@ -25,6 +25,8 @@ Anna stands beside the windmill near where you arrived. Right-click her and choo
 
 Open `/quests` to see your quest journal. NPCs around town offer more quests when you speak to them.
 
+The advancement screen has six Storm tabs: The Storm, Tracks, Skills, Spells, Mob Arena, and Search and Destroy. Reaching a new milestone toasts and is announced in chat and on Discord. `/quests` remains the journal.
+
 ## 3. Find somewhere to build
 
 Use your compass to choose a biome, or run `/rtp` to travel to a safe wilderness spot in Frontier, the main survival world. Random teleporting is free for your first seven days, although travel cooldowns still apply. `/worlds` reaches [the other worlds](/survival/worlds/).

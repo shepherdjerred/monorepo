@@ -18,11 +18,13 @@ import com.shepherdjerred.thestorm.essentials.adapter.paper.EssentialsPaper;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
+import com.shepherdjerred.thestorm.essentials.app.HomeSignals;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import com.shepherdjerred.thestorm.essentials.app.PlayerDirectory;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments;
 import com.shepherdjerred.thestorm.essentials.app.WarpDirectory;
+import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
 import com.shepherdjerred.thestorm.essentials.domain.config.EssentialsConfig;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportPricer;
 import java.nio.file.Path;
@@ -37,8 +39,8 @@ import org.jspecify.annotations.Nullable;
  * economy module and checked against land protection from the towns module; both must be enabled
  * first.
  *
- * <p>Publishes {@link TeleportGuards} (other modules add rules such as "not in combat") and {@link
- * AfkStatus}.
+ * <p>Publishes {@link TeleportGuards} (other modules add rules such as "not in combat"), {@link
+ * AfkStatus}, {@link HomeStore} and {@link HomeSignals}.
  */
 public final class EssentialsModule implements StormModule {
 
@@ -120,6 +122,9 @@ public final class EssentialsModule implements StormModule {
             new JooqHomeStore(database),
             new JooqBackStore(database),
             new JooqKitClaimStore(database));
+    var homeSignals = new HomeSignals();
+    context.services().provide(HomeStore.class, stores.homes());
+    context.services().provide(HomeSignals.class, homeSignals);
     paper =
         EssentialsPaper.start(
             context,
@@ -134,7 +139,8 @@ public final class EssentialsModule implements StormModule {
                 stores,
                 protection,
                 sealed,
-                SavedRespawn.load(levelDirectory.apply(context), context.compute())));
+                SavedRespawn.load(levelDirectory.apply(context), context.compute())),
+            homeSignals);
   }
 
   @Override

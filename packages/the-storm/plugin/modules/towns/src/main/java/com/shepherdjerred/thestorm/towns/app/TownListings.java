@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.UUID;
 
 /** Builds public town summaries from the loaded, in-memory town state. Main thread only. */
 public final class TownListings implements TownRead {
@@ -45,6 +47,20 @@ public final class TownListings implements TownRead {
             .limit(limit)
             .toList();
     return new Listing(towns.size(), shown);
+  }
+
+  @Override
+  public OptionalInt claims(UUID player) {
+    return state
+        .townOf(player)
+        .filter(town -> !town.isCamp())
+        .map(town -> OptionalInt.of(state.claimCount(town.id())))
+        .orElseGet(OptionalInt::empty);
+  }
+
+  @Override
+  public List<UUID> members(UUID townId) {
+    return state.town(townId).map(town -> List.copyOf(town.members().keySet())).orElseGet(List::of);
   }
 
   @Override

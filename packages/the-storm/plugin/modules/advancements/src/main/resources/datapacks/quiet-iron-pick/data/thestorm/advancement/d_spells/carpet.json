@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:d_spells",
+  "display": {
+    "icon": {
+      "id": "minecraft:moss_carpet"
+    },
+    "title": "Magnet Rise",
+    "description": "Cast Carpet.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

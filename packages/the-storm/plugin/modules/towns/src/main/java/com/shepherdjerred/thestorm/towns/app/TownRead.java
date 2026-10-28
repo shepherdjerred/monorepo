@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.towns.app;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.UUID;
 
 /** Read-only, main-thread snapshot of player towns for other modules. */
 public interface TownRead {
@@ -13,6 +15,15 @@ public interface TownRead {
   Listing page(int page, int limit);
 
   Optional<TownSummary> info(String name);
+
+  /**
+   * How many chunks {@code player}'s town claims, or empty when they are in no town. Camps are not
+   * towns.
+   */
+  OptionalInt claims(UUID player);
+
+  /** Members of {@code townId}. Empty when that town is not loaded. */
+  List<UUID> members(UUID townId);
 
   /** A bounded list with its full count. */
   record Listing(int total, List<TownSummary> towns) {

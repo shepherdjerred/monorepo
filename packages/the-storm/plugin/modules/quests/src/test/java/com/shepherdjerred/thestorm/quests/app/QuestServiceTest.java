@@ -20,6 +20,7 @@ import com.shepherdjerred.thestorm.quests.domain.model.ItemMatch;
 import com.shepherdjerred.thestorm.quests.domain.model.Objective;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.model.Region;
+import com.shepherdjerred.thestorm.quests.domain.state.Completion;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue;
 import java.time.Duration;
@@ -199,6 +200,24 @@ final class QuestServiceTest {
     service.join(ALICE).join();
     assertThat(state(ALICE).discoveries()).containsEntry("old-iron", WEDNESDAY);
     assertThat(store.saved.get(ALICE)).isEqualTo(state(ALICE));
+  }
+
+  @Test
+  void joiningRestoresCountedQuestsAndANewCompletionIsASeparateNotice() {
+    store.saved.put(
+        ALICE, PlayerQuests.empty(ALICE).withCompletion("smith", new Completion(1, WEDNESDAY)));
+    var seen = new ArrayList<QuestCompletions.Standing>();
+    service.subscribe(seen::add);
+
+    join(ALICE);
+    service.accept(ALICE, "hunt", "captain");
+    service.event(ALICE, new QuestEvent.Killed("ZOMBIE"), List.of());
+    service.event(ALICE, new QuestEvent.Killed("ZOMBIE"), List.of());
+
+    assertThat(seen)
+        .containsExactly(
+            new QuestCompletions.Standing(ALICE, 1, QuestCompletions.Standing.Origin.LOADED),
+            new QuestCompletions.Standing(ALICE, 2, QuestCompletions.Standing.Origin.EARNED));
   }
 
   @Test

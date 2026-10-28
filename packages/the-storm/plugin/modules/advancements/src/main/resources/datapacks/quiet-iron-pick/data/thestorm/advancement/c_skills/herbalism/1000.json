@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:c_skills/herbalism/500",
+  "display": {
+    "icon": {
+      "id": "minecraft:wheat"
+    },
+    "title": "Jarrin root",
+    "description": "Reach Herbalism level 1000.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import com.shepherdjerred.thestorm.tracks.app.TrackPurchases;
 import com.shepherdjerred.thestorm.tracks.app.TrackRuntime;
 import com.shepherdjerred.thestorm.tracks.app.TrackSessions;
+import com.shepherdjerred.thestorm.tracks.app.TrackSignals;
 import com.shepherdjerred.thestorm.tracks.domain.TracksConfig;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.PurchaseRules;
 import java.time.Duration;
@@ -79,12 +80,16 @@ public final class TracksModule implements StormModule {
             wallets,
             PurchaseRules.standard(config.pricing(), config.purchaseCooldown()),
             groups::ready);
+    var signals = new TrackSignals();
+    service.watch(signals);
     purchases = service;
     context.services().provide(TrackLevels.class, cache);
     context.services().provide(TrackPurchases.class, service);
+    context.services().provide(TrackSignals.class, signals);
     groups.start();
     var sessions =
         new TrackSessions(runtime, TracksPaper.loadFailedNotice(context.plugin().getServer()));
+    sessions.watch(signals);
     registered =
         TracksPaper.install(
             context, config, new UseCases(service, new TrackAdmin(runtime), sessions, cache));

@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry;
 import com.shepherdjerred.thestorm.rwf.app.shop.KitShop;
+import com.shepherdjerred.thestorm.rwf.app.store.MatchStats;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.app.store.StatsStore;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.event.HandlerList;
@@ -99,6 +101,11 @@ public final class RwfPaper {
     this.permissions = parts.permissions();
     this.sealed = parts.sealed();
     this.teamChat = parts.teamChat();
+  }
+
+  /** Notified on the main thread after a match's statistics are stored. */
+  public void onSettled(Consumer<MatchStats> listener) {
+    runner.onSettled(listener);
   }
 
   private record Parts(

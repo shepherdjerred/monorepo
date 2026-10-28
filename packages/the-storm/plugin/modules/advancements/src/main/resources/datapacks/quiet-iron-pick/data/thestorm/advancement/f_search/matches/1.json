@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:f_search",
+  "display": {
+    "icon": {
+      "id": "minecraft:iron_sword"
+    },
+    "title": "Bravo Six, going dark",
+    "description": "Play a Search and Destroy match.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

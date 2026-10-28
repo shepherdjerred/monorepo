@@ -14,7 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 /**
  * Feeds joins, leaves, deaths and advancements to the relay. Runs at MONITOR so it sees the final
  * death and advancement messages other modules settled on. Players in a sealed world (a minigame
- * arena, its bots included) are not relayed.
+ * arena, its bots included) are not relayed, except Storm milestones, which still announce.
  */
 public final class ServerEventsListener implements Listener {
 
@@ -76,11 +76,14 @@ public final class ServerEventsListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onAdvancement(PlayerAdvancementDoneEvent event) {
-    if (sealed.isSealed(event.getPlayer().getWorld())
-        || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
+    if (com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
       return;
     }
     var advancement = event.getAdvancement();
+    if (sealed.isSealed(event.getPlayer().getWorld())
+        && !"thestorm".equals(advancement.getKey().getNamespace())) {
+      return;
+    }
     var display = advancement.getDisplay();
     var title = display == null ? "" : text.plain(display.title());
     var announced = display != null && display.doesAnnounceToChat() && event.message() != null;

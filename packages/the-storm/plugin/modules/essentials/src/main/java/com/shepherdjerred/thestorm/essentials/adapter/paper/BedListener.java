@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.players.Humans;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.essentials.app.HomeSignals;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
 import com.shepherdjerred.thestorm.essentials.domain.home.Home;
 import com.shepherdjerred.thestorm.essentials.domain.home.HomeError;
@@ -21,12 +22,17 @@ final class BedListener implements Listener {
   private final HomeStore homes;
   private final BedHomes beds;
   private final int limit;
+  private final HomeSignals homesSaved;
 
-  BedListener(PaperRuntime runtime, HomeStore homes, BedHomes beds, int limit) {
+  /** How many homes a player may keep, and who hears when a bed home is saved. */
+  record Policy(int limit, HomeSignals saved) {}
+
+  BedListener(PaperRuntime runtime, HomeStore homes, BedHomes beds, Policy policy) {
     this.runtime = runtime;
     this.homes = homes;
     this.beds = beds;
-    this.limit = limit;
+    this.limit = policy.limit();
+    this.homesSaved = policy.saved();
   }
 
   @EventHandler
@@ -72,6 +78,7 @@ final class BedListener implements Listener {
             case Result.Ok<HomeRules.Change, HomeError> ignored -> {
               beds.keep(player, position);
               Say.success(player, Say.HOMES, "Respawn point set.");
+              homesSaved.saved(player.getUniqueId());
             }
             case Result.Err<HomeRules.Change, HomeError> ignored ->
                 Say.error(player, Say.HOMES, "Could not save that respawn point.");
