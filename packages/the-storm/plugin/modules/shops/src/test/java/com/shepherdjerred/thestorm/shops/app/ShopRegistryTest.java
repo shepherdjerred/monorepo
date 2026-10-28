@@ -111,7 +111,9 @@ final class ShopRegistryTest {
         new Deal.Party(new AccountId.Player(ALICE), new FakeHoldings(0, 1)),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
         "test",
-        "coal");
+        "coal",
+        0L,
+        false);
   }
 
   @Test

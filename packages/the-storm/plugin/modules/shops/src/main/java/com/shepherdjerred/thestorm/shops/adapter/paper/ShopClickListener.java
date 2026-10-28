@@ -40,20 +40,24 @@ final class ShopClickListener implements Listener {
   private final ItemTemplates templates;
   private final Replies replies;
   private final ProductAnalytics analytics;
+  private final ShopAccess access;
 
-  ShopClickListener(ChestShopSettings settings, ChestShops shops, PaperTools tools) {
+  ShopClickListener(
+      ChestShopSettings settings, ChestShops shops, PaperTools tools, ShopAccess access) {
     this.settings = settings;
     this.shops = shops;
     this.blocks = tools.blocks();
     this.templates = tools.templates();
     this.replies = tools.replies();
     this.analytics = tools.analytics();
+    this.access = access;
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onQuit(PlayerQuitEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     shops.forget(event.getPlayer().getUniqueId());
+    access.forget(event.getPlayer().getUniqueId());
   }
 
   @EventHandler(priority = EventPriority.HIGH)
@@ -71,10 +75,18 @@ final class ShopClickListener implements Listener {
       return;
     }
     var player = event.getPlayer();
-    if (manages(player, shop.orElseThrow())) {
+    if (settings.shopsDisabledIn(block.getWorld().getName())) {
+      event.setCancelled(true);
+      player.sendMessage(Replies.error("Shops are not used in this world."));
+      return;
+    }
+    var found = shop.orElseThrow();
+    var tradingOwn =
+        access.enabled(player.getUniqueId()) && found.owner().isOwnedBy(player.getUniqueId());
+    if (manages(player, found) && (found.item().isEmpty() || !tradingOwn)) {
       if (click.orElseThrow() == ChestShopSettings.Click.RIGHT) {
         event.setCancelled(true);
-        ownerClick(player, block, shop.orElseThrow());
+        ownerClick(player, block, found);
       }
       return;
     }
@@ -84,7 +96,7 @@ final class ShopClickListener implements Listener {
       return;
     }
     event.setCancelled(true);
-    trade(player, shop.orElseThrow(), settings.directionOf(click.orElseThrow()));
+    trade(player, found, settings.directionOf(click.orElseThrow()), tradingOwn);
   }
 
   /**
@@ -133,13 +145,18 @@ final class ShopClickListener implements Listener {
                 + " more."));
   }
 
-  private void trade(Player player, SignShop shop, Direction direction) {
+  private void trade(Player player, SignShop shop, Direction direction, boolean tradingOwnStock) {
     if (shop.item().isEmpty()) {
       player.sendMessage(
           Replies.error(replies.texts().problem(new TradeProblem.ItemNotSet(), "items")));
       return;
     }
     var item = shop.item().orElseThrow();
+    var action = direction == Direction.BUY ? "buy" : "sell";
+    if (!ShopMaterialAccess.may(player, action, item.material())) {
+      player.sendMessage(Replies.error("You cannot " + action + " that item here."));
+      return;
+    }
     var visit =
         new ChestShops.Visit(
             shop,
@@ -154,7 +171,9 @@ final class ShopClickListener implements Listener {
             shop.container()
                 .flatMap(blocks::block)
                 .map(ShopBlocks::containerBlocks)
-                .orElseGet(List::of));
+                .orElseGet(List::of),
+            player.hasPermission(ShopsPermissions.SKIP_TAX),
+            tradingOwnStock);
     var goods = ShopTexts.goods(shop.quantity(), item.material());
     replies.whenDone(
         shops.trade(visit),
@@ -185,6 +204,7 @@ final class ShopClickListener implements Listener {
   private String shopName(SignShop shop) {
     return switch (shop.owner()) {
       case ShopOwner.Player(_, var name) -> name + "'s shop";
+      case ShopOwner.Town(_, var name) -> name + "'s shop";
       case ShopOwner.Admin() -> "the " + settings.adminShopLabel();
     };
   }

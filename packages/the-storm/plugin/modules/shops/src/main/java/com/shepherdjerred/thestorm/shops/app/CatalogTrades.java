@@ -117,7 +117,9 @@ public final class CatalogTrades {
                 + order.entry().itemKey()
                 + ":"
                 + order.direction().id(),
-            order.entry().itemKey());
+            order.entry().itemKey(),
+            0L,
+            false);
     var goods = TradeEngine.goodsProblem(deal);
     if (goods.isPresent()) {
       return completedFuture(new TradeOutcome.Refused(goods.orElseThrow()));

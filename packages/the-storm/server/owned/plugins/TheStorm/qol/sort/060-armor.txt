@@ -1,0 +1,10 @@
+# Armor. Elytra is with the other worn gear in other-tools, so a chestplate stays here.
+sticky=false
+*_helmet
+*_chestplate
+*_leggings
+*_boots
+turtle_helmet
+wolf_armor
+*_horse_armor
+elytra

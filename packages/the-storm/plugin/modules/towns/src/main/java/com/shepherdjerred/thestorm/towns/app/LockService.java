@@ -4,12 +4,16 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.lock.Lock;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockAttempt;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockFlag;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockGrant;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockModes;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockPolicy;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockProblem;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockRules;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockType;
 import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRules;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +36,7 @@ public final class LockService {
   private final LockBook book;
   private final LocksStore store;
   private LockSaves saves = new LockSaves();
+  private final ModeBook modes = new ModeBook();
   private final LockPolicy policy;
   private final Clocks clocks;
   private final Predicate<UUID> ownerBusy;
@@ -74,18 +79,50 @@ public final class LockService {
     return policy;
   }
 
-  /** Locks the container made of {@code blocks} for {@code player}. */
+  public ModeBook modes() {
+    return modes;
+  }
+
+  public java.time.Instant now() {
+    return clocks.time().instant();
+  }
+
+  /** The type and password of a lock being created. A blank password is only valid for private. */
+  public record Requested(LockType type, String password) {
+
+    public static final Requested PRIVATE = new Requested(LockType.PRIVATE, "");
+  }
+
+  /** Locks the container made of {@code blocks} for {@code player}, as a private lock. */
   public Result<Change<Lock>, List<LockProblem>> lock(
       UUID player, List<BlockPos> blocks, LockAttempt.Standing standing) {
+    return lock(player, blocks, standing, Requested.PRIVATE);
+  }
+
+  /**
+   * Locks the container made of {@code blocks} for {@code player} as {@code requested}. The
+   * password is kept only when the type is a password lock.
+   */
+  public Result<Change<Lock>, List<LockProblem>> lock(
+      UUID player, List<BlockPos> blocks, LockAttempt.Standing standing, Requested requested) {
+    var type = requested.type();
+    var password = requested.password();
     if (reloading || ownerBusy.test(player)) {
       return refusedBusy();
+    }
+    if (type == LockType.PASSWORD && password.isBlank()) {
+      return Result.err(List.of(new LockProblem.PasswordMissing()));
     }
     var attempt = new LockAttempt(player, blocks, standing, TownRules.newId(clocks.random()));
     return LockRules.lock(attempt, book, policy)
         .map(
             lock -> {
-              book.put(lock);
-              return persist(lock, store.save(lock));
+              var typed =
+                  type == LockType.PRIVATE && password.isEmpty()
+                      ? applyTemplate(player, lock)
+                      : lock.withType(type, password);
+              book.put(typed);
+              return persist(typed, store.save(typed));
             });
   }
 
@@ -146,6 +183,92 @@ public final class LockService {
     return change(block, lock -> LockRules.redstone(player, lock, on));
   }
 
+  /** Switches the lock on {@code block} to {@code type}. */
+  public Result<Change<Lock>, List<LockProblem>> type(
+      UUID player, BlockPos block, LockType type, String password) {
+    return change(block, lock -> LockRules.type(player, lock, type, password));
+  }
+
+  /** Adds or removes permission group {@code name} on the lock at {@code block}. */
+  public Result<Change<Lock>, List<LockProblem>> group(
+      UUID player, BlockPos block, String name, boolean on) {
+    return change(block, lock -> LockRules.group(player, lock, name, on));
+  }
+
+  /** Adds or removes {@code town} from the lock at {@code block}. */
+  public Result<Change<Lock>, List<LockProblem>> town(
+      UUID player, BlockPos block, UUID town, boolean on) {
+    return change(block, lock -> LockRules.town(player, lock, town, on));
+  }
+
+  /** Gives the lock at {@code block} to {@code owner}. An admin action, not an owner action. */
+  public Result<Change<Lock>, List<LockProblem>> forceOwner(BlockPos block, UUID owner) {
+    return change(
+        block,
+        lock -> {
+          if (lock.isEmpty()) {
+            return Result.err(List.of(new LockProblem.NotLocked()));
+          }
+          var found = lock.get();
+          if (found.restoration().imported()) {
+            return Result.err(List.of(new LockProblem.NotYourLock()));
+          }
+          if (found.owner().equals(owner)) {
+            return Result.err(List.of(new LockProblem.Unchanged("owner", true)));
+          }
+          return Result.ok(found.ownedBy(owner));
+        });
+  }
+
+  /** Removes each lock. Exempt locks are the caller's to filter out first. */
+  public List<Change<Lock>> removeAll(List<Lock> locks) {
+    var removed = new ArrayList<Change<Lock>>();
+    for (var lock : locks) {
+      if (reloading || busy.containsKey(lock.id())) {
+        continue;
+      }
+      removed.add(persistUnlock(lock));
+    }
+    return List.copyOf(removed);
+  }
+
+  /** Records that {@code lock} was opened, at most once a minute. */
+  public void touch(Lock lock) {
+    if (reloading || busy.containsKey(lock.id()) || ownersSettling(lock)) {
+      return;
+    }
+    var now = clocks.time().instant();
+    if (!lock.options().lastUsed().plus(Duration.ofMinutes(1)).isBefore(now)) {
+      return;
+    }
+    var next = lock.touched(now);
+    book.put(next);
+    var _ = persist(next, store.save(next));
+  }
+
+  /** Flips {@code mode} for {@code player}. {@code template} is kept when persist turns on. */
+  public LockModes toggleMode(UUID player, LockModes.Mode mode, Optional<UUID> template) {
+    var next = modes.get(player).toggled(mode, template);
+    modes.put(player, next);
+    var _ =
+        store
+            .saveMode(player, next)
+            .whenCompleteAsync(
+                (ok, failure) -> {
+                  if (failure != null) {
+                    reload(new CompletableFuture<>(), failure);
+                  }
+                },
+                clocks.mainThread());
+    return next;
+  }
+
+  /** Turns {@code flag} on or off for the lock on {@code block}. */
+  public Result<Change<Lock>, List<LockProblem>> flag(
+      UUID player, BlockPos block, LockFlag flag, boolean on) {
+    return change(block, lock -> LockRules.flag(player, lock, flag, on));
+  }
+
   private Result<Change<Lock>, List<LockProblem>> change(
       BlockPos block, Function<Optional<Lock>, Result<Lock, List<LockProblem>>> rule) {
     var lock = book.lockAt(block);
@@ -162,6 +285,14 @@ public final class LockService {
   private boolean isBusy(Optional<Lock> lock) {
     return reloading
         || lock.filter(found -> busy.containsKey(found.id()) || ownersSettling(found)).isPresent();
+  }
+
+  private Lock applyTemplate(UUID player, Lock lock) {
+    var sticky = modes.get(player);
+    if (!sticky.persist()) {
+      return lock;
+    }
+    return sticky.template().flatMap(book::byId).map(lock::styledLike).orElse(lock);
   }
 
   private boolean ownersSettling(Lock lock) {

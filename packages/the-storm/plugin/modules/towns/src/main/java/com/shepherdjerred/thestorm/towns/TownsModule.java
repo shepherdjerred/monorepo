@@ -173,6 +173,7 @@ public final class TownsModule implements StormModule {
     var lockSaves = new com.shepherdjerred.thestorm.towns.app.LockSaves();
     locks.watchSaves(lockSaves);
     context.services().provide(com.shepherdjerred.thestorm.towns.app.LockSaves.class, lockSaves);
+    locks.modes().load(await(lockStore.loadModes(), "lock modes"));
     settling.onSettled(locks::flushDeferred);
     var recoveryStore = new JooqRecoveryStore(context.database());
     // Schematic and item archive encoding is CPU work for core's bounded pool, which closes

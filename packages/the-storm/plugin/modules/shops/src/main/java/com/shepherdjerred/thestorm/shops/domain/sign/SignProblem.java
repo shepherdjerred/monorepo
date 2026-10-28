@@ -27,6 +27,9 @@ public sealed interface SignProblem {
   /** A price above the most a shop may ask. */
   record PriceTooHigh(Direction side, long max) implements SignProblem {}
 
+  /** A price outside the configured band for that side. */
+  record PriceOutOfBand(Direction side, long price, long min, long max) implements SignProblem {}
+
   /** The same side appears twice, as in {@code B 5:B 6}. */
   record SideTwice(Direction side) implements SignProblem {}
 
@@ -42,6 +45,9 @@ public sealed interface SignProblem {
   /** No item has this name. */
   record UnknownItem(String text) implements SignProblem {}
 
+  /** The owner line is not a player or town name. */
+  record BadOwner(String text) implements SignProblem {}
+
   /** A sentence for the player who wrote the sign. */
   default String describe() {
     return switch (this) {
@@ -55,12 +61,16 @@ public sealed interface SignProblem {
       case ZeroPrice(var side) -> sideName(side) + " price must be at least 1 crystal.";
       case PriceTooHigh(var side, var max) ->
           sideName(side) + " price must be at most " + max + " crystals.";
+      case PriceOutOfBand(var side, var price, var min, var max) ->
+          sideName(side) + " price must be " + min + ".." + max + " crystals, not " + price + ".";
       case SideTwice(var side) -> "Line 3 has two " + side.id() + " prices.";
       case TooManyPrices(var count) ->
           "Line 3 has " + count + " prices; write at most one B and one S.";
       case BadPrices(var problem) -> capitalize(problem.describe()) + ".";
       case MissingItem() -> "Line 4 needs an item name, or ? to set it by clicking.";
       case UnknownItem(var text) -> "There is no item called \"" + text + "\".";
+      case BadOwner(var text) ->
+          "Line 1 must be a player or town name, or blank for your own shop, not \"" + text + "\".";
     };
   }
 

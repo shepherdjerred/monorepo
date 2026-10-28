@@ -10,13 +10,20 @@ import com.shepherdjerred.thestorm.towns.domain.lock.LockAccess;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockAttempt;
 import com.shepherdjerred.thestorm.towns.domain.protection.Denial;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jspecify.annotations.Nullable;
@@ -35,6 +42,15 @@ final class LockGuard {
   private final Notices notices;
   private final TownsState towns;
   private final SealedWorlds sealed;
+
+  /** Password locks a player has opened since they logged in. */
+  private final Map<UUID, Set<UUID>> passwords = new ConcurrentHashMap<>();
+
+  /**
+   * The password lock a player was just asked to answer in chat. Read from the async chat thread so
+   * the password is not broadcast, and removed on the main thread.
+   */
+  private final Map<UUID, UUID> awaitingPassword = new ConcurrentHashMap<>();
 
   record Parts(
       LockBook book,
@@ -66,18 +82,86 @@ final class LockGuard {
     return book.at(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
   }
 
+  /** The id of the town named {@code name}, ignoring case. */
+  Optional<UUID> townNamed(String name) {
+    return towns.named(name).map(town -> town.id());
+  }
+
+  /** The lock on an item frame or armor stand, stored at the block that entity occupies. */
+  @Nullable Lock kept(Entity entity) {
+    if (!(entity instanceof ItemFrame) && !(entity instanceof ArmorStand)) {
+      return null;
+    }
+    return keptAt(entity.getLocation().getBlock());
+  }
+
+  /** A lock stored at {@code block} even when that block is not itself a container. */
+  @Nullable Lock keptAt(Block block) {
+    if (isSealed(block.getWorld())) {
+      return null;
+    }
+    return book.at(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
+  }
+
+  /**
+   * True when {@code player} may use {@code entity}'s lock. An entity with no lock is free. A
+   * refusal is told to the player.
+   */
+  boolean mayUse(Player player, Entity entity, boolean breaking) {
+    var lock = kept(entity);
+    if (lock == null) {
+      return true;
+    }
+    var block = entity.getLocation().getBlock();
+    var actor = Guard.actor(player);
+    var allowed =
+        breaking
+            ? access.breaking(lock, actor.player(), actor.bypass(), landTown(block))
+            : access.open(
+                lock,
+                actor.player(),
+                actor.bypass(),
+                new LockAccess.Approach(
+                    landTown(block),
+                    knowsPassword(player.getUniqueId(), lock),
+                    inGroup(player, lock)));
+    if (allowed.isPresent()) {
+      return true;
+    }
+    notices.denied(player, new Denial.Locked());
+    return false;
+  }
+
   /** A locked machine may use its own inventory from redstone only by explicit owner choice. */
   boolean mayAutomate(Block block) {
     var lock = lockOf(block);
     return lock == null || lock.options().redstone();
   }
 
-  /** The blocks of the container at {@code block}: it, and its other half if a double chest. */
+  /**
+   * The blocks of the container at {@code block}: it, its double-chest partner, or its other half.
+   */
   static List<Block> container(Block block) {
     var blocks = new ArrayList<Block>(2);
     blocks.add(block);
-    Chests.partner(block).ifPresent(blocks::add);
+    Chests.partner(block).ifPresent(partner -> add(blocks, partner));
+    Doors.otherHalf(block).ifPresent(half -> add(blocks, half));
     return List.copyOf(blocks);
+  }
+
+  /** {@link #container(Block)}, plus both halves of a paired door. */
+  static List<Block> covered(Block block) {
+    var blocks = new ArrayList<>(container(block));
+    for (var extra : Doors.pair(block)) {
+      add(blocks, extra);
+    }
+    return List.copyOf(blocks);
+  }
+
+  private static void add(List<Block> blocks, Block block) {
+    if (!blocks.contains(block)) {
+      blocks.add(block);
+    }
   }
 
   static BlockPos position(Block block) {
@@ -103,7 +187,19 @@ final class LockGuard {
     };
   }
 
+  private record Who(UUID player, boolean bypass, Predicate<Lock> groupMember) {}
+
+  private boolean permits(Player actor, List<Block> blocks, Operation operation) {
+    var who = Guard.actor(actor);
+    return permits(
+        blocks, operation, new Who(who.player(), who.bypass(), lock -> inGroup(actor, lock)));
+  }
+
   private boolean permits(UUID player, boolean bypass, List<Block> blocks, Operation operation) {
+    return permits(blocks, operation, new Who(player, bypass, lock -> false));
+  }
+
+  private boolean permits(List<Block> blocks, Operation operation, Who who) {
     for (var block : blocks) {
       var lock = lockOf(block);
       if (lock == null) {
@@ -114,8 +210,16 @@ final class LockGuard {
       }
       var allowed =
           switch (operation) {
-            case OPEN -> access.open(lock, player, bypass, landTown(block));
-            case BREAK, WIRE -> access.breaking(lock, player, bypass, landTown(block));
+            case OPEN ->
+                access.open(
+                    lock,
+                    who.player(),
+                    who.bypass(),
+                    new LockAccess.Approach(
+                        landTown(block),
+                        knowsPassword(who.player(), lock),
+                        who.groupMember().test(lock)));
+            case BREAK, WIRE -> access.breaking(lock, who.player(), who.bypass(), landTown(block));
           };
       if (allowed.isEmpty()) {
         return false;
@@ -124,9 +228,18 @@ final class LockGuard {
     return true;
   }
 
+  private static boolean inGroup(Player player, Lock lock) {
+    for (var group : lock.options().groups()) {
+      var node = "thestorm.towns.lock.group." + group;
+      if (player.isPermissionSet(node) && player.hasPermission(node)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private boolean report(Player player, List<Block> blocks, Operation operation) {
-    var actor = Guard.actor(player);
-    if (permits(actor.player(), actor.bypass(), blocks, operation)) {
+    if (permits(player, blocks, operation)) {
       return true;
     }
     notices.denied(player, new Denial.Locked());
@@ -218,6 +331,87 @@ final class LockGuard {
 
   /** True when an item move between {@code source} and {@code destination} may happen. */
   boolean mayTransfer(Inventory source, Inventory destination) {
-    return LockAccess.mayTransfer(owners(source, destination));
+    if (LockAccess.mayTransfer(owners(source, destination))) {
+      return true;
+    }
+    return allowsOut(source) && allowsIn(destination);
+  }
+
+  /** How {@code player} may move items in the lock on {@code block}. */
+  LockAccess.Movement movement(Player player, Block block) {
+    var lock = lockOf(block);
+    if (lock == null) {
+      return LockAccess.Movement.FULL;
+    }
+    var actor = Guard.actor(player);
+    return access.movement(
+        lock,
+        actor.player(),
+        actor.bypass(),
+        new LockAccess.Approach(
+            landTown(block), knowsPassword(actor.player(), lock), inGroup(player, lock)));
+  }
+
+  boolean knowsPassword(UUID player, Lock lock) {
+    return passwords.getOrDefault(player, Set.of()).contains(lock.id());
+  }
+
+  /** The next chat message from {@code player} is an attempt at {@code lock}'s password. */
+  void expectPassword(UUID player, Lock lock) {
+    awaitingPassword.put(player, lock.id());
+  }
+
+  /** True when {@code player} has been asked for a password and has not answered. */
+  boolean isAwaitingPassword(UUID player) {
+    return awaitingPassword.containsKey(player);
+  }
+
+  /** The lock id {@code player} was asked to unlock, if they have not answered yet. */
+  @Nullable UUID takePasswordPrompt(UUID player) {
+    return awaitingPassword.remove(player);
+  }
+
+  void grantPassword(UUID player, UUID lockId) {
+    passwords.computeIfAbsent(player, id -> new HashSet<>()).add(lockId);
+  }
+
+  /** Drops password access when {@code player} logs out. */
+  void forgetPasswords(UUID player) {
+    passwords.remove(player);
+    awaitingPassword.remove(player);
+  }
+
+  private boolean allowsOut(Inventory inventory) {
+    for (var lock : locksOf(inventory)) {
+      var flags = lock.options().flags();
+      if (!flags.hopper() && !flags.hopperOut()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean allowsIn(Inventory inventory) {
+    for (var lock : locksOf(inventory)) {
+      var flags = lock.options().flags();
+      if (!flags.hopper() && !flags.hopperIn()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private List<Lock> locksOf(Inventory inventory) {
+    if (inventory.getHolder(false) instanceof Entity) {
+      return List.of();
+    }
+    var found = new ArrayList<Lock>();
+    for (var location : Chests.locations(inventory)) {
+      var lock = lockOf(Guard.world(location).getBlockAt(location));
+      if (lock != null) {
+        found.add(lock);
+      }
+    }
+    return found;
   }
 }

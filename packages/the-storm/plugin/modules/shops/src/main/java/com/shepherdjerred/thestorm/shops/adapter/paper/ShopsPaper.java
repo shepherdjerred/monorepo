@@ -115,6 +115,9 @@ public final class ShopsPaper {
     var notices = new OwnerNoticesListener(server, state.store(), replies, settings.summaryLines());
     var blocks = new ShopBlocks(plugin, state.registry(), containers(settings.containers()));
     services.provide(
+        com.shepherdjerred.thestorm.core.protection.ReservedContainers.class,
+        new ShopReservations(state.registry()));
+    services.provide(
         com.shepherdjerred.thestorm.shops.app.ShopRelocation.class,
         new ShopMoves(
             new ShopMoves.State(state.registry(), state.store(), locks),
@@ -127,7 +130,10 @@ public final class ShopsPaper {
             new ChestShops.Policy(
                 CreationRules.standard(settings.limits()),
                 new ServerOffers(state.catalogs(), state.registry()),
-                settings.clickCooldown()),
+                settings.clickCooldown(),
+                settings.buyTaxPercent(),
+                settings.sellTaxPercent(),
+                settings.requireFullAmount()),
             new PaperShopEffects(
                 notices,
                 blocks,
@@ -138,6 +144,7 @@ public final class ShopsPaper {
     ShopsPermissions.register(events);
     events.registerEvents(
         new ShopReadinessListener(state.registry(), containers(settings.containers())), plugin);
+    var access = new ShopAccess();
     events.registerEvents(
         new ShopSignListener(
             new ShopSignListener.Deps(
@@ -149,11 +156,17 @@ public final class ShopsPaper {
                 templates,
                 protection,
                 context.scheduler(),
-                settings.buyClick())),
+                settings.buyClick(),
+                settings,
+                services.require(Wallets.class),
+                services)),
         plugin);
     events.registerEvents(
         new ShopClickListener(
-            settings, chestShops, new PaperTools(blocks, templates, replies, context.analytics())),
+            settings,
+            chestShops,
+            new PaperTools(blocks, templates, replies, context.analytics()),
+            access),
         plugin);
     events.registerEvents(new ShopGuardListener(locks, blocks, chestShops), plugin);
     events.registerEvents(notices, plugin);
@@ -174,7 +187,16 @@ public final class ShopsPaper {
             new DialogServerShops.Controls(context.scheduler(), context.analytics()),
             config.catalogs().maxDistance());
     var serverShops = new ReadyServerShops(dialogs, state.registry());
-    var command = new ShopCommand(serverShops, state.registry(), settings.limits());
+    var command =
+        new ShopCommand(
+            new ShopCommand.Wiring(
+                serverShops,
+                state.registry(),
+                settings.limits(),
+                notices,
+                blocks,
+                settings.adminShopLabel(),
+                access));
     context
         .lifecycle()
         .registerEventHandler(

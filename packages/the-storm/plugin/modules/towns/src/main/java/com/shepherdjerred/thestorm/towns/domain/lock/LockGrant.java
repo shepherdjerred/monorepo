@@ -6,4 +6,6 @@ public enum LockGrant {
   USE,
   /** Open it, and break it too. */
   MANAGE,
+  /** Open it and edit who else is on the list. Cannot break it or remove the owner. */
+  ADMIN,
 }

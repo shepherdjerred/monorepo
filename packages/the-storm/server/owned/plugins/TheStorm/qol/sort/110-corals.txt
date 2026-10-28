@@ -1,0 +1,16 @@
+# Coral, matched before the broader plant list.
+sticky=false
+*_coral
+*_coral_block
+*_coral_fan
+*_coral_wall_fan
+tube_coral
+brain_coral
+bubble_coral
+fire_coral
+horn_coral
+dead_tube_coral
+dead_brain_coral
+dead_bubble_coral
+dead_fire_coral
+dead_horn_coral

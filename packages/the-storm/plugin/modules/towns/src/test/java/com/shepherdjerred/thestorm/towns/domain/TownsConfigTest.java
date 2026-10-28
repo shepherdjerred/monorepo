@@ -38,6 +38,10 @@ final class TownsConfigTest {
       locks:
         maxPerPlayer: 64
         autoLockOnPlace: true
+        autocloseSeconds: 2
+        lockCost: 0
+        magnetRadius: 3
+        expireDays: 30
       pvp:
         toggleCooldownHours: 168
         combatLockSeconds: 30
@@ -106,6 +110,10 @@ final class TownsConfigTest {
         "    profile: SAFE\n",
         "  thrownItemMemoryTicks: 100\n",
         "  autoLockOnPlace: true\n",
+        "  autocloseSeconds: 2\n",
+        "  lockCost: 0\n",
+        "  magnetRadius: 3\n",
+        "  expireDays: 30\n",
         "  toggleCooldownHours: 168\n",
         "  combatLockSeconds: 30\n",
         "  idleDays: 90\n",
@@ -148,6 +156,10 @@ final class TownsConfigTest {
         "transferConfirmSeconds: 60|transferConfirmSeconds: 0",
         "maxPerPlayer: 64|maxPerPlayer: 0",
         "autoLockOnPlace: true|autoLockOnPlace: maybe",
+        "autocloseSeconds: 2|autocloseSeconds: 0",
+        "lockCost: 0|lockCost: -1",
+        "magnetRadius: 3|magnetRadius: 0",
+        "expireDays: 30|expireDays: 0",
         "toggleCooldownHours: 168|toggleCooldownHours: -1",
         "combatLockSeconds: 30|combatLockSeconds: -1",
         "limited: false|limited: maybe",

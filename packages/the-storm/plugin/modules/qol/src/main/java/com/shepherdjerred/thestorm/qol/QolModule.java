@@ -6,13 +6,16 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
+import com.shepherdjerred.thestorm.qol.adapter.db.JooqBankStore;
 import com.shepherdjerred.thestorm.qol.adapter.db.JooqGraveStore;
+import com.shepherdjerred.thestorm.qol.adapter.db.JooqSortStore;
 import com.shepherdjerred.thestorm.qol.adapter.paper.QolPaper;
 import com.shepherdjerred.thestorm.qol.adapter.paper.RtpPaper;
 import com.shepherdjerred.thestorm.qol.app.CombatStatus;
 import com.shepherdjerred.thestorm.qol.app.CombatTracker;
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
+import com.shepherdjerred.thestorm.qol.domain.sort.CategoryFiles;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -32,6 +35,7 @@ public final class QolModule implements StormModule {
   @Override
   public void enable(ModuleContext context) {
     var config = context.loadConfig("qol.yml", QolConfig.class);
+    var categories = CategoryFiles.load(context.dataDirectory().resolve("qol/sort"));
     context.database().migrate(id(), getClass().getClassLoader());
     var services = context.services();
     var combat = new CombatTracker(context.time(), config.combat().tagFor());
@@ -49,8 +53,10 @@ public final class QolModule implements StormModule {
             services.require(Protection.class),
             services.require(TeleportGuards.class),
             services.require(AfkStatus.class),
-            services.require(SealedWorlds.class));
-    paper = QolPaper.start(context, config, app);
+            services.require(SealedWorlds.class),
+            new JooqBankStore(context.database()),
+            new JooqSortStore(context.database()));
+    paper = QolPaper.start(context, config, app, categories);
     RtpPaper.install(
         context,
         new com.shepherdjerred.thestorm.qol.adapter.db.JooqQolStore(context.database()),

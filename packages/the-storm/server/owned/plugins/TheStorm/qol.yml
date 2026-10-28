@@ -31,8 +31,50 @@ combat:
 sleep:
   percent: 50
 
-# /sort sorts the container you are looking at. With sneakPunch, punching a
-# chest, barrel, shulker box or ender chest while sneaking with an empty hand
-# sorts it too.
+# /sort opens the settings screen. /sort on, off and toggle change automatic
+# chest sorting. /sort inventory, hotbar and all sort those slots. With
+# sneakPunch, punching a chest, barrel, shulker box or ender chest while
+# sneaking with an empty hand sorts it too. sortTime is when a player who
+# turned automatic sorting on has a container sorted: OPEN, CLOSE, or BOTH.
+# New players start from defaults, with automatic sorting off. blockedHolders
+# are regular expressions matched against an inventory holder's class name.
+# disabledWorlds skips automatic sorting. Plugin screens are never sorted.
 sort:
   sneakPunch: true
+  sortTime: CLOSE
+  hotkeyCooldownMillis: 200
+  defaults:
+    containers: false
+    inventory: false
+    middleClick: true
+    shiftClick: true
+    doubleClick: true
+    shiftRightClick: true
+    dump: false
+    take: false
+    leftClickBlock: false
+  blockedHolders:
+    - ".*[Bb]ack[Pp]ack.*"
+  preventNullHolders: false
+  disabledWorlds: []
+
+# A [Bank] sign on a chest, barrel, copper chest or dispenser, and [Shelf]
+# signs that receive the items it accepts. groups are extra limits a player
+# gets with thestorm.qol.bank.limits.<name>. Distances are blocks, in a
+# straight line.
+bank:
+  limits:
+    linkRadius: 64
+    findRadius: 128
+    banksPerPlayer: 8
+    shelvesPerBank: 32
+  fallbackRole: OPEN
+  verticalTwo: false
+  horizontalTwo: false
+  signInFront: true
+  groups:
+    donors:
+      linkRadius: 128
+      findRadius: 256
+      banksPerPlayer: 20
+      shelvesPerBank: 64

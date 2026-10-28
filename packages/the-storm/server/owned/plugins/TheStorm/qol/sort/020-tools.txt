@@ -1,0 +1,13 @@
+# Tools you dig, chop, and till with.
+sticky=false
+*_pickaxe
+*_axe
+*_shovel
+*_hoe
+fishing_rod
+flint_and_steel
+shears
+brush
+spyglass
+carrot_on_a_stick
+warped_fungus_on_a_stick

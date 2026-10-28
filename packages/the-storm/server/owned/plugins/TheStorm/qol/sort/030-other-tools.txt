@@ -1,0 +1,15 @@
+# Gear that is not a weapon or a digging tool.
+sticky=false
+clock
+compass
+recovery_compass
+lead
+name_tag
+saddle
+goat_horn
+bucket
+*_bucket
+minecart
+*_minecart
+*_boat
+*_chest_boat

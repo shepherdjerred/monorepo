@@ -6,6 +6,13 @@ public sealed interface OwnerLine {
   /** The creator's own shop; the line is filled in with their name. */
   record Creator() implements OwnerLine {}
 
+  /**
+   * A shop for the player or town named on the line.
+   *
+   * @param name the sign's first line, already stripped
+   */
+  record Named(String name) implements OwnerLine {}
+
   /** A server shop with unlimited stock, trading with the server account. */
   record AdminShop() implements OwnerLine {}
 }

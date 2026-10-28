@@ -1,0 +1,12 @@
+# Weapons: swords, bows, and what they fire.
+sticky=false
+*_sword
+bow
+crossbow
+trident
+mace
+shield
+arrow
+spectral_arrow
+tipped_arrow
+wind_charge

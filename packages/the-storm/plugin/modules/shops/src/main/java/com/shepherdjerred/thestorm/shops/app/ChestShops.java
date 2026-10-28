@@ -5,6 +5,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.shops.domain.price.ShopLevy;
 import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationAttempt;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationProblem;
@@ -15,6 +16,8 @@ import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import com.shepherdjerred.thestorm.shops.domain.sign.OwnerLine;
 import com.shepherdjerred.thestorm.shops.domain.sign.ShopSignDraft;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
+import com.shepherdjerred.thestorm.shops.domain.trade.PartialQuantity;
+import com.shepherdjerred.thestorm.shops.domain.trade.TradeChecks;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
@@ -45,6 +48,9 @@ public final class ChestShops {
   private final ShopEffects effects;
   private final ServerOffers offers;
   private final Duration clickCooldown;
+  private final int buyTaxPercent;
+  private final int sellTaxPercent;
+  private final boolean requireFullAmount;
   private final Map<UUID, Instant> lastTrades = new HashMap<>();
   private final Executor mainThread;
   private final InstantSource time;
@@ -56,12 +62,29 @@ public final class ChestShops {
    * @param creation the creation rules with the configured limits
    * @param offers the server's own prices, which admin shops may not loop with
    * @param clickCooldown the least time between one customer's trades at sign shops
+   * @param buyTaxPercent percent of a buy kept by the server
+   * @param sellTaxPercent percent of a sell kept by the server
+   * @param requireFullAmount a trade must move the sign's whole quantity
    */
-  public record Policy(CreationRules creation, ServerOffers offers, Duration clickCooldown) {
+  public record Policy(
+      CreationRules creation,
+      ServerOffers offers,
+      Duration clickCooldown,
+      int buyTaxPercent,
+      int sellTaxPercent,
+      boolean requireFullAmount) {
     public Policy {
       if (clickCooldown.isNegative()) {
         throw new IllegalArgumentException("the click cooldown must not be negative");
       }
+      if (buyTaxPercent < 0 || buyTaxPercent > 100 || sellTaxPercent < 0 || sellTaxPercent > 100) {
+        throw new IllegalArgumentException("tax percents must be 0..100");
+      }
+    }
+
+    /** No tax, and every trade must move the sign's whole quantity. */
+    public Policy(CreationRules creation, ServerOffers offers, Duration clickCooldown) {
+      this(creation, offers, clickCooldown, 0, 0, true);
     }
   }
 
@@ -81,6 +104,9 @@ public final class ChestShops {
     this.rules = policy.creation();
     this.offers = policy.offers();
     this.clickCooldown = policy.clickCooldown();
+    this.buyTaxPercent = policy.buyTaxPercent();
+    this.sellTaxPercent = policy.sellTaxPercent();
+    this.requireFullAmount = policy.requireFullAmount();
     this.effects = effects;
   }
 
@@ -120,7 +146,34 @@ public final class ChestShops {
       boolean admin,
       int shopkeeperLevel,
       Placement where,
-      Optional<ItemFingerprint> item) {}
+      Optional<ItemFingerprint> item,
+      ShopOwner owner) {
+
+    /** Admin flag, level, placement and item for a shop whose owner is implied by the sign. */
+    public record Opening(
+        boolean admin, int shopkeeperLevel, Placement where, Optional<ItemFingerprint> item) {}
+
+    /** A shop for the creator, or an admin shop. A named line has to say who it resolved to. */
+    public static Request implied(ShopSignDraft draft, Customer creator, Opening opening) {
+      return new Request(
+          draft,
+          creator,
+          opening.admin(),
+          opening.shopkeeperLevel(),
+          opening.where(),
+          opening.item(),
+          owner(draft, creator));
+    }
+
+    private static ShopOwner owner(ShopSignDraft draft, Customer creator) {
+      return switch (draft.owner()) {
+        case OwnerLine.Creator() -> new ShopOwner.Player(creator.id(), creator.name());
+        case OwnerLine.AdminShop() -> new ShopOwner.Admin();
+        case OwnerLine.Named(var name) ->
+            throw new IllegalArgumentException("a named shop needs its owner: " + name);
+      };
+    }
+  }
 
   /**
    * Where a new shop goes.
@@ -149,18 +202,17 @@ public final class ChestShops {
 
   /** Checks a sign and builds its shop without making it tradable or persisting it. */
   public Result<SignShop, List<CreationProblem>> prepare(Request request) {
-    var owner =
-        switch (request.draft().owner()) {
-          case OwnerLine.Creator() ->
-              new ShopOwner.Player(request.creator().id(), request.creator().name());
-          case OwnerLine.AdminShop() -> new ShopOwner.Admin();
-        };
+    var owner = request.owner();
     var attempt =
         new CreationAttempt(
             request.draft().owner(),
             request.admin(),
             request.shopkeeperLevel(),
-            registry.ownedBy(request.creator().id()),
+            switch (owner) {
+              case ShopOwner.Player(var id, _) -> registry.ownedBy(id);
+              case ShopOwner.Town(var id, _) -> registry.ownedBy(id);
+              case ShopOwner.Admin() -> 0;
+            },
             containerState(owner, request.where()));
     var problems = rules.check(attempt);
     if (!problems.isEmpty()) {
@@ -209,6 +261,7 @@ public final class ChestShops {
                 block ->
                     switch (owner) {
                       case ShopOwner.Player(var id, _) -> registry.ownsAllOn(id, block);
+                      case ShopOwner.Town(var id, _) -> registry.ownsAllOn(id, block);
                       case ShopOwner.Admin() ->
                           registry.tradingFrom(block).stream().allMatch(SignShop::isAdmin);
                     });
@@ -257,7 +310,9 @@ public final class ChestShops {
       Customer customer,
       Holdings customerItems,
       Holdings shopItems,
-      List<BlockPos> containerBlocks) {
+      List<BlockPos> containerBlocks,
+      boolean skipTax,
+      boolean tradingOwnStock) {
     public Visit {
       containerBlocks = List.copyOf(containerBlocks);
     }
@@ -273,20 +328,42 @@ public final class ChestShops {
     var shop = visit.shop();
     var direction = visit.direction();
     var customer = visit.customer();
-    var refusal = refusal(shop, direction, customer).or(() -> tooSoon(customer));
+    var refusal =
+        refusal(shop, direction, customer, visit.tradingOwnStock()).or(() -> tooSoon(customer));
     if (refusal.isPresent()) {
       return completedFuture(new TradeOutcome.Refused(refusal.orElseThrow()));
     }
     var price = shop.prices().forDirection(direction).orElseThrow();
+    var asked = shop.quantity();
+    var quantity = asked;
+    if (!requireFullAmount) {
+      var customerPile = visit.customerItems().stockpile();
+      var shopPile = visit.shopItems().stockpile();
+      var available = direction == Direction.BUY ? shopPile.count() : customerPile.count();
+      var room = direction == Direction.BUY ? customerPile.space() : shopPile.space();
+      var fit = PartialQuantity.fit(asked, available, room);
+      if (fit < 1) {
+        return completedFuture(
+            new TradeOutcome.Refused(
+                TradeChecks.goods(direction, asked, customerPile, shopPile).orElseThrow()));
+      }
+      quantity = fit;
+    }
+    var gross = PartialQuantity.scale(price.crystals(), asked, quantity);
+    var percent =
+        visit.skipTax() ? 0 : (direction == Direction.BUY ? buyTaxPercent : sellTaxPercent);
+    var levy = ShopLevy.of(gross, percent);
     var deal =
         new Deal(
             direction,
-            shop.quantity(),
-            Money.crystals(price.crystals()),
+            quantity,
+            Money.crystals(levy.gross()),
             new Deal.Party(customer.account(), visit.customerItems()),
             new Deal.Party(accountOf(shop.owner()), visit.shopItems()),
             "shop:" + shop.id() + ":" + direction.id(),
-            shop.item().orElseThrow().template());
+            shop.item().orElseThrow().template(),
+            levy.tax(),
+            visit.tradingOwnStock());
     var goods = TradeEngine.goodsProblem(deal);
     if (goods.isPresent()) {
       return completedFuture(new TradeOutcome.Refused(goods.orElseThrow()));
@@ -298,7 +375,7 @@ public final class ChestShops {
                 problem
                     .<CompletableFuture<TradeOutcome>>map(
                         cannot -> completedFuture(new TradeOutcome.Refused(cannot)))
-                    .orElseGet(() -> settle(visit, deal, price.crystals())),
+                    .orElseGet(() -> settle(visit, deal, levy.gross())),
             mainThread);
   }
 
@@ -383,7 +460,8 @@ public final class ChestShops {
     return List.copyOf(closedNow);
   }
 
-  private Optional<TradeProblem> refusal(SignShop shop, Direction direction, Customer customer) {
+  private Optional<TradeProblem> refusal(
+      SignShop shop, Direction direction, Customer customer, boolean tradingOwnStock) {
     if (!effects.tradeAllowed(shop)) {
       return Optional.of(
           new TradeProblem.ShopClosed("the plot lease has expired or recovery is in progress."));
@@ -395,7 +473,7 @@ public final class ChestShops {
     if (shop.item().isEmpty()) {
       return Optional.of(new TradeProblem.ItemNotSet());
     }
-    if (shop.owner().isOwnedBy(customer.id())) {
+    if (shop.owner().isOwnedBy(customer.id()) && !tradingOwnStock) {
       return Optional.of(new TradeProblem.OwnShop());
     }
     if (shop.prices().forDirection(direction).isEmpty()) {
@@ -408,6 +486,7 @@ public final class ChestShops {
     var site =
         switch (shop.owner()) {
           case ShopOwner.Player(var owner, _) -> new TradeSite.Chest(shop.id(), owner);
+          case ShopOwner.Town(var town, _) -> new TradeSite.Chest(shop.id(), town);
           case ShopOwner.Admin() -> new TradeSite.Admin(shop.id());
         };
     var trade =
@@ -421,9 +500,9 @@ public final class ChestShops {
             price,
             time.instant());
     var told =
-        switch (site) {
-          case TradeSite.Chest(_, var owner) -> effects.tellOwnerIfOnline(owner, trade);
-          case TradeSite.Admin(_), TradeSite.Catalog(_) -> true;
+        switch (shop.owner()) {
+          case ShopOwner.Player(var id, _) -> effects.tellOwnerIfOnline(id, trade);
+          case ShopOwner.Town(_, _), ShopOwner.Admin() -> true;
         };
     Background.logFailure(
         store.recordTrade(trade, told), logger, "log a trade at shop " + shop.id());
@@ -432,6 +511,7 @@ public final class ChestShops {
   static AccountId accountOf(ShopOwner owner) {
     return switch (owner) {
       case ShopOwner.Player(var id, _) -> new AccountId.Player(id);
+      case ShopOwner.Town(var id, _) -> new AccountId.Town(id);
       case ShopOwner.Admin() -> new AccountId.Server();
     };
   }

@@ -9,19 +9,25 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqLocksStore;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.lock.Lock;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockFlag;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockType;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import net.kyori.adventure.text.Component;
 import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Openable;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBurnEvent;
@@ -31,7 +37,10 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.CrafterCraftEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerQuitEvent.QuitReason;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -72,7 +81,11 @@ final class LockListenersTest extends AegisServer {
               lock(CAROL, CHEST_X, Y - 1, Z),
               lock(DAVE, CHEST_X + 1, Y - 1, Z),
               lock(CAROL, 145, Y, Z),
-              lock(CAROL, CLAIM_X + 10, Y, Z))) {
+              lock(CAROL, CLAIM_X + 10, Y, Z),
+              lock(CAROL, 147, Y, Z).withType(LockType.PUBLIC, ""),
+              lock(CAROL, 148, Y, Z).withType(LockType.PASSWORD, "gate"),
+              lock(CAROL, 152, Y, Z).withFlag(LockFlag.AUTOCLOSE, true),
+              lock(CAROL, 153, Y, Z))) {
         store.save(lock).get(10, TimeUnit.SECONDS);
       }
     } catch (Exception e) {
@@ -97,6 +110,63 @@ final class LockListenersTest extends AegisServer {
     block(CHEST_X - 1, Y - 1, Z).setType(Material.HOPPER);
     block(145, Y, Z).setType(Material.DISPENSER);
     block(CLAIM_X + 10, Y, Z).setType(Material.CHEST);
+    block(147, Y, Z).setType(Material.CHEST);
+    block(148, Y, Z).setType(Material.CHEST);
+    block(152, Y, Z).setType(Material.IRON_DOOR);
+  }
+
+  @Test
+  void aPublicLockLetsStrangersOpenItAndStillKeepsThemFromBreakingIt() {
+    var chest = block(147, Y, Z);
+
+    assertThat(rightClick(bob, chest)).isNotEqualTo(Event.Result.DENY);
+    assertThat(breakAllowed(bob, chest)).isFalse();
+  }
+
+  @Test
+  void aPasswordWorksUntilLogout() {
+    var chest = block(148, Y, Z);
+
+    assertThat(rightClick(bob, chest)).isEqualTo(Event.Result.DENY);
+    passwordListener().submitPassword(bob, "gate");
+
+    assertThat(rightClick(bob, chest)).isNotEqualTo(Event.Result.DENY);
+    call(new PlayerQuitEvent(bob, Component.empty(), QuitReason.DISCONNECTED));
+    assertThat(rightClick(bob, chest)).isEqualTo(Event.Result.DENY);
+  }
+
+  @Test
+  void aLockedDoorStaysShutForStrangersAndAnIronDoorClosesItself() {
+    var iron = block(152, Y, Z);
+
+    assertThat(rightClick(bob, iron)).isEqualTo(Event.Result.DENY);
+    assertThat(rightClick(carol, iron)).isNotEqualTo(Event.Result.DENY);
+    assertThat(((Openable) iron.getBlockData()).isOpen()).isTrue();
+
+    for (var tick = 0; tick < 45; tick++) {
+      server.getScheduler().performOneTick();
+    }
+    assertThat(((Openable) iron.getBlockData()).isOpen()).isFalse();
+  }
+
+  @Test
+  void aLockedArmorStandRejectsStrangers() {
+    var stand =
+        (ArmorStand) world.spawnEntity(new Location(world, 153, Y, Z), EntityType.ARMOR_STAND);
+    var stranger = new PlayerInteractEntityEvent(bob, stand, EquipmentSlot.HAND);
+    var owner = new PlayerInteractEntityEvent(carol, stand, EquipmentSlot.HAND);
+
+    call(stranger);
+    call(owner);
+
+    assertThat(stranger.isCancelled()).isTrue();
+    assertThat(owner.isCancelled()).isFalse();
+  }
+
+  @Test
+  void nolockModeToggles() throws InterruptedException {
+    assertThat(server.dispatchCommand(carol, "lock mode nolock")).isTrue();
+    awaitLine(carol, "nolock is on");
   }
 
   private Event.Result rightClick(PlayerMock player, Block block) {
@@ -348,6 +418,15 @@ final class LockListenersTest extends AegisServer {
     plugin = super.load();
 
     assertThat(breakAllowed(bob, block(CHEST_X, Y, Z))).isFalse();
+  }
+
+  private LockListener passwordListener() {
+    for (var registered : PlayerInteractEvent.getHandlerList().getRegisteredListeners()) {
+      if (registered.getListener() instanceof LockListener listener) {
+        return listener;
+      }
+    }
+    throw new IllegalStateException("lock listener is not registered");
   }
 
   /** An inventory at block ({@code x}, {@code y}, {@code Z}), held by {@code holder}. */

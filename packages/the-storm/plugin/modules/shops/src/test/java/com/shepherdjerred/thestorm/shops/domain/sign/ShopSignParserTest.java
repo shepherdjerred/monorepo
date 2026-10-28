@@ -31,10 +31,18 @@ final class ShopSignParserTest {
   }
 
   @Test
-  void theOwnerLineIsIgnoredForPlayerShops() {
+  void aNameOnTheFirstLineNamesThatOwner() {
     var result = parser.parse(SignLines.of("SomeoneElse", "1", "B 5", "Diamond Sword"));
 
-    assertThat(result.map(ShopSignDraft::owner)).isEqualTo(Result.ok(new OwnerLine.Creator()));
+    assertThat(result.map(ShopSignDraft::owner))
+        .isEqualTo(Result.ok(new OwnerLine.Named("SomeoneElse")));
+  }
+
+  @Test
+  void aFirstLineThatIsNotANameIsRefused() {
+    var result = parser.parse(SignLines.of("not a name", "1", "B 5", "coal"));
+
+    assertThat(result.isOk()).isFalse();
   }
 
   @ParameterizedTest

@@ -1,21 +1,29 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.app.Change;
 import com.shepherdjerred.thestorm.towns.app.LockService;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.lock.Lock;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockAccess;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockAttempt;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockProblem;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockType;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRules;
 import io.papermc.paper.event.entity.ItemTransportingEntityValidateTargetEvent;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Openable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -33,8 +41,15 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.CrafterCraftEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Locked containers, on any land: only their owner, the players they trust and (by config) their
@@ -53,16 +68,33 @@ final class LockListener implements Listener {
   private final BlockKinds kinds;
   private final Placers placers;
   private final RandomGenerator random;
+  private final Scheduler scheduler;
+  private final Wallets wallets;
   private final Map<BlockPos, UUID> pendingAutoLocks = new HashMap<>();
 
-  record PlacementTools(Placers placers, RandomGenerator random) {}
+  record PlacementTools(
+      Placers placers, RandomGenerator random, Scheduler scheduler, Wallets wallets) {}
 
   LockListener(LockGuard locks, LockService service, BlockKinds kinds, PlacementTools tools) {
     this.locks = locks;
     this.service = service;
     this.kinds = kinds;
+    this.wallets = tools.wallets();
     this.placers = tools.placers();
     this.random = tools.random();
+    this.scheduler = tools.scheduler();
+  }
+
+  LockGuard locks() {
+    return locks;
+  }
+
+  LockService service() {
+    return service;
+  }
+
+  BlockKinds kinds() {
+    return kinds;
   }
 
   @EventHandler(priority = EventPriority.LOW)
@@ -73,11 +105,148 @@ final class LockListener implements Listener {
         || !kinds.isLockable(block.getType())) {
       return;
     }
-    var blocks = new ArrayList<>(LockGuard.container(block));
+    var blocks = new ArrayList<>(LockGuard.covered(block));
     blocks.addAll(Chests.shelfChain(block));
     if (!locks.mayOpen(event.getPlayer(), blocks)) {
+      var lock = locks.lockOf(block);
+      if (lock != null
+          && lock.options().type() == LockType.PASSWORD
+          && !locks.knowsPassword(event.getPlayer().getUniqueId(), lock)) {
+        locks.expectPassword(event.getPlayer().getUniqueId(), lock);
+        event
+            .getPlayer()
+            .sendMessage(
+                Notices.info("Type this lock's password in chat. It lasts until you log out."));
+      }
       event.setUseInteractedBlock(Event.Result.DENY);
       event.setUseItemInHand(Event.Result.DENY);
+      return;
+    }
+    var opened = locks.lockOf(block);
+    if (opened != null) {
+      service.touch(opened);
+    }
+    openAndClose(block);
+  }
+
+  boolean willLock(Player player) {
+    return service.policy().autoLockOnPlace()
+        && !service.modes().get(player.getUniqueId()).nolock();
+  }
+
+  /**
+   * Iron doors, trapdoors and gates do not open on a click, so a player who may use the lock opens
+   * them. They close after the configured delay, as does any door whose autoclose flag is on.
+   */
+  private void openAndClose(Block block) {
+    if (!(block.getBlockData() instanceof Openable)) {
+      return;
+    }
+    var lock = locks.lockOf(block);
+    if (lock == null) {
+      lock = Doors.otherHalf(block).map(locks::lockOf).orElse(null);
+    }
+    if (lock == null) {
+      return;
+    }
+    var iron = block.getType().name().startsWith("IRON_");
+    if (iron) {
+      for (var part : LockGuard.container(block)) {
+        if (part.getBlockData() instanceof Openable openable && !openable.isOpen()) {
+          openable.setOpen(true);
+          part.setBlockData(openable);
+        }
+      }
+    }
+    if (iron || lock.options().flags().autoclose()) {
+      var _ =
+          scheduler.runOnMainThreadLater(
+              Duration.ofSeconds(service.policy().autocloseSeconds()), () -> close(block));
+    }
+  }
+
+  private static void close(Block block) {
+    for (var part : LockGuard.container(block)) {
+      if (part.getBlockData() instanceof Openable openable && openable.isOpen()) {
+        openable.setOpen(false);
+        part.setBlockData(openable);
+      }
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOW)
+  void onChat(AsyncChatEvent event) {
+    var playerId = event.getPlayer().getUniqueId();
+    if (!locks.isAwaitingPassword(playerId)) {
+      return;
+    }
+    event.setCancelled(true);
+    var word = PlainTextComponentSerializer.plainText().serialize(event.message());
+    var player = event.getPlayer();
+    scheduler.runOnMainThread(() -> submitPassword(player, word));
+  }
+
+  /** Checks {@code word} against the password {@code player} was just asked for. */
+  void submitPassword(Player player, String word) {
+    var lockId = locks.takePasswordPrompt(player.getUniqueId());
+    if (lockId == null) {
+      return;
+    }
+    var lock = service.book().all().stream().filter(found -> found.id().equals(lockId)).findFirst();
+    if (lock.isEmpty()) {
+      player.sendMessage(Notices.error("That lock is gone."));
+      return;
+    }
+    if (!lock.get().options().password().equals(word)) {
+      player.sendMessage(Notices.error("That password is wrong."));
+      return;
+    }
+    locks.grantPassword(player.getUniqueId(), lockId);
+    player.sendMessage(Notices.success("Password accepted until you log out."));
+  }
+
+  @EventHandler(priority = EventPriority.LOW)
+  void onQuit(PlayerQuitEvent event) {
+    locks.forgetPasswords(event.getPlayer().getUniqueId());
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onClick(InventoryClickEvent event) {
+    if (!(event.getWhoClicked() instanceof Player player)) {
+      return;
+    }
+    var restriction = restriction(player, event.getView().getTopInventory());
+    if (restriction == LockAccess.Movement.FULL) {
+      return;
+    }
+    var takes = takesFrom(event);
+    var puts = putsInto(event);
+    var refused =
+        switch (restriction) {
+          case NONE, LOOK -> takes || puts;
+          case PUT -> takes;
+          case TAKE -> puts;
+          case FULL -> false;
+        };
+    if (refused) {
+      event.setCancelled(true);
+      player.sendMessage(Notices.error(refusal(restriction)));
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onDrag(InventoryDragEvent event) {
+    if (!(event.getWhoClicked() instanceof Player player)) {
+      return;
+    }
+    var top = event.getView().getTopInventory();
+    var restriction = restriction(player, top);
+    if (restriction == LockAccess.Movement.FULL) {
+      return;
+    }
+    var touchesTop = event.getRawSlots().stream().anyMatch(slot -> slot < top.getSize());
+    if (touchesTop && restriction != LockAccess.Movement.PUT) {
+      event.setCancelled(true);
     }
   }
 
@@ -99,7 +268,8 @@ final class LockListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onPlace(BlockPlaceEvent event) {
-    if (event instanceof BlockMultiPlaceEvent) {
+    if (event instanceof BlockMultiPlaceEvent
+        && !kinds.registersOnPlace(event.getBlock().getType())) {
       return;
     }
     var block = event.getBlock();
@@ -108,20 +278,28 @@ final class LockListener implements Listener {
     }
     var player = event.getPlayer();
     var type = block.getType();
-    if (kinds.isLockable(type) && service.policy().autoLockOnPlace() && service.isSettling()) {
+    if (kinds.isRedstone(type) && !mayWireNear(player, block)) {
+      event.setCancelled(true);
+      return;
+    }
+    if (!kinds.registersOnPlace(type)) {
+      return;
+    }
+    if (!willLock(player)) {
+      return;
+    }
+    if (service.isSettling()) {
       player.sendMessage(
           Notices.error("Locks are saving; try placing the container again shortly."));
       event.setCancelled(true);
       return;
     }
-    if (kinds.isLockable(type) && !mayPlaceBeside(player, block)) {
+    if (!mayPlaceBeside(player, block)) {
       event.setCancelled(true);
       return;
     }
     var partner = Chests.partner(block);
-    if (kinds.isLockable(type)
-        && service.policy().autoLockOnPlace()
-        && partner.isPresent()
+    if (partner.isPresent()
         && locks.lockOf(partner.get()) == null
         && !player.getUniqueId().equals(placers.placedBy(partner.get()))) {
       player.sendMessage(
@@ -129,16 +307,11 @@ final class LockListener implements Listener {
       event.setCancelled(true);
       return;
     }
-    if (kinds.isLockable(type)
-        && service.policy().autoLockOnPlace()
-        && service.book().countOf(player.getUniqueId()) >= service.policy().maxPerPlayer()
-        && Chests.partner(block).map(locks::lockOf).orElse(null) == null) {
+    if (service.book().countOf(player.getUniqueId()) >= service.policy().maxPerPlayer()
+        && Chests.partner(block).map(locks::lockOf).orElse(null) == null
+        && Doors.otherHalf(block).map(locks::lockOf).orElse(null) == null) {
       player.sendMessage(
           Notices.error("Your lock limit is full; unlock a container before placing another."));
-      event.setCancelled(true);
-      return;
-    }
-    if (kinds.isRedstone(type) && !mayWireNear(player, block)) {
       event.setCancelled(true);
     }
   }
@@ -149,12 +322,21 @@ final class LockListener implements Listener {
    */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPlaced(BlockPlaceEvent event) {
+    if (event instanceof BlockMultiPlaceEvent
+        && !kinds.registersOnPlace(event.getBlock().getType())) {
+      return;
+    }
     var block = event.getBlock();
     if (locks.isSealed(block.getWorld())) {
       return;
     }
     var position = LockGuard.position(block);
-    if (service.book().lockAt(position).isPresent()) {
+    var already = service.book().lockAt(position).orElse(null);
+    if (already != null) {
+      var partner = Doors.otherHalf(block).map(LockGuard::position).orElse(null);
+      if (partner != null && already.blocks().contains(partner)) {
+        return;
+      }
       service.release(position);
     }
     if (!kinds.isLockable(block.getType())) {
@@ -172,7 +354,10 @@ final class LockListener implements Listener {
     if (extendJoinedChest(event.getPlayer(), block, position)) {
       return;
     }
-    if (!service.policy().autoLockOnPlace()) {
+    if (extendDoorHalf(event.getPlayer(), block, position)) {
+      return;
+    }
+    if (!kinds.registersOnPlace(block.getType()) || !willLock(event.getPlayer())) {
       return;
     }
     autoLockPlaced(event.getPlayer(), block, position);
@@ -205,7 +390,37 @@ final class LockListener implements Listener {
     return true;
   }
 
-  private void autoLockPlaced(Player player, Block block, BlockPos position) {
+  /** The other half of this door is already locked, so this half joins that lock. */
+  private boolean extendDoorHalf(Player player, Block block, BlockPos position) {
+    var partner = Doors.otherHalf(block).orElse(null);
+    if (partner == null) {
+      return false;
+    }
+    var lock = locks.lockOf(partner);
+    if (lock == null
+        || lock.blocks().contains(position)
+        || !locks.mayBreak(player, lock, partner)) {
+      return lock != null;
+    }
+    var extended = service.extendOnPlacement(lock, position);
+    if (extended.isEmpty()) {
+      revokeUnstoredPlacement(player, block, position);
+      return true;
+    }
+    var _ =
+        extended
+            .get()
+            .saved()
+            .whenComplete(
+                (saved, failure) -> {
+                  if (failure != null) {
+                    revokeUnstoredPlacement(player, block, position);
+                  }
+                });
+    return true;
+  }
+
+  void autoLockPlaced(Player player, Block block, BlockPos position) {
     var blocks = LockGuard.container(block).stream().map(LockGuard::position).toList();
     var standing =
         new LockAttempt.Standing(player.getUniqueId(), true, locks.ground(player, block), false);
@@ -219,9 +434,15 @@ final class LockListener implements Listener {
                 .saved()
                 .whenComplete(
                     (saved, failure) -> {
-                      if (pendingAutoLocks.remove(position, token) && failure != null) {
-                        revokeUnstoredPlacement(player, block, position);
+                      if (!pendingAutoLocks.remove(position, token)) {
+                        return;
                       }
+                      if (failure != null) {
+                        revokeUnstoredPlacement(player, block, position);
+                        return;
+                      }
+                      LockFee.charge(
+                          new LockFee.Bill(wallets, scheduler, service, player), change.value());
                     });
       }
       case Result.Err<Change<Lock>, List<LockProblem>>(var _) -> {
@@ -298,7 +519,8 @@ final class LockListener implements Listener {
   @EventHandler(priority = EventPriority.LOW)
   void onGolemTarget(ItemTransportingEntityValidateTargetEvent event) {
     for (var block : LockGuard.container(event.getBlock())) {
-      if (locks.lockOf(block) != null) {
+      var lock = locks.lockOf(block);
+      if (lock != null && !lock.options().flags().golem()) {
         event.setAllowed(false);
         return;
       }
@@ -307,12 +529,12 @@ final class LockListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onEntityExplode(EntityExplodeEvent event) {
-    event.blockList().removeIf(block -> locks.lockOf(block) != null);
+    event.blockList().removeIf(this::resistsExplosion);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onBlockExplode(BlockExplodeEvent event) {
-    event.blockList().removeIf(block -> locks.lockOf(block) != null);
+    event.blockList().removeIf(this::resistsExplosion);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -347,5 +569,80 @@ final class LockListener implements Listener {
     if (locks.lockOf(event.getBlock()) != null) {
       event.setCancelled(true);
     }
+  }
+
+  private boolean resistsExplosion(Block block) {
+    var lock = locks.lockOf(block);
+    return lock != null && !lock.options().flags().explosions();
+  }
+
+  private LockAccess.Movement restriction(Player player, Inventory top) {
+    var result = LockAccess.Movement.FULL;
+    for (var location : Chests.locations(top)) {
+      result = stricter(result, locks.movement(player, Guard.world(location).getBlockAt(location)));
+    }
+    return result;
+  }
+
+  private static LockAccess.Movement stricter(
+      LockAccess.Movement current, LockAccess.Movement next) {
+    if (current == LockAccess.Movement.NONE || next == LockAccess.Movement.NONE) {
+      return LockAccess.Movement.NONE;
+    }
+    if (current == LockAccess.Movement.LOOK || next == LockAccess.Movement.LOOK) {
+      return LockAccess.Movement.LOOK;
+    }
+    if (current == next || next == LockAccess.Movement.FULL) {
+      return current;
+    }
+    if (current == LockAccess.Movement.FULL) {
+      return next;
+    }
+    return LockAccess.Movement.LOOK;
+  }
+
+  private static boolean takesFrom(InventoryClickEvent event) {
+    if (event.getClick() == ClickType.DOUBLE_CLICK) {
+      return true;
+    }
+    var top = event.getView().getTopInventory();
+    var clicked = event.getClickedInventory();
+    if (clicked == null || !clicked.equals(top)) {
+      return false;
+    }
+    return switch (event.getClick()) {
+      case SHIFT_LEFT, SHIFT_RIGHT, DROP, CONTROL_DROP -> occupied(event.getCurrentItem());
+      case NUMBER_KEY, SWAP_OFFHAND -> true;
+      default -> occupied(event.getCurrentItem());
+    };
+  }
+
+  private static boolean putsInto(InventoryClickEvent event) {
+    var top = event.getView().getTopInventory();
+    var clicked = event.getClickedInventory();
+    if (clicked == null) {
+      return false;
+    }
+    if (clicked.equals(top)) {
+      return switch (event.getClick()) {
+        case NUMBER_KEY, SWAP_OFFHAND -> true;
+        case SHIFT_LEFT, SHIFT_RIGHT, DROP, CONTROL_DROP, DOUBLE_CLICK -> false;
+        default -> occupied(event.getCursor());
+      };
+    }
+    return event.isShiftClick() && occupied(event.getCurrentItem());
+  }
+
+  private static boolean occupied(@Nullable ItemStack stack) {
+    return stack != null && !stack.getType().isAir();
+  }
+
+  private static String refusal(LockAccess.Movement movement) {
+    return switch (movement) {
+      case PUT -> "This lock only accepts items.";
+      case TAKE -> "This lock only gives items.";
+      case LOOK, NONE -> "This lock is display only.";
+      case FULL -> "This lock is open.";
+    };
   }
 }

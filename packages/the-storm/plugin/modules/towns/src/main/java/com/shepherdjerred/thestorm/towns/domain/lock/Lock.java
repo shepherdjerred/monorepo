@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.towns.domain.lock;
 
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -89,10 +90,113 @@ public record Lock(
    * @param sharedWithTown the owner's town mates may open it (never break it)
    * @param redstone redstone may make it dispense or craft, so anyone who can power it can make it
    *     give up its items
+   * @param type how people who are not trusted may use it
+   * @param password the word a password lock expects; empty for every other type
+   * @param flags hopper, golem, magnet, autoclose, explosion, and expiry options
+   * @param groups permission groups that may open it; each is {@code thestorm.towns.lock.group.}
+   *     plus this name
+   * @param towns towns, other than the owner's shared town, whose members may open it
+   * @param lastUsed when it was last opened; {@link Instant#EPOCH} means never
    */
-  public record Options(boolean sharedWithTown, boolean redstone) {
+  public record Options(
+      boolean sharedWithTown,
+      boolean redstone,
+      LockType type,
+      String password,
+      Flags flags,
+      Set<String> groups,
+      Set<UUID> towns,
+      Instant lastUsed) {
 
     public static final Options NONE = new Options(false, false);
+
+    /** A private lock with no extra flags. Existing callers keep this shape. */
+    public Options(boolean sharedWithTown, boolean redstone) {
+      this(
+          sharedWithTown,
+          redstone,
+          LockType.PRIVATE,
+          "",
+          Flags.NONE,
+          Set.of(),
+          Set.of(),
+          Instant.EPOCH);
+    }
+
+    public Options {
+      groups = Set.copyOf(groups);
+      towns = Set.copyOf(towns);
+      if (type == LockType.PASSWORD) {
+        if (password.isBlank()) {
+          throw new IllegalArgumentException("a password lock needs a password");
+        }
+      } else if (!password.isEmpty()) {
+        throw new IllegalArgumentException("only a password lock has a password");
+      }
+      if (groups.stream().anyMatch(name -> !name.matches("[a-z0-9._-]{1,32}"))) {
+        throw new IllegalArgumentException("a lock group is 1..32 of a-z, 0-9, ., _ or -");
+      }
+    }
+
+    public Options withShared(boolean shared) {
+      return new Options(shared, redstone, type, password, flags, groups, towns, lastUsed);
+    }
+
+    public Options withRedstone(boolean allowed) {
+      return new Options(sharedWithTown, allowed, type, password, flags, groups, towns, lastUsed);
+    }
+
+    public Options withType(LockType next, String word) {
+      return new Options(
+          sharedWithTown,
+          redstone,
+          next,
+          next == LockType.PASSWORD ? word : "",
+          flags,
+          groups,
+          towns,
+          lastUsed);
+    }
+
+    public Options withFlags(Flags next) {
+      return new Options(sharedWithTown, redstone, type, password, next, groups, towns, lastUsed);
+    }
+
+    public Options withGroups(Set<String> next) {
+      return new Options(sharedWithTown, redstone, type, password, flags, next, towns, lastUsed);
+    }
+
+    public Options withTowns(Set<UUID> next) {
+      return new Options(sharedWithTown, redstone, type, password, flags, groups, next, lastUsed);
+    }
+
+    /** The same allowances, marked opened at {@code when}. */
+    public Options touched(Instant when) {
+      return new Options(sharedWithTown, redstone, type, password, flags, groups, towns, when);
+    }
+
+    /** The same allowances on a new lock, which nobody has opened. */
+    public Options unused() {
+      return touched(Instant.EPOCH);
+    }
+  }
+
+  /**
+   * Extra allowances stored with the lock. Off means the historical restriction: hoppers follow the
+   * same-owner rule, copper golems stay out, explosions cannot break it, and it can expire.
+   */
+  public record Flags(
+      boolean hopper,
+      boolean hopperIn,
+      boolean hopperOut,
+      boolean golem,
+      boolean magnet,
+      boolean autoclose,
+      boolean explosions,
+      boolean exempt) {
+
+    public static final Flags NONE =
+        new Flags(false, false, false, false, false, false, false, false);
   }
 
   /** A copy that also covers {@code block}, the other half of a double chest. */
@@ -125,6 +229,31 @@ public record Lock(
 
   public Lock withOptions(Options next) {
     return new Lock(id, owner, blocks, trusted, next, restoration);
+  }
+
+  /** A copy whose type is {@code type}. {@code word} is kept only for a password lock. */
+  public Lock withType(LockType type, String word) {
+    return withOptions(options.withType(type, word));
+  }
+
+  /** A copy with {@code flag} set to {@code on}. */
+  public Lock withFlag(LockFlag flag, boolean on) {
+    return withOptions(options.withFlags(flag.apply(options.flags(), on)));
+  }
+
+  /** A copy marked opened at {@code when}. */
+  public Lock touched(Instant when) {
+    return withOptions(options.touched(when));
+  }
+
+  /**
+   * This lock's blocks and owner, with {@code template}'s type, flags, list, groups and towns. The
+   * new lock has not been opened.
+   */
+  public Lock styledLike(Lock template) {
+    var next = new HashMap<>(template.trusted());
+    owners().forEach(next::remove);
+    return new Lock(id, owner, blocks, next, template.options().unused(), restoration);
   }
 
   /**

@@ -31,11 +31,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 /**
- * Keeps shop stock where it belongs. A shop's container opens only for its owner (and admins),
- * whatever the land's container flags say; the sign and container break only for them; no machine
- * or mob (hopper, hopper minecart, dropper, crafter, copper golem) ever moves items into or out of
- * it, even on the owner's own land; nothing opens while a trade is settling; and explosions,
- * pistons, fire and mobs leave shops alone.
+ * Keeps shop stock where it belongs. A shop's container opens for its owner, an admin, or someone
+ * allowed to access that name. The sign and container break for the owner, an admin, or someone
+ * allowed to destroy that name. No machine or mob (hopper, hopper minecart, dropper, crafter,
+ * copper golem) ever moves items into or out of it, even on the owner's own land; nothing opens
+ * while a trade is settling; and explosions, pistons, fire and mobs leave shops alone.
  */
 final class ShopGuardListener implements Listener {
 
@@ -67,7 +67,7 @@ final class ShopGuardListener implements Listener {
     if (shopsHere.isEmpty()) {
       return;
     }
-    refusal(event.getPlayer(), shopsHere, "container")
+    refusal(event.getPlayer(), shopsHere, "container", false)
         .ifPresent(
             reason -> {
               event.setUseInteractedBlock(Event.Result.DENY);
@@ -84,7 +84,7 @@ final class ShopGuardListener implements Listener {
     if (shopsHere.isEmpty() || !(event.getPlayer() instanceof Player player)) {
       return;
     }
-    refusal(player, shopsHere, "container")
+    refusal(player, shopsHere, "container", false)
         .ifPresent(
             reason -> {
               event.setCancelled(true);
@@ -100,7 +100,7 @@ final class ShopGuardListener implements Listener {
       return;
     }
     var player = event.getPlayer();
-    var refusal = refusal(player, shopsHere, "shop");
+    var refusal = refusal(player, shopsHere, "shop", true);
     if (refusal.isPresent()) {
       event.setCancelled(true);
       player.sendMessage(Replies.error(refusal.orElseThrow()));
@@ -111,7 +111,7 @@ final class ShopGuardListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onBreakFinal(BlockBreakEvent event) {
     var shopsHere = blocks.shopsAt(event.getBlock());
-    if (shopsHere.isEmpty() || !mayManage(event.getPlayer(), shopsHere)) {
+    if (shopsHere.isEmpty() || !mayBreak(event.getPlayer(), shopsHere)) {
       return;
     }
     shopsHere.forEach(shops::remove);
@@ -129,7 +129,7 @@ final class ShopGuardListener implements Listener {
     }
     var player = event.getPlayer();
     var neighbors = blocks.shopsOnContainer(placed);
-    if (!neighbors.isEmpty() && !mayManage(player, neighbors)) {
+    if (!neighbors.isEmpty() && !mayOpen(player, neighbors)) {
       event.setCancelled(true);
       player.sendMessage(Replies.error("That would reach into " + owners(neighbors) + "."));
     }
@@ -212,19 +212,47 @@ final class ShopGuardListener implements Listener {
   }
 
   /** Why {@code player} may not open or break these shops right now, if they may not. */
-  private Optional<String> refusal(Player player, List<SignShop> shopsHere, String what) {
+  private Optional<String> refusal(
+      Player player, List<SignShop> shopsHere, String what, boolean breaking) {
     if (isBusy(shopsHere)) {
       return Optional.of("A trade with this shop is going through; try again.");
     }
-    return mayManage(player, shopsHere)
+    var allowed = breaking ? mayBreak(player, shopsHere) : mayOpen(player, shopsHere);
+    return allowed
         ? Optional.empty()
         : Optional.of("This " + what + " belongs to " + owners(shopsHere) + ".");
   }
 
-  /** Admins, or the player who owns every one of these shops. */
-  private static boolean mayManage(Player player, List<SignShop> shopsHere) {
-    return player.hasPermission(ShopsPermissions.ADMIN)
-        || shopsHere.stream().allMatch(shop -> shop.owner().isOwnedBy(player.getUniqueId()));
+  /** Admins, the owner, or someone granted access to that name. */
+  private static boolean mayOpen(Player player, List<SignShop> shopsHere) {
+    return shopsHere.stream().allMatch(shop -> mayOpen(player, shop));
+  }
+
+  private static boolean mayOpen(Player player, SignShop shop) {
+    if (player.hasPermission(ShopsPermissions.ADMIN)
+        || shop.owner().isOwnedBy(player.getUniqueId())) {
+      return true;
+    }
+    return shop.owner()
+        .otherName()
+        .filter(name -> ShopNameAccess.may(player, "access", name))
+        .isPresent();
+  }
+
+  /** Admins, the owner, or someone granted destroy for that name. */
+  private static boolean mayBreak(Player player, List<SignShop> shopsHere) {
+    return shopsHere.stream().allMatch(shop -> mayBreak(player, shop));
+  }
+
+  private static boolean mayBreak(Player player, SignShop shop) {
+    if (player.hasPermission(ShopsPermissions.ADMIN)
+        || shop.owner().isOwnedBy(player.getUniqueId())) {
+      return true;
+    }
+    return shop.owner()
+        .otherName()
+        .filter(name -> ShopNameAccess.may(player, "destroy", name))
+        .isPresent();
   }
 
   private static String owners(List<SignShop> shopsHere) {
@@ -233,6 +261,7 @@ final class ShopGuardListener implements Listener {
             shop ->
                 switch (shop.owner()) {
                   case ShopOwner.Player(_, var name) -> name;
+                  case ShopOwner.Town(_, var name) -> name;
                   case ShopOwner.Admin() -> "the server";
                 })
         .distinct()

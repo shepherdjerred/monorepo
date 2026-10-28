@@ -2,7 +2,9 @@
 # NPC shop catalogs live in shops/<id>.yml next to this file.
 
 # Chest shops: a sign on a container, in ChestShop's format.
-#   line 1  your name (filled in for you), or the admin-shop label below
+#   line 1  blank (filled in with your name), another player or a town,
+#           or the admin-shop label below. Another name needs
+#           thestorm.shops.other.create, or .create.<name>.
 #   line 2  items per trade
 #   line 3  prices in crystals: B 50:S 40 (either side may be left out)
 #   line 4  the item's name, or ? and then right-click the sign holding it
@@ -41,6 +43,30 @@ chestShops:
   # shops, so an autoclicker cannot hammer a shop. Below 200 so holding the
   # use button (which repeats every 200 ms) still trades.
   clickCooldownMillis: 150
+  # Percent of a buy's price the server keeps. The customer pays the sign
+  # price; the owner receives the rest. 0 takes nothing.
+  # thestorm.shops.tax.skip pays no tax.
+  buyTaxPercent: 0
+  # Percent of a sell's price the server keeps, taken from what the customer
+  # is paid. The shop still pays the sign price.
+  sellTaxPercent: 0
+  # Crystals charged when a chest shop is created. 0 charges nothing.
+  # thestorm.shops.fee.skip creates for free.
+  creationFee: 0
+  # The cheapest and dearest a sign may ask, in crystals. A material entry
+  # replaces the global band for that material. thestorm.shops.price.bypass
+  # ignores these.
+  prices:
+    minBuy: 1
+    maxBuy: 1000000000
+    minSell: 1
+    maxSell: 1000000000
+    materials: {}
+  # A trade must move the quantity on the sign. Set false to sell or buy as
+  # many as the stock, the inventory, and the price allow.
+  requireFullAmount: true
+  # Worlds whose signs never become shops and whose shop signs do not trade.
+  disabledWorlds: []
 
 # NPC shops.
 catalogs:

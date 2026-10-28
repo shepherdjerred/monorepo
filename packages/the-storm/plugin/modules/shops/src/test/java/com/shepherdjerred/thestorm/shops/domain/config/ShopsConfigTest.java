@@ -19,7 +19,8 @@ final class ShopsConfigTest {
 
   private static ChestShopSettings settings(
       ChestShopSettings.Click click, int maxQuantity, List<String> containers) {
-    return new ChestShopSettings(click, maxQuantity, "Admin Shop", containers, LIMITS, 5, 250);
+    return ChestShopSettings.untaxed(
+        new ChestShopSettings.Basics(click, maxQuantity, "Admin Shop", containers, LIMITS, 5, 250));
   }
 
   @Test
@@ -31,6 +32,12 @@ final class ShopsConfigTest {
     assertThat(config.chestShops().containers()).doesNotContain("SHULKER_BOX");
     assertThat(config.chestShops().limits().allowed(1)).isEqualTo(5);
     assertThat(config.chestShops().clickCooldown()).isEqualTo(java.time.Duration.ofMillis(150));
+    assertThat(config.chestShops().buyTaxPercent()).isZero();
+    assertThat(config.chestShops().sellTaxPercent()).isZero();
+    assertThat(config.chestShops().creationFee()).isZero();
+    assertThat(config.chestShops().requireFullAmount()).isTrue();
+    assertThat(config.chestShops().disabledWorlds()).isEmpty();
+    assertThat(config.chestShops().prices().minBuy()).isEqualTo(1);
     assertThat(config.catalogs().zone()).isEqualTo(ZoneId.of("America/Los_Angeles"));
     assertThat(config.catalogs().maxDistance()).isEqualTo(8);
   }
@@ -57,23 +64,33 @@ final class ShopsConfigTest {
         .hasMessageContaining("twice");
     assertThatThrownBy(
             () ->
-                new ChestShopSettings(
-                    ChestShopSettings.Click.RIGHT, 1, " ", List.of("CHEST"), LIMITS, 5, 250))
+                ChestShopSettings.untaxed(
+                    new ChestShopSettings.Basics(
+                        ChestShopSettings.Click.RIGHT, 1, " ", List.of("CHEST"), LIMITS, 5, 250)))
         .hasMessageContaining("adminShopLabel");
     assertThatThrownBy(
             () ->
-                new ChestShopSettings(
-                    ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), Map.of(1, 1), 5, 250))
+                ChestShopSettings.untaxed(
+                    new ChestShopSettings.Basics(
+                        ChestShopSettings.Click.RIGHT,
+                        1,
+                        "A",
+                        List.of("CHEST"),
+                        Map.of(1, 1),
+                        5,
+                        250)))
         .hasMessageContaining("level 2");
     assertThatThrownBy(
             () ->
-                new ChestShopSettings(
-                    ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 0, 250))
+                ChestShopSettings.untaxed(
+                    new ChestShopSettings.Basics(
+                        ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 0, 250)))
         .hasMessageContaining("summaryLines");
     assertThatThrownBy(
             () ->
-                new ChestShopSettings(
-                    ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 5, -1))
+                ChestShopSettings.untaxed(
+                    new ChestShopSettings.Basics(
+                        ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 5, -1)))
         .hasMessageContaining("clickCooldownMillis");
   }
 

@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.protection.ReservedContainers;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
 import com.shepherdjerred.thestorm.core.world.BlockChanges;
@@ -16,15 +17,20 @@ import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuard;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
+import com.shepherdjerred.thestorm.qol.adapter.db.JooqBankStore;
 import com.shepherdjerred.thestorm.qol.adapter.db.JooqGraveStore;
+import com.shepherdjerred.thestorm.qol.adapter.db.JooqSortStore;
 import com.shepherdjerred.thestorm.qol.app.CombatTracker;
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
+import com.shepherdjerred.thestorm.qol.domain.sort.CategoryCatalog;
+import com.shepherdjerred.thestorm.qol.domain.sort.CategoryFiles;
 import com.shepherdjerred.thestorm.qol.testing.FakeClock;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,6 +62,7 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 final class QolHarness implements AutoCloseable {
 
   static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm/qol.yml");
+  static final Path SHIPPED_SORT = Path.of("../../../server/owned/plugins/TheStorm/qol/sort");
 
   private static Consumer<JavaPlugin> enabling = plugin -> {};
 
@@ -146,6 +153,10 @@ final class QolHarness implements AutoCloseable {
   final Guards guards = new Guards();
   final Afk afk = new Afk();
   final Land land = new Land();
+
+  /** Block keys {@code x,y,z} that shops reserve, so a bank sign on them is refused. */
+  final Set<String> reserved = new HashSet<>();
+
   final GraveRegistry graves = new GraveRegistry();
   final FaultyStore store;
   final CombatTracker combat;
@@ -171,8 +182,21 @@ final class QolHarness implements AutoCloseable {
     var server = MockBukkit.mock();
     var world = server.addSimpleWorld("world");
     world.loadChunk(0, 0);
+    CategoryCatalog categories;
     try {
       Files.writeString(directory.resolve("qol.yml"), Files.readString(SHIPPED));
+      var sort = directory.resolve("qol/sort");
+      Files.createDirectories(sort);
+      try (var listing = Files.list(SHIPPED_SORT)) {
+        for (var file :
+            listing.filter(path -> path.getFileName().toString().endsWith(".txt")).toList()) {
+          Files.copy(
+              file,
+              sort.resolve(file.getFileName().toString()),
+              StandardCopyOption.REPLACE_EXISTING);
+        }
+      }
+      categories = CategoryFiles.load(sort);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -186,6 +210,15 @@ final class QolHarness implements AutoCloseable {
           var services = new Services();
           services.provide(
               BlockChanges.class, new AuditedBlockChanges(harness.recordedChanges::add));
+          services.provide(
+              ReservedContainers.class,
+              location ->
+                  harness.reserved.contains(
+                      location.getBlockX()
+                          + ","
+                          + location.getBlockY()
+                          + ","
+                          + location.getBlockZ()));
           var context =
               new ModuleContext(
                   plugin,
@@ -210,9 +243,13 @@ final class QolHarness implements AutoCloseable {
                       harness.land,
                       harness.guards,
                       harness.afk,
-                      harness.sealed),
-                  new ServerHooks(
-                      GraveFace.PLAIN, player -> harness.saved.add(player.getUniqueId())));
+                      harness.sealed,
+                      new JooqBankStore(database),
+                      new JooqSortStore(database)),
+                  new QolPaper.Boot(
+                      categories,
+                      new ServerHooks(
+                          GraveFace.PLAIN, player -> harness.saved.add(player.getUniqueId()))));
         };
     try {
       MockBukkit.loadWith(
@@ -220,6 +257,11 @@ final class QolHarness implements AutoCloseable {
           new PluginDescriptionFile("TheStorm", "1", HarnessPlugin.class.getName()));
       if (!unreadable) {
         harness.until(harness.graves::isLoaded);
+        harness.until(
+            () -> {
+              var started = harness.paper;
+              return started != null && started.banks().isLoaded() && started.sorts().isLoaded();
+            });
       }
     } catch (RuntimeException e) {
       harness.close();

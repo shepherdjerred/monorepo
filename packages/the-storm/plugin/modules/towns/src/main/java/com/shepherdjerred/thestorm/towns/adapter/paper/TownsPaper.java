@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
+import com.shepherdjerred.thestorm.core.towns.NamedTown;
+import com.shepherdjerred.thestorm.core.towns.TownDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -191,6 +193,9 @@ public final class TownsPaper {
                           context.scheduler().mainThread());
             });
     services.provide(
+        TownDirectory.class,
+        name -> state.named(name).map(town -> new NamedTown(town.id(), town.name())));
+    services.provide(
         com.shepherdjerred.thestorm.core.protection.ManagedTrades.class,
         location -> {
           var land = guard.land(location);
@@ -216,6 +221,16 @@ public final class TownsPaper {
             new CampLife.Parts(
                 context, towns, state, config.camps(), sealed, config.claims().worlds()));
     campLife.start();
+    var lockListener =
+        new LockListener(
+            locks,
+            loaded.locks(),
+            kinds,
+            new LockListener.PlacementTools(
+                placers,
+                context.random(),
+                context.scheduler(),
+                services.require(com.shepherdjerred.thestorm.economy.app.Wallets.class)));
     List<Listener> listeners =
         List.of(
             new SpawnRegions(server, state, config),
@@ -234,11 +249,8 @@ public final class TownsPaper {
             new ArrivalListener(guard),
             new SpawnListener(guard),
             new SpawnComfort(state, loaded.spawnSites()),
-            new LockListener(
-                locks,
-                loaded.locks(),
-                kinds,
-                new LockListener.PlacementTools(placers, context.random())),
+            lockListener,
+            new LockHeld(lockListener),
             new JoinListener(towns, levels, memberCommands, campLife),
             campLife);
     for (var listener : listeners) {
@@ -255,9 +267,13 @@ public final class TownsPaper {
                 treasury,
                 levels,
                 runtime));
+    TownsPermissions.register(plugin.getServer().getPluginManager());
     var lockCommands =
         new LockCommands(
-            loaded.locks(), locks, new LockCommands.Parts(guard, kinds, placers, names, runtime));
+            loaded.locks(),
+            locks,
+            services.require(com.shepherdjerred.thestorm.economy.app.Wallets.class),
+            new LockCommands.Parts(guard, kinds, placers, names, runtime));
     var pvpCommands = new PvpCommands(loaded.pvp(), runtime);
     var regionCommands = new RegionCommands(state);
     context

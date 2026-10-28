@@ -5,10 +5,12 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeChecks;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -37,6 +39,8 @@ import java.util.function.Supplier;
  * on the main thread.
  */
 public final class TradeEngine {
+
+  private static final AccountId TREASURY = new AccountId.Server();
 
   private final Wallets wallets;
   private final Executor mainThread;
@@ -74,15 +78,21 @@ public final class TradeEngine {
     if (payer instanceof AccountId.Server) {
       return completedFuture(Optional.empty());
     }
-    return ledger(() -> wallets.balance(payer, deal.price().currency()))
+    var due =
+        deal.sameAccountAllowed() && payer.equals(deal.payee().account())
+            ? Money.crystals(deal.tax())
+            : deal.price();
+    if (due.isZero()) {
+      return completedFuture(Optional.empty());
+    }
+    return ledger(() -> wallets.balance(payer, due.currency()))
         .thenApply(
             balance ->
-                balance.isAtLeast(deal.price())
+                balance.isAtLeast(due)
                     ? Optional.empty()
                     : Optional.of(
                         payer.equals(deal.customer().account())
-                            ? new TradeProblem.CustomerCannotPay(
-                                balance.amount(), deal.price().amount())
+                            ? new TradeProblem.CustomerCannotPay(balance.amount(), due.amount())
                             : new TradeProblem.OwnerCannotPay()));
   }
 
@@ -109,7 +119,8 @@ public final class TradeEngine {
       return refund(
           receipt,
           new Refund(deal.reason(), problem.orElseThrow(), () -> {}, Optional.empty()),
-          trail);
+          trail,
+          deal);
     }
     deal.shop().holdings().remove(deal.quantity());
     deal.customer().holdings().add(deal.quantity());
@@ -165,7 +176,8 @@ public final class TradeEngine {
                 trail.escrowReleased();
               },
               Optional.of(new HeldItems(deal.goods(), quantity))),
-          trail);
+          trail,
+          deal);
     }
     deal.shop().holdings().add(quantity);
     trail.escrowReleased();
@@ -187,36 +199,171 @@ public final class TradeEngine {
       Optional<HeldItems> keptOnFailure) {}
 
   private CompletableFuture<Result<Receipt, EconomyError>> pay(Deal deal, LedgerTrail trail) {
-    var payment =
+    if (deal.sameAccountAllowed() && deal.payer().account().equals(deal.payee().account())) {
+      return paySame(deal, trail);
+    }
+    return paySplit(deal, trail);
+  }
+
+  private CompletableFuture<Result<Receipt, EconomyError>> paySame(Deal deal, LedgerTrail trail) {
+    if (deal.tax() == 0) {
+      return completedFuture(Result.ok(unmoved(deal)));
+    }
+    var tax = Money.crystals(deal.tax());
+    var taxReason = deal.reason() + ":tax";
+    if (deal.net() == 0) {
+      return move(new Payment(deal.payer().account(), TREASURY, tax, taxReason), trail);
+    }
+    return move(new Payment(deal.payer().account(), TREASURY, tax, taxReason), trail)
+        .thenApply(
+            taxResult ->
+                switch (taxResult) {
+                  case Result.Ok<Receipt, EconomyError> _ -> Result.ok(unmoved(deal));
+                  case Result.Err<Receipt, EconomyError> failed -> failed;
+                });
+  }
+
+  private CompletableFuture<Result<Receipt, EconomyError>> paySplit(Deal deal, LedgerTrail trail) {
+    if (deal.tax() == 0) {
+      return move(
+          new Payment(deal.payer().account(), deal.payee().account(), deal.price(), deal.reason()),
+          trail);
+    }
+    var tax = Money.crystals(deal.tax());
+    var taxReason = deal.reason() + ":tax";
+    if (deal.net() == 0) {
+      return move(new Payment(deal.payer().account(), TREASURY, tax, taxReason), trail);
+    }
+    var net = Money.crystals(deal.net());
+    var split = new Split(deal, trail, tax, taxReason, net);
+    return move(
+            new Payment(deal.payer().account(), deal.payee().account(), net, deal.reason()), trail)
+        .thenCompose(netResult -> afterNet(split, netResult));
+  }
+
+  private record Split(Deal deal, LedgerTrail trail, Money tax, String taxReason, Money net) {}
+
+  private CompletableFuture<Result<Receipt, EconomyError>> afterNet(
+      Split split, Result<Receipt, EconomyError> netResult) {
+    return switch (netResult) {
+      case Result.Err<Receipt, EconomyError> failed -> completedFuture(failed);
+      case Result.Ok<Receipt, EconomyError>(var netReceipt) ->
+          move(
+                  new Payment(
+                      split.deal().payer().account(), TREASURY, split.tax(), split.taxReason()),
+                  split.trail())
+              .thenCompose(taxResult -> afterTax(split, netReceipt, taxResult));
+    };
+  }
+
+  private CompletableFuture<Result<Receipt, EconomyError>> afterTax(
+      Split split, Receipt netReceipt, Result<Receipt, EconomyError> taxResult) {
+    return switch (taxResult) {
+      case Result.Ok<Receipt, EconomyError> _ -> completedFuture(Result.ok(netReceipt));
+      case Result.Err<Receipt, EconomyError> failed ->
+          move(
+                  new Payment(
+                      split.deal().payee().account(),
+                      split.deal().payer().account(),
+                      split.net(),
+                      "refund:" + split.deal().reason()),
+                  split.trail())
+              .thenApply(
+                  reversed -> {
+                    if (reversed instanceof Result.Err) {
+                      refunds.failed(
+                          netReceipt,
+                          "refund:" + split.deal().reason(),
+                          "tax transfer failed and the net could not be returned",
+                          Optional.empty());
+                    }
+                    return failed;
+                  });
+    };
+  }
+
+  private record Payment(AccountId from, AccountId to, Money amount, String reason) {}
+
+  private CompletableFuture<Result<Receipt, EconomyError>> move(
+      Payment payment, LedgerTrail trail) {
+    var paymentResult =
         ledger(
             () ->
-                wallets.transfer(
-                    deal.payer().account(), deal.payee().account(), deal.price(), deal.reason()));
-    note(payment, "payment", trail);
-    return payment;
+                wallets.transfer(payment.from(), payment.to(), payment.amount(), payment.reason()));
+    note(paymentResult, "payment", trail);
+    return paymentResult;
   }
 
   private CompletableFuture<TradeOutcome> refund(
-      Receipt receipt, Refund refund, LedgerTrail trail) {
+      Receipt receipt, Refund refund, LedgerTrail trail, Deal deal) {
     var reason = "refund:" + refund.dealReason();
+    if (receipt.transactionId() == 0) {
+      refund.refunded().run();
+      return returnTax(
+          new TradeOutcome.Refunded(refund.problem()), new TaxRefund(deal, refund, trail, reason));
+    }
     var transfer =
         ledger(() -> wallets.transfer(receipt.to(), receipt.from(), receipt.amount(), reason));
     note(transfer, "refund", trail);
-    return transfer.handleAsync(
+    return transfer
+        .handleAsync(
+            (result, error) -> {
+              if (error != null) {
+                return refundFailed(receipt, reason, refund, error.toString());
+              }
+              return switch (result) {
+                case Result.Ok<Receipt, EconomyError>(_) -> {
+                  refund.refunded().run();
+                  yield new TradeOutcome.Refunded(refund.problem());
+                }
+                case Result.Err<Receipt, EconomyError>(var refusal) ->
+                    refundFailed(receipt, reason, refund, refusal.toString());
+              };
+            },
+            mainThread)
+        .thenCompose(outcome -> returnTax(outcome, new TaxRefund(deal, refund, trail, reason)));
+  }
+
+  private record TaxRefund(Deal deal, Refund refund, LedgerTrail trail, String reason) {}
+
+  /** Returns a self-trade's tax after the net, which never moved, is already settled. */
+  private CompletableFuture<TradeOutcome> returnTax(TradeOutcome outcome, TaxRefund tax) {
+    var deal = tax.deal();
+    var refund = tax.refund();
+    var trail = tax.trail();
+    var reason = tax.reason();
+    if (!(outcome instanceof TradeOutcome.Refunded) || deal.tax() == 0 || deal.net() == 0) {
+      return completedFuture(outcome);
+    }
+    var taxBack =
+        ledger(
+            () ->
+                wallets.transfer(
+                    TREASURY, deal.payer().account(), Money.crystals(deal.tax()), reason + ":tax"));
+    note(taxBack, "refund", trail);
+    return taxBack.handleAsync(
         (result, error) -> {
-          if (error != null) {
-            return refundFailed(receipt, reason, refund, error.toString());
+          if (error != null || result instanceof Result.Err<Receipt, EconomyError>) {
+            return (TradeOutcome)
+                new TradeOutcome.RefundFailed(refund.problem(), "the tax could not be returned");
           }
-          return switch (result) {
-            case Result.Ok<Receipt, EconomyError>(_) -> {
-              refund.refunded().run();
-              yield new TradeOutcome.Refunded(refund.problem());
-            }
-            case Result.Err<Receipt, EconomyError>(var refusal) ->
-                refundFailed(receipt, reason, refund, refusal.toString());
-          };
+          return outcome;
         },
         mainThread);
+  }
+
+  /**
+   * A self-trade moves no net crystals, so there is no ledger row to reverse. {@code transactionId}
+   * 0 is that marker; the server's tax, when there is any, is a real transfer beside it.
+   */
+  private static Receipt unmoved(Deal deal) {
+    return new Receipt(
+        0,
+        deal.payer().account(),
+        deal.payee().account(),
+        deal.price(),
+        deal.reason(),
+        Instant.EPOCH);
   }
 
   private TradeOutcome refundFailed(Receipt receipt, String reason, Refund refund, String why) {
