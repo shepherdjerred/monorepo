@@ -33,7 +33,8 @@ struct FacetAccountInputCodecTests {
         let additions: [String: [String: Any]] = [
             "fill": [:],
             "submit": [:], "observe": [:], "finish": [:],
-            "fill-verification": [:], "submit-verification": [:],
+            "fill-verification": ["expiresAtUnixMilliseconds": 1_793_161_000_000],
+            "submit-verification": ["expiresAtUnixMilliseconds": 1_793_161_000_000],
             "fill-vault-password": [:],
             "checkpoint-empty": [:], "checkpoint-email": [:], "checkpoint-vault-empty": [:],
             "connect": ["remoteVaultID": "owned-remote", "profileID": run],
@@ -55,6 +56,8 @@ struct FacetAccountInputCodecTests {
             var reply = AccountInputReply(codec.identity, kind: .ready)
             reply.runnerPID = 501
             reply.stage = stage
+            reply.operation = .probe
+            reply.clockUnixMilliseconds = 1_793_161_000_000
             try assertReply(codec, reply: reply)
             count += 1
         }
@@ -116,6 +119,7 @@ struct FacetAccountInputCodecTests {
             ["sessionID": request], ["runID": request], ["deviceID": request],
             ["requestID": "malformed"], ["extra": true], ["kind": "unknown"],
             ["password": ""], ["code": "123456"], ["schemaVersion": 2],
+            ["expiresAtUnixMilliseconds": 1_793_161_000_000],
         ] {
             let value = valid.merging(changes) { _, replacement in replacement }
             #expect(throws: AccountInputFailure.self) {
@@ -150,6 +154,58 @@ struct FacetAccountInputCodecTests {
                 willSubmitCalled = true
             } catch {}
             #expect(!willSubmitCalled)
+        }
+    }
+}
+
+extension FacetAccountInputCodecTests {
+    @Test func fixtureAllowsOneInitialSubmitAndForbidsCodeSubmitOrConnectBeforeDispatch() throws {
+        var fixture = AccountInputRequests(operation: .fixtureVerification)
+        try fixture.admit(UUID().uuidString, kind: .submit)
+        for kind: AccountInputCommand.Kind in [.submit, .submitVerification, .connect] {
+            var wouldSubmit = false
+            do {
+                try fixture.admit(UUID().uuidString, kind: kind)
+                wouldSubmit = true
+            } catch {}
+            #expect(!wouldSubmit)
+        }
+        #expect(AccountInputOperation.fixtureVerification.appMode == "fixture-verification")
+        #expect(AccountInputOperation.probe.appMode == "account")
+    }
+
+    @Test func verificationExpiryIsRequiredOnlyOnCodeCommands() throws {
+        let codec = try boundary()
+        for kind in ["fill-verification", "submit-verification"] {
+            #expect(throws: AccountInputFailure.self) {
+                try codec.command(JSONSerialization.data(withJSONObject: envelope(kind)))
+            }
+        }
+    }
+
+    @Test func verificationAdmissionBindsExpiryAndRejectsExpiredCodeWithoutGrace() throws {
+        let timing = try boundary().verificationTiming
+        let now: Int64 = 1_793_161_000_000
+        var admission = AccountInputVerificationAdmission()
+        try admission.filled(now + 10000, timing: timing, now: now)
+        try admission.requireSubmit(now + 10000, timing: timing, now: now + 9999)
+        #expect(throws: AccountInputFailure.self) {
+            try admission.requireSubmit(now + 10000, timing: timing, now: now + 10000)
+        }
+        #expect(throws: AccountInputFailure.self) {
+            try admission.requireSubmit(now + 10001, timing: timing, now: now)
+        }
+        #expect(throws: AccountInputFailure.self) {
+            try admission.filled(now + 20000, timing: timing, now: now)
+        }
+        for expiry in [
+            now, now - 1,
+            now + timing.maximumValidityMilliseconds
+                + timing.maximumClockSkewMilliseconds + 1, Int64.min,
+        ] {
+            #expect(throws: AccountInputFailure.self) {
+                try timing.requireLive(expiry, now: now)
+            }
         }
     }
 
@@ -190,22 +246,7 @@ struct FacetAccountInputCodecTests {
             )
             .standardizedFileURL
         let schema = try FacetSchema(data: Data(contentsOf: url))
-        struct FrameFixture {
-            let action: String
-            let stage: String
-            var value: String?
-        }
-        for fixture in [
-            FrameFixture(action: "bind", stage: "credentials"),
-            FrameFixture(action: "clear", stage: "credentials"),
-            FrameFixture(action: "email", stage: "credentials", value: "synthetic@example.invalid"),
-            FrameFixture(
-                action: "password", stage: "credentials", value: "synthetic-only-password"),
-            FrameFixture(action: "verification", stage: "verification", value: "123456"),
-            FrameFixture(action: "clear-vault", stage: "vaults"),
-            FrameFixture(action: "vault-password", stage: "vaults", value: "synthetic-vault-only"),
-            FrameFixture(action: "finish", stage: "vaults"),
-        ] {
+        for fixture in appCommandFixtures {
             let action = fixture.action
             let stage = fixture.stage
             var frame = envelope(action)
@@ -213,8 +254,20 @@ struct FacetAccountInputCodecTests {
             frame["token"] = String(repeating: "a", count: 64)
             frame["expectedStage"] = stage
             if let value = fixture.value { frame["value"] = value }
+            if action == "verification" { frame["expiresAtUnixMilliseconds"] = 1_793_161_000_000 }
             try schema.validate(
                 data: JSONSerialization.data(withJSONObject: frame), definition: "app-command")
+            var wrongExpiry = frame
+            if action == "verification" {
+                wrongExpiry.removeValue(forKey: "expiresAtUnixMilliseconds")
+            } else {
+                wrongExpiry["expiresAtUnixMilliseconds"] = 1_793_161_000_000
+            }
+            #expect(throws: (any Error).self) {
+                try schema.validate(
+                    data: JSONSerialization.data(withJSONObject: wrongExpiry),
+                    definition: "app-command")
+            }
             #expect(throws: (any Error).self) {
                 try schema.validate(
                     data: JSONSerialization.data(withJSONObject: frame), definition: "command")
@@ -232,6 +285,56 @@ struct FacetAccountInputCodecTests {
             try schema.validate(
                 data: JSONSerialization.data(withJSONObject: ["kind": kind, "pid": 501, "uid": 501]
                 ), definition: "bridge-packet")
+        }
+    }
+
+    private struct FrameFixture {
+        let action: String
+        let stage: String
+        var value: String?
+    }
+
+    private var appCommandFixtures: [FrameFixture] {
+        [
+            FrameFixture(action: "bind", stage: "credentials"),
+            FrameFixture(action: "clear", stage: "credentials"),
+            FrameFixture(action: "email", stage: "credentials", value: "synthetic@example.invalid"),
+            FrameFixture(
+                action: "password", stage: "credentials", value: "synthetic-only-password"),
+            FrameFixture(action: "verification", stage: "verification", value: "123456"),
+            FrameFixture(action: "clear-vault", stage: "vaults"),
+            FrameFixture(action: "vault-password", stage: "vaults", value: "synthetic-vault-only"),
+            FrameFixture(action: "finish", stage: "vaults"),
+        ]
+    }
+
+    @Test func appHelloRequiresExplicitModeFixtureConfirmationAndClock() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent(
+                "../../../../tasks-for-obsidian/scripts/ios-account/account-input.schema.json"
+            ).standardizedFileURL
+        let schema = try FacetSchema(data: Data(contentsOf: url))
+        var hello = envelope("hello")
+        hello.removeValue(forKey: "requestID")
+        hello.merge([
+            "formEpoch": request, "token": String(repeating: "a", count: 64),
+            "appPID": 501, "stage": "credentials", "mode": "account",
+            "fixtureConfirmed": false, "clockUnixMilliseconds": 1_793_161_000_000,
+        ]) { _, replacement in replacement }
+        try schema.validate(
+            data: JSONSerialization.data(withJSONObject: hello), definition: "app-reply")
+        for name in ["mode", "fixtureConfirmed", "clockUnixMilliseconds"] {
+            var missing = hello
+            missing.removeValue(forKey: name)
+            #expect(throws: (any Error).self) {
+                try schema.validate(
+                    data: JSONSerialization.data(withJSONObject: missing), definition: "app-reply")
+            }
+        }
+        hello["expiresAtUnixMilliseconds"] = 1_793_161_000_000
+        #expect(throws: (any Error).self) {
+            try schema.validate(
+                data: JSONSerialization.data(withJSONObject: hello), definition: "app-reply")
         }
     }
 }

@@ -337,6 +337,14 @@ diagnosed without capturing the real OTP session. The method guard recognizes
 the exact authenticator label from the pinned official app and still rejects
 email and recovery-code challenges.
 
+The iOS driver described there requires separate email/password and synthetic
+verification privacy proofs for the same prepared bytes. Its verification
+fixture reaches the normal Rust MFA decoder through an isolated, strictly local
+HTTP boundary, without authenticating an account or submitting a code. Real iOS
+authenticator entry uses a one-shot local Keychain generator after ownership
+checks, with native expiry checks before mutation and the normal tap. Fixture
+privacy evidence and real account/Sync acceptance remain separate.
+
 `bun run mac:acceptance:e2e` builds once, checks initial and cold-launch window
 isolation, then runs four local standalone workflows sequentially with
 a new descriptor, synthetic Markdown, and no live account: capture/edit/cold

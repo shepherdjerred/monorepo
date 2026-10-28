@@ -27,6 +27,10 @@ public actor FacetObsidianAccount {
     private let remoteVaultAccess: FacetRemoteVaultAccess
     private let metadataURL: URL
     private let transport: URLSession
+    #if DEBUG
+        public nonisolated let acceptanceFixtureIdentity: FacetAcceptanceAccountFixtureIdentity?
+        private let acceptanceHTTPFixture: FacetAcceptanceAccountHTTPFixture?
+    #endif
     private var identities: [String: FacetSyncIdentity]
     private var pendingKeyRemoval: Set<String> = []
     private var activeOwner: String?
@@ -38,13 +42,24 @@ public actor FacetObsidianAccount {
         directory: URL, secrets: any FacetSecureStore = FacetKeychainStore(),
         remoteVaultAccess: FacetRemoteVaultAccess = .unrestricted
     ) throws {
-        self.secrets = secrets
+        let accountDirectory: URL
+        #if DEBUG
+            let fixture = try FacetAcceptanceAccountHTTPFixture.launch(directory: directory)
+            acceptanceHTTPFixture = fixture
+            acceptanceFixtureIdentity = fixture?.identity
+            accountDirectory = fixture?.directory ?? directory
+            self.secrets = fixture == nil ? secrets : FacetAcceptanceAccountNoAuthStore()
+        #else
+            accountDirectory = directory
+            self.secrets = secrets
+        #endif
         self.remoteVaultAccess = remoteVaultAccess
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        metadataURL = directory.appendingPathComponent("sync-identities.json")
+        try FileManager.default.createDirectory(
+            at: accountDirectory, withIntermediateDirectories: true)
+        metadataURL = accountDirectory.appendingPathComponent("sync-identities.json")
         do {
             let bytes = try Data(contentsOf: metadataURL)
-            try Self.validateMetadataShape(bytes)
+            try FacetAccountMetadata.validateShape(bytes)
             let metadata = try JSONDecoder().decode(FacetAccountMetadata.self, from: bytes)
             guard metadata.schemaVersion == 1 else { throw FacetContractError.unsupportedResponse }
             identities = metadata.identities
@@ -92,23 +107,6 @@ public actor FacetObsidianAccount {
         accessEpoch.withLock { epoch in
             epoch += 1
             return epoch
-        }
-    }
-
-    private static func validateMetadataShape(_ bytes: Data) throws {
-        guard let fields = try FacetJSON.parse(bytes).object?.fields,
-            let version = fields["schemaVersion"], FacetJSONNumbers.isInteger(version),
-            FacetJSONNumbers.compare(version, .integer(1)) == 0,
-            Set(fields.keys).isSubset(of: [
-                "schemaVersion", "activeOwner", "identities", "pendingKeyRemoval",
-            ])
-        else { throw FacetContractError.unsupportedResponse }
-        if let pending = fields["pendingKeyRemoval"] {
-            guard let values = pending.array?.elements,
-                Set(values.compactMap(\.text)).count == values.count
-            else {
-                throw FacetContractError.unsupportedResponse
-            }
         }
     }
 
@@ -309,6 +307,11 @@ extension FacetObsidianAccount {
     }
 
     private func response(_ request: URLRequest) async throws -> (UInt16, Data) {
+        #if DEBUG
+            if let acceptanceHTTPFixture {
+                return try acceptanceHTTPFixture.response(request)
+            }
+        #endif
         let (stream, nativeResponse) = try await transport.bytes(for: request)
         guard let response = nativeResponse as? HTTPURLResponse,
             let status = UInt16(exactly: response.statusCode)

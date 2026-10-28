@@ -4,6 +4,66 @@ import addFormats from "ajv-formats";
 import { z } from "zod";
 import accountDefinition from "./account-input.schema.json";
 
+export const AccountOperationSchema = z.enum([
+  "probe",
+  "fixture-verification",
+  "credentials",
+]);
+export type AccountOperation = z.infer<typeof AccountOperationSchema>;
+export const VerificationTiming = z
+  .strictObject({
+    minimumValidityMilliseconds: z.literal(15_000),
+    maximumClockSkewMilliseconds: z.literal(2000),
+    maximumValidityMilliseconds: z.literal(120_000),
+  })
+  .parse(accountDefinition.$defs["verification-timing"].const);
+export const VerificationValueSchema = z.strictObject({
+  code: z.string().regex(/^\d{6}$/u),
+  expiresAtUnixMilliseconds: z.number().int().positive(),
+});
+export type VerificationValue = z.infer<typeof VerificationValueSchema>;
+export type VerificationSource = {
+  waitUntilFresh: () => Promise<void>;
+  issue: () => VerificationValue;
+};
+export function assertVerificationFresh(
+  expires: number,
+  margin: number = VerificationTiming.maximumClockSkewMilliseconds,
+) {
+  const remaining = expires - Date.now();
+  if (
+    remaining <= margin ||
+    remaining > VerificationTiming.maximumValidityMilliseconds
+  )
+    throw new Error(
+      "Verification validity is insufficient; no automatic retry",
+    );
+}
+export function assertInputClock(clock: number, roundTripMilliseconds = 0) {
+  if (
+    roundTripMilliseconds < 0 ||
+    roundTripMilliseconds > VerificationTiming.maximumClockSkewMilliseconds ||
+    Math.abs(clock - Date.now()) >
+      VerificationTiming.maximumClockSkewMilliseconds
+  )
+    throw new Error("Private input clocks do not agree");
+}
+export async function issueVerificationAfterValidation(
+  validate: () => Promise<void>,
+  source: VerificationSource,
+  validateLive: () => Promise<void>,
+) {
+  await validate();
+  await source.waitUntilFresh();
+  await validateLive();
+  const value = VerificationValueSchema.parse(source.issue());
+  assertVerificationFresh(
+    value.expiresAtUnixMilliseconds,
+    VerificationTiming.minimumValidityMilliseconds,
+  );
+  return value;
+}
+
 export const AccountIdentitySchema = z.strictObject({
   sessionID: z.uuid(),
   runID: z.uuid(),
@@ -23,13 +83,16 @@ export const AccountCommandSchema = z.discriminatedUnion("kind", [
       "checkpoint-email",
       "checkpoint-vault-empty",
       "fill",
-      "fill-verification",
       "fill-vault-password",
       "submit",
-      "submit-verification",
       "observe",
       "finish",
     ]),
+  }),
+  z.strictObject({
+    ...correlated,
+    kind: z.enum(["fill-verification", "submit-verification"]),
+    expiresAtUnixMilliseconds: z.number().int().positive(),
   }),
   z.strictObject({
     ...correlated,
@@ -52,6 +115,8 @@ const AccountReplySchema = z.discriminatedUnion("kind", [
     ...envelope,
     kind: z.literal("ready"),
     runnerPID: z.number().int().positive(),
+    operation: AccountOperationSchema,
+    clockUnixMilliseconds: z.number().int().positive(),
     stage: z.enum(["credentials", "verification", "vaults"]),
     signInEnabled: z.boolean(),
     connectEnabled: z.boolean().optional(),
@@ -150,6 +215,9 @@ export const AppReplySchema = z.strictObject({
   stage: z.enum(["credentials", "verification", "vaults"]),
   requestID: z.uuid().optional(),
   appPID: z.number().int().positive().optional(),
+  mode: z.enum(["account", "fixture-verification"]).optional(),
+  fixtureConfirmed: z.boolean().optional(),
+  clockUnixMilliseconds: z.number().int().positive().optional(),
   action: z
     .enum([
       "clear",
@@ -172,6 +240,19 @@ export function decodeAppReply(value: unknown): AppReply {
   if (!parsed.success)
     throw new Error("Private app input returned an invalid frame");
   return parsed.data;
+}
+export function decodeCorrelatedAppReply(value: unknown, expected: AppReply) {
+  const reply = decodeAppReply(value);
+  for (const field of [
+    "token",
+    "formEpoch",
+    "runID",
+    "sessionID",
+    "deviceID",
+  ] as const)
+    if (reply[field] !== expected[field])
+      throw new Error("Private app reply ownership changed");
+  return reply;
 }
 export function encodeAppCommand(value: unknown) {
   boundaryCheck("app-command", value);

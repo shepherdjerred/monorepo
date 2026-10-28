@@ -208,7 +208,8 @@
             "runID",
             "deviceID",
             "requestID",
-            "kind"
+            "kind",
+            "expiresAtUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -228,6 +229,9 @@
             },
             "kind": {
               "const": "fill-verification"
+            },
+            "expiresAtUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -240,7 +244,8 @@
             "runID",
             "deviceID",
             "requestID",
-            "kind"
+            "kind",
+            "expiresAtUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -260,6 +265,9 @@
             },
             "kind": {
               "const": "submit-verification"
+            },
+            "expiresAtUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -384,7 +392,9 @@
             "kind",
             "runnerPID",
             "stage",
-            "signInEnabled"
+            "signInEnabled",
+            "operation",
+            "clockUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -412,6 +422,12 @@
             },
             "signInEnabled": {
               "type": "boolean"
+            },
+            "operation": {
+              "$ref": "#/$defs/operation"
+            },
+            "clockUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -426,7 +442,9 @@
             "kind",
             "runnerPID",
             "stage",
-            "signInEnabled"
+            "signInEnabled",
+            "operation",
+            "clockUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -454,6 +472,12 @@
             },
             "signInEnabled": {
               "type": "boolean"
+            },
+            "operation": {
+              "$ref": "#/$defs/operation"
+            },
+            "clockUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -469,7 +493,9 @@
             "runnerPID",
             "stage",
             "signInEnabled",
-            "connectEnabled"
+            "connectEnabled",
+            "operation",
+            "clockUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -500,6 +526,12 @@
             },
             "connectEnabled": {
               "type": "boolean"
+            },
+            "operation": {
+              "$ref": "#/$defs/operation"
+            },
+            "clockUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -1326,7 +1358,8 @@
             "requestID",
             "kind",
             "expectedStage",
-            "value"
+            "value",
+            "expiresAtUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -1360,6 +1393,9 @@
             "value": {
               "type": "string",
               "pattern": "^[0-9]{6}$"
+            },
+            "expiresAtUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -1521,7 +1557,10 @@
             "token",
             "kind",
             "appPID",
-            "stage"
+            "stage",
+            "mode",
+            "fixtureConfirmed",
+            "clockUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -1553,6 +1592,15 @@
             },
             "stage": {
               "enum": ["credentials", "verification", "vaults"]
+            },
+            "mode": {
+              "enum": ["account", "fixture-verification"]
+            },
+            "fixtureConfirmed": {
+              "type": "boolean"
+            },
+            "clockUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -1568,7 +1616,8 @@
             "token",
             "kind",
             "requestID",
-            "stage"
+            "stage",
+            "clockUnixMilliseconds"
           ],
           "properties": {
             "schemaVersion": {
@@ -1598,6 +1647,9 @@
             },
             "stage": {
               "enum": ["credentials", "verification", "vaults"]
+            },
+            "clockUnixMilliseconds": {
+              "$ref": "#/$defs/timestamp"
             }
           }
         },
@@ -1785,6 +1837,32 @@
           }
         }
       ]
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "operation": {
+      "enum": ["probe", "fixture-verification", "credentials"]
+    },
+    "verification-timing": {
+      "const": {
+        "minimumValidityMilliseconds": 15000,
+        "maximumClockSkewMilliseconds": 2000,
+        "maximumValidityMilliseconds": 120000
+      }
+    },
+    "verification-fixture": {
+      "const": {
+        "mode": "fixture-verification",
+        "requestPath": "/user/signin",
+        "preflightStatus": 200,
+        "responseStatus": 200,
+        "responseBody": {
+          "error": "Please enter your 2FA code"
+        }
+      }
     }
   }
 }

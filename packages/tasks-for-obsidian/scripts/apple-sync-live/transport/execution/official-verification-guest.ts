@@ -180,6 +180,7 @@ async function compile(runtime: GuestRuntime) {
   const sources = [];
   for (const name of [
     "OfficialOwner.swift",
+    "OfficialAccountContainer.swift",
     "OfficialVerification.swift",
     "official-account.swift",
   ] as const) {

@@ -14,6 +14,7 @@ struct AccountInputForm {
   let remoteVaultID: String?
   let profileID: String?
   let willSubmit: () -> Void
+  let verificationTiming: AccountInputVerificationTiming
 
   func open() throws -> Stage {
     let onboarding = app.buttons.matching(identifier: "facet.onboarding.sync")
@@ -79,16 +80,20 @@ struct AccountInputForm {
     form.submit.tap()
   }
 
-  func fillVerification() throws {
+  func fillVerification(expiry: Int64) throws {
+    try verificationTiming.requireLive(expiry)
     _ = try credentials(verification: true)
     _ = try unique(app.textFields, "facet.account.code")
     try enabled(try credentials(verification: true).submit)
+    try verificationTiming.requireLive(expiry)
   }
 
-  func submitVerification() throws {
+  func submitVerification(expiry: Int64) throws {
     let form = try credentials(verification: true)
     try ready(form.submit)
+    try verificationTiming.requireLive(expiry)
     willSubmit()
+    try verificationTiming.requireLive(expiry)
     form.submit.tap()
   }
 

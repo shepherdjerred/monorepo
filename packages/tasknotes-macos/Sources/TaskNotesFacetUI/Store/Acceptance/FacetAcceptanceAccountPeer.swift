@@ -15,6 +15,9 @@
         private let helperPID: pid_t
         private let formEpoch: String
         private let schema: FacetSchema
+        private let mode: String
+        private let fixtureConfirmed: Bool
+        private let maximumValidityMilliseconds: Int64
         private var descriptor: Int32 = -1
         private var audit: Data?
         private var pending = Data()
@@ -24,13 +27,26 @@
 
         internal init(
             identity: [String: String], endpoint: String, helperPID: pid_t, formEpoch: UUID,
-            schema: Data
+            schema: Data, mode: String,
+            fixtureIdentity: FacetAcceptanceAccountFixtureIdentity?
         ) throws {
+            let confirmed =
+                fixtureIdentity.map {
+                    $0.runID.uuidString.lowercased() == identity["runID"]
+                        && $0.sessionID.uuidString.lowercased() == identity["sessionID"]
+                } ?? false
+            guard
+                (mode == "fixture-verification" && confirmed)
+                    || (mode == "account" && fixtureIdentity == nil)
+            else { throw Failure.boundary }
             self.identity = identity
             self.endpoint = endpoint
             self.helperPID = helperPID
             self.formEpoch = formEpoch.uuidString.lowercased()
             self.schema = try FacetSchema(data: schema)
+            self.mode = mode
+            fixtureConfirmed = confirmed
+            maximumValidityMilliseconds = try Self.maximumValidity(schema)
         }
 
         internal func stop() {
@@ -110,7 +126,11 @@
             envelope["formEpoch"] = formEpoch
             envelope["token"] = token
             try await send(
-                envelope.merging(["kind": "hello", "stage": initialStage, "appPID": getpid()]) {
+                envelope.merging([
+                    "kind": "hello", "stage": initialStage, "appPID": getpid(),
+                    "mode": mode, "fixtureConfirmed": fixtureConfirmed,
+                    "clockUnixMilliseconds": Int64(Date().timeIntervalSince1970 * 1000),
+                ]) {
                     _, new in new
                 })
             let bind = try await command(envelope: envelope)
@@ -119,7 +139,10 @@
                 let firstID = bind["requestID"] as? String
             else { throw Failure.boundary }
             try await send(
-                envelope.merging(["kind": "ready", "requestID": firstID, "stage": initialStage]) {
+                envelope.merging([
+                    "kind": "ready", "requestID": firstID, "stage": initialStage,
+                    "clockUnixMilliseconds": Int64(Date().timeIntervalSince1970 * 1000),
+                ]) {
                     _, new in new
                 })
             admission = FacetAcceptanceInputAdmission(
@@ -144,7 +167,10 @@
             let value = frame["value"] as? String
             guard admitted,
                 value.map({ $0.utf8.count <= (action == .email ? 256 : 512) }) ?? true,
-                await apply(action, value, expected)
+                await Self.applyAtBoundary(
+                    (action, value), expected: expected,
+                    expiry: frame["expiresAtUnixMilliseconds"] as? Int64,
+                    maximumValidity: maximumValidityMilliseconds, apply: apply)
             else { throw Failure.form }
             try _Concurrency.Task.checkCancellation()
             guard !stopped else { throw Failure.form }
@@ -231,6 +257,38 @@
                 guard count > 0 else { throw Failure.peer }
                 offset += count
             }
+        }
+    }
+
+    extension FacetAcceptanceAccountPeer {
+        private static func maximumValidity(_ data: Data) throws -> Int64 {
+            guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let definitions = root["$defs"] as? [String: Any],
+                let timing = definitions["verification-timing"] as? [String: Any],
+                let value = timing["const"] as? [String: Int64],
+                let maximum = value["maximumValidityMilliseconds"],
+                let skew = value["maximumClockSkewMilliseconds"]
+            else { throw Failure.boundary }
+            try FacetSchema(data: data).validate(
+                data: JSONSerialization.data(withJSONObject: value),
+                definition: "verification-timing")
+            return maximum + skew
+        }
+
+        @MainActor
+        private static func applyAtBoundary(
+            _ input: (action: FacetAcceptanceInputAction, value: String?), expected: String,
+            expiry: Int64?, maximumValidity: Int64, apply: Apply
+        ) -> Bool {
+            if input.action == .verification {
+                let now = Int64(Date().timeIntervalSince1970 * 1000)
+                guard let expiry, expiry > now, expiry - now <= maximumValidity else {
+                    return false
+                }
+            } else if expiry != nil {
+                return false
+            }
+            return apply(input.action, input.value, expected)
         }
     }
 #endif

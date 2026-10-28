@@ -186,6 +186,7 @@ struct FacetAccountForm: View {
                     do {
                         acceptanceInput = try FacetAcceptanceAccountInput.start(
                             configuration: store.acceptanceConfiguration,
+                            fixtureIdentity: store.account?.acceptanceFixtureIdentity,
                             formEpoch: mount,
                             stage: { acceptanceStage(mount: mount) },
                             apply: { action, value, expected in

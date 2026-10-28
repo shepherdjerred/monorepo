@@ -5,14 +5,30 @@ enum AccountInputFailure: String, Error {
   case input, ownership, form, focus, deadline, socket
 }
 
-enum AccountInputOperation: String { case probe, credentials }
+enum AccountInputOperation: String, Encodable {
+  case probe, credentials
+  case fixtureVerification = "fixture-verification"
+  var appMode: String {
+    switch self {
+    case .probe, .credentials: "account"
+    case .fixtureVerification: "fixture-verification"
+    }
+  }
+}
 
 struct AccountInputRequests {
   let operation: AccountInputOperation
   private var seen: Set<String> = []
+  private var fixtureSubmitted = false
   mutating func admit(_ request: String, kind: AccountInputCommand.Kind) throws {
     guard operation != .probe || ![.submit, .submitVerification, .connect].contains(kind) else {
       throw AccountInputFailure.input
+    }
+    if operation == .fixtureVerification {
+      guard kind != .submitVerification, kind != .connect,
+        kind != .submit || !fixtureSubmitted
+      else { throw AccountInputFailure.input }
+      if kind == .submit { fixtureSubmitted = true }
     }
     guard seen.count < 13, seen.insert(request).inserted else { throw AccountInputFailure.input }
   }
@@ -63,6 +79,7 @@ struct AccountInputCommand: Decodable {
   let kind: Kind
   let remoteVaultID: String?
   let profileID: String?
+  let expiresAtUnixMilliseconds: Int64?
 }
 
 struct AccountInputReply: Encodable {
@@ -88,6 +105,8 @@ struct AccountInputReply: Encodable {
   var submitActionCount: Int?
   var reason: AccountInputFailure.RawValue?
   var point: String?
+  var operation: AccountInputOperation?
+  var clockUnixMilliseconds: Int64?
 
   init(_ identity: AccountInputIdentity, kind: Kind, requestID: String? = nil) {
     sessionID = identity.sessionID
@@ -100,6 +119,7 @@ struct AccountInputReply: Encodable {
   private enum CodingKeys: String, CodingKey {
     case schemaVersion, sessionID, runID, deviceID, requestID, kind, runnerPID, stage
     case signInEnabled, connectEnabled, disabledCheckpoints, submitActionCount, reason, busy, point
+    case operation, clockUnixMilliseconds
   }
 
   func encode(to encoder: any Encoder) throws {
@@ -116,6 +136,8 @@ struct AccountInputReply: Encodable {
     try output.encodeIfPresent(submitActionCount, forKey: .submitActionCount)
     try output.encodeIfPresent(reason, forKey: .reason)
     try output.encodeIfPresent(point, forKey: .point)
+    try output.encodeIfPresent(operation, forKey: .operation)
+    try output.encodeIfPresent(clockUnixMilliseconds, forKey: .clockUnixMilliseconds)
     switch kind {
     case .checkpoint:
       if point == "vault-empty" {
@@ -141,6 +163,7 @@ struct AccountInputReply: Encodable {
 struct AccountInputProtocol {
   private let schema: FacetSchema
   let identity: AccountInputIdentity
+  let verificationTiming: AccountInputVerificationTiming
 
   init(identity: AccountInputIdentity, bundle: Bundle) throws {
     guard let url = bundle.url(forResource: "account-input.schema", withExtension: "json")
@@ -152,7 +175,10 @@ struct AccountInputProtocol {
 
   init(identity: AccountInputIdentity, schemaData: Data) throws {
     self.identity = identity
-    do { schema = try FacetSchema(data: schemaData) } catch {
+    do {
+      schema = try FacetSchema(data: schemaData)
+      verificationTiming = try AccountInputVerificationTiming(schemaData: schemaData)
+    } catch {
       throw AccountInputFailure.input
     }
   }
@@ -175,5 +201,57 @@ struct AccountInputProtocol {
       guard data.count < 8192 else { throw AccountInputFailure.input }
       return data + Data([10])
     } catch { throw AccountInputFailure.input }
+  }
+}
+
+struct AccountInputVerificationTiming: Decodable {
+  let minimumValidityMilliseconds: Int64
+  let maximumClockSkewMilliseconds: Int64
+  let maximumValidityMilliseconds: Int64
+
+  init(schemaData: Data) throws {
+    guard let root = try JSONSerialization.jsonObject(with: schemaData) as? [String: Any],
+      let definitions = root["$defs"] as? [String: Any],
+      let timing = definitions["verification-timing"] as? [String: Any],
+      let value = timing["const"] as? [String: Any],
+      Set(value.keys) == [
+        "minimumValidityMilliseconds", "maximumClockSkewMilliseconds",
+        "maximumValidityMilliseconds",
+      ]
+    else { throw AccountInputFailure.input }
+    self = try JSONDecoder().decode(Self.self, from: JSONSerialization.data(withJSONObject: value))
+    guard minimumValidityMilliseconds > maximumClockSkewMilliseconds,
+      maximumClockSkewMilliseconds > 0, maximumValidityMilliseconds >= minimumValidityMilliseconds
+    else { throw AccountInputFailure.input }
+  }
+
+  static var now: Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+
+  func requireLive(_ expiry: Int64, now: Int64 = Self.now) throws {
+    let (remaining, overflow) = expiry.subtractingReportingOverflow(now)
+    guard !overflow, remaining > 0,
+      remaining - maximumClockSkewMilliseconds <= maximumValidityMilliseconds
+    else { throw AccountInputFailure.deadline }
+  }
+}
+
+struct AccountInputVerificationAdmission {
+  private var filledExpiry: Int64?
+
+  mutating func filled(
+    _ expiry: Int64, timing: AccountInputVerificationTiming,
+    now: Int64 = AccountInputVerificationTiming.now
+  ) throws {
+    guard filledExpiry == nil else { throw AccountInputFailure.input }
+    try timing.requireLive(expiry, now: now)
+    filledExpiry = expiry
+  }
+
+  func requireSubmit(
+    _ expiry: Int64, timing: AccountInputVerificationTiming,
+    now: Int64 = AccountInputVerificationTiming.now
+  ) throws {
+    guard filledExpiry == expiry else { throw AccountInputFailure.input }
+    try timing.requireLive(expiry, now: now)
   }
 }

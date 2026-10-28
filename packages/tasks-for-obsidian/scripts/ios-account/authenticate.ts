@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 import {
   readHostCredentialItem,
-  readHostVerificationCode,
+  prepareHostVerificationCode,
   readHostVaultPassword,
 } from "../apple-sync-live/transport/execution/credential-host";
 import { launch } from "../apple-sync-live/platform";
@@ -10,6 +10,7 @@ import type { Manifest } from "../apple-sync-live/model";
 import { requireIosPrivateInputProof } from "./probe";
 import { executePrivateAccountSession } from "./run-session";
 import { accountCheckpoint, validateAccountState } from "./state";
+import { VerificationTiming } from "./contract";
 
 const locator = z.string().regex(/^[A-Za-z0-9]{20,32}$/u);
 export const IOSAccountOptionsSchema = z.strictObject({
@@ -50,7 +51,7 @@ export async function runIosAccountAuthentication(
   const remoteVaultID = manifest.allowedRemoteVaultID;
   const observed = await executePrivateAccountSession(manifest, {
     operation: "credentials",
-    runnerFiles: proof.runnerFiles,
+    runnerFiles: proof.credentials.runnerFiles,
     ...(checkpoint === undefined
       ? {}
       : { originalProfileID: checkpoint.profileID }),
@@ -67,9 +68,10 @@ export async function runIosAccountAuthentication(
       }
       if (session.stage === "verification") {
         const before = await validateAccountState(manifest, checkpoint);
-        const code = readHostVerificationCode(
+        const code = prepareHostVerificationCode(
           locators,
           settings.credentialBackend,
+          VerificationTiming,
         );
         const after = await validateAccountState(manifest, checkpoint);
         assert.deepEqual(

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
+import definition from "./account-input.schema.json";
 import { provenancePaths } from "../apple-sync-live/model";
 import {
   AccountFrameDecoder,
@@ -6,6 +8,9 @@ import {
   encodeAccountCommand,
   encodeAppCommand,
   decodeAppReply,
+  assertInputClock,
+  assertVerificationFresh,
+  issueVerificationAfterValidation,
 } from "./contract";
 
 const identity = {
@@ -19,9 +24,121 @@ const ready = {
   ...base,
   kind: "ready",
   runnerPID: 123,
+  operation: "credentials",
+  clockUnixMilliseconds: Date.now(),
   stage: "credentials",
   signInEnabled: false,
 };
+
+test("every closed neutral object has possible required fields and expiry belongs only to verification", () => {
+  const closed = z.object({
+    additionalProperties: z.literal(false),
+    required: z.array(z.string()),
+    properties: z.record(z.string(), z.unknown()),
+  });
+  function walk(value: unknown) {
+    if (value === null || typeof value !== "object") return;
+    const parsed = closed.safeParse(value);
+    if (parsed.success)
+      for (const required of parsed.data.required)
+        expect(Object.hasOwn(parsed.data.properties, required)).toBe(true);
+    for (const child of Object.values(value)) walk(child);
+  }
+  walk(definition);
+  for (const [name, variants] of [
+    ["command", definition.$defs.command.oneOf],
+    ["app-command", definition.$defs["app-command"].oneOf],
+  ] as const)
+    for (const variant of variants) {
+      const kind = variant.properties.kind.const;
+      const required =
+        name === "command"
+          ? kind === "fill-verification" || kind === "submit-verification"
+          : kind === "verification";
+      expect(
+        Object.hasOwn(variant.properties, "expiresAtUnixMilliseconds"),
+      ).toBe(required);
+      expect(
+        new Set<string>(variant.required).has("expiresAtUnixMilliseconds"),
+      ).toBe(required);
+    }
+});
+
+test("code controls carry only expiry metadata and reject expired or skewed clocks", () => {
+  for (const kind of ["fill-verification", "submit-verification"]) {
+    expect(() => encodeAccountCommand({ ...base, requestID, kind })).toThrow();
+    expect(
+      encodeAccountCommand({
+        ...base,
+        requestID,
+        kind,
+        expiresAtUnixMilliseconds: Date.now() + 30_000,
+      }).length,
+    ).toBeGreaterThan(0);
+  }
+  expect(() =>
+    encodeAccountCommand({
+      ...base,
+      requestID,
+      kind: "fill",
+      expiresAtUnixMilliseconds: Date.now() + 30_000,
+    }),
+  ).toThrow();
+  expect(() => assertVerificationFresh(Date.now())).toThrow();
+  expect(() => assertVerificationFresh(Date.now() + 121_000)).toThrow();
+  expect(() => assertInputClock(Date.now() - 3000)).toThrow();
+  expect(() => assertInputClock(Date.now(), 2001)).toThrow();
+});
+
+test("actual late writer orders full validation, eligible clock, live owners then one issue", async () => {
+  const events: string[] = [];
+  await issueVerificationAfterValidation(
+    async () => {
+      await Promise.resolve();
+      events.push("validated");
+    },
+    {
+      waitUntilFresh: async () => {
+        events.push("waited");
+      },
+      issue: () => {
+        events.push("issued");
+        return {
+          code: "739251",
+          expiresAtUnixMilliseconds: Date.now() + 30_000,
+        };
+      },
+    },
+    async () => {
+      events.push("live-owners");
+    },
+  );
+  expect(events).toEqual(["validated", "waited", "live-owners", "issued"]);
+  for (const failure of ["validation", "wait", "owners"])
+    await expect(
+      issueVerificationAfterValidation(
+        async () => {
+          if (failure === "validation") throw new Error("guard changed");
+        },
+        {
+          waitUntilFresh: async () => {
+            if (failure === "wait") throw new Error("guard changed");
+          },
+          issue: () => {
+            events.push("forbidden");
+            return {
+              code: "739251",
+              expiresAtUnixMilliseconds: Date.now() + 30_000,
+            };
+          },
+        },
+        async () => {
+          if (failure === "owners") throw new Error("guard changed");
+        },
+      ),
+    ).rejects.toThrow("guard changed");
+  expect(events).not.toContain("forbidden");
+});
 
 describe("private iOS account boundary", () => {
   test("prepared source inventory pins credential handling, privacy proof and invoked XCTest helpers", () => {
@@ -177,7 +294,15 @@ test("app-only values cannot cross the Runner boundary and remain bound to an ex
     ["verification", "123456", "verification"],
     ["vault-password", "synthetic-vault-only", "vaults"],
   ] as const) {
-    const frame = { ...envelope, kind, value, expectedStage: stage };
+    const frame = {
+      ...envelope,
+      kind,
+      value,
+      expectedStage: stage,
+      ...(kind === "verification"
+        ? { expiresAtUnixMilliseconds: Date.now() + 30_000 }
+        : {}),
+    };
     expect(encodeAppCommand(frame).toString()).toContain(value);
     expect(() => encodeAccountCommand(frame)).toThrow("closed contract");
     expect(() =>

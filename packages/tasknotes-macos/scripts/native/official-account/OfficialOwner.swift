@@ -152,9 +152,10 @@ struct OfficialOwner {
         repeat {
             try requireOwner()
             if let windows = attribute(appRoot, "AXWindows") as? [AXUIElement] {
-                let candidates = try windows.filter { try completeForm($0, kind: formKind) }
-                if candidates.count == 1, let selected = candidates.first { return selected }
-                guard candidates.isEmpty else { throw GuardFailure.form }
+                let matches = try windows.map { try completeForm($0, kind: formKind) }
+                if let selected = try uniqueOfficialAccountWindow(matches) {
+                    return windows[selected]
+                }
             }
             RunLoop.current.run(until: Date().addingTimeInterval(0.02))
         } while Date() < deadline
@@ -164,6 +165,7 @@ struct OfficialOwner {
     private static func completeForm(_ candidate: AXUIElement, kind: OfficialFormKind) throws
         -> Bool
     {
+        if kind == .totp { return try officialTOTPForm(candidate) != nil }
         let nodes = try descendants(candidate)
         let textFields = nodes.filter { attribute($0, "AXRole") as? String == "AXTextField" }
         let anchors: [AXUIElement]
@@ -183,8 +185,7 @@ struct OfficialOwner {
             else { return false }
             anchors = [emailField]
         } else {
-            guard textFields.count == 1 else { return false }
-            anchors = textFields
+            throw GuardFailure.input
         }
         guard let anchor = anchors.first, attribute(anchor, "AXEnabled") as? Bool == true,
             sameElement(attribute(anchor, "AXWindow"), candidate),
@@ -235,10 +236,13 @@ struct OfficialOwner {
         guard formKind == .credentials || (placeholder.isEmpty && !secure) else {
             throw GuardFailure.input
         }
+        if formKind == .totp {
+            guard let form = try officialTOTPForm(window) else { throw GuardFailure.form }
+            return form.field
+        }
         let fields = try descendants(window).filter {
             attribute($0, "AXRole") as? String == "AXTextField"
-                && (formKind == .totp
-                    || attribute($0, "AXPlaceholderValue") as? String == placeholder)
+                && attribute($0, "AXPlaceholderValue") as? String == placeholder
         }
         guard fields.count == 1, let field = fields.first,
             attribute(field, "AXEnabled") as? Bool == true,
@@ -269,8 +273,12 @@ extension OfficialOwner {
     }
 
     func loginEnabled() throws -> Bool {
-        try Self.controlsReady(
-            field(formKind == .totp ? "" : "Your email...", secure: false), window: window)
+        if formKind == .totp {
+            guard try officialTOTPForm(window) != nil else { throw GuardFailure.form }
+            return true
+        }
+        return try Self.controlsReady(
+            field("Your email...", secure: false), window: window)
     }
 
     func length(_ placeholder: String, secure: Bool) throws -> Int {

@@ -2,6 +2,7 @@ import { Socket } from "node:net";
 import { expect, test } from "vitest";
 import { PrivateAccountSession } from "./connection";
 import { boundaryCheck } from "./contract";
+import type { AccountOperation } from "./contract";
 import type { AppInput } from "./app-input";
 import { z } from "zod";
 
@@ -11,6 +12,47 @@ const identity = {
   deviceID: "32345678-1234-4234-9234-123456789abc",
 };
 type Callback = (error?: Error | null) => void;
+
+test("fixture verification permits one synthetic initial submit and never code submit/connect", async () => {
+  const { session, wire } = fixture(true, false, "fixture-verification");
+  try {
+    await session.bind();
+    await session.fill({
+      email: "synthetic@example.invalid",
+      password: "synthetic-only-password",
+    });
+    await session.submit();
+    await session.observe();
+    await session.fillVerification({
+      waitUntilFresh: () => Promise.resolve(),
+      issue: () => ({
+        code: "739251",
+        expiresAtUnixMilliseconds: Date.now() + 30_000,
+      }),
+    });
+    await expect(session.submitVerification()).rejects.toThrow();
+    await expect(session.connect("never-remote")).rejects.toThrow();
+    const finished = await session.finish();
+    expect(finished.submitActionCount).toBe(1);
+    expect(wire.commands).toHaveLength(7);
+    expect(wire.commands).not.toContain("submit-verification");
+    expect(wire.commands).not.toContain("connect");
+  } finally {
+    session.close();
+  }
+  const probe = fixture(false, false, "probe");
+  try {
+    await probe.session.bind();
+    await probe.session.fill({
+      email: "synthetic@example.invalid",
+      password: "synthetic-only-password",
+    });
+    await expect(probe.session.submit()).rejects.toThrow();
+    expect(probe.wire.commands).not.toContain("submit");
+  } finally {
+    probe.session.close();
+  }
+});
 class RunnerWire extends Socket {
   readonly frames: string[] = [];
   readonly commands: string[] = [];
@@ -19,6 +61,7 @@ class RunnerWire extends Socket {
   constructor(
     private readonly mfa: boolean,
     private readonly encrypted: boolean,
+    private readonly operation: AccountOperation,
   ) {
     super();
   }
@@ -156,6 +199,8 @@ class RunnerWire extends Socket {
           ...identity,
           kind: "ready",
           runnerPID: 501,
+          operation: this.operation,
+          clockUnixMilliseconds: Date.now(),
           stage: "credentials",
           signInEnabled: false,
         }) + "\n",
@@ -163,8 +208,12 @@ class RunnerWire extends Socket {
     );
   }
 }
-function fixture(mfa = true, encrypted = true) {
-  const wire = new RunnerWire(mfa, encrypted),
+function fixture(
+  mfa = true,
+  encrypted = true,
+  operation: AccountOperation = "credentials",
+) {
+  const wire = new RunnerWire(mfa, encrypted, operation),
     values: { action: string; value?: string }[] = [];
   let closingExpected = false;
   const app: AppInput = {
@@ -172,11 +221,17 @@ function fixture(mfa = true, encrypted = true) {
     apply: async (action, _stage, value) => {
       values.push({ action, ...(value === undefined ? {} : { value }) });
     },
+    applyVerification: async (source) => {
+      await source.waitUntilFresh();
+      const value = source.issue();
+      values.push({ action: "verification", value: value.code });
+      return value.expiresAtUnixMilliseconds;
+    },
     validate: async () => {
       expect(closingExpected).toBe(false);
     },
     finish: async () => {
-      expect(closingExpected).toBe(true);
+      closingExpected = true;
     },
     expectClose: async () => {
       closingExpected = true;
@@ -188,7 +243,7 @@ function fixture(mfa = true, encrypted = true) {
     async () => {
       expect(wire.destroyed).toBe(false);
     },
-    app,
+    { app, operation },
   );
   wire.ready();
   return { wire, values, app, session };
@@ -212,7 +267,13 @@ test.each([
       await session.submit();
       await session.observe();
       if (mfa) {
-        await session.fillVerification("123456");
+        await session.fillVerification({
+          waitUntilFresh: () => Promise.resolve(),
+          issue: () => ({
+            code: "123456",
+            expiresAtUnixMilliseconds: Date.now() + 30_000,
+          }),
+        });
         await session.submitVerification();
         await session.observe();
       }

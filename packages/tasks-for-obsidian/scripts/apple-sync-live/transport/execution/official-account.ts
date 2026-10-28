@@ -113,6 +113,16 @@ export async function runGuestOfficialAccount(
   );
   const ownerCopy = path.join(directory, "OfficialOwner.swift");
   await copyFile(ownerSource, ownerCopy, 1);
+  const containerSource = path.join(
+    runtime.exportRoot,
+    "live-helpers/OfficialAccountContainer.swift",
+  );
+  assert.equal(
+    await macFileSHA(containerSource),
+    runtime.config.helpers["OfficialAccountContainer.swift"],
+  );
+  const containerCopy = path.join(directory, "OfficialAccountContainer.swift");
+  await copyFile(containerSource, containerCopy, 1);
   const verificationSource = path.join(
     runtime.exportRoot,
     "live-helpers/OfficialVerification.swift",
@@ -128,6 +138,7 @@ export async function runGuestOfficialAccount(
     "xcrun",
     "swiftc",
     ownerCopy,
+    containerCopy,
     verificationCopy,
     copied,
     "-o",

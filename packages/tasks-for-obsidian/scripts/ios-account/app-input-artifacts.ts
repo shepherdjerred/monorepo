@@ -16,6 +16,72 @@ import {
   type Manifest,
 } from "../apple-sync-live/model";
 import { boundedCommand } from "tasknotes-macos/scripts/apple-acceptance/bounded-command.ts";
+import { boundaryCheck, type AccountOperation } from "./contract";
+
+export function inputBootstrap(
+  directory: string,
+  pid: number,
+  operation: AccountOperation,
+) {
+  const mode: "account" | "fixture-verification" =
+    operation === "fixture-verification" ? "fixture-verification" : "account";
+  return {
+    FACET_E2E_ACCOUNT_SOCKET: path.join(directory, "input.sock"),
+    FACET_E2E_ACCOUNT_HELPER_PID: String(pid),
+    FACET_E2E_ACCOUNT_MODE: mode,
+  };
+}
+
+export const HelperDiagnosticSchema = z.strictObject({
+  kind: z.literal("rejected"),
+  phase: z.enum([
+    "bootstrap",
+    "stdio",
+    "directory",
+    "socket",
+    "peer",
+    "authorization",
+    "pump",
+  ]),
+  reason: z.enum(["boundary", "peer", "deadline", "frame", "io"]),
+  errno: z.number().int(),
+});
+export class InputStages {
+  private number = 0;
+  constructor(
+    private readonly evidence: string,
+    private readonly runID: string,
+    private readonly helperPID: number,
+  ) {}
+  async rejection(stderr: string, appPID: number | undefined) {
+    if (stderr === "") return;
+    const packet: unknown = JSON.parse(stderr);
+    boundaryCheck("bridge-packet", packet);
+    const diagnostic = HelperDiagnosticSchema.safeParse(packet);
+    if (diagnostic.success)
+      await this.add("helper-rejected", appPID, diagnostic.data);
+  }
+  async add(
+    stage: string,
+    appPID: number | undefined,
+    diagnostic?: z.infer<typeof HelperDiagnosticSchema>,
+  ) {
+    const directory = path.join(this.evidence, "app-input-stages");
+    await mkdir(directory, { recursive: true, mode: 0o700 });
+    await writeFile(
+      path.join(directory, String(++this.number).padStart(2, "0") + ".json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        runID: this.runID,
+        stage,
+        helperPID: this.helperPID,
+        appPID: appPID ?? null,
+        ...(diagnostic === undefined ? {} : { diagnostic }),
+      }),
+      { flag: "wx", mode: 0o600 },
+    );
+  }
+}
 
 export const InputArtifactsSchema = z.strictObject({
   bridge: z.string().regex(/^[a-f0-9]{64}$/u),
@@ -29,6 +95,23 @@ export const ProcessLifetimeSchema = z.strictObject({
   startMicroseconds: z.number().int().min(0).max(999_999),
 });
 export type ProcessLifetime = z.infer<typeof ProcessLifetimeSchema>;
+export async function assertInputBundle(
+  directory: string,
+  files: Record<string, string>,
+  executable: string,
+) {
+  const metadata = await lstat(executable);
+  assert.ok(
+    metadata.isFile() &&
+      !metadata.isSymbolicLink() &&
+      metadata.uid === process.getuid?.(),
+  );
+  assert.deepEqual(
+    await inputBundle(directory),
+    files,
+    "Private app executable changed",
+  );
+}
 export async function inputBinary(file: string) {
   const before = await lstat(file);
   assert.ok(

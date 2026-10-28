@@ -3,6 +3,7 @@ import {
   readHostCredentialItem,
   readHostVaultPassword,
   readHostVerificationCode,
+  prepareHostVerificationCode,
   type SecretCommandRunner,
 } from "./credential-host";
 import { parseOfficialAccountArguments } from "./official-host";
@@ -12,6 +13,65 @@ import {
 } from "tasknotes-macos/scripts/mac-account-contract";
 import { parseIosCredentialOptions } from "../../../ios-account";
 import path from "node:path";
+
+test("local OTP material is read once, generated late once and fails closed after its window", () => {
+  const clock = vi.spyOn(Date, "now").mockReturnValue(1_800_000_001_000);
+  let reads = 0;
+  const material = () => {
+    reads += 1;
+    return {
+      email: "synthetic@example.invalid",
+      password: "synthetic-only",
+      otp: {
+        secret: "A".repeat(32),
+        algorithm: "sha1" as const,
+        digits: 6 as const,
+        period: 30,
+      },
+    };
+  };
+  try {
+    const code = prepareHostVerificationCode(
+      locators,
+      "keychain",
+      {
+        minimumValidityMilliseconds: 15_000,
+        maximumValidityMilliseconds: 120_000,
+      },
+      material,
+    );
+    expect(reads).toBe(1);
+    clock.mockReturnValue(1_800_000_002_000);
+    expect(code.issue().code).toMatch(/^\d{6}$/u);
+    expect(() => code.issue()).toThrow("already_issued");
+    const expired = prepareHostVerificationCode(
+      locators,
+      "keychain",
+      {
+        minimumValidityMilliseconds: 15_000,
+        maximumValidityMilliseconds: 120_000,
+      },
+      material,
+    );
+    clock.mockReturnValue(1_800_000_029_000);
+    expect(() => expired.issue()).toThrow("window_insufficient");
+    expect(() => expired.issue()).toThrow("already_issued");
+    expect(() =>
+      prepareHostVerificationCode(
+        locators,
+        "desktop",
+        {
+          minimumValidityMilliseconds: 15_000,
+          maximumValidityMilliseconds: 120_000,
+        },
+        material,
+      ),
+    ).toThrow("required_for_fresh_otp");
+    expect(reads).toBe(2);
+  } finally {
+    clock.mockRestore();
+  }
+});
 
 const locators = {
   "--account": "A".repeat(26),
