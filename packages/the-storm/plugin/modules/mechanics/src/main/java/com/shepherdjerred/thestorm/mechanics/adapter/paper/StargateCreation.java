@@ -125,7 +125,13 @@ final class StargateCreation implements Listener {
       reject(event, "Stargates are loading or saving; try again.");
       return false;
     }
-    return validOption(event, option);
+    if (!validOption(event, option)) return false;
+    if (option.equalsIgnoreCase("A")
+        && !book.canCreateAlwaysOpen(event.getPlayer().getUniqueId())) {
+      reject(event, "You can own at most four always-open Stargates.");
+      return false;
+    }
+    return true;
   }
 
   private static boolean validOption(SignChangeEvent event, String option) {
@@ -201,9 +207,14 @@ final class StargateCreation implements Listener {
                   },
                   context.scheduler().mainThread());
     } catch (IllegalArgumentException | IllegalStateException failure) {
-      player.sendMessage(
-          Component.text("That Stargate overlaps another gate or its name is already in use."));
+      player.sendMessage(Component.text(creationFailure(failure)));
     }
+  }
+
+  private static String creationFailure(RuntimeException failure) {
+    if (failure instanceof StargateBook.AlwaysOpenLimitException)
+      return "You can own at most four always-open Stargates.";
+    return "That Stargate overlaps another gate or its name is already in use.";
   }
 
   private boolean mayBuild(UUID actor, PaperGrid grid, Pos sign, java.util.List<Pos> cells) {

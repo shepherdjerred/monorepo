@@ -16,6 +16,16 @@ import org.jspecify.annotations.Nullable;
  * Serializes changes and publishes them only after the durable write succeeds. Main thread only.
  */
 public final class StargateBook {
+  public static final int MAX_ALWAYS_OPEN_PER_PLAYER = 4;
+
+  public static final class AlwaysOpenLimitException extends IllegalArgumentException {
+    private static final long serialVersionUID = 1L;
+
+    public AlwaysOpenLimitException() {
+      super("A player can own at most four always-open Stargates");
+    }
+  }
+
   private final StargateStore store;
   private final Executor mainThread;
   private StargateStore.@Nullable Snapshot snapshot;
@@ -77,6 +87,7 @@ public final class StargateBook {
 
   public CompletableFuture<Void> createGate(Stargate gate) {
     var current = current();
+    checkAlwaysOpenCapacity(current, gate);
     var gates = new ArrayList<>(current.gates());
     gates.add(gate);
     return save(
@@ -89,6 +100,7 @@ public final class StargateBook {
         || !(network.access() instanceof NetworkAccess.Public))
       throw new IllegalArgumentException("gate must belong to the new public network");
     var current = current();
+    checkAlwaysOpenCapacity(current, gate);
     var networks = new ArrayList<>(current.networks());
     networks.add(network);
     var gates = new ArrayList<>(current.gates());
@@ -96,6 +108,22 @@ public final class StargateBook {
     return save(
         new StargateStore.Snapshot(networks, gates),
         () -> store.createNetworkAndGate(network, gate));
+  }
+
+  /** Whether this player can register another always-open gate across all networks. */
+  public boolean canCreateAlwaysOpen(UUID owner) {
+    return alwaysOpenCount(current(), owner) < MAX_ALWAYS_OPEN_PER_PLAYER;
+  }
+
+  private static void checkAlwaysOpenCapacity(StargateStore.Snapshot current, Stargate gate) {
+    if (gate.alwaysOpen() && alwaysOpenCount(current, gate.ownerId()) >= MAX_ALWAYS_OPEN_PER_PLAYER)
+      throw new AlwaysOpenLimitException();
+  }
+
+  private static long alwaysOpenCount(StargateStore.Snapshot current, UUID owner) {
+    return current.gates().stream()
+        .filter(gate -> gate.alwaysOpen() && gate.ownerId().equals(owner))
+        .count();
   }
 
   public CompletableFuture<Void> replaceInvitations(UUID id, Set<UUID> players) {
