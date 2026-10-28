@@ -7,6 +7,10 @@ Owners and assistants can set protection and public access separately for each c
 
 Stand in the chunk and use `/claim info` to check its current settings. Change one with `/claim flag <flag> <true|false>`, such as `/claim flag pvp false`. New claims have PvP on and the other flags off.
 
+![Example claim info: a camp owns the chunk, PvP is on, and the other listed flags are off.](/screenshots/claim-info.webp)
+
+This example shows the camp that owns the chunk followed by its current flags. Your camp name and settings will differ.
+
 | Flag              | What turning it on allows                                         |
 | ----------------- | ----------------------------------------------------------------- |
 | `pvp`             | Players can fight each other.                                     |

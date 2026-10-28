@@ -11,7 +11,7 @@ import type { RequestSchema } from "@shepherdjerred/mc-harness/protocol/client-s
 export const SessionSchema = z.strictObject({
   socket: z.string().min(1),
   artifacts: z.string().min(1),
-  server: z.string().regex(/^127\.0\.0\.1:\d+$/u),
+  server: z.string().regex(/^(?:127\.0\.0\.1:\d+|mc\.ts-mc\.net:30000)$/u),
   control: z.string().min(1),
 });
 export type Session = z.infer<typeof SessionSchema>;

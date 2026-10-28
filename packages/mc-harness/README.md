@@ -95,7 +95,8 @@ original ArtifactVersion instead. An absent accepted release is an error;
 the candidate never substitutes for production acceptance.
 The image bakes Paper, every plugin, and owned config; the harness stages
 a config overlay that enables the companion module and its local dependencies,
-plus `skylands` when the image's frozen config lists it (older images predate it),
+the shops and mechanics modules, plus `skylands` when the image's frozen config
+lists it (older images predate it),
 while disabling RWF, which requires the provisioned `rwf` world and production
 recording salt. Docker and Kubernetes mount the overlay at the config file path,
 leaving the image's baked plugins visible. The overlay uses a clearly fake RWF

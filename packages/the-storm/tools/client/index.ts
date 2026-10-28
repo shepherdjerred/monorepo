@@ -5,6 +5,7 @@ import { readSession, request } from "./protocol.ts";
 import { smoke, tour } from "./scripts.ts";
 import { viewpoint } from "./viewpoint.ts";
 import { encodeVideo } from "./video.ts";
+import { live } from "./live.ts";
 
 const parsed = parseArgs({
   args: Bun.argv.slice(2),
@@ -29,7 +30,7 @@ async function main(): Promise<void> {
   const action = parsed.positionals[0];
   if (action === undefined || parsed.values.help) {
     process.stdout.write(
-      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel|--rwf-experience|--rwf-map <map-id>] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|server-list|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
+      "client live\nclient preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel|--rwf-experience|--rwf-map <map-id>] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|respawn|sign-write|server-list|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
     process.stdout.write(
       'client frame-pacing-start --session <session.json> --args \'{"name":"baseline","durationMs":60000,"targetFrames":36000}\'\nclient frame-pacing-status --session <session.json>\n',
@@ -53,6 +54,10 @@ async function main(): Promise<void> {
     });
     return;
   }
+  if (action === "live") {
+    await live();
+    return;
+  }
   const args = z
     .record(z.string(), z.unknown())
     .parse(JSON.parse(parsed.values.args ?? "{}"));
@@ -66,6 +71,10 @@ async function main(): Promise<void> {
   const session = await readSession(
     z.string().min(1).parse(parsed.values.session),
   );
+  if (action === "stop" && session.server === "mc.ts-mc.net:30000") {
+    await request(session, "shutdown");
+    return;
+  }
   if (action === "tour") {
     await tour(session);
     return;

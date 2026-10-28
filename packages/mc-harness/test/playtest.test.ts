@@ -158,6 +158,8 @@ describe("published Storm image profiles", () => {
       );
       expect(config.moduleKeys).toContain("rwfbots");
       expect(config.enabledModules).toContain("companions");
+      expect(config.enabledModules).toContain("shops");
+      expect(config.enabledModules).toContain("mechanics");
       expect(config.enabledModules).not.toContain("rwf");
 
       const profile = resolveProfile(

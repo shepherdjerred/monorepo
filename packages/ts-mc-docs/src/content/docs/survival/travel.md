@@ -5,6 +5,8 @@ description: Find a place to build and travel between homes, players, and worlds
 
 Use `/rtp` to find a random wilderness location in Frontier, or `/worlds` to choose a destination. Your starter compass also offers a biome choice until your first successful random teleport. See [worlds](/survival/worlds/) for the destinations and their borders.
 
+![The travel menu offers Frontier, Skylands, and Main Map 2.](/screenshots/worlds-menu.webp)
+
 At your shelter, use `/sethome` to save a home and `/home` to return. Right-clicking a bed saves a separate respawn home named `bed`; `/home` without a name goes there. Use `/home <name>` to visit a named home. Your latest bed replaces the previous bed home.
 
 Use `/spawn` to return to the windmill, `/back` to return to your previous location, or `/tpa <player>` to ask to visit another player. `/tpahere <player>` asks them to come to you; the other player must accept.

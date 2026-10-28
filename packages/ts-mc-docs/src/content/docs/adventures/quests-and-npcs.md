@@ -7,9 +7,15 @@ NPCs offer conversations, quests, and other services around the world. Interact 
 
 An indicator above an NPC can show that a quest is available or ready to hand in. Read the objectives and return to the appropriate NPC when you finish. Quests are offered and progress in the permanent main world.
 
+![Winston offers a quest, with Accept and Not now choices in the conversation](/screenshots/npc-quest-offer.webp)
+
+Quest offers explain the request before you choose whether to accept it.
+
 ## Your journal
 
 Use `/quests` (or `/q`) to open your journal. It shows your quests and their progress. Use `/quests track <quest>` to follow a quest and `/quests abandon <quest>` to leave one. `/quests top` shows the quest leaderboard.
+
+![A quest journal with no active quests, a completed quest in the diary, and a discovery count.](/screenshots/quest-journal.webp)
 
 The journal also shows quest points and a diary of your latest completed quests. Its collections section records discoveries: picking up certain items for the first time reveals a regional field note. Open the journal to see the notes you have found and your collection count.
 

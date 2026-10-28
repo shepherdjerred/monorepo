@@ -24,8 +24,8 @@ record Session(Path socket, Path artifacts, String server) {
       if (!Protocol.text(node, "target", 16).equals("live") || !server.equals("ts-mc.net:25565")) {
         throw new IllegalArgumentException("Live sessions require the The Storm production server");
       }
-    } else if (!server.matches("127\\.0\\.0\\.1:[0-9]{1,5}")) {
-      throw new IllegalArgumentException("Preview requires a loopback server");
+    } else if (!server.matches("127\\.0\\.0\\.1:[0-9]{1,5}") && !server.equals("mc.ts-mc.net:30000")) {
+      throw new IllegalArgumentException("Client requires a loopback server or The Storm");
     }
     if (!live) {
       var port = Integer.parseInt(server.substring(server.lastIndexOf(':') + 1));

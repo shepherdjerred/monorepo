@@ -14,6 +14,8 @@ Choose the instructions for your edition below. If you aren't sure which edition
 3. Name the server **The Storm** and enter **`ts-mc.net`** as the address.
 4. Save it, select The Storm, and choose **Join Server**.
 
+![The Java multiplayer screen with The Storm in the server list and the Join Server and Add Server buttons below.](/screenshots/java-multiplayer-list.webp)
+
 Java discovers the port automatically. If your client cannot resolve the address, enter **`mc.ts-mc.net:30000`** instead.
 
 ## Bedrock Edition

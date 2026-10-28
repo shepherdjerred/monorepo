@@ -7,6 +7,10 @@ Spells can help with travel, gathering and combat. Buy levels in the Spellcaster
 
 To cast a spell you know, use `/spells bind <spell>` to receive its reusable focus. Hold the focus and right-click; each cast consumes the listed reagents from your inventory and starts a cooldown. For example, `/spells bind mark` binds Mark at Spellcaster I. Mark records a place, and Recall returns you to it; bind both and carry their reagents before relying on the trip. Check `/spells info mark` and `/spells info recall` for their costs and cooldowns.
 
+![Example spell info for Mark, showing Spellcaster I, its reagents and a one-minute cooldown.](/screenshots/spell-mark-info.webp)
+
+The info output names the required track level, ingredients, and cooldown. Check it in game for the current values.
+
 Single-use scrolls work differently: anyone can read one, and the scroll itself is consumed instead of focus reagents. Some spells share a cooldown, such as Dawn and Dusk. Bosses including the Ender Dragon, Wither, Warden and Elder Guardian are immune to spells.
 
 Browse the [spell catalogue](/progression/spell-catalogue/) to choose a spell by tier and effect. The in-game info command shows its current reagents and cooldown.

@@ -31,6 +31,8 @@ Round border, radius 12,000 blocks: the edge of the restored map.
 
 Floating islands above the void, with modern biomes. Reach its spawn from `/worlds`, or find a random spot with `/rtp skylands`. Falling off an island is a long way down.
 
+![A grassy Skylands island beside smaller islands floating over the void.](/screenshots/skylands.webp)
+
 Round border, radius 3,000 blocks.
 
 ## The Nether

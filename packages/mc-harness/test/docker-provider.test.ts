@@ -56,6 +56,9 @@ describe("docker sandbox argv", () => {
       "/tmp/storm-staging/plugins/TheStormFixtures.jar:/plugins/TheStormFixtures.jar:ro",
     );
     expect(args).not.toContain("/tmp/storm-staging/plugins:/plugins:ro");
+    expect(args).toContain("1000:3000");
+    expect(args).toContain("2000");
+    expect(args).toContain("type=volume,destination=/data,volume-nocopy");
     expect(args.at(-1)).toBe(
       `${request.publishedArtifact.uri}@${request.publishedArtifact.digest}`,
     );
