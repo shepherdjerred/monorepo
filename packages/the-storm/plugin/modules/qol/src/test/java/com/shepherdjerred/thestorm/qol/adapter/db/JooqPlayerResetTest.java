@@ -4,6 +4,7 @@ import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_PL
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.qol.app.PlayerProfile;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
@@ -39,7 +40,7 @@ final class JooqPlayerResetTest {
       assertThat(otherRows).isEqualTo(1);
       assertThat(await(profiles.ensure(target, Instant.EPOCH)).created()).isTrue();
       assertThat(await(profiles.ensure(target, Instant.EPOCH)).profile().starterRtpCharges())
-          .isEqualTo(8);
+          .isEqualTo(PlayerProfile.STARTER_CHARGES);
     }
   }
 
