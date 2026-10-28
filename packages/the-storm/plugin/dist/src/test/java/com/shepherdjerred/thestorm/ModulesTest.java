@@ -50,6 +50,7 @@ final class ModulesTest {
           "skills",
           "skylands",
           "spells",
+          "stargates",
           "tickets",
           "towns",
           "tracks",

@@ -1,0 +1,69 @@
+package com.shepherdjerred.thestorm.mechanics.adapter.remote;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import tools.jackson.databind.json.JsonMapper;
+
+/** Resolves the server-scoped Stargate rollout asynchronously at startup. */
+public final class FliptStargatesGate implements AutoCloseable {
+  private static final String NAMESPACE_KEY = "the-storm";
+  private static final String FLAG_KEY = "the-storm-stargates-enabled";
+  private static final JsonMapper JSON = JsonMapper.builder().build();
+  private final HttpClient client;
+  private final URI endpoint;
+  private final String environment;
+
+  public FliptStargatesGate(URI base, String environment) {
+    if ((!"http".equals(base.getScheme()) && !"https".equals(base.getScheme()))
+        || base.getHost() == null
+        || base.getUserInfo() != null
+        || base.getQuery() != null) {
+      throw new IllegalArgumentException("Flipt URL must be an uncredentialed HTTP server address");
+    }
+    if (!"prod".equals(environment) && !"beta".equals(environment)) {
+      throw new IllegalArgumentException("unknown Flipt environment: " + environment);
+    }
+    this.endpoint = base.resolve("/evaluate/v1/boolean");
+    this.environment = environment;
+    this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+  }
+
+  public CompletableFuture<Boolean> enabled() {
+    var body =
+        "{\"namespace_key\":\""
+            + NAMESPACE_KEY
+            + "\",\"flag_key\":\""
+            + FLAG_KEY
+            + "\",\"entity_id\":\"the-storm-server\",\"context\":{}}";
+    var request =
+        HttpRequest.newBuilder(endpoint)
+            .timeout(Duration.ofSeconds(3))
+            .header("Content-Type", "application/json")
+            .header("x-flipt-environment", environment)
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+    return client
+        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(FliptStargatesGate::parse);
+  }
+
+  static boolean parse(HttpResponse<String> response) {
+    if (response.statusCode() != 200) {
+      throw new IllegalStateException("Flipt evaluation returned HTTP " + response.statusCode());
+    }
+    var enabled = JSON.readTree(response.body()).get("enabled");
+    if (enabled == null || !enabled.isBoolean()) {
+      throw new IllegalStateException("Flipt boolean evaluation is missing enabled");
+    }
+    return enabled.booleanValue();
+  }
+
+  @Override
+  public void close() {
+    client.close();
+  }
+}

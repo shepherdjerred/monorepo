@@ -202,6 +202,7 @@ export async function stagePlugins(
     | "stormConfig"
     | "mechanicsE2eJar"
     | "mechanicsConfig"
+    | "stargatesConfig"
     | "fixturesJar"
     | "mapSourceChunks"
     | "learningModelDir"

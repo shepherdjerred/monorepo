@@ -69,6 +69,7 @@ tracks:
         unlocks:
           - Build gates.
           - Build hidden doors.
+          - Build Stargates and manage networks.
       - title: Artificer
         unlocks:
           - Copy signs with the sign copier.

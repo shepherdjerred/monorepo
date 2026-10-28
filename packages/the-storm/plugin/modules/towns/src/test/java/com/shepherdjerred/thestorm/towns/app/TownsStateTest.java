@@ -86,6 +86,15 @@ final class TownsStateTest {
   }
 
   @Test
+  void membershipPortReflectsRemovedMembersAndTownIdentity() {
+    TownMembership membership = state;
+    assertThat(membership.isMember(ASSISTANT, TOWN_A)).isTrue();
+    assertThat(membership.isMember(ASSISTANT, TOWN_B)).isFalse();
+    state.replaceTown(Fixtures.townA().withoutMember(ASSISTANT));
+    assertThat(membership.isMember(ASSISTANT, TOWN_A)).isFalse();
+  }
+
+  @Test
   void aReplacedTownMayNotTakeAnotherTownsNameOrMembers() {
     assertThatThrownBy(() -> state.replaceTown(Fixtures.townA().renamed("Bastion")))
         .isInstanceOf(IllegalStateException.class);

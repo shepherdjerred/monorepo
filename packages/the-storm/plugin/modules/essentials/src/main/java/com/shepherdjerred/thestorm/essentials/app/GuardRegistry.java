@@ -18,6 +18,7 @@ public final class GuardRegistry implements TeleportGuards {
   }
 
   /** The first refusal from any guard, or empty when every guard allows the teleport. */
+  @Override
   public Optional<Component> check(UUID mover, Location destination) {
     for (var guard : guards) {
       var refusal = guard.refusal(mover, destination);

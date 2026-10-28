@@ -27,6 +27,7 @@ import com.shepherdjerred.thestorm.towns.app.RentalGate;
 import com.shepherdjerred.thestorm.towns.app.Settling;
 import com.shepherdjerred.thestorm.towns.app.TownEvents;
 import com.shepherdjerred.thestorm.towns.app.TownListings;
+import com.shepherdjerred.thestorm.towns.app.TownMembership;
 import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
@@ -204,6 +205,7 @@ public final class TownsModule implements StormModule {
     context.services().provide(Protection.class, installed.protection());
     context.services().provide(SettledLand.class, installed.settled());
     context.services().provide(TownRead.class, new TownListings(state));
+    context.services().provide(TownMembership.class, state);
     context.services().provide(TownMilestones.class, installed.milestones());
     context
         .services()

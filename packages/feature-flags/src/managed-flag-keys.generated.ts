@@ -367,6 +367,7 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-letters-enabled",
   "the-storm-ip-enforcement-enabled",
   "the-storm-companions-enabled",
+  "the-storm-stargates-enabled",
   "the-storm-crier-enabled",
   "the-storm-survival-enabled",
   "the-storm-merchant-enabled",

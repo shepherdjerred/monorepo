@@ -2,7 +2,7 @@ import { z } from "zod";
 import { rwfTestSettings } from "./rwf-settings.ts";
 import { BeginnerFlags } from "./beginner-flags.ts";
 import { moderate } from "./brain/moderation.ts";
-import { expansionEvaluation } from "./brain/flags.ts";
+import { expansionEvaluation, stargatesEvaluation } from "./brain/flags.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
@@ -363,11 +363,9 @@ async function evaluateFlag(
   state: BrainState,
 ): Promise<Response> {
   const body: unknown = await request.json();
-  const expanded = expansionEvaluation(
-    body,
-    request,
-    state.mode !== "screening-disabled",
-  );
+  const expanded =
+    expansionEvaluation(body, request, state.mode !== "screening-disabled") ??
+    stargatesEvaluation(body, request);
   if (expanded !== undefined) return expanded;
   const prod = request.headers.get("x-flipt-environment") === "prod";
   const companion = z

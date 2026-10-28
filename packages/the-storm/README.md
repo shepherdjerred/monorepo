@@ -446,7 +446,7 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 29 modules and enables all of them. Every
+The shipped `config.yml` registers 30 modules and enables all of them. Every
 module must also declare its player-reset cleanup or explicitly declare itself
 stateless; startup fails if a module is omitted. This includes `creative` (the recovered plot world, which must already be loaded
 with generator `TheStorm:creative`, and whose CoreProtect block and WorldEdit
@@ -637,6 +637,8 @@ still applies its access rules. Owners can grant use, management, town sharing,
 and redstone access separately. Admin
 regions retain their own opening rules. Other modules use the towns
 `Protection` port so their container interactions follow the same rules.
+The `TownMembership` service answers current membership by player and town ID
+for features that restrict access to a town's members.
 The towns `TownRead` port exposes an alphabetical, bounded directory of town
 names with member and claim counts plus the total town count. Consumers call
 it on Paper's main thread because it snapshots the loaded towns state; it
