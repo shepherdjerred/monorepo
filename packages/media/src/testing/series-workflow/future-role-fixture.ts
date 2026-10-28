@@ -1,4 +1,5 @@
-import { rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
@@ -16,9 +17,12 @@ import {
   createOutboxActivities,
   type WorkflowStarter,
 } from "#automation/store.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 
 /** Real approval and a recurring catalog command precede discovery of the later episode. */
-export async function createFutureSeriesWorkflowFixture() {
+export async function createFutureSeriesWorkflowFixture(
+  options: { memberPath?: string } = {},
+) {
   const cluster = await startMediaTestPostgres();
   const db = cluster.database;
   const directories: string[] = [];
@@ -59,6 +63,19 @@ export async function createFutureSeriesWorkflowFixture() {
         bytes: upgrade,
         show: f.plexShow,
         episodeSpan: { season: 2, first: 3, last: 3 },
+        ...(options.memberPath === undefined
+          ? {}
+          : {
+              members: [
+                {
+                  season: 2,
+                  first: 3,
+                  last: 3,
+                  bytes: upgrade,
+                  relativePath: options.memberPath,
+                },
+              ],
+            }),
         items: [
           {
             ratingKey: String(wire.episodeId + 1_000_000_000),
@@ -99,6 +116,7 @@ export async function createFutureSeriesWorkflowFixture() {
       privateTitle: f.series.title,
       initialOperationId: initial.id,
       episode,
+      testing: { db, files: f.files, context, owner: f.network.actor },
       refreshMediaCatalog: createCatalogActivities(context).refreshMediaCatalog,
       catalogCoverage: createCatalogCoverageFacet(context),
       loadAcquisition: async () => ({
@@ -146,12 +164,22 @@ export async function createFutureSeriesWorkflowFixture() {
             }),
           ]);
         const currentServing = await serving;
+        const physical = await Promise.all(
+          assets.map(async (asset) => ({
+            assetId: asset.id,
+            checksum: createHash("sha256")
+              .update(await readFile(workerFilePath(f.files, asset.path)))
+              .digest("hex"),
+            expectedChecksum: asset.checksum,
+          })),
+        );
         return {
           episode: leaf,
           operations,
           attempts,
           personalRequests,
           assets,
+          physical,
           adds: currentServing === undefined ? 0 : currentServing.additions(),
         };
       },

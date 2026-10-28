@@ -98,6 +98,40 @@ async function selected(f: Awaited<ReturnType<typeof fixture>>) {
   };
 }
 
+test("caption installation preserves the caller's original exhausted provenance allowance", async () => {
+  const f = await fixture();
+  const { input } = await selected(f);
+  const before = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: input.subtitleId },
+  });
+  const execution = testPublicationExecution();
+  const budget = new PublicationAuthorityReadBudget();
+  budget.consume(99);
+  await expect(
+    installMovieSubtitlesV4(
+      {
+        ...f.files.context,
+        publicationExecution: () => execution,
+        movieManagement: { execution, budget },
+      },
+      input,
+    ),
+  ).rejects.toThrow("100 total queried records");
+  expect(() => budget.consume(1)).toThrow("100 total queried records");
+  expect(
+    await f.db.subtitleAsset.findUniqueOrThrow({
+      where: { id: input.subtitleId },
+    }),
+  ).toEqual(before);
+  expect(
+    await readMovieSubtitleReceiptV4(
+      f.db,
+      input,
+      new PublicationAuthorityReadBudget(),
+    ),
+  ).toBeNull();
+});
+
 test.each(MovieEditionKeySchema.options)(
   "actual %s caption installation preserves exact cut, original publication and completed retry",
   async (edition) => {

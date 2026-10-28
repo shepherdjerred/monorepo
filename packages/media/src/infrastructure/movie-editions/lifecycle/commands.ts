@@ -6,12 +6,68 @@ import {
   MovieRequestV4Schema,
   MovieRequestResultV4Schema,
   type MovieRequestV4,
+  MovieLifecycleCommandV4Schema,
+  MovieLifecycleResultV4Schema,
+  type MovieLifecycleCommandV4,
 } from "#shared/movie-editions/lifecycle-v4.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { queueRequestedMovieRetryV4 } from "./retry-command.ts";
 
 /** Registered only when all v4 effect consumers are available. v3 stays a distinct protocol. */
 export class MovieLifecycleCommands extends MovieEditionCommands {
+  retryMovieEditionV4(
+    actor: MediaActor,
+    key: string,
+    raw: MovieLifecycleCommandV4,
+    beforeNewCommand?: () => Promise<void>,
+  ) {
+    const input = MovieLifecycleCommandV4Schema.parse(raw);
+    const budget = new PublicationAuthorityReadBudget();
+    let access: MovieChoiceAccess | undefined;
+    let freshness: MovieChoiceFreshness | null = null;
+    return this.commandWithProtocol(
+      actor,
+      key,
+      {
+        command: { protocol: "movie_retry_v4", input },
+        decode: (value) => MovieLifecycleResultV4Schema.parse(value),
+        beforeNewCommand: async () => {
+          await beforeNewCommand?.();
+          access = await this.configuredMovieChoiceAccess();
+        },
+        assertCommit: () => freshness?.assertActive(),
+      },
+      async (tx) => {
+        if (access === undefined)
+          throw new Error(
+            "Movie retry access was not captured before its transaction",
+          );
+        const queued = await queueRequestedMovieRetryV4(
+          tx,
+          { actor, command: input, access, budget },
+          (db, command) =>
+            this.enqueue(db, actor, {
+              kind: "reconcile_movie_edition_v4",
+              ...command,
+            }),
+        );
+        freshness = queued.freshness;
+        return MovieLifecycleResultV4Schema.parse({
+          schemaVersion: 4,
+          scope: input.scope,
+          result: {
+            operationId: queued.operationId,
+            status: "queued",
+            version: queued.applied.mediaVersion,
+          },
+          applied: queued.applied,
+        });
+      },
+    );
+  }
+
   requestMovieEditionV4(
     actor: MediaActor,
     key: string,

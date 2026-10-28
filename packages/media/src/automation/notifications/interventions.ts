@@ -18,6 +18,16 @@ export async function queueIntervention(
   const attempt = await tx.acquisitionAttempt.findFirst({
     where: { OR: [{ operationId }, { coordinatorOperationId: operationId }] },
   });
+  if (
+    ["reconcile_movie_edition_v4", "acquire_movie_edition_v4"].includes(
+      operation.kind,
+    )
+  ) {
+    const { queueMovieInterventionV4 } =
+      await import("#automation/movie-editions/notifications/intervention/producer.ts");
+    await queueMovieInterventionV4(tx, operation, attempt?.id);
+    return;
+  }
   if (attempt !== null) assertDefaultEdition(attempt.edition);
   const birth = z
     .object({

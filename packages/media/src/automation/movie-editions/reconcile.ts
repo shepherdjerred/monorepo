@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/activities-v4.ts";
 import {
@@ -7,13 +6,16 @@ import {
   type MovieOperationV4,
 } from "#shared/movie-editions/automation-v4.ts";
 import { assertMovieAcquisitionOperationV4 } from "#infrastructure/movie-editions/lifecycle/operation.ts";
-import { readMovieAttemptIdentityV4 } from "#infrastructure/movie-editions/lifecycle/attempt-identity.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { MediaError } from "#application/errors.ts";
 import { searchMovieCandidatesV4 } from "./candidates.ts";
 import { assessRetainedMovieRelease } from "./release-assessment.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
-import { validMovieAttemptV4 } from "./submission.ts";
+import { resumeMovieAttempt } from "./retry/resume.ts";
+import {
+  readMovieRetryCaptureV1,
+  reconcileMovieRetryV4,
+} from "./retry/recovery.ts";
 import { movieManagementContext } from "./management-context.ts";
 
 /** One coordinator retains its own scope and attempt; another cut cannot sponsor a resume. */
@@ -34,6 +36,15 @@ export async function reconcileMovieIntentV4(
       releaseId: z.uuid().optional(),
     })
     .parse(record.payload);
+  const retry = readMovieRetryCaptureV1(record.payload);
+  if (retry !== null) {
+    context.movieManagement.budget.consume(1);
+    return reconcileMovieRetryV4(context, {
+      command: input,
+      operation: record,
+      capture: retry,
+    });
+  }
   const coordinator = await assertMovieAcquisitionOperationV4(
     context.db,
     input.operationId,
@@ -143,45 +154,4 @@ async function selectMovieCandidate(
     releaseId,
   });
   return { releaseId, assessment: assessed.ref };
-}
-
-async function resumeMovieAttempt(
-  context: MediaAutomationContext,
-  input: MovieOperationV4,
-  existing: AcquisitionAttempt,
-): ReturnType<MovieNetworkActivitiesV4["reconcileMovieIntentV4"]> {
-  await readMovieAttemptIdentityV4(context.db, existing, input.scope);
-  if (existing.coordinatorOperationId !== input.operationId)
-    return {
-      status: "obsolete",
-      attemptId: null,
-      reason: "coordinator_changed",
-    };
-  if (["imported", "completed"].includes(existing.state))
-    return {
-      status: "acquire",
-      attemptId: existing.id,
-      reason: "resume_committed_publication",
-    };
-  if (["cancelled", "failed"].includes(existing.state))
-    return { status: "obsolete", attemptId: null, reason: "attempt_terminal" };
-  // Ambiguous adds reconcile their actual external outcome before current demand.
-  if (
-    ["submitting", "submission_unknown"].includes(existing.state) ||
-    (await validMovieAttemptV4(context, {
-      schemaVersion: 4,
-      operationId: input.operationId,
-      attemptId: existing.id,
-      scope: input.scope,
-    }))
-  )
-    return { status: "acquire", attemptId: existing.id, reason: null };
-  return {
-    status: existing.filePlan === null ? "obsolete" : "blocked",
-    attemptId: null,
-    reason:
-      existing.filePlan === null
-        ? "intent_changed"
-        : "movie_publication_reconciliation_required",
-  };
 }

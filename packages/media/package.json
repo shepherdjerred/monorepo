@@ -11,6 +11,7 @@
     "./testing/movie-cleanup-workflow": "./src/testing/movie-workflow/cleanup-role-fixture.ts",
     "./testing/movie-retention-workflow": "./src/testing/movie-workflow/retention-role-fixture.ts",
     "./testing/movie-restore-workflow": "./src/testing/movie-workflow/restore-role-fixture.ts",
+    "./testing/movie-retry-workflow": "./src/testing/movie-workflow/retry-role-fixture.ts",
     "./testing/managed-movie-workflow": "./src/testing/movie-workflow/managed-role-fixture.ts",
     "./testing/managed-series-workflow": "./src/testing/series-workflow/role-fixture.ts",
     "./testing/future-series-workflow": "./src/testing/series-workflow/future-role-fixture.ts",

@@ -16,6 +16,7 @@ import { readMovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { readMovieRetentionWarningV4 } from "#shared/movie-editions/retention-v4.ts";
 import { readMovieRemovalNoticeV4 } from "#shared/movie-editions/removal-v4.ts";
+import { readMovieInterventionNoticeV4 } from "#shared/movie-editions/intervention/v4.ts";
 
 /** Match Keep/unwatch and root-cancellation ordering before locking delivery authority. */
 export async function lockDelivery(
@@ -36,10 +37,14 @@ export async function lockDelivery(
   const movieNotice = readMovieNoticeV4(snapshot.event.payload);
   const movieWarning = readMovieRetentionWarningV4(snapshot.event.payload);
   const movieRemoval = readMovieRemovalNoticeV4(snapshot.event.payload);
+  const movieIntervention = readMovieInterventionNoticeV4(
+    snapshot.event.payload,
+  );
   const movieScope =
     movieNotice?.source.scope ??
     movieWarning?.scope ??
-    movieRemoval?.source.scope;
+    movieRemoval?.source.scope ??
+    movieIntervention?.source.scope;
   if (movieScope === undefined)
     await lockDefaultScopes(
       tx,

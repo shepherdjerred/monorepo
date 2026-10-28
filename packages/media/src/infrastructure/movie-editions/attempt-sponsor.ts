@@ -5,11 +5,13 @@ import {
   type MovieEditionBirthAuthority,
 } from "#shared/movie-editions/authority.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 type SponsorInput = {
   attemptId: string;
   expectedScope?: MovieEditionScope | undefined;
   expectedRequestId?: string | undefined;
+  budget?: PublicationAuthorityReadBudget | undefined;
 };
 
 function assertExpectedSponsor(
@@ -39,6 +41,7 @@ export async function readMovieAttemptSponsor(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
+  input.budget?.consume(1);
   if (attempt.movieEditionAuthority === null) {
     if (
       attempt.movieEditionChoiceId !== null ||
@@ -54,6 +57,7 @@ export async function readMovieAttemptSponsor(
   const choice = await tx.movieEditionChoice.findUniqueOrThrow({
     where: { id: proof.choiceId },
   });
+  input.budget?.consume(1);
   const audit = MovieEditionChoiceAuditSchema.parse(choice.authority);
   if (
     attempt.movieEditionChoiceId !== choice.id ||

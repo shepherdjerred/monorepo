@@ -23,12 +23,14 @@ import { sourceIdentityProof } from "#infrastructure/acquisition-identity/evalua
 import { assertMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { assertMovieChoiceV4 } from "./authority.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Literal birth evidence only. This read never authorizes a new transfer or filesystem effect. */
 export async function readMovieAttemptIdentityV4(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
   input: MovieEditionScope,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const scope = MovieEditionScopeSchema.parse(input);
   const identity = MovieAcquisitionIdentitySchema.parse(
@@ -52,6 +54,7 @@ export async function readMovieAttemptIdentityV4(
       where: { id: identity.assessment.id },
     }),
   );
+  budget?.consume(1);
   if (
     assessed.ref.hash !== identity.assessment.hash ||
     assessed.value.releaseId !== attempt.releaseId ||
@@ -60,11 +63,12 @@ export async function readMovieAttemptIdentityV4(
     identityHash(assessed.value.canonical) !== identityHash(identity.canonical)
   )
     throw new Error("Movie v4 acquisition assessment binding is corrupt");
-  await assertBirthIdentity(tx, attempt, identity);
+  await assertBirthIdentity(tx, attempt, identity, budget);
   await tx.$queryRaw`SELECT id FROM "ReleaseCandidate" WHERE id = ${attempt.releaseId} FOR SHARE`;
   const release = await tx.releaseCandidate.findUniqueOrThrow({
     where: { id: attempt.releaseId },
   });
+  budget?.consume(1);
   if (candidateDigest(release) !== identity.source.candidateDigest)
     throw new MediaError(
       "identity_source_changed",
@@ -100,7 +104,12 @@ export async function assertMovieAttemptIdentityV4(
   },
 ) {
   const { access, invocation } = authority;
-  const captured = await readMovieAttemptIdentityV4(tx, attempt, scope);
+  const captured = await readMovieAttemptIdentityV4(
+    tx,
+    attempt,
+    scope,
+    invocation?.budget,
+  );
   const identity = captured.identity;
   if (
     (identity.schemaVersion === 2
@@ -128,6 +137,7 @@ export async function assertMovieAttemptIdentityV4(
       movieAccess: access,
       movieScope: scope,
       recordedAttemptId: attempt.id,
+      ...(invocation === undefined ? {} : { budget: invocation.budget }),
     });
   const current = await buildCanonicalIdentity(tx, [scope.mediaId]);
   if (
@@ -145,6 +155,7 @@ export async function assertMovieAttemptIdentityV4(
     predecessorAssetIds: [],
     phase: "candidate",
     members: [],
+    ...(invocation === undefined ? {} : { budget: invocation.budget }),
   });
   if (identityHash(cut.candidate) !== identityHash(captured.assessment.cut))
     throw new MediaError(
@@ -187,6 +198,7 @@ async function assertBirthIdentity(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
   identity: MovieAcquisitionIdentity,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   if (identity.schemaVersion === 3) {
     if (
@@ -204,6 +216,7 @@ async function assertBirthIdentity(
     attemptId: attempt.id,
     expectedScope: identity.scope,
     expectedRequestId: identity.sponsorRequestId,
+    ...(budget === undefined ? {} : { budget }),
   });
   if (
     sponsor === null ||

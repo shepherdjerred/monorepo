@@ -30,7 +30,8 @@ export async function inspectAndStageMovieV4(
     ...publicationInvocation(initial, execution),
     movieManagement: {
       execution,
-      budget: new PublicationAuthorityReadBudget(),
+      budget:
+        initial.movieManagement?.budget ?? new PublicationAuthorityReadBudget(),
     },
   };
   const input = MovieAttemptOperationV4Schema.parse(raw);

@@ -22,11 +22,13 @@ import {
 } from "#shared/movie-editions/registry.ts";
 import { CanonicalIdentitySchema } from "#shared/acquisition/identity.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Read under the caller's canonical/target locks when establishing acquisition authority. */
 export async function movieAssessmentContext(
   tx: Prisma.TransactionClient,
   input: MovieEditionScope,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const scope = MovieEditionScopeSchema.parse(input);
   const target = await tx.mediaIntent.findUniqueOrThrow({
@@ -54,6 +56,7 @@ export async function movieAssessmentContext(
       },
     },
   });
+  budget?.consume(1);
   const canonical = CanonicalIdentitySchema.options[0].parse(
     await buildCanonicalIdentity(tx, [scope.mediaId]),
   );

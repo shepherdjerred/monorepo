@@ -33,6 +33,12 @@ import {
   assertMovieRemovalNoticeConfiguration,
 } from "./movie-editions/notifications/removal-authority.ts";
 import { assertMovieRemovalAcknowledgement } from "./movie-editions/notifications/removal-acknowledgement.ts";
+import { readMovieInterventionNoticeV4 } from "#shared/movie-editions/intervention/v4.ts";
+import {
+  prepareMovieInterventionV4,
+  assertMovieInterventionConfiguration,
+} from "./movie-editions/notifications/intervention/authority.ts";
+import { assertMovieInterventionAcknowledgement } from "./movie-editions/notifications/intervention/acknowledgement.ts";
 
 const result = (
   status: "accepted" | "failed" | "unknown",
@@ -58,6 +64,11 @@ export function createNotificationActivities(
         include: deliveryInclude,
       });
       if (["sending", "unknown", "accepted"].includes(snapshot.state)) {
+        await assertMovieInterventionAcknowledgement(
+          context.db,
+          snapshot,
+          budget,
+        );
         await assertMovieRemovalAcknowledgement(context.db, snapshot, budget);
         await assertMovieNoticeAcknowledgement(context.db, snapshot);
         execution.assertActive();
@@ -74,13 +85,23 @@ export function createNotificationActivities(
           "subtitles_ready",
           "retention_warning",
         ].includes(snapshot.event.kind) ||
-        readMovieRemovalNoticeV4(snapshot.event.payload) !== null
+        readMovieRemovalNoticeV4(snapshot.event.payload) !== null ||
+        readMovieInterventionNoticeV4(snapshot.event.payload) !== null
           ? await networkMovieAccess(context, eventMediaIds(snapshot))
           : undefined;
       let binding: Awaited<ReturnType<typeof prepareNotificationBinding>>;
       let movieNotice: Awaited<ReturnType<typeof prepareMovieNoticeV4>>;
       let movieRemoval: Awaited<ReturnType<typeof prepareMovieRemovalNoticeV4>>;
+      let movieIntervention: Awaited<
+        ReturnType<typeof prepareMovieInterventionV4>
+      >;
       try {
+        movieIntervention = await prepareMovieInterventionV4(context, {
+          delivery: snapshot,
+          execution,
+          access: movieAccess,
+          budget,
+        });
         movieRemoval = await prepareMovieRemovalNoticeV4(context, {
           delivery: snapshot,
           execution,
@@ -114,6 +135,7 @@ export function createNotificationActivities(
         binding,
         movieNotice,
         movieRemoval,
+        movieIntervention,
       };
       const claim = await context.db
         .$transaction(async (tx) => {
@@ -189,6 +211,7 @@ export function createNotificationActivities(
         return result("failed", claim.protectedReason);
       try {
         await context.checkpoint?.("notification-claimed");
+        await assertMovieInterventionConfiguration(context, movieIntervention);
         await assertMovieRemovalNoticeConfiguration(context, movieRemoval);
         await assertMovieNoticeConfiguration(context, movieNotice);
         await assertNotificationBindingConfiguration(context, binding);

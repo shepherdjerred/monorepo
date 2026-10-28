@@ -145,7 +145,15 @@ export async function submitMovieTorrentV4(
     where: { id: input.attemptId },
     include: { release: true, torrent: true },
   });
-  await readMovieAttemptIdentityV4(context.db, attempt, input.scope);
+  context.movieManagement.budget.consume(
+    2 + (attempt.torrent === null ? 0 : 1),
+  );
+  await readMovieAttemptIdentityV4(
+    context.db,
+    attempt,
+    input.scope,
+    context.movieManagement.budget,
+  );
   const prerequisite = await submissionPrerequisiteV4(context, attempt, input);
   if (prerequisite !== null) return prerequisite;
   const recovering =
@@ -222,7 +230,12 @@ async function registerMovieSubmissionV4(
     });
     if (current.coordinatorOperationId !== attempt.coordinatorOperationId)
       return false;
-    await readMovieAttemptIdentityV4(tx, current, scope);
+    await readMovieAttemptIdentityV4(
+      tx,
+      current,
+      scope,
+      context.movieManagement?.budget,
+    );
     const torrent = await tx.torrent.upsert({
       where: { infoHash: source.infoHash },
       create: {

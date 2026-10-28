@@ -60,9 +60,13 @@ export async function installMovieSubtitlesV4(
   const execution = requirePublicationExecution(
     initial.publicationExecution?.(),
   );
-  const context = publicationInvocation(initial, execution);
+  const budget =
+    initial.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
+  const context = {
+    ...publicationInvocation(initial, execution),
+    movieManagement: { execution, budget },
+  };
   const input = MovieSubtitleInstallV4Schema.parse(raw);
-  const budget = new PublicationAuthorityReadBudget();
   if ((await readMovieSubtitleReceiptV4(context.db, input, budget)) !== null) {
     execution.assertActive();
     execution.signal.throwIfAborted();
