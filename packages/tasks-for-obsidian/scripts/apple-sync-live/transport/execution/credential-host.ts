@@ -9,7 +9,13 @@ import {
   root,
   credentialBackend,
   type CredentialBackend,
+  type PasswordManagerBackend,
 } from "tasknotes-macos/scripts/mac-account-contract.ts";
+import { readInstalledLocalAccount } from "tasknotes-macos/scripts/local-credentials/broker.ts";
+import {
+  generateTotp,
+  LocalCredentialFailure,
+} from "tasknotes-macos/scripts/local-credentials/payload.ts";
 
 const ItemParametersSchema = z.strictObject({
   "--account": z.string().regex(/^[A-Za-z0-9]{20,32}$/u),
@@ -41,7 +47,7 @@ const runSecretCommand: SecretCommandRunner = (argv, options) =>
 
 function failureReason(
   result: SecretCommandResult,
-  backend: CredentialBackend,
+  backend: PasswordManagerBackend,
 ) {
   const code =
     result.error && "code" in result.error ? result.error.code : undefined;
@@ -64,7 +70,7 @@ function failureReason(
 function captureSecret(
   args: string[],
   timeout: number,
-  backend: CredentialBackend,
+  backend: PasswordManagerBackend,
   run: SecretCommandRunner,
 ): string {
   const argv =
@@ -99,11 +105,27 @@ function captureSecret(
 /** Host memory only. Callers must prove and then revalidate their exact owned native form. */
 export function readHostCredentialItem(
   parameters: HostCredentialParameters,
-  selectedBackend: CredentialBackend = "service-account",
+  selectedBackend: CredentialBackend = "keychain",
   run: SecretCommandRunner = runSecretCommand,
+  readLocal: typeof readInstalledLocalAccount = readInstalledLocalAccount,
 ) {
   const backend = credentialBackend(selectedBackend);
   const selected = ItemParametersSchema.parse(parameters);
+  if (backend === "keychain") {
+    try {
+      return readLocal({
+        account: selected["--account"],
+        vault: selected["--vault"],
+        item: selected["--item"],
+      }).credentials;
+    } catch (error) {
+      throw new PasswordManagerFailure(
+        error instanceof LocalCredentialFailure
+          ? error.classification
+          : "local_credentials_unavailable",
+      );
+    }
+  }
   const output = captureSecret(
     [
       "item",
@@ -132,11 +154,36 @@ export function readHostCredentialItem(
 }
 export function readHostVerificationCode(
   parameters: HostCredentialParameters,
-  selectedBackend: CredentialBackend = "service-account",
+  selectedBackend: CredentialBackend = "keychain",
   run: SecretCommandRunner = runSecretCommand,
+  readLocal: typeof readInstalledLocalAccount = readInstalledLocalAccount,
 ): string {
   const backend = credentialBackend(selectedBackend);
   const selected = ItemParametersSchema.parse(parameters);
+  if (backend === "keychain") {
+    try {
+      const { otp } = readLocal({
+        account: selected["--account"],
+        vault: selected["--vault"],
+        item: selected["--item"],
+      });
+      if (otp === undefined)
+        throw new LocalCredentialFailure("local_credentials_missing_otp");
+      return generateTotp(
+        otp.secret,
+        Math.floor(Date.now() / 1000),
+        otp.algorithm,
+        6,
+        otp.period,
+      );
+    } catch (error) {
+      throw new PasswordManagerFailure(
+        error instanceof LocalCredentialFailure
+          ? error.classification
+          : "local_credentials_unavailable",
+      );
+    }
+  }
   const code = captureSecret(
     [
       "item",
@@ -174,7 +221,7 @@ export function readHostVaultPassword(
   const password = captureSecret(
     ["read", reference],
     30_000,
-    credentialBackend(backend),
+    backend,
     run,
   ).replace(/\n$/u, "");
   try {
@@ -182,5 +229,35 @@ export function readHostVaultPassword(
     return password;
   } catch {
     throw new PasswordManagerFailure("password_manager_invalid_vault_password");
+  }
+}
+
+/** Explicit enrollment source only. The unchanged original item is read once. */
+export function readDesktopEnrollmentItem(
+  parameters: HostCredentialParameters,
+  run: SecretCommandRunner = runSecretCommand,
+): unknown {
+  const selected = ItemParametersSchema.parse(parameters);
+  const output = captureSecret(
+    [
+      "item",
+      "get",
+      selected["--item"],
+      "--vault",
+      selected["--vault"],
+      "--account",
+      selected["--account"],
+      "--format",
+      "json",
+      "--reveal",
+    ],
+    60_000,
+    "desktop",
+    run,
+  );
+  try {
+    return JSON.parse(output);
+  } catch {
+    throw new PasswordManagerFailure("password_manager_invalid_item");
   }
 }

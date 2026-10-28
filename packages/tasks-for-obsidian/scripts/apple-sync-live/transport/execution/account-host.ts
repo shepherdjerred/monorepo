@@ -16,6 +16,7 @@ import {
   assertFreshInitialStatus,
   type Operation,
   credentialBackend,
+  vaultPasswordBackend,
 } from "tasknotes-macos/scripts/mac-account-contract.ts";
 import type {
   ClosedAccountReceiptSchema,
@@ -155,7 +156,7 @@ function readAccountSecret(
       kind: "text",
       value: readHostVaultPassword(
         parameters["--vault-password-ref"] ?? "",
-        credentialBackend(parameters["--vault-password-backend"]),
+        vaultPasswordBackend(parameters["--vault-password-backend"]),
       ),
     };
   const selected = {

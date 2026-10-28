@@ -23,6 +23,7 @@ import {
   bindingFor,
   childEnvironment,
   credentialBackend,
+  vaultPasswordBackend,
   exactPID,
   parseArguments,
   root,
@@ -337,7 +338,7 @@ export async function main(args: string[]) {
           ? readHostVerificationCode(selected, backend)
           : readHostVaultPassword(
               parameters["--vault-password-ref"] ?? "",
-              credentialBackend(parameters["--vault-password-backend"]),
+              vaultPasswordBackend(parameters["--vault-password-backend"]),
             );
     // Approval can take a minute: the candidate must still be the exact frozen
     // build before any retrieved value is handed to native UI.

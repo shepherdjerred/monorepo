@@ -166,29 +166,51 @@ bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> plugin 
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> present
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> probe
 bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> credentials \
-  --credential-backend service-account \
+  --credential-backend keychain \
   --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
 ```
 
-Apple acceptance drivers default account-item, verification-code and vault-password
-reads to the repository's machine service account through
-`scripts/onepassword/with-service-account.sh`. Routine tests do not request
-1Password Desktop approval, and a failed service-account read never falls back
-to Desktop. `--credential-backend desktop` explicitly selects attended account
-and verification-code reads; `--vault-password-backend desktop` separately selects
-attended vault-password reads. These choices affect test setup only; installed
-apps use their normal sign-in UI and Keychain.
+Account and verification-code reads default to a local, nonsynchronizing macOS
+Keychain item. Install the dedicated signed helper and explicitly enroll the
+designated login once before live acceptance:
 
-Before live acceptance, provision the designated test login and separate encrypted
-vault password in a vault readable by the enrolled machine service account.
-An existing Personal-vault item or `--account` value does not grant that access.
-Credential owners must authorize any item provisioning; the drivers do not copy
-or move credentials, broaden Personal-vault access or change 1Password protections.
-`--account`, `--vault` and `--item` remain required item locators; service-account
-reads use their token's account and omit the `op --account` selector. Missing
-enrollment, denied access or missing items stop with a closed error before the
-requested value is sent to the app.
-Service-account enrollment alone does not establish that the test login is ready.
+```bash
+bun ../tasknotes-macos/scripts/local-credentials.ts install \
+  --identity <pinned-40-hex-certificate-SHA1> --team <pinned-team-ID>
+bun ../tasknotes-macos/scripts/local-credentials.ts enroll \
+  --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
+```
+
+Installation requires the explicit existing Apple Development identity and team
+from the helper's pinned signing profile; other identities fail before setup.
+The helper remains at
+`~/Library/Application Support/FacetAcceptanceCredentials/bin/facet-credentials`;
+only that signed helper is trusted to read its credential item. Enrollment reads
+the designated 1Password item through the normal Desktop authorization flow and
+passes selected login credentials and any OTP seed through private memory-only
+input into the local classic Keychain. The original 1Password item stays unchanged.
+Enrollment does not copy the login into the Homelab vault or grant a service
+account access to the Personal vault. Enrollment refuses an existing local record
+and preserves its bytes and access policy. It checks that the local target is
+missing and usable before requesting source approval, then verifies a fresh helper
+read after insertion before reporting successful enrollment.
+
+Routine reads disable Keychain authentication UI and stop if the item is missing,
+locked or denied. They never fall back to 1Password, open an approval prompt or
+change the item's access policy. Keep the helper's signing identity stable;
+installation does not automatically broaden an existing item's trust. An explicit
+`--credential-backend desktop` selects attended account/verification reads, while
+`--credential-backend service-account` requires separately provisioned machine
+access. `--account`, `--vault` and `--item` remain required, and local records bind
+all three original locators. Service-account reads use their token's account and
+omit the `op --account` selector.
+
+The separate vault encryption password keeps its existing `service-account`
+default through `scripts/onepassword/with-service-account.sh`; local login
+enrollment does not copy it. `--vault-password-backend desktop` selects an
+explicit attended read instead. Every backend failure stops before the requested
+value is sent to the app, without trying another backend. These choices configure
+test setup only; installed apps use their normal sign-in UI and Keychain.
 
 The probe uses synthetic values and zero submits; real entry requires its measured
 privacy proof and performs one normal submit. Account success, conditional MFA,
@@ -228,7 +250,7 @@ Only after that proof may the operator invoke:
 
 ```bash
 bun run ios:account <runID> credentials \
-  --credential-backend service-account \
+  --credential-backend keychain \
   --account <1Password-account-ID> --vault <vault-ID> --item <item-ID> \
   --vault-password-ref <op-reference> --vault-password-backend service-account
 # Reauthorization adds --lifecycle-round <1|2|3> and uses the original profile.

@@ -41,7 +41,49 @@ const empty: SecretCommandRunner = () => ({
 });
 
 describe("prompt-free Apple acceptance credential routing", () => {
-  test.each([undefined, "service-account", "desktop"] as const)(
+  test("default Keychain account and OTP reads never invoke any password-manager command", () => {
+    const passwordManager = vi.fn();
+    const local = vi.fn(
+      (_locator: { account: string; vault: string; item: string }) => ({
+        credentials: {
+          email: "synthetic@example.invalid",
+          password: "synthetic-only-password",
+        },
+        otp: {
+          // Zero-byte routing fixture; RFC vectors live in payload.test.ts.
+          secret: "A".repeat(32),
+          algorithm: "sha1" as const,
+          digits: 6 as const,
+          period: 30,
+        },
+      }),
+    );
+    expect(
+      readHostCredentialItem(locators, undefined, passwordManager, local).email,
+    ).toBe("synthetic@example.invalid");
+    expect(
+      readHostVerificationCode(locators, undefined, passwordManager, local),
+    ).toMatch(/^\d{6}$/u);
+    expect(passwordManager).not.toHaveBeenCalled();
+    expect(local).toHaveBeenCalledTimes(2);
+    expect(local.mock.calls[0]?.[0]).toEqual({
+      account: locators["--account"],
+      vault: locators["--vault"],
+      item: locators["--item"],
+    });
+    expect(() =>
+      readHostVerificationCode(locators, "keychain", passwordManager, () => ({
+        credentials: {
+          email: "synthetic@example.invalid",
+          password: "synthetic-only-password",
+        },
+        otp: undefined,
+      })),
+    ).toThrow("local_credentials_missing_otp");
+    expect(passwordManager).not.toHaveBeenCalled();
+  });
+
+  test.each(["service-account", "desktop"] as const)(
     "all secret operations use only the selected backend (%s)",
     (backend) => {
       const calls: string[][] = [];
@@ -126,9 +168,9 @@ describe("prompt-free Apple acceptance credential routing", () => {
         commands.push(argv);
         return { stdout: "synthetic-only-secret", stderr, status };
       };
-      expect(() => readHostCredentialItem(locators, undefined, fake)).toThrow(
-        `password_manager_service_account_${reason}`,
-      );
+      expect(() =>
+        readHostCredentialItem(locators, "service-account", fake),
+      ).toThrow(`password_manager_service_account_${reason}`);
       expect(commands).toHaveLength(1);
       expect(commands[0]?.[0]).toBe(
         path.join(root, "scripts/onepassword/with-service-account.sh"),
@@ -146,14 +188,14 @@ describe("prompt-free Apple acceptance credential routing", () => {
       status: null,
       error: timeout,
     });
-    expect(() => readHostCredentialItem(locators, undefined, timedOut)).toThrow(
-      "password_manager_service_account_timeout",
-    );
     expect(() =>
-      readHostCredentialItem(locators, undefined, malformed),
+      readHostCredentialItem(locators, "service-account", timedOut),
+    ).toThrow("password_manager_service_account_timeout");
+    expect(() =>
+      readHostCredentialItem(locators, "service-account", malformed),
     ).toThrow("password_manager_invalid_item");
     expect(() =>
-      readHostVerificationCode(locators, undefined, malformed),
+      readHostVerificationCode(locators, "service-account", malformed),
     ).toThrow("password_manager_invalid_otp");
     expect(() => readHostVaultPassword(reference, undefined, empty)).toThrow(
       "password_manager_invalid_vault_password",
@@ -161,10 +203,15 @@ describe("prompt-free Apple acceptance credential routing", () => {
   });
 });
 
-test("all Apple command parsers default to service-account and require explicit Desktop opt-in", () => {
-  for (const backend of [undefined, "desktop"] as const) {
+test("Apple account parsers default to local Keychain while vault passwords retain service-account", () => {
+  for (const backend of [
+    undefined,
+    "keychain",
+    "service-account",
+    "desktop",
+  ] as const) {
     const flag = backend === undefined ? [] : ["--credential-backend", backend];
-    const expected = backend ?? "service-account";
+    const expected = backend ?? "keychain";
     expect(
       parseOfficialAccountArguments([
         runID,
@@ -189,8 +236,11 @@ test("all Apple command parsers default to service-account and require explicit 
         ...flag,
       ]).credentialBackend,
     ).toBe(expected);
+    const vaultBackend = backend === "keychain" ? undefined : backend;
     const vaultFlag =
-      backend === undefined ? [] : ["--vault-password-backend", backend];
+      vaultBackend === undefined
+        ? []
+        : ["--vault-password-backend", vaultBackend];
     expect(
       parseArguments([
         runID,
@@ -199,7 +249,7 @@ test("all Apple command parsers default to service-account and require explicit 
         reference,
         ...vaultFlag,
       ]).parameters["--vault-password-backend"],
-    ).toBe(expected);
+    ).toBe(vaultBackend ?? "service-account");
     expect(
       parseIosCredentialOptions([
         ...locatorArgs,
@@ -207,8 +257,27 @@ test("all Apple command parsers default to service-account and require explicit 
         reference,
         ...vaultFlag,
       ]).vaultPasswordBackend,
-    ).toBe(expected);
+    ).toBe(vaultBackend ?? "service-account");
   }
+  expect(() =>
+    parseArguments([
+      runID,
+      "vault",
+      "--vault-password-ref",
+      reference,
+      "--vault-password-backend",
+      "keychain",
+    ]),
+  ).toThrow();
+  expect(() =>
+    parseIosCredentialOptions([
+      ...locatorArgs,
+      "--vault-password-ref",
+      reference,
+      "--vault-password-backend",
+      "keychain",
+    ]),
+  ).toThrow();
   expect(() =>
     parseOfficialAccountArguments([
       runID,
