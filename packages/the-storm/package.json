@@ -60,6 +60,7 @@
     "test:e2e": "bun --no-install --bun vitest run --config vitest.e2e.config.ts",
     "test:full": "STORM_E2E_FULL=1 bun --no-install --bun vitest run --config vitest.full.config.ts",
     "test:startup": "STORM_E2E_FULL=1 bun --no-install --bun vitest run --config vitest.startup.config.ts",
+    "test:stargate-restart": "STORM_E2E_FULL=1 bun --no-install --bun vitest run --config vitest.stargate-restart.config.ts",
     "test:load": "STORM_E2E_PROFILE=load bun --no-install --bun vitest run --config vitest.load.config.ts",
     "test:capacity": "STORM_E2E_PROFILE=capacity bun --no-install --bun vitest run --config vitest.capacity.config.ts",
     "test:capacity-native": "STORM_E2E_PROFILE=capacity bun --no-install --bun vitest run --config vitest.capacity-native.config.ts",

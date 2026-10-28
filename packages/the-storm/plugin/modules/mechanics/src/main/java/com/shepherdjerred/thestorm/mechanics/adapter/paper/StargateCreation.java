@@ -9,8 +9,10 @@ import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Direction;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Mount;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
+import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.Stargate;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.StargateFrame;
+import com.shepherdjerred.thestorm.mechanics.domain.stargate.StargateNetwork;
 import java.util.IdentityHashMap;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
@@ -28,7 +30,12 @@ final class StargateCreation implements Listener {
   private final Protection protection;
   private final SealedWorlds sealed;
   private final java.util.function.BooleanSupplier enabled;
-  private final IdentityHashMap<SignChangeEvent, Stargate> pending = new IdentityHashMap<>();
+
+  private record Pending(Stargate gate, StargateNetwork network, boolean newNetwork) {}
+
+  private record NetworkChoice(StargateNetwork network, boolean created) {}
+
+  private final IdentityHashMap<SignChangeEvent, Pending> pending = new IdentityHashMap<>();
 
   StargateCreation(
       ModuleContext context,
@@ -61,20 +68,12 @@ final class StargateCreation implements Listener {
     var facing = view.facing().orElseThrow();
     var frame = StargateFrame.find(grid, sign, facing);
     if (frame.isEmpty()) return;
-    if (!enabled.getAsBoolean()) {
-      reject(event, "Stargates are not available right now.");
-      return;
-    }
-    if (!book.ready()) {
-      reject(event, "Stargates are loading or saving; try again.");
-      return;
-    }
-    var network = book.registry().network(lines.get(2).strip());
-    if (network.isEmpty()) {
-      reject(event, "Create the network first with /stargate network create.");
-      return;
-    }
-    if (!access.mayCreate(event.getPlayer(), network.orElseThrow().access())) {
+    var option = lines.get(3).strip();
+    if (!available(event, option)) return;
+    var choice = networkChoice(event, lines.get(2));
+    if (choice.isEmpty()) return;
+    var network = choice.orElseThrow().network();
+    if (!access.mayCreate(event.getPlayer(), network.access())) {
       reject(event, "You need Mechanic III and access to this network.");
       return;
     }
@@ -102,30 +101,79 @@ final class StargateCreation implements Listener {
       var gate =
           new Stargate(
               id,
-              network.orElseThrow().id(),
+              network.id(),
               lines.getFirst(),
               actor,
               block.getWorld().getUID(),
               sign,
-              frame.orElseThrow());
-      pending.put(event, gate);
+              frame.orElseThrow(),
+              lines.get(1).isBlank() ? null : lines.get(1).strip(),
+              option.equalsIgnoreCase("A"));
+      if (lines.get(2).isBlank()) event.line(2, Component.text(network.name()));
+      pending.put(event, new Pending(gate, network, choice.orElseThrow().created()));
     } catch (IllegalArgumentException error) {
-      reject(event, "Choose a valid gate name on the first line.");
+      reject(event, "Use valid gate and destination names; A requires a fixed destination.");
+    }
+  }
+
+  private boolean available(SignChangeEvent event, String option) {
+    if (!enabled.getAsBoolean()) {
+      reject(event, "Stargates are not available right now.");
+      return false;
+    }
+    if (!book.ready()) {
+      reject(event, "Stargates are loading or saving; try again.");
+      return false;
+    }
+    if (!validOption(event, option)) return false;
+    if (option.equalsIgnoreCase("A")
+        && !book.canCreateAlwaysOpen(event.getPlayer().getUniqueId())) {
+      reject(event, "You can own at most four always-open Stargates.");
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean validOption(SignChangeEvent event, String option) {
+    if (option.isEmpty() || option.equalsIgnoreCase("A")) return true;
+    reject(event, "Leave line four blank or use A for an always-open gate.");
+    return false;
+  }
+
+  private java.util.Optional<NetworkChoice> networkChoice(SignChangeEvent event, String line) {
+    var name = line.isBlank() ? "central" : line.strip();
+    var existing = book.registry().network(name);
+    if (existing.isPresent())
+      return java.util.Optional.of(new NetworkChoice(existing.orElseThrow(), false));
+    try {
+      var network =
+          new StargateNetwork(
+              new UUID(context.random().nextLong(), context.random().nextLong()),
+              name,
+              new NetworkAccess.Public());
+      return java.util.Optional.of(new NetworkChoice(network, true));
+    } catch (IllegalArgumentException error) {
+      reject(event, "Choose a valid network name on the third line.");
+      return java.util.Optional.empty();
     }
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void commit(SignChangeEvent event) {
-    var gate = pending.remove(event);
-    if (gate == null || event.isCancelled()) return;
-    context.scheduler().runOnMainThread(() -> save(event, gate));
+    var creation = pending.remove(event);
+    if (creation == null || event.isCancelled()) return;
+    context.scheduler().runOnMainThread(() -> save(event, creation));
   }
 
-  private void save(SignChangeEvent event, Stargate gate) {
+  private void save(SignChangeEvent event, Pending creation) {
+    var gate = creation.gate();
     var player = event.getPlayer();
     if (event.isCancelled() || !player.isOnline() || !book.ready() || !enabled.getAsBoolean())
       return;
-    var network = book.registry().network(gate.networkId());
+    var network =
+        creation.newNetwork()
+            ? java.util.Optional.of(creation.network())
+            : book.registry().network(gate.networkId());
     var grid = new PaperGrid(event.getBlock().getWorld());
     if (network.isEmpty()
         || !access.mayCreate(player, network.orElseThrow().access())
@@ -144,7 +192,9 @@ final class StargateCreation implements Listener {
     }
     try {
       var _ =
-          book.createGate(gate)
+          (creation.newNetwork()
+                  ? book.createNetworkAndGate(creation.network(), gate)
+                  : book.createGate(gate))
               .whenCompleteAsync(
                   (ignored, failure) -> {
                     if (failure != null) {
@@ -157,9 +207,14 @@ final class StargateCreation implements Listener {
                   },
                   context.scheduler().mainThread());
     } catch (IllegalArgumentException | IllegalStateException failure) {
-      player.sendMessage(
-          Component.text("That Stargate overlaps another gate or its name is already in use."));
+      player.sendMessage(Component.text(creationFailure(failure)));
     }
+  }
+
+  private static String creationFailure(RuntimeException failure) {
+    if (failure instanceof StargateBook.AlwaysOpenLimitException)
+      return "You can own at most four always-open Stargates.";
+    return "That Stargate overlaps another gate or its name is already in use.";
   }
 
   private boolean mayBuild(UUID actor, PaperGrid grid, Pos sign, java.util.List<Pos> cells) {

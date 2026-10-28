@@ -59,7 +59,12 @@ final class StargatePortals implements Listener {
   private final StargateTravel travel;
   private final Map<UUID, UUID> selected = new HashMap<>();
   private final Map<UUID, OpenGate> active = new HashMap<>();
+  private final Map<UUID, Set<WorldChunk>> destinationTickets = new HashMap<>();
+  private final Set<UUID> loadingPermanent = new HashSet<>();
+  private final Set<UUID> retryingPermanent = new HashSet<>();
   private final Set<UUID> inside = new HashSet<>();
+  private final Cancellable permanentTick;
+  private boolean stopped;
 
   StargatePortals(
       ModuleContext context, StargateBook book, StargateAccess access, StargateSettings settings) {
@@ -73,6 +78,119 @@ final class StargatePortals implements Listener {
     this.blocks = context.services().require(BlockChanges.class);
     this.tickets = context.services().require(ChunkTickets.class);
     this.travel = new StargateTravel(context, book, access, this::openAndIntact);
+    this.permanentTick =
+        context
+            .scheduler()
+            .repeatOnMainThread(
+                Duration.ofSeconds(1), Duration.ofSeconds(1), this::reconcilePermanent);
+  }
+
+  private void reconcilePermanent() {
+    if (stopped || !book.ready()) return;
+    for (var entry : java.util.List.copyOf(active.values())) {
+      if (entry.gate().alwaysOpen() && !permanentValid(entry.gate(), entry.target(), true)) {
+        entry.closing().cancel();
+        close(entry.gate().id());
+      }
+    }
+    if (!enabled.getAsBoolean()) return;
+    for (var gate : book.registry().gates()) reconcilePermanentGate(gate);
+  }
+
+  private void reconcilePermanentGate(Stargate gate) {
+    if (!gate.alwaysOpen()
+        || active.containsKey(gate.id())
+        || loadingPermanent.contains(gate.id())
+        || retryingPermanent.contains(gate.id())) return;
+    var target = destination(gate);
+    var sourceWorld = context.plugin().getServer().getWorld(gate.worldId());
+    if (target.isEmpty() || sourceWorld == null || !intact(gate, false)) return;
+    var targetWorld = context.plugin().getServer().getWorld(target.orElseThrow().worldId());
+    if (targetWorld == null) return;
+    loadPermanentTarget(gate, target.orElseThrow(), sourceWorld, targetWorld);
+  }
+
+  private void loadPermanentTarget(
+      Stargate gate, Stargate target, org.bukkit.World sourceWorld, org.bukkit.World targetWorld) {
+    var positions = new java.util.ArrayList<>(target.frame().frameBlocks());
+    positions.addAll(target.frame().interior());
+    positions.add(target.sign());
+    positions.add(target.button());
+    var chunks = new HashSet<WorldChunk>();
+    positions.forEach(pos -> chunks.add(new WorldChunk(targetWorld, pos.x() >> 4, pos.z() >> 4)));
+    loadingPermanent.add(gate.id());
+    var loads =
+        chunks.stream()
+            .map(chunk -> chunk.world().getChunkAtAsync(chunk.x(), chunk.z()))
+            .toArray(CompletableFuture<?>[]::new);
+    var _ =
+        CompletableFuture.allOf(loads)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  loadingPermanent.remove(gate.id());
+                  if (failure != null) {
+                    context
+                        .logger()
+                        .error("Could not load destination for Stargate {}", gate.name(), failure);
+                    retryPermanentLater(gate.id());
+                    return;
+                  }
+                  if (stopped || !book.ready() || active.containsKey(gate.id())) return;
+                  if (!permanentValid(gate, target.id(), false)) {
+                    retryPermanentLater(gate.id());
+                    return;
+                  }
+                  var held = new HashSet<WorldChunk>();
+                  try {
+                    for (var chunk : chunks) {
+                      tickets.hold(chunk.world(), chunk.x(), chunk.z());
+                      held.add(chunk);
+                    }
+                    openGate(gate, target, sourceWorld, true);
+                    destinationTickets.put(gate.id(), Set.copyOf(held));
+                  } catch (RuntimeException error) {
+                    held.forEach(chunk -> tickets.release(chunk.world(), chunk.x(), chunk.z()));
+                    context
+                        .logger()
+                        .error("Could not open permanent Stargate {}", gate.name(), error);
+                    retryPermanentLater(gate.id());
+                  }
+                },
+                context.scheduler().mainThread());
+  }
+
+  private void retryPermanentLater(UUID gateId) {
+    if (stopped || !retryingPermanent.add(gateId)) return;
+    context
+        .scheduler()
+        .runOnMainThreadLater(Duration.ofSeconds(5), () -> retryingPermanent.remove(gateId));
+  }
+
+  private boolean permanentValid(Stargate gate, UUID targetId, boolean open) {
+    if (!enabled.getAsBoolean() || !book.ready()) return false;
+    var registered = book.registry().gate(gate.id());
+    var target = destination(gate);
+    if (registered.isEmpty()
+        || !registered.orElseThrow().equals(gate)
+        || target.isEmpty()
+        || !target.orElseThrow().id().equals(targetId)
+        || !intact(gate, open)
+        || !intact(target.orElseThrow(), active.containsKey(targetId))) return false;
+    var world = context.plugin().getServer().getWorld(gate.worldId());
+    var targetWorld = context.plugin().getServer().getWorld(target.orElseThrow().worldId());
+    if (world == null
+        || targetWorld == null
+        || sealed.isSealed(world)
+        || sealed.isSealed(targetWorld)) return false;
+    var policy = book.registry().network(gate.networkId()).orElseThrow().access();
+    if (!policy.permits(gate.ownerId(), town -> access.towns().isMember(gate.ownerId(), town)))
+      return false;
+    var grid = new PaperGrid(world);
+    return gate.frame().interior().stream()
+            .noneMatch(pos -> protection.isPreserved(grid.location(pos)))
+        && new Guard(protection)
+            .automaticCells(gate.ownerId(), grid, gate.frame().interior())
+            .isAllowed();
   }
 
   boolean enabled() {
@@ -116,6 +234,12 @@ final class StargatePortals implements Listener {
   }
 
   private void select(Player player, Stargate gate) {
+    if (gate.fixedDestination() != null) {
+      tell(
+          player,
+          "Fixed destination: " + gate.fixedDestination() + ". Press the button to open the gate.");
+      return;
+    }
     if (active.containsKey(gate.id())) {
       tell(player, "Wait for this Stargate to close before changing its destination.");
       return;
@@ -154,9 +278,11 @@ final class StargatePortals implements Listener {
 
   private void activate(Player player, Stargate gate) {
     if (active.containsKey(gate.id())) return;
-    var targetId = selected.get(gate.id());
-    var target =
-        targetId == null ? java.util.Optional.<Stargate>empty() : book.registry().gate(targetId);
+    if (gate.alwaysOpen()) {
+      tell(player, "This gate opens automatically when its destination is available.");
+      return;
+    }
+    var target = destination(gate);
     if (target.isEmpty() || !gate.networkId().equals(target.orElseThrow().networkId())) {
       tell(player, "Select a destination on the sign first.");
       return;
@@ -174,6 +300,12 @@ final class StargatePortals implements Listener {
       tell(player, "This Stargate no longer has permission to change its portal.");
       return;
     }
+    openGate(gate, target.orElseThrow(), world, false);
+    tell(player, "Stargate open to " + target.orElseThrow().name() + ".");
+  }
+
+  private void openGate(Stargate gate, Stargate target, org.bukkit.World world, boolean permanent) {
+    var grid = new PaperGrid(world);
     var data = (Orientable) Material.NETHER_PORTAL.createBlockData();
     data.setAxis(gate.frame().across().dx() == 0 ? Axis.Z : Axis.X);
     var updates =
@@ -191,11 +323,13 @@ final class StargatePortals implements Listener {
         tickets.hold(world, chunk.x(), chunk.z());
         held.add(chunk);
       }
-      var closing = context.scheduler().runOnMainThreadLater(openFor, () -> close(gate.id()));
+      Cancellable closing =
+          permanent
+              ? () -> {}
+              : context.scheduler().runOnMainThreadLater(openFor, () -> close(gate.id()));
       try {
         blocks.prepare("stargate", updates).apply();
-        active.put(
-            gate.id(), new OpenGate(gate, target.orElseThrow().id(), closing, Set.copyOf(chunks)));
+        active.put(gate.id(), new OpenGate(gate, target.id(), closing, Set.copyOf(chunks)));
       } catch (RuntimeException failure) {
         StargateActivation.abort(closing, () -> removePortal(gate, grid), failure);
         throw failure;
@@ -204,16 +338,45 @@ final class StargatePortals implements Listener {
       for (var chunk : held) tickets.release(world, chunk.x(), chunk.z());
       throw error;
     }
-    tell(player, "Stargate open to " + target.orElseThrow().name() + ".");
+  }
+
+  private java.util.Optional<Stargate> destination(Stargate gate) {
+    if (gate.fixedDestination() != null)
+      return book.registry().gate(gate.networkId(), gate.fixedDestination());
+    var targetId = selected.get(gate.id());
+    return targetId == null ? java.util.Optional.empty() : book.registry().gate(targetId);
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void move(PlayerMoveEvent event) {
     if (!event.hasChangedBlock()) return;
-    var to = event.getTo();
+    enter(event.getPlayer(), event.getTo());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void vehicleMove(org.bukkit.event.vehicle.VehicleMoveEvent event) {
+    var vehicle = event.getVehicle();
+    if (!StargateMount.supported(vehicle)) return;
+    var position =
+        StargateMount.touchingPortal(vehicle, event.getTo(), this::isGate).orElseGet(event::getTo);
+    for (var passenger : vehicle.getPassengers())
+      if (passenger instanceof Player player) enter(player, position);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void mountMove(io.papermc.paper.event.entity.EntityMoveEvent event) {
+    var mount = event.getEntity();
+    if (!event.hasChangedPosition() || !StargateMount.supported(mount)) return;
+    var position =
+        StargateMount.touchingPortal(mount, event.getTo(), this::isGate).orElseGet(event::getTo);
+    for (var passenger : mount.getPassengers())
+      if (passenger instanceof Player player) enter(player, position);
+  }
+
+  private void enter(Player player, org.bukkit.Location to) {
     var registry = book.committed();
     var gate = registry.flatMap(value -> value.interior(to.getWorld().getUID(), PaperGrid.pos(to)));
-    var id = event.getPlayer().getUniqueId();
+    var id = player.getUniqueId();
     if (gate.isEmpty()) {
       inside.remove(id);
       return;
@@ -222,17 +385,25 @@ final class StargatePortals implements Listener {
     var entry = active.get(gate.orElseThrow().id());
     if (entry == null) return;
     var target = book.registry().gate(entry.target());
-    if (target.isPresent()) travel.go(event.getPlayer(), entry.gate(), target.orElseThrow());
+    if (target.isPresent()) travel.go(player, entry.gate(), target.orElseThrow());
   }
 
   @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
   void playerPortal(PlayerPortalEvent event) {
-    if (isGate(event.getFrom())) event.setCancelled(true);
+    var vehicle = event.getPlayer().getVehicle();
+    if (isGate(event.getFrom())
+        || isGate(event.getFrom().clone().add(0, 1, 0))
+        || (vehicle != null
+            && StargateMount.touchingPortal(vehicle, event.getFrom(), this::isGate).isPresent()))
+      event.setCancelled(true);
   }
 
   @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
   void entityPortal(EntityPortalEvent event) {
-    if (isGate(event.getFrom())) event.setCancelled(true);
+    if (isGate(event.getFrom())
+        || isGate(event.getFrom().clone().add(0, 1, 0))
+        || StargateMount.touchingPortal(event.getEntity(), event.getFrom(), this::isGate)
+            .isPresent()) event.setCancelled(true);
   }
 
   @EventHandler
@@ -273,6 +444,17 @@ final class StargatePortals implements Listener {
     var grid = new PaperGrid(world);
     return gate.frame().interior().stream()
         .allMatch(pos -> grid.loaded(pos) && !grid.cellAt(pos).is("minecraft:nether_portal"));
+  }
+
+  /** Close an active gate before its durable removal; fail if portal blocks remain. */
+  boolean closeForRemoval(Stargate gate) {
+    var open = active.get(gate.id());
+    if (open != null) {
+      open.closing().cancel();
+      close(gate.id());
+    }
+    recover(gate);
+    return canRemove(gate);
   }
 
   CompletableFuture<Void> resetPlayer(UUID player) {
@@ -398,11 +580,14 @@ final class StargatePortals implements Listener {
     if (entry == null) return;
     var gate = entry.gate();
     var world = context.plugin().getServer().getWorld(gate.worldId());
-    if (world == null) return;
     try {
-      removePortal(gate, new PaperGrid(world));
+      if (world != null) removePortal(gate, new PaperGrid(world));
     } finally {
-      for (var chunk : entry.chunks()) tickets.release(world, chunk.x(), chunk.z());
+      if (world != null)
+        for (var chunk : entry.chunks()) tickets.release(world, chunk.x(), chunk.z());
+      var destination = destinationTickets.remove(id);
+      if (destination != null)
+        destination.forEach(chunk -> tickets.release(chunk.world(), chunk.x(), chunk.z()));
     }
   }
 
@@ -428,6 +613,8 @@ final class StargatePortals implements Listener {
   }
 
   void stop() {
+    stopped = true;
+    permanentTick.cancel();
     for (var entry : java.util.List.copyOf(active.values())) {
       entry.closing().cancel();
       close(entry.gate().id());

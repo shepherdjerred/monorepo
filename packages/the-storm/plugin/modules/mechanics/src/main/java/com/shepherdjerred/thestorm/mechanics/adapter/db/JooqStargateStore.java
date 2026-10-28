@@ -115,23 +115,48 @@ public final class JooqStargateStore implements StargateStore {
   public CompletableFuture<Void> createGate(Stargate gate) {
     return database.write(
         dsl -> {
-          var row = dsl.newRecord(MECHANICS_STARGATE_GATE);
-          row.setId(gate.id().toString());
-          row.setNetworkId(gate.networkId().toString());
-          row.setName(gate.name());
-          row.setNameKey(key(gate.name()));
-          row.setOwnerId(gate.ownerId().toString());
-          row.setWorldId(gate.worldId().toString());
-          row.setSignX(gate.sign().x());
-          row.setSignY(gate.sign().y());
-          row.setSignZ(gate.sign().z());
-          row.setOriginX(gate.frame().origin().x());
-          row.setOriginY(gate.frame().origin().y());
-          row.setOriginZ(gate.frame().origin().z());
-          row.setAcross(gate.frame().across().name());
-          row.store();
+          insertGate(dsl, gate);
           return null;
         });
+  }
+
+  @Override
+  public CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate) {
+    if (!(network.access() instanceof NetworkAccess.Public)
+        || !network.id().equals(gate.networkId()))
+      throw new IllegalArgumentException("gate must belong to the new public network");
+    return database.write(
+        dsl -> {
+          var row = dsl.newRecord(MECHANICS_STARGATE_NETWORK);
+          row.setId(network.id().toString());
+          row.setName(network.name());
+          row.setNameKey(key(network.name()));
+          row.setKind("public");
+          row.store();
+          insertGate(dsl, gate);
+          return null;
+        });
+  }
+
+  private static void insertGate(org.jooq.DSLContext dsl, Stargate gate) {
+    var row = dsl.newRecord(MECHANICS_STARGATE_GATE);
+    row.setId(gate.id().toString());
+    row.setNetworkId(gate.networkId().toString());
+    row.setName(gate.name());
+    row.setNameKey(key(gate.name()));
+    row.setOwnerId(gate.ownerId().toString());
+    row.setWorldId(gate.worldId().toString());
+    row.setSignX(gate.sign().x());
+    row.setSignY(gate.sign().y());
+    row.setSignZ(gate.sign().z());
+    row.setOriginX(gate.frame().origin().x());
+    row.setOriginY(gate.frame().origin().y());
+    row.setOriginZ(gate.frame().origin().z());
+    row.setAcross(gate.frame().across().name());
+    row.setShape(gate.frame().shape().name());
+    row.setFixedDestination(gate.fixedDestination());
+    row.setAlwaysOpen(gate.alwaysOpen() ? 1 : 0);
+    row.store();
   }
 
   @Override
@@ -206,6 +231,9 @@ public final class JooqStargateStore implements StargateStore {
         new Pos(row.getSignX(), row.getSignY(), row.getSignZ()),
         new StargateFrame(
             new Pos(row.getOriginX(), row.getOriginY(), row.getOriginZ()),
-            Direction.valueOf(row.getAcross())));
+            Direction.valueOf(row.getAcross()),
+            StargateFrame.Shape.valueOf(row.getShape())),
+        row.getFixedDestination(),
+        row.getAlwaysOpen() == 1);
   }
 }

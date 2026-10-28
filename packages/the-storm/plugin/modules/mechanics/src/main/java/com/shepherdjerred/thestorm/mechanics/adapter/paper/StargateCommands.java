@@ -89,16 +89,20 @@ final class StargateCommands {
   }
 
   private int help(CommandSender sender) {
-    sender.sendMessage(
-        Component.text("Frame: two obsidian across top and bottom, three high on each side."));
+    sender.sendMessage(Component.text("Build the small obsidian frame or the seven-block circle."));
     sender.sendMessage(
         Component.text("Place a wall sign and button on opposite middle side blocks."));
-    sender.sendMessage(Component.text("Sign: gate name on line 1, network name on line 3."));
+    sender.sendMessage(
+        Component.text("Sign: gate name on line 1, network name on line 3 (blank: central)."));
+    sender.sendMessage(
+        Component.text("Line 2: fixed destination. Line 4: A keeps a fixed gate open."));
     sender.sendMessage(
         Component.text("Use the sign to select a destination, then press the button."));
     sender.sendMessage(Component.text("/stargate network create <public|private|town> <name>"));
     sender.sendMessage(Component.text("/stargate network <invite|uninvite> <network> <player>"));
     sender.sendMessage(Component.text("/stargate remove <network> <gate>"));
+    sender.sendMessage(
+        Component.text("You may also remove your gate by breaking its frame, sign or button."));
     return Command.SINGLE_SUCCESS;
   }
 
@@ -111,12 +115,8 @@ final class StargateCommands {
     var gate = book.registry().gate(network.orElseThrow().id(), gateName);
     if (gate.isEmpty()) return fail(sender, "No such Stargate on that network.");
     var value = gate.orElseThrow();
-    var policy = network.orElseThrow().access();
-    var authorized =
-        policy instanceof NetworkAccess.Public
-            ? player.getUniqueId().equals(value.ownerId())
-            : access.mayUse(player, policy);
-    if (!authorized) return fail(sender, "You cannot manage this Stargate.");
+    if (!player.getUniqueId().equals(value.ownerId()))
+      return fail(sender, "You cannot manage this Stargate.");
     var world = context.plugin().getServer().getWorld(value.worldId());
     if (world == null || !portals.canRemove(value)) {
       return fail(sender, "Visit the gate and wait for its portal to close before removing it.");

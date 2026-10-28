@@ -15,6 +15,7 @@ dependencies {
   implementation(project(":towns"))
   implementation(project(":essentials"))
   implementation(project(":creative"))
+  testImplementation(libs.mockito)
 }
 
 // A second, test-only Paper plugin lets the real-server E2E harness install

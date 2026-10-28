@@ -23,6 +23,8 @@ public interface StargateStore {
 
   CompletableFuture<Void> createGate(Stargate gate);
 
+  CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate);
+
   CompletableFuture<Boolean> deleteGate(UUID id);
 
   CompletableFuture<Void> resetPlayer(UUID player);

@@ -573,7 +573,11 @@ final class TeleportFlow implements TeleportTravel {
     var left = Positions.of(mover);
     CompletableFuture<Boolean> arrival;
     try {
-      arrival = this.arrival.move(mover, safe);
+      var landing = landings.get(mover.getUniqueId());
+      arrival =
+          landing != null && landing.move() != null
+              ? landing.move().move(mover, safe)
+              : this.arrival.move(mover, safe);
     } catch (RuntimeException e) {
       runtime.report("teleporting a player", e);
       cancel(ticket, payment, "the teleport failed");

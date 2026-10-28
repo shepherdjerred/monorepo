@@ -25,7 +25,9 @@ final class StargateIntegrityRulesTest {
             new UUID(0, 3),
             new UUID(0, 4),
             new Pos(-1, 66, -1),
-            frame);
+            frame,
+            null,
+            false);
     var sign =
         new SignView(List.of("Home", "", "Roads", ""), Mount.WALL, Optional.of(Direction.NORTH));
     var grid = new TestGrid();

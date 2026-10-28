@@ -45,10 +45,10 @@ public final class StargatesPaper {
     context
         .services()
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
-        .register("stargates", portals::resetPlayer);
+        .registerEarly("stargates", portals::resetPlayer);
     var serverHub = new StargateServerHub(context, book, settings, config.serverGates());
     var events = context.plugin().getServer().getPluginManager();
-    events.registerEvents(new StargateProtection(book), context.plugin());
+    events.registerEvents(new StargateProtection(context, book, portals), context.plugin());
     events.registerEvents(
         new StargateCreation(context, book, access, enabled::get), context.plugin());
     events.registerEvents(portals, context.plugin());

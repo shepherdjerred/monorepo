@@ -39,7 +39,9 @@ public record ServerGate(
         new UUID(0, 0),
         new UUID(0, 0),
         sign,
-        new StargateFrame(origin, across, StargateFrame.Shape.CIRCLE));
+        new StargateFrame(origin, across, StargateFrame.Shape.CIRCLE),
+        null,
+        false);
   }
 
   /** An explicit landing, also checked against the inventory-isolated creative entry. */

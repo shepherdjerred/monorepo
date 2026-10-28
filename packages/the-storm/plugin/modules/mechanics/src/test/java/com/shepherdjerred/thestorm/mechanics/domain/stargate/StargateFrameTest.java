@@ -39,14 +39,16 @@ final class StargateFrameTest {
   @Test
   void findsEitherControlFromTheSignFace() {
     for (var facing : Direction.HORIZONTAL) {
-      var frame = new StargateFrame(new Pos(10, 64, 10), facing.clockwise());
-      var grid = new TestGrid();
-      frame.frameBlocks().forEach(pos -> grid.solid(pos, "minecraft:obsidian"));
-      for (var control : frame.controls()) {
-        var sign = control.offset(facing);
-        assertThat(StargateFrame.find(grid, sign, facing)).contains(frame);
+      for (var shape : StargateFrame.Shape.values()) {
+        var frame = new StargateFrame(new Pos(10, 64, 10), facing.clockwise(), shape);
+        var grid = new TestGrid();
+        frame.frameBlocks().forEach(pos -> grid.solid(pos, "minecraft:obsidian"));
+        for (var control : frame.controls()) {
+          var sign = control.offset(facing);
+          assertThat(StargateFrame.find(grid, sign, facing)).contains(frame);
+        }
+        assertThat(StargateFrame.find(grid, frame.controls().getFirst(), Direction.UP)).isEmpty();
       }
-      assertThat(StargateFrame.find(grid, frame.controls().getFirst(), Direction.UP)).isEmpty();
     }
   }
 }

@@ -6,6 +6,16 @@ import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
 async function buildHub(rcon: RconClient): Promise<void> {
+  await waitUntil(
+    "previous world gate is closed",
+    async () => {
+      const result = await rcon.command(
+        "execute if block 960 71 0 minecraft:nether_portal",
+      );
+      return !result.includes("Test passed");
+    },
+    15_000,
+  );
   await rcon.command("forceload add 944 -16 976 0");
   await rcon.command("fill 955 69 0 975 69 5 minecraft:stone");
   expect(
@@ -25,6 +35,16 @@ async function buildHub(rcon: RconClient): Promise<void> {
       `execute in minecraft:${dimension} run fill 969 71 0 971 73 2 minecraft:air`,
     );
   }
+  await rcon.command("execute in minecraft:frontier run forceload add 960 -16");
+  await rcon.command(
+    "execute in minecraft:frontier run fill 969 70 -1 971 70 -1 minecraft:stone",
+  );
+  await rcon.command(
+    "execute in minecraft:frontier run fill 969 71 -1 971 73 -1 minecraft:air",
+  );
+  await rcon.command(
+    "execute in minecraft:frontier run forceload remove 960 -16",
+  );
   for (const y of ["70", "76"])
     await rcon.command(`fill 959 ${y} 0 961 ${y} 0 minecraft:obsidian`);
   for (const y of ["71", "75"])
@@ -45,6 +65,7 @@ async function enterHub(
   bot: Bot,
   rcon: RconClient,
   destination: string,
+  mounted = false,
 ): Promise<void> {
   await rcon.command(
     `execute in minecraft:overworld run tp ${bot.username} 963.5 71 3.5`,
@@ -65,12 +86,25 @@ async function enterHub(
   );
   const sign = bot.blockAt(signPos);
   if (sign === null) throw new Error("World gate sign is missing");
-  const selected = waitForMessage(
-    bot,
-    new RegExp(`Destination: ${destination}`, "u"),
+  await waitUntil(
+    "world gate is closed for selection",
+    async () => {
+      const result = await rcon.command(
+        "execute if block 960 71 0 minecraft:air",
+      );
+      return result.includes("Test passed");
+    },
+    15_000,
   );
-  await bot.activateBlock(sign);
-  await selected;
+  let selected = false;
+  for (let attempt = 0; !selected && attempt < 4; attempt++) {
+    const next = waitForMessage(bot, /Destination: ([^.]+)/u);
+    await bot.activateBlock(sign);
+    const match = await next;
+    selected = match[1] === destination;
+  }
+  if (!selected)
+    throw new Error(`Could not select world gate destination ${destination}`);
   await rcon.command(`tp ${bot.username} 957.5 71 2.5`);
   await waitUntil(
     "world gate button in reach",
@@ -92,6 +126,72 @@ async function enterHub(
       Math.abs(bot.entity.position.x - 960.5) < 0.3 &&
       bot.entity.position.z > 2,
   );
+  if (mounted) {
+    await rcon.command(
+      'summon minecraft:oak_boat 960.5 71 2.5 {Tags:["world_gate_boat"]}',
+    );
+    await rcon.command(
+      `ride ${bot.username} mount @e[tag=world_gate_boat,limit=1]`,
+    );
+    await waitUntil("rider mounts world-gate boat", async () => {
+      const result = await rcon.command(
+        `execute as ${bot.username} on vehicle if entity @s[tag=world_gate_boat]`,
+      );
+      return result.includes("Test passed");
+    });
+    let boatZ = 2.5;
+    if (destination === "Creative") {
+      let denied = false;
+      const capture = (message: string) => {
+        if (message.includes("Dismount before entering Creative"))
+          denied = true;
+      };
+      bot.on("messagestr", capture);
+      try {
+        await waitUntil("Creative rejects a mounted player", () => {
+          if (denied) return true;
+          boatZ = Math.max(0.5, boatZ - 0.2);
+          bot._client.write("vehicle_move", {
+            x: 960.5,
+            y: 71,
+            z: boatZ,
+            yaw: 180,
+            pitch: 0,
+            onGround: true,
+          });
+          return false;
+        });
+      } finally {
+        bot.off("messagestr", capture);
+      }
+      const stillRiding = await rcon.command(
+        `execute in minecraft:overworld as @a[name=${bot.username}] on vehicle if entity @s[tag=world_gate_boat]`,
+      );
+      expect(stillRiding).toContain("Test passed");
+      return;
+    }
+    await waitUntil(
+      "mounted arrival in 2026",
+      async () => {
+        const result = await rcon.command(
+          `execute in minecraft:frontier as @a[name=${bot.username}] on vehicle if entity @s[tag=world_gate_boat]`,
+        );
+        if (result.includes("Test passed")) return true;
+        boatZ = Math.max(0.5, boatZ - 0.2);
+        bot._client.write("vehicle_move", {
+          x: 960.5,
+          y: 71,
+          z: boatZ,
+          yaw: 180,
+          pitch: 0,
+          onGround: true,
+        });
+        return false;
+      },
+      20_000,
+    );
+    return;
+  }
   await bot.lookAt(new Vec3(960.5, 71, 0.5));
   bot.setControlState("forward", true);
   try {
@@ -100,6 +200,42 @@ async function enterHub(
     bot.setControlState("forward", false);
   }
 }
+
+test("world gate carries a boat and rider to the 2026 world", async ({
+  bot,
+  rcon,
+}) => {
+  const messages: string[] = [];
+  bot.on("messagestr", (message) => {
+    messages.push(message);
+  });
+  await buildHub(rcon);
+  await waitUntil(
+    "adjacent destination chunk unloads before mounted travel",
+    async () => {
+      const result = await rcon.command(
+        "execute in minecraft:frontier unless loaded 970 71 -1",
+      );
+      return result.includes("Test passed");
+    },
+    30_000,
+  );
+  try {
+    await enterHub(bot, rcon, "2026", true);
+  } catch (error) {
+    throw new Error(`Mounted world travel failed: ${messages.join(" | ")}`, {
+      cause: error,
+    });
+  }
+});
+
+test("world gate requires riders to dismount before entering Creative", async ({
+  bot,
+  rcon,
+}) => {
+  await buildHub(rcon);
+  await enterHub(bot, rcon, "Creative", true);
+});
 
 test("server world gate reaches all four worlds and preserves survival inventory through Creative", async ({
   bot,

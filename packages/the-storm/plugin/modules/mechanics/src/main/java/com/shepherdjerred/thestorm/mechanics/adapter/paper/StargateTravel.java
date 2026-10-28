@@ -51,16 +51,24 @@ final class StargateTravel {
       player.sendMessage(Component.text("That Stargate destination is unavailable."));
       return;
     }
-    travel.complimentary(player, target.name(), () -> prepare(player, source, target));
+    var mount = player.getVehicle();
+    if (mount != null && (!StargateMount.supported(mount) || mount.getPassengers().size() != 1)) {
+      player.sendMessage(Component.text("Dismount before using this Stargate."));
+      return;
+    }
+    travel.complimentary(player, target.name(), () -> prepare(player, source, target, mount));
   }
 
   private CompletableFuture<Result<TeleportTravel.Landing, Component>> prepare(
-      Player player, Stargate source, Stargate target) {
+      Player player,
+      Stargate source,
+      Stargate target,
+      org.bukkit.entity.@org.jspecify.annotations.Nullable Entity mount) {
     var world = context.plugin().getServer().getWorld(target.worldId());
     if (world == null)
       return CompletableFuture.completedFuture(
           Result.err(Component.text("The destination world is not loaded.")));
-    var chunks = chunks(target);
+    var chunks = chunks(target, Math.max(1, StargateMount.landingRadius(player, mount)));
     var id = player.getUniqueId();
     var trip = trips.start(id, new Trip(source.id(), target.id()));
     var loads =
@@ -87,9 +95,20 @@ final class StargateTravel {
                       Component.text("The gate changed before travel."));
                 }
                 var feet = landing(target);
+                if (mount != null) feet = feet.offset(target.facing());
                 var location = new Location(world, feet.x() + 0.5, feet.y(), feet.z() + 0.5);
                 return Result.<TeleportTravel.Landing, Component>ok(
-                    new TeleportTravel.Landing(location, release, () -> {}));
+                    new TeleportTravel.Landing(
+                        location,
+                        release,
+                        () -> {},
+                        StargateMount.transport(
+                            mount,
+                            context
+                                .services()
+                                .require(
+                                    com.shepherdjerred.thestorm.core.protection.Protection
+                                        .class))));
               } catch (RuntimeException failure) {
                 release.run();
                 throw failure;
@@ -159,14 +178,22 @@ final class StargateTravel {
     return gate.frame().origin().offset(Direction.UP).offset(gate.facing());
   }
 
-  private static Set<Chunk> chunks(Stargate gate) {
+  private static Set<Chunk> chunks(Stargate gate, int radius) {
     var positions = new LinkedHashSet<>(gate.frame().frameBlocks());
     positions.addAll(gate.frame().interior());
     positions.add(gate.sign());
     positions.add(gate.button());
     positions.add(landing(gate));
+    var mountedLanding = landing(gate).offset(gate.facing());
     var result = new LinkedHashSet<Chunk>();
     positions.forEach(pos -> result.add(new Chunk(pos.x() >> 4, pos.z() >> 4)));
+    for (var x = (mountedLanding.x() - radius) >> 4; x <= (mountedLanding.x() + radius) >> 4; x++) {
+      for (var z = (mountedLanding.z() - radius) >> 4;
+          z <= (mountedLanding.z() + radius) >> 4;
+          z++) {
+        result.add(new Chunk(x, z));
+      }
+    }
     return Set.copyOf(result);
   }
 }
