@@ -14,6 +14,10 @@ public enum ProtectedAction {
   INTERACT,
   /** Open or take from a container. */
   OPEN_CONTAINER,
+  /** Put items into a container the player already has open. */
+  INSERT_ITEM,
+  /** Take items out of a container the player already has open. */
+  REMOVE_ITEM,
   /** Change redstone: repeaters, comparators, note blocks, daylight sensors. */
   USE_REDSTONE,
   /** Hurt an animal, item frame, armor stand or other non-hostile entity. */

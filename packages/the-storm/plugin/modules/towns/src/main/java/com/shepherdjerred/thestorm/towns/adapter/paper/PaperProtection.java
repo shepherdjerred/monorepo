@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockAccess;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Actor;
@@ -15,6 +16,7 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Verdict;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -66,7 +68,7 @@ final class PaperProtection implements Protection {
       return decision(new Verdict.Deny(new Denial.ByRegion(site.name(), act.action())));
     }
     var verdict =
-        action == ProtectedAction.OPEN_CONTAINER
+        opensContainer(action)
                 && rendering.kinds().isLockable(location.getBlock().getType())
                 && land instanceof Land.TownLand
                 && LockGuard.container(location.getBlock()).stream()
@@ -74,15 +76,12 @@ final class PaperProtection implements Protection {
             ? Verdict.allow()
             : engine().decide(actor, act, land);
     if (verdict.isAllowed()
-        && (action == ProtectedAction.OPEN_CONTAINER
+        && (opensContainer(action)
             || action == ProtectedAction.BREAK
             || action == ProtectedAction.AUTOMATIC_BREAK)) {
       var block = Guard.world(location).getBlockAt(location);
-      if (!(action == ProtectedAction.OPEN_CONTAINER
-          ? locks.mayOpen(player, actor.bypass(), LockGuard.container(block))
-          : locks.mayBreak(player, actor.bypass(), LockGuard.container(block)))) {
-        verdict = new Verdict.Deny(new Denial.Locked());
-      }
+      verdict =
+          containerVerdict(new ContainerCheck(player, actor.bypass(), action, block), verdict);
     }
     return decision(verdict);
   }
@@ -167,12 +166,49 @@ final class PaperProtection implements Protection {
     };
   }
 
+  private static boolean opensContainer(ProtectedAction action) {
+    return action == ProtectedAction.OPEN_CONTAINER
+        || action == ProtectedAction.INSERT_ITEM
+        || action == ProtectedAction.REMOVE_ITEM;
+  }
+
+  private record ContainerCheck(UUID player, boolean bypass, ProtectedAction action, Block block) {}
+
+  private Verdict containerVerdict(ContainerCheck check, Verdict verdict) {
+    var halves = LockGuard.container(check.block());
+    var opened =
+        opensContainer(check.action())
+            ? locks.mayOpen(check.player(), check.bypass(), halves)
+            : locks.mayBreak(check.player(), check.bypass(), halves);
+    if (!opened
+        || (opensContainer(check.action())
+            && !itemMoveAllowed(check.player(), check.action(), check.block()))) {
+      return new Verdict.Deny(new Denial.Locked());
+    }
+    return verdict;
+  }
+
+  /** Opening is already decided. Insert and remove also follow the lock's direction. */
+  private boolean itemMoveAllowed(UUID player, ProtectedAction action, Block block) {
+    if (action == ProtectedAction.OPEN_CONTAINER) {
+      return true;
+    }
+    var online = server.getPlayer(player);
+    if (online == null) {
+      return false;
+    }
+    var movement = locks.movement(online, block);
+    return action == ProtectedAction.INSERT_ITEM
+        ? movement == LockAccess.Movement.FULL || movement == LockAccess.Movement.PUT
+        : movement == LockAccess.Movement.FULL || movement == LockAccess.Movement.TAKE;
+  }
+
   static Action actionOf(ProtectedAction action) {
     return switch (action) {
       case BUILD, AUTOMATIC_BUILD -> Action.BUILD;
       case BREAK, AUTOMATIC_BREAK -> Action.BREAK;
       case INTERACT -> Action.INTERACT;
-      case OPEN_CONTAINER -> Action.OPEN_CONTAINER;
+      case OPEN_CONTAINER, INSERT_ITEM, REMOVE_ITEM -> Action.OPEN_CONTAINER;
       case USE_REDSTONE -> Action.USE_REDSTONE;
       case DAMAGE_ENTITY -> Action.DAMAGE_ENTITY;
       case INTERACT_ENTITY -> Action.INTERACT_ENTITY;
@@ -184,7 +220,15 @@ final class PaperProtection implements Protection {
 
   private Subject subjectOf(ProtectedAction action, Location location) {
     return switch (action) {
-      case BUILD, BREAK, AUTOMATIC_BUILD, AUTOMATIC_BREAK, INTERACT, OPEN_CONTAINER, USE_REDSTONE ->
+      case BUILD,
+          BREAK,
+          AUTOMATIC_BUILD,
+          AUTOMATIC_BREAK,
+          INTERACT,
+          OPEN_CONTAINER,
+          INSERT_ITEM,
+          REMOVE_ITEM,
+          USE_REDSTONE ->
           rendering.kinds().subject(location.getBlock().getType());
       case DAMAGE_ENTITY, INTERACT_ENTITY, PLACE_ENTITY -> Subject.ENTITY;
       case TELEPORT_INTO, SET_HOME -> Subject.LOCATION;

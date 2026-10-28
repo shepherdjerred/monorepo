@@ -961,39 +961,54 @@ final class Banks implements Listener {
 
     private static void compact(Inventory inventory, Set<String> materials) {
       var indexes = new ArrayList<Integer>();
-      var amounts = new HashMap<String, Integer>();
-      var types = new HashMap<String, Material>();
-      var maxes = new HashMap<String, Integer>();
+      var groups = new ArrayList<List<ItemStack>>();
       for (var index = 0; index < inventory.getSize(); index++) {
         var stack = inventory.getItem(index);
         if (stack == null || stack.getType().isAir()) {
           continue;
         }
-        var key = stack.getType().getKey().toString();
-        if (!materials.contains(key)) {
+        if (!materials.contains(stack.getType().getKey().toString())) {
           continue;
         }
         indexes.add(index);
-        amounts.merge(key, stack.getAmount(), Integer::sum);
-        types.put(key, stack.getType());
-        maxes.put(key, stack.getMaxStackSize());
         inventory.setItem(index, null);
+        groupWithSimilar(groups, stack.clone());
       }
       var cursor = 0;
-      for (var entry : amounts.entrySet()) {
-        var left = entry.getValue();
-        var max = maxes.get(entry.getKey());
-        var type = types.get(entry.getKey());
-        if (max == null || type == null) {
-          throw new IllegalStateException("restack lost track of " + entry.getKey());
-        }
-        while (left > 0) {
-          var amount = Math.min(left, max);
-          inventory.setItem(indexes.get(cursor), new ItemStack(type, amount));
-          cursor++;
-          left -= amount;
+      for (var group : groups) {
+        cursor = rewrite(inventory, indexes, cursor, group);
+      }
+    }
+
+    private static void groupWithSimilar(List<List<ItemStack>> groups, ItemStack stack) {
+      for (var group : groups) {
+        if (group.getFirst().isSimilar(stack)) {
+          group.add(stack);
+          return;
         }
       }
+      var group = new ArrayList<ItemStack>();
+      group.add(stack);
+      groups.add(group);
+    }
+
+    private static int rewrite(
+        Inventory inventory, List<Integer> indexes, int cursor, List<ItemStack> group) {
+      var template = group.getFirst();
+      var left = 0;
+      for (var stack : group) {
+        left += stack.getAmount();
+      }
+      var max = template.getMaxStackSize();
+      while (left > 0) {
+        var copy = template.clone();
+        var amount = Math.min(left, max);
+        copy.setAmount(amount);
+        inventory.setItem(indexes.get(cursor), copy);
+        cursor++;
+        left -= amount;
+      }
+      return cursor;
     }
 
     private static void apply(
@@ -1017,30 +1032,31 @@ final class Banks implements Listener {
       if (total > stack.getAmount() || total < 1) {
         return;
       }
-      var type = stack.getType();
+      var template = stack.clone();
       var left = stack.getAmount() - total;
       if (left == 0) {
         source.setItem(slot, null);
       } else {
         stack.setAmount(left);
       }
-      var delivery = new Delivery(source, destinations, slot, type);
+      var delivery = new Delivery(source, destinations, slot, template);
       for (var move : moves) {
         deliver(delivery, move);
       }
     }
 
     private record Delivery(
-        Inventory source, Map<String, Inventory> destinations, int slot, Material type) {}
+        Inventory source, Map<String, Inventory> destinations, int slot, ItemStack template) {}
 
     private static void deliver(Delivery delivery, Move move) {
+      var moving = delivery.template().clone();
+      moving.setAmount(move.amount());
       var destination = delivery.destinations().get(move.shelfId());
       if (destination == null) {
-        giveBack(delivery.source(), delivery.slot(), new ItemStack(delivery.type(), move.amount()));
+        giveBack(delivery.source(), delivery.slot(), moving);
         return;
       }
-      for (var leftover :
-          destination.addItem(new ItemStack(delivery.type(), move.amount())).values()) {
+      for (var leftover : destination.addItem(moving).values()) {
         giveBack(delivery.source(), delivery.slot(), leftover);
       }
     }

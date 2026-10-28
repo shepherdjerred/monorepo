@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.qol.app.store.SortStore;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.sort.SortSwitches;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -266,6 +267,9 @@ final class SortBehavior implements Listener {
     if (click.event().isRightClick()
         && click.switches().take()
         && click.player().hasPermission(QolPermissions.SORT_TAKE)) {
+      if (!sorting.mayMove(click.player(), click.top(), true)) {
+        return;
+      }
       click.event().setCancelled(true);
       transfer(
           new Carry(
@@ -273,6 +277,9 @@ final class SortBehavior implements Listener {
       return;
     }
     if (click.switches().dump() && click.player().hasPermission(QolPermissions.SORT_DUMP)) {
+      if (!sorting.mayMove(click.player(), click.top(), false)) {
+        return;
+      }
       click.event().setCancelled(true);
       transfer(new Carry(click.player().getInventory(), 9, 35, click.top(), true));
     }
@@ -291,7 +298,7 @@ final class SortBehavior implements Listener {
         && (!click.switches().take() || !click.player().hasPermission(QolPermissions.SORT_TAKE))) {
       return;
     }
-    if (!cooled(click.player())) {
+    if (!cooled(click.player()) || !sorting.mayMove(click.player(), click.top(), !dump)) {
       return;
     }
     click.event().setCancelled(true);
@@ -311,7 +318,7 @@ final class SortBehavior implements Listener {
       return;
     }
     var open = player.getOpenInventory().getTopInventory();
-    if (!open.equals(top) || blocked(open)) {
+    if (!open.equals(top) || blocked(open) || !sorting.mayMove(player, open, !dump)) {
       return;
     }
     if (dump) {
@@ -496,12 +503,14 @@ final class SortBehavior implements Listener {
     if (!carry.everything() && !wanted.contains(stack.getType())) {
       return;
     }
-    var moving = stack.clone();
-    carry.to().addItem(moving);
-    if (moving.getAmount() == 0) {
+    var leftovers = new ArrayList<>(carry.to().addItem(stack.clone()).values());
+    if (leftovers.isEmpty()) {
       carry.from().setItem(slot, null);
-    } else if (moving.getAmount() != stack.getAmount()) {
-      stack.setAmount(moving.getAmount());
+      return;
+    }
+    carry.from().setItem(slot, leftovers.getFirst());
+    for (var extra : leftovers.subList(1, leftovers.size())) {
+      carry.from().addItem(extra);
     }
   }
 

@@ -16,8 +16,10 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Lockable;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Sorting the chest, barrel, shulker box or ender chest a player points at. A player may only sort
@@ -72,6 +74,48 @@ final class ContainerSorting {
     }
     InventorySorter.sort(inventory);
     Say.success(player, Say.SORT, "Sorted.");
+  }
+
+  /**
+   * Whether {@code player} may move items. {@code taking} removes from the container; otherwise
+   * items go into it. Donation, supply, and display locks keep their direction.
+   */
+  boolean mayMove(Player player, Inventory inventory, boolean taking) {
+    if (inventory.getType() == InventoryType.ENDER_CHEST) {
+      return true;
+    }
+    var spans = moveSpans(inventory);
+    if (spans.isEmpty()) {
+      return false;
+    }
+    var action = taking ? ProtectedAction.REMOVE_ITEM : ProtectedAction.INSERT_ITEM;
+    for (var at : spans) {
+      if (protection.check(player.getUniqueId(), action, at) instanceof Decision.Denied) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static List<Location> moveSpans(Inventory inventory) {
+    if (inventory instanceof DoubleChestInventory chest) {
+      var spans = new ArrayList<Location>();
+      addSide(spans, chest.getLeftSide());
+      addSide(spans, chest.getRightSide());
+      return spans;
+    }
+    var at = inventory.getLocation();
+    return at == null ? List.of() : List.of(at);
+  }
+
+  private static void addSide(List<Location> spans, @Nullable Inventory side) {
+    if (side == null) {
+      return;
+    }
+    var at = side.getLocation();
+    if (at != null) {
+      spans.add(at);
+    }
   }
 
   /** Why {@code player} may not sort {@code inventory} at {@code block}, or empty if they may. */

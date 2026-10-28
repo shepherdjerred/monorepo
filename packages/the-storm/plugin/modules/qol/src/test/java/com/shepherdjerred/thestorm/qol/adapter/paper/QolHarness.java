@@ -116,7 +116,7 @@ final class QolHarness implements AutoCloseable {
     public Decision check(UUID player, ProtectedAction action, Location location) {
       var denied =
           switch (action) {
-            case OPEN_CONTAINER -> noContainers.test(location);
+            case OPEN_CONTAINER, INSERT_ITEM, REMOVE_ITEM -> noContainers.test(location);
             case BUILD, AUTOMATIC_BUILD -> noBuilding.test(location);
             default -> false;
           };
