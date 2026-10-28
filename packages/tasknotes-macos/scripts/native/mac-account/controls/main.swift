@@ -145,9 +145,11 @@ func streamControls() throws {
     try streamCase(Data(repeating: 65, count: 8194), expected: 1)
 }
 
+let transitionRun = "fe57a427-484e-4dd7-9f18-a50d529c4705"
+
 func transitionStatus() -> [String: Any] {
     [
-        "schemaVersion": 1, "runID": "synthetic-run", "capturedAt": "1970-01-01T00:16:40.500Z",
+        "schemaVersion": 1, "runID": transitionRun, "capturedAt": "1970-01-01T00:16:40.500Z",
         "profiles": [], "accountStage": "credentials", "accountBusy": true,
         "accountExchange": NSNull(),
     ]
@@ -164,7 +166,7 @@ func transitionExchange(_ step: String, completed: Bool) -> [String: Any] {
 
 func transitionControls() throws {
     let now = Date(timeIntervalSince1970: 1001)
-    var transition = MacFixtureTransition(run: "synthetic-run", launch: 1000)
+    var transition = MacFixtureTransition(run: transitionRun, launch: 1000)
     var status = transitionStatus()
     try require(try transition.admit(status, now: now) == nil)
     for step in ["preflight", "post"] {
@@ -203,6 +205,36 @@ func transitionControls() throws {
     try rejects { _ = try transition.admit(malformed, now: now) }
     status["accountBusy"] = false
     try require(try transition.admit(status, now: now) == transition.requestID)
+}
+
+func transitionUUIDControls() throws {
+    let now = Date(timeIntervalSince1970: 1001)
+    guard let configuredRun = UUID(uuidString: transitionRun) else {
+        throw ControlFailure.assertion
+    }
+    let encoded = try JSONDecoder().decode(
+        String.self, from: JSONEncoder().encode(configuredRun))
+    try require(encoded == transitionRun.uppercased())
+    for run in [transitionRun, encoded] {
+        var transition = MacFixtureTransition(run: transitionRun, launch: 1000)
+        var status = transitionStatus()
+        status["runID"] = run
+        try require(try transition.admit(status, now: now) == nil)
+        status["accountExchange"] = transitionExchange("post", completed: true)
+        status["accountStage"] = "verification"
+        status["accountBusy"] = false
+        try require(try transition.admit(status, now: now) == transition.requestID)
+    }
+    for invalid: Any in ["2ac8f8b0-3eef-41cd-8a0f-50a5f75617aa", "not-a-uuid", 17, NSNull()] {
+        var transition = MacFixtureTransition(run: transitionRun, launch: 1000)
+        var status = transitionStatus()
+        status["runID"] = invalid
+        try rejects { _ = try transition.admit(status, now: now) }
+    }
+    var invalidExpected = MacFixtureTransition(run: "not-a-uuid", launch: 1000)
+    var invalidObserved = transitionStatus()
+    invalidObserved["runID"] = "not-a-uuid"
+    try rejects { _ = try invalidExpected.admit(invalidObserved, now: now) }
 }
 
 if CommandLine.arguments.count == 2, CommandLine.arguments[1] == "--stream" {
@@ -256,6 +288,7 @@ do {
     try recordControls(root)
     try streamControls()
     try transitionControls()
+    try transitionUUIDControls()
     let receipt =
         "PASS original request/action/expiry/approval/durable-record/private-stream controls; "
         + "no UI or credential access\n"

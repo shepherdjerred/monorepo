@@ -127,6 +127,7 @@ export async function runGuestAccount(
       receipt: await installGuestMacInputApproval(
         runtime,
         new TextEncoder().encode(JSON.stringify(operation.action.approval)),
+        { remoteID: request.binding.allowedRemoteVaultID, lifecycle },
       ),
     };
   }

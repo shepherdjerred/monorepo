@@ -4,6 +4,45 @@ use serde_json::json;
 use tasknotes_vault::config::{ConfigurationSource, DetectionMethod, TaskNotesConfiguration};
 
 #[test]
+fn complete_official_plugin_mapping_resolves_without_standard_approval()
+-> Result<(), Box<dyn std::error::Error>> {
+    let defaults: serde_json::Value = serde_json::from_str(include_str!("../src/defaults.json"))?;
+    let mut mapping = defaults["fieldMapping"]
+        .as_object()
+        .ok_or("embedded field mapping is missing")?
+        .clone();
+    for (role, field) in &mut mapping {
+        *field = json!(format!("custom_{role}"));
+    }
+    for role in ["timeEstimate", "timeEntries", "pomodoros"] {
+        mapping.insert(role.to_owned(), json!(format!("historical_{role}")));
+    }
+    let plugin = serde_json::to_vec(&json!({"fieldMapping": mapping}))?;
+    let configuration = TaskNotesConfiguration::resolve(Some(&plugin), None, false)?;
+    assert_eq!(configuration.source, ConfigurationSource::PluginDataJson);
+    for role in defaults["fieldMapping"]
+        .as_object()
+        .ok_or("embedded field mapping is missing")?
+        .keys()
+    {
+        assert_eq!(configuration.mapping.field(role), format!("custom_{role}"));
+    }
+    assert_eq!(configuration.mapping.field("tags"), "tags");
+    for role in ["timeEstimate", "timeEntries", "pomodoros"] {
+        assert!(!configuration.mapping.role_to_field.contains_key(role));
+    }
+    assert!(
+        TaskNotesConfiguration::resolve(
+            Some(br#"{"fieldMapping":{"imaginaryRole":"custom"}}"#),
+            None,
+            false,
+        )
+        .is_err()
+    );
+    Ok(())
+}
+
+#[test]
 fn standard_configuration_does_not_initialize_retired_timing_policy()
 -> Result<(), Box<dyn std::error::Error>> {
     let config = TaskNotesConfiguration::resolve(None, None, true)?;

@@ -335,6 +335,8 @@ or a separate XCTest SDK. Both complete raw-evidence gates bind
 the exact prepared source, app and helper bytes. They establish input privacy for
 email/password and verification fields, not a separate vault-password sentinel
 proof or real authentication.
+After both gates pass, the probe awaits its existing normal app launch, fresh
+idle account status and the owned process lifetime before returning for real entry.
 
 Each real invocation revalidates those two measured proofs before reading its
 selected backend. Authenticator entry accepts only the enrolled local Keychain

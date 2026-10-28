@@ -24,6 +24,7 @@ import {
   type MacInputOperation,
 } from "./protocol";
 import { captureMacFileDescriptors } from "./collect";
+import { waitMacCredentialsStatus } from "./readiness";
 
 class MacPreparationRejected extends Error {
   constructor(readonly reason: string) {
@@ -189,45 +190,20 @@ export async function inspectMacInput(
 }
 
 async function waitFixtureStatus(runtime: GuestRuntime, startedAt: number) {
-  const deadline = Date.now() + 30_000;
-  for (;;) {
-    try {
-      const raw = await readOwnedMacVMJSON(
-        path.join(runtime.paths.stateDirectory, "control/status.json"),
-        65_536,
-      );
-      const state = z
-        .object({
-          runID: z.literal(runtime.config.runID),
-          capturedAt: z.iso.datetime(),
-          accountStage: z.literal("credentials"),
-          accountBusy: z.literal(false),
-          profiles: z.array(z.unknown()).length(0),
-        })
-        .safeParse(raw);
-      if (
-        state.success &&
-        Date.parse(state.data.capturedAt) >= startedAt &&
-        Date.now() - Date.parse(state.data.capturedAt) <= 5000
-      )
-        return;
-    } catch (error) {
-      if (!(
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ))
-        throw error;
-    }
-    assert.ok(
-      Date.now() < deadline,
-      "Synthetic Mac fixture did not become ready",
-    );
-    await Bun.sleep(100);
-  }
+  await waitMacCredentialsStatus(
+    {
+      runID: runtime.config.runID,
+      readStatus: () =>
+        readOwnedMacVMJSON(
+          path.join(runtime.paths.stateDirectory, "control/status.json"),
+          65_536,
+        ),
+    },
+    startedAt,
+  );
 }
 
-async function waitInspection(
+export async function waitInspection(
   program: string,
   binding: ReturnType<typeof legacyMacBinding>,
   mode: string,
