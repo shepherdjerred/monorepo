@@ -3327,6 +3327,14 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "the-storm-stargates-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "delivery-enabled-environments",
           "type": "variant",
           "default": "[\"arcade/prod\",\"better-skill-capped/prod\",\"birmel/prod\",\"cluster-admission/prod\",\"cluster-observability/prod\",\"cluster-platform/prod\",\"cook/prod\",\"cross-compilers/prod\",\"delivery-control-plane/prod\",\"delivery-data/prod\",\"delivery/prod\",\"gitops/root\",\"gitops/tofu:anthropic\",\"gitops/tofu:arr\",\"gitops/tofu:cloudflare\",\"gitops/tofu:cloudflare-tokens\",\"gitops/tofu:discord\",\"gitops/tofu:github\",\"gitops/tofu:openai\",\"gitops/tofu:posthog\",\"gitops/tofu:seaweedfs\",\"gitops/tofu:tailscale\",\"glitter-boys-ppl/prod\",\"glitter-boys/prod\",\"minecraft/sandbox\",\"minecraft/tsmc\",\"ops-dashboard/prod\",\"redlib/prod\",\"resume/prod\",\"scout-design-system/prod\",\"scout-for-lol/beta\",\"scout-for-lol/prod\",\"self-hosted-apps/redlib\",\"sjer-red/prod\",\"starlight-karma-bot/beta\",\"starlight-karma-bot/prod\",\"static-site-proxy/prod\",\"static-sites/better-skill-capped\",\"static-sites/cook\",\"static-sites/cross-compilers\",\"static-sites/glitter-boys\",\"static-sites/glitter-boys-ppl\",\"static-sites/proxy\",\"static-sites/resume\",\"static-sites/scout-design-system\",\"static-sites/sjer-red\",\"static-sites/statically-typed\",\"static-sites/stocks-sjer-red\",\"static-sites/ts-mc-docs\",\"static-sites/webring\",\"static-sites/wiki-sjer-red\",\"statically-typed/prod\",\"stocks-sjer-red/prod\",\"storm-brain/prod\",\"storm-forum/prod\",\"streambot/prod\",\"tasknotes-server/prod\",\"temporal-data/prod\",\"temporal/prod\",\"tofu-anthropic-federation/prod\",\"tofu-anthropic/prod\",\"tofu-argocd/prod\",\"tofu-arr/prod\",\"tofu-asuswrt/prod\",\"tofu-cloudflare-tokens/prod\",\"tofu-cloudflare/prod\",\"tofu-discord/prod\",\"tofu-dockerhub-tokens/prod\",\"tofu-dockerhub/prod\",\"tofu-github/prod\",\"tofu-google/prod\",\"tofu-openai/prod\",\"tofu-posthog/prod\",\"tofu-seaweedfs/prod\",\"tofu-tailscale/prod\",\"tracker/prod\",\"trmnl-dashboard/prod\",\"ts-mc-docs/prod\",\"webring/prod\",\"wiki-sjer-red/prod\"]",
