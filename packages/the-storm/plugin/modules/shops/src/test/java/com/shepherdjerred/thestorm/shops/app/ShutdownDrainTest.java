@@ -86,7 +86,8 @@ final class ShutdownDrainTest {
     wallets.holdNext();
     var trade =
         shops.trade(
-            new ChestShops.Visit(shop, Direction.BUY, BOB, bobsItems, chest, List.of(CHEST)));
+            new ChestShops.Visit(
+                shop, Direction.BUY, BOB, bobsItems, chest, List.of(CHEST), false, false));
     // While the server still ran, the affordability answer came back and the trade was locked and
     // paid for; the ledger's answer to the payment is what is still outstanding.
     pump.runQueued();
@@ -200,6 +201,8 @@ final class ShutdownDrainTest {
         new Deal.Party(BOB.account(), items),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
         "shop:catalog:exchange:emerald:sell",
-        "emerald");
+        "emerald",
+        0L,
+        false);
   }
 }

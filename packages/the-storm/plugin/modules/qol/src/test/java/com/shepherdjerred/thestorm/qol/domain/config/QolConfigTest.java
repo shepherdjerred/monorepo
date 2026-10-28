@@ -43,6 +43,10 @@ final class QolConfigTest {
     assertThat(config.combat().killOnLogout()).isTrue();
     assertThat(config.sleep().percent()).isEqualTo(50);
     assertThat(config.sort().sneakPunch()).isTrue();
+    assertThat(config.sort().sortTime()).isEqualTo(QolConfig.Sort.When.CLOSE);
+    assertThat(config.bank().limits().linkRadius()).isEqualTo(64);
+    assertThat(config.bank().fallbackRole())
+        .isEqualTo(com.shepherdjerred.thestorm.qol.domain.bank.BankRole.OPEN);
   }
 
   @ParameterizedTest

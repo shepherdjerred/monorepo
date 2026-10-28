@@ -1,0 +1,18 @@
+# Brewing ingredients and the potions they make.
+sticky=false
+potion
+splash_potion
+lingering_potion
+glass_bottle
+blaze_powder
+blaze_rod
+nether_wart
+ghast_tear
+magma_cream
+fermented_spider_eye
+glistering_melon_slice
+dragon_breath
+phantom_membrane
+rabbit_foot
+brewing_stand
+cauldron

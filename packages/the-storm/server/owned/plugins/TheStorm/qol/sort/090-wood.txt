@@ -1,0 +1,24 @@
+# Wood and the planks cut from it.
+sticky=false
+*_log
+*_wood
+*_stem
+*_hyphae
+*_planks
+stick
+bamboo
+bamboo_block
+*_fence
+*_fence_gate
+*_door
+*_trapdoor
+*_sign
+*_hanging_sign
+*_stairs
+*_slab
+chest
+trapped_chest
+barrel
+crafting_table
+ladder
+scaffolding

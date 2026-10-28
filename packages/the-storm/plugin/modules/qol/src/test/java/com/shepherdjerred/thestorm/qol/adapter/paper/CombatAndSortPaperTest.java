@@ -185,12 +185,12 @@ final class CombatAndSortPaperTest {
 
     assertThat(Arrays.asList(chest.getContents()).subList(0, 7))
         .containsExactly(
-            new ItemStack(Material.APPLE, 1),
             new ItemStack(Material.DIAMOND_SWORD, 1),
             named(Material.DIAMOND_SWORD, 1, "Excalibur"),
+            new ItemStack(Material.APPLE, 1),
+            new ItemStack(Material.STONE, 5),
             new ItemStack(Material.DIRT, 64),
             new ItemStack(Material.DIRT, 6),
-            new ItemStack(Material.STONE, 5),
             null);
   }
 

@@ -42,7 +42,9 @@ final class TradeEngineTest {
         new Deal.Party(ALICE, customer),
         new Deal.Party(counterparty, shopItems),
         "shop:1:" + direction.id(),
-        "coal");
+        "coal",
+        0L,
+        false);
   }
 
   private TradeOutcome run(Deal deal) throws Exception {
@@ -61,6 +63,32 @@ final class TradeEngineTest {
     assertThat(wallets.balanceOf(OWNER)).isEqualTo(50);
     assertThat(customer.count).isEqualTo(16);
     assertThat(shop.count).isEqualTo(4);
+  }
+
+  @Test
+  void buyingKeepsTheTaxAndPaysTheOwnerTheRest() throws Exception {
+    wallets.set(ALICE, 100);
+    shop.count = 20;
+    var taxed =
+        new Deal(
+            Direction.BUY,
+            16,
+            Money.crystals(100),
+            new Deal.Party(ALICE, customer),
+            new Deal.Party(OWNER, shop),
+            "shop:1:buy",
+            "coal",
+            10L,
+            false);
+
+    var outcome = run(taxed);
+
+    assertThat(outcome).isInstanceOf(TradeOutcome.Completed.class);
+    assertThat(wallets.balanceOf(ALICE)).isZero();
+    assertThat(wallets.balanceOf(OWNER)).isEqualTo(90);
+    assertThat(wallets.receipts())
+        .extracting(receipt -> receipt.amount().amount())
+        .containsExactly(90L, 10L);
   }
 
   @Test
@@ -474,7 +502,9 @@ final class TradeEngineTest {
                     new Deal.Party(ALICE, customer),
                     new Deal.Party(OWNER, shop),
                     "x",
-                    "coal"))
+                    "coal",
+                    0L,
+                    false))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () ->
@@ -485,7 +515,9 @@ final class TradeEngineTest {
                     new Deal.Party(ALICE, customer),
                     new Deal.Party(OWNER, shop),
                     "x",
-                    "coal"))
+                    "coal",
+                    0L,
+                    false))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

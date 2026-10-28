@@ -140,11 +140,16 @@ public final class Explanations {
           capitalized(setting) + " is already " + (on ? "on" : "off") + " for this lock.";
       case LockProblem.LimitReached(var limit) ->
           "You already hold " + limit + " locks, the most you may. Unlock one first.";
-      case LockProblem.NotYourLock() -> "Only the lock's owner can do that.";
+      case LockProblem.NotYourLock() ->
+          "Only the lock's owner, or an admin on its list, can do that.";
       case LockProblem.NotYourself() -> "You always have access to your own locks.";
       case LockProblem.AlreadyTrusted(var player) -> player + " is already trusted on this lock.";
       case LockProblem.NotTrusted(var player) -> player + " is not trusted on this lock.";
       case LockProblem.Busy() -> BUSY;
+      case LockProblem.PasswordMissing() ->
+          "A password lock needs a word, like /lock password gate.";
+      case LockProblem.BadEntry(var name) ->
+          "\"" + name + "\" is not a group or town name this lock can store.";
     };
   }
 

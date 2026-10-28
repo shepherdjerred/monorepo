@@ -154,9 +154,16 @@ final class KindsTest {
           Material.DISPENSER,
           Material.CRAFTER,
           Material.OAK_SHELF,
+          Material.OAK_DOOR,
+          Material.IRON_DOOR,
+          Material.OAK_TRAPDOOR,
+          Material.OAK_FENCE_GATE,
+          Material.OAK_SIGN,
         }) {
       assertThat(kinds.isLockable(container)).as("%s", container).isTrue();
     }
+    assertThat(kinds.registersOnPlace(Material.OAK_DOOR)).isTrue();
+    assertThat(kinds.registersOnPlace(Material.OAK_SIGN)).isFalse();
     for (var other :
         new Material[] {
           Material.ENDER_CHEST, Material.LECTERN, Material.JUKEBOX, Material.BEACON, Material.STONE

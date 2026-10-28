@@ -38,4 +38,10 @@ public sealed interface LockProblem {
 
   /** A change to this lock is still being saved. */
   record Busy() implements LockProblem {}
+
+  /** A password lock was asked for without a word. */
+  record PasswordMissing() implements LockProblem {}
+
+  /** A group or town entry was not a name this lock can store. */
+  record BadEntry(String name) implements LockProblem {}
 }

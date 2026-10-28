@@ -25,7 +25,7 @@ public final class ShopArchive {
   public static byte[] encode(List<SignShop> shops) {
     var bytes = new ByteArrayOutputStream();
     try (var out = new DataOutputStream(bytes)) {
-      out.writeInt(1);
+      out.writeInt(2);
       out.writeInt(shops.size());
       for (var shop : shops) {
         out.writeLong(shop.id());
@@ -34,9 +34,23 @@ public final class ShopArchive {
         if (shop.container().isPresent()) {
           position(out, shop.container().get());
         }
-        var owner = (ShopOwner.Player) shop.owner();
-        out.writeUTF(owner.id().toString());
-        out.writeUTF(owner.name());
+        switch (shop.owner()) {
+          case ShopOwner.Player(var id, var name) -> {
+            out.writeUTF("player");
+            out.writeUTF(id.toString());
+            out.writeUTF(name);
+          }
+          case ShopOwner.Town(var id, var name) -> {
+            out.writeUTF("town");
+            out.writeUTF(id.toString());
+            out.writeUTF(name);
+          }
+          case ShopOwner.Admin() -> {
+            out.writeUTF("admin");
+            out.writeUTF("");
+            out.writeUTF("admin");
+          }
+        }
         out.writeInt(shop.quantity());
         out.writeLong(shop.prices().buy().map(Price::crystals).orElse(0L));
         out.writeLong(shop.prices().sell().map(Price::crystals).orElse(0L));
@@ -59,7 +73,8 @@ public final class ShopArchive {
 
   public static List<SignShop> decode(byte[] bytes) {
     try (var in = new DataInputStream(new ByteArrayInputStream(bytes))) {
-      if (in.readInt() != 1) {
+      var version = in.readInt();
+      if (version != 1 && version != 2) {
         throw new IllegalStateException("unknown shop definition archive version");
       }
       var count = in.readInt();
@@ -68,7 +83,7 @@ public final class ShopArchive {
       }
       var shops = new ArrayList<SignShop>(count);
       for (var i = 0; i < count; i++) {
-        shops.add(readShop(in));
+        shops.add(version == 1 ? readShopV1(in) : readShop(in));
       }
       if (in.available() != 0) {
         throw new IllegalStateException("shop definition archive has trailing data");
@@ -79,11 +94,38 @@ public final class ShopArchive {
     }
   }
 
-  private static SignShop readShop(DataInputStream in) throws IOException {
+  private static SignShop readShopV1(DataInputStream in) throws IOException {
     var id = in.readLong();
     var sign = position(in);
     var container = in.readBoolean() ? Optional.of(position(in)) : Optional.<BlockPos>empty();
     var owner = new ShopOwner.Player(UUID.fromString(in.readUTF()), in.readUTF());
+    return finish(in, new Archived(id, sign, container, owner));
+  }
+
+  private static SignShop readShop(DataInputStream in) throws IOException {
+    var id = in.readLong();
+    var sign = position(in);
+    var container = in.readBoolean() ? Optional.of(position(in)) : Optional.<BlockPos>empty();
+    var kind = in.readUTF();
+    var ownerId = in.readUTF();
+    var name = in.readUTF();
+    ShopOwner owner =
+        switch (kind) {
+          case "player" -> new ShopOwner.Player(UUID.fromString(ownerId), name);
+          case "town" -> new ShopOwner.Town(UUID.fromString(ownerId), name);
+          case "admin" -> new ShopOwner.Admin();
+          default -> throw new IllegalStateException("unknown archived shop owner " + kind);
+        };
+    return finish(in, new Archived(id, sign, container, owner));
+  }
+
+  private record Archived(long id, BlockPos sign, Optional<BlockPos> container, ShopOwner owner) {}
+
+  private static SignShop finish(DataInputStream in, Archived archived) throws IOException {
+    var id = archived.id();
+    var sign = archived.sign();
+    var container = archived.container();
+    var owner = archived.owner();
     var quantity = in.readInt();
     var buy = in.readLong();
     var sell = in.readLong();

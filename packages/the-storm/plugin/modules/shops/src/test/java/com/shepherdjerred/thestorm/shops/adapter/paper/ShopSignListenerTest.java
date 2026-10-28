@@ -20,7 +20,7 @@ final class ShopSignListenerTest extends ShopsFixture {
     var alice = player("Alice", 1);
     var sign = signOn(chest(0));
 
-    var event = write(alice, sign, "whatever", "16", "b50 : s40", "coal");
+    var event = write(alice, sign, "", "16", "b50 : s40", "coal");
     tick(2);
 
     assertThat(event.isCancelled()).isFalse();
@@ -42,6 +42,36 @@ final class ShopSignListenerTest extends ShopsFixture {
             .getPersistentDataContainer()
             .get(new NamespacedKey(plugin, "shop_id"), PersistentDataType.LONG);
     assertThat(stamped).isEqualTo(stored.getFirst().id());
+  }
+
+  @Test
+  void aNamedSignBelongsToThatPlayer() throws Exception {
+    var alice = player("Alice", 1);
+    alice.addAttachment(plugin, ShopsPermissions.OTHER_CREATE, true);
+    var bob = player("Bob", 1);
+
+    var event = write(alice, signOn(chest(0)), "Bob", "1", "B 5", "coal");
+    tick(2);
+
+    assertThat(event.isCancelled()).isFalse();
+    assertThat(lines(event)).containsExactly("Bob", "1", "B 5", "Coal");
+    assertThat(storedShops())
+        .singleElement()
+        .satisfies(
+            shop ->
+                assertThat(shop.owner()).isEqualTo(new ShopOwner.Player(bob.getUniqueId(), "Bob")));
+  }
+
+  @Test
+  void anotherPlayersNameNeedsPermission() {
+    var alice = player("Alice", 1);
+    player("Bob", 1);
+
+    var event = write(alice, signOn(chest(0)), "Bob", "1", "B 5", "coal");
+
+    assertThat(event.isCancelled()).isTrue();
+    assertThat(messages(alice))
+        .anySatisfy(line -> assertThat(line).contains("cannot make a shop for Bob"));
   }
 
   @Test

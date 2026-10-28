@@ -1,0 +1,25 @@
+# Redstone dust and the components that use it. Dust itself is a valuable, so it stays there.
+sticky=false
+repeater
+comparator
+observer
+piston
+sticky_piston
+slime_ball
+slime_block
+honey_block
+hopper
+dropper
+dispenser
+daylight_detector
+target
+note_block
+tnt
+lever
+*_button
+*_pressure_plate
+tripwire_hook
+sculk_sensor
+calibrated_sculk_sensor
+redstone_torch
+redstone_lamp

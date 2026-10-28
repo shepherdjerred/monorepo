@@ -30,6 +30,33 @@ public final class ShopsPermissions {
   /** The staff command that opens any NPC shop without its NPC, for testing. */
   public static final String OPEN_CATALOG = "thestorm.shops.command.open";
 
+  /** Buy from chest shops. A material child, such as {@code .diamond}, can be denied on its own. */
+  public static final String BUY = "thestorm.shops.buy";
+
+  /** Sell to chest shops. */
+  public static final String SELL = "thestorm.shops.sell";
+
+  /** Create chest shops. */
+  public static final String CREATE = "thestorm.shops.create";
+
+  /** Pay no buy or sell tax. */
+  public static final String SKIP_TAX = "thestorm.shops.tax.skip";
+
+  /** Create a chest shop without the creation fee. */
+  public static final String SKIP_FEE = "thestorm.shops.fee.skip";
+
+  /** Ignore the configured minimum and maximum prices. */
+  public static final String PRICE_BYPASS = "thestorm.shops.price.bypass";
+
+  /** Create a shop whose sign names another player or a town. */
+  public static final String OTHER_CREATE = "thestorm.shops.other.create";
+
+  /** Break a shop whose sign names another player or a town. */
+  public static final String OTHER_DESTROY = "thestorm.shops.other.destroy";
+
+  /** Open the stock of a shop whose sign names another player or a town. */
+  public static final String OTHER_ACCESS = "thestorm.shops.other.access";
+
   private ShopsPermissions() {}
 
   /** Registers every node with its default, skipping Shopkeeper nodes tracks already registered. */
@@ -42,6 +69,27 @@ public final class ShopsPermissions {
         plugins,
         new Permission(
             OPEN_CATALOG, "Open any NPC shop with /shop <catalog>", PermissionDefault.OP));
+    addIfAbsent(plugins, new Permission(BUY, "Buy from chest shops", PermissionDefault.TRUE));
+    addIfAbsent(plugins, new Permission(SELL, "Sell to chest shops", PermissionDefault.TRUE));
+    addIfAbsent(plugins, new Permission(CREATE, "Create chest shops", PermissionDefault.TRUE));
+    addIfAbsent(plugins, new Permission(SKIP_TAX, "Pay no shop tax", PermissionDefault.FALSE));
+    addIfAbsent(
+        plugins,
+        new Permission(SKIP_FEE, "Create a shop without the fee", PermissionDefault.FALSE));
+    addIfAbsent(
+        plugins, new Permission(PRICE_BYPASS, "Ignore shop price limits", PermissionDefault.FALSE));
+    addIfAbsent(
+        plugins,
+        new Permission(
+            OTHER_CREATE, "Create a shop for another player or a town", PermissionDefault.FALSE));
+    addIfAbsent(
+        plugins,
+        new Permission(
+            OTHER_DESTROY, "Break another player or town's shop", PermissionDefault.FALSE));
+    addIfAbsent(
+        plugins,
+        new Permission(
+            OTHER_ACCESS, "Open another player or town's shop stock", PermissionDefault.FALSE));
     for (var level = 1; level <= Track.MAX_LEVEL; level++) {
       addIfAbsent(
           plugins,

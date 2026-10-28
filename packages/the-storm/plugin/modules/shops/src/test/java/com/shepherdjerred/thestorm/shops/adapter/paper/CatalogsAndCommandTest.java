@@ -127,6 +127,34 @@ final class CatalogsAndCommandTest extends ShopsFixture {
   }
 
   @Test
+  void itemInfoNamesAMaterialAndToggleMutesTradeMessages() {
+    var alice = player("Alice", 1);
+
+    assertThat(server.dispatchCommand(alice, "iteminfo coal")).isTrue();
+    assertThat(server.dispatchCommand(alice, "shop toggle")).isTrue();
+    assertThat(server.dispatchCommand(alice, "iteminfo not-an-item")).isTrue();
+
+    assertThat(messages(alice))
+        .containsExactly(
+            "[Shop]: coal stacks to 64.",
+            "[Shop]: Shop trade messages are off.",
+            "[Shop]: There is no item called \"not-an-item\".");
+  }
+
+  @Test
+  void shopAccessTogglesTradingAtShopsYouMayOpen() {
+    var alice = player("Alice", 1);
+
+    assertThat(server.dispatchCommand(alice, "shop access")).isTrue();
+    assertThat(server.dispatchCommand(alice, "shop access")).isTrue();
+
+    assertThat(messages(alice))
+        .containsExactly(
+            "[Shop]: You can trade at shops whose stock you may open.",
+            "[Shop]: You manage your own shops again.");
+  }
+
+  @Test
   void containersMustBeBlocks() {
     assertThat(ShopsPaper.containers(java.util.List.of("CHEST", "BARREL")))
         .isEqualTo(Set.of(Material.CHEST, Material.BARREL));

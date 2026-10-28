@@ -114,6 +114,7 @@ final class BlockKinds {
   private final Map<Material, Act> presses = new EnumMap<>(Material.class);
   private final Set<Material> redstone = EnumSet.noneOf(Material.class);
   private final Set<Material> lockable = EnumSet.noneOf(Material.class);
+  private final Set<Material> registered = EnumSet.noneOf(Material.class);
 
   BlockKinds() {
     switches();
@@ -122,9 +123,19 @@ final class BlockKinds {
     stepsAndImpacts();
     redstone();
     lockable.addAll(LOCKABLE);
-    for (var tag : List.of(Tag.SHULKER_BOXES, Tag.COPPER_CHESTS, Tag.WOODEN_SHELVES)) {
+    registered.addAll(LOCKABLE);
+    for (var tag :
+        List.of(
+            Tag.SHULKER_BOXES,
+            Tag.COPPER_CHESTS,
+            Tag.WOODEN_SHELVES,
+            Tag.DOORS,
+            Tag.TRAPDOORS,
+            Tag.FENCE_GATES)) {
       lockable.addAll(tag.getValues());
+      registered.addAll(tag.getValues());
     }
+    lockable.addAll(Tag.ALL_SIGNS.getValues());
   }
 
   private void switches() {
@@ -242,9 +253,17 @@ final class BlockKinds {
     return Optional.ofNullable(presses.get(type));
   }
 
-  /** True for containers {@code /lock} protects. */
+  /** True for blocks {@code /lock} protects: containers, doors, trapdoors, gates and signs. */
   boolean isLockable(Material type) {
     return lockable.contains(type);
+  }
+
+  /**
+   * True for blocks a new placement locks when {@code locks.autoLockOnPlace} is on. Signs are
+   * lockable, and placing one does not spend a lock.
+   */
+  boolean registersOnPlace(Material type) {
+    return registered.contains(type);
   }
 
   /** True for lockable blocks redstone makes push items out: dispensers, droppers, crafters. */

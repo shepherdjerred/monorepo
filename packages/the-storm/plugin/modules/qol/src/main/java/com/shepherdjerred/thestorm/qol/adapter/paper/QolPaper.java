@@ -8,11 +8,17 @@ import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
+import com.shepherdjerred.thestorm.qol.app.BankBook;
 import com.shepherdjerred.thestorm.qol.app.CombatTracker;
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
+import com.shepherdjerred.thestorm.qol.app.SortBook;
+import com.shepherdjerred.thestorm.qol.app.store.BankStore;
 import com.shepherdjerred.thestorm.qol.app.store.GraveStore;
+import com.shepherdjerred.thestorm.qol.app.store.SortStore;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePlacement;
+import com.shepherdjerred.thestorm.qol.domain.sort.CategoryCatalog;
+import com.shepherdjerred.thestorm.qol.domain.sort.SortSwitches;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
@@ -35,6 +41,8 @@ public final class QolPaper {
   private final QolPermissions permissions;
   private final CombatTracker combat;
   private final SleepListener sleep;
+  private final BankBook banks;
+  private final SortBook sorts;
   private final ComponentLogger logger;
   private boolean stopped;
 
@@ -42,10 +50,14 @@ public final class QolPaper {
       QolPermissions permissions,
       CombatTracker combat,
       SleepListener sleep,
+      BankBook banks,
+      SortBook sorts,
       ComponentLogger logger) {
     this.permissions = permissions;
     this.combat = combat;
     this.sleep = sleep;
+    this.banks = banks;
+    this.sorts = sorts;
     this.logger = logger;
   }
 
@@ -59,6 +71,8 @@ public final class QolPaper {
    * @param guards essentials' teleport guards, for the combat guard
    * @param afk essentials' away status, for the sleep vote
    * @param sealed worlds the graves stay out of
+   * @param banks deposit bank storage
+   * @param sorts per-player sort switches
    */
   public record App(
       GraveStore store,
@@ -67,18 +81,27 @@ public final class QolPaper {
       Protection protection,
       TeleportGuards guards,
       AfkStatus afk,
-      SealedWorlds sealed) {}
+      SealedWorlds sealed,
+      BankStore banks,
+      SortStore sorts) {}
 
-  public static QolPaper start(ModuleContext context, QolConfig config, App app) {
-    return start(context, config, app, ServerHooks.PAPER);
+  /** Categories plus the server calls used while the module is starting. */
+  record Boot(CategoryCatalog categories, ServerHooks hooks) {}
+
+  public static QolPaper start(
+      ModuleContext context, QolConfig config, App app, CategoryCatalog categories) {
+    return start(context, config, app, new Boot(categories, ServerHooks.PAPER));
   }
 
-  /** {@link #start(ModuleContext, QolConfig, App)} with the given server calls. */
-  static QolPaper start(ModuleContext context, QolConfig config, App app, ServerHooks hooks) {
+  /** {@link #start(ModuleContext, QolConfig, App, CategoryCatalog)} with the given server calls. */
+  static QolPaper start(ModuleContext context, QolConfig config, App app, Boot boot) {
+    var categories = boot.categories();
+    var hooks = boot.hooks();
+    InventorySorter.use(categories);
     var server = context.plugin().getServer();
     var runtime = new QolRuntime(server, context.scheduler(), context.time(), context.logger());
     var permissions = new QolPermissions(server.getPluginManager());
-    permissions.register();
+    permissions.register(config.bank().groups().keySet());
 
     var policy = config.graves().policy();
     var parts =
@@ -98,7 +121,16 @@ public final class QolPaper {
     var sorting = new ContainerSorting(app.protection());
     var combat = new CombatListener(runtime, app.combat(), config.combat(), app.sealed());
     var sleep = new SleepListener(runtime, app.afk(), config.sleep().percent());
-    var paper = new QolPaper(permissions, app.combat(), sleep, context.logger());
+    var banks = new BankBook();
+    var bankListener =
+        new Banks(
+            new Banks.Gear(
+                runtime, banks, app.banks(), config.bank(), app.protection(), context.services()));
+    var sorts = new SortBook(SortSwitches.defaults(config.sort().defaults()));
+    var sortBehavior =
+        new SortBehavior(
+            new SortBehavior.Wiring(runtime, sorts, app.sorts(), config.sort(), sorting));
+    var paper = new QolPaper(permissions, app.combat(), sleep, banks, sorts, context.logger());
 
     app.guards()
         .add(
@@ -114,11 +146,18 @@ public final class QolPaper {
                                         + DurationText.of(remaining)
                                         + " left)."))));
 
-    var commands = new QolCommands(runtime, app.graves(), policy, sorting);
+    var commands = new QolCommands(runtime, app.graves(), policy);
+    var bankCommands = new BankCommands(bankListener);
+    var sortCommands = new SortCommands(sortBehavior);
     context
         .lifecycle()
         .registerEventHandler(
-            LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
+            LifecycleEvents.COMMANDS,
+            event -> {
+              commands.register(event.registrar());
+              bankCommands.register(event.registrar());
+              sortCommands.register(event.registrar());
+            });
 
     paper.listeners.add(new GraveListener(deaths, opening, upkeep, safe));
     paper.listeners.add(new GraveShield());
@@ -127,6 +166,8 @@ public final class QolPaper {
     if (config.sort().sneakPunch()) {
       paper.listeners.add(new SortListener(sorting));
     }
+    paper.listeners.add(bankListener);
+    paper.listeners.add(sortBehavior);
     paper.listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
     sleep.start();
@@ -137,7 +178,9 @@ public final class QolPaper {
             scheduler.repeatOnMainThread(
                 EVERY_SECOND, EVERY_SECOND, () -> server.getOnlinePlayers().forEach(safe::sample)),
             scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, combat::tick),
-            scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, sleep::tick)));
+            scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, sleep::tick),
+            scheduler.repeatOnMainThread(
+                Duration.ofMinutes(1), Duration.ofMinutes(1), bankListener::sweep)));
     upkeep.load(
         paper::gravesUnreadable,
         () ->
@@ -150,7 +193,59 @@ public final class QolPaper {
                       upkeep.expireNear(player);
                       opening.nearby(player);
                     }));
+    runtime.onMain(
+        app.banks().loadAll(),
+        "load banks",
+        loaded -> {
+          if (!paper.stopped) {
+            banks.load(loaded);
+          }
+        },
+        failure -> {
+          if (!paper.stopped) {
+            paper.banksUnreadable();
+          }
+        });
+    runtime.onMain(
+        app.sorts().loadAll(),
+        "load sort settings",
+        loaded -> {
+          if (!paper.stopped) {
+            sorts.load(loaded);
+          }
+        },
+        failure -> {
+          if (!paper.stopped) {
+            paper.sortsUnreadable();
+          }
+        });
     return paper;
+  }
+
+  BankBook banks() {
+    return banks;
+  }
+
+  SortBook sorts() {
+    return sorts;
+  }
+
+  /** Sort settings could not be read: qol stops rather than guess who wants automatic sorting. */
+  private void sortsUnreadable() {
+    logger.error(
+        Component.text(
+            "qol stopped: sort settings could not be loaded from storage. Sorting stays unused"
+                + " until the server restarts with working storage."));
+    stop();
+  }
+
+  /** Banks could not be read: qol stops rather than shelve from a partial picture. */
+  private void banksUnreadable() {
+    logger.error(
+        Component.text(
+            "qol stopped: banks could not be loaded from storage. Deposit banks stay unused until"
+                + " the server restarts with working storage."));
+    stop();
   }
 
   /** Graves could not be read: qol stops rather than run graves on a partial picture. */

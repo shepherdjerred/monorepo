@@ -35,13 +35,13 @@ public final class CreationRules {
   }
 
   static Optional<CreationProblem> chestShopsNeedShopkeeper(CreationAttempt attempt) {
-    return attempt.owner() instanceof OwnerLine.Creator && attempt.shopkeeperLevel() < 1
+    return personal(attempt.owner()) && attempt.shopkeeperLevel() < 1
         ? Optional.of(new CreationProblem.NotShopkeeper())
         : Optional.empty();
   }
 
   static Optional<CreationProblem> withinLimit(ShopLimits limits, CreationAttempt attempt) {
-    if (!(attempt.owner() instanceof OwnerLine.Creator) || attempt.shopkeeperLevel() < 1) {
+    if (!personal(attempt.owner()) || attempt.shopkeeperLevel() < 1) {
       return Optional.empty();
     }
     var limit = limits.allowed(attempt.shopkeeperLevel());
@@ -51,10 +51,14 @@ public final class CreationRules {
   }
 
   static Optional<CreationProblem> chestShopsNeedAContainer(CreationAttempt attempt) {
-    return attempt.owner() instanceof OwnerLine.Creator
-            && attempt.container() == CreationAttempt.Container.NONE
+    return personal(attempt.owner()) && attempt.container() == CreationAttempt.Container.NONE
         ? Optional.of(new CreationProblem.NoContainer())
         : Optional.empty();
+  }
+
+  /** A player's or a town's shop, as opposed to an admin shop. */
+  private static boolean personal(OwnerLine owner) {
+    return !(owner instanceof OwnerLine.AdminShop);
   }
 
   static Optional<CreationProblem> containerIsNotSomeoneElses(CreationAttempt attempt) {

@@ -11,20 +11,17 @@ import io.papermc.paper.command.brigadier.Commands;
 import java.util.function.Consumer;
 import org.bukkit.entity.Player;
 
-/** {@code /graves} and {@code /sort}. */
+/** {@code /graves}. */
 final class QolCommands {
 
   private final QolRuntime runtime;
   private final GraveRegistry graves;
   private final GravePolicy policy;
-  private final ContainerSorting sorting;
 
-  QolCommands(
-      QolRuntime runtime, GraveRegistry graves, GravePolicy policy, ContainerSorting sorting) {
+  QolCommands(QolRuntime runtime, GraveRegistry graves, GravePolicy policy) {
     this.runtime = runtime;
     this.graves = graves;
     this.policy = policy;
-    this.sorting = sorting;
   }
 
   void register(Commands commands) {
@@ -34,12 +31,6 @@ final class QolCommands {
             .executes(context -> asPlayer(context, this::listGraves))
             .build(),
         "List your graves and where they are");
-    commands.register(
-        Commands.literal("sort")
-            .requires(source -> source.getSender().hasPermission(QolPermissions.SORT))
-            .executes(context -> asPlayer(context, sorting::sortLookedAt))
-            .build(),
-        "Sort the chest, barrel or shulker box you are looking at");
   }
 
   private void listGraves(Player player) {

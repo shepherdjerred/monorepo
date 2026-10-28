@@ -48,6 +48,33 @@ public final class LockAccess {
     TOWN,
     LAND_MANAGER,
     BYPASS,
+    /** The lock's type lets people who are not on the list use it. */
+    PUBLIC,
+    /** The player entered this password lock's word during this session. */
+    PASSWORD,
+  }
+
+  /**
+   * What a player who can open the inventory may do with its items. Full access is the owner, a
+   * trusted player, a town share, a land manager, staff, or a known password.
+   */
+  public enum Movement {
+    FULL,
+    PUT,
+    TAKE,
+    LOOK,
+    NONE
+  }
+
+  /**
+   * Extra facts about an open that are not the player or the lock: the claim they stand on, whether
+   * they already typed the password, and whether they hold one of the lock's groups.
+   */
+  public record Approach(Optional<UUID> landTown, boolean passwordKnown, boolean groupMember) {
+
+    public Approach(Optional<UUID> landTown) {
+      this(landTown, false, false);
+    }
   }
 
   public LockAccess(Towns towns) {
@@ -59,6 +86,17 @@ public final class LockAccess {
    * {@code landTown} (empty off claims), or empty when they may not.
    */
   public Optional<Right> open(Lock lock, UUID player, boolean bypass, Optional<UUID> landTown) {
+    return open(lock, player, bypass, new Approach(landTown));
+  }
+
+  /**
+   * Why {@code player} may open {@code lock}. {@code approach} carries the claim, a known password,
+   * and group membership.
+   */
+  public Optional<Right> open(Lock lock, UUID player, boolean bypass, Approach approach) {
+    var landTown = approach.landTown();
+    var passwordKnown = approach.passwordKnown();
+    var groupMember = approach.groupMember();
     if (lock.ownedByPlayer(player)) {
       return Optional.of(Right.OWNER);
     }
@@ -70,7 +108,44 @@ public final class LockAccess {
         && !towns.blocksTownShare(player, lock.blocks())) {
       return Optional.of(Right.TOWN);
     }
-    return managerOrStaff(lock, player, bypass, landTown);
+    var town = towns.townIdOf(player);
+    if (town.isPresent() && lock.options().towns().contains(town.get())) {
+      return Optional.of(Right.TOWN);
+    }
+    if (groupMember) {
+      return Optional.of(Right.TRUSTED);
+    }
+    var staff = managerOrStaff(lock, player, bypass, landTown);
+    if (staff.isPresent()) {
+      return staff;
+    }
+    return switch (lock.options().type()) {
+      case PRIVATE -> Optional.empty();
+      case PASSWORD -> passwordKnown ? Optional.of(Right.PASSWORD) : Optional.empty();
+      case PUBLIC, DONATION, SUPPLY, DISPLAY -> Optional.of(Right.PUBLIC);
+    };
+  }
+
+  /** How {@code player} may move items once the inventory is open. */
+  public Movement movement(Lock lock, UUID player, boolean bypass, Optional<UUID> landTown) {
+    return movement(lock, player, bypass, new Approach(landTown));
+  }
+
+  /** How {@code player} may move items once the inventory is open. */
+  public Movement movement(Lock lock, UUID player, boolean bypass, Approach approach) {
+    var right = open(lock, player, bypass, approach);
+    if (right.isEmpty()) {
+      return Movement.NONE;
+    }
+    if (right.get() != Right.PUBLIC) {
+      return Movement.FULL;
+    }
+    return switch (lock.options().type()) {
+      case PUBLIC, PRIVATE, PASSWORD -> Movement.FULL;
+      case DONATION -> Movement.PUT;
+      case SUPPLY -> Movement.TAKE;
+      case DISPLAY -> Movement.LOOK;
+    };
   }
 
   /** Why {@code player} may break the locked container, or empty when they may not. */

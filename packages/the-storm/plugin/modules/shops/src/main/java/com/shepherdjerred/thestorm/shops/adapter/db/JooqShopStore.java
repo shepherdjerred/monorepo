@@ -33,6 +33,7 @@ public final class JooqShopStore implements ShopStore {
 
   private static final String PLAYER = "player";
   private static final String ADMIN = "admin";
+  private static final String TOWN = "town";
   private static final String CHEST = "chest";
   private static final String CATALOG = "catalog";
 
@@ -68,6 +69,11 @@ public final class JooqShopStore implements ShopStore {
           switch (shop.owner()) {
             case ShopOwner.Player(var id, var name) -> {
               record.setOwnerKind(PLAYER);
+              record.setOwnerId(id.toString());
+              record.setOwnerName(name);
+            }
+            case ShopOwner.Town(var id, var name) -> {
+              record.setOwnerKind(TOWN);
               record.setOwnerId(id.toString());
               record.setOwnerName(name);
             }
@@ -248,6 +254,9 @@ public final class JooqShopStore implements ShopStore {
         switch (record.getOwnerKind()) {
           case PLAYER ->
               new ShopOwner.Player(
+                  UUID.fromString(requireColumn(record.getOwnerId())), record.getOwnerName());
+          case TOWN ->
+              new ShopOwner.Town(
                   UUID.fromString(requireColumn(record.getOwnerId())), record.getOwnerName());
           case ADMIN -> new ShopOwner.Admin();
           default -> throw new IllegalStateException("unknown owner kind " + record.getOwnerKind());

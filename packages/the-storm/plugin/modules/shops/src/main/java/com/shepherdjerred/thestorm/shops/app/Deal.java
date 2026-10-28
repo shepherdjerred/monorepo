@@ -15,6 +15,8 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
  * @param reason the ledger reason, such as {@code shop:chest:12:buy}
  * @param goods the item, as the refund-failure log keeps it: a chest shop's serialized fingerprint
  *     or a catalog item key
+ * @param tax crystals of {@code price} kept by the server; the payer still pays {@code price}
+ * @param sameAccountAllowed the owner is trading at their own shop, so only the tax moves
  */
 public record Deal(
     Direction direction,
@@ -23,7 +25,9 @@ public record Deal(
     Party customer,
     Party shop,
     String reason,
-    String goods) {
+    String goods,
+    long tax,
+    boolean sameAccountAllowed) {
 
   /**
    * One side of a trade.
@@ -40,6 +44,14 @@ public record Deal(
     if (price.amount() < 1) {
       throw new IllegalArgumentException("a trade costs at least one crystal");
     }
+    if (tax < 0 || tax > price.amount()) {
+      throw new IllegalArgumentException("tax must be 0.." + price.amount() + ", not " + tax);
+    }
+  }
+
+  /** What the payee receives after tax. */
+  public long net() {
+    return price.amount() - tax;
   }
 
   /** Who pays: the customer when buying, the shop when the customer sells. */

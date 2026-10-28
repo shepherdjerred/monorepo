@@ -266,5 +266,17 @@ final class LockServiceTest {
     public CompletableFuture<Void> delete(UUID id) {
       return record(() -> saved.remove(id));
     }
+
+    @Override
+    public CompletableFuture<Map<UUID, com.shepherdjerred.thestorm.towns.domain.lock.LockModes>>
+        loadModes() {
+      return CompletableFuture.completedFuture(Map.of());
+    }
+
+    @Override
+    public CompletableFuture<Void> saveMode(
+        UUID player, com.shepherdjerred.thestorm.towns.domain.lock.LockModes modes) {
+      return CompletableFuture.completedFuture(null);
+    }
   }
 }

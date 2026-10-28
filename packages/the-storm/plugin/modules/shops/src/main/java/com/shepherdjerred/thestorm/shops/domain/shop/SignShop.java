@@ -37,8 +37,8 @@ public record SignShop(
     if (quantity < 1) {
       throw new IllegalArgumentException("quantity must be positive: " + quantity);
     }
-    if (owner instanceof ShopOwner.Player && container.isEmpty()) {
-      throw new IllegalArgumentException("a player's shop needs a container");
+    if (!(owner instanceof ShopOwner.Admin) && container.isEmpty()) {
+      throw new IllegalArgumentException("a player's or town's shop needs a container");
     }
   }
 
@@ -56,6 +56,7 @@ public record SignShop(
     var ownerLabel =
         switch (owner) {
           case ShopOwner.Player(_, var name) -> name;
+          case ShopOwner.Town(_, var name) -> name;
           case ShopOwner.Admin() -> adminShopLabel;
         };
     var itemLabel =

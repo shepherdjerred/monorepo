@@ -5,19 +5,22 @@ import com.shepherdjerred.thestorm.shops.domain.price.ShopPrices;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Reads a sign a player wrote into a shop draft, collecting every problem at once so the player can
  * fix the sign in one go.
  *
  * <pre>
- * line 1  owner      filled in with the creator's name, or the admin-shop label
+ * line 1  owner      blank for the creator, a player or town name, or the admin-shop label
  * line 2  quantity   items per trade, 1..maxQuantity
  * line 3  prices     B 50:S 40, either side optional
  * line 4  item       an item name, or ? to set it by clicking with the item
  * </pre>
  */
 public final class ShopSignParser {
+
+  private static final Pattern NAME = Pattern.compile("[A-Za-z0-9_]{1,20}");
 
   private final int maxQuantity;
   private final String adminShopLabel;
@@ -44,6 +47,7 @@ public final class ShopSignParser {
 
   public Result<ShopSignDraft, List<SignProblem>> parse(SignLines lines) {
     var problems = new ArrayList<SignProblem>();
+    var owner = collect(owner(lines.owner()), problems);
     var quantity = collect(QuantityLine.parse(lines.quantity(), maxQuantity), problems);
     var prices = collectAll(PriceLine.parse(lines.prices()), problems);
     var item = collect(item(lines.item()), problems);
@@ -52,14 +56,21 @@ public final class ShopSignParser {
     }
     return Result.ok(
         new ShopSignDraft(
-            owner(lines.owner()),
-            quantity.orElseThrow(),
-            prices.orElseThrow(),
-            item.orElseThrow()));
+            owner.orElseThrow(), quantity.orElseThrow(), prices.orElseThrow(), item.orElseThrow()));
   }
 
-  private OwnerLine owner(String line) {
-    return isAdminShop(line) ? new OwnerLine.AdminShop() : new OwnerLine.Creator();
+  private Result<OwnerLine, SignProblem> owner(String line) {
+    var text = line.strip();
+    if (text.isEmpty()) {
+      return Result.ok(new OwnerLine.Creator());
+    }
+    if (isAdminShop(text)) {
+      return Result.ok(new OwnerLine.AdminShop());
+    }
+    if (!NAME.matcher(text).matches()) {
+      return Result.err(new SignProblem.BadOwner(text));
+    }
+    return Result.ok(new OwnerLine.Named(text));
   }
 
   private boolean isAdminShop(String line) {

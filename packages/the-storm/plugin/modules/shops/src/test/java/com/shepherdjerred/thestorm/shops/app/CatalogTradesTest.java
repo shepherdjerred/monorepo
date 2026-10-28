@@ -211,7 +211,9 @@ final class CatalogTradesTest {
         new Deal.Party(ALICE.account(), new FakeHoldings(0, 1)),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
         "test",
-        "coal");
+        "coal",
+        0L,
+        false);
   }
 
   @Test

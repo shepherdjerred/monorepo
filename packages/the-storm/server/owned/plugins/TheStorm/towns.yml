@@ -43,8 +43,23 @@ membership:
 locks:
   # The most locks one player may hold; a double chest counts once.
   maxPerPlayer: 64
-  # Lock newly placed containers for their placer; /unlock makes one public.
+  # Lock newly placed containers, doors, trapdoors, fence gates, item frames
+  # and armor stands for their placer. Signs can be locked with /lock and are
+  # not locked just by placing them. /unlock removes the lock. /lock public, password, donation, supply
+  # and display change who else may use a lock. /lock hopper, hopperin,
+  # hopperout, golem, magnet, autoclose, explosions and exempt turn those
+  # flags on or off.
   autoLockOnPlace: true
+  # Seconds before an iron door, trapdoor or gate closes itself, and before
+  # any door closes when its autoclose flag is on.
+  autocloseSeconds: 2
+  # Crystals charged for a new lock. Zero charges nothing.
+  lockCost: 0
+  # Blocks from which a magnet lock pulls dropped items.
+  magnetRadius: 3
+  # Days a lock may go unopened before /lock admin expire can remove it.
+  # Exempt locks are kept.
+  expireDays: 30
 
 pvp:
   # How long after changing their own PvP (/pvp on|off) a player must wait to
