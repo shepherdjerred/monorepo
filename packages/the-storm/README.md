@@ -518,15 +518,30 @@ seabeds, water and shores without replacing the original islands.
 Villages, mines and ancient-city ruins use deterministic 512-block feature cells.
 Each cell has a clear perimeter and may remain empty when its terrain cannot
 support a complete feature. Village buildings and city ruins reuse native Paper
-26.3 templates, fitted individually to real shelves. Seeded searches choose their
+26.3 templates, fitted individually to real shelves. Villages select complete
+plains, desert, savanna, snowy or taiga architectural families from the local
+climate, with native centres, farms, profession buildings and houses. City centres
+assemble matching native jigsaw sockets before extending into additional ruins
+and wall sections on surrounding shelves. Seeded searches choose their
 positions, rotations and elevations. Bounded pathfinding connects accepted plots;
 mines follow existing rock and can bridge actual gaps. There are no fixed demo
 locations, district-sized terrain reservations or post-generation pastes. Template
 coordinates describe reusable buildings, never world locations.
 
+Native metadata preserves socket directions, names, targets and pools. Geometry
+uses the occupied height rather than empty export padding; horizontal dimensions
+retain the native coordinate system for socket alignment. Central platforms stay
+above the fitted ground, and city sites require at least three native central-wall
+connections. Sparse template cells
+are valid empty standing space only inside the fitted footprint, with an actual
+native floor beneath residents. Roads use continuous surfaces from the village's
+native palette, with coherent wear at the verges and stairs across the supported
+walking width. Gardens and irregular sculk/deepslate patches follow existing surfaces.
+
 Plans are immutable and cached with bounded memory. Each population call writes
 only its own chunk, including native loot snapshots, distributed village jobs,
-villagers, crop lights and cave-spider spawners. Native decoration is disabled in
+villagers in the matching architectural style, native cats/golems/pen animals,
+crop lights and cave-spider spawners. Native decoration is disabled in
 a bounded halo around planned features; captured native trees are accepted only
 as whole, chunk-local trees outside the planned buildings and routes. This prevents
 later neighbouring decoration from overwriting completed paths.
@@ -554,6 +569,13 @@ and saved-block audit remain in the output directory. Wait for
 `PROCEDURAL_NATIVE_READY` and process exit before auditing. Use a different fresh
 output with `--order reverse` to compare plans and saved feature digests, or
 `--cell-x`/`--cell-z` to sample distant terrain. These extended checks stay outside CI.
+
+`tools/skylands/catalog-native.py` regenerates the relative socket catalog from
+the locally licensed Paper jar; it copies no binary structure assets. Pass
+`--paper-jar` and `--output` explicitly, then run `:skylands:spotlessApply`. The
+extended fixture exports `template-geometry.json`; its wrapped `templates` array
+is the domain test fixture when native assets or geometry rules intentionally
+change. Rebuild and regenerate fresh worlds after such changes.
 
 ## NPCs and the town watch
 

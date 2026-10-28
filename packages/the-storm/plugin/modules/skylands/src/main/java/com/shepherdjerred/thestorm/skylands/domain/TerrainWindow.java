@@ -12,6 +12,10 @@ public final class TerrainWindow {
     this.landscape = landscape;
   }
 
+  long seed() {
+    return landscape.seed();
+  }
+
   public LayeredLandscape.Column column(int x, int z) {
     return columns.computeIfAbsent(
         LayeredLandscape.columnKey(x, z), ignored -> landscape.column(x, z));

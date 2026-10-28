@@ -38,15 +38,18 @@ final class LayeredPlanningTest {
 
   @Test
   void completeDistrictsFitActualShelvesAndLeaveBuildingsClearOfRoutes() throws IOException {
-    var land = new LayeredLandscape(1731);
+    var land = new LayeredLandscape(90210);
     var sites = new LayeredSites(land, templates());
     var fit = new PlotFit(new TerrainWindow(land));
-    for (var cell : List.of(new SkyCell(0, 0), new SkyCell(0, -2), new SkyCell(-1, 9))) {
+    for (var cell : List.of(new SkyCell(18, -23), new SkyCell(17, -23))) {
       var plan = sites.plan(cell);
-      assertThat(plan.pieces()).hasSizeGreaterThanOrEqualTo(4);
+      assertThat(plan.pieces()).hasSizeGreaterThanOrEqualTo(10);
       for (var piece : plan.pieces()) {
         assertThat(fit.fits(piece)).as("terrain fit: %s", piece).isTrue();
-        assertThat(plan.pieces().stream().filter(p -> !p.equals(piece)).noneMatch(piece::overlaps))
+        assertThat(
+                plan.pieces().stream()
+                    .filter(p -> !p.equals(piece))
+                    .noneMatch(p -> p.bounds().intersects(piece.bounds())))
             .isTrue();
         assertThat(
                 plan.edits().stream()
@@ -56,23 +59,60 @@ final class LayeredPlanningTest {
             .isTrue();
       }
     }
-    var village = sites.plan(new SkyCell(0, 0));
-    assertThat(village.residents()).hasSize(7);
+    var village = sites.plan(new SkyCell(18, -23));
+    assertThat(
+            village.residents().stream()
+                .filter(r -> r.kind() == SkyPlan.ResidentKind.VILLAGER)
+                .count())
+        .isGreaterThanOrEqualTo(8);
+    assertThat(village.pieces()).anyMatch(p -> p.template().key().contains("/town_centers/"));
+    assertThat(village.residents()).anyMatch(r -> r.kind() == SkyPlan.ResidentKind.IRON_GOLEM);
     assertThat(village.pieces()).anyMatch(p -> p.template().key().contains("farm"));
-    assertThat(sites.plan(new SkyCell(0, -2)).edits())
+    assertThat(sites.plan(new SkyCell(17, -23)).edits())
         .anyMatch(e -> e.block().equals("minecraft:sculk_shrieker[can_summon=true]"));
+    var walls =
+        sites.plan(new SkyCell(17, -23)).pieces().stream()
+            .filter(p -> p.template().key().contains("city_center/"))
+            .toList();
+    assertThat(walls).hasSizeGreaterThanOrEqualTo(4);
+    var connected = new java.util.HashSet<SkyPiece>();
+    connected.add(walls.getFirst());
+    for (var round = 0; round < walls.size(); round++) {
+      for (var child : walls) {
+        if (connected.stream().anyMatch(parent -> joined(parent, child))) connected.add(child);
+      }
+    }
+    assertThat(connected).containsExactlyInAnyOrderElementsOf(walls);
+  }
+
+  private static boolean joined(SkyPiece parent, SkyPiece child) {
+    return parent.template().joins().stream()
+        .anyMatch(
+            a ->
+                child.template().joins().stream()
+                    .anyMatch(
+                        b ->
+                            a.target().equals(b.name())
+                                && parent
+                                    .at(a.position())
+                                    .add(parent.direction(a.direction()))
+                                    .equals(child.at(b.position()))
+                                && parent
+                                    .direction(a.direction())
+                                    .add(child.direction(b.direction()))
+                                    .equals(new SkyPosition(0, 0, 0))));
   }
 
   @Test
   void planningOrderAndConcurrentRequestsDoNotChangeTheLayout() throws Exception {
-    var cells = List.of(new SkyCell(0, 0), new SkyCell(-1, -1), new SkyCell(0, -2));
-    var forward = new LayeredSites(new LayeredLandscape(1731), templates());
+    var cells = List.of(new SkyCell(18, -23), new SkyCell(16, -22), new SkyCell(17, -23));
+    var forward = new LayeredSites(new LayeredLandscape(90210), templates());
     var expected = cells.stream().map(forward::plan).toList();
-    var reverse = new LayeredSites(new LayeredLandscape(1731), templates());
+    var reverse = new LayeredSites(new LayeredLandscape(90210), templates());
     for (var i = cells.size() - 1; i >= 0; i--) {
       assertThat(reverse.plan(cells.get(i))).isEqualTo(expected.get(i));
     }
-    var concurrent = new LayeredSites(new LayeredLandscape(1731), templates());
+    var concurrent = new LayeredSites(new LayeredLandscape(90210), templates());
     var tasks = cells.stream().map(c -> (Callable<SkyPlan>) () -> concurrent.plan(c)).toList();
     try (var pool = Executors.newFixedThreadPool(3)) {
       var results = pool.invokeAll(tasks);
@@ -109,7 +149,8 @@ final class LayeredPlanningTest {
                     List.of(new SkyPlan.Resident(outside, SkyPlan.ResidentKind.VILLAGER))))
         .isInstanceOf(IllegalArgumentException.class);
     var shape =
-        new SkyTemplate("test", new SkyPosition(3, 4, 5), new SkyPosition(0, 1, -1), List.of(), 0);
+        new SkyTemplate(
+            "test", new SkyPosition(3, 4, 5), new SkyPosition(0, 1, -1), List.of(), 0, List.of());
     assertThatThrownBy(
             () ->
                 new SkyPlan(

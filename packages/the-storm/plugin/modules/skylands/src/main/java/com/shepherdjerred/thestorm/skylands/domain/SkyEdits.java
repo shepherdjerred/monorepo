@@ -27,6 +27,10 @@ final class SkyEdits {
     return values.values().stream().map(this::connections).toList();
   }
 
+  boolean contains(SkyPosition p) {
+    return values.containsKey(p);
+  }
+
   private SkyPlan.Edit connections(SkyPlan.Edit edit) {
     if (!edit.block().endsWith("_fence")) return edit;
     var p = edit.position();
@@ -91,16 +95,26 @@ final class SkyEdits {
   }
 
   void farmLights(SkyPiece piece) {
-    if (!piece.template().key().endsWith("plains_small_farm_1")) return;
-    for (var z : List.of(2, 6)) {
-      for (var x : List.of(0, 6)) {
-        for (var y = 1; y < 4; y++) set(piece.at(new SkyPosition(x, y, z)), "oak_log[axis=y]");
-      }
-      for (var x = 0; x < 7; x++) {
-        var axis = piece.quarterTurns() % 2 == 0 ? "x" : "z";
-        set(piece.at(new SkyPosition(x, 4, z)), "oak_log[axis=" + axis + "]");
-      }
-      for (var x : List.of(1, 5)) set(piece.at(new SkyPosition(x, 3, z)), "lantern[hanging=true]");
+    if (!piece.template().key().contains("farm")) return;
+    var width = piece.template().size().x();
+    var depth = piece.template().size().z();
+    for (var z = 2; z < depth - 1; z++) {
+      if ((z - 2) % 4 != 0 && z != depth - 3) continue;
+      arbor(piece, z, width);
+    }
+  }
+
+  private void arbor(SkyPiece piece, int z, int width) {
+    for (var x : List.of(0, width - 1)) {
+      for (var y = 1; y < 4; y++) set(piece.at(new SkyPosition(x, y, z)), "oak_log[axis=y]");
+    }
+    for (var x = 0; x < width; x++) {
+      var axis = piece.quarterTurns() % 2 == 0 ? "x" : "z";
+      set(piece.at(new SkyPosition(x, 4, z)), "oak_log[axis=" + axis + "]");
+    }
+    for (var x = 1; x < width - 1; x++) {
+      if ((x - 1) % 4 == 0 || x == width - 2)
+        set(piece.at(new SkyPosition(x, 3, z)), "lantern[hanging=true]");
     }
   }
 }

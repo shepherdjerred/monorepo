@@ -22,7 +22,12 @@ public record SkyPlan(
 
   public enum ResidentKind {
     VILLAGER,
-    LOOT_MINECART
+    LOOT_MINECART,
+    IRON_GOLEM,
+    CAT,
+    COW,
+    SHEEP,
+    HORSE
   }
 
   public record Resident(SkyPosition position, ResidentKind kind) {}

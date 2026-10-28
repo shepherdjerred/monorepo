@@ -116,7 +116,9 @@ final class LayeredPopulation extends BlockPopulator {
                     Villager.class,
                     SpawnReason.CUSTOM,
                     v -> {
-                      v.setVillagerType(Villager.Type.PLAINS);
+                      v.setVillagerType(villagerType(slice, p));
+                      if (Math.floorMod(SkyRandom.hash(p, landscape.seed() + 2879), 7) == 0)
+                        v.setBaby();
                       v.setRemoveWhenFarAway(false);
                     });
         case LOOT_MINECART ->
@@ -130,7 +132,34 @@ final class LayeredPopulation extends BlockPopulator {
                       cart.setLootTable(LootTables.ABANDONED_MINESHAFT.getLootTable());
                       cart.setSeed(SkyRandom.hash(p, landscape.seed() + 2267));
                     });
+        case IRON_GOLEM, CAT, COW, SHEEP, HORSE ->
+            slice
+                .region()
+                .spawnEntity(
+                    location,
+                    EntityType.valueOf(resident.kind().name()),
+                    SpawnReason.CUSTOM,
+                    entity -> entity.setPersistent(true));
       }
     }
+  }
+
+  private static Villager.Type villagerType(LayeredSlice slice, SkyPosition p) {
+    var key =
+        slice.plan().pieces().stream()
+            .filter(piece -> piece.bounds().contains(p))
+            .findFirst()
+            .orElseThrow()
+            .template()
+            .key()
+            .split("/", -1)[1];
+    return switch (key) {
+      case "plains" -> Villager.Type.PLAINS;
+      case "desert" -> Villager.Type.DESERT;
+      case "savanna" -> Villager.Type.SAVANNA;
+      case "snowy" -> Villager.Type.SNOW;
+      case "taiga" -> Villager.Type.TAIGA;
+      default -> throw new IllegalArgumentException("Unknown native village family " + key);
+    };
   }
 }

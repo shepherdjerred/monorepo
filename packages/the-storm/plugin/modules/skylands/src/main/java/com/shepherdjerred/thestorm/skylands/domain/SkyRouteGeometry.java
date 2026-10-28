@@ -11,16 +11,20 @@ final class SkyRouteGeometry {
   private final TerrainWindow terrain;
   private final List<SkyPiece> pieces;
   private final Set<SkyPosition> walking = new HashSet<>();
+  private final Set<SkyPosition> lanes = new HashSet<>();
+  private final boolean desert;
 
   SkyRouteGeometry(SkyEdits edits, TerrainWindow terrain, List<SkyPiece> pieces) {
     this.edits = edits;
     this.terrain = terrain;
     this.pieces = List.copyOf(pieces);
+    desert = pieces.stream().anyMatch(p -> p.template().key().startsWith("village/desert/"));
   }
 
   void apply(List<SkyRoute> routes, boolean ruins) {
     for (var route : routes) for (var edge : route.segments()) walking.addAll(points(edge));
     for (var p : walking) lane(p, ruins);
+    for (var p : walking) verges(p, ruins);
     for (var route : routes) {
       for (var edge : route.segments()) detail(edge, ruins);
     }
@@ -48,7 +52,8 @@ final class SkyRouteGeometry {
 
   private void lane(SkyPosition p, boolean ruins) {
     if (plot(p)) throw new IllegalStateException("Route entered a planned building " + p);
-    edits.set(p.above(-1), ruins ? "gray_wool" : "gravel");
+    edits.set(p.above(-1), surface(ruins));
+    lanes.add(p);
     for (var h = 0; h < 3; h++) edits.set(p.above(h), "air");
     for (var d = 2; d <= 3; d++) {
       var below = p.above(-d);
@@ -56,6 +61,53 @@ final class SkyRouteGeometry {
         edits.set(below, ruins ? "cobbled_deepslate" : "cobblestone");
       }
     }
+  }
+
+  private String surface(boolean ruins) {
+    if (ruins) return "gray_wool";
+    return desert ? "smooth_sandstone" : "dirt_path";
+  }
+
+  private String edge(SkyPosition p, boolean ruins) {
+    var wear = SkyRandom.noise(p.x() / 7.0, p.y() / 11.0, p.z() / 7.0, terrain.seed() + 2777);
+    if (wear < .42) return surface(ruins);
+    if (ruins) return "deepslate_tiles";
+    return desert ? "sandstone" : "coarse_dirt";
+  }
+
+  private void verges(SkyPosition p, boolean ruins) {
+    for (var direction :
+        List.of(
+            new SkyPosition(1, 0, 0),
+            new SkyPosition(-1, 0, 0),
+            new SkyPosition(0, 0, 1),
+            new SkyPosition(0, 0, -1))) {
+      var q = p.add(direction);
+      if (!side(q)) continue;
+      edits.set(q.above(-1), edge(q, ruins));
+      lanes.add(q);
+      for (var h = 0; h < 3; h++) edits.set(q.above(h), "air");
+      lamp(q.add(direction), ruins);
+    }
+  }
+
+  private boolean side(SkyPosition p) {
+    return !walking.contains(p)
+        && !edits.contains(p)
+        && !plot(p)
+        && !plot(p.above(-1))
+        && !plot(p.above(2))
+        && terrain.solid(p.above(-1))
+        && terrain.air(p)
+        && terrain.air(p.above(1))
+        && terrain.air(p.above(2))
+        && walking.stream().noneMatch(w -> w.x() == p.x() && w.z() == p.z() && w.y() != p.y());
+  }
+
+  private void lamp(SkyPosition p, boolean ruins) {
+    if (Math.floorMod(SkyRandom.hash(p, terrain.seed() + 2789), 29) != 0 || !side(p)) return;
+    edits.set(p, ruins ? "cobbled_deepslate_wall" : "oak_fence");
+    edits.set(p.above(1), ruins ? "soul_lantern" : "lantern");
   }
 
   private void detail(SkyRoute.Segment edge, boolean ruins) {
@@ -71,8 +123,17 @@ final class SkyRouteGeometry {
     var high = low.equals(edge.from()) ? edge.to() : edge.from();
     if (low.y() == high.y()) return;
     var face = facing(high.x() - low.x(), high.z() - low.z());
-    edits.set(
-        low, (ruins ? "cobbled_deepslate_stairs" : "cobblestone_stairs") + "[facing=" + face + "]");
+    var stair =
+        ruins
+            ? "cobbled_deepslate_stairs"
+            : desert ? "smooth_sandstone_stairs" : "cobblestone_stairs";
+    var dx = high.x() - low.x();
+    var dz = high.z() - low.z();
+    for (var side = -1; side <= 1; side++) {
+      var offset = new SkyPosition(-dz * side, 0, dx * side);
+      if (lanes.contains(low.add(offset)) && lanes.contains(high.add(offset)))
+        edits.set(low.add(offset), stair + "[facing=" + face + "]");
+    }
   }
 
   private void bridge(SkyRoute.Segment edge, boolean ruins) {

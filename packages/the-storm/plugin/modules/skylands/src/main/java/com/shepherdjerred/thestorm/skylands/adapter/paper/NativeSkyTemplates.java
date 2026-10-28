@@ -50,7 +50,12 @@ public final class NativeSkyTemplates {
     var blocks = structure.getPalettes().getFirst().getBlocks();
     var cells = cells(blocks, links);
     var size = structure.getSize();
-    var dimensions = new SkyPosition(size.getBlockX(), size.getBlockY(), size.getBlockZ());
+    var occupiedHeight = cells.stream().mapToInt(c -> c.position().y() + 1).max().orElseThrow();
+    var height =
+        key.contains("/houses/") && key.contains("farm")
+            ? Math.max(6, occupiedHeight)
+            : occupiedHeight;
+    var dimensions = new SkyPosition(size.getBlockX(), height, size.getBlockZ());
     return new Template(NativeTemplateGeometry.describe(key, dimensions, cells), cells);
   }
 
@@ -65,6 +70,7 @@ public final class NativeSkyTemplates {
         data = Objects.requireNonNull(links.get(p), "Unrecognized native jigsaw " + p);
         used.add(p);
       }
+      if (data.getMaterial() == Material.STRUCTURE_VOID) continue;
       result.add(new Cell(p, block, data));
     }
     if (!used.equals(links.keySet()))

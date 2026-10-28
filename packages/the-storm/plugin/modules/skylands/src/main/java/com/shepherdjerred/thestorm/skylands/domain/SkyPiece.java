@@ -25,6 +25,16 @@ public record SkyPiece(SkyTemplate template, SkyPosition origin, int quarterTurn
     return at(template.entrance());
   }
 
+  public SkyPosition direction(SkyPosition vector) {
+    return switch (quarterTurns) {
+      case 0 -> vector;
+      case 1 -> new SkyPosition(-vector.z(), vector.y(), vector.x());
+      case 2 -> new SkyPosition(-vector.x(), vector.y(), -vector.z());
+      case 3 -> new SkyPosition(vector.z(), vector.y(), -vector.x());
+      default -> throw new IllegalStateException("Validated rotation changed");
+    };
+  }
+
   public SkyPosition size() {
     var s = template.size();
     return quarterTurns % 2 == 0 ? s : new SkyPosition(s.z(), s.y(), s.x());

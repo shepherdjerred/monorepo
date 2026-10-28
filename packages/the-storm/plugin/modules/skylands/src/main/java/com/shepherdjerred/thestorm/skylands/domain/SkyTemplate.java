@@ -8,9 +8,11 @@ public record SkyTemplate(
     SkyPosition size,
     SkyPosition entrance,
     List<SkyPosition> residents,
-    int embeddedHeight) {
+    int embeddedHeight,
+    List<SkyJoin> joins) {
   public SkyTemplate {
     residents = List.copyOf(residents);
+    joins = List.copyOf(joins);
     if (size.x() < 1
         || size.y() < 1
         || size.z() < 1

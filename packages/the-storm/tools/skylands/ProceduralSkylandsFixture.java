@@ -39,6 +39,11 @@ public final class ProceduralSkylandsFixture extends JavaPlugin {
   private int total;
 
   @Override public void onEnable() {
+    try { prepare(); }
+    catch (RuntimeException | LinkageError error) { fail(error); }
+  }
+
+  private void prepare() {
     long seed = Long.parseLong(System.getProperty("sky.fixture.seed"));
     String name = "sky_generated";
     generator = LayeredSkylandsGenerator.create(this, name, seed);

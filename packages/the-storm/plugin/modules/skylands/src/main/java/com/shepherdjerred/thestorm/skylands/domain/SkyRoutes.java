@@ -39,6 +39,7 @@ public final class SkyRoutes {
 
   public Optional<SkyRoute> find(SkyPosition start, Set<SkyPosition> goals, Mode mode) {
     if (goals.isEmpty()) throw new IllegalArgumentException("A route needs a destination");
+    var index = new SkyGoals(goals);
     var queue =
         new PriorityQueue<>(
             Comparator.comparingDouble(Node::priority).thenComparingLong(Node::order));
@@ -46,36 +47,28 @@ public final class SkyRoutes {
     var previous = new HashMap<SkyPosition, SkyRoute.Segment>();
     costs.put(start, 0.0);
     long order = 0;
-    queue.add(new Node(start, 0, heuristic(start, goals), order++));
+    queue.add(new Node(start, 0, index.distance(start), order++));
     while (!queue.isEmpty() && costs.size() <= 16_000) {
       var node = queue.remove();
       if (node.cost() != java.util.Objects.requireNonNull(costs.get(node.point()))) continue;
-      if (goals.contains(node.point())) return Optional.of(reconstruct(node.point(), previous));
-      for (var edge : edges(node.point(), mode, goals)) {
+      if (index.contains(node.point())) return Optional.of(reconstruct(node.point(), previous));
+      for (var edge : edges(node.point(), mode, index)) {
         var cost = node.cost() + cost(edge, mode);
         if (cost >= costs.getOrDefault(edge.to(), Double.POSITIVE_INFINITY) || cost > 220) continue;
         costs.put(edge.to(), cost);
         previous.put(edge.to(), edge);
-        queue.add(new Node(edge.to(), cost, cost + heuristic(edge.to(), goals), order++));
+        queue.add(new Node(edge.to(), cost, cost + index.distance(edge.to()), order++));
       }
     }
     return Optional.empty();
   }
 
-  private static double heuristic(SkyPosition p, Set<SkyPosition> goals) {
-    return goals.stream()
-        .mapToDouble(
-            g -> Math.abs(g.x() - p.x()) + Math.abs(g.z() - p.z()) + Math.abs(g.y() - p.y()))
-        .min()
-        .orElseThrow();
-  }
-
-  private List<SkyRoute.Segment> edges(SkyPosition p, Mode mode, Set<SkyPosition> goals) {
+  private List<SkyRoute.Segment> edges(SkyPosition p, Mode mode, SkyGoals goals) {
     var out = new ArrayList<SkyRoute.Segment>();
     for (var direction : DIRECTIONS) {
       for (var dy : List.of(0, -1, 1)) {
         var q = p.add(direction).above(dy);
-        if (compatible(q, goals)
+        if (goals.compatible(q)
             && walkable(q, mode)
             && (mode == Mode.RUINS || terrain.air(p.above(Math.max(0, dy) + 1)))) {
           out.add(new SkyRoute.Segment(p, q, SkyRoute.Kind.WALK));
@@ -85,16 +78,6 @@ public final class SkyRoutes {
       if (mode == Mode.RUINS) cliff(p, direction).ifPresent(out::add);
     }
     return out;
-  }
-
-  private static boolean compatible(SkyPosition p, Set<SkyPosition> network) {
-    return network.stream()
-        .noneMatch(
-            n ->
-                n.x() == p.x()
-                    && n.z() == p.z()
-                    && Math.abs(n.y() - p.y()) > 0
-                    && Math.abs(n.y() - p.y()) < 4);
   }
 
   private boolean free(SkyPosition p) {
@@ -113,12 +96,12 @@ public final class SkyRoutes {
   }
 
   private Optional<SkyRoute.Segment> bridge(
-      SkyPosition start, SkyPosition direction, Set<SkyPosition> goals) {
+      SkyPosition start, SkyPosition direction, SkyGoals goals) {
     if (!bridgeLanding(start, direction)) return Optional.empty();
     var voidColumns = 0;
     for (var t = 1; t <= 32; t++) {
       var p = start.add(new SkyPosition(direction.x() * t, 0, direction.z() * t));
-      if (!compatible(p, goals) || !bridgeSection(p, direction)) break;
+      if (!goals.compatible(p) || !bridgeSection(p, direction)) break;
       if (!terrain.footing(p.above(-1), 2)) voidColumns++;
       if (t >= 4 && voidColumns >= 3 && bridgeLanding(p, direction)) {
         return Optional.of(new SkyRoute.Segment(start, p, SkyRoute.Kind.BRIDGE));

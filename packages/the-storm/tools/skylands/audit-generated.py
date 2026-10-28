@@ -52,7 +52,7 @@ for plan in result["witnesses"]:
                 for y in range(origin["y"], origin["y"] + size["y"]):
                     p = x, y, z
                     actual, props = world.block(p)
-                    assert actual != "minecraft:jigsaw", ("unresolved connector", p)
+                    assert actual not in {"minecraft:jigsaw", "minecraft:structure_void"}, ("unresolved connector", p)
                     count[actual] += 1
                     if actual in {"minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroots"}:
                         crop_lights.append(world.light(p))
@@ -118,6 +118,20 @@ counts = collections.Counter(str(e["id"]) for e in entities)
 expected_villagers = sum(r["kind"] == "VILLAGER" for p in result["witnesses"] for r in p["residents"])
 expected_carts = sum(r["kind"] == "LOOT_MINECART" for p in result["witnesses"] for r in p["residents"])
 assert counts["minecraft:villager"] >= expected_villagers, ("missing villagers", counts, expected_villagers)
+for kind, entity in {"IRON_GOLEM": "minecraft:iron_golem", "CAT": "minecraft:cat"}.items():
+    expected = sum(r["kind"] == kind for p in result["witnesses"] for r in p["residents"])
+    assert counts[entity] >= expected, ("missing native village resident", entity, expected, counts)
+for plan in result["witnesses"]:
+    for resident in plan["residents"]:
+        if resident["kind"] != "VILLAGER":
+            continue
+        p = tuple(resident["position"][k] for k in ("x", "y", "z"))
+        assert world.block(p)[0] in {
+            "minecraft:air",
+            "minecraft:cave_air",
+            "minecraft:wall_torch",
+            "minecraft:torch",
+        } or world.block(p)[0].endswith("_carpet"), ("blocked villager", p, world.block(p))
 carts = [e for e in entities if str(e["id"]) == "minecraft:chest_minecart"]
 assert len(carts) >= expected_carts
 assert all(str(e.get("LootTable")) == "minecraft:chests/abandoned_mineshaft" for e in carts)

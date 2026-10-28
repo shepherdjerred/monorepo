@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.skylands.adapter.paper;
 import com.shepherdjerred.thestorm.skylands.domain.SkyPiece;
 import com.shepherdjerred.thestorm.skylands.domain.SkyPosition;
 import com.shepherdjerred.thestorm.skylands.domain.SkyRandom;
+import org.bukkit.Material;
 import org.bukkit.block.TileState;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.structure.StructureRotation;
@@ -10,6 +11,8 @@ import org.bukkit.loot.Lootable;
 
 /** Copies native piece cells and their loot/component snapshots, clipped to the owner chunk. */
 final class LayeredPiecePlacement {
+  private static final java.util.Set<Material> CROPS =
+      java.util.Set.of(Material.WHEAT, Material.CARROTS, Material.POTATOES, Material.BEETROOTS);
   private final NativeSkyTemplates templates;
   private final LayeredBlocks blocks;
   private final long seed;
@@ -32,7 +35,9 @@ final class LayeredPiecePlacement {
       var p = piece.at(cell.position());
       if (!slice.owns(p)) continue;
       var data = cell.data().clone();
-      if (data instanceof Ageable && piece.template().key().contains("farm")) {
+      if (data instanceof Ageable
+          && CROPS.contains(data.getMaterial())
+          && piece.template().key().contains("farm")) {
         data = crop(cell.position());
       }
       data.rotate(rotation);
@@ -51,7 +56,13 @@ final class LayeredPiecePlacement {
   private org.bukkit.block.data.BlockData crop(SkyPosition p) {
     var crops = java.util.List.of("wheat", "carrots", "potatoes", "beetroots");
     var crop =
-        (Ageable) blocks.get("minecraft:" + crops.get(Math.floorMod(p.x() + p.z(), 4))).clone();
+        (Ageable)
+            blocks
+                .get(
+                    "minecraft:"
+                        + crops.get(
+                            Math.floorMod(Math.floorDiv(p.x(), 4) + Math.floorDiv(p.z(), 4), 4)))
+                .clone();
     crop.setAge(crop.getMaximumAge());
     return crop;
   }
