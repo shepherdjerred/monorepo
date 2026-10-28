@@ -26,7 +26,9 @@ final class StargateRegistryTest {
         OWNER,
         WORLD,
         new Pos(x - 1, 65, -1),
-        new StargateFrame(new Pos(x, 63, 0), Direction.EAST));
+        new StargateFrame(new Pos(x, 63, 0), Direction.EAST),
+        null,
+        false);
   }
 
   @Test

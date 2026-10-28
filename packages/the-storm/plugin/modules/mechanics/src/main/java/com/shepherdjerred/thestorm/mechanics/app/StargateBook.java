@@ -83,6 +83,21 @@ public final class StargateBook {
         new StargateStore.Snapshot(current.networks(), gates), () -> store.createGate(gate));
   }
 
+  /** Commit an automatically created public network and its first gate together. */
+  public CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate) {
+    if (!network.id().equals(gate.networkId())
+        || !(network.access() instanceof NetworkAccess.Public))
+      throw new IllegalArgumentException("gate must belong to the new public network");
+    var current = current();
+    var networks = new ArrayList<>(current.networks());
+    networks.add(network);
+    var gates = new ArrayList<>(current.gates());
+    gates.add(gate);
+    return save(
+        new StargateStore.Snapshot(networks, gates),
+        () -> store.createNetworkAndGate(network, gate));
+  }
+
   public CompletableFuture<Void> replaceInvitations(UUID id, Set<UUID> players) {
     var current = current();
     var invited = Set.copyOf(players);

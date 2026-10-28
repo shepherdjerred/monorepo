@@ -143,7 +143,9 @@ final class StargateServerHub implements Listener {
             id,
             world.getUID(),
             config.sign(),
-            new StargateFrame(config.origin(), config.across(), StargateFrame.Shape.CIRCLE));
+            new StargateFrame(config.origin(), config.across(), StargateFrame.Shape.CIRCLE),
+            null,
+            false);
     return new Hub(config, gate, network);
   }
 
@@ -248,9 +250,33 @@ final class StargateServerHub implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void move(PlayerMoveEvent event) {
     if (!event.hasChangedBlock()) return;
-    var position = event.getTo();
+    enter(event.getPlayer(), event.getTo());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void vehicleMove(org.bukkit.event.vehicle.VehicleMoveEvent event) {
+    var vehicle = event.getVehicle();
+    if (!StargateMount.supported(vehicle)) return;
+    var position =
+        StargateMount.touchingPortal(vehicle, event.getTo(), loc -> atInterior(loc).isPresent())
+            .orElseGet(event::getTo);
+    for (var passenger : vehicle.getPassengers())
+      if (passenger instanceof Player player) enter(player, position);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void mountMove(io.papermc.paper.event.entity.EntityMoveEvent event) {
+    var mount = event.getEntity();
+    if (!event.hasChangedPosition() || !StargateMount.supported(mount)) return;
+    var position =
+        StargateMount.touchingPortal(mount, event.getTo(), loc -> atInterior(loc).isPresent())
+            .orElseGet(event::getTo);
+    for (var passenger : mount.getPassengers())
+      if (passenger instanceof Player player) enter(player, position);
+  }
+
+  private void enter(Player player, Location position) {
     var hub = atInterior(position);
-    var player = event.getPlayer();
     if (hub.isEmpty()) {
       inside.remove(player.getUniqueId());
       return;
@@ -263,6 +289,10 @@ final class StargateServerHub implements Listener {
   }
 
   private void creative(Player player) {
+    if (player.isInsideVehicle()) {
+      tell(player, "Dismount before entering Creative.");
+      return;
+    }
     var location = creative.destination();
     var refusal = guards.check(player.getUniqueId(), location);
     if (refusal.isPresent()) {
@@ -284,13 +314,24 @@ final class StargateServerHub implements Listener {
       tell(player, "That world is not loaded.");
       return;
     }
-    travel.complimentary(
-        player, destination.label(), () -> prepare(player, hub, world, destination));
+    var mount = player.getVehicle();
+    if (mount != null && (!StargateMount.supported(mount) || mount.getPassengers().size() != 1)) {
+      tell(player, "Dismount before using this Stargate.");
+      return;
+    }
+    var target = new WorldTrip(world, destination, mount);
+    travel.complimentary(player, destination.label(), () -> prepare(player, hub, target));
   }
 
+  private record WorldTrip(
+      World world,
+      ServerGate.Destination destination,
+      org.bukkit.entity.@org.jspecify.annotations.Nullable Entity mount) {}
+
   private CompletableFuture<Result<TeleportTravel.Landing, Component>> prepare(
-      Player player, Hub hub, World world, ServerGate.Destination destination) {
-    var spawn = destination.landing();
+      Player player, Hub hub, WorldTrip target) {
+    var spawn = target.destination().landing();
+    var world = target.world();
     var x = spawn.x() >> 4;
     var z = spawn.z() >> 4;
     var id = player.getUniqueId();
@@ -319,7 +360,8 @@ final class StargateServerHub implements Listener {
                     new TeleportTravel.Landing(
                         new Location(world, spawn.x() + 0.5, spawn.y(), spawn.z() + 0.5),
                         release,
-                        () -> {}));
+                        () -> {},
+                        StargateMount.transport(target.mount(), protection)));
               } catch (RuntimeException failure) {
                 release.run();
                 throw failure;
@@ -348,12 +390,22 @@ final class StargateServerHub implements Listener {
 
   @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
   void playerPortal(PlayerPortalEvent event) {
-    if (atInterior(event.getFrom()).isPresent()) event.setCancelled(true);
+    var vehicle = event.getPlayer().getVehicle();
+    if (atInterior(event.getFrom()).isPresent()
+        || atInterior(event.getFrom().clone().add(0, 1, 0)).isPresent()
+        || (vehicle != null
+            && StargateMount.touchingPortal(
+                    vehicle, event.getFrom(), loc -> atInterior(loc).isPresent())
+                .isPresent())) event.setCancelled(true);
   }
 
   @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
   void entityPortal(EntityPortalEvent event) {
-    if (atInterior(event.getFrom()).isPresent()) event.setCancelled(true);
+    if (atInterior(event.getFrom()).isPresent()
+        || atInterior(event.getFrom().clone().add(0, 1, 0)).isPresent()
+        || StargateMount.touchingPortal(
+                event.getEntity(), event.getFrom(), loc -> atInterior(loc).isPresent())
+            .isPresent()) event.setCancelled(true);
   }
 
   @EventHandler

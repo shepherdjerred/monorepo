@@ -49,6 +49,9 @@ public final class StargateIntegrityRules {
         || sign.facing().isEmpty()
         || sign.facing().orElseThrow() != gate.facing()
         || !sign.line(0).strip().equals(gate.name())
+        || (gate.fixedDestination() != null
+            && !sign.line(1).strip().equalsIgnoreCase(gate.fixedDestination()))
+        || (gate.alwaysOpen() && !sign.line(3).strip().equalsIgnoreCase("A"))
         || !sign.line(2).strip().equalsIgnoreCase(network.name())
         || !inspection.buttonMatches()) return false;
     return gate.frame().frameBlocks().stream()

@@ -52,8 +52,10 @@ final class JooqStargateStoreTest {
             "Home",
             OWNER,
             WORLD,
-            new Pos(1, 65, 2),
-            new StargateFrame(new Pos(2, 63, 3), Direction.EAST));
+            new Pos(-1, 65, 2),
+            new StargateFrame(new Pos(2, 63, 3), Direction.EAST, StargateFrame.Shape.CIRCLE),
+            "Destination",
+            true);
     store.createNetwork(network).get();
     store.createGate(gate).get();
     database.close();
@@ -88,6 +90,43 @@ final class JooqStargateStoreTest {
   }
 
   @Test
+  void automaticallyCreatedNetworkAndGateCommitTogether() throws Exception {
+    var network = new StargateNetwork(NETWORK, "Road", new NetworkAccess.Public());
+    var gate =
+        new Stargate(
+            GATE,
+            NETWORK,
+            "Home",
+            OWNER,
+            WORLD,
+            new Pos(1, 65, 2),
+            new StargateFrame(new Pos(2, 63, 3), Direction.EAST),
+            null,
+            false);
+    store.createNetworkAndGate(network, gate).get();
+    assertThat(store.load().get().networks()).containsExactly(network);
+    assertThat(store.load().get().gates()).containsExactly(gate);
+
+    var otherId = new UUID(2, 3);
+    var other = new StargateNetwork(otherId, "Other", new NetworkAccess.Public());
+    var duplicate =
+        new Stargate(
+            GATE,
+            otherId,
+            "OtherGate",
+            OWNER,
+            WORLD,
+            new Pos(1, 65, 2),
+            new StargateFrame(new Pos(2, 63, 3), Direction.EAST),
+            null,
+            false);
+    assertThatThrownBy(() -> store.createNetworkAndGate(other, duplicate).get())
+        .isInstanceOf(ExecutionException.class);
+    assertThat(store.load().get().networks()).containsExactly(network);
+    assertThat(store.load().get().gates()).containsExactly(gate);
+  }
+
+  @Test
   void resetRemovesOwnedPrivateNetworksOwnedGatesAndInvitationsOnly() throws Exception {
     var publicId = new UUID(1, 1);
     var otherPrivateId = new UUID(1, 2);
@@ -109,7 +148,9 @@ final class JooqStargateStoreTest {
             OWNER,
             WORLD,
             new Pos(1, 65, 2),
-            new StargateFrame(new Pos(2, 63, 3), Direction.EAST));
+            new StargateFrame(new Pos(2, 63, 3), Direction.EAST),
+            null,
+            false);
     var guestGate =
         new Stargate(
             new UUID(2, 1),
@@ -118,7 +159,9 @@ final class JooqStargateStoreTest {
             GUEST,
             WORLD,
             new Pos(11, 65, 2),
-            new StargateFrame(new Pos(12, 63, 3), Direction.EAST));
+            new StargateFrame(new Pos(12, 63, 3), Direction.EAST),
+            null,
+            false);
     var keptGate =
         new Stargate(
             new UUID(2, 2),
@@ -127,7 +170,9 @@ final class JooqStargateStoreTest {
             other,
             WORLD,
             new Pos(21, 65, 2),
-            new StargateFrame(new Pos(22, 63, 3), Direction.EAST));
+            new StargateFrame(new Pos(22, 63, 3), Direction.EAST),
+            null,
+            false);
     store.createGate(myGate).get();
     store.createGate(guestGate).get();
     store.createGate(keptGate).get();

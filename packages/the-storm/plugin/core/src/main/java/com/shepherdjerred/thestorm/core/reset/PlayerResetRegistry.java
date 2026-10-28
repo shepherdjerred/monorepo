@@ -17,6 +17,7 @@ public final class PlayerResetRegistry {
   }
 
   private final Map<String, Handler> handlers = new LinkedHashMap<>();
+  private final Set<String> early = new LinkedHashSet<>();
   private final Set<String> stateless = new LinkedHashSet<>();
   private java.util.function.Consumer<String> diagnostics = message -> {};
   private boolean complete;
@@ -30,6 +31,12 @@ public final class PlayerResetRegistry {
   public void register(String module, Handler handler) {
     participate(module);
     handlers.put(module, handler);
+  }
+
+  /** Registers cleanup that must run while other modules' account permissions still exist. */
+  public void registerEarly(String module, Handler handler) {
+    register(module, handler);
+    early.add(module);
   }
 
   /** Declares that a module has no human-account state to delete. */
@@ -55,13 +62,17 @@ public final class PlayerResetRegistry {
     complete = true;
   }
 
-  /** Runs every state-owning module's cleanup in enable order. */
+  /** Runs early cleanup first, then remaining handlers in their registration order. */
   public CompletableFuture<Void> reset(UUID player) {
     if (!complete) {
       throw new IllegalStateException("Player reset registry is not complete");
     }
     var result = CompletableFuture.<Void>completedFuture(null);
-    for (var handler : handlers.entrySet()) {
+    var ordered =
+        handlers.entrySet().stream()
+            .sorted(java.util.Comparator.comparing(entry -> !early.contains(entry.getKey())))
+            .toList();
+    for (var handler : ordered) {
       result =
           result.thenCompose(
               ignored -> {

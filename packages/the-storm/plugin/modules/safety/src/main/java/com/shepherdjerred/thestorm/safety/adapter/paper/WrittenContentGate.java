@@ -62,7 +62,7 @@ public final class WrittenContentGate implements Listener {
               || !block.getWorld().equals(player.getWorld())
               || block.getLocation().distanceSquared(player.getLocation()) > 64
               || !current.getSide(side).lines().equals(original)) return "stale-edit";
-          var approved = new SignChangeEvent(block, player, lines, side);
+          var approved = new SignChangeEvent(block, player, new java.util.ArrayList<>(lines), side);
           replay.add(approved);
           try {
             context.plugin().getServer().getPluginManager().callEvent(approved);

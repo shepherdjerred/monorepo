@@ -112,16 +112,22 @@ it preserves the lobby's identity and saved terrain across restarts.
 Storm owns gameplay, economy, chat, towns and locks, quests, NPCs, skills,
 arena, moderation, Discord relay, sleep, graves, and native world borders.
 
-Stargates use the rounded obsidian frame, a wall sign and a button. Mechanic III
-players create public, private or town networks with `/stargate network create`;
-private network owners manage invitations with `/stargate network invite` and
-`uninvite`. On the wall sign, put the gate name on line one and the network
-name on line three. Right-click the sign to select another gate on that network,
-then press the button and walk into the portal. Remove a gate with
-`/stargate remove <network> <gate>` before changing its blocks. Network and gate
-records persist in the Storm database. Gate use
-checks network access, town protection and the shared teleport safety rules.
-Travel is free. Server-owned world gates use a seven-block-wide, one-block-thick
+Mechanic III players can build the classic small obsidian frame or the
+seven-block-wide, one-block-thick circle, with a wall sign and button on
+opposite sides. Put the gate name on line one and the network name on line
+three; an unknown name creates a public network, and a blank name uses `central`.
+Private and town networks are created with `/stargate network create`; private
+network owners manage invitations with `/stargate network invite` and `uninvite`.
+Right-click the sign to select another gate, press the button and enter. To fix
+the destination, put its name on line two; add `A` on line four to keep that
+gate open when its destination and permissions allow. An authorized player can
+break a gate's frame, sign or button to unregister it, or use `/stargate remove
+<network> <gate>`. Network and gate records persist in the Storm database.
+
+Gate travel is free and checks network access, town protection and the shared
+teleport safety rules. A single rider can bring a boat, minecart, horse, pig or
+strider when there is enough safe, permitted landing space. Dismount before
+entering Creative. Server-owned world gates use the seven-block-wide
 obsidian circle, declared in `stargates.yml` with the origin at the middle of
 the bottom row. The sign and button attach to opposite sides, two blocks above
 the origin. Each gate must explicitly declare `allowPreservedPortal`; leave it

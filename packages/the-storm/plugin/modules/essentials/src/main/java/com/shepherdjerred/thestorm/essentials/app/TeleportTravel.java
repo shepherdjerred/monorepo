@@ -58,7 +58,21 @@ public interface TeleportTravel {
   /**
    * Destination resources stay held until delivery or failure; callbacks run on the main thread.
    */
-  record Landing(Location location, Runnable release, Runnable arrived) {}
+  record Landing(
+      Location location,
+      Runnable release,
+      Runnable arrived,
+      @org.jspecify.annotations.Nullable BiMove move) {
+    public Landing(Location location, Runnable release, Runnable arrived) {
+      this(location, release, arrived, null);
+    }
+  }
+
+  /** Optional transport for a prepared trip, after the normal player travel guards pass. */
+  @FunctionalInterface
+  interface BiMove {
+    CompletableFuture<Boolean> move(Player player, Location destination);
+  }
 
   record Status(
       TeleportPricing rules,

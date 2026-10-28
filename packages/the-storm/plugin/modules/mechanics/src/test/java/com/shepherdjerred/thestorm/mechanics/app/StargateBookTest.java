@@ -55,6 +55,11 @@ final class StargateBookTest {
     }
 
     @Override
+    public CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate) {
+      return write;
+    }
+
+    @Override
     public CompletableFuture<Void> replaceInvitations(UUID networkId, Set<UUID> players) {
       throw new UnsupportedOperationException();
     }

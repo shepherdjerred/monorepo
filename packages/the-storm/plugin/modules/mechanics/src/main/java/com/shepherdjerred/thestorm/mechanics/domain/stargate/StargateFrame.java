@@ -84,20 +84,23 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
   }
 
   /**
-   * Finds the default frame from a wall sign on either middle control block. The sign's facing
+   * Finds a supported frame from a wall sign on either middle control block. The sign's facing
    * points away from its supporting obsidian. Frames must be complete and their interior empty.
    */
   public static Optional<StargateFrame> find(BlockGrid grid, Pos sign, Direction facing) {
     if (!facing.isHorizontal()) return Optional.empty();
     var across = facing.clockwise();
     var support = sign.offset(facing.opposite());
-    var left = new StargateFrame(support.offset(across).offset(Direction.DOWN, 2), across);
-    var right = new StargateFrame(support.offset(across, -2).offset(Direction.DOWN, 2), across);
-    var leftMatches = left.isClosed(grid);
-    var rightMatches = right.isClosed(grid);
-    // Sharing a control block between two frames is ambiguous and must not bind either one.
-    if (leftMatches == rightMatches) return Optional.empty();
-    return Optional.of(leftMatches ? left : right);
+    var base = support.offset(Direction.DOWN, 2);
+    var candidates =
+        List.of(
+            new StargateFrame(base.offset(across), across),
+            new StargateFrame(base.offset(across, -2), across),
+            new StargateFrame(base.offset(across, 3), across, Shape.CIRCLE),
+            new StargateFrame(base.offset(across, -3), across, Shape.CIRCLE));
+    var matches = candidates.stream().filter(frame -> frame.isClosed(grid)).toList();
+    // Sharing a control block between frames is ambiguous and must not bind either one.
+    return matches.size() == 1 ? Optional.of(matches.getFirst()) : Optional.empty();
   }
 
   /** The two blocks on which the sign and button are mounted. */
