@@ -82,6 +82,7 @@ public record SummonView(
         TraversalState.UNMODIFIED,
         Quiver.ENDLESS,
         false,
+        false,
         false);
   }
 }

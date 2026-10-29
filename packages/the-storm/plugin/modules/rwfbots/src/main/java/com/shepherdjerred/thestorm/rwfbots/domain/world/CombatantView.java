@@ -32,6 +32,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  * @param sneaking whether crouched: its name tag is dimmed and not drawn through blocks
  * @param nameHidden whether enemies see no name tag over it (an invisible kit, or a disguise
  *     wearing another's name)
+ * @param drawingBow whether it is drawing a bow or loading a crossbow: holding right click with one
+ *     in hand, which any player watching it sees
  */
 public record CombatantView(
     CombatantId id,
@@ -55,7 +57,8 @@ public record CombatantView(
     TraversalState traversal,
     Quiver quiver,
     boolean sneaking,
-    boolean nameHidden) {
+    boolean nameHidden,
+    boolean drawingBow) {
 
   /** How far above the feet a standing player's eyes are. */
   public static final double EYE_HEIGHT = 1.62;
@@ -73,6 +76,9 @@ public record CombatantView(
         || !(absorption >= 0)
         || !(armorValue >= 0 && armorValue <= 20)) {
       throw new IllegalArgumentException("absorption and armor must be in range");
+    }
+    if (drawingBow && !usingItem) {
+      throw new IllegalArgumentException("a bow is drawn only while the hand is raised");
     }
     if (heldSlot < 0 || heldSlot > 8) {
       throw new IllegalArgumentException("held slot must be 0..8: " + heldSlot);
@@ -135,7 +141,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withTraversal(TraversalState capabilities) {
@@ -161,7 +168,8 @@ public record CombatantView(
         capabilities,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withVel(Vec3 newVel) {
@@ -187,7 +195,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withFacing(Facing facing) {
@@ -213,7 +222,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withHealth(double newHealth, double newAbsorption) {
@@ -239,7 +249,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withAlive(boolean nowAlive) {
@@ -265,7 +276,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withInvisible(boolean nowInvisible, double newArmor) {
@@ -291,7 +303,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withDisguised(boolean nowDisguised) {
@@ -317,7 +330,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withLastHurtTick(long tick) {
@@ -343,7 +357,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withMotion(boolean nowSprinting, boolean nowOnGround) {
@@ -369,7 +384,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withHands(int slot, boolean nowUsingItem) {
@@ -395,7 +411,8 @@ public record CombatantView(
         traversal,
         quiver,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   public CombatantView withQuiver(Quiver arrows) {
@@ -421,7 +438,8 @@ public record CombatantView(
         traversal,
         arrows,
         sneaking,
-        nameHidden);
+        nameHidden,
+        drawingBow);
   }
 
   /** This combatant crouched or not, with its name tag hidden from enemies or not. */
@@ -448,6 +466,7 @@ public record CombatantView(
         traversal,
         quiver,
         nowSneaking,
-        nowNameHidden);
+        nowNameHidden,
+        drawingBow);
   }
 }

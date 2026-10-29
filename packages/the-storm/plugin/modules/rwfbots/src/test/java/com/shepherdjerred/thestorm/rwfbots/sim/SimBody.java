@@ -62,6 +62,10 @@ final class SimBody {
   double fallDistance;
   TraversalState traversal = TraversalState.UNMODIFIED;
   boolean usingItem;
+
+  /** A scripted archer's draw; a bot draws when it raises its bow slot. */
+  boolean drawingBow;
+
   long useStart = -1;
   boolean invisible;
   boolean disguised;
@@ -127,7 +131,14 @@ final class SimBody {
         capabilities(),
         com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
         sneaking,
-        kit.isInvisibleKit());
+        kit.isInvisibleKit(),
+        usingItem && (drawingBow || drawsBow()));
+  }
+
+  private boolean drawsBow() {
+    return reflexContext != null
+        && reflexContext.loadout().hasBow()
+        && heldSlot == reflexContext.loadout().bowSlot();
   }
 
   private TraversalState capabilities() {

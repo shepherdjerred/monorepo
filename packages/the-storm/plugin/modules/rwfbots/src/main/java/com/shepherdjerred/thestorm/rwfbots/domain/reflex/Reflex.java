@@ -185,6 +185,19 @@ public final class Reflex {
     return levers.minClickGapTicks() * Math.max(1, factor);
   }
 
+  /** How hard a fighter circles: not at all charging, a little closing, fully in contact. */
+  private static double strafeWeight(boolean charging, double distance) {
+    if (charging) return 0;
+    return distance > REACH + 0.5 ? 0.25 : 1.0;
+  }
+
+  /** A strafe flips its direction at random, 10 to 40 ticks apart. */
+  private static ReflexState strafeFlip(ReflexState state, long now, RandomGenerator random) {
+    if (now < state.nextStrafeFlip()) return state;
+    var flip = random.nextBoolean() ? -state.strafeDir() : state.strafeDir();
+    return state.withStrafe(flip, now + 10 + random.nextInt(30));
+  }
+
   /** The mutable working set of one tick. */
   private static final class Run {
     private final ReflexInput input;
@@ -571,11 +584,16 @@ public final class Reflex {
     }
 
     private void strafe(CombatantView target, double distance) {
-      if (now >= state.nextStrafeFlip()) {
-        var flip = random.nextBoolean() ? -state.strafeDir() : state.strafeDir();
-        state = state.withStrafe(flip, now + 10 + random.nextInt(30));
-      }
       var toTarget = target.pos().minus(self.pos()).horizontal();
+      // A drawn bow is charged in legs across its line ({@link Weave}).
+      var weave = !toTarget.isZero() && Weave.applies(target, distance, context.loadout().body());
+      state =
+          weave
+              ? Weave.leg(
+                  new Weave.Leg(context.grid(), input, target, levers().reactionTicks()),
+                  state,
+                  random)
+              : strafeFlip(state, now, random);
       if (toTarget.isZero()) {
         commands.add(new BodyCommand.Stop());
         return;
@@ -588,7 +606,7 @@ public final class Reflex {
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.
-      var strafeWeight = charging ? 0.0 : distance > REACH + 0.5 ? 0.25 : 1.0;
+      var strafeWeight = weave ? Weave.WEIGHT : strafeWeight(charging, distance);
       var move = side.scale(strafeWeight).plus(radial.scale(closing)).plus(apart.scale(2.5));
       var preferred = move.isZero() ? radial : move.normalized();
       var alternative = radial.scale(closing < 0 ? -1 : 1);

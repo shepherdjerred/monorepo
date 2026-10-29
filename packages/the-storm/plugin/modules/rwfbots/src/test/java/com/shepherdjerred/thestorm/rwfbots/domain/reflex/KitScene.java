@@ -80,7 +80,8 @@ record KitScene(
         view.traversal(),
         view.quiver(),
         view.sneaking(),
-        view.nameHidden());
+        view.nameHidden(),
+        false);
   }
 
   KitScene self(CombatantView newSelf) {

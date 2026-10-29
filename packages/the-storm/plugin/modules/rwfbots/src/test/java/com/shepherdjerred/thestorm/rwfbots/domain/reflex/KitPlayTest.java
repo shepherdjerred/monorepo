@@ -114,6 +114,7 @@ final class KitPlayTest {
         view.traversal(),
         view.quiver(),
         false,
+        false,
         false);
   }
 
