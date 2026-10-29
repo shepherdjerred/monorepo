@@ -29,6 +29,17 @@ const target = path.join(GOLDEN_ROOT, relative);
 await rm(target, { recursive: true, force: true });
 await mkdir(path.dirname(target), { recursive: true });
 await cloneTree(workspace, target);
+// The install ran as root and the copy keeps owners, but checkout and the
+// prepared-seed clear run as UID 1000 and must rewrite or delete anything in
+// a clone. Hand the whole tree to that user once here, not in every workflow.
+const chown = Bun.spawn(["chown", "-R", "1000:1000", target], {
+  stdout: "ignore",
+  stderr: "pipe",
+});
+if ((await chown.exited) !== 0)
+  throw new Error(
+    `chown of the golden workspace failed: ${await new Response(chown.stderr).text()}`,
+  );
 await Bun.write(path.join(target, GOLDEN_MARKER), JSON.stringify(marker));
 console.log(`CI_WORKSPACE_GOLDEN ${JSON.stringify(marker)}`);
 console.log(`CI_MAINTENANCE_RESULT ${JSON.stringify({ status: "completed" })}`);
