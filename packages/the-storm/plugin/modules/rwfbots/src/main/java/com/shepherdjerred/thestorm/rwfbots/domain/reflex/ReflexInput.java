@@ -80,8 +80,20 @@ public record ReflexInput(
     }
     return percept
         .nearestVisible()
-        .filter(enemy -> enemy.pos().distance(self.pos()) <= reach)
+        .filter(enemy -> enemy.pos().distance(self.pos()) <= defended(self, decision, enemy, reach))
         .or(() -> resolveSummon(self, decision, percept).map(SummonView::asTarget));
+  }
+
+  /**
+   * How close {@code enemy} may come before {@code self} fights it: {@code reach}, or for a bow kit
+   * not running from the fight, a sword inside {@link BowSpacing#SWORD_NEAR}. It is shot as the
+   * archer goes rather than met with its sword at arm's length.
+   */
+  private static double defended(
+      CombatantView self, Decision decision, CombatantView enemy, double reach) {
+    return self.kit().hasBow() && decision.stance() != Stance.EVASIVE && BowSpacing.sword(enemy)
+        ? Math.max(reach, BowSpacing.SWORD_NEAR)
+        : reach;
   }
 
   /**
