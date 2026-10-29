@@ -156,6 +156,9 @@ test("artifact publication preserves build gates and has no deployment-acceptanc
   expect(publication?.commands).toContain(
     "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
   );
+  expect(publication?.commands).toContain(
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
+  );
   expect(
     publication?.secrets?.filter(
       (grant) => grant.secret === "ci-delivery-credentials",
