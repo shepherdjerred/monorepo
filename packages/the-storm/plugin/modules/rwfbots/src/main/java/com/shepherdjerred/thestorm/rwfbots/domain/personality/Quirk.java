@@ -1,8 +1,9 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.personality;
 
 /**
- * A small, named habit a personality has, from a fixed vocabulary so code can act on it. Three show
- * in play: {@link #CROUCH_SPAM} taps sneak when idle or after a kill (the reflex layer), {@link
+ * A small, named habit a personality has, from a fixed vocabulary so code can act on it. Four show
+ * in play: {@link #CROUCH_SPAM} taps sneak when idle or after a kill and {@link #BUNNY_HOPS}
+ * sprint-jumps along shorter runs and nearer enemies (the reflex layer), {@link
  * #LATE_TO_EVERYTHING} stands a few seconds at the start of the match (the think step), and {@link
  * #LOVES_NUKE} pulls the bot towards the slot that arms the nuke (the team step). The rest are for
  * chat and stay content in play.
@@ -30,7 +31,7 @@ public enum Quirk {
   HOLDS_GRUDGES,
   /** Celebrates before the round is actually won. */
   CELEBRATES_EARLY,
-  /** Jumps constantly, crit or not. */
+  /** Jumps constantly, crit or not: sprint-jumps along any run its hop fits on. */
   BUNNY_HOPS,
   /** Fires arrows at anything that moves. */
   BOW_SPAMMER,

@@ -296,7 +296,7 @@ public final class BotTicker {
     input = roster.harness().input(match.matchId(), input, match.nav());
     var context =
         new ReflexContext(
-            match.nav().grid(),
+            match.nav(),
             profile.levers(),
             PaperLoadouts.available(
                 bot.loadout(self.orElseThrow().kit()), roster.bodies().entity(bot.uuid())),

@@ -81,6 +81,13 @@ public interface Bodies {
   /** Jumps if standing on something. */
   void jump(UUID bot);
 
+  /**
+   * Sprint-jumps along the heading it steered this tick if standing on something, with the inputs a
+   * player holds through the flight ({@link
+   * com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor#hop}).
+   */
+  void hop(UUID bot);
+
   void sneak(UUID bot, boolean sneaking);
 
   void selectSlot(UUID bot, int slot);

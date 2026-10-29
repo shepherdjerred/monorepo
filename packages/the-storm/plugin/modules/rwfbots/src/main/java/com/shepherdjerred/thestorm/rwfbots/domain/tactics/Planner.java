@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.CombatFootwork;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Lane;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
@@ -1150,7 +1151,7 @@ public final class Planner {
     }
     if (!enemy.visible()
         || (!context.keep().ranged()
-            && needsMeleeRoute(context.nav(), situation.self().pos(), enemy.pos()))) {
+            && needsMeleeRoute(context.nav(), situation.self(), enemy.pos()))) {
       return fightDecision(
           scene,
           plan,
@@ -1184,10 +1185,16 @@ public final class Planner {
             .orElse(shoot));
   }
 
-  /** Sight through glass or over a low wall does not establish a level walking approach. */
-  private static boolean needsMeleeRoute(NavArtifact nav, Vec3 from, Vec3 to) {
+  /**
+   * Sight through glass or over a low wall does not establish a level walking approach, nor does a
+   * first step the reflex's footwork refuses: a fighter in a doorway with its enemy off to the side
+   * clips the frame stepping straight at it, and stood there for good.
+   */
+  private static boolean needsMeleeRoute(NavArtifact nav, CombatantView self, Vec3 to) {
     var grid = nav.grid();
+    var from = self.pos();
     return Math.abs(from.y() - to.y()) > 0.5
+        || !CombatFootwork.safe(grid, self, to.minus(from))
         || !continuousFloor(nav, from, to)
         || grid.raycast(from.plus(0, 0.1, 0), to.plus(0, 0.1, 0), VoxelGrid.Layer.MOVEMENT)
             .isPresent()

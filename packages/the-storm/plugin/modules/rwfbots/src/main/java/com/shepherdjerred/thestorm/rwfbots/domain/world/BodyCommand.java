@@ -19,8 +19,19 @@ public sealed interface BodyCommand {
   /** Stop moving. */
   record Stop() implements BodyCommand {}
 
-  /** Jump if on the ground. */
-  record Jump() implements BodyCommand {}
+  /**
+   * Jump if on the ground.
+   *
+   * @param hop a sprint jump along a straight run, with the inputs a player holds through it
+   *     ({@link com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor#hop}), rather than
+   *     a step, leap or fight jump
+   */
+  record Jump(boolean hop) implements BodyCommand {
+    /** A step, leap or fight jump. */
+    public Jump() {
+      this(false);
+    }
+  }
 
   /** Start or stop sneaking. */
   record Sneak(boolean sneaking) implements BodyCommand {}

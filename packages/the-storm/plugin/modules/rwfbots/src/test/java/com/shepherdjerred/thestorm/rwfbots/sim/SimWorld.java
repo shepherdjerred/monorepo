@@ -119,7 +119,7 @@ final class SimWorld {
         new Perception(new SenseContext(nav.grid(), nav.graph(), nav.regions(), body.levers));
     body.reflexContext =
         new ReflexContext(
-            nav.grid(),
+            nav,
             body.levers,
             Loadout.standard(spawn.kit()),
             ReflexContext.Habits.of(archetype, quirks));
@@ -337,7 +337,10 @@ final class SimWorld {
         body.sprinting = false;
         physics.steer(body, Vec3.ZERO);
       }
-      case BodyCommand.Jump _ -> physics.jump(body, tick);
+      case BodyCommand.Jump(var hop) -> {
+        if (hop) physics.hop(body, tick);
+        else physics.jump(body, tick);
+      }
       case BodyCommand.Sneak(var sneaking) -> body.sneaking = sneaking;
       case BodyCommand.SelectSlot(var slot) -> body.heldSlot = slot;
       case BodyCommand.Swing _ -> {}

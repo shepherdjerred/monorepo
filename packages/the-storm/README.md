@@ -1580,6 +1580,15 @@ cumulative fall damage, actual movement and protection capabilities, effect
 expiry, available healing, known enemy exposure and bomb deadlines. A
 successful bake proves graph connectivity; native movement must also be checked
 in the pinned Paper/Citizens runtime.
+Between authored jumps, a sprinting body with the technique for it sprint-jumps
+along a straight, level run of at least six blocks, with no fight on its hands
+and no enemy in sight within sixteen blocks. A hop launches with a player's
+inputs: the speed the body carries, its sprint input and the boost, then
+unclamped air input in flight. That is about a quarter faster than sprinting;
+the motor's ordinary steering stops at sprint speed, so a hop made with it
+gained nothing. The hop's corridor must be baked standable ground with headroom
+along its line and no opening within the drift a replan could steer it. A wall
+beside it is safe; a fence or a single block the body could land on is not.
 Runtime exposure, congestion and personality penalties are traversal-time
 densities: each leg integrates its endpoint values over its actual duration.
 This keeps compressed jumps and water intervals from receiving an artificial
@@ -3679,7 +3688,7 @@ graph nodes. Teammates with one goal still take different ways. Formation steeri
 uses the playbook's slot spacing while accounting for closing teammates.
 Archetypes bend the utilities, the decision temperature and
 the fighting range, and add a push to the aggression lever at the draft;
-`crouch_spam`, `late_to_everything` and `loves_nuke` act in play.
+`crouch_spam`, `late_to_everything`, `loves_nuke` and `bunny_hops` act in play.
 
 `/rwfbots debug [bot]` (`thestorm.rwfbots.admin`) prints the governor level,
 think and staleness percentiles, the board counters and every bot's plan, or
