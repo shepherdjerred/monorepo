@@ -1,0 +1,13 @@
+{
+  "id": "landing-pages/prod/1",
+  "definition": {
+    "archiveComponent": "archive:landing-pages",
+    "bucket": "landing-pages",
+    "immutablePrefixes": ["_astro/"],
+    "extraExcludes": [],
+    "entrypoints": ["index.html"],
+    "verification": { "url": "https://pages.sjer.red/", "expectedStatus": 200 },
+    "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+    "kind": "static-site"
+  }
+}

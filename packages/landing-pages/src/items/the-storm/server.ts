@@ -8,11 +8,10 @@ const { java, bedrock } = forum.minecraft.connections;
 export const server = {
   java: {
     address: java.address,
-    // The server runs 26.2; ViaVersion admits newer clients (26.3) and
-    // ViaBackwards admits older ones, so the page names the newest version.
-    serverVersion: "26.2",
+    // ViaBackwards admits clients older than the server's version.
+    serverVersion: "26.3",
     versions: "26.3 & older",
-    bestOn: "26.2 or 26.3",
+    bestOn: "26.3",
   },
   // Bedrock support follows the live Geyser build, so the page names no number.
   bedrock: {

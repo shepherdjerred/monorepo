@@ -67,8 +67,8 @@ async function destination(bucket: string, environmentId: string) {
   };
 }
 
-test("the actual default writer declaration admits all fifteen registered catalog targets", async () => {
-  expect(Object.keys(STATIC_SITE_DESTINATIONS)).toHaveLength(15);
+test("the actual default writer declaration admits all sixteen registered catalog targets", async () => {
+  expect(Object.keys(STATIC_SITE_DESTINATIONS)).toHaveLength(16);
   for (const [bucket, environmentId] of Object.entries(
     STATIC_SITE_DESTINATIONS,
   )) {

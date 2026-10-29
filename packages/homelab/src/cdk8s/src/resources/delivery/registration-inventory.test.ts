@@ -123,6 +123,18 @@ test("ordinary application registrations match their reviewed delegation definit
   expect(new Set(applications).size).toBe(applications.length);
 });
 
+/**
+ * The release policy names the site's catalog environment, and the window
+ * migrates the bucket's v1 environment onto it. A site added after the v1
+ * freeze has no v1 environment to migrate.
+ */
+function expectSiteCatalogEnvironment(bucket: string): void {
+  expect(STATIC_BUCKET_RELEASE_POLICIES[bucket], bucket).toBe(`${bucket}/prod`);
+  const v1 = V1_STATIC_SITE_DESTINATIONS[bucket];
+  if (v1 !== undefined)
+    expect(V1_ENVIRONMENT_RENAMES[v1], bucket).toBe(`${bucket}/prod`);
+}
+
 test("every served static bucket has one pipeline or an explicit independent writer", async () => {
   expect(storagePolicy.archiveBucket).toBe(STATIC_ARCHIVE_BUCKET);
   const pipelines: {
@@ -164,13 +176,7 @@ test("every served static bucket has one pipeline or an explicit independent wri
   expect(registered).toHaveLength(16);
   for (const bucket of registered) {
     if (bucket.startsWith("scout-frontend")) continue;
-    // The release policy names the catalog environment; the window migrates
-    // the bucket's v1 environment onto it.
-    expect(STATIC_BUCKET_RELEASE_POLICIES[bucket], bucket).toBe(
-      `${bucket}/prod`,
-    );
-    const v1 = V1_STATIC_SITE_DESTINATIONS[bucket] ?? "";
-    expect(V1_ENVIRONMENT_RENAMES[v1], bucket).toBe(`${bucket}/prod`);
+    expectSiteCatalogEnvironment(bucket);
   }
   for (const stage of ["beta", "prod"]) {
     const environment = z
