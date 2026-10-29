@@ -485,6 +485,18 @@
         {
           "runner": "vitest",
           "args": ["test"]
+        },
+        {
+          "runner": "command",
+          "name": "pms-runner",
+          "command": [
+            "go",
+            "-C",
+            "reproduction/pms-runner",
+            "test",
+            "-race",
+            "./..."
+          ]
         }
       ]
     },
@@ -1234,6 +1246,16 @@
         {
           "path": "e2e",
           "reason": "Playwright acceptance runs in the browser E2E lane."
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/media",
+      "directory": "packages/media",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     }

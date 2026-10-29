@@ -18,8 +18,8 @@ COPY --chown=1000:1000 \
   ci/scripts/images/smoke-app-configs.ts \
   /app/ci/scripts/images/
 
-# Scout's production image deliberately excludes PostgreSQL. Its exact-digest
-# smoke starts an ephemeral database to exercise the deployed migration path,
+# Scout and Media production images deliberately exclude PostgreSQL. Their
+# exact-digest smokes start ephemeral databases to exercise deployed migrations,
 # so install that harness-only dependency before switching to the deployment
 # uid.
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
@@ -28,7 +28,7 @@ COPY --chown=1000:1000 \
 # a version pin. Acknowledged per-site so a NEW unpinned install still fails.
 # hadolint ignore=DL3008
 RUN case "${SMOKE_TARGET}" in \
-      scout-for-lol) \
+      scout-for-lol|media) \
         apt-get update \
         && apt-get install -y --no-install-recommends postgresql postgresql-client \
         && rm -rf /var/lib/apt/lists/* \

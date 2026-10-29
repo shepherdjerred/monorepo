@@ -1,6 +1,16 @@
 import { expect, test } from "vitest";
 import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 
+test.each(["v1", "v2"] as const)(
+  "%s retains one media chart and application image owner",
+  (registry) => {
+    const owners = publicationOwners(registry);
+    expect(owners.image("media")).toBe("streambot");
+    expect(owners.image("streambot")).toBe("streambot");
+    expect(owners.chart("media")).toBe("streambot");
+  },
+);
+
 test("v1 names services.json groups until the window's catalog flip", () => {
   const owners = publicationOwners("v1");
   expect(owners.chart("woodpecker")).toBe("ci");

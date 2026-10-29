@@ -3,16 +3,12 @@ import * as canary from "./notification-canary.ts";
 export const runDailyNotificationCanary = canary.runDailyNotificationCanary;
 import * as stormForum from "./homelab/storm-forum.ts";
 import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
-import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
-export const maintainStormForumWorkflow = (stage: ForumStage) =>
-  stormForum.maintainStormForumWorkflow(stage);
-export const backupStormForumWorkflow = (stage: ForumStage) =>
-  stormForum.backupStormForumWorkflow(stage);
-export const runSeaweedFsBackupWorkflow = (
-  input: Parameters<typeof seaweedBackup.runSeaweedFsBackupWorkflow>[0],
-) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
-export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
-  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
+export const maintainStormForumWorkflow = stormForum.maintainStormForumWorkflow;
+export const backupStormForumWorkflow = stormForum.backupStormForumWorkflow;
+export const runSeaweedFsBackupWorkflow =
+  seaweedBackup.runSeaweedFsBackupWorkflow;
+export const runSeaweedFsBackupRetentionAndGcWorkflow =
+  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow;
 import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
 import * as ciMaintenance from "./ci/maintenance.ts";
 export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;
@@ -140,7 +136,6 @@ import {
 } from "./worker-deployment-canary.ts";
 
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
-import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
@@ -153,11 +148,10 @@ import type {
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
 import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
-import { photonConversationWorkflow as _photonConversationWorkflow } from "./photon/conversation.ts";
+import * as photonConversation from "./photon/conversation.ts";
 
-export const photonConversationWorkflow = (
-  ...args: Parameters<typeof _photonConversationWorkflow>
-) => _photonConversationWorkflow(...args);
+export const photonConversationWorkflow =
+  photonConversation.photonConversationWorkflow;
 export const photonAgentChatWorkflow = (
   ...args: Parameters<typeof _photonAgentChatWorkflow>
 ) => _photonAgentChatWorkflow(...args);
@@ -180,9 +174,8 @@ export function workerDeploymentCanaryWorkflow(
   return Promise.resolve();
 }
 
-export async function fetchSkillCappedManifest(): Promise<void> {
-  return _fetchSkillCappedManifest();
-}
+export const fetchSkillCappedManifest = (): Promise<void> =>
+  _fetchSkillCappedManifest();
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
@@ -419,22 +412,16 @@ export async function runGlitterCorpusChannelOverlap(
   return _runGlitterCorpusChannelOverlap(input);
 }
 
-export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
-  return _runGlitterCorpusDaily();
-}
+export const runGlitterCorpusDaily = () => _runGlitterCorpusDaily();
 
-export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
-  return _runLlmBilledCostReconciliation();
-}
-
+export const runLlmBilledCostReconciliation = () =>
+  _runLlmBilledCostReconciliation();
 export const runOpsSnapshot = () => _runOpsSnapshot();
-
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
 ): ReturnType<typeof _runOpsDigest> {
   return _runOpsDigest(input);
 }
-
 export const agentChatWorkflow = agentChat.agentChatWorkflow;
 export const agentChatTurnReceiptWorkflow =
   agentChat.agentChatTurnReceiptWorkflow;
@@ -457,3 +444,51 @@ export const deliveryPlatformRecoveryWorkflow =
 export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
+import * as media from "./media/exports.ts";
+export const prepareMediaHandoffWorkflow = media.prepareMediaHandoffWorkflow,
+  applyLibraryHandoffV3Workflow = media.applyLibraryHandoffV3Workflow,
+  applyMediaHandoffWorkflow = media.applyMediaHandoffWorkflow,
+  prepareNativeArchiveWorkflow = media.prepareNativeArchiveWorkflow,
+  applyNativeArchiveWorkflow = media.applyNativeArchiveWorkflow,
+  cleanupNativeArchiveWorkflow = media.cleanupNativeArchiveWorkflow,
+  prepareNativeQuarantineWorkflow = media.prepareNativeQuarantineWorkflow,
+  applyNativeQuarantineWorkflow = media.applyNativeQuarantineWorkflow,
+  restoreNativeQuarantineWorkflow = media.restoreNativeQuarantineWorkflow,
+  prepareNativeRecoveryWorkflow = media.prepareNativeRecoveryWorkflow,
+  applyNativeRecoveryWorkflow = media.applyNativeRecoveryWorkflow,
+  preparePlexExclusionWorkflow = media.preparePlexExclusionWorkflow,
+  executePlexExclusionWorkflow = media.executePlexExclusionWorkflow,
+  recoverPlexExclusionWorkflow = media.recoverPlexExclusionWorkflow,
+  reconcileMediaWorkflow = media.reconcileMediaWorkflow,
+  reconcileMovieEditionV4Workflow = media.reconcileMovieEditionV4Workflow,
+  acquireMovieEditionV4Workflow = media.acquireMovieEditionV4Workflow,
+  acquireMovieSubtitlesV4Workflow = media.acquireMovieSubtitlesV4Workflow,
+  acquireMediaReleaseWorkflow = media.acquireMediaReleaseWorkflow,
+  acquireMediaSubtitlesWorkflow = media.acquireMediaSubtitlesWorkflow,
+  installMediaSubtitleWorkflow = media.installMediaSubtitleWorkflow,
+  cleanupMediaUpgradeWorkflow = media.cleanupMediaUpgradeWorkflow,
+  maintainMediaTorrentWorkflow = media.maintainMediaTorrentWorkflow,
+  retainMediaWorkflow = media.retainMediaWorkflow,
+  restoreMediaWorkflow = media.restoreMediaWorkflow,
+  deliverMediaNotificationWorkflow = media.deliverMediaNotificationWorkflow,
+  dispatchMediaOutboxWorkflow = media.dispatchMediaOutboxWorkflow,
+  sweepMediaWorkflow = media.sweepMediaWorkflow,
+  matchProviderFeedSourceWorkflow = media.matchProviderFeedSourceWorkflow,
+  expandMediaRequestWorkflow = media.expandMediaRequestWorkflow,
+  refreshMediaCatalogWorkflow = media.refreshMediaCatalogWorkflow,
+  expandCatalogRequestsWorkflow = media.expandCatalogRequestsWorkflow,
+  prepareSubtitleReplacementWorkflow = media.prepareSubtitleReplacementWorkflow,
+  applySubtitleReplacementWorkflow = media.applySubtitleReplacementWorkflow,
+  reconcileSubtitleReplacementWorkflow =
+    media.reconcileSubtitleReplacementWorkflow,
+  cleanupSubtitleReplacementWorkflow = media.cleanupSubtitleReplacementWorkflow,
+  observeMediaCapacityWorkflow = media.observeMediaCapacityWorkflow,
+  reverifyPlexBindingWorkflow = media.reverifyPlexBindingWorkflow,
+  verifyLibraryPlexBindingWorkflow = media.verifyLibraryPlexBindingWorkflow,
+  observePlexEventHintWorkflow = media.observePlexEventHintWorkflow,
+  observeMoviePlexHintV4Workflow = media.observeMoviePlexHintV4Workflow,
+  prepareNativeCompensationWorkflow = media.prepareNativeCompensationWorkflow,
+  applyNativeCompensationWorkflow = media.applyNativeCompensationWorkflow,
+  compensateNativePublicationWorkflow =
+    media.compensateNativePublicationWorkflow,
+  publishCompensatedMediaWorkflow = media.publishCompensatedMediaWorkflow;

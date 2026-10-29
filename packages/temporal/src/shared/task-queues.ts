@@ -10,6 +10,8 @@ export const TASK_QUEUES = {
   DELIVERY: "delivery",
   /** Provider (OpenTofu) and control-plane effects with separate namespace/credential authority. */
   DELIVERY_PLATFORM: "delivery-platform",
+  MEDIA_NETWORK: "media-network",
+  MEDIA_FILES: "media-files",
   /** Latency-sensitive Home Assistant workflows and activities. */
   HOME: "home",
   /** Shared report delivery, freshness, and failure-notification work. */
@@ -77,6 +79,8 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.DELIVERY_WORKFLOWS,
   TASK_QUEUES.DELIVERY,
   TASK_QUEUES.DELIVERY_PLATFORM,
+  TASK_QUEUES.MEDIA_NETWORK,
+  TASK_QUEUES.MEDIA_FILES,
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,

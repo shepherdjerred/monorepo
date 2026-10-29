@@ -2,7 +2,9 @@
   "name": "@shepherdjerred/woodpecker-config-extension",
   "type": "module",
   "imports": {
-    "#src/*": "./src/*"
+    "#src/*": "./src/*",
+    "#test-identity": "./test/identity.ts",
+    "#pms-runner-protocol": "./reproduction/pms-runner/protocol.schema.json"
   },
   "private": true,
   "scripts": {
@@ -10,8 +12,9 @@
     "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/woodpecker-config-extension:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t woodpecker-config-extension:dev -f Dockerfile ../..",
     "lint": "bunx eslint --cache . --max-warnings=0",
     "start": "bun src/index.ts",
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test && bun run test:pms-runner",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:pms-runner": "go -C reproduction/pms-runner test -race ./...",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "dependencies": {

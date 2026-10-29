@@ -62,6 +62,10 @@ describe("ci image resolution", () => {
       { name: "mikefarah/yq", value: "latest" },
       { name: "minio/mc", value: "RELEASE" },
       { name: "minio/minio", value: "RELEASE" },
+      {
+        name: "plexinc/pms-docker",
+        value: `1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,
+      },
     ],
   });
 

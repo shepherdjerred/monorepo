@@ -173,7 +173,7 @@
     },
     {
       "id": "streambot",
-      "images": ["streambot"],
+      "images": ["streambot", "media"],
       "title": "Streambot & media",
       "kind": "product",
       "package": "streambot",

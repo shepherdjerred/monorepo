@@ -8,6 +8,13 @@ pipeline, and the list of changed files; this service replies with the
 workflows that build should run. Lane selection happens here rather than in
 a bootstrap pod, so no step has to start before the graph is known.
 
+## PMS component runner
+
+The [PMS runner contributor reference](reproduction/pms-runner/README.md)
+documents exact-source component reproduction and UID-scoped cleanup. Local
+`test` and the CI manifest both include its fake-client Go race tests; those
+tests do not launch Kubernetes workloads.
+
 ## Why the pipeline is data, not YAML
 
 `src/pipeline/model.ts` describes a step: its key, dependencies, changed-path

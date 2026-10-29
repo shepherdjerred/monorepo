@@ -1,0 +1,15 @@
+{
+  "id": "fictional-quality",
+  "version": 1,
+  "rules": {
+    "qualities": ["WEB-720p", "WEB-1080p", "Remux-2160p"],
+    "rejectedCodecs": ["unknown"],
+    "requiredAudioLanguages": ["en"],
+    "minimumBytes": 1000000,
+    "maximumBytes": 50000000000,
+    "minimumScore": 0,
+    "tagScores": { "PROPER": 5 },
+    "cutoffQuality": "Remux-2160p",
+    "cutoffScore": 0
+  }
+}

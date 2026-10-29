@@ -531,6 +531,10 @@
           "producer": "first-party"
         },
         {
+          "name": "image:media",
+          "producer": "first-party"
+        },
+        {
           "name": "chart:media",
           "producer": "first-party"
         }

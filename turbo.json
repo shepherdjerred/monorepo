@@ -424,6 +424,7 @@
         "@shepherdjerred/alert-dashboard#generate",
         "@shepherdjerred/delivery#generate",
         "@shepherdjerred/tracker#generate",
+        "@shepherdjerred/media#generate",
         "@shepherdjerred/birmel#generate",
         "@discord-plays-mario-kart/backend#generate",
         "@scout-for-lol/backend#generate",

@@ -35,6 +35,8 @@ const PLACEHOLDER_IMAGES: CiImages = {
     "mikefarah/yq": "mikefarah/yq:0",
     "minio/mc": "minio/mc:0",
     "minio/minio": "minio/minio:0",
+    "plexinc/pms-docker":
+      "plexinc/pms-docker:1.43.4.10903-e5521bd8c-amd64@sha256:dbb879bf58c3fc56635f21ac48c32aa6853aaa23d4a57b102033b6dc6d2d9cee",
   },
 };
 

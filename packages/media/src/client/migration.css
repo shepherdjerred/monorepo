@@ -1,0 +1,91 @@
+.migration-page .panel {
+  margin-top: 24px;
+}
+.migration-page .table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+}
+.migration-page table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+}
+.migration-page th,
+.migration-page td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.migration-page th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.migration-page code {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+.migration-page .review-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0;
+  font-size: 13px;
+}
+.migration-page .capture-choice {
+  margin: 8px 8px 0 0;
+}
+.migration-page .checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.8rem 0;
+  overflow-wrap: anywhere;
+}
+.migration-page .checkbox-row input {
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
+}
+.migration-page fieldset {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  margin: 1rem 0;
+}
+.migration-page .action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+@media (max-width: 640px) {
+  .migration-page .library-plan thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .migration-page .library-plan tbody,
+  .migration-page .library-plan tr,
+  .migration-page .library-plan td {
+    display: block;
+  }
+  .migration-page .library-plan tr {
+    border-bottom: 1px solid var(--line);
+    padding: 10px 0;
+  }
+  .migration-page .library-plan td {
+    border: 0;
+    padding: 8px 0;
+  }
+  .migration-page .library-plan td::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+}

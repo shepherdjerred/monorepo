@@ -3,6 +3,7 @@ import path from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
+import type { CiCommandStep } from "#src/pipeline/model.ts";
 import {
   WORKFLOW_TIMEOUT_MINUTES,
   emitWorkflow,
@@ -15,8 +16,12 @@ function substitute(yaml: string): string {
   return yaml.replaceAll("$$", () => "$");
 }
 
+const EmittedCommand = z.object({
+  name: z.string(),
+  commands: z.array(z.string()),
+});
 const EmittedCommands = z.object({
-  steps: z.tuple([z.object({ commands: z.array(z.string()) })]),
+  steps: z.tuple([EmittedCommand]).rest(EmittedCommand),
 });
 
 test("checkout-free startup uses the existing workspace mount instead of creating a checkout", () => {
@@ -58,7 +63,19 @@ describe("variable substitution", () => {
       const parsed = EmittedCommands.parse(
         parse(substitute(emitWorkflow(step, TEST_IDENTITY))),
       );
-      expect(parsed.steps[0].commands, step.key).toEqual(wrapCommands(step));
+      const commands = [step, ...(step.orderedSteps ?? [])];
+      expect(
+        parsed.steps.map((command) => command.name),
+        step.key,
+      ).toEqual(commands.map((command) => command.key));
+      for (const [index, command] of commands.entries())
+        expect(parsed.steps[index]?.commands, command.key).toEqual(
+          wrapCommands({
+            ...command,
+            label: command.key,
+            ...(step.backend === undefined ? {} : { backend: step.backend }),
+          }),
+        );
     }
   });
 
@@ -82,34 +99,51 @@ describe("variable substitution", () => {
   });
 });
 
+function assertBunCacheEnvironment(
+  command: CiCommandStep,
+  environment: Readonly<Record<string, string>> | undefined,
+): void {
+  if (environment === undefined) throw new Error("Emitted command missing");
+  const cacheClaims = new Set(
+    (command.volumes ?? []).map((volume) => volume.claim),
+  );
+  const shared =
+    cacheClaims.has(BUN_CACHE.claim) &&
+    cacheClaims.has(BUN_CACHE_CONTROL.claim);
+
+  if (command.key === "codex-review-gate") {
+    expect(shared).toBe(false);
+  }
+
+  expect(environment["BUN_INSTALL_LOCK_MODE"], command.key).toBe(
+    shared ? "shared" : "local",
+  );
+  expect(environment["BUN_CACHE_LOCK_FILE"], command.key).toBe(
+    shared ? `${BUN_CACHE_CONTROL.path}/.gc.lock` : undefined,
+  );
+}
+
 describe("Bun cache install mode", () => {
   test("sets a valid install mode on every workflow and locks shared cache use", () => {
     for (const step of testPipelineSteps()) {
       const parsed = z
         .object({
-          steps: z.tuple([
-            z.object({ environment: z.record(z.string(), z.string()) }),
-          ]),
+          steps: z.array(
+            z.object({
+              name: z.string(),
+              environment: z.record(z.string(), z.string()),
+            }),
+          ),
         })
         .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))));
-      const environment = parsed.steps[0].environment;
-      const cacheClaims = new Set(
-        (step.volumes ?? []).map((volume) => volume.claim),
-      );
-      const shared =
-        cacheClaims.has(BUN_CACHE.claim) &&
-        cacheClaims.has(BUN_CACHE_CONTROL.claim);
-
-      if (step.key === "codex-review-gate") {
-        expect(shared).toBe(false);
+      const commands = [step, ...(step.orderedSteps ?? [])];
+      expect(
+        parsed.steps.map((command) => command.name),
+        step.key,
+      ).toEqual(commands.map((command) => command.key));
+      for (const [index, command] of commands.entries()) {
+        assertBunCacheEnvironment(command, parsed.steps[index]?.environment);
       }
-
-      expect(environment["BUN_INSTALL_LOCK_MODE"], step.key).toBe(
-        shared ? "shared" : "local",
-      );
-      expect(environment["BUN_CACHE_LOCK_FILE"], step.key).toBe(
-        shared ? `${BUN_CACHE_CONTROL.path}/.gc.lock` : undefined,
-      );
     }
   });
 });
@@ -149,7 +183,7 @@ const EmittedPodOptions = z.object({
 });
 
 const EmittedServices = z.object({
-  steps: z.tuple([EmittedPodOptions.loose()]),
+  steps: z.array(EmittedPodOptions.extend({ name: z.string() }).loose()),
   clone: z.array(EmittedPodOptions.loose()).optional(),
   services: z.array(EmittedPodOptions.loose()).optional(),
 });
@@ -168,11 +202,31 @@ describe("pod shape", () => {
       const emitted = EmittedServices.parse(
         parse(substitute(emitWorkflow(step, TEST_IDENTITY))),
       );
-      const pods = [
-        emitted.steps[0],
-        ...(emitted.services ?? []),
-        ...(emitted.clone ?? []),
-      ];
+      const commands = [step, ...(step.orderedSteps ?? [])];
+      expect(
+        emitted.steps.map((command) => command.name),
+        step.key,
+      ).toEqual(commands.map((command) => command.key));
+      for (const [index, command] of commands.entries()) {
+        const options = emitted.steps[index]?.backend_options.kubernetes;
+        if (options === undefined) throw new Error("Emitted pod missing");
+        expect(options.resources, command.key).toEqual({
+          requests: {
+            cpu: command.resources.cpuRequest,
+            memory: command.resources.memoryRequest,
+            "ephemeral-storage": command.resources.ephemeralStorageRequest,
+          },
+          limits: {
+            cpu: command.resources.cpuLimit,
+            memory: command.resources.memoryLimit,
+            "ephemeral-storage": command.resources.ephemeralStorageLimit,
+          },
+        });
+        expect(options.labels["ci.sjer.red/step-key"]).toBe(command.key);
+        expect(options.labels["ci.sjer.red/commit"]).toBe(TEST_IDENTITY.commit);
+        expect(options.serviceAccountName).toBe("woodpecker-job");
+      }
+      const pods = [...(emitted.services ?? []), ...(emitted.clone ?? [])];
       services += emitted.services?.length ?? 0;
       clones += emitted.clone?.length ?? 0;
       for (const pod of pods) {
