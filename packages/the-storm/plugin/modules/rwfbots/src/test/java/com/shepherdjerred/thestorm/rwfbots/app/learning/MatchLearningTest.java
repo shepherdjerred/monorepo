@@ -133,6 +133,7 @@ final class MatchLearningTest {
             com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
             com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
             false,
+            false,
             false);
     var target = combatant(2, BLUE, new Vec3(7, 1, 5));
     var snapshot =

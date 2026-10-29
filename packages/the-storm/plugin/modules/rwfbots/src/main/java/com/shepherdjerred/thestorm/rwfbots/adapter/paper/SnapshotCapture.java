@@ -216,7 +216,15 @@ public final class SnapshotCapture {
         traversal,
         Quivers.of(entity),
         entity.isSneaking(),
-        nameTags.hiddenFromEnemies(fighter.uuid()));
+        nameTags.hiddenFromEnemies(fighter.uuid()),
+        drawingBow(entity));
+  }
+
+  /** Whether the entity is drawing a bow or loading a crossbow, as anyone watching it sees. */
+  static boolean drawingBow(Player entity) {
+    if (!entity.isHandRaised()) return false;
+    var item = entity.getActiveItem().getType();
+    return item == Material.BOW || item == Material.CROSSBOW;
   }
 
   /**

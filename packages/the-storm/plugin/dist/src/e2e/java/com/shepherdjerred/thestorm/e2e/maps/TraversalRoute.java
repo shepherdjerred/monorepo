@@ -179,6 +179,7 @@ final class TraversalRoute {
         capture.captureTraversal(player, "trooper", tick),
         com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
         false,
+        false,
         false);
   }
 }

@@ -272,6 +272,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         capture.captureTraversal(player, "trooper", ticks),
         com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
         false,
+        false,
         false);
   }
 
@@ -398,6 +399,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         -1,
         com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
         com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
+        false,
         false,
         false);
   }

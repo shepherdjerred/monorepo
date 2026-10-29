@@ -3696,7 +3696,9 @@ shots: inside the range where one aim-error deviation misses by a block (10 to
 sight (`ArrowEconomy`). Below 24, with no enemy in sight within 20 blocks and no
 fuse, bomb or plant slot to see to, it walks onto the cell of a landed,
 pick-up-allowed arrow within 12 blocks so the server's touch picks it up
-(`Resupply`). Every path a bot walks pays a per-bot
+(`Resupply`). A swordsman charging an archer it sees drawing, 6 to 30 blocks
+off, weaves: legs 27 degrees off its line flip every 6 to 9 ticks and a
+reaction time after each shot, never towards a drop (`Weave`). Every path a bot walks pays a per-bot
 penalty per block of each primitive: seeded noise over patches of the map, a
 toll on teammates' current paths and one for leaving its lane. Long jumps pay
 for their full distance, so they cannot evade those costs by skipping intermediate

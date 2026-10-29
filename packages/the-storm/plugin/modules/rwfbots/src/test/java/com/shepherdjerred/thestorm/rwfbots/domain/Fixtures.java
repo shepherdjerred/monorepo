@@ -51,6 +51,7 @@ public final class Fixtures {
         com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
         com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
         false,
+        false,
         false);
   }
 
