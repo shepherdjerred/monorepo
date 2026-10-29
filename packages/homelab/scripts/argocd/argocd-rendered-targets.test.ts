@@ -34,22 +34,38 @@ function live(namespace?: string) {
   };
 }
 
+const liveCopies = [live("mc-sandbox"), live("minecraft-tsmc"), live("velero")];
+
 describe("renderedTargetState", () => {
   test("matches a live object to the manifest rendered in its namespace", () => {
-    expect(renderedTargetState(targets, live("mc-sandbox"), "mc-sandbox")).toBe(
-      "role in mc-sandbox",
-    );
+    expect(
+      renderedTargetState(
+        targets,
+        live("mc-sandbox"),
+        "mc-sandbox",
+        liveCopies,
+      ),
+    ).toBe("role in mc-sandbox");
   });
 
   test("treats a live object in a namespace the revision no longer renders as a prune", () => {
     expect(
-      renderedTargetState(targets, live("velero"), "mc-sandbox"),
+      renderedTargetState(targets, live("velero"), "mc-sandbox", liveCopies),
     ).toBeUndefined();
   });
 
+  test("refuses a live object whose rendered namespace has no live copy yet", () => {
+    expect(() =>
+      renderedTargetState(targets, live("velero"), "mc-sandbox", [
+        live("mc-sandbox"),
+        live("velero"),
+      ]),
+    ).toThrow(/in namespace velero but rendered it in minecraft-tsmc/u);
+  });
+
   test("refuses a namespace-less live object that matches several manifests", () => {
-    expect(() => renderedTargetState(targets, live(), "mc-sandbox")).toThrow(
-      /matched .* to 2 rendered manifests/u,
-    );
+    expect(() =>
+      renderedTargetState(targets, live(), "mc-sandbox", liveCopies),
+    ).toThrow(/matched .* to 2 rendered manifests/u);
   });
 });
