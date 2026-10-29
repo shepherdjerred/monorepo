@@ -132,6 +132,10 @@ export const ClientActionSchema = z.enum([
   "inventory",
   "close",
   "clear-overlays",
+  "chat-open",
+  "advancements",
+  "hover-slot",
+  "screen-type",
   "respawn",
   "sign-write",
   "click",
@@ -172,6 +176,26 @@ export const CLIENT_ACTION_REQUEST_SCHEMAS = {
   inventory: z.strictObject({ open: z.boolean() }),
   close: z.strictObject({}),
   "clear-overlays": z.strictObject({}),
+  "chat-open": z.strictObject({}),
+  advancements: z.strictObject({
+    tab: z
+      .string()
+      .regex(/^[a-z0-9_.-]+:[a-z0-9_./-]+$/u)
+      .optional(),
+  }),
+  "hover-slot": z.strictObject({
+    containerId: z.number().int(),
+    stateId: z.number().int(),
+    slot: z.number().int().nonnegative(),
+  }),
+  "screen-type": z.strictObject({
+    revision: z.string().min(1).max(100),
+    id: z.number().int().nonnegative(),
+    text: z
+      .string()
+      .max(200)
+      .regex(/^[^\r\n]*$/u),
+  }),
   respawn: z.strictObject({}),
   "sign-write": z.strictObject({
     lines: z.tuple([

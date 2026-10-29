@@ -1,5 +1,9 @@
 import path from "node:path";
 import {
+  captureModules,
+  importedNormalWorlds,
+} from "#sandbox/capture-features.ts";
+import {
   citizens,
   coreProtect,
   luckPerms,
@@ -42,9 +46,19 @@ export type StagedEntry =
       source: string;
       target: string;
       content:
-        "towns" | "parcels" | "heritage" | "essentials" | "world" | "travel";
+        | "towns"
+        | "parcels"
+        | "heritage"
+        | "essentials"
+        | "world"
+        | "travel"
+        | "stargates"
+        | "multiverse"
+        | "arena-survival"
+        | "shards";
       spawn: [number, number, number];
       sha256: string;
+      additionalWorlds?: readonly string[];
     }
   | { kind: "repo-file"; source: string; target: string; build?: string }
   | { kind: "repo-dir"; source: string; target: string }
@@ -302,7 +316,13 @@ const PROFILES: Record<
 export function resolveProfile(
   request: Pick<
     SandboxCreateRequest,
-    "profile" | "world" | "publishedArtifact" | "publishedConfig" | "mapSpawn"
+    | "profile"
+    | "world"
+    | "publishedArtifact"
+    | "publishedConfig"
+    | "mapSpawn"
+    | "rollout"
+    | "captureFeatures"
   >,
   secrets: Secrets,
   mapSource?: SandboxSummary["mapSource"],
@@ -331,8 +351,23 @@ export function resolveProfile(
       "Real-map profile requires the imported map fingerprint and safe spawn",
     );
   const spawn = request.mapSpawn;
+  const additional = captureModules(request.captureFeatures, mapSource);
+  const additionalWorlds = importedNormalWorlds(mapSource);
   return {
     ...profile,
+    env: {
+      ...profile.env,
+      THESTORM_CREATIVE_BOOTSTRAP: "false",
+      ...(additional.includes("rwf")
+        ? { RWF_RECORDING_SALT: "mc-harness-local-capture-pseudonym-salt" }
+        : {}),
+      ...(request.rollout === undefined
+        ? {}
+        : {
+            FLIPT_URL: request.rollout.url,
+            FLIPT_ENVIRONMENT: request.rollout.environment,
+          }),
+    },
     staged: [
       ...profile.staged
         .filter(
@@ -363,10 +398,27 @@ export function resolveProfile(
                   "qol",
                   "shops",
                   "mechanics",
+                  "skills",
+                  "spells",
+                  "seasonal",
+                  ...additional,
+                  ...(mapSource.dimensions?.includes("minecraft:creative") ===
+                  true
+                    ? ["creative"]
+                    : []),
                 ],
               }
             : entry,
         ),
+      {
+        kind: "capture-content",
+        source: path.join(STORM_PATHS.ownedConfigDir, "world.yml"),
+        target: "Multiverse-Core/worlds.yml",
+        content: "multiverse",
+        spawn,
+        sha256: mapSource.sha256,
+        additionalWorlds,
+      },
       {
         kind: "capture-content",
         source: path.join(STORM_PATHS.ownedConfigDir, "towns.yml"),
@@ -399,13 +451,25 @@ export function resolveProfile(
         spawn,
         sha256: mapSource.sha256,
       },
-      ...(["world", "travel"] as const).map((content) => ({
+      ...(["world", "travel", "stargates", "shards"] as const).map(
+        (content) => ({
+          kind: "capture-content" as const,
+          source: path.join(STORM_PATHS.ownedConfigDir, `${content}.yml`),
+          target: `TheStorm/${content}.yml`,
+          content,
+          spawn,
+          sha256: mapSource.sha256,
+          additionalWorlds,
+        }),
+      ),
+      ...["survival", "rustworks"].map((arena) => ({
         kind: "capture-content" as const,
-        source: path.join(STORM_PATHS.ownedConfigDir, `${content}.yml`),
-        target: `TheStorm/${content}.yml`,
-        content,
+        source: path.join(STORM_PATHS.ownedConfigDir, "arena", `${arena}.yml`),
+        target: `TheStorm/arena/${arena}.yml`,
+        content: "arena-survival" as const,
         spawn,
         sha256: mapSource.sha256,
+        additionalWorlds,
       })),
     ],
   };

@@ -6,6 +6,7 @@ import { PublicMediaSchema } from "#protocol/media.ts";
 import { mediaMarkup } from "#protocol/media-markup.ts";
 import type { CaptureRun } from "./model.ts";
 import { sha256 } from "./media.ts";
+import { isImportedWorld } from "#sandbox/map-provenance.ts";
 
 const DerivationSchema = z.strictObject({
   sourceSha256: z.string(),
@@ -94,7 +95,8 @@ async function install(
 
 function requirePublishable(run: CaptureRun): void {
   if (
-    (run.target !== "live" && run.mapSource === undefined) ||
+    (run.target !== "live" &&
+      !isImportedWorld(run.mapSource, run.box.world, run.server)) ||
     run.state !== "complete"
   )
     throw new Error(

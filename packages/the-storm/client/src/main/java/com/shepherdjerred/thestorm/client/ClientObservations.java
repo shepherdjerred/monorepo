@@ -59,7 +59,11 @@ final class ClientObservations {
               "width",
               widget.getWidth(),
               "height",
-              widget.getHeight()));
+              widget.getHeight(),
+              "value",
+              widget instanceof net.minecraft.client.gui.components.EditBox input
+                  ? input.getValue()
+                  : ""));
     }
     return Map.of("revision", revision(client, widgets), "controls", rows);
   }
@@ -80,6 +84,25 @@ final class ClientObservations {
     return "Control activated";
   }
 
+  Object type(Minecraft client, JsonNode args) {
+    Protocol.keys(args, Set.of("revision", "id", "text"));
+    var widgets = widgets(client);
+    if (!Protocol.text(args, "revision", 100).equals(revision(client, widgets)))
+      throw new IllegalStateException("Screen changed; inspect controls again");
+    var widget = widgets.get(Protocol.integer(args, "id", 0, widgets.size() - 1));
+    if (!(widget instanceof net.minecraft.client.gui.components.EditBox input)
+        || !input.active
+        || !input.visible) throw new IllegalStateException("Control is not an editable text field");
+    var text = args.required("text");
+    if (!text.isString()
+        || text.stringValue().length() > 200
+        || text.stringValue().contains("\n")
+        || text.stringValue().contains("\r"))
+      throw new IllegalArgumentException("Invalid screen text");
+    input.setValue(text.stringValue());
+    return "Text field updated";
+  }
+
   private static String revision(Minecraft client, List<AbstractWidget> widgets) {
     var signature = new StringBuilder().append(System.identityHashCode(client.gui.screen()));
     for (var widget : widgets)
@@ -91,7 +114,12 @@ final class ClientObservations {
           .append(':')
           .append(widget.active)
           .append(':')
-          .append(widget.visible);
+          .append(widget.visible)
+          .append(':')
+          .append(
+              widget instanceof net.minecraft.client.gui.components.EditBox input
+                  ? input.getValue()
+                  : "");
     return Integer.toHexString(signature.toString().hashCode());
   }
 

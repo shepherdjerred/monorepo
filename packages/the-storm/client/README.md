@@ -111,6 +111,13 @@ produce schema 4 `mc-docs-frames` receipts. Cancellation and missed sampling
 slots produce incomplete receipts that cannot be exported. `release-inputs`
 releases held keys without cancelling the recording; `release` cancels both.
 `screen-inspect`, `screen-activate`, and cursor-based `messages` expose UI readiness.
+`screen-type` edits an observed text field using its current revision and control
+ID. `chat-open` expands real command output, `advancements` opens the vanilla
+advancement screen (optionally selecting an installed root with `tab`), and `hover-slot` positions the pointer over an observed
+container slot to render its ordinary tooltip. Hovering requires the current
+container ID and state ID and never transfers an item. Local capture scenes
+can cycle paintings only when the entire observed entity fits their declared
+fixture; live entity interactions remain refused.
 The spectator workflow below retains its independent RWF contract.
 
 Place a spectator observer at the desired viewpoint in the owned sandbox's

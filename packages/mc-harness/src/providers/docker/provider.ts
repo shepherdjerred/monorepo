@@ -320,6 +320,10 @@ export class DockerSandboxProvider implements SandboxProvider {
         profile: request.profile,
         world: request.world,
         ...(mapSource === undefined ? {} : { mapSource }),
+        ...(request.rollout === undefined ? {} : { rollout: request.rollout }),
+        ...(request.captureFeatures === undefined
+          ? {}
+          : { captureFeatures: request.captureFeatures }),
         status: "ready",
         createdAt,
         expiresAt,

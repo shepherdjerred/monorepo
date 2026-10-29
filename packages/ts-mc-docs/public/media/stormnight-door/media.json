@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "stormnight-door",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/stormnight-door/original.webp",
+  "poster": "/media/stormnight-door/poster.webp",
+  "alt": "Visit one of Stormnight’s authored doors while the annual event is active.",
+  "caption": "Visit one of Stormnight’s authored doors while the annual event is active.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.28],
+      "to": [0.5, 0.51],
+      "text": "Participating door",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

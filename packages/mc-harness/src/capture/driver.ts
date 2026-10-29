@@ -26,6 +26,7 @@ import type { CaptureContext } from "./define.ts";
 
 import { save, type CaptureRun } from "./model.ts";
 import { createLookAt } from "./camera.ts";
+import { createInteractions } from "./interactions.ts";
 
 function decimal(value: number): string {
   return Number.isInteger(value) ? value.toFixed(1) : value.toString();
@@ -166,35 +167,14 @@ export async function createDriver(directory: string, run: CaptureRun) {
   };
   const lookAt = createLookAt(status, native, waitFor);
   const messages = createMessageControls(native);
-  const interact = async (action: "use" | "attack", sneak = false) => {
-    await messages.mark();
-    if (sneak) {
-      const held = (async () => {
-        try {
-          await bounded("input", { buttons: ["sneak"], ticks: 40 });
-        } catch (error) {
-          if (
-            !(error instanceof Error) ||
-            !error.message.endsWith("Input cancelled")
-          )
-            throw error;
-        }
-      })();
-      await waitFor(
-        "sneak held",
-        (state) =>
-          state.connected &&
-          state.heldInputs.includes("sneak") &&
-          state["crouching"] === true,
-      );
-      try {
-        await bounded(action);
-      } finally {
-        await native("release-inputs");
-        await held;
-      }
-    } else await bounded(action);
-  };
+  const interact = createInteractions({
+    mark: messages.mark,
+    bounded,
+    native,
+    waitFor,
+    status,
+    lookAt,
+  });
   const saveCapture = createCaptureSaver(directory, run);
   const recording = { active: false };
   const context: CaptureContext = {
@@ -237,6 +217,7 @@ export async function createDriver(directory: string, run: CaptureRun) {
     },
     playerCommand: messages.command,
     id: run.id,
+    target: run.target,
     track: async (track, level) => {
       if (!Number.isInteger(level) || level < 0 || level > 5)
         throw new Error("Invalid track level");
@@ -283,6 +264,7 @@ export async function createDriver(directory: string, run: CaptureRun) {
         "click",
         "sign-write",
         "screen-activate",
+        "screen-type",
         "move",
       ].includes(action)
         ? bounded(action === "move" ? "input" : action, args)
@@ -417,6 +399,8 @@ export async function createDriver(directory: string, run: CaptureRun) {
     context,
     native,
     bounded,
+    attack: context.attack,
+    playerCommand: messages.command,
     command,
     teleport,
     lookAt,

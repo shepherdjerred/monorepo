@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "hidden-switch",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/hidden-switch/original.webp",
+  "poster": "/media/hidden-switch/poster.webp",
+  "alt": "An X sign on the hidden side of a block with an adjacent powered lever",
+  "caption": "Click the opposite face of the supporting block to toggle the lever beside the sign.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.34],
+      "to": [0.55, 0.47],
+      "text": "Hidden sign",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.29, 0.36],
+      "to": [0.42, 0.57],
+      "text": "Lever",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

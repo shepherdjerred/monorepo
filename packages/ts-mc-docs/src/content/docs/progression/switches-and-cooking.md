@@ -9,9 +9,18 @@ Mechanic I lets you build and use these signs where you have permission. Write t
 
 Attach a wall sign to a block and write `[X]` on its second line. Right-click the supporting block from the other side to operate the hidden switch. Connect redstone to use its signal.
 
+<div><storm-media data-manifest="/media/hidden-switch/media.json"><figure><img alt="An X sign beside a powered lever on the hidden side of a block" src="/media/hidden-switch/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Click the opposite face of the supporting block to toggle the lever beside the sign.</figcaption></figure></storm-media></div>
+<p><a href="/media/hidden-switch/annotated.webp" download>Download annotated image</a></p>
+
 ## Light switch
 
 Write `[|]` on line 2 of a sign and right-click it to toggle nearby supported lights together. It searches within eight blocks and handles up to 32 lights, including candles, candle cakes and copper bulbs.
+
+<div><storm-media data-manifest="/media/lights-off/media.json"><figure><img alt="An unlit copper bulb and candle beside their light-switch sign" src="/media/lights-off/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The supported lights start off.</figcaption></figure></storm-media></div>
+<p><a href="/media/lights-off/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/lights-on/media.json"><figure><img alt="The same copper bulb and candle lit together by the light-switch sign" src="/media/lights-on/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>One sign switches both nearby lights on together.</figcaption></figure></storm-media></div>
+<p><a href="/media/lights-on/annotated.webp" download>Download annotated image</a></p>
 
 ## Cooking pot
 

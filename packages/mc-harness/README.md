@@ -232,8 +232,9 @@ bank, owner shop test, elevator, moving bridge, and private Stargates. Setup
 declares the complete bounds, inspectors, and an outside staging point.
 Author assertions against inventory, exact blocks, messages received after
 the action, and observed arrival rather than successful command dispatch.
-The shop example tests the owner's supported access mode; it does not prove
-a payment between two accounts.
+The owner shop example tests the owner's supported access mode. The separate
+customer scene uses a second genuine client and verifies both players' balances
+and inventory transfers before restoring them.
 
 ```bash
 toolkit mc capture doctor --target live --account XiguaJerred
@@ -325,6 +326,59 @@ public media, preserves replaced assets privately, and prints escaped markup
 for player docs. It never publishes run journals, absolute paths, coordinates,
 chat logs, tokens, or screenshots from rehearsal. The docs build validates
 manifest identities, required derivatives, and all built media references.
+
+For an existing menu or landmark, use a read-only observation instead of staging
+a scene:
+
+```bash
+toolkit mc capture observe /private/presentation.json --target live --account XiguaJerred --reason "Capture the current player guide"
+```
+
+The file uses the same presentation schema as a scene capture. Observation takes
+fresh frames after terrain sections finish loading and rendering, checks the client's UUID and world against the target
+server, and uses the same account lock, private provenance, render, review, and
+export steps. It leaves the current screen, inventory, progression, and terrain
+alone and works with an older bridge that provides ordinary info and players
+routes. Local observations require a fingerprinted real-map copy and an imported
+dimension; a generated auxiliary world does not inherit that provenance.
+
+Add `--seconds 3` to record a short view instead of a still (1–60 seconds).
+The recorder uses the same verified native framebuffer receipts as scene clips
+and restores its window settings. Observation does not trigger gameplay: drive
+the demonstrated flow separately after the native recorder reaches `CAPTURING`.
+
+Real-map sessions can explicitly use a reachable flag provider with
+`--rollout-url <https-endpoint> --rollout-environment prod|beta`. This changes
+only the disposable server's bootstrap and records that choice in its private
+provenance. It reads the provider's actual decisions; it never opens a closed
+gate or changes remote targeting. Credentials and query parameters are refused.
+Without both options, the profile retains its inert local rollout reader.
+
+Repeat `--capture-feature` to enable `stargates`, `quests`, `shards`, `arena`,
+`rwf`, or `advancements`. Their required gameplay services load together;
+external chat, bots, and AI modules stay omitted. RWF requires saved terrain
+under `dimensions/minecraft/rwf`; Stargates requires the saved creative world
+under `dimensions/minecraft/creative` for its destination service. Cross-world
+server hubs are omitted from this isolated copy; player networks remain available.
+Arena's survival maps run only when their matching terrain is imported; the
+Colosseum retains its main-world configuration. The generated Multiverse
+registry loads imported normal worlds before
+The Storm validates them; plugin-owned creative and Skylands retain their own
+loaders. Shards'
+drop-world list is mapped to loaded worlds; its authored altar coordinates and
+strict block validation remain intact. Use a map whose configured arenas,
+altars, and NPC locations exist before enabling those features.
+
+Scene recovery verifies its terrain, player body, and declared module state.
+Progression state outside that contract belongs in prepared observations on a
+disposable target, which is removed after the demonstration.
+
+Scenes can register a `player-command` compensation with an expected reply and
+an exact standing/aim point. Cleanup observes that reply before restoring the
+target's terrain. Bank and shop signs still use native breaking to remove their
+registered resources; a break compensation can request sneaking for admin shop
+removal. Held-input failures release the controls, and aiming accounts for the
+actual eye height after crouching.
 
 Actors are Citizens NPCs, so Storm's `Humans.isHuman()` (no `NPC` metadata)
 filters them out of most Storm listeners: towns, economy, shops, quests,

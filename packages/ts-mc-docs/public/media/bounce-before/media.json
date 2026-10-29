@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "bounce-before",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/bounce-before/original.webp",
+  "poster": "/media/bounce-before/poster.webp",
+  "alt": "A loose item rests above an upward-facing Bounce piston before redstone power.",
+  "caption": "A loose item rests above an upward-facing Bounce piston before redstone power.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.75, 0.32],
+      "to": [0.52, 0.55],
+      "text": "Item on Bounce",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

@@ -19,6 +19,9 @@ For removing members and choosing who can use a chunk, see [Sharing a camp](/hom
 
 Outsiders cannot build, open containers, or harm animals on camp land. New containers have their own locks. PvP is on by default. If no member comes online for 90 days, the camp and its claims are removed; blocks and locks remain. A warning appears during the last 14 days.
 
+<div><storm-media data-manifest="/media/camp-overview/media.json"><figure><img alt="Your camp reports its members, claimed chunks, and activity window." src="/media/camp-overview/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Your camp reports its members, claimed chunks, and activity window.</figcaption></figure></storm-media></div>
+<p><a href="/media/camp-overview/annotated.webp" download>Download annotated image</a></p>
+
 ## Grow into a town
 
 Once the owner has Governor I, `/camp graduate <name>` turns the camp into a named town, keeping its chunks and members. The camp's inactivity clock stops. You can train Governor with a trainer or `/perks`.
@@ -28,6 +31,9 @@ Use `/town list` to see towns and `/town info` for information about yours. A to
 ## Manage a town
 
 Members can leave with `/town leave`. Owners and assistants can remove someone below their rank with `/town kick <player>`. The owner can make a member an assistant with `/town promote <player>` or return an assistant to member with `/town demote <player>`. Owners cannot leave until they transfer ownership or delete the town. To transfer it, use `/town transfer <player>` and then `/town transfer confirm` within 60 seconds. The successor must be online, have Governor I, and have a high enough Governor level for the town's current land.
+
+<div><storm-media data-manifest="/media/town-transfer-confirmation/media.json"><figure><img alt="Ownership handover requires a separate confirmation before the owner changes." src="/media/town-transfer-confirmation/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Ownership handover requires a separate confirmation before the owner changes.</figcaption></figure></storm-media></div>
+<p><a href="/media/town-transfer-confirmation/annotated.webp" download>Download annotated image</a></p>
 
 See [Town roles](/homes/town-roles/) for the permissions each role receives.
 

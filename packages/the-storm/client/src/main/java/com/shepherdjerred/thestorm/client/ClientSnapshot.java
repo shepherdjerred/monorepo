@@ -1,10 +1,14 @@
 package com.shepherdjerred.thestorm.client;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.chunk.CompiledSectionMesh;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -33,6 +37,12 @@ final class ClientSnapshot {
     return Map.ofEntries(
         Map.entry("connected", true),
         Map.entry("renderedFrames", RenderCapture.renderedFrames()),
+        Map.entry(
+            "terrainReady",
+            terrainLoaded(client)
+                && client.levelRenderer.hasRenderedAllSections()
+                && terrainVisible(client)),
+        Map.entry("chunkStats", client.level.gatherChunkSourceStats()),
         Map.entry("uuid", player.getUUID().toString()),
         Map.entry("name", player.getName().getString()),
         Map.entry("position", List.of(player.getX(), player.getY(), player.getZ())),
@@ -44,6 +54,7 @@ final class ClientSnapshot {
         Map.entry("hotbar", player.getInventory().getSelectedSlot()),
         Map.entry("swinging", player.isSwinging()),
         Map.entry("crouching", player.isCrouching()),
+        Map.entry("eyeHeight", player.getEyeHeight()),
         Map.entry("screen", screen == null ? "" : screen.getTitle().getString()),
         Map.entry("containerId", container.containerId),
         Map.entry("stateId", container.getStateId()),
@@ -52,6 +63,30 @@ final class ClientSnapshot {
         Map.entry("slots", slots),
         Map.entry("target", target(client)),
         Map.entry("fps", client.getFps()));
+  }
+
+  private static boolean terrainLoaded(Minecraft client) {
+    var player = requireNonNull(client.player);
+    var level = requireNonNull(client.level);
+    var chunk = player.chunkPosition();
+    for (var x = chunk.x() - 1; x <= chunk.x() + 1; x++) {
+      for (var z = chunk.z() - 1; z <= chunk.z() + 1; z++) {
+        if (!level.hasChunk(x, z)) return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean terrainVisible(Minecraft client) {
+    var sections = client.levelRenderer.visibleSections();
+    if (sections.isEmpty()) return false;
+    var now = Util.getMillis();
+    var fade = Util.toMillis(client.options.chunkSectionFadeInTime().get());
+    return sections.stream()
+        .allMatch(
+            section ->
+                !CompiledSectionMesh.UNCOMPILED.equals(section.getSectionMesh())
+                    && section.getVisibility(now, fade) >= 1.0f);
   }
 
   private static Item item(int slot, ItemStack stack) {
@@ -74,17 +109,33 @@ final class ClientSnapshot {
           "block",
           "position",
           List.of(pos.getX(), pos.getY(), pos.getZ()),
+          "hit",
+          List.of(block.getLocation().x, block.getLocation().y, block.getLocation().z),
           "type",
           BuiltInRegistries.BLOCK.getKey(client.level.getBlockState(pos).getBlock()).toString());
     }
     if (hit instanceof EntityHitResult entity) {
+      var target = entity.getEntity();
+      var box = target.getBoundingBox();
       return Map.of(
           "kind",
           "entity",
           "id",
           entity.getEntity().getId(),
           "type",
-          BuiltInRegistries.ENTITY_TYPE.getKey(entity.getEntity().getType()).toString());
+          BuiltInRegistries.ENTITY_TYPE.getKey(target.getType()).toString(),
+          "uuid",
+          target.getUUID().toString(),
+          "bounds",
+          Map.of(
+              "min",
+              List.of(box.minX, box.minY, box.minZ),
+              "max",
+              List.of(box.maxX, box.maxY, box.maxZ)),
+          "variant",
+          target instanceof net.minecraft.world.entity.decoration.painting.Painting painting
+              ? painting.getVariant().unwrapKey().orElseThrow().identifier().toString()
+              : "");
     }
     return Map.of("kind", "miss");
   }

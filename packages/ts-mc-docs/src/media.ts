@@ -76,7 +76,16 @@ class StormMedia extends HTMLElement {
     });
     const controls = document.createElement("div");
     controls.className = "storm-media-controls";
-    controls.append(toggle, steps);
+    if (manifest.annotations.length > 0) controls.append(toggle);
+    if (media instanceof HTMLImageElement) {
+      const fullSize = document.createElement("a");
+      fullSize.href = manifest.src;
+      fullSize.target = "_blank";
+      fullSize.rel = "noopener";
+      fullSize.textContent = "Open full-size image";
+      controls.append(fullSize);
+    }
+    if (manifest.annotations.length > 0) controls.append(steps);
     this.append(controls);
     toggle.addEventListener(
       "click",

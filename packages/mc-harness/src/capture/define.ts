@@ -8,7 +8,15 @@ export type Cleanup =
   | ({ kind: "resource" } & CaptureResource)
   | { kind: "command"; command: string }
   | {
+      kind: "player-command";
+      command: string;
+      expectedMessage: string;
+      standing: [number, number, number];
+      look: [number, number, number];
+    }
+  | {
       kind: "break";
+      sneak?: boolean;
       position: [number, number, number];
       standing: [number, number, number];
     };
@@ -26,6 +34,7 @@ export type CaptureScene = {
 
 export type CaptureContext = {
   id: string;
+  target: string;
   name: string;
   box: Box;
   at: (x: number, y: number, z: number) => [number, number, number];

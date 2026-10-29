@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "ticket-help",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/ticket-help/original.webp",
+  "poster": "/media/ticket-help/poster.webp",
+  "alt": "Start a report with /ticket and a description of the problem.",
+  "caption": "Start a report with /ticket and a description of the problem.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.68],
+      "to": [0.2, 0.84],
+      "text": "Describe the problem",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

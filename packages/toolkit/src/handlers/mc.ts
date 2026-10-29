@@ -35,7 +35,7 @@ import {
   liveWriteFlags,
   type LiveWriteValues,
 } from "#lib/mc/live.ts";
-import { parseMcArgs } from "./mc-args.ts";
+import { parseMcArgs, rolloutInput, captureFeatureInput } from "./mc-args.ts";
 import { handleMcClient } from "./mc-client.ts";
 import { handleMcFiles } from "./mc-files.ts";
 import { handleMcEvidence } from "./mc-evidence.ts";
@@ -164,6 +164,9 @@ async function handleSandbox(args: string[]): Promise<void> {
     world: { type: "string", default: "flat" },
     "map-directory": { type: "string" },
     "map-spawn": { type: "string" },
+    "rollout-url": { type: "string" },
+    "rollout-environment": { type: "string" },
+    "capture-feature": { type: "string", multiple: true },
     ttl: { type: "string" },
     keep: { type: "boolean", default: false },
     all: { type: "boolean", default: false },
@@ -181,6 +184,8 @@ async function handleSandbox(args: string[]): Promise<void> {
           ? {}
           : { mapDirectory: values["map-directory"] }),
         ...(mapSpawn === undefined ? {} : { mapSpawn }),
+        ...rolloutInput(values["rollout-url"], values["rollout-environment"]),
+        ...captureFeatureInput(values["capture-feature"]),
         ttlSeconds:
           values.ttl === undefined
             ? DEFAULT_SANDBOX_TTL_SECONDS

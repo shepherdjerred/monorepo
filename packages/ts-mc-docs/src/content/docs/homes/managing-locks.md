@@ -15,6 +15,9 @@ This spawn chest is in staff custody. A player-owned chest instead shows its own
 
 New locks block redstone on dispensers, droppers, and crafters. The owner can use `/lock redstone on` to allow it, or `/lock redstone off` to block it again. To permit item transfers, use `/lock hopper on` on each locked container involved. Use `/lock hopperin on` or `/lock hopperout on` to allow only transfers in or out, respectively.
 
+<div><storm-media data-manifest="/media/lock-trusted/media.json"><figure><img alt="Manage access lets a trusted player open and break the locked container." src="/media/lock-trusted/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Manage access lets a trusted player open and break the locked container.</figcaption></figure></storm-media></div>
+<p><a href="/media/lock-trusted/annotated.webp" download>Download annotated image</a></p>
+
 ## Choose a lock type
 
 The owner can change the lock by looking at it and using one of these commands:
@@ -29,6 +32,25 @@ The owner can change the lock by looking at it and using one of these commands:
 | `/lock password <password>` | Players who enter the password during their session can use it. |
 
 To open a password lock, interact with it and type the password in chat when prompted. The response is not broadcast, and access lasts until you log out.
+
+<details><summary>Example messages for each lock type</summary>
+
+<div><storm-media data-manifest="/media/lock-private/media.json"><figure><img alt="A private lock names its owner and blocks untrusted players." src="/media/lock-private/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A private lock names its owner and blocks untrusted players.</figcaption></figure></storm-media></div>
+<p><a href="/media/lock-private/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/lock-public/media.json"><figure><img alt="A public lock allows anyone to use the container." src="/media/lock-public/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A public lock allows anyone to use the container.</figcaption></figure></storm-media></div>
+<p><a href="/media/lock-public/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/lock-donation/media.json"><figure><img alt="A donation lock lets visitors add items without taking them." src="/media/lock-donation/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A donation lock lets visitors add items without taking them.</figcaption></figure></storm-media></div>
+<p><a href="/media/lock-donation/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/lock-supply/media.json"><figure><img alt="A supply lock lets visitors take items without adding them." src="/media/lock-supply/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A supply lock lets visitors take items without adding them.</figcaption></figure></storm-media></div>
+<p><a href="/media/lock-supply/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/lock-display/media.json"><figure><img alt="A display lock lets visitors look without moving items." src="/media/lock-display/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A display lock lets visitors look without moving items.</figcaption></figure></storm-media></div>
+<p><a href="/media/lock-display/annotated.webp" download>Download annotated image</a></p>
+
+</details>
 
 ## Change your lock modes
 

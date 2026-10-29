@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "super-push-before",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/super-push-before/original.webp",
+  "poster": "/media/super-push-before/poster.webp",
+  "alt": "Two oak planks sit directly in front of the SuperPush piston.",
+  "caption": "Two oak planks sit directly in front of the SuperPush piston.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.32, 0.3],
+      "to": [0.56, 0.49],
+      "text": "Two planks",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

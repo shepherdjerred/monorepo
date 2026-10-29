@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "sign-copied",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/sign-copied/original.webp",
+  "poster": "/media/sign-copied/poster.webp",
+  "alt": "Two signs now display the same welcome and storage-room text",
+  "caption": "Punch the source sign with a feather, then right-click the destination to paste its text.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.24, 0.29],
+      "to": [0.27, 0.48],
+      "text": "Source",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.58, 0.29],
+      "to": [0.62, 0.48],
+      "text": "Pasted text",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

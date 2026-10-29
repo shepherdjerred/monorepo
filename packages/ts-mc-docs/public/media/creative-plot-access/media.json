@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "creative-plot-access",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/creative-plot-access/original.webp",
+  "poster": "/media/creative-plot-access/poster.webp",
+  "alt": "The owner trusts an online helper and enables visitor interactions on this plot.",
+  "caption": "The owner trusts an online helper and enables visitor interactions on this plot.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.63, 0.66],
+      "to": [0.23, 0.84],
+      "text": "Trust + visitor use",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

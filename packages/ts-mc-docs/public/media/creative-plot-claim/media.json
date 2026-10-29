@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "creative-plot-claim",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/creative-plot-claim/original.webp",
+  "poster": "/media/creative-plot-claim/poster.webp",
+  "alt": "Your claimed plot remains part of the recovered creative world.",
+  "caption": "Your claimed plot remains part of the recovered creative world.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.63, 0.66],
+      "to": [0.19, 0.84],
+      "text": "Plot information",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

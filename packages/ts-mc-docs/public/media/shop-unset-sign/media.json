@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "shop-unset-sign",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/shop-unset-sign/original.webp",
+  "poster": "/media/shop-unset-sign/poster.webp",
+  "alt": "A question mark leaves the item unset until the owner selects it.",
+  "caption": "A question mark leaves the item unset until the owner selects it.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.7, 0.3],
+      "to": [0.5, 0.54],
+      "text": "Choose item",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

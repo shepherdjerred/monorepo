@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "quest-partial-delivery",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/quest-partial-delivery/original.webp",
+  "poster": "/media/quest-partial-delivery/poster.webp",
+  "alt": "Thomas accepts 16 iron ingots toward the 32 required; the journal preserves the partial delivery.",
+  "caption": "Thomas accepts 16 iron ingots toward the 32 required; the journal preserves the partial delivery.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.02, 0.2],
+      "to": [0.5, 0.41],
+      "text": "16 / 32",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

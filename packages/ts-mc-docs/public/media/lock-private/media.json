@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "lock-private",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/lock-private/original.webp",
+  "poster": "/media/lock-private/poster.webp",
+  "alt": "A private lock names its owner and blocks untrusted players.",
+  "caption": "A private lock names its owner and blocks untrusted players.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.59, 0.65],
+      "to": [0.32, 0.84],
+      "text": "Private",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

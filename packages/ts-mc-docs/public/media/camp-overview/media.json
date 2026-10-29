@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "camp-overview",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/camp-overview/original.webp",
+  "poster": "/media/camp-overview/poster.webp",
+  "alt": "Your camp reports its members, claimed chunks, and activity window.",
+  "caption": "Your camp reports its members, claimed chunks, and activity window.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.58, 0.63],
+      "to": [0.27, 0.84],
+      "text": "Members + land",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}
