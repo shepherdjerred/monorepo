@@ -772,25 +772,41 @@ final class BotChatTest {
     assertThat(heard(redBody)).as("bot bodies are never an audience").isEmpty();
   }
 
+  /**
+   * Alice (blue, far away) and one red bot, with Robin red but out of the fight: the red bot is the
+   * last of its team and makes for the blue bomb at once, with nobody in sight.
+   */
+  private CombatantId.Bot lonePlanter(PlayerMock alice, PlayerMock robin) {
+    var harness = harness();
+    return live(
+            alice,
+            0,
+            1,
+            () -> {
+              harness.match.fireJoin(new CombatantId.Human(robin.getUniqueId()), "Robin");
+              harness.match.fighting(robin.getUniqueId(), TeamColor.RED, "trooper");
+              harness.match.kill(robin.getUniqueId());
+              alice.teleport(new Location(harness.world, 200.5, 1, 200.5));
+            })
+        .getFirst();
+  }
+
+  /** The planter's plant calls among {@code heard}, the red bot's team lines. */
+  private List<String> plantCalls(CombatantId.Bot planter, List<String> heard) {
+    var prefix = "[Tm][● " + name(planter) + " ✦]: ";
+    return heard.stream()
+        .filter(line -> line.startsWith(prefix))
+        .map(line -> line.substring(prefix.length()).toLowerCase(java.util.Locale.ROOT))
+        .filter(line -> line.startsWith("planting") || line.startsWith("going blue bomb"))
+        .toList();
+  }
+
   @Test
   void aBotsObjectiveCallReachesItsHumanTeammateInTeamChatOnce() {
     var harness = start("greet", BotChatTest::teams);
     var alice = harness.player("Alice");
     var robin = harness.player("Robin");
-    var redBot =
-        live(
-                alice,
-                0,
-                1,
-                () -> {
-                  // Robin is red, but out of the fight: the red bot is the last of its team and
-                  // makes for the blue bomb at once, with nobody in sight.
-                  harness.match.fireJoin(new CombatantId.Human(robin.getUniqueId()), "Robin");
-                  harness.match.fighting(robin.getUniqueId(), TeamColor.RED, "trooper");
-                  harness.match.kill(robin.getUniqueId());
-                  alice.teleport(new Location(harness.world, 200.5, 1, 200.5));
-                })
-            .getFirst();
+    var redBot = lonePlanter(alice, robin);
     var aliceHeard = new ArrayList<String>();
     var robinHeard = new ArrayList<String>();
     for (var second = 0; second < 10; second++) {
@@ -798,17 +814,42 @@ final class BotChatTest {
       aliceHeard.addAll(heard(alice));
       robinHeard.addAll(heard(robin));
     }
-    var prefix = "[Tm][● " + name(redBot) + " ✦]: ";
-    assertThat(
-            robinHeard.stream()
-                .filter(line -> line.startsWith(prefix))
-                .map(line -> line.substring(prefix.length()).toLowerCase(java.util.Locale.ROOT))
-                .filter(line -> line.startsWith("planting") || line.startsWith("going blue bomb")))
+    assertThat(plantCalls(redBot, robinHeard))
         .as("the red planter calls its plant to Robin, once: %s", robinHeard)
         .hasSize(1);
+    var prefix = "[Tm][● " + name(redBot) + " ✦]: ";
     assertThat(aliceHeard)
         .as("blue never hears red's team calls")
         .noneMatch(line -> line.startsWith(prefix));
+  }
+
+  @Test
+  void aJumpMidCallHoldsTheCallUntilTheLandingInsteadOfDroppingIt() {
+    var harness = start("greet", BotChatTest::teams);
+    var alice = harness.player("Alice");
+    var robin = harness.player("Robin");
+    var redBot = lonePlanter(alice, robin);
+    var chat = harness.paper().chat().orElseThrow();
+    var robinHeard = new ArrayList<String>();
+    for (var tick = 0; tick < 200 && !chat.typingUrgently(redBot.uuid()); tick++) {
+      harness.tick();
+      robinHeard.addAll(heard(robin));
+    }
+    assertThat(chat.typingUrgently(redBot.uuid())).as("the planter types its call").isTrue();
+    // A leap on the way: half a second in the air, as BotTicker reports every airborne tick.
+    for (var tick = 0; tick < 10; tick++) {
+      chat.defer(redBot.uuid());
+      assertThat(chat.typingUrgently(redBot.uuid())).as("no typing in the air").isFalse();
+      harness.tick();
+      robinHeard.addAll(heard(robin));
+    }
+    for (var second = 0; second < 8; second++) {
+      harness.ticks(20);
+      robinHeard.addAll(heard(robin));
+    }
+    assertThat(plantCalls(redBot, robinHeard))
+        .as("the call is typed after the landing and said once: %s", robinHeard)
+        .hasSize(1);
   }
 
   @Test
