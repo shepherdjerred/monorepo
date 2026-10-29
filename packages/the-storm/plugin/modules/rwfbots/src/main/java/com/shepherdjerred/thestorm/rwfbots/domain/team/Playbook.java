@@ -25,6 +25,11 @@ import java.util.Set;
  *   <li>HUNT: sweeping pairs towards where the enemy was seen, a planter and overwatch.
  * </ul>
  *
+ * <p>Every {@link #PLANTER_EVERY}th place past the first of a large team is another planter on a
+ * side lane, so a big team carries more than one fuse up the field. A team closing out the round
+ * ({@link Setup#closing()}) drops its strategy for a plant rush with escorts and sweeping pairs
+ * hunting the last enemies where they were seen.
+ *
  * <p>The team moves up the field: lane and flank slots stand at the team's push, a progress along
  * the lanes that grows every deal until the team makes contact ({@link #ADVANCE} a deal from {@link
  * #START_PUSH}), so the side lanes advance with the planter instead of waiting at home.
@@ -98,6 +103,9 @@ public final class Playbook {
   /** How far beside its partner the second sweeper walks. */
   static final double SWEEP_PARTNER = 4.5;
 
+  /** Every this many places of a team, one more is a planter: about one planter per nine bots. */
+  public static final int PLANTER_EVERY = 9;
+
   private static final int SNAP = 3;
   private static final int SEARCH_RINGS = 8;
   // How far past a slot that falls in water placement looks for dry ground.
@@ -121,6 +129,7 @@ public final class Playbook {
    * @param sightings where teammates last saw enemies, newest first
    * @param enemyHome where the enemy starts
    * @param watchers nav regions the enemy can see from, for picking hidden flank points
+   * @param closing whether the team is closing out the round: the plant rush and the hunt
    */
   public record Setup(
       NavArtifact nav,
@@ -135,7 +144,8 @@ public final class Playbook {
       double guardClear,
       List<Vec3> sightings,
       Vec3 enemyHome,
-      Set<Integer> watchers) {
+      Set<Integer> watchers,
+      boolean closing) {
 
     public Setup {
       lanes = List.copyOf(lanes);
@@ -171,11 +181,36 @@ public final class Playbook {
 
   /** The first {@code size} wants of {@code strategy}; without an objective, hold and hunt. */
   static List<Want> wants(Strategy strategy, int size, boolean objective) {
+    return wants(strategy, size, objective, false);
+  }
+
+  /**
+   * The first {@code size} wants of {@code strategy}, or of the closing rush while {@code closing};
+   * without an objective, hold and hunt.
+   */
+  static List<Want> wants(Strategy strategy, int size, boolean objective, boolean closing) {
     var out = new ArrayList<Want>(size);
     for (var i = 0; out.size() < size; i++) {
-      out.add(objective ? want(strategy, i) : guard(i));
+      out.add(objective ? attack(strategy, i, closing) : guard(i));
     }
-    return objective && size >= 4 ? balanceDefenders(out) : out;
+    return objective && size >= 4 && !closing ? balanceDefenders(out) : out;
+  }
+
+  /**
+   * The {@code i}th want with an objective: a further planter at every {@link #PLANTER_EVERY}th
+   * place, a fixed place so its slot key stays put as the team shrinks.
+   */
+  private static Want attack(Strategy strategy, int i, boolean closing) {
+    if (i >= PLANTER_EVERY && i % PLANTER_EVERY == 0) {
+      var left = (i / PLANTER_EVERY) % 2 == 1;
+      return Want.of(SlotKind.PLANT, left ? Lanes.Which.LEFT : Lanes.Which.RIGHT);
+    }
+    return closing ? close(i) : want(strategy, i);
+  }
+
+  /** How many planters a team of {@code size} deals with an objective. */
+  public static int planters(int size) {
+    return 1 + Math.max(0, size - 1) / PLANTER_EVERY;
   }
 
   private static List<Want> balanceDefenders(List<Want> wants) {
@@ -285,6 +320,22 @@ public final class Playbook {
     };
   }
 
+  /**
+   * Closing out the round: the planter with its wedge, sweeping pairs on both sides after the last
+   * enemies, and one anchor in case they make for the own bomb.
+   */
+  private static Want close(int i) {
+    return switch (i) {
+      case 0 -> Want.of(SlotKind.PLANT, Lanes.Which.MIDDLE);
+      case 1 -> Want.escort(ESCORT_SIDE);
+      case 2, 3 -> Want.paired(SlotKind.SWEEP, Lanes.Which.LEFT, 0);
+      case 4, 5 -> Want.paired(SlotKind.SWEEP, Lanes.Which.RIGHT, 1);
+      case 6 -> Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE);
+      case 7 -> Want.escort(-ESCORT_SIDE);
+      default -> Want.paired(SlotKind.SWEEP, cycle(i), i / 2);
+    };
+  }
+
   private static Want hunt(int i) {
     return switch (i) {
       case 0, 1 -> Want.paired(SlotKind.SWEEP, Lanes.Which.LEFT, 0);
@@ -308,7 +359,8 @@ public final class Playbook {
   public static List<Slot> deal(Setup setup) {
     var deal = new Deal(setup);
     var slots = new ArrayList<Slot>(setup.size());
-    for (var want : wants(setup.strategy(), setup.size(), setup.objective().isPresent())) {
+    for (var want :
+        wants(setup.strategy(), setup.size(), setup.objective().isPresent(), setup.closing())) {
       slots.add(deal.slot(want));
     }
     return slots;

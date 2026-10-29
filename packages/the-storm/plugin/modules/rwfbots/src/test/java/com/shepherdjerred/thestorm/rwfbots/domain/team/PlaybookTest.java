@@ -80,7 +80,10 @@ final class PlaybookTest {
 
   private static WorldSnapshot snapshot(long tick, List<CombatantView> bots) {
     var everyone = new ArrayList<>(bots);
-    everyone.add(Fixtures.combatant(99, BLUE, NAV.sites().spawns().getLast().cell().feet()));
+    // An even match: a lone enemy would have the team close out the round instead of playing.
+    for (var i = 0; i < Math.max(1, bots.size()); i++) {
+      everyone.add(Fixtures.combatant(99 + i, BLUE, NAV.sites().spawns().getLast().cell().feet()));
+    }
     return new WorldSnapshot(
         tick,
         MatchPhase.LIVE,
@@ -324,7 +327,8 @@ final class PlaybookTest {
                   1,
                   List.of(pond),
                   pond,
-                  Set.of()));
+                  Set.of(),
+                  false));
       assertThat(slots)
           .as(strategy.name())
           .allSatisfy(slot -> assertThat(slot.pos().x()).isLessThan(9));

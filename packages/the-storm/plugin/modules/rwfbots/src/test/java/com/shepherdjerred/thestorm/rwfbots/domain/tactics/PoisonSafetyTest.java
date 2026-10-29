@@ -72,7 +72,8 @@ final class PoisonSafetyTest {
             List.of(slot),
             Map.of(self.id(), slot.key()),
             0,
-            java.util.Map.of());
+            java.util.Map.of(),
+            -1);
     var snapshot =
         new WorldSnapshot(
             100,

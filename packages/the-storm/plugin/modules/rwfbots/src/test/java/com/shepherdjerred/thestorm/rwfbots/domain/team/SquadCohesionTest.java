@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 final class SquadCohesionTest {
   private static final Vec3 GOAL = new Vec3(20.5, 1, 5.5);
+  private static final TeamBrain.Odds EVEN = new TeamBrain.Odds(3, 3, false);
 
   private static TeamPlan previous() {
     var slots = List.of(slot("left"), slot("middle"), slot("right"));
@@ -26,7 +27,8 @@ final class SquadCohesionTest {
         Map.of(
             new CombatantId(1), "left", new CombatantId(2), "middle", new CombatantId(3), "right"),
         0,
-        Map.of());
+        Map.of(),
+        -1);
   }
 
   private static Slot slot(String key) {
@@ -40,22 +42,31 @@ final class SquadCohesionTest {
   @Test
   void theLineWaitsForTheSquadRatherThanAdvancingOnElapsedTimeAlone() {
     var plan = previous();
-    assertThat(TeamBrain.push(plan, List.of(bot(1, false), bot(2, false), bot(3, true)), false))
+    assertThat(
+            TeamBrain.push(
+                plan,
+                List.of(bot(1, false), bot(2, false), bot(3, true)),
+                contact(EVEN, false),
+                40))
         .isEqualTo(plan.push());
-    assertThat(TeamBrain.push(plan, List.of(bot(1, true), bot(2, true), bot(3, false)), false))
+    assertThat(
+            TeamBrain.push(
+                plan, List.of(bot(1, true), bot(2, true), bot(3, false)), contact(EVEN, false), 40))
         .isEqualTo(plan.push() + Playbook.ADVANCE);
   }
 
   @Test
   void contactAndDifferentFloorsDoNotCountAsAReadyAssaultLine() {
     var plan = previous();
-    assertThat(TeamBrain.push(plan, List.of(bot(1, true), bot(2, true), bot(3, true)), true))
+    assertThat(
+            TeamBrain.push(
+                plan, List.of(bot(1, true), bot(2, true), bot(3, true)), contact(EVEN, true), 40))
         .isEqualTo(plan.push());
     var above =
         List.of(bot(1, true), bot(2, true), bot(3, true)).stream()
             .map(bot -> bot.withPos(bot.pos().plus(0, 4, 0)))
             .toList();
-    assertThat(TeamBrain.push(plan, above, false)).isEqualTo(plan.push());
+    assertThat(TeamBrain.push(plan, above, contact(EVEN, false), 40)).isEqualTo(plan.push());
     assertThat(TeamBrain.ERRATIC).isLessThan(TeamBrain.STICKY);
   }
 
@@ -102,5 +113,9 @@ final class SquadCohesionTest {
     var bot = new CombatantId(1);
     assertThat(SquadCohesion.fit(Map.of(bot, 1), bot, lane(-1), 2)).isZero();
     assertThat(SquadCohesion.fit(Map.of(bot, 1), bot, lane(0), 1)).isZero();
+  }
+
+  private static TeamBrain.Odds contact(TeamBrain.Odds odds, boolean contact) {
+    return new TeamBrain.Odds(odds.ours(), odds.theirs(), contact);
   }
 }

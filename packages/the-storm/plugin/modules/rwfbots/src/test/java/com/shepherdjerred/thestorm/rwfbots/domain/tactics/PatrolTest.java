@@ -86,7 +86,8 @@ final class PatrolTest {
                     List.of(slot),
                     Map.of(self.id(), slot.key()),
                     0,
-                    Map.of()),
+                    Map.of(),
+                    -1),
                 0);
     var enemy = combatant(2, BLUE, SLOT.plus(12, 0, 0));
     var snapshot =

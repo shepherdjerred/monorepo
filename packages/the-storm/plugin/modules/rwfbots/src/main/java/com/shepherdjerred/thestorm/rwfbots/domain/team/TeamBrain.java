@@ -46,8 +46,14 @@ public final class TeamBrain {
   /** How much random preference an erratic (troll) bot adds to every slot. */
   static final double ERRATIC = 0.12;
 
-  /** An enemy seen this close to a teammate stops the team's push. */
+  /** An enemy seen this close to a teammate holds the team's push, unless it is winning. */
   static final double CONTACT = 24;
+
+  /**
+   * A push held this long, in ticks, moves anyway: two even teams in contact the whole round would
+   * otherwise never send the planter (prod: first plants at 210 s of 36 v 36).
+   */
+  public static final long STALL_TICKS = 200;
 
   /** Anchors keep this far from the bomb they hold when there is no poison. */
   static final double ANCHOR_MIN = 3;
@@ -179,7 +185,8 @@ public final class TeamBrain {
               plan.slots(),
               pending.assignment().finish(distances, random),
               plan.dealtTick(),
-              plan.groups());
+              plan.groups(),
+              plan.pushedTick());
       return board.withPlan(completed, tick);
     }
   }
@@ -219,7 +226,8 @@ public final class TeamBrain {
             .orElse(home);
     var poison = snapshot.poison();
     var clear = poison.active() ? poison.bombRadius() + POISON_ROOM : ANCHOR_MIN;
-    var push = push(board.plan(), alive, sightingsNear(board, snapshot.tick(), alive));
+    var odds = Odds.of(snapshot, team, sightingsNear(board, snapshot.tick(), alive));
+    var push = push(board.plan(), alive, odds, snapshot.tick());
     var setup =
         new Playbook.Setup(
             nav,
@@ -234,7 +242,8 @@ public final class TeamBrain {
             clear,
             sightings,
             enemyHome,
-            watchers(nav, sightings, enemyHome));
+            watchers(nav, sightings, enemyHome),
+            odds.closing());
     var slots = Playbook.deal(setup);
     var nuke = objective.map(bomb -> bomb.owner() instanceof BombOwner.Nuke).orElse(false);
     var assignment = new RoleAssignment(new Dealing(board.plan(), situation, alive, nuke), slots);
@@ -248,7 +257,10 @@ public final class TeamBrain {
             slots,
             Map.of(),
             snapshot.tick(),
-            Squads.deal(board.plan().groups(), alive, situation.members())),
+            Squads.deal(board.plan().groups(), alive, situation.members()),
+            push == board.plan().push() && board.plan().pushedTick() >= 0
+                ? board.plan().pushedTick()
+                : snapshot.tick()),
         assignment);
   }
 
@@ -266,22 +278,58 @@ public final class TeamBrain {
             slots,
             Map.of(),
             situation.snapshot().tick(),
-            Squads.deal(board.plan().groups(), alive, situation.members())),
+            Squads.deal(board.plan().groups(), alive, situation.members()),
+            board.plan().pushedTick()),
         assignment);
   }
 
   /**
-   * How far the team has pushed up its lanes: {@link Playbook#START_PUSH} at the first deal, then
-   * {@link Playbook#ADVANCE} more each deal up to {@link Playbook#MAX_PUSH}, holding where it is
-   * once the team is in contact.
+   * How the fight stands for a team.
+   *
+   * @param ours the team's living members, bots or not
+   * @param theirs every other team's living members
+   * @param contact whether a teammate saw an enemy close by lately
    */
-  static double push(TeamPlan previous, List<CombatantView> alive, boolean contact) {
+  record Odds(int ours, int theirs, boolean contact) {
+
+    /** Who is alive in {@code snapshot}, seen from {@code team}. */
+    static Odds of(WorldSnapshot snapshot, TeamId team, boolean contact) {
+      return new Odds(snapshot.alive(team).size(), snapshot.aliveEnemiesOf(team).size(), contact);
+    }
+
+    /**
+     * Whether the team is far enough ahead to close the round out: it outnumbers an enemy down to
+     * its last two, or outnumbers the enemy two to one. An even fight is never rushed.
+     */
+    boolean closing() {
+      return theirs > 0 && ((theirs <= 2 && ours > theirs) || ours >= 2 * theirs);
+    }
+
+    /** Whether the team leads by at least two and a quarter: a fight it can press. */
+    boolean leading() {
+      return ours >= theirs + 2 && ours * 4 >= theirs * 5;
+    }
+  }
+
+  /**
+   * How far the team has pushed up its lanes: {@link Playbook#START_PUSH} at the first deal, then
+   * {@link Playbook#ADVANCE} more each deal up to {@link Playbook#MAX_PUSH} once the team formed up
+   * on its last bound. In contact the team holds unless it leads the fight; any hold moves on after
+   * {@link #STALL_TICKS}, so an even stalemate still sends the planter, a bound at a time. Closing
+   * out the round goes all the way.
+   */
+  static double push(TeamPlan previous, List<CombatantView> alive, Odds odds, long now) {
     if (previous.dealtTick() < 0) {
       return Playbook.START_PUSH;
     }
-    return contact || !formedUp(previous, alive)
-        ? previous.push()
-        : Math.min(Playbook.MAX_PUSH, previous.push() + Playbook.ADVANCE);
+    if (odds.closing()) {
+      return Math.max(previous.push(), Playbook.MAX_PUSH);
+    }
+    var pressing = odds.contact() ? odds.leading() : formedUp(previous, alive);
+    var stalled = previous.pushedTick() >= 0 && now - previous.pushedTick() >= STALL_TICKS;
+    return pressing || stalled
+        ? Math.min(Playbook.MAX_PUSH, previous.push() + Playbook.ADVANCE)
+        : previous.push();
   }
 
   /** Advance the line only once most mobile squad members actually reach its previous bound. */

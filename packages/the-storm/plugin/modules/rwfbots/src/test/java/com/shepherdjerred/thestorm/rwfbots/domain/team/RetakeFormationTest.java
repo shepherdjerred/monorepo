@@ -132,7 +132,8 @@ final class RetakeFormationTest {
             List.of(held),
             Map.of(bots.get(1).id(), held.key()),
             0,
-            java.util.Map.of());
+            java.util.Map.of(),
+            -1);
     var airborne = List.of(bots.get(0), bots.get(1).withPos(bots.get(1).pos().plus(0, 20, 0)));
     assertThat(RetakeFormation.slots(tight, bomb(true), airborne, previous).get(1).pos())
         .isEqualTo(held.pos());
