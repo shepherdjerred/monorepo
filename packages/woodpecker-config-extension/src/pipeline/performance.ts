@@ -6,6 +6,11 @@ export const WORKSPACE_SEEDS = {
   claim: "woodpecker-workspace-seeds",
   path: "/woodpecker/workspace-seeds",
 };
+/** Written only by the golden maintenance publisher; see checkout/golden.ts. */
+export const WORKSPACE_GOLDEN = {
+  claim: "woodpecker-workspace-golden",
+  path: "/woodpecker/golden",
+};
 export const SEED_CONTROL = {
   claim: "woodpecker-source-control",
   path: "/woodpecker/source-control",
@@ -16,9 +21,9 @@ const PROFILES: Readonly<Record<string, "verify" | "browser">> = {
 };
 const FORMAT_CACHE_PATH = "/woodpecker/format-cache";
 /**
- * Bun materializes node_modules from the shared cache claim with
- * copy_file_range. Both claims sit in liskov's ZFS pool, where block cloning
- * can share the blocks instead of writing a second copy.
+ * Meant to let liskov's ZFS pool clone node_modules blocks from the shared
+ * cache claim. The pool's clone savings show it does not; golden workspace
+ * clones remove the install's writes instead (checkout/golden.ts).
  */
 const COPYFILE = { CI_BUN_INSTALL_BACKEND: "copyfile" } as const;
 function environment(step: CiStep, options: PerformanceOptions, main: boolean) {

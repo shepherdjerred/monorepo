@@ -113,18 +113,18 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 65 included and 39 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 65 included and 40 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(104);
-  expect(new Set(keys).size).toBe(104);
+  expect(keys).toHaveLength(105);
+  expect(new Set(keys).size).toBe(105);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
   ).toHaveLength(65);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(39);
+  ).toHaveLength(40);
   expect(
     getPvcBackupPolicy("minecraft-tsmc", "minecraft-tsmc-bluemap").backup,
   ).toBe("disabled");
@@ -223,18 +223,20 @@ describe("PVC backup policy", () => {
 
     expect(pvcCount).toBeGreaterThan(0);
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
-    // Includes one CI RAM scratch mutation per lane profile (verify, browser).
-    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(6);
-    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(6);
+    // Includes one CI RAM scratch mutation per lane profile (verify, browser)
+    // and the golden workspace clone mutation.
+    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(7);
+    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(7);
     // The retired TSMC restoration controller no longer owns a copy guard.
     expect(admissionKinds.has("copy:ValidatingAdmissionPolicy")).toBe(false);
     expect(admissionKinds.has("copy:ValidatingAdmissionPolicyBinding")).toBe(
       false,
     );
-    // PVC backup, ArgoCD lifecycle, CI pod and RAM scratch guards, mc-harness
-    // sandbox pods and the read-only Forum observer CONNECT guard remain.
-    // Transition rendering adds the Application source-writer policy.
-    const validating = transitionRendering() ? 7 : 6;
+    // PVC backup, ArgoCD lifecycle, CI pod, RAM scratch and workspace clone
+    // guards, mc-harness sandbox pods and the read-only Forum observer CONNECT
+    // guard remain. Transition rendering adds the Application source-writer
+    // policy.
+    const validating = transitionRendering() ? 8 : 7;
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(validating);
     expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(
       validating,

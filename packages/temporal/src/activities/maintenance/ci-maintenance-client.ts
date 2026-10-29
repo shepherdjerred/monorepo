@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { Octokit } from "octokit";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { ciWorkspaceSeedRefreshEnabled } from "#config/ci-maintenance.ts";
+import {
+  ciWorkspaceGoldenRefreshEnabled,
+  ciWorkspaceSeedRefreshEnabled,
+} from "#config/ci-maintenance.ts";
 import {
   isActiveMaintenanceStatus,
   type MaintenanceCandidate,
@@ -188,16 +191,47 @@ const IMAGE_INPUTS = [
   "ci/ci-image/Dockerfile",
   "ci/ci-playwright/Dockerfile",
 ];
-export function imageMaintenanceFingerprint(
+function treeFingerprint(
   tree: readonly { path?: string; sha?: string }[],
+  inputs: readonly string[],
+  label: string,
+  hash = createHash("sha256"),
 ) {
-  const hash = createHash("sha256");
-  for (const path of IMAGE_INPUTS) {
+  for (const path of inputs) {
     const sha = tree.find((entry) => entry.path === path)?.sha;
-    if (sha === undefined) throw new Error(`Missing CI image input ${path}`);
+    if (sha === undefined) throw new Error(`Missing ${label} ${path}`);
     hash.update(`${path}\0${sha}\0`);
   }
   return hash.digest("hex");
+}
+export function imageMaintenanceFingerprint(
+  tree: readonly { path?: string; sha?: string }[],
+) {
+  return treeFingerprint(tree, IMAGE_INPUTS, "CI image input");
+}
+
+// What a golden workspace's install depends on. Main's source moves on every
+// merge, so the day bounds how far workspaces drift from their golden commit
+// instead; each workspace still checks out and installs its own commit.
+const GOLDEN_INPUTS = [
+  "bun.lock",
+  "bunfig.toml",
+  "package.json",
+  "patches",
+  ".mise.toml",
+  "mise.lock",
+  "ci/ci-image/Dockerfile",
+];
+export function goldenMaintenanceFingerprint(
+  tree: readonly { path?: string; sha?: string }[],
+  now: Date,
+) {
+  return treeFingerprint(
+    tree,
+    GOLDEN_INPUTS,
+    "golden workspace input",
+    createHash("sha256").update(`${now.toISOString().slice(0, 10)}\0`),
+  );
 }
 async function frozenBranch(github: Octokit, branch: string) {
   const prs = await github.rest.pulls.list({
@@ -241,6 +275,19 @@ export async function maintenanceCandidates(
             kind: "workspace-seeds" as const,
             source,
             fingerprint: source,
+            frozen: false,
+          },
+        ]
+      : []),
+    ...((await ciWorkspaceGoldenRefreshEnabled())
+      ? [
+          {
+            kind: "workspace-golden" as const,
+            source,
+            fingerprint: goldenMaintenanceFingerprint(
+              tree.data.tree,
+              new Date(),
+            ),
             frozen: false,
           },
         ]

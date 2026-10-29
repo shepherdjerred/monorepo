@@ -6,7 +6,11 @@ import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps, githubReleaseStep } from "#src/pipeline/lanes/scout.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import { noWorkStep } from "#src/pipeline/completion.ts";
-import { WORKSPACE_SEEDS, SEED_CONTROL } from "#src/pipeline/performance.ts";
+import {
+  WORKSPACE_GOLDEN,
+  WORKSPACE_SEEDS,
+  SEED_CONTROL,
+} from "#src/pipeline/performance.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { shellQuote } from "#src/pipeline/emit.ts";
@@ -15,6 +19,7 @@ export const MaintenanceKindSchema = z.enum([
   "release-notes",
   "ci-images",
   "workspace-seeds",
+  "workspace-golden",
 ]);
 export type MaintenanceKind = z.infer<typeof MaintenanceKindSchema>;
 
@@ -82,7 +87,7 @@ export async function eligibleMaintenanceSteps(
   verifiedSource: () => Promise<string | undefined>,
 ) {
   if (
-    kind === "workspace-seeds" &&
+    (kind === "workspace-seeds" || kind === "workspace-golden") &&
     (await verifiedSource()) !== pipeline.commit
   )
     return [
@@ -125,6 +130,7 @@ export function maintenanceSteps(
   kind: MaintenanceKind,
 ): CiStep[] {
   if (kind === "workspace-seeds") return workspaceSeedSteps(images);
+  if (kind === "workspace-golden") return [workspaceGoldenStep(images)];
   const release = scoutSteps(images).find(
     (step) => step.key === "release-please",
   );
@@ -221,6 +227,31 @@ function workspaceSeedSteps(images: CiImages): CiStep[] {
       ],
     },
   ];
+}
+
+/**
+ * Installs a verified main checkout from scratch and copies it into the golden
+ * claim, which Temporal then snapshots for new workspaces to clone. This
+ * workspace may itself be a golden clone; removing every untracked file first
+ * keeps an earlier generation's leftovers out of the next.
+ */
+function workspaceGoldenStep(images: CiImages): CiStep {
+  return {
+    key: "maintenance-workspace-golden",
+    label: "refresh the golden workspace",
+    image: images.base,
+    commands: [
+      "git clean -ffdxq",
+      ". ci/scripts/toolchain.sh",
+      "ci/scripts/bun-install.sh --frozen-lockfile",
+      "bun --no-install ci/scripts/publish-workspace-golden.ts",
+    ],
+    timeoutMinutes: 30,
+    resources: MEDIUM_TIER,
+    secrets: [GITHUB_DOWNLOAD],
+    volumes: [BUN_CACHE, BUN_CACHE_CONTROL, WORKSPACE_GOLDEN],
+    concurrency: { limit: 1, group: "ci-maintenance" },
+  };
 }
 
 /** Artifact publication retains verification while refresh work runs separately. */

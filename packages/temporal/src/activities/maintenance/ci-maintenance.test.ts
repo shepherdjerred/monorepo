@@ -2,10 +2,12 @@ import { expect, test } from "vitest";
 import {
   initialMaintenanceState,
   nextMaintenanceCandidate,
+  recordGoldenSnapshot,
   recordMaintenanceObservation,
   type MaintenanceCandidate,
 } from "#shared/ci-maintenance.ts";
 import {
+  goldenMaintenanceFingerprint,
   imageMaintenanceFingerprint,
   isCompleteMain,
   maintenanceResult,
@@ -273,4 +275,72 @@ test("requires exactly one structured result receipt", () => {
   expect(() => maintenanceResult([entry, entry])).toThrow(
     "unique result receipt",
   );
+});
+
+test("a golden refresh completes only once its claim is snapshotted and selected", () => {
+  const state = initialMaintenanceState();
+  const golden = { ...candidate, kind: "workspace-golden" as const };
+  state.pending = { ...golden, requestId: "request-1", pipeline: 12 };
+  recordMaintenanceObservation(state, {
+    enabled: true,
+    candidates: [],
+    busy: false,
+    pending: { number: 12, status: "success", source: candidate.source },
+  });
+  expect(state.pending).toBeNull();
+  expect(state.completed["workspace-golden"]).toBeUndefined();
+  expect(state.goldenSnapshot?.requestId).toBe("request-1");
+  // No second publish may rewrite the claim before it is snapshotted.
+  expect(
+    nextMaintenanceCandidate(state, [{ ...golden, fingerprint: "next" }]),
+  ).toBeUndefined();
+  expect(nextMaintenanceCandidate(state, [golden, candidate])?.kind).toBe(
+    "ci-images",
+  );
+  recordGoldenSnapshot(state, "ci-workspace-golden-aaaaaaaaaaaa-request-");
+  expect(state.goldenSnapshot).toBeNull();
+  expect(state.completed["workspace-golden"]).toBe(candidate.fingerprint);
+  expect(state.observation).toContain("ci-workspace-golden-");
+});
+
+test("a coordinator state from before golden refreshes selects golden work", () => {
+  const { goldenSnapshot: _omitted, ...legacy } = initialMaintenanceState();
+  const golden = { ...candidate, kind: "workspace-golden" as const };
+  expect(nextMaintenanceCandidate(legacy, [golden])).toEqual(golden);
+  recordGoldenSnapshot(legacy, "unused");
+  expect(legacy.completed["workspace-golden"]).toBeUndefined();
+});
+
+test("the golden fingerprint follows dependency inputs and the UTC day", () => {
+  const tree = [
+    "bun.lock",
+    "bunfig.toml",
+    "package.json",
+    "patches",
+    ".mise.toml",
+    "mise.lock",
+    "ci/ci-image/Dockerfile",
+  ].map((path) => ({ path, sha: `${path}-v1` }));
+  const day = new Date("2026-10-29T03:00:00Z");
+  const base = goldenMaintenanceFingerprint(tree, day);
+  expect(
+    goldenMaintenanceFingerprint(tree, new Date("2026-10-29T23:59:00Z")),
+  ).toBe(base);
+  expect(
+    goldenMaintenanceFingerprint(tree, new Date("2026-10-30T00:00:00Z")),
+  ).not.toBe(base);
+  expect(
+    goldenMaintenanceFingerprint(
+      tree.map((entry) =>
+        entry.path === "bun.lock" ? { ...entry, sha: "bun.lock-v2" } : entry,
+      ),
+      day,
+    ),
+  ).not.toBe(base);
+  expect(() =>
+    goldenMaintenanceFingerprint(
+      tree.filter((entry) => entry.path !== "patches"),
+      day,
+    ),
+  ).toThrow("Missing golden workspace input patches");
 });

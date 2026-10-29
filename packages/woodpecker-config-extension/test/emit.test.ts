@@ -3,6 +3,7 @@ import path from "node:path";
 import { parse, parseDocument } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
+import { SOURCE_CACHE_PREPARATION_IMAGE } from "#src/pipeline/source-cache.ts";
 import {
   WORKFLOW_TIMEOUT_MINUTES,
   emitWorkflow,
@@ -280,6 +281,11 @@ test.each(["push", "pull_request", "tag"])(
       .object({
         clone: z.tuple([
           z.object({
+            name: z.literal("clear-golden"),
+            image: z.literal(SOURCE_CACHE_PREPARATION_IMAGE),
+            commands: z.tuple([z.string()]),
+          }),
+          z.object({
             image: z.string(),
             settings: z.object({
               depth: z.literal(0),
@@ -292,10 +298,14 @@ test.each(["push", "pull_request", "tag"])(
         ]),
       })
       .parse(parse(emitWorkflow(step, { ...TEST_IDENTITY, event })));
-    expect(emitted.clone[0].image).toMatch(
+    // The Git plugin needs an empty directory; only a golden clone is cleared.
+    expect(emitted.clone[0].commands[0]).toBe(
+      "if [ -e .ci-golden ]; then find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +; fi",
+    );
+    expect(emitted.clone[1].image).toMatch(
       /^docker\.io\/woodpeckerci\/plugin-git:\d+\.\d+\.\d+@sha256:[a-f0-9]{64}$/,
     );
-    expect(emitted.clone[0].settings.tags).toBe(
+    expect(emitted.clone[1].settings.tags).toBe(
       event === "tag" ? true : undefined,
     );
   },

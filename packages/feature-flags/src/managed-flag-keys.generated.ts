@@ -304,6 +304,7 @@ export type TrmnlDashboardFlagKey = (typeof TRMNL_DASHBOARD_FLAG_KEYS)[number];
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
   "ci-workspace-seed-refresh-enabled",
+  "ci-workspace-golden-refresh-enabled",
   "temporal-daily-report-notifications-enabled",
   "temporal-agent-chat-photon-enabled",
   "temporal-call-graph-tracing",

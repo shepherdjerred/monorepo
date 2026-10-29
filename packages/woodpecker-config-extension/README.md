@@ -124,9 +124,22 @@ Credentialless automation receives none of these caches.
 
 The production inventory enables the copyfile backend. Every credentialed
 step's `bun-install.sh`, including grouped ordered containers, then passes
-`--backend=copyfile`. Bun materializes `node_modules` from the shared cache
-claim with `copy_file_range`, which liskov's ZFS pool can satisfy by cloning
-blocks across datasets instead of writing them again.
+`--backend=copyfile`. It was meant to let liskov's ZFS pool clone
+`node_modules` blocks from the shared cache claim. The pool's block-cloning
+savings stayed near 5 GB with it on, so it does not; the golden workspace
+below removes the install's writes instead.
+
+### Golden workspaces
+
+A workspace claim may start as a ZFS clone of the golden workspace: a
+verified main checkout with dependencies installed, marked by an untracked
+`.ci-golden` file naming its commit. The homelab clone policy supplies the
+clone; `maintenance-workspace-golden` publishes the golden checkout with
+`ci/scripts/publish-workspace-golden.ts`. The source-cache checkout keeps the
+clone's Git index, brings in the requested commit's objects, merges shallow
+boundaries, and resets, so only differing files are written. It then removes
+the marker. The ordinary Git plugin path empties a golden clone first, and a
+prepared-seed checkout clears it, since both expect an empty workspace.
 
 Incremental source misses copy and verify recent immutable objects before
 advertising a temporary negotiation ref. Fetch still requests the exact SHA;

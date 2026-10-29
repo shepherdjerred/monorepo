@@ -4,11 +4,18 @@ import {
   mkdir,
   readdir,
   rename,
+  rm,
   stat,
   utimes,
 } from "node:fs/promises";
 import nodePath from "node:path";
 import { CommitSchema, SnapshotSchema, git, verifyObjects } from "./git.ts";
+import {
+  clearWorkspace,
+  GOLDEN_MARKER,
+  goldenMarker,
+  type GoldenMarker,
+} from "./golden.ts";
 import { restorePreparedSeed, restoreGradleSeed } from "./prepared.ts";
 const { join } = nodePath;
 
@@ -85,13 +92,39 @@ export type CheckoutInput = {
   };
 };
 
+async function shallowLines(path: string): Promise<string[]> {
+  const file = Bun.file(path);
+  if (!(await file.exists())) return [];
+  const text = await file.text();
+  return text.split("\n").filter((line) => line !== "");
+}
+
+/**
+ * Adds a snapshot's shallow boundaries to the workspace's own. A golden clone
+ * keeps its commit's objects, whose boundary must stay recorded or integrity
+ * checks would read the missing ancestors as damage. Written by rename: the
+ * existing file may belong to another user.
+ */
+async function mergeShallow(source: string, destination: string) {
+  const merged = [
+    ...new Set([
+      ...(await shallowLines(destination)),
+      ...(await shallowLines(source)),
+    ]),
+  ].toSorted();
+  const temporary = `${destination}.tmp-${crypto.randomUUID()}`;
+  await Bun.write(temporary, `${merged.join("\n")}\n`);
+  await rename(temporary, destination);
+}
+
 /** A seed is copied and checked before Git can advertise any of its objects. */
 async function restoreObjects(
   snapshot: string,
   workspace: string,
-  repository: string,
-  commit: string,
+  source: { repository: string; commit: string },
+  keepShallow = false,
 ) {
+  const { repository, commit } = source;
   const manifest = SnapshotSchema.parse(
     await Bun.file(join(snapshot, "manifest.json")).json(),
   );
@@ -103,7 +136,12 @@ async function restoreObjects(
     join(snapshot, "objects"),
     join(workspace, ".git", "objects"),
   );
-  await cp(join(snapshot, "shallow"), join(workspace, ".git", "shallow"));
+  if (keepShallow)
+    await mergeShallow(
+      join(snapshot, "shallow"),
+      join(workspace, ".git", "shallow"),
+    );
+  else await cp(join(snapshot, "shallow"), join(workspace, ".git", "shallow"));
   if ((await verifyObjects(workspace, commit)) !== manifest.tree)
     throw new Error("Source cache tree mismatch");
   return manifest;
@@ -157,14 +195,52 @@ async function seedObjects(
   // existing 8 GiB target for the complete shared source cache.
   if (manifest.objectBytes > 2 * 1024 ** 3)
     return { seedSha: undefined, initialBytes: 0 };
-  const seed = await restoreObjects(
-    snapshot,
-    input.workspace,
-    input.repository,
-    seedSha,
-  );
+  const seed = await restoreObjects(snapshot, input.workspace, {
+    repository: input.repository,
+    commit: seedSha,
+  });
   await git(input.workspace, ["update-ref", "refs/heads/cache-seed", seedSha]);
   return { seedSha, initialBytes: seed.objectBytes };
+}
+
+/**
+ * A workflow starts empty or as a golden clone; any other existing checkout
+ * is refused, never reset. Prepared seeds restore into an empty workspace, so
+ * they clear a clone first: deleting its files writes nothing to the pool.
+ */
+async function prepareWorkspace(
+  input: CheckoutInput,
+): Promise<GoldenMarker | undefined> {
+  const golden = await goldenMarker(input.workspace);
+  if (golden !== undefined && input.prepared === undefined) {
+    const remote = await git(input.workspace, [
+      "config",
+      "--get",
+      "remote.origin.url",
+    ]);
+    if (remote !== input.repository)
+      throw new Error(
+        "Golden workspace remote differs from the requested source",
+      );
+    return golden;
+  }
+  if (golden !== undefined) await clearWorkspace(input.workspace);
+  if (await optionalDirectory(join(input.workspace, ".git")))
+    throw new Error("Source checkout workspace already has Git metadata");
+  await git(input.workspace, ["init", "--quiet"]);
+  await git(input.workspace, ["remote", "add", "origin", input.repository]);
+  return;
+}
+
+/**
+ * A golden clone already holds a recent main commit's objects, which a
+ * depth-one fetch negotiates against like an incremental seed.
+ */
+async function goldenObjects(workspace: string) {
+  return {
+    seedSha: undefined,
+    initialBytes: await objectBytes(join(workspace, ".git", "objects")),
+  };
 }
 
 export async function checkoutSource(input: CheckoutInput) {
@@ -175,11 +251,7 @@ export async function checkoutSource(input: CheckoutInput) {
   const parent = join(input.cache, "v1", key);
   const snapshot = join(parent, commit);
   const started = performance.now();
-  // A workflow starts with an empty workspace. Never reset an existing checkout.
-  if (await optionalDirectory(join(input.workspace, ".git")))
-    throw new Error("Source checkout workspace already has Git metadata");
-  await git(input.workspace, ["init", "--quiet"]);
-  await git(input.workspace, ["remote", "add", "origin", input.repository]);
+  const golden = await prepareWorkspace(input);
   // Private benchmark storage may live in .git, which must be initialized first.
   await mkdir(parent, { recursive: true });
   const hit = await optionalDirectory(snapshot);
@@ -191,12 +263,15 @@ export async function checkoutSource(input: CheckoutInput) {
     const restored = await restoreObjects(
       snapshot,
       input.workspace,
-      input.repository,
-      commit,
+      { repository: input.repository, commit },
+      golden !== undefined,
     );
     tree = restored.tree;
   } else {
-    const seeded = await seedObjects(input, parent, key, commit);
+    const seeded =
+      golden === undefined
+        ? await seedObjects(input, parent, key, commit)
+        : await goldenObjects(input.workspace);
     seedSha = seeded.seedSha;
     const downloadStarted = performance.now();
     // Eager depth-one fetch: no tree:0 filter and no lazy checkout hydration.
@@ -259,9 +334,19 @@ export async function checkoutSource(input: CheckoutInput) {
           commit,
           input.gradle.image,
         );
+  // A golden clone keeps its index, so only files that differ from the golden
+  // commit are written. Status first refreshes the index's stat data, which a
+  // copy that renumbers inodes would otherwise make every file look modified.
+  if (golden !== undefined)
+    await git(input.workspace, [
+      "status",
+      "--porcelain",
+      "--untracked-files=no",
+    ]);
   await git(input.workspace, ["reset", "--hard", "--quiet", commit]);
   if ((await git(input.workspace, ["rev-parse", "HEAD"])) !== commit)
     throw new Error("Materialized checkout head mismatch");
+  if (golden !== undefined) await rm(join(input.workspace, GOLDEN_MARKER));
   const now = new Date();
   await utimes(snapshot, now, now);
   return {
@@ -270,6 +355,7 @@ export async function checkoutSource(input: CheckoutInput) {
     tree,
     cache: hit ? "hit" : "miss",
     seedSha: seedSha ?? null,
+    goldenSha: golden?.commit ?? null,
     prepared,
     gradle,
     // Stored Git object bytes, not estimated TCP/TLS wire bytes.

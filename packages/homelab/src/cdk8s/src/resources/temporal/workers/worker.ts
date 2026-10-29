@@ -16,6 +16,7 @@ import {
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 import { createTemporalWorkerCrdReaderRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/crd-rbac.ts";
 import { createTemporalWorkerCiWorkspaceReaperRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ci-workspace-reaper-rbac.ts";
+import { createTemporalWorkerCiWorkspaceGoldenRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ci-workspace-golden-rbac.ts";
 import {
   glitterContextEnv,
   glitterCorpusEnv,
@@ -192,6 +193,9 @@ export function createTemporalWorkerDeployment(
 
   // Deletes leaked Woodpecker step pods and workspace claims in woodpecker-ci.
   createTemporalWorkerCiWorkspaceReaperRbac(chart, [infraServiceAccount]);
+
+  // Snapshots the golden CI workspace and selects it for new workspaces.
+  createTemporalWorkerCiWorkspaceGoldenRbac(chart, [infraServiceAccount]);
 
   const freshRssManifestVolume = Volume.fromConfigMap(
     chart,

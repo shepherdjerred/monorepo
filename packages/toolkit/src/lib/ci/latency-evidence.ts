@@ -25,6 +25,12 @@ const CheckoutSchema = z.object({
     .regex(/^[a-f\d]{40}$/u)
     .nullable()
     .optional(),
+  // The golden main commit a cloned workspace started from.
+  goldenSha: z
+    .string()
+    .regex(/^[a-f\d]{40}$/u)
+    .nullable()
+    .optional(),
   prepared: z
     .object({
       hit: z.boolean(),

@@ -10,6 +10,10 @@ export async function ciWorkspaceSeedRefreshEnabled() {
   return maintenanceFlag("ci-workspace-seed-refresh-enabled");
 }
 
+export async function ciWorkspaceGoldenRefreshEnabled() {
+  return maintenanceFlag("ci-workspace-golden-refresh-enabled");
+}
+
 async function maintenanceFlag(flag: string) {
   const resolver = defineConfig({
     definition: {

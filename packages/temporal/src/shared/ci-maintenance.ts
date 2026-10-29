@@ -5,6 +5,7 @@ export const CI_MAINTENANCE_KINDS = [
   "release-notes",
   "ci-images",
   "workspace-seeds",
+  "workspace-golden",
 ] as const;
 export const CiMaintenanceKindSchema = z.enum(CI_MAINTENANCE_KINDS);
 export type CiMaintenanceKind = z.infer<typeof CiMaintenanceKindSchema>;
@@ -24,6 +25,11 @@ export type MaintenanceState = {
     Record<CiMaintenanceKind, { requestId: string; reason: string }>
   >;
   pending: MaintenanceRequest | null;
+  /**
+   * A golden refresh that succeeded but whose claim is not yet snapshotted and
+   * selected. Optional because earlier coordinator states predate it.
+   */
+  goldenSnapshot?: MaintenanceRequest | null;
   lastKind: CiMaintenanceKind;
   observation: string;
 };
@@ -50,6 +56,18 @@ export function isActiveMaintenanceStatus(status: string): boolean {
   return ["created", "pending", "running", "blocked"].includes(status);
 }
 
+/** Records the selected golden snapshot; the refresh is then complete. */
+export function recordGoldenSnapshot(
+  state: MaintenanceState,
+  snapshot: string,
+): void {
+  const request = state.goldenSnapshot;
+  if (request === undefined || request === null) return;
+  state.completed[request.kind] = request.fingerprint;
+  state.goldenSnapshot = null;
+  state.observation = `Selected golden workspace snapshot ${snapshot}`;
+}
+
 export function nextMaintenanceCandidate(
   state: MaintenanceState,
   candidates: readonly MaintenanceCandidate[],
@@ -61,6 +79,13 @@ export function nextMaintenanceCandidate(
   return ordered.find(
     (candidate) =>
       !candidate.frozen &&
+      // Publishing again before the last refresh is snapshotted would
+      // snapshot a claim being rewritten.
+      !(
+        candidate.kind === "workspace-golden" &&
+        state.goldenSnapshot !== undefined &&
+        state.goldenSnapshot !== null
+      ) &&
       state.blocked[candidate.kind] === undefined &&
       state.completed[candidate.kind] !== candidate.fingerprint,
   );
@@ -91,6 +116,13 @@ export function recordMaintenanceObservation(
   } else if (receipt.status === "success" && receipt.deferred === true) {
     state.observation =
       "Candidate deferred while a human reviews the existing PR";
+  } else if (
+    receipt.status === "success" &&
+    request.kind === "workspace-golden"
+  ) {
+    // Completed only once the refreshed claim is snapshotted and selected.
+    state.goldenSnapshot = request;
+    state.observation = `Snapshotting the golden workspace at ${request.source}`;
   } else if (receipt.status === "success") {
     state.completed[request.kind] = request.fingerprint;
     state.observation = `Completed ${request.kind} at ${request.source}`;

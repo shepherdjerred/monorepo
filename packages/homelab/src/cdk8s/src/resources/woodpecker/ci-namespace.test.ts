@@ -544,15 +544,24 @@ describe("CI pod guard", () => {
   });
 
   it("requires the CI node, batch priority, and bounded containers", () => {
-    const [formatter, ...expressions] = guard().policy.spec.validations.map(
-      (validation) => validation.expression,
-    );
+    const [formatter, golden, ...expressions] =
+      guard().policy.spec.validations.map(
+        (validation) => validation.expression,
+      );
     expect(formatter).toContain("woodpecker-format-main");
     expect(formatter).toContain(
       "object.metadata.annotations['ci.sjer.red/event'] in ['push', 'manual']",
     );
     expect(formatter).toContain(
       "object.metadata.annotations['ci.sjer.red/branch'] == 'main'",
+    );
+    // Every workspace clones the golden checkout; only its publisher writes it.
+    expect(golden).toContain("woodpecker-workspace-golden");
+    expect(golden).toContain(
+      "object.metadata.labels['ci.sjer.red/step-key'] == 'maintenance-workspace-golden'",
+    );
+    expect(golden).toContain(
+      "object.metadata.annotations['ci.sjer.red/event'] == 'manual'",
     );
     expect(expressions).toHaveLength(4);
     expect(expressions[0]).toContain(

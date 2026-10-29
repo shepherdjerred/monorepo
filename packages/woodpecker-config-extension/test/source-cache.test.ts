@@ -17,6 +17,7 @@ import { z } from "zod";
 import { parse } from "yaml";
 import { git } from "#src/checkout/git.ts";
 import { checkoutSource } from "#src/checkout/snapshot.ts";
+import { clearWorkspace, GOLDEN_MARKER } from "#src/checkout/golden.ts";
 import {
   collectPreparedSeeds,
   publishPreparedSeed,
@@ -458,6 +459,7 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
     expect(prepare?.image).toMatch(/^busybox:.*@sha256:[a-f\d]{64}$/u);
     expect(prepare?.commands).toEqual([
       "chown 1000:1000 . /woodpecker/source-cache /woodpecker/source-control",
+      "if [ -e .ci-golden ]; then chown -R 1000:1000 .git; fi",
     ]);
     expect(prepare?.backend_options.kubernetes.securityContext).toEqual({
       allowPrivilegeEscalation: false,
@@ -496,4 +498,95 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
         .some((volume) => volume.includes("source-")),
     ).toBe(false);
   }
+});
+
+/** A workspace as the golden publisher leaves it, cloned as ZFS would. */
+async function goldenClone(input: Awaited<ReturnType<typeof fixture>>) {
+  const golden = join(input.root, "golden");
+  await mkdir(golden);
+  await checkoutSource({ ...input, workspace: golden });
+  await Bun.write(join(golden, "node_modules", "dep", "index.js"), "dep\n");
+  await Bun.write(
+    join(golden, GOLDEN_MARKER),
+    JSON.stringify({ version: 1, commit: input.commit }),
+  );
+  const clone = join(input.root, "clone");
+  const copy = Bun.spawn(["cp", "-a", golden, clone]);
+  expect(await copy.exited).toBe(0);
+  return clone;
+}
+
+async function nextCommit(repository: string) {
+  await Bun.write(join(repository, "added.txt"), "second revision\n");
+  await git(repository, ["rm", "-q", "link"]);
+  await git(repository, ["add", "added.txt"]);
+  await git(repository, [
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "next",
+  ]);
+  return git(repository, ["rev-parse", "HEAD"]);
+}
+
+test.each(["miss", "hit"])(
+  "a golden clone moves to the requested commit on a cache %s, writing only the difference",
+  async (cache) => {
+    const input = await fixture();
+    const clone = await goldenClone(input);
+    const commit = await nextCommit(input.repository);
+    if (cache === "hit") {
+      const warmer = join(input.root, "warmer");
+      await mkdir(warmer);
+      await checkoutSource({ ...input, commit, workspace: warmer });
+    }
+    const before = await stat(join(clone, "run.sh"));
+    const result = await checkoutSource({ ...input, commit, workspace: clone });
+    expect(result).toMatchObject({ cache, goldenSha: input.commit });
+    expect(await git(clone, ["rev-parse", "HEAD"])).toBe(commit);
+    expect(
+      await git(clone, ["status", "--porcelain", "--untracked-files=no"]),
+    ).toBe("");
+    expect(await Bun.file(join(clone, "added.txt")).text()).toBe(
+      "second revision\n",
+    );
+    expect(await Bun.file(join(clone, "link")).exists()).toBe(false);
+    // The index survives the clone, so an unchanged file is not rewritten.
+    const after = await stat(join(clone, "run.sh"));
+    expect(after.ino).toBe(before.ino);
+    // Dependencies come from the golden install; the marker is consumed.
+    expect(
+      await Bun.file(join(clone, "node_modules", "dep", "index.js")).text(),
+    ).toBe("dep\n");
+    expect(await Bun.file(join(clone, GOLDEN_MARKER)).exists()).toBe(false);
+    const shallow = await Bun.file(join(clone, ".git", "shallow")).text();
+    expect(shallow).toContain(commit);
+    await git(clone, ["fsck", "--full"]);
+  },
+);
+
+test("a golden clone of another repository is refused", async () => {
+  const input = await fixture();
+  const clone = await goldenClone(input);
+  await git(clone, [
+    "remote",
+    "set-url",
+    "origin",
+    "https://example.invalid/other.git",
+  ]);
+  await expect(checkoutSource({ ...input, workspace: clone })).rejects.toThrow(
+    "Golden workspace remote differs",
+  );
+});
+
+test("clearing a golden clone leaves an empty workspace", async () => {
+  const input = await fixture();
+  const clone = await goldenClone(input);
+  await clearWorkspace(clone);
+  expect(await readdir(clone)).toEqual([]);
+  const result = await checkoutSource({ ...input, workspace: clone });
+  expect(result.goldenSha).toBeNull();
 });
