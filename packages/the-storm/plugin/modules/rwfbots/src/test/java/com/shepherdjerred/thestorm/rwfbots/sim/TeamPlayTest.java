@@ -140,7 +140,9 @@ final class TeamPlayTest {
   // seen only half as far.
   // A push held in contact moves on after a stall or when the team leads the fight, and a team well
   // ahead closes the round out with a plant rush and hunting pairs.
-  private static final String PINNED_YARD_HASH = "19026977cf51a378";
+  // Leaps are planned while their body runs up the line, judged where a plan reaches the body, and
+  // a run-up the body is already on is joined rather than walked back to.
+  private static final String PINNED_YARD_HASH = "103f981201343025";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

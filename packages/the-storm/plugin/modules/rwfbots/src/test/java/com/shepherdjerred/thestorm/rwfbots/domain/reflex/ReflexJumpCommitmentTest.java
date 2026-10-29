@@ -82,6 +82,96 @@ final class ReflexJumpCommitmentTest {
   }
 
   @Test
+  void aMovedGoalKeepsTheRunUpWhileItsLaunchIsStillOnTheRoute() {
+    // Team slot goals drift every deal; a run-up under way must not restart from its approach.
+    var self = combatant(1, RED, new Vec3(1.5, 1, 1.5));
+    var moved = new Waypoint(GOAL.pos().plus(0, 0, 1), Hop.WALK);
+    var decision = route(Option.HUNT, moved).withWaypoints(List.of(ORIGINAL, moved));
+    var step = tick(self, active(ORIGINAL, ActiveJump.Stage.RUN_UP), decision, 10);
+    assertThat(step.state().activeJump())
+        .hasValueSatisfying(
+            next -> {
+              assertThat(next.waypoint()).isEqualTo(ORIGINAL);
+              assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
+              assertThat(next.startedTick()).isEqualTo(1);
+              assertThat(next.intent()).isEqualTo(new ActiveJump.Intent(Option.HUNT, moved.pos()));
+            });
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(ORIGINAL.launch().orElseThrow().takeoff(), true));
+  }
+
+  @Test
+  void aSprintingWalkerJoinsTheRunUpOfTheLeapAfterItsWaypoint() {
+    // The walk waypoint is the takeoff node; the body is already running the run-up line.
+    var self = combatant(1, RED, new Vec3(1.2, 1, 1.5)).withVel(new Vec3(0.28, 0, 0));
+    var node = new Waypoint(new Vec3(2.5, 1, 1.5), Hop.WALK);
+    var decision = route(Option.HUNT, GOAL).withWaypoints(List.of(node, ORIGINAL, GOAL));
+    var world =
+        new WorldSnapshot(
+            10,
+            MatchPhase.LIVE,
+            List.of(self),
+            List.of(),
+            PoisonView.NONE,
+            "jump-test",
+            List.of(),
+            List.of(),
+            List.of());
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(self, world, decision, Optional.empty(), 0, List.of()),
+            CONTEXT,
+            new SplittableRandom(196));
+    assertThat(step.state().waypointIndex()).isEqualTo(1);
+    assertThat(step.state().activeJump())
+        .hasValueSatisfying(
+            next -> {
+              assertThat(next.waypoint()).isEqualTo(ORIGINAL);
+              assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
+            });
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(ORIGINAL.launch().orElseThrow().takeoff(), true));
+  }
+
+  @Test
+  void aRunUpAbandonedForSwordContactIsDroppedSoItsRunwayGateCannotFreezeTheFight() {
+    var self = combatant(1, RED, new Vec3(1.5, 1, 1.5));
+    var enemy = combatant(2, BLUE, new Vec3(1.5, 1, 4.0));
+    var world =
+        new WorldSnapshot(
+            10,
+            MatchPhase.LIVE,
+            List.of(self, enemy),
+            List.of(),
+            PoisonView.NONE,
+            "jump-test",
+            List.of(),
+            List.of(),
+            List.of());
+    var decision = route(Option.HUNT, GOAL).withWaypoints(List.of(ORIGINAL, GOAL));
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing())
+                .withActiveJump(Optional.of(active(ORIGINAL, ActiveJump.Stage.RUN_UP))),
+            new ReflexInput(self, world, decision, Optional.of(enemy), 0, List.of()),
+            CONTEXT,
+            new SplittableRandom(196));
+    assertThat(step.commands()).anyMatch(BodyCommand.Attack.class::isInstance);
+    assertThat(step.state().activeJump()).isEmpty();
+    // A flight already under way is never dropped: it owns the body until it lands.
+    var flying = self.withPos(new Vec3(4.5, 2, 1.5)).withMotion(true, false);
+    var airborne =
+        Reflex.tick(
+            ReflexState.initial(self.facing())
+                .withActiveJump(Optional.of(active(ORIGINAL, ActiveJump.Stage.AIRBORNE))),
+            new ReflexInput(flying, world, decision, Optional.of(enemy), 0, List.of()),
+            CONTEXT,
+            new SplittableRandom(196));
+    assertThat(airborne.state().activeJump()).isPresent();
+  }
+
+  @Test
   void airborneCommitmentKeepsItsLandingEvenWhenTheOrderAndGoalChange() {
     var self = combatant(1, RED, new Vec3(4.5, 2, 1.5)).withMotion(true, false);
     var active = active(ORIGINAL, ActiveJump.Stage.AIRBORNE);

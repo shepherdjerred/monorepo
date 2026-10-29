@@ -125,6 +125,9 @@ public final class Reflex {
     var run = new Run(state, input, context, random);
     run.execute();
     run.commitFlight();
+    // A run-up the body did not follow this tick (it fought, ate or worked a fuse instead) is
+    // abandoned: the body's run-up gate would otherwise hold every other step to the runway.
+    var next = run.leapt ? run.state : unprepared(run.state);
     var commands =
         input.self().traversal().maySprint()
             ? run.commands
@@ -135,7 +138,13 @@ public final class Reflex {
                             ? new BodyCommand.MoveToward(point, false, hop)
                             : command)
                 .toList();
-    return new Step(run.state, commands);
+    return new Step(next, commands);
+  }
+
+  private static ReflexState unprepared(ReflexState state) {
+    return state.activeJump().filter(jump -> jump.stage() != ActiveJump.Stage.AIRBORNE).isPresent()
+        ? state.withActiveJump(Optional.empty())
+        : state;
   }
 
   /**
@@ -187,6 +196,9 @@ public final class Reflex {
     private final long now;
     private final List<BodyCommand> commands = new ArrayList<>();
     private ReflexState state;
+
+    /** Whether this tick's controls followed a sprint jump, preparing or flying it. */
+    private boolean leapt;
 
     Run(ReflexState state, ReflexInput input, ReflexContext context, RandomGenerator random) {
       this.state = state;
@@ -612,7 +624,13 @@ public final class Reflex {
         return;
       }
       var waypoints = input.decision().waypoints();
-      var index = activeJumpIndex(waypoints, advanceWaypoint(waypoints, state.waypointIndex()));
+      // Running at a takeoff already, the body starts the leap's run-up there rather than braking
+      // onto the takeoff node and walking back to the measured run-up start.
+      var index =
+          JumpController.joinedLeap(
+              waypoints,
+              activeJumpIndex(waypoints, advanceWaypoint(waypoints, state.waypointIndex())),
+              self);
       if (index != state.waypointIndex()) {
         state = state.withPath(index, input.decision().snapshotTick());
       }
@@ -732,6 +750,7 @@ public final class Reflex {
     }
 
     private void leap(Waypoint waypoint) {
+      leapt = true;
       if (!self.traversal().maySprint()
           && state
               .activeJump()

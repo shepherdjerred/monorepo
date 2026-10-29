@@ -24,6 +24,11 @@ public record ActiveJump(
       throw new IllegalArgumentException("airborne primitive has no launch tick");
   }
 
+  /** The same preparation, now serving {@code next}. */
+  public ActiveJump withIntent(Intent next) {
+    return new ActiveJump(waypoint, next, stage, startedTick, launchTick);
+  }
+
   public ActiveJump stage(Stage next, long now) {
     return new ActiveJump(
         waypoint, intent, next, startedTick, next == Stage.AIRBORNE ? now : launchTick);

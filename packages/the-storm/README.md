@@ -1567,8 +1567,14 @@ ordinary wooden doors, jump-up steps, and sprint jumps with certified run-up
 and flight clearance. Compressed water intervals preserve intermediate depths
 without storing a graph node for every submerged block. Nodes retain actual
 half-block standing heights and exact climbable-cell metadata. A climb edge
-alone does not certify that the body's feet touch a ladder or vine. Prepared
-run-ups survive equivalent replans;
+alone does not certify that the body's feet touch a ladder or vine. A body
+already running up a sprint jump's line joins its run-up where it is, closing a
+small cross-track by pure pursuit; only side, stalled or overshooting approaches
+walk back to the measured run-up start. The planner prices a leap from the
+body's own node where the body will be when the plan reaches it, so a body is
+never handed a leap it has just run past, and a leap the body is already running
+up the line of costs no setup, so it is planned before the takeoff node. Prepared run-ups survive replans that
+keep their launch on the route, whatever the route's goal;
 takeoff rechecks position, momentum, health and expiring protection. Routes account for
 cumulative fall damage, actual movement and protection capabilities, effect
 expiry, available healing, known enemy exposure and bomb deadlines. A
