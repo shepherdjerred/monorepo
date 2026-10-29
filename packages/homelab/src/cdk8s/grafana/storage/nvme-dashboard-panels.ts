@@ -283,7 +283,7 @@ function addWriteBudgetPanels(builder: dashboard.DashboardBuilder): void {
     createStatPanel({
       title: "CI Workspace Writes by Step (24h)",
       description:
-        "Logical bytes each CI step's fresh workspaces wrote over the last 24h. Physical writes are these times the CI pool's amplification.",
+        "Logical bytes each CI step's fresh workspaces wrote over the last 24h.",
       query: `sort_desc(${CI_STEP_WORKSPACE_LOGICAL_BYTES_24H})`,
       legend: "{{step}}",
       gridPos: { x: 0, y: 107, w: 12, h: 8 },
