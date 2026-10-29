@@ -230,4 +230,19 @@ describe("renderApplication (T2)", () => {
       { name: "b", value: String.raw`\{"a":1\,"b":[2]\}`, forceString: true },
     ]);
   });
+
+  test("renders no parameters list when there are none, as ArgoCD stores it", () => {
+    const body = renderApplication({
+      recipe: recipe({ artifactParameters: {} }),
+      environmentId: "openebs/prod",
+      configuration: { "helm.valuesObject": '{"a":true}' },
+      artifacts,
+    });
+    expect(body.spec.source).toEqual({
+      repoURL: "https://openebs.github.io/openebs",
+      chart: "openebs",
+      targetRevision: "4.3.2",
+      helm: { valuesObject: { a: true } },
+    });
+  });
 });

@@ -68,6 +68,7 @@ function source(
     return { repoURL: body.repoURL, path: body.path, targetRevision: revision };
   }
   const values = helmValues(recipe, configuration, artifacts);
+  const parameters = helmParameters(values.parameters);
   return {
     repoURL: body.repoURL,
     chart: body.chart,
@@ -77,7 +78,9 @@ function source(
       ...(values.valuesObject === undefined
         ? {}
         : { valuesObject: values.valuesObject }),
-      parameters: helmParameters(values.parameters),
+      // ArgoCD stores no empty `parameters` list, so the readback of an
+      // Application without parameters must not expect one.
+      ...(parameters.length === 0 ? {} : { parameters }),
     },
   };
 }
