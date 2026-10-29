@@ -103,6 +103,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   record Parts(
       PaperContext context,
       RwfConfig config,
+      com.shepherdjerred.thestorm.rwf.app.MatchExperiences experiences,
       Snapshots snapshots,
       KitFactory kits,
       Scoreboards boards,
@@ -192,8 +193,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   MatchRunner(Parts parts) {
     this.parts = parts;
-    this.experiences =
-        new com.shepherdjerred.thestorm.rwf.app.MatchExperiences(parts.config().experience());
+    this.experiences = parts.experiences();
     this.powers =
         new KitPowers(
             this,

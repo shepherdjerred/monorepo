@@ -15,12 +15,15 @@ final class MatchExperiencesTest {
     var owner = new MatchExperiences(ExperienceSettings.DEFAULT);
     var first = UUID.fromString("00000000-0000-0000-0000-000000000001");
     var second = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    assertThat(owner.currentOrPending()).isEqualTo(ExperienceSettings.DEFAULT);
     var frozen = owner.freeze(first, 31);
     owner.select(ExperienceSettings.Preset.RELAXED.settings());
+    assertThat(owner.currentOrPending()).isEqualTo(ExperienceSettings.DEFAULT);
     assertThat(owner.freeze(first, 31)).isSameAs(frozen);
     assertThat(frozen.settings().difficulty()).isEqualTo(ExperienceSettings.Difficulty.HARD);
     assertThat(owner.freeze(second, 32).settings().difficulty())
         .isEqualTo(ExperienceSettings.Difficulty.EASY);
+    assertThat(owner.currentOrPending().difficulty()).isEqualTo(ExperienceSettings.Difficulty.EASY);
     assertThat(new MatchExperiences(ExperienceSettings.DEFAULT).pending())
         .isEqualTo(ExperienceSettings.DEFAULT);
   }

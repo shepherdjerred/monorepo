@@ -178,7 +178,10 @@ async function overlaySection(
   const end = after === -1 ? lines.length : after;
   for (const [key, value] of Object.entries(fields)) {
     const index = lines.findIndex(
-      (line, at) => at > start && at < end && line.startsWith(`  ${key}: `),
+      (line, at) =>
+        at > start &&
+        at < end &&
+        (line.trimEnd() === `  ${key}:` || line.startsWith(`  ${key}: `)),
     );
     if (index === -1) {
       throw new Error(`No ${section}.${key} line to overlay in ${file}`);

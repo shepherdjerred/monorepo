@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitLayout;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitPool;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -76,9 +77,10 @@ public final class KitShop {
     return wallets.balance(new AccountId.Player(player), CURRENCY);
   }
 
-  /** {@code player} buys {@code kit} at {@code now}: the purchase, or why not. */
-  public CompletableFuture<Result<Purchase, ShopError>> buy(UUID player, KitSpec kit, Instant now) {
-    if (!kit.purchasable()) {
+  /** {@code player} buys {@code kit} from {@code pool} at {@code now}: the purchase, or why not. */
+  public CompletableFuture<Result<Purchase, ShopError>> buy(
+      UUID player, KitPool pool, KitSpec kit, Instant now) {
+    if (!kit.purchasable() || !pool.allows(kit.id())) {
       return CompletableFuture.completedFuture(Result.err(new ShopError.NotForSale(kit.id())));
     }
     var purchase = new Purchase(ids.get(), player, kit.id(), kit.price(), now);

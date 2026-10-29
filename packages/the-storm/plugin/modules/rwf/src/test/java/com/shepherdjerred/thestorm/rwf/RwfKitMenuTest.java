@@ -450,6 +450,32 @@ final class RwfKitMenuTest {
   }
 
   @Test
+  void aRestrictedPoolLimitsTheMenuRotationAndPurchases() throws java.io.IOException {
+    var harness = RwfHarness.prepare(directory);
+    var config = directory.resolve("rwf.yml");
+    var original = java.nio.file.Files.readString(config);
+    var restricted = original.replace("  kits: []", "  kits: [trooper, berserker]");
+    assertThat(restricted).isNotEqualTo(original);
+    java.nio.file.Files.writeString(config, restricted);
+    running = harness.enable(directory);
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    fund(harness, alice, 1000);
+
+    var top = openMenu(harness, alice).getTopInventory();
+
+    assertThat(name(requireNonNull(top.getItem(0)))).isEqualTo("Trooper");
+    assertThat(name(requireNonNull(top.getItem(1)))).isEqualTo("Berserker");
+    assertThat(top.getItem(2)).isNull();
+    alice.performCommand("rwf rotation");
+    harness.until(() -> said(alice, "Free this week: . Changes in"));
+    assertThat(heard).noneMatch(message -> message.contains("Sapper"));
+    alice.performCommand("rwf buy sapper");
+    harness.until(() -> said(alice, "Sapper is not for sale"));
+    assertThat(credits(harness, alice)).isEqualTo(1000);
+  }
+
+  @Test
   void withTheKitsFlagOffOnlyTheFirstFourKitsAreOffered() {
     var harness = RwfHarness.prepare(directory);
     JoinGate closed = player -> CompletableFuture.completedFuture(false);
