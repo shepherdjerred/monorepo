@@ -360,8 +360,9 @@ external chat, bots, and AI modules stay omitted. RWF requires saved terrain
 under `dimensions/minecraft/rwf`; Stargates requires the saved creative world
 under `dimensions/minecraft/creative` for its destination service. Cross-world
 server hubs are omitted from this isolated copy; player networks remain available.
-Arena's survival maps run only when their matching terrain is imported; the
-Colosseum retains its main-world configuration. The generated Multiverse
+Arena captures enable the Colosseum and omit unrelated survival arenas, which
+have separate map readiness requirements. The Colosseum retains its main-world
+configuration. The generated Multiverse
 registry loads imported normal worlds before
 The Storm validates them; plugin-owned creative and Skylands retain their own
 loaders. Shards'
@@ -370,6 +371,9 @@ strict block validation remain intact. Use a map whose configured arenas,
 altars, and NPC locations exist before enabling those features.
 
 Scene recovery verifies its terrain, player body, and declared module state.
+Starting camera positions must have clear body space before a checkpoint is
+created. Ordinary movement uses guarded client input; presses that include use
+or attack still require a bounded fixture target.
 Progression state outside that contract belongs in prepared observations on a
 disposable target, which is removed after the demonstration.
 

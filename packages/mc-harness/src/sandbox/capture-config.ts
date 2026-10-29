@@ -11,13 +11,9 @@ export function captureConfig(source: string, entry: Entry): string {
   const [x, y, zz] = entry.spawn;
   switch (entry.content) {
     case "arena-survival": {
-      const arena = z.object({ world: z.string() }).parse(parsed["arena"]);
-      return Bun.YAML.stringify({
-        ...parsed,
-        enabled:
-          parsed["enabled"] === true &&
-          (entry.additionalWorlds ?? []).includes(arena.world),
-      });
+      // This feature captures the Colosseum. Unrelated survival arenas have
+      // separate terrain and readiness requirements, even on an imported world.
+      return Bun.YAML.stringify({ ...parsed, enabled: false });
     }
     case "multiverse":
       return Bun.YAML.stringify(

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "rwf-kit-menu",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-kit-menu/original.webp",
+  "poster": "/media/rwf-kit-menu/poster.webp",
+  "alt": "Browse kit items and prices; bought kits stay unlocked for later rounds.",
+  "caption": "Browse kit items and prices; bought kits stay unlocked for later rounds.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.13, 0.2],
+      "to": [0.49, 0.28],
+      "text": "Price and lock",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

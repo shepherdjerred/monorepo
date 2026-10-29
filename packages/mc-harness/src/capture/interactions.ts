@@ -1,10 +1,38 @@
 import type { CaptureContext } from "./define.ts";
 import { z } from "zod";
+import { ClientMoveRequestSchema } from "#protocol/client.ts";
 
 type Action = (
   action: string,
   args?: Record<string, unknown>,
 ) => Promise<unknown>;
+
+/** Movement can face open air; presses that can change the world stay bounded. */
+export function createSceneActions(
+  native: Action,
+  bounded: Action,
+): CaptureContext["action"] {
+  return async (action, args = {}) => {
+    if (action === "move") {
+      const input = ClientMoveRequestSchema.parse(args);
+      return input.buttons.some(
+        (button) => button === "use" || button === "attack",
+      )
+        ? bounded("input", input)
+        : native("move", input);
+    }
+    return [
+      "use",
+      "attack",
+      "click",
+      "sign-write",
+      "screen-activate",
+      "screen-type",
+    ].includes(action)
+      ? bounded(action, args)
+      : native(action, args);
+  };
+}
 
 /** Own the held input through pose verification, including native rejection. */
 export function createInteractions(controls: {

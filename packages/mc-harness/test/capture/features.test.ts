@@ -99,5 +99,5 @@ it("requires imported RWF terrain and resolves the full milestone service graph"
     Bun.YAML.parse(
       captureConfig("enabled: true\narena: {world: settlement}", optionalArena),
     ),
-  ).toMatchObject({ enabled: true });
+  ).toMatchObject({ enabled: false });
 });

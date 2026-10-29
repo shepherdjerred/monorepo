@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "storm-advancement-tabs",
+  "kind": "image",
+  "width": 1708,
+  "height": 960,
+  "src": "/media/storm-advancement-tabs/original.webp",
+  "poster": "/media/storm-advancement-tabs/poster.webp",
+  "alt": "The Storm advancement tab on live TSMC, with the server's milestone tabs visible",
+  "caption": "Open the Storm tabs to follow server milestones alongside Minecraft's vanilla advancements.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.04, 0.24],
+      "to": [0.38, 0.16],
+      "text": "Storm milestones",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

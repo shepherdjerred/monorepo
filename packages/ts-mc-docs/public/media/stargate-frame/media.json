@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "stargate-frame",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/stargate-frame/original.webp",
+  "poster": "/media/stargate-frame/poster.webp",
+  "alt": "The two-wide, three-high opening of a player-built Stargate",
+  "caption": "Leave the two-wide, three-high opening empty, with the sign and button on opposite sides.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.72, 0.35],
+      "to": [0.49, 0.48],
+      "text": "Two-wide opening",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.18, 0.32],
+      "to": [0.37, 0.45],
+      "text": "Button",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

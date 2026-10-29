@@ -22,11 +22,12 @@ import {
 import { CaptureTransport } from "./transport.ts";
 import { createMessageControls } from "./messages.ts";
 import { createRecorder } from "./recording.ts";
+import { assertLanding } from "./landing.ts";
 import type { CaptureContext } from "./define.ts";
 
 import { save, type CaptureRun } from "./model.ts";
 import { createLookAt } from "./camera.ts";
-import { createInteractions } from "./interactions.ts";
+import { createInteractions, createSceneActions } from "./interactions.ts";
 
 function decimal(value: number): string {
   return Number.isInteger(value) ? value.toFixed(1) : value.toString();
@@ -104,35 +105,14 @@ export async function createDriver(directory: string, run: CaptureRun) {
   if (world === undefined) throw new Error(`Unknown world ${run.box.world}`);
   const teleport: CaptureContext["teleport"] = async (position, yaw, pitch) => {
     const [x, y, zz] = position;
-    const ground = {
-      x: Math.floor(x),
-      y: Math.floor(y) - 1,
-      z: Math.floor(zz),
-    };
-    const area = await transport.world(
-      RegionReadResponseSchema,
-      "region-read",
-      {
-        world: run.box.world,
-        min: ground,
-        max: { ...ground, y: ground.y + 2 },
-      },
-    );
-    const bytes = Buffer.from(area.blocks, "base64");
-    const states = [0, 1, 2].map(
-      (index) => area.palette[bytes.readUInt32LE(index * 4)],
-    );
-    const groundState = states[0];
-    const harmless =
-      /^minecraft:(?:stone|dirt|grass_block|sand|gravel|deepslate|cobblestone|(?:oak|spruce|birch|jungle|acacia|dark_oak|mangrove|cherry)_planks|stone_bricks)(?:\[|$)/u;
-    if (
-      groundState === undefined ||
-      !harmless.test(groundState) ||
-      states.slice(1).some((block) => block !== "minecraft:air")
-    )
-      throw new Error(
-        "Destination does not have verified safe ground and clearance",
-      );
+    const returningToFlight =
+      cleaning &&
+      run.checkpoint?.allowFlight === true &&
+      run.checkpoint.flying &&
+      run.origin?.position.every(
+        (value, index) => value === position[index],
+      ) === true;
+    await assertLanding(transport, run.box.world, position, returningToFlight);
     await command(
       `execute in ${world.key} run minecraft:tp ${run.name} ${[x, y, zz].map((value) => decimal(value)).join(" ")} ${yaw.toString()} ${pitch.toString()}`,
     );
@@ -257,18 +237,7 @@ export async function createDriver(directory: string, run: CaptureRun) {
     lookAt,
     use: (sneak) => interact("use", sneak),
     attack: (sneak) => interact("attack", sneak),
-    action: async (action, args = {}) =>
-      [
-        "use",
-        "attack",
-        "click",
-        "sign-write",
-        "screen-activate",
-        "screen-type",
-        "move",
-      ].includes(action)
-        ? bounded(action === "move" ? "input" : action, args)
-        : native(action, args),
+    action: createSceneActions(native, bounded),
     step: async (name, action) => {
       await log({ kind: "step-start", name });
       if (recording.active)
@@ -368,6 +337,7 @@ export async function createDriver(directory: string, run: CaptureRun) {
         "rendered scene",
         (state) =>
           state.connected &&
+          state["terrainReady"] === true &&
           state.fps > 0 &&
           state["swinging"] === false &&
           typeof state["renderedFrames"] === "number" &&

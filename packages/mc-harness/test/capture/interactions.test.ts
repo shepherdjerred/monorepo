@@ -1,5 +1,34 @@
 import { it, expect } from "vitest";
-import { createInteractions } from "#src/capture/interactions.ts";
+import {
+  createInteractions,
+  createSceneActions,
+} from "#src/capture/interactions.ts";
+
+it("routes world-changing input through fixture admission while walking can face air", async () => {
+  const calls: string[] = [];
+  const action = createSceneActions(
+    (op) => {
+      calls.push(`native:${op}`);
+      return Promise.resolve();
+    },
+    (op) => {
+      calls.push(`bounded:${op}`);
+      return Promise.reject(new Error("Fixture refused"));
+    },
+  );
+  await action("move", { buttons: ["forward"], ticks: 20 });
+  for (const button of ["use", "attack"])
+    await expect(
+      action("move", { buttons: ["forward", button], ticks: 20 }),
+    ).rejects.toThrow("Fixture refused");
+  await expect(action("use")).rejects.toThrow("Fixture refused");
+  expect(calls).toEqual([
+    "native:move",
+    "bounded:input",
+    "bounded:input",
+    "bounded:use",
+  ]);
+});
 
 it("releases native input when pose verification or input admission fails", async () => {
   const calls: string[] = [];
