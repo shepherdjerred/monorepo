@@ -20,6 +20,7 @@ final class SimPhysics {
   }
 
   void steer(SimBody body, Vec3 heading) {
+    body.heading = heading;
     var slowdown = body.usingItem ? 0.2 : body.sneaking ? 0.3 : 1;
     body.velocity =
         MovementMotor.steer(
@@ -35,7 +36,9 @@ final class SimPhysics {
 
   void jump(SimBody body, long tick) {
     if (!body.onGround) return;
-    body.velocity = MovementMotor.jump(body.velocity, body.sprinting && body.traversal.maySprint());
+    body.velocity =
+        MovementMotor.jump(
+            body.velocity, body.sprinting && body.traversal.maySprint(), body.heading);
     body.jumpTick = tick;
     body.onGround = false;
   }

@@ -1,9 +1,15 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
+import java.util.BitSet;
 import org.junit.jupiter.api.Test;
 
 final class BowSolverTest {
@@ -77,5 +83,29 @@ final class BowSolverTest {
   @Test
   void flightTimeGrowsWithDistance() {
     assertThat(BowSolver.flightTicks(10, 3)).isLessThan(BowSolver.flightTicks(30, 3));
+  }
+
+  @Test
+  void aJumpingTargetIsLedAlongTheGroundAndAimedAtWhereItWillLand() {
+    var bounds = new GridBounds(new BlockPos(0, 0, 0), 32, 8, 8);
+    var floor = new BitSet(bounds.volume());
+    for (var x = 0; x < 32; x++) for (var z = 0; z < 8; z++) floor.set(bounds.index(x, 0, z));
+    var grid = new VoxelGrid(bounds, floor, floor, floor);
+    // Mid-jump, rising 0.4 a tick: leading that for 12 ticks aimed nearly five blocks high.
+    var jumping =
+        Fixtures.combatant(2, Fixtures.BLUE, new Vec3(10.5, 1.8, 3.5))
+            .withVel(new Vec3(0.28, 0.4, 0))
+            .withMotion(true, false);
+    var aim = BowSolver.lead(grid, jumping, 12);
+    assertThat(aim.x()).isCloseTo(10.5 + 12 * 0.28, within(1e-9));
+    assertThat(aim.y()).isCloseTo(1 + BowSolver.BODY_CENTRE, within(1e-9));
+    // On the ground the aim keeps its feet height; over a drop it keeps its own height.
+    var running = jumping.withPos(new Vec3(10.5, 1, 3.5)).withMotion(true, true);
+    assertThat(BowSolver.lead(grid, running, 12).y()).isCloseTo(2.3, within(1e-9));
+    var overVoid = jumping.withPos(new Vec3(10.5, 1.8, 30));
+    assertThat(BowSolver.lead(grid, overVoid, 12).y()).isCloseTo(1.8 + 1.3, within(1e-9));
+    // Higher above the ground than any jump lifts, a target climbs, swims or falls: aim at it.
+    var climbing = jumping.withPos(new Vec3(10.5, 4.5, 3.5)).withVel(new Vec3(0, 0.1, 0));
+    assertThat(BowSolver.lead(grid, climbing, 12).y()).isCloseTo(4.5 + 1.3, within(1e-9));
   }
 }

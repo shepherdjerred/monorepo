@@ -18,6 +18,30 @@ public final class CombatFootwork {
     return safe(grid, self, alternative) ? alternative : Vec3.ZERO;
   }
 
+  /**
+   * Whether a combat step keeps the sprint: a player strafing in contact holds forward as well, so
+   * a step towards {@code toTarget} or across it sprints, and only backing off drops it.
+   */
+  public static boolean sprintable(Vec3 step, Vec3 toTarget) {
+    var horizontal = step.horizontal();
+    return !horizontal.isZero()
+        && horizontal.normalized().dot(toTarget.horizontal().normalized()) > -SPRINT_SLACK;
+  }
+
+  /** How far a strafe may drift backwards, as a share of the step, and still count as across. */
+  static final double SPRINT_SLACK = 0.05;
+
+  /** Ticks after a hit during which an optional jump only carries the body further with it. */
+  public static final long REEL_TICKS = 10;
+
+  /**
+   * Whether {@code self} is still reeling from a hit: a jump now leaves the ground while knockback
+   * is carrying it, so the blow throws it further and the body cannot steer back until it lands.
+   */
+  public static boolean reeling(CombatantView self, long now) {
+    return self.lastHurtTick() >= 0 && now - self.lastHurtTick() < REEL_TICKS;
+  }
+
   public static boolean safe(VoxelGrid grid, CombatantView self, Vec3 heading) {
     if (heading.isZero()) return true;
     var delta = heading.horizontal().normalized();

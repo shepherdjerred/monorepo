@@ -60,14 +60,23 @@ public final class MovementMotor {
     return forward < 0 ? delta.minus(direction.scale(forward)) : delta;
   }
 
-  /** A sprint launch follows travel direction, independently of where combat aiming faces. */
+  /** A sprint launch whose travel already runs along its heading, as a measured run-up does. */
   public static Vec3 jump(Vec3 velocity, boolean sprint) {
-    var horizontal = velocity.horizontal();
+    return jump(velocity, sprint, velocity);
+  }
+
+  /**
+   * A sprint launch boosts along the steering {@code heading}, independently of where combat aiming
+   * faces and of knockback the body is still carrying: boosting along current velocity made a jump
+   * right after a hit carry the body about a fifth further with the blow.
+   */
+  public static Vec3 jump(Vec3 velocity, boolean sprint, Vec3 heading) {
+    var direction = heading.horizontal();
     var impulse =
-        sprint && !horizontal.isZero()
-            ? horizontal.normalized().scale(SPRINT_JUMP_IMPULSE)
+        sprint && !direction.isZero()
+            ? direction.normalized().scale(SPRINT_JUMP_IMPULSE)
             : Vec3.ZERO;
-    return horizontal.plus(impulse).plus(0, JUMP_SPEED, 0);
+    return velocity.horizontal().plus(impulse).plus(0, JUMP_SPEED, 0);
   }
 
   /**

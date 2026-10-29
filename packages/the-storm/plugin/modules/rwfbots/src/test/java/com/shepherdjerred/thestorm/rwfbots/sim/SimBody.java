@@ -49,6 +49,10 @@ final class SimBody {
   boolean sneaking;
   boolean onGround = true;
   Vec3 velocity = Vec3.ZERO;
+
+  /** Where the body last steered; a sprint jump boosts along it, as the Paper body does. */
+  Vec3 heading = Vec3.ZERO;
+
   double fallDistance;
   TraversalState traversal = TraversalState.UNMODIFIED;
   boolean usingItem;

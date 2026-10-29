@@ -254,10 +254,15 @@ public final class CitizensBodies implements Bodies, Listener {
         .ifPresent(
             player -> {
               var velocity = player.getVelocity();
+              var heading =
+                  Optional.ofNullable(movement.get(bot))
+                      .map(BodyMovement::heading)
+                      .orElse(Vec3.ZERO);
               var launch =
                   MovementMotor.jump(
                       new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
-                      player.isSprinting());
+                      player.isSprinting(),
+                      heading);
               player.setVelocity(new org.bukkit.util.Vector(launch.x(), launch.y(), launch.z()));
             });
   }

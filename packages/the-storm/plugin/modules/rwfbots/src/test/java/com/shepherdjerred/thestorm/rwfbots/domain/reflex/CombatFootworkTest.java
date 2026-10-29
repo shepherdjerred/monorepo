@@ -55,4 +55,21 @@ final class CombatFootworkTest {
     assertThat(CombatFootwork.steer(grid(blocks), self(), SOUTH, EAST)).isEqualTo(Vec3.ZERO);
     assertThat(CombatFootwork.safe(grid(floor()), self(), SOUTH)).isTrue();
   }
+
+  @Test
+  void aStrafeAcrossOrTowardsTheTargetKeepsTheSprintButBackingOffDropsIt() {
+    var toTarget = new Vec3(2.75, 0, 0);
+    assertThat(CombatFootwork.sprintable(new Vec3(0.3, 0, 1), toTarget)).isTrue();
+    assertThat(CombatFootwork.sprintable(new Vec3(1, 0, 0), toTarget)).isTrue();
+    assertThat(CombatFootwork.sprintable(new Vec3(0, 0, 1), toTarget)).isTrue();
+    assertThat(CombatFootwork.sprintable(new Vec3(-0.6, 0, 1), toTarget)).isFalse();
+    assertThat(CombatFootwork.sprintable(Vec3.ZERO, toTarget)).isFalse();
+  }
+
+  @Test
+  void aBodyReelsForTenTicksAfterAHit() {
+    assertThat(CombatFootwork.reeling(self(), 100)).isFalse();
+    assertThat(CombatFootwork.reeling(self().withLastHurtTick(95), 100)).isTrue();
+    assertThat(CombatFootwork.reeling(self().withLastHurtTick(90), 100)).isFalse();
+  }
 }

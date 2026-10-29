@@ -357,6 +357,39 @@ final class ReflexTest {
   }
 
   @Test
+  void strafingInsideTheSpacingBandKeepsTheSprintItsHitsKnockBackWith() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    for (var gap : new double[] {2.65, 2.75, 2.85}) {
+      var target = combatant(2, BLUE, new Vec3(5.5 + gap, 1, 5.5));
+      var move = strafeStep(self, target);
+      assertThat(move.sprint()).as("gap %s", gap).isTrue();
+    }
+    // Backing off from a target too close is not forward input and cannot sprint.
+    var close = strafeStep(self, combatant(2, BLUE, new Vec3(7.5, 1, 5.5)));
+    assertThat(close.sprint()).isFalse();
+  }
+
+  private static BodyCommand.MoveToward strafeStep(CombatantView self, CombatantView target) {
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self,
+                world(1, List.of(self, target), List.of()),
+                fight(self, target, 1),
+                Optional.of(target),
+                3,
+                List.of()),
+            context(levers(1)),
+            new SplittableRandom(7));
+    return step.commands().stream()
+        .filter(BodyCommand.MoveToward.class::isInstance)
+        .map(BodyCommand.MoveToward.class::cast)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  @Test
   void pursuitDoesNotSpendASwingCooldownBeforeSwordContact() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5)).withFacing(new Facing(-90, 0));
     var target = combatant(2, BLUE, new Vec3(9.8, 1, 5.5));

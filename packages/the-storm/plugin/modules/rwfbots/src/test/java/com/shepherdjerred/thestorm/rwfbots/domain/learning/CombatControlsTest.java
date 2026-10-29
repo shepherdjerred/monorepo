@@ -269,6 +269,39 @@ final class CombatControlsTest {
     assertThat(CombatCommands.replace(context, jump)).isSameAs(context.authored().commands());
   }
 
+  @Test
+  void aBodyStillReelingFromAHitCannotTakeAnOptionalJump() {
+    var nav =
+        MapBaker.bake(
+            "open",
+            new Arena(Optional.empty(), Optional.empty()),
+            new NavSites(List.of(), List.of()));
+    var body = combatant(1, RED, new Vec3(5.5, 1, 5.5)).withHands(1, false);
+    var jump = ticket(new CombatAction(7, true, false, true, true));
+    var steady =
+        new CombatCommands.Context(
+            new Reflex.Step(ReflexState.initial(body.facing()), List.of(new BodyCommand.Stop())),
+            input(body),
+            nav);
+    assertThat(CombatCommands.eligible(steady, jump)).isTrue();
+    // Snapshot tick 100: a hit four ticks ago still carries the body; one ten ticks ago no longer.
+    for (var hurt : List.of(96L, 90L)) {
+      var hit = body.withLastHurtTick(hurt);
+      var context =
+          new CombatCommands.Context(
+              new Reflex.Step(ReflexState.initial(hit.facing()), List.of(new BodyCommand.Stop())),
+              input(hit),
+              nav);
+      assertThat(CombatCommands.eligible(context, jump))
+          .as("hurt at %s", hurt)
+          .isEqualTo(hurt == 90L);
+      assertThat(
+              CombatCommands.eligible(
+                  context, ticket(new CombatAction(7, false, false, true, true))))
+          .isTrue();
+    }
+  }
+
   private record Arena(Optional<BlockPos> gap, Optional<BlockPos> obstacle)
       implements BlockClassification {
     @Override
