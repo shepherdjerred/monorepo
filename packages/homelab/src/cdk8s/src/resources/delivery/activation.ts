@@ -15,7 +15,12 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   forumObserver: string | undefined;
   trmnlArchiveReader: string | undefined;
   trmnlKey: string | undefined;
-  /** Read-only GitHub token (field DELIVERY_GH_TOKEN) for hub commit context. */
+  /**
+   * GitHub token (field GITHUB_DOWNLOAD_TOKEN) for hub commit context and the
+   * independent source acquisition reads. Until a fine-grained public-read
+   * token exists, this is CI's existing download token in
+   * `ci-github-credentials`, which carries broader scopes.
+   */
   githubReader: string | undefined;
   /**
    * npm token (field NPM_TOKEN) that npm channel deployments publish with
@@ -37,7 +42,7 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   forumObserver: "es5ddbihz4qeylhjt2x2iemvzi",
   trmnlArchiveReader: "542onhpijguqgaukmyvbujbu74",
   trmnlKey: "p7th6tqeel7k2sm47mrrto7oca",
-  githubReader: undefined,
+  githubReader: "34gzcrhwdm34lpadyly3rcsu44",
   npmChannel: "4fmd5otmvwcpsrxjaptrloppvu",
 };
 

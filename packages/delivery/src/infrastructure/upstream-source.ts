@@ -64,6 +64,30 @@ export function sourceReview(
   };
 }
 
+const GITHUB_READ_HOSTS: ReadonlySet<string> = new Set([
+  "api.github.com",
+  "codeload.github.com",
+]);
+
+/**
+ * The acquisition transport with the API's GitHub read credential on GitHub
+ * reads only. Anonymous reads share the egress IP's hourly quota with CI,
+ * which a main pipeline can exhaust before its source acquisition runs.
+ */
+export function githubAuthenticatedTransport(
+  token: string | undefined,
+  transport: Transport = fetch,
+): Transport {
+  if (token === undefined) return transport;
+  return (url, init) => {
+    const target = url instanceof URL ? url : new URL(url);
+    if (!GITHUB_READ_HOSTS.has(target.hostname)) return transport(url, init);
+    const headers = new Headers(init?.headers);
+    headers.set("authorization", `Bearer ${token}`);
+    return transport(url, { ...init, headers });
+  };
+}
+
 async function githubRead(
   url: string,
   transport: Transport,

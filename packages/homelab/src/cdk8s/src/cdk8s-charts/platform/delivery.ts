@@ -192,7 +192,7 @@ export function createDeliveryChart(
                   "github-reader-secret",
                   githubItem.name,
                 ),
-                key: "DELIVERY_GH_TOKEN",
+                key: "GITHUB_DOWNLOAD_TOKEN",
               }),
             }),
         WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),

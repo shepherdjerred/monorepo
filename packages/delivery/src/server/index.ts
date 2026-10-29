@@ -18,6 +18,7 @@ import {
   createForumBaselineReader,
 } from "#infrastructure/forum/baseline-inspector.ts";
 import { createApp } from "./app.ts";
+import { githubAuthenticatedTransport } from "#infrastructure/upstream-source.ts";
 import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import { createTrmnlRecoveryInspector } from "#infrastructure/trmnl-recovery.ts";
@@ -103,6 +104,7 @@ const app = createApp({
   }),
   ciOrigin: bootstrap.WOODPECKER_URL,
   ciRepositoryId: bootstrap.WOODPECKER_REPO_ID,
+  upstreamFetch: githubAuthenticatedTransport(bootstrap.DELIVERY_GH_TOKEN),
   qualifyBuild: createQualifier({
     origin: bootstrap.WOODPECKER_URL,
     repositoryId: bootstrap.WOODPECKER_REPO_ID,
