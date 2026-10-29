@@ -1,4 +1,6 @@
 import type { ParseArgsOptionsConfig } from "node:util";
+import { CAPTURE_ENTRY } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import { runBuildCli } from "#lib/mc/build.ts";
 import { publishedProfileInputs } from "#lib/mc/published-profile.ts";
 import { mcBuildCommand } from "#commands/mc/build.ts";
 import {
@@ -429,6 +431,10 @@ export async function handleMcCommand(
       }
       case "build": {
         await mcBuildCommand(args);
+        return;
+      }
+      case "capture": {
+        process.exitCode = await runBuildCli(args, CAPTURE_ENTRY);
         return;
       }
       case "actor": {

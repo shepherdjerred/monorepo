@@ -64,8 +64,15 @@ public final class VideoGameTest implements FabricClientGameTest {
       }
       arm(context, capture, "native-missed-slot", 900);
       context.waitFor(client -> "READY".equals(capture.status().state()), 600);
-      context.runOnClient(client -> capture.start());
+      // Make the adverse render rate explicit instead of depending on runner scheduling.
+      var limit = context.computeOnClient(client -> client.options.framerateLimit().get());
+      context.runOnClient(
+          client -> {
+            client.options.framerateLimit().set(20);
+            capture.start();
+          });
       context.waitFor(client -> "FAILED".equals(capture.status().state()), 600);
+      context.runOnClient(client -> client.options.framerateLimit().set(limit));
       var failed = context.computeOnClient(client -> capture.status());
       if (!failed.error().contains("missed frame")) {
         throw new IllegalStateException("Slow rendering failed for an unexpected reason");

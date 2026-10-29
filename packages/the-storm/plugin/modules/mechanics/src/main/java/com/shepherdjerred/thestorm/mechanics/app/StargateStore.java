@@ -27,5 +27,7 @@ public interface StargateStore {
 
   CompletableFuture<Boolean> deleteGate(UUID id);
 
+  CompletableFuture<Boolean> deleteEmptyNetwork(UUID id);
+
   CompletableFuture<Void> resetPlayer(UUID player);
 }

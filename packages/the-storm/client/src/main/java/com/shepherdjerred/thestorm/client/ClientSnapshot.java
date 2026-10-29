@@ -32,6 +32,9 @@ final class ClientSnapshot {
     }
     return Map.ofEntries(
         Map.entry("connected", true),
+        Map.entry("renderedFrames", RenderCapture.renderedFrames()),
+        Map.entry("uuid", player.getUUID().toString()),
+        Map.entry("name", player.getName().getString()),
         Map.entry("position", List.of(player.getX(), player.getY(), player.getZ())),
         Map.entry("yaw", player.getYRot()),
         Map.entry("pitch", player.getXRot()),

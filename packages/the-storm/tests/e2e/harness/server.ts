@@ -31,7 +31,7 @@ import {
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
 import { stageRwf } from "./rwf-staging.ts";
-import { RconClient } from "#e2e/harness/rcon.ts";
+import { verifyRconReady } from "./boot/rcon-ready.ts";
 import { stageWorld } from "./world-copy.ts";
 import { serverIcon } from "./paths.ts";
 import { ExternalServerShape } from "#e2e/harness/external/inputs.ts";
@@ -367,14 +367,7 @@ async function bootContainer(
   const rcon = await publishedPort(id, 25_575);
   // The Done line proves the game port; prove RCON accepts and executes a
   // command too before handing the server to the E2E suite.
-  const client = await RconClient.connect({
-    host: rcon.host,
-    port: rcon.port,
-    password: rconPassword,
-    timeoutMs: Math.max(1, deadline - Date.now()),
-  });
-  await client.command("list");
-  client.close();
+  await verifyRconReady(rcon, rconPassword, deadline);
   return {
     kind: "container",
     containerId: id,

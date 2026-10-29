@@ -43,12 +43,13 @@ check behavior as live tsmc runs it.
 
 ## Routing
 
-| Task                                              | Read                             |
-| ------------------------------------------------- | -------------------------------- |
-| WorldEdit edits, region reads, snapshots, console | `references/commands.md`         |
-| Actors and repeatable playtests                   | `references/actors-playtests.md` |
-| A user-requested change on live tsmc              | `references/live.md`             |
-| A build that should end up in a real place        | the `minecraft-building` skill   |
+| Task                                              | Read                                                   |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| WorldEdit edits, region reads, snapshots, console | `references/commands.md`                               |
+| Actors and repeatable playtests                   | `references/actors-playtests.md`                       |
+| A user-requested change on live tsmc              | `references/live.md`                                   |
+| A build that should end up in a real place        | the `minecraft-building` skill                         |
+| Player docs screenshots, clips, and annotations   | `packages/mc-harness/README.md`, Documentation capture |
 
 Key rules from those references:
 

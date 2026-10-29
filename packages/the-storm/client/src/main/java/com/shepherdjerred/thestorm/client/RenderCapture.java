@@ -7,6 +7,21 @@ import org.jspecify.annotations.Nullable;
 public final class RenderCapture {
   private static @Nullable VideoCapture capture;
   private static @Nullable FramePacing pacing;
+  private static @Nullable DocsCapture docs;
+  private static long renderedFrames;
+
+  static long renderedFrames() {
+    return renderedFrames;
+  }
+
+  static void installDocs(DocsCapture owner) {
+    docs = owner;
+  }
+
+  static void removeDocs(DocsCapture owner) {
+    if (docs != owner) throw new IllegalStateException("Docs capture owner changed");
+    docs = null;
+  }
 
   private RenderCapture() {}
 
@@ -23,6 +38,7 @@ public final class RenderCapture {
   static void remove(VideoCapture owner) {
     if (capture != owner) throw new IllegalStateException("Render capture owner changed");
     capture = null;
+    docs = null;
     pacing = null;
   }
 
@@ -32,6 +48,9 @@ public final class RenderCapture {
   }
 
   public static void rendered() {
+    renderedFrames++;
+    var recording = docs;
+    if (recording != null) recording.render(Minecraft.getInstance());
     var owner = capture;
     if (owner != null) owner.render(Minecraft.getInstance());
     var timing = pacing;

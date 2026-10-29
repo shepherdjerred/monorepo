@@ -170,6 +170,22 @@ public final class JooqStargateStore implements StargateStore {
   }
 
   @Override
+  public CompletableFuture<Boolean> deleteEmptyNetwork(UUID id) {
+    return database.write(
+        dsl -> {
+          if (dsl.fetchExists(
+              dsl.selectOne()
+                  .from(MECHANICS_STARGATE_GATE)
+                  .where(MECHANICS_STARGATE_GATE.NETWORK_ID.eq(id.toString()))))
+            throw new IllegalStateException("Capture network still has gates");
+          return dsl.deleteFrom(MECHANICS_STARGATE_NETWORK)
+                  .where(MECHANICS_STARGATE_NETWORK.ID.eq(id.toString()))
+                  .execute()
+              == 1;
+        });
+  }
+
+  @Override
   public CompletableFuture<Void> resetPlayer(UUID player) {
     var id = player.toString();
     return database.write(

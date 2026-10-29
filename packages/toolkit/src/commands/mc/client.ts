@@ -8,11 +8,11 @@ import {
   ClientStopResponseSchema,
 } from "@shepherdjerred/mc-harness/protocol/client.ts";
 import { daemonRequest, daemonSend } from "#lib/mc/client.ts";
+import { renderClientStatus, renderClients } from "#lib/mc/game-client.ts";
 import {
   liveWriteHeaders,
   type LiveWriteFlags,
 } from "@shepherdjerred/mc-harness/protocol/live.ts";
-import { renderClientStatus, renderClients } from "#lib/mc/game-client.ts";
 
 function print<T>(json: boolean, value: T, render: (value: T) => string): void {
   console.log(json ? JSON.stringify(value, null, 2) : render(value));
@@ -83,21 +83,19 @@ export async function mcClientStatusCommand(
   print(json, status, renderClientStatus);
 }
 
-export async function mcClientActionCommand(input: {
-  name: string;
-  action: ClientAction;
-  body: Record<string, unknown>;
-  json: boolean;
-  write?: LiveWriteFlags;
-}): Promise<void> {
-  const { name, action, body, json, write = {} } = input;
+export async function mcClientActionCommand(
+  name: string,
+  action: ClientAction,
+  body: Record<string, unknown>,
+  options: { json: boolean; write: LiveWriteFlags },
+): Promise<void> {
   const result = await daemonSend(
     ClientActionResponseSchema,
     "POST",
     clientPath(name, `/${action}`),
-    { body, headers: liveWriteHeaders(write) },
+    { body, headers: liveWriteHeaders(options.write) },
   );
-  print(json, result, (value) => value.detail);
+  print(options.json, result, (value) => value.detail);
 }
 
 export async function mcClientCaptureCommand(

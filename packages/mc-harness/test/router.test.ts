@@ -365,7 +365,8 @@ describe("client routes", () => {
       target: "sbx-abc123",
       name: "Tester",
     });
-    expect(again.status).toBe(409);
+    expect(again.status).toBe(200);
+    expect(fake.launches).toHaveLength(1);
     await call(ctx, "DELETE", "/clients/Tester");
   });
 
@@ -379,7 +380,10 @@ describe("client routes", () => {
       yaw: 90,
       pitch: -15,
     });
-    expect(look.json).toEqual({ detail: "Camera updated" });
+    expect(look.json).toEqual({
+      detail: "Camera updated",
+      result: "Camera updated",
+    });
     const status = await call(ctx, "GET", "/clients/Mover");
     expect(status.json).toMatchObject({ state: { yaw: 90, pitch: -15 } });
     await call(ctx, "POST", "/clients/Mover/move", {

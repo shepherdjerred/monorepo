@@ -1,4 +1,10 @@
 import type { z } from "zod";
+import {
+  CaptureInspectionSchema,
+  PlayerCheckpointSchema,
+  type PlayerRestoreSchema,
+} from "#protocol/capture.ts";
+import { z as captureZod } from "zod";
 import { EvidencePageSchema, type EvidenceQuery } from "#protocol/evidence.ts";
 import {
   type ActorAction,
@@ -84,6 +90,36 @@ export class BridgeClient {
 
   regionRead(box: Box) {
     return this.json(RegionReadResponseSchema, "POST", "/v1/regions/read", box);
+  }
+
+  captureInspect(box: Box) {
+    return this.json(CaptureInspectionSchema, "POST", "/v1/capture/inspect", {
+      box,
+    });
+  }
+
+  capturePlayer(name: string) {
+    return this.json(PlayerCheckpointSchema, "POST", "/v1/capture/player", {
+      name,
+    });
+  }
+
+  captureCleanup(input: { name: string; resource: string; id: string }) {
+    return this.json(
+      captureZod.strictObject({ removed: captureZod.literal(true) }),
+      "POST",
+      "/v1/capture/cleanup",
+      input,
+    );
+  }
+
+  restoreCapturePlayer(input: captureZod.infer<typeof PlayerRestoreSchema>) {
+    return this.json(
+      captureZod.strictObject({ restored: captureZod.literal(true) }),
+      "POST",
+      "/v1/capture/player/restore",
+      input,
+    );
   }
 
   snapshotCreate(box: Box, label?: string) {

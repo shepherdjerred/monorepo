@@ -66,6 +66,21 @@ final class VideoFrames {
 
   record Written(Frame frame, String file, String sha256) {}
 
+  record DocsObservation(String world, String screen) {}
+
+  record DocsWritten(Frame frame, String file, String sha256, DocsObservation observation) {}
+
+  record DocsReceipt(
+      int schema,
+      String kind,
+      String source,
+      int fps,
+      int requestedFrames,
+      boolean complete,
+      String error,
+      List<DocsWritten> frames,
+      List<DocsCapture.Marker> markers) {}
+
   record Receipt(
       int schema,
       String kind,
@@ -259,6 +274,53 @@ final class VideoFrames {
                 StandardOpenOption.WRITE);
           } catch (IOException e) {
             throw new IllegalStateException("Cannot seal frame receipt", e);
+          }
+          return receipt;
+        },
+        io);
+  }
+
+  CompletableFuture<Path> finishDocs(
+      int total,
+      String error,
+      java.util.Map<Integer, DocsObservation> observations,
+      List<DocsCapture.Marker> markers) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          if (error.isEmpty() && written.size() != total)
+            throw new IllegalStateException("Docs frame inventory is incomplete");
+          var frames =
+              written.values().stream()
+                  .sorted(java.util.Comparator.comparingInt(entry -> entry.frame().index()))
+                  .map(
+                      entry ->
+                          new DocsWritten(
+                              entry.frame(),
+                              entry.file(),
+                              entry.sha256(),
+                              java.util.Objects.requireNonNull(
+                                  observations.get(entry.frame().index()))))
+                  .toList();
+          var result =
+              new DocsReceipt(
+                  4,
+                  "mc-docs-frames",
+                  "minecraft-framebuffer",
+                  FrameClock.FPS,
+                  total,
+                  error.isEmpty(),
+                  error,
+                  frames,
+                  markers);
+          var receipt = directory.resolve("frames.json");
+          try {
+            Files.writeString(
+                receipt,
+                Protocol.JSON.writeValueAsString(result) + "\n",
+                StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE);
+          } catch (IOException failure) {
+            throw new IllegalStateException("Cannot seal docs receipt", failure);
           }
           return receipt;
         },
