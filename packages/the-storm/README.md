@@ -3787,6 +3787,18 @@ row, lingering 2 to 5 s at each by its patience. It stands
 still to shoot a visible enemy, when sneaking as the last of its team, and for
 deliberate holds (`HOLD_ANGLE` at a late start or a pending elimination).
 
+A route ends on the node its goal snaps to, so a slot point in the air or over
+a ledge is reached from the nearest node instead of being walked at for the
+plan's whole life. `FrozenWatch` tells a frozen bot from a deliberate hold: a
+bot that has stood within 0.15 blocks and 2 degrees of one spot for 8 s while
+its decision sends it somewhere is frozen, unless it is eating or drawing, its
+route failed and recovery is handling it, or it works a fuse within reach (its
+decision still carries the route to the bomb's approach). `BotTicker` logs a
+frozen bot at WARN, with its option and plan, the route's length and end, its
+last body command, last movement problem and last stuck state, and the think
+loop drops its plan and blocks the plan's goal for 5 s, so it rethinks or
+recovers. The warning repeats every 8 s the bot stays frozen.
+
 The body's last movement gate (`MovementSafety`, read against live terrain by
 `MovementTerrain`) follows vanilla where the graph's primitives meet real
 blocks. A body is grounded when its centre or any footprint corner rests on a

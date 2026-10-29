@@ -202,7 +202,7 @@ public final class Tactics {
     return state
         .plan()
         .filter(plan -> plan.option() != Option.DEFUSE || assignedDefuser(situation))
-        .map(plan -> advance(plan, situation))
+        .map(plan -> advance(plan, situation, context))
         .filter(plan -> alive(plan, situation))
         .filter(plan -> Planner.coverFitsSlot(plan, situation, context))
         .filter(plan -> !situation.pendingElimination() || !offensive(plan.option()))
@@ -486,9 +486,10 @@ public final class Tactics {
     return new TeamNote(cover, chasing, path);
   }
 
-  private static Plan advance(Plan plan, Situation situation) {
+  private static Plan advance(Plan plan, Situation situation, TacticsContext context) {
     var result = plan;
-    while (!result.done() && Planner.stepDone(result.current(), situation, result.startedTick())) {
+    while (!result.done()
+        && RouteArrival.stepDone(result.current(), situation, context, result.startedTick())) {
       result = result.advance();
     }
     return result;

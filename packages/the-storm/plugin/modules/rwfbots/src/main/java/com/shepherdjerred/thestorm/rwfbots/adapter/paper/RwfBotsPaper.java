@@ -213,7 +213,8 @@ public final class RwfBotsPaper {
                     new TacticalObservations.Parts(
                         services.require(com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class),
                         services.require(com.shepherdjerred.thestorm.rwf.app.TacticalReports.class),
-                        module.time()))));
+                        module.time())),
+                module.logger()));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
     var doors =
         new DoorVisibility(

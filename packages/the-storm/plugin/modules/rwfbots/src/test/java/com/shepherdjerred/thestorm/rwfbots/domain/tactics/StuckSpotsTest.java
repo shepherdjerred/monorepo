@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
@@ -29,6 +30,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -637,6 +639,38 @@ final class StuckSpotsTest {
     assertThat(RecoverySteps.stranded(stuck, context(nav))).as("no way up the step").isTrue();
     assertThat(RecoverySteps.escape(stuck, context(nav))).isEmpty();
     assertThat(RecoverySteps.trapped(stuck, context(nav))).isTrue();
+  }
+
+  @Test
+  void aBotOnTheNodeAnOffGraphGoalSnapsToHasArrivedInsteadOfStandingFrozen() {
+    // floating-isles: a slot point in the air over a ledge snaps to the ledge's node, a bot there
+    // was sent one waypoint onto the node it stood on, and the route never counted as reached.
+    // Bots stood frozen for the 13 to 15 seconds of their plan's life, then took the same plan.
+    var nav = nav("floating-isles");
+    var context = context(nav);
+    var node = nav.graph().nodeAt(new BlockPos(4246, 87, 2117)).orElseThrow();
+    var feet = nav.graph().feet(node);
+    var goal = feet.plus(0, 2.4, 0);
+    var self = landed(feet.plus(0.2, 0, 0.1)).withTraversal(TraversalState.UNMODIFIED);
+    var situation = situation(nav, self, Optional.empty(), 100);
+    var plan =
+        Plan.of(
+            Option.TAKE_SLOT,
+            95,
+            new PlanStep.Route(goal, Stance.AGGRESSIVE),
+            new PlanStep.Hold(goal, goal.plus(10, 0, 0), Stance.CAUTIOUS));
+
+    assertThat(Planner.pathTo(situation, context, goal, new Planner.Way(Stance.AGGRESSIVE, false)))
+        .isInstanceOf(RouteResult.Arrived.class);
+    assertThat(RouteArrival.stepDone(plan.current(), situation, context, 95)).isTrue();
+    var thought =
+        Tactics.think(
+            new TacticsState(
+                Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
+            situation,
+            context,
+            new SplittableRandom(1));
+    assertThat(thought.decision().planLabel()).isNotEqualTo("take_slot:route");
   }
 
   /** A body that may not sprint, as a juggernaut's or a starving one's is. */
