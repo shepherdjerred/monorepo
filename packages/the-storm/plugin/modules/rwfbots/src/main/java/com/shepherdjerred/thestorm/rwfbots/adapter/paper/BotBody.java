@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +55,22 @@ public final class BotBody {
 
   void shieldUntil(long tick) {
     shieldUntil = tick;
+  }
+
+  /**
+   * A kit use waiting for the body to come to rest first (a horn's windup breaks on any step), and
+   * the last tick it may wait to.
+   */
+  record Brace(BodyCommand.UseKit use, long until) {}
+
+  private Optional<Brace> brace = Optional.empty();
+
+  Optional<Brace> brace() {
+    return brace;
+  }
+
+  void brace(Optional<Brace> waiting) {
+    brace = waiting;
   }
 
   BotBody(UUID uuid, Director.Drafted drafted) {
@@ -122,11 +139,13 @@ public final class BotBody {
     tally = PersonalityStats.Tally.NONE;
     drawStart = -1;
     shieldUntil = 0;
+    brace = Optional.empty();
   }
 
   void leaveMatch() {
     profile = null;
     shieldUntil = 0;
+    brace = Optional.empty();
   }
 
   ReflexState reflex() {
@@ -223,6 +242,7 @@ public final class BotBody {
     recoveryRequested = false;
     drawStart = -1;
     shieldUntil = 0;
+    brace = Optional.empty();
   }
 
   public PersonalityStats.Tally tally() {

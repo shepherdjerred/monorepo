@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
+import java.util.List;
 import java.util.Optional;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -9,8 +10,8 @@ import org.bukkit.inventory.meta.CrossbowMeta;
 import org.jspecify.annotations.Nullable;
 
 /**
- * What the current body can actually use: native ranged weapons with their ammunition, and the
- * steaks it carries.
+ * What the current body can actually use: native ranged weapons with their ammunition, the steaks
+ * it carries, and the kit items it still holds that are off cooldown.
  */
 final class PaperLoadouts {
   private PaperLoadouts() {}
@@ -19,7 +20,8 @@ final class PaperLoadouts {
   private static final int HOTBAR = 9;
 
   static Loadout available(Loadout template, Optional<Player> body) {
-    var loadout = template.withSteakSlot(steakSlot(template, body));
+    var loadout =
+        template.withSteakSlot(steakSlot(template, body)).withKitItems(kitItems(template, body));
     if (!loadout.hasBow()) {
       return loadout;
     }
@@ -39,6 +41,25 @@ final class PaperLoadouts {
             || inventory.contains(Material.TIPPED_ARROW)
             || inventory.contains(Material.SPECTRAL_ARROW);
     return ready ? loadout : loadout.withoutRanged();
+  }
+
+  /**
+   * The kit items still in hand and off cooldown: a thrown-away pearl or wind charge stack is gone,
+   * and one just thrown cools down as it does for a player.
+   */
+  private static List<Loadout.KitItem> kitItems(Loadout loadout, Optional<Player> body) {
+    if (body.isEmpty()) {
+      return loadout.kitItems();
+    }
+    var player = body.orElseThrow();
+    var inventory = player.getInventory();
+    return loadout.kitItems().stream()
+        .filter(
+            item -> {
+              var stack = inventory.getItem(item.slot());
+              return stack != null && !stack.isEmpty() && !player.hasCooldown(stack);
+            })
+        .toList();
   }
 
   /**

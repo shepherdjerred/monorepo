@@ -40,7 +40,27 @@ public record KitMove(String item, Use use, double min, double max, int gapTicks
      * No enemy within {@code min} and the next waypoint is between {@code min} and {@code max}
      * away: use it looking at the waypoint.
      */
-    TRAVEL
+    TRAVEL,
+    /**
+     * Hurt with an enemy in sight, working a fuse under enemy eyes, or outnumbered within {@code
+     * max}: put it down where it stands, as the Smokescreen's smoke.
+     */
+    COVER,
+    /**
+     * Standing still with two teammates within {@code max} and a fight coming, no enemy within
+     * {@code min}: sound it, as the Tactician's horn.
+     */
+    RALLY,
+    /**
+     * Thrown onto certified ground of its own path between {@code min} and {@code max} away, to
+     * close on a fleeing or ranged enemy or to escape one, as an ender pearl.
+     */
+    BLINK,
+    /**
+     * Burst against an enemy within {@code min} to push it away or off a ledge, at its own feet to
+     * leap at one within {@code max} or away from one when hurt, as a wind charge.
+     */
+    GUST
   }
 
   public KitMove {

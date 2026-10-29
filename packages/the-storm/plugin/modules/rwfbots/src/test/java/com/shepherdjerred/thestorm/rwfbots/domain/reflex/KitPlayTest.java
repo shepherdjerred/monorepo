@@ -81,7 +81,7 @@ final class KitPlayTest {
         .extracting(BodyCommand.UseKit::at)
         .isEqualTo(Optional.of(HERE.plus(0, -0.1, 0)));
     assertThat(KitPlay.choose(item, base, 0, Optional.of(NAV.grid()))).isEmpty();
-    assertThat(KitPlay.safeLaunch(NAV.grid(), new Vec3(0.5, 1, 0.5))).isFalse();
+    assertThat(WindCharge.launchPad(NAV.grid(), new Vec3(0.5, 1, 0.5))).isFalse();
     var unsupported =
         new com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid(
             NAV.grid().bounds(),

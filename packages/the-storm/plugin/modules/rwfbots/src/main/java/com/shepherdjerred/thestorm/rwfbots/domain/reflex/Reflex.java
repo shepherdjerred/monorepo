@@ -74,7 +74,7 @@ public final class Reflex {
   /** ...or this soon after being hit with an enemy at hand. */
   public static final int STEAK_AFTER_HIT_TICKS = 10;
 
-  /** Steaks (and kit items) are at least this many ticks apart: one hand, one right-click. */
+  /** Right-clicks with steaks and kit items are at least this many ticks apart: one hand. */
   public static final int STEAK_GAP_TICKS = 4;
 
   /** Fuse clicks target this gap, in ticks (300 ms). */
@@ -230,7 +230,7 @@ public final class Reflex {
       var bomb = bombInReach();
       if (workDefuse(bomb, target)) return;
       ability();
-      kitItems();
+      kitItems(false);
       act(bomb, target);
       steak();
       crouchSpam();
@@ -270,6 +270,7 @@ public final class Reflex {
         commands.add(new BodyCommand.CancelUse());
         state = state.withEating(-1, false);
       }
+      kitItems(true);
       fuse(bomb.orElseThrow());
       commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
       return true;
@@ -329,17 +330,22 @@ public final class Reflex {
 
     /**
      * Uses the first kit item whose moment it is ({@link KitPlay}), at most one a tick and each
-     * kit's uses at least the item's gap apart; never while eating or drawing a bow.
+     * kit's uses at least the item's gap apart; never while eating or drawing a bow. Working a
+     * defuse, only cover (smoke) is put down.
      */
-    private void kitItems() {
-      if (now < state.nextKitUse() || state.isEating() || state.isDrawing()) {
+    private void kitItems(boolean defusing) {
+      if (!state.handFreeForKit(now)) {
         return;
       }
-      for (var item : context.loadout().kitItems()) {
-        var use = KitPlay.choose(item, input, state.waypointIndex(), Optional.of(context.grid()));
+      var means = new KitPlay.Means(Optional.of(context.grid()), KitTiming.of(levers(), random));
+      for (var item : KitPlay.usable(context.loadout(), defusing)) {
+        var use = KitPlay.choose(item, input, state.waypointIndex(), means);
         if (use.isPresent()) {
           commands.add(use.orElseThrow());
-          state = state.withNextKitUse(now + item.move().gapTicks());
+          state =
+              state
+                  .withNextKitUse(now + item.move().gapTicks())
+                  .withNextRightClick(now + STEAK_GAP_TICKS);
           return;
         }
       }
@@ -351,7 +357,7 @@ public final class Reflex {
           .ifPresent(
               eat -> {
                 commands.add(eat);
-                state = state.withNextKitUse(now + STEAK_GAP_TICKS);
+                state = state.withNextRightClick(now + STEAK_GAP_TICKS);
               });
     }
 
