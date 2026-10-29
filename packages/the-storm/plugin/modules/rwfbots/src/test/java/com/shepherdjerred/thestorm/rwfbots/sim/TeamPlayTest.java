@@ -95,6 +95,9 @@ final class TeamPlayTest {
     }
   }
 
+  /** The share of bots that must reach claimed cover: main's bootstrap lower bound, below. */
+  private static final double COVER_FLOOR = 0.308;
+
   @Test
   void botsThatSeeTheEnemyGetIntoCoverTheyClaimed() {
     var saw = 0;
@@ -102,8 +105,12 @@ final class TeamPlayTest {
     // 72 matches, splits and hunts against rushes: a bot sees an enemy within contact range once
     // out of its spawn, and has 3 s to stand in cover it claimed. The yard is open ground with a
     // few pillars, and planters, chasers and archers already fighting have better things to do.
-    // Main gets 363 of 1116 (32.5%) into cover on exactly these matches; the bar allows about one
-    // match's worth (five bots) less, so one chaotic match cannot flip it.
+    // Main (47b94f1fe9) gets 359 of 1114 (32.2%) into cover on exactly these matches. A bar one
+    // match below that is under one standard error (about 15 bots), so a change that only moves
+    // trajectories flips it. The floor is the one-sided 95% lower bound of main's rate instead:
+    // 10,000 bootstrap resamples of main's 72 per-match tallies (whole matches, Python
+    // random.Random(20261029)), each resample's covered over saw, gives 30.8%. The two-sided 95%
+    // interval is 30.5% to 34.0%.
     for (var seed = 1L; seed <= 72; seed++) {
       var world =
           Arenas.yard(seed, 8, seed % 2 == 0 ? Strategy.SPLIT : Strategy.HUNT, Strategy.RUSH);
@@ -115,7 +122,7 @@ final class TeamPlayTest {
     assertThat(saw).isGreaterThanOrEqualTo(10);
     assertThat(covered)
         .as("%d of %d bots in claimed cover within 3 s", covered, saw)
-        .isGreaterThanOrEqualTo((int) Math.ceil(saw * 0.320));
+        .isGreaterThanOrEqualTo((int) Math.ceil(saw * COVER_FLOOR));
   }
 
   /**

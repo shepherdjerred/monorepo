@@ -115,10 +115,27 @@ final class HumanSupportPlayTest {
     assertThat(helped).as("bots clicked the fuse with the human").allMatch(hands -> hands >= 2);
   }
 
+  /**
+   * The median, over the seeds below, of each match's median distance from the lone human to its
+   * nearest bot may be at most this, in blocks: the one-sided 95% upper bound of main's (4.74),
+   * rounded up.
+   */
+  private static final double COMPANY_MEDIAN_CEILING = 4.775;
+
+  /** At least this many of the 32 matches keep a bot within 8 blocks: main's lower bound (30). */
+  private static final int COMPANY_WITHIN_FLOOR = 28;
+
+  /**
+   * A human alone on the field keeps a bot's company, over 32 matches. Four seeds with an 8-block
+   * bar on each flipped on noise: main itself has 2 of these 32 matches over 8 blocks. Both bounds
+   * come from main (47b94f1fe9) alone: 10,000 bootstrap resamples of its 32 per-match medians
+   * (Python random.Random(20261029)), the 95th percentile of the resampled median and the 5th
+   * percentile of the resampled count within 8 blocks.
+   */
   @Test
   void aHumanAloneOnTheFieldKeepsOneBotsCompany() {
     var near = new ArrayList<Double>();
-    for (var seed = 80L; seed < 84; seed++) {
+    for (var seed = 80L; seed < 112; seed++) {
       var probe = new SimWorld(Arenas.YARD, seed);
       var at = ground(probe, new Vec3(31, 65, 8));
       var world = world(seed, at, Strategy.RUSH);
@@ -131,9 +148,12 @@ final class HumanSupportPlayTest {
           });
       near.add(median(samples));
     }
-    assertThat(near)
-        .as("median distance from the human to its nearest bot after fifteen seconds")
-        .allMatch(distance -> distance <= 8);
+    assertThat(median(near))
+        .as("median over matches of the median distance to the nearest bot: %s", near)
+        .isLessThanOrEqualTo(COMPANY_MEDIAN_CEILING);
+    assertThat(near.stream().filter(distance -> distance <= 8).count())
+        .as("matches with a bot within 8 blocks after fifteen seconds: %s", near)
+        .isGreaterThanOrEqualTo(COMPANY_WITHIN_FLOOR);
   }
 
   private static double median(List<Double> values) {
