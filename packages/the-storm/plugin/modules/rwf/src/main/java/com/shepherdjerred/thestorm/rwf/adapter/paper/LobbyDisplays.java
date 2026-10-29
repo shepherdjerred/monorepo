@@ -77,7 +77,7 @@ final class LobbyDisplays {
   private final PaperContext context;
   private final Keys keys;
   private final LobbyRoom room;
-  private final List<KitSpec> kits;
+  private final Supplier<List<KitSpec>> catalog;
   private final KitFactory items;
   private final Consumer<Display> style;
   private final Supplier<List<KitSpec>> rotation;
@@ -85,6 +85,7 @@ final class LobbyDisplays {
   private final Supplier<Boolean> showStats;
   private final Map<String, TextDisplay> texts = new HashMap<>();
   private final Map<String, List<String>> shown = new HashMap<>();
+  private List<KitSpec> shownKits = List.of();
   private List<KitSpec> wall = List.of();
 
   /**
@@ -93,7 +94,8 @@ final class LobbyDisplays {
    * @param context the shared server services
    * @param keys entity tags
    * @param room the lobby
-   * @param kits the kits, one per alcove, with their items
+   * @param kits the kit icons
+   * @param catalog the currently admitted kits
    * @param style styles each display once spawned (its billboard)
    * @param rotation this week's free kits, or none while the kit shop is off for everyone here
    * @param leaders the leaderboards as last read
@@ -104,6 +106,7 @@ final class LobbyDisplays {
       Keys keys,
       LobbyRoom room,
       KitFactory kits,
+      Supplier<List<KitSpec>> catalog,
       Consumer<Display> style,
       Supplier<List<KitSpec>> rotation,
       Supplier<Map<StatsStore.Stat, List<StatsStore.Totals>>> leaders,
@@ -114,11 +117,11 @@ final class LobbyDisplays {
     this.keys = parts.keys();
     this.room = parts.room();
     this.items = parts.kits();
+    this.catalog = parts.catalog();
     this.style = parts.style();
     this.rotation = parts.rotation();
     this.leaders = parts.leaders();
     this.showStats = parts.showStats();
-    this.kits = room.layout().kits().stream().map(items::require).toList();
   }
 
   private Location at(Spawn spawn) {
@@ -158,7 +161,23 @@ final class LobbyDisplays {
     texts.put(ROTATION, spawnText(at(layout.rotation().header()), ROTATION, rotation(List.of())));
     wall = List.of();
     showWall(rotation.get());
-    for (var kit : kits) {
+    showKits(catalog.get());
+  }
+
+  private void showKits(List<KitSpec> admitted) {
+    var layout = room.layout();
+    admitted = admitted.stream().filter(kit -> layout.alcove(kit.id()).isPresent()).toList();
+    if (admitted.equals(shownKits)) {
+      return;
+    }
+    for (var entity : context.lobbyWorld().getEntities()) {
+      if (keys.lobbyPart(entity)
+          .filter(part -> part.startsWith(ITEM) || part.startsWith(LABEL))
+          .isPresent()) {
+        entity.remove();
+      }
+    }
+    for (var kit : admitted) {
       var alcove = layout.alcove(kit.id()).orElseThrow();
       var where = at(alcove.display());
       where.setYaw(alcove.stand().yaw() + 180);
@@ -171,6 +190,7 @@ final class LobbyDisplays {
               new org.joml.Vector3f(LABEL_SCALE, LABEL_SCALE, LABEL_SCALE),
               new org.joml.AxisAngle4f()));
     }
+    shownKits = List.copyOf(admitted);
   }
 
   /**
@@ -208,8 +228,9 @@ final class LobbyDisplays {
     wall = List.copyOf(free);
   }
 
-  /** Redraws the match board, the podiums and the leaderboards, only where their text changed. */
+  /** Redraws the admitted alcoves and changing lobby text. */
   void update(LobbyStatus status, Optional<Ballot> ballot) {
+    showKits(catalog.get());
     var board = new ArrayList<>(boardLines(status));
     var free = rotation.get();
     if (!free.isEmpty()) {
@@ -256,6 +277,7 @@ final class LobbyDisplays {
     }
     texts.clear();
     shown.clear();
+    shownKits = List.of();
     wall = List.of();
   }
 

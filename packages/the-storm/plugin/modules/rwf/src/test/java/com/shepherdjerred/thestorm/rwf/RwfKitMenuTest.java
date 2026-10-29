@@ -467,6 +467,17 @@ final class RwfKitMenuTest {
     assertThat(name(requireNonNull(top.getItem(0)))).isEqualTo("Trooper");
     assertThat(name(requireNonNull(top.getItem(1)))).isEqualTo("Berserker");
     assertThat(top.getItem(2)).isNull();
+    var tag = new org.bukkit.NamespacedKey("thestorm", "rwf_lobby");
+    assertThat(
+            harness.lobbyWorld.getEntities().stream()
+                .map(
+                    entity ->
+                        entity
+                            .getPersistentDataContainer()
+                            .get(tag, org.bukkit.persistence.PersistentDataType.STRING))
+                .filter(part -> part != null && part.startsWith("alcove-"))
+                .toList())
+        .containsExactlyInAnyOrder("alcove-item:trooper", "alcove-label:trooper");
     alice.performCommand("rwf rotation");
     harness.until(() -> said(alice, "Free this week: . Changes in"));
     assertThat(heard).noneMatch(message -> message.contains("Sapper"));

@@ -192,8 +192,9 @@ equivalent used instead.
 
 ## Buying, the rotation and layouts
 
-The menu, purchases and weekly rotation include only the current draft's kit
-pool. A pool with fewer than four purchasable kits has no weekly free rotation.
+The menu, lobby alcove displays, purchases and weekly rotation include only the
+current draft's kit pool. A pool with fewer than four purchasable kits has no
+weekly free rotation.
 
 - `/rwf buy <kit>` or the kit menu's confirmation buys a kit with Red Warfare
   credits (3 for a win, 1 for a loss). A purchase is written as a pending row

@@ -230,6 +230,7 @@ public final class RwfPaper {
                 keys,
                 lobby,
                 kits,
+                armory::kits,
                 app.hooks().displayStyle(),
                 () -> armory.anyExpanded() ? armory.rotation(context.time().instant()) : List.of(),
                 () -> Optional.ofNullable(statsHolder.get()).map(Stats::leaders).orElseGet(Map::of),
