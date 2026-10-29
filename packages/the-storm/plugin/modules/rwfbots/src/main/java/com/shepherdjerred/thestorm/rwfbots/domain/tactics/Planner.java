@@ -396,6 +396,9 @@ public final class Planner {
     if (slot.kind() != SlotKind.ESCORT) {
       return slot.pos();
     }
+    if (slot.buddy().isPresent()) {
+      return Accompany.point(situation, context, slot);
+    }
     var planter = situation.planter();
     if (planter.isEmpty()) {
       return slot.pos();

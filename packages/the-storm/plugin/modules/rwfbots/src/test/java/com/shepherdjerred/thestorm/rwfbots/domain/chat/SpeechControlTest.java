@@ -54,4 +54,29 @@ final class SpeechControlTest {
           .isBetween(2000L, 4000L);
     }
   }
+
+  private static SpeechControl.Line urgent(UUID speaker, String text) {
+    return new SpeechControl.Line(speaker, Optional.of("red"), text, true);
+  }
+
+  @Test
+  void urgentTeamCallsGoAheadOfSightingsWithinTheirOwnLargerBudget() {
+    var control = new SpeechControl();
+    var red = Optional.of("red");
+    var one = new UUID(0, 1);
+    var two = new UUID(0, 2);
+    var three = new UUID(0, 3);
+    assertThat(control.deliver(one, red, "enemy mid", Instant.EPOCH)).isTrue();
+    assertThat(control.deliver(two, red, "enemy west", Instant.EPOCH.plusSeconds(1))).isTrue();
+    // The sightings' budget is spent; an objective call still goes out, even from a bot that
+    // just spoke, once its short wait has passed.
+    assertThat(control.deliver(three, red, "enemy east", Instant.EPOCH.plusSeconds(2))).isFalse();
+    assertThat(control.deliver(urgent(three, "planting"), Instant.EPOCH.plusSeconds(2))).isTrue();
+    assertThat(control.deliver(urgent(one, "retake"), Instant.EPOCH.plusSeconds(3))).isFalse();
+    assertThat(control.deliver(urgent(one, "retake"), Instant.EPOCH.plusSeconds(4))).isTrue();
+    assertThat(control.deliver(urgent(two, "defusing"), Instant.EPOCH.plusSeconds(6)))
+        .as("four team lines in fifteen seconds is the most")
+        .isFalse();
+    assertThat(control.remaining(red, Instant.EPOCH.plusSeconds(15), true)).isEqualTo(1);
+  }
 }
