@@ -187,6 +187,7 @@ final class MacAccountSession {
         } else {
             try runPrivate(frame, initial: initial)
         }
+        frame.removeAll()
         var result = base("finished")
         result.merge([
             "cleared": request.probe, "secureField": request.phase != "verification",
@@ -195,6 +196,7 @@ final class MacAccountSession {
             "intentRecorded": intentRecorded,
         ]) { _, new in new }
         emit(result)
+        try stream.requireEOF()
     }
 }
 
