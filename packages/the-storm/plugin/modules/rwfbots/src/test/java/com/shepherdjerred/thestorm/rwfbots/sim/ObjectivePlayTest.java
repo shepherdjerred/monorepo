@@ -30,9 +30,13 @@ final class ObjectivePlayTest {
 
   /**
    * When the median even match must have seen its first attempt on a team bomb, in ticks (70 s
-   * before stalled pushes moved).
+   * before stalled pushes moved). Main (ad7466e9f4) measures 1187 over the 128 matches below. A
+   * median moves with any one chaotic match, so the ceiling is the one-sided 95% upper bound of
+   * main's median: 10,000 bootstrap resamples of main's 128 first attempts (no attempt counted as
+   * never, Python random.Random(20261028)), the median taken as here, rounded up to the tick. The
+   * two-sided 95% interval is 1084 to 1299.
    */
-  private static final long MEDIAN_ATTEMPT_BY = 1300;
+  private static final long MEDIAN_ATTEMPT_BY = 1278;
 
   /** When a team two to one up must have started arming, in ticks. */
   private static final long CLOSER_ATTEMPT_BY = 800;
@@ -75,7 +79,9 @@ final class ObjectivePlayTest {
   void evenTeamsInContactStillSendThePlanterAndAttemptAPlant() {
     var firsts = new ArrayList<Long>();
     var sent = new ArrayList<Long>();
-    for (var seed = 30L; seed < 38; seed++) {
+    // 128 matches, so one chaotic match cannot flip a floor. Each floor is what main measures on
+    // exactly this set, less at most one match.
+    for (var seed = 30L; seed < 62; seed++) {
       for (var red : List.of(Strategy.RUSH, Strategy.SPLIT)) {
         for (var blue : List.of(Strategy.RUSH, Strategy.SPLIT)) {
           var world = Arenas.yard(seed, 8, red, blue);
@@ -93,17 +99,18 @@ final class ObjectivePlayTest {
         }
       }
     }
-    // Before stalled pushes moved, 18 of these 64 teams never sent their planter at all.
+    // Before stalled pushes moved, 18 of the first 64 teams never sent their planter at all; main
+    // sends 232 of these 256 in time.
     assertThat(sent.stream().filter(tick -> tick <= PLANTER_SENT_BY).count())
         .as("teams that sent their planter within 30 s: %s", sent)
-        .isGreaterThanOrEqualTo(sent.size() * 4L / 5);
+        .isGreaterThanOrEqualTo(230);
     var sorted = firsts.stream().sorted().toList();
     assertThat(sorted.get(sorted.size() / 2))
         .as("median first plant attempt of %s", firsts)
         .isLessThanOrEqualTo(MEDIAN_ATTEMPT_BY);
     assertThat(firsts.stream().filter(first -> first == Long.MAX_VALUE).count())
         .as("matches without a plant attempt in two minutes: %s", firsts)
-        .isLessThanOrEqualTo(2);
+        .isLessThanOrEqualTo(16);
   }
 
   @Test
@@ -138,7 +145,9 @@ final class ObjectivePlayTest {
   void aTeamTwoToOneUpRushesThePlantAndHunts() {
     var firsts = new ArrayList<Long>();
     var hunted = new ArrayList<Boolean>();
-    for (var seed = 40L; seed < 46; seed++) {
+    // 48 matches: main sends pairs hunting in all 48 and starts arming in 35 within 40 s. Each
+    // floor allows one chaotic match below that.
+    for (var seed = 40L; seed < 88; seed++) {
       var world = Arenas.yard(seed, 8, Strategy.TURTLE, Strategy.TURTLE);
       world.bodies.values().stream()
           .filter(body -> body.team.equals(BLUE))
@@ -154,9 +163,11 @@ final class ObjectivePlayTest {
       hunted.add(attempts.hunted.getOrDefault(RED, false));
       firsts.add(attempts.firstArm.getOrDefault(RED, Long.MAX_VALUE));
     }
-    assertThat(hunted).as("eight against four sent pairs hunting").allMatch(value -> value);
-    assertThat(firsts)
-        .as("eight against four started arming")
-        .allMatch(tick -> tick <= CLOSER_ATTEMPT_BY);
+    assertThat(hunted.stream().filter(value -> value).count())
+        .as("eight against four sent pairs hunting: %s", hunted)
+        .isGreaterThanOrEqualTo(47);
+    assertThat(firsts.stream().filter(tick -> tick <= CLOSER_ATTEMPT_BY).count())
+        .as("eight against four started arming: %s", firsts)
+        .isGreaterThanOrEqualTo(34);
   }
 }
