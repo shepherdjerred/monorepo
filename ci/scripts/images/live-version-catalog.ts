@@ -41,7 +41,7 @@ export function currentPipelineNumber(
  * qualifies still compares against, and retains, that pipeline's images (B2);
  * Delivery verifies the retaining build only after the original's build.
  * Images are looked up under the registry's owners (v1 until the window's
- * catalog flip).
+ * catalog flip); an image whose owner Delivery no longer admits has no base.
  */
 export async function readRetainableImages(
   read?: RetainableImageReader,
@@ -60,6 +60,8 @@ export async function readRetainableImages(
   const entries = await Promise.all(
     CANONICAL_IMAGE_TARGETS.map(async (name) => {
       const { serviceId, component, kind } = imageIdentity(name, owners);
+      // Delivery admits no builds of a retired service; nothing to retain.
+      if (!owners.admits(serviceId)) return;
       try {
         return [
           name,

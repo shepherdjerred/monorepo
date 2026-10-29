@@ -390,7 +390,8 @@ export async function deliveryChartBase(
   beforePipeline: number,
   owners: PublicationOwners = publicationOwners("v1"),
 ): Promise<ChartPlanningBase | undefined> {
-  // A chart the registry no longer registers (v2's apps) has no base.
+  // A chart the registry no longer registers (v2's apps, a retired service's
+  // chart) has no base.
   const owner = owners.chart(name);
   if (owner === undefined) return undefined;
   let artifact: ArtifactVersion;

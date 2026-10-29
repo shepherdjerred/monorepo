@@ -186,6 +186,9 @@ async function addImagePublications(
     if (name === undefined)
       throw new Error(`Image pin key is malformed: ${key}`);
     const owner = owners.image(name);
+    // A retired service's image is still built for its live Application but
+    // never registered: Delivery admits no builds of a retired service.
+    if (!owners.admits(owner)) continue;
     const uri = firstPartyImageRepository(name);
     const raw = await dependencies.inspectImage(`${uri}@${digest}`);
     ledger.add(owner, {

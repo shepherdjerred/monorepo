@@ -266,6 +266,10 @@ test("after the window's catalog flip, retained images are looked up under their
   expect(inventory.size).toBe(0);
   expect(queried).toContain("image:caddy-s3proxy=static-site-proxy");
   expect(queried).toContain("image:woodpecker-config-extension=woodpecker");
+  // Delivery admits no builds of a retired service, so the bake never asks.
+  expect(
+    queried.some((entry) => entry.startsWith("image:discord-plays-")),
+  ).toBe(false);
   expect(imageIdentity("redlib", publicationOwners("v2")).serviceId).toBe(
     "redlib",
   );

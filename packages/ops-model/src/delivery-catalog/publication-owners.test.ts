@@ -24,3 +24,17 @@ test("v2 names the catalog's first-party owners and no longer registers apps", (
     "first-party catalog owner",
   );
 });
+
+test("v2 admits only active services, so a retired service's components are neither compared nor registered", () => {
+  const owners = publicationOwners("v2");
+  expect(owners.image("discord-plays-mario-kart")).toBe(
+    "discord-plays-mario-kart",
+  );
+  expect(owners.admits("discord-plays-mario-kart")).toBe(false);
+  expect(owners.admits("discord-plays-pokemon")).toBe(false);
+  expect(owners.chart("mario-kart")).toBeUndefined();
+  expect(owners.chart("pokemon")).toBeUndefined();
+  expect(owners.admits("woodpecker")).toBe(true);
+  expect(owners.admits("not-a-service")).toBe(false);
+  expect(publicationOwners("v1").admits("static-sites")).toBe(true);
+});

@@ -7,6 +7,7 @@ import {
   CATALOG_CORE,
   type CatalogCore,
   catalogOwnsService,
+  catalogService,
   firstPartyOwner,
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 
@@ -34,6 +35,12 @@ export type PublicationOwners = {
   image: (name: string) => string;
   /** Whether the registry declares the service. */
   owns: (serviceId: string) => boolean;
+  /**
+   * Whether Delivery admits builds for the service. Delivery refuses builds of
+   * a service whose catalog lifecycle is not `active`, so producers neither
+   * compare against nor register its components.
+   */
+  admits: (serviceId: string) => boolean;
 };
 
 export function publicationOwners(
@@ -61,6 +68,8 @@ export function publicationOwners(
       },
       owns: (serviceId) =>
         catalog.services.some((service) => service.id === serviceId),
+      admits: (serviceId) =>
+        catalog.services.some((service) => service.id === serviceId),
     };
   }
   const core = sources.core ?? CATALOG_CORE;
@@ -71,7 +80,7 @@ export function publicationOwners(
       const owner = firstPartyOwner(`chart:${name}`, core);
       if (owner === undefined)
         throw new Error(`Chart ${name} has no first-party catalog owner`);
-      return owner.id;
+      return owner.lifecycle === "active" ? owner.id : undefined;
     },
     image(name) {
       const owner = firstPartyOwner(`image:${name}`, core);
@@ -82,5 +91,7 @@ export function publicationOwners(
       return owner.id;
     },
     owns: (serviceId) => catalogOwnsService(serviceId, core),
+    admits: (serviceId) =>
+      catalogService(serviceId, core)?.lifecycle === "active",
   };
 }
