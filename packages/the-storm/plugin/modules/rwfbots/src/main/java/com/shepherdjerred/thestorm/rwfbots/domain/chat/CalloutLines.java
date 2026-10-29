@@ -139,8 +139,8 @@ public final class CalloutLines {
     out.put(
         Callout.Kind.ENEMY,
         new Pools(
-            List.of("Enemy {place}!", "One {place}!"),
-            List.of("{place}", "one {place}"),
+            List.of("Enemy at {place}!", "One at {place}!"),
+            List.of("{place}", "one at {place}"),
             List.of("{name}, one {bearing}!", "Enemy {bearing}, {name}!"),
             List.of("{name} {bearing}", "{name} one {bearing}")));
     return Map.copyOf(out);

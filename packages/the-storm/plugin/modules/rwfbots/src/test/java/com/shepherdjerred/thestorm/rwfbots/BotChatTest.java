@@ -373,13 +373,16 @@ final class BotChatTest {
       authoredStart(speech, Optional.empty());
       heard(watcher);
       harness.clock.advance(Duration.ofSeconds(70));
-      assertThat(harness.paper().roster().live()).allMatch(body -> !speech.typing(body.uuid()));
+      // A planter on its way may be typing an urgent team call meanwhile; idle chat is casual.
+      java.util.function.Predicate<UUID> casual =
+          uuid -> speech.typing(uuid) && !speech.typingUrgently(uuid);
+      assertThat(harness.paper().roster().live()).allMatch(body -> !casual.test(body.uuid()));
       requireNonNull(speechClock).pulse();
       var typing = false;
       for (var step = 0; step < 40 && !typing; step++) {
         speechTicks(speech, 1);
         typing =
-            harness.paper().roster().live().stream().anyMatch(body -> speech.typing(body.uuid()));
+            harness.paper().roster().live().stream().anyMatch(body -> casual.test(body.uuid()));
       }
       assertThat(typing)
           .as("a real due idle chance selects an unoccupied stationary holder")
@@ -389,7 +392,7 @@ final class BotChatTest {
           .isEmpty();
       var speaker =
           harness.paper().roster().live().stream()
-              .filter(body -> speech.typing(body.uuid()))
+              .filter(body -> casual.test(body.uuid()))
               .findFirst()
               .orElseThrow();
       var decision =

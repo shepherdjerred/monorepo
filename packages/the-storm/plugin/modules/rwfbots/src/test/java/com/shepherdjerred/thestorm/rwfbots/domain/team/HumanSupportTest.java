@@ -179,6 +179,21 @@ final class HumanSupportTest {
   }
 
   @Test
+  void aHumanGuardingTheBombTheyLitKeepsTheirCover() {
+    var bots = sixWithTwoForward();
+    var human = Fixtures.combatant(HUMAN.value(), RED, ground(bomb("blue-1").plus(-5, 0, 0)));
+    var plan =
+        deal(
+                Blackboard.open(RED, Strategy.RUSH),
+                snapshot(0, bots, List.of(human), new BombState.Armed(900)),
+                bots)
+            .plan();
+    assertThat(support(plan, HUMAN))
+        .hasSize(HumanSupport.URGENT)
+        .allSatisfy(slot -> assertThat(Math.abs(slot.side())).isEqualTo(HumanSupport.COVER_SIDE));
+  }
+
+  @Test
   void aHumanWithAnEnemyOnThemGetsTheNearbyBots() {
     var bots = sixWithTwoForward();
     var at = ground(bomb("blue-1").plus(-8, 0, 0));

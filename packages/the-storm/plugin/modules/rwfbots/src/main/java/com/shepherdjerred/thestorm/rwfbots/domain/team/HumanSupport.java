@@ -21,8 +21,9 @@ import java.util.Optional;
  * human ({@link Slot#buddy}):
  *
  * <ul>
- *   <li>{@link Need#ARMING}: a human arming an enemy bomb gets up to {@link #URGENT} nearby bots to
- *       cover them; as escorts they also click the fuse, each one a second off the arm time.
+ *   <li>{@link Need#ARMING}: a human arming an enemy bomb, or guarding it as it burns down, gets up
+ *       to {@link #URGENT} nearby bots to cover them; as escorts they also click the fuse, each one
+ *       a second off the arm time.
  *   <li>{@link Need#ENGAGED}: a human with an enemy on them gets up to {@link #URGENT} nearby bots.
  *   <li>{@link Need#COMPANY}: otherwise, in a team of at least {@link #COMPANY_TEAM} bots, one bot
  *       walks loosely beside each human.
@@ -36,6 +37,12 @@ public final class HumanSupport {
 
   /** A human whose feet are this close to an enemy bomb their team is arming is the one arming. */
   static final double ARMING_REACH = 4.5;
+
+  /**
+   * A human this close to an enemy bomb burning down is guarding the fuse they lit: the enemy comes
+   * to defuse it, so the cover stays.
+   */
+  static final double GUARD_REACH = 8;
 
   /** A sighting this close to a human, this recently, means an enemy is on them. */
   static final double ENGAGED_NEAR = 12;
@@ -98,15 +105,20 @@ public final class HumanSupport {
     return threat(board, snapshot, human).isPresent() ? Need.ENGAGED : Need.COMPANY;
   }
 
-  /** The enemy bomb {@code human} is arming right now, if any. */
+  /**
+   * The enemy bomb {@code human} is arming right now, or guarding once it burns down, if any: the
+   * planter's cover stays while the enemy comes to defuse.
+   */
   public static Optional<BombView> arming(WorldSnapshot snapshot, CombatantView human) {
     return snapshot.bombs().stream()
+        .filter(bomb -> !bomb.belongsTo(human.team()))
         .filter(
             bomb ->
                 bomb.state() instanceof BombState.Arming(var team, var _, var _)
-                    && team.equals(human.team())
-                    && !bomb.belongsTo(human.team()))
-        .filter(bomb -> bomb.pos().horizontalDistance(human.pos()) <= ARMING_REACH)
+                    ? team.equals(human.team())
+                        && bomb.pos().horizontalDistance(human.pos()) <= ARMING_REACH
+                    : bomb.state().isLit()
+                        && bomb.pos().horizontalDistance(human.pos()) <= GUARD_REACH)
         .findFirst();
   }
 

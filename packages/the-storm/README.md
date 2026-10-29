@@ -3637,7 +3637,8 @@ bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
 Human teammates are looked after (`HumanSupport`): a deal turns a few of the
 playbook's least important slots (lane, flank, overwatch and sweep, and for
 an urgent call the planter's escorts; never the planter, anchors or a retake)
-into escort slots that move beside a human. A human arming an enemy bomb, or
+into escort slots that move beside a human. A human arming an enemy bomb (or
+guarding it within 8 blocks as it burns down), or
 with an enemy seen near them, gets up to two of the bots within 40 blocks,
 who cover them and, as escorts, click the fuse with them; otherwise each
 human in a team of at least four bots keeps one bot's company. Support is at
