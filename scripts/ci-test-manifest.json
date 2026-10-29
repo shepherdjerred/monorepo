@@ -998,6 +998,8 @@
             "test/discord",
             "test/mc",
             "scripts",
+            "src/handlers/backup.test.ts",
+            "src/lib/backup/delivery-replication.test.ts",
             "test-integration/catalog.integration.test.ts"
           ]
         }
