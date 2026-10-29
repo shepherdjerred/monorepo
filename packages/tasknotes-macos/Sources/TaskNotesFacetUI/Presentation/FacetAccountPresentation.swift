@@ -23,6 +23,12 @@ internal struct FacetAccountPresentation {
     var restoreAttempted = false
     var isBusy: Bool { operation != nil }
 
+    static func canSignIn(
+        busy: Bool, email: String, password: String, code: String, needsCode: Bool
+    ) -> Bool {
+        !busy && !email.isEmpty && !password.isEmpty && (!needsCode || !code.isEmpty)
+    }
+
     static func failureMessage(_ failure: any Error) -> String {
         if let url = failure as? URLError {
             return url.code == .timedOut
