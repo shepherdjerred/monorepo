@@ -94,6 +94,7 @@ function fixture(): CaptureRun {
 class FakeTransport extends CaptureTransport {
   readonly events: string[] = [];
   failResource = false;
+  failPlayer = false;
   corruptTerrain = false;
   restored = false;
   override world<T extends z.ZodType>(
@@ -141,6 +142,12 @@ function driver(transport: FakeTransport): Parameters<typeof restoreScene>[3] {
       transport.events.push(command);
       return Promise.resolve();
     },
+    playerCommand: (command, expected) => {
+      transport.events.push(`player:${command}:${expected}`);
+      return transport.failPlayer
+        ? Promise.reject(new Error("Missing cleanup confirmation"))
+        : Promise.resolve();
+    },
     teleport: (position) => {
       transport.events.push(`tp:${position.join(",")}`);
       return Promise.resolve();
@@ -155,10 +162,45 @@ function driver(transport: FakeTransport): Parameters<typeof restoreScene>[3] {
       return Promise.resolve(undefined);
     },
     bounded: () => Promise.resolve({ result: undefined }),
+    attack: () => Promise.resolve(),
   };
 }
 
 describe("capture recovery", () => {
+  it("requires observed player cleanup confirmation before restoring its target", async () => {
+    const root = await mkdtemp(
+      path.join(os.tmpdir(), "capture-player-cleanup-"),
+    );
+    const directory = path.join(root, "run");
+    try {
+      const run = fixture();
+      run.cleanup = [
+        {
+          kind: "player-command",
+          command: "unlock",
+          expectedMessage: "Unlocked.",
+          standing: [-2, 64, 0],
+          look: [0.5, 63.5, 0.5],
+        },
+      ];
+      await initializeRun(directory, run);
+      const transport = new FakeTransport("live", "test");
+      transport.failPlayer = true;
+      await expect(
+        restoreScene(directory, scene, run, driver(transport)),
+      ).rejects.toThrow("Missing cleanup confirmation");
+      expect(run.cleanup).toHaveLength(1);
+      expect(transport.events).not.toContain("snapshot-restore");
+      transport.failPlayer = false;
+      await restoreScene(directory, scene, run, driver(transport));
+      expect(run.cleanup).toEqual([]);
+      expect(transport.events.indexOf("player:unlock:Unlocked.")).toBeLessThan(
+        transport.events.indexOf("snapshot-restore"),
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
   it("refuses a new site until the same target and account's interrupted run has been restored", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "capture-pending-"));
     try {

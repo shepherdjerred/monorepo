@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "door-closed",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/door-closed/original.webp",
+  "poster": "/media/door-closed/poster.webp",
+  "alt": "Oak planks fill the moving section between the Door Up and Door Down ends",
+  "caption": "Matching signs and base blocks define the closed door.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.43],
+      "to": [0.5, 0.49],
+      "text": "Moving planks",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

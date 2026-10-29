@@ -9,6 +9,8 @@ Use a teleport request when you and another player want to meet.
 2. The recipient accepts with `/tpaccept`, or uses `/tpaccept <player>` to select a sender. `/tpdeny` declines the latest request; add a player name to select a sender.
 3. Wait for the teleport to complete. Requests expire after one minute, so send a new one if the recipient misses it.
 
+<div><storm-media data-manifest="/media/incoming-teleport-request/media.json"><figure><img src="/media/incoming-teleport-request/original.webp" width="2560" height="1440" loading="lazy" alt="A real second player requests a visit; the recipient can accept or deny it." /><figcaption>A real second player requests a visit; the recipient can accept or deny it. <a href="/media/incoming-teleport-request/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
 The requester pays for either direction after a successful trip. Requests have a ten-second sending interval. A combat tag or destination permissions can prevent travel; check [travel costs and timing](/survival/advanced/travel/) before trying again.
 
 Use `/tptoggle` to turn incoming requests off or back on. Turning them off clears incoming requests. Accept only requests from players you want to meet.

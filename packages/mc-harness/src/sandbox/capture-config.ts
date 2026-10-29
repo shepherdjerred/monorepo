@@ -10,10 +10,48 @@ export function captureConfig(source: string, entry: Entry): string {
     .parse(Bun.YAML.parse(source));
   const [x, y, zz] = entry.spawn;
   switch (entry.content) {
+    case "arena-survival": {
+      const arena = z.object({ world: z.string() }).parse(parsed["arena"]);
+      return Bun.YAML.stringify({
+        ...parsed,
+        enabled:
+          parsed["enabled"] === true &&
+          (entry.additionalWorlds ?? []).includes(arena.world),
+      });
+    }
+    case "multiverse":
+      return Bun.YAML.stringify(
+        Object.fromEntries(
+          (entry.additionalWorlds ?? []).map((name) => [
+            `minecraft:${name}`,
+            {
+              "auto-load": true,
+              biome: "",
+              generator: "",
+              "adjust-spawn": false,
+              "keep-spawn-in-memory": false,
+              gamemode: "survival",
+              "read-only": {
+                environment: "normal",
+                "generator-settings": "",
+                "legacy-world-name": name,
+              },
+              version: 1.3,
+            },
+          ]),
+        ),
+      );
     case "world":
       return Bun.YAML.stringify({
         ...parsed,
-        worlds: [{ name: "world", preset: "normal", rtp: true }],
+        worlds: [
+          { name: "world", preset: "normal", rtp: true },
+          ...(entry.additionalWorlds ?? []).map((name) => ({
+            name,
+            preset: "normal",
+            rtp: false,
+          })),
+        ],
         borders: [
           {
             world: "world",
@@ -24,6 +62,24 @@ export function captureConfig(source: string, entry: Entry): string {
           },
         ],
       });
+    case "shards": {
+      const drops = z
+        .looseObject({ worlds: z.array(z.string()) })
+        .parse(parsed["drops"]);
+      const loaded = new Set([
+        "minecraft:overworld",
+        "minecraft:the_nether",
+        "minecraft:the_end",
+        ...(entry.additionalWorlds ?? []).map((name) => `minecraft:${name}`),
+      ]);
+      return Bun.YAML.stringify({
+        ...parsed,
+        drops: {
+          ...drops,
+          worlds: drops.worlds.filter((world) => loaded.has(world)),
+        },
+      });
+    }
     case "travel":
       return Bun.YAML.stringify({
         ...parsed,
@@ -38,6 +94,10 @@ export function captureConfig(source: string, entry: Entry): string {
         ],
         portals: [],
       });
+    case "stargates":
+      // Server hubs refer to realms omitted from the disposable import.
+      // Player-built networks retain their ordinary configuration.
+      return Bun.YAML.stringify({ ...parsed, serverGates: [] });
     case "essentials":
       return Bun.YAML.stringify({
         ...parsed,

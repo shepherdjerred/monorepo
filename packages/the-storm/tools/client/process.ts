@@ -15,7 +15,7 @@ export async function startClient(options: {
   await mkdir(gameDir, { recursive: true });
   await Bun.write(
     path.join(gameDir, "options.txt"),
-    "onboardAccessibility:false\ntutorialStep:none\n",
+    "onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\npauseOnLostFocus:false\n",
   );
   const bootstrap = path.join(privateDir, "bootstrap.json");
   const { control: _control, ...config } = session;

@@ -17,7 +17,7 @@ export function createRecorder(
   native: Native,
   save: (presentation: Presentation, source: string) => Promise<void>,
   stopFile: string,
-  active: (value: boolean) => void,
+  active?: (value: boolean) => void,
 ): CaptureContext["record"] {
   return async (presentation, action, seconds = 12) => {
     const wait = async (wanted: string) => {
@@ -39,15 +39,15 @@ export function createRecorder(
       });
       await wait("READY");
       await native("record-start");
-      active(true);
+      active?.(true);
       await native("record-marker", { name: "__capture_start" });
       await action();
       await native("record-marker", { name: "__capture_end" });
-      active(false);
+      active?.(false);
       const result = await wait("COMPLETE");
       await save(presentation, result.receipt);
     } finally {
-      active(false);
+      active?.(false);
       await native("record-cancel");
     }
   };

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "perks-overview",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/perks-overview/original.webp",
+  "poster": "/media/perks-overview/poster.webp",
+  "alt": "The perks overview shows your level and the next price for every track.",
+  "caption": "The perks overview shows your level and the next price for every track.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.67, 0.63],
+      "to": [0.21, 0.75],
+      "text": "Your next price",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

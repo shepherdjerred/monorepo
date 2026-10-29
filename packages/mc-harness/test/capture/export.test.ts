@@ -145,6 +145,18 @@ describe("capture export", () => {
         rendered,
         docs,
       );
+      await expect(
+        exportMedia(
+          {
+            ...run,
+            target: "sandbox-map",
+            box: { ...run.box, world: "skylands" },
+            mapSource: { sha256: "a".repeat(64), files: 10, bytes: 1024 },
+          },
+          rendered,
+          docs,
+        ),
+      ).rejects.toThrow("completed live or real-map");
       const manifest = await Bun.file(
         path.join(docs, "media/example/media.json"),
       ).text();

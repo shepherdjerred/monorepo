@@ -34,6 +34,7 @@ import { initializeRun, RunSchema, type CaptureRun } from "./model.ts";
 import { renderMedia, sha256 } from "./media.ts";
 import { reviewScene } from "./review-command.ts";
 import type { CaptureScene } from "./define.ts";
+import { observeFrame } from "./observe.ts";
 
 const captures = path.join(MC_DIR, "captures");
 const SceneSchema = z.object({
@@ -289,6 +290,22 @@ async function rehearseScene(
   }
 }
 
+async function observeScene(
+  argument: string | undefined,
+  options: CaptureOptions & { seconds?: string | undefined },
+): Promise<void> {
+  const run = await observeFrame(required(argument, "presentation.json"), {
+    target: required(options.target, "--target"),
+    name: options.account ?? "XiguaJerred",
+    reason: required(options.reason, "--reason"),
+    ...(options.seconds === undefined
+      ? {}
+      : { seconds: Number(options.seconds) }),
+  });
+  print(JSON.stringify(run, null, 2));
+  if (run.state !== "complete") process.exitCode = 1;
+}
+
 async function main(): Promise<void> {
   const parsed = parseArgs({
     args: Bun.argv.slice(2),
@@ -300,6 +317,7 @@ async function main(): Promise<void> {
       reason: { type: "string" },
       site: { type: "string" },
       docs: { type: "string" },
+      seconds: { type: "string" },
       help: { type: "boolean" },
     },
   });
@@ -314,6 +332,7 @@ async function main(): Promise<void> {
   if (action === "doctor") return doctor(options);
   if (action === "site") return findSite(argument, options);
   if (action === "run") return startScene(argument, options);
+  if (action === "observe") return observeScene(argument, options);
   if (action === "rehearse") return rehearseScene(argument, options);
   const id = required(argument, "run-id");
   const directory = runDirectory(id);

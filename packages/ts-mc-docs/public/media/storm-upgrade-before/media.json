@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "storm-upgrade-before",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/storm-upgrade-before/original.webp",
+  "poster": "/media/storm-upgrade-before/poster.webp",
+  "alt": "Hold eligible equipment and right-click an authored emerald-block altar in the rain.",
+  "caption": "Hold eligible equipment and right-click an authored emerald-block altar in the rain.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.28],
+      "to": [0.5, 0.5],
+      "text": "Authored altar",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

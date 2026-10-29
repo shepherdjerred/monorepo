@@ -63,6 +63,7 @@ export const CaptureBoundedActionSchema = z.strictObject({
     "sign-write",
     "click",
     "screen-activate",
+    "screen-type",
   ]),
   arguments: z.record(z.string(), z.unknown()),
 });

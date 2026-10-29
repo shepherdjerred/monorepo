@@ -13,6 +13,7 @@ import path from "node:path";
 import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { assertNoPendingRun } from "./pending.ts";
 import { SandboxListResponseSchema } from "#protocol/ipc.ts";
+import { isImportedWorld } from "#sandbox/map-provenance.ts";
 
 export async function runScene(
   directory: string,
@@ -84,17 +85,13 @@ async function recoverFailure(
   }
 }
 
-async function captureScene(
-  directory: string,
-  scene: CaptureScene,
+async function admitMap(
   run: CaptureRun,
   driver: Awaited<ReturnType<typeof createDriver>>,
 ): Promise<void> {
-  const { transport, context, status } = driver;
-
   run.server = driver.worldInfo;
   if (run.target !== "live") {
-    const { sandboxes } = await transport.request(
+    const { sandboxes } = await driver.transport.request(
       SandboxListResponseSchema,
       "GET",
       "/sandboxes",
@@ -102,7 +99,24 @@ async function captureScene(
     const target = sandboxes.find((sandbox) => sandbox.id === run.target);
     if (target?.world === "real-map" && target.mapSource !== undefined)
       run.mapSource = target.mapSource;
+    if (
+      run.mapSource !== undefined &&
+      !isImportedWorld(run.mapSource, run.box.world, run.server)
+    )
+      throw new Error(
+        "The selected world is not covered by the imported map provenance",
+      );
   }
+}
+
+async function captureScene(
+  directory: string,
+  scene: CaptureScene,
+  run: CaptureRun,
+  driver: Awaited<ReturnType<typeof createDriver>>,
+): Promise<void> {
+  const { transport, context, status } = driver;
+  await admitMap(run, driver);
   const region = await transport.world(
     RegionReadResponseSchema,
     "region-read",

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "storm-upgrade-after",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/storm-upgrade-after/original.webp",
+  "poster": "/media/storm-upgrade-after/poster.webp",
+  "alt": "The successful first upgrade adds Storm I lore and consumes exactly one Storm Shard.",
+  "caption": "The successful first upgrade adds Storm I lore and consumes exactly one Storm Shard.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.25, 0.55],
+      "to": [0.46, 0.65],
+      "text": "Storm I",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

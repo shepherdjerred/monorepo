@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "travel-prices",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/travel-prices/original.webp",
+  "poster": "/media/travel-prices/poster.webp",
+  "alt": "Use /tpinfo to check the configured price and cooldown for each kind of travel.",
+  "caption": "Use /tpinfo to check the configured price and cooldown for each kind of travel.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.66, 0.63],
+      "to": [0.18, 0.75],
+      "text": "Price + cooldown",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

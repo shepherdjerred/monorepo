@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "saved-homes",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/saved-homes/original.webp",
+  "poster": "/media/saved-homes/poster.webp",
+  "alt": "The saved-home list shows a named home that can be visited with /home docs-camp.",
+  "caption": "The saved-home list shows a named home that can be visited with /home docs-camp.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.68, 0.6],
+      "to": [0.2, 0.84],
+      "text": "Saved home",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

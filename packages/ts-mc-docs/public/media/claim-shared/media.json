@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "claim-shared",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/claim-shared/original.webp",
+  "poster": "/media/claim-shared/poster.webp",
+  "alt": "Sharing the chunk restores access for the camp.",
+  "caption": "Sharing the chunk restores access for the camp.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.58, 0.63],
+      "to": [0.27, 0.84],
+      "text": "Camp access",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

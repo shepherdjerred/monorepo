@@ -22,6 +22,7 @@
     "#authored-combat-wire": "./plugin/dist/src/e2e/resources/rwf-authored-combat.json",
     "#pursuit-wire": "./plugin/dist/src/e2e/resources/rwf-pursuit.json",
     "#client/*": "./tools/client/*",
+    "#captures/*": "./tools/captures/*",
     "#client-duel-video-wire": "./client/src/main/resources/storm-duel-video.json",
     "#client-duel-clock-wire": "./client/src/main/resources/storm-duel-clock.json",
     "#client-video-wire": "./client/src/main/resources/storm-video.json",

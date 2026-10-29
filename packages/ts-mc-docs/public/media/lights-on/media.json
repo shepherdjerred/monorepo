@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "lights-on",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/lights-on/original.webp",
+  "poster": "/media/lights-on/poster.webp",
+  "alt": "The same copper bulb and candle lit together by the light-switch sign",
+  "caption": "One sign switches both nearby lights on together.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.28],
+      "to": [0.64, 0.46],
+      "text": "Bulb on",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.14, 0.36],
+      "to": [0.34, 0.51],
+      "text": "Candle on",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

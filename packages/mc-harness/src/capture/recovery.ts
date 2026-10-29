@@ -11,14 +11,17 @@ import type { CaptureScene } from "./define.ts";
 import { save, type CaptureRun } from "./model.ts";
 import type { createDriver } from "./driver.ts";
 import { regionFingerprint } from "./admission.ts";
+import { fixtureAim } from "./camera.ts";
 
 type Driver = Pick<
   Awaited<ReturnType<typeof createDriver>>,
   | "transport"
   | "command"
+  | "playerCommand"
   | "teleport"
   | "lookAt"
   | "bounded"
+  | "attack"
   | "world"
   | "native"
   | "beginCleanup"
@@ -53,6 +56,12 @@ async function removeFixture(
   cleanup: Cleanup,
   run: CaptureRun,
 ): Promise<void> {
+  if (cleanup.kind === "player-command") {
+    await driver.teleport(cleanup.standing, 0, 0);
+    await driver.lookAt(cleanup.look);
+    await driver.playerCommand(cleanup.command, cleanup.expectedMessage);
+    return;
+  }
   if (cleanup.kind === "command") {
     await driver.command(cleanup.command);
     return;
@@ -77,13 +86,29 @@ async function removeFixture(
     box,
   );
   if (before.palette.every((block) => block === "minecraft:air")) return;
-  // Avoid activating a managed travel compass while removing a fixture sign.
-  await driver.native("hotbar", { slot: 0 });
+  const state = await driver.status();
+  if (!state.connected)
+    throw new Error("Client disconnected during fixture cleanup");
+  const empty = state.inventory.find(
+    (item) =>
+      item.slot >= 0 &&
+      item.slot < 8 &&
+      item.count === 0 &&
+      item.type === "minecraft:air",
+  );
+  if (empty === undefined)
+    throw new Error("Fixture sign cleanup requires an empty hotbar slot");
+  // Special tools and the reserved travel compass intercept ordinary punches.
+  await driver.native("hotbar", { slot: empty.slot });
   await driver.teleport(cleanup.standing, 0, 0);
-  await driver.lookAt([x + 0.5, y + 0.5, zz + 0.5]);
+  const targetBlock =
+    before.palette[Buffer.from(before.blocks, "base64").readUInt32LE(0)];
+  if (targetBlock === undefined)
+    throw new Error("Cleanup target has no block state");
+  await driver.lookAt(fixtureAim(cleanup.position, targetBlock));
   await waitForFixtureTarget(driver, cleanup.position);
   // One swing cannot continue through the removed sign into its surroundings.
-  await driver.bounded("attack");
+  await driver.attack(cleanup.sneak);
   const deadline = performance.now() + 5000;
   while (performance.now() < deadline) {
     const after = await driver.transport.world(

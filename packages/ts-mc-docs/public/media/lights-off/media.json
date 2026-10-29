@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "lights-off",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/lights-off/original.webp",
+  "poster": "/media/lights-off/poster.webp",
+  "alt": "An unlit copper bulb and candle beside their light-switch sign",
+  "caption": "The supported lights start off.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.28],
+      "to": [0.64, 0.46],
+      "text": "Unlit",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

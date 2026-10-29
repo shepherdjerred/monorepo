@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "stormnight-reward",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/stormnight-reward/original.webp",
+  "poster": "/media/stormnight-reward/poster.webp",
+  "alt": "An authored Stormnight door gives its actual trick-or-treat reward once per day.",
+  "caption": "An authored Stormnight door gives its actual trick-or-treat reward once per day.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.63, 0.66],
+      "to": [0.22, 0.84],
+      "text": "Daily reward",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

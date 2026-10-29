@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "perks-mechanic",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/perks-mechanic/original.webp",
+  "poster": "/media/perks-mechanic/poster.webp",
+  "alt": "The Mechanic detail lists the builds unlocked at each level.",
+  "caption": "The Mechanic detail lists the builds unlocked at each level.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.66, 0.42],
+      "to": [0.19, 0.61],
+      "text": "Mechanic II",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

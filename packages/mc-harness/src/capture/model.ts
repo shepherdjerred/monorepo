@@ -12,7 +12,19 @@ import { CaptureResourceSchema } from "#protocol/capture.ts";
 const CleanupSchema = z.union([
   z.strictObject({ kind: z.literal("command"), command: z.string() }),
   z.strictObject({
+    kind: z.literal("player-command"),
+    command: z
+      .string()
+      .min(1)
+      .max(256)
+      .regex(/^[^/\r\n][^\r\n]*$/u),
+    expectedMessage: z.string().min(1).max(500),
+    standing: z.tuple([z.number(), z.number(), z.number()]),
+    look: z.tuple([z.number(), z.number(), z.number()]),
+  }),
+  z.strictObject({
     kind: z.literal("break"),
+    sneak: z.boolean().optional(),
     position: z.tuple([z.number(), z.number(), z.number()]),
     standing: z.tuple([z.number(), z.number(), z.number()]),
   }),
@@ -22,6 +34,7 @@ const CleanupSchema = z.union([
 ]);
 export const RunSchema = z.strictObject({
   schema: z.literal(1),
+  mode: z.literal("observation").optional(),
   id: z.string(),
   target: z.string(),
   mapSource: MapSourceSchema.optional(),

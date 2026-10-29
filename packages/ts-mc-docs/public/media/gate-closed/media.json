@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "gate-closed",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/gate-closed/original.webp",
+  "poster": "/media/gate-closed/poster.webp",
+  "alt": "A closed three-wide oak fence gate between stone posts",
+  "caption": "Each fence column reaches the ground when the gate is closed.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.25, 0.4],
+      "to": [0.5, 0.53],
+      "text": "Fence columns",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

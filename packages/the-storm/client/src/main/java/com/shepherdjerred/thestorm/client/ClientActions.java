@@ -47,8 +47,8 @@ final class ClientActions {
             .contains(request.action())) {
       throw new IllegalArgumentException("Action is not available in a live session");
     }
-    if (Set.of("messages", "screen-inspect", "screen-activate").contains(request.action()))
-      return observe(client, request);
+    if (Set.of("messages", "screen-inspect", "screen-activate", "screen-type")
+        .contains(request.action())) return observe(client, request);
     if (request.action().startsWith("record-")) return record(client, request);
     if (Set.of("status", "shutdown", "release", "release-inputs", "server-list", "respawn")
         .contains(request.action())) {
@@ -78,6 +78,11 @@ final class ClientActions {
             if (videos.active())
               throw new IllegalStateException("Rendered capture owns the camera");
             yield observations.activate(client, request.arguments());
+          }
+          case "screen-type" -> {
+            if (videos.active())
+              throw new IllegalStateException("Rendered capture owns the camera");
+            yield observations.type(client, request.arguments());
           }
           default -> throw new IllegalArgumentException("Unknown observation action");
         };
@@ -197,6 +202,8 @@ final class ClientActions {
       case "look" -> look(client, args);
       case "hotbar" -> hotbar(client, args);
       case "inventory" -> inventory(client, args);
+      case "chat-open", "advancements" -> ClientScreens.open(client, request.action(), args);
+      case "hover-slot" -> ClientScreens.hover(client, args);
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);

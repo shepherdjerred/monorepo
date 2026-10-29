@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "repair-before",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/repair-before/original.webp",
+  "poster": "/media/repair-before/poster.webp",
+  "alt": "Hold a damaged iron pickaxe in your main hand and iron ingots in your offhand.",
+  "caption": "Hold a damaged iron pickaxe in your main hand and iron ingots in your offhand.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.25, 0.57],
+      "to": [0.39, 0.7],
+      "text": "Damaged tool",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.68, 0.36],
+      "to": [0.5, 0.46],
+      "text": "Three ingots",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

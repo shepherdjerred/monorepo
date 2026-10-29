@@ -64,19 +64,19 @@ tracks:
         unlocks:
           - Build elevators between floors.
           - Build retracting bridges.
+          - Build moving doors and gates.
           - Mechanisms only work where you are allowed to build.
       - title: Mechanic
         unlocks:
-          - Build gates.
-          - Build hidden doors.
+          - Copy sign text with a feather.
+          - Cycle paintings of the same size.
           - Build Stargates and manage networks.
       - title: Artificer
         unlocks:
-          - Copy signs with the sign copier.
-          - Build map and painting switchers.
+          - Build Crush and Bounce pistons.
       - title: Master Mechanic
         unlocks:
-          - Build special pistons that move what vanilla pistons cannot.
+          - Build SuperSticky and SuperPush pistons.
   engineer:
     displayName: Engineer
     color: "#3FB27F"

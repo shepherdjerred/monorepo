@@ -11,6 +11,7 @@ async function fingerprint(
   const hash = createHash("sha256");
   let files = 0;
   let bytes = 0;
+  const dimensions = new Set<string>();
   const visit = async (relative: string): Promise<void> => {
     await chmod(path.join(directory, relative), 0o777);
     const entries = await readdir(path.join(directory, relative), {
@@ -35,11 +36,24 @@ async function fingerprint(
         );
         files++;
         bytes += data.length;
+        const parts = name.split(path.sep);
+        if (
+          parts.length === 5 &&
+          parts[0] === "dimensions" &&
+          parts[3] === "region" &&
+          /^r\.-?\d+\.-?\d+\.mca$/u.test(parts[4] ?? "")
+        )
+          dimensions.add(`${parts[1] ?? ""}:${parts[2] ?? ""}`);
       } else throw new Error("World import contains an unsupported file");
     }
   };
   await visit("");
-  return { sha256: hash.digest("hex"), files, bytes };
+  return {
+    sha256: hash.digest("hex"),
+    files,
+    bytes,
+    dimensions: [...dimensions].toSorted(),
+  };
 }
 
 export async function copyRealMap(source: string, destination: string) {

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "crystal-balance",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/crystal-balance/original.webp",
+  "poster": "/media/crystal-balance/poster.webp",
+  "alt": "The wallet command shows crystals and the separate Credits balance.",
+  "caption": "The wallet command shows crystals and the separate Credits balance.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.68, 0.6],
+      "to": [0.2, 0.84],
+      "text": "Separate balances",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

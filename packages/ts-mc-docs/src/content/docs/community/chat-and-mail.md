@@ -3,7 +3,9 @@ title: Chat, mail, and help
 description: Talk to players, read deliveries, and find help on The Storm.
 ---
 
-Chat channels let you talk to the whole server or a smaller group. Use `/channels` to see the channels available to you, and `/channels hide <channel>` or `/channels show <channel>` to control what you see. `/g` selects Global and `/war` selects War chat. Town members can use Town chat.
+Chat channels let you talk to the whole server or a smaller group. Use `/channels` to see the channels available to you, and `/channels hide <channel>` or `/channels show <channel>` to control what you see. `/g` selects Global and `/war` selects War chat. Town chat is available to town members when that channel is enabled; `/channels` explains any current restriction.
+
+<div><storm-media data-manifest="/media/chat-channels/media.json"><figure><img src="/media/chat-channels/original.webp" width="2560" height="1440" loading="lazy" alt="The channel list shows which conversations are visible and where you are speaking." /><figcaption>The channel list shows which conversations are visible and where you are speaking. <a href="/media/chat-channels/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
 
 Use `/msg <player> <message>` for a private message to an online player and `/r <message>` to reply. `/ignore <player>` hides a player's chat; `/unignore <player>` reverses it. Hiding a channel changes what you see, not which channel you send to.
 

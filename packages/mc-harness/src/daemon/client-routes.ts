@@ -21,6 +21,7 @@ import type { ClientManager } from "./clients.ts";
 import { body, DaemonError, reply } from "./http.ts";
 import { guarded } from "./live-routes.ts";
 import { CaptureBoundedActionSchema } from "#protocol/capture.ts";
+import { isLocalPaintingUse } from "./painting-target.ts";
 
 /** The slice of the daemon context the client routes use. */
 type ClientRouteContext = {
@@ -93,7 +94,14 @@ async function boundedAction(
   } else if (
     operation.action !== "click" &&
     operation.action !== "sign-write" &&
-    operation.action !== "screen-activate"
+    operation.action !== "screen-activate" &&
+    operation.action !== "screen-type" &&
+    !isLocalPaintingUse(
+      summary.target,
+      operation.action,
+      state.target,
+      operation.box,
+    )
   )
     throw new DaemonError("Aim at the declared fixture", 409);
   const act = () =>
@@ -248,9 +256,14 @@ async function clientAction(
       throw new DaemonError("Live service unavailable", 503);
     const target = await ctx.target("live");
     if (
-      ["use", "attack", "click", "sign-write", "screen-activate"].includes(
-        action,
-      ) ||
+      [
+        "use",
+        "attack",
+        "click",
+        "sign-write",
+        "screen-activate",
+        "screen-type",
+      ].includes(action) ||
       (action === "move" &&
         "buttons" in args &&
         args.buttons.some((button) => button === "use" || button === "attack"))

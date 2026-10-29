@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "town-transfer-confirmation",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/town-transfer-confirmation/original.webp",
+  "poster": "/media/town-transfer-confirmation/poster.webp",
+  "alt": "Ownership handover requires a separate confirmation before the owner changes.",
+  "caption": "Ownership handover requires a separate confirmation before the owner changes.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.58, 0.63],
+      "to": [0.27, 0.84],
+      "text": "Confirm separately",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

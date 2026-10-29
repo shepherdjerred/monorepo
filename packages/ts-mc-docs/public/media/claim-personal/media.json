@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "claim-personal",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/claim-personal/original.webp",
+  "poster": "/media/claim-personal/poster.webp",
+  "alt": "A personal chunk keeps building and container access with its holder.",
+  "caption": "A personal chunk keeps building and container access with its holder.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.58, 0.63],
+      "to": [0.27, 0.84],
+      "text": "Personal access",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}
