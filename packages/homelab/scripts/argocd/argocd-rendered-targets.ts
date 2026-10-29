@@ -64,7 +64,7 @@ export function renderedTargetState(
     );
     if (moved.length > 0) {
       const rendered = moved
-        .map(({ namespace }) => namespace ?? "<none>")
+        .map(({ namespace = "<none>" }) => namespace)
         .join(", ");
       throw new Error(
         `Apply-safety preflight for ${appName} found ${identity} in namespace ${resource.namespace ?? "<none>"} but rendered it in ${rendered}`,
