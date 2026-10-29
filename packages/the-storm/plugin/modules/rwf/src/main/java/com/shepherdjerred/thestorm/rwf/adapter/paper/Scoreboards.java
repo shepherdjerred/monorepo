@@ -40,15 +40,16 @@ import org.bukkit.scoreboard.Team;
  * watchers, there is one neutral board. Once they are, each team sees its own board, and Medics a
  * copy of it that shows everyone's health under their name. Every board has a team per {@link
  * TeamColor} (name tags in the team's colour, no friendly fire, invisible teammates seen) with a
- * {@code <team>_bot} sub-team whose members carry a dim {@code ✦} suffix, a {@code <team>_hidden}
- * team whose name tags never show, and Red Warfare's sidebar: its lobby board until the match goes
- * live, then its game board of the teams still alive and their bombs, where a Saboteur's armed bomb
- * keeps its countdown from the teams it hides it from.
+ * {@code <team>_bot} sub-team whose members carry a dim {@code ✦} suffix, a {@code <team>_spy} team
+ * (and its {@code _bot} sub-team) for enemy Spies wearing that team's colours, a {@code
+ * <team>_hidden} team whose name tags never show, and Red Warfare's sidebar: its lobby board until
+ * the match goes live, then its game board of the teams still alive and their bombs, where a
+ * Saboteur's armed bomb keeps its countdown from the teams it hides it from.
  *
  * <p>On a team's board an enemy Ghost or Wraith is on the hidden team, an enemy Spy is on the
- * viewer's own team, and an enemy Skinner wearing a skin is hidden too, its worn name drawn over it
- * by {@link KitDisplays}. Members see their board while inside and the server's main board again
- * when they leave.
+ * viewer's spy team, coloured as the viewer's own but apart from it, and an enemy Skinner wearing a
+ * skin is hidden too, its worn name drawn over it by {@link KitDisplays}. Members see their board
+ * while inside and the server's main board again when they leave.
  */
 final class Scoreboards {
 
@@ -109,6 +110,8 @@ final class Scoreboards {
     for (var color : TeamColor.values()) {
       team(board, teamName(color, false), color, false);
       team(board, teamName(color, true), color, true);
+      team(board, spyName(color, false), color, false);
+      team(board, spyName(color, true), color, true);
       var hidden = team(board, hiddenName(color), color, false);
       hidden.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
     }
@@ -163,6 +166,15 @@ final class Scoreboards {
 
   static String teamName(TeamColor color, boolean bot) {
     return "rwf_" + color.name().toLowerCase(Locale.ROOT) + (bot ? "_bot" : "");
+  }
+
+  /**
+   * The team an enemy Spy sits on in {@code color}'s board: {@code color}'s name-tag colour, but
+   * not {@code color}'s own team. Vanilla's friendly-fire rule spares whoever shares the attacker's
+   * scoreboard team, so a Spy seated on its viewers' own team could never be hurt by them.
+   */
+  static String spyName(TeamColor color, boolean bot) {
+    return "rwf_" + color.name().toLowerCase(Locale.ROOT) + "_spy" + (bot ? "_bot" : "");
   }
 
   static String hiddenName(TeamColor color) {
@@ -293,7 +305,7 @@ final class Scoreboards {
     }
     if (seat.disguise().isPresent()) {
       var disguise = seat.disguise().orElseThrow();
-      return disguise.team().isEmpty() ? teamName(viewer, seat.bot()) : hiddenName(seat.team());
+      return disguise.team().isEmpty() ? spyName(viewer, seat.bot()) : hiddenName(seat.team());
     }
     return teamName(seat.team(), seat.bot());
   }
