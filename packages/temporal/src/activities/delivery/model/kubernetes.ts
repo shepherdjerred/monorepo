@@ -91,6 +91,7 @@ const OperationPhaseSchema = z
 async function writeBody(rendered: RenderedApplication) {
   const current = await getArgoApplication(rendered.name, {
     signal: signal(),
+    project: rendered.body.spec.project,
   });
   if (current === null) {
     await createArgoApplication(rendered.body, { signal: signal() });

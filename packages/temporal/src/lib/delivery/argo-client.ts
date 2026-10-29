@@ -99,14 +99,23 @@ function requireOwner(application: OwnedApplication, environmentId: string) {
     );
 }
 
-/** Null when the Application does not exist; any other failure is thrown. */
+/**
+ * Null when the Application does not exist; any other failure is thrown.
+ * Argo answers 403 for an absent Application unless the read names the
+ * project the caller may read it in, so a create-when-absent read passes it.
+ */
 export async function getArgoApplication(
   name: string,
-  options: ArgoClientOptions = {},
+  options: ArgoClientOptions & { project?: string } = {},
 ): Promise<unknown> {
   const response = await argoFetch(
     `/${encodeURIComponent(name)}`,
-    { method: "GET" },
+    {
+      method: "GET",
+      ...(options.project === undefined
+        ? {}
+        : { query: { project: options.project } }),
+    },
     options,
   );
   if (response.status === 404) return null;
