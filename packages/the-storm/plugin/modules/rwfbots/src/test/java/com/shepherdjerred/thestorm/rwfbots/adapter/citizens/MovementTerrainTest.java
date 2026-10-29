@@ -378,4 +378,77 @@ final class MovementTerrainTest {
             com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
     assertThat(result.destination()).contains(new Vec3(1.5, 2, 3.5));
   }
+
+  @Test
+  void aBodyOnABottomSlabMayNotJumpForAFullBlockAboveItWithoutJumpBoost() {
+    // fjords: a bot on a bottom slab hopped for minutes at a ledge a block and a half above its
+    // feet, peaking at 1.25 every time.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE_SLAB);
+    world.getBlockAt(2, 1, 2).setType(Material.STONE);
+    world.getBlockAt(2, 2, 2).setType(Material.STONE);
+    var from = new Vec3(1.5, 1.5, 2.5);
+    var ledge = new Vec3(2.5, 3, 2.5);
+    var unboosted =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            from, ledge, Hop.JUMP);
+    var boosted =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            from,
+            ledge,
+            Hop.JUMP,
+            Optional.empty(),
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.jumpRise(0));
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, unboosted)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.explain(
+                terrain, unboosted))
+        .isEqualTo("flight rises too far");
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, boosted)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
+  void aBodyOnAStairsLowerHalfJumpingSidewaysTakesOffFromItsTallHalf() {
+    // fjords: bodies on a stair's lower half were refused a jump to its side for a ledge a block
+    // and a half above their feet; from the stair's tall half at its centre the ledge is a block.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE_STAIRS);
+    world.getBlockAt(2, 1, 2).setType(Material.STONE);
+    world.getBlockAt(2, 2, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 1.5, 2.85), new Vec3(2.5, 3, 2.5), Hop.JUMP);
+    var result =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, request);
+    assertThat(result.reason())
+        .isEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
+    assertThat(result.destination()).contains(new Vec3(1.5, 2, 2.5));
+  }
+
+  @Test
+  void aBodyOnAStairsLowerHalfStepsUpItsTallHalfBeforeItJumps() {
+    // The stair's tall half is its north half: a body on the lower half is a block and a half
+    // below the next ledge, but walks up the half step first and jumps only a block.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE_STAIRS);
+    world.getBlockAt(1, 1, 1).setType(Material.STONE);
+    world.getBlockAt(1, 2, 1).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 1.5, 2.85), new Vec3(1.5, 3, 1.5), Hop.JUMP);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .as(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.explain(
+                terrain, request))
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
 }

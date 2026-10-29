@@ -1942,19 +1942,19 @@
     "retainedFluidPortals": 4479
   },
   "edges": {
-    "total": 300414,
+    "total": 300385,
     "damaging": 17460,
     "maximumRawDamage": 21,
     "CLIMB": 222,
     "DROP": 42254,
-    "JUMP": 22502,
+    "JUMP": 22473,
     "LEAP": 80200,
     "SWIM": 33810,
     "WALK": 121426
   },
-  "regions": 2961,
+  "regions": 2963,
   "coverPoints": 11806,
-  "chokepoints": 1520,
+  "chokepoints": 1522,
   "routes": {
     "count": 300,
     "spawnToBomb": [
@@ -3762,5 +3762,5 @@
   },
   "distanceFields": 52,
   "problems": [],
-  "bytes": 4955725
+  "bytes": 4956929
 }

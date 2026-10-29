@@ -1666,17 +1666,17 @@
     "retainedFluidPortals": 3898
   },
   "edges": {
-    "total": 273628,
+    "total": 273616,
     "damaging": 16242,
     "maximumRawDamage": 21,
     "CLIMB": 396,
     "DROP": 43302,
-    "JUMP": 21514,
+    "JUMP": 21502,
     "LEAP": 78637,
     "SWIM": 29569,
     "WALK": 100210
   },
-  "regions": 2407,
+  "regions": 2409,
   "coverPoints": 9082,
   "chokepoints": 1089,
   "routes": {
@@ -5214,5 +5214,5 @@
   },
   "distanceFields": 100,
   "problems": [],
-  "bytes": 8237200
+  "bytes": 8237477
 }

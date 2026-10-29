@@ -1628,8 +1628,8 @@
     "damaging": 9822,
     "maximumRawDamage": 16,
     "CLIMB": 7454,
-    "DROP": 26197,
-    "JUMP": 7195,
+    "DROP": 26198,
+    "JUMP": 7194,
     "LEAP": 76316,
     "SWIM": 2115784,
     "WALK": 57668
@@ -4956,5 +4956,5 @@
   },
   "distanceFields": 94,
   "problems": [],
-  "bytes": 14585432
+  "bytes": 14585431
 }

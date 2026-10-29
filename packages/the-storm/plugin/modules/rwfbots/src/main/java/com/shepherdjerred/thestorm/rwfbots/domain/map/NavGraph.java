@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
@@ -37,6 +38,12 @@ public final class NavGraph {
 
   /** Sprint-jump flight certification is bounded independently of full-height walk-off drops. */
   public static final int MAX_JUMP_DESCENT = 16;
+
+  /**
+   * The highest rise between feet heights a jump edge may climb: the apex of a jump without Jump
+   * Boost. The graph is shared by every body, so it only offers what an unboosted body can make.
+   */
+  public static final double MAX_JUMP_RISE = MovementSafety.jumpRise(MovementSafety.NO_JUMP_BOOST);
 
   private static final float INF = Float.POSITIVE_INFINITY;
   private static final int[][] NEAREST_OFFSETS = {

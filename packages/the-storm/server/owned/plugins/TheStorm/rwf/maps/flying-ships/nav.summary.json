@@ -478,17 +478,17 @@
     "retainedFluidPortals": 0
   },
   "edges": {
-    "total": 78100,
+    "total": 78024,
     "damaging": 2345,
     "maximumRawDamage": 33,
     "CLIMB": 108,
     "DROP": 7097,
-    "JUMP": 5022,
+    "JUMP": 4946,
     "LEAP": 33283,
     "SWIM": 0,
     "WALK": 32590
   },
-  "regions": 548,
+  "regions": 554,
   "coverPoints": 1401,
   "chokepoints": 265,
   "routes": {
@@ -3335,12 +3335,12 @@
       {
         "from": "blue-spawn-40",
         "to": "blue-1",
-        "length": 157.12483549118042,
-        "nodes": 23
+        "length": 168.19827795028687,
+        "nodes": 24
       }
     ]
   },
   "distanceFields": 81,
   "problems": [],
-  "bytes": 960203
+  "bytes": 924506
 }

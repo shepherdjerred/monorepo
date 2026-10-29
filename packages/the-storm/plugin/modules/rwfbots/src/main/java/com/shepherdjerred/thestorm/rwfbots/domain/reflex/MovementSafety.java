@@ -12,7 +12,14 @@ public final class MovementSafety {
   private static final double LOOK_AHEAD = 0.9;
   private static final double SAMPLE_GAP = 0.2;
   private static final double WALK_DROP = 1.1;
-  private static final double MAX_JUMP_RISE = 1.75;
+  // How far above a body a ladder or vine step may end: a climb is not a jump, and keeps its reach.
+  private static final double MAX_CLIMB_RISE = 1.75;
+
+  /** The Jump Boost amplifier of a body without the effect. */
+  public static final int NO_JUMP_BOOST = -1;
+
+  // Vanilla adds this to the launch speed per Jump Boost level.
+  private static final double JUMP_BOOST_SPEED = 0.1;
   // The upstream directed graph permits four-cell diagonal launches (sqrt(32) blocks).
   private static final double MAX_LEAP_SPAN = 6;
   // Vanilla walks a body up a ledge this high (a slab or a stair step) without a jump.
@@ -50,10 +57,47 @@ public final class MovementSafety {
     boolean submerged(Vec3 feet);
   }
 
-  public record Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff) {
+  /**
+   * One proposed step.
+   *
+   * @param takeoff where the body left the ground for the flight it is in, if it is in one
+   * @param jumpRise how far above its take-off the body's jump lifts its feet, from {@link
+   *     #jumpRise(int)}
+   */
+  public record Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff, double jumpRise) {
+    public Request {
+      if (!(jumpRise > 0)) throw new IllegalArgumentException("a jump must rise");
+    }
+
     public Request(Vec3 from, Vec3 target, Hop hop) {
       this(from, target, hop, Optional.empty());
     }
+
+    public Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff) {
+      this(from, target, hop, takeoff, MovementSafety.jumpRise(NO_JUMP_BOOST));
+    }
+
+    /** The same body's {@code step} to the same target, set off from {@code origin} instead. */
+    private Request setOff(Vec3 origin, Hop step) {
+      return new Request(origin, target, step, Optional.empty(), jumpRise);
+    }
+  }
+
+  /**
+   * The apex of a standing jump above its take-off for a body with Jump Boost {@code amplifier}
+   * ({@link #NO_JUMP_BOOST} without it): vanilla's launch speed under its gravity and drag, a
+   * little over a block and a quarter unboosted. A body on a bottom slab cannot jump onto a full
+   * block above it.
+   */
+  public static double jumpRise(int amplifier) {
+    if (amplifier < NO_JUMP_BOOST) throw new IllegalArgumentException("unknown jump boost level");
+    var speed = MovementMotor.JUMP_SPEED + JUMP_BOOST_SPEED * (amplifier + 1);
+    var height = 0.0;
+    while (speed > 0) {
+      height += speed;
+      speed = (speed - 0.08) * 0.98;
+    }
+    return height;
   }
 
   public enum Reason {
@@ -117,9 +161,11 @@ public final class MovementSafety {
     var from = request.from();
     if (request.takeoff().isPresent() || !terrain.grounded(from)) return Optional.empty();
     var centre = new Vec3(Math.floor(from.x()) + 0.5, from.y(), Math.floor(from.z()) + 0.5);
+    // On a stair's lower half the centre is on its tall half, the height the jump leaves from.
+    if (!terrain.clear(centre)) centre = halfStepUp(terrain, centre).orElse(centre);
     if (centre.horizontalDistance(from) < CENTRED) return Optional.empty();
     return walkCorridor(terrain, from, centre, true)
-            && traversal(terrain, new Request(centre, request.target(), request.hop()))
+            && traversal(terrain, request.setOff(centre, request.hop()))
         ? Optional.of(centre)
         : Optional.empty();
   }
@@ -272,7 +318,7 @@ public final class MovementSafety {
    */
   private static boolean steppingDown(Terrain terrain, Request request) {
     return request.from().y() - request.target().y() > HALF_STEP
-        && traversal(terrain, new Request(request.from(), request.target(), Hop.DROP));
+        && traversal(terrain, request.setOff(request.from(), Hop.DROP));
   }
 
   private static Result steer(Terrain terrain, Request request, Vec3 heading) {
@@ -378,7 +424,7 @@ public final class MovementSafety {
 
   private static String climbing(Terrain terrain, Vec3 from, Vec3 target) {
     if (from.horizontalDistance(target) > 1.5) return "climb target too far across";
-    if (target.y() - from.y() > MAX_JUMP_RISE) return "climb target too far above";
+    if (target.y() - from.y() > MAX_CLIMB_RISE) return "climb target too far above";
     if (!safe(terrain, target)) return "climb target " + leg(terrain, target, target, Check.CLEAR);
     if (!terrain.supported(target, WALK_DROP)) return "climb target unsupported";
     var raised = from.withY(Math.max(from.y(), target.y()));
@@ -393,7 +439,7 @@ public final class MovementSafety {
     var target = request.target();
     var origin = request.takeoff().orElse(from);
     if (origin.horizontalDistance(target) > MAX_LEAP_SPAN) return "flight too long";
-    if (origin.y() - target.y() < -MAX_JUMP_RISE) return "flight rises too far";
+    if (!withinJump(terrain, request, origin)) return "flight rises too far";
     if (!safe(terrain, target)) return "landing " + leg(terrain, target, target, Check.CLEAR);
     if (!terrain.supported(target, WALK_DROP)) return "landing unsupported";
     var flightY =
@@ -535,9 +581,8 @@ public final class MovementSafety {
     var from = request.from();
     var target = request.target();
     var origin = request.takeoff().orElse(from);
-    var descent = origin.y() - target.y();
     if (origin.horizontalDistance(target) > MAX_LEAP_SPAN
-        || descent < -MAX_JUMP_RISE
+        || !withinJump(terrain, request, origin)
         || !safe(terrain, target)
         || !terrain.supported(target, WALK_DROP)) {
       return false;
@@ -550,6 +595,38 @@ public final class MovementSafety {
         || (request.takeoff().isEmpty()
             && terrain.grounded(from)
             && clearFlight(terrain, from, target, flightY + STEP_HEIGHT));
+  }
+
+  /**
+   * Whether the body's jump lifts its feet from {@code origin} to the target's height: straight
+   * away, or after it walks up the half step in its way, as a body on a stair's lower half does
+   * onto the stair's tall half before it jumps the next stair. A body on a bottom slab facing a
+   * full block a block and a half up has no such step, and its every jump fell short (fjords).
+   */
+  private static boolean withinJump(Terrain terrain, Request request, Vec3 origin) {
+    var rise = request.target().y() - origin.y();
+    if (rise <= request.jumpRise()) return true;
+    // A body holding a vine or ladder climbs the rest of the way to the ledge it jumps for, and a
+    // body already in the air from an unknown take-off keeps what momentum it has.
+    if (terrain.climbable(origin) || !terrain.grounded(origin)) return rise <= MAX_CLIMB_RISE;
+    var heading = request.target().minus(origin).horizontal();
+    if (rise - HALF_STEP > request.jumpRise() || heading.isZero()) return false;
+    var reach = Math.min(LOOK_AHEAD, heading.length());
+    var count = Math.max(1, (int) Math.ceil(reach / SAMPLE_GAP));
+    for (var index = 1; index <= count; index++) {
+      var sample = origin.plus(heading.normalized().scale(reach * index / count));
+      if (!terrain.clear(sample)) return halfStepUp(terrain, sample).isPresent();
+    }
+    return false;
+  }
+
+  /**
+   * Where a grounded body stands on the half step it collides with at {@code feet}: the tall half
+   * of a stair or a slab's top, half a block up, when that is safe footing.
+   */
+  private static Optional<Vec3> halfStepUp(Terrain terrain, Vec3 feet) {
+    var step = feet.plus(0, HALF_STEP, 0);
+    return safe(terrain, step) && terrain.grounded(step) ? Optional.of(step) : Optional.empty();
   }
 
   private static boolean clearFlight(Terrain terrain, Vec3 from, Vec3 target, double flightY) {
@@ -565,7 +642,7 @@ public final class MovementSafety {
     var target = request.target();
     if (from.horizontalDistance(target) < 0.01) return clearCorridor(terrain, from, target);
     if (from.horizontalDistance(target) > 1.5
-        || target.y() - from.y() > MAX_JUMP_RISE
+        || target.y() - from.y() > MAX_CLIMB_RISE
         || !safe(terrain, target)
         || !terrain.supported(target, WALK_DROP)) return false;
     var raised = from.withY(Math.max(from.y(), target.y()));

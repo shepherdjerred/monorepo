@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
@@ -63,6 +64,15 @@ final class MovementSafetyTest {
 
   private static MovementSafety.Result move(Terrain terrain, Vec3 target, Hop hop) {
     return MovementSafety.choose(terrain, new MovementSafety.Request(START, target, hop));
+  }
+
+  @Test
+  void anUnboostedJumpClearsABlockButNotABlockAndAHalfWhileJumpBoostDoes() {
+    // Vanilla's apex: 1.2522 blocks without the effect; Jump Boost I adds 0.1 to the launch.
+    assertThat(MovementSafety.jumpRise(MovementSafety.NO_JUMP_BOOST))
+        .isCloseTo(1.2522, within(1e-3));
+    assertThat(MovementSafety.jumpRise(0)).isGreaterThan(1.5);
+    assertThat(MovementSafety.jumpRise(1)).isGreaterThan(MovementSafety.jumpRise(0));
   }
 
   @Test

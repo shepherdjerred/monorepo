@@ -958,19 +958,19 @@
     "retainedFluidPortals": 3734
   },
   "edges": {
-    "total": 1503883,
+    "total": 1503860,
     "damaging": 164387,
     "maximumRawDamage": 53,
     "CLIMB": 90542,
     "DROP": 279757,
-    "JUMP": 70850,
+    "JUMP": 70827,
     "LEAP": 591735,
     "SWIM": 32505,
     "WALK": 438494
   },
   "regions": 13680,
   "coverPoints": 68168,
-  "chokepoints": 5935,
+  "chokepoints": 5936,
   "routes": {
     "count": 444,
     "spawnToBomb": [
@@ -1439,8 +1439,8 @@
       {
         "from": "red-spawn-13",
         "to": "blue-1",
-        "length": 572.1358757019043,
-        "nodes": 50
+        "length": 571.7870383262634,
+        "nodes": 51
       },
       {
         "from": "red-spawn-14",
@@ -2015,7 +2015,7 @@
       {
         "from": "red-spawn-29",
         "to": "blue-1",
-        "length": 560.7601251602173,
+        "length": 562.4112877845764,
         "nodes": 48
       },
       {
@@ -3642,5 +3642,5 @@
   },
   "distanceFields": 76,
   "problems": [],
-  "bytes": 31158431
+  "bytes": 31158522
 }

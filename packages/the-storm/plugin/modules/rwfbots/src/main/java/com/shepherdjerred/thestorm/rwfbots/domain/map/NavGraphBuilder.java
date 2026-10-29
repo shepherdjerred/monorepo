@@ -179,23 +179,28 @@ final class NavGraphBuilder {
     return true;
   }
 
+  /**
+   * A jump onto the node one cell up and across. The rise is measured between the actual feet
+   * heights, so a body standing on a bottom slab beneath a full block faces a block and a half,
+   * which no unboosted jump reaches; such a step is no edge at all (fjords: bots hopped at a slab
+   * for minutes, peaking a few hundredths short of the ledge). A body in a vine or ladder climbs
+   * the rest of the way instead (saigon: the vines beside the blue bomb's platform).
+   */
   private boolean upwardStep(BlockPos cell, int dx, int dz, List<Edge> edges) {
     var ahead = cell.offset(dx, 0, dz);
     var diagonal = dx != 0 && dz != 0;
     var up = nodeAt(ahead.up());
-    if (up >= 0
-        && passable(cell.offset(0, 2, 0))
-        && (!diagonal || clearCorner(cell.up(), dx, dz))) {
-      var swim = shape(cell).swim() || shape(ahead.up()).swim();
-      edges.add(
-          new Edge(
-              up,
-              swim ? Hop.SWIM : Hop.JUMP,
-              swim ? TraversalCosts.swim(cell, ahead.up()) : NavGraph.JUMP_COST,
-              0));
+    if (up < 0 || !passable(cell.offset(0, 2, 0)) || (diagonal && !clearCorner(cell.up(), dx, dz)))
+      return false;
+    var swim = shape(cell).swim() || shape(ahead.up()).swim();
+    if (swim) {
+      edges.add(new Edge(up, Hop.SWIM, TraversalCosts.swim(cell, ahead.up()), 0));
       return true;
     }
-    return false;
+    var rise = BlockFeet.at(blocks, ahead.up()).y() - BlockFeet.at(blocks, cell).y();
+    if (rise > NavGraph.MAX_JUMP_RISE && !shape(cell).climbable()) return false;
+    edges.add(new Edge(up, Hop.JUMP, NavGraph.JUMP_COST, 0));
+    return true;
   }
 
   private boolean fluidCorner(BlockPos cell, int dx, int dz) {
