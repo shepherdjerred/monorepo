@@ -409,6 +409,20 @@ async function componentArtifacts(
   return artifacts;
 }
 
+/**
+ * The acquiring service's artifact id: its catalog component, not the
+ * registry path, which for a Talos factory installer carries a 64-hex
+ * schematic and overflows Delivery's 160-character identifier. An existing
+ * original of the same origin keeps its id; this names only new rows.
+ */
+export function acquisitionArtifactId(
+  intent: Pick<UpstreamIntent, "serviceId" | "component" | "version">,
+  digest: string,
+): string {
+  const component = intent.component.slice(intent.component.indexOf(":") + 1);
+  return `upstream/${intent.serviceId}/${component}/${intent.version}/${digest.slice("sha256:".length)}`;
+}
+
 async function registerAcquisition(
   client: UpstreamClient,
   producer: UpstreamProducer,
@@ -436,7 +450,7 @@ async function registerAcquisition(
     artifact: v2
       ? {
           ...acquired,
-          id: `upstream/${intent.serviceId}/${acquired.id.slice("upstream/".length)}`,
+          id: acquisitionArtifactId(intent, acquired.digest),
           component: intent.component,
         }
       : acquired,
