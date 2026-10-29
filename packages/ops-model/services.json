@@ -37,7 +37,6 @@
     },
     {
       "id": "delivery-data",
-      "rootReleaseExclusions": { "delivery-data": "inactive" },
       "title": "Delivery data layer",
       "kind": "platform",
       "package": "homelab",
@@ -355,7 +354,6 @@
     },
     {
       "id": "temporal-data",
-      "rootReleaseExclusions": { "temporal-data": "inactive" },
       "title": "Temporal data layer",
       "kind": "platform",
       "package": "homelab",

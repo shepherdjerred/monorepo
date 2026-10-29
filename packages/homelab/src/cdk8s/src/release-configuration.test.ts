@@ -6,11 +6,10 @@ import {
   transitionRendering,
 } from "./release-configuration.ts";
 
-// The cutover work merges inert; the window turns transition rendering on with
-// a reviewed change to `transitionRendering()` (and this assertion) before the final v1
-// root release.
-test("transition rendering is off until the cutover window", () => {
-  expect(transitionRendering()).toBe(false);
+// The cutover window turned transition rendering on with a reviewed change to
+// `transitionRendering()` (and this assertion) before the final v1 root release.
+test("transition rendering is on for the cutover", () => {
+  expect(transitionRendering()).toBe(true);
 });
 
 // The root renders the data-layer Applications only under transition

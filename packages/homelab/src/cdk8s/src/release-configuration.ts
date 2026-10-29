@@ -63,7 +63,7 @@ export function publicationImageDigests(
  * applies.
  */
 export function transitionRendering(): boolean {
-  return false;
+  return true;
 }
 
 export function releaseChartRevisions(
