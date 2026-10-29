@@ -544,17 +544,17 @@
     "retainedFluidPortals": 882
   },
   "edges": {
-    "total": 252017,
+    "total": 252006,
     "damaging": 15443,
     "maximumRawDamage": 13,
     "CLIMB": 0,
     "DROP": 26648,
-    "JUMP": 10196,
+    "JUMP": 10185,
     "LEAP": 98175,
     "SWIM": 7074,
     "WALK": 109924
   },
-  "regions": 1613,
+  "regions": 1614,
   "coverPoints": 10622,
   "chokepoints": 1080,
   "routes": {
@@ -1637,8 +1637,8 @@
       {
         "from": "red-spawn-30",
         "to": "blue-1",
-        "length": 446.33781242370605,
-        "nodes": 39
+        "length": 442.61320781707764,
+        "nodes": 38
       },
       {
         "from": "red-spawn-31",
@@ -1817,8 +1817,8 @@
       {
         "from": "red-spawn-35",
         "to": "blue-1",
-        "length": 449.9889750480652,
-        "nodes": 40
+        "length": 453.7135796546936,
+        "nodes": 41
       },
       {
         "from": "red-spawn-36",
@@ -1889,8 +1889,8 @@
       {
         "from": "red-spawn-37",
         "to": "blue-1",
-        "length": 446.6866497993469,
-        "nodes": 38
+        "length": 442.9620451927185,
+        "nodes": 37
       },
       {
         "from": "red-spawn-38",
@@ -1925,8 +1925,8 @@
       {
         "from": "red-spawn-38",
         "to": "blue-1",
-        "length": 444.7600917816162,
-        "nodes": 38
+        "length": 441.0354871749878,
+        "nodes": 37
       },
       {
         "from": "red-spawn-39",
@@ -2033,8 +2033,8 @@
       {
         "from": "red-spawn-41",
         "to": "blue-1",
-        "length": 457.9155330657959,
-        "nodes": 40
+        "length": 454.1909284591675,
+        "nodes": 39
       },
       {
         "from": "red-spawn-42",
@@ -2069,8 +2069,8 @@
       {
         "from": "red-spawn-42",
         "to": "blue-1",
-        "length": 456.8335337638855,
-        "nodes": 39
+        "length": 453.1089291572571,
+        "nodes": 38
       },
       {
         "from": "red-spawn-43",
@@ -2105,8 +2105,8 @@
       {
         "from": "red-spawn-43",
         "to": "blue-1",
-        "length": 452.9366497993469,
-        "nodes": 39
+        "length": 449.2120451927185,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-1",
@@ -3624,5 +3624,5 @@
   },
   "distanceFields": 87,
   "problems": [],
-  "bytes": 5816133
+  "bytes": 5808229
 }

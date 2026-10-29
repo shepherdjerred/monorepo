@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.Objects;
 import java.util.Optional;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 /** Physical movement is checked after every planner, combat controller and recovery proposal. */
@@ -70,7 +71,8 @@ final class BodyMovement {
             ? runUp(player, target, terrain)
             : MovementSafety.choose(
                 terrain,
-                new MovementSafety.Request(position, goal, hop, flight.map(Flight::origin)));
+                new MovementSafety.Request(
+                    position, goal, hop, flight.map(Flight::origin), jumpRise(player)));
     if (checked.destination().isPresent()
         && !survives(player, terrain, checked.destination().orElseThrow(), hop))
       checked = new MovementSafety.Result(Optional.empty(), MovementSafety.Reason.UNSAFE_LANDING);
@@ -80,7 +82,9 @@ final class BodyMovement {
               checked.reason() == MovementSafety.Reason.UNSAFE_LANDING
                   ? "landing forecast refused"
                   : MovementSafety.explain(
-                      terrain, new MovementSafety.Request(position, goal, hop)));
+                      terrain,
+                      new MovementSafety.Request(
+                          position, goal, hop, Optional.empty(), jumpRise(player))));
     beginFlight(candidate, checked.reason());
     if (checked.reason().refused()
         && hop == Hop.WALK
@@ -228,6 +232,13 @@ final class BodyMovement {
     return BodyFluids.inWater(player)
         ? MovementMotor.swim(current, control)
         : MovementMotor.steer(current, control);
+  }
+
+  /** How high this body's jump lifts it now, with the Jump Boost it actually has. */
+  private static double jumpRise(Player player) {
+    var boost = player.getPotionEffect(PotionEffectType.JUMP_BOOST);
+    return MovementSafety.jumpRise(
+        boost == null ? MovementSafety.NO_JUMP_BOOST : boost.getAmplifier());
   }
 
   private static Vec3 feet(Player player) {
