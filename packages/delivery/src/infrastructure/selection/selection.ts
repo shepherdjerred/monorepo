@@ -48,12 +48,20 @@ async function acceptedDeployment(tx: Transaction, env: Environment) {
  * The recipe and configuration a deploy or promote carries: the accepted
  * selection's, or the declared binding while nothing is accepted (E0). A
  * newer declared revision reaches the environment only through `rebind`.
+ * A carried selection is re-keyed onto the catalog's component names
+ * (section 7), which only the declared recipe names; the pre-catalog recipe
+ * it records is provenance, so it binds like no acceptance at all.
  */
 async function currentBinding(tx: Transaction, env: Environment) {
   const accepted = await acceptedDeployment(tx, env);
+  if (accepted === null || accepted.kind === "carry")
+    return {
+      recipeId: env.pipelineRevisionId,
+      configurationId: env.declaredConfigurationId,
+    };
   return {
-    recipeId: accepted?.pipelineRevisionId ?? env.pipelineRevisionId,
-    configurationId: accepted?.configurationId ?? env.declaredConfigurationId,
+    recipeId: accepted.pipelineRevisionId,
+    configurationId: accepted.configurationId,
   };
 }
 
