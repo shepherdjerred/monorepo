@@ -77,6 +77,16 @@ describe("getArgoApplication", () => {
       "HTTP 500",
     );
   });
+
+  it("names the project so Argo reports an absent Application as 404, not 403", async () => {
+    const missing = transport(() => new Response("", { status: 404 }));
+    expect(
+      await getArgoApplication("arcade", { ...missing, project: "workloads" }),
+    ).toBeNull();
+    expect(missing.calls[0]?.url).toBe(
+      "https://argocd.example.test/api/v1/applications/arcade?project=workloads",
+    );
+  });
 });
 
 describe("createArgoApplication", () => {
