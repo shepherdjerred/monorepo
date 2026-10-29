@@ -6,8 +6,12 @@ final class MacInputStream {
     let deadline: Date
     private var pending = Data()
 
-    init() throws {
-        deadline = Date().addingTimeInterval(120)
+    init(deadline: Date = Date().addingTimeInterval(120)) throws {
+        let remaining = deadline.timeIntervalSinceNow
+        guard remaining.isFinite, remaining > 0, remaining <= 120 else {
+            throw MacInputFailure.deadline
+        }
+        self.deadline = deadline
         guard isatty(STDIN_FILENO) == 0, isatty(STDOUT_FILENO) == 0 else {
             throw MacInputFailure.input
         }
@@ -56,6 +60,29 @@ final class MacInputStream {
                 return try decode(pending)
             }
             pending.append(contentsOf: bytes.prefix(count))
+        }
+    }
+
+    /// FINISHED leaves input ownership with the sender until its empty terminal EOF.
+    func requireEOF() throws {
+        guard pending.isEmpty else { throw MacInputFailure.input }
+        while true {
+            try live()
+            var descriptor = pollfd(fd: STDIN_FILENO, events: Int16(POLLIN | POLLHUP), revents: 0)
+            let remaining = max(1, min(1000, Int32(deadline.timeIntervalSinceNow * 1000)))
+            let result = poll(&descriptor, 1, remaining)
+            if result < 0 {
+                if errno == EINTR { continue }
+                throw MacInputFailure.input
+            }
+            if result == 0 { continue }
+            try live()
+            try requireReadable(descriptor)
+            var byte: UInt8 = 0
+            let count = read(STDIN_FILENO, &byte, 1)
+            byte = 0
+            if count == 0 { return }
+            throw MacInputFailure.input
         }
     }
 

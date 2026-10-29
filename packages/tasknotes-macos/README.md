@@ -344,6 +344,9 @@ seed. It prepares and binds the native channel, completes expensive checks, then
 issues one code with expiry checks before entry and the normal click. It retains
 an exclusive intent before submission; no code or value-derived digest enters
 the receipt. Every session keeps its original 120-second limit.
+After FINISHED, the native helper requires the sender's empty terminal EOF before
+exiting, within that same deadline. Any trailing input rejects the session; the
+host still requires complete output, exit zero and empty diagnostics.
 Each invocation performs only its selected action and emits a closed receipt.
 If a receipt reports an unknown submission outcome, inspect the current
 app/status before invoking it again. These credential backends configure the
