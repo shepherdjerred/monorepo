@@ -638,4 +638,103 @@ final class StuckSpotsTest {
     assertThat(RecoverySteps.escape(stuck, context(nav))).isEmpty();
     assertThat(RecoverySteps.trapped(stuck, context(nav))).isTrue();
   }
+
+  /** A body that may not sprint, as a juggernaut's or a starving one's is. */
+  private static CombatantView walker(Vec3 feet) {
+    var walking =
+        new com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState(
+            false, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 20, 0);
+    return combatant(1, RED, feet).withTraversal(walking).withMotion(false, true);
+  }
+
+  @Test
+  void aBotThatDroppedOffItsSpawnLedgeIsNotStranded() {
+    // cors-path: every spawn is a ledge each route drops off, so only the 292 nodes on the ledges
+    // reached a spawn and a bot anywhere else counted as stranded: no bank to climb out onto, so it
+    // was told to hold. A bomb it can still reach anchors it as a spawn does.
+    var nav = nav("cors-path");
+    var context = context(nav);
+    var landed = new Vec3(6153.5, 6.0, 1133.5);
+    var node = nav.graph().nearestNode(landed).orElseThrow();
+    assertThat(RecoverySteps.sink(context, node)).as("the landing is a sink").isFalse();
+    var bomb = nav.sites().bombs().getFirst();
+    var goal = nav.graph().feet(nav.approachNode(bomb).orElseThrow());
+    var state =
+        new TacticsState(
+            Optional.of(Plan.of(Option.TAKE_SLOT, 95, new PlanStep.Route(goal, Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    var situation = situation(nav, landed(landed), Optional.of(goal), 100);
+
+    assertThat(RecoverySteps.stranded(situation, context)).isFalse();
+    var thought = Tactics.think(state, situation, context, new SplittableRandom(1));
+    assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.NONE);
+    assertThat(thought.decision().waypoints()).isNotEmpty();
+  }
+
+  @Test
+  void aBotInTheFloatingIslesWaterCaveWalksOutWithoutSprintJumps() {
+    // floating-isles: a scavenger circled a water cave for six and a half minutes, until the match
+    // ended. Its cheapest way out is fourteen sprint jumps up the cave mouth; a body that may not
+    // sprint has a walk and jump way out, and neither counts as stranded there.
+    var nav = nav("floating-isles");
+    var context = context(nav);
+    var pool = new Vec3(4195.7, 64.0, 2166.3);
+    var spawn = nav.graph().feet(nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow());
+    for (var self : List.of(landed(pool), walker(pool))) {
+      var situation = situation(nav, self, Optional.of(spawn), 100);
+      assertThat(RecoverySteps.stranded(situation, context)).isFalse();
+      assertThat(RecoverySteps.escape(situation, context)).isEmpty();
+    }
+    var walking = situation(nav, walker(pool), Optional.of(spawn), 100);
+    var route = Planner.pathTo(walking, context, spawn, new Planner.Way(Stance.AGGRESSIVE, false));
+    assertThat(route.failure()).isEmpty();
+    assertThat(route.waypoints()).extracting(point -> point.hop()).doesNotContain(Hop.LEAP);
+  }
+
+  @Test
+  void onlyABodyThatMayNotSprintIsStrandedWhereSprintJumpsAreTheOnlyWayOut() {
+    // perfect-balance: a floor four blocks below a walkway, left only by sprint jumps. A body that
+    // may not sprint never leaves it; one that may is free to try.
+    var nav = nav("perfect-balance");
+    var context = context(nav);
+    var floor = new Vec3(1025.5, 25.0, 4165.5);
+    var node = nav.graph().nearestNode(floor).orElseThrow();
+    assertThat(nav.leapOnlyExit(node)).isTrue();
+    assertThat(RecoverySteps.sink(context, node)).isFalse();
+    var sprinting = situation(nav, landed(floor), Optional.empty(), 100);
+    var walking = situation(nav, walker(floor), Optional.empty(), 100);
+    assertThat(RecoverySteps.stranded(sprinting, context)).isFalse();
+    assertThat(RecoverySteps.stranded(walking, context)).isTrue();
+    // The walker's recovery steps never take the leaps its body refuses.
+    for (var tick = 100L; tick < 300; tick += 20) {
+      var step = RecoverySteps.step(situation(nav, walker(floor), Optional.empty(), tick), context);
+      step.ifPresent(
+          to -> {
+            for (var edge = nav.graph().edgeStart(node); edge < nav.graph().edgeEnd(node); edge++)
+              if (nav.graph().feet(nav.graph().edgeTarget(edge)).equals(to))
+                assertThat(nav.graph().edgeHop(edge)).isNotEqualTo(Hop.LEAP);
+          });
+    }
+  }
+
+  @Test
+  void aDropIntoAPocketOnlySprintJumpsLeaveIsCharged() {
+    var nav = nav("perfect-balance");
+    var graph = nav.graph();
+    var ledge = graph.nodeAt(new BlockPos(1028, 29, 4160)).orElseThrow();
+    var pocket = graph.nodeAt(new BlockPos(1029, 25, 4161)).orElseThrow();
+    var drop = -1;
+    for (var edge = graph.edgeStart(ledge); edge < graph.edgeEnd(ledge); edge++)
+      if (graph.edgeTarget(edge) == pocket && graph.edgeHop(edge) == Hop.DROP) drop = edge;
+    assertThat(drop).as("the baked drop into the pocket").isNotNegative();
+    var toll = RouteNavigator.trapped(context(nav), (edge, source, duration) -> 0);
+    assertThat(toll.cost(drop, ledge, 10)).isEqualTo(RouteNavigator.LEAP_TRAP_TOLL);
+    // Within the pocket a drop costs only its time.
+    for (var edge = graph.edgeStart(pocket); edge < graph.edgeEnd(pocket); edge++)
+      assertThat(toll.cost(edge, pocket, 10)).isZero();
+  }
 }

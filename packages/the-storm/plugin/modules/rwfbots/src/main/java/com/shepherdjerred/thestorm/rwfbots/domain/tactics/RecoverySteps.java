@@ -35,18 +35,35 @@ final class RecoverySteps {
   private RecoverySteps() {}
 
   /**
-   * Whether no spawn can be reached from {@code node}: a pool or a pit the graph has no way out of.
-   * A map without spawns has no sinks.
+   * Whether no spawn or bomb can be reached from {@code node} over any edge: a pool or a pit the
+   * graph has no way out of. A map without spawns or bombs has no sinks.
    */
   static boolean sink(TacticsContext context, int node) {
-    var spawns = spawnNodes(context);
-    return !spawns.isEmpty() && !reachesAny(context.nav().graph(), node, spawns);
+    return sink(context, node, true);
+  }
+
+  /**
+   * Whether no spawn or bomb can be reached from {@code node} over the edges a body takes: one that
+   * may not sprint takes no sprint jump, so a pocket whose only way out is a run of them holds it
+   * for good, as {@link #step} already knew.
+   */
+  static boolean sink(TacticsContext context, int node, boolean leaps) {
+    return !context.nav().anchored(node, leaps);
+  }
+
+  /** Whether the body in {@code situation} can take sprint jumps. */
+  static boolean leaps(Situation situation) {
+    return situation.self().traversal().maySprint();
   }
 
   /** Whether a bot may be sent to stand at {@code node}: not in water and not in a sink. */
   static boolean leavable(TacticsContext context, int node) {
+    return leavable(context, node, true);
+  }
+
+  private static boolean leavable(TacticsContext context, int node, boolean leaps) {
     var graph = context.nav().graph();
-    return !graph.water().contains(graph.cell(node)) && !sink(context, node);
+    return !graph.water().contains(graph.cell(node)) && !sink(context, node, leaps);
   }
 
   /**
@@ -57,29 +74,29 @@ final class RecoverySteps {
   static boolean usable(Situation situation, TacticsContext context, int node) {
     var graph = context.nav().graph();
     var from = start(graph, situation.self().pos());
-    return leavable(context, node) && (from.isEmpty() || graph.reachable(from.getAsInt(), node));
+    return leavable(context, node, leaps(situation))
+        && (from.isEmpty() || graph.reachable(from.getAsInt(), node));
   }
 
   /**
    * The way out for a bot stranded in a sink, off any climb: along the graph through the sink (a
-   * pool's swim edges) to the nearest node beside a bank at most a block up from which a spawn can
-   * be reached, then onto that bank, which a swimmer climbs as a player does. A higher edge, such
-   * as a stair's half step above the water, cannot be climbed out onto. Empty when the bot is not
-   * stranded or no such bank lies within {@link #ESCAPE_SEARCH} nodes.
+   * pool's swim edges) to the nearest node beside a bank at most a block up from which a spawn or a
+   * bomb can be reached, then onto that bank, which a swimmer climbs as a player does. A higher
+   * edge, such as a stair's half step above the water, cannot be climbed out onto. Empty when the
+   * bot is not stranded or no such bank lies within {@link #ESCAPE_SEARCH} nodes.
    */
   static Optional<List<Waypoint>> escape(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
     var start = standingNode(graph, situation.self().pos());
-    var spawns = spawnNodes(context);
+    var leaps = leaps(situation);
     if (start.isEmpty()
-        || spawns.isEmpty()
         || graph.climbable(start.getAsInt())
-        || reachesAny(graph, start.getAsInt(), spawns)) return Optional.empty();
-    return toBank(context.nav(), start.getAsInt(), spawns);
+        || !sink(context, start.getAsInt(), leaps)) return Optional.empty();
+    return toBank(context.nav(), start.getAsInt(), leaps);
   }
 
   /** Breadth first from {@code start} to the first node with a climbable bank beside it. */
-  private static Optional<List<Waypoint>> toBank(NavArtifact nav, int start, List<Integer> spawns) {
+  private static Optional<List<Waypoint>> toBank(NavArtifact nav, int start, boolean leaps) {
     var graph = nav.graph();
     var via = new HashMap<Integer, Integer>();
     via.put(start, -1);
@@ -87,9 +104,10 @@ final class RecoverySteps {
     queue.add(start);
     while (!queue.isEmpty() && via.size() <= ESCAPE_SEARCH) {
       var node = queue.remove();
-      var bank = bankBeside(nav, node, spawns);
+      var bank = bankBeside(nav, node, leaps);
       if (bank.isPresent()) return Optional.of(path(graph, via, node, bank.orElseThrow()));
       for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
+        if (!leaps && graph.edgeHop(edge) == Hop.LEAP) continue;
         if (via.putIfAbsent(graph.edgeTarget(edge), edge) == null)
           queue.add(graph.edgeTarget(edge));
       }
@@ -99,13 +117,13 @@ final class RecoverySteps {
 
   /**
    * The waypoint onto a node beside {@code node}, at most {@link #BANK_RISE} up, that reaches a
-   * spawn: a jump where a dry body must rise more than a step, which a walk cannot climb. A dry
-   * body crossing diagonally needs both corners clear where it crosses, as the movement gate does;
-   * floating-isles offered a bank past a solid corner, refused every time it was tried.
+   * spawn or a bomb: a jump where a dry body must rise more than a step, which a walk cannot climb.
+   * A dry body crossing diagonally needs both corners clear where it crosses, as the movement gate
+   * does; floating-isles offered a bank past a solid corner, refused every time it was tried.
    */
-  private static Optional<Waypoint> bankBeside(NavArtifact nav, int node, List<Integer> spawns) {
+  private static Optional<Waypoint> bankBeside(NavArtifact nav, int node, boolean leaps) {
     for (var cell : beside(nav.graph().cell(node))) {
-      var bank = bankAt(nav, node, cell, spawns);
+      var bank = bankAt(nav, node, cell, leaps);
       if (bank.isPresent()) return bank;
     }
     return Optional.empty();
@@ -113,7 +131,7 @@ final class RecoverySteps {
 
   /** The waypoint onto the node at {@code cell} from {@code node}, when it is a usable bank. */
   private static Optional<Waypoint> bankAt(
-      NavArtifact nav, int node, BlockPos cell, List<Integer> spawns) {
+      NavArtifact nav, int node, BlockPos cell, boolean leaps) {
     var graph = nav.graph();
     var from = graph.cell(node);
     var bank = graph.nodeAt(cell);
@@ -125,7 +143,7 @@ final class RecoverySteps {
     // A jump needs headroom above the take-off, as the graph's own upward steps do.
     if ((jump && nav.grid().blocksMovement(from.offset(0, 2, 0)))
         || rise > BANK_RISE + 1e-6
-        || !reachesAny(graph, bank.getAsInt(), spawns)) return Optional.empty();
+        || !nav.anchored(bank.getAsInt(), leaps)) return Optional.empty();
     return Optional.of(new Waypoint(graph.feet(bank.getAsInt()), jump ? Hop.JUMP : Hop.WALK));
   }
 
@@ -180,25 +198,26 @@ final class RecoverySteps {
   }
 
   /**
-   * Whether the bot holds onto a climb from which no spawn can be reached, such as vines hanging
-   * under an island or a shaft whose top is a ceiling: climbing on only keeps it hanging there.
+   * Whether the bot holds onto a climb from which no spawn or bomb can be reached, such as vines
+   * hanging under an island or a shaft whose top is a ceiling: climbing on only keeps it hanging
+   * there.
    */
   static boolean strandedOnClimb(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
     var start = standingNode(graph, situation.self().pos());
     return start.isPresent()
         && graph.climbable(start.getAsInt())
-        && sink(context, start.getAsInt());
+        && sink(context, start.getAsInt(), leaps(situation));
   }
 
   /**
-   * Whether the bot stands where no spawn can be reached: on a dead-end climb or in a pool or pit
-   * the graph has no way out of. Tactics re-plans its way out every step while it is, rather than
-   * following a plan that would hold it where it stood.
+   * Whether the bot stands where no spawn or bomb can be reached: on a dead-end climb or in a pool
+   * or pit the graph has no way out of. Tactics re-plans its way out every step while it is, rather
+   * than following a plan that would hold it where it stood.
    */
   static boolean stranded(Situation situation, TacticsContext context) {
     var start = standingNode(context.nav().graph(), situation.self().pos());
-    return start.isPresent() && sink(context, start.getAsInt());
+    return start.isPresent() && sink(context, start.getAsInt(), leaps(situation));
   }
 
   /**
@@ -216,38 +235,27 @@ final class RecoverySteps {
         : OptionalInt.empty();
   }
 
-  /** The nodes the map's spawns are approached from. */
-  private static List<Integer> spawnNodes(TacticsContext context) {
-    var nodes = new ArrayList<Integer>();
-    for (var site : context.nav().sites().spawns())
-      context.nav().approachNode(site).ifPresent(nodes::add);
-    return nodes;
-  }
-
-  private static boolean reachesAny(NavGraph graph, int from, List<Integer> targets) {
-    for (var target : targets) if (graph.reachable(from, target)) return true;
-    return false;
-  }
-
   /**
    * The recovery step: an adjacent node the body can actually move to (no leap for a body that may
-   * not sprint, no diagonal that lets go of a ladder) that keeps it able to reach a spawn when it
-   * can now, preferring steps without fall damage. A raw edge led bots off a walkway's end into the
-   * dead ground under an island, or to a leap their body refused without a word.
+   * not sprint, no diagonal that lets go of a ladder) that keeps it able to reach a spawn or a bomb
+   * the way its body moves when it can now, preferring steps without fall damage. A raw edge led
+   * bots off a walkway's end into the dead ground under an island, or to a leap their body refused
+   * without a word.
    */
   static Optional<Vec3> step(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
     var from = start(graph, situation.self().pos());
     if (from.isEmpty()) return Optional.empty();
     var start = from.getAsInt();
-    var spawns = spawnNodes(context);
-    var anchored = !spawns.isEmpty() && reachesAny(graph, start, spawns);
+    var leaps = leaps(situation);
+    var nav = context.nav();
+    var anchored = nav.anchored(start, leaps);
     var safe = new ArrayList<Integer>();
     var hurting = new ArrayList<Integer>();
     for (var edge = graph.edgeStart(start); edge < graph.edgeEnd(start); edge++) {
       if (graph.unheldClimbDiagonal(edge)
-          || (graph.edgeHop(edge) == Hop.LEAP && !situation.self().traversal().maySprint())
-          || (anchored && !reachesAny(graph, graph.edgeTarget(edge), spawns))) continue;
+          || (graph.edgeHop(edge) == Hop.LEAP && !leaps)
+          || (anchored && !nav.anchored(graph.edgeTarget(edge), leaps))) continue;
       (graph.edgeDamage(edge) == 0 ? safe : hurting).add(edge);
     }
     var steps = safe.isEmpty() ? hurting : safe;

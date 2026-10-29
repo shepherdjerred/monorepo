@@ -56,7 +56,7 @@ val trainingYardNav =
 // routes on valley as well.
 val shippedMaps = file("../../../server/owned/plugins/TheStorm/rwf/maps")
 val stuckSpotNavs =
-    listOf("the-harshest-harvest", "miner-dispute", "cloned-balance", "hemispheres", "floating-isles", "valley").map { shippedMaps.resolve("$it/nav.rwfnav") }
+    listOf("the-harshest-harvest", "miner-dispute", "cloned-balance", "hemispheres", "floating-isles", "valley", "cors-path", "perfect-balance").map { shippedMaps.resolve("$it/nav.rwfnav") }
 
 tasks.test {
   dependsOn("prepareActorParity")

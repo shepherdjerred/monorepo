@@ -3755,12 +3755,17 @@ When a route fails, tactics records the goal as blocked and substitutes a
 `RECOVER` step to an adjacent node, routed from the same node the failed route
 started at. If that step cannot be routed either, the bot walks straight back
 to its nearest node, so a failed route never leaves a bot standing while any
-node is in reach. A bot hanging on a climb that reaches no spawn (vines that
-hang under an island into the void) lets go instead, and one stranded anywhere
-else no spawn can be reached from (a pool the graph has no exit from) swims
-through it to the nearest bank at most a block above the water that leads home
-and climbs out, as a player does (a stair's half step above the water cannot be
-climbed out onto). Cover is never chosen in water or in such a sink. `RECOVER` is never scored
+node is in reach. A bot is stranded where no spawn's or bomb's approach can be
+reached the way its body moves: a body that may not sprint takes no sprint
+jumps, so a pocket only sprint jumps lead out of strands it. Spawns alone are
+not enough on maps whose spawns are ledges every route drops off (cors-path).
+A bot hanging on a climb that reaches none of them (vines that hang under an
+island into the void) lets go instead, and one stranded anywhere else (a pool
+the graph has no exit from) swims through it to the nearest bank at most a block
+above the water that leads home and climbs out, as a player does (a stair's half
+step above the water cannot be climbed out onto). Cover is never chosen in water
+or in such a sink. A drop into a pocket only sprint jumps lead out of costs a
+route 64 walked blocks on top of its time. `RECOVER` is never scored
 or drawn and earns no commitment bonus. A bot body that has stood on solid ground for two ticks has its fall
 distance cleared, and the router treats a grounded body as landed: an NPC body
 does not refresh vanilla's collision on-ground flag while standing still, so a

@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalDensity;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.WaterRoutes;
@@ -74,11 +75,8 @@ final class RouteNavigator {
   private static Optional<Candidate> graph(
       TacticsContext context, Endpoints endpoints, Tolls tolls, HealthRoutes.RiskPolicy policy) {
     var request = new HealthRoutes.Request(endpoints.from(), endpoints.to(), policy, node -> 0);
-    var edges =
-        tolls
-            .risk()
-            .edges()
-            .withToll(TraversalDensity.edges(context.nav().graph(), tolls.penalty()));
+    var density = TraversalDensity.edges(context.nav().graph(), tolls.penalty());
+    var edges = tolls.risk().edges().withToll(trapped(context, density));
     var found = planned(context, endpoints, tolls, new Search(request, edges));
     if (found.isPresent() || !edges.timed()) return found;
     // Virtual depth legs can outlast an effect that protected the compressed portal route.
@@ -90,6 +88,26 @@ final class RouteNavigator {
   }
 
   private record Search(HealthRoutes.Request request, HealthRoutes.EdgePolicy edges) {}
+
+  /**
+   * What a drop costs on top of its time when it lands where only sprint jumps lead back out (see
+   * {@link com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact#leapOnlyExit}): a missed jump
+   * on the way out drops the bot back in, and one that may not sprint is stuck there.
+   */
+  static final double LEAP_TRAP_TOLL = TraversalCosts.walkingTicks(64);
+
+  /** {@code base} with {@link #LEAP_TRAP_TOLL} on every drop into a leap-only pocket. */
+  static NavGraph.EdgeToll trapped(TacticsContext context, NavGraph.EdgeToll base) {
+    var graph = context.nav().graph();
+    var pocket = context.nav().leapOnlyExits();
+    return (edge, source, duration) ->
+        base.cost(edge, source, duration)
+            + (graph.edgeHop(edge) == Hop.DROP
+                    && pocket.test(graph.edgeTarget(edge))
+                    && !pocket.test(source)
+                ? LEAP_TRAP_TOLL
+                : 0);
+  }
 
   private static Optional<Candidate> planned(
       TacticsContext context, Endpoints endpoints, Tolls tolls, Search search) {
