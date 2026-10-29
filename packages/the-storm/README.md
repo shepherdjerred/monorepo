@@ -1988,9 +1988,13 @@ when attacking human or NPC enemies.
   they may still pick it.
 - Scoreboards are per viewing team, plus a copy for Medics that shows
   everyone's health under their name. An enemy Ghost or Wraith is on a hidden
-  team, an enemy Spy on a spy team in the viewer's colour (not the viewer's
-  own team, whose no-friendly-fire rule would make the Spy unhittable), and a
-  dressed Skinner hidden with its worn name drawn above it for the enemy only.
+  team, an enemy Spy on a team of its own in the viewer's colour (not the
+  viewer's own team, whose no-friendly-fire rule would make the Spy
+  unhittable), and a dressed Skinner hidden with its worn name drawn above it
+  for the enemy only. The tab list orders entries by team name, then player
+  name, so the viewer's members and the Spies wearing their colours sit on
+  numbered teams in name order (`rwf_blue`, `rwf_blue_001`, ...) and a Spy is
+  listed where its name falls among them.
 - Teams are dealt with Medics spread evenly first (`KitBook.SPREAD_EVENLY`).
 
 Bots know every kit (`rwfbots` `Kit`). Their hotbar is read from rwf's own

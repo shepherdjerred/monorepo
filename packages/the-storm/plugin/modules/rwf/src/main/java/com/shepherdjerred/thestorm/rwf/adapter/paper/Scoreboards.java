@@ -40,16 +40,17 @@ import org.bukkit.scoreboard.Team;
  * watchers, there is one neutral board. Once they are, each team sees its own board, and Medics a
  * copy of it that shows everyone's health under their name. Every board has a team per {@link
  * TeamColor} (name tags in the team's colour, no friendly fire, invisible teammates seen) with a
- * {@code <team>_bot} sub-team whose members carry a dim {@code ✦} suffix, a {@code <team>_spy} team
- * (and its {@code _bot} sub-team) for enemy Spies wearing that team's colours, a {@code
- * <team>_hidden} team whose name tags never show, and Red Warfare's sidebar: its lobby board until
- * the match goes live, then its game board of the teams still alive and their bombs, where a
- * Saboteur's armed bomb keeps its countdown from the teams it hides it from.
+ * {@code <team>_bot} sub-team whose members carry a dim {@code ✦} suffix, numbered teams of either
+ * for enemy Spies wearing that team's colours and the members they stand between ({@link
+ * #lineName}), a {@code <team>_hidden} team whose name tags never show, and Red Warfare's sidebar:
+ * its lobby board until the match goes live, then its game board of the teams still alive and their
+ * bombs, where a Saboteur's armed bomb keeps its countdown from the teams it hides it from.
  *
- * <p>On a team's board an enemy Ghost or Wraith is on the hidden team, an enemy Spy is on the
- * viewer's spy team, coloured as the viewer's own but apart from it, and an enemy Skinner wearing a
- * skin is hidden too, its worn name drawn over it by {@link KitDisplays}. Members see their board
- * while inside and the server's main board again when they leave.
+ * <p>On a team's board an enemy Ghost or Wraith is on the hidden team, an enemy Spy is on a team of
+ * its own coloured as the viewer's, apart from the viewer's team but sorted among its members in
+ * the tab list by name, and an enemy Skinner wearing a skin is hidden too, its worn name drawn over
+ * it by {@link KitDisplays}. Members see their board while inside and the server's main board again
+ * when they leave.
  */
 final class Scoreboards {
 
@@ -110,8 +111,6 @@ final class Scoreboards {
     for (var color : TeamColor.values()) {
       team(board, teamName(color, false), color, false);
       team(board, teamName(color, true), color, true);
-      team(board, spyName(color, false), color, false);
-      team(board, spyName(color, true), color, true);
       var hidden = team(board, hiddenName(color), color, false);
       hidden.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
     }
@@ -169,13 +168,41 @@ final class Scoreboards {
   }
 
   /**
-   * The team an enemy Spy sits on in {@code color}'s board: {@code color}'s name-tag colour, but
-   * not {@code color}'s own team. Vanilla's friendly-fire rule spares whoever shares the attacker's
-   * scoreboard team, so a Spy seated on its viewers' own team could never be hurt by them.
+   * The team the first enemy Spy (by name) wearing {@code color} sits on in {@code color}'s board:
+   * {@code color}'s name-tag colour, but not {@code color}'s own team. Vanilla's friendly-fire rule
+   * spares whoever shares the attacker's scoreboard team, so a Spy seated on its viewers' own team
+   * could never be hurt by them. See {@link #lineName} for where the others sit.
    */
   static String spyName(TeamColor color, boolean bot) {
-    return "rwf_" + color.name().toLowerCase(Locale.ROOT) + "_spy" + (bot ? "_bot" : "");
+    return lineName(color, bot, 1);
   }
+
+  /**
+   * The {@code index}th team of {@code color}'s humans (or bots) on {@code color}'s board, which
+   * seats its members and the enemy Spies wearing its colours in one line ordered by name.
+   *
+   * <p>The vanilla tab list orders entries by their team's name, then by player name ignoring case
+   * (PlayerTabOverlay's comparator, after the list order and spectators). A Spy must not share its
+   * viewers' team (see {@link #spyName}), so on a team of its own it would sort before or after all
+   * of them: a human Spy after the viewer's bots, a bot Spy after the last bot, out of alphabetical
+   * order, which an observant player reads as the Spy. Instead the members before the first Spy by
+   * name keep the team itself (index 0), each Spy has a team of its own, and the members between
+   * two Spies, or after the last, share the next: the names sort {@code rwf_blue}, {@code
+   * rwf_blue_001}, {@code rwf_blue_002}, ... before {@code rwf_blue_bot}, {@code rwf_blue_bot_001},
+   * ..., so the Spy stands where its name falls among the viewer's own.
+   */
+  static String lineName(TeamColor color, boolean bot, int index) {
+    if (index < 0 || index > MAX_LINE) {
+      throw new IllegalArgumentException(
+          "a team line has at most " + MAX_LINE + " teams: " + index);
+    }
+    return index == 0
+        ? teamName(color, bot)
+        : teamName(color, bot) + "_" + String.format(Locale.ROOT, "%03d", index);
+  }
+
+  /** Three digits: every combatant of a match could stand in one line, each a team apart. */
+  static final int MAX_LINE = 999;
 
   static String hiddenName(TeamColor color) {
     return "rwf_" + color.name().toLowerCase(Locale.ROOT) + "_hidden";
@@ -250,6 +277,7 @@ final class Scoreboards {
           team.removeEntry(seat.name());
         }
       }
+      layout();
     }
   }
 
@@ -270,14 +298,83 @@ final class Scoreboards {
     reseat(next);
   }
 
-  /** Puts {@code seat} on the right team of every board. */
+  /**
+   * Puts {@code seat} on the right team of every board, and its viewers' lines in order again: a
+   * Spy's coming, going or name moves the teams of the members it stands between.
+   */
   private void reseat(Seat seat) {
-    entry(neutral, seat, teamName(seat.team(), seat.bot()));
+    entry(
+        neutral,
+        seat.name(),
+        new Place(teamName(seat.team(), seat.bot()), seat.team(), seat.bot()));
+    layout();
+  }
+
+  /**
+   * A team to seat an entry on, and how to register it if no board has needed it yet.
+   *
+   * @param team the team's name
+   * @param color its name-tag colour
+   * @param bot whether it is a bot team
+   */
+  private record Place(String team, TeamColor color, boolean bot) {}
+
+  /** Seats every combatant on the right team of each team's boards. */
+  private void layout() {
     for (var viewer : TeamColor.values()) {
-      var team = teamFor(seat, viewer);
-      entry(Objects.requireNonNull(boards.get(viewer)), seat, team);
-      entry(Objects.requireNonNull(medics.get(viewer)), seat, team);
+      var places = places(viewer, seats.values());
+      var board = Objects.requireNonNull(boards.get(viewer));
+      var medic = Objects.requireNonNull(medics.get(viewer));
+      for (var seat : seats.values()) {
+        // Only the viewer's line has teams beyond those registered at enable, all its colour.
+        var place = new Place(Objects.requireNonNull(places.get(seat.name())), viewer, seat.bot());
+        entry(board, seat.name(), place);
+        entry(medic, seat.name(), place);
+      }
     }
+  }
+
+  /**
+   * The team each of {@code seated} sits on in {@code viewer}'s boards: {@link #teamFor}, with
+   * {@code viewer}'s members and the enemy Spies wearing its colours in their lines ({@link
+   * #lineName}).
+   */
+  static Map<String, String> places(TeamColor viewer, Iterable<Seat> seated) {
+    var out = new HashMap<String, String>();
+    for (var seat : seated) {
+      out.put(seat.name(), teamFor(seat, viewer));
+    }
+    for (var bot : List.of(false, true)) {
+      out.putAll(line(viewer, bot, seated));
+    }
+    return out;
+  }
+
+  /**
+   * The teams of {@code viewer}'s line of humans (or bots): its members and the enemy Spies wearing
+   * its colours, in name order, each Spy on a team of its own between the members around it.
+   */
+  private static Map<String, String> line(TeamColor viewer, boolean bot, Iterable<Seat> seated) {
+    var line = new ArrayList<Seat>();
+    for (var seat : seated) {
+      var team = teamFor(seat, viewer);
+      if (seat.bot() == bot
+          && (team.equals(teamName(viewer, bot)) || team.equals(spyName(viewer, bot)))) {
+        line.add(seat);
+      }
+    }
+    line.sort(
+        Comparator.comparing(Seat::name, String.CASE_INSENSITIVE_ORDER).thenComparing(Seat::name));
+    var out = new HashMap<String, String>();
+    var index = 0;
+    var afterSpy = false;
+    for (var seat : line) {
+      var spy = seat.team() != viewer;
+      if (spy || afterSpy) index++;
+      afterSpy = spy;
+      out.put(seat.name(), lineName(viewer, bot, index));
+    }
+    return out;
   }
 
   /**
@@ -310,17 +407,25 @@ final class Scoreboards {
     return teamName(seat.team(), seat.bot());
   }
 
-  private static void entry(Scoreboard board, Seat seat, String teamName) {
-    var team = Objects.requireNonNull(board.getTeam(teamName), "teams are registered at enable");
-    if (team.hasEntry(seat.name())) {
+  /**
+   * Puts {@code name} on {@code place}'s team of {@code board}; a line's team ({@link #lineName})
+   * is registered the first time it is needed.
+   */
+  private static void entry(Scoreboard board, String name, Place place) {
+    var registered = board.getTeam(place.team());
+    var team =
+        registered == null && place.team().startsWith(teamName(place.color(), place.bot()) + "_")
+            ? team(board, place.team(), place.color(), place.bot())
+            : Objects.requireNonNull(registered, "teams are registered at enable");
+    if (team.hasEntry(name)) {
       return;
     }
     // Leave the old team explicitly rather than relying on addEntry to move the entry.
-    var before = board.getEntryTeam(seat.name());
+    var before = board.getEntryTeam(name);
     if (before != null) {
-      before.removeEntry(seat.name());
+      before.removeEntry(name);
     }
-    team.addEntry(seat.name());
+    team.addEntry(name);
   }
 
   /** The team entry {@code player} is on in the neutral board, for tests and diagnostics. */
