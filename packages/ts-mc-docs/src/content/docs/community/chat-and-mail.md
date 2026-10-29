@@ -15,6 +15,15 @@ Global chat is also relayed to [Discord](/discord/). Choose a private message wh
 
 Use `/mail` to see your mail and collect deliveries. If a delivery cannot fit, make room and claim it again; excess items are kept in mail. Where letters are enabled, send one with `/mail send <player> <text>`, including to an offline player, and read or reply using the options shown in your mailbox. Linked players can also send letters from [Discord](/discord/). A full inbox refuses new letters.
 
+<div><storm-media data-manifest="/media/mail-reward-pending/media.json"><figure><img alt="A pending reward delivery and its claim command" src="/media/mail-reward-pending/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A pending delivery lists its claim command; choose an option to collect it.</figcaption></figure></storm-media></div>
+
+<details>
+<summary>After collecting a delivery</summary>
+
+<div><storm-media data-manifest="/media/mail-reward-collected/media.json"><figure><img alt="The delivery confirmation and collected ingots" src="/media/mail-reward-collected/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The selected delivery is collected into the inventory; make room before claiming large deliveries.</figcaption></figure></storm-media></div>
+
+</details>
+
 ## Find help
 
 Use `/guide` for the welcome guide, `/rules` for server rules, and `/help` to find commands. `/help <command>` shows usage for a command. If you need staff help, use the ticket command in game or the linked Discord channel.

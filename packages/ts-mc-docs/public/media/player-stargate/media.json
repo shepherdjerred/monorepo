@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "player-stargate",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/player-stargate/original.webp",
+  "poster": "/media/player-stargate/poster.webp",
+  "alt": "A player-built Stargate with a selected destination",
+  "caption": "Select a destination on the sign, then press the button to open the gate.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.35],
+      "to": [0.47, 0.47],
+      "text": "Selected destination",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

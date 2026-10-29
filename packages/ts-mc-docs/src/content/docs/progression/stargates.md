@@ -18,6 +18,10 @@ After you right-click the welcome gate's sign, the destination appears in chat. 
 
 Create a [Stargate network](/progression/stargate-networks/) and [build gates](/progression/build-stargates/) to connect your own destinations. `/stargate` also shows the in-game instructions.
 
+<div><storm-media data-manifest="/media/player-stargate/media.json"><figure><img alt="A player-built Stargate with a selected destination" src="/media/player-stargate/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Select a destination on the sign, then press the button to open the gate.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/player-stargate-travel/media.json"><figure><video controls muted playsinline preload="metadata" poster="/media/player-stargate-travel/poster.webp" aria-label="Opening and walking through a player-built Stargate" src="/media/player-stargate-travel/clip.mp4" width="1280" height="720"></video><figcaption>The private network connects Home and Mine.</figcaption></figure></storm-media></div>
+
 ## If a gate does not work
 
 For a player-built gate, check that both gates are registered on the same network and that you can access it. Check the frame, sign and button for changes, and wait for an open gate to close before selecting another destination. A private invitation can be revoked, including while a portal is open. If the destination is unavailable, ask its owner to check the destination gate and access.

@@ -14,6 +14,7 @@ import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { assertNoPendingRun } from "./pending.ts";
 import { SandboxListResponseSchema } from "#protocol/ipc.ts";
 import { isImportedWorld } from "#sandbox/map-provenance.ts";
+import { assertLanding } from "./landing.ts";
 
 export async function runScene(
   directory: string,
@@ -151,11 +152,18 @@ async function captureScene(
     yaw: player.yaw,
     pitch: player.pitch,
   };
-  run.checkpoint = await transport.world(
+  const checkpoint = await transport.world(
     PlayerCheckpointSchema,
     "capture-player",
     { name: run.name },
   );
+  await assertLanding(
+    transport,
+    run.box.world,
+    player.position,
+    checkpoint.allowFlight && checkpoint.flying,
+  );
+  run.checkpoint = checkpoint;
   run.state = "checkpoint";
   await save(directory, run);
   await context.teleport(context.at(...scene.staging), 0, 0);

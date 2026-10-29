@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "stargate-sign",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/stargate-sign/original.webp",
+  "poster": "/media/stargate-sign/poster.webp",
+  "alt": "A registered Home Stargate sign",
+  "caption": "Name the gate on line 1 and the network on line 3; wait for the creation confirmation.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.28],
+      "to": [0.5, 0.42],
+      "text": "Gate name",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.75, 0.61],
+      "to": [0.5, 0.53],
+      "text": "Network",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}
