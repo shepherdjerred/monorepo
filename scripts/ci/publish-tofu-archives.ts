@@ -9,7 +9,7 @@
  */
 import path from "node:path";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
-import { TOFU_ARCHIVE_METADATA_DIRECTORY } from "../lib/tofu-archive.ts";
+import { TOFU_ARCHIVE_METADATA_DIRECTORY } from "../lib/tofu-archive-identity.ts";
 import { publishTofuStackArchive } from "../lib/tofu-archive-publication.ts";
 
 const repoRoot = path.resolve(import.meta.dir, "../..");

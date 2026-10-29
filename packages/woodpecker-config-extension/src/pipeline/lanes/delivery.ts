@@ -26,7 +26,7 @@ export function deliveryPublicationSteps(
       label: "register Delivery artifacts",
       image: images.base,
       commands: [
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
         DOCKERHUB_READ_LOGIN,
         `bun --no-install scripts/ci/publish-delivery.ts${staticArchives ? " --static-archives" : ""}${catalogV2 ? " --catalog-v2" : ""}`,
       ],

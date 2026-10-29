@@ -16,7 +16,7 @@ import {
   tofuArchiveComponent,
   tofuArchiveServiceId,
   validateTofuArchiveUri,
-} from "../tofu-archive.ts";
+} from "../tofu-archive-identity.ts";
 
 /** Build-scoped handoff written by the archive producer and read at registration. */
 export const TOFU_ARCHIVE_HANDOFF = "tofu-archive-artifacts";

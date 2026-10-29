@@ -11,12 +11,12 @@ import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { publishImmutableArchive } from "./artifacts/immutable-archive.ts";
 import { requireEnv } from "./run.ts";
+import { createTofuStackArchive } from "./tofu-archive.ts";
 import {
-  createTofuStackArchive,
   tofuArchiveArtifactId,
   tofuArchiveComponent,
   tofuArchiveUri,
-} from "./tofu-archive.ts";
+} from "./tofu-archive-identity.ts";
 
 /** Publish if absent, confirm by readback, and record the artifact for the handoff writer. */
 export async function publishTofuStackArchive(input: {

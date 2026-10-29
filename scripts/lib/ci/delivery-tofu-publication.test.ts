@@ -12,7 +12,7 @@ import {
   tofuArchiveComponent,
   tofuArchiveServiceId,
   tofuArchiveUri,
-} from "../tofu-archive.ts";
+} from "../tofu-archive-identity.ts";
 import {
   attachTofuArchivePublications,
   parseTofuArchivePublications,

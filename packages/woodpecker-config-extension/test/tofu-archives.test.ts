@@ -77,6 +77,9 @@ test("before the window's catalog flip, main builds no archives and publication 
   expect(publication?.commands).toContain(
     "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
   );
+  expect(publication?.commands).toContain(
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
+  );
   expect(
     publication?.secrets?.some(
       (grant) => grant.secret === "ci-delivery-archive-credentials",

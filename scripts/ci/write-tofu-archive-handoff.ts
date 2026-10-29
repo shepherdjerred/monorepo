@@ -15,8 +15,8 @@ import {
 import {
   TOFU_ARCHIVE_METADATA_DIRECTORY,
   tofuArchiveServiceId,
-} from "../lib/tofu-archive.ts";
-import { parseTofuStack } from "../../packages/homelab/scripts/tofu/tofu-stack-manifest.ts";
+} from "../lib/tofu-archive-identity.ts";
+import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 
 /** `<stack>.json` records become `{ serviceId: "tofu-<stack>", artifact }` entries. */
 export async function readTofuArchiveMetadata(
@@ -27,7 +27,10 @@ export async function readTofuArchiveMetadata(
   );
   const records = [];
   for (const file of files.sort()) {
-    const stack = parseTofuStack(path.basename(file, ".json"));
+    const name = path.basename(file, ".json");
+    const parsed = TofuStackSchema.safeParse(name);
+    if (!parsed.success) throw new Error(`Unknown OpenTofu stack: ${name}`);
+    const stack = parsed.data;
     const artifact: unknown = await Bun.file(path.join(directory, file)).json();
     records.push({ serviceId: tofuArchiveServiceId(stack), artifact });
   }

@@ -36,10 +36,6 @@ import {
 } from "../lib/ci/delivery-upstream-artifacts.ts";
 import { attachForumPublication } from "../lib/ci/delivery-forum-publication.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
-import {
-  attachPlatformPublication,
-  platformSourceFiles,
-} from "../lib/ci/delivery-platform-publication.ts";
 import { PublicationLedger } from "../lib/ci/delivery-publication-ledger.ts";
 import {
   attachTofuArchivePublications,
@@ -438,40 +434,45 @@ async function main() {
   // v2 registers every OpenTofu stack's frozen archive under its tofu-<stack>
   // service. v1 releases the root and its stacks through the platform
   // publication, as before the window's catalog flip.
-  const registered = options.catalogV2
-    ? attachTofuArchivePublications(
-        forumPublications,
-        await tofuArchiveHandoff(),
-        identity,
-      )
-    : await attachPlatformPublication(
-        forumPublications,
-        {
-          ...identity,
-          rootInventory: handoffs.rootInventory,
-          retainedCharts: handoffs.retainedCharts,
-          files: await platformSourceFiles(
-            sourceRevision,
-            Bun.env["CI_CHANGED_BASE"],
-          ),
-        },
-        async () => {
-          const artifact = await client.latestQualifiedArtifact({
-            serviceId: "gitops",
-            component: "chart:apps",
-            kind: "chart",
-          });
-          return artifact.id;
-        },
-        options.staticArchives
-          ? (bucket) =>
-              client.latestQualifiedArtifact({
-                serviceId: "static-sites",
-                component: `site:${bucket}`,
-                kind: "archive",
-              })
-          : undefined,
-      );
+  let registered: PublishBuild[];
+  if (options.catalogV2) {
+    registered = attachTofuArchivePublications(
+      forumPublications,
+      await tofuArchiveHandoff(),
+      identity,
+    );
+  } else {
+    const legacyPlatform =
+      await import("../lib/ci/delivery-platform-publication.ts");
+    registered = await legacyPlatform.attachPlatformPublication(
+      forumPublications,
+      {
+        ...identity,
+        rootInventory: handoffs.rootInventory,
+        retainedCharts: handoffs.retainedCharts,
+        files: await legacyPlatform.platformSourceFiles(
+          sourceRevision,
+          Bun.env["CI_CHANGED_BASE"],
+        ),
+      },
+      async () => {
+        const artifact = await client.latestQualifiedArtifact({
+          serviceId: "gitops",
+          component: "chart:apps",
+          kind: "chart",
+        });
+        return artifact.id;
+      },
+      options.staticArchives
+        ? (bucket) =>
+            client.latestQualifiedArtifact({
+              serviceId: "static-sites",
+              component: `site:${bucket}`,
+              kind: "archive",
+            })
+        : undefined,
+    );
+  }
   for (const publication of registered) {
     const result = await client.publish(publication);
     console.log(

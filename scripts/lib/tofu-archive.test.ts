@@ -6,13 +6,15 @@ import { TOFU_STACK_ROOT } from "../../packages/homelab/scripts/tofu/tofu-extern
 import { restoreStaticArchive } from "./static-site-archive.ts";
 import {
   createTofuStackArchive,
+  tofuStackArchiveFiles,
+} from "./tofu-archive.ts";
+import {
   tofuArchiveArtifactId,
   tofuArchiveComponent,
   tofuArchiveServiceId,
   tofuArchiveUri,
-  tofuStackArchiveFiles,
   validateTofuArchiveUri,
-} from "./tofu-archive.ts";
+} from "./tofu-archive-identity.ts";
 
 const repository = path.resolve(import.meta.dir, "../..");
 const digest = `sha256:${"a".repeat(64)}`;
