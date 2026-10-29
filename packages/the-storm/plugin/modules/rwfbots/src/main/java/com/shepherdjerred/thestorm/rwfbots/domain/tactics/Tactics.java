@@ -119,7 +119,7 @@ public final class Tactics {
     }
     var routed = route(new Planning(plan, state.lifeEpoch(), objective), situation, context);
     plan = routed.plan();
-    var memory = routed.memory();
+    var memory = routed.memory().engaged(fighting(plan.option()), now);
     var decision = routed.decision();
     if (decision.ability().isPresent()) {
       clock = clock.used(now);
@@ -143,7 +143,17 @@ public final class Tactics {
         new TacticsState(Optional.of(plan), now, state.lifeEpoch(), born, clock, memory),
         decision,
         trace,
-        note(plan, decision, situation, context).working(memory.defusing()));
+        note(plan, decision, situation, context)
+            .working(memory.defusing())
+            .engaged(memory.engagedSince()));
+  }
+
+  /** Whether a plan for {@code option} ties the bot up in a fight instead of its objective. */
+  static boolean fighting(Option option) {
+    return switch (option) {
+      case ENGAGE, RETREAT, HEAL, REWIND -> true;
+      default -> false;
+    };
   }
 
   /** A new plan for {@code chosen}; a resupply trip walks to the arrow it was scored for. */
@@ -326,7 +336,7 @@ public final class Tactics {
 
   /** Without a team assignment anyone may save the fuse; screens yield to live fuse workers. */
   static boolean assignedDefuser(Situation situation) {
-    if (situation.role() == Role.RETAKE) return true;
+    if (situation.role() == Role.RETAKE || ObjectivePolicy.helpsDefuse(situation)) return true;
     var plan = situation.board().plan();
     var assignedFuse =
         plan.objective()

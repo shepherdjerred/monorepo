@@ -12,19 +12,26 @@ import java.util.Set;
  * @param cover the cover node it holds or is moving to
  * @param chasing the enemy it is fighting
  * @param path the nav nodes it is about to walk
+ * @param objective the fuse it works
+ * @param engagedSince since when it has been tied up fighting, or -1
  */
 public record TeamNote(
     Optional<Integer> cover,
     Optional<CombatantId> chasing,
     Set<Integer> path,
-    Optional<BombId> objective) {
+    Optional<BombId> objective,
+    long engagedSince) {
 
   public TeamNote(Optional<Integer> cover, Optional<CombatantId> chasing, Set<Integer> path) {
-    this(cover, chasing, path, Optional.empty());
+    this(cover, chasing, path, Optional.empty(), -1);
   }
 
   public TeamNote working(Optional<BombId> bomb) {
-    return new TeamNote(cover, chasing, path, bomb);
+    return new TeamNote(cover, chasing, path, bomb, engagedSince);
+  }
+
+  public TeamNote engaged(long since) {
+    return new TeamNote(cover, chasing, path, objective, since);
   }
 
   public static final TeamNote NONE = new TeamNote(Optional.empty(), Optional.empty(), Set.of());

@@ -91,7 +91,11 @@ final class RoleAssignmentTest {
             -1);
     var dealing =
         new TeamBrain.Dealing(
-            previous, new TeamBrain.TeamSituation(nav, snapshot, bots, members), bots, false);
+            previous,
+            new TeamBrain.TeamSituation(nav, snapshot, bots, members),
+            bots,
+            false,
+            java.util.Set.of());
     var prepared = new RoleAssignment(dealing, slots);
     assertThat(prepared.rows()).isLessThan(bots.size());
     var rows = new ArrayList<float[]>();

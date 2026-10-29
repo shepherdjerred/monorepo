@@ -3119,7 +3119,15 @@ Before publishing a retake plan, a separate parallel stage checks its two fuse
 workers with their actual planner, health, movement capabilities and perception.
 Each team step permits at most four planner evaluations, rotating through
 replacement candidates across steps. An uncertified worker becomes a reserve;
-screens wait for certified workers rather than all crowding the fuse. Changes to
+screens wait for certified workers rather than all crowding the fuse. A screen
+within 8 blocks of a fuse its workers have started, with no enemy in sight,
+joins the clicking until three hands are on it (each clicker takes a second off
+the defuse). A worker tied up fighting for three seconds hands its fuse on: the
+team re-deals at once and the worker's station goes to the next bot. With time
+in hand (its route, the nine-second work, five seconds of safety and ten
+spare), a worker within 16 blocks of the bomb waits there for two of its
+retakers and screens before walking onto the fuse. Fuse timing uses the nav
+graph's route costs, which are walking time in ticks. Changes to
 an admitted worker's health, movement state or temporary protection trigger an
 earlier check. Search scratch belongs exclusively to each batch, and Flight
 Recorder spans expose both stage and individual route costs. This query-count

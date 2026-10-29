@@ -4,10 +4,12 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,16 +37,22 @@ final class ObjectivePlayTest {
   /** When a team two to one up must have started arming, in ticks. */
   private static final long CLOSER_ATTEMPT_BY = 800;
 
-  /** Per team: when it first started arming an enemy team's bomb, and when it sent its planter. */
+  /**
+   * Per team: when it first started arming an enemy team's bomb, or any bomb at all (the nuke is an
+   * objective too), and when it sent its planter.
+   */
   private static final class Attempts {
     final Map<TeamId, Long> firstPlant = new HashMap<>();
+    final Map<TeamId, Long> firstArm = new HashMap<>();
     final Map<TeamId, Long> planterSent = new HashMap<>();
     final Map<TeamId, Boolean> hunted = new HashMap<>();
 
     void observe(SimWorld world) {
       for (var bomb : world.bombs.values()) {
-        if (bomb.phase == SimBomb.Phase.ARMING && bomb.owner instanceof BombOwner.Team) {
-          firstPlant.putIfAbsent(bomb.armingTeam.orElseThrow(), world.tick);
+        if (bomb.phase == SimBomb.Phase.ARMING) {
+          var team = bomb.armingTeam.orElseThrow();
+          firstArm.putIfAbsent(team, world.tick);
+          if (bomb.owner instanceof BombOwner.Team) firstPlant.putIfAbsent(team, world.tick);
         }
       }
       world.boards.forEach(
@@ -99,6 +107,34 @@ final class ObjectivePlayTest {
   }
 
   @Test
+  void defendersBesideTheirFuseDefuseWithThreeHands() {
+    for (var seed = 50L; seed < 54; seed++) {
+      var world = new SimWorld(Arenas.SYNTHETIC, seed);
+      world.addBomb(0, RED, SyntheticMap.RED_BOMB);
+      world.addBomb(1, BLUE, SyntheticMap.BLUE_BOMB);
+      for (var i = 0; i < 3; i++) {
+        world.addBot(
+            new SimWorld.Spawn(
+                i + 1, BLUE, Kit.TROOPER, SyntheticMap.BLUE_BOMB.offset(-2 - i, 0, 4).feet()),
+            0.7);
+      }
+      world.addScripted(new SimWorld.Spawn(9, RED, Kit.TROOPER, SyntheticMap.RED_SPAWN.feet()));
+      world.bomb(1).arm(0);
+      var hands = new int[1];
+      world.run(
+          900,
+          w -> {
+            hands[0] = Math.max(hands[0], w.bomb(1).clickers.size());
+            return w.bomb(1).phase == SimBomb.Phase.IDLE;
+          });
+      assertThat(world.bomb(1).phase)
+          .as("seed %d defused by tick %d", seed, world.tick)
+          .isEqualTo(SimBomb.Phase.IDLE);
+      assertThat(hands[0]).as("seed %d hands on the fuse", seed).isEqualTo(3);
+    }
+  }
+
+  @Test
   void aTeamTwoToOneUpRushesThePlantAndHunts() {
     var firsts = new ArrayList<Long>();
     var hunted = new ArrayList<Boolean>();
@@ -113,10 +149,10 @@ final class ObjectivePlayTest {
           (int) CLOSER_ATTEMPT_BY + 1,
           w -> {
             attempts.observe(w);
-            return attempts.firstPlant.containsKey(RED);
+            return attempts.firstArm.containsKey(RED);
           });
       hunted.add(attempts.hunted.getOrDefault(RED, false));
-      firsts.add(attempts.firstPlant.getOrDefault(RED, Long.MAX_VALUE));
+      firsts.add(attempts.firstArm.getOrDefault(RED, Long.MAX_VALUE));
     }
     assertThat(hunted).as("eight against four sent pairs hunting").allMatch(value -> value);
     assertThat(firsts)
