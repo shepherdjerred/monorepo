@@ -53,7 +53,7 @@ final class StreakPlayTest {
             tick,
             0,
             java.util.Optional.empty());
-    return new ReflexInput(self, world, decision, target, 0, List.of());
+    return new ReflexInput(self, world, decision, target, 0, List.of(), Optional.empty());
   }
 
   @Test

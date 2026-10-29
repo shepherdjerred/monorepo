@@ -107,7 +107,7 @@ final class OpeningRunUpTest {
       var step =
           Reflex.tick(
               state,
-              new ReflexInput(self, world, route, Optional.empty(), 0, List.of()),
+              new ReflexInput(self, world, route, Optional.empty(), 0, List.of(), Optional.empty()),
               context,
               random);
       state = step.state();

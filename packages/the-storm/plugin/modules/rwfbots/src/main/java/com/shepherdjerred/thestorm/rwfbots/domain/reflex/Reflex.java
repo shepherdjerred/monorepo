@@ -250,9 +250,29 @@ public final class Reflex {
       ability();
       kitItems(false);
       act(bomb, target);
+      faceThreat(target, bomb);
       steak();
       crouchSpam();
       commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
+    }
+
+    /**
+     * Turns to an enemy in contact the bot is not fighting, seen or felt: it never keeps its back
+     * to a blow, whatever path it walks. A bomb it works or a drawn bow keeps the aim.
+     */
+    private void faceThreat(Optional<CombatantView> target, Optional<BombView> bomb) {
+      if (target.isPresent() || bomb.isPresent() || state.isDrawing()) return;
+      input
+          .threat()
+          .ifPresent(
+              at ->
+                  state =
+                      state.withAim(
+                          AimController.aim(
+                              state.aim(),
+                              Facing.looking(self.eye(), at.plus(0, 1.3, 0)),
+                              levers(),
+                              random)));
     }
 
     private void act(Optional<BombView> bomb, Optional<CombatantView> target) {
@@ -396,8 +416,10 @@ public final class Reflex {
       return wants && !enemyWithin(target, MELEE_ALERT);
     }
 
+    /** Whether the target is within {@code distance}, or an enemy is in contact, seen or felt. */
     private boolean enemyWithin(Optional<CombatantView> target, double distance) {
-      return target.isPresent() && target.get().pos().distance(self.pos()) <= distance;
+      return (target.isPresent() && target.get().pos().distance(self.pos()) <= distance)
+          || input.threat().isPresent();
     }
 
     private void eat(Optional<CombatantView> target) {
@@ -570,6 +592,7 @@ public final class Reflex {
     }
 
     private void click(CombatantView target, double distance) {
+      state = MeleePressure.answer(state, self, now, levers().reactionTicks());
       if (now < state.nextClickAt()) {
         return;
       }
@@ -613,7 +636,10 @@ public final class Reflex {
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
       // Combat movement needs the same reaction-window personal space as formation movement.
       var apart = walkingApart();
-      var closing = edge.closing(closing(distance, apart));
+      var closing =
+          edge.closing(
+              MeleePressure.closing(
+                  distance, apart.length() > CROWDED, MeleePressure.yields(input), edge.ledged()));
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.
@@ -931,17 +957,6 @@ public final class Reflex {
         case AGGRESSIVE, EVASIVE -> true;
         case CAUTIOUS, STEALTH -> false;
       };
-    }
-
-    /**
-     * How hard to close on the target: in to the strafing band, out of it when too close, and back
-     * when a teammate is already on top of the fight, to give it room rather than pile in.
-     */
-    private static double closing(double distance, Vec3 apart) {
-      if (apart.length() > CROWDED || distance < SPACING_NEAR) {
-        return -0.6;
-      }
-      return distance > SPACING_FAR ? 1.0 : 0.0;
     }
 
     /** Leave room before converging teammates cross the spacing band during reaction delay. */

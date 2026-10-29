@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
@@ -19,6 +20,8 @@ import java.util.Optional;
  * @param gapplesLeft golden apples in the inventory
  * @param perceived every enemy the bot perceives this tick, target or not, nearest first; never one
  *     it cannot see, so nothing reacts to a player hidden behind a wall or invisible
+ * @param threat where the nearest enemy in contact is, seen or just felt or heard there ({@link
+ *     #threat}): the bot faces it whatever else it does
  */
 public record ReflexInput(
     CombatantView self,
@@ -26,7 +29,17 @@ public record ReflexInput(
     Decision decision,
     Optional<CombatantView> target,
     int gapplesLeft,
-    List<CombatantView> perceived) {
+    List<CombatantView> perceived,
+    Optional<Vec3> threat) {
+
+  /**
+   * An enemy this close is in contact. In production bots within 3.5 blocks of their nearest enemy
+   * faced more than 90 degrees away from it 19% of the time: walking past it, or fighting another.
+   */
+  public static final double CONTACT = 3.5;
+
+  /** An enemy the bot felt or heard in contact counts for this long after, in ticks. */
+  public static final long CONTACT_MEMORY_TICKS = 20;
 
   /** No bot without a shot stands closer than this to a hostile golem, in blocks. */
   public static final double GOLEM_KEEP_AWAY = 6;
@@ -50,7 +63,57 @@ public record ReflexInput(
   public static ReflexInput of(
       CombatantView self, WorldSnapshot snapshot, Decision decision, Percept percept) {
     return new ReflexInput(
-        self, snapshot, decision, resolveTarget(self, decision, percept), 0, percept.visible());
+        self,
+        snapshot,
+        decision,
+        resolveTarget(self, decision, percept),
+        0,
+        percept.visible(),
+        threat(self, percept));
+  }
+
+  /**
+   * Where the nearest enemy in {@link #CONTACT} is: one in sight, else one the bot placed there in
+   * the last {@link #CONTACT_MEMORY_TICKS}, by the blow it struck (exactly) or the sound it made. A
+   * player struck from behind knows where the blow came from and turns to it.
+   */
+  static Optional<Vec3> threat(CombatantView self, Percept percept) {
+    var seen = contact(self, percept.visible());
+    if (seen.isPresent()) return seen;
+    var now = percept.tick();
+    return percept.state().memory().sightings().values().stream()
+        .filter(sighting -> now - sighting.tick() <= CONTACT_MEMORY_TICKS)
+        .map(sighting -> sighting.predictedPos(now))
+        .filter(pos -> pos.horizontalDistance(self.pos()) <= CONTACT)
+        .min(java.util.Comparator.comparingDouble(pos -> pos.horizontalDistance(self.pos())));
+  }
+
+  /**
+   * The enemy in {@link #CONTACT} the bot fights first: the one that just hurt it, else the
+   * nearest.
+   */
+  private static Optional<CombatantView> inFace(CombatantView self, Percept percept) {
+    var near =
+        percept.visible().stream()
+            .filter(enemy -> enemy.pos().horizontalDistance(self.pos()) <= CONTACT)
+            .toList();
+    var attacker =
+        percept
+            .state()
+            .grudgeAt(percept.tick())
+            .flatMap(
+                grudge ->
+                    near.stream()
+                        .filter(enemy -> enemy.id().equals(grudge.attacker()))
+                        .findFirst());
+    return attacker.or(() -> near.stream().findFirst());
+  }
+
+  private static Optional<Vec3> contact(CombatantView self, List<CombatantView> perceived) {
+    return perceived.stream()
+        .map(CombatantView::pos)
+        .filter(pos -> pos.horizontalDistance(self.pos()) <= CONTACT)
+        .min(java.util.Comparator.comparingDouble(pos -> pos.horizontalDistance(self.pos())));
   }
 
   /** The enemy {@code self} should fight this tick, if any. */
@@ -65,7 +128,19 @@ public record ReflexInput(
     }
     var decided = decision.target().flatMap(percept::visible);
     if (decided.isPresent()) {
-      return decided;
+      // A bot fights an enemy in its face before one the think step chose further off: it would
+      // otherwise turn its back on a blow to chase the other.
+      return decided
+          .filter(
+              chosen ->
+                  decision.stance() == Stance.EVASIVE
+                      || chosen.pos().distance(self.pos()) <= Reflex.MELEE_ALERT)
+          .or(() -> inFace(self, percept))
+          .or(() -> decided);
+    }
+    if (decision.stance() != Stance.EVASIVE) {
+      var face = inFace(self, percept);
+      if (face.isPresent()) return face;
     }
     var reach = reach(decision);
     // Of the enemies in reach, the one that just hurt the bot comes first.
@@ -136,6 +211,6 @@ public record ReflexInput(
   }
 
   public ReflexInput withGapples(int count) {
-    return new ReflexInput(self, snapshot, decision, target, count, perceived);
+    return new ReflexInput(self, snapshot, decision, target, count, perceived, threat);
   }
 }

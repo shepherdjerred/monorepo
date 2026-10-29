@@ -98,7 +98,13 @@ final class ReflexTest {
             Optional.empty());
     var input =
         new ReflexInput(
-            self, world(20, List.of(self), List.of()), decision, Optional.empty(), 0, List.of());
+            self,
+            world(20, List.of(self), List.of()),
+            decision,
+            Optional.empty(),
+            0,
+            List.of(),
+            Optional.empty());
     var step =
         Reflex.tick(
             ReflexState.initial(Facing.SOUTH),
@@ -117,7 +123,8 @@ final class ReflexTest {
                 decision,
                 Optional.empty(),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(0.8)),
             new SplittableRandom(4));
     assertThat(flight.commands()).doesNotContain(new BodyCommand.Jump());
@@ -140,7 +147,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(target),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context,
             new SplittableRandom(7));
     var stationary =
@@ -152,7 +160,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(target),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context,
             new SplittableRandom(7));
     var converging =
@@ -164,7 +173,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(target),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context,
             new SplittableRandom(7));
     assertThat(stationary.commands()).isEqualTo(alone.commands());
@@ -201,7 +211,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(target),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context,
             new SplittableRandom(7));
     var above =
@@ -213,7 +224,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(target),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context,
             new SplittableRandom(7));
     assertThat(above.commands()).isEqualTo(without.commands());
@@ -251,7 +263,8 @@ final class ReflexTest {
                   decision,
                   Optional.of(target),
                   0,
-                  List.of()),
+                  List.of(),
+                  Optional.empty()),
               context(levers(1)),
               random);
       assertThat(step.commands()).contains(new BodyCommand.MoveToward(destination, true));
@@ -294,7 +307,8 @@ final class ReflexTest {
                 decision,
                 Optional.empty(),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(1)),
             new SplittableRandom(7));
     return step.commands().stream()
@@ -322,7 +336,13 @@ final class ReflexTest {
           Reflex.tick(
               state,
               new ReflexInput(
-                  self, snapshot, fight(self, target, 1), Optional.of(target), 3, List.of()),
+                  self,
+                  snapshot,
+                  fight(self, target, 1),
+                  Optional.of(target),
+                  3,
+                  List.of(),
+                  Optional.empty()),
               context(levers(1)),
               random);
       hits += (int) step.commands().stream().filter(BodyCommand.Attack.class::isInstance).count();
@@ -342,7 +362,13 @@ final class ReflexTest {
         Reflex.tick(
             ReflexState.initial(self.facing()),
             new ReflexInput(
-                self, snapshot, fight(self, target, 1), Optional.of(target), 3, List.of()),
+                self,
+                snapshot,
+                fight(self, target, 1),
+                Optional.of(target),
+                3,
+                List.of(),
+                Optional.empty()),
             context(levers(1)),
             new SplittableRandom(7));
     var move =
@@ -364,9 +390,11 @@ final class ReflexTest {
       var move = strafeStep(self, target);
       assertThat(move.sprint()).as("gap %s", gap).isTrue();
     }
-    // Backing off from a target too close is not forward input and cannot sprint.
-    var close = strafeStep(self, combatant(2, BLUE, new Vec3(7.5, 1, 5.5)));
-    assertThat(close.sprint()).isFalse();
+    // Inside the band a bot holds its ground and circles, keeping the sprint.
+    var close = combatant(2, BLUE, new Vec3(7.5, 1, 5.5));
+    assertThat(strafeStep(self, close).sprint()).isTrue();
+    // Backing off, which only a badly hurt bot does, is not forward input and cannot sprint.
+    assertThat(strafeStep(self.withHealth(5, 0), close).sprint()).isFalse();
   }
 
   private static BodyCommand.MoveToward strafeStep(CombatantView self, CombatantView target) {
@@ -379,7 +407,8 @@ final class ReflexTest {
                 fight(self, target, 1),
                 Optional.of(target),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(1)),
             new SplittableRandom(7));
     return step.commands().stream()
@@ -403,7 +432,8 @@ final class ReflexTest {
                 fight(self, target, 1),
                 Optional.of(target),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(1)),
             random);
     assertThat(first.commands())
@@ -420,7 +450,8 @@ final class ReflexTest {
                 fight(self, target, 1),
                 Optional.of(target),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(1)),
             random);
     assertThat(contact.commands()).anyMatch(BodyCommand.Attack.class::isInstance);
@@ -446,7 +477,13 @@ final class ReflexTest {
       var snapshot = world(tick, List.of(self, target), List.of());
       var input =
           new ReflexInput(
-              self, snapshot, fight(self, target, 1), Optional.of(target), 3, List.of());
+              self,
+              snapshot,
+              fight(self, target, 1),
+              Optional.of(target),
+              3,
+              List.of(),
+              Optional.empty());
       var step = Reflex.tick(state, input, context(levers), random);
       state = step.state();
       perTick.add(step.commands());
@@ -552,7 +589,8 @@ final class ReflexTest {
               decision,
               Optional.empty(),
               3,
-              List.of());
+              List.of(),
+              Optional.empty());
       var step = Reflex.tick(state, input, context(levers(1)), random);
       state = step.state();
       if (step.commands().stream().anyMatch(c -> c.equals(new BodyCommand.ClickBomb(bomb.id())))) {
@@ -582,7 +620,8 @@ final class ReflexTest {
               decision,
               Optional.empty(),
               3,
-              List.of());
+              List.of(),
+              Optional.empty());
       var step = Reflex.tick(state, input, context(levers(0.5)), random);
       state = step.state();
       if (step.commands().contains(new BodyCommand.StartUse())) {
@@ -692,7 +731,8 @@ final class ReflexTest {
                 decision,
                 Optional.empty(),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(1)),
             new SplittableRandom(4));
     return step.commands().stream()
@@ -732,7 +772,8 @@ final class ReflexTest {
                   holding,
                   target,
                   0,
-                  List.of()),
+                  List.of(),
+                  Optional.empty()),
               context,
               new SplittableRandom(4));
       assertThat(step.commands())
@@ -749,7 +790,8 @@ final class ReflexTest {
                 holding,
                 Optional.empty(),
                 0,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context,
             new SplittableRandom(4));
     assertThat(uncrowded.commands()).contains(new BodyCommand.Stop());
@@ -782,7 +824,8 @@ final class ReflexTest {
                 decision,
                 Optional.empty(),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(0.5)),
             new SplittableRandom(1));
     assertThat(step.commands())
@@ -805,7 +848,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(enemy),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(0.5)),
             random);
     assertThat(step.state().isEating()).isTrue();
@@ -819,7 +863,8 @@ final class ReflexTest {
                 decision,
                 Optional.of(closeEnemy),
                 3,
-                List.of()),
+                List.of(),
+                Optional.empty()),
             context(levers(0.5)),
             random);
     assertThat(interrupted.state().isEating()).isFalse();
@@ -872,7 +917,8 @@ final class ReflexTest {
                 decision,
                 seen ? Optional.of(enemy) : Optional.empty(),
                 0,
-                perceived.orElseGet(() -> seen ? List.of(enemy) : List.of()));
+                perceived.orElseGet(() -> seen ? List.of(enemy) : List.of()),
+                Optional.empty());
         var step = Reflex.tick(state, input, context, new SplittableRandom(tick));
         state = step.state();
         commands.addAll(step.commands());
@@ -1244,7 +1290,8 @@ final class ReflexTest {
               decision,
               Optional.empty(),
               0,
-              List.of());
+              List.of(),
+              Optional.empty());
       state = Reflex.tick(state, input, context(levers(0.5)), new SplittableRandom(tick)).state();
     }
     assertThat(Math.abs(state.aim().look().yawDelta(toward))).isLessThan(5);

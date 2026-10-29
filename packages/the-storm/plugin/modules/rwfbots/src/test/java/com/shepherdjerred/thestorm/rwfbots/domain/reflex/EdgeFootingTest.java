@@ -196,7 +196,9 @@ final class EdgeFootingTest {
             List.of(),
             List.of(),
             List.of());
-    var input = new ReflexInput(self, world, decision, Optional.of(enemy), 0, List.of(enemy));
+    var input =
+        new ReflexInput(
+            self, world, decision, Optional.of(enemy), 0, List.of(enemy), Optional.empty());
     var context =
         new ReflexContext(
             nav, levers(0.65), Loadout.standard(Kit.TROOPER), ReflexContext.Habits.NONE);

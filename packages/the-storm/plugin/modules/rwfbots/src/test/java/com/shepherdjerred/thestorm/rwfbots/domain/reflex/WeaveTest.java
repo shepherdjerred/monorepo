@@ -174,7 +174,8 @@ final class WeaveTest {
             decision,
             Optional.of(archer),
             0,
-            List.of(archer));
+            List.of(archer),
+            Optional.empty());
     var context =
         new ReflexContext(
             LEDGE, levers(0.65), Loadout.standard(Kit.TROOPER), ReflexContext.Habits.NONE);
@@ -210,7 +211,8 @@ final class WeaveTest {
             Optional.empty()),
         Optional.of(bow),
         0,
-        List.of(bow));
+        List.of(bow),
+        Optional.empty());
   }
 
   private static Stimulus shot(CombatantId archer, long tick) {

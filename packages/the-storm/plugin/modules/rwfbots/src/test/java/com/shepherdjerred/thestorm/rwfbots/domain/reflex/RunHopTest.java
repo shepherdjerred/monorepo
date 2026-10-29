@@ -128,7 +128,7 @@ final class RunHopTest {
             List.of());
     return Reflex.tick(
             ReflexState.initial(Facing.SOUTH).withPath(0, NOW),
-            new ReflexInput(self, world, decision, Optional.empty(), 0, seen),
+            new ReflexInput(self, world, decision, Optional.empty(), 0, seen, Optional.empty()),
             context,
             new SplittableRandom(5))
         .commands();

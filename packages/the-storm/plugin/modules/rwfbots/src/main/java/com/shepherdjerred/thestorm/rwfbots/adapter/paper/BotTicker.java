@@ -404,7 +404,8 @@ public final class BotTicker {
         input.perceived().stream()
             .flatMap(seen -> fresh(seen, input, grid).stream())
             .sorted(java.util.Comparator.comparingDouble(enemy -> enemy.pos().distance(self)))
-            .toList());
+            .toList(),
+        input.threat());
   }
 
   private static Optional<CombatantView> fresh(
@@ -439,7 +440,8 @@ public final class BotTicker {
         input.decision(),
         input.target().filter(clear),
         input.gapplesLeft(),
-        input.perceived().stream().filter(clear).toList());
+        input.perceived().stream().filter(clear).toList(),
+        input.threat());
   }
 
   /**

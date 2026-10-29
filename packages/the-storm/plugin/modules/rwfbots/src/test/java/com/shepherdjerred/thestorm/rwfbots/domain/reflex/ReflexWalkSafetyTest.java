@@ -155,7 +155,8 @@ final class ReflexWalkSafetyTest {
             List.of());
     return Reflex.tick(
         ReflexState.initial(fixture.self().facing()),
-        new ReflexInput(fixture.self(), world, decision, Optional.empty(), 0, List.of()),
+        new ReflexInput(
+            fixture.self(), world, decision, Optional.empty(), 0, List.of(), Optional.empty()),
         new ReflexContext(fixture.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
         new SplittableRandom(196));
   }
