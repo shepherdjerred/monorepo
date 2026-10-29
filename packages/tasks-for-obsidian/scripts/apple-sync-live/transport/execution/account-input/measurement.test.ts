@@ -105,10 +105,10 @@ function fixture(operation: Phase = "credentials-probe") {
     "fd-after.stdout": text(descriptors),
     "fd-after.stderr": text(""),
     "fd-after.json": encode(command(fdArgv, 1_005_001, 1_005_010)),
-    "unified.stdout": text(""),
+    "unified.stdout": text('{"count":0,"finished":1}\n'),
     "unified.stderr": text(""),
-    "unified.json": encode(
-      command(
+    "unified.json": encode({
+      ...command(
         [
           "/usr/bin/log",
           "show",
@@ -117,16 +117,20 @@ function fixture(operation: Phase = "credentials-probe") {
           "--style",
           "ndjson",
           "--start",
-          "@999.000000",
+          "1970-01-01 00:16:39+0000",
           "--end",
-          "@1005.015000",
+          "1970-01-01 00:16:46+0000",
           "--predicate",
           "processIdentifier == 123",
         ],
         1_005_020,
         1_005_030,
       ),
-    ),
+      requestedInterval: {
+        startUnixMilliseconds: 999_000,
+        endUnixMilliseconds: 1_005_015,
+      },
+    }),
   };
   if (operation === "verification-probe")
     guestFiles["native-intent.json"] = encode({
@@ -250,7 +254,18 @@ test("FD measurements must bracket the actual native interval", () => {
   });
   expect(() => validateMacMeasuredOutputs(after)).toThrow();
 });
-test.each(["no-debug", "wrong-pid", "wrong-time", "failed-exit", "incomplete"])(
+test.each([
+  "no-debug",
+  "wrong-pid",
+  "wrong-time",
+  "failed-exit",
+  "incomplete",
+  "missing-interval",
+  "wrong-start",
+  "reversed-interval",
+  "late-end",
+  "fractional-end",
+])(
   "invalid unified command/evidence cannot authorize input (%s)",
   (variant) => {
     const value = fixture();
@@ -261,6 +276,27 @@ test.each(["no-debug", "wrong-pid", "wrong-time", "failed-exit", "incomplete"])(
       if (variant === "wrong-time") argv[9] = "@999.000000";
       if (variant === "failed-exit") raw["exitCode"] = 1;
       if (variant === "incomplete") raw["complete"] = false;
+      if (variant === "missing-interval") delete raw["requestedInterval"];
+      if (
+        [
+          "wrong-start",
+          "reversed-interval",
+          "late-end",
+          "fractional-end",
+        ].includes(variant)
+      ) {
+        const interval = z
+          .record(z.string(), z.number())
+          .parse(raw["requestedInterval"]);
+        if (variant === "wrong-start")
+          interval["startUnixMilliseconds"] = 999_001;
+        if (variant === "reversed-interval")
+          interval["endUnixMilliseconds"] = 998_999;
+        if (variant === "late-end") interval["endUnixMilliseconds"] = 1_008_000;
+        if (variant === "fractional-end")
+          interval["endUnixMilliseconds"] = 1_005_015.5;
+        raw["requestedInterval"] = interval;
+      }
       raw["argv"] = argv;
     });
     expect(() => validateMacMeasuredOutputs(value)).toThrow();

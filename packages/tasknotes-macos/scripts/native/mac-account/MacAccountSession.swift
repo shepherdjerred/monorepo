@@ -74,11 +74,7 @@ final class MacAccountSession {
             (request.input["launchDate"] as? NSNumber)?.doubleValue == observed.launch,
             let app = NSRunningApplication(processIdentifier: observed.pid)
         else { throw Failure.process }
-        _ = app.activate(options: [])
-        guard AXUIElementPerformAction(observed.window, kAXRaiseAction as CFString) == .success
-        else {
-            throw Failure.window
-        }
+        guard app.activate(options: []) else { throw Failure.window }
         while try NSWorkspace.shared.frontmostApplication?.processIdentifier != observed.pid
             || !observed.focusedWindowIsOwned()
         {
