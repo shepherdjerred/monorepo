@@ -24,15 +24,17 @@ export function resourceIdentity(
  * (harmless — the API server ignores it). So a missing namespace on either side
  * is a wildcard, and more than one wildcard match is ambiguous and fatal.
  *
- * Two *concrete, different* namespaces name two different objects. A live
- * object whose namespace the revision no longer renders is a prune, exactly
- * like one whose name it no longer renders: it has no target, and the rendered
- * copy in the other namespace is matched against its own live object.
+ * Two *concrete, different* namespaces name two different objects. When every
+ * namespace the revision renders the object in already has its own live copy,
+ * the unmatched live object is a plain prune and has no target. When a rendered
+ * namespace has no live copy, the object is moving namespace; that stays fatal,
+ * because a missing target would skip the immutable checks for it entirely.
  */
 export function renderedTargetState(
   targets: ReadonlyMap<string, readonly RenderedTarget[]>,
   resource: ManagedResource,
   appName: string,
+  live: readonly ManagedResource[],
 ): string | undefined {
   const identity = resourceIdentity(
     resource.group ?? "",
@@ -50,6 +52,24 @@ export function renderedTargetState(
     throw new Error(
       `Apply-safety preflight for ${appName} matched ${identity} to ${matches.length.toString()} rendered manifests`,
     );
+  }
+  if (matches.length === 0) {
+    const moved = candidates.filter(
+      (candidate) =>
+        !live.some(
+          (other) =>
+            resourceIdentity(other.group ?? "", other.kind, other.name) ===
+              identity && other.namespace === candidate.namespace,
+        ),
+    );
+    if (moved.length > 0) {
+      const rendered = moved
+        .map(({ namespace }) => namespace ?? "<none>")
+        .join(", ");
+      throw new Error(
+        `Apply-safety preflight for ${appName} found ${identity} in namespace ${resource.namespace ?? "<none>"} but rendered it in ${rendered}`,
+      );
+    }
   }
   return matches[0]?.manifest;
 }

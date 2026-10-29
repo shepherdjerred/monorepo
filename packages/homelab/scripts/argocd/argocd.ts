@@ -536,7 +536,7 @@ async function revisionScopedResources(
   );
   const matched = new Set<string>();
   const scoped = resources.map((resource) => {
-    const manifest = renderedTargetState(targets, resource, appName);
+    const manifest = renderedTargetState(targets, resource, appName, resources);
     if (manifest !== undefined) {
       matched.add(manifest);
     }
