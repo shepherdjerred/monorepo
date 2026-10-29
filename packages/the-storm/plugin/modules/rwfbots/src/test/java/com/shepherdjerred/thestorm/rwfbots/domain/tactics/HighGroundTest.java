@@ -157,7 +157,8 @@ final class HighGroundTest {
             List.of(slot),
             Map.of(self.id(), slot.key()),
             100,
-            Map.of());
+            Map.of(),
+            -1);
     var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, 100);
     return Planner.expand(Option.HOLD_SLOT, situation(self, enemy, board), context(BALCONY, kit));
   }

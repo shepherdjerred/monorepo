@@ -111,7 +111,8 @@ final class ObjectiveChoiceTest {
             List.of(),
             Map.of(),
             0,
-            java.util.Map.of());
+            java.util.Map.of(),
+            -1);
     return Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
   }
 

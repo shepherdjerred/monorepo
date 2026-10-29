@@ -112,7 +112,8 @@ final class StuckSpotsTest {
                   List.of(slot),
                   Map.of(self.id(), slot.key()),
                   0,
-                  Map.of()),
+                  Map.of(),
+                  -1),
               0);
     }
     var snapshot =

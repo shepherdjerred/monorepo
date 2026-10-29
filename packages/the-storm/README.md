@@ -3578,10 +3578,17 @@ think loop takes over.
 Team play. Every couple of seconds the team step deals a `Playbook`: one
 slot per living bot for the team's strategy, at least four blocks apart.
 Lane and flank slots sit at the team's push along their lane, which starts
-halfway to the enemy bomb and moves further up with every deal until a
-teammate sees an enemy close by; the planter holds its place on the line
-until the push is far enough up, it is the last one alive or the bomb is
-right there. TURTLE is drawn for at most one team in four; outside it at
+halfway to the enemy bomb and moves further up with every deal once the line
+has formed up. While a teammate sees an enemy close by the push holds, unless
+the team leads the fight by two and a quarter; any hold moves on after ten
+seconds, so an even stalemate still advances a bound at a time. The planter
+holds its place on the line until the push is far enough up, it is the last
+one alive or the bomb is right there. Every ninth place past the first of a
+large team is another planter on a side lane (one per nine bots). A team that
+outnumbers an enemy down to its last two, or outnumbers it two to one, closes
+the round out: the push goes all the way, and the playbook becomes a plant
+rush with escorts, one anchor and sweeping pairs hunting the latest
+sightings. TURTLE is drawn for at most one team in four; outside it at
 most one bot of eight anchors. RUSH puts the planter up the middle with a
 two-escort wedge behind it and the side lanes and flanks screening; SPLIT
 sends the planter and an escort down one lane and a pair with a flank down

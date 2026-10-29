@@ -137,7 +137,9 @@ final class TeamPlayTest {
   // Traces carry the distance to a hostile golem in sight (golemDist).
   // Standing enemies' name tags place them through walls within 32 blocks, privately; crouchers are
   // seen only half as far.
-  private static final String PINNED_YARD_HASH = "a2aecb6b447ff845";
+  // A push held in contact moves on after a stall or when the team leads the fight, and a team well
+  // ahead closes the round out with a plant rush and hunting pairs.
+  private static final String PINNED_YARD_HASH = "19026977cf51a378";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

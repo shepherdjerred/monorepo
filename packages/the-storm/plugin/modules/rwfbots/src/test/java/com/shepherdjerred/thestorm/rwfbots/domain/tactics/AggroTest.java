@@ -112,7 +112,8 @@ final class AggroTest {
                     List.of(slot.orElseThrow()),
                     Map.of(self.id(), slot.orElseThrow().key()),
                     0,
-                    Map.of()),
+                    Map.of(),
+                    -1),
                 0);
       }
       var snapshot =

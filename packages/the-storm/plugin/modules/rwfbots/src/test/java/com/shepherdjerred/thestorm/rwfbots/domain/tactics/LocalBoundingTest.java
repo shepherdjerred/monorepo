@@ -74,7 +74,8 @@ final class LocalBoundingTest {
             List.of(flank, home),
             Map.of(self.id(), flank.key(), defender.id(), home.key()),
             0,
-            Map.of(self.id(), 0, defender.id(), 0));
+            Map.of(self.id(), 0, defender.id(), 0),
+            -1);
     var snapshot =
         new WorldSnapshot(
             40,

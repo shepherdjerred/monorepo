@@ -19,6 +19,9 @@ import java.util.Optional;
  * @param slots every slot dealt, one per living bot
  * @param assignment the slot key each bot holds
  * @param dealtTick when the slots were dealt, or -1 before the first deal
+ * @param groups the squad each bot walks with
+ * @param pushedTick when the push last moved, or -1 before the first deal; a push held too long in
+ *     a stalemate moves anyway ({@link TeamBrain#STALL_TICKS})
  */
 public record TeamPlan(
     Optional<Strategy> strategy,
@@ -29,7 +32,8 @@ public record TeamPlan(
     List<Slot> slots,
     Map<CombatantId, String> assignment,
     long dealtTick,
-    Map<CombatantId, Integer> groups) {
+    Map<CombatantId, Integer> groups,
+    long pushedTick) {
 
   public static final TeamPlan NONE =
       new TeamPlan(
@@ -41,7 +45,8 @@ public record TeamPlan(
           List.of(),
           Map.of(),
           -1,
-          Map.of());
+          Map.of(),
+          -1);
 
   public TeamPlan {
     lanes = List.copyOf(lanes);
