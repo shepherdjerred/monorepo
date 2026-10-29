@@ -8,12 +8,8 @@ import {
   emitWorkflow,
   wrapCommands,
 } from "#src/pipeline/emit.ts";
+import { substitute } from "./envsubst.ts";
 import { TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
-
-/** What Woodpecker's envsubst does to text that holds only escaped `$`. */
-function substitute(yaml: string): string {
-  return yaml.replaceAll("$$", () => "$");
-}
 
 const EmittedCommands = z.object({
   steps: z.tuple([z.object({ commands: z.array(z.string()) })]),
@@ -79,6 +75,21 @@ describe("variable substitution", () => {
     ).steps[0].commands[0];
     expect(command).toContain('"${filters[@]}"');
     expect(command).toContain("${#filters[@]}");
+  });
+
+  /** A sed backreference once emitted `\\1`, which envsubst left as `\1`. */
+  test("keeps backslashes intact", () => {
+    const sites = steps.find((step) => step.key === "sites");
+    expect(sites).toBeDefined();
+    if (sites === undefined) return;
+    const commands = [
+      String.raw`sed -nE 's/"v": "([0-9.]+)"/\1/p' "$manifest"`,
+      String.raw`printf '%s\n' 'a\/b' 'c\\d'`,
+    ];
+    const emitted = EmittedCommands.parse(
+      parse(substitute(emitWorkflow({ ...sites, commands }, TEST_IDENTITY))),
+    ).steps[0].commands;
+    expect(emitted).toEqual(wrapCommands({ ...sites, commands }));
   });
 });
 

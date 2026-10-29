@@ -480,19 +480,21 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
 }
 
 /**
- * Double every `$` so Woodpecker's substitution hands back exactly what was
- * emitted.
+ * Double every `$` and `\` so Woodpecker's substitution hands back exactly
+ * what was emitted.
  *
  * Woodpecker runs every configuration -- extension-served ones included --
  * through envsubst before parsing it. That rewrites any braced `${NAME}`,
  * blanking names it does not know, and rejects bash forms such as
- * `"${array[@]}"` outright, failing the whole pipeline at compile time. None
- * of the emitted text is a Woodpecker template: steps read `CI_*` from their
- * environment at run time. envsubst turns `$$` back into `$`, so doubling is
- * exact rather than a guess about which forms it would have touched.
+ * `"${array[@]}"` outright, failing the whole pipeline at compile time. It
+ * also unescapes `\\` and `\/`, so a YAML `\\1` reaches the parser as the
+ * invalid escape `\1`. None of the emitted text is a Woodpecker template:
+ * steps read `CI_*` from their environment at run time. envsubst collapses
+ * `$$` and `\\` pairwise, so doubling is exact rather than a guess about which
+ * forms it would have touched.
  */
 export function escapeSubstitution(yaml: string): string {
-  return yaml.replaceAll("$", () => "$$");
+  return yaml.replaceAll(/[$\\]/gu, (character) => character.repeat(2));
 }
 
 export function emitWorkflows(
