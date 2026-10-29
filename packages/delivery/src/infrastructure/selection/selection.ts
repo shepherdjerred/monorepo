@@ -33,6 +33,15 @@ async function pipelineRevision(tx: Transaction, id: string) {
   );
 }
 
+/** A pre-cutover platform recipe: it runs only through its exact typed request. */
+export function legacyPlatformRecipe({ definition }: PipelineRevision) {
+  return (
+    definition.kind === "root-release" ||
+    definition.kind === "control-plane" ||
+    (definition.kind === "tofu" && "runnerImage" in definition)
+  );
+}
+
 async function acceptedDeployment(tx: Transaction, env: Environment) {
   return env.acceptedDeploymentId === null
     ? null
@@ -50,11 +59,18 @@ async function acceptedDeployment(tx: Transaction, env: Environment) {
  * newer declared revision reaches the environment only through `rebind`.
  * A carried selection is re-keyed onto the catalog's component names
  * (section 7), which only the declared recipe names; the pre-catalog recipe
- * it records is provenance, so it binds like no acceptance at all.
+ * it records is provenance, so it binds like no acceptance at all. So does a
+ * pre-cutover platform recipe, which only its typed request may run.
  */
 async function currentBinding(tx: Transaction, env: Environment) {
   const accepted = await acceptedDeployment(tx, env);
-  if (accepted === null || accepted.kind === "carry")
+  if (
+    accepted === null ||
+    accepted.kind === "carry" ||
+    legacyPlatformRecipe(
+      await pipelineRevision(tx, accepted.pipelineRevisionId),
+    )
+  )
     return {
       recipeId: env.pipelineRevisionId,
       configurationId: env.declaredConfigurationId,

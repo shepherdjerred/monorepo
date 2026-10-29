@@ -16,7 +16,7 @@ import {
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
 import { required, wire } from "#infrastructure/delivery-records.ts";
-import type { FrozenSelection } from "./selection.ts";
+import { legacyPlatformRecipe, type FrozenSelection } from "./selection.ts";
 
 export type DeploymentRequest =
   | z.input<typeof CreateDeploymentV2Schema>
@@ -81,12 +81,7 @@ export async function adoptionSelection(
 
 /** Pre-cutover platform pipelines run only through their typed requests. */
 export function refuseLegacyPlatform(selection: FrozenSelection) {
-  const definition = selection.pipeline.definition;
-  if (
-    definition.kind === "root-release" ||
-    definition.kind === "control-plane" ||
-    (definition.kind === "tofu" && "runnerImage" in definition)
-  )
+  if (legacyPlatformRecipe(selection.pipeline))
     throw new DeliveryError(
       "INVALID",
       "Specialized control-plane and platform pipelines require their exact typed source, artifact, inventory or saved-plan request",
