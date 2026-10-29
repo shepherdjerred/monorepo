@@ -3,10 +3,12 @@ package com.shepherdjerred.thestorm.rwfbots.sim;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverOffsets;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TrainingYardNav;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
@@ -15,6 +17,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +43,9 @@ final class Arenas {
 
   record Lineup(Strategy strategy, List<Pick> picks) {}
 
+  /** Both teams' lineups. */
+  record Sides(Lineup red, Lineup blue) {}
+
   /** An eight-strong lineup spread over the archetypes and the four shipped kits. */
   static final List<Pick> EIGHT =
       List.of(
@@ -51,6 +60,20 @@ final class Arenas {
 
   private Arenas() {}
 
+  /** A shipped map's baked nav artifact, as the stuck-spot regressions load it. */
+  static NavArtifact shippedNav(String map) {
+    var path = Path.of(System.getProperty("thestorm.rwfbots.shippedMaps"), map, "nav.rwfnav");
+    try {
+      return switch (NavCodec.decode(Files.readAllBytes(path))) {
+        case Result.Ok<NavArtifact, NavCodec.CodecError>(var nav) -> nav;
+        case Result.Err<NavArtifact, NavCodec.CodecError>(var error) ->
+            throw new IllegalStateException(map + " nav does not decode: " + error);
+      };
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
   /** {@code perTeam} bots a side on the training yard, from its spawns, bombs and nuke. */
   static SimWorld yard(long seed, int perTeam, Strategy red, Strategy blue) {
     return yard(seed, perTeam, new Lineup(red, EIGHT), new Lineup(blue, EIGHT));
@@ -58,12 +81,22 @@ final class Arenas {
 
   /** The same authored yard and physics, with explicit team cohorts. */
   static SimWorld yard(long seed, int perTeam, Lineup red, Lineup blue) {
+    return shipped(YARD, seed, perTeam, new Sides(red, blue));
+  }
+
+  /**
+   * {@code perTeam} bots a side on a shipped map, from its baked spawns, bombs and nukes; teams
+   * larger than a side's spawn sites share them in turn.
+   */
+  static SimWorld shipped(NavArtifact nav, long seed, int perTeam, Sides sides) {
+    var red = sides.red();
+    var blue = sides.blue();
     if (red.picks().isEmpty() || blue.picks().isEmpty()) {
       throw new IllegalArgumentException("both teams need a nonempty cohort");
     }
-    var world = new SimWorld(YARD, seed);
+    var world = new SimWorld(nav, seed);
     var id = 0;
-    for (var bomb : YARD.sites().bombs()) {
+    for (var bomb : nav.sites().bombs()) {
       if (bomb.team().isPresent()) {
         world.addBomb(id++, new TeamId(bomb.team().orElseThrow()), bomb.cell());
       } else {
@@ -74,13 +107,17 @@ final class Arenas {
     for (var team : List.of(RED, BLUE)) {
       var cohort = team.equals(RED) ? red.picks() : blue.picks();
       var spawns =
-          YARD.sites().spawns().stream()
+          nav.sites().spawns().stream()
               .filter(site -> site.team().orElseThrow().equals(team.value()))
               .sorted(Comparator.comparing(site -> site.name()))
               .toList();
+      if (spawns.isEmpty()) {
+        throw new IllegalArgumentException(nav.mapId() + " has no " + team.value() + " spawn");
+      }
       for (var i = 0; i < perTeam; i++) {
         var pick = cohort.get(i % cohort.size());
-        add(world, new SimWorld.Spawn(bot++, team, pick.kit(), spawns.get(i).cell().feet()), pick);
+        var at = spawns.get(i % spawns.size()).cell().feet();
+        add(world, new SimWorld.Spawn(bot++, team, pick.kit(), at), pick);
       }
     }
     world.setStrategy(RED, red.strategy());

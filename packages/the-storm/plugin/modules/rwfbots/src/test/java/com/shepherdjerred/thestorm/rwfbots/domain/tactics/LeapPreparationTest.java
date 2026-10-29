@@ -29,14 +29,18 @@ final class LeapPreparationTest {
   }
 
   @Test
-  void firstEntryUsesActualCertifiedMomentumOrPricesItsActualBackup() {
+  void firstEntryJudgesTheBodyWhereThePlanWillReachIt() {
     var graph = graph();
     var launch = graph.waypoint(1).launch().orElseThrow();
-    var ready = combatant(1, RED, launch.takeoff()).withVel(new Vec3(0.28, 0, 0));
+    var lead = MovementMotor.SPRINT_SPEED * LeapPreparation.PLAN_LATENCY_TICKS;
+    // Sprinting at the takeoff the plan arrives on time; a plan made at the takeoff arrives late.
+    var ready = combatant(1, RED, launch.takeoff().plus(-lead, 0, 0)).withVel(new Vec3(0.28, 0, 0));
     assertThat(LeapPreparation.ticks(graph, 1, ready, 0)).isZero();
-    var stopped = ready.withVel(Vec3.ZERO);
+    var overshooting = ready.withPos(launch.takeoff());
+    assertThat(LeapPreparation.ticks(graph, 1, overshooting, 0)).isGreaterThan(14);
+    var stopped = ready.withPos(launch.takeoff()).withVel(Vec3.ZERO);
     assertThat(LeapPreparation.ticks(graph, 1, stopped, 0)).isGreaterThan(14);
-    var displaced = ready.withPos(ready.pos().plus(0, 0, 1));
+    var displaced = stopped.withPos(stopped.pos().plus(0, 0, 1));
     assertThat(LeapPreparation.ticks(graph, 1, displaced, 0))
         .isGreaterThan(LeapPreparation.ticks(graph, 1, stopped, 0));
   }
@@ -45,9 +49,27 @@ final class LeapPreparationTest {
   void futureTurnCannotBorrowCurrentAlignedMomentumEvenAtItsTakeoff() {
     var graph = graph();
     var launch = graph.waypoint(3).launch().orElseThrow();
-    var currentlyAligned = combatant(1, RED, launch.takeoff()).withVel(new Vec3(0, 0, 0.28));
-    assertThat(LeapPreparation.ticks(graph, 3, currentlyAligned, 0)).isGreaterThan(20);
+    // Momentum along the leap's heading but off its line still needs a turn and a full run-up.
+    var offLine = combatant(1, RED, graph.feet(0)).withVel(new Vec3(0, 0, 0.28));
+    assertThat(LeapPreparation.ticks(graph, 3, offLine, 0)).isGreaterThan(20);
+    var lead = MovementMotor.SPRINT_SPEED * LeapPreparation.PLAN_LATENCY_TICKS;
+    var currentlyAligned =
+        combatant(1, RED, launch.takeoff().plus(0, 0, -lead)).withVel(new Vec3(0, 0, 0.28));
     assertThat(LeapPreparation.ticks(graph, 3, currentlyAligned, 2)).isZero();
+  }
+
+  @Test
+  void aFutureLeapCostsNoSetupForABodyAlreadyRunningUpItsLine() {
+    var graph = graph();
+    var launch = graph.waypoint(3).launch().orElseThrow();
+    var running =
+        combatant(1, RED, launch.runUpStart().plus(0, 0, -2)).withVel(new Vec3(0, 0, 0.28));
+    assertThat(LeapPreparation.ticks(graph, 3, running, 0)).isZero();
+    // Standing on the line, or too far back for the line to predict the route, is not running in.
+    assertThat(LeapPreparation.ticks(graph, 3, running.withVel(Vec3.ZERO), 0)).isGreaterThan(20);
+    var distant =
+        running.withPos(launch.runUpStart().plus(0, 0, -LeapPreparation.RUNNING_REACH - 2));
+    assertThat(LeapPreparation.ticks(graph, 3, distant, 0)).isGreaterThan(20);
   }
 
   @Test

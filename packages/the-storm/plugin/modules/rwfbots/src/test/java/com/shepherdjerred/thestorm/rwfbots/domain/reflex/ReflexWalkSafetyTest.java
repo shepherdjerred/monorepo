@@ -71,8 +71,10 @@ final class ReflexWalkSafetyTest {
     for (var hop : List.of(Hop.DROP, Hop.CLIMB, Hop.SWIM))
       assertThat(move(fixture, new Waypoint(BASE, hop)).waypoint()).isEqualTo(BASE);
     var launch = new JumpLaunch(new Vec3(4.7, 1, 1.5), new Vec3(2.7, 1, 1.5), 0.27, 13);
-    assertThat(move(fixture, new Waypoint(BASE, Hop.LEAP, Optional.of(launch))).waypoint())
-        .isEqualTo(launch.runUpStart());
+    // Standing just behind the run-up start, the leap controller steers onto its run-up line.
+    var leap = move(fixture, new Waypoint(BASE, Hop.LEAP, Optional.of(launch))).waypoint();
+    assertThat(leap.z()).isEqualTo(launch.takeoff().z());
+    assertThat(leap.x()).isBetween(launch.runUpStart().x(), launch.takeoff().x());
   }
 
   @Test
