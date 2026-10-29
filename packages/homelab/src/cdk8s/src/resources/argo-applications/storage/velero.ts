@@ -1,6 +1,6 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
-import { ApiObject, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Schedule } from "@shepherdjerred/homelab/cdk8s/generated/imports/velero.io.ts";
@@ -12,30 +12,11 @@ import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/ve
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
-/** The homelab R2 bucket's credential item, shared with the WAL archive and Delivery's cold start. */
+/** The homelab R2 bucket's credential item, which Velero writes its backups with. */
 export const HOMELAB_R2_ITEM_ID = "ypce2djferc6zf7bocxft36n6a";
 
-/** The Velero namespace plus the deny-all restore rehearsal namespaces. */
+/** The Velero namespace. */
 export function createVeleroNamespaces(chart: Chart): void {
-  for (const namespace of [
-    "ops-restore-rehearsal",
-    "ops-restore-rehearsal-incremental",
-  ]) {
-    new Namespace(chart, `${namespace}-namespace`, {
-      metadata: { name: namespace },
-    });
-    new ApiObject(chart, `${namespace}-isolation`, {
-      apiVersion: "networking.k8s.io/v1",
-      kind: "NetworkPolicy",
-      metadata: { name: `${namespace}-isolate`, namespace },
-      spec: {
-        podSelector: {},
-        policyTypes: ["Ingress", "Egress"],
-        ingress: [],
-        egress: [],
-      },
-    });
-  }
   new Namespace(chart, `velero-namespace`, {
     metadata: {
       name: `velero`,
@@ -77,27 +58,6 @@ export function createVeleroResources(chart: Chart): OnePasswordItem {
  */
 export function createVeleroSchedules(chart: Chart): void {
   for (const scheduleConfig of VELERO_SCHEDULES) {
-    // The paused legacy schedule has no remaining backups. It is still
-    // rendered, but without prune protection, so the release after its
-    // removal from source prunes it through release-root.
-    new Schedule(chart, scheduleConfig.id, {
-      metadata: {
-        name: scheduleConfig.legacyName,
-        namespace: "velero",
-        annotations: backupMonitoringAnnotations(scheduleConfig.monitoring),
-      },
-      spec: {
-        paused: true,
-        schedule: scheduleConfig.cronSchedule,
-        template: {
-          snapshotVolumes: true,
-          labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
-          storageLocation: "default",
-          ttl: scheduleConfig.ttl,
-          volumeSnapshotLocations: ["zfspv-incr"],
-        },
-      },
-    });
     new Schedule(chart, `${scheduleConfig.id}-v2`, {
       metadata: {
         name: scheduleConfig.name,

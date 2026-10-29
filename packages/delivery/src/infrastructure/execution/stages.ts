@@ -1,4 +1,3 @@
-import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { DeploymentSchema, PipelineRevisionSchema } from "#shared/contract.ts";
 import { minecraftUpgradeOf } from "#shared/model/recipe-view.ts";
@@ -221,8 +220,6 @@ function settledEnvironment(
       ? {
           acceptedDeploymentId: row.id,
           generation: { increment: 1 },
-          // An acceptance settles any reconcile-after-restore hold (section 6).
-          restoreHold: Prisma.DbNull,
           ...(observesApplication(row)
             ? { acceptedVersionSetRevisionId: row.versionSetRevisionId }
             : {}),

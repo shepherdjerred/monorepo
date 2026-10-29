@@ -80,7 +80,6 @@
     "@shepherdjerred/ops-clients": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/s3-signed-request": "workspace:*",
-    "@shepherdjerred/seaweedfs-backup": "workspace:*",
     "@shepherdjerred/storm-forum": "workspace:*",
     "@shepherdjerred/temporal-observability": "workspace:*",
     "@shepherdjerred/text": "workspace:*",

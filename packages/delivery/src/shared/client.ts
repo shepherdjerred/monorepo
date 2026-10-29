@@ -45,7 +45,6 @@ import {
   OwnershipHandoverContextSchema,
   ContentRecoveryIntentSchema,
   ContentRecoveryContextSchema,
-  PendingReplicationSchema,
 } from "./contract.ts";
 import type {
   PublishBuild,
@@ -82,7 +81,6 @@ import type {
   DispatchBarrier,
   ContentBarrierRestoration,
 } from "./contract.ts";
-import type { RecordArtifactReplication } from "./artifact-contract.ts";
 import { modelRoutes } from "./model/routes-client.ts";
 import { DeploymentDetailV2Schema } from "./model/route-contract.ts";
 
@@ -305,10 +303,6 @@ export function createDeliveryClient(options: RequestOptions) {
       ),
     acquireUpstreamArtifact: (input: AcquireUpstreamArtifact) =>
       request("/artifacts/upstream", ArtifactAcquisitionSchema, input),
-    pendingReplication: () =>
-      request("/replication/pending", PendingReplicationSchema),
-    recordReplication: (input: RecordArtifactReplication) =>
-      request("/artifacts/replication", ArtifactVersionSchema, input),
     requestWorkerRecovery: (
       deploymentId: string,
       input: RequestWorkerRecovery,

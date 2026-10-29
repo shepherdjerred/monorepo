@@ -2,7 +2,6 @@ import { forumBundlePolicyDigest } from "@shepherdjerred/ops-model/forum-bundle-
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
-import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { ForumBaselineProofSchema } from "#shared/forum-contract.ts";
 import type { ForumBaselineContext } from "#shared/contract.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
@@ -86,7 +85,6 @@ export async function seedForum(delivery: Delivery) {
     },
     testPublisher,
   );
-  await replicateProducedArtifacts(delivery, acquired.buildId);
   await delivery.qualifyForumBundle(acquired.buildId, testExecutor, () =>
     Promise.resolve(),
   );

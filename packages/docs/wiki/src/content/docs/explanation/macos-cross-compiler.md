@@ -106,7 +106,7 @@ were. That was a deliberate choice, not an oversight. Apple's Xcode license
 restricts redistributing the SDKs, and the README tells users so. The SDK
 tarballs themselves live in the private `apple-sdks` SeaweedFS bucket, pinned
 by sha256. Staging one needs a Mac with that exact Xcode installed, so the
-bucket is backed up rather than treated as rebuildable.
+bucket is not treated as rebuildable.
 
 The in-cluster BuildKit daemon runs on the amd64 CI node. It builds the arm64
 images under QEMU, registered on the node by an init container. That makes

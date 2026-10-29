@@ -1,10 +1,6 @@
 import { StageSchema } from "#shared/contract.ts";
 import { CatalogDocumentSchema } from "#shared/model/catalog-contract.ts";
 import {
-  ColdStartSnapshotSchema,
-  RestoreHoldSchema,
-} from "#shared/model/cold-start-contract.ts";
-import {
   MonitorObservationSchema,
   MonitorSchema,
   MonitorStatusSchema,
@@ -15,7 +11,6 @@ import {
   CatalogStateSchema,
   DeploymentDetailV2Schema,
   EnvironmentSelectionSchema,
-  ReconcileAfterRestoreSchema,
   ServiceLifecycleViewSchema,
 } from "#shared/model/route-contract.ts";
 import { RollbackCandidatesSchema } from "#shared/model/selection-contract.ts";
@@ -254,33 +249,6 @@ export const retiredService = ServiceLifecycleViewSchema.parse({
   lifecycle: "retired",
 });
 
-/** What reconcile-after-restore leaves on an environment it held (section 6). */
-export const restoreHold = RestoreHoldSchema.parse({
-  catalogRevision: digest("c"),
-  reason: "Live target and snapshot run r41; the record accepted r42",
-  heldAt: at(57),
-});
-
-export const restoreComparison = ReconcileAfterRestoreSchema.parse({
-  environments: [
-    {
-      id: PROD,
-      record: selection(42, 4, 7),
-      snapshot: selection(42, 4, 7),
-      live: selection(42, 4, 7),
-      status: "match",
-    },
-    {
-      id: BETA,
-      record: selection(42, 4, 7),
-      snapshot: selection(41, 4, 7),
-      live: selection(41, 4, 7),
-      status: "held",
-      reason: "Live target and snapshot run r41; the record accepted r42",
-    },
-  ],
-});
-
 export const attestedStage = StageSchema.parse({
   id: "cluster-admission-prod-3/canary",
   deploymentId: "cluster-admission-prod-3",
@@ -290,53 +258,6 @@ export const attestedStage = StageSchema.parse({
   message: "Operator attested the admission canary",
   startedAt: at(10),
   updatedAt: at(11),
-});
-
-/** A cold-start snapshot naming revisions of `catalogDocument()`. */
-export const coldStartSnapshot = ColdStartSnapshotSchema.parse({
-  writtenAt: at(58),
-  catalogRevision: digest("c"),
-  environments: [
-    {
-      environmentId: "delivery/prod",
-      deploymentId: "delivery-prod-7",
-      acceptedAt: at(50),
-      selection: {
-        versionSetRevisionId: "delivery:r7",
-        recipeRevisionId: "delivery/3",
-        configurationRevisionId: "delivery/1",
-      },
-      artifacts: {
-        "image:delivery": {
-          uri: "ghcr.io/shepherdjerred/delivery",
-          version: "2026.10.21",
-          digest: digest("d"),
-        },
-        "chart:delivery": {
-          uri: "https://chartmuseum.sjer.red/charts/delivery-1.4.0.tgz",
-          version: "1.4.0",
-          digest: digest("e"),
-        },
-      },
-    },
-    {
-      environmentId: "sjer-red/prod",
-      deploymentId: "sjer-red-prod-3",
-      acceptedAt: at(40),
-      selection: {
-        versionSetRevisionId: "sjer-red:r3",
-        recipeRevisionId: "sjer-red/1",
-        configurationRevisionId: "sjer-red/1",
-      },
-      artifacts: {
-        "archive:sjer-red": {
-          uri: "s3://delivery-artifacts/sites/sjer-red.tar.zst",
-          version: "2026.10.20",
-          digest: digest("a"),
-        },
-      },
-    },
-  ],
 });
 
 const planCreated = Date.parse(at(50));

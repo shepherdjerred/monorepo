@@ -28,7 +28,6 @@ metrics_cache: dict[str, dict[str, Any]] = {
         "last_scrape_time": 0,
         "last_scrape_success": False,
         "last_error": "",
-        "lock_prefix_seconds": {},
     }
     for bucket in BUCKET_NAMES
 }
@@ -82,54 +81,11 @@ def fetch_r2_usage(bucket_name: str):
     cache["last_scrape_time"] = time.time()
 
 
-def fetch_r2_lock(bucket_name: str):
-    """Fetch effective age locks for a bucket."""
-    cache = metrics_cache[bucket_name]
-    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/r2/buckets/{bucket_name}/lock"
-    headers = {
-        "Authorization": f"Bearer {API_TOKEN}",
-        "Content-Type": "application/json",
-    }
-    try:
-        request = Request(url, headers=headers)
-        with urlopen(request, timeout=30) as response:
-            data = json.loads(response.read().decode("utf-8"))
-            if not data.get("success"):
-                raise RuntimeError(f"Lock API returned errors for {bucket_name}")
-            prefix_seconds: dict[str, int] = {}
-            for rule in data.get("result", {}).get("rules", []):
-                if not rule.get("enabled"):
-                    continue
-                condition = rule.get("condition", {})
-                if condition.get("type") != "Age":
-                    continue
-                prefix = rule.get("prefix", "")
-                prefix_seconds[prefix] = max(
-                    prefix_seconds.get(prefix, 0),
-                    condition.get("maxAgeSeconds", 0),
-                )
-            cache["lock_prefix_seconds"] = prefix_seconds
-    except HTTPError as error:
-        cache["last_scrape_success"] = False
-        cache["last_error"] = f"Lock HTTP {error.code}: {error.reason}"
-        print(f"HTTP error fetching R2 lock for {bucket_name}: {error}")
-    except URLError as error:
-        cache["last_scrape_success"] = False
-        cache["last_error"] = f"Lock URL error: {error.reason}"
-        print(f"URL error fetching R2 lock for {bucket_name}: {error}")
-    except Exception as error:
-        cache["last_scrape_success"] = False
-        cache["last_error"] = f"Lock error: {error}"
-        print(f"Error fetching R2 lock for {bucket_name}: {error}")
-
-
 def scrape_loop():
     """Background thread that periodically fetches R2 metrics."""
     while True:
         for bucket_name in BUCKET_NAMES:
             fetch_r2_usage(bucket_name)
-            if bucket_name == "seaweedfs-backups":
-                fetch_r2_lock(bucket_name)
         time.sleep(SCRAPE_INTERVAL)
 
 
@@ -167,12 +123,6 @@ def generate_metrics():
             f'cloudflare_r2_exporter_scrape_success{{bucket="{bucket_name}"}} '
             f"{1 if cache['last_scrape_success'] else 0}"
         )
-
-    lines.append("# HELP cloudflare_r2_bucket_lock_age_seconds Effective age lock by bucket prefix")
-    lines.append("# TYPE cloudflare_r2_bucket_lock_age_seconds gauge")
-    for bucket_name, cache in metrics_cache.items():
-        for prefix, seconds in cache["lock_prefix_seconds"].items():
-            lines.append(f'cloudflare_r2_bucket_lock_age_seconds{{bucket="{bucket_name}",prefix="{prefix}"}} {seconds}')
 
     return "\n".join(lines) + "\n"
 
@@ -221,8 +171,6 @@ def main():
     # Perform initial scrape
     for bucket_name in BUCKET_NAMES:
         fetch_r2_usage(bucket_name)
-        if bucket_name == "seaweedfs-backups":
-            fetch_r2_lock(bucket_name)
 
     # Start HTTP server
     server = HTTPServer(("", PORT), MetricsHandler)

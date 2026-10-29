@@ -1,12 +1,7 @@
 import { ApplicationFailure } from "@temporalio/activity";
 import { z } from "zod";
 import type { EvidenceInput } from "@shepherdjerred/delivery/contract";
-import {
-  ColdStartReceiptSchema,
-  ColdStartRequirementSchema,
-  type ColdStartReceipt,
-  type RecipeDefinition,
-} from "@shepherdjerred/delivery/model-contract";
+import type { RecipeDefinition } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import {
   modelSteps,
@@ -30,7 +25,6 @@ import { runStaticSiteStep } from "./static-site.ts";
 import { runArchiveStep } from "./archive.ts";
 import { requireSyncedBefore } from "./step-order.ts";
 import { runForumBundleStep } from "./forum-bundle.ts";
-import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
   deploymentPath,
@@ -214,12 +208,12 @@ function selfHealingRecipes(
 }
 
 /**
- * After acceptance: self-heal on the accepted exact source (T4), and the
- * cold-start snapshot to write off-cluster when the chain moved (X7).
+ * After acceptance: self-heal on the accepted exact source (T4). It returns
+ * null: histories recorded while the retired cold-start snapshot existed
+ * returned a snapshot to write here, and the Workflow keeps that branch
+ * only for their replay.
  */
-export async function settleDeliveryModel(
-  id: string,
-): Promise<ColdStartWrite | null> {
+export async function settleDeliveryModel(id: string): Promise<null> {
   const current = await deploymentDetail(id);
   if (
     current.deployment.status !== "succeeded" ||
@@ -228,26 +222,5 @@ export async function settleDeliveryModel(
     return null;
   for (const application of selfHealingRecipes(requireModelRecipe(current)))
     await enableSelfHeal(current, application);
-  const requirement = await deliveryRequest(
-    `${deploymentPath(id)}/cold-start`,
-    ColdStartRequirementSchema,
-  );
-  return requirement.required
-    ? {
-        deploymentId: id,
-        fingerprint: requirement.fingerprint,
-        snapshot: requirement.snapshot,
-      }
-    : null;
-}
-
-export async function recordDeliveryColdStart(
-  id: string,
-  receipt: ColdStartReceipt,
-) {
-  await deliveryRequest(
-    `${deploymentPath(id)}/cold-start`,
-    ColdStartReceiptSchema,
-    receipt,
-  );
+  return null;
 }

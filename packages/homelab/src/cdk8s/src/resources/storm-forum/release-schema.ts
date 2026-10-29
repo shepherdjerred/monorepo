@@ -42,32 +42,7 @@ export const ReleaseSchema = z
     bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
     bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
     releaseId: ForumReleaseIdSchema,
-    preUpgradeBackup: z
-      .object({
-        bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
-        xenforoVersion: z.string().min(1),
-        runtimeImage: z
-          .string()
-          .regex(
-            /^(?:ghcr\.io|docker\.io)\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/,
-          ),
-      })
-      .strict()
-      .optional(),
     storageSlot: z.enum(["primary", "recovery"]).optional(),
-    restore: z
-      .object({
-        manifestKey: z
-          .string()
-          .regex(/^snapshots\/(?:beta|prod)\/[a-f0-9-]{36}\/manifest\.json$/),
-        runtimeImage: z
-          .string()
-          .regex(
-            /^(?:ghcr\.io|docker\.io)\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/,
-          ),
-      })
-      .strict()
-      .optional(),
     trustedConnectorCidr: z
       .cidrv4()
       .refine(
@@ -77,17 +52,7 @@ export const ReleaseSchema = z
   })
   .strict()
   .refine(
-    (value) =>
-      (value.storageSlot !== "recovery" || value.stage === "beta") &&
-      (!value.restore ||
-        (value.stage === "beta" && value.storageSlot === "recovery")),
-    "Recovery uses only the dedicated private beta storage pair",
-  )
-  .refine(
-    (value) =>
-      !value.restore ||
-      value.restore.runtimeImage.replace(/^ghcr\.io\//, "docker.io/") ===
-        value.image,
-    "Recovery must run the snapshot's exact runtime digest",
+    (value) => value.storageSlot !== "recovery" || value.stage === "beta",
+    "Recovery storage belongs only to private beta",
   );
 export type ForumRelease = z.infer<typeof ReleaseSchema>;

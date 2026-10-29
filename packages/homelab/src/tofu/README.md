@@ -14,7 +14,7 @@ tofu/
 ├── argocd/              # ArgoCD account tokens for Woodpecker and Delivery, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
-├── backblaze/           # Private backup buckets and scoped keys (operator-applied)
+├── backblaze/           # Retired backup buckets, forgotten without destroy (operator-applied)
 ├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
 ├── cloudflare-tokens/   # Scoped API tokens, isolated from the DNS stack
 ├── discord/             # Imported Discord bot application settings
@@ -159,8 +159,9 @@ requires connectivity to both the LAN and tailnet; see
 declaration prevents destruction; its lifecycle rule removes only abandoned
 multipart uploads after seven days and never expires completed archives. Retain
 these declarations while the archives exist so ordinary stack applies preserve
-their storage and access policy. Backup buckets are the operator-applied
-`backblaze` stack. `jerred-archives` stays on R2.
+their storage and access policy. `jerred-archives` stays on R2. Velero's
+scheduled backups, written to the R2 `homelab` bucket, are the only backup;
+no stack declares a separate backup bucket.
 
 Each domain's `.tf` file owns its existing zone and application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,

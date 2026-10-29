@@ -71,7 +71,7 @@ describe("ops source collectors", () => {
         "max by (node,dataset_name) (zfs_dataset_referenced_bytes)",
       ].toSorted(),
     );
-    expect(result.signals).toHaveLength(3);
+    expect(result.signals).toHaveLength(1);
     expect(
       result.signals.every((signal) => signal.severity === "unknown"),
     ).toBe(true);

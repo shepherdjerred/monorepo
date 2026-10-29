@@ -828,14 +828,6 @@
       "clones": 1,
       "tokens": 97
     },
-    "packages/seaweedfs-backup/test/backup-restore.test.ts|packages/seaweedfs-backup/test/gc.test.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/seaweedfs-backup/test/gc.test.ts|packages/seaweedfs-backup/test/s3-endpoints.integration.test.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
     "packages/starlight-karma-bot/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
       "clones": 1,
       "tokens": 72

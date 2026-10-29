@@ -134,11 +134,13 @@ deliberately never configured.
 Persistent volumes are ZFS on OpenEBS, across an NVMe pool and an HDD pool. They
 are scrubbed weekly and covered by an explicit Velero backup inventory.
 
+The backup strategy is Velero's scheduled backups (6-hourly, daily, weekly and
+monthly) and nothing else: no database WAL archives, object replicas or
+application-level dumps.
+
 Object storage is SeaweedFS, which backs S3 buckets for Scout images, Glitter's
-corpus, LLM observability archives, and public PR artifacts. Protected objects
-are copied incrementally to immutable recovery points in Cloudflare R2; derived
-and ephemeral buckets remain explicitly excluded. See the
-[SeaweedFS backup reference](/reference/seaweedfs-backups/).
+corpus, LLM observability archives, and public PR artifacts. Its volumes are
+backed up by those same Velero schedules.
 
 Secrets come from 1Password. Backup coverage is an explicit list, not an
 inference — a volume nobody added is a volume nobody is backing up, and the

@@ -26,7 +26,6 @@ import {
   artifactRow,
   artifactView,
 } from "#infrastructure/delivery-data.ts";
-import { replicationPending } from "#infrastructure/artifact-stores/replication.ts";
 
 export type VerifyForumBundle = (artifact: ArtifactVersion) => Promise<void>;
 /** Operator-registered bundle builds: `attested` now, `licensed-bundle` for rows older than that kind. */
@@ -213,8 +212,6 @@ export async function qualifyForumBundle(
     where: { id: buildId },
     data: { qualificationCheckedAt: new Date() },
   });
-  // PC1: the licensed bytes get an off-cluster replica before anything reads them.
-  if (await replicationPending(this.database, buildId)) return current;
   let status: "verified" | "failed" = "verified",
     reason: string | null = null;
   try {

@@ -36,7 +36,7 @@ RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/
 FROM php:8.5.12-fpm-bookworm@sha256:740a5adab5af19504d8aa0754e903e20b40b0153cfd4013c11e4df2029a7b73c AS runtime
 # Distribution packages receive security updates when the pinned base is rebuilt.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip mariadb-client ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j2 gd mysqli zip intl exif \
     && rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache \

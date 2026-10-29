@@ -86,7 +86,6 @@ describe("Temporal ops snapshot collector", () => {
     for (const name of [
       "temporal-temporal-repo-worker",
       "temporal-temporal-scout-worker",
-      "temporal-temporal-backup-worker",
       "temporal-temporal-billing-worker",
     ]) {
       const names = workerEnv(synthesized, name).map((entry) => entry.name);

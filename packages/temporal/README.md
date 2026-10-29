@@ -212,13 +212,10 @@ plan and reattaches to any Job whose stage is already recorded.
 A compound recipe, such as TSMC's companion and server, runs its sub-recipes'
 steps in recipe order under one deployment and one lease. Each step key is
 prefixed with its sub-recipe's position (`sub2-step-sync`). A model
-`minecraft-upgrade` step has two release modes:
-
-- `verified-restore` runs before the sync, through the v1 preservation
-  controller. While players defer preservation, the step waits. The sync then
-  requires the fresh preservation proof.
-- `retained-volume-restart` runs after the sync. It reads back that the server
-  runs exactly `repository:version@digest`.
+`minecraft-upgrade` step restarts the retained world volume after the sync and
+reads back that the server runs exactly `repository:version@digest`. Historical
+`verified-restore` rows take the same path; scheduled Velero backups are the
+only backup.
 
 Rollbacks of TSMC stay refused.
 
@@ -240,9 +237,7 @@ deployment. A rollback finds its version present and only moves the pointer.
 
 Poller proofs make bounded exact-build instant readbacks when active polling
 briefly reaches zero; success requires a fresh positive result, and query or
-schema errors fail immediately. Minecraft preservation and recovery
-HTTP requests disable socket idle timeouts during backups while retaining their
-two-hour total deadline and caller cancellation.
+schema errors fail immediately.
 
 Worker Jobs invoke the native Temporal CLI only for the fixed in-cluster
 plaintext endpoint, with environment and file configuration disabled. This
@@ -470,27 +465,14 @@ changes PostgreSQL selection nor releases a lock. The root release and guarded
 sync commands remain independent infrastructure recovery tools after CI stops
 deploying workloads.
 
-For damaged or missing data, first restore and verify an independent copy with
-the [independent restore procedure](../docs/wiki/src/content/docs/how-to/upgrade-a-homelab-postgresql-major-version.md#2-verify-an-independent-offsite-restore)
-in the PostgreSQL operator how-to. It holds the Restore template, the tokenless
-local-socket-only verification Pod and Delivery's integrity checks. The
-protected source is `delivery/pgdata-delivery-postgresql-0`; the inert,
-restricted destination is `delivery-catalog-recovery/pgdata-delivery-postgresql-0`.
-Restore only the reviewed PV/PVC backup and its complete snapshot chain into
-that destination, never application controllers, Secrets or service accounts.
-The destination has no application writer and is excluded from new backups.
-Its deny-all NetworkPolicy is not enforced by the current Flannel CNI, so the
-how-to keeps the verification Pod offline by configuration and requires proof
-that it holds no socket.
-
-Require completed snapshots, distinct PV/CSI handles, matching server major
-version, successful crash recovery/checksums and catalog/audit/lock/outbox
-integrity. Restore the verified catalog with all API writers stopped using the
-existing PostgreSQL recovery procedure, preserving the original volume. Then
-reconcile the API at its captured source and inspect actual Temporal, native Job
-and Argo identities against restored records before resuming submissions. A
-stale backup cannot justify accepting releases or clearing quarantine. This
-source procedure has not been exercised by disrupting healthy production.
+For damaged or missing data, stop every API writer and restore the Delivery
+PostgreSQL volume from Velero's scheduled backups, which are the only backup,
+with the
+[PostgreSQL operator how-to](../docs/wiki/src/content/docs/how-to/upgrade-a-homelab-postgresql-major-version.md).
+Then reconcile the API at its captured source and inspect actual Temporal,
+native Job and Argo identities against restored records before resuming
+submissions. A stale backup cannot justify accepting releases or clearing
+quarantine.
 
 Central's explicitly reviewed `caddy-s3proxy` sidecar stays an immutable chart
 dependency; acceptance checks its ready Pods against the selected chart's

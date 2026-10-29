@@ -25,9 +25,9 @@ export function createTemporalDataApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "temporal",
       },
-      // No automated sync: restoring the database deletes its `postgresql`
-      // object, and an automated sync would recreate an empty cluster that
-      // archives into the same WAL-G prefix as the backups being restored.
+      // No automated sync: restoring the database from a Velero backup
+      // deletes its `postgresql` object, and an automated sync would
+      // recreate an empty cluster over the volume being restored.
     },
   });
 }

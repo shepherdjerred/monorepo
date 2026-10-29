@@ -5,10 +5,7 @@ import {
 } from "@shepherdjerred/discord-plays-core/entry.ts";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
-import {
-  POKEMON_SAVE_HISTORY_ENTRIES,
-  PokemonGameDriver,
-} from "./lifecycle/pokemon-driver.ts";
+import { PokemonGameDriver } from "./lifecycle/pokemon-driver.ts";
 import type { CommandInput } from "./game/command/command-input.ts";
 import { enqueueCommand } from "./emulator/command-sink.ts";
 import {
@@ -95,7 +92,6 @@ const runtime = bootGameBot({
     userbotTokens: [config.stream.userbot.token],
     driver,
     stateRootDir: config.state_root_dir,
-    saveHistory: { entries: POKEMON_SAVE_HISTORY_ENTRIES, keep: 50 },
     extraCommands: (botClient) =>
       buildPokemonExtraCommands({
         driver,

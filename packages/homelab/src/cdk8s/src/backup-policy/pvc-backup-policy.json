@@ -1,11 +1,5 @@
 [
   {
-    "namespace": "delivery-catalog-recovery",
-    "name": "pgdata-delivery-postgresql-0",
-    "backup": "disabled",
-    "reason": "Isolated Delivery catalog recovery copy; original offsite backup and production volume remain protected"
-  },
-  {
     "namespace": "delivery",
     "name": "pgdata-delivery-postgresql-0",
     "backup": "enabled",
@@ -54,18 +48,6 @@
     "reason": "Refreshable Codex credentials are seeded from 1Password and must stay outside backup archives"
   },
   {
-    "namespace": "ops-restore-rehearsal-incremental",
-    "name": "pgdata-temporal-postgresql-0",
-    "backup": "disabled",
-    "reason": "Independent network-isolated incremental restore acceptance; preserves the standalone full rehearsal dataset"
-  },
-  {
-    "namespace": "ops-restore-rehearsal",
-    "name": "pgdata-temporal-postgresql-0",
-    "backup": "disabled",
-    "reason": "Network-isolated disposable Temporal database restore rehearsal; original offsite archives remain protected"
-  },
-  {
     "namespace": "storm-brain",
     "name": "storm-brain-budget",
     "backup": "enabled",
@@ -75,7 +57,7 @@
     "namespace": "storm-forum",
     "name": "storm-forum-database",
     "backup": "enabled",
-    "reason": "Forum database volume; coordinated exports are stored separately"
+    "reason": "Forum database volume"
   },
   {
     "namespace": "storm-forum",
@@ -87,25 +69,25 @@
     "namespace": "storm-forum-beta",
     "name": "storm-forum-database",
     "backup": "disabled",
-    "reason": "Disposable protected test database restored from coordinated production exports"
+    "reason": "Disposable protected beta test copy; production volumes remain backed up"
   },
   {
     "namespace": "storm-forum-beta",
     "name": "storm-forum-files",
     "backup": "disabled",
-    "reason": "Disposable protected test files restored from coordinated production exports"
+    "reason": "Disposable protected beta test copy; production volumes remain backed up"
   },
   {
     "namespace": "storm-forum-beta",
     "name": "storm-forum-recovery-database",
     "backup": "disabled",
-    "reason": "Dedicated private beta restore target; source snapshots remain protected"
+    "reason": "Dedicated private beta recovery slot; production volumes remain backed up"
   },
   {
     "namespace": "storm-forum-beta",
     "name": "storm-forum-recovery-files",
     "backup": "disabled",
-    "reason": "Dedicated private beta restore target; source snapshots remain protected"
+    "reason": "Dedicated private beta recovery slot; production volumes remain backed up"
   },
   {
     "namespace": "birmel",
@@ -542,26 +524,26 @@
   {
     "namespace": "seaweedfs",
     "name": "data-filer-seaweedfs-filer-0",
-    "backup": "disabled",
-    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+    "backup": "enabled",
+    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
   },
   {
     "namespace": "seaweedfs",
     "name": "data-seaweedfs-seaweedfs-master-0",
-    "backup": "disabled",
-    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+    "backup": "enabled",
+    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
   },
   {
     "namespace": "seaweedfs",
     "name": "data-seaweedfs-volume-0",
-    "backup": "disabled",
-    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+    "backup": "enabled",
+    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
   },
   {
     "namespace": "seaweedfs",
     "name": "idx-seaweedfs-volume-0",
-    "backup": "disabled",
-    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+    "backup": "enabled",
+    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
   },
   {
     "namespace": "stash",

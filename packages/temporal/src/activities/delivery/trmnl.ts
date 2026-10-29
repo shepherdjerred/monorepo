@@ -12,7 +12,7 @@ import {
 } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { withActivityHeartbeat } from "#activities/activity-heartbeat.ts";
 import { configureTrmnlPlugins } from "#lib/delivery/trmnl.ts";
 import { trmnlRepairClaim, verifyTrmnlRepairBackend } from "./trmnl-repair.ts";
 import { executorIdentity } from "./model/stages.ts";
@@ -43,7 +43,7 @@ export function liveTrmnlClients(signal: AbortSignal) {
 export async function applyDeliveryTrmnlPlugins(
   id: string,
 ): Promise<EvidenceInput[]> {
-  return await withBackupActivityHeartbeat(
+  return await withActivityHeartbeat(
     Context.current(),
     async ({ signal }) => await applyTrmnlWithClients(id, signal),
     { stage: "trmnl-plugins" },

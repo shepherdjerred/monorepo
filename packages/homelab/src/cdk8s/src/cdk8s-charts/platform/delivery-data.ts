@@ -3,7 +3,6 @@ import { Chart } from "cdk8s";
 import { createDeliveryNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/namespace.ts";
 import { createSingleAppPostgreSQL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/single-app-postgresql.ts";
 import { retainDataLayerResource } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/data-layer.ts";
-import { archivePostgresWal } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/wal-archive.ts";
 
 /**
  * Delivery's data layer: the `delivery` Namespace and the `delivery-postgresql`
@@ -24,6 +23,5 @@ export function createDeliveryDataChart(app: App): Chart {
     userFlags: [],
   });
   retainDataLayerResource(database);
-  archivePostgresWal(database, "delivery-postgresql");
   return chart;
 }

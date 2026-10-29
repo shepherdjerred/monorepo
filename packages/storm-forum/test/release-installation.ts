@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { rename, unlink } from "node:fs/promises";
-import { releaseForum, validateBackupSource } from "#src/release.ts";
-import { endStormForumBackup } from "#src/backup.ts";
+import { releaseForum } from "#src/release.ts";
+import { MAINTENANCE_MARKER, endForumMaintenance } from "#src/maintenance.ts";
 import { z } from "zod";
 import { runPhp } from "#src/process.ts";
 import { forumManifest } from "#src/config.ts";
@@ -15,28 +15,13 @@ const installed = z
   .strict()
   .parse(JSON.parse(await runPhp(["/opt/storm-forum/runtime/installed.php"])));
 assert.equal(installed.xenforoVersion, forumManifest.xenforoVersion);
-assert.throws(
-  () =>
-    validateBackupSource(
-      {
-        xenforoVersion: "2.3.8",
-        bundleSha256: "a".repeat(64),
-        runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
-      },
-      installed.xenforoVersion,
-    ),
-  /differs from the installed database/,
-);
 
 // Only the disposable licensed fixture runs this test. Keep the database intact
 // while emulating a missing native installation marker.
 const nativeLock = "/var/lib/storm-forum/internal_data/install-lock.php";
 const heldLock = `${nativeLock}.fixture`;
 assert.equal(await Bun.file(heldLock).exists(), false);
-assert.equal(
-  await Bun.file("/var/lib/storm-forum/.maintenance").exists(),
-  false,
-);
+assert.equal(await Bun.file(MAINTENANCE_MARKER).exists(), false);
 assert.equal(
   await Bun.file("/var/lib/storm-forum/.release-lock").exists(),
   false,
@@ -66,9 +51,7 @@ try {
   const lock = OwnerSchema.parse(
     await Bun.file("/var/lib/storm-forum/.release-lock").json(),
   );
-  const marker = OwnerSchema.parse(
-    await Bun.file("/var/lib/storm-forum/.maintenance").json(),
-  );
+  const marker = OwnerSchema.parse(await Bun.file(MAINTENANCE_MARKER).json());
   assert.equal(marker.owner, lock.owner);
   await assert.rejects(releaseForum("beta"), /EEXIST/);
 } finally {
@@ -84,7 +67,7 @@ try {
   const lock = OwnerSchema.parse(
     await Bun.file("/var/lib/storm-forum/.release-lock").json(),
   );
-  await endStormForumBackup(lock.owner);
+  await endForumMaintenance(lock.owner);
   await unlink("/var/lib/storm-forum/.release-lock");
 }
 process.stdout.write(

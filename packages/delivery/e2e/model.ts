@@ -1,10 +1,5 @@
 import type { Database } from "#infrastructure/database.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  coldStartSnapshot,
-  snapshotFingerprint,
-} from "#infrastructure/cold-start/snapshot.ts";
-import { coldStartArchiveKey } from "#shared/model/cold-start-contract.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { publishCiRunner } from "#testing/model-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
@@ -268,9 +263,8 @@ async function release(
 /**
  * Three releases and a configuration rebind of Arcade: the newest alarmed
  * under a hold policy, earlier ones excluded from rollback by a forward-only
- * schema key, a restore hold from a stale cold-start snapshot, a declared
- * recipe the accepted selection does not use yet, and a non-eligible deploy
- * waiting for an override approval.
+ * schema key, a declared recipe the accepted selection does not use yet, and
+ * a non-eligible deploy waiting for an override approval.
  */
 export async function seedModelBrowser(delivery: Delivery, database: Database) {
   const base = await catalogDocument();
@@ -288,8 +282,6 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
     throw new Error("Four set revisions were composed");
   await release(delivery, database, first, { requests: 180 });
   await release(delivery, database, second, { requests: 140 });
-  // The snapshot the backup worker wrote when this release was accepted.
-  const stale = await coldStartSnapshot(database, new Date().toISOString());
   // The catalog moves prod to configuration revision 2; a rebind realises it.
   await delivery.reconcileCatalog(document(base, 2), testOperator);
   const rebind = await delivery.createDeployment(
@@ -306,17 +298,6 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
   await execute(delivery, rebind);
   await delivery.observeMonitor(rebind.id, observation(120), testExecutor);
   await release(delivery, database, third, { requests: 40, critical: true });
-  // The operator supplies the snapshot it read from R2 (section 6).
-  await delivery.reconcileAfterRestore(
-    {
-      requestId: "model/restore",
-      snapshot: stale.snapshot,
-      fingerprint: snapshotFingerprint(stale.snapshot),
-      archiveKey: coldStartArchiveKey(stale.snapshot),
-    },
-    testOperator,
-    {},
-  );
   await delivery.reconcileCatalog(document(base, 3), testOperator);
   // Never accepted in beta, so only an override approval admits it (H4).
   await delivery.createDeployment(

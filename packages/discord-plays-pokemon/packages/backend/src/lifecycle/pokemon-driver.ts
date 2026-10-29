@@ -43,16 +43,6 @@ export const POKEMON_GOAL_STATE_FILE = "goal-state.json";
 export const POKEMON_GOAL_MEMORY_DIR = "goal-memory";
 const INPUT_LOG_CAPACITY = 30;
 
-/**
- * A guild's progress: snapshotted into `saves/<guildId>/history/` before every
- * session. Goal screenshots are diagnostics, not progress, and stay out.
- */
-export const POKEMON_SAVE_HISTORY_ENTRIES = [
-  POKEMON_SAVE_FILE,
-  POKEMON_GOAL_STATE_FILE,
-  POKEMON_GOAL_MEMORY_DIR,
-] as const;
-
 /** The streamer surface a session drives; GameStreamer in production. */
 export type SessionStreamer = Pick<
   GameStreamer,

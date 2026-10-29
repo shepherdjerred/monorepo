@@ -32,8 +32,6 @@ export const TASK_QUEUES = {
   SCOUT: "scout",
   /** Serial direct subprocess maintenance against the CI cache PVCs. */
   MAINTENANCE: "maintenance",
-  /** Serial object-level SeaweedFS backup and retention work. */
-  BACKUP: "backup",
   /** Official provider usage and cost reconciliation with isolated credentials. */
   BILLING: "billing",
   /** Scheduled chat waiters, isolated from unrelated repository automation. */

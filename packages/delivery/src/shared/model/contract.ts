@@ -3,7 +3,6 @@ import * as render from "./application-render.ts";
 import * as stageKeys from "./stage-keys.ts";
 import * as routes from "./route-contract.ts";
 import * as approvals from "./approval-contract.ts";
-import * as coldStart from "./cold-start-contract.ts";
 import * as catalog from "./catalog-contract.ts";
 import * as deploymentRequests from "#shared/deployment-request-contract.ts";
 import * as monitors from "./monitor-contract.ts";
@@ -126,24 +125,6 @@ export function siteReleaseOf(
 export const AdmissionSnapshotSchema = admission.AdmissionSnapshotSchema;
 export type AdmissionSnapshot = admission.AdmissionSnapshot;
 
-export const ColdStartRequirementSchema = coldStart.ColdStartRequirementSchema;
-export const ColdStartReceiptSchema = coldStart.ColdStartReceiptSchema;
-export type ColdStartReceipt = coldStart.ColdStartReceipt;
-export const COLD_START_SNAPSHOT = coldStart.COLD_START_SNAPSHOT;
-export function coldStartArchiveKey(
-  snapshot: Parameters<typeof coldStart.coldStartArchiveKey>[0],
-): string {
-  return coldStart.coldStartArchiveKey(snapshot);
-}
-export const SnapshotArtifactSchema = coldStart.SnapshotArtifactSchema;
-export const SnapshotEnvironmentSchema = coldStart.SnapshotEnvironmentSchema;
-export const ColdStartSnapshotSchema = coldStart.ColdStartSnapshotSchema;
-export type SnapshotArtifact = coldStart.SnapshotArtifact;
-export type SnapshotEnvironment = coldStart.SnapshotEnvironment;
-export type ColdStartSnapshot = coldStart.ColdStartSnapshot;
-export const SettleRestoreHoldSchema = coldStart.SettleRestoreHoldSchema;
-export type SettleRestoreHold = coldStart.SettleRestoreHold;
-
 export const RecipeKindSchema = routes.RecipeKindSchema;
 export const EnvironmentSelectionSchema = routes.EnvironmentSelectionSchema;
 export const DeploymentV2Schema = routes.DeploymentV2Schema;
@@ -157,10 +138,6 @@ export const CatalogReconcileResultSchema = routes.CatalogReconcileResultSchema;
 export const CatalogStateSchema = routes.CatalogStateSchema;
 export const RetireServiceRequestSchema = routes.RetireServiceRequestSchema;
 export const ServiceLifecycleViewSchema = routes.ServiceLifecycleViewSchema;
-export const ReconcileAfterRestoreRequestSchema =
-  routes.ReconcileAfterRestoreRequestSchema;
-export const RestoreComparisonSchema = routes.RestoreComparisonSchema;
-export const ReconcileAfterRestoreSchema = routes.ReconcileAfterRestoreSchema;
 export type EnvironmentSelection = routes.EnvironmentSelection;
 export type DeploymentV2 = routes.DeploymentV2;
 export type DeploymentDetailV2 = routes.DeploymentDetailV2;
@@ -171,14 +148,6 @@ export type CatalogReconcileResult = routes.CatalogReconcileResult;
 export type CatalogState = routes.CatalogState;
 export type RetireServiceRequest = routes.RetireServiceRequest;
 export type ServiceLifecycleView = routes.ServiceLifecycleView;
-export type ReconcileAfterRestoreRequest = routes.ReconcileAfterRestoreRequest;
-export type StoredSnapshotObject = routes.StoredSnapshotObject;
-export function restoreRequest(
-  ...args: Parameters<typeof routes.restoreRequest>
-): ReturnType<typeof routes.restoreRequest> {
-  return routes.restoreRequest(...args);
-}
-export type ReconcileAfterRestore = routes.ReconcileAfterRestore;
 
 export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
   return bindings.recipeRunners(definition);

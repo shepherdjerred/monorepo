@@ -1,8 +1,5 @@
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
-import {
-  AdmissionSnapshotSchema,
-  type ColdStartSnapshot,
-} from "@shepherdjerred/delivery/model-contract";
+import { AdmissionSnapshotSchema } from "@shepherdjerred/delivery/model-contract";
 
 /** A suite's report lives in its workspace; the workspace is the report path's package. */
 export function testWorkspace(resultPath: string): string {
@@ -35,9 +32,3 @@ export function frozenRunnerImage(
     );
   return `${frozen.artifact.uri}@${frozen.artifact.digest}`;
 }
-
-export type ColdStartWrite = {
-  deploymentId: string;
-  fingerprint: string;
-  snapshot: ColdStartSnapshot;
-};

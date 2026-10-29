@@ -2,11 +2,6 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createDeliveryClient } from "#shared/client.ts";
 import {
-  coldStartArchiveKey,
-  type ColdStartSnapshot,
-} from "#shared/model/cold-start-contract.ts";
-import { snapshotFingerprint } from "#infrastructure/cold-start/snapshot.ts";
-import {
   MonitorStatusSchema,
   WatchingMonitorSchema,
 } from "#shared/model/monitor-contract.ts";
@@ -17,7 +12,6 @@ import {
   DeploymentDetailV2Schema,
   DeploymentV2Schema,
   EnvironmentSelectionSchema,
-  ReconcileAfterRestoreSchema,
   ServiceLifecycleViewSchema,
 } from "#shared/model/route-contract.ts";
 import { RecoveryIntentV2Schema } from "#shared/recovery-intent.ts";
@@ -297,44 +291,5 @@ describe("catalog, lifecycle and restore", () => {
         kind: "deploy",
       }),
     ).toBe(409);
-  });
-
-  test("reconcile-after-restore compares every active environment with the operator's snapshot", async () => {
-    const snapshot: ColdStartSnapshot = {
-      writtenAt: new Date().toISOString(),
-      catalogRevision: `sha256:${"c".repeat(64)}`,
-      environments: [],
-    };
-    const body = {
-      requestId: "restore-1",
-      snapshot,
-      fingerprint: snapshotFingerprint(snapshot),
-      archiveKey: coldStartArchiveKey(snapshot),
-    };
-    // The API reads nothing from R2: without the snapshot it refuses.
-    expect(
-      await status("/reconcile-after-restore", "admin", {
-        requestId: "restore-0",
-      }),
-    ).toBe(400);
-    expect(await status("/reconcile-after-restore", "executor", body)).toBe(
-      403,
-    );
-    const compared = await call(
-      "POST",
-      "/reconcile-after-restore",
-      "admin",
-      body,
-    );
-    expect(compared.status).toBe(200);
-    expect(
-      ReconcileAfterRestoreSchema.parse(compared.json).environments,
-    ).toContainEqual({
-      id: "arcade/prod",
-      record: null,
-      snapshot: null,
-      live: null,
-      status: "match",
-    });
   });
 });

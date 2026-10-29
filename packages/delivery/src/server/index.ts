@@ -87,7 +87,6 @@ const forumBundleReader =
 const readApplication = createApplicationReader();
 const app = createApp({
   delivery,
-  readApplication,
   workerRecoveryReaders: {
     readApplication,
     readKubernetes: createWorkerRecoveryReader(),

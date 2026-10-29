@@ -1,8 +1,4 @@
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 /**
  * Thin wrapper over the AWS SDK S3 client for SeaweedFS uploads. Credentials,
@@ -16,11 +12,10 @@ import {
  * Construct an S3 client for the given AWS profile. When `profile` is omitted
  * the SDK falls back to its standard resolution (`AWS_PROFILE` or `default`).
  */
-export function createS3Client(profile?: string, endpoint?: string): S3Client {
+export function createS3Client(profile?: string): S3Client {
   return new S3Client({
     forcePathStyle: true, // SeaweedFS requires path-style addressing
     ...(profile != null && profile.length > 0 ? { profile } : {}),
-    ...(endpoint === undefined ? {} : { endpoint, region: "auto" }),
   });
 }
 
@@ -44,23 +39,4 @@ export async function putObject(
       ContentType: params.contentType,
     }),
   );
-}
-
-/**
- * Read a single object as text with its user metadata. A missing body is an
- * error, never an empty object.
- */
-export async function getObjectText(
-  client: S3Client,
-  params: { bucket: string; key: string },
-): Promise<{ text: string; metadata: Record<string, string> }> {
-  const response = await client.send(
-    new GetObjectCommand({ Bucket: params.bucket, Key: params.key }),
-  );
-  if (response.Body === undefined)
-    throw new Error(`s3://${params.bucket}/${params.key} returned no body`);
-  return {
-    text: await response.Body.transformToString(),
-    metadata: response.Metadata ?? {},
-  };
 }

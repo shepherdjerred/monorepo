@@ -48,7 +48,6 @@ export async function publishUpstreamSources(): Promise<void> {
           Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}`,
         },
       });
-      const deadline = Date.now() + 12 * 60 * 1000;
       return componentArtifactsForPublication(
         client,
         sources,
@@ -73,13 +72,6 @@ export async function publishUpstreamSources(): Promise<void> {
             );
           },
           githubToken: () => requireEnv("GITHUB_DOWNLOAD_TOKEN"),
-          waitForPending: async () => {
-            if (Date.now() >= deadline)
-              throw new Error(
-                "Timed out waiting for source archive replication",
-              );
-            await Bun.sleep(5000);
-          },
         },
       );
     },

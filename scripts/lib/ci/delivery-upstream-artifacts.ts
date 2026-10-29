@@ -66,8 +66,6 @@ export type ComponentArtifactOptions = {
   githubToken?: () => string;
   /** Stores a source tarball in the Delivery artifact bucket. */
   publishArchive?: typeof publishImmutableArchive;
-  /** Wait between idempotent reads of a pending acquisition, if the producer can wait for replication. */
-  waitForPending?: () => Promise<void>;
 };
 export type SourceTransport = (
   url: string,
@@ -405,7 +403,6 @@ async function componentArtifacts(
         intent,
         acquired,
         v2,
-        waitForPending: options.waitForPending,
       }),
     );
   }
@@ -419,12 +416,10 @@ async function registerAcquisition(
     intent,
     acquired,
     v2,
-    waitForPending,
   }: {
     intent: UpstreamIntent;
     acquired: AcquireUpstreamArtifact["artifact"];
     v2: boolean;
-    waitForPending: ComponentArtifactOptions["waitForPending"];
   },
 ): Promise<ArtifactVersion> {
   const pipeline = `ci/${String(producer.repositoryId)}/${String(producer.pipelineNumber)}`;
@@ -446,16 +441,7 @@ async function registerAcquisition(
         }
       : acquired,
   };
-  let result = await client.acquireUpstreamArtifact(request);
-  const buildId = result.buildId;
-  while (waitForPending !== undefined && result.status === "pending") {
-    await waitForPending();
-    result = await client.acquireUpstreamArtifact(request);
-    if (result.buildId !== buildId)
-      throw new Error(
-        "Acquisition identity changed while waiting for qualification",
-      );
-  }
+  const result = await client.acquireUpstreamArtifact(request);
   if (result.status !== "verified")
     throw new Error(
       `Upstream ${intent.component} acquisition is ${result.status}; no eligible CI reference was published`,

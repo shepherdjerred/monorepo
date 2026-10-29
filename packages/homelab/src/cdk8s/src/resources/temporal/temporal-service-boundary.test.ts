@@ -6,10 +6,9 @@ import {
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
-import { HOMELAB_R2_ITEM_ID } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
 
 function resources() {
-  return synthesizeTemporalResources(".test-synth-temporal-backup-worker");
+  return synthesizeTemporalResources(".test-synth-temporal-service-boundary");
 }
 
 describe("Temporal internal service boundary", () => {
@@ -171,110 +170,5 @@ describe("Temporal internal service boundary", () => {
         ports: [{ port: "grafana", protocol: "TCP" }],
       },
     ]);
-  });
-});
-
-describe("Temporal SeaweedFS backup boundary", () => {
-  test("uses its dedicated secret, the homelab R2 credential for Delivery's cold start, and no Kubernetes token", () => {
-    const synthesized = resources();
-    const { pod, container } = findTemporalWorkerContainer(
-      synthesized,
-      "temporal-temporal-backup-worker",
-    );
-    expect(pod.metadata.labels).toMatchObject({
-      app: "temporal-worker",
-      component: "backup-worker",
-    });
-    expect(container.env).toContainEqual({
-      name: "TEMPORAL_WORKER_ROLE",
-      value: "backup",
-    });
-    const backupCredentialVariables = container.env.filter(
-      (variable) =>
-        variable.name.includes("ACCESS_KEY") &&
-        !variable.name.startsWith("CLOUDFLARE_R2_"),
-    );
-    expect(backupCredentialVariables).toHaveLength(4);
-    expect(
-      backupCredentialVariables.map(
-        (variable) => variable.valueFrom?.secretKeyRef.name,
-      ),
-    ).toEqual([
-      "temporal-seaweedfs-backup",
-      "temporal-seaweedfs-backup",
-      "temporal-seaweedfs-backup",
-      "temporal-seaweedfs-backup",
-    ]);
-
-    const item = findTemporalResource(
-      synthesized,
-      "OnePasswordItem",
-      "temporal-seaweedfs-backup",
-    );
-    expect(
-      z.object({ itemPath: z.string() }).parse(item.spec).itemPath,
-    ).toMatch(/\/items\/fkp3hqhl3wze3bxddhhaq3ykzq$/u);
-    // The cold-start snapshot is written to the homelab bucket (model section 6).
-    expect(
-      container.env
-        .filter((variable) => variable.name.startsWith("CLOUDFLARE_R2_"))
-        .map((variable) => [
-          variable.name,
-          variable.valueFrom?.secretKeyRef.name,
-        ]),
-    ).toEqual([
-      ["CLOUDFLARE_R2_ACCESS_KEY_ID", "temporal-delivery-cold-start"],
-      ["CLOUDFLARE_R2_SECRET_ACCESS_KEY", "temporal-delivery-cold-start"],
-    ]);
-    const coldStart = findTemporalResource(
-      synthesized,
-      "OnePasswordItem",
-      "temporal-delivery-cold-start",
-    );
-    expect(
-      z.object({ itemPath: z.string() }).parse(coldStart.spec).itemPath,
-    ).toMatch(new RegExp(`/items/${HOMELAB_R2_ITEM_ID}$`, "u"));
-  });
-
-  test("limits network access to metrics, DNS, Temporal, tracing, HTTPS, and SeaweedFS", () => {
-    const policy = findTemporalResource(
-      resources(),
-      "NetworkPolicy",
-      "temporal-backup-worker-netpol",
-    );
-    const spec = z
-      .object({
-        podSelector: z.object({
-          matchLabels: z.record(z.string(), z.string()),
-        }),
-        ingress: z.array(z.unknown()),
-        egress: z.array(
-          z.object({
-            ports: z.array(
-              z.object({ port: z.number(), protocol: z.string() }),
-            ),
-          }),
-        ),
-      })
-      .parse(policy.spec);
-    expect(spec.podSelector.matchLabels).toEqual({
-      component: "backup-worker",
-    });
-    expect(spec.ingress).toHaveLength(1);
-    expect(
-      spec.egress
-        .flatMap((rule) =>
-          rule.ports.map((port) => `${port.protocol}:${String(port.port)}`),
-        )
-        .sort(),
-    ).toEqual(["TCP:4318", "TCP:443", "TCP:53", "TCP:7233", "UDP:53"]);
-
-    const seaweedFsPolicy = findTemporalResource(
-      resources(),
-      "NetworkPolicy",
-      "temporal-backup-seaweedfs-netpol",
-    );
-    expect(JSON.stringify(seaweedFsPolicy.spec)).toContain("8333");
-    expect(JSON.stringify(seaweedFsPolicy.spec)).toContain("seaweedfs");
   });
 });

@@ -46,7 +46,6 @@ import {
   resolveManifest,
 } from "./artifact-stores/oci-registry.ts";
 import type { RegistryLocation } from "./artifact-stores/oci-registry.ts";
-import { replicationPending } from "./artifact-stores/replication.ts";
 import {
   sourceReview,
   verifySource,
@@ -467,9 +466,6 @@ export async function acquireUpstreamArtifact(
     else if (plan.kind === "source") await verifySource(input, plan, transport);
     else await verifyManifest(input, plan, transport);
     await this.database.$transaction(async (tx) => {
-      // PC1: bytes in a self-hosted store (a source tarball) verify only once
-      // their off-cluster replica is recorded; a later acquisition retries.
-      if (await replicationPending(tx, buildId)) return;
       const changed = await tx.build.updateMany({
         where: { id: buildId, status: { in: ["pending", "failed"] } },
         data: {

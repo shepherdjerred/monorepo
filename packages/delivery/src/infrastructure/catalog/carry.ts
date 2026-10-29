@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { Prisma } from "#generated/prisma/client.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import {
   catalogComponentOf,
   catalogOwnerOf,
@@ -163,7 +163,6 @@ async function moveArtifact(
           version: original.version,
           origin: ArtifactOriginSchema.parse(original.origin),
           contentFingerprint: original.contentFingerprint,
-          replication: original.replication ?? Prisma.DbNull,
           migratedFrom,
         },
       },
@@ -263,7 +262,7 @@ type CarryContext = { catalogRevision: string; actor: Principal };
  * carried set with the v1 acceptance's recipe and configuration, has no
  * stages and no effects, and becomes the environment's accepted deployment;
  * every reader of the accepted selection (its view, promotion, admission,
- * the cold-start snapshot, rollback candidates) then names the carried set.
+ * rollback candidates) then names the carried set.
  * The v1 deployment stays immutable history.
  */
 async function acceptCarried(

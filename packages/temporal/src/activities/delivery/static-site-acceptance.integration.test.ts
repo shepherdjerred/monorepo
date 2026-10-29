@@ -3,7 +3,6 @@ import {
   createTestDatabase,
   createApp,
   Delivery,
-  replicateProducedArtifacts,
   testExecutor,
   testOperator,
   testPublisher,
@@ -52,8 +51,6 @@ test("the static adapter's evidence can finish its exact deployment through the 
     testPublisher,
     { repositoryId: 1, pipelineNumber: 1 },
   );
-  // Self-hosted archive bytes verify only with an off-cluster replica (PC1).
-  await replicateProducedArtifacts(delivery, publication.buildId);
   await delivery.qualify(publication.buildId, "verified", testExecutor);
   const versions = await delivery.versions("static-sites");
   const selected = versions[0];

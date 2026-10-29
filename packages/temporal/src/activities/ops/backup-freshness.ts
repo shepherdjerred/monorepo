@@ -1,6 +1,5 @@
 import type { VeleroScheduleStatus } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import type { PrometheusSample } from "@shepherdjerred/ops-clients/prometheus.ts";
-import { SEAWEEDFS_BACKUP_FRESHNESS } from "@shepherdjerred/ops-model/backup-policy.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import { metricsLink } from "./ops-links.ts";
@@ -53,37 +52,6 @@ function signal(input: {
         : { ageHours: Math.round(ageSeconds / 3600) },
     links: [metricsLink("Backup freshness", query, "now-30d")],
   };
-}
-
-/** Cadence and grace come from their owners; no empty metric means healthy. */
-function seaweedfsSignals(samples: readonly PrometheusSample[]): SignalInput[] {
-  const signals: SignalInput[] = [];
-  const seaweedfs = ages(samples, "cadence");
-  for (const cadence of seaweedfs.keys()) {
-    if (!(cadence in SEAWEEDFS_BACKUP_FRESHNESS))
-      throw new Error(`Unknown SeaweedFS backup cadence ${cadence}`);
-  }
-  for (const [cadence, policy] of Object.entries(SEAWEEDFS_BACKUP_FRESHNESS)) {
-    const age = seaweedfs.get(cadence);
-    const severity: Severity =
-      age === undefined
-        ? "unknown"
-        : age > policy.errorSeconds + policy.alertForSeconds
-          ? "error"
-          : age > policy.warningSeconds + policy.alertForSeconds
-            ? "warning"
-            : "ok";
-    if (severity !== "ok")
-      signals.push(
-        signal({
-          name: `SeaweedFS ${cadence}`,
-          severity,
-          ageSeconds: age,
-          query: `seaweedfs_backup_last_success_timestamp_seconds{cadence=${JSON.stringify(cadence)}}`,
-        }),
-      );
-  }
-  return signals;
 }
 
 function veleroScheduleSignal(
@@ -154,12 +122,11 @@ function veleroScheduleSignal(
 
 /** Cadence and grace come from their owners; no empty metric means healthy. */
 export function backupFreshnessSignals(input: {
-  seaweedfs: readonly PrometheusSample[];
   velero: readonly PrometheusSample[];
   schedules: readonly VeleroScheduleStatus[];
   now: Date;
 }): SignalInput[] {
-  const signals = seaweedfsSignals(input.seaweedfs);
+  const signals: SignalInput[] = [];
   const velero = ages(input.velero, "schedule");
   if (input.schedules.length === 0)
     signals.push(

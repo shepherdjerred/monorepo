@@ -10,25 +10,11 @@ import {
 } from "#commands/deploy/deploy.ts";
 import { parseDeployArgs } from "#commands/deploy/common.ts";
 import { deployMachineCredential } from "#commands/deploy/forum.ts";
-import type { ObjectReader } from "#commands/deploy/model-io.ts";
 import {
-  COLD_START_SNAPSHOT,
   CatalogDocumentSchema,
   catalogRevision,
-  coldStartArchiveKey,
 } from "@shepherdjerred/delivery/model-contract";
 import { loadCatalogDocument } from "@shepherdjerred/ops-model/delivery-catalog/files.ts";
-
-const snapshotWriterFingerprint = `sha256:${"c".repeat(64)}`;
-/** `latest.json` and its immutable copy, as the writer left them in R2. */
-const storedSnapshot: ObjectReader = (location) =>
-  location.key === COLD_START_SNAPSHOT.key ||
-  location.key === coldStartArchiveKey(fixtures.coldStartSnapshot)
-    ? Promise.resolve({
-        text: JSON.stringify(fixtures.coldStartSnapshot),
-        fingerprint: snapshotWriterFingerprint,
-      })
-    : Promise.reject(new Error(`No object ${location.key}`));
 
 type Sent = { method: string; path: string; body: unknown };
 
@@ -63,13 +49,9 @@ async function run(
   client: ReturnType<typeof delivery>["client"],
   command: string,
   args: string[],
-  readObject?: ObjectReader,
 ) {
   const { values, positionals } = parseDeployArgs(args);
-  return runDeployCommand(client, command, positionals, {
-    ...values,
-    ...(readObject === undefined ? {} : { readObject }),
-  });
+  return runDeployCommand(client, command, positionals, values);
 }
 
 const prod = encodeURIComponent(fixtures.PROD);
@@ -110,24 +92,6 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     ["catalog", ["reconcile"], ["--file", "catalog.json"], "--machine"],
     ["promote", [fixtures.BETA, fixtures.PROD], ["--override"], "--override"],
     [
-      "snapshot",
-      ["accept", fixtures.PROD],
-      ["--reason", "x".repeat(20)],
-      "--machine",
-    ],
-    [
-      "snapshot",
-      ["accept", fixtures.PROD],
-      ["--machine", "--evidence", "e"],
-      "--reason",
-    ],
-    [
-      "render-application",
-      ["delivery/prod"],
-      ["--snapshot", "s.json"],
-      "--file",
-    ],
-    [
       "attest",
       ["deployment-1"],
       ["--machine", "--evidence", "e.json"],
@@ -139,16 +103,6 @@ describe("model verbs refuse incomplete requests before credentials", () => {
       ["--machine", "--stage", "canary"],
       "--evidence",
     ],
-    ["snapshot", [], [], "--output"],
-    ["snapshot", ["reconcile"], [], "--machine"],
-    [
-      "snapshot",
-      ["reconcile", fixtures.PROD],
-      ["--machine"],
-      "takes no operand",
-    ],
-    ["snapshot", ["restore"], [], "deploy snapshot reconcile"],
-    ["render-application", ["delivery/prod"], [], "--snapshot"],
     ["recover", ["scout-prod-37"], ["--machine"], "--expected-generation"],
     ["rollback", [fixtures.PROD], [], "Invalid operands"],
     ["monitor", [], [], "Invalid operands"],
@@ -162,7 +116,7 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     expect(deployMachineCredential("attest", ["deployment-1"])).toBe(
       "DELIVERY_ATTEST_TOKEN",
     );
-    for (const command of ["retire", "catalog", "snapshot"])
+    for (const command of ["retire", "catalog"])
       expect(deployMachineCredential(command, [])).toBe("DELIVERY_API_TOKEN");
   });
 });
@@ -337,55 +291,6 @@ describe("admin and operator verbs", () => {
     ]);
     expect(result).toEqual({ result: fixtures.attestedStage, exitCode: 0 });
     expect(sent[0]?.body).toEqual({ stage: "canary", evidence });
-  });
-
-  test("snapshot reconcile exits non-zero while any environment is held", async () => {
-    const held = delivery({
-      "POST /reconcile-after-restore": fixtures.restoreComparison,
-    });
-    const mismatch = await run(
-      held.client,
-      "snapshot",
-      ["reconcile", "--machine", "--request-id", "r/1"],
-      storedSnapshot,
-    );
-    expect(mismatch.exitCode).toBe(1);
-    // The operator's own R2 read supplies the snapshot (section 6).
-    expect(held.sent[0]?.body).toEqual({
-      requestId: "r/1",
-      snapshot: fixtures.coldStartSnapshot,
-      fingerprint: snapshotWriterFingerprint,
-      archiveKey: coldStartArchiveKey(fixtures.coldStartSnapshot),
-    });
-    const matching = delivery({
-      "POST /reconcile-after-restore": {
-        environments: fixtures.restoreComparison.environments.filter(
-          (entry) => entry.status === "match",
-        ),
-      },
-    });
-    const match = await run(
-      matching.client,
-      "snapshot",
-      ["reconcile", "--machine"],
-      storedSnapshot,
-    );
-    expect(match.exitCode).toBe(0);
-  });
-
-  test("snapshot reconcile refuses a snapshot whose immutable copy differs, before sending", async () => {
-    const { client, sent } = delivery({});
-    await expect(
-      run(client, "snapshot", ["reconcile", "--machine"], (location) =>
-        location.key === COLD_START_SNAPSHOT.key
-          ? storedSnapshot(location)
-          : Promise.resolve({
-              text: "{}",
-              fingerprint: snapshotWriterFingerprint,
-            }),
-      ),
-    ).rejects.toThrow("differs from its immutable copy");
-    expect(sent).toEqual([]);
   });
 });
 
@@ -614,148 +519,5 @@ describe("override approvals", () => {
       reason: "Reviewed the ineligible set revision",
       override: true,
     });
-  });
-});
-
-describe("cold start", () => {
-  test("snapshot accept settles one restore hold with the operator's evidence", async () => {
-    const cleared = {
-      environmentId: fixtures.PROD,
-      cleared: fixtures.restoreHold,
-    };
-    const { client, sent } = delivery({
-      [`POST /environments/${prod}/restore-hold/accept`]: cleared,
-    });
-    const result = await run(client, "snapshot", [
-      "accept",
-      fixtures.PROD,
-      "--machine",
-      "--reason",
-      "The live Application is the intended rollback target",
-      "--evidence",
-      "argocd app get scout shows revision r41",
-    ]);
-    expect(result).toEqual({ result: cleared, exitCode: 0 });
-    expect(sent[0]?.body).toEqual({
-      reason: "The live Application is the intended rollback target",
-      evidence: "argocd app get scout shows revision r41",
-    });
-  });
-
-  test("snapshot --output reads R2 directly, without Delivery", async () => {
-    const output = path.join(directory, "cold-start.json");
-    const read: string[] = [];
-    const { client, sent } = delivery({});
-    const result = await run(
-      client,
-      "snapshot",
-      ["--output", output],
-      (location) => {
-        read.push(`${location.bucket}/${location.key}`);
-        return Promise.resolve({
-          text: JSON.stringify(fixtures.coldStartSnapshot),
-          fingerprint: undefined,
-        });
-      },
-    );
-    expect(read).toEqual(["homelab/delivery-cold-start/latest.json"]);
-    expect(sent).toEqual([]);
-    expect(result).toMatchObject({
-      result: { location: "s3://homelab/delivery-cold-start/latest.json" },
-      exitCode: 0,
-    });
-    expect(await Bun.file(output).json()).toEqual(fixtures.coldStartSnapshot);
-  });
-
-  test("snapshot --output refuses a snapshot that breaks the contract", async () => {
-    const { client } = delivery({});
-    await expect(
-      run(
-        client,
-        "snapshot",
-        ["--output", path.join(directory, "broken.json")],
-        () =>
-          Promise.resolve({
-            text: JSON.stringify({ environments: [] }),
-            fingerprint: undefined,
-          }),
-      ),
-    ).rejects.toThrow();
-  });
-
-  test("render-application prints the snapshot's selection as an Application", async () => {
-    const snapshot = path.join(directory, "snapshot.json");
-    const catalog = path.join(directory, "catalog.json");
-    const document = await fixtures.catalogDocument();
-    // The snapshot names the catalog revision it was written under.
-    await Bun.write(
-      snapshot,
-      JSON.stringify({
-        ...fixtures.coldStartSnapshot,
-        catalogRevision: await catalogRevision(document),
-      }),
-    );
-    await Bun.write(catalog, JSON.stringify(document));
-    const { client, sent } = delivery({});
-    const args = ["--snapshot", snapshot, "--file", catalog];
-    const rendered = await run(client, "render-application", [
-      "delivery/prod",
-      ...args,
-    ]);
-    expect(sent).toEqual([]);
-    expect(rendered).toMatchObject({
-      exitCode: 0,
-      result: {
-        kind: "Application",
-        metadata: { name: "delivery" },
-        spec: { source: { targetRevision: "1.4.0" } },
-        operation: {
-          info: [{ value: "cold-start/delivery-prod-7" }],
-          sync: { revision: "1.4.0" },
-        },
-      },
-    });
-    await expect(
-      run(client, "render-application", ["sjer-red/prod", ...args]),
-    ).rejects.toThrow("does not describe an ArgoCD Application");
-    await expect(
-      run(client, "render-application", ["arcade/prod", ...args]),
-    ).rejects.toThrow("no accepted selection for arcade/prod");
-  });
-
-  test("render-application refuses a catalog document of another revision", async () => {
-    const snapshot = path.join(directory, "other-snapshot.json");
-    const catalog = path.join(directory, "other-catalog.json");
-    const document = await fixtures.catalogDocument();
-    await Bun.write(
-      snapshot,
-      JSON.stringify({
-        ...fixtures.coldStartSnapshot,
-        catalogRevision: await catalogRevision(document),
-      }),
-    );
-    // The same revision ids, with one configuration's contents changed.
-    await Bun.write(
-      catalog,
-      JSON.stringify({
-        ...document,
-        configurations: document.configurations.map((entry, index) =>
-          index === 0
-            ? { ...entry, content: { ...entry.content, changed: "yes" } }
-            : entry,
-        ),
-      }),
-    );
-    const { client, sent } = delivery({});
-    await expect(
-      run(client, "render-application", [
-        "delivery/prod",
-        "--snapshot",
-        snapshot,
-        "--file",
-        catalog,
-      ]),
-    ).rejects.toThrow(/but the snapshot was written under/u);
-    expect(sent).toEqual([]);
   });
 });

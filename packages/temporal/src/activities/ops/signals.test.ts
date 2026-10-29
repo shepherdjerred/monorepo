@@ -148,7 +148,6 @@ function maintenance(
     probeCertificates: [],
     filesystems: [],
     zpools: [],
-    seaweedfsBackups: [],
     veleroBackups: [],
     cpu: [sample(0.25)],
     memory: [sample(0.5)],
@@ -177,11 +176,7 @@ describe("maintenance", () => {
           sample(0.3, { instance: "torvalds", mountpoint: "/var" }),
           sample(0.82, { instance: "liskov", mountpoint: "/var/mnt/ci" }),
         ],
-        seaweedfsBackups: [
-          sample(40 * 3600, { cadence: "daily" }),
-          sample(3600, { cadence: "six-hourly" }),
-        ],
-        veleroBackups: [sample(3600, { schedule: "nightly" })],
+        veleroBackups: [sample(40 * 3600, { schedule: "nightly" })],
       }),
       [
         {
@@ -202,7 +197,7 @@ describe("maintenance", () => {
       ["maintenance:certificate:postal/smtp", "error"],
       ["maintenance:filesystem:liskov:/var/mnt/ci", "warning"],
       ["maintenance:zpool:zpool tank", "error"],
-      ["maintenance:backup:SeaweedFS daily", "warning"],
+      ["maintenance:backup:Velero nightly", "warning"],
     ]);
     expect(result.signals[1]).toMatchObject({
       kind: "filesystem",

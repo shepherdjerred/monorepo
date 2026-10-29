@@ -28,10 +28,6 @@ export function nativeModule(options: {
 }): GameServerModule<SelfbotPooledUserbot> {
   return {
     definition: games[options.gameId],
-    saveEntries:
-      options.gameId === "brawl"
-        ? ["emulator/Wii", "emulator/GC"]
-        : ["profile/Default/IndexedDB"],
     create(context) {
       const metricLabels = { runtime: options.gameId };
       const format = nativeFormats[options.gameId];

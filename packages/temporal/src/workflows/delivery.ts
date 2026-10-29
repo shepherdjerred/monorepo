@@ -6,11 +6,8 @@ import {
   proxyActivities,
   sleep,
 } from "@temporalio/workflow";
-import type { PendingReplication } from "@shepherdjerred/delivery/artifact-contract";
 import type { DeliveryActivities } from "#activities/delivery/index.ts";
 import type { PlatformDeliveryActivities } from "#activities/delivery/platform/index.ts";
-import type { DeliveryReplicationActivities } from "#activities/delivery/replication/copy.ts";
-import type { DeliveryColdStartActivities } from "#activities/delivery/model/cold-start.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
@@ -68,29 +65,70 @@ const controlPlane = proxyActivities<PlatformDeliveryActivities>({
     maximumInterval: "30 seconds",
   },
 });
-/** Off-cluster writes run on the backup worker, which holds the R2 credentials. */
-const backup = proxyActivities<DeliveryColdStartActivities>({
-  taskQueue: TASK_QUEUES.BACKUP,
+/**
+ * Activities of Delivery's retired off-cluster replication and cold-start
+ * snapshot. Velero's scheduled backups are the only backup now, and no worker
+ * serves these; only histories recorded before their removal schedule them,
+ * so replay of those histories keeps the same commands.
+ */
+type RetiredReplica = {
+  backupBucket: string;
+  backupObjectKey: string;
+  sha256: string;
+};
+type RetiredPendingReplication = {
+  artifacts: {
+    artifactId: string;
+    buildId: string;
+    serviceId: string;
+    uri: string;
+    digest: string;
+  }[];
+};
+type RetiredBackupActivities = {
+  writeDeliveryColdStart: (write: unknown) => Promise<unknown>;
+  replicateDeliveryObject: (input: {
+    sourceBucket: string;
+    sourceKey: string;
+    expectedSha256: string;
+  }) => Promise<RetiredReplica>;
+};
+type RetiredDeliveryActivities = {
+  listDeliveryReplications: () => Promise<RetiredPendingReplication>;
+  recordDeliveryReplication: (input: unknown) => Promise<void>;
+  recordDeliveryColdStart: (
+    deploymentId: string,
+    receipt: unknown,
+  ) => Promise<void>;
+};
+/** The retired backup worker's queue, as recorded histories name it. */
+const RETIRED_BACKUP_QUEUE = "backup";
+const retiredMetadata = proxyActivities<RetiredDeliveryActivities>({
+  taskQueue: TASK_QUEUES.DELIVERY,
+  startToCloseTimeout: "2 minutes",
+  retry: {
+    initialInterval: "5 seconds",
+    maximumInterval: "30 seconds",
+  },
+});
+const retiredQualification = proxyActivities<RetiredDeliveryActivities>({
+  taskQueue: TASK_QUEUES.DELIVERY,
+  startToCloseTimeout: "2 minutes",
+  retry: { maximumAttempts: 1 },
+});
+const retiredBoundedColdStart = proxyActivities<RetiredBackupActivities>({
+  taskQueue: RETIRED_BACKUP_QUEUE,
   scheduleToCloseTimeout: "10 minutes",
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 5, initialInterval: "10 seconds" },
 });
-/**
- * The cold-start snapshot of an acceptance retries until it lands: the
- * deployment is already terminal, and nothing else revisits it to write the
- * snapshot (X7). Each write is idempotent and never moves `latest.json` back.
- */
-const coldStartBackup = proxyActivities<DeliveryColdStartActivities>({
-  taskQueue: TASK_QUEUES.BACKUP,
+const retiredColdStart = proxyActivities<RetiredBackupActivities>({
+  taskQueue: RETIRED_BACKUP_QUEUE,
   startToCloseTimeout: "2 minutes",
   retry: { initialInterval: "10 seconds", maximumInterval: "10 minutes" },
 });
-const replication = proxyActivities<DeliveryReplicationActivities>({
-  taskQueue: TASK_QUEUES.BACKUP,
-  // The backup worker runs one Activity at a time and the dispatch Workflow
-  // has a five-minute execution budget: a running snapshot defers replication
-  // to a later tick instead of holding this one. The copy is idempotent, so the
-  // next tick retries instead of this one.
+const retiredReplication = proxyActivities<RetiredBackupActivities>({
+  taskQueue: RETIRED_BACKUP_QUEUE,
   scheduleToStartTimeout: "1 minute",
   scheduleToCloseTimeout: "3 minutes",
   startToCloseTimeout: "3 minutes",
@@ -104,6 +142,12 @@ const replication = proxyActivities<DeliveryReplicationActivities>({
  * qualification and dispatch Activities.
  */
 export const DELIVERY_REPLICATION_PATCH = "delivery-dispatch-replication-v1";
+/**
+ * Off-cluster replication was retired: histories that recorded the
+ * replication marker keep its commands, and new ticks record this marker
+ * instead and never replicate.
+ */
+export const DROP_DELIVERY_REPLICATION_PATCH = "drop-delivery-replication-v1";
 /** Histories that already scheduled preservation keep that command; new runs do not. */
 export const DROP_MINECRAFT_PRESERVATION_PATCH =
   "drop-minecraft-preservation-v1";
@@ -125,8 +169,8 @@ export const DELIVERY_MODEL_EXECUTOR_PATCH = "delivery-model-executor-v1";
 export const DELIVERY_DISPATCH_MODEL_PATCH = "delivery-dispatch-model-v1";
 
 /**
- * An acceptance's cold-start write retries until it lands (X7). Histories
- * recorded before it keep their bounded five attempts.
+ * Retired with the cold-start snapshot: histories that recorded an
+ * acceptance's write keep their retrying or bounded attempts on replay.
  */
 export const DELIVERY_COLD_START_RETRY_PATCH = "delivery-cold-start-retry-v1";
 
@@ -138,7 +182,7 @@ export const DELIVERY_COLD_START_RETRY_PATCH = "delivery-cold-start-retry-v1";
 export const DELIVERY_SELF_HOSTED_HANDOFF_PATCH =
   "delivery-self-hosted-handoff-v1";
 
-/** Artifacts replicated per dispatch tick; the rest wait for the next one. */
+/** Artifacts a recorded replication tick replicated; the rest waited. */
 const REPLICATIONS_PER_DISPATCH = 10;
 
 function replicatedStoreObject(uri: string): { bucket: string; key: string } {
@@ -163,15 +207,15 @@ function hexSha256(digest: string): string {
 }
 
 async function replicateArtifact(
-  artifact: PendingReplication["artifacts"][number],
+  artifact: RetiredPendingReplication["artifacts"][number],
 ): Promise<void> {
   const { bucket, key } = replicatedStoreObject(artifact.uri);
-  const replica = await replication.replicateDeliveryObject({
+  const replica = await retiredReplication.replicateDeliveryObject({
     sourceBucket: bucket,
     sourceKey: key,
     expectedSha256: hexSha256(artifact.digest),
   });
-  await qualification.recordDeliveryReplication({
+  await retiredQualification.recordDeliveryReplication({
     artifactId: artifact.artifactId,
     replication: {
       store: "r2",
@@ -183,11 +227,14 @@ async function replicateArtifact(
   });
 }
 
-/** One artifact's failure never stops the others; every failure is returned. */
+/**
+ * Retained only for histories recorded with the replication marker. One
+ * artifact's failure never stopped the others; every failure is returned.
+ */
 async function replicatePendingArtifacts(): Promise<unknown[]> {
-  let pending: PendingReplication;
+  let pending: RetiredPendingReplication;
   try {
-    pending = await qualification.listDeliveryReplications();
+    pending = await retiredQualification.listDeliveryReplications();
   } catch (error: unknown) {
     return [error];
   }
@@ -358,21 +405,24 @@ export async function deliveryHandoffWorkflow(input: {
   await settleModelAcceptance(input.deploymentId, "accepted");
 }
 
-/** After acceptance: self-heal on the accepted source and the cold-start snapshot (T4, X7). */
+/** After acceptance: self-heal on the accepted source (T4). */
 async function settleModelAcceptance(
   deploymentId: string,
   outcome: "accepted" | "handed-off",
 ) {
   // A handed-off deployment is settled by its successor (D8).
   if (outcome === "handed-off") return;
-  const coldStart = await metadata.settleDeliveryModel(deploymentId);
-  if (coldStart === null) return;
+  // Settlement now always returns null. Histories recorded while the
+  // cold-start snapshot existed returned one here and then wrote it; replay
+  // keeps those commands.
+  const recorded: unknown = await metadata.settleDeliveryModel(deploymentId);
+  if (recorded === null) return;
   const writer = patched(DELIVERY_COLD_START_RETRY_PATCH)
-    ? coldStartBackup
-    : backup;
-  await metadata.recordDeliveryColdStart(
+    ? retiredColdStart
+    : retiredBoundedColdStart;
+  await retiredMetadata.recordDeliveryColdStart(
     deploymentId,
-    await writer.writeDeliveryColdStart(coldStart),
+    await writer.writeDeliveryColdStart(recorded),
   );
 }
 
@@ -390,11 +440,14 @@ async function observeAcceptedSelections(): Promise<unknown[]> {
 }
 
 export async function deliveryDispatchWorkflow() {
-  // Receipts land before qualification so a build verifies in the same tick;
-  // dispatch still runs when replication fails and the failure surfaces last.
-  const replicationFailures = patched(DELIVERY_REPLICATION_PATCH)
-    ? await replicatePendingArtifacts()
-    : [];
+  // New ticks record the drop marker and never replicate. A history recorded
+  // with the replication marker replays its list, copy and receipt commands;
+  // one recorded before replication existed has neither marker.
+  const replicationFailures =
+    !patched(DROP_DELIVERY_REPLICATION_PATCH) &&
+    patched(DELIVERY_REPLICATION_PATCH)
+      ? await replicatePendingArtifacts()
+      : [];
   const [
     qualified,
     dispatched,

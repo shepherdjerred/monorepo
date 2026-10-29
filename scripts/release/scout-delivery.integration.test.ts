@@ -5,7 +5,6 @@ import {
   createApp,
   createTestDatabase,
   Delivery,
-  replicateProducedArtifacts,
   testExecutor,
   testPublisher,
   testOperator,
@@ -147,9 +146,6 @@ async function qualify(build: number, input: PublishBuild, store = delivery) {
     repositoryId: 1,
     pipelineNumber: build,
   });
-  // PC1: produced self-hosted archives hold `pending` until R2 holds their
-  // bytes. Retained references carry their original receipt and need none.
-  await replicateProducedArtifacts(store, registered.buildId);
   expect(
     await store.qualify(registered.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });

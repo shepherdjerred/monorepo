@@ -5,7 +5,6 @@ import {
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
 import { testExecutor, testOperator, testPublisher } from "./seed.ts";
-import { replicateProducedArtifacts } from "./replication.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
 import type {
@@ -46,7 +45,6 @@ export async function contentRecoveryFixture(
     testPublisher,
     { repositoryId: 1, pipelineNumber: 100 },
   );
-  await replicateProducedArtifacts(delivery, build.buildId);
   await delivery.qualify(build.buildId, "verified", testExecutor);
   const [version] = await delivery.versions("sjer-red");
   if (version === undefined)

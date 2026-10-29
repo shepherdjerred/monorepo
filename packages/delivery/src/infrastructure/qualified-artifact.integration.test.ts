@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { useDeliveryHttp } from "#testing/delivery-http-fixture.ts";
 import { testExecutor, testPublisher, testOperator } from "#testing/seed.ts";
-import { replicateProducedArtifacts } from "#testing/replication.ts";
 
 const query = {
   serviceId: "scout-for-lol",
@@ -193,7 +192,6 @@ test("late verified outputs cannot replace the image in the newest coherent auto
   });
   const three = await sitePublication({ number: 3, requiredDigest: a });
   for (const build of [one, three, two]) {
-    await replicateProducedArtifacts(harness.delivery, build.buildId);
     expect(
       await harness.delivery.qualify(build.buildId, "verified", testExecutor),
     ).toEqual({ status: "verified" });
@@ -229,7 +227,6 @@ test("late verified outputs cannot replace the image in the newest coherent auto
     requiredDigest: selected.digest,
     siteDigest: "4".repeat(64),
   });
-  await replicateProducedArtifacts(harness.delivery, four.buildId);
   expect(
     await harness.delivery.qualify(four.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });
@@ -343,7 +340,6 @@ test("automatic qualification retains qualified image B across a manual A compos
     testPublisher,
     { repositoryId: 1, pipelineNumber: 3 },
   );
-  await replicateProducedArtifacts(harness.delivery, c.buildId);
   expect(
     await harness.delivery.qualify(c.buildId, "verified", testExecutor),
   ).toEqual({
@@ -653,7 +649,6 @@ async function platformSource(number: number, rootArtifactId: string) {
     testPublisher,
     { repositoryId: 1, pipelineNumber: number },
   );
-  await replicateProducedArtifacts(harness.delivery, build.buildId);
   return build;
 }
 

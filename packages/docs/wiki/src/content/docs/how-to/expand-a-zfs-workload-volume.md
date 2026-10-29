@@ -63,5 +63,4 @@ Keep the explicit claim declarations and their pruning protection.
 
 ## Related
 
-- [SeaweedFS off-site backups](/reference/seaweedfs-backups/)
 - [Reclaim a released volume](/how-to/reclaim-a-released-volume/)

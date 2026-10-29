@@ -13,7 +13,6 @@ import type { Box, Player } from "#protocol/bridge.ts";
 import {
   LIVE_DAEMON_START_HINT,
   LIVE_TARGET_ID,
-  type LiveBackupResponse,
   type LiveJournalEntry,
   type LiveStatusResponse,
   type LiveWriteFlags,
@@ -322,13 +321,6 @@ export class LiveService {
   private async snapshot(target: Target, box: Box): Promise<string> {
     const snapshot = await target.bridge.snapshotCreate(box, "live-undo");
     return snapshot.id;
-  }
-
-  backup(_reason: string, _wait: boolean): Promise<LiveBackupResponse> {
-    throw new LiveError(
-      "Harness backups were removed. Scheduled Velero backups are the only backup.",
-      410,
-    );
   }
 
   async journalEntries(since?: Date): Promise<LiveJournalEntry[]> {

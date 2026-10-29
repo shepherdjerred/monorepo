@@ -2,10 +2,6 @@ import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecy
 import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type { UserbotProvider } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 import { ensureSessionDir } from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths";
-import {
-  snapshotSaveDir,
-  type SaveHistoryOptions,
-} from "@shepherdjerred/discord-stream-lifecycle/persistence/save-history";
 import type { Session, SessionStopReason } from "./session.ts";
 
 export type SessionManagerLogger = {
@@ -65,11 +61,6 @@ export type SessionManagerOptions<TUserbot extends PooledUserbot> = {
   readonly driver: GameDriver<TUserbot>;
   /** Root directory under which `<guildId>/` session dirs are created. */
   readonly stateRootDir: string;
-  /**
-   * Snapshot these save entries into `<sessionDir>/history/` before every session
-   * boots. A snapshot failure aborts the start rather than running unprotected.
-   */
-  readonly saveHistory?: SaveHistoryOptions;
   readonly logger?: SessionManagerLogger;
   /**
    * Invoked after each session ends (any reason), AFTER the driver's `onSessionStop`
@@ -96,7 +87,6 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
   private readonly pool: UserbotProvider<TUserbot>;
   private readonly driver: GameDriver<TUserbot>;
   private readonly stateRootDir: string;
-  private readonly saveHistory: SaveHistoryOptions | undefined;
   private readonly log: SessionManagerLogger;
   private readonly onSessionStopped:
     | ((session: Session<TUserbot>, reason: SessionStopReason) => void)
@@ -109,7 +99,6 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
     this.pool = options.pool;
     this.driver = options.driver;
     this.stateRootDir = options.stateRootDir;
-    this.saveHistory = options.saveHistory;
     this.log = options.logger ?? noopLogger;
     this.onSessionStopped = options.onSessionStopped;
   }
@@ -160,18 +149,6 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
           this.stateRootDir,
           request.guildId,
         );
-        if (this.saveHistory !== undefined) {
-          const snapshot = await snapshotSaveDir(
-            sessionDirPath,
-            this.saveHistory,
-          );
-          if (snapshot !== null) {
-            this.log.info("save history snapshot taken", {
-              guildId: request.guildId,
-              snapshot,
-            });
-          }
-        }
       } catch (error) {
         this.pool.release(entry);
         const err = toError(error);

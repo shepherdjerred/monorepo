@@ -8,7 +8,6 @@ import {
 import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type { UserbotProvider } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 import { ensureSessionDir } from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths";
-import { snapshotSaveDir } from "@shepherdjerred/discord-stream-lifecycle/persistence/save-history";
 import type { SessionStopReason } from "@shepherdjerred/discord-stream-lifecycle/session/session";
 import type {
   ArcadeSession,
@@ -154,11 +153,6 @@ export class SessionManager<T extends PooledUserbot> {
         path.join(this.options.stateRoot, request.gameId),
         request.guildId,
       );
-      entry.controller.signal.throwIfAborted();
-      await snapshotSaveDir(entry.session.sessionDir, {
-        entries: module.saveEntries,
-        keep: 50,
-      });
       entry.controller.signal.throwIfAborted();
       entry.runtime = module.create({
         session: entry.session,

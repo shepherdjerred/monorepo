@@ -7,21 +7,9 @@ import { z } from "zod";
 import { forumManifest, StageSchema } from "./config.ts";
 import { assembleBundle, releaseForum } from "./release.ts";
 import { createMaintainStormForum } from "./activities.ts";
-import {
-  beginStormForumBackup,
-  snapshotStormForum,
-  endStormForumBackup,
-} from "./backup.ts";
-import { restoreForum } from "./restore.ts";
 import { recoverForumRelease } from "./recovery.ts";
-const command = z
-  .enum(["assemble", "release", "restore", "worker"])
-  .parse(Bun.argv[2]);
+const command = z.enum(["assemble", "release", "worker"]).parse(Bun.argv[2]);
 switch (command) {
-  case "restore": {
-    await restoreForum();
-    break;
-  }
   case "assemble": {
     await assembleBundle();
 
@@ -53,9 +41,6 @@ switch (command) {
         taskQueue: forumManifest.stages[env.STORM_FORUM_STAGE].taskQueue,
         activities: {
           maintainStormForum: createMaintainStormForum(env.STORM_FORUM_STAGE),
-          beginStormForumBackup,
-          snapshotStormForum,
-          endStormForumBackup,
         },
         maxConcurrentActivityTaskExecutions: 1,
       });
@@ -68,6 +53,6 @@ switch (command) {
     break;
   }
   default: {
-    throw new Error("Usage: cli.ts assemble | release | restore | worker");
+    throw new Error("Usage: cli.ts assemble | release | worker");
   }
 }

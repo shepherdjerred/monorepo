@@ -7,17 +7,8 @@ import type { Delivery } from "./delivery.ts";
 import { id, type Transaction } from "./delivery-data.ts";
 import type { Database } from "./database.ts";
 import { composeVerifiedBuild } from "./composition/verified-build.ts";
-import { replicationPending } from "./artifact-stores/replication.ts";
 
 type BuildRow = Prisma.BuildGetPayload<object>;
-
-/** Rolls a tentative verification back while produced bytes await their replica (PC1). */
-class AwaitingReplication extends Error {
-  constructor() {
-    super("Produced artifacts await their off-cluster replica");
-    this.name = "AwaitingReplication";
-  }
-}
 
 /** Rolls a tentative verification back while a retained original's build is pending (B2). */
 class AwaitingRetainedBuild extends Error {
@@ -196,19 +187,10 @@ export async function qualify(
       });
       if (status !== "verified") return;
       await requireQualifiedReferences(tx, build);
-      // Composition runs before the replica check so incompatible outputs fail
-      // without waiting; compatible ones verify only once every produced
-      // self-hosted byte has an off-cluster replica (PC1).
       if (build.sourceKind === "ci") await composeVerifiedBuild(tx, build);
-      if (await replicationPending(tx, buildId))
-        throw new AwaitingReplication();
     });
   } catch (error) {
-    if (
-      error instanceof AwaitingReplication ||
-      error instanceof AwaitingRetainedBuild
-    )
-      return { status: "pending" };
+    if (error instanceof AwaitingRetainedBuild) return { status: "pending" };
     if (!(error instanceof DeliveryError && error.code === "INVALID"))
       throw error;
     await this.database.$transaction(async (tx) => {

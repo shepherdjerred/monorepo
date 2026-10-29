@@ -14,6 +14,10 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  getPvcBackupLabels,
+  getPvcBackupPolicy,
+} from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
@@ -63,10 +67,7 @@ export function createSeaweedfsResources(chart: Chart): void {
       metadata: {
         name,
         namespace: "seaweedfs",
-        labels: {
-          "velero.io/backup": "disabled",
-          "velero.io/exclude-from-backup": "true",
-        },
+        labels: getPvcBackupLabels(getPvcBackupPolicy("seaweedfs", name)),
         annotations: {
           "argocd.argoproj.io/sync-wave": "-1",
           "argocd.argoproj.io/sync-options": "Prune=false",

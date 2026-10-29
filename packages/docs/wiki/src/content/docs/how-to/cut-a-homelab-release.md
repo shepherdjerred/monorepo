@@ -443,7 +443,6 @@ Check each cause in order with `toolkit deploy versions SERVICE --json` and
 | New set revision is not the live set            | Its order key is below the live set's ([R4](packages/delivery/docs/model.md#46-set-revision))                                |
 | No deployment queued                            | A failed deployment blocks automatic successors ([D2](packages/delivery/docs/model.md#412-deployment))                       |
 | No deployment queued after a cancel or alarm    | That set revision is suppressed ([D3](packages/delivery/docs/model.md#412-deployment))                                       |
-| No deployment queued after a restore            | The environment is held until its live state is accepted ([section 6](packages/delivery/docs/model.md#6-flows))              |
 | Deployment queued but not admitted              | A prerequisite edge is unmet ([Z1](packages/delivery/docs/model.md#418-prerequisite-edge))                                   |
 | Nothing queued in prod                          | Prod has a promotion source; promote from it ([M2](packages/delivery/docs/model.md#416-promotion-tree))                      |
 
@@ -519,7 +518,6 @@ release evidence.
 ## Related
 
 - [Why releases are shaped this way](/explanation/homelab/release-safety/)
-- [Restore the Delivery record](/how-to/restore-the-delivery-record/)
 - [Delivery model reference](/reference/delivery-model/)
 - [How the Delivery hub follows a change](/explanation/homelab/delivery-hub/)
 - [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)

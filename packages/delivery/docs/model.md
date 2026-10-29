@@ -37,19 +37,17 @@ Woodpecker builds. 1Password holds secrets. Target adapters reconcile.
 | G2  | Consistency     | An environment's accepted selection is one set revision whose components satisfied every declared constraint; in settled state only the accepted selection and retained hosts are live; while a deployment is owned, its desired selection is also live. | K1, R2, A3, E4, M2, T3               |
 | G3  | Independence    | One service's release never waits on, or is broken by, another service's release unless a declared edge (a tracking reference or a prerequisite) says so.                                                                                                | S2, T1, A5, Z1                       |
 | G4  | Evidence        | Every change to a running system is a recorded deployment with recorded acceptance, or, for `operator-run`, an operator attestation recorded with its evidence. Nothing is believed because a file in Git says so.                                       | C3, D1, V1, V3, T5                   |
-| G5  | Recoverability  | Any ambiguous effect leaves ownership held until an independent inspection settles it. The record survives loss of the executor, and loss of the record is detectable and reconcilable.                                                                  | D1, D5, D7, I1, precondition PC2     |
+| G5  | Recoverability  | Any ambiguous effect leaves ownership held until an independent inspection settles it. The record survives loss of the executor, and loss of the record is detectable and reconcilable.                                                                  | D1, D5, D7, I1, precondition PC1     |
 
 Preconditions the guarantees rest on and the model cannot provide by itself:
 
-- PC1. Artifact bytes in self-hosted stores (ChartMuseum, SeaweedFS) are
-  replicated to off-cluster storage before a build is `verified`, and
-  restoring those stores from the replica is a bootstrap step (section 6).
-  Artifacts in external registries (Docker Hub, upstream chart
+- PC1. Velero's scheduled backups (every six hours, daily, weekly and
+  monthly) are the backup of the cluster's volumes, including the record's
+  database and the self-hosted artifact stores; nothing else is. There are no
+  off-cluster artifact replicas, write-ahead-log archives or Delivery-written
+  snapshots. Artifacts in external registries (Docker Hub, upstream chart
   repositories) and versions published to audience-facing channels (npm)
   rely on the registry's retention; this is an accepted risk (X11).
-- PC2. Delivery's and Temporal's databases archive write-ahead logs to
-  off-cluster storage. A restore from periodic volume snapshots alone cannot
-  satisfy G5.
 
 ## 3. Ownership boundary
 
@@ -57,13 +55,12 @@ Git owns source, the catalog (section 4.1), recipe revisions, configuration
 revisions, prerequisite edges, and acquisition intents. Delivery owns builds,
 artifacts, set revisions, selections, environment pointers, deployments,
 approvals, recovery intents, and evidence. No version of anything that runs
-is recorded in Git. The cold-start snapshot (section 6) is written to
-off-cluster storage by Delivery, not to Git.
+is recorded in Git.
 
 **Runtime substrate.** PostgreSQL is the record. Temporal is durable
 execution and the home of all recurring work; there are no Kubernetes
 CronJobs. S3 (SeaweedFS in the cluster, R2 off the cluster) holds artifact
-stores, OpenTofu state, off-cluster replicas and the cold-start snapshot.
+stores and OpenTofu state; Velero writes its backups to R2 (PC1).
 Kubernetes plays two roles: it is the target for hosted workloads, reached
 through ArgoCD, and it is the sandbox in which a stage that is credentialed,
 heavy or toolchain-specific runs as an ephemeral Job under the batch
@@ -271,7 +268,7 @@ multi-platform images), origin, `requires`, retention state.
 - A6. Every artifact referenced by a previously accepted selection is
   retained in a registered artifact store, addressable by digest, until
   every service referencing it is `removed`. Self-hosted stores satisfy this
-  through PC1; external registries through their own retention, which is an
+  through their own retention and PC1; external registries through their own retention, which is an
   accepted risk (X11). An artifact whose store is not registered is not
   selectable.
 
@@ -847,30 +844,19 @@ records what it found, and settles. Automatic operation resumes only on
 
 **Self-hosted upgrade.** A deployment of Delivery, its control plane,
 Temporal, or ArgoCD acquires the global dispatch barrier (D8): new claims
-stop, queues drain, the record is journaled off-cluster, then the effect is
+stop, queues drain, the barrier is journaled, then the effect is
 applied by the outgoing executor and accepted by the incoming one reading the
 frozen record. Changes to these services' data layers (their PostgreSQL
 clusters) are separate `operator-run` deployments of `delivery-data` and
 `temporal-data`, so an ordinary image or chart deployment can never alter
 the cluster definition of the database that records it. Schema migrations
-of a self-hosted service still run inside its image deployment. When
-Delivery is paused, the operator-run bootstrap path of a cold start is also
-how its own API, control plane and workers are upgraded.
+of a self-hosted service still run inside its image deployment.
 
-**Cold start.** With the cluster empty, an operator runs the bootstrap tool
-against the latest cold-start snapshot, which Delivery writes to off-cluster
-storage on every acceptance of a bootstrap-chain environment. The tool walks
-the bootstrap chain in prerequisite-edge order: node OS and Kubernetes
-(attested, outside Delivery), ZFS pools (operator), ArgoCD, 1Password
-Connect, OpenEBS, cert-manager, Tailscale, cloudflare-operator, ChartMuseum,
-the PostgreSQL operator, SeaweedFS, restore of the artifact stores and
-databases from off-cluster replicas (PC1, PC2), Woodpecker, Delivery,
-Temporal, the Delivery control plane. Each is executed as `operator-run` and
-sets the environment's observed selection only. Once Delivery is up, a
-`reconcile-after-restore` step compares record, snapshot, and live target for
-every environment and holds automatic deployments on each mismatch until an
-operator accepts or rolls back with evidence. The snapshot never sets an
-accepted pointer.
+**Restore.** Velero's scheduled backups are the backup; nothing else is
+(PC1). Restoring the cluster is a Velero restore of the backed-up volumes and
+resources. There is no Delivery cold-start snapshot, replica restore or
+reconcile-after-restore step; after a restore, drift observation and the
+ordinary recovery intents settle any target that differs from the record.
 
 ## 7. Fit to the inventory
 
@@ -934,9 +920,8 @@ record the v1 artifact they stand for, and form the first set revision of
 their service's lineage (R0). A `carry` deployment freezes that set
 revision with the v1 acceptance's recipe and configuration and becomes the
 environment's accepted selection (L1), so the selection view, promotion,
-admission, the cold-start snapshot and rollback all name the carried
-identities; the v1 deployment stays as it was. The v1 sync of the target
-stands for the carry in a reconcile-after-restore. The carried artifacts
+admission and rollback all name the carried
+identities; the v1 deployment stays as it was. The carried artifacts
 stay qualified for retention and rollback because their original builds
 qualified.
 
@@ -978,8 +963,7 @@ Decision: ArgoCD remains the `kubernetes-application` adapter. It appears
 nowhere else in the model, so a later replacement (Helm render, server-side
 apply, readiness by kstatus, label-based prune, inside the Temporal executor)
 changes one adapter and no primitive. Revisit if ArgoCD's health model stops
-covering a workload Delivery must accept, or if the bootstrap dependency on
-ArgoCD becomes the limiting factor for cold start.
+covering a workload Delivery must accept.
 
 ## 9. Decisions
 
@@ -991,7 +975,7 @@ ArgoCD becomes the limiting factor for cold start.
 | X4  | One service per static site, plus a proxy service.                                                                                                                                                                                                                                       | Ownership, promotion, and rollback are per site. The shared service exists because one CI producer builds all sites, which is a build concern. The publisher registers one build per site.                                                                                                                                          |
 | X5  | ArgoCD stays as the Kubernetes adapter under the conditions in section 8.                                                                                                                                                                                                                | Section 8.                                                                                                                                                                                                                                                                                                                          |
 | X6  | The root Application dissolves; sync waves become prerequisite edges.                                                                                                                                                                                                                    | An app-of-apps is Git as the source of desired state. Ordering that is a real contract is declared, not implied by wave numbers.                                                                                                                                                                                                    |
-| X7  | Bootstrap is Delivery-described and operator-executed; the snapshot lives off-cluster and sets observed, never accepted.                                                                                                                                                                 | Delivery cannot execute what must exist before it runs, but it can be the record. A snapshot that set acceptance would be a second source of truth.                                                                                                                                                                                 |
+| X7  | Bootstrap is operator-executed; Velero scheduled backups are the only backup, and Delivery writes no snapshot.                                                                                                                                                                           | One backup mechanism covers every volume; a second Delivery-specific snapshot would be another copy to operate and keep consistent.                                                                                                                                                                                                 |
 | X8  | OpenTofu stacks publish a stack archive; desired state is configuration.                                                                                                                                                                                                                 | Plan and apply bind to a selection rather than a bare commit, and a stack can be rolled back like any other service.                                                                                                                                                                                                                |
 | X9  | One catalog.                                                                                                                                                                                                                                                                             | Five files describe the same services from different angles today. One definition removes the class of mismatch found in the sweep.                                                                                                                                                                                                 |
 | X10 | Chart artifacts are content-addressed with the version string excluded.                                                                                                                                                                                                                  | Otherwise every merge republishes every chart and, with the root dissolved, queues a deployment per chart per commit.                                                                                                                                                                                                               |

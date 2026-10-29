@@ -189,10 +189,6 @@ toolkit deploy approve-plan <DEPLOYMENT_ID> --reason "Reviewed the saved plan's 
 toolkit deploy reject-plan <DEPLOYMENT_ID> --reason "Why the saved plan must not apply"
 toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason "Inspect the target and settle ownership" [--step <STEP>] [--operation-id <ARGO_OPERATION_UUID>] --machine
 toolkit deploy recovery <INTENT_ID>
-toolkit deploy snapshot --output <FILE>
-toolkit deploy snapshot reconcile --machine
-toolkit deploy snapshot accept <ENVIRONMENT_ID> --reason "Why the live state is right" --evidence "What was inspected" --machine
-toolkit deploy render-application <ENVIRONMENT_ID> --snapshot <FILE> --file <CATALOG_DOCUMENT_JSON>
 ```
 
 `start` requests an exact set revision the way the recipe the release
@@ -214,8 +210,7 @@ generation unless `--expected-generation` pins it. `monitor` prints the accepted
 deployment's monitor: state, policy, the declared evidence thresholds and the
 latest observation with its firing alarms.
 
-`retire`, `catalog reconcile`, `recover`, `snapshot reconcile` and
-`snapshot accept` require the admin credential. `catalog reconcile` reads the
+`retire`, `catalog reconcile` and `recover` require the admin credential. `catalog reconcile` reads the
 catalog document `--file` names, or without `--file` builds the committed one
 of the monorepo checkout it runs in with `loadCatalogDocument()` from
 `@shepherdjerred/ops-model/delivery-catalog/files.ts`, reading the core and
@@ -237,25 +232,6 @@ records operator-attested evidence for one stage of an `operator-run`
 deployment; the evidence file is a JSON array of evidence entries, and the
 command uses the attestor credential `DELIVERY_ATTEST_TOKEN`, which the
 executor never holds.
-
-The cold-start verbs work while Delivery is down. `snapshot --output` reads the
-newest cold-start snapshot from `s3://homelab/delivery-cold-start/latest.json`
-at the R2 endpoint the snapshot writer uses, with the `r2` AWS profile's
-credentials, validates it and writes it to the file. `render-application`
-prints the ArgoCD Application for one environment from its recipe in the
-catalog document `--file` names and the snapshot's accepted selection, with the
-one sync a cold start needs, ready for `kubectl apply`; it uses Delivery's one
-Application renderer. The catalog document must be the revision the snapshot
-records (`catalogRevision`), so the selection's recipe and configuration ids
-resolve to the contents that were accepted; any other revision is refused
-before rendering. `snapshot reconcile` runs reconcile-after-restore once
-Delivery is back: it reads `latest.json` and its immutable copy with the `r2`
-profile, requires them identical with the writer's fingerprint, and sends
-that snapshot, because Delivery holds no R2 credential. Delivery compares the
-record, the snapshot and the live target for every environment, holds
-automatic deployments on each mismatch, and the command exits 1 while any
-environment is held. `snapshot accept` settles one hold by accepting
-the live state with a reason and the evidence inspected.
 
 `catalog reconcile` is how definitions reach Delivery. Two older verbs register
 one pipeline revision or environment outside the catalog, with an admin
@@ -348,22 +324,6 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 `promtool`, and `logcli` stays directly invoked.
 
 ## Monorepo workflows
-
-### Replicate one pending Delivery artifact
-
-When the Delivery replication coordinator is intentionally paused, an operator
-can replicate one reviewed pending artifact without dispatching deployments:
-
-```bash
-toolkit backup seaweedfs pending-delivery --service SERVICE_ID
-toolkit backup seaweedfs replicate-delivery --artifact ARTIFACT_ID --service SERVICE_ID --digest sha256:EXPECTED_DIGEST
-```
-
-The command requires the SeaweedFS backup source and R2 backup environment
-described in the SeaweedFS backup package. It resolves the Delivery executor
-credential through the toolkit broker, checks the exact pending identity,
-copies and verifies the bytes, rechecks the pending record, and records the
-replication receipt. It does not resume the dispatch schedule.
 
 ### Wait for CI and merge readiness
 

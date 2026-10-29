@@ -2,10 +2,7 @@ import type { Client } from "discord.js";
 import { games } from "@arcade/common/catalog.ts";
 import { UserError } from "#src/errors.ts";
 import type { PokemonState } from "@arcade/common/telemetry.ts";
-import {
-  PokemonGameDriver,
-  POKEMON_SAVE_HISTORY_ENTRIES,
-} from "@discord-plays-pokemon/backend/lifecycle/pokemon-driver.ts";
+import { PokemonGameDriver } from "@discord-plays-pokemon/backend/lifecycle/pokemon-driver.ts";
 import type { RuntimeConfig as Config } from "@discord-plays-pokemon/backend/config/schema.ts";
 import { readGameStateView } from "@discord-plays-pokemon/backend/game/state-view.ts";
 import { describeGameEvent } from "@discord-plays-pokemon/backend/game/events/describe.ts";
@@ -43,7 +40,6 @@ export function emeraldModule(options: {
 }): GameServerModule<SelfbotPooledUserbot> {
   return {
     definition: games.emerald,
-    saveEntries: POKEMON_SAVE_HISTORY_ENTRIES,
     create(context) {
       const feed = options.feeds.create(
         context.session.id,

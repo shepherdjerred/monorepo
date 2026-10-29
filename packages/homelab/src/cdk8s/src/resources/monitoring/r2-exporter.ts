@@ -95,7 +95,7 @@ export async function createR2ExporterMonitoring(chart: Chart) {
         ),
         key: "CLOUDFLARE_ACCOUNT_ID",
       }),
-      R2_BUCKET_NAMES: EnvValue.fromValue("homelab,seaweedfs-backups"),
+      R2_BUCKET_NAMES: EnvValue.fromValue("homelab"),
       SCRAPE_INTERVAL_SECONDS: EnvValue.fromValue("300"),
       EXPORTER_PORT: EnvValue.fromValue("9199"),
     },

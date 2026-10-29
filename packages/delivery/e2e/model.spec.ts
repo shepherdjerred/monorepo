@@ -40,15 +40,8 @@ async function captureDeploymentRequest(page: Page) {
   return async () => CreateDeploymentV2Schema.parse(await promise);
 }
 
-test("the environment shows its restore hold, monitor and binding", async ({
-  page,
-}) => {
+test("the environment shows its monitor and binding", async ({ page }) => {
   await openEnvironment(page);
-  const hold = page.getByRole("region", { name: "Held after restore" });
-  await expect(hold).toContainText("differs from the cold-start snapshot");
-  await expect(hold).toContainText(
-    "toolkit deploy snapshot accept arcade/prod",
-  );
   const monitor = page.getByRole("region", { name: "Monitor", exact: true });
   await expect(monitor.getByText("alarmed", { exact: true })).toBeVisible();
   await expect(monitor).toContainText("Hold for an operator on alarm");

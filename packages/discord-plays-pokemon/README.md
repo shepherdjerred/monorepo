@@ -154,12 +154,9 @@ driven by Woodpecker). Configuration is a mounted `config.toml`
 
 Each guild's progress lives under `saves/<guildId>/` on the PVC. Saves are
 written with a temp file, fsync, and rename, and the session's final flush
-completes before `/stop` replies. Before every session the bot copies the
-guild's flash save, goal state, and goal memory into
-`saves/<guildId>/history/<timestamp>/`, keeping the newest 50. A wrong-size
-flash save refuses `/play` and is left untouched. To restore, stop the
-session and copy a snapshot's files back into the guild directory. The PVC is
-also covered by the cluster's Velero schedules.
+completes before `/stop` replies. A wrong-size flash save refuses `/play` and
+is left untouched. The cluster's Velero schedules are the only backup of the
+PVC.
 
 ## Disclaimer
 

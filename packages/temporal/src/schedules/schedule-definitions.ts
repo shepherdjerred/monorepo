@@ -9,7 +9,6 @@ import {
   type ScheduleDefinition,
 } from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
-import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
 import { STORM_FORUM_SCHEDULES } from "./storm-forum-schedule-definitions.ts";
 import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
@@ -70,7 +69,6 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   },
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
-  ...BACKUP_SCHEDULES,
   ...MINECRAFT_SCHEDULES,
   ...STORM_FORUM_SCHEDULES,
   ...AGENT_CHAT_SCHEDULES,

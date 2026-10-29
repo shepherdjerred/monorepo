@@ -25,7 +25,6 @@ export type GameSession = {
 
 export type GameServerModule<T extends PooledUserbot> = {
   readonly definition: GameDefinition;
-  readonly saveEntries: readonly string[];
   create: (context: {
     session: ArcadeSession<T>;
     players: () => readonly (Player | null)[];

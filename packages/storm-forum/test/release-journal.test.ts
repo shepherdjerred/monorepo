@@ -238,7 +238,7 @@ describe("original Forum native phase journal", () => {
   });
 
   it.each(["install", "addons", "seed", "history", "accounts"] as const)(
-    "refuses uncertain interrupted %s without discarding original backup",
+    "refuses uncertain interrupted %s for reviewed native repair",
     (step) => {
       const value = journal();
       value.phase = "mutating";
@@ -251,7 +251,7 @@ describe("original Forum native phase journal", () => {
     },
   );
 
-  it("requires original installation observation, exact prefix and committed original backup", () => {
+  it("requires original installation observation and an exact prefix", () => {
     const value = journal();
     value.installationObserved = false;
     expect(() => forumResumeStep(value)).toThrow("independently observed");
@@ -259,8 +259,9 @@ describe("original Forum native phase journal", () => {
     value.completed = ["addons"];
     expect(() => forumResumeStep(value)).toThrow("ordered prefix");
     value.completed = [];
+    // A legacy journal that recorded an original without a snapshot still resumes.
     value.original = value.candidate;
-    expect(() => forumResumeStep(value)).toThrow("committed original backup");
+    expect(forumResumeStep(value)).toBe(0);
   });
 
   it("permits verified cleanup without rerunning native commands and rejects incomplete verification", () => {
@@ -273,7 +274,7 @@ describe("original Forum native phase journal", () => {
     expect(forumResumeStep(value)).toBe(FORUM_RELEASE_STEPS.length);
   });
 
-  it("never replaces original owner, backup, candidate or completed checkpoints", async () => {
+  it("never replaces original owner, recorded original, candidate or completed checkpoints", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "forum-journal-"));
     try {
       const file = path.join(directory, "journal.json");
@@ -293,7 +294,7 @@ describe("original Forum native phase journal", () => {
           ...value,
           originalSnapshot: "other/manifest.json",
         }),
-      ).rejects.toThrow("committed backup");
+      ).rejects.toThrow("recorded original");
       await expect(
         writeForumReleaseJournal(file, { ...value, completed: [] }),
       ).rejects.toThrow("discard");

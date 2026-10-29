@@ -10,7 +10,7 @@ import {
   readTrmnlArchive,
   type TrmnlArchiveReader,
 } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
-import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { withActivityHeartbeat } from "#activities/activity-heartbeat.ts";
 import { liveTrmnlClients } from "#activities/delivery/trmnl.ts";
 import { configureTrmnlPlugins } from "#lib/delivery/trmnl.ts";
 import { recordStage, requireOwned, stageOf } from "./stages.ts";
@@ -39,7 +39,7 @@ export async function runArchiveStep(
   archiveComponent: string,
   key: string,
 ): Promise<void> {
-  await withBackupActivityHeartbeat(
+  await withActivityHeartbeat(
     effectContext(),
     async ({ signal }) =>
       await applyPluginArchive(

@@ -7,7 +7,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import { retainDataLayerResource } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/data-layer.ts";
-import { archivePostgresWal } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/wal-archive.ts";
 
 /**
  * Temporal's data layer: the `temporal` Namespace, the PostgreSQL TLS chain,
@@ -25,7 +24,6 @@ export function createTemporalDataChart(app: App): Chart {
   createTemporalPostgreSQLCertificate(chart);
   const database = createTemporalPostgreSQLDatabase(chart);
   retainDataLayerResource(database);
-  archivePostgresWal(database, "temporal-postgresql");
   createTemporalPostgreSQLNetworkPolicy(chart);
   return chart;
 }

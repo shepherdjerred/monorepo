@@ -44,23 +44,6 @@ this boundary. The [configuration service](https://github.com/shepherdjerred/mon
 owns permissions; the [portal](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/addon/Storm/Forum/Pub/Controller/Portal.php)
 queries an explicit public-forum allowlist.
 
-## A database dump alone cannot restore attachments
-
-Database rows and writable files form one recovery unit. Maintenance drains active
-requests before both are captured. A manifest commits the pair only after both
-payloads have been uploaded with checksums. This avoids treating a partial upload
-as a usable backup. The [snapshot implementation](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/src/backup.ts)
-owns that consistency boundary.
-
-Recovery targets an empty, private beta storage pair. Keeping its original claims
-declared preserves beta data while a dedicated restore job reconstructs the snapshot.
-The [release chart](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/homelab/src/cdk8s/src/resources/storm-forum/index.ts)
-owns that isolation boundary. The
-[restore implementation](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/src/restore.ts)
-checks the payload pair and reapplies beta settings before reopening requests.
-Closing registration and replacing the production URL keep restored production
-settings from exposing the test installation.
-
 ## Status observes the Minecraft backend
 
 The forum reads the server's desired state and queries its backend directly.
