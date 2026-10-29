@@ -433,6 +433,36 @@ final class MovementTerrainTest {
   }
 
   @Test
+  void aWalkUpAStairClimbsItsLowerHalfAndThenItsTallHalf() {
+    // hemispheres: the tower stairs are walks now. The look-ahead reaches the stair's tall half,
+    // a block above the floor, which no single step clears; the body is on the lower half by then.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE_STAIRS);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 1, 3.5), new Vec3(1.5, 2, 2.5), Hop.WALK);
+    var result =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, request);
+    assertThat(result.reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+    assertThat(result.destination()).contains(new Vec3(1.5, 2, 2.5));
+  }
+
+  @Test
+  void aWalkIntoAStairsTallBackIsStillRefused() {
+    world.getBlockAt(1, 1, 2).setType(Material.STONE_STAIRS);
+    world.getBlockAt(0, 1, 2).setType(Material.STONE);
+    world.getBlockAt(2, 1, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 1, 1.5), new Vec3(1.5, 2, 2.5), Hop.WALK);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .destination())
+        .isNotEqualTo(Optional.of(new Vec3(1.5, 2, 2.5)));
+  }
+
+  @Test
   void aBodyOnAStairsLowerHalfStepsUpItsTallHalfBeforeItJumps() {
     // The stair's tall half is its north half: a body on the lower half is a block and a half
     // below the next ledge, but walks up the half step first and jumps only a block.

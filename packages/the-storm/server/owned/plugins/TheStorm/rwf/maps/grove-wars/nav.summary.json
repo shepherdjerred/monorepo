@@ -1947,10 +1947,10 @@
     "maximumRawDamage": 21,
     "CLIMB": 222,
     "DROP": 42254,
-    "JUMP": 22473,
+    "JUMP": 21828,
     "LEAP": 80200,
     "SWIM": 33810,
-    "WALK": 121426
+    "WALK": 122071
   },
   "regions": 2963,
   "coverPoints": 11806,
@@ -1997,20 +1997,20 @@
       {
         "from": "red-spawn-2",
         "to": "red-1",
-        "length": 138.4846968650818,
+        "length": 138.06241750717163,
         "nodes": 16
       },
       {
         "from": "red-spawn-2",
         "to": "red-1",
-        "length": 144.4846968650818,
+        "length": 143.4846968650818,
         "nodes": 16
       },
       {
         "from": "red-spawn-2",
         "to": "red-1",
-        "length": 158.13585996627808,
-        "nodes": 18
+        "length": 150.83353471755981,
+        "nodes": 16
       },
       {
         "from": "red-spawn-2",
@@ -2213,20 +2213,20 @@
       {
         "from": "red-spawn-8",
         "to": "red-1",
-        "length": 142.4846968650818,
+        "length": 141.4846968650818,
         "nodes": 16
       },
       {
         "from": "red-spawn-8",
         "to": "red-1",
-        "length": 151.06241750717163,
-        "nodes": 17
+        "length": 147.4846968650818,
+        "nodes": 16
       },
       {
         "from": "red-spawn-8",
         "to": "red-1",
-        "length": 154.20930194854736,
-        "nodes": 18
+        "length": 157.41125535964966,
+        "nodes": 17
       },
       {
         "from": "red-spawn-8",
@@ -2255,7 +2255,7 @@
       {
         "from": "red-spawn-9",
         "to": "red-1",
-        "length": 155.4846968650818,
+        "length": 152.13585948944092,
         "nodes": 17
       },
       {
@@ -2297,8 +2297,8 @@
       {
         "from": "red-spawn-10",
         "to": "red-1",
-        "length": 163.71358060836792,
-        "nodes": 19
+        "length": 163.13585996627808,
+        "nodes": 18
       },
       {
         "from": "red-spawn-10",
@@ -2327,7 +2327,7 @@
       {
         "from": "red-spawn-11",
         "to": "red-1",
-        "length": 154.4846968650818,
+        "length": 151.13585948944092,
         "nodes": 17
       },
       {
@@ -2369,8 +2369,8 @@
       {
         "from": "red-spawn-12",
         "to": "red-1",
-        "length": 162.71358060836792,
-        "nodes": 19
+        "length": 162.13585996627808,
+        "nodes": 18
       },
       {
         "from": "red-spawn-12",
@@ -2429,8 +2429,8 @@
       {
         "from": "red-spawn-14",
         "to": "red-1",
-        "length": 147.13585948944092,
-        "nodes": 17
+        "length": 145.4846968650818,
+        "nodes": 16
       },
       {
         "from": "red-spawn-14",
@@ -2471,13 +2471,13 @@
       {
         "from": "red-spawn-15",
         "to": "red-1",
-        "length": 159.13585948944092,
-        "nodes": 18
+        "length": 157.13585948944092,
+        "nodes": 17
       },
       {
         "from": "red-spawn-15",
         "to": "red-1",
-        "length": 167.48469734191895,
+        "length": 161.20930194854736,
         "nodes": 18
       },
       {
@@ -2501,8 +2501,8 @@
       {
         "from": "red-spawn-16",
         "to": "red-1",
-        "length": 146.13585948944092,
-        "nodes": 17
+        "length": 144.4846968650818,
+        "nodes": 16
       },
       {
         "from": "red-spawn-16",
@@ -2543,7 +2543,7 @@
       {
         "from": "red-spawn-17",
         "to": "red-1",
-        "length": 158.13585948944092,
+        "length": 157.71358013153076,
         "nodes": 18
       },
       {
@@ -2645,8 +2645,8 @@
       {
         "from": "red-spawn-20",
         "to": "red-1",
-        "length": 152.13585948944092,
-        "nodes": 17
+        "length": 150.4846968650818,
+        "nodes": 16
       },
       {
         "from": "red-spawn-20",
@@ -2657,8 +2657,8 @@
       {
         "from": "red-spawn-20",
         "to": "red-1",
-        "length": 170.13585996627808,
-        "nodes": 19
+        "length": 168.13585996627808,
+        "nodes": 18
       },
       {
         "from": "red-spawn-20",
@@ -2717,20 +2717,20 @@
       {
         "from": "red-spawn-22",
         "to": "red-1",
-        "length": 151.4846968650818,
+        "length": 151.06241750717163,
         "nodes": 17
       },
       {
         "from": "red-spawn-22",
         "to": "red-1",
-        "length": 157.4846968650818,
+        "length": 156.4846968650818,
         "nodes": 17
       },
       {
         "from": "red-spawn-22",
         "to": "red-1",
-        "length": 171.13585996627808,
-        "nodes": 19
+        "length": 163.83353471755981,
+        "nodes": 17
       },
       {
         "from": "red-spawn-22",
@@ -3762,5 +3762,5 @@
   },
   "distanceFields": 52,
   "problems": [],
-  "bytes": 4956929
+  "bytes": 4958149
 }

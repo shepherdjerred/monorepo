@@ -267,10 +267,10 @@
     "maximumRawDamage": 14,
     "CLIMB": 0,
     "DROP": 7977,
-    "JUMP": 2039,
+    "JUMP": 1716,
     "LEAP": 202367,
     "SWIM": 0,
-    "WALK": 103678
+    "WALK": 104001
   },
   "regions": 572,
   "coverPoints": 2122,
@@ -311,8 +311,8 @@
       {
         "from": "red-spawn-1",
         "to": "blue-1",
-        "length": 460.8066039085388,
-        "nodes": 36
+        "length": 468.2252058982849,
+        "nodes": 47
       },
       {
         "from": "red-spawn-2",
@@ -347,8 +347,8 @@
       {
         "from": "red-spawn-2",
         "to": "blue-1",
-        "length": 470.9534878730774,
-        "nodes": 37
+        "length": 470.6560425758362,
+        "nodes": 48
       },
       {
         "from": "red-spawn-3",
@@ -491,8 +491,8 @@
       {
         "from": "red-spawn-6",
         "to": "blue-1",
-        "length": 472.41125440597534,
-        "nodes": 39
+        "length": 471.2252058982849,
+        "nodes": 48
       },
       {
         "from": "red-spawn-7",
@@ -858,5 +858,5 @@
   },
   "distanceFields": 18,
   "problems": [],
-  "bytes": 1275877
+  "bytes": 1277518
 }

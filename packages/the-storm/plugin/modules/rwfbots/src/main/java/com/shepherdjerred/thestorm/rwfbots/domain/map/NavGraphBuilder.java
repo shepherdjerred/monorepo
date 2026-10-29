@@ -15,6 +15,9 @@ import java.util.Optional;
  */
 final class NavGraphBuilder {
 
+  // A stair step or a slab: vanilla walks a body up one this high.
+  private static final double HALF_STEP = 0.5;
+
   private static final int[][] DIRECTIONS = {
     {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
   };
@@ -199,8 +202,33 @@ final class NavGraphBuilder {
     }
     var rise = BlockFeet.at(blocks, ahead.up()).y() - BlockFeet.at(blocks, cell).y();
     if (rise > NavGraph.MAX_JUMP_RISE && !shape(cell).climbable()) return false;
-    edges.add(new Edge(up, Hop.JUMP, NavGraph.JUMP_COST, 0));
+    if (walksUp(cell, dx, dz, rise)) {
+      edges.add(new Edge(up, Hop.WALK, diagonal ? NavGraph.DIAGONAL_COST : NavGraph.WALK_COST, 0));
+    } else {
+      edges.add(new Edge(up, Hop.JUMP, NavGraph.JUMP_COST, 0));
+    }
     return true;
+  }
+
+  /**
+   * Whether a body walks up onto the node {@code rise} above it, one cell across, in half steps a
+   * vanilla body climbs without jumping: onto a bottom slab from level with its base, or up a stair
+   * it enters by its lower half. Every stair step was a jump; a spotter hopped 122 times in a
+   * minute and a half at a turn of hemispheres' tower stairs.
+   */
+  private boolean walksUp(BlockPos cell, int dx, int dz, double rise) {
+    var ahead = cell.offset(dx, 0, dz);
+    // A body on the lower half of the stair it stands on is half a block below its node; it walks
+    // up only across the stair's tall half (hemispheres: turning off a tower stair onto a slab).
+    var under = cell.down();
+    var standing =
+        bounds.contains(under) ? blocks.halfStepQuarters(under.x(), under.y(), under.z()) : 0;
+    if (standing != 0 && (standing & StairQuarters.left(dx, dz)) != 0) return false;
+    if (rise <= HALF_STEP + 1e-9) return (dx == 0 || dz == 0) || clearCorner(cell, dx, dz);
+    if (rise > 2 * HALF_STEP + 1e-9) return false;
+    var entered = StairQuarters.entered(dx, dz);
+    return entered != 0
+        && (blocks.halfStepQuarters(ahead.x(), ahead.y(), ahead.z()) & entered) == entered;
   }
 
   private boolean fluidCorner(BlockPos cell, int dx, int dz) {

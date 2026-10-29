@@ -484,11 +484,13 @@ public final class MovementSafety {
   private static boolean walkCorridor(Terrain terrain, Vec3 from, Vec3 to, boolean ends) {
     var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
     var escaping = terrain.hazardous(from);
+    var lift = 0.0;
     for (var index = 0; index <= count; index++) {
       var sample = from.lerp(to, (double) index / count);
       if (!terrain.inside(sample)) return false;
-      var point = stood(terrain, sample);
+      var point = stood(terrain, sample, lift);
       if (point.isEmpty()) return false;
+      lift = Math.max(lift, point.orElseThrow().y() - sample.y());
       if (escaping && index != count) continue;
       var on = index > 0 && (index < count || !ends);
       if (!walkable(terrain, point.orElseThrow(), sample.horizontalDistance(from), on))
@@ -522,6 +524,15 @@ public final class MovementSafety {
       }
     }
     return true;
+  }
+
+  /**
+   * Where a walking body stands at {@code point}, having already stepped {@code lift} above the
+   * walk's height: up a stair it climbs the lower half and then the tall half, a step from each.
+   */
+  private static Optional<Vec3> stood(Terrain terrain, Vec3 point, double lift) {
+    var stepped = stood(terrain, point);
+    return stepped.isPresent() || lift <= 0 ? stepped : stood(terrain, point.plus(0, lift, 0));
   }
 
   /**
