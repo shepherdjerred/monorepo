@@ -3529,16 +3529,21 @@ says gg; it still obeys delivery limits. The director's `botCooldownSeconds`,
 `maxDelayMillis` control proposals, and a line is not repeated within a match.
 Proposals more than four seconds ahead are discarded. `SpeechControl` owns
 final delivery: casual Global chat allows one line per 20 seconds and one per
-bot per 45 seconds; tactical Team chat allows two lines per team per 15 seconds
-and one per bot per 15 seconds. Identical text in the same channel/team is
-deduplicated for 12 seconds. Placeholders are filled
+bot per 45 seconds; tactical Team chat allows two sightings per team per 15
+seconds and one per bot per 15 seconds. Urgent team calls go first: four lines
+per team per 15 seconds, sightings included, and four seconds between a bot's
+team lines. Identical text in the same channel/team is deduplicated for 12
+seconds, and a call a teammate made about the same place (by name or within 16
+blocks) is dropped for 10 seconds for a sighting and 20 for anything else. Placeholders are filled
 with names as players see them (`{victim}`, `{killer}`, `{team}` as `Red
 Team`, `{bomb}`). Each accepted proposal waits 400–900 ms, then takes
 5–9 Unicode code points per second to type, clamped to 0.8–4 seconds. A typing
 bot stops voluntary movement, attacks and item use, cancelling active drawing
 or eating. Nearby teammates within 24 blocks and line of sight see a `typing…`
 indicator; enemies and unassigned lobby viewers do not. Immediate danger,
-recent injury, fuse work, shield commitment or horn casting cancel typing.
+recent injury, fuse work, shield commitment or horn casting cancel typing;
+an urgent team call (below) is a few words a player types even mid-fight, so
+danger and injury do not cancel it.
 Death, departure, a changed life/phase, disabling chat or switching the flag
 off clears unfinished speech and indicators. A completed line goes through
 the chat module's `NpcChat`, so it
@@ -3550,7 +3555,26 @@ teams exist, a `●` in the team colour before it. Either way only the human
 players in the rwf world hear it (members and watchers, never the bot bodies
 or anyone elsewhere), and no NPC line is relayed to Discord. A line chat
 refuses is dropped. A tactical bot report reaches teammates' decision memory
-only after its spoken line is successfully delivered. Warden listening-post
+only after its spoken line is successfully delivered.
+
+Team calls. Besides sightings, each team's `TeamCallouts` (`domain.team`)
+watches its bombs, its bots' decisions and its support slots and calls each
+objective moment once, as it begins: the enemy arming the own bomb, the own
+bomb lit (retake), a lit fuse with 15 seconds left and nobody on it (a
+defuse), a bot making for an enemy bomb or the own fuse within 24 blocks
+(planting or defusing; a free teammate calls it once the worker's hands are on
+the fuse), a bot sent to cover an arming human or to help one in a fight, and
+a bot stuck losing a fight (help). `Places` names spots as players do,
+because the maps name no regions: `red bomb`, `the nuke` or `blue base` near
+a bomb or a spawn, else the side of the map (`red side`, `mid`) with a compass
+word when off the line between the bases (`west mid`). A sighting within 16
+blocks of a human teammate is addressed to them with where it is from where
+they look (`Alex, one behind you!`); among a bot's sightings, and across the
+team's pending reports, those nearest a human or where they are heading are
+called first. `CalloutLines` words each call short in the speaker's voice: a
+terse or quiet personality says the fewest words, a loud one ends with `!`, a
+lowercase style types in lowercase. A bot stops to type an urgent call even on
+its way somewhere, as a player would, but not while working a fuse. Warden listening-post
 reports are automatic device observations. A new context is a new `ChatMoment`
 with its own line pool and the same delivery limits.
 
@@ -3610,6 +3634,17 @@ is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
 assignments stick. Tactics then take and hold the slot (ARM targets an unlit
 bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
+Human teammates are looked after (`HumanSupport`): a deal turns a few of the
+playbook's least important slots (lane, flank, overwatch and sweep, and for
+an urgent call the planter's escorts; never the planter, anchors or a retake)
+into escort slots that move beside a human. A human arming an enemy bomb (or
+guarding it within 8 blocks as it burns down), or
+with an enemy seen near them, gets up to two of the bots within 40 blocks,
+who cover them and, as escorts, click the fuse with them; otherwise each
+human in a team of at least four bots keeps one bot's company. Support is at
+most a third of the team and four slots, a bot further than 40 blocks pays for
+a support slot, and a human who starts arming or meets an enemy is dealt
+support at once rather than at the next periodic deal.
 Unfinished lane, flank and sweep assignments stay committed through distant sightings,
 cover stops and the gaps between movement bounds. Close contact, recent damage,
 survival and defusing can interrupt them; an established fight continues, and

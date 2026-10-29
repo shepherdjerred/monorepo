@@ -12,6 +12,8 @@ import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatMoments;
 import com.shepherdjerred.thestorm.rwfbots.app.TeamReport;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
+import com.shepherdjerred.thestorm.rwfbots.domain.chat.CalloutLines;
+import com.shepherdjerred.thestorm.rwfbots.domain.chat.CalloutLog;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.ChatDirector;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.ChatMoment;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.ChatScene;
@@ -19,6 +21,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.chat.ChatSettings;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.SpeechControl;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.Utterance;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Callout;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.time.Duration;
 import java.time.Instant;
@@ -46,9 +49,12 @@ import org.jspecify.annotations.Nullable;
  * subject to chat's filters, hidden channels and ignores. A line reads like player chat in its
  * channel's format, with the {@code ✦} bot marker after the name and, once teams exist, a mark in
  * the bot's team colour before it. In the lobby bots greet as they walk in, answer a human who
- * chats there, make small talk and remark on the countdown's last seconds. Every second it offers
- * the director an idle moment and, every {@code flagRefresh}, evaluates the managed Flipt flag off
- * the main thread; the cached answer gates every line, so the flag off, an evaluation failure or no
+ * chats there, make small talk and remark on the countdown's last seconds. In the match the think
+ * loop's sightings and objective calls ({@link Callout}) are said in Team chat in the speaker's
+ * voice ({@link CalloutLines}): those nearest a human first, urgent calls ahead of sightings, and
+ * none a teammate just made about the same place ({@link CalloutLog}). Every second it offers the
+ * director an idle moment and, every {@code flagRefresh}, evaluates the managed Flipt flag off the
+ * main thread; the cached answer gates every line, so the flag off, an evaluation failure or no
  * answer yet keeps bots silent. Main thread only.
  */
 public final class BotChat implements Consumer<MatchNotification>, BodyActivity {
@@ -68,6 +74,7 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   private final Map<String, String> teamsByName = new HashMap<>();
   private final Map<UUID, Speech> speeches = new HashMap<>();
   private SpeechControl limits = new SpeechControl();
+  private CalloutLog said = new CalloutLog();
   private Optional<ThinkLoop> thinking = Optional.empty();
   private Optional<org.bukkit.plugin.Plugin> plugin = Optional.empty();
 
@@ -77,9 +84,15 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
       Instant ends,
       int lifeEpoch,
       Optional<TeamReport> report,
+      Optional<Callout> callout,
       Optional<org.bukkit.entity.TextDisplay> indicator) {
     Speech withIndicator(org.bukkit.entity.TextDisplay display) {
-      return new Speech(line, starts, ends, lifeEpoch, report, Optional.of(display));
+      return new Speech(line, starts, ends, lifeEpoch, report, callout, Optional.of(display));
+    }
+
+    /** An objective call or a teammate in need, which goes before sightings. */
+    boolean urgent() {
+      return callout.filter(call -> call.kind().urgent()).isPresent();
     }
   }
 
@@ -152,6 +165,15 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     return !now.isBefore(speech.starts());
   }
 
+  /**
+   * Whether {@code uuid} is typing an urgent team call (the objective, a teammate in need), which a
+   * bot stops to type even on its way somewhere, as a player would.
+   */
+  public boolean typingUrgently(UUID uuid) {
+    var speech = speeches.get(uuid);
+    return speech != null && speech.urgent() && typing(uuid);
+  }
+
   @Override
   public void cancel(UUID uuid) {
     var speech = speeches.remove(uuid);
@@ -172,8 +194,16 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     }
     if (snapshot.isPresent()) {
       var world = snapshot.orElseThrow();
-      thinking.ifPresent(loop -> loop.drainReports().forEach(report -> report(report, world, now)));
+      // Sightings nearest a human go first, so the team's budget goes on what they can use.
+      thinking.ifPresent(
+          loop ->
+              loop.drainReports().stream()
+                  .sorted(
+                      java.util.Comparator.comparingDouble(TeamReport::usefulness)
+                          .thenComparing(report -> report.sighting().reporter()))
+                  .forEach(report -> report(report, world, now)));
     }
+    thinking.ifPresent(loop -> loop.drainCallouts().forEach(callout -> callout(callout, now)));
     for (var uuid : List.copyOf(speeches.keySet())) advance(uuid, snapshot, now);
   }
 
@@ -191,9 +221,15 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     speech = indicator(speech, body.orElseThrow());
     speeches.put(uuid, speech);
     if (now.isBefore(speech.ends())) return;
-    if (limits.deliver(uuid, channel(speech.line()), speech.line().text(), now)
+    var repeat = speech.callout().filter(call -> said.repeats(call, now)).isPresent();
+    if (!repeat
+        && limits.deliver(
+            new SpeechControl.Line(
+                uuid, channel(speech.line()), speech.line().text(), speech.urgent()),
+            now)
         && show(speech.line())) {
       var completed = speech;
+      completed.callout().ifPresent(call -> said.said(call, now));
       thinking.ifPresent(loop -> completed.report().ifPresent(loop::delivered));
     }
     cancel(uuid);
@@ -331,6 +367,8 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
             .bot(speech.line().speaker())
             .filter(bot -> bot.shieldUntil() > world.tick())
             .isPresent()) return true;
+    // An urgent call is a few words a player types even mid-fight: a sighting is not.
+    if (speech.urgent()) return false;
     if (me.lastHurtTick() >= 0 && world.tick() - me.lastHurtTick() <= 15) return true;
     var danger =
         thinking
@@ -350,32 +388,63 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   }
 
   private void report(TeamReport report, WorldSnapshot snapshot, Instant now) {
+    if (snapshot.tick() - report.sighting().seenTick() > 120) return;
+    if (said.repeats(report.callout(), now)) return;
     var session = parts.roster().session().orElseThrow();
-    var uuid = session.ids().uuid(report.sighting().reporter());
-    if (uuid.isEmpty()
-        || speeches.containsKey(uuid.orElseThrow())
-        || snapshot.tick() - report.sighting().seenTick() > 120) return;
-    var bot = parts.roster().bot(uuid.orElseThrow());
+    session
+        .ids()
+        .uuid(report.sighting().reporter())
+        .ifPresent(uuid -> say(uuid, report.callout(), Optional.of(report), now));
+  }
+
+  /** An objective call from the team step, said by its speaker in team chat. */
+  private void callout(Callout callout, Instant now) {
+    if (said.repeats(callout, now)) return;
+    parts
+        .roster()
+        .session()
+        .flatMap(session -> session.ids().uuid(callout.speaker()))
+        .ifPresent(uuid -> say(uuid, callout, Optional.empty(), now));
+  }
+
+  /**
+   * Queues {@code callout} for {@code uuid} in team chat, in its voice. An urgent call takes the
+   * place of a sighting or banter the bot has not finished typing.
+   */
+  private void say(UUID uuid, Callout callout, Optional<TeamReport> report, Instant now) {
+    var bot = parts.roster().bot(uuid);
     if (bot.isEmpty()) return;
-    var fighter =
-        previous == null
-            ? Optional.<MatchState.Fighter>empty()
-            : previous.combatant(uuid.orElseThrow());
+    var pending = speeches.get(uuid);
+    if (pending != null) {
+      if (!callout.kind().urgent() || pending.urgent()) return;
+      cancel(uuid);
+    }
+    var state = previous;
+    var fighter = state == null ? Optional.<MatchState.Fighter>empty() : state.combatant(uuid);
     var team = fighter.flatMap(MatchState.Fighter::team).map(ChatMoments::teamName);
     if (team.isEmpty()) return;
-    var point = report.sighting().pos();
+    var subject =
+        callout
+            .subject()
+            .flatMap(id -> parts.roster().session().flatMap(session -> session.ids().uuid(id)))
+            .flatMap(id -> state == null ? Optional.empty() : state.combatant(id))
+            .map(MatchState.Fighter::name);
     var text =
-        "Enemy near " + Math.round(point.x() / 8) * 8 + ", " + Math.round(point.z() / 8) * 8 + "!";
+        CalloutLines.line(
+            callout,
+            subject,
+            Optional.of(bot.orElseThrow().drafted().personality()),
+            bot.orElseThrow().random());
     var line =
         new Utterance(
-            uuid.orElseThrow(),
+            uuid,
             bot.orElseThrow().name(),
             team,
             com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines.Moment.ON_LAST_ALIVE,
             text,
             text,
             now);
-    queue(line, Optional.of(report));
+    queue(line, report, Optional.of(callout));
   }
 
   @Override
@@ -408,6 +477,7 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     if (after.phase() == MatchState.Phase.RESETTING) {
       clearSpeech();
       limits = new SpeechControl();
+      said = new CalloutLog();
       director = null;
       directorMatch = null;
     }
@@ -523,19 +593,21 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   }
 
   private void say(Utterance line, Instant now) {
-    if (!now.isAfter(line.at().plusSeconds(4))) queue(line, Optional.empty());
+    if (!now.isAfter(line.at().plusSeconds(4))) queue(line, Optional.empty(), Optional.empty());
   }
 
-  private void queue(Utterance line, Optional<TeamReport> report) {
+  private void queue(Utterance line, Optional<TeamReport> report, Optional<Callout> callout) {
     var bot = parts.roster().bot(line.speaker());
     if (!enabled || bot.isEmpty() || speeches.containsKey(line.speaker())) return;
     var now = parts.time().instant();
     if (line.at().isAfter(now.plusSeconds(4))) return;
     var channel = channel(line);
-    if (!limits.ready(line.speaker(), channel, line.text(), now)) return;
+    var urgent = callout.filter(call -> call.kind().urgent()).isPresent();
+    if (!limits.ready(new SpeechControl.Line(line.speaker(), channel, line.text(), urgent), now))
+      return;
     var queued =
         speeches.values().stream().filter(speech -> channel(speech.line()).equals(channel)).count();
-    if (queued >= limits.remaining(channel, now)) return;
+    if (queued >= limits.remaining(channel, now, urgent)) return;
     var starts = now.plus(SpeechControl.reaction(bot.orElseThrow().random()));
     var epoch =
         bot.orElseThrow()
@@ -550,6 +622,7 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
             starts.plus(SpeechControl.typing(line.text(), bot.orElseThrow().random())),
             epoch,
             report,
+            callout,
             Optional.empty()));
   }
 

@@ -14,12 +14,15 @@ import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsState;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Thought;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Callout;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Places;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.RetakeAdmission;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotFit;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamBrain;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamCallouts;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -36,6 +39,7 @@ import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -81,6 +85,7 @@ public final class ThinkLoop {
   private final ConcurrentHashMap<CombatantId, TeamReport> reports = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<CombatantId, TeamReport> deliveredReports =
       new ConcurrentHashMap<>();
+  private final ConcurrentLinkedQueue<Callout> callouts = new ConcurrentLinkedQueue<>();
   private volatile boolean composedCommunication;
   private final ConcurrentHashMap<TeamId, SensorEnvelope> sensors = new ConcurrentHashMap<>();
   private final ThinkStats stats = new ThinkStats();
@@ -136,6 +141,7 @@ public final class ThinkLoop {
     sensors.clear();
     reports.clear();
     deliveredReports.clear();
+    callouts.clear();
     profiles.clear();
     epochs.clear();
     replans.clear();
@@ -181,6 +187,7 @@ public final class ThinkLoop {
     sensors.clear();
     reports.clear();
     deliveredReports.clear();
+    callouts.clear();
     match = null;
     profiles.clear();
     epochs.clear();
@@ -202,7 +209,15 @@ public final class ThinkLoop {
     if (!enabled) {
       reports.clear();
       deliveredReports.clear();
+      callouts.clear();
     }
+  }
+
+  /** The objective calls the team steps made since the last drain, in the order they were made. */
+  public List<Callout> drainCallouts() {
+    var out = new ArrayList<Callout>();
+    for (var next = callouts.poll(); next != null; next = callouts.poll()) out.add(next);
+    return out;
   }
 
   public List<TeamReport> drainReports() {
@@ -448,6 +463,7 @@ public final class ThinkLoop {
   private static final class Team {
     Blackboard board;
     RetakeAdmission.State admission = RetakeAdmission.State.EMPTY;
+    final TeamCallouts callouts = new TeamCallouts();
     long lastTick = NEVER;
 
     Team(Blackboard board) {
@@ -487,11 +503,13 @@ public final class ThinkLoop {
     private int generationSeen = -1;
     private final ThinkBatches batches = new ThinkBatches(compute);
     private List<NavGraph.SearchWorkspace> workspaces = List.of();
+    private @Nullable Places places;
 
     void retire() {
       minds.clear();
       teams.clear();
       workspaces = List.of();
+      places = null;
       generationSeen = -1;
     }
 
@@ -549,6 +567,7 @@ public final class ThinkLoop {
                 } finally {
                   tacticsCommit.close();
                 }
+                if (composedCommunication && current(cycle)) announce(cycle);
                 var publish = ThinkFlight.section(flight(cycle, "publish"), active.size());
                 try {
                   publishBoard(cycle, active, started);
@@ -572,6 +591,7 @@ public final class ThinkLoop {
               IntStream.range(0, compute.parallelism())
                   .mapToObj(ignored -> current.nav().graph().workspace())
                   .toList();
+          places = placesOf(current.nav());
         }
         var active = activeMinds(current, snapshot);
         var cycle =
@@ -758,10 +778,25 @@ public final class ThinkLoop {
       if (composedCommunication) {
         if (mind.lastReportTick == NEVER || snapshot.tick() - mind.lastReportTick >= 40) {
           mind.lastReportTick = snapshot.tick();
+          var team = mind.profile.team();
+          var humans = humans(snapshot, team);
+          // The enemy nearest a human, where they stand or are heading, is the one worth calling.
+          var report =
+              reports.stream()
+                  .min(
+                      Comparator.comparingDouble(
+                          (SharedSighting sighting) ->
+                              TeamCallouts.usefulness(sighting.pos(), humans)))
+                  .orElseThrow();
           ThinkLoop.this.reports.put(
               mind.profile.id(),
               new TeamReport(
-                  current.generation(), mind.epoch, mind.profile.team(), reports.getFirst()));
+                  current.generation(),
+                  mind.epoch,
+                  team,
+                  report,
+                  TeamCallouts.enemy(report, team, humans, places(current)),
+                  TeamCallouts.usefulness(report.pos(), humans)));
         }
         return;
       }
@@ -772,6 +807,50 @@ public final class ThinkLoop {
               mind.profile.levers().coordination(),
               snapshot.tick(),
               randomFor(current, mind.profile.id(), snapshot.tick() + 1));
+    }
+
+    private Places places(Match current) {
+      var known = places;
+      if (known == null) {
+        known = placesOf(current.nav());
+        places = known;
+      }
+      return known;
+    }
+
+    /** Each team's objective calls this cycle, from its board and its bots' fresh decisions. */
+    private void announce(Cycle cycle) {
+      var snapshot = cycle.snapshot();
+      var ordered =
+          teams.entrySet().stream()
+              .sorted(Map.Entry.comparingByKey(Comparator.comparing(TeamId::value)))
+              .toList();
+      for (var entry : ordered) {
+        var id = entry.getKey();
+        var bots = new ArrayList<CombatantView>();
+        var decisions = new HashMap<CombatantId, Decision>();
+        for (var mind : minds.values()) {
+          if (!mind.profile.team().equals(id) || !valid(mind)) continue;
+          var view = snapshot.combatant(mind.profile.id()).filter(CombatantView::alive);
+          if (view.isEmpty()) continue;
+          bots.add(view.orElseThrow());
+          if (mind.decision != null) decisions.put(mind.profile.id(), mind.decision);
+        }
+        bots.sort(Comparator.comparing(CombatantView::id));
+        callouts.addAll(
+            entry
+                .getValue()
+                .callouts
+                .observe(
+                    new TeamCallouts.Scene(
+                        id,
+                        snapshot,
+                        entry.getValue().board,
+                        decisions,
+                        bots,
+                        humans(snapshot, id),
+                        places(cycle.current()))));
+      }
     }
 
     private PendingTeam prepareTeam(Cycle cycle, Team team) {
@@ -1073,6 +1152,23 @@ public final class ThinkLoop {
   private record TacticsWork(Mind mind, Blackboard board) {}
 
   private record Proposal(Mind mind, Thought thought) {}
+
+  /** The living members of {@code team} that are no registered bot: its human players. */
+  private List<CombatantView> humans(WorldSnapshot snapshot, TeamId team) {
+    return snapshot.alive(team).stream().filter(view -> !profiles.containsKey(view.id())).toList();
+  }
+
+  /** How players name {@code nav}'s places; the middle of the map when it has no spawns. */
+  static Places placesOf(NavArtifact nav) {
+    var bounds = nav.graph().bounds();
+    var origin = bounds.origin();
+    return new Places(
+        nav.sites(),
+        new com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3(
+            origin.x() + bounds.sizeX() / 2.0,
+            origin.y() + bounds.sizeY() / 2.0,
+            origin.z() + bounds.sizeZ() / 2.0));
+  }
 
   /** Whether a layer last run at {@code last} is due at {@code tick} with {@code period}. */
   static boolean due(long last, long tick, int period) {

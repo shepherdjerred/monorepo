@@ -285,10 +285,13 @@ final class BotChatTest {
 
     int assertTravelling(RwfBotsHarness harness) {
       var session = harness.paper().roster().session().orElseThrow();
+      var chat = harness.paper().chat().orElseThrow();
+      // A planter on its way may stop to call its plant: an urgent team call, not casual speech.
       var travellers =
           harness.paper().loop().board().thoughts().entrySet().stream()
               .filter(entry -> !entry.getValue().decision().waypoints().isEmpty())
               .map(entry -> session.ids().uuid(entry.getKey()).orElseThrow())
+              .filter(uuid -> !chat.typingUrgently(uuid))
               .toList();
       for (var uuid : travellers) {
         assertThat(harness.paper().chat().orElseThrow().typing(uuid))
@@ -370,13 +373,16 @@ final class BotChatTest {
       authoredStart(speech, Optional.empty());
       heard(watcher);
       harness.clock.advance(Duration.ofSeconds(70));
-      assertThat(harness.paper().roster().live()).allMatch(body -> !speech.typing(body.uuid()));
+      // A planter on its way may be typing an urgent team call meanwhile; idle chat is casual.
+      java.util.function.Predicate<UUID> casual =
+          uuid -> speech.typing(uuid) && !speech.typingUrgently(uuid);
+      assertThat(harness.paper().roster().live()).allMatch(body -> !casual.test(body.uuid()));
       requireNonNull(speechClock).pulse();
       var typing = false;
       for (var step = 0; step < 40 && !typing; step++) {
         speechTicks(speech, 1);
         typing =
-            harness.paper().roster().live().stream().anyMatch(body -> speech.typing(body.uuid()));
+            harness.paper().roster().live().stream().anyMatch(body -> casual.test(body.uuid()));
       }
       assertThat(typing)
           .as("a real due idle chance selects an unoccupied stationary holder")
@@ -386,7 +392,7 @@ final class BotChatTest {
           .isEmpty();
       var speaker =
           harness.paper().roster().live().stream()
-              .filter(body -> speech.typing(body.uuid()))
+              .filter(body -> casual.test(body.uuid()))
               .findFirst()
               .orElseThrow();
       var decision =
@@ -764,6 +770,45 @@ final class BotChatTest {
         .asString()
         .startsWith("[Tm][● " + name(blueBot) + " ✦]: ");
     assertThat(heard(redBody)).as("bot bodies are never an audience").isEmpty();
+  }
+
+  @Test
+  void aBotsObjectiveCallReachesItsHumanTeammateInTeamChatOnce() {
+    var harness = start("greet", BotChatTest::teams);
+    var alice = harness.player("Alice");
+    var robin = harness.player("Robin");
+    var redBot =
+        live(
+                alice,
+                0,
+                1,
+                () -> {
+                  // Robin is red, but out of the fight: the red bot is the last of its team and
+                  // makes for the blue bomb at once, with nobody in sight.
+                  harness.match.fireJoin(new CombatantId.Human(robin.getUniqueId()), "Robin");
+                  harness.match.fighting(robin.getUniqueId(), TeamColor.RED, "trooper");
+                  harness.match.kill(robin.getUniqueId());
+                  alice.teleport(new Location(harness.world, 200.5, 1, 200.5));
+                })
+            .getFirst();
+    var aliceHeard = new ArrayList<String>();
+    var robinHeard = new ArrayList<String>();
+    for (var second = 0; second < 10; second++) {
+      harness.ticks(20);
+      aliceHeard.addAll(heard(alice));
+      robinHeard.addAll(heard(robin));
+    }
+    var prefix = "[Tm][● " + name(redBot) + " ✦]: ";
+    assertThat(
+            robinHeard.stream()
+                .filter(line -> line.startsWith(prefix))
+                .map(line -> line.substring(prefix.length()).toLowerCase(java.util.Locale.ROOT))
+                .filter(line -> line.startsWith("planting") || line.startsWith("going blue bomb")))
+        .as("the red planter calls its plant to Robin, once: %s", robinHeard)
+        .hasSize(1);
+    assertThat(aliceHeard)
+        .as("blue never hears red's team calls")
+        .noneMatch(line -> line.startsWith(prefix));
   }
 
   @Test

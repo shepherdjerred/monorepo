@@ -23,9 +23,9 @@ import java.util.random.RandomGenerator;
 
 /**
  * The 1 to 2 Hz team step: forgets the dead, and every couple of seconds deals the playbook's slots
- * for the team's strategy and the match as it stands, then hands them to bots with the Hungarian
- * algorithm over fit, path distance and continuity, so a bot keeps its slot unless another is
- * clearly better.
+ * for the team's strategy and the match as it stands, a few of them turned to support the team's
+ * human players ({@link HumanSupport}), then hands them to bots with the Hungarian algorithm over
+ * fit, path distance and continuity, so a bot keeps its slot unless another is clearly better.
  */
 public final class TeamBrain {
 
@@ -98,6 +98,14 @@ public final class TeamBrain {
       }
     }
 
+    /**
+     * {@code team}'s living human players: its living members the team step deals no slot, as
+     * nothing but a bot has a member record.
+     */
+    public List<CombatantView> humans(TeamId team) {
+      return snapshot.alive(team).stream().filter(view -> !members.containsKey(view.id())).toList();
+    }
+
     /** The member record of {@code bot}, which must be on the team. */
     public SlotFit.Member memberOf(CombatantId bot) {
       var member = members.get(bot);
@@ -149,7 +157,12 @@ public final class TeamBrain {
         urgent.isPresent()
             && snapshot.tick() - result.rolesAssignedTick() >= HANDOFF_PERIOD_TICKS
             && stuckWorker(result, snapshot.tick());
-    if ((due || rosterChanged || defenseChanged || handOff) && !alive.isEmpty()) {
+    // A human who starts arming or meets an enemy is helped now, not at the next periodic deal.
+    var supportChanged =
+        urgent.isEmpty()
+            && snapshot.tick() - result.rolesAssignedTick() >= HANDOFF_PERIOD_TICKS
+            && HumanSupport.stale(result, situation, alive);
+    if ((due || rosterChanged || defenseChanged || handOff || supportChanged) && !alive.isEmpty()) {
       return new Prepared(result, Optional.of(deal(result, situation, alive)), snapshot.tick());
     }
     return new Prepared(result, Optional.empty(), snapshot.tick());
@@ -274,7 +287,11 @@ public final class TeamBrain {
             enemyHome,
             watchers(nav, sightings, enemyHome),
             odds.closing());
-    var slots = Playbook.deal(setup);
+    var humans = new java.util.HashMap<CombatantId, CombatantView>();
+    situation.humans(team).forEach(human -> humans.put(human.id(), human));
+    var slots =
+        HumanSupport.adapt(
+            Playbook.deal(setup), HumanSupport.calls(board, situation, alive, home), humans);
     var nuke = objective.map(bomb -> bomb.owner() instanceof BombOwner.Nuke).orElse(false);
     var assignment =
         new RoleAssignment(
@@ -523,6 +540,7 @@ public final class TeamBrain {
             / DISTANCE_SCALE
             * (slot.role() == Role.RETAKE ? 4 : 1)
         + (held ? STICKY : 0)
+        - HumanSupport.cost(slot, bot, dealing.situation().snapshot())
         - (slot.role() == Role.RETAKE && dealing.pinned().contains(bot.id()) ? HANDOFF : 0);
   }
 
