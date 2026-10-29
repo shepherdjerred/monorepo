@@ -19,12 +19,17 @@ public final class SchematicClassification implements BlockClassification {
   private final Schematic schematic;
   private final GridBounds bounds;
   private final List<BlockTable.Classified> palette;
+  private final int[] halfSteps;
 
   private SchematicClassification(
-      Schematic schematic, GridBounds bounds, List<BlockTable.Classified> palette) {
+      Schematic schematic,
+      GridBounds bounds,
+      List<BlockTable.Classified> palette,
+      int[] halfSteps) {
     this.schematic = schematic;
     this.bounds = bounds;
     this.palette = List.copyOf(palette);
+    this.halfSteps = halfSteps.clone();
   }
 
   /**
@@ -46,14 +51,16 @@ public final class SchematicClassification implements BlockClassification {
           "map " + mapId + ": blocks.schem does not fill the region in map.yml");
     }
     var palette = new ArrayList<BlockTable.Classified>();
+    var halfSteps = new int[schematic.palette().size()];
     for (var entry : schematic.palette()) {
       try {
+        halfSteps[palette.size()] = BlockTable.halfStepQuarters(entry);
         palette.add(BlockTable.classify(entry));
       } catch (UnknownBlockStateException e) {
         throw new UnknownBlockStateException("map " + mapId + ": " + e.getMessage());
       }
     }
-    return new SchematicClassification(schematic, bounds, palette);
+    return new SchematicClassification(schematic, bounds, palette, halfSteps);
   }
 
   /** The classification of each palette entry, by palette index. */
@@ -81,8 +88,17 @@ public final class SchematicClassification implements BlockClassification {
     return classified(x, y, z).blocksSight();
   }
 
+  @Override
+  public int halfStepQuarters(int x, int y, int z) {
+    return halfSteps[paletteIndex(x, y, z)];
+  }
+
   private BlockTable.Classified classified(int x, int y, int z) {
+    return palette.get(paletteIndex(x, y, z));
+  }
+
+  private int paletteIndex(int x, int y, int z) {
     var origin = bounds.origin();
-    return palette.get(schematic.paletteIndex(x - origin.x(), y - origin.y(), z - origin.z()));
+    return schematic.paletteIndex(x - origin.x(), y - origin.y(), z - origin.z());
   }
 }

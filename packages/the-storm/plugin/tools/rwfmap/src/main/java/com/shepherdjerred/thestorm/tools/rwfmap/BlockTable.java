@@ -1,7 +1,9 @@
 package com.shepherdjerred.thestorm.tools.rwfmap;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.StairQuarters;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -415,6 +417,20 @@ public final class BlockTable {
     }
     throw new UnknownBlockStateException(
         "unknown block state " + blockState + "; add it to the rwfmap BlockTable");
+  }
+
+  /**
+   * The {@link StairQuarters} of a canonical block state's top that are a half step: the lower half
+   * of a bottom-half stair, by its facing and shape. Zero for anything else, an upside-down stair
+   * included, whose top is flat.
+   */
+  public static int halfStepQuarters(String blockState) {
+    if (classify(blockState).shape() != BlockShape.STAIRS) return 0;
+    var state = BlockState.parse(blockState);
+    if ("top".equals(state.property("half"))) return 0;
+    return StairQuarters.halfStep(
+        StairQuarters.Facing.valueOf(state.property("facing").toUpperCase(Locale.ROOT)),
+        StairQuarters.Shape.valueOf(state.property("shape").toUpperCase(Locale.ROOT)));
   }
 
   private static Optional<Classified> flat(BlockState state) {

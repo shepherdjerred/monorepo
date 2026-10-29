@@ -405,10 +405,10 @@
     "maximumRawDamage": 22,
     "CLIMB": 0,
     "DROP": 10752,
-    "JUMP": 5927,
+    "JUMP": 4043,
     "LEAP": 314596,
     "SWIM": 41814,
-    "WALK": 135924
+    "WALK": 137808
   },
   "regions": 702,
   "coverPoints": 2787,
@@ -996,5 +996,5 @@
   },
   "distanceFields": 18,
   "problems": [],
-  "bytes": 1898421
+  "bytes": 1898500
 }

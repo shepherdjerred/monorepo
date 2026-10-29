@@ -1629,10 +1629,10 @@
     "maximumRawDamage": 16,
     "CLIMB": 7454,
     "DROP": 26198,
-    "JUMP": 7194,
+    "JUMP": 6678,
     "LEAP": 76316,
     "SWIM": 2115784,
-    "WALK": 57668
+    "WALK": 58184
   },
   "regions": 4997,
   "coverPoints": 9476,
@@ -2363,20 +2363,20 @@
       {
         "from": "red-spawn-21",
         "to": "red-1",
-        "length": 111.36474227905273,
+        "length": 109.94246292114258,
         "nodes": 16
       },
       {
         "from": "red-spawn-21",
         "to": "red-1",
-        "length": 123.89595079421997,
-        "nodes": 19
+        "length": 119.24478816986084,
+        "nodes": 18
       },
       {
         "from": "red-spawn-21",
         "to": "red-1",
-        "length": 130.89595079421997,
-        "nodes": 19
+        "length": 130.74050951004028,
+        "nodes": 18
       },
       {
         "from": "red-spawn-21",
@@ -2387,7 +2387,7 @@
       {
         "from": "red-spawn-21",
         "to": "blue-1",
-        "length": 1028.618155002594,
+        "length": 1025.2693176269531,
         "nodes": 90
       },
       {
@@ -4457,7 +4457,7 @@
       {
         "from": "blue-spawn-33",
         "to": "red-1",
-        "length": 1021.2423877716064,
+        "length": 1017.8935503959656,
         "nodes": 88
       },
       {
@@ -4469,20 +4469,20 @@
       {
         "from": "blue-spawn-33",
         "to": "blue-1",
-        "length": 125.74050998687744,
+        "length": 124.31823062896729,
         "nodes": 18
       },
       {
         "from": "blue-spawn-33",
         "to": "blue-1",
-        "length": 136.5471134185791,
-        "nodes": 21
+        "length": 131.89595079421997,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-33",
         "to": "blue-1",
-        "length": 142.94246292114258,
-        "nodes": 18
+        "length": 142.7870216369629,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-34",
@@ -4956,5 +4956,5 @@
   },
   "distanceFields": 94,
   "problems": [],
-  "bytes": 14585431
+  "bytes": 14589837
 }
