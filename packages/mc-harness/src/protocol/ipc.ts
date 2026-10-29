@@ -45,7 +45,12 @@ export const ProfileSchema = z.enum([
   "storm-prod",
   "storm-candidate",
 ]);
-export const WorldKindSchema = z.enum(["flat", "void"]);
+export const WorldKindSchema = z.enum(["flat", "void", "real-map"]);
+export const MapSourceSchema = z.strictObject({
+  sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  files: z.number().int().positive(),
+  bytes: z.number().int().positive(),
+});
 /** Where a sandbox runs: local Docker, or the homelab cluster's mc-sandbox namespace. */
 export const ProviderKindSchema = z.enum(["docker", "kubernetes"]);
 export type ProviderKind = z.infer<typeof ProviderKindSchema>;
@@ -54,6 +59,10 @@ export const SandboxCreateRequestSchema = z
   .strictObject({
     profile: ProfileSchema,
     world: WorldKindSchema,
+    mapDirectory: z.string().min(1).optional(),
+    mapSpawn: z
+      .tuple([z.number(), z.number().min(-63).max(318), z.number()])
+      .optional(),
     ttlSeconds: z
       .number()
       .int()
@@ -75,6 +84,17 @@ export const SandboxCreateRequestSchema = z
       .optional(),
   })
   .superRefine((input, context) => {
+    if (
+      (input.world === "real-map") !== (input.mapDirectory !== undefined) ||
+      (input.world === "real-map") !== (input.mapSpawn !== undefined) ||
+      (input.world === "real-map" &&
+        (input.provider === "kubernetes" || input.profile !== "storm-dev"))
+    )
+      context.addIssue({
+        code: "custom",
+        message:
+          "Real-map capture requires a map directory, safe map spawn, and the local Docker storm-dev profile",
+      });
     const published =
       input.profile === "storm-prod" || input.profile === "storm-candidate";
     const selected = input.publishedArtifact;
@@ -119,6 +139,7 @@ export const SandboxSummarySchema = z.strictObject({
   provider: ProviderKindSchema,
   profile: ProfileSchema,
   world: WorldKindSchema,
+  mapSource: MapSourceSchema.optional(),
   status: z.enum(["ready", "stopped"]),
   createdAt: z.string(),
   expiresAt: z.string(),

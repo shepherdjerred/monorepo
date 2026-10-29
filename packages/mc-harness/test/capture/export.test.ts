@@ -94,10 +94,10 @@ describe("capture export", () => {
       const { run, rendered, docs } = await fixture(root);
       await expect(
         exportMedia({ ...run, target: "sandbox-1" }, rendered, docs),
-      ).rejects.toThrow("completed live");
+      ).rejects.toThrow("completed live or real-map");
       await expect(
         exportMedia({ ...run, state: "needs-recovery" }, rendered, docs),
-      ).rejects.toThrow("completed live");
+      ).rejects.toThrow("completed live or real-map");
       await Bun.write(path.join(rendered, "example/original.webp"), "changed");
       await expect(exportMedia(run, rendered, docs)).rejects.toThrow(
         "Rendered output changed",
@@ -128,6 +128,28 @@ describe("capture export", () => {
       expect(await Bun.file(path.join(destination, "notes.txt")).text()).toBe(
         "keep me",
       );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+  it("accepts restored real-map copies while keeping map identity private", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "capture-real-map-"));
+    try {
+      const { run, rendered, docs } = await fixture(root);
+      await exportMedia(
+        {
+          ...run,
+          target: "sandbox-map",
+          mapSource: { sha256: "a".repeat(64), files: 10, bytes: 1024 },
+        },
+        rendered,
+        docs,
+      );
+      const manifest = await Bun.file(
+        path.join(docs, "media/example/media.json"),
+      ).text();
+      expect(manifest).not.toContain("sandbox-map");
+      expect(manifest).not.toContain("a".repeat(64));
     } finally {
       await rm(root, { recursive: true, force: true });
     }

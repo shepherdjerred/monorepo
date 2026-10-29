@@ -65,6 +65,7 @@ export type CaptureContext = {
   ) => Promise<void>;
   lookAt: (position: [number, number, number]) => Promise<void>;
   use: (sneak?: boolean) => Promise<void>;
+  attack: (sneak?: boolean) => Promise<void>;
   sign: (lines: [string, string, string, string]) => Promise<void>;
   transfer: (item: string, from: "container" | "inventory") => Promise<void>;
   capture: (presentation: Presentation) => Promise<void>;

@@ -2,6 +2,8 @@ import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
+import { copyRealMap } from "#sandbox/map-copy.ts";
+import { startCaptureProxy } from "./proxy.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BridgeClient } from "#bridge/client.ts";
 import {
@@ -140,6 +142,10 @@ export const SANDBOX_ROW_FORMAT = `{{.ID}}\t{{.Label "${LABELS.sandbox}"}}\t{{.L
 export class DockerSandboxProvider implements SandboxProvider {
   readonly kind = "docker" as const;
   private queue: Promise<unknown> = Promise.resolve();
+  private readonly proxies = new Map<
+    string,
+    Awaited<ReturnType<typeof startCaptureProxy>>
+  >();
 
   constructor(
     private readonly options: {
@@ -191,10 +197,15 @@ export class DockerSandboxProvider implements SandboxProvider {
     const started = Date.now();
     const id = newSandboxId();
     const secrets = newSandboxSecrets();
-    const profile = resolveProfile(request, secrets);
-    // Fail on a missing build output before writing anything.
-    await requireStagedSources(this.options.repoRoot, profile.staged);
     const dir = this.options.store.dir(id);
+    await mkdir(dir, { recursive: true, mode: 0o700 });
+    const mapSource =
+      request.mapDirectory === undefined
+        ? undefined
+        : await copyRealMap(request.mapDirectory, path.join(dir, "world"));
+    const profile = resolveProfile(request, secrets, mapSource);
+    // Validate build outputs before creating a container.
+    await requireStagedSources(this.options.repoRoot, profile.staged);
     progress("staging plugins");
     const { pluginsDir, seedFiles } = await stageSandboxFiles({
       dir,
@@ -228,6 +239,8 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     const containerId = stdout.trim();
     try {
+      if (mapSource !== undefined)
+        await docker(["cp", path.join(dir, "world"), `${containerId}:/data/`]);
       if (isPublishedStorm(request.profile)) {
         // Match the server chart's fsGroup on a fresh volume, as boot-check.sh
         // does. The server itself stays unprivileged; only these short-lived
@@ -258,6 +271,27 @@ export class DockerSandboxProvider implements SandboxProvider {
           `${containerId}:/data/${seed.target}`,
         ]);
       }
+      if (mapSource !== undefined) {
+        const config = path.join(dir, "config");
+        await mkdir(config, { mode: 0o777 });
+        await Bun.write(
+          path.join(config, "paper-global.yml"),
+          "_version: 31\nproxies:\n  proxy-protocol: true\n",
+        );
+        await docker(["cp", config, `${containerId}:/data/`]);
+        await docker([
+          "run",
+          "--rm",
+          "--volumes-from",
+          containerId,
+          "--entrypoint",
+          "chmod",
+          profile.image,
+          "-R",
+          "a+rwX",
+          "/data/config",
+        ]);
+      }
       progress("booting Paper");
       const deadline = started + BOOT_TIMEOUT_MS;
       await startAndAwaitDone(containerId, deadline);
@@ -277,17 +311,21 @@ export class DockerSandboxProvider implements SandboxProvider {
         ),
         deadline,
       );
+      const proxy =
+        mapSource === undefined ? undefined : await startCaptureProxy(game);
+      if (proxy !== undefined) this.proxies.set(id, proxy);
       const record: SandboxRecord = {
         id,
         provider: "docker",
         profile: request.profile,
         world: request.world,
+        ...(mapSource === undefined ? {} : { mapSource }),
         status: "ready",
         createdAt,
         expiresAt,
         keep: request.keep,
         bootMs: Date.now() - started,
-        endpoints: { game, rcon, bridge },
+        endpoints: { game: proxy?.endpoint ?? game, rcon, bridge },
         providerRef: { kind: "docker", containerId },
         owner: this.owner,
         secrets,
@@ -295,6 +333,8 @@ export class DockerSandboxProvider implements SandboxProvider {
       await this.options.store.write(record);
       return record;
     } catch (error) {
+      this.proxies.get(id)?.close();
+      this.proxies.delete(id);
       const logs = await containerLogs(containerId).catch(() => "");
       await Bun.write(path.join(dir, "failed-boot.log"), logs);
       await docker(["rm", "-f", "-v", containerId]);
@@ -312,13 +352,17 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     return records.map((record) => ({
       ...record,
-      status: running.has(dockerContainerId(record).slice(0, 12))
-        ? "ready"
-        : "stopped",
+      status:
+        running.has(dockerContainerId(record).slice(0, 12)) &&
+        (record.world !== "real-map" || this.proxies.has(record.id))
+          ? "ready"
+          : "stopped",
     }));
   }
 
   async destroy(id: string): Promise<void> {
+    this.proxies.get(id)?.close();
+    this.proxies.delete(id);
     const record = await this.options.store.read(id);
     const allRows = await this.rows();
     const rows = allRows.filter((row) => row.id === id);

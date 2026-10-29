@@ -14,7 +14,7 @@ Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
 Sandboxes (Paper 26.3 + WorldEdit + MCBridge; build MCBridge first). Profiles:
 paper, storm-dev (Docker by default); storm-prod, storm-candidate (the published
 image; cluster by default, ttl ≤ 8h):
-  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep] [--artifact-file original-artifact.json] [--json]
+  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void|real-map] [--map-directory saved-map --map-spawn '[x,y,z]'] [--ttl 2h] [--keep] [--artifact-file original-artifact.json] [--json]
   toolkit mc sandbox ls [--json]
   toolkit mc sandbox down <id…> | --all
 
@@ -58,7 +58,7 @@ mode in sandboxes, authenticated Prism on live; needs a desktop session and Java
 
 Documentation capture (authenticated live media; private rehearsal and recovery):
   toolkit mc capture doctor --target live [--account XiguaJerred]
-  toolkit mc capture site find --target live --reason <why>
+  toolkit mc capture site find|select --target <id|live> --reason <why>
   toolkit mc capture run <scene.ts> --site <site.json> --target live --reason <why>
   toolkit mc capture rehearse <scene.ts> --site <site.json> --target <sandbox-id> --reason <why>
   toolkit mc capture status|stop|render|review <run-id>

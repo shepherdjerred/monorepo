@@ -42,6 +42,8 @@ final class ClientSnapshot {
         Map.entry("food", player.getFoodData().getFoodLevel()),
         Map.entry("world", client.level.dimension().identifier().toString()),
         Map.entry("hotbar", player.getInventory().getSelectedSlot()),
+        Map.entry("swinging", player.isSwinging()),
+        Map.entry("crouching", player.isCrouching()),
         Map.entry("screen", screen == null ? "" : screen.getTitle().getString()),
         Map.entry("containerId", container.containerId),
         Map.entry("stateId", container.getStateId()),

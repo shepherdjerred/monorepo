@@ -195,6 +195,12 @@ final class ClientActions {
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);
+      case "clear-overlays" -> {
+        Protocol.keys(args, Set.of());
+        client.gui.hud.getChat().clearMessages(false);
+        client.gui.toastManager().clear();
+        yield "Transient overlays cleared";
+      }
       case "attack", "use" -> interact(client, request);
       default -> throw new IllegalArgumentException("Unknown action: " + request.action());
     };
@@ -451,9 +457,11 @@ final class ClientActions {
     var mode = java.util.Objects.requireNonNull(client.gameMode);
     var hit = client.hitResult;
     if (request.action().equals("attack")) {
-      if (!(hit instanceof EntityHitResult entity))
-        throw new IllegalStateException("Aim at an entity");
-      mode.attack(player, entity.getEntity());
+      if (hit instanceof EntityHitResult entity) mode.attack(player, entity.getEntity());
+      else if (hit instanceof BlockHitResult block
+          && hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK)
+        mode.startDestroyBlock(block.getBlockPos(), block.getDirection());
+      else throw new IllegalStateException("Aim at an entity or block");
     } else if (hit instanceof BlockHitResult block
         && hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
       mode.useItemOn(player, InteractionHand.MAIN_HAND, block);

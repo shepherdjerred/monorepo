@@ -78,11 +78,6 @@ class StormMedia extends HTMLElement {
     controls.className = "storm-media-controls";
     controls.append(toggle, steps);
     this.append(controls);
-    this.cleanup = () => {
-      stage.before(media);
-      stage.remove();
-      controls.remove();
-    };
     toggle.addEventListener(
       "click",
       () => {
@@ -104,16 +99,27 @@ class StormMedia extends HTMLElement {
           : manifest.annotations.filter(
               (cue) => time >= cue.startMs && time < cue.endMs,
             );
-      const signature = JSON.stringify(active);
+      const width = stage.clientWidth,
+        height = stage.clientHeight;
+      if (width <= 0 || height <= 0) return;
+      const signature = JSON.stringify([width, height, active]);
       if (signature === previous) return;
       previous = signature;
       // Geometry contains only validated numbers and XML-escaped plain text.
-      overlay.innerHTML = overlaySvg(active, manifest.width, manifest.height);
+      overlay.innerHTML = overlaySvg(active, width, height, 16);
     };
     if (media instanceof HTMLVideoElement) {
       for (const event of ["timeupdate", "seeked", "loadedmetadata"])
         media.addEventListener(event, draw, { signal });
     }
+    const observer = new ResizeObserver(draw);
+    observer.observe(stage);
+    this.cleanup = () => {
+      observer.disconnect();
+      stage.before(media);
+      stage.remove();
+      controls.remove();
+    };
     draw();
   }
 }

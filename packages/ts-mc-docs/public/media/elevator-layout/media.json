@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "elevator-layout",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/elevator-layout/original.webp",
+  "poster": "/media/elevator-layout/poster.webp",
+  "alt": "Two vertically aligned lift signs with a safe platform at each stop",
+  "caption": "Align the signs vertically and leave room to stand at each floor.",
+  "annotations": []
+}

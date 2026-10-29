@@ -217,6 +217,7 @@ async function clientAction(
       "close",
       "messages",
       "screen-inspect",
+      "clear-overlays",
       "record-status",
       "record-cancel",
     ].includes(action)

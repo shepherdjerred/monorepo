@@ -92,14 +92,23 @@ async function install(
   }
 }
 
-/** Publishes only an allowlisted, verified set of derivatives from completed live runs. */
+function requirePublishable(run: CaptureRun): void {
+  if (
+    (run.target !== "live" && run.mapSource === undefined) ||
+    run.state !== "complete"
+  )
+    throw new Error(
+      "Docs export requires a completed live or real-map capture",
+    );
+}
+
+/** Publishes verified derivatives from restored live runs or fingerprinted real-map copies. */
 export async function exportMedia(
   run: CaptureRun,
   rendered: string,
   docsPublic: string,
 ): Promise<string[]> {
-  if (run.target !== "live" || run.state !== "complete")
-    throw new Error("Docs export requires a completed live capture");
+  requirePublishable(run);
   const snippets: string[] = [];
   for (const capture of run.captures) {
     const source = path.join(rendered, capture.name);

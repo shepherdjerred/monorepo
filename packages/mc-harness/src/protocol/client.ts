@@ -131,6 +131,7 @@ export const ClientActionSchema = z.enum([
   "release-inputs",
   "inventory",
   "close",
+  "clear-overlays",
   "respawn",
   "sign-write",
   "click",
@@ -170,6 +171,7 @@ export const CLIENT_ACTION_REQUEST_SCHEMAS = {
   "release-inputs": z.strictObject({}),
   inventory: z.strictObject({ open: z.boolean() }),
   close: z.strictObject({}),
+  "clear-overlays": z.strictObject({}),
   respawn: z.strictObject({}),
   "sign-write": z.strictObject({
     lines: z.tuple([

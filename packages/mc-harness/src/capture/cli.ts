@@ -307,7 +307,7 @@ async function main(): Promise<void> {
   const options = parsed.values;
   if (action === undefined || options.help === true) {
     print(
-      "toolkit mc capture doctor --target <sandbox|live>\nsite find --target live --account XiguaJerred --reason <why>\nrun <scene.ts> --site <site.json> --target <sandbox|live> --reason <why>\nstatus|stop|recover|render|review|export <run-id> [--target live --reason <why>] [--docs ts-mc-docs]",
+      "toolkit mc capture doctor --target <sandbox|live>\nsite find|select --target <sandbox|live> --account XiguaJerred --reason <why>\nrun <scene.ts> --site <site.json> --target <sandbox|live> --reason <why>\nstatus|stop|recover|render|review|export <run-id> [--target live --reason <why>] [--docs ts-mc-docs]",
     );
     return;
   }

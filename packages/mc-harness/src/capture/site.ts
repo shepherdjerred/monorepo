@@ -151,7 +151,8 @@ export async function findSite(
   argument: string | undefined,
   options: CaptureOptions,
 ): Promise<void> {
-  if (argument !== "find") throw new Error("Use capture site find");
+  if (argument !== "find" && argument !== "select")
+    throw new Error("Use capture site find or select");
   const target = required(options.target, "--target");
   const reason = required(options.reason, "--reason");
   const name = options.account ?? "XiguaJerred";
@@ -165,15 +166,16 @@ export async function findSite(
   if (!initial.state.connected || initial.client.target !== target)
     throw new Error("Client is not connected to the requested target");
   const origin = initial.state.position;
-  await transport.request(
-    ClientActionResponseSchema,
-    "POST",
-    `${route}/command`,
-    { text: "rtp" },
-  );
+  if (argument === "find")
+    await transport.request(
+      ClientActionResponseSchema,
+      "POST",
+      `${route}/command`,
+      { text: "rtp" },
+    );
   let arrived: ClientState = initial.state;
   const deadline = performance.now() + 120_000;
-  while (performance.now() < deadline) {
+  while (argument === "find" && performance.now() < deadline) {
     const response = await transport.request(
       ClientStatusResponseSchema,
       "GET",
@@ -193,11 +195,12 @@ export async function findSite(
   }
   if (
     !arrived.connected ||
-    Math.hypot(
-      ...arrived.position.map(
-        (value, index) => value - (origin[index] ?? value),
-      ),
-    ) <= 16
+    (argument === "find" &&
+      Math.hypot(
+        ...arrived.position.map(
+          (value, index) => value - (origin[index] ?? value),
+        ),
+      ) <= 16)
   )
     throw new Error(
       "RTP did not arrive; inspect recent client messages for price/cooldown feedback",

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "deposit-bank",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/deposit-bank/original.webp",
+  "poster": "/media/deposit-bank/poster.webp",
+  "alt": "A deposit bank barrel beside a cobblestone shelf",
+  "caption": "Closing the bank sends matching items to its linked shelf.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.62, 0.3],
+      "to": [0.65, 0.51],
+      "text": "Drop-off bank",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.16, 0.29],
+      "to": [0.21, 0.52],
+      "text": "Matching shelf",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}
