@@ -13,6 +13,7 @@ import {
 } from "./protocol";
 import { prepareNormalMacAccount } from "./readiness";
 import type { MacLifecycle } from "./prepare";
+import { macUnifiedLogQuery, type MacLogInterval } from "./unified-log";
 
 const maximum = 8 * 1024 * 1024;
 type Captured = {
@@ -158,7 +159,10 @@ async function retain(
   directory: string,
   name: string,
   result: Captured,
-  argv: string[],
+  {
+    argv,
+    requestedInterval,
+  }: { argv: string[]; requestedInterval?: MacLogInterval },
 ) {
   let failed = false;
   for (const [file, bytes] of [
@@ -176,6 +180,7 @@ async function retain(
           complete: result.complete,
           startedAtUnixMilliseconds: result.startedAtUnixMilliseconds,
           finishedAtUnixMilliseconds: result.finishedAtUnixMilliseconds,
+          ...(requestedInterval === undefined ? {} : { requestedInterval }),
         }),
       ),
     ],
@@ -210,7 +215,7 @@ export async function captureMacFileDescriptors(
     "fn",
   ];
   const result = await capture(argv);
-  await retain(prepared.evidenceDirectory, "fd-" + phase, result, argv);
+  await retain(prepared.evidenceDirectory, "fd-" + phase, result, { argv });
   assert.equal(result.exitCode, 0);
   assert.equal(result.stderr.length, 0);
   assert.ok(result.complete && !result.truncated && !result.timedOut);
@@ -268,23 +273,17 @@ export async function collectGuestMacInput(
     }
     await runtime.retire();
     const end = Date.now();
-    const argv = [
-      "/usr/bin/log",
-      "show",
-      "--info",
-      "--debug",
-      "--style",
-      "ndjson",
-      "--start",
-      "@" + prepared.input.launchDate.toFixed(6),
-      "--end",
-      "@" + (end / 1000).toFixed(6),
-      "--predicate",
-      "processIdentifier == " + String(prepared.input.pid),
-    ];
+    const query = macUnifiedLogQuery(
+      prepared.input.pid,
+      prepared.input.launchDate,
+      end,
+    );
     try {
-      const result = await capture(argv);
-      await retain(directory, "unified", result, argv);
+      const result = await capture(query.argv);
+      await retain(directory, "unified", result, {
+        argv: query.argv,
+        requestedInterval: query.interval,
+      });
       if (
         result.exitCode !== 0 ||
         result.stderr.length > 0 ||

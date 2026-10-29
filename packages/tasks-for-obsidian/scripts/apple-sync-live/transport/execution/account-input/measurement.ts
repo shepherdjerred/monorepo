@@ -10,6 +10,7 @@ import {
   macVerificationTiming,
   type MacInputPrepared,
 } from "./protocol";
+import { macUnifiedLogQuery } from "./unified-log";
 
 export const NativeWindowSchema = z.strictObject({
   startedAtUnixMilliseconds: z.number().int().positive(),
@@ -25,6 +26,12 @@ const CommandSchema = z.strictObject({
   complete: z.literal(true),
   startedAtUnixMilliseconds: z.number().int().positive(),
   finishedAtUnixMilliseconds: z.number().int().positive(),
+});
+const UnifiedCommandSchema = CommandSchema.extend({
+  requestedInterval: z.strictObject({
+    startUnixMilliseconds: z.number().positive(),
+    endUnixMilliseconds: z.number().int().positive(),
+  }),
 });
 const CaptureSchema = z.strictObject({
   schemaVersion: z.literal(1),
@@ -210,27 +217,19 @@ export function validateMacMeasuredOutputs(options: {
     after.startedAtUnixMilliseconds >= window.finishedAtUnixMilliseconds - skew,
   );
   assert.ok(before.startedAtUnixMilliseconds >= input.launchDate * 1000 - skew);
-  const unified = CommandSchema.parse(json(get("unified.json")));
-  const end = unified.argv[9];
-  assert.ok(end !== undefined && /^@\d+(?:\.\d+)?$/u.test(end));
-  const endMilliseconds = Number(end.slice(1)) * 1000;
-  assert.deepEqual(unified.argv, [
-    "/usr/bin/log",
-    "show",
-    "--info",
-    "--debug",
-    "--style",
-    "ndjson",
-    "--start",
-    "@" + input.launchDate.toFixed(6),
-    "--end",
-    end,
-    "--predicate",
-    "processIdentifier == " + String(input.pid),
-  ]);
+  const unified = UnifiedCommandSchema.parse(json(get("unified.json")));
+  const interval = unified.requestedInterval;
+  assert.equal(interval.startUnixMilliseconds, input.launchDate * 1000);
+  const expectedQuery = macUnifiedLogQuery(
+    input.pid,
+    input.launchDate,
+    interval.endUnixMilliseconds,
+  );
+  assert.deepEqual(unified.argv, expectedQuery.argv);
+  assert.deepEqual(interval, expectedQuery.interval);
   assert.ok(
-    endMilliseconds >= after.finishedAtUnixMilliseconds &&
-      endMilliseconds <= unified.startedAtUnixMilliseconds + skew,
+    interval.endUnixMilliseconds >= after.finishedAtUnixMilliseconds &&
+      interval.endUnixMilliseconds <= unified.startedAtUnixMilliseconds + skew,
   );
   assert.ok(
     unified.finishedAtUnixMilliseconds >= unified.startedAtUnixMilliseconds,

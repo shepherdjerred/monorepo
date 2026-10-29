@@ -35,6 +35,22 @@ const pluginReads = new Set([
   ".obsidian/plugins/tasknotes/main.js",
   ".obsidian/plugins/tasknotes/styles.css",
 ]);
+const accountSessionEvidence = new Set([
+  "prepared.json",
+  "app.stdout",
+  "app.stderr",
+  "fd-before.stdout",
+  "fd-before.stderr",
+  "fd-before.json",
+  "fd-after.stdout",
+  "fd-after.stderr",
+  "fd-after.json",
+  "unified.stdout",
+  "unified.stderr",
+  "unified.json",
+  "capture.json",
+  "native-intent.json",
+]);
 export type GuestPaths = {
   stateDirectory: string;
   referenceDirectory: string;
@@ -134,7 +150,18 @@ async function readMeasuredBytes(
 }
 
 export function evidencePathAllowed(relative: string): boolean {
+  const segments = relative.split("/");
+  const [root, sessions, sessionID, filename] = segments;
+  const accountSession =
+    root === "account-input" &&
+    sessions === "sessions" &&
+    segments.length === 4 &&
+    filename !== undefined &&
+    accountSessionEvidence.has(filename) &&
+    sessionID?.toLowerCase() === sessionID &&
+    UuidSchema.safeParse(sessionID).success;
   return (
+    accountSession ||
     /^journeys\/round-[123]\/[A-Za-z0-9][A-Za-z0-9-]{0,100}\/(?:summary\.json|tests\.json|selected-test\.json|ownership-cleanup\.json|attachments\/(?:manifest\.json|[A-Fa-f0-9-]{36}\.(?:png|json)))$/u.test(
       relative,
     ) ||
