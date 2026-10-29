@@ -19,6 +19,7 @@ import org.bukkit.util.Vector;
 /** Physical movement is checked after every planner, combat controller and recovery proposal. */
 final class BodyMovement {
   private Optional<Flight> flight = Optional.empty();
+  private Vec3 heading = Vec3.ZERO;
   private Optional<String> lastRefusal = Optional.empty();
   private final TraversalCapture survival;
   private final java.util.function.BiConsumer<Player, Vector> doors;
@@ -95,7 +96,7 @@ final class BodyMovement {
       // mid-flight and landed it where it started. Vanilla keeps its momentum.
       return checked.reason();
     }
-    var heading = checked.destination().map(point -> point.minus(position)).orElse(Vec3.ZERO);
+    heading = checked.destination().map(point -> point.minus(position)).orElse(Vec3.ZERO);
     steer(
         player,
         new Steering(
@@ -144,8 +145,14 @@ final class BodyMovement {
     return lastRefusal;
   }
 
+  /** Where the body last steered on purpose; a sprint jump boosts along it, not along knockback. */
+  Vec3 heading() {
+    return heading;
+  }
+
   void stop(Player player) {
     flight = Optional.empty();
+    heading = Vec3.ZERO;
     steer(
         player, new Steering(Vec3.ZERO, false, false, Hop.WALK), terrain(player, Optional.empty()));
   }

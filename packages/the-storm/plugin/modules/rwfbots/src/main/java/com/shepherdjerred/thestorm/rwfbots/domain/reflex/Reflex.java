@@ -418,8 +418,7 @@ public final class Reflex {
       var distance = self.pos().horizontalDistance(target.pos());
       var speed = context.loadout().ranged().projectileSpeed();
       var flight = BowSolver.flightTicks(distance, speed);
-      var lead = target.vel().scale(flight * levers().predictionQuality());
-      var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
+      var aimPoint = BowSolver.lead(context.grid(), target, flight * levers().predictionQuality());
       var solved = bowFacing(aimPoint);
       if (solved.isEmpty()) {
         stopShooting();
@@ -589,7 +588,10 @@ public final class Reflex {
       var preferred = move.isZero() ? radial : move.normalized();
       var alternative = radial.scale(closing < 0 ? -1 : 1);
       var safe = CombatFootwork.steer(context.grid(), self, preferred, alternative);
-      var sprint = (charging || now >= state.wTapUntil()) && closing > 0;
+      // RWF's knockback counts a sprinting attacker as a knockback level: keep sprinting through
+      // the strafe in the spacing band, not only while closing, so the hits there carry it.
+      var sprint =
+          (charging || now >= state.wTapUntil()) && CombatFootwork.sprintable(safe, radial);
       commands.add(
           safe.isZero()
               ? new BodyCommand.Stop()

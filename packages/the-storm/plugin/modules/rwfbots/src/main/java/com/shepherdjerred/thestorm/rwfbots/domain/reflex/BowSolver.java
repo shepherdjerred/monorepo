@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
@@ -30,7 +32,40 @@ public final class BowSolver {
   private static final double LOWEST_ELEVATION = -89;
   private static final double HIGHEST_ELEVATION = 60;
 
+  /** Height above the feet an arrow aims for: the middle of the body. */
+  static final double BODY_CENTRE = 1.3;
+
+  /**
+   * The most a jump lifts feet above the ground it left, blocks. Ground further below an airborne
+   * target is not where it lands from a jump: it is climbing, swimming or falling, and the bow
+   * keeps its own height.
+   */
+  static final double JUMP_APEX = 1.3;
+
   private BowSolver() {}
+
+  /**
+   * Where to aim at {@code target} for an arrow {@code leadTicks} in flight: its body centre, led
+   * by its horizontal velocity, at the height a jumping target lands on. Leading a jump's upward
+   * velocity aimed blocks above a target that is back on the ground when the arrow arrives.
+   */
+  public static Vec3 lead(VoxelGrid grid, CombatantView target, double leadTicks) {
+    var feet = target.pos().plus(target.vel().horizontal().scale(leadTicks));
+    var y = target.onGround() ? target.pos().y() : landing(grid, feet.withY(target.pos().y()));
+    return new Vec3(feet.x(), y + BODY_CENTRE, feet.z());
+  }
+
+  /** The top of the solid cell a jump at {@code above} comes down on, or its own height. */
+  private static double landing(VoxelGrid grid, Vec3 above) {
+    var x = (int) Math.floor(above.x());
+    var z = (int) Math.floor(above.z());
+    var lowest = (int) Math.floor(above.y() - JUMP_APEX);
+    for (var y = (int) Math.floor(above.y()); y >= lowest; y--) {
+      if (grid.bounds().contains(x, y, z) && grid.blocks(x, y, z, VoxelGrid.Layer.MOVEMENT))
+        return Math.max(Math.min(above.y(), y + 1.0), above.y() - JUMP_APEX);
+    }
+    return above.y();
+  }
 
   /** One tick of arrow motion from {@code pos} with {@code vel}: the new position and velocity. */
   public record Arrow(Vec3 pos, Vec3 vel) {

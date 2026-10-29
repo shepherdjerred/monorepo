@@ -78,6 +78,8 @@ public final class CombatCommands {
     if (action.sprint() && !self.traversal().maySprint()) return false;
     var direction = direction(ticket);
     if (!CombatFootwork.safe(context.nav().grid(), self, direction)) return false;
+    if (action.jump() && CombatFootwork.reeling(self, context.input().snapshot().tick()))
+      return false;
     return !action.jump()
         || CombatFootwork.safeJump(
             context.nav(),

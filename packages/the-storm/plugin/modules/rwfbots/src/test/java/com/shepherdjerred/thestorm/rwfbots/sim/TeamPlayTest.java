@@ -142,7 +142,8 @@ final class TeamPlayTest {
   // ahead closes the round out with a plant rush and hunting pairs.
   // Leaps are planned while their body runs up the line, judged where a plan reaches the body, and
   // a run-up the body is already on is joined rather than walked back to.
-  private static final String PINNED_YARD_HASH = "103f981201343025";
+  // Bots keep sprinting while strafing in contact; sprint jumps boost along the steering heading.
+  private static final String PINNED_YARD_HASH = "faad496389a7ca98";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

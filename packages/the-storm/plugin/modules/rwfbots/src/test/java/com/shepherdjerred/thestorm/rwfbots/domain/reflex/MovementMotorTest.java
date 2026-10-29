@@ -51,6 +51,21 @@ final class MovementMotorTest {
   }
 
   @Test
+  void aSprintJumpRightAfterAHitBoostsAlongTheHeadingNotTheKnockback() {
+    // Knocked back west while steering east: the boost opposes the blow instead of adding to it.
+    var knocked = new Vec3(-0.4, 0, 0);
+    var launch = MovementMotor.jump(knocked, true, new Vec3(1, 0, 0));
+    assertThat(launch.x()).isCloseTo(-0.2, within(1e-9));
+    assertThat(launch.y()).isEqualTo(MovementMotor.JUMP_SPEED);
+    // Knocked sideways: the blow is kept but never lengthened by the sprint impulse.
+    var sideways = MovementMotor.jump(new Vec3(0, 0, 0.4), true, new Vec3(1, 0, 0));
+    assertThat(sideways.z()).isCloseTo(0.4, within(1e-9));
+    assertThat(sideways.x()).isCloseTo(0.2, within(1e-9));
+    // No steering input: no sprint impulse at all.
+    assertThat(MovementMotor.jump(knocked, true, Vec3.ZERO).x()).isCloseTo(-0.4, within(1e-9));
+  }
+
+  @Test
   void submergedSteeringCanHoldRiseAndDiveFromTheSameState() {
     assertThat(MovementMotor.swimVertical(0)).isZero();
     assertThat(MovementMotor.swimVertical(2)).isEqualTo(0.16);
