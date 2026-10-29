@@ -50,6 +50,19 @@ public sealed interface BodyCommand {
   /** Let go of right click without firing: a half-drawn bow is lowered, no arrow leaves. */
   record CancelUse() implements BodyCommand {}
 
+  /**
+   * Eat what is in hotbar {@code slot} through rwf's consume port, without changing the held item:
+   * a steak heals at once.
+   */
+  record Consume(int slot) implements BodyCommand {
+
+    public Consume {
+      if (slot < 0 || slot > 8) {
+        throw new IllegalArgumentException("slot must be 0..8: " + slot);
+      }
+    }
+  }
+
   /** Right click {@code bomb} with the fuse. */
   record ClickBomb(BombId bomb) implements BodyCommand {}
 

@@ -47,6 +47,7 @@ public final class Loadouts {
         weapon,
         slot(hotbar, BOWS::contains).orElse(-1),
         slot(hotbar, "GOLDEN_APPLE"::equals).orElse(-1),
+        slot(hotbar, "COOKED_BEEF"::equals).orElse(-1),
         FUSE_SLOT,
         items,
         kit.body(),

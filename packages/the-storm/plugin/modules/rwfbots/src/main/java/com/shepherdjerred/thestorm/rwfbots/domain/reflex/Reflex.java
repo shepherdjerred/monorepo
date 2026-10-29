@@ -65,6 +65,18 @@ public final class Reflex {
   /** Keep eating until effective health reaches this. */
   public static final double EAT_UNTIL = 14;
 
+  /** How much a steak heals, at once and with no eating animation (rwf's steak). */
+  public static final double STEAK_HEAL = 8;
+
+  /** Eat a steak at or under this share of maximum health... */
+  public static final double STEAK_BELOW_SHARE = 0.6;
+
+  /** ...or this soon after being hit with an enemy at hand. */
+  public static final int STEAK_AFTER_HIT_TICKS = 10;
+
+  /** Steaks (and kit items) are at least this many ticks apart: one hand, one right-click. */
+  public static final int STEAK_GAP_TICKS = 4;
+
   /** Fuse clicks target this gap, in ticks (300 ms). */
   public static final int FUSE_BASE_GAP = 6;
 
@@ -209,6 +221,7 @@ public final class Reflex {
       ability();
       kitItems();
       act(bomb, target);
+      steak();
       crouchSpam();
       commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
     }
@@ -319,6 +332,16 @@ public final class Reflex {
           return;
         }
       }
+    }
+
+    /** Eats a steak when {@link SteakEating} says so, a right-click apart from kit items. */
+    private void steak() {
+      SteakEating.choose(context.loadout(), input, state, commands)
+          .ifPresent(
+              eat -> {
+                commands.add(eat);
+                state = state.withNextKitUse(now + STEAK_GAP_TICKS);
+              });
     }
 
     private Optional<BombView> bombInReach() {

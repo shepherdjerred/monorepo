@@ -309,6 +309,14 @@ final class BodyDriverTest {
   }
 
   @Test
+  void aSteakIsEatenThroughTheConsumePortWithoutChangingTheHeldItem() {
+    apply(1, new BodyCommand.Consume(2));
+
+    assertThat(actions.calls()).containsExactly("consume 2");
+    assertThat(bodies.orders()).noneMatch(order -> order.startsWith("slot"));
+  }
+
+  @Test
   void forceFollowsVanilla() {
     assertThat(BodyDriver.force(0)).isZero();
     assertThat(BodyDriver.force(5)).isCloseTo((0.0625 + 0.5) / 3, within(1e-9));

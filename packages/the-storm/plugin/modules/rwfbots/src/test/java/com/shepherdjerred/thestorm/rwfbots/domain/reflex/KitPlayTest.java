@@ -176,7 +176,8 @@ final class KitPlayTest {
   @Test
   void theHotbarIsReadFromTheKitList() {
     assertThat(Loadouts.rwf(Kit.TROOPER))
-        .isEqualTo(new Loadout(1, -1, 2, 0, List.of(), Kit.Body.PLAIN, Weapon.LEGACY, Weapon.NONE));
+        .isEqualTo(
+            new Loadout(1, -1, 2, -1, 0, List.of(), Kit.Body.PLAIN, Weapon.LEGACY, Weapon.NONE));
     var medic = Loadouts.rwf(Kit.MEDIC);
     assertThat(medic.gappleSlot()).isEqualTo(3);
     assertThat(medic.kitItems()).extracting(Loadout.KitItem::slot).containsExactly(2);
