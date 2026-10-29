@@ -418,6 +418,7 @@ describe("CI reporting manifest", () => {
           "scripts/velero-backups.test.ts",
           "scripts/zfs-nvme-lz4.test.ts",
           "scripts/argocd/argocd-apply-safety.test.ts",
+          "scripts/argocd/argocd-rendered-targets.test.ts",
           "scripts/argocd/argocd-auto-sync-policy.test.ts",
           "scripts/argocd/argocd-child-sync-timeout.test.ts",
           "scripts/argocd/argocd-release-result.test.ts",
