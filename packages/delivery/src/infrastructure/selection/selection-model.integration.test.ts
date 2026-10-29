@@ -373,6 +373,42 @@ describe("selections (4.9, 4.12)", () => {
   });
 });
 
+describe("binding over a pre-cutover acceptance (E0, section 7)", () => {
+  test("a deploy over a pre-cutover platform acceptance runs under the declared recipe", async () => {
+    const baseline = await acceptedBaseline();
+    // A v1 platform deployment records a recipe only its typed request runs.
+    await context.cluster.database.pipeline.create({
+      data: {
+        id: "platform/tofu:github/1",
+        definition: {
+          kind: "tofu",
+          stack: "github",
+          runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
+        },
+      },
+    });
+    await context.cluster.database.deployment.update({
+      where: { id: baseline.id },
+      data: { pipelineRevisionId: "platform/tofu:github/1" },
+    });
+    const env = await environmentRow();
+    const deploy = await context.delivery.createDeployment(
+      {
+        requestId: crypto.randomUUID(),
+        environmentId: env.id,
+        versionSetRevisionId: context.fixture.versionSet.id,
+        expectedGeneration: env.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    expect(deploy).toMatchObject({
+      pipelineRevisionId: env.pipelineRevisionId,
+      configurationId: env.declaredConfigurationId,
+    });
+  });
+});
+
 describe("eligibility through a promotion source (4.12, M2, W3)", () => {
   test("a deploy is eligible only for its source's current, settled acceptance", async () => {
     const first = context.fixture.versionSet.id;
