@@ -81,6 +81,12 @@ public record Loadout(
         swordSlot, -1, gappleSlot, steakSlot, fuseSlot, kitItems, body, melee, Weapon.NONE);
   }
 
+  /** The same layout using only {@code items} of its kit items. */
+  public Loadout withKitItems(List<KitItem> items) {
+    return new Loadout(
+        swordSlot, bowSlot, gappleSlot, steakSlot, fuseSlot, items, body, melee, ranged);
+  }
+
   /** The same layout with its steaks in hotbar {@code slot}, or none at -1. */
   public Loadout withSteakSlot(int slot) {
     return new Loadout(

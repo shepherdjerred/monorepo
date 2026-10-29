@@ -1,17 +1,21 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.KitMove;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
  * When a bot uses a kit item, from what it can fairly know this tick: the enemy it fights (only one
- * it sees), its own health, its teammates and where it is walking. A pure function; the reflex
- * layer spaces the uses out.
+ * it sees), its own health, its teammates and where it is walking. A function of the tick and of
+ * how promptly the bot notices a moment ({@link KitTiming}); the reflex layer spaces the uses out.
+ * The kits whose moments take more judgement have their own classes: {@link SmokeCover}, {@link
+ * RallyHorn}, {@link PearlThrow} and {@link WindCharge}.
  */
 public final class KitPlay {
 
@@ -38,12 +42,41 @@ public final class KitPlay {
     return choose(item, input, waypointIndex, Optional.empty());
   }
 
+  /**
+   * The command that uses {@code item} now, if this is the moment for it, for a bot that acts the
+   * tick a moment comes; {@code grid} is the map an aimed throw is checked against.
+   */
   public static Optional<BodyCommand.UseKit> choose(
-      Loadout.KitItem item,
-      ReflexInput input,
-      int waypointIndex,
-      Optional<com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid> grid) {
-    if (item.move().item().equals("WIND_CHARGE")) return windJump(item, input, waypointIndex, grid);
+      Loadout.KitItem item, ReflexInput input, int waypointIndex, Optional<VoxelGrid> grid) {
+    return choose(item, input, waypointIndex, new Means(grid, KitTiming.prompt()));
+  }
+
+  /**
+   * What a bot brings to a kit move beyond the tick's input.
+   *
+   * @param grid the map an aimed throw or a launch is checked against, if known
+   * @param timing how promptly it notices a moment and how true it throws
+   */
+  public record Means(Optional<VoxelGrid> grid, KitTiming timing) {}
+
+  /**
+   * The command that uses {@code item} now, if this is the moment for it and the bot notices it
+   * ({@link Means#timing}).
+   */
+  public static Optional<BodyCommand.UseKit> choose(
+      Loadout.KitItem item, ReflexInput input, int waypointIndex, Means means) {
+    return switch (item.move().use()) {
+      case COVER -> SmokeCover.choose(item, input, means.timing());
+      case RALLY -> RallyHorn.choose(item, input, means.timing());
+      case BLINK -> PearlThrow.choose(item, input, waypointIndex, means);
+      case GUST -> WindCharge.choose(item, input, waypointIndex, means);
+      default -> simple(item, input, waypointIndex);
+    };
+  }
+
+  /** The kit moves whose moment is plain to see, acted on the tick it comes. */
+  private static Optional<BodyCommand.UseKit> simple(
+      Loadout.KitItem item, ReflexInput input, int waypointIndex) {
     var move = item.move();
     var self = input.self();
     var target = input.target().filter(enemy -> within(self, enemy.pos(), move));
@@ -80,58 +113,18 @@ public final class KitPlay {
                   .map(enemy -> at(item, enemy, false))
               : Optional.empty();
       case TRAVEL -> travel(item, input, waypointIndex);
+      default -> throw new IllegalStateException("a judged move has its own class: " + move);
     };
   }
 
-  /** A wind charge jumps from broad supported ground, aimed at the feet rather than a waypoint. */
-  private static Optional<BodyCommand.UseKit> windJump(
-      Loadout.KitItem item,
-      ReflexInput input,
-      int index,
-      Optional<com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid> grid) {
-    var self = input.self();
-    if (grid.isEmpty() || !self.onGround() || self.effectiveHealth() < LOW) return Optional.empty();
-    var climb =
-        index < input.decision().waypoints().size()
-            && input.decision().waypoints().get(index).pos().y() > self.pos().y() + 1;
-    var smash =
-        self.kit() == com.shepherdjerred.thestorm.rwfbots.domain.world.Kit.MACEGUARD
-            && input.target().filter(enemy -> enemy.pos().distance(self.pos()) <= 5).isPresent();
-    if ((!climb && !smash) || !safeLaunch(grid.orElseThrow(), self.pos())) return Optional.empty();
-    return Optional.of(
-        new BodyCommand.UseKit(
-            item.slot(), Optional.empty(), Optional.of(self.pos().plus(0, -0.1, 0))));
-  }
-
-  public static boolean safeLaunch(
-      com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid grid, Vec3 feet) {
-    var x = (int) Math.floor(feet.x());
-    var y = (int) Math.floor(feet.y());
-    var z = (int) Math.floor(feet.z());
-    for (var dx = -2; dx <= 2; dx++) {
-      for (var dz = -2; dz <= 2; dz++) {
-        if (!safeColumn(
-            grid, new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(x + dx, y, z + dz)))
-          return false;
-      }
-    }
-    return true;
-  }
-
-  private static boolean safeColumn(
-      com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid grid,
-      com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos feet) {
-    var below =
-        new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(
-            feet.x(), feet.y() - 1, feet.z());
-    if (!grid.bounds().contains(below) || !grid.blocksMovement(below)) return false;
-    for (var dy = 0; dy <= 3; dy++) {
-      var cell =
-          new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(
-              feet.x(), feet.y() + dy, feet.z());
-      if (!grid.bounds().contains(cell) || grid.blocksMovement(cell)) return false;
-    }
-    return true;
+  /**
+   * The kit items a bot may reach for now: while it works a defuse, only cover (smoke), which hides
+   * the defuse without stopping it.
+   */
+  static List<Loadout.KitItem> usable(Loadout loadout, boolean defusing) {
+    return loadout.kitItems().stream()
+        .filter(item -> !defusing || item.move().use() == KitMove.Use.COVER)
+        .toList();
   }
 
   private static Optional<BodyCommand.UseKit> here(Loadout.KitItem item) {

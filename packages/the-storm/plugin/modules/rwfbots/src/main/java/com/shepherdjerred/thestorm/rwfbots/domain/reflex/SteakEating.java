@@ -7,8 +7,8 @@ import java.util.Optional;
 /**
  * When a bot eats a steak, which heals at once with no eating animation: once it has lost a whole
  * steak's worth of health, so none is wasted, and is low or was just hit in a fight. A steak goes
- * between swings: never in a tick that swings, nor while eating an apple or drawing a bow, and at
- * least the kit items' gap after the last right-click.
+ * between swings: never in a tick that swings, nor while eating an apple or drawing a bow, and a
+ * right-click's gap after the last steak or kit item, whatever that item's own gap.
  */
 final class SteakEating {
 
@@ -19,7 +19,7 @@ final class SteakEating {
       Loadout loadout, ReflexInput input, ReflexState state, List<BodyCommand> tick) {
     var now = input.snapshot().tick();
     if (!loadout.hasSteak()
-        || now < state.nextKitUse()
+        || now < state.nextRightClick()
         || state.isEating()
         || state.isDrawing()
         || tick.stream().anyMatch(SteakEating::swings)) {

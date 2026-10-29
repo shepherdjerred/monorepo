@@ -17,8 +17,9 @@ import org.bukkit.inventory.ItemStack;
 /**
  * A kit item used by a bot, which never clicks: each item becomes the same ability input a player's
  * click on it does, through the same listener code where there is some. Blocks are put down at the
- * bot's feet, a barricade two blocks ahead of it, and a hook lands where the bot aimed. Main thread
- * only.
+ * bot's feet, a barricade two blocks ahead of it, and a hook lands where the bot aimed. Native
+ * items (a shield, a wind charge, an ender pearl) go through the server's own item use, thrown
+ * along the bot's look. Main thread only.
  */
 final class BotKitUses {
 
@@ -48,7 +49,7 @@ final class BotKitUses {
               bot,
               new ExpansionInput.AirJump(!((Entity) bot).isOnGround(), bot.getVelocity().getY()));
       case SPLASH_POTION -> act(bot, new ExpansionInput.ThrowFlask());
-      case SHIELD, WIND_CHARGE -> {
+      case SHIELD, WIND_CHARGE, ENDER_PEARL -> {
         PaperNativeItems.start(bot);
         yield Optional.empty();
       }

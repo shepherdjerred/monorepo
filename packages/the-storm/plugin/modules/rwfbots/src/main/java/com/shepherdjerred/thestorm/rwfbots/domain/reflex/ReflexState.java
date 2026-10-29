@@ -21,7 +21,9 @@ import java.util.Optional;
  * @param decisionTick the snapshot tick of the decision the waypoint index belongs to
  * @param lastJumpTick when the bot last jumped
  * @param abilityUsedFor the decision tick whose ability has already been triggered, or -1
- * @param nextKitUse the earliest tick a kit item may be used again
+ * @param nextKitUse the earliest tick a kit item may be used again, its gap after the last one
+ * @param nextRightClick the earliest tick of the next right-click with a kit item or a steak: one
+ *     hand, one click at a time
  * @param activeJump the jump being prepared or flown, if any
  * @param bowSight where the drawn bow last had a target, so a draw survives the target ducking out
  *     of sight
@@ -41,6 +43,7 @@ public record ReflexState(
     long lastJumpTick,
     long abilityUsedFor,
     long nextKitUse,
+    long nextRightClick,
     Optional<ActiveJump> activeJump,
     Optional<ReflexState.BowSight> bowSight) {
 
@@ -70,6 +73,7 @@ public record ReflexState(
         -1,
         -1,
         0,
+        0,
         Optional.empty(),
         Optional.empty());
   }
@@ -80,6 +84,14 @@ public record ReflexState(
 
   public boolean isEating() {
     return eatingSince >= 0;
+  }
+
+  /**
+   * Whether a kit item may be used at {@code now}: its gap since the last one has passed, the hand
+   * is free of the last right-click, and the bot is neither eating nor drawing a bow.
+   */
+  public boolean handFreeForKit(long now) {
+    return now >= nextKitUse && now >= nextRightClick && !isEating() && !isDrawing();
   }
 
   public ReflexState withAim(AimState newAim) {
@@ -98,6 +110,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -118,6 +131,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -138,6 +152,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -158,6 +173,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -178,6 +194,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -198,6 +215,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -218,6 +236,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -238,6 +257,7 @@ public record ReflexState(
         tick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -258,6 +278,7 @@ public record ReflexState(
         lastJumpTick,
         tick,
         nextKitUse,
+        nextRightClick,
         activeJump,
         bowSight);
   }
@@ -277,6 +298,28 @@ public record ReflexState(
         decisionTick,
         lastJumpTick,
         abilityUsedFor,
+        tick,
+        nextRightClick,
+        activeJump,
+        bowSight);
+  }
+
+  public ReflexState withNextRightClick(long tick) {
+    return new ReflexState(
+        aim,
+        nextClickAt,
+        wTapUntil,
+        strafeDir,
+        nextStrafeFlip,
+        drawStart,
+        eatingSince,
+        healing,
+        nextFuseClick,
+        waypointIndex,
+        decisionTick,
+        lastJumpTick,
+        abilityUsedFor,
+        nextKitUse,
         tick,
         activeJump,
         bowSight);
@@ -298,6 +341,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         jump,
         bowSight);
   }
@@ -318,6 +362,7 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
+        nextRightClick,
         activeJump,
         sight);
   }

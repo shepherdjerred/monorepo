@@ -71,6 +71,12 @@ public final class BodyDriver {
       Consumer<BotBody> rewound,
       com.shepherdjerred.thestorm.rwf.app.TacticalCasting casting) {}
 
+  /** A body slower than this across the ground, blocks a tick, is at rest. */
+  static final double AT_REST = 0.02;
+
+  /** The most ticks a body waits to come to rest for a kit use. */
+  static final long BRACE_TICKS = 10;
+
   public BodyDriver(Parts parts) {
     this.bodies = parts.bodies();
     this.actions = parts.actions();
@@ -97,6 +103,7 @@ public final class BodyDriver {
     var look = look(commands);
     look.ifPresent(facing -> bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch()));
     if (holdShield(bot, navigation.tick(), fuse)) return;
+    if (braced(bot, navigation)) return;
     if (casting.stationary(bot.uuid())) {
       bodies.stop(bot.uuid());
       return;
@@ -255,6 +262,11 @@ public final class BodyDriver {
    * after.
    */
   private void useKit(BotBody bot, BodyCommand.UseKit use, Frame frame) {
+    if (needsRest(bot, use)) {
+      bodies.stop(bot.uuid());
+      bot.brace(Optional.of(new BotBody.Brace(use, frame.tick() + BRACE_TICKS)));
+      return;
+    }
     use.at().ifPresent(point -> lookAt(bot, point));
     var target = use.target().flatMap(frame.ids()::uuid);
     var at = use.at().map(point -> new Point(point.x(), point.y(), point.z()));
@@ -276,6 +288,47 @@ public final class BodyDriver {
           .ifPresent(
               facing -> bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch()));
     }
+  }
+
+  /**
+   * Whether {@code use} must wait for the body to come to rest: a Tactician's horn winds up
+   * standing still and any step breaks it, so a bot stops first, as a player lets go of the keys.
+   */
+  private boolean needsRest(BotBody bot, BodyCommand.UseKit use) {
+    return bodies
+        .entity(bot.uuid())
+        .filter(player -> !player.isDead())
+        .filter(
+            player -> {
+              var item = player.getInventory().getItem(use.slot());
+              var velocity = player.getVelocity();
+              return item != null
+                  && item.getType() == Material.GOAT_HORN
+                  && Math.hypot(velocity.getX(), velocity.getZ()) > AT_REST;
+            })
+        .isPresent();
+  }
+
+  /**
+   * Holds a braced body still until it has come to rest, then makes the use it waited for; gives up
+   * after {@link #BRACE_TICKS}. Returns whether the body was held this tick.
+   */
+  private boolean braced(BotBody bot, Navigation navigation) {
+    var waiting = bot.brace();
+    if (waiting.isEmpty()) return false;
+    if (navigation.tick() > waiting.orElseThrow().until()) {
+      bot.brace(Optional.empty());
+      return false;
+    }
+    bodies.stop(bot.uuid());
+    if (!needsRest(bot, waiting.orElseThrow().use())) {
+      bot.brace(Optional.empty());
+      useKit(
+          bot,
+          waiting.orElseThrow().use(),
+          new Frame(navigation.ids(), navigation.tick(), Optional.empty(), navigation.bounds()));
+    }
+    return true;
   }
 
   private void lookAt(BotBody bot, Vec3 point) {

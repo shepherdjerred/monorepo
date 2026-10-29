@@ -1984,7 +1984,23 @@ once they arrive with nobody in sight, a Teleporter's remote puts a pad under
 its farthest teammate when no enemy is near, a Sacrificial bonds the nearest
 ally it touches and snips its bonds when low, Spotter and Bannerman use theirs
 on an enemy in view, Engineer and Decoy theirs when hurt, and a Grappler hooks
-toward a far waypoint. Kits whose power is in how they move have it in the
+toward a far waypoint. Kits whose moment takes judgement have their own
+classes. A Smokescreen smokes when it is hurt in sight of an enemy, when it
+works a fuse (defusing too) while an enemy watches from beyond sword reach, or
+when it is outnumbered (`SmokeCover`). A Tactician sounds its horn before a
+fight, never during one: two teammates are within reach, no enemy is near,
+and an enemy is in view or the team is at a bomb. The body comes to rest
+before the windup starts (`RallyHorn`, `BodyDriver`). A Ninja or Ghost
+pearls onto its own path, or onto ground short of the enemy, to close on an
+archer, a runner or a distant enemy, or to escape when hurt. Each throw is
+followed through the voxels with its stray and goes only onto solid ground
+with room to stand (`PearlThrow`, `PearlFlight`). A Windrunner or Maceguard
+uses a wind charge to escape when hurt or to knock an enemy over a drop. A
+Windrunner also uses one to shove a swordsman back to bow range, and a
+Maceguard to launch over an enemy or leap at one. Each flight is checked for
+floor and headroom first (`WindCharge`, `Footing`). These moments wait a
+skill-scaled reaction (`KitTiming`), and a spent or cooling item drops out of
+the usable loadout (`PaperLoadouts`). Kits whose power is in how they move have it in the
 body (`Kit.Body`): a Dwarf sneaks whenever it waits with no enemy in sight, and
 an Inertia sprints straight at its target instead of strafing until it is in
 reach. The use goes through `BotActions.useKit` and becomes the same ability

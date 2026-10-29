@@ -221,8 +221,6 @@ public enum Kit {
       case KNIGHT, LANCER -> List.of(new KitMove("SHIELD", KitMove.Use.AT_ENEMY, 0, 6, 40));
       case ACROBAT -> List.of(new KitMove("FEATHER", KitMove.Use.TRAVEL, 3, 12, 160));
       case ALCHEMIST -> List.of(new KitMove("SPLASH_POTION", KitMove.Use.AT_ENEMY, 3, 14, 200));
-      case WINDRUNNER, MACEGUARD ->
-          List.of(new KitMove("WIND_CHARGE", KitMove.Use.TRAVEL, 5, 18, 100));
       case DEMOLITIONS ->
           List.of(new KitMove("STONE_PRESSURE_PLATE", KitMove.Use.PLACE, 20, 0, 100));
       case EXPLOSIVE ->
@@ -244,6 +242,22 @@ public enum Kit {
       case BANNERMAN -> List.of(new KitMove("WHITE_BANNER", KitMove.Use.AT_ENEMY, 0, 14, 300));
       case ENGINEER -> List.of(new KitMove("BRICKS", KitMove.Use.DEFEND, 0, 10, 200));
       case DECOY -> List.of(new KitMove("ARMOR_STAND", KitMove.Use.DEFEND, 0, 8, 300));
+      default -> judgedMoves();
+    };
+  }
+
+  /**
+   * The kit items whose moment takes judgement: a wind charge's launch or shove, a pearl's throw,
+   * the Smokescreen's smoke and the Tactician's horn. The gap of an item with a recharge is the
+   * recharge.
+   */
+  private List<KitMove> judgedMoves() {
+    return switch (this) {
+      case WINDRUNNER, MACEGUARD ->
+          List.of(new KitMove("WIND_CHARGE", KitMove.Use.GUST, 4.5, 12, 60));
+      case NINJA, GHOST -> List.of(new KitMove("ENDER_PEARL", KitMove.Use.BLINK, 8, 26, 60));
+      case SMOKESCREEN -> List.of(new KitMove("GRAY_DYE", KitMove.Use.COVER, 0, 12, 600));
+      case TACTICIAN -> List.of(new KitMove("GOAT_HORN", KitMove.Use.RALLY, 10, 7.5, 800));
       default -> List.of();
     };
   }
