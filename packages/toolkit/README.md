@@ -618,7 +618,8 @@ token and RCON password live in `~/.toolkit/mc/sandboxes/<id>/record.json`
 (mode `0600`) and never appear in command output. `--target <id>` selects a
 sandbox; without it the command uses the only running one and fails when there
 are none or several. A sandbox is removed when its TTL expires or the daemon
-stops, unless it was created with `--keep`. There is no live-server target yet.
+stops, unless it was created with `--keep`. Live operations require an explicit
+`--target live` and writes require a journaled `--reason`.
 
 Coordinates may be negative anywhere (`--pos1 -3,-60,-3`, `region read
 -6,-61,-6 6,-44,6`, `cmd tp agent -60 0`); no `--opt=` or `--` is needed.
@@ -657,6 +658,28 @@ append the op to a build's op log once it succeeds. Recorded writes hold the
 build's publication lock from the server mutation through recording, excluding
 render snapshots; a busy or missing build fails before the server write.
 Recorded pastes retain the exact schematic bytes sent to the server.
+
+#### Minecraft documentation capture
+
+Documentation capture uses the same daemon:
+
+```bash
+toolkit mc client start --target live --account XiguaJerred --reason "TSMC docs capture" --json
+toolkit mc capture doctor --target live
+toolkit mc capture site find --target live --reason "Scout docs terrain"
+toolkit mc capture run <scene.ts> --site <site.json> --target live --reason "Capture instructions"
+toolkit mc capture status|stop|render|review <run-id>
+toolkit mc capture recover <run-id> --target live --reason "Restore capture"
+toolkit mc capture export <run-id> --docs ts-mc-docs
+```
+
+Authenticated launch uses the existing macOS Prism account and the registered
+`MC_BRIDGE_TOKEN` credential. The daemon owns its temporary instance and
+refuses to replace an account already online. Capture scenes checkpoint and
+restore the wilderness site, inventory, and temporary plugin state. Export
+accepts completed live runs only and emits sanitized public derivatives and
+markup. See `packages/mc-harness/README.md` for scene APIs, bounded live
+actions, rehearsal prerequisites, annotations, and failure recovery.
 
 #### Minecraft builds
 

@@ -139,6 +139,13 @@ public final class TheStormPlugin extends JavaPlugin {
             RandomGenerator.getDefault(),
             getComponentLogger(),
             productAnalytics);
+    getServer()
+        .getServicesManager()
+        .register(
+            com.shepherdjerred.thestorm.core.capture.CaptureInspection.class,
+            services.require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class),
+            this,
+            org.bukkit.plugin.ServicePriority.Normal);
     var analyticsPaper = new AnalyticsPaper(context, productAnalytics);
     analytics = analyticsPaper;
     var rollout =

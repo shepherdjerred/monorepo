@@ -25,6 +25,11 @@ final class ShopAccess {
     return trading.contains(player);
   }
 
+  void restore(UUID player, boolean enabled) {
+    if (enabled) trading.add(player);
+    else trading.remove(player);
+  }
+
   void forget(UUID player) {
     trading.remove(player);
   }

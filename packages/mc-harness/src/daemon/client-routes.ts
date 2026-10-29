@@ -1,5 +1,6 @@
 import {
   CLIENT_ACTION_REQUEST_SCHEMAS,
+  type ClientStartRequest,
   ClientActionResponseSchema,
   ClientActionSchema,
   ClientCaptureRequestSchema,
@@ -14,11 +15,15 @@ import type { SandboxBackend } from "#sandbox/provider.ts";
 import type { Target } from "#src/target.ts";
 import type { ClientManager } from "./clients.ts";
 import { body, DaemonError, reply } from "./http.ts";
+import { guarded } from "./live-routes.ts";
+import type { LiveService } from "#src/live/service.ts";
+import { CaptureBoundedActionSchema } from "#protocol/capture.ts";
 
 /** The slice of the daemon context the client routes use. */
 type ClientRouteContext = {
   provider: Pick<SandboxBackend, "list">;
   clients: ClientManager;
+  live?: LiveService;
   target: (id: string) => Promise<Target>;
   log: (msg: string, extra?: Record<string, unknown>) => void;
 };
@@ -32,6 +37,129 @@ async function startClient(
   request: Request,
 ): Promise<Response> {
   const start = await body(request, ClientStartRequestSchema);
+  return start.target === "live"
+    ? startLiveClient(ctx, request, start)
+    : startSandboxClient(ctx, start);
+}
+
+async function boundedAction(
+  ctx: ClientRouteContext,
+  request: Request,
+  client: string,
+): Promise<Response> {
+  const operation = await body(request, CaptureBoundedActionSchema);
+  const { client: summary, state } = await ctx.clients.status(client);
+  if (!state.connected) throw new DaemonError("Client is disconnected", 409);
+  const target = await ctx.target(summary.target);
+  const { worlds } = await target.bridge.info();
+  const world = worlds.find((entry) => entry.name === operation.box.world);
+  if (world?.key !== state.world)
+    throw new DaemonError("Client is outside the declared fixture world", 409);
+  if (state.target.kind === "block") {
+    const position = state.target["position"];
+    const minimum = [
+      operation.box.min.x,
+      operation.box.min.y,
+      operation.box.min.z,
+    ];
+    const maximum = [
+      operation.box.max.x,
+      operation.box.max.y,
+      operation.box.max.z,
+    ];
+    if (
+      !Array.isArray(position) ||
+      position.length !== 3 ||
+      !position.every(
+        (value, axis) =>
+          typeof value === "number" &&
+          value >= (minimum[axis] ?? Infinity) &&
+          value <= (maximum[axis] ?? -Infinity),
+      )
+    )
+      throw new DaemonError("Crosshair is outside the declared fixture", 409);
+  } else if (
+    operation.action !== "click" &&
+    operation.action !== "sign-write" &&
+    operation.action !== "screen-activate"
+  )
+    throw new DaemonError("Aim at the declared fixture", 409);
+  const act = () =>
+    ctx.clients.request(client, operation.action, operation.arguments);
+  if (summary.target === "live") {
+    if (ctx.live === undefined)
+      throw new DaemonError("Live service unavailable", 503);
+    const { players } = await target.bridge.players();
+    const participant = players.find(
+      (player) => player.name === client && player.uuid === state["uuid"],
+    );
+    if (participant === undefined)
+      throw new DaemonError(
+        "Live player identity differs from the controlled client",
+        409,
+      );
+    const result = await guarded(
+      { target, request, ctx: { live: ctx.live, clients: ctx.clients } },
+      () =>
+        Promise.resolve({
+          kind: "client-act",
+          name: client,
+          uuid: participant.uuid,
+          action: operation.action,
+          box: operation.box,
+        }),
+      act,
+    );
+    return Response.json({ result });
+  }
+  return Response.json({ result: await act() });
+}
+
+async function startLiveClient(
+  ctx: ClientRouteContext,
+  request: Request,
+  start: ClientStartRequest,
+): Promise<Response> {
+  if (start.name !== "XiguaJerred" || start.op || start.gameMode !== undefined)
+    throw new DaemonError(
+      "Live capture uses XiguaJerred without automatic op or game-mode changes",
+    );
+  if (ctx.live === undefined)
+    throw new DaemonError("Live service unavailable", 503);
+  const target = await ctx.target("live");
+  const existing = ctx.clients
+    .list()
+    .find((client) => client.name === start.name && client.target === "live");
+  const { players } = await target.bridge.players();
+  if (
+    existing === undefined &&
+    players.some((player) => player.name === start.name)
+  )
+    throw new DaemonError(
+      "XiguaJerred is already connected; refusing to replace that session",
+      409,
+    );
+  const summary = await guarded(
+    { target, request, ctx: { live: ctx.live, clients: ctx.clients } },
+    () =>
+      Promise.resolve({ kind: "command", command: "capture-session-start" }),
+    () =>
+      ctx.clients.start({
+        name: start.name,
+        target: "live",
+        game: { host: "mc.ts-mc.net", port: 30_000 },
+      }),
+  );
+  return reply(
+    ClientStatusResponseSchema,
+    await ctx.clients.status(summary.name),
+  );
+}
+
+async function startSandboxClient(
+  ctx: ClientRouteContext,
+  start: ClientStartRequest,
+): Promise<Response> {
   const records = await ctx.provider.list();
   const record = records.find((candidate) => candidate.id === start.target);
   if (record === undefined) {
@@ -66,6 +194,7 @@ async function clientAction(
   client: string,
   action: string,
 ): Promise<Response> {
+  if (action === "bounded") return boundedAction(ctx, request, client);
   if (action === "capture") {
     const { out } = await body(request, ClientCaptureRequestSchema);
     return reply(ClientCaptureResponseSchema, {
@@ -78,8 +207,51 @@ async function clientAction(
   }
   const args = await body(request, CLIENT_ACTION_REQUEST_SCHEMAS[parsed.data]);
   const wire = parsed.data === "move" ? "input" : parsed.data;
-  const result = await ctx.clients.request(client, wire, args);
-  return reply(ClientActionResponseSchema, { detail: detail(result) });
+  const { client: summary, state } = await ctx.clients.status(client);
+  let result: unknown;
+  if (
+    summary.target === "live" &&
+    ![
+      "release",
+      "release-inputs",
+      "close",
+      "messages",
+      "screen-inspect",
+      "record-status",
+      "record-cancel",
+    ].includes(action)
+  ) {
+    if (ctx.live === undefined)
+      throw new DaemonError("Live service unavailable", 503);
+    const target = await ctx.target("live");
+    if (
+      ["use", "attack", "click", "sign-write", "screen-activate"].includes(
+        action,
+      ) ||
+      (action === "move" &&
+        "buttons" in args &&
+        args.buttons.some((button) => button === "use" || button === "attack"))
+    )
+      throw new DaemonError(
+        "Live block interactions require a bounded capture scene",
+        409,
+      );
+    if (!state.connected)
+      throw new DaemonError("Live client is disconnected", 409);
+    result = await guarded(
+      { target, request, ctx: { live: ctx.live, clients: ctx.clients } },
+      () =>
+        Promise.resolve({
+          kind: "command",
+          command:
+            action === "command" && "text" in args
+              ? args.text
+              : `capture-client-${action}`,
+        }),
+      () => ctx.clients.request(client, wire, args),
+    );
+  } else result = await ctx.clients.request(client, wire, args);
+  return reply(ClientActionResponseSchema, { detail: detail(result), result });
 }
 
 async function clientRoute(

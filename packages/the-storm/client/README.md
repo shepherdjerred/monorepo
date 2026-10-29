@@ -32,14 +32,15 @@ transcripts, and logs remain under `.cache/client/<session>/`.
 
 ## Connect to live The Storm
 
-On macOS, `bun run client live` builds the mod and launches a temporary Prism
-instance using the existing `XiguaJerred` account. It requires the `26.3` Prism
-instance and a signed-in account. The temporary instance is removed on exit;
-the normal instance is not modified. The session file printed on connection
-works with the same client actions and `stop` command below. `viewpoint`,
+On macOS, `bun run client live` delegates to
+`toolkit mc client start --target live --account XiguaJerred --reason ...`.
+The harness builds the mod, owns the temporary Prism instance, and journals
+live actions. It requires the existing `26.3` Prism instance and signed-in
+account. The session file printed on connection routes actions through the
+harness; live world interactions require a bounded capture scene. `viewpoint`,
 `tour`, `smoke`, and fixture controls are sandbox-only. Client actions and
 commands affect the live server; use them only for authorized work. Captures
-and command transcripts remain under `.cache/client/` and can contain player
+and command transcripts remain under `~/.toolkit/mc/clients/` and can contain player
 information. The server may need to be awake before connecting.
 
 ## Inspect and control
@@ -100,6 +101,17 @@ lobby, market, mystery box, and foundry. This tool supplies scripted inputs and
 inspection; it does not implement autonomous navigation or a full-match player.
 
 ## Record rendered footage
+
+For documentation of ordinary gameplay and menus, use `toolkit mc capture`
+and its scenes, recovery, annotations, review, and export workflow documented
+in `packages/mc-harness/README.md`. The generic native actions are
+`record-arm`, `record-start`, `record-marker`, `record-status`, and
+`record-cancel`. They retain the actual HUD, screen, world, and camera and
+produce schema 4 `mc-docs-frames` receipts. Cancellation and missed sampling
+slots produce incomplete receipts that cannot be exported. `release-inputs`
+releases held keys without cancelling the recording; `release` cancels both.
+`screen-inspect`, `screen-activate`, and cursor-based `messages` expose UI readiness.
+The spectator workflow below retains its independent RWF contract.
 
 Place a spectator observer at the desired viewpoint in the owned sandbox's
 visible windowed preview, close

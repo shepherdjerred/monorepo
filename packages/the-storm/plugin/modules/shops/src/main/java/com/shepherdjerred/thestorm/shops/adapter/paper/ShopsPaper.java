@@ -145,6 +145,19 @@ public final class ShopsPaper {
     events.registerEvents(
         new ShopReadinessListener(state.registry(), containers(settings.containers())), plugin);
     var access = new ShopAccess();
+    var capture =
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+    capture.registerPlayer("shop.access", player -> Boolean.toString(access.enabled(player)));
+    capture.registerCleanup(
+        "shop-access",
+        (player, value) -> {
+          if (!value.equals("true") && !value.equals("false"))
+            throw new IllegalArgumentException("Invalid shop-access checkpoint");
+          access.restore(player, Boolean.parseBoolean(value));
+          return java.util.concurrent.CompletableFuture.completedFuture(null);
+        });
     events.registerEvents(
         new ShopSignListener(
             new ShopSignListener.Deps(

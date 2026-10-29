@@ -43,16 +43,27 @@ Actors (Citizens player NPCs; profiles paper and storm-dev):
   toolkit mc actor act <name> attack --entity <uuid> | --type <entity-type>
 
 Real client (a rendered Minecraft client the daemon runs against a sandbox; offline
-mode, so never live; needs a desktop session and Java 25; the first start compiles it):
+mode in sandboxes, authenticated Prism on live; needs a desktop session and Java 25):
   toolkit mc client start [--target <id>] [--name HarnessClient] [--op] [--game-mode creative] [--json]
+  toolkit mc client start --target live --account XiguaJerred --reason <why> [--json]
   toolkit mc client ls | status [--name n] [--json]
   toolkit mc client look <yaw> <pitch>   Yaw 0 south, 90 west, 180 north, 270 east; pitch 90 is down
   toolkit mc client move <forward|back|left|right|jump|sneak|sprint|attack|use…> [--ticks 20]
   toolkit mc client hotbar <0-8> | use | attack | release
   toolkit mc client command <text…>     Runs as the player (no leading slash)
   toolkit mc client capture [--out f.png]   Screenshot of the rendered frame
+  toolkit mc client screen-inspect|messages|pan [--args <json>] [--name n] [--json]
   toolkit mc client stop [--name n] | --all
 --name picks the client when several run (default: the only one).
+
+Documentation capture (authenticated live media; private rehearsal and recovery):
+  toolkit mc capture doctor --target live [--account XiguaJerred]
+  toolkit mc capture site find --target live --reason <why>
+  toolkit mc capture run <scene.ts> --site <site.json> --target live --reason <why>
+  toolkit mc capture rehearse <scene.ts> --site <site.json> --target <sandbox-id> --reason <why>
+  toolkit mc capture status|stop|render|review <run-id>
+  toolkit mc capture recover <run-id> --target live --reason <why>
+  toolkit mc capture export <run-id> --docs ts-mc-docs
 
 ${LIVE_USAGE}
 

@@ -178,10 +178,10 @@ the process.
 | Acts by  | Server API calls (`place`, `break`, `goto`)  | Keyboard-style input on the crosshair, as a player would      |
 | Sees     | Observation JSON                             | `capture` screenshots of the rendered frame plus `status`     |
 | Cost     | Milliseconds; any number; headless           | ~15–30s to join, a JVM each; needs a desktop session and Java |
-| Targets  | Sandboxes and live (guarded)                 | Sandboxes only; tsmc is online-mode                           |
+| Targets  | Sandboxes and live (guarded)                 | Sandboxes; authenticated XiguaJerred on live                  |
 | Best for | Scripted playtests, block-level assertions   | What players see: HUD, dialogs, rendering, client-side flows  |
 
-The client accepts only a `127.0.0.1` server, which matches Docker sandboxes
+Sandbox clients accept a `127.0.0.1` server, which matches Docker sandboxes
 and cluster sandboxes (through the daemon's port-forward). `--op` and
 `--game-mode` apply through the bridge console after it joins. Stopping a
 sandbox stops its clients, and so does stopping the daemon. Each session writes
@@ -189,6 +189,114 @@ sandbox stops its clients, and so does stopping the daemon. Each session writes
 `~/.toolkit/mc/clients/<name>-<started>/`; `capture --out f.png` copies the PNG
 out. Verify world effects with `toolkit mc region read` rather than trusting a
 screenshot alone.
+
+Live capture uses the existing signed-in Prism account on macOS:
+
+```bash
+toolkit mc client start --target live --account XiguaJerred --reason "TSMC documentation capture" --json
+toolkit mc client status --name XiguaJerred --json
+toolkit mc client screen-inspect --name XiguaJerred --json
+toolkit mc client messages --name XiguaJerred --args '{"since":0}' --json
+```
+
+The daemon builds the client and owns an isolated temporary Prism instance,
+its display-awake lease, logs, and shutdown. The regular Prism instance and
+account store stay intact. It refuses to replace an already-connected account.
+Repeating start reuses a healthy owned session on the same target. Live start
+requires the explicit account and reason, resolves the registered MCBridge
+credential, and grants no permissions or game mode. Vault credentials never
+reach the daemon or game process. The legacy `bun run client live` command
+delegates here; its session routes through the daemon rather than a direct
+live control socket.
+
+Rich actions accept validated JSON with `--args`. `screen-inspect` returns visible
+widget IDs and a revision; `screen-activate` rejects stale IDs/revisions.
+`messages` returns a bounded cursor-based history. `pan` smoothly turns the
+camera over a bounded number of ticks. Container clicks require the observed
+container/state IDs. Live world interactions use a capture scene's declared
+footprint, snapshot, reason, and journal. Only the verified controlled player's
+presence is exempted for native interactions; other humans stay protected.
+WorldEdit and terrain restoration still refuse any player inside their box.
+
+## Documentation capture
+
+Scenes default-export `defineCaptureScene` from `capture/define.ts`. Examples
+live in `packages/the-storm/tools/captures/scenes/`: inventory, cooking pot,
+bank, owner shop test, elevator, moving bridge, and private Stargates. Setup
+declares the complete bounds, inspectors, and an outside staging point.
+Author assertions against inventory, exact blocks, messages received after
+the action, and observed arrival rather than successful command dispatch.
+The shop example tests the owner's supported access mode; it does not prove
+a payment between two accounts.
+
+```bash
+toolkit mc capture doctor --target live --account XiguaJerred
+toolkit mc capture site find --target live --account XiguaJerred --reason "Scout an unclaimed docs site"
+toolkit mc capture run packages/the-storm/tools/captures/scenes/cooking.ts --site <site.json> --target live --reason "Capture cooking-pot instructions"
+toolkit mc capture status <run-id>
+toolkit mc capture render <run-id>
+toolkit mc capture review <run-id>
+toolkit mc capture export <run-id> --docs ts-mc-docs
+```
+
+`site find` uses the player's ordinary `/rtp`, verifies wilderness, retains a
+schematic and four freshly rendered views, and returns a private site file.
+Choose natural terrain with safe ground at the scene's staging point.
+The server must advertise the `capture` capability from the matching
+TheStorm/MCBridge artifact. Doctor fails explicitly for missing tools, launch
+prerequisites, server capability, or a disconnected/non-rendering client.
+
+Each run holds a target/account lock and atomically journals its checkpoint
+under `~/.toolkit/mc/captures/`. It refuses sites with existing block entities
+or module-owned resources. Before introducing demo items it saves the original
+inventory, game mode, vitals, effects, flight state, progression, and position.
+Temporary progression and plugin resources register durable compensation
+**before** mutation. Cleanup replays it in reverse, checks module state, moves
+outside the footprint, restores and fingerprints the terrain, returns the
+player, and restores inventory using a compare-and-swap check. A failed
+compensation remains in the journal. Runs and logs are private and can contain
+player data; do not upload them as PR assets.
+
+```bash
+toolkit mc capture stop <run-id>
+toolkit mc capture recover <run-id> --target live --reason "Restore interrupted capture"
+toolkit mc capture rehearse <scene.ts> --site <site.json> --target <production-profile-sandbox> --reason "Rehearse docs scene"
+```
+
+Stop requests release inputs and enter cleanup. Recovery uses saved
+compensation and does not import or replay the original scene. Recover before
+starting another capture against an unfinished site. Rehearsal copies the
+retained site's terrain into an empty owned `storm-prod`/`storm-candidate`
+sandbox and owns its `CapturePreview` client. It requires the matching server
+capability and enabled gameplay/rollout prerequisites; published sandboxes'
+closed Flipt bootstrap does not prove flag-gated Stargate behavior. Rehearsal
+assets are private QA and are refused by docs export. Published media must
+come from completed live runs with verified restoration.
+
+Screenshots and short step sequences are the default. Use `context.record`
+for motion that explains the behavior. Its generic recorder allows ordinary
+HUD, menus, input, and world transitions without freezing the camera. It
+records actual 1280×720 framebuffer samples at 30 fps, at most 60 seconds;
+missed samples fail instead of duplicating frames. Schema 4 docs receipts and
+their neutral contract remain separate from the RWF spectator receipts.
+`context.step` records client-observed frame markers inside a clip. An
+annotation's optional `atStep: "open-start"` resolves against
+`context.step("open", ...)`; millisecond start/end values are offsets from
+that marker. Missing markers, overlong actions, and out-of-range cues fail.
+
+Edit the run's `*.presentation.json` to adjust normalized arrow/box/label
+geometry and captions, then render again. Rendering keeps originals intact,
+checks frame hashes, and validates both plain and annotated MP4 derivatives
+with ffprobe. Review serves the actual docs component on loopback, including
+timed overlays, seek buttons, an annotation toggle, and text fallback. Videos
+use ordinary controls and never autoplay. The same SVG geometry produces
+shareable annotated WebP/MP4 exports.
+
+Export verifies provenance and derivative hashes, copies only allowlisted
+public media, preserves replaced assets privately, and prints escaped markup
+for player docs. It never publishes run journals, absolute paths, coordinates,
+chat logs, tokens, or screenshots from rehearsal. The docs build validates
+manifest identities, required derivatives, and all built media references.
 
 Actors are Citizens NPCs, so Storm's `Humans.isHuman()` (no `NPC` metadata)
 filters them out of most Storm listeners: towns, economy, shops, quests,

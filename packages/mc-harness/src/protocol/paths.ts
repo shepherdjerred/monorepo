@@ -46,6 +46,14 @@ export const BUILD_ENTRY = path.join(
   "cli.ts",
 );
 
+export const CAPTURE_ENTRY = path.join(
+  "packages",
+  "mc-harness",
+  "src",
+  "capture",
+  "cli.ts",
+);
+
 /** Journals of applies (promote) per target, for verify and undo. */
 export const JOURNAL_DIR = path.join(MC_DIR, "journal");
 

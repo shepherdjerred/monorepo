@@ -78,7 +78,11 @@ export async function startMcDaemon(
     cwd: root,
     detached: true,
     stdio: "ignore",
-    env: { ...Bun.env, TOOLKIT_MC_TTL_SECONDS: String(ttlSeconds) },
+    env: {
+      ...Bun.env,
+      OP_SERVICE_ACCOUNT_TOKEN: undefined,
+      TOOLKIT_MC_TTL_SECONDS: String(ttlSeconds),
+    },
   });
   child.unref();
 

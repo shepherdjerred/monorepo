@@ -1,4 +1,5 @@
 import os from "node:os";
+import { LIVE_TOKEN_OP_REF } from "@shepherdjerred/mc-harness/protocol/live.ts";
 import { z } from "zod";
 import { defaultToolkitConfigPath } from "#lib/toolkit-config.ts";
 
@@ -30,6 +31,10 @@ const DELIVERY_SITE_ACTIVATOR_ITEM_ID = "l5c76kuxgqckt3xc7pmman6l4u";
 const DELIVERY_CACHE_PURGE_ITEM_ID = "la7gkfl5eqtxiiv2hq3qujx2gi";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
+  MC_BRIDGE_TOKEN: {
+    description: "Authenticated Minecraft operator bridge",
+    source: { kind: "op", ref: LIVE_TOKEN_OP_REF },
+  },
   DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID: {
     description: "Delivery static-site activator access key",
     source: {

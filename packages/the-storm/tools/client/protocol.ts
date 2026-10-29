@@ -7,8 +7,19 @@ import {
   ConnectedClientStateShape,
 } from "@shepherdjerred/mc-harness/protocol/client-socket.ts";
 import type { RequestSchema } from "@shepherdjerred/mc-harness/protocol/client-socket.ts";
+import { CaptureTransport } from "@shepherdjerred/mc-harness/capture/transport.ts";
+import {
+  ClientActionSchema,
+  ClientActionResponseSchema,
+  ClientCaptureResponseSchema,
+  ClientStatusResponseSchema,
+  ClientStopResponseSchema,
+  CLIENT_ACTION_REQUEST_SCHEMAS,
+} from "@shepherdjerred/mc-harness/protocol/client.ts";
 
 export const SessionSchema = z.strictObject({
+  client: z.string().optional(),
+  reason: z.string().min(1).optional(),
   socket: z.string().min(1),
   artifacts: z.string().min(1),
   server: z.string().regex(/^(?:127\.0\.0\.1:\d+|mc\.ts-mc\.net:30000)$/u),
@@ -66,6 +77,8 @@ export async function request(
   action: string,
   args: Record<string, unknown> = {},
 ): Promise<unknown> {
+  if (session.client !== undefined)
+    return harnessRequest(session, action, args);
   const command = {
     version: 1 as const,
     id: randomUUID(),
@@ -101,6 +114,51 @@ export async function request(
     );
     throw error;
   }
+}
+
+async function harnessRequest(
+  session: Session,
+  action: string,
+  args: Record<string, unknown>,
+): Promise<unknown> {
+  if (
+    session.client === undefined ||
+    session.reason === undefined ||
+    session.server !== "mc.ts-mc.net:30000"
+  )
+    throw new Error("Invalid harness session");
+  const transport = new CaptureTransport("live", session.reason);
+  const route = `/clients/${encodeURIComponent(session.client)}`;
+  if (action === "status") {
+    const result = await transport.request(
+      ClientStatusResponseSchema,
+      "GET",
+      route,
+    );
+    return result.state;
+  }
+  if (action === "shutdown" || action === "stop")
+    return transport.request(ClientStopResponseSchema, "DELETE", route);
+  if (action === "capture") {
+    const { name } = z
+      .strictObject({ name: z.string().regex(/^[\w-]+$/u) })
+      .parse(args);
+    return transport.request(
+      ClientCaptureResponseSchema,
+      "POST",
+      `${route}/capture`,
+      { out: path.join(session.artifacts, `${name}.png`) },
+    );
+  }
+  const parsed = ClientActionSchema.parse(action === "input" ? "move" : action);
+  const body = CLIENT_ACTION_REQUEST_SCHEMAS[parsed].parse(args);
+  const result = await transport.request(
+    ClientActionResponseSchema,
+    "POST",
+    `${route}/${parsed}`,
+    body,
+  );
+  return result.result;
 }
 
 export async function waitFor<T>(

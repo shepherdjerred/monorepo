@@ -269,6 +269,7 @@ export class LiveService {
     op: LiveWriteOp,
     flags: LiveWriteFlags,
     run: (target: Target) => Promise<T>,
+    nearbyParticipant?: string,
   ): Promise<T> {
     const config = await this.options.config();
     const assessment = assessLiveWrite(op, config, flags.affects);
@@ -279,6 +280,8 @@ export class LiveService {
     const players = await this.players(target);
     const authorization = authorizeLiveWrite({
       assessment,
+      participant: op.kind === "client-act" ? op.uuid : undefined,
+      nearbyParticipant,
       flags,
       players,
       now: this.now(),

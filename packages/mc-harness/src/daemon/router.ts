@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { capturePost } from "./capture-routes.ts";
 import { EvidencePageSchema, EvidenceQuerySchema } from "#protocol/evidence.ts";
 import { BridgeRequestError } from "#bridge/client.ts";
 import {
@@ -149,6 +150,8 @@ async function targetGet(call: TargetCall): Promise<Response | null> {
 }
 
 async function targetPost(call: TargetCall): Promise<Response | null> {
+  const capture = await capturePost(call);
+  if (capture !== null) return capture;
   const { ctx, request, target, action } = call;
   const { bridge, id } = target;
   switch (action) {

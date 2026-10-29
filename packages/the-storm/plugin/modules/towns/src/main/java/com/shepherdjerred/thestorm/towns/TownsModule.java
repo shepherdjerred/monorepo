@@ -207,6 +207,7 @@ public final class TownsModule implements StormModule {
     context.services().provide(SettledLand.class, installed.settled());
     context.services().provide(TownRead.class, new TownListings(state));
     context.services().provide(TownMembership.class, state);
+    registerCapture(context, state);
     context.services().provide(TownMilestones.class, installed.milestones());
     context
         .services()
@@ -225,6 +226,23 @@ public final class TownsModule implements StormModule {
   }
 
   /** Draws towns on BlueMap when it is installed; otherwise nothing listens. */
+  private static void registerCapture(ModuleContext context, TownsState state) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class)
+        .register(
+            "wilderness",
+            area -> {
+              for (var x = area.minX(); x <= area.maxX(); x++)
+                for (var y = area.minY(); y <= area.maxY(); y++)
+                  for (var z = area.minZ(); z <= area.maxZ(); z++)
+                    if (!(state.landAt(area.world(), x, y, z)
+                        instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.Wilderness))
+                      return "false";
+              return "true";
+            });
+  }
+
   private TownEvents mapEvents(ModuleContext context, TownsState state) {
     var server = context.plugin().getServer();
     if (server.getPluginManager().getPlugin("BlueMap") == null) {

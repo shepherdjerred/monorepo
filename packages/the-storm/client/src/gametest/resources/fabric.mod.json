@@ -6,7 +6,8 @@
   "entrypoints": {
     "fabric-client-gametest": [
       "com.shepherdjerred.thestorm.client.PreviewGameTest",
-      "com.shepherdjerred.thestorm.client.VideoGameTest"
+      "com.shepherdjerred.thestorm.client.VideoGameTest",
+      "com.shepherdjerred.thestorm.client.DocsGameTest"
     ]
   }
 }

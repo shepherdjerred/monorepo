@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:net";
 import path from "node:path";
 import { z } from "zod";
-import type { ClientLauncher, LaunchSpec } from "#daemon/clients.ts";
+import type { ClientLauncher, LaunchSpec } from "#daemon/client-launch.ts";
 
 const RequestSchema = z.strictObject({
   version: z.literal(1),

@@ -45,6 +45,25 @@ public final class ShopsModule implements StormModule {
     context.database().migrate(id(), ShopsModule.class.getClassLoader());
     var store = new JooqShopStore(context.database());
     var registry = ShopRegistry.loading();
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class)
+        .register(
+            "shops",
+            area -> {
+              if (!registry.isReady()) throw new IllegalStateException("Shops are loading");
+              return registry.all().stream()
+                  .filter(
+                      shop ->
+                          area.contains(
+                              shop.sign().world(),
+                              shop.sign().x(),
+                              shop.sign().y(),
+                              shop.sign().z()))
+                  .map(shop -> Long.toString(shop.id()))
+                  .sorted()
+                  .collect(java.util.stream.Collectors.joining(","));
+            });
     var installed =
         ShopsPaper.install(context, config, new ShopsPaper.State(registry, store, catalogs));
     context.services().provide(ServerShops.class, installed.serverShops());

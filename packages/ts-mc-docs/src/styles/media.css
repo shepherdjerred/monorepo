@@ -1,0 +1,49 @@
+.storm-media-stage {
+  position: relative;
+}
+.storm-media-stage img,
+.storm-media-stage video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.storm-media-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.storm-media-overlay svg {
+  width: 100%;
+  height: 100%;
+}
+.storm-media-controls {
+  margin-block: 0.75rem;
+}
+.storm-media-controls button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--sl-color-gray-4);
+  border-radius: 0.4rem;
+  background: var(--sl-color-gray-6);
+}
+.storm-media-steps {
+  font-size: 0.9rem;
+}
+storm-media {
+  display: block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .storm-media-overlay svg {
+    animation: storm-media-reveal 150ms ease-out;
+  }
+  @keyframes storm-media-reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
