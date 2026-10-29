@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.StairQuarters;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
@@ -32,6 +33,55 @@ final class SimPhysicsTest {
   private static void move(SimPhysics physics, SimBody body, long tick) {
     body.previousPos = body.pos;
     physics.move(body, tick);
+  }
+
+  // Floor at y 0. From x 3 east, a bottom-slab floor (row z 1); a stair entered by its lower half
+  // and then full blocks level with its top (row z 3); full blocks (row z 5).
+  private static final BlockClassification STEPS =
+      new BlockClassification() {
+        @Override
+        public GridBounds bounds() {
+          return new GridBounds(new BlockPos(0, 0, 0), 9, 5, 7);
+        }
+
+        @Override
+        public BlockShape shape(int x, int y, int z) {
+          if (y == 0) return BlockShape.FULL;
+          if (x < 3 || y != 1) return BlockShape.PASSABLE;
+          if (z == 1) return BlockShape.SLAB_BOTTOM;
+          if (z == 3) return x == 3 ? BlockShape.STAIRS : BlockShape.FULL;
+          return z == 5 ? BlockShape.FULL : BlockShape.PASSABLE;
+        }
+
+        @Override
+        public boolean blocksSight(int x, int y, int z) {
+          return shape(x, y, z).blocksMovement();
+        }
+
+        @Override
+        public int halfStepQuarters(int x, int y, int z) {
+          return shape(x, y, z) == BlockShape.STAIRS
+              ? StairQuarters.halfStep(StairQuarters.Facing.EAST, StairQuarters.Shape.STRAIGHT)
+              : 0;
+        }
+      };
+
+  @Test
+  void aWalkStepsUpASlabAndAStairTheGraphWalksButNotABlockItJumps() {
+    var physics = new SimPhysics(MapBaker.bake("steps", STEPS, new NavSites(List.of(), List.of())));
+    assertThat(walkEast(physics, 1)).as("onto the slabs").isEqualTo(1.5);
+    assertThat(walkEast(physics, 3)).as("up the stair").isEqualTo(2);
+    assertThat(walkEast(physics, 5)).as("into the wall").isEqualTo(1);
+  }
+
+  /** The feet height a body walking east along row {@code z} ends at. */
+  private static double walkEast(SimPhysics physics, int z) {
+    var body = body(new Vec3(1.5, 1, z + 0.5));
+    for (var tick = 1; tick <= 30; tick++) {
+      physics.steer(body, EAST);
+      move(physics, body, tick);
+    }
+    return body.pos.y();
   }
 
   @Test

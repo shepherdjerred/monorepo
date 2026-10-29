@@ -13,6 +13,10 @@ final class SimPhysics {
   private static final double RADIUS = 0.299;
   private static final double HEIGHT = 1.8;
   private static final double EPSILON = 1e-6;
+  // Vanilla walks a grounded body up a ledge this high without a jump.
+  private static final double STEP_HEIGHT = 0.6;
+  // A stair's full block, climbed as its two half steps; the sim's grid has no stair shapes.
+  private static final double STAIR_RISE = 1.0;
   private final NavArtifact nav;
 
   SimPhysics(NavArtifact nav) {
@@ -112,12 +116,46 @@ final class SimPhysics {
       body.pos = body.pos.plus(delta);
       return;
     }
+    if (body.onGround && stepUp(body, delta)) return;
     var x = new Vec3(delta.x(), 0, 0);
     var z = new Vec3(0, 0, delta.z());
     if (clear(body.pos.plus(x))) body.pos = body.pos.plus(x);
     else body.velocity = new Vec3(0, body.velocity.y(), body.velocity.z());
     if (clear(body.pos.plus(z))) body.pos = body.pos.plus(z);
     else body.velocity = new Vec3(body.velocity.x(), body.velocity.y(), 0);
+  }
+
+  /**
+   * A grounded body walks up a ledge no higher than vanilla's step, and up a stair the baked graph
+   * walks up (a WALK edge rising a full block, which it builds only across a stair's lower half).
+   */
+  private boolean stepUp(SimBody body, Vec3 delta) {
+    var rise = stairAhead(body.pos, delta) ? STAIR_RISE : STEP_HEIGHT;
+    var raised = body.pos.plus(0, rise, 0);
+    var moved = raised.plus(delta);
+    if (!clear(raised) || !clear(moved)) return false;
+    var landing = floor(moved, body.pos.y() + EPSILON);
+    if (!Double.isFinite(landing)) return false;
+    body.pos = moved.withY(landing);
+    return true;
+  }
+
+  /** Whether the graph walks the body's node up a full block into the cell it is moving into. */
+  private boolean stairAhead(Vec3 feet, Vec3 delta) {
+    var graph = nav.graph();
+    var node = graph.nodeAt(BlockPos.of(feet));
+    if (node.isEmpty() || delta.isZero()) return false;
+    var ahead = BlockPos.of(feet.plus(delta.normalized().scale(RADIUS + delta.length())));
+    var from = node.getAsInt();
+    for (var edge = graph.edgeStart(from); edge < graph.edgeEnd(from); edge++) {
+      var target = graph.edgeTarget(edge);
+      var cell = graph.cell(target);
+      if (graph.edgeHop(edge) == Hop.WALK
+          && cell.x() == ahead.x()
+          && cell.z() == ahead.z()
+          && graph.feet(target).y() - feet.y() > STEP_HEIGHT) return true;
+    }
+    return false;
   }
 
   private double floor(Vec3 feet, double lower) {
