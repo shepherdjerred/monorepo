@@ -20,6 +20,15 @@ import org.bukkit.util.Vector;
 final class BodyMovement {
   private Optional<Flight> flight = Optional.empty();
   private Vec3 heading = Vec3.ZERO;
+
+  /** The velocity this tick's steering started from, and the server tick it was taken on. */
+  private Vec3 carried = Vec3.ZERO;
+
+  private int carriedTick = -1;
+
+  /** Whether the body is flying a hop it launched, which keeps a player's inputs until it lands. */
+  private boolean hopping;
+
   private Optional<String> lastRefusal = Optional.empty();
   private final TraversalCapture survival;
   private final java.util.function.BiConsumer<Player, Vector> doors;
@@ -46,7 +55,12 @@ final class BodyMovement {
 
   private record Flight(Vec3 origin, Vec3 target, Hop hop, int started) {}
 
-  private record Steering(Vec3 heading, boolean sprint, boolean leavingWater, Hop hop) {}
+  private record Steering(
+      Vec3 heading, boolean sprint, boolean leavingWater, Hop hop, boolean hopping) {
+    Steering(Vec3 heading, boolean sprint, boolean leavingWater, Hop hop) {
+      this(heading, sprint, leavingWater, hop, false);
+    }
+  }
 
   MovementSafety.Reason move(Player player, Bodies.MotionTarget target) {
     var position = feet(player);
@@ -64,6 +78,7 @@ final class BodyMovement {
     // kept a stale take-off origin, and every retried jump was judged from it and refused.
     var grounded = SnapshotCapture.onGround(player) || terrain.grounded(position);
     var tick = player.getServer().getCurrentTick();
+    carry(player, tick, grounded || hop != Hop.WALK);
     var candidate = new Flight(position, goal, hop, tick);
     retainFlight(candidate, grounded);
     doors.accept(player, new Vector(goal.x() - position.x(), 0, goal.z() - position.z()));
@@ -100,7 +115,11 @@ final class BodyMovement {
     steer(
         player,
         new Steering(
-            heading, target.sprint(), bank.isPresent() && checked.destination().isPresent(), hop),
+            heading,
+            target.sprint(),
+            bank.isPresent() && checked.destination().isPresent(),
+            hop,
+            hopping),
         terrain);
     return checked.reason();
   }
@@ -150,9 +169,35 @@ final class BodyMovement {
     return heading;
   }
 
+  /**
+   * A sprint jump along the heading this tick's steering took, from the speed the body carried into
+   * the tick ({@link MovementMotor#hop}); the flight keeps a player's air input until it lands.
+   */
+  Vec3 hop(Player player) {
+    var from = carriedTick == player.getServer().getCurrentTick() ? carried : velocity(player);
+    hopping = true;
+    return MovementMotor.hop(from, heading);
+  }
+
+  /**
+   * Keeps the velocity this tick's steering starts from, which a hop launches from; a body that has
+   * landed, or walks anything but a plain walk, is no longer flying a hop.
+   */
+  private void carry(Player player, int tick, boolean ended) {
+    carried = velocity(player);
+    carriedTick = tick;
+    if (ended) hopping = false;
+  }
+
+  private static Vec3 velocity(Player player) {
+    var velocity = player.getVelocity();
+    return new Vec3(velocity.getX(), velocity.getY(), velocity.getZ());
+  }
+
   void stop(Player player) {
     flight = Optional.empty();
     heading = Vec3.ZERO;
+    hopping = false;
     steer(
         player, new Steering(Vec3.ZERO, false, false, Hop.WALK), terrain(player, Optional.empty()));
   }
@@ -236,8 +281,9 @@ final class BodyMovement {
         new MovementMotor.Control(
             steering.heading(), steering.sprint(), SnapshotCapture.onGround(player), slowdown);
     var current = new Vec3(velocity.getX(), velocity.getY(), velocity.getZ());
-    return BodyFluids.inWater(player)
-        ? MovementMotor.swim(current, control)
+    if (BodyFluids.inWater(player)) return MovementMotor.swim(current, control);
+    return steering.hopping() && !control.onGround()
+        ? MovementMotor.hopAir(current, control)
         : MovementMotor.steer(current, control);
   }
 

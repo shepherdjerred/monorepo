@@ -156,6 +156,11 @@ public final class FakeBodies implements Bodies {
   }
 
   @Override
+  public void hop(UUID bot) {
+    order("hop " + player(bot).getName());
+  }
+
+  @Override
   public void sneak(UUID bot, boolean sneaking) {
     player(bot).setSneaking(sneaking);
     order("sneak " + player(bot).getName() + " " + sneaking);

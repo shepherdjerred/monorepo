@@ -52,10 +52,11 @@ val shippedConfig = file("../../../server/owned/plugins/TheStorm/rwfbots.yml")
 // The training yard's baked nav artifact: the headless sim plays on it as well as SyntheticMap.
 val trainingYardNav =
     file("../../../server/owned/plugins/TheStorm/rwf/maps/training-yard/nav.rwfnav")
-// Shipped maps where live bots were recorded stuck; the stuck-spot regression test routes on them.
+// Shipped maps the sim plays on: live bots were recorded stuck on most, and the run-hop test runs
+// routes on valley as well.
 val shippedMaps = file("../../../server/owned/plugins/TheStorm/rwf/maps")
 val stuckSpotNavs =
-    listOf("the-harshest-harvest", "miner-dispute", "cloned-balance", "hemispheres", "floating-isles").map { shippedMaps.resolve("$it/nav.rwfnav") }
+    listOf("the-harshest-harvest", "miner-dispute", "cloned-balance", "hemispheres", "floating-isles", "valley").map { shippedMaps.resolve("$it/nav.rwfnav") }
 
 tasks.test {
   dependsOn("prepareActorParity")

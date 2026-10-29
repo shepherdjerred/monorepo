@@ -193,7 +193,10 @@ public final class BodyDriver {
         bot.motion(MotionRecovery.State.INITIAL);
         bodies.stop(id);
       }
-      case BodyCommand.Jump _ -> bodies.jump(id);
+      case BodyCommand.Jump(var hop) -> {
+        if (hop) bodies.hop(id);
+        else bodies.jump(id);
+      }
       case BodyCommand.Sneak(var sneaking) -> bodies.sneak(id, sneaking);
       case BodyCommand.SelectSlot(var slot) -> bodies.selectSlot(id, emptyHandSlot(bot, slot));
       case BodyCommand.Swing _ -> bodies.swing(id);

@@ -79,6 +79,37 @@ public final class MovementMotor {
     return velocity.horizontal().plus(impulse).plus(0, JUMP_SPEED, 0);
   }
 
+  /** The ground input a sprinting player adds on the tick it jumps, on top of its speed. */
+  static final double SPRINT_GROUND_INPUT = GROUND_ACCELERATION * 1.3;
+
+  /** The air input a sprinting player adds each tick of a flight, whatever its speed. */
+  static final double SPRINT_AIR_INPUT = AIR_ACCELERATION * 1.3;
+
+  /**
+   * A player's sprint jump along a straight run: the speed it {@code carried} into the tick, plus
+   * its sprint input and the jump's boost along the steering {@code heading}. {@link #jump} boosts
+   * the speed this tick's steering already capped at a sprint, and {@link #steer} adds no air input
+   * above a sprint, so a body hopping that way ran no faster than one sprinting (5.9 against 5.6
+   * m/s). Vanilla adds both inputs whatever the speed, and drag alone bleeds the boost: about 7.2
+   * m/s.
+   */
+  public static Vec3 hop(Vec3 carried, Vec3 heading) {
+    var direction = heading.horizontal();
+    if (direction.isZero()) throw new IllegalArgumentException("a hop needs a heading");
+    return carried
+        .horizontal()
+        .plus(direction.normalized().scale(SPRINT_GROUND_INPUT + SPRINT_JUMP_IMPULSE))
+        .plus(0, JUMP_SPEED, 0);
+  }
+
+  /** A player's input during a hop's flight: vanilla's air input, added whatever the speed. */
+  public static Vec3 hopAir(Vec3 velocity, Control control) {
+    var horizontal = control.heading().horizontal();
+    if (horizontal.isZero()) return velocity;
+    var input = control.sprint() ? SPRINT_AIR_INPUT : AIR_ACCELERATION;
+    return velocity.plus(horizontal.normalized().scale(input * control.slowdown()));
+  }
+
   /**
    * Directed fluid input: ascend, descend, or hold a submerged waypoint without overriding land
    * gravity.

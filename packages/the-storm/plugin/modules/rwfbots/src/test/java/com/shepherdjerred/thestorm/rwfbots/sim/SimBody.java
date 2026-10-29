@@ -53,6 +53,12 @@ final class SimBody {
   /** Where the body last steered; a sprint jump boosts along it, as the Paper body does. */
   Vec3 heading = Vec3.ZERO;
 
+  /** The velocity the last steering started from: a hop launches from it, as the Paper body. */
+  Vec3 carried = Vec3.ZERO;
+
+  /** Flying a hop it launched, with a player's air input until it lands. */
+  boolean hopping;
+
   double fallDistance;
   TraversalState traversal = TraversalState.UNMODIFIED;
   boolean usingItem;

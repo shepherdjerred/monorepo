@@ -268,6 +268,21 @@ public final class CitizensBodies implements Bodies, Listener {
   }
 
   @Override
+  public void hop(UUID bot) {
+    entity(bot)
+        .filter(SnapshotCapture::onGround)
+        .ifPresent(
+            player -> {
+              // A hop runs along the heading this tick's steering took; a body that took none has
+              // no run to hop along.
+              var body = movement.get(bot);
+              if (body == null || body.heading().horizontal().isZero()) return;
+              var launch = body.hop(player);
+              player.setVelocity(new org.bukkit.util.Vector(launch.x(), launch.y(), launch.z()));
+            });
+  }
+
+  @Override
   public void sneak(UUID bot, boolean sneaking) {
     entity(bot).ifPresent(player -> player.setSneaking(sneaking));
   }

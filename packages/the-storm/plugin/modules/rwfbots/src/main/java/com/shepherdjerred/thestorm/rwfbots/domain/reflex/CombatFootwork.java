@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.AABB;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -59,15 +60,145 @@ public final class CombatFootwork {
   /** Every possible future steering direction must still land on certified supported terrain. */
   public static boolean safeJump(
       NavArtifact nav, CombatantView self, MovementMotor.Control control, long now) {
-    if (!self.onGround()
-        || Math.abs(self.pos().y() - Math.rint(self.pos().y())) > 0.02
-        || self.traversal().slowFallingUntilTick() > now
-        || self.traversal().jumpBoostUntilTick() > now) return false;
+    if (!launchable(self, now)) return false;
     var envelope = envelope(self, control);
     return envelope.isPresent() && clearEnvelope(nav, self.pos(), envelope.orElseThrow());
   }
 
-  private record Envelope(double radius, double rise) {}
+  /** The body's half diagonal: how far past its centre its box reaches. */
+  private static final double HALF_DIAGONAL =
+      Math.hypot(AABB.PLAYER_HALF_WIDTH, AABB.PLAYER_HALF_WIDTH);
+
+  /** The cells a hop's body sweeps itself, within its half width of the line. */
+  private static final double HOP_BODY = AABB.PLAYER_HALF_WIDTH + 0.05;
+
+  /**
+   * Whether a sprint jump that keeps steering along {@code direction} stays over baked standable
+   * ground with clear headroom: {@link #safeJump}'s certificate over the corridor the flight can
+   * cover, rather than every direction a fight could turn it. The body's own line needs headroom
+   * for the whole arc; beside it, within the drift a replan could steer it, a wall only stops the
+   * body, so it counts as safe, while an opening or water does not. A straight run along a wall is
+   * safe to hop; the full envelope refuses it.
+   */
+  public static boolean safeHop(NavArtifact nav, CombatantView self, Vec3 direction, long now) {
+    if (direction.horizontal().isZero() || !launchable(self, now)) return false;
+    // A hop launches from the speed the body carries, plus its sprint input and the boost.
+    var carried = Math.max(self.vel().horizontal().length(), MovementMotor.SPRINT_SPEED);
+    var heading = direction.horizontal().normalized();
+    return flight(MovementMotor.hop(heading.scale(carried), heading))
+        .map(
+            envelope ->
+                new Corridor(
+                    self.pos(),
+                    self.pos().plus(heading.scale(envelope.radius())),
+                    HALF_DIAGONAL + envelope.drift(),
+                    self.pos().y() + envelope.rise()))
+        .filter(corridor -> corridor.inside(nav.graph().bounds()))
+        .filter(corridor -> clearCorridor(nav, corridor))
+        .isPresent();
+  }
+
+  /**
+   * The ground a straight hop may cover.
+   *
+   * @param from the take-off
+   * @param to where the flight carries along its line
+   * @param drift how far beside the line it may land
+   * @param peak the highest its feet climb
+   */
+  private record Corridor(Vec3 from, Vec3 to, double drift, double peak) {
+    int minX() {
+      return cell(Math.min(from.x(), to.x()) - drift);
+    }
+
+    int maxX() {
+      return cell(Math.max(from.x(), to.x()) + drift);
+    }
+
+    int minZ() {
+      return cell(Math.min(from.z(), to.z()) - drift);
+    }
+
+    int maxZ() {
+      return cell(Math.max(from.z(), to.z()) + drift);
+    }
+
+    boolean inside(GridBounds bounds) {
+      return minX() >= bounds.origin().x()
+          && minZ() >= bounds.origin().z()
+          && maxX() < bounds.origin().x() + bounds.sizeX()
+          && maxZ() < bounds.origin().z() + bounds.sizeZ();
+    }
+  }
+
+  /**
+   * The body's own line needs standable ground and headroom for the whole arc; beside it a wall
+   * only stops the body, while an opening or water could take it.
+   */
+  private static boolean clearCorridor(NavArtifact nav, Corridor corridor) {
+    var feet = cell(corridor.from().y());
+    for (var z = corridor.minZ(); z <= corridor.maxZ(); z++) {
+      for (var x = corridor.minX(); x <= corridor.maxX(); x++) {
+        var away = squareToSegment(x, z, corridor.from(), corridor.to());
+        var ground = new BlockPos(x, feet, z);
+        var safe =
+            away > corridor.drift()
+                || (away <= HOP_BODY
+                    ? standable(nav, ground) && clearColumn(nav.grid(), ground, corridor.peak())
+                    : standable(nav, ground) || wall(nav.grid(), ground));
+        if (!safe) return false;
+      }
+    }
+    return true;
+  }
+
+  /** A baked node on solid support, neither water nor a ladder or vine. */
+  private static boolean standable(NavArtifact nav, BlockPos cell) {
+    var node = nav.graph().nodeAt(cell);
+    return node.isPresent()
+        && !nav.graph().water().contains(cell)
+        && !nav.graph().climbable(node.getAsInt())
+        && nav.grid().blocks(cell.x(), cell.y() - 1, cell.z(), VoxelGrid.Layer.MOVEMENT);
+  }
+
+  /**
+   * A cell the body slides along rather than lands on: two blocks high at the take-off height. A
+   * hop's apex clears anything lower, so a body drifting over a deck's rail or an island's edge
+   * fence comes down on it, or past it over the drop it guards.
+   */
+  private static boolean wall(VoxelGrid grid, BlockPos cell) {
+    return grid.blocks(cell.x(), cell.y(), cell.z(), VoxelGrid.Layer.MOVEMENT)
+        && grid.blocks(cell.x(), cell.y() + 1, cell.z(), VoxelGrid.Layer.MOVEMENT);
+  }
+
+  /** A grounded body on a full block's top, with no effect that changes a jump's arc. */
+  private static boolean launchable(CombatantView self, long now) {
+    return self.onGround()
+        && Math.abs(self.pos().y() - Math.rint(self.pos().y())) <= 0.02
+        && self.traversal().slowFallingUntilTick() <= now
+        && self.traversal().jumpBoostUntilTick() <= now;
+  }
+
+  /** Horizontal distance from the unit square at ({@code x}, {@code z}) to a segment. */
+  private static double squareToSegment(int x, int z, Vec3 from, Vec3 to) {
+    var best = Double.POSITIVE_INFINITY;
+    for (var step = 0; step <= 16; step++) {
+      var point = from.plus(to.minus(from).scale(step / 16.0));
+      var nearestX = Math.clamp(point.x(), x, x + 1.0);
+      var nearestZ = Math.clamp(point.z(), z, z + 1.0);
+      best = Math.min(best, Math.hypot(point.x() - nearestX, point.z() - nearestZ));
+    }
+    return best;
+  }
+
+  /**
+   * A flight's reach.
+   *
+   * @param radius how far it carries along its launch
+   * @param rise how high it climbs
+   * @param drift how far the strongest air input steers it across its launch before it lands
+   */
+  private record Envelope(double radius, double rise, double drift) {}
 
   private static Optional<Envelope> envelope(CombatantView self, MovementMotor.Control control) {
     // Recovery may redirect the first move. Ground steering stays within this momentum/speed cap.
@@ -75,7 +206,14 @@ public final class CombatFootwork {
         Math.max(
             self.vel().horizontal().length(),
             control.sprint() ? MovementMotor.SPRINT_SPEED : MovementMotor.WALK_SPEED);
-    var launch = MovementMotor.jump(new Vec3(groundSpeed, 0, 0), control.sprint());
+    return flight(MovementMotor.jump(new Vec3(groundSpeed, 0, 0), control.sprint()));
+  }
+
+  /**
+   * The reach and rise of a flight launched at {@code launch}, with the strongest air input a body
+   * can add every tick.
+   */
+  private static Optional<Envelope> flight(Vec3 launch) {
     var speed = launch.horizontal().length();
     var vertical = launch.y();
     var height = 0.0;
@@ -84,19 +222,23 @@ public final class CombatFootwork {
     var maximumAirInput =
         MovementMotor.steer(Vec3.ZERO, new MovementMotor.Control(new Vec3(1, 0, 0), true, false, 1))
             .length();
+    var across = 0.0;
+    var drift = 0.0;
     for (var tick = 0; tick < 20; tick++) {
       radius += speed;
       height += vertical;
+      drift += across;
       peak = Math.max(peak, height);
-      if (vertical <= 0 && height <= 0) return Optional.of(new Envelope(radius, peak));
+      if (vertical <= 0 && height <= 0) return Optional.of(new Envelope(radius, peak, drift));
       speed = speed * (tick == 0 ? 0.546 : 0.91) + maximumAirInput;
+      across = across * (tick == 0 ? 0.546 : 0.91) + maximumAirInput;
       vertical = (vertical - 0.08) * 0.98;
     }
     return Optional.empty();
   }
 
   private static boolean clearEnvelope(NavArtifact nav, Vec3 source, Envelope envelope) {
-    var radius = envelope.radius() + Math.hypot(AABB.PLAYER_HALF_WIDTH, AABB.PLAYER_HALF_WIDTH);
+    var radius = envelope.radius() + HALF_DIAGONAL;
     var bounds = nav.graph().bounds();
     if (source.x() - radius < bounds.origin().x()
         || source.z() - radius < bounds.origin().z()

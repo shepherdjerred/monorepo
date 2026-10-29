@@ -21,15 +21,18 @@ final class SimPhysics {
 
   void steer(SimBody body, Vec3 heading) {
     body.heading = heading;
+    body.carried = body.velocity;
     var slowdown = body.usingItem ? 0.2 : body.sneaking ? 0.3 : 1;
+    var control =
+        new MovementMotor.Control(
+            heading,
+            body.sprinting && body.traversal.maySprint(),
+            body.onGround || water(body.pos),
+            slowdown);
     body.velocity =
-        MovementMotor.steer(
-            body.velocity,
-            new MovementMotor.Control(
-                heading,
-                body.sprinting && body.traversal.maySprint(),
-                body.onGround || water(body.pos),
-                slowdown));
+        body.hopping && !control.onGround()
+            ? MovementMotor.hopAir(body.velocity, control)
+            : MovementMotor.steer(body.velocity, control);
     if (water(body.pos))
       body.velocity = body.velocity.withY(MovementMotor.swimVertical(heading.y()));
   }
@@ -41,6 +44,15 @@ final class SimPhysics {
             body.velocity, body.sprinting && body.traversal.maySprint(), body.heading);
     body.jumpTick = tick;
     body.onGround = false;
+  }
+
+  /** A sprint jump along this tick's steering, as the Paper body launches one. */
+  void hop(SimBody body, long tick) {
+    if (!body.onGround || body.heading.horizontal().isZero()) return;
+    body.velocity = MovementMotor.hop(body.carried, body.heading);
+    body.jumpTick = tick;
+    body.onGround = false;
+    body.hopping = true;
   }
 
   void move(SimBody body, long tick) {
@@ -73,6 +85,7 @@ final class SimPhysics {
       body.fallDistance += Math.max(0, body.pos.y() - floor);
       body.pos = body.pos.withY(floor);
       body.onGround = true;
+      body.hopping = false;
       body.velocity = body.velocity.withY(0);
       land(body, tick);
       return;

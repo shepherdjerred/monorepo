@@ -105,7 +105,6 @@ public final class Reflex {
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
-  private static final int JUMP_COOLDOWN = 10;
   private static final long CROUCH_BURST_TICKS = 30;
   private static final long CROUCH_TAP_TICKS = 3;
 
@@ -692,13 +691,22 @@ public final class Reflex {
         commands.add(WalkSteering.makeRoom(context.grid(), self, push));
         return;
       }
-      commands.add(new BodyCommand.MoveToward(destination, sprint, waypoint.hop()));
-      jumpIfNeeded(waypoint);
+      var launch = RunHop.launch(context, new RunHop.Run(input, state, index, sprint), destination);
+      commands.add(new BodyCommand.MoveToward(launch.steer(), sprint, waypoint.hop()));
+      launch
+          .jump()
+          .ifPresent(
+              jump -> {
+                commands.add(jump);
+                state = state.withLastJump(now);
+              });
       lookAhead(destination);
     }
 
     private boolean walksInterface(Waypoint waypoint) {
-      return waypoint.hop() == Hop.SWIM || waypoint.hop() == Hop.CLIMB || airborne();
+      return waypoint.hop() == Hop.SWIM
+          || waypoint.hop() == Hop.CLIMB
+          || (airborne() && !RunHop.ownFlight(self, now - state.lastJumpTick()));
     }
 
     /** Still falling: a body on solid ground has landed whatever its fall distance says. */
@@ -872,7 +880,9 @@ public final class Reflex {
 
     private int advanceWaypoint(List<Waypoint> waypoints, int index) {
       var i = index;
-      while (i < waypoints.size() && WaypointArrival.reached(self, waypoints.get(i))) {
+      while (i < waypoints.size()
+          && (WaypointArrival.reached(self, waypoints.get(i))
+              || RunHop.overflown(self, waypoints, i, now - state.lastJumpTick()))) {
         i++;
       }
       return i;
@@ -911,18 +921,6 @@ public final class Reflex {
           };
       var push = footwork.apart(spacing, levers().reactionTicks());
       commands.add(WalkSteering.separate(context.grid(), self, push));
-    }
-
-    private void jumpIfNeeded(Waypoint waypoint) {
-      var needsJump =
-          waypoint.hop() == Hop.JUMP
-              && self.pos().horizontalDistance(waypoint.pos()) <= 1.2
-              && self.onGround()
-              && now - state.lastJumpTick() > JUMP_COOLDOWN;
-      if (needsJump) {
-        commands.add(new BodyCommand.Jump());
-        state = state.withLastJump(now);
-      }
     }
 
     private void hold() {
