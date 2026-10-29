@@ -16,6 +16,8 @@ export type DeliveryPlatformGrant = {
 export const DELIVERY_PLATFORM_ITEMS = {
   "delivery-platform-api": { itemId: "g6xiqdecqhclbc5fiijzj45nrq" },
   "delivery-plan-encryption": { itemId: "ht456xpr7y3p2sbdfx64zvyv3u" },
+  // SeaweedFS identity delivery-archive-reader: Read:delivery-artifacts/tofu/* only.
+  "delivery-archive-reader": { itemId: "54p6psg7g6xdtxu3yso5kkifua" },
   "ci-seaweedfs-credentials": { itemId: "eyfsbfkxojth6ymr65l47yyfxy" },
   "ci-tailscale-credentials": { itemId: "eoqdhvwgu7rjfqe6dknexihitu" },
   "ci-github-credentials": { itemId: "34gzcrhwdm34lpadyly3rcsu44" },
