@@ -80,6 +80,18 @@ type Options = {
     input: Pick<PublishBuild, "ciUrl" | "sourceRevision">,
   ) => Promise<"pending" | "verified" | "failed">;
 };
+/**
+ * A request that failed validation names each failing field path and rule,
+ * never the submitted values, so a producer's 400 explains itself.
+ */
+export function invalidRequestMessage(error: z.ZodError | SyntaxError): string {
+  if (error instanceof SyntaxError) return "Invalid request: malformed JSON";
+  const issues = error.issues
+    .slice(0, 5)
+    .map((issue) => `${issue.path.join(".") || "(body)"}: ${issue.code}`);
+  return `Invalid request: ${issues.join("; ")}`;
+}
+
 export function createApp(options: Options) {
   const app = new Hono<{
     Variables: { principal: Principal; requestId: string };
@@ -392,7 +404,7 @@ export function createApp(options: Options) {
         {
           error: {
             code: "INVALID",
-            message: "Invalid request",
+            message: invalidRequestMessage(error),
             requestId: c.get("requestId"),
           },
         },
