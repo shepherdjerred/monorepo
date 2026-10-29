@@ -4,6 +4,8 @@ import {
   createTimeseriesPanel,
 } from "@shepherdjerred/homelab/cdk8s/grafana/shared/dashboard-panels.ts";
 import {
+  CI_STEP_WORKSPACE_LOGICAL_BYTES_24H,
+  CI_STEP_WORKSPACES_24H,
   CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
   NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
   NVME_DRIVE_WRITTEN_BYTES_24H,
@@ -274,6 +276,52 @@ function addWriteBudgetPanels(builder: dashboard.DashboardBuilder): void {
       ],
       gridPos: { x: 12, y: 99, w: 12, h: 8 },
       unit: "decbytes",
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "CI Workspace Writes by Step (24h)",
+      description:
+        "Logical bytes each CI step's fresh workspaces wrote over the last 24h. Physical writes are these times the CI pool's amplification.",
+      query: `sort_desc(${CI_STEP_WORKSPACE_LOGICAL_BYTES_24H})`,
+      legend: "{{step}}",
+      gridPos: { x: 0, y: 107, w: 12, h: 8 },
+      unit: "decbytes",
+      instant: true,
+      thresholds: [{ value: 0, color: "blue" }],
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "CI Logical Writes per Workspace by Step (24h)",
+      description:
+        "Average logical bytes one workspace of each step wrote: what a cheaper workspace setup has to remove.",
+      query: `sort_desc(${CI_STEP_WORKSPACE_LOGICAL_BYTES_24H} / on(step) ${CI_STEP_WORKSPACES_24H})`,
+      legend: "{{step}}",
+      gridPos: { x: 12, y: 107, w: 12, h: 8 },
+      unit: "decbytes",
+      instant: true,
+      thresholds: [{ value: 0, color: "blue" }],
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "ZFS Block Cloning Savings",
+      targets: [
+        {
+          query: "zfs_zpool_bclonesaved_bytes",
+          legend: "{{node}} · {{zpool_name}} saved",
+        },
+        {
+          query: "zfs_zpool_bcloneused_bytes",
+          legend: "{{node}} · {{zpool_name}} cloned blocks",
+        },
+      ],
+      gridPos: { x: 0, y: 115, w: 12, h: 8 },
+      unit: "bytes",
     }),
   );
 }

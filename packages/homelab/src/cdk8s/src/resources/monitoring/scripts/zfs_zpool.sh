@@ -31,7 +31,7 @@ done
 
 ### zpool metrics ###
 
-zpool_info="$(zpool list -Hp -o name,size,free,freeing,dedupratio,fragmentation 2>/dev/null)" &&
+zpool_info="$(zpool list -Hp -o name,size,free,freeing,dedupratio,fragmentation,bcloneused,bclonesaved,bcloneratio 2>/dev/null)" &&
 [ -n "$zpool_info" ] &&
 while read -r col metric help; do
   echo "# HELP ${ZPOOL}_${metric} ${help}"
@@ -43,7 +43,10 @@ done <<<$'1\tsize_bytes\tTotal size of the storage pool
 2\tfree_bytes\tThe amount of free space available in the pool
 3\tfreeing_bytes\tThe amount of space waiting to be reclaimed from destroyed filesystems or snapshots
 4\tdedupratio\tThe deduplication ratio
-5\tfragmentation\tThe amount of fragmentation in the pool'
+5\tfragmentation\tThe amount of fragmentation in the pool
+6\tbcloneused_bytes\tThe amount of space used by block-cloned blocks
+7\tbclonesaved_bytes\tThe amount of space block cloning saves
+8\tbcloneratio\tThe block cloning ratio'
 
 ### zpool scan / scrub metrics ###
 

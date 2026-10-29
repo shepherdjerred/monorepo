@@ -4,6 +4,8 @@ import path from "node:path";
 import { test } from "vitest";
 import { expectPromtoolRulesPass } from "./promtool-test.ts";
 import {
+  CI_STEP_WORKSPACE_LOGICAL_BYTES_24H,
+  CI_STEP_WORKSPACES_24H,
   CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
   getNvmeRuleGroups,
   NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
@@ -92,9 +94,38 @@ function driveSeries(drive: Drive) {
 
 function claim(name: string, values: string) {
   return {
-    series: `kube_persistentvolumeclaim_info{namespace="woodpecker-ci",persistentvolumeclaim="${name}",storageclass="ci-workspace"}`,
+    series: `kube_persistentvolumeclaim_info{namespace="woodpecker-ci",persistentvolumeclaim="${name}",storageclass="ci-workspace",volumename="pvc-${name}"}`,
     values,
   };
+}
+
+// A workspace claim's dataset, its clone pod (no step key), and its step pod.
+function workspace(
+  name: string,
+  step: string,
+  present: string,
+  writes: string,
+) {
+  const pvc = (pod: string) => ({
+    series: `kube_pod_spec_volumes_persistentvolumeclaims_info{namespace="woodpecker-ci",persistentvolumeclaim="${name}",pod="${pod}"}`,
+    values: present,
+  });
+  return [
+    {
+      series: `node_zfs_zpool_dataset_nwritten{node="liskov",zpool="zfspv-pool-nvme",dataset="zfspv-pool-nvme/pvc-${name}"}`,
+      values: writes,
+    },
+    pvc(`${name}-clone`),
+    pvc(`${name}-step`),
+    {
+      series: `kube_pod_labels{namespace="woodpecker-ci",pod="${name}-clone"}`,
+      values: present,
+    },
+    {
+      series: `kube_pod_labels{namespace="woodpecker-ci",pod="${name}-step",label_ci_sjer_red_step_key="${step}"}`,
+      values: present,
+    },
+  ];
 }
 
 // Expected 5-year budget in GB/day, from the same definition the rules use.
@@ -176,6 +207,21 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
               claim("wp-old", "1x12"),
               claim("wp-a", `_x240 1x12`),
               claim("wp-b", `_x300 1x${String(EVAL_HOURS * 12 - 300)}`),
+              // wp-old's 9 GB is outside the window; wp-a wrote 5.5 GB and
+              // wp-b 2 GB, each counted once despite its clone pod.
+              ...workspace("wp-old", "verify", "1x12", "0+1000000000x9"),
+              ...workspace(
+                "wp-a",
+                "verify",
+                "_x240 1x12",
+                "_x240 0+500000000x11",
+              ),
+              ...workspace(
+                "wp-b",
+                "playwright-e2e",
+                `_x300 1x${String(EVAL_HOURS * 12 - 300)}`,
+                "_x300 0+100000000x20",
+              ),
             ],
             promql_expr_test: [
               {
@@ -195,7 +241,7 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                 })),
               },
               {
-                expr: `round(${ZFS_POOL_WRITE_AMPLIFICATION_24H})`,
+                expr: `round(${ZFS_POOL_WRITE_AMPLIFICATION_24H}{node="torvalds"})`,
                 eval_time: evalTime,
                 exp_samples: [
                   {
@@ -213,6 +259,22 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                     labels: '{node="liskov",zpool="zfspv-pool-nvme"}',
                     value: 200,
                   },
+                ],
+              },
+              {
+                expr: `${CI_STEP_WORKSPACE_LOGICAL_BYTES_24H} / 1e8`,
+                eval_time: evalTime,
+                exp_samples: [
+                  { labels: '{step="verify"}', value: 55 },
+                  { labels: '{step="playwright-e2e"}', value: 20 },
+                ],
+              },
+              {
+                expr: `${CI_STEP_WORKSPACES_24H} + 0`,
+                eval_time: evalTime,
+                exp_samples: [
+                  { labels: '{step="verify"}', value: 1 },
+                  { labels: '{step="playwright-e2e"}', value: 1 },
                 ],
               },
             ],
