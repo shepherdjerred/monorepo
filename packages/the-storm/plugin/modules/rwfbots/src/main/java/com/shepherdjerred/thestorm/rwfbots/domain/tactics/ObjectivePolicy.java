@@ -4,7 +4,9 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -260,6 +262,21 @@ public final class ObjectivePolicy {
         .findFirst()
         .map(bot -> bot.id().equals(situation.self().id()))
         .orElse(false);
+  }
+
+  /**
+   * Whether the bot guards a nuke its team has lit ({@link Playbook#HOLD}): it stays beside it to
+   * fight off the defuse rather than walk off to arm another bomb. In prod (1020-bf0e) each lone
+   * armer walked off and the other side defused the nuke behind it.
+   */
+  static boolean guardsLitNuke(Situation situation) {
+    return situation
+        .slot()
+        .filter(slot -> slot.key().equals(Playbook.HOLD))
+        .flatMap(Slot::bomb)
+        .flatMap(situation.snapshot()::bomb)
+        .filter(bomb -> bomb.state().isLit() && !bomb.threatens(situation.self().team()))
+        .isPresent();
   }
 
   private static boolean formationAssigned(Situation situation, BombView bomb) {

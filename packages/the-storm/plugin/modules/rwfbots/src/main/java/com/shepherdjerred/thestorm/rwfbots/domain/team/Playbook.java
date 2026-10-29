@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,8 +42,9 @@ import java.util.Set;
  * anchor stands where it can walk to the bomb and back.
  *
  * <p>The nuke is just another objective: a strategy names which bomb it plays for, it never wins by
- * being closest. Static slots keep at least {@link #SPACING} blocks apart; escorts are a wedge
- * relative to the planter and are placed where the planter is when dealt.
+ * being closest. A nuke the team holds, one it defused or armed, keeps a guard beside it ({@link
+ * #HOLD}). Static slots keep at least {@link #SPACING} blocks apart; escorts are a wedge relative
+ * to the planter and are placed where the planter is when dealt.
  */
 public final class Playbook {
 
@@ -139,6 +141,14 @@ public final class Playbook {
   /** Every this many places of a team, one more is a planter: about one planter per nine bots. */
   public static final int PLANTER_EVERY = 9;
 
+  /**
+   * The key of the slot that guards a nuke the team holds ({@link Setup#held}): an anchor beside it
+   * that names it as its bomb. In prod (1020-bf0e) lone bots armed and defused one nuke twelve
+   * times in five and a half minutes, because whoever defused it walked off to its strategy's bomb
+   * and the other side came back to arm it again.
+   */
+  public static final String HOLD = "hold-0";
+
   private static final int SNAP = 3;
   private static final int SEARCH_RINGS = 8;
   // How far past a slot that falls in water placement looks for dry ground.
@@ -165,6 +175,8 @@ public final class Playbook {
    * @param closing whether the team is closing out the round: the plant rush and the hunt
    * @param field the walking ticks of the team's shortest baked route from its spawn to an enemy
    *     bomb, or 0 when it has none
+   * @param held a nuke the team holds ({@link #HOLD}): one it defused and has not lost since, or
+   *     one it armed
    */
   public record Setup(
       NavArtifact nav,
@@ -181,7 +193,8 @@ public final class Playbook {
       Vec3 enemyHome,
       Set<Integer> watchers,
       boolean closing,
-      double field) {
+      double field,
+      Optional<BombView> held) {
 
     public Setup {
       lanes = List.copyOf(lanes);
@@ -198,6 +211,9 @@ public final class Playbook {
       }
       if (!(field >= 0) || Double.isInfinite(field)) {
         throw new IllegalArgumentException("field must be a finite walk: " + field);
+      }
+      if (held.isPresent() && !(held.orElseThrow().owner() instanceof BombOwner.Nuke)) {
+        throw new IllegalArgumentException("only a nuke is held: " + held.orElseThrow());
       }
     }
   }
@@ -420,18 +436,59 @@ public final class Playbook {
     };
   }
 
-  /** Deals {@code setup.size()} slots. */
+  /**
+   * Deals {@code setup.size()} slots; with a {@link Setup#held} nuke, one of them is {@link #HOLD}
+   * beside it, unless the team's one bot is arming it.
+   */
   public static List<Slot> deal(Setup setup) {
     var deal = new Deal(setup);
-    var slots = new ArrayList<Slot>(setup.size());
     var wants =
         setup.objective().isPresent()
             ? attacking(setup.strategy(), setup.size(), setup.closing(), setup.field())
             : wants(setup.strategy(), setup.size(), false, setup.closing());
-    for (var want : wants) {
-      slots.add(deal.slot(want));
+    var arming =
+        setup.held().isPresent()
+            && setup.objective().map(BombView::id).equals(setup.held().map(BombView::id));
+    var hold = setup.held().isPresent() && !(wants.size() == 1 && arming) ? holdIndex(wants) : -1;
+    var slots = new ArrayList<Slot>(setup.size());
+    for (var index = 0; index < wants.size(); index++) {
+      slots.add(
+          index == hold ? deal.hold(setup.held().orElseThrow()) : deal.slot(wants.get(index)));
     }
     return slots;
+  }
+
+  /**
+   * The want the nuke's guard replaces: a field attacker its side can spare, else an escort, else
+   * any field attacker, else overwatch, else a further anchor, else the last want (a lone bot's).
+   */
+  static int holdIndex(List<Want> wants) {
+    for (var index = wants.size() - 1; index >= 0; index--) {
+      var candidate = wants.get(index);
+      if (fieldAttacker(candidate)
+          && wants.stream()
+                  .filter(Playbook::fieldAttacker)
+                  .filter(want -> want.which() == candidate.which())
+                  .count()
+              > 1) return index;
+    }
+    for (var kind : List.of(SlotKind.ESCORT, SlotKind.LANE, SlotKind.FLANK, SlotKind.SWEEP)) {
+      var index = lastOf(wants, kind, 0);
+      if (index >= 0) return index;
+    }
+    var overwatch = lastOf(wants, SlotKind.OVERWATCH, 0);
+    if (overwatch >= 0) return overwatch;
+    var anchor = lastOf(wants, SlotKind.ANCHOR, 1);
+    return anchor >= 0 ? anchor : wants.size() - 1;
+  }
+
+  /** The last want of {@code kind} past the first {@code skip} of them, or -1. */
+  private static int lastOf(List<Want> wants, SlotKind kind, int skip) {
+    var seen = (int) wants.stream().filter(want -> want.kind() == kind).count();
+    for (var index = wants.size() - 1; index >= 0 && seen > skip; index--) {
+      if (wants.get(index).kind() == kind) return index;
+    }
+    return -1;
   }
 
   /** One deal in progress: what is placed so far and how many of each kind. */
@@ -489,8 +546,9 @@ public final class Playbook {
     private Slot plant(String key, Want want) {
       var bomb = setup.objective().orElseThrow();
       var lane = laneIndex(want.which());
+      // A held nuke is armed from beside it, where its guard stands, whatever the push.
       var at =
-          push >= PLANT_GO
+          push >= PLANT_GO || setup.held().map(BombView::id).filter(bomb.id()::equals).isPresent()
               ? place(approach(bomb))
               : place(setup.lanes().get(lane).at(Math.max(LANE_NEAREST, push + AHEAD)));
       return new Slot(
@@ -653,7 +711,7 @@ public final class Playbook {
           bestAnchor(
               guard,
               facing,
-              new Band(Math.max(setup.guardClear(), ANCHOR_MIN), ANCHOR_MAX, false),
+              new Band(Math.max(setup.guardClear(), ANCHOR_MIN), ANCHOR_MAX, false, true),
               coverNodes());
       // The first anchor holds home only where the screen would leave the bomb out of reach: on
       // the training yard's flat ground a screening anchor already stands within range, and holding
@@ -678,8 +736,10 @@ public final class Playbook {
      * @param most the furthest
      * @param close whether the distance is measured in three dimensions, so cover on a ledge above
      *     or below the bomb is not counted as close to it
+     * @param spreading whether the anchor spreads from the other anchors' approaches, as the own
+     *     bomb's do; a nuke's guard has none
      */
-    private record Band(double least, double most, boolean close) {
+    private record Band(double least, double most, boolean close, boolean spreading) {
 
       double distance(Vec3 feet, Vec3 guard) {
         return close ? feet.distance(guard) : feet.minus(guard).horizontal().length();
@@ -695,12 +755,39 @@ public final class Playbook {
      * walkable lies that close.
      */
     private Optional<Vec3> home(Vec3 guard, Vec3 facing) {
-      var band = new Band(Math.max(setup.guardClear(), HOME_NEAREST), HOME_HOLD, true);
+      var band = new Band(Math.max(setup.guardClear(), HOME_NEAREST), HOME_HOLD, true, true);
       if (band.least() >= band.most() || setup.nav().bombApproach(BlockPos.of(guard)).isEmpty())
         return Optional.empty();
       var back = facing.scale(-1);
       return bestAnchor(guard, back, band, coverNodes())
           .or(() -> bestAnchor(guard, back, band, nodesAround(guard, band)));
+    }
+
+    /**
+     * The nuke's guard: an anchor within {@link #HOME_HOLD} of the held nuke facing the threat, on
+     * cover if any lies there, so whoever defused or armed it stays to fight the side that comes to
+     * arm or defuse it again.
+     */
+    Slot hold(BombView nuke) {
+      var threat = setup.sightings().stream().findFirst().orElseGet(setup::enemyHome);
+      var toEnemy = threat.minus(nuke.pos()).horizontal();
+      var facing = toEnemy.isZero() ? axis : toEnemy.normalized();
+      var band = new Band(HOME_NEAREST, HOME_HOLD, true, false);
+      var at =
+          bestAnchor(nuke.pos(), facing, band, coverNodes())
+              .or(() -> bestAnchor(nuke.pos(), facing, band, nodesAround(nuke.pos(), band)))
+              .map(this::keep)
+              .orElseGet(() -> place(approach(nuke)));
+      return new Slot(
+          HOLD,
+          SlotKind.ANCHOR,
+          Role.DEFEND,
+          at,
+          at.plus(facing.scale(16)),
+          -1,
+          -1,
+          Optional.of(nuke.id()),
+          0);
     }
 
     private List<Integer> coverNodes() {
@@ -746,7 +833,10 @@ public final class Playbook {
         }
         var offset = feet.minus(guard).horizontal();
         var direction = offset.isZero() ? facing : offset.normalized();
-        var score = spread(direction) + 0.2 * direction.dot(facing) - 0.02 * distance;
+        var score =
+            (band.spreading() ? spread(direction) : 0)
+                + 0.2 * direction.dot(facing)
+                - 0.02 * distance;
         if (score > bestScore) {
           bestScore = score;
           best = Optional.of(feet);

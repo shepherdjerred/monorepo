@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -243,7 +244,11 @@ public final class TeamBrain {
     var home = home(nav, team, alive);
     var defense = RetakeFormation.urgent(snapshot, team);
     if (defense.isPresent()) return retakeDeal(board, situation, alive, defense.orElseThrow());
-    var objective = ObjectiveChoice.choose(board, situation, alive);
+    var held = heldNuke(board, snapshot, team);
+    // A side well ahead arms the nuke it holds for itself; otherwise it guards it.
+    var objective =
+        held.filter(nuke -> nuke.armableBy(team) && ahead(snapshot, team))
+            .or(() -> ObjectiveChoice.choose(board, situation, alive));
     var lanes = lanes(board, situation, home, objective);
     if (lanes.isEmpty()) {
       objective = Optional.empty();
@@ -287,7 +292,8 @@ public final class TeamBrain {
             enemyHome,
             watchers(nav, sightings, enemyHome),
             odds.closing(),
-            field(nav, team));
+            field(nav, team),
+            held);
     var humans = new java.util.HashMap<CombatantId, CombatantView>();
     situation.humans(team).forEach(human -> humans.put(human.id(), human));
     var slots =
@@ -458,6 +464,74 @@ public final class TeamBrain {
   }
 
   /**
+   * The nuke {@code team} holds, whose guard {@link Playbook#HOLD} keeps beside it: one not lit
+   * that it just defused (its last deal was a retake of it) or that its guard still holds, and one
+   * it has lit while the enemy is about ({@link #contested}) or down to its last few. The rules let
+   * anyone arm an idle nuke (rwf {@code Bomb.click}), so a defuser that walked away handed it
+   * straight back to the side that armed it, and an armer that walked away left its fuse to the
+   * enemy. A guard on every lit nuke took a bot from the human it kept company
+   * (HumanSupportPlayTest).
+   */
+  static Optional<BombView> heldNuke(Blackboard board, WorldSnapshot snapshot, TeamId team) {
+    var previous = board.plan();
+    return snapshot.bombs().stream()
+        .filter(bomb -> bomb.owner() instanceof BombOwner.Nuke)
+        .filter(bomb -> !(bomb.state() instanceof BombState.Destroyed))
+        .filter(
+            bomb -> {
+              var idle = !bomb.state().isLit();
+              var threatened =
+                  contested(board, snapshot.tick(), bomb)
+                      || snapshot.aliveEnemiesOf(team).size() <= LAST_FEW;
+              return (idle && (retook(previous, bomb) || guarded(previous, bomb)))
+                  || (litBy(bomb, team) && threatened);
+            })
+        .findFirst();
+  }
+
+  /**
+   * Against an enemy down to this many a lit nuke is guarded whether anyone was seen near it or
+   * not: a last survivor sneaks to it unseen (a local sunspire match: Red, two against one, armed
+   * it and walked off, and the last Blue defused it behind them, seven times).
+   */
+  static final int LAST_FEW = 2;
+
+  /** An enemy seen this close to an idle nuke its team holds may come to arm it. */
+  static final double CONTESTED = 24;
+
+  /** Whether a teammate saw an enemy within {@link #CONTESTED} of {@code nuke} lately. */
+  private static boolean contested(Blackboard board, long now, BombView nuke) {
+    return board.visibleSightings(now).stream()
+        .filter(sighting -> now - sighting.seenTick() <= STALL_TICKS)
+        .anyMatch(sighting -> sighting.pos().distance(nuke.pos()) <= CONTESTED);
+  }
+
+  /** Whether {@code team} armed {@code nuke} and its fuse burns. */
+  private static boolean litBy(BombView nuke, TeamId team) {
+    return nuke.owner() instanceof BombOwner.Nuke(var by)
+        && by.filter(team::equals).isPresent()
+        && nuke.state().isLit();
+  }
+
+  /** Whether {@code previous} was a retake of {@code bomb}: a retake deal has no lanes. */
+  private static boolean retook(TeamPlan previous, BombView bomb) {
+    return previous.lanes().isEmpty() && previous.objective().filter(bomb.id()::equals).isPresent();
+  }
+
+  private static boolean guarded(TeamPlan previous, BombView bomb) {
+    return previous.slot(Playbook.HOLD).flatMap(Slot::bomb).filter(bomb.id()::equals).isPresent();
+  }
+
+  /**
+   * Whether {@code team} leads the fight as {@link Odds#leading} has it, by two and a quarter: a
+   * side merely one up sent to arm the nuke left the enemy's bomb alone (ObjectivePlayTest's first
+   * plants came later).
+   */
+  private static boolean ahead(WorldSnapshot snapshot, TeamId team) {
+    return Odds.of(snapshot, team, false).leading();
+  }
+
+  /**
    * How long the team's field is: the walking ticks of its shortest baked route from a spawn of its
    * own to an enemy team's bomb, or 0 on a map without one.
    */
@@ -558,7 +632,7 @@ public final class TeamBrain {
         - DISTANCE_WEIGHT
             * Math.min(distance, DISTANCE_CAP)
             / DISTANCE_SCALE
-            * (slot.role() == Role.RETAKE ? 4 : 1)
+            * (slot.role() == Role.RETAKE || slot.key().equals(Playbook.HOLD) ? 4 : 1)
         + (held ? STICKY : 0)
         - HumanSupport.cost(slot, bot, dealing.situation().snapshot())
         - (slot.role() == Role.RETAKE && dealing.pinned().contains(bot.id()) ? HANDOFF : 0);

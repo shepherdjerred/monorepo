@@ -363,7 +363,8 @@ final class PlaybookTest {
                   pond,
                   Set.of(),
                   false,
-                  0));
+                  0,
+                  Optional.empty()));
       assertThat(slots)
           .as(strategy.name())
           .allSatisfy(slot -> assertThat(slot.pos().x()).isLessThan(9));
