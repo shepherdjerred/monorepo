@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+import { createNarrowReader } from "@shepherdjerred/delivery/client";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
 import { SEAWEEDFS_BACKUP_POLICY } from "@shepherdjerred/seaweedfs-backup/policy";
 import { restoreSnapshot } from "@shepherdjerred/seaweedfs-backup/restore";
@@ -8,10 +9,20 @@ import {
 } from "@shepherdjerred/seaweedfs-backup/store";
 import { verifySnapshot } from "@shepherdjerred/seaweedfs-backup/verify";
 import { openColdStartRecord } from "#lib/backup/cold-start-record.ts";
+import {
+  parseDeliveryReplicationTarget,
+  pendingServiceArtifacts,
+  replicateDeliveryArtifact,
+} from "#lib/backup/delivery-replication.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
+import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { deliveryClient, deliveryUrl } from "#lib/delivery/client.ts";
 
 const USAGE = `
 toolkit backup seaweedfs snapshots
 toolkit backup seaweedfs verify --snapshot <id> [--full]
+toolkit backup seaweedfs pending-delivery --service <id>
+toolkit backup seaweedfs replicate-delivery --artifact <id> --service <id> --digest <sha256>
 toolkit backup seaweedfs restore --snapshot <id> --bucket <name> --destination-bucket <empty-bucket>
 toolkit backup seaweedfs restore --cold-start --record <new-file> --snapshot <id> --bucket <name> --destination-bucket <name>
 `;
@@ -63,6 +74,58 @@ async function verifyCommand(args: string[]): Promise<void> {
   });
   console.log(
     `Verified ${result.snapshotId}: ${String(result.manifests)} manifests, ${String(result.checkedObjects)} objects present, ${String(result.hashedObjects)} checksums`,
+  );
+}
+
+async function deliveryExecutorClient() {
+  const config = await loadToolkitConfig();
+  await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN"]);
+  const url = deliveryUrl(await config.value("deliveryUrl"));
+  const token = required(
+    Bun.env["DELIVERY_EXECUTOR_TOKEN"],
+    "DELIVERY_EXECUTOR_TOKEN",
+  );
+  const client = deliveryClient(url, token);
+  const read = createNarrowReader({
+    baseUrl: url,
+    headers: { Authorization: `Bearer ${token}` },
+    fetch: (input, init) =>
+      fetch(input, {
+        ...init,
+        signal: AbortSignal.timeout(30_000),
+        redirect: "error",
+      }),
+  });
+  return {
+    recordReplication: client.recordReplication,
+    pendingForService: (serviceId: string) =>
+      pendingServiceArtifacts(read, serviceId),
+  };
+}
+
+async function replicateDeliveryCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      artifact: { type: "string" },
+      service: { type: "string" },
+      digest: { type: "string" },
+    },
+    allowPositionals: false,
+  });
+  const target = parseDeliveryReplicationTarget({
+    artifactId: required(values.artifact, "--artifact"),
+    serviceId: required(values.service, "--service"),
+    digest: required(values.digest, "--digest"),
+  });
+  const client = await deliveryExecutorClient();
+  const result = await replicateDeliveryArtifact(target, client);
+  console.log(
+    JSON.stringify({
+      artifactId: result.id,
+      digest: result.digest,
+      replication: result.replication,
+    }),
   );
 }
 
@@ -165,6 +228,31 @@ export async function handleBackupCommand(
     case "verify":
       await verifyCommand(actionArgs);
       break;
+    case "replicate-delivery":
+      await replicateDeliveryCommand(actionArgs);
+      break;
+    case "pending-delivery": {
+      const { values } = parseArgs({
+        args: actionArgs,
+        options: { service: { type: "string" } },
+        allowPositionals: false,
+      });
+      const service = required(values.service, "--service");
+      const client = await deliveryExecutorClient();
+      const artifacts = await client.pendingForService(service);
+      console.log(
+        JSON.stringify(
+          artifacts.map(({ id, serviceId, digest, uri, buildId }) => ({
+            id,
+            serviceId,
+            digest,
+            uri,
+            buildId,
+          })),
+        ),
+      );
+      break;
+    }
     case "restore":
       await restoreCommand(actionArgs);
       break;

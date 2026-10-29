@@ -349,6 +349,22 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 
 ## Monorepo workflows
 
+### Replicate one pending Delivery artifact
+
+When the Delivery replication coordinator is intentionally paused, an operator
+can replicate one reviewed pending artifact without dispatching deployments:
+
+```bash
+toolkit backup seaweedfs pending-delivery --service SERVICE_ID
+toolkit backup seaweedfs replicate-delivery --artifact ARTIFACT_ID --service SERVICE_ID --digest sha256:EXPECTED_DIGEST
+```
+
+The command requires the SeaweedFS backup source and R2 backup environment
+described in the SeaweedFS backup package. It resolves the Delivery executor
+credential through the toolkit broker, checks the exact pending identity,
+copies and verifies the bytes, rechecks the pending record, and records the
+replication receipt. It does not resume the dispatch schedule.
+
 ### Wait for CI and merge readiness
 
 `toolkit ci maintenance --json` reports recent explicit maintenance runs and

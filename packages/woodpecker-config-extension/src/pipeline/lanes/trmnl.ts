@@ -37,7 +37,7 @@ export function trmnlSteps(images: CiImages): CiStep[] {
     },
     {
       key: "trmnl-plugin-archives",
-      label: "publish TRMNL plugin archive",
+      label: "publish verified source and TRMNL archives",
       image: images.base,
       commands: [
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",

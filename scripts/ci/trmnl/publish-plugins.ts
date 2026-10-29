@@ -15,9 +15,11 @@ import {
 } from "../../lib/ci/ci-handoff.ts";
 import { DELIVERY_IMAGE_DIGESTS_HANDOFF } from "../../lib/ci/image-publication-handoff.ts";
 import { requireEnv, runAllowExit } from "../../lib/run.ts";
+import { publishUpstreamSources } from "../../lib/ci/upstream-source-publication.ts";
 
 if (Bun.argv.length !== 2)
   throw new Error("publish-plugins.ts accepts no arguments");
+await publishUpstreamSources();
 await writeJsonHandoff("trmnl-plugin-artifacts", []);
 const digests = z
   .record(z.string(), z.string().regex(/^sha256:[a-f0-9]{64}$/u))

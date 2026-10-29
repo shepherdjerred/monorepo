@@ -441,6 +441,13 @@ pipeline. Runtime comparison uses the qualified original digest; Workflow host
 versions and routing remain PostgreSQL selections. Git image values and the
 retired mutable publication head do not choose reused artifacts.
 
+The shared archive producer also acquires catalog Git sources. It reads the
+registry choice frozen by the image job, reuses a qualified original when
+available, and otherwise publishes the exact tagged commit's immutable bytes.
+Delivery independently verifies the acquisition and its off-cluster replica
+before registration can retain it. This job already holds the scoped archive
+publisher and Delivery identities, and registration waits for its result.
+
 When a graph change retires a failing lane, the deployed image can still select
 that lane for the PR carrying its replacement. Changes under this package are
 also inputs to every workflow, so an extension-only PR cannot escape the old

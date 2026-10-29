@@ -1,8 +1,3 @@
-import { createHash } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { sourceArchiveUri } from "@shepherdjerred/delivery/artifact-contract";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import type {
@@ -32,7 +27,12 @@ import {
   helmRepositoryUrl,
   type ChartTransport,
 } from "./upstream-delivery-chart.ts";
-import { publishImmutableArchive } from "../artifacts/immutable-archive.ts";
+import type { publishImmutableArchive } from "../artifacts/immutable-archive.ts";
+import {
+  prepareSource,
+  publishSource,
+  exactQualifiedSource,
+} from "./delivery-upstream-source.ts";
 
 /**
  * Charts still copied into ChartMuseum. Nothing new is mirrored (X11); the
@@ -66,12 +66,14 @@ export type ComponentArtifactOptions = {
   githubToken?: () => string;
   /** Stores a source tarball in the Delivery artifact bucket. */
   publishArchive?: typeof publishImmutableArchive;
+  /** Wait between idempotent reads of a pending acquisition, if the producer can wait for replication. */
+  waitForPending?: () => Promise<void>;
 };
 export type SourceTransport = (
   url: string,
   init?: RequestInit,
 ) => Promise<Response>;
-type UpstreamIntent = {
+export type UpstreamIntent = {
   serviceId: string;
   component: string;
   kind: "chart" | "image" | "archive";
@@ -82,10 +84,11 @@ type UpstreamIntent = {
   /** Pinned bytes known before acquisition (images); charts learn theirs from the index. */
   digest?: string;
 };
-type UpstreamClient = Pick<
+export type UpstreamClient = Pick<
   DeliveryClient,
   "latestQualifiedArtifact" | "acquireUpstreamArtifact"
->;
+> &
+  Partial<Pick<DeliveryClient, "findQualifiedArtifact">>;
 
 /**
  * The version-catalog entries v1 acquires: only the Minecraft chart. Every
@@ -283,99 +286,15 @@ async function retained(
   return original;
 }
 
-/** Delivery verifies a source tarball up to this size; a larger one never qualifies. */
-const MAX_SOURCE_BYTES = 16 * 1024 * 1024;
-
-async function githubRead(
-  transport: SourceTransport,
-  url: string,
-  headers: Record<string, string>,
-  label: string,
-): Promise<Uint8Array> {
-  const response = await transport(url, {
-    headers,
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!response.ok)
-    throw new Error(`${label} failed (${String(response.status)})`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.length > MAX_SOURCE_BYTES)
-    throw new Error(`${label} exceeds Delivery's 16 MiB source limit`);
-  return bytes;
-}
-
-/**
- * A GitHub source is acquired as the tarball of the commit its pinned tag
- * names, stored content-addressed in the Delivery artifact bucket. Delivery
- * resolves the tag and hashes the tarball again before it qualifies.
- */
-async function acquiredSource(
-  intent: UpstreamIntent,
-  options: ComponentArtifactOptions,
-): Promise<AcquireUpstreamArtifact["artifact"]> {
-  const transport = options.sourceTransport ?? fetch;
-  const token = options.githubToken?.();
-  const commit = new TextDecoder()
-    .decode(
-      await githubRead(
-        transport,
-        `https://api.github.com/repos/${intent.name}/commits/${encodeURIComponent(intent.version)}`,
-        {
-          accept: "application/vnd.github.sha",
-          ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
-        },
-        `GitHub tag resolution for ${intent.name}@${intent.version}`,
-      ),
-    )
-    .trim();
-  if (!/^[a-f0-9]{40}$/u.test(commit))
-    throw new Error(
-      `GitHub did not resolve ${intent.name}@${intent.version} to a commit`,
-    );
-  const tarball = await githubRead(
-    transport,
-    `https://codeload.github.com/${intent.name}/tar.gz/${commit}`,
-    {},
-    `GitHub tarball of ${intent.name}@${commit}`,
-  );
-  const digest = `sha256:${createHash("sha256").update(tarball).digest("hex")}`;
-  const uri = sourceArchiveUri(intent.name, digest);
-  const directory = await mkdtemp(path.join(tmpdir(), "delivery-source-"));
-  try {
-    const file = path.join(directory, "source.tar.gz");
-    await Bun.write(file, tarball);
-    await (options.publishArchive ?? publishImmutableArchive)({
-      uri,
-      file,
-      readback: path.join(directory, "readback.tar.gz"),
-      digest,
-    });
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-  return {
-    id: `upstream/${intent.name}/${intent.version}/${digest.slice(7)}`,
-    component: intent.component,
-    kind: "archive",
-    uri,
-    digest,
-    version: commit,
-    origin: {
-      kind: "upstream",
-      repository: intent.repository,
-      name: intent.name,
-      version: intent.version,
-      commit,
-      checksum: digest,
-    },
-  };
-}
-
 async function acquiredArtifact(
   intent: UpstreamIntent,
   options: ComponentArtifactOptions,
 ): Promise<AcquireUpstreamArtifact["artifact"]> {
-  if (intent.kind === "archive") return acquiredSource(intent, options);
+  if (intent.kind === "archive") {
+    const source = await prepareSource(intent, options);
+    await publishSource(source, options);
+    return source.artifact;
+  }
   // A Helm-index chart learns its digest from the index; a registry-hosted
   // entry (an image or an OCI chart) is already pinned.
   if (intent.kind === "chart" && intent.digest === undefined) {
@@ -439,22 +358,56 @@ export async function componentArtifactsForPublication(
   const v2 = options.registry === "v2";
   const artifacts: ArtifactVersion[] = [];
   for (const entry of componentEntries(catalog)) {
-    // The bytes are acquired once per entry; v2 registers them under every
-    // acquiring service, each with its own artifact and request identity.
-    let acquired: AcquireUpstreamArtifact["artifact"] | undefined;
-    for (const intent of v2
+    const intents = v2
       ? catalogIntents(entry, options.core ?? CATALOG_CORE)
-      : [componentIntent(entry, options)]) {
-      const original = await retained(client, intent);
-      if (original !== undefined) {
-        artifacts.push(original);
+      : [componentIntent(entry, options)];
+    artifacts.push(
+      ...(await componentArtifacts(client, producer, options, intents)),
+    );
+  }
+  return artifacts;
+}
+
+async function componentArtifacts(
+  client: UpstreamClient,
+  producer: UpstreamProducer,
+  options: ComponentArtifactOptions,
+  intents: readonly UpstreamIntent[],
+): Promise<ArtifactVersion[]> {
+  const v2 = options.registry === "v2";
+  const artifacts: ArtifactVersion[] = [];
+  let acquired: AcquireUpstreamArtifact["artifact"] | undefined;
+  let source: Awaited<ReturnType<typeof prepareSource>> | undefined;
+  for (const intent of intents) {
+    const original = await retained(client, intent);
+    if (original !== undefined) {
+      artifacts.push(original);
+      continue;
+    }
+    if (
+      intent.kind === "archive" &&
+      client.findQualifiedArtifact !== undefined
+    ) {
+      source ??= await prepareSource(intent, options);
+      const exact = await exactQualifiedSource(client, intent, source);
+      if (exact !== undefined) {
+        artifacts.push(exact);
         continue;
       }
-      acquired ??= await acquiredArtifact(intent, options);
-      artifacts.push(
-        await registerAcquisition(client, producer, { intent, acquired, v2 }),
-      );
+      if (acquired === undefined) {
+        await publishSource(source, options);
+        acquired = source.artifact;
+      }
     }
+    acquired ??= await acquiredArtifact(intent, options);
+    artifacts.push(
+      await registerAcquisition(client, producer, {
+        intent,
+        acquired,
+        v2,
+        waitForPending: options.waitForPending,
+      }),
+    );
   }
   return artifacts;
 }
@@ -466,14 +419,16 @@ async function registerAcquisition(
     intent,
     acquired,
     v2,
+    waitForPending,
   }: {
     intent: UpstreamIntent;
     acquired: AcquireUpstreamArtifact["artifact"];
     v2: boolean;
+    waitForPending: ComponentArtifactOptions["waitForPending"];
   },
 ): Promise<ArtifactVersion> {
   const pipeline = `ci/${String(producer.repositoryId)}/${String(producer.pipelineNumber)}`;
-  const result = await client.acquireUpstreamArtifact({
+  const request: AcquireUpstreamArtifact = {
     requestId: v2
       ? `${pipeline}/acquire/${intent.serviceId}/${intent.name}/${intent.version}`
       : `${pipeline}/acquire/${intent.name}/${intent.version}`,
@@ -490,7 +445,17 @@ async function registerAcquisition(
           component: intent.component,
         }
       : acquired,
-  });
+  };
+  let result = await client.acquireUpstreamArtifact(request);
+  const buildId = result.buildId;
+  while (waitForPending !== undefined && result.status === "pending") {
+    await waitForPending();
+    result = await client.acquireUpstreamArtifact(request);
+    if (result.buildId !== buildId)
+      throw new Error(
+        "Acquisition identity changed while waiting for qualification",
+      );
+  }
   if (result.status !== "verified")
     throw new Error(
       `Upstream ${intent.component} acquisition is ${result.status}; no eligible CI reference was published`,

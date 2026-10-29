@@ -547,7 +547,7 @@ describe("selected lane contracts", () => {
     expect(keys).not.toContain("trmnl-plugin-archives");
   });
 
-  test("TRMNL CI has immutable publication credentials without external mutation authority", () => {
+  test("the shared archive producer has source and immutable publication credentials without external mutation authority", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     expect(
       steps.find((s) => s.key === "trmnl-validate")?.secrets,
@@ -555,6 +555,13 @@ describe("selected lane contracts", () => {
     const producer = steps.find((s) => s.key === "trmnl-plugin-archives");
     expect(producer?.secrets?.map((secret) => secret.key)).toContain(
       "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
+    );
+    expect(producer?.secrets?.map((secret) => secret.key)).toEqual(
+      expect.arrayContaining([
+        "GITHUB_DOWNLOAD_TOKEN",
+        "DELIVERY_PUBLISHER_TOKEN",
+        "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+      ]),
     );
     expect(
       steps

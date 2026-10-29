@@ -1,7 +1,10 @@
 import { rm } from "node:fs/promises";
 import { teeOutputTail } from "../reporting/command-output.ts";
 import { asRecord } from "../../../scripts/lib/json.ts";
-import { setDeliveryDigestMetadata } from "../../../scripts/lib/ci/image-publication-handoff.ts";
+import {
+  setDeliveryCatalogRegistry,
+  setDeliveryDigestMetadata,
+} from "../../../scripts/lib/ci/image-publication-handoff.ts";
 import {
   classifyRuntimeChange,
   imageRuntimeFingerprint,
@@ -409,6 +412,7 @@ async function main(): Promise<void> {
   ]);
 
   const owners = publicationOwners(options.catalogV2 ? "v2" : "v1");
+  if (options.push) await setDeliveryCatalogRegistry(owners.registry);
   const originals = options.push
     ? await readRetainableImages(undefined, undefined, owners)
     : undefined;

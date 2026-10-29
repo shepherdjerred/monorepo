@@ -43,6 +43,10 @@ import {
 } from "../lib/ci/delivery-tofu-publication.ts";
 import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
 import {
+  DELIVERY_CATALOG_REGISTRY_HANDOFF,
+  parseDeliveryCatalogRegistry,
+} from "../lib/ci/image-publication-handoff.ts";
+import {
   NPM_PACKAGE_HANDOFF,
   parseNpmPackagePublications,
 } from "../lib/artifacts/npm-package-archive.ts";
@@ -364,6 +368,11 @@ async function main() {
     headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
   });
   const owners = publicationOwners(options.catalogV2 ? "v2" : "v1");
+  const imageRegistry = parseDeliveryCatalogRegistry(
+    await readRequiredHandoff(DELIVERY_CATALOG_REGISTRY_HANDOFF),
+  );
+  if (imageRegistry !== owners.registry)
+    throw new Error("Image and Delivery publication catalog registries differ");
   const handoffs = await readPublicationHandoffs(options.staticArchives);
   const versionCatalog = parseVersionCatalog(rawCatalog);
   const components = await componentArtifactsForPublication(

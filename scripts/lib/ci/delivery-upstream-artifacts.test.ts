@@ -633,6 +633,46 @@ const cloudflareSource = parseVersionCatalog(rawVersionCatalog).entries.find(
 );
 const sourceCommit = "6".repeat(40);
 
+test("an independently qualified exact source can be reused before a complete version set exists", async () => {
+  if (cloudflareSource === undefined) throw new Error("source entry missing");
+  const bytes = "verified source bytes";
+  const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+  const exact = ArtifactVersionSchema.parse({
+    ...acquiredSourceVersion(sourceCommit),
+    digest,
+    uri: sourceArchiveUri("adyanth/cloudflare-operator", digest),
+    origin: { ...acquiredSourceVersion(sourceCommit).origin, checksum: digest },
+  });
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "no set");
+      },
+      findQualifiedArtifact: async (query) => {
+        expect(query).toMatchObject({
+          digest,
+          version: sourceCommit,
+          originKind: "upstream",
+        });
+        return exact;
+      },
+      acquireUpstreamArtifact: unexpected,
+    },
+    catalog(cloudflareSource),
+    producer,
+    {
+      credentials: unexpected,
+      registry: "v2",
+      sourceTransport: async (url) =>
+        new Response(
+          url.startsWith("https://api.github.com/") ? sourceCommit : bytes,
+        ),
+      publishArchive: unexpected,
+    },
+  );
+  expect(selected).toEqual([exact]);
+});
+
 test("v2 acquires a GitHub source as the tarball of its tag's commit, stored by digest", async () => {
   if (cloudflareSource === undefined)
     throw new Error("cloudflare-operator source entry missing");
@@ -645,6 +685,9 @@ test("v2 acquires a GitHub source as the tarball of its tag's commit, stored by 
     {
       latestQualifiedArtifact: async () => {
         throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      findQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No exact source");
       },
       acquireUpstreamArtifact: async (input) => {
         requests.push(input);
@@ -714,6 +757,107 @@ test("v2 acquires a GitHub source as the tarball of its tag's commit, stored by 
       },
     }),
   ]);
+});
+
+test("an exact-source authorization error fails instead of uploading or registering", async () => {
+  if (cloudflareSource === undefined) throw new Error("source entry missing");
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: async () => {
+          throw new DeliveryClientError(404, "NOT_FOUND", "no set");
+        },
+        findQualifiedArtifact: async () => {
+          throw new DeliveryClientError(403, "FORBIDDEN", "denied");
+        },
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog(cloudflareSource),
+      producer,
+      {
+        credentials: unexpected,
+        registry: "v2",
+        sourceTransport: async (url) =>
+          new Response(
+            url.startsWith("https://api.github.com/") ? sourceCommit : "source",
+          ),
+        publishArchive: unexpected,
+      },
+    ),
+  ).rejects.toMatchObject({ status: 403 });
+});
+
+test("an exact lookup returning a foreign artifact fails closed", async () => {
+  if (cloudflareSource === undefined) throw new Error("source entry missing");
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: async () => {
+          throw new DeliveryClientError(404, "NOT_FOUND", "no set");
+        },
+        findQualifiedArtifact: async () => acquiredSourceVersion(sourceCommit),
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog(cloudflareSource),
+      producer,
+      {
+        credentials: unexpected,
+        registry: "v2",
+        sourceTransport: async (url) =>
+          new Response(
+            url.startsWith("https://api.github.com/")
+              ? sourceCommit
+              : "different bytes",
+          ),
+        publishArchive: unexpected,
+      },
+    ),
+  ).rejects.toThrow("different upstream identity");
+});
+
+test("source acquisition waits for the same original to become independently verified", async () => {
+  if (cloudflareSource === undefined) throw new Error("source entry missing");
+  let calls = 0;
+  let waits = 0;
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "no set");
+      },
+      findQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "no source");
+      },
+      acquireUpstreamArtifact: async (request) => {
+        requests.push(request);
+        calls += 1;
+        return {
+          ...verified(request),
+          status: calls === 1 ? "pending" : "verified",
+        };
+      },
+    },
+    catalog(cloudflareSource),
+    producer,
+    {
+      credentials: unexpected,
+      registry: "v2",
+      sourceTransport: async (url) =>
+        new Response(
+          url.startsWith("https://api.github.com/") ? sourceCommit : "source",
+        ),
+      publishArchive: async (input) => {
+        expect(input.uri).toContain("delivery-artifacts");
+      },
+      waitForPending: async () => {
+        waits += 1;
+      },
+    },
+  );
+  expect(waits).toBe(1);
+  expect(requests).toHaveLength(2);
+  expect(requests[1]).toEqual(requests[0]);
+  expect(selected[0]?.version).toBe(sourceCommit);
 });
 
 function acquiredSourceVersion(originCommit: string) {
