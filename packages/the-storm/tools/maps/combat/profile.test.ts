@@ -88,7 +88,7 @@ test("serialized private profile remains compatible with actual ordinary server 
     expect(observed.match.previewLength).toBe(rwfTestSettings.previewLength);
     expect(observed.match.freezeLength).toBe(rwfTestSettings.freezeLength);
     expect(trooperCombatProfile(Bun.YAML.parse(source)).original.kits).toEqual(
-      [],
+      staged.original.kits,
     );
     await Bun.write(
       file,

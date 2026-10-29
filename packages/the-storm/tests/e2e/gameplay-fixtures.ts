@@ -193,7 +193,12 @@ async function profileFixtures(
         stormConfig: withBots(owned),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
-        rwf: { ...fullRwfTestSettings, countdown: "PT60S", maxCombatants: 256 },
+        rwf: {
+          kits: [],
+          ...fullRwfTestSettings,
+          countdown: "PT60S",
+          maxCombatants: 256,
+        },
       };
     }
     case "full": {
@@ -208,7 +213,7 @@ async function profileFixtures(
         ).text(),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
-        rwf: { ...fullRwfTestSettings, maps: suiteMaps },
+        rwf: { kits: [], ...fullRwfTestSettings, maps: suiteMaps },
       };
     }
     case "load": {
@@ -218,6 +223,7 @@ async function profileFixtures(
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
         rwf: {
+          kits: [],
           ...rwfTestSettings,
           maxCombatants: 101,
           loadtest: true,
@@ -248,7 +254,7 @@ async function profileFixtures(
           "reset",
         ]),
         fixturesJar,
-        rwf: { ...rwfTestSettings, maps: suiteMaps },
+        rwf: { kits: [], ...rwfTestSettings, maps: suiteMaps },
         mechanicsE2eJar: path.join(
           packageRoot,
           "plugin/modules/mechanics/build/libs/TheStormMechanicsE2E.jar",

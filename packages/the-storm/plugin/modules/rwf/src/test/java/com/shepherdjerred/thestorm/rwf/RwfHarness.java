@@ -190,6 +190,9 @@ public final class RwfHarness implements AutoCloseable {
       Files.writeString(
           config,
           Files.readString(config)
+              // The fixture stages only Training Yard and exercises every kit.
+              .replaceAll("(?m)^  maps:\\n(?:    - [a-z0-9-]+\\n)+", "  maps: []\n")
+              .replaceAll("(?m)^  kits:\\n(?:    - [a-z0-9-]+\\n)+", "  kits: []\n")
               .replace("automaticSizing: true", "automaticSizing: false")
               // Keep original flow scenarios explicit and short; native acceptance uses 30s.
               .replace("previewLength: PT30S", "previewLength: PT10S")

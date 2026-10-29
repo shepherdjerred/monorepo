@@ -2096,8 +2096,10 @@ selects its requested map; neither selection changes the production catalog.
 `hard`), style (`varied`, `push`, `cautious`, `teamplay`), variety (`low`,
 `medium`, `high`), and map/kit ID restrictions. Empty restrictions admit every
 otherwise available choice. The shipped experience is hard, varied and high
-variety, with the existing automatic large lobby sizing. `/rwf settings` shows
-the current frozen experience and the next draft's preferences.
+variety, with the existing automatic large lobby sizing. Its explicit pools
+admit only the 31 playable imported maps and 24 ported kits; the authored maps
+and designed kits remain shipped for development and testing. `/rwf settings`
+shows the current frozen experience and the next draft's preferences.
 
 Administrators can use `/rwf admin settings preset relaxed|balanced|challenging`
 or set `difficulty`, `style`, `variety`, `maps` or `kits` individually. Map and
