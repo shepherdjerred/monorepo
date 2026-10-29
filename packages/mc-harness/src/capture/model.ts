@@ -4,6 +4,7 @@ import { z } from "zod";
 import { BoxSchema, InfoResponseSchema } from "#protocol/bridge.ts";
 import { ClientNameSchema } from "#protocol/client.ts";
 import { MediaName } from "#protocol/media.ts";
+import { MapSourceSchema } from "#protocol/ipc.ts";
 
 import { PlayerCheckpointSchema } from "#protocol/capture.ts";
 import { CaptureResourceSchema } from "#protocol/capture.ts";
@@ -23,6 +24,7 @@ export const RunSchema = z.strictObject({
   schema: z.literal(1),
   id: z.string(),
   target: z.string(),
+  mapSource: MapSourceSchema.optional(),
   reason: z.string().min(1),
   name: ClientNameSchema,
   inspectors: z.array(z.string()),

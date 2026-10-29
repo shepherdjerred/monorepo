@@ -36,7 +36,8 @@ public final class PreviewClient implements ClientModInitializer {
         client -> {
           client.options.pauseOnLostFocus = false;
           client.options.fov().set(70);
-          client.options.guiScale().set(2);
+          client.options.guiScale().set(4);
+          client.resizeGui();
           client
               .options
               .inactivityFpsLimit()

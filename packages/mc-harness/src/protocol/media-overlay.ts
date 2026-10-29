@@ -14,6 +14,7 @@ export function overlaySvg(
   cues: readonly Annotation[],
   width: number,
   height: number,
+  fontSize = 24,
 ): string {
   const elements = cues
     .map((cue) => {
@@ -25,7 +26,11 @@ export function overlaySvg(
           : cue.kind === "box"
             ? `<rect x="${Math.min(x, tx).toString()}" y="${Math.min(y, ty).toString()}" width="${Math.abs(tx - x).toString()}" height="${Math.abs(ty - y).toString()}" rx="4"/>`
             : "";
-      return `<g fill="none" stroke="#ffda69" stroke-width="4">${shape}</g><text x="${x.toString()}" y="${Math.max(28, y - 12).toString()}" font-family="sans-serif" font-size="24" font-weight="bold" fill="white" stroke="#151b27" stroke-width="5" paint-order="stroke">${escapeXml(cue.text)}</text>`;
+      const labelX = Math.min(
+        x,
+        Math.max(8, width - cue.text.length * fontSize * 0.62 - 8),
+      );
+      return `<g fill="none" stroke="#ffda69" stroke-width="4">${shape}</g><text x="${labelX.toString()}" y="${Math.max(fontSize + 4, y - 12).toString()}" font-family="sans-serif" font-size="${fontSize.toString()}" font-weight="bold" fill="white" stroke="#151b27" stroke-width="5" paint-order="stroke">${escapeXml(cue.text)}</text>`;
     })
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width.toString()}" height="${height.toString()}" viewBox="0 0 ${width.toString()} ${height.toString()}"><defs><marker id="tip" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0L7 3L0 6" fill="none" stroke="#ffda69" stroke-width="1.5"/></marker></defs>${elements}</svg>`;

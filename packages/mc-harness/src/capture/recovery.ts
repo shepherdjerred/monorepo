@@ -22,8 +22,31 @@ type Driver = Pick<
   | "world"
   | "native"
   | "beginCleanup"
+  | "status"
 >;
 type Cleanup = CaptureRun["cleanup"][number];
+
+async function waitForFixtureTarget(
+  driver: Driver,
+  position: [number, number, number],
+): Promise<void> {
+  const deadline = performance.now() + 5000;
+  while (performance.now() < deadline) {
+    const state = await driver.status();
+    if (!state.connected)
+      throw new Error("Client disconnected during fixture cleanup");
+    const point = state.target["position"];
+    if (
+      state.target.kind === "block" &&
+      Array.isArray(point) &&
+      point.length === 3 &&
+      point.every((value, index) => value === position[index])
+    )
+      return;
+    await Bun.sleep(50);
+  }
+  throw new Error("Fixture sign is not under the settled crosshair");
+}
 
 async function removeFixture(
   driver: Driver,
@@ -54,8 +77,11 @@ async function removeFixture(
     box,
   );
   if (before.palette.every((block) => block === "minecraft:air")) return;
+  // Avoid activating a managed travel compass while removing a fixture sign.
+  await driver.native("hotbar", { slot: 0 });
   await driver.teleport(cleanup.standing, 0, 0);
   await driver.lookAt([x + 0.5, y + 0.5, zz + 0.5]);
+  await waitForFixtureTarget(driver, cleanup.position);
   // One swing cannot continue through the removed sign into its surroundings.
   await driver.bounded("attack");
   const deadline = performance.now() + 5000;

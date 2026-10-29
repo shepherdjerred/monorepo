@@ -25,6 +25,11 @@ import { createRecorder } from "./recording.ts";
 import type { CaptureContext } from "./define.ts";
 
 import { save, type CaptureRun } from "./model.ts";
+import { createLookAt } from "./camera.ts";
+
+function decimal(value: number): string {
+  return Number.isInteger(value) ? value.toFixed(1) : value.toString();
+}
 export async function createDriver(directory: string, run: CaptureRun) {
   const transport = new CaptureTransport(
     run.target,
@@ -128,7 +133,7 @@ export async function createDriver(directory: string, run: CaptureRun) {
         "Destination does not have verified safe ground and clearance",
       );
     await command(
-      `execute in ${world.key} run minecraft:tp ${run.name} ${x.toString()} ${y.toString()} ${zz.toString()} ${yaw.toString()} ${pitch.toString()}`,
+      `execute in ${world.key} run minecraft:tp ${run.name} ${[x, y, zz].map((value) => decimal(value)).join(" ")} ${yaw.toString()} ${pitch.toString()}`,
     );
     await waitFor(
       "verified client arrival",
@@ -159,19 +164,9 @@ export async function createDriver(directory: string, run: CaptureRun) {
       await save(directory, run);
     }
   };
-  const lookAt: CaptureContext["lookAt"] = async (position) => {
-    const state = await status();
-    if (!state.connected) throw new Error("Client disconnected");
-    const dx = position[0] - state.position[0],
-      dy = position[1] - state.position[1] - 1.62,
-      dz = position[2] - state.position[2];
-    await native("look", {
-      yaw: (Math.atan2(-dx, dz) * 180) / Math.PI,
-      pitch: (-Math.atan2(dy, Math.hypot(dx, dz)) * 180) / Math.PI,
-    });
-  };
+  const lookAt = createLookAt(status, native, waitFor);
   const messages = createMessageControls(native);
-  const use = async (sneak = false) => {
+  const interact = async (action: "use" | "attack", sneak = false) => {
     await messages.mark();
     if (sneak) {
       const held = (async () => {
@@ -187,15 +182,18 @@ export async function createDriver(directory: string, run: CaptureRun) {
       })();
       await waitFor(
         "sneak held",
-        (state) => state.connected && state.heldInputs.includes("sneak"),
+        (state) =>
+          state.connected &&
+          state.heldInputs.includes("sneak") &&
+          state["crouching"] === true,
       );
       try {
-        await bounded("use");
+        await bounded(action);
       } finally {
         await native("release-inputs");
         await held;
       }
-    } else await bounded("use");
+    } else await bounded(action);
   };
   const saveCapture = createCaptureSaver(directory, run);
   const recording = { active: false };
@@ -276,7 +274,8 @@ export async function createDriver(directory: string, run: CaptureRun) {
     command,
     teleport,
     lookAt,
-    use,
+    use: (sneak) => interact("use", sneak),
+    attack: (sneak) => interact("attack", sneak),
     action: async (action, args = {}) =>
       [
         "use",
@@ -388,6 +387,7 @@ export async function createDriver(directory: string, run: CaptureRun) {
         (state) =>
           state.connected &&
           state.fps > 0 &&
+          state["swinging"] === false &&
           typeof state["renderedFrames"] === "number" &&
           state["renderedFrames"] >= before.renderedFrames + 3,
       );

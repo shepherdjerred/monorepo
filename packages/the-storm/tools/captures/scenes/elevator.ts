@@ -5,10 +5,15 @@ export default defineCaptureScene({
   description: "Travel between two real elevator signs and restore both floors",
   bounds: { min: [0, -1, 0], max: [6, 6, 6] },
   staging: [-3, 0, -3],
-  inspectors: ["wilderness", "shops", "banks", "stargates"],
+  inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
     await context.track("mechanic", 2);
     await context.command(`minecraft:gamemode creative ${context.name}`);
+    await context.set(
+      context.at(0, 0, 0),
+      context.at(6, 6, 6),
+      "minecraft:air",
+    );
     await context.set(
       context.at(0, -1, 0),
       context.at(6, -1, 6),
@@ -43,11 +48,26 @@ export default defineCaptureScene({
         "",
         "",
       ]);
+      await context.feedback("Right-click it to ride to the next floor.");
     }
   },
   run: async (context) => {
+    await context.command(`minecraft:gamemode survival ${context.name}`);
+    await context.action("hotbar", { slot: 7 });
+    await context.teleport(context.at(-2.5, 0, -2.5), 0, 0);
+    await context.lookAt(context.at(3.5, 3.5, 2.5));
+    await context.action("clear-overlays");
+    await context.capture({
+      schema: 1,
+      name: "elevator-layout",
+      alt: "Two vertically aligned lift signs with a safe platform at each stop",
+      caption:
+        "Align the signs vertically and leave room to stand at each floor.",
+      annotations: [],
+    });
     await context.teleport(context.at(3.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(3.5, 1.5, 2.5));
+    await context.action("clear-overlays");
     await context.capture({
       schema: 1,
       name: "elevator-lower",
@@ -71,24 +91,50 @@ export default defineCaptureScene({
         name: "elevator-travel",
         alt: "Using the elevator to travel up and return to ground level",
         caption: "The signs move the player between aligned stops.",
-        annotations: [],
+        annotations: [
+          {
+            kind: "arrow",
+            from: [0.65, 0.28],
+            to: [0.5, 0.5],
+            text: "Upper stop",
+            atStep: "up-end",
+            startMs: 0,
+            endMs: 1800,
+          },
+          {
+            kind: "arrow",
+            from: [0.65, 0.28],
+            to: [0.5, 0.5],
+            text: "Back at ground",
+            atStep: "down-end",
+            startMs: 0,
+            endMs: 1800,
+          },
+        ],
       },
       async () => {
-        await context.use();
-        await context.waitFor(
-          "upper stop",
-          (state) =>
-            state.connected && Math.abs(state.position[1] - (base + 4)) < 0.2,
-        );
-        await context.lookAt(context.at(3.5, 5.5, 2.5));
-        await context.use();
-        await context.waitFor(
-          "ground stop",
-          (state) =>
-            state.connected && Math.abs(state.position[1] - base) < 0.2,
-        );
+        await context.step("up", async () => {
+          await context.use();
+          await context.waitFor(
+            "upper stop",
+            (state) =>
+              state.connected && Math.abs(state.position[1] - (base + 4)) < 0.2,
+          );
+          await context.lookAt(context.at(3.5, 5.5, 2.5));
+        });
+        await context.action("pan", { yaw: 0, pitch: 4, ticks: 40 });
+        await context.step("down", async () => {
+          await context.use();
+          await context.waitFor(
+            "ground stop",
+            (state) =>
+              state.connected && Math.abs(state.position[1] - base) < 0.2,
+          );
+          await context.lookAt(context.at(3.5, 1.5, 2.5));
+        });
+        await context.action("pan", { yaw: 0, pitch: 4, ticks: 40 });
       },
-      8,
+      6,
     );
   },
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
 import type { CaptureContext } from "./define.ts";
 import type { Presentation } from "#protocol/media.ts";
 
@@ -33,7 +34,7 @@ export function createRecorder(
     };
     try {
       await native("record-arm", {
-        name: presentation.name,
+        name: `${presentation.name.slice(0, 42)}-${randomUUID()}`,
         frames: seconds * 30,
       });
       await wait("READY");

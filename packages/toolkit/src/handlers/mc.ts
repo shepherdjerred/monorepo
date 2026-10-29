@@ -152,12 +152,18 @@ async function handleDaemon(args: string[]): Promise<void> {
   fail(`unknown daemon action "${action}"`);
 }
 
+function mapSpawnInput(value: string | undefined): unknown {
+  return value === undefined ? undefined : JSON.parse(value);
+}
+
 async function handleSandbox(args: string[]): Promise<void> {
   const [action = "", ...rest] = args;
   const { values, positionals } = parse(rest, {
     profile: { type: "string", default: "paper" },
     "artifact-file": { type: "string" },
     world: { type: "string", default: "flat" },
+    "map-directory": { type: "string" },
+    "map-spawn": { type: "string" },
     ttl: { type: "string" },
     keep: { type: "boolean", default: false },
     all: { type: "boolean", default: false },
@@ -166,10 +172,15 @@ async function handleSandbox(args: string[]): Promise<void> {
   switch (action) {
     case "up": {
       const profile = ProfileSchema.parse(values.profile);
+      const mapSpawn = mapSpawnInput(values["map-spawn"]);
       const request = SandboxCreateRequestSchema.parse({
         profile,
         ...(await publishedProfileInputs(profile, values["artifact-file"])),
         world: WorldKindSchema.parse(values.world),
+        ...(values["map-directory"] === undefined
+          ? {}
+          : { mapDirectory: values["map-directory"] }),
+        ...(mapSpawn === undefined ? {} : { mapSpawn }),
         ttlSeconds:
           values.ttl === undefined
             ? DEFAULT_SANDBOX_TTL_SECONDS

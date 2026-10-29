@@ -146,6 +146,10 @@ function driver(transport: FakeTransport): Parameters<typeof restoreScene>[3] {
       return Promise.resolve();
     },
     lookAt: () => Promise.resolve(),
+    status: () =>
+      Promise.reject(
+        new Error("This fixture does not contain native block cleanup"),
+      ),
     native: (action) => {
       transport.events.push(action);
       return Promise.resolve(undefined);

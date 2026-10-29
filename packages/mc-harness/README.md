@@ -218,6 +218,12 @@ footprint, snapshot, reason, and journal. Only the verified controlled player's
 presence is exempted for native interactions; other humans stay protected.
 WorldEdit and terrain restoration still refuse any player inside their box.
 
+`clear-overlays` clears visible chat and recipe notifications for a capture;
+the private `messages` history remains available for assertions. The isolated
+camera profile uses a larger interface scale. Scene screenshots wait for fresh
+rendered frames and a completed hand swing, and aimed interactions wait for a
+fresh raycast. Sneaking interactions wait for the player's crouching pose.
+
 ## Documentation capture
 
 Scenes default-export `defineCaptureScene` from `capture/define.ts`. Examples
@@ -242,6 +248,27 @@ toolkit mc capture export <run-id> --docs ts-mc-docs
 `site find` uses the player's ordinary `/rtp`, verifies wilderness, retains a
 schematic and four freshly rendered views, and returns a private site file.
 Choose natural terrain with safe ground at the scene's staging point.
+`site select` checks and scouts the player's current location instead of using
+RTP. It applies the same wilderness check and retains the same evidence.
+
+Stateful demonstrations can use a disposable copy of a real saved map:
+
+```bash
+toolkit mc sandbox up --profile storm-dev --provider docker --world real-map --map-directory /path/to/saved-map --map-spawn '[68.5,83,66.5]' --ttl 4h --json
+```
+
+Choose a verified safe spawn on that map. The local profile keeps the normal
+spawn safety checks, creates an isolated database, omits synthetic fixture
+plugins and outbound integrations, and reserves only the local spawn chunk.
+The loopback connection forwards a TEST-NET address through Paper's PROXY
+protocol, preserving the server's normal forwarded-address admission check.
+Its connection belongs to this daemon session; recreate the disposable copy
+after a daemon restart.
+Production claims and parcel ownership are not transplanted onto unrelated
+terrain. Import copies saved world content without player files or session
+locks, records its fingerprint privately, and never writes to the source.
+The source must use Paper's `dimensions/minecraft/overworld/region` layout.
+Flat/void rehearsals remain private QA; published screenshots need real terrain.
 The server must advertise the `capture` capability from the matching
 TheStorm/MCBridge artifact. Doctor fails explicitly for missing tools, launch
 prerequisites, server capability, or a disconnected/non-rendering client.
@@ -271,7 +298,8 @@ sandbox and owns its `CapturePreview` client. It requires the matching server
 capability and enabled gameplay/rollout prerequisites; published sandboxes'
 closed Flipt bootstrap does not prove flag-gated Stargate behavior. Rehearsal
 assets are private QA and are refused by docs export. Published media must
-come from completed live runs with verified restoration.
+come from completed live runs or fingerprinted real-map copies with verified
+restoration.
 
 Screenshots and short step sequences are the default. Use `context.record`
 for motion that explains the behavior. Its generic recorder allows ordinary

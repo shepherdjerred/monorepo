@@ -12,6 +12,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { assertNoPendingRun } from "./pending.ts";
+import { SandboxListResponseSchema } from "#protocol/ipc.ts";
 
 export async function runScene(
   directory: string,
@@ -76,6 +77,7 @@ async function recoverFailure(
   if (run.checkpoint === null) return;
   try {
     await restore();
+    run.state = "failed";
   } catch (error) {
     run.error += `; cleanup: ${String(error)}`;
     run.state = "needs-recovery";
@@ -91,6 +93,16 @@ async function captureScene(
   const { transport, context, status } = driver;
 
   run.server = driver.worldInfo;
+  if (run.target !== "live") {
+    const { sandboxes } = await transport.request(
+      SandboxListResponseSchema,
+      "GET",
+      "/sandboxes",
+    );
+    const target = sandboxes.find((sandbox) => sandbox.id === run.target);
+    if (target?.world === "real-map" && target.mapSource !== undefined)
+      run.mapSource = target.mapSource;
+  }
   const region = await transport.world(
     RegionReadResponseSchema,
     "region-read",
