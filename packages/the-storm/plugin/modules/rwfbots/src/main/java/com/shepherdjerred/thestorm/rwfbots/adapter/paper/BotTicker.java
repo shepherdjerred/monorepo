@@ -361,7 +361,10 @@ public final class BotTicker {
     return true;
   }
 
-  /** Speech must yield to committed landing control and nearby fuse work. */
+  /**
+   * Speech must yield to committed landing control and nearby fuse work: fuse work drops the line,
+   * a jump or fall only holds it until the landing ({@link BodyActivity#defer}).
+   */
   static boolean communicationPaused(BotBody bot, ReflexInput input, BodyActivity activity) {
     var fuse =
         switch (input.decision().option()) {
@@ -381,8 +384,8 @@ public final class BotTicker {
             .activeJump()
             .filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE)
             .isPresent();
-    if (working || airborne || input.self().traversal().fallDistance() > 0)
-      activity.cancel(bot.uuid());
+    if (working) activity.cancel(bot.uuid());
+    else if (airborne || input.self().traversal().fallDistance() > 0) activity.defer(bot.uuid());
     return activity.typing(bot.uuid());
   }
 

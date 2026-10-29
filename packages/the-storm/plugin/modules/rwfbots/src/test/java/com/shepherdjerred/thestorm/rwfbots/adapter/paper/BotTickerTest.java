@@ -83,6 +83,43 @@ final class BotTickerTest {
     assertThat(activity.busy).isFalse();
   }
 
+  @Test
+  void aJumpOrFallHoldsTheLineForTheLandingAndOnlyFuseWorkDropsIt() {
+    var self = combatant(1, RED, new Vec3(1.5, 3, 1.5));
+    var activity = new HoldingActivity();
+    var bot = bot();
+    assertThat(
+            BotTicker.communicationPaused(
+                bot, idle(self.withTraversal(self.traversal().withFallDistance(0.25))), activity))
+        .isFalse();
+    assertThat(activity.deferred).isEqualTo(1);
+    assertThat(activity.cancelled).isZero();
+  }
+
+  /** Records how speech was told to yield; deferring holds the line without typing. */
+  private static final class HoldingActivity implements BodyActivity {
+    private int deferred;
+    private int cancelled;
+    private boolean held;
+
+    @Override
+    public boolean typing(UUID uuid) {
+      return !held;
+    }
+
+    @Override
+    public void cancel(UUID uuid) {
+      cancelled++;
+      held = true;
+    }
+
+    @Override
+    public void defer(UUID uuid) {
+      deferred++;
+      held = true;
+    }
+  }
+
   private static BotBody bot() {
     return new BotBody(
         new UUID(0, 1),

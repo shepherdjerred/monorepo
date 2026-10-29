@@ -65,6 +65,10 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   static final String TEAM_MARK = "●";
 
   private static final Duration IDLE_EVERY = Duration.ofSeconds(1);
+
+  /** How long a deferred call waits before trying again: one body tick. */
+  private static final Duration LANDING = Duration.ofMillis(50);
+
   private static final long CHAT_SALT = 0x63686174L;
 
   /** The countdown's last seconds a bot may remark on. */
@@ -172,6 +176,35 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   public boolean typingUrgently(UUID uuid) {
     var speech = speeches.get(uuid);
     return speech != null && speech.urgent() && typing(uuid);
+  }
+
+  /**
+   * An urgent call waits out a jump or fall and is typed once the bot lands, as a player would: the
+   * think loop calls each objective moment once, so a call dropped mid-air was never made (a
+   * planter leaping on its way lost its plant call). Anything else is dropped.
+   */
+  @Override
+  public void defer(UUID uuid) {
+    var speech = speeches.get(uuid);
+    if (speech == null) return;
+    if (!speech.urgent()) {
+      cancel(uuid);
+      return;
+    }
+    var now = parts.time().instant();
+    if (now.isBefore(speech.starts())) return;
+    var typing = Duration.between(speech.starts(), speech.ends());
+    var restart = now.plus(LANDING);
+    speeches.put(
+        uuid,
+        new Speech(
+            speech.line(),
+            restart,
+            restart.plus(typing),
+            speech.lifeEpoch(),
+            speech.report(),
+            speech.callout(),
+            speech.indicator()));
   }
 
   @Override

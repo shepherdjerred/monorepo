@@ -71,6 +71,9 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 public final class RwfBotsHarness implements AutoCloseable {
   public static final FilterSettings CHAT_FILTER = new FilterSettings(256, 4, 30);
 
+  /** Seeds the module's random generator, so every run drafts the same bots. */
+  static final long MODULE_SEED = 0x7277_6662_6F74L;
+
   public static final NavArtifact NAV = SyntheticMap.bake();
 
   /** The synthetic map's west half baked as a lobby: the bots' lobby places on its open floor. */
@@ -279,7 +282,10 @@ public final class RwfBotsHarness implements AutoCloseable {
                   services,
                   directory,
                   clock,
-                  RandomGenerator.of("L64X128MixRandom"),
+                  // Seeded: the module's generator drafts the bots' personalities, and an
+                  // unseeded draft gave each run different bots with different movement.
+                  java.util.random.RandomGeneratorFactory.<RandomGenerator>of("L64X128MixRandom")
+                      .create(MODULE_SEED),
                   plugin.getComponentLogger(),
                   com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
         };
