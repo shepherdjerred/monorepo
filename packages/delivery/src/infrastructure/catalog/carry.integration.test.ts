@@ -585,6 +585,37 @@ test("a rebind right after reconcile moves the carried selection to the declared
   });
 });
 
+test("a deploy right after reconcile runs the carried selection under the declared recipe", async () => {
+  await seedV1Site();
+  await context.delivery.reconcileCatalog(
+    await catalogDocument(),
+    testOperator,
+    V1_CATALOG_MIGRATION,
+  );
+  const carried = await carriedSet("sjer-red");
+  const env = await context.cluster.database.environment.findUniqueOrThrow({
+    where: { id: "sjer-red/prod" },
+  });
+  // The carried set names catalog components that only the declared recipe
+  // selects; the pre-catalog recipe stays on the carry deployment.
+  const deploy = await context.delivery.createDeployment(
+    {
+      requestId: "sjer-red/deploy-carried",
+      environmentId: "sjer-red/prod",
+      expectedGeneration: env.generation,
+      kind: "deploy",
+      versionSetRevisionId: carried.id,
+    },
+    testOperator,
+  );
+  expect(deploy).toMatchObject({
+    serviceId: "sjer-red",
+    versionSetRevisionId: carried.id,
+    pipelineRevisionId: "sjer-red/1",
+    configurationId: "sjer-red/1",
+  });
+});
+
 test("two v1 components becoming one catalog component refuse the reconcile", async () => {
   await seedV1Site([
     {
