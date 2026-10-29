@@ -26,8 +26,6 @@ bun run test:e2e
 Tests start isolated disposable PostgreSQL clusters using the repository's
 mise-managed `initdb` and `pg_ctl`. They require no production database or
 credentials and do not skip database verification when binaries are missing.
-Recovery tests also use the matching `pg_dump` and `pg_restore` tools to restore
-an independent cluster and verify request, outbox, evidence, and lock identities.
 `bun run migrate:deploy` applies committed Prisma migrations using `DATABASE_URL`.
 
 The hosted API keeps its existing pod serving while one replacement runs
@@ -42,8 +40,7 @@ The Playwright harness supplies a separate real proxy and disposable database
 for local interaction tests: `e2e/server.ts` on port 17353 for the release
 specs, and `e2e/model-server.ts` on port 17355 for `model.spec.ts`. The model
 harness reconciles its own catalog and records Arcade's releases, a
-configuration rebind, monitor observations, a restore hold and a quarantined
-deploy through Delivery's own APIs (`e2e/model.ts`), plus a tofu stack waiting
+configuration rebind, monitor observations and a quarantined deploy through Delivery's own APIs (`e2e/model.ts`), plus a tofu stack waiting
 at its approve step and archives for an operator-run stack and a channel
 (`e2e/model-plan.ts`), so its pages read the real model routes. Setting
 `DELIVERY_HARNESS_MACHINE_CREDENTIALS` to a JSON array of disposable machine
@@ -65,7 +62,7 @@ TanStack Router definitions in `src/client/router.tsx`:
 | `/pipelines/:id/executions`    | Every build or composed version set and where it deployed    |
 | `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts     |
 | `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval |
-| `/environments/:id`            | Restore hold, selection, monitor, rollback candidates, form  |
+| `/environments/:id`            | Selection, monitor, rollback candidates, form                |
 | `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
 | `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones |
 | `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles |
@@ -140,8 +137,7 @@ sending and each response before use.
   selection, previous accepted and restored deployments, the approval queue
   item, the recovery-intent and attestation requests, the catalog reconcile
   result and state, the record each catalog reconcile audits, service
-  retirement, the restore-hold settlement, and the reconcile-after-restore
-  comparison. `MonitorStatusSchema` carries the declared monitor and the
+  retirement. `MonitorStatusSchema` carries the declared monitor and the
   latest observation so evidence reads against its threshold. The selection
   view names the declared recipe's kind, and the hub's environment detail
   names the release kind: that of the recipe a release freezes, the accepted
@@ -149,15 +145,9 @@ sending and each response before use.
   `releaseKindOf` reads the stored kind as admission does, so a v1 `manual`
   pipeline is a `deploy` although the selection view normalises it to
   `operator-run`.
-- Cold start (section 6, X7): `ColdStartSnapshotSchema` records each
-  environment's accepted selection with its set revision's artifacts, and
-  `COLD_START_SNAPSHOT` names the R2 endpoint and object the snapshot writer
-  puts and `toolkit deploy snapshot` reads. `renderApplication`
-  (`model/application-render.ts`) is the one rendering of a
-  `kubernetes-application` recipe into its ArgoCD Application for one
-  environment's selection; the executor writes it, and
-  `toolkit deploy render-application` prints it with the sync a cold start
-  needs.
+- Application render: `renderApplication` (`model/application-render.ts`)
+  is the one rendering of a `kubernetes-application` recipe into its ArgoCD
+  Application for one environment's selection; the executor writes it.
 - Deployment and approval (4.12, 4.13): `CreateDeploymentV2Schema` with
   `deploy`, `promote`, `rollback` (naming `selectionDeploymentId`), `rebind`,
   `retire-host`, `channel-publish` and `operator-run`, plus the `override`
@@ -196,8 +186,6 @@ gives each model route's scope and toolkit command.
 | Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                           |
 | Attest an operator-run stage                                    | `POST /deployments/:id/attestations`                                  |
 | Retire a service                                                | `POST /services/:id/retire`                                           |
-| Compare record, supplied cold-start snapshot and live targets   | `POST /reconcile-after-restore`                                       |
-| Accept the live state of a restore-held environment             | `POST /environments/:id/restore-hold/accept`                          |
 | Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`              |
 | One change, traced from build or set revision                   | `GET /builds/:id`, `GET /versions/:id/trace`                          |
 | Paginated deployments, builds and audit activity                | `GET /deployments`, `GET /builds`, `GET /activity`                    |
@@ -206,7 +194,7 @@ gives each model route's scope and toolkit command.
 | Committed change stream                                         | `GET /events`                                                         |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
-`/replication/pending`, `/artifacts/replication`, `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
+`/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
 `/monitors/watching`, `/deployments/:id/monitor/observations`,
 and deployment `claim`, `stages`, `finish`, and `orphan` operations. Workflow IDs come from the shared
 `deliveryWorkflowId` helper.
@@ -335,12 +323,7 @@ Environment variables are bootstrap and credentials: `DATABASE_URL`, `HOST`,
 `WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`,
 `ARGOCD_RECOVERY_TOKEN`, and the optional read-only `DELIVERY_GH_TOKEN`.
 `ARGOCD_RECOVERY_TOKEN` is a read-only ArgoCD credential for the hub's runtime
-panel only; no settlement reader uses it. The API holds no R2 credential:
-`POST /api/v1/reconcile-after-restore` takes the cold-start snapshot, its
-writer's `fingerprint` metadata and its immutable copy's key from the operator,
-who reads `latest.json` and that copy with their own credential
-(`restoreRequest` in the model contract). The API checks the fingerprint and
-the key before comparing.
+panel only; no settlement reader uses it. The API holds no R2 credential.
 
 Recovery never reads ArgoCD through its server or with the executor's
 credential. The API's independent reader runs as the
@@ -725,17 +708,9 @@ string excluded, so CI can retain an unchanged chart instead of republishing it
 under a new version.
 
 Bytes in self-hosted stores (`s3://delivery-artifacts/`,
-`s3://storm-forum-releases/`) are replicated off-cluster before their build is
-verified. The executor lists `GET /api/v1/replication/pending`, copies each
-object to the R2 backup bucket through the SeaweedFS backup package (the same
-object key the daily snapshot uses, so the next snapshot reuses it), and records
-the receipt with `POST /api/v1/artifacts/replication`. `qualify` answers
-`pending` for a build whose produced archive lacks a receipt; images and charts
-in external registries rely on registry retention, an accepted risk. The copy
-runs on the Temporal `backup` worker, which runs one Activity at a time: while a
-daily snapshot holds it, each dispatch tick reports the replication as failed
-and retries on the next tick, so affected builds stay `pending` until the
-snapshot ends.
+`s3://storm-forum-releases/`) are not copied elsewhere. Scheduled Velero
+backups are the only backup; images and charts in external registries rely on
+registry retention, an accepted risk.
 
 Forum adoption preserves the original runtime's genuine CI/source identity and
 the original licensed archive's digest and producer revision. When that immutable
@@ -777,9 +752,8 @@ stores it content-addressed at
 `s3://delivery-artifacts/sources/<owner>/<repo>/<sha256>.tar.gz` and registers it with
 the commit as the artifact version and the tag in its origin. The server
 resolves the tag to its commit on GitHub, requires that commit, and requires
-the commit's tarball to hash to the digest. The build stays pending until the
-stored tarball's off-cluster replica is recorded (PC1), and a later acquisition
-of the same original verifies it. A recipe whose Application has a Git source
+the commit's tarball to hash to the digest, and a later acquisition of the
+same original reuses it. A recipe whose Application has a Git source
 binds that archive's version, an exact commit, as `targetRevision`, so ArgoCD
 syncs only that commit. For charts and images, the artifact URI is the upstream location; nothing new is mirrored. The
 Minecraft chart stays mirrored into ChartMuseum because the registered
@@ -832,21 +806,8 @@ The activated homelab service includes a matching ServiceMonitor and alerts
 for unavailability, delayed dispatch and required independent recovery.
 
 PostgreSQL is the permanent record and audit source; Temporal owns durable
-execution. On each acceptance of a bootstrap-chain environment, the backup
-worker writes the cold-start snapshot of every environment's accepted selection
-to `s3://homelab/delivery-cold-start/latest.json`, with an immutable copy at
-`delivery-cold-start/<timestamp>-<catalogRevision>.json` and the writer's
-fingerprint as object metadata ([X7](docs/model.md#9-decisions)). The snapshot
-sets observed selections only. During a cold start,
-`toolkit deploy render-application` renders an environment's Application from
-the snapshot and the catalog document. After a restore, the operator reads both
-copies with their own R2 credential and supplies them to
-`POST /api/v1/reconcile-after-restore`, which compares the record, the snapshot
-and each live target. Each mismatch holds automatic deployment until an
-operator accepts the live state through
-`POST /api/v1/environments/:id/restore-hold/accept` or a deployment is accepted
-there. The procedure is
-[Restore the Delivery record](../docs/wiki/src/content/docs/how-to/restore-the-delivery-record.md).
+execution. Scheduled Velero backups of the database volumes are the only
+backup of the record; there is no separate snapshot, replica or restore tool.
 Changes to the Delivery and Temporal PostgreSQL clusters are `operator-run`
 deployments of `delivery-data` and `temporal-data`, never part of an image or
 chart deployment.

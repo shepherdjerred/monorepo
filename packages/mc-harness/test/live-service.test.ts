@@ -18,7 +18,6 @@ import {
 
 const sts = await statefulSetFixture();
 const pod = await liveFixture("pod.json");
-const backups = await liveFixture("backups.json");
 
 function logPage(start: number, count = 500, truncated = false) {
   return {
@@ -130,7 +129,6 @@ class FakeLiveBridge extends BridgeClient {
 type Cluster = {
   sts: unknown;
   pod: unknown;
-  backups: unknown;
   calls: string[][];
 };
 
@@ -153,12 +151,6 @@ function clusterRunner(cluster: Cluster): KubectlRunner {
           )
         : Promise.resolve({ stdout: JSON.stringify(cluster.pod), stderr: "" });
     }
-    if (verb === "get" && kind === "backups.velero.io") {
-      return Promise.resolve({
-        stdout: JSON.stringify(cluster.backups),
-        stderr: "",
-      });
-    }
     return verb === "create"
       ? Promise.resolve({ stdout: "created", stderr: "" })
       : Promise.reject(new Error(`unexpected kubectl ${args.join(" ")}`));
@@ -168,7 +160,7 @@ function clusterRunner(cluster: Cluster): KubectlRunner {
 async function setup(
   options: { token?: string; cluster?: Partial<Omit<Cluster, "calls">> } = {},
 ) {
-  const cluster: Cluster = { sts, pod, backups, calls: [], ...options.cluster };
+  const cluster: Cluster = { sts, pod, calls: [], ...options.cluster };
   const bridge = new FakeLiveBridge();
   const journal = new LiveJournal(
     await mkdtemp(path.join(os.tmpdir(), "live-svc-")),
@@ -514,18 +506,7 @@ describe("live target writes", () => {
   });
 });
 
-describe("live backups and journal", () => {
-  it("refuses to create a harness Velero backup", async () => {
-    const { ctx, cluster } = await setup();
-    const { status, json } = await post(ctx, "/live/backup", {
-      reason: "before regen",
-      wait: false,
-    });
-    expect(status).toBe(410);
-    expect(String(json["error"])).toMatch(/Scheduled Velero backups/u);
-    expect(cluster.calls.some((args) => args.includes("create"))).toBe(false);
-  });
-
+describe("live journal", () => {
   it("lists the journal since a time", async () => {
     const { ctx } = await setup();
     await post(

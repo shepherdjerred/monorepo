@@ -24,7 +24,6 @@ import { ciIdentity } from "#infrastructure/qualification.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { registerWorkerRoutes } from "./worker-routes.ts";
 import { registerSelectionRoutes } from "./selection-routes.ts";
-import { registerColdStartRoutes } from "./cold-start-routes.ts";
 import { retryRequest } from "#infrastructure/selection/request.ts";
 import {
   approvalById,
@@ -35,7 +34,6 @@ import {
   activeEnvironmentIds,
   requireAdmitting,
 } from "#infrastructure/delivery-selection.ts";
-import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import type { WorkerRecoveryReaders } from "#infrastructure/worker-pool/recovery-observation.ts";
 import { registerPlatformRoutes } from "./platform-routes.ts";
 import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
@@ -54,7 +52,6 @@ import type { InspectMinecraftRecovery } from "#infrastructure/minecraft-recover
 import { deliveryMetrics } from "./metrics.ts";
 import { registerArtifactRoutes } from "./artifact-routes.ts";
 import { registerQualificationRoutes } from "./qualification-routes.ts";
-import { registerReplicationRoutes } from "./replication-routes.ts";
 import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
 import { registerOwnershipRoute } from "./ownership-route.ts";
 import { registerRecoveryRoute } from "./recovery-route.ts";
@@ -71,8 +68,6 @@ type Options = {
   ciOrigin: string;
   ciRepositoryId: number;
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
-  /** Independent Application readback for reconcile-after-restore (D5). */
-  readApplication?: ApplicationReader;
   /** Independent readers that observe a pending worker recovery (D5, I2). */
   workerRecoveryReaders?: WorkerRecoveryReaders;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
@@ -107,7 +102,6 @@ export function createApp(options: Options) {
       maxSize:
         c.req.path === "/api/v1/platform/plans" ||
         c.req.path === "/api/v1/catalog/reconcile" ||
-        c.req.path === "/api/v1/reconcile-after-restore" ||
         /^\/api\/v1\/platform-recovery\/[^/]+\/plan$/.test(c.req.path)
           ? 16 * 1024 * 1024
           : 1024 * 1024,
@@ -144,7 +138,7 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|orphan|lease|handoff|successor|monitor\/observations|cold-start|drift|attestations)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|orphan|lease|handoff|successor|monitor\/observations|drift|attestations)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
@@ -164,12 +158,7 @@ export function createApp(options: Options) {
         // Registering definitions has no effect on a running system (C3);
         // the cutover reconciles the catalog before writes resume.
         c.req.path === "/api/v1/catalog/reconcile" ||
-        // A restore runs while writes are paused; it only sets or settles
-        // holds and never moves an accepted pointer (section 6).
-        c.req.path === "/api/v1/reconcile-after-restore" ||
-        /^\/api\/v1\/environments\/[^/]+\/(?:restore-hold\/accept|removed)$/.test(
-          c.req.path,
-        );
+        /^\/api\/v1\/environments\/[^/]+\/removed$/.test(c.req.path);
       const settlesStage = await settlesExistingStage(
         options.delivery,
         c.req.raw,
@@ -198,7 +187,6 @@ export function createApp(options: Options) {
     options.inspectMinecraftRecovery,
   );
   registerQualificationRoutes(app, delivery, options.qualifyBuild);
-  registerReplicationRoutes(app, delivery);
   registerArtifactRoutes(app, delivery, {
     repositoryId: options.ciRepositoryId,
     ...(options.upstreamFetch === undefined
@@ -259,11 +247,6 @@ export function createApp(options: Options) {
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
   registerSelectionRoutes(app, delivery, options.config.writesEnabled);
-  registerColdStartRoutes(app, delivery, {
-    ...(options.readApplication === undefined
-      ? {}
-      : { readApplication: options.readApplication }),
-  });
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {

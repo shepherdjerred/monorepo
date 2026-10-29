@@ -904,16 +904,6 @@
       ]
     },
     {
-      "package": "@shepherdjerred/seaweedfs-backup",
-      "directory": "packages/seaweedfs-backup",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["test"]
-        }
-      ]
-    },
-    {
       "package": "@shepherdjerred/temporal",
       "directory": "packages/temporal",
       "steps": [
@@ -998,8 +988,6 @@
             "test/discord",
             "test/mc",
             "scripts",
-            "src/handlers/backup.test.ts",
-            "src/lib/backup/delivery-replication.test.ts",
             "test-integration/catalog.integration.test.ts"
           ]
         }

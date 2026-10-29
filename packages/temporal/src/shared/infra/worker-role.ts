@@ -3,7 +3,6 @@ import { z } from "zod";
 export const WorkerRoleSchema = z.enum([
   "all",
   "agent",
-  "backup",
   "billing",
   "control",
   "delivery",

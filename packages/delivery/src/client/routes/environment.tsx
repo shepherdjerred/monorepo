@@ -71,7 +71,6 @@ function EnvironmentPage() {
         <RuntimePanel environmentId={environment.id} />
       </div>
       <EnvironmentModel
-        restoreHold={detail.restoreHold}
         environmentId={environment.id}
         permitted={permitted}
         onDeployment={open}

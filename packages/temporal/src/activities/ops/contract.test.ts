@@ -273,7 +273,6 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
       probeCertificates: [sample(5 * 86_400, { instance: "https://sjer.red" })],
       filesystems: [sample(0.95, { instance: "torvalds", mountpoint: "/var" })],
       zpools: [sample(0.85, { zpool_name: "tank" })],
-      seaweedfsBackups: [sample(48 * 3600, { cadence: "daily" })],
       veleroBackups: [sample(40 * 3600, { schedule: "nightly" })],
       cpu: [sample(0.4)],
       memory: [sample(0.6)],

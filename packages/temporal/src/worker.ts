@@ -58,7 +58,6 @@ import {
 import { createQueueWorker } from "./worker-factory.ts";
 import {
   restoreGlitterCorpusMetricsAfterWorkerStart,
-  restoreSeaweedFsMetricsAfterWorkerStart,
   restoreVeleroR2MetricsAfterWorkerStart,
 } from "./observability/restore-startup-metrics.ts";
 import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
@@ -444,9 +443,6 @@ async function main(): Promise<void> {
   const workerRuns = workers.map((roleWorker) => roleWorker.run());
   if (roleContract.restoresGlitterCorpusMetrics) {
     void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
-  }
-  if (roleContract.restoresSeaweedFsBackupMetrics) {
-    void restoreSeaweedFsMetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (roleContract.restoresVeleroR2AuditMetrics) {
     void restoreVeleroR2MetricsAfterWorkerStart(() => shutdownStarted);

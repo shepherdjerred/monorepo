@@ -26,7 +26,7 @@ import {
   assertNoReservedStaticFiles,
 } from "./static-site-effects.ts";
 import type { StaticActivationReceipt } from "./static-site-effects.ts";
-import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { withActivityHeartbeat } from "#activities/activity-heartbeat.ts";
 import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import { verifyPublicStaticEntrypoint } from "./static-site-public.ts";
 import {
@@ -190,7 +190,7 @@ export async function withStaticActivityRuntime<T>(
   // A model step's bucket sync, receipt and purge stop once its lease is
   // lost (D7); native repair holds no lease and keeps the cancellation.
   const context = effectContext();
-  return withBackupActivityHeartbeat(
+  return withActivityHeartbeat(
     context,
     ({ signal }) =>
       operation({

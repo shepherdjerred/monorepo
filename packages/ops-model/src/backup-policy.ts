@@ -31,17 +31,3 @@ export function backupMonitoringAnnotations(policy: {
     [BACKUP_MONITORING_ANNOTATIONS.severity]: policy.severity,
   };
 }
-
-/** Matches the SeaweedFS PrometheusRule windows and five-minute pending time. */
-export const SEAWEEDFS_BACKUP_FRESHNESS = {
-  "six-hourly": {
-    warningSeconds: 8 * 3600,
-    errorSeconds: 8 * 3600,
-    alertForSeconds: 300,
-  },
-  daily: {
-    warningSeconds: 36 * 3600,
-    errorSeconds: 48 * 3600,
-    alertForSeconds: 300,
-  },
-} as const;

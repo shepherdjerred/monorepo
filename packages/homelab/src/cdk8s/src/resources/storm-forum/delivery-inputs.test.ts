@@ -15,11 +15,6 @@ const release = {
   bundleKey: "releases/legacy.zip",
   releaseId: "c".repeat(12),
   trustedConnectorCidr: "10.244.0.0/24",
-  preUpgradeBackup: {
-    bundleSha256: "d".repeat(64),
-    xenforoVersion: "2.3.13",
-    runtimeImage: `docker.io/shepherdjerred/storm-forum@sha256:${"e".repeat(64)}`,
-  },
 };
 
 async function render(values: Record<string, unknown>) {
@@ -75,7 +70,7 @@ describe("forum selected release rendering", () => {
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain("Delivery requires");
   });
-  it("renders exact selected artifacts and the previous accepted backup source while retaining safety gates", async () => {
+  it("renders exact selected artifacts while retaining safety gates", async () => {
     const result = await render({
       image: `docker.io/shepherdjerred/storm-forum@sha256:${"f".repeat(64)}`,
       releaseId: "0123456789abcdef",
@@ -92,8 +87,7 @@ describe("forum selected release rendering", () => {
       `docker.io/shepherdjerred/storm-forum@sha256:${"f".repeat(64)}`,
     );
     expect(result.stdout).not.toContain("releases/legacy.zip");
-    expect(result.stdout).toContain("BACKUP_SOURCE_XENFORO_VERSION");
-    expect(result.stdout).toContain("2.3.12");
+    expect(result.stdout).not.toContain("BACKUP_");
     expect(result.stdout).toContain("backoffLimit: 0");
     expect(result.stdout).toContain("activeDeadlineSeconds: 3600");
     expect(result.stdout).toContain("ADMIN_PASSWORD");

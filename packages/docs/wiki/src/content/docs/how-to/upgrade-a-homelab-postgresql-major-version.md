@@ -44,10 +44,6 @@ and deploy its admission rules through the repository release workflow first.
 The disposable copy is excluded from new backups; the source remains included.
 Do not disable admission to make a restore pass.
 
-[Delivery's catalog recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md#delivery-execution)
-uses this step without the upgrade. Its source and restore volumes, and the
-restore namespace's protections, are defined there.
-
 ### Restore the volume
 
 Save this Restore as `restore.yaml` and replace its placeholders.
@@ -232,7 +228,7 @@ starts. Each setting has one job:
 | `listen_addresses=''`                                  | The server opens no TCP port. Only `kubectl exec` reaches it.                                                                                                                                       |
 | `unix_socket_directories=/tmp`                         | Spilo's entrypoint prepares the configured socket directory, and this Pod skips the entrypoint.                                                                                                     |
 | `ssl=off`                                              | The restored configuration names certificates that Spilo's entrypoint generates. They do not exist here.                                                                                            |
-| `archive_mode=off`                                     | The copy must never ship WAL to production's archive.                                                                                                                                               |
+| `archive_mode=off`                                     | The copy archives no WAL.                                                                                                                                                                           |
 | `default_transaction_read_only=on`                     | Checks cannot write to the copy by accident.                                                                                                                                                        |
 | `logging_collector=off`, `log_destination=stderr`      | Recovery and shutdown appear in `kubectl logs`.                                                                                                                                                     |
 | `timescaledb.telemetry_level=off`                      | TimescaleDB otherwise sends telemetry over the network.                                                                                                                                             |

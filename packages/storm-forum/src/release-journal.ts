@@ -5,7 +5,7 @@ import {
   ForumStepAcknowledgementSchema,
   type ForumStepAcknowledgement,
 } from "@shepherdjerred/ops-model/forum-recovery.ts";
-import { SnapshotSourceSchema } from "./storage.ts";
+import { ReleaseSourceSchema } from "./storage.ts";
 
 const Step = z.enum([
   "install",
@@ -22,13 +22,16 @@ export const ForumReleaseJournalSchema = z.strictObject({
   schema: z.literal("storm-forum-release/v1"),
   stage: z.enum(["beta", "prod"]),
   owner: z.uuid(),
-  candidate: SnapshotSourceSchema,
-  original: SnapshotSourceSchema.nullable(),
+  candidate: ReleaseSourceSchema,
+  /** Legacy: journals written before Velero became the only backup; new journals record null. */
+  original: ReleaseSourceSchema.nullable(),
   installationObserved: z.boolean(),
+  /** Legacy pre-upgrade snapshot key; new journals record null. */
   originalSnapshot: z.string().nullable(),
   phase: z.enum([
     "prepared",
     "maintenance",
+    /** Legacy phase of the removed pre-upgrade snapshot. */
     "snapshot",
     "ready",
     "mutating",
@@ -92,7 +95,7 @@ export async function acknowledgeForumReleaseStep(
 export async function reuseCompletedForumRelease(
   input: {
     journal: ForumReleaseJournal;
-    candidate: z.infer<typeof SnapshotSourceSchema>;
+    candidate: z.infer<typeof ReleaseSourceSchema>;
     stage: "beta" | "prod";
   },
   effects: { unlocked: () => Promise<boolean>; verify: () => Promise<void> },
@@ -136,11 +139,9 @@ export function forumResumeStep(journal: ForumReleaseJournal): number {
     throw new Error("Forum terminal journal lacks every completed native step");
   if (journal.phase === "mutating" && !REPEATABLE.has(journal.step ?? ""))
     throw new Error(
-      `Forum ${journal.step ?? "unknown"} may have partially mutated data; retain the original backup and maintenance owner for reviewed native repair`,
+      `Forum ${journal.step ?? "unknown"} may have partially mutated data; retain the maintenance owner for reviewed native repair`,
     );
   if (["prepared", "maintenance", "snapshot"].includes(journal.phase)) return 0;
-  if (journal.original !== null && journal.originalSnapshot === null)
-    throw new Error("Forum recovery has no committed original backup");
   if (!journal.installationObserved)
     throw new Error(
       "Forum recovery has not independently observed the original installation",
@@ -193,7 +194,7 @@ export async function writeForumReleaseJournal(
         prior.originalSnapshot !== next.originalSnapshot)
     )
       throw new Error(
-        "Forum recovery cannot replace the original owner, candidate or committed backup",
+        "Forum recovery cannot replace the original owner, candidate or recorded original",
       );
     if (
       prior.completed.some((step, index) => next.completed[index] !== step) ||

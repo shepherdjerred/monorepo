@@ -30,23 +30,15 @@ import {
   CatalogStateSchema,
   DeploymentV2Schema,
   EnvironmentSelectionSchema,
-  ReconcileAfterRestoreRequestSchema,
-  ReconcileAfterRestoreSchema,
   RecoveryIntentRequestSchema,
-  RestoreHoldSettledSchema,
   RetireServiceRequestSchema,
   ServiceLifecycleViewSchema,
   type AttestationRequest,
   type ApproveTofuPlan,
-  type ReconcileAfterRestoreRequest,
   type RecoveryIntentRequest,
   type RetireServiceRequest,
 } from "./route-contract.ts";
 import { RollbackCandidatesSchema } from "./selection-contract.ts";
-import {
-  SettleRestoreHoldSchema,
-  type SettleRestoreHold,
-} from "./cold-start-contract.ts";
 
 /** Request bodies as callers write them, before schema defaults apply. */
 export type CreateDeploymentV2Request = z.input<
@@ -181,20 +173,6 @@ export function modelRoutes(request: ReturnType<typeof createRequester>) {
         `/services/${segment(serviceId)}/retire`,
         ServiceLifecycleViewSchema,
         checked(RetireServiceRequestSchema, input),
-      ),
-    /** Admin: accept the live state an environment was held on after a restore. */
-    settleRestoreHold: (environmentId: string, input: SettleRestoreHold) =>
-      request(
-        environmentPath(environmentId, "restore-hold/accept"),
-        RestoreHoldSettledSchema,
-        checked(SettleRestoreHoldSchema, input),
-      ),
-    /** Admin: compare record, cold-start snapshot and live target; hold mismatches. */
-    reconcileAfterRestore: (input: ReconcileAfterRestoreRequest) =>
-      request(
-        "/reconcile-after-restore",
-        ReconcileAfterRestoreSchema,
-        checked(ReconcileAfterRestoreRequestSchema, input),
       ),
   };
 }

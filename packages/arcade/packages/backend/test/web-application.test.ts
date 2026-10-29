@@ -39,7 +39,6 @@ async function harness(moderator = async (_guild: string) => false) {
   for (const definition of Object.values(games))
     modules.set(definition.id, {
       definition,
-      saveEntries: [],
       create: () => ({
         start: async () => {
           /* no external runtime in HTTP tests */

@@ -17,10 +17,6 @@ function signals(schedules: VeleroScheduleStatus[], age?: number) {
   return backupFreshnessSignals({
     now,
     schedules,
-    seaweedfs: [
-      { metric: { cadence: "daily" }, value: 3600 },
-      { metric: { cadence: "six-hourly" }, value: 3600 },
-    ],
     velero:
       age === undefined
         ? []

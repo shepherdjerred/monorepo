@@ -8,7 +8,8 @@ import {
   replayFixture,
 } from "#workflows/testing/delivery-workers.ts";
 
-const coldStart = {
+/** What settlement returned while the retired cold-start snapshot existed. */
+const recordedColdStart = {
   deploymentId: "deployment-7",
   fingerprint: `sha256:${"c".repeat(64)}`,
   snapshot: { schema: "delivery-cold-start/v1" },
@@ -42,7 +43,22 @@ function modelActivities(calls: string[], failStep?: string) {
     },
     settleDeliveryModel: () => {
       calls.push("settle");
-      return coldStart;
+      return null;
+    },
+  };
+}
+
+/** Model activities as they ran while settlement returned a snapshot to write. */
+function recordedColdStartActivities(calls: string[]) {
+  return {
+    ...modelActivities(calls),
+    runDeliveryModelStep: (_id: string, key: string) => {
+      calls.push(key);
+      return { waiting: false };
+    },
+    settleDeliveryModel: () => {
+      calls.push("settle");
+      return recordedColdStart;
     },
     recordDeliveryColdStart: (_id: string, receipt: { uri: string }) => {
       calls.push(`record:${receipt.uri}`);
@@ -50,14 +66,8 @@ function modelActivities(calls: string[], failStep?: string) {
   };
 }
 
-/** A settled acceptance that writes its cold-start snapshot, in order. */
-const settledWithSnapshot = [
-  "accept",
-  "finish:succeeded",
-  "settle",
-  `write:${coldStart.fingerprint}`,
-  "record:s3://backup/delivery/cold-start/c.json",
-];
+/** A settled acceptance, in order; it writes no snapshot. */
+const settled = ["accept", "finish:succeeded", "settle"];
 
 /** Replays a recorded history against the production delivery Workflows. */
 async function replayDelivery(
@@ -83,24 +93,17 @@ function successorActivities(calls: string[]) {
   };
 }
 
-/** The backup worker's cold-start write, failing its first `failures` attempts. */
+/** The retired backup queue's cold-start write, as recorded histories ran it. */
 async function backupWorker(
   environment: TestWorkflowEnvironment,
   calls: string[],
-  failures = 0,
 ) {
-  let attempts = 0;
   return Worker.create({
     connection: environment.nativeConnection,
     namespace: "default",
-    taskQueue: TASK_QUEUES.BACKUP,
+    taskQueue: "backup",
     activities: {
-      writeDeliveryColdStart: (input: typeof coldStart) => {
-        attempts += 1;
-        if (attempts <= failures) {
-          calls.push("write-failed");
-          throw new Error("R2 is unavailable");
-        }
+      writeDeliveryColdStart: (input: typeof recordedColdStart) => {
         calls.push(`write:${input.fingerprint}`);
         return {
           fingerprint: input.fingerprint,
@@ -155,25 +158,22 @@ async function runTofuRecipe(
 }
 
 describe("Delivery model step executor (T3)", () => {
-  it("resumes at the first unsettled step, renews the lease before each, then accepts and writes the cold-start snapshot", async () => {
+  it("resumes at the first unsettled step, renews the lease before each, then accepts and settles", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const calls: string[] = [];
     const { workflows, activities } = await createDeliveryWorkers(
       environment,
       modelActivities(calls),
     );
-    const backup = await backupWorker(environment, calls);
     try {
       const workflowId = `model-delivery-${crypto.randomUUID()}`;
       await workflows.runUntil(
         activities.runUntil(
-          backup.runUntil(
-            environment.client.workflow.execute("deliveryDeploymentWorkflow", {
-              workflowId,
-              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-              args: [{ deploymentId: "deployment-7" }],
-            }),
-          ),
+          environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ deploymentId: "deployment-7" }],
+          }),
         ),
       );
       expect(calls).toEqual([
@@ -184,7 +184,7 @@ describe("Delivery model step executor (T3)", () => {
         "waited",
         "lease",
         "test-e2e",
-        ...settledWithSnapshot,
+        ...settled,
       ]);
       await replayDelivery(environment, workflowId);
     } finally {
@@ -346,70 +346,48 @@ describe("Delivery model step executor (T3)", () => {
   }, 60_000);
 });
 
-describe("Delivery model cold-start snapshot (X7)", () => {
-  it("keeps writing the snapshot past five failed attempts until it lands", async () => {
-    const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    const calls: string[] = [];
-    const { workflows, activities } = await createDeliveryWorkers(
-      environment,
-      modelActivities(calls),
+/** Replays a recorded cold-start write against the production Workflows. */
+async function replayRecordedColdStart(fixture: URL) {
+  const environment = await TestWorkflowEnvironment.createTimeSkipping();
+  const calls: string[] = [];
+  const backup = await backupWorker(environment, calls);
+  try {
+    await backup.runUntil(
+      replayFixture(environment, {
+        fixture,
+        workflowType: "deliveryDeploymentWorkflow",
+        workflowId: `model-recorded-cold-start-${crypto.randomUUID()}`,
+        args: [{ deploymentId: "deployment-7" }],
+        activities: recordedColdStartActivities(calls),
+      }),
     );
-    const backup = await backupWorker(environment, calls, 6);
-    try {
-      const workflowId = `model-cold-start-${crypto.randomUUID()}`;
-      await workflows.runUntil(
-        activities.runUntil(
-          backup.runUntil(
-            environment.client.workflow.execute("deliveryDeploymentWorkflow", {
-              workflowId,
-              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-              args: [{ deploymentId: "deployment-7" }],
-            }),
-          ),
-        ),
-      );
-      expect(calls.slice(calls.indexOf("settle"))).toEqual([
-        "settle",
-        ...Array.from({ length: 6 }, () => "write-failed"),
-        `write:${coldStart.fingerprint}`,
-        "record:s3://backup/delivery/cold-start/c.json",
-      ]);
-      await Worker.runReplayHistory(
-        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
-        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
-      );
-    } finally {
-      await environment.teardown();
-    }
-  }, 120_000);
+    expect(calls.slice(calls.indexOf("settle"))).toEqual([
+      "settle",
+      `write:${recordedColdStart.fingerprint}`,
+      "record:s3://backup/delivery/cold-start/c.json",
+    ]);
+  } finally {
+    await environment.teardown();
+  }
+}
 
+describe("Delivery cold-start snapshot retirement", () => {
   it("replays a model deployment recorded while the write was bounded to five attempts", async () => {
-    const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    const calls: string[] = [];
-    const backup = await backupWorker(environment, calls);
-    try {
-      await backup.runUntil(
-        replayFixture(environment, {
-          fixture: new URL(
-            "replay-fixtures/delivery-model-before-cold-start-retry.ts",
-            import.meta.url,
-          ),
-          workflowType: "deliveryDeploymentWorkflow",
-          workflowId: `model-before-cold-start-retry-${crypto.randomUUID()}`,
-          args: [{ deploymentId: "deployment-7" }],
-          activities: {
-            ...modelActivities(calls),
-            runDeliveryModelStep: (_id: string, key: string) => {
-              calls.push(key);
-              return { waiting: false };
-            },
-          },
-        }),
-      );
-      expect(calls).toContain(`write:${coldStart.fingerprint}`);
-    } finally {
-      await environment.teardown();
-    }
+    await replayRecordedColdStart(
+      new URL(
+        "replay-fixtures/delivery-model-before-cold-start-retry.ts",
+        import.meta.url,
+      ),
+    );
+  }, 60_000);
+
+  it("replays a model deployment recorded while the write retried until it landed", async () => {
+    await replayRecordedColdStart(
+      new URL(
+        "replay-fixtures/delivery-model-with-cold-start-retry.ts",
+        import.meta.url,
+      ),
+    );
   }, 60_000);
 });
 
@@ -500,21 +478,18 @@ describe("Delivery self-hosted handoff (D8)", () => {
     const { workflows, activities } = await createDeliveryWorkers(environment, {
       ...successorActivities(calls),
     });
-    const backup = await backupWorker(environment, calls);
     try {
       const workflowId = `handoff-${crypto.randomUUID()}`;
       await workflows.runUntil(
         activities.runUntil(
-          backup.runUntil(
-            environment.client.workflow.execute("deliveryHandoffWorkflow", {
-              workflowId,
-              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-              args: [{ deploymentId: "deployment-7" }],
-            }),
-          ),
+          environment.client.workflow.execute("deliveryHandoffWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ deploymentId: "deployment-7" }],
+          }),
         ),
       );
-      expect(calls).toEqual(["claim", ...settledWithSnapshot]);
+      expect(calls).toEqual(["claim", ...settled]);
       await replayDelivery(environment, workflowId);
     } finally {
       await environment.teardown();

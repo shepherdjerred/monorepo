@@ -494,7 +494,6 @@ describe("Burst-memory sharing policy", () => {
     for (const name of [
       "temporal-temporal-workflows-candidate",
       "temporal-temporal-infra-worker",
-      "temporal-temporal-backup-worker",
       "temporal-temporal-billing-worker",
     ]) {
       const container = collected.all.find((item) => item.workload === name);

@@ -20,20 +20,6 @@ export const SPAGHETTI_HOME_DIR = "spaghettikart";
 /** The game's 4 Kbit EEPROM image: cups, records, and settings. */
 const EEPROM_FILE = "default.sav";
 const EEPROM_BYTES = 512;
-const CONTROLLER_PAK_FILES = 16;
-
-/**
- * A guild's progress, relative to its session dir: the EEPROM save plus the
- * controller-pak header and files (time-trial ghosts). Snapshotted into
- * saves/<guildId>/history/ before every session.
- */
-export const MK64_SAVE_HISTORY_ENTRIES: readonly string[] = [
-  path.join(SPAGHETTI_HOME_DIR, EEPROM_FILE),
-  path.join(SPAGHETTI_HOME_DIR, "controllerPak_header.sav"),
-  ...Array.from({ length: CONTROLLER_PAK_FILES }, (_, index) =>
-    path.join(SPAGHETTI_HOME_DIR, `controllerPak_file_${String(index)}.sav`),
-  ),
-];
 
 /**
  * The wasm core's save blob (EEPROM, 4 mempaks, SRAM, flash), which kept the

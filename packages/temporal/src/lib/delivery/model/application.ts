@@ -91,8 +91,8 @@ export function renderConfiguration(
 }
 
 /**
- * The Application a deployment writes, from the one shared renderer the
- * cold-start tool also uses, over the deployment's frozen selection.
+ * The Application a deployment writes, from the one shared renderer, over
+ * the deployment's frozen selection.
  */
 export function renderApplication(
   detail: DeploymentDetail,

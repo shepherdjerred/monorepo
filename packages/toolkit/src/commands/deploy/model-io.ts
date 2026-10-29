@@ -1,28 +1,14 @@
-import {
-  CatalogDocumentSchema,
-  type StoredSnapshotObject,
-} from "@shepherdjerred/delivery/model-contract";
+import { CatalogDocumentSchema } from "@shepherdjerred/delivery/model-contract";
 import { pathToFileURL } from "node:url";
 import { CatalogCoreSchema } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { loadCatalogDocument } from "@shepherdjerred/ops-model/delivery-catalog/files.ts";
 import { repoRoot } from "#lib/deployed/git.ts";
 import { required, type DeployOptions } from "./common.ts";
 
-/**
- * Reads one object of the cold-start store with the writer's `fingerprint`
- * metadata; injected by tests.
- */
-export type ObjectReader = (location: {
-  endpoint: string;
-  bucket: string;
-  key: string;
-}) => Promise<StoredSnapshotObject>;
-
 export type ModelOptions = DeployOptions & {
   requestNotice?: (id: string) => void;
   /** Announces the catalog revision a reconcile sends. */
   catalogNotice?: (revision: string) => void;
-  readObject?: ObjectReader;
 };
 export type ModelResult = Promise<{ result: unknown; exitCode: number }>;
 

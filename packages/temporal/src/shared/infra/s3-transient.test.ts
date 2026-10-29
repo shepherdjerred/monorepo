@@ -25,7 +25,7 @@ function s3Error(input: {
 }
 
 describe("isTransientStorageError", () => {
-  test("rejects S3 access denials so restoration fails fast", () => {
+  test("rejects S3 access denials so callers fail fast", () => {
     expect(
       isTransientStorageError(
         s3Error({ name: "AccessDenied", httpStatusCode: 403 }),

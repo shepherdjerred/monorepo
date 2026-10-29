@@ -3,8 +3,6 @@
  * `/targets/live/*` passes through.
  */
 import {
-  LiveBackupRequestSchema,
-  LiveBackupResponseSchema,
   LiveJournalResponseSchema,
   LiveStatusResponseSchema,
   LiveUndoRequestSchema,
@@ -20,7 +18,7 @@ type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
 /**
  * Runs a write on its target. Sandbox writes run directly; live writes go
- * through the guard (reason, players, backups, snapshot, journal).
+ * through the guard (reason, players, snapshot, journal).
  */
 export async function guarded<T>(
   call: { target: Target; request: Request; ctx: { live: LiveService } },
@@ -54,11 +52,6 @@ export async function dispatchLive(
 ): Promise<Response> {
   if (action === "status" && request.method === "GET") {
     return reply(LiveStatusResponseSchema, await ctx.live.describe());
-  }
-  if (action === "backup" && request.method === "POST") {
-    const { reason, wait } = await body(request, LiveBackupRequestSchema);
-    ctx.log("live backup", { wait });
-    return reply(LiveBackupResponseSchema, await ctx.live.backup(reason, wait));
   }
   if (action === "journal" && request.method === "GET") {
     const since = url.searchParams.get("since");

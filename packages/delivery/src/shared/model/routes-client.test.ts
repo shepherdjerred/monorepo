@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import * as fixtures from "#testing/model-fixtures.ts";
 import { createDeliveryClient, DeliveryClientError } from "#shared/client.ts";
 import { CatalogDocumentSchema } from "./catalog-contract.ts";
-import { coldStartArchiveKey } from "./cold-start-contract.ts";
 
 type Sent = { method: string; url: string; body: unknown };
 
@@ -32,13 +31,6 @@ const rollback = {
   selectionDeploymentId: "scout-prod-41",
 };
 const evidence = [{ kind: "attestation" as const, summary: "Canary passed" }];
-/** The operator's reconcile-after-restore request for the fixture snapshot. */
-const restore = {
-  requestId: "request/restore",
-  snapshot: fixtures.coldStartSnapshot,
-  fingerprint: `sha256:${"c".repeat(64)}`,
-  archiveKey: coldStartArchiveKey(fixtures.coldStartSnapshot),
-};
 
 type Route = [
   name: string,
@@ -190,13 +182,6 @@ const table: Route[] = [
     "/services/webring-legacy/retire",
     { requestId: "request/retire", reason: "Replaced by the webring channel" },
     fixtures.retiredService,
-  ],
-  [
-    "reconcileAfterRestore",
-    (delivery) => delivery.reconcileAfterRestore(restore),
-    "/reconcile-after-restore",
-    restore,
-    fixtures.restoreComparison,
   ],
 ];
 

@@ -99,30 +99,6 @@ function upstreamIdentity(
         origin.commit === undefined &&
         origin.version === artifact.version;
 }
-/**
- * Off-cluster replica of bytes that live in a self-hosted store. Recorded by
- * the executor after it copies the object to R2 and reads the copy back; a
- * build that produced such bytes is not verified until every one has a receipt
- * (PC1).
- */
-export const ArtifactReplicationSchema = z
-  .object({
-    store: z.literal("r2"),
-    bucket: z.string().min(1).max(255),
-    key: z.string().min(1).max(1024),
-    digest: Digest,
-    replicatedAt: z.iso.datetime(),
-  })
-  .strict();
-export type ArtifactReplication = z.infer<typeof ArtifactReplicationSchema>;
-/** Self-hosted object stores whose bytes must be replicated before a build is verified. */
-export const REPLICATED_STORE_URI_PREFIXES = [
-  "s3://delivery-artifacts/",
-  "s3://storm-forum-releases/",
-] as const;
-export function requiresReplication(uri: string): boolean {
-  return REPLICATED_STORE_URI_PREFIXES.some((prefix) => uri.startsWith(prefix));
-}
 export const ArtifactInputSchema = z
   .object({
     id: IdentifierSchema,
@@ -186,7 +162,6 @@ export const ArtifactVersionSchema = ArtifactInputSchema.safeExtend({
   buildId: IdentifierSchema,
   sourceRevision: Source,
   createdAt: z.iso.datetime(),
-  replication: ArtifactReplicationSchema.optional(),
   migratedFrom: MigratedFromSchema.optional(),
 });
 export const BuildSourceKindSchema = z.enum([
@@ -314,27 +289,3 @@ export const ArtifactAcquisitionSchema = z.object({
   artifact: ArtifactVersionSchema,
   status: z.enum(["pending", "verified", "failed"]),
 });
-/** One produced artifact whose self-hosted bytes still lack an off-cluster replica. */
-export const PendingReplicationSchema = z.object({
-  artifacts: z.array(
-    z
-      .object({
-        artifactId: IdentifierSchema,
-        buildId: IdentifierSchema,
-        serviceId: IdentifierSchema,
-        uri: z.string().min(1).max(2048),
-        digest: Digest,
-      })
-      .strict(),
-  ),
-});
-export type PendingReplication = z.infer<typeof PendingReplicationSchema>;
-export const RecordArtifactReplicationSchema = z
-  .object({
-    artifactId: IdentifierSchema,
-    replication: ArtifactReplicationSchema,
-  })
-  .strict();
-export type RecordArtifactReplication = z.infer<
-  typeof RecordArtifactReplicationSchema
->;

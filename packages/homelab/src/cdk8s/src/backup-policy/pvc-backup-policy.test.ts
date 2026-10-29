@@ -79,19 +79,17 @@ afterEach(async () => {
   );
 });
 
-it.each(["ops-restore-rehearsal", "ops-restore-rehearsal-incremental"])(
-  "excludes the %s rehearsal from backup selection",
-  (namespace) => {
-    expect(
-      getPvcBackupLabels(
-        getPvcBackupPolicy(namespace, "pgdata-temporal-postgresql-0"),
-      ),
-    ).toEqual({
-      "velero.io/backup": "disabled",
-      "velero.io/exclude-from-backup": "true",
-    });
-  },
-);
+it.each([
+  "data-filer-seaweedfs-filer-0",
+  "data-seaweedfs-seaweedfs-master-0",
+  "data-seaweedfs-volume-0",
+  "idx-seaweedfs-volume-0",
+])("includes SeaweedFS's %s in Velero's scheduled backups", (name) => {
+  expect(getPvcBackupLabels(getPvcBackupPolicy("seaweedfs", name))).toEqual({
+    "velero.io/backup": "enabled",
+    "velero.io/exclude-from-backup": "false",
+  });
+});
 
 it("includes Tracker's operator-managed database in backups before activation", () => {
   expect(
@@ -115,18 +113,18 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 61 included and 46 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 65 included and 39 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(107);
-  expect(new Set(keys).size).toBe(107);
+  expect(keys).toHaveLength(104);
+  expect(new Set(keys).size).toBe(104);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(61);
+  ).toHaveLength(65);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(46);
+  ).toHaveLength(39);
   expect(
     getPvcBackupPolicy("minecraft-tsmc", "minecraft-tsmc-bluemap").backup,
   ).toBe("disabled");
@@ -371,15 +369,6 @@ describe("PVC backup policy", () => {
 });
 
 describe("PostgreSQL restore backup policy", () => {
-  it("excludes the reserved native restore rehearsal claim", () => {
-    expect(
-      getPvcBackupPolicy(
-        "ops-restore-rehearsal",
-        "pgdata-temporal-postgresql-0",
-      ).backup,
-    ).toBe("disabled");
-  });
-
   it("retains every PostgreSQL source backup after retiring the PG18 restore copies", () => {
     const clusters = [
       ["scout-beta", "scout-beta", "scout-beta"],

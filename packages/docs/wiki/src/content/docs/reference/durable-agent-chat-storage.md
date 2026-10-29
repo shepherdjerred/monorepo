@@ -55,9 +55,9 @@ Sources: [receipt Workflow](https://github.com/shepherdjerred/monorepo/blob/main
 | Complete provider session slice | 256 MiB                                                              |
 | Files per manifest              | 1,000                                                                |
 | Object upload/download          | 2 MiB                                                                |
-| Bucket                          | `agent-chat-sessions`; non-expiring, daily backup                    |
+| Bucket                          | `agent-chat-sessions`; non-expiring                                  |
 
-Sources: [checkpoint chunks](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/activities/agent/chat/session-checkpoint.ts), [manifest contracts](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/activities/agent/chat/session-bundle.ts), [bounded object transfers](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/activities/agent/chat/session-store.ts), and [bucket policy](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/seaweedfs-backup/policy.json).
+Sources: [checkpoint chunks](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/activities/agent/chat/session-checkpoint.ts), [manifest contracts](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/activities/agent/chat/session-bundle.ts), and [bounded object transfers](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/activities/agent/chat/session-store.ts).
 
 Turn manifests identify the chat, provider session, turn, workspace path, files, and ordered chunk hashes. Version 3 also stores the complete turn result so a lost Activity completion can be recovered without invoking the provider again; version 2 remains readable for legacy session hydration. Chunks use per-chat content-addressed keys. Existing chunks are reused; manifests remain immutable per turn attempt. Downloads validate chunk and complete-file hashes before session resume.
 

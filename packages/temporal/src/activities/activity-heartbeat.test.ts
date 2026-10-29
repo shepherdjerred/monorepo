@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { withBackupMaintenanceHeartbeat } from "./seaweedfs-backup-heartbeat.ts";
+import { withActivityHeartbeat } from "./activity-heartbeat.ts";
 
 afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("backup maintenance Activity heartbeats", () => {
+describe("long Activity heartbeats", () => {
   test("heartbeats every 30 seconds during slow I/O and clears the timer", async () => {
     vi.useFakeTimers();
     const heartbeat = vi.fn();
     let complete: (() => void) | undefined;
-    const operation = withBackupMaintenanceHeartbeat(
+    const operation = withActivityHeartbeat(
       { heartbeat, cancellationSignal: new AbortController().signal },
       async ({ onProgress }) => {
         onProgress({ stage: "gc-sweep", completed: 17, total: 100 });
@@ -19,6 +19,7 @@ describe("backup maintenance Activity heartbeats", () => {
         });
         return 17;
       },
+      { stage: "start", completed: 0, total: 100 },
     );
     await vi.advanceTimersByTimeAsync(65_000);
     expect(heartbeat).toHaveBeenLastCalledWith({
@@ -38,7 +39,7 @@ describe("backup maintenance Activity heartbeats", () => {
   test("passes Activity cancellation to in-flight operations and clears the timer", async () => {
     vi.useFakeTimers();
     const cancellation = new AbortController();
-    const operation = withBackupMaintenanceHeartbeat(
+    const operation = withActivityHeartbeat(
       { heartbeat: vi.fn(), cancellationSignal: cancellation.signal },
       ({ signal }) =>
         new Promise<void>((_resolve, reject) => {
@@ -51,6 +52,7 @@ describe("backup maintenance Activity heartbeats", () => {
             },
           );
         }),
+      { stage: "start", completed: 0, total: 100 },
     );
     const assertion = expect(operation).rejects.toThrow("Activity cancelled");
     cancellation.abort(new Error("Activity cancelled"));
@@ -66,7 +68,7 @@ describe("backup maintenance Activity heartbeats", () => {
     heartbeat.mockImplementation(() => {
       throw new Error("Heartbeat rejected");
     });
-    const operation = withBackupMaintenanceHeartbeat(
+    const operation = withActivityHeartbeat(
       { heartbeat, cancellationSignal: new AbortController().signal },
       ({ signal }) =>
         new Promise<void>((_resolve, reject) => {
@@ -79,6 +81,7 @@ describe("backup maintenance Activity heartbeats", () => {
             },
           );
         }),
+      { stage: "start", completed: 0, total: 100 },
     );
     const assertion = expect(operation).rejects.toThrow("Heartbeat rejected");
     await vi.advanceTimersByTimeAsync(30_000);

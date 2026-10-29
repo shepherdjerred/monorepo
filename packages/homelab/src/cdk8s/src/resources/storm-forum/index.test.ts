@@ -20,43 +20,8 @@ const fixture = {
   trustedConnectorCidr: "10.244.0.0/16",
 };
 
-describe("forum upgrade snapshot contract", () => {
-  it("gives upgrade jobs scoped snapshot credentials before account migrations", () => {
-    resetProbeRegistry();
-    const rendered = Testing.synth(
-      createStormForumChart(new App(), {
-        ...fixture,
-        stage: "prod",
-        preUpgradeBackup: {
-          bundleSha256: "d".repeat(64),
-          xenforoVersion: "2.3.8",
-          runtimeImage: `docker.io/shepherdjerred/storm-forum@sha256:${"d".repeat(64)}`,
-        },
-      }),
-    );
-    const job = rendered.find((resource) => resource.kind === "Job");
-    const json = JSON.stringify(job);
-    expect(json).toContain('"name":"BACKUP_ACCESS_KEY"');
-    expect(json).toContain('"name":"BACKUP_SECRET_KEY"');
-    expect(json).toContain('"value":"storm-forum-backups"');
-    expect(json).not.toContain('"key":"RESTORE_ACCESS_KEY"');
-    expect(json).toContain(
-      '"name":"BACKUP_SOURCE_XENFORO_VERSION","value":"2.3.8"',
-    );
-    expect(json).toContain(
-      '"name":"BACKUP_SOURCE_BUNDLE_SHA256","value":"' + "d".repeat(64) + '"',
-    );
-    expect(json).toContain(
-      JSON.stringify({
-        name: "BACKUP_SOURCE_RUNTIME_IMAGE",
-        value: fixture.image.replace("a".repeat(64), "d".repeat(64)),
-      }),
-    );
-    expect(json).toContain(
-      '"name":"RUNTIME_IMAGE","value":"' + fixture.image + '"',
-    );
-  });
-  it("preserves the completed bootstrap job until a new release explicitly requests a pre-upgrade backup", () => {
+describe("forum release job contract", () => {
+  it("renders the release job without backup credentials", () => {
     resetProbeRegistry();
     const rendered = Testing.synth(createStormForumChart(new App(), fixture));
     expect(
@@ -210,82 +175,24 @@ describe("forum isolation and release resources", () => {
       }),
     ).toThrow();
   });
-  it("restores a production snapshot into the separate beta pair without installing or pruning primary storage", () => {
-    resetProbeRegistry();
-    const rendered = Testing.synth(
-      createStormForumChart(new App(), {
-        ...fixture,
-        storageSlot: "recovery",
-        restore: {
-          manifestKey:
-            "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
-          runtimeImage: fixture.image.replace("docker.io/", "ghcr.io/"),
-        },
-      }),
-    );
-    const job = rendered.find((resource) => resource.kind === "Job");
-    const jobJson = JSON.stringify(job);
-    expect(jobJson).toContain('"restore"]');
-    expect(jobJson).not.toContain('"release"]');
-    expect(jobJson).toContain('"key":"RESTORE_SECRET_KEY"');
-    expect(jobJson).not.toContain('"key":"BACKUP_SECRET_KEY"');
-    expect(jobJson).not.toContain("ADMIN_PASSWORD");
-    expect(jobJson).toContain(
-      JSON.stringify({
-        name: "RUNTIME_IMAGE",
-        value: fixture.image.replace("docker.io/", "ghcr.io/"),
-      }),
-    );
-    expect(jobJson).toContain(`"image":"${fixture.image}"`);
-    expect(jobJson).toContain('"claimName":"storm-forum-recovery-files"');
-    expect(
-      JSON.stringify(
-        rendered.find(
-          (resource) =>
-            resource.kind === "Deployment" &&
-            JSON.stringify(resource.metadata).includes("storm-forum-database"),
-        ),
-      ),
-    ).toContain('"claimName":"storm-forum-recovery-database"');
-    expect(
-      rendered
-        .filter((resource) => resource.kind === "PersistentVolumeClaim")
-        .map((resource) => resource.metadata.name)
-        .sort((left, right) => left.localeCompare(right)),
-    ).toEqual([
-      "storm-forum-database",
-      "storm-forum-files",
-      "storm-forum-recovery-database",
-      "storm-forum-recovery-files",
-    ]);
-  });
-  it("rejects restoring over the primary pair or into production", () => {
-    const restore = {
-      manifestKey:
-        "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
-      runtimeImage: fixture.image,
-    };
+  it("keeps the recovery storage pair private to beta and refuses retired backup inputs", () => {
     expect(
       ReleaseSchema.safeParse({
         ...fixture,
+        stage: "prod",
         storageSlot: "recovery",
+      }).success,
+    ).toBe(false);
+    expect(
+      ReleaseSchema.safeParse({
+        ...fixture,
         restore: {
-          ...restore,
-          runtimeImage: fixture.image.replace("a".repeat(64), "b".repeat(64)),
+          manifestKey:
+            "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+          runtimeImage: fixture.image,
         },
       }).success,
     ).toBe(false);
-    expect(() =>
-      createStormForumChart(new App(), { ...fixture, restore }),
-    ).toThrow();
-    expect(() =>
-      createStormForumChart(new App(), {
-        ...fixture,
-        stage: "prod",
-        storageSlot: "recovery",
-        restore,
-      }),
-    ).toThrow();
   });
   it("refuses the catalog's unpublished bootstrap marker for an active release", () => {
     expect(() =>

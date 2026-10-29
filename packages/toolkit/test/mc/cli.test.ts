@@ -64,10 +64,7 @@ describe("toolkit mc argument handling", () => {
 });
 
 describe("toolkit mc live argument handling", () => {
-  test("live backup and undo require --reason before contacting the daemon", async () => {
-    const backup = await runMcCommand(["live", "backup"]);
-    expect(backup.exitCode).toBe(1);
-    expect(backup.stderr).toContain("--reason is required");
+  test("live undo requires --reason before contacting the daemon", async () => {
     const undo = await runMcCommand(["live", "undo", "lj-abc-123456"]);
     expect(undo.exitCode).toBe(1);
     expect(undo.stderr).toContain("--reason is required");

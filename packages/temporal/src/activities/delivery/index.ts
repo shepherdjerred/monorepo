@@ -32,10 +32,7 @@ import {
 } from "./forum/operations.ts";
 import { dispatchDeliveryForumBaselines } from "./forum/dispatch.ts";
 import { applyDeliveryTrmnlPlugins } from "./trmnl.ts";
-import {
-  listDeliveryReplications,
-  recordDeliveryReplication,
-} from "./replication/receipts.ts";
+import { listDeliveryReplications } from "./replication-dispatch.ts";
 import {
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,
@@ -44,7 +41,6 @@ import { runDeliveryTestStage } from "./test-stage.ts";
 import {
   acceptDeliveryModel,
   planDeliveryModel,
-  recordDeliveryColdStart,
   renewDeliveryLease,
   runDeliveryModelStep,
   settleDeliveryModel,
@@ -72,9 +68,7 @@ export const deliveryActivities = {
   runDeliveryModelStep,
   acceptDeliveryModel,
   settleDeliveryModel,
-  recordDeliveryColdStart,
   listDeliveryReplications,
-  recordDeliveryReplication,
   runDeliveryTestStage,
   applyDeliveryTrmnlPlugins,
   failDeliveryPlatformRecovery,

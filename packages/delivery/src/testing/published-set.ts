@@ -1,5 +1,4 @@
 import type { useDeliveryFixture } from "./delivery-fixture.ts";
-import { replicateProducedArtifacts } from "./replication.ts";
 import { testExecutor, testPublisher } from "./seed.ts";
 
 type Context = ReturnType<typeof useDeliveryFixture>;
@@ -13,8 +12,8 @@ type PublishedArtifact = {
 };
 
 /**
- * Publishes one main-pipeline build of a service's artifacts, replicates
- * and qualifies it, and returns the automatic set it composed (R0).
+ * Publishes one main-pipeline build of a service's artifacts, qualifies it,
+ * and returns the automatic set it composed (R0).
  */
 export async function publishVerifiedSet(
   context: Context,
@@ -37,7 +36,6 @@ export async function publishVerifiedSet(
     testPublisher,
     { repositoryId: 1, pipelineNumber: build.pipelineNumber },
   );
-  await replicateProducedArtifacts(context.delivery, published.buildId);
   await context.delivery.qualify(published.buildId, "verified", testExecutor);
   const [set] = await context.delivery.versions(build.serviceId);
   if (set === undefined)

@@ -17,13 +17,6 @@ import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src
 import { createDeliveryDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/delivery-data.ts";
 import { createTemporalDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/temporal-data.ts";
 import { ROOT_CHART } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
-import {
-  POSTGRES_WAL_ARCHIVE,
-  postgresWalArchiving,
-  POSTGRES_WAL_PREFIXES,
-  archivePostgresWal,
-  postgresWalArchivePrefix,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/wal-archive.ts";
 
 const ResourceSchema = z
   .object({
@@ -98,21 +91,11 @@ const deliveryApp = render(".test-synth-delivery-app", (app) => {
 });
 const temporalApp = render(".test-synth-temporal-app", createTemporalChart);
 
-/** WAL archiving adds each cluster's credential mirror after the cluster. */
-function walCredentials(
-  cluster: keyof typeof POSTGRES_WAL_PREFIXES,
-): [string, string][] {
-  return postgresWalArchiving()
-    ? [["OnePasswordItem", `${cluster}-wal-archive`]]
-    : [];
-}
-
 describe("PostgreSQL data-layer charts", () => {
   test("render exactly the data-layer objects", () => {
     expect(inventory(deliveryData)).toEqual([
       ["Namespace", "delivery"],
       ["postgresql", "delivery-postgresql"],
-      ...walCredentials("delivery-postgresql"),
     ]);
     expect(inventory(temporalData)).toEqual([
       ["Namespace", "temporal"],
@@ -121,34 +104,28 @@ describe("PostgreSQL data-layer charts", () => {
       ["Issuer", "temporal-postgresql-ca-issuer"],
       ["Certificate", "temporal-postgresql"],
       ["postgresql", "temporal-postgresql"],
-      ...walCredentials("temporal-postgresql"),
       ["NetworkPolicy", "temporal-postgresql-netpol"],
     ]);
   });
 
   // Adoption must be a no-op for the live clusters: the data charts emit the
-  // same constructors' output, plus only the prune protection and, once the
-  // clusters are adopted, the WAL archiving environment.
-  test("adopt the clusters byte-identically apart from prune protection and WAL archiving", () => {
+  // same constructors' output, plus only the prune protection.
+  test("adopt the clusters byte-identically apart from prune protection", () => {
     expect(find(deliveryData, "postgresql", "delivery-postgresql")).toEqual(
       retained(
         clusterAsReleasedToday("delivery", "delivery", (chart) => {
-          const database = createSingleAppPostgreSQL(chart, {
+          return createSingleAppPostgreSQL(chart, {
             app: "delivery",
             userFlags: [],
           });
-          archivePostgresWal(database, "delivery-postgresql");
-          return database;
         }),
       ),
     );
     expect(find(temporalData, "postgresql", "temporal-postgresql")).toEqual(
       retained(
-        clusterAsReleasedToday("temporal", "temporal", (chart) => {
-          const database = createTemporalPostgreSQLDatabase(chart);
-          archivePostgresWal(database, "temporal-postgresql");
-          return database;
-        }),
+        clusterAsReleasedToday("temporal", "temporal", (chart) =>
+          createTemporalPostgreSQLDatabase(chart),
+        ),
       ),
     );
   });
@@ -206,19 +183,6 @@ describe("PostgreSQL data-layer charts", () => {
   );
 });
 
-function archived(enabled: boolean) {
-  const chart = new Chart(new App(), "delivery-data", {
-    namespace: "delivery",
-    disableResourceNameHashes: true,
-  });
-  const database = createSingleAppPostgreSQL(chart, {
-    app: "delivery",
-    userFlags: [],
-  });
-  archivePostgresWal(database, "delivery-postgresql", enabled);
-  return z.array(ResourceSchema).parse(chart.toJson());
-}
-
 // Under transition rendering the application charts render none of the
 // objects the data charts own; `transition-rendering.test.ts` proves it for
 // the whole app.
@@ -245,66 +209,10 @@ test.runIf(transitionRendering())(
   },
 );
 
-describe("WAL-G archiving", () => {
-  test("is on once the data layers have adopted their clusters", () => {
-    expect(postgresWalArchiving()).toBe(true);
-    for (const resource of [...deliveryData, ...temporalData])
-      if (resource.kind === "postgresql")
-        expect(JSON.stringify(resource.spec)).toContain("WALG");
-  });
-
-  test("archives each cluster under its declared prefix of the Velero bucket", () => {
-    const resources = archived(true);
-    const item = find(
-      resources,
-      "OnePasswordItem",
-      "delivery-postgresql-wal-archive",
-    );
-    expect(item.spec).toEqual({
-      itemPath: expect.stringContaining(POSTGRES_WAL_ARCHIVE.itemId),
-    });
-    const env = z
-      .object({
-        env: z.array(
-          z.looseObject({ name: z.string(), value: z.string().optional() }),
-        ),
-      })
-      .parse(find(resources, "postgresql", "delivery-postgresql").spec).env;
-    const value = (name: string) =>
-      env.find((entry) => entry.name === name)?.value;
-    expect(value("WALG_S3_PREFIX")).toBe(
-      "s3://homelab/postgres-wal/delivery-postgresql",
-    );
-    expect(value("USE_WALG_BACKUP")).toBe("true");
-    expect(value("AWS_ENDPOINT")).toBe(POSTGRES_WAL_ARCHIVE.endpoint);
-    for (const name of ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"])
-      expect(env.find((entry) => entry.name === name)).toMatchObject({
-        valueFrom: {
-          secretKeyRef: { name: "delivery-postgresql-wal-archive" },
-        },
-      });
-    expect(archived(false).map((resource) => resource.kind)).toEqual([
-      "postgresql",
-    ]);
-  });
-
-  test("declares one prefix per archived cluster, all under postgres-wal/", () => {
-    expect(Object.keys(POSTGRES_WAL_PREFIXES).sort()).toEqual([
-      "delivery-postgresql",
-      "temporal-postgresql",
-    ]);
-    for (const [cluster, prefix] of Object.entries(POSTGRES_WAL_PREFIXES))
-      expect(prefix).toBe(`postgres-wal/${cluster}/`);
-    expect(postgresWalArchivePrefix("temporal-postgresql")).toBe(
-      "s3://homelab/postgres-wal/temporal-postgresql",
-    );
-  });
-});
-
 describe("Operator-run data-layer Applications", () => {
-  // Restoring a database deletes its `postgresql` object. An automated sync
-  // would recreate an empty cluster that archives into the backups' WAL-G
-  // prefix, so only the guarded release syncs these Applications.
+  // Restoring a database from a Velero backup deletes its `postgresql`
+  // object. An automated sync would recreate an empty cluster over the volume
+  // being restored, so only the guarded release syncs these Applications.
   test.each([false, true])(
     "never sync automatically (transition rendering %s)",
     (transition) => {

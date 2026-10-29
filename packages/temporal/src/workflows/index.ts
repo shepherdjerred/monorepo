@@ -2,17 +2,9 @@
 import * as canary from "./notification-canary.ts";
 export const runDailyNotificationCanary = canary.runDailyNotificationCanary;
 import * as stormForum from "./homelab/storm-forum.ts";
-import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
 import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
 export const maintainStormForumWorkflow = (stage: ForumStage) =>
   stormForum.maintainStormForumWorkflow(stage);
-export const backupStormForumWorkflow = (stage: ForumStage) =>
-  stormForum.backupStormForumWorkflow(stage);
-export const runSeaweedFsBackupWorkflow = (
-  input: Parameters<typeof seaweedBackup.runSeaweedFsBackupWorkflow>[0],
-) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
-export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
-  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
 import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
 import * as ciMaintenance from "./ci/maintenance.ts";
 export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;

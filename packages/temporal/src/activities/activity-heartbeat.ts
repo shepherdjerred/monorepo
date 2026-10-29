@@ -1,26 +1,13 @@
-import type {
-  BackupMaintenanceHooks,
-  BackupMaintenanceProgress,
-} from "@shepherdjerred/seaweedfs-backup/maintenance";
-
 type ActivityHeartbeatContext<Progress> = {
   cancellationSignal: AbortSignal;
   heartbeat: (details: Progress) => void;
 };
 
-/** Keep long maintenance I/O alive and stop writes when its Activity expires. */
-export async function withBackupMaintenanceHeartbeat<Result>(
-  context: ActivityHeartbeatContext<BackupMaintenanceProgress>,
-  operation: (hooks: Required<BackupMaintenanceHooks>) => Promise<Result>,
-): Promise<Result> {
-  return withBackupActivityHeartbeat(context, operation, {
-    stage: "snapshot-inventory",
-    completed: 0,
-  });
-}
-
-/** Cover inventory and publication waits as well as per-object copy progress. */
-export async function withBackupActivityHeartbeat<
+/**
+ * Heartbeat a long Activity every 30 seconds and on each stage change, and
+ * abort its I/O when the Activity is cancelled or a heartbeat fails.
+ */
+export async function withActivityHeartbeat<
   Result,
   Progress extends { stage: string },
 >(

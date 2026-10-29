@@ -71,8 +71,6 @@ model Artifact {
   originKey            String?                     @unique
   /// Chart content identity with the version excluded (X10); null for images, archives and older charts.
   contentFingerprint   String?
-  /// Off-cluster replica receipt for bytes in a self-hosted store (PC1); null until the executor copies them.
-  replication          Json?
   /// Section 7: the v1 artifact (id, service, component) this catalog identity carries; null for every produced artifact.
   migratedFrom         Json?
   createdAt            DateTime                    @default(now())
@@ -179,8 +177,6 @@ model Environment {
   acceptedDeploymentId               String?
   acceptedDeployment                 Deployment?           @relation("AcceptedSelection", fields: [acceptedDeploymentId], references: [id], onDelete: Restrict)
   observedAt                         DateTime?
-  /// Section 6: set by reconcile-after-restore on a mismatch; automatic deployments wait until an operator settles it.
-  restoreHold                        Json?
   /// 4.10: when the executor destroyed a removed environment's target state.
   targetRemovedAt                    DateTime?
   /// C1: the catalog revision that last declared this environment; an omitted environment keeps an older one.

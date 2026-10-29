@@ -2,14 +2,7 @@ import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 export type TemporalRuntimeRole =
-  | "backup"
-  | "billing"
-  | "control"
-  | "home"
-  | "reports"
-  | "infra"
-  | "repo"
-  | "scout";
+  "billing" | "control" | "home" | "reports" | "infra" | "repo" | "scout";
 
 export function temporalRuntimeEnv(
   serverServiceName: string,

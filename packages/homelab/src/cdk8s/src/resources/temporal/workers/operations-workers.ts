@@ -14,7 +14,6 @@ import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ops-snapshot-env.ts";
 import { rwfArchiveEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/rwf-archive-env.ts";
-import { deliveryColdStartEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/cold-start-credential.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -77,7 +76,6 @@ export type TemporalOperationsWorkerProps = {
   talosConfigVolume: Volume;
   freshRssManifestVolume: Volume;
   freshRssCredentialVolume: Volume;
-  backupSecret: ISecret;
   veleroR2AuditSecret: ISecret;
   billingSecret: ISecret;
 };
@@ -260,52 +258,10 @@ export function createTemporalOperationsWorkers(
     },
   });
 
-  const backupDeployment = createTemporalDomainWorker(chart, {
-    name: "temporal-backup-worker",
-    component: "backup-worker",
-    cpuRequest: Cpu.millis(250),
-    cpuLimit: Cpu.millis(1000),
-    memoryRequest: Size.mebibytes(512),
-    memoryLimit: Size.gibibytes(2),
-    envVariables: {
-      ...temporalRuntimeEnv(
-        props.serverServiceName,
-        props.secret,
-        "backup",
-        "temporal-backup-worker",
-      ),
-      SEAWEEDFS_BACKUP_SOURCE_ENDPOINT: EnvValue.fromValue(
-        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-      ),
-      SEAWEEDFS_BACKUP_SOURCE_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-        secret: props.backupSecret,
-        key: "SEAWEEDFS_BACKUP_SOURCE_ACCESS_KEY_ID",
-      }),
-      SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-        secret: props.backupSecret,
-        key: "SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY",
-      }),
-      R2_BACKUP_ENDPOINT: EnvValue.fromValue(
-        "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
-      ),
-      R2_BACKUP_ACCESS_KEY_ID: EnvValue.fromSecretValue({
-        secret: props.backupSecret,
-        key: "R2_BACKUP_ACCESS_KEY_ID",
-      }),
-      R2_BACKUP_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
-        secret: props.backupSecret,
-        key: "R2_BACKUP_SECRET_ACCESS_KEY",
-      }),
-      R2_BACKUP_BUCKET: EnvValue.fromValue("seaweedfs-backups"),
-      ...deliveryColdStartEnvironment(chart, "temporal-delivery-cold-start"),
-    },
-  });
-
   return {
     infraDeployment,
     repoDeployment,
     scoutDeployment,
-    backupDeployment,
     billingDeployment,
   };
 }

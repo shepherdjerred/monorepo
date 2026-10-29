@@ -25,9 +25,6 @@ export const MAINTENANCE_QUERIES = {
   filesystems: `max by (instance, mountpoint) (1 - node_filesystem_avail_bytes{${EXCLUDED_FS}} / node_filesystem_size_bytes{${EXCLUDED_FS}})`,
   zpools:
     "max by (zpool_name) (1 - zfs_zpool_free_bytes / zfs_zpool_size_bytes)",
-  /** Seconds since the last successful SeaweedFS backup per cadence. */
-  seaweedfsBackups:
-    "time() - max by (cadence) (max_over_time(seaweedfs_backup_last_success_timestamp_seconds[7d]))",
   /** Seconds since the last successful Velero backup per schedule. */
   veleroBackups:
     'time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})',
@@ -159,7 +156,6 @@ export function mapMaintenance(
   const certificates = certificateSignals(samples);
   const capacity = capacitySignals(samples);
   const backups = backupFreshnessSignals({
-    seaweedfs: samples.seaweedfsBackups,
     velero: samples.veleroBackups,
     schedules,
     now,

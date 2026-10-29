@@ -115,6 +115,13 @@ export const DELETED_SCHEDULE_IDS = [
   // paused and never started an execution, so no workflow types need draining.
   "the-storm-mining-reset-countdown",
   "the-storm-mining-reset-quarterly",
+  // Velero's scheduled backups are the only backup: the SeaweedFS object
+  // backup and the Forum database export were retired with their workflows.
+  "seaweedfs-backup-six-hourly",
+  "seaweedfs-backup-daily",
+  "seaweedfs-backup-retention-gc-weekly",
+  "storm-forum-beta-backup",
+  "storm-forum-prod-backup",
 ] as const;
 
 /**
@@ -162,6 +169,13 @@ const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
   { workflowType: "runProtobufWatch", namespace: "prod" },
   // Same drain for the retired daily CI I/O telemetry report.
   { workflowType: "runCiIoTelemetry", namespace: "prod" },
+  // Drain the retired SeaweedFS object backup and Forum export.
+  { workflowType: "runSeaweedFsBackupWorkflow", namespace: "prod" },
+  {
+    workflowType: "runSeaweedFsBackupRetentionAndGcWorkflow",
+    namespace: "prod",
+  },
+  { workflowType: "backupStormForumWorkflow", namespace: "prod" },
 ] as const;
 
 export async function terminateRetiredWorkflowExecutions(

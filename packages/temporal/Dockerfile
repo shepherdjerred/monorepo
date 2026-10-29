@@ -77,7 +77,6 @@ COPY --parents \
   packages/llm-models \
   packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
-  packages/seaweedfs-backup \
   packages/toolkit \
   packages/tracker/src/shared \
   packages/unix-socket-daemon/src \
@@ -499,7 +498,6 @@ COPY --parents \
   packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \
-  packages/seaweedfs-backup \
   packages/ops-model \
   packages/ops-clients \
   ./

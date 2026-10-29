@@ -26,7 +26,6 @@ import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/r
 import { createDeliveryMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/monitoring.ts";
 import { deliveryForumEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum-bootstrap.ts";
 import { deliveryTrmnlEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/trmnl-bootstrap.ts";
-import { createDeliveryCatalogRecovery } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/catalog-recovery.ts";
 import { attachNativeForumReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum/native-reader.ts";
 import { attachDeliveryRecoveryReaders } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/recovery-readers.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -58,7 +57,6 @@ export function createDeliveryChart(
   // Namespace and the `delivery-postgresql` cluster this chart connects to.
   if (!transitionRendering())
     createDeliveryNamespace(chart, { retained: false });
-  createDeliveryCatalogRecovery(chart);
   if (!transitionRendering())
     createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
   const database = Secret.fromSecretName(

@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { open, unlink } from "node:fs/promises";
-import { S3Client } from "bun";
 import { z } from "zod";
 import {
   ForumReleaseIdSchema,
@@ -8,16 +7,15 @@ import {
 } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { forumManifest, StageSchema } from "./config.ts";
 import {
-  beginStormForumBackup,
-  endStormForumBackup,
-  snapshotForum,
-} from "./backup.ts";
-import { SnapshotEnvironmentSchema, SnapshotSourceSchema } from "./storage.ts";
-import { SnapshotSchema } from "./restore.ts";
+  MAINTENANCE_MARKER,
+  MaintenanceMarkerSchema,
+  beginForumMaintenance,
+  endForumMaintenance,
+} from "./maintenance.ts";
+import { ReleaseSourceSchema } from "./storage.ts";
 import {
   executeForumReleaseStep,
   observeForumInstallation,
-  originalForumSource,
   validateVendorBundle,
   verifyForumRelease,
 } from "./release.ts";
@@ -36,65 +34,9 @@ const Lock = z.strictObject({
   owner: z.uuid(),
   startedAt: z.iso.datetime(),
 });
-const Maintenance = z.strictObject({ owner: z.uuid(), startedAt: z.number() });
+const Maintenance = MaintenanceMarkerSchema;
 const LOCK = "/var/lib/storm-forum/.release-lock";
-const MARKER = "/var/lib/storm-forum/.maintenance";
-
-export async function verifyOriginalForumBackup(
-  journal: ForumReleaseJournal,
-): Promise<void> {
-  if (journal.original === null) {
-    if (journal.originalSnapshot !== null)
-      throw new Error("Empty installation has an unexpected original snapshot");
-    return;
-  }
-  const env = SnapshotEnvironmentSchema.parse(Bun.env);
-  const client = new S3Client({
-    endpoint: env.BACKUP_ENDPOINT,
-    bucket: env.BACKUP_BUCKET,
-    accessKeyId: env.BACKUP_ACCESS_KEY,
-    secretAccessKey: env.BACKUP_SECRET_KEY,
-    region: "us-east-1",
-  });
-  const prefix = `snapshots/${journal.stage}/${journal.owner}`;
-  if (journal.originalSnapshot !== `${prefix}/manifest.json`)
-    throw new Error(
-      "Forum original backup does not belong to its original maintenance owner",
-    );
-  const manifest = SnapshotSchema.parse(
-    await client.file(journal.originalSnapshot).json(),
-  );
-  const source = SnapshotSourceSchema.parse(
-    await client.file(`${prefix}/source-release.json`).json(),
-  );
-  if (
-    manifest.stage !== journal.stage ||
-    manifest.owner !== journal.owner ||
-    manifest.bundleSha256 !== journal.original.bundleSha256 ||
-    manifest.xenforoVersion !== journal.original.xenforoVersion ||
-    JSON.stringify(source) !== JSON.stringify(journal.original) ||
-    manifest.payloads
-      .map((p) => p.key)
-      .sort()
-      .join("|") !==
-      [`${prefix}/database.sql`, `${prefix}/files.tar.gz`].join("|")
-  )
-    throw new Error("Forum committed original backup identity changed");
-  for (const payload of manifest.payloads) {
-    let bytes = 0;
-    const hash = createHash("sha256");
-    for await (const chunk of client.file(payload.key).stream()) {
-      bytes += chunk.byteLength;
-      if (bytes > payload.bytes)
-        throw new Error("Forum original backup exceeds committed size");
-      hash.update(chunk);
-    }
-    if (bytes !== payload.bytes || hash.digest("hex") !== payload.sha256)
-      throw new Error(
-        "Forum original backup bytes differ from the committed snapshot",
-      );
-  }
-}
+const MARKER = MAINTENANCE_MARKER;
 
 async function requireOwner(journal: ForumReleaseJournal): Promise<void> {
   const lock = Lock.parse(await Bun.file(LOCK).json());
@@ -139,14 +81,14 @@ export async function recoverForumRelease(): Promise<void> {
       FORUM_RECOVERY_ACTION: z.string().transform(parseForumRecoveryAction),
       FORUM_RELEASE_ID: ForumReleaseIdSchema,
       STORM_FORUM_STAGE: StageSchema,
-      RUNTIME_IMAGE: SnapshotSourceSchema.shape.runtimeImage,
-      BUNDLE_SHA256: SnapshotSourceSchema.shape.bundleSha256,
+      RUNTIME_IMAGE: ReleaseSourceSchema.shape.runtimeImage,
+      BUNDLE_SHA256: ReleaseSourceSchema.shape.bundleSha256,
     })
     .parse(Bun.env);
   const file = `/var/lib/storm-forum/.release-journals/${env.FORUM_RELEASE_ID}.json`;
   if (!(await Bun.file(file).exists()))
     throw new Error(
-      "Legacy Forum release has no native phase journal; inspect its retained original Job/backup and use reviewed native repair, never remove markers or retry a migration blindly",
+      "Legacy Forum release has no native phase journal; inspect its retained original Job and use reviewed native repair, never remove markers or retry a migration blindly",
     );
   const journal = ForumReleaseJournalSchema.parse(await Bun.file(file).json());
   if (
@@ -162,7 +104,6 @@ export async function recoverForumRelease(): Promise<void> {
   if (acknowledgement !== undefined) {
     await requireOwner(journal);
     await validateVendorBundle();
-    await verifyOriginalForumBackup(journal);
     await acknowledgeForumReleaseStep(
       file,
       journal,
@@ -220,8 +161,6 @@ async function inspectForumJournal(
     throw new Error(
       "Forum interrupted mutation lost its native ownership markers",
     );
-  if (journal.originalSnapshot !== null)
-    await verifyOriginalForumBackup(journal);
 }
 
 async function ensureOriginalOwner(
@@ -246,38 +185,20 @@ async function ensureOriginalOwner(
       await handle.close();
     }
   }
-  await beginStormForumBackup(journal.owner);
+  await beginForumMaintenance(journal.owner);
   await requireOwner(journal);
 }
 
-async function prepareOriginalBackup(
+/** Drain requests and observe the installation before any step migrates. */
+async function prepareRelease(
   file: string,
   journal: ForumReleaseJournal,
 ): Promise<void> {
   if (!["prepared", "maintenance", "snapshot"].includes(journal.phase)) return;
   await Bun.sleep(65_000);
   if (!journal.installationObserved) {
-    const installation = await observeForumInstallation();
-    journal.original =
-      installation.state === "installed"
-        ? originalForumSource(installation.xenforoVersion)
-        : null;
+    await observeForumInstallation();
     journal.installationObserved = true;
-    journal.phase = "snapshot";
-    await writeForumReleaseJournal(file, journal);
-  }
-  if (journal.original !== null && journal.originalSnapshot === null) {
-    const snapshot = await snapshotForum(
-      journal.owner,
-      {
-        cancellationSignal: new AbortController().signal,
-        heartbeat: () => {
-          /* Foreground operator waits for the original snapshot. */
-        },
-      },
-      journal.original,
-    );
-    journal.originalSnapshot = snapshot.manifestKey;
   }
   journal.phase = "ready";
   await writeForumReleaseJournal(file, journal);
@@ -295,8 +216,7 @@ async function repairForumJournal(
   if (journal.phase !== "verified") {
     await ensureOriginalOwner(journal);
     await validateVendorBundle();
-    await prepareOriginalBackup(file, journal);
-    await verifyOriginalForumBackup(journal);
+    await prepareRelease(file, journal);
     await runForumReleaseSteps(
       journal,
       async (step) => {
@@ -314,7 +234,7 @@ async function repairForumJournal(
   }
   await requireCleanupOwner(journal);
   await verifyForumRelease(journal);
-  if (await Bun.file(MARKER).exists()) await endStormForumBackup(journal.owner);
+  if (await Bun.file(MARKER).exists()) await endForumMaintenance(journal.owner);
   if (await Bun.file(LOCK).exists()) await unlink(LOCK);
   journal.phase = "complete";
   await writeForumReleaseJournal(file, journal);

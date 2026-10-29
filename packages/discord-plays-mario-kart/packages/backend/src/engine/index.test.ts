@@ -5,7 +5,6 @@ import path from "node:path";
 import {
   assertEepromIntact,
   migrateLegacyEeprom,
-  MK64_SAVE_HISTORY_ENTRIES,
   SPAGHETTI_HOME_DIR,
 } from "./index.ts";
 
@@ -39,21 +38,6 @@ describe("assertEepromIntact", () => {
     await expect(assertEepromIntact(sessionDir)).rejects.toThrow(
       /wrong size \(0 bytes, expected 512\)/,
     );
-  });
-});
-
-describe("MK64_SAVE_HISTORY_ENTRIES", () => {
-  test("covers the EEPROM and every controller-pak file in the game home", () => {
-    expect(MK64_SAVE_HISTORY_ENTRIES).toContain(
-      path.join(SPAGHETTI_HOME_DIR, "default.sav"),
-    );
-    expect(MK64_SAVE_HISTORY_ENTRIES).toContain(
-      path.join(SPAGHETTI_HOME_DIR, "controllerPak_header.sav"),
-    );
-    expect(MK64_SAVE_HISTORY_ENTRIES).toContain(
-      path.join(SPAGHETTI_HOME_DIR, "controllerPak_file_15.sav"),
-    );
-    expect(MK64_SAVE_HISTORY_ENTRIES).toHaveLength(18);
   });
 });
 

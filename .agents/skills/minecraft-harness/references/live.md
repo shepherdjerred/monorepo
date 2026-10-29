@@ -18,7 +18,7 @@ toolkit mc live undo <journal-id> --reason "<why>"
   token through the Keychain service account; never print the token.
 - Tier 1 (WorldEdit, paste, restore, actor block actions) is snapshotted first
   and undoable. Tier 2 (huge regions, `stop`, `kill`, `co rollback`, `//regen`)
-  needs `toolkit mc live backup --wait --reason …`; dangerous commands also need
-  `--confirm-dangerous`. Use `we`/`paste`, not `fill`/`setblock`.
+  is not undoable; scheduled Velero backups are the only backup, and dangerous
+  commands need `--confirm-dangerous`. Use `we`/`paste`, not `fill`/`setblock`.
 - A human inside the box blocks the write; within 32 blocks needs
   `--allow-players`. Rehearse on a `storm-prod` sandbox first.

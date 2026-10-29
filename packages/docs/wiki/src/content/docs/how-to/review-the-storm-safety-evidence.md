@@ -59,11 +59,6 @@ toolkit mc evidence export --target live --player Example --since 2026-10-01T00:
 The exporter refuses overwrite and creates an owner-only file.
 If export fails, treat the remaining file as partial and private; retry with a new path.
 
-To verify a restore, start an isolated sandbox from the selected backup through the existing recovery workflow.
-Repeat search and show against its explicit sandbox target. Compare known allowed, blocked and private-message receipts.
-Confirm that interrupted submissions have an interruption receipt and were not automatically published.
-Never use the live target to test destructive recovery.
-
 Retention and restore ownership are declared in the [server source](https://github.com/shepherdjerred/monorepo/tree/main/packages/the-storm/server).
 
 ## Related

@@ -5,7 +5,6 @@ import {
 import type { Database } from "#infrastructure/database.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import type { PipelineDefinition } from "#shared/contract.ts";
-import { replicateProducedArtifacts } from "./replication.ts";
 import { testExecutor, testOperator, testPublisher } from "./seed.ts";
 
 /** The TRMNL dashboard release and its fixed plugin archive dependency. */
@@ -75,7 +74,6 @@ export async function requestTrmnlRelease(delivery: Delivery) {
     testPublisher,
     { repositoryId: 1, pipelineNumber: 90 },
   );
-  await replicateProducedArtifacts(delivery, build.buildId);
   await delivery.qualify(build.buildId, "verified", testExecutor);
   const [selected] = await delivery.versions("trmnl-dashboard");
   if (selected === undefined)

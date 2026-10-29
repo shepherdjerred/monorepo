@@ -34,7 +34,6 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
   [TASK_QUEUES.REPO_AUTOMATION]: "repo",
   [TASK_QUEUES.SCOUT]: "scout",
   [TASK_QUEUES.MAINTENANCE]: "maintenance",
-  [TASK_QUEUES.BACKUP]: "platform",
   [TASK_QUEUES.BILLING]: "platform",
   [TASK_QUEUES.AGENT_CHAT_DISPATCH]: "agent",
   [TASK_QUEUES.AGENT_CHAT_RECEIPTS]: "agent",
@@ -120,7 +119,6 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
   maintainStormForumWorkflow: "infra",
-  backupStormForumWorkflow: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION
   runLlmCatalogRefresh: "repo",

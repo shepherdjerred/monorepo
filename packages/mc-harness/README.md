@@ -521,8 +521,7 @@ The guard refuses outright:
 Each attempt that passes the guard is appended to
 `~/.toolkit/mc/journal/live/<date>.jsonl` with its reason, tier, box, humans
 online and snapshot id, whether or not it succeeds. `live undo` is
-last-in-first-out over overlapping boxes. `live backup` is refused; the
-scheduled Velero job is the backup.
+last-in-first-out over overlapping boxes.
 
 Operator steps: the wiki how-to "Operate The Storm with the agent harness".
 

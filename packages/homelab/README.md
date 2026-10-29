@@ -74,10 +74,9 @@ some things I'm proud of:
 - Close to zero host setup — a few commands deploy the entire cluster
 - Entirely written in TypeScript built with [cdk8s](https://cdk8s.io/) and
   [Bun](https://bun.sh/)
-- Automated backups: Velero backs up PVCs by an explicit per-volume policy, and
-  the Temporal `backup` worker snapshots SeaweedFS buckets to R2. The same
-  worker copies each new Delivery artifact in `delivery-artifacts` and
-  `storm-forum-releases` to R2 before Delivery verifies its build
+- Automated backups: Velero's 6-hourly, daily, weekly and monthly schedules
+  back up PVCs, SeaweedFS included, by an explicit per-volume policy. They are
+  the only backup
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
 - Declarative GitOps deployment via ArgoCD, selected and verified by Delivery
@@ -148,8 +147,6 @@ explains CI change selection:
 Delivery's private browser endpoint uses the existing Tailscale Kubernetes
 operator and an Ingress tagged `tag:delivery`. Its policy allows admins only.
 No application-side Tailscale credential or additional OAuth client is required.
-The [cold-start procedure](../docs/wiki/src/content/docs/how-to/restore-the-delivery-record.md)
-walks the bootstrap chain from Delivery's cold-start snapshot.
 
 Never apply manifests directly with `kubectl apply` — all changes go through
 ArgoCD, which reverts direct mutations.

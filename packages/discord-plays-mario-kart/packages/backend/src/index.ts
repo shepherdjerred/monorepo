@@ -11,7 +11,7 @@ import {
 import { engineFormat } from "./engine/format.ts";
 import { AUDIO_CHANNELS, DISPLAY_ASPECT } from "./emulator/constants.ts";
 import { seatAdmission } from "./webserver/driver-feed-admission.ts";
-import { MK64_SAVE_HISTORY_ENTRIES, prepareEngine } from "./engine/index.ts";
+import { prepareEngine } from "./engine/index.ts";
 import { Events } from "discord.js";
 import type { IdentifySocket } from "@shepherdjerred/discord-plays-core/webserver/socket.ts";
 import {
@@ -115,7 +115,6 @@ const runtime = bootGameBot({
     userbotTokens: [config.stream.userbot.token],
     driver,
     stateRootDir: config.state_root_dir,
-    saveHistory: { entries: MK64_SAVE_HISTORY_ENTRIES, keep: 50 },
     extraCommands: (botClient) =>
       buildMarioKartExtraCommands({
         driver,

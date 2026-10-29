@@ -815,51 +815,6 @@ test("an exact lookup returning a foreign artifact fails closed", async () => {
   ).rejects.toThrow("different upstream identity");
 });
 
-test("source acquisition waits for the same original to become independently verified", async () => {
-  if (cloudflareSource === undefined) throw new Error("source entry missing");
-  let calls = 0;
-  let waits = 0;
-  const requests: AcquireUpstreamArtifact[] = [];
-  const selected = await componentArtifactsForPublication(
-    {
-      latestQualifiedArtifact: async () => {
-        throw new DeliveryClientError(404, "NOT_FOUND", "no set");
-      },
-      findQualifiedArtifact: async () => {
-        throw new DeliveryClientError(404, "NOT_FOUND", "no source");
-      },
-      acquireUpstreamArtifact: async (request) => {
-        requests.push(request);
-        calls += 1;
-        return {
-          ...verified(request),
-          status: calls === 1 ? "pending" : "verified",
-        };
-      },
-    },
-    catalog(cloudflareSource),
-    producer,
-    {
-      credentials: unexpected,
-      registry: "v2",
-      sourceTransport: async (url) =>
-        new Response(
-          url.startsWith("https://api.github.com/") ? sourceCommit : "source",
-        ),
-      publishArchive: async (input) => {
-        expect(input.uri).toContain("delivery-artifacts");
-      },
-      waitForPending: async () => {
-        waits += 1;
-      },
-    },
-  );
-  expect(waits).toBe(1);
-  expect(requests).toHaveLength(2);
-  expect(requests[1]).toEqual(requests[0]);
-  expect(selected[0]?.version).toBe(sourceCommit);
-});
-
 function acquiredSourceVersion(originCommit: string) {
   const digest = `sha256:${"7".repeat(64)}`;
   return ArtifactVersionSchema.parse({

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
   DELIVERY_ENVIRONMENT_ANNOTATION,
-  REQUEST_INFO,
   RESOURCES_FINALIZER,
   helmParameters,
   renderApplication,
@@ -142,7 +141,7 @@ describe("renderApplication (T2)", () => {
     });
   });
 
-  test("a cascade lifecycle carries the resources finalizer and a cold start its initial sync", () => {
+  test("a cascade lifecycle carries the resources finalizer", () => {
     const base = recipe();
     if (base.kind !== "kubernetes-application") throw new Error("kind");
     const cascade = recipe({
@@ -153,19 +152,11 @@ describe("renderApplication (T2)", () => {
       environmentId: "openebs/prod",
       configuration: {},
       artifacts,
-      initialSync: { requestId: "11111111-1111-4111-8111-111111111111" },
     });
     expect(application.metadata.finalizers).toEqual([
       "example/keep",
       RESOURCES_FINALIZER,
     ]);
-    expect(application.operation).toEqual({
-      initiatedBy: { username: "delivery-cold-start" },
-      info: [
-        { name: REQUEST_INFO, value: "11111111-1111-4111-8111-111111111111" },
-      ],
-      sync: { revision: "4.3.2" },
-    });
   });
 
   test("refuses a configuration that overrides an artifact binding or a missing artifact", () => {

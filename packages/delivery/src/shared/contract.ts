@@ -197,9 +197,6 @@ export const AcquireUpstreamArtifactSchema =
   artifacts.AcquireUpstreamArtifactSchema;
 export const ArtifactAcquisitionSchema = artifacts.ArtifactAcquisitionSchema;
 export type AcquireUpstreamArtifact = artifacts.AcquireUpstreamArtifact;
-export const PendingReplicationSchema = artifacts.PendingReplicationSchema;
-export const RecordArtifactReplicationSchema =
-  artifacts.RecordArtifactReplicationSchema;
 const TimestampSchema = z.iso.datetime();
 export const ArtifactInputSchema = artifacts.ArtifactInputSchema;
 export const PublishBuildSchema = artifacts.PublishBuildSchema;

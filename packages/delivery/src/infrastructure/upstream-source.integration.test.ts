@@ -3,7 +3,6 @@ import { beforeEach, expect, test } from "vitest";
 import { VersionCatalogEntrySchema } from "@shepherdjerred/version-catalog";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { declareAcquisitions, registerTestService } from "#testing/services.ts";
-import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { testPublisher } from "#testing/seed.ts";
 import { AcquireUpstreamArtifactSchema } from "#shared/contract.ts";
 import { sourceArchiveUri } from "#shared/artifact-contract.ts";
@@ -84,7 +83,7 @@ function github(served: { commit?: string; tarball?: Uint8Array } = {}) {
   return { requests, transport };
 }
 
-test("a tagged GitHub source is acquired as its commit's tarball, verified once replicated", async () => {
+test("a tagged GitHub source is acquired and verified as its commit's tarball", async () => {
   const { requests, transport } = github();
   const first = await context.delivery.acquireUpstreamArtifact(
     acquisition("cloudflare-operator/7"),
@@ -92,8 +91,7 @@ test("a tagged GitHub source is acquired as its commit's tarball, verified once 
     { transport, components },
   );
   expect(requests).toEqual([TAG_URL, TARBALL_URL]);
-  // PC1: the stored tarball is a self-hosted byte, so the build waits for its replica.
-  expect(first.status).toBe("pending");
+  expect(first.status).toBe("verified");
   expect(first.artifact).toMatchObject({
     component: "archive:cloudflare-operator",
     kind: "archive",
@@ -107,8 +105,7 @@ test("a tagged GitHub source is acquired as its commit's tarball, verified once 
       where: { id: first.artifact.id },
     }),
   ).resolves.toMatchObject({ store: "delivery-artifacts" });
-  await replicateProducedArtifacts(context.delivery, first.buildId);
-  // The next pipeline's acquisition finds the same original and verifies it.
+  // The next pipeline's acquisition finds the same verified original.
   const next = await context.delivery.acquireUpstreamArtifact(
     acquisition("cloudflare-operator/8"),
     testPublisher,

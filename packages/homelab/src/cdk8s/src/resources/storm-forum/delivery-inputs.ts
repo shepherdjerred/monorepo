@@ -21,10 +21,5 @@ export function forumTemplateInputs(
     bundleKey: selected("bundleKey"),
     bundleSha256: selected("bundleSha256"),
     releaseId: selected("releaseId"),
-    preUpgradeBackup: {
-      bundleSha256: selected("previousBundleSha256"),
-      xenforoVersion: selected("previousXenforoVersion"),
-      runtimeImage: selected("previousRuntimeImage"),
-    },
   };
 }

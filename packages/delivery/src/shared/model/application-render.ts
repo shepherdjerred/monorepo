@@ -6,9 +6,8 @@ import {
 
 /**
  * The one renderer of the ArgoCD Application a `kubernetes-application`
- * recipe describes for a selection (T2). Pure and I/O-free: the executor's
- * create and update path and the cold-start tool both call it, so a cold
- * start renders exactly the object Delivery would write.
+ * recipe describes for a selection (T2). Pure and I/O-free; the executor's
+ * create and update path calls it.
  */
 
 /** Ownership marker Delivery writes into every Application body it manages. */
@@ -16,8 +15,6 @@ export const DELIVERY_ENVIRONMENT_ANNOTATION =
   "delivery.shepherdjerred.com/environment";
 /** ArgoCD's finalizer that cascades deletion to the Application's resources. */
 export const RESOURCES_FINALIZER = "resources-finalizer.argocd.argoproj.io";
-/** The operation-info key that carries a request identity into ArgoCD (T5). */
-export const REQUEST_INFO = "ci.sjer.red/request-id";
 
 export type RenderArtifact = { uri: string; version: string; digest: string };
 
@@ -117,17 +114,12 @@ export function helmValues(
  * and the artifact parameters in their formats. Automation stays off while a
  * deployment owns the target; self-heal on the accepted exact source is the
  * adapter's decision after acceptance (T4).
- *
- * `initialSync` adds the sync operation an operator-created Application
- * needs to converge during a cold start, carrying its request identity
- * (T5); Delivery takes the Application over on its next deployment.
  */
 export function renderApplication(input: {
   recipe: RecipeDefinition;
   environmentId: string;
   configuration: Readonly<Record<string, string>>;
   artifacts: Readonly<Record<string, RenderArtifact>>;
-  initialSync?: { requestId: string };
 }) {
   const { recipe } = input;
   if (recipe.kind !== "kubernetes-application")
@@ -168,15 +160,6 @@ export function renderApplication(input: {
         ? {}
         : { revisionHistoryLimit: body.revisionHistoryLimit }),
     },
-    ...(input.initialSync === undefined
-      ? {}
-      : {
-          operation: {
-            initiatedBy: { username: "delivery-cold-start" },
-            info: [{ name: REQUEST_INFO, value: input.initialSync.requestId }],
-            sync: { revision: rendered.targetRevision },
-          },
-        }),
   };
 }
 export type RenderedApplication = ReturnType<typeof renderApplication>;

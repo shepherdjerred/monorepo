@@ -80,8 +80,8 @@ the conversation after it drops out of the recent-chat list.
 ## Provider state is durable, workspaces are disposable
 
 Claude Code and Codex retain opaque local files for session resume. The agent
-Activity stores only the provider's session slice in the non-expiring,
-daily-backed-up `agent-chat-sessions` SeaweedFS bucket. Credentials,
+Activity stores only the provider's session slice in the non-expiring
+`agent-chat-sessions` SeaweedFS bucket. Credentials,
 configuration files, and workspace files are excluded.
 Immutable turn manifests reference content-addressed chunks. Unchanged
 transcript chunks are reused across turns; transfers and integrity checks stream

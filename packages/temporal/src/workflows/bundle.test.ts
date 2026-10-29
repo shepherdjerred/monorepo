@@ -22,9 +22,6 @@ describe("workflow bundle", () => {
     for (const name of [
       "maintainStormForumWorkflow",
       "runTrackerAttachmentCleanup",
-      "backupStormForumWorkflow",
-      "runSeaweedFsBackupWorkflow",
-      "runSeaweedFsBackupRetentionAndGcWorkflow",
       "agentChatWorkflow",
       "agentChatTurnReceiptWorkflow",
       "agentChatCatalogWorkflow",

@@ -145,7 +145,6 @@ describe("model view helpers", () => {
 function environment(permitted: boolean) {
   return render(
     <EnvironmentModel
-      restoreHold={fixtures.restoreHold}
       environmentId={fixtures.PROD}
       permitted={permitted}
       onDeployment={() => Promise.resolve()}
@@ -168,13 +167,6 @@ function environment(permitted: boolean) {
 }
 
 describe("environment model panels", () => {
-  test("shows the restore hold and how an administrator settles it", () => {
-    const html = environment(true);
-    expect(html).toContain("Held after restore");
-    expect(html).toContain(fixtures.restoreHold.reason);
-    expect(html).toContain("toolkit deploy snapshot accept scout-for-lol/prod");
-  });
-
   test("shows the accepted selection beside the declared binding", () => {
     const html = environment(true);
     expect(html).toContain("scout-for-lol:r42");

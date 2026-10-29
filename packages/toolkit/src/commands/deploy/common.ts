@@ -26,8 +26,6 @@ export function parseDeployArgs(args: string[]) {
       stage: { type: "string" },
       evidence: { type: "string" },
       step: { type: "string" },
-      output: { type: "string" },
-      snapshot: { type: "string" },
     },
   });
 }

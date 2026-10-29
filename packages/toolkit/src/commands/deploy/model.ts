@@ -12,12 +12,6 @@ import {
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import { generation, required, type DeployOptions } from "./common.ts";
 import {
-  runRenderCommand,
-  runSnapshotCommand,
-  validateRenderCommand,
-  validateSnapshotCommand,
-} from "./cold-start.ts";
-import {
   readJson,
   reconcileDocument,
   requestId,
@@ -41,8 +35,6 @@ export const MODEL_COMMANDS = [
   "reject-plan",
   "recover",
   "recovery",
-  "snapshot",
-  "render-application",
 ] as const;
 
 /** The inspected Argo operation that settles an `argo` intent (4.15), when named. */
@@ -134,14 +126,6 @@ export function validateModelCommand(
         );
       if (options.reason === undefined || options.reason.trim() === "")
         throw new Error("--reason is required");
-      return;
-    }
-    case "snapshot": {
-      validateSnapshotCommand(positionals, options);
-      return;
-    }
-    case "render-application": {
-      validateRenderCommand(options);
       return;
     }
   }
@@ -360,8 +344,6 @@ export async function runModelCommand(
   options: ModelOptions,
 ): ModelResult {
   validateModelCommand(command, positionals, options);
-  if (command === "snapshot")
-    return runSnapshotCommand(client, positionals, options);
   const target = required(positionals[0]);
   switch (command) {
     case "start": {
@@ -390,9 +372,6 @@ export async function runModelCommand(
     }
     case "reject-plan": {
       return decidePlan(client, target, options, "rejected");
-    }
-    case "render-application": {
-      return runRenderCommand(target, options);
     }
     default: {
       return administer(client, command, target, options);

@@ -15,7 +15,6 @@ import {
   reportActivities,
   scoutActivities,
   maintenanceWorkerActivities,
-  backupWorkerActivities,
   billingActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
@@ -31,7 +30,6 @@ export type QueueWorkerRole =
   | "delivery"
   | "delivery-platform"
   | "delivery-workflows"
-  | "backup"
   | "billing"
   | "glitter-context"
   | "glitter-corpus"
@@ -109,13 +107,6 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "billing",
     taskQueue: TASK_QUEUES.BILLING,
     activities: billingActivities,
-    maxConcurrentActivityTaskExecutions: 1,
-  },
-  {
-    kind: "activity",
-    role: "backup",
-    taskQueue: TASK_QUEUES.BACKUP,
-    activities: backupWorkerActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {
@@ -257,7 +248,6 @@ export type WorkerRoleContract = {
   validatesScheduleEnvironmentLocally: boolean;
   runsEventBridge: boolean;
   restoresGlitterCorpusMetrics: boolean;
-  restoresSeaweedFsBackupMetrics: boolean;
   restoresVeleroR2AuditMetrics: boolean;
 };
 
@@ -271,7 +261,6 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
     runsEventBridge: role === "all" || role === "home",
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",
-    restoresSeaweedFsBackupMetrics: role === "all" || role === "backup",
     restoresVeleroR2AuditMetrics: role === "all" || role === "infra",
   };
 }

@@ -43,9 +43,6 @@ import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciWorkspaceReaperActivities } from "./maintenance/ci-workspace-reaper.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
-import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
-import { deliveryReplicationActivities } from "./delivery/replication/copy.ts";
-import { deliveryColdStartActivities } from "./delivery/model/cold-start.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { stormPlotActivities } from "./homelab/storm-plots.ts";
@@ -157,12 +154,6 @@ export const maintenanceWorkerActivities = {
   ...mainVulnScanActivities,
   ...linkRotScanActivities,
 };
-export const backupWorkerActivities = {
-  ...seaweedFsBackupActivities,
-  ...deliveryReplicationActivities,
-  ...deliveryColdStartActivities,
-};
-
 export const billingActivities = {
   ...llmBilledCostActivities,
 };

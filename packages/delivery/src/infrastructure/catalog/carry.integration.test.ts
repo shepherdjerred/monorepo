@@ -1,13 +1,11 @@
 import { expect, test } from "vitest";
 import { liveSet } from "#infrastructure/composition/automatic.ts";
-import { coldStartSnapshot } from "#infrastructure/cold-start/snapshot.ts";
 import { wire } from "#infrastructure/delivery-records.ts";
 import { freezeAdmission } from "#infrastructure/execution/admission.ts";
 import { rollbackCandidates } from "#infrastructure/selection/candidates.ts";
 import { environmentSelection } from "#infrastructure/selection/views.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
-import { coldStartArchiveKey } from "#shared/model/cold-start-contract.ts";
-import { arcadePipeline } from "#testing/model-fixture.ts";
+import type { arcadePipeline } from "#testing/model-fixture.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { useCatalogCluster } from "#testing/catalog-cluster.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
@@ -62,17 +60,6 @@ async function seedV1Selection(seed: {
           ...artifact,
           digest: digest(character),
           version: "1.0.0",
-          ...(artifact.uri.startsWith("s3://delivery-artifacts/")
-            ? {
-                replication: {
-                  store: "r2",
-                  bucket: "delivery-artifacts-replica",
-                  key: artifact.uri.slice("s3://delivery-artifacts/".length),
-                  digest: digest(character),
-                  replicatedAt: "2026-10-01T00:00:00.000Z",
-                },
-              }
-            : {}),
         })),
       },
     },
@@ -190,7 +177,6 @@ test("a static site's accepted archive is carried across the rename as the first
     uri: SITE.uri,
     digest: digest("b"),
     store: "delivery-artifacts",
-    replication: expect.objectContaining({ digest: digest("b") }),
     migratedFrom: {
       artifactId: SITE.id,
       serviceId: "static-sites",
@@ -406,7 +392,7 @@ test("a chart whose owner moved is carried to its catalog owner, and producers f
   ).toBe(1);
 });
 
-test("the view, admission, the cold-start snapshot and rollback name the carried selection", async () => {
+test("the view, admission and rollback name the carried selection", async () => {
   await seedMovedArcade();
   await context.delivery.reconcileCatalog(
     await catalogDocument(),
@@ -451,17 +437,6 @@ test("the view, admission, the cold-start snapshot and rollback name the carried
       versionSetRevisionId: carried.id,
     }),
   ]);
-  const { snapshot } = await coldStartSnapshot(db, new Date().toISOString());
-  expect(
-    snapshot.environments.find((row) => row.environmentId === "arcade/prod"),
-  ).toMatchObject({
-    deploymentId: carry.id,
-    selection: { versionSetRevisionId: carried.id },
-    artifacts: {
-      "chart:arcade": { digest: digest("c") },
-      "image:arcade": { digest: digest("d") },
-    },
-  });
   // The carry is the accepted rollback source; the v1 acceptance stays one.
   const candidates = await rollbackCandidates(db, "arcade/prod");
   expect(candidates.map((row) => [row.deploymentId, row.eligible])).toEqual([
@@ -469,64 +444,6 @@ test("the view, admission, the cold-start snapshot and rollback name the carried
     ["gitops-legacy/arcade/accepted", true],
   ]);
   expect(candidates[0]?.selection.versionSetRevisionId).toBe(carried.id);
-});
-
-test("after a restore, the v1 sync of a carried selection still matches the record (section 6)", async () => {
-  // The v1 acceptance synced the arcade Application under its request.
-  await seedMovedArcade("gitops-legacy/arcade", arcadePipeline);
-  const db = context.cluster.database;
-  await db.stage.create({
-    data: {
-      id: "gitops-legacy/arcade/accepted/reconcile",
-      deploymentId: "gitops-legacy/arcade/accepted",
-      key: "reconcile",
-      status: "succeeded",
-      operationId: "v1-sync-request",
-      message: "Synced",
-    },
-  });
-  await context.delivery.reconcileCatalog(
-    await catalogDocument(),
-    testOperator,
-    MOVED,
-  );
-  const { snapshot, fingerprint } = await coldStartSnapshot(
-    db,
-    new Date().toISOString(),
-  );
-  const result = await context.delivery.reconcileAfterRestore(
-    {
-      requestId: "restore-carried",
-      snapshot,
-      fingerprint,
-      archiveKey: coldStartArchiveKey(snapshot),
-    },
-    { ...testOperator, scopes: [...testOperator.scopes, "admin" as const] },
-    {
-      readApplication: (name) =>
-        Promise.resolve(
-          name === "arcade"
-            ? {
-                status: {
-                  operationState: {
-                    operation: {
-                      info: [
-                        {
-                          name: "ci.sjer.red/request-id",
-                          value: "v1-sync-request",
-                        },
-                      ],
-                    },
-                  },
-                },
-              }
-            : null,
-        ),
-    },
-  );
-  expect(
-    result.environments.find((env) => env.id === "arcade/prod"),
-  ).toMatchObject({ status: "match" });
 });
 
 test("a promotion from a carried source takes the carried set revision (W3)", async () => {

@@ -1,7 +1,7 @@
 # Storm forum runtime
 
 The Storm's XenForo integration owns repeatable forum configuration, its portal,
-independently authored child styles, Minecraft status, and coordinated backups.
+independently authored child styles, and Minecraft status.
 Reviewed public historical discussions retain original names and dates, with new replies enabled.
 
 ## Licensed inputs and image boundary
@@ -55,24 +55,23 @@ qualified original image/bundle artifact IDs, request ID and reason. Inspect it
 with `toolkit deploy forum inspect <intent-id>`. Independent inspection reads the
 actual completed release Job, ready Pod digests and installed database version
 twice. It records original provenance without accepting a deployment. The first
-upgrade freezes that baseline for its pre-upgrade backup and checks it again
-before candidate source selection. Later upgrades use the actually accepted release.
+upgrade freezes that baseline and checks it again before candidate source
+selection. Later upgrades use the actually accepted release.
 
 The fixed `/_delivery/status` endpoint listens only on the internal observer port
 8082 and requires a dedicated read-only bearer capability. Public and admin
 listeners deny that path. Missing observer credentials, unknown original source
 policy, unsettled maintenance or missing native provenance block adoption.
-Ordinary image rollback is refused: database restoration uses the independent
-backup/restore procedure.
+Ordinary image rollback is refused. Velero's scheduled backups of the forum
+volumes are the only backup.
 
 ## Entrypoints
 
-| Command                   | Behavior                                                                                                                                                                                                                                 |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun src/cli.ts assemble` | Verify and unpack the private bundle; combine the system and Postal certificate authorities.                                                                                                                                             |
-| `bun src/cli.ts release`  | Take an exclusive release lock, close requests, snapshot an existing installation, install pinned dependencies, configure, import styles/history, retire generated launch content, apply the authorized account merge, and rebuild jobs. |
-| `bun src/cli.ts worker`   | Poll the stage's Temporal activity queue for housekeeping and coordinated snapshots.                                                                                                                                                     |
-| `bun src/cli.ts restore`  | Verify a committed backup pair and restore into an empty, private beta database and empty attachment directories.                                                                                                                        |
+| Command                   | Behavior                                                                                                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun src/cli.ts assemble` | Verify and unpack the private bundle; combine the system and Postal certificate authorities.                                                                                                          |
+| `bun src/cli.ts release`  | Take an exclusive release lock, close requests, install pinned dependencies, configure, import styles/history, retire generated launch content, apply the authorized account merge, and rebuild jobs. |
+| `bun src/cli.ts worker`   | Poll the stage's Temporal activity queue for housekeeping.                                                                                                                                            |
 
 Release jobs are explicit and versioned. A failed migration leaves its release
 lock and maintenance marker for inspection; restarting a pod never retries a
@@ -84,7 +83,7 @@ An upgrade to a different XenForo version requires an explicit migration change.
 For an interrupted `install`, `addons`, `seed`, `history` or `accounts` step,
 the operator recovery command reports the exact journal hash. It does not retry
 that step. Keep dispatch paused and the original executor stopped. Inspect the
-original Job, PVC, candidate and committed backup before repairing native state.
+original Job, PVC and candidate before repairing native state.
 An operator can copy its terminal Pod with existing Kubernetes tooling:
 
 ```bash
@@ -98,8 +97,7 @@ native command arguments are `/opt/storm-forum/runtime/command.php storm:seed`,
 pending merge first. For installation or add-on failures, diagnose the native
 installer/add-on state before using XenForo's installation or add-on recovery
 tools. An incomplete installation is never overwritten by `runtime/install.php`.
-Do not replace the original snapshot with already-mutated data or delete a
-pending merge marker to make a command pass.
+Do not delete a pending merge marker to make a command pass.
 
 Wait for the exact manual Pod to terminate, retain its result, and remove that
 Pod with its recorded UID before rerunning recovery. The existing foreground
@@ -108,7 +106,7 @@ recovery command accepts `--action repair --acknowledge-step STEP
 must prove that one step complete using native installation, add-on, content or
 account checkpoints. Only then does it append that checkpoint and continue;
 it never reruns the acknowledged step. Failed inspection leaves the original
-owner, journal, backup and maintenance intact.
+owner, journal and maintenance intact.
 
 Managed nodes, groups, permissions, navigation, widgets, and styles retain stable
 IDs. `storm:seed` soft-deletes only the three mapped, unreplied generated launch
@@ -273,60 +271,30 @@ The dedicated stage-specific 1Password item supplies these required fields:
 | ------------------------------------------------- | --------------------------------------------------- |
 | `DB_PASSWORD`, `MARIADB_ROOT_PASSWORD`            | Forum and database bootstrap                        |
 | `BUNDLE_ACCESS_KEY`, `BUNDLE_SECRET_KEY`          | Private bundle reader, scoped to the release bucket |
-| `BACKUP_ACCESS_KEY`, `BACKUP_SECRET_KEY`          | Snapshot writer, scoped to the backup bucket        |
-| `RESTORE_ACCESS_KEY`, `RESTORE_SECRET_KEY`        | Beta restore Job only, read-only snapshot access    |
 | `POSTAL_SMTP_USERNAME`, `POSTAL_SMTP_PASSWORD`    | Postal STARTTLS authentication                      |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`      | Required registration challenge                     |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Fresh-install administrator, release job only       |
 | `STAGING_HTTP_AUTH`                               | Beta ingress password file                          |
 
-Database, bundle, backup, and Temporal connection locations are bootstrap inputs
+Database, bundle, and Temporal connection locations are bootstrap inputs
 declared by the homelab chart. Credentials are references in configuration and
 injected into native mail/CAPTCHA options in memory, never stored in `xf_option`.
 
 ## Storage and recovery contract
 
-The database and writable files have separate NVMe claims. A snapshot closes PHP
-requests, waits for the maximum request lifetime, exports MariaDB, and archives
-`data/` and `internal_data/`. Payloads have checksums and sizes. Uploading the
-manifest last commits the pair. The protected bucket participates in the existing
-SeaweedFS-to-R2 backup policy. Only a tested pair establishes restore confidence.
-
-For an upgrade, declare `preUpgradeBackup: { "bundleSha256": "<currently deployed bundle>", "xenforoVersion": "<currently deployed version>", "runtimeImage": "docker.io/shepherdjerred/storm-forum@sha256:<currently deployed digest>" }`
-alongside a new release ID. The release Job snapshots before migrations and records
-that previous bundle, XenForo version, and runtime image so recovery uses matching
-application files and add-on code. The `source-release.json` record is uploaded before
-the manifest; the v1 manifest remains readable by the previous runtime during rollback.
-For a GHCR-era runtime mirrored to Docker Hub, retain its original GHCR identity
-in the pre-upgrade source record: that original runtime expects it during restore.
-Completed bootstrap
-Jobs remain unchanged until the next explicit release; an installed forum cannot
-upgrade without the source bundle and backup credentials.
+The database and writable files have separate NVMe claims. Velero's scheduled
+backups are their only backup; the forum takes no snapshot of its own. A
+release closes requests and waits for the maximum request lifetime before it
+migrates. Release journals written before this change may still name an
+original release and snapshot; those fields parse and are no longer used.
+Completed bootstrap Jobs remain unchanged until the next explicit release.
 The ArgoCD application preserves `/spec/template` only for the inventory's exact
 versioned Job name. A new release ID creates a new Job with its full declared
 template; Job status and health remain part of reconciliation.
 
-Recovery requires `STORM_FORUM_STAGE=beta`, the backup reader credentials,
-`RESTORE_MANIFEST_KEY`, and the exact `BUNDLE_SHA256` and `RUNTIME_IMAGE` recorded in the snapshot.
-The chart supplies the actual immutable Docker Hub runtime image identity. New runtimes require the
-source record and reject image mismatches. Historical GHCR records remain readable
-with the same repository and digest mirrored to Docker Hub; different digests are rejected.
-The restore command rejects occupied databases, occupied attachment directories,
-mixed releases, invalid archive paths, links, and checksum mismatches. Before
-clearing maintenance it reapplies the beta URL, closes registration, selects the
-normal season, and rebuilds jobs. Failed recovery leaves maintenance enabled.
-
-Declare a beta release with `storageSlot: "recovery"` and
-`restore: { "manifestKey": "snapshots/prod/<snapshot-uuid>/manifest.json", "runtimeImage": "<exact image identity from source-release.json>" }` in
-the release inventory. Its wave-zero Job restores instead of installing a new
-forum, using dedicated read-only credentials. The restore Job receives the
-recorded identity so original GHCR-era runtimes remain usable; its Docker Hub
-Pod image must have the same repository and digest. Beta declares both primary and
-recovery PVC pairs so changing the selected pair cannot prune the original data.
-Subsequent releases retain `storageSlot: "recovery"` and omit `restore`.
-The recovery pair must be empty; repeated drills require reviewed storage
-replacement through the homelab's existing destructive-operation workflow.
-Production releases cannot select the recovery pair or request restore.
+Beta declares both primary and recovery PVC pairs so changing the selected pair
+cannot prune the original data. Production releases cannot select the recovery
+pair.
 
 ## Development
 
@@ -356,18 +324,13 @@ exercise all 42 managed styles, parent migration, inherited palettes, repeated
 imports, preserved member choices, follower transitions and rejection of missing
 styles or altered/incompatible archives.
 The optional preview
-binds only localhost. Ctrl-C removes its exact containers and network.
-`scripts/local-backup-test.ts` takes that harness's explicit application container
-name and exercises a real database/files round trip through an isolated S3 API
-fixture. It runs backup and restore with the current `storm-forum:dev` image,
-sharing the preview's licensed application and data volumes for the backup.
-Rebuild that image after dependency changes. This proves the payload and restore implementation; SeaweedFS/R2 and
-Postal delivery still require deployment acceptance.
+binds only localhost. Ctrl-C removes its exact containers and network. Postal
+delivery still requires deployment acceptance.
 
 Homelab charts and ArgoCD applications consume static stage policy at
 `packages/homelab/src/cdk8s/src/resources/storm-forum/releases.json`: storage,
 ingress and provisioned credential item IDs. PostgreSQL freezes the selected
-original image, licensed bundle and previous backup tuple. The chart requires
+original image, licensed bundle and previous release tuple. The chart requires
 those exact Helm inputs; source generation neither reads PostgreSQL nor embeds
 selected release pins. Initial bootstrap uses an explicit validated descriptor
 outside Git, followed by independent runtime baseline verification.

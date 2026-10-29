@@ -64,7 +64,6 @@ async function harness(
   for (const definition of Object.values(games))
     modules.set(definition.id, {
       definition,
-      saveEntries: [],
       create: (context) => {
         fatalError = context.fatalError;
         const runtime: GameSession = {

@@ -9,7 +9,7 @@ import {
   type RetentionApplyInput,
   type RetentionPlanInput,
 } from "#shared/woodpecker-retention.ts";
-import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { withActivityHeartbeat } from "#activities/activity-heartbeat.ts";
 import {
   applyRetentionBatch,
   planRetentionBatch,
@@ -51,7 +51,7 @@ async function lastScheduledContinuation() {
 export const woodpeckerRetentionActivities = {
   async initializeWoodpeckerRetention(resumeScheduled: boolean) {
     try {
-      return await withBackupActivityHeartbeat(
+      return await withActivityHeartbeat(
         Context.current(),
         async (hooks) => {
           const policy = await woodpeckerRetentionConfig();
@@ -84,7 +84,7 @@ export const woodpeckerRetentionActivities = {
 
   async planWoodpeckerRetentionBatch(input: RetentionPlanInput) {
     try {
-      return await withBackupActivityHeartbeat(
+      return await withActivityHeartbeat(
         Context.current(),
         async (hooks) => {
           const client = await retentionClient(hooks.signal, () => {
@@ -105,7 +105,7 @@ export const woodpeckerRetentionActivities = {
       const progress = retentionProgressFromHeartbeat(
         Context.current().info.heartbeatDetails,
       );
-      return await withBackupActivityHeartbeat(
+      return await withActivityHeartbeat(
         Context.current(),
         async (hooks) => {
           let latest = progress;

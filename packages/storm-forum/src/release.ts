@@ -6,11 +6,11 @@ import { ForumReleaseIdSchema } from "@shepherdjerred/ops-model/forum-recovery.t
 import { forumManifest, type Stage } from "./config.ts";
 import { runPhp } from "./process.ts";
 import {
-  beginStormForumBackup,
-  endStormForumBackup,
-  snapshotForum,
-} from "./backup.ts";
-import { SnapshotSourceSchema } from "./storage.ts";
+  MAINTENANCE_MARKER,
+  beginForumMaintenance,
+  endForumMaintenance,
+} from "./maintenance.ts";
+import { ReleaseSourceSchema } from "./storage.ts";
 import {
   ForumReleaseJournalSchema,
   reuseCompletedForumRelease,
@@ -41,28 +41,6 @@ export async function observeForumInstallation() {
   return InstallationSchema.parse(
     JSON.parse(await runPhp(["/opt/storm-forum/runtime/installed.php"])),
   );
-}
-export function originalForumSource(installedVersion: string) {
-  return validateBackupSource(
-    {
-      bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
-      xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
-      runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
-    },
-    installedVersion,
-  );
-}
-export function validateBackupSource(
-  source: unknown,
-  installedVersion: string,
-) {
-  const release = SnapshotSourceSchema.parse(source);
-  if (release.xenforoVersion !== installedVersion) {
-    throw new Error(
-      "Backup source XenForo version differs from the installed database",
-    );
-  }
-  return release;
 }
 export async function assembleBundle(): Promise<void> {
   const env = BundleEnvironmentSchema.parse(Bun.env);
@@ -162,7 +140,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
     throw new Error(
       "Forum recovery requires the dedicated native recovery entrypoint",
     );
-  const candidate = SnapshotSourceSchema.parse({
+  const candidate = ReleaseSourceSchema.parse({
     runtimeImage: Bun.env["RUNTIME_IMAGE"],
     bundleSha256: Bun.env["BUNDLE_SHA256"],
     xenforoVersion: forumManifest.xenforoVersion,
@@ -180,7 +158,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
         {
           unlocked: async () =>
             !(await Bun.file(lock).exists()) &&
-            !(await Bun.file("/var/lib/storm-forum/.maintenance").exists()),
+            !(await Bun.file(MAINTENANCE_MARKER).exists()),
           verify: async () => {
             await verifyForumRelease(prior);
           },
@@ -222,34 +200,13 @@ export async function releaseForum(stage: Stage): Promise<void> {
     await validateVendorBundle();
     journal.phase = "maintenance";
     await checkpoint();
-    await beginStormForumBackup(owner);
+    await beginForumMaintenance(owner);
     ownsMaintenance = true;
+    // In-flight requests drain before anything migrates.
     await Bun.sleep(65_000);
     unsafeInstallation = true;
-    const installation = await observeForumInstallation();
+    await observeForumInstallation();
     unsafeInstallation = false;
-    if (installation.state === "installed") {
-      // The database has not been upgraded yet. Restore it with the previous
-      // private bundle, rather than recording this job's incoming bundle.
-      const sourceBundle = originalForumSource(installation.xenforoVersion);
-      journal.original = sourceBundle;
-      journal.installationObserved = true;
-      journal.phase = "snapshot";
-      await checkpoint();
-      const snapshot = await snapshotForum(
-        owner,
-        {
-          cancellationSignal: new AbortController().signal,
-          heartbeat: (message) => {
-            process.stdout.write(`${String(message)}\n`);
-          },
-        },
-        sourceBundle,
-      );
-      journal.originalSnapshot = snapshot.manifestKey;
-      await checkpoint();
-      process.stdout.write(`Pre-upgrade snapshot: ${snapshot.manifestKey}\n`);
-    }
     journal.installationObserved = true;
     journal.phase = "ready";
     await checkpoint();
@@ -268,7 +225,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
     // A failed migration requires inspection before another release can run.
     if (completed || (!mutating && !unsafeInstallation)) {
       if (ownsMaintenance) {
-        await endStormForumBackup(owner);
+        await endForumMaintenance(owner);
       }
       await unlink(lock);
       if (completed) {

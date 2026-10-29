@@ -102,13 +102,12 @@ Evidence is appended and never edited
 Defined in the [shared contract](packages/delivery/src/shared/contract.ts)
 and beside each object's schema.
 
-| Object             | States                                                                      | Model                                                       |
-| ------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Deployment         | `awaiting_approval`, `queued`, `running`, `succeeded`, `failed`, `canceled` | [4.12](packages/delivery/docs/model.md#412-deployment)      |
-| Monitor            | `unmonitored`, `watching`, `settled`, `alarmed`                             | [4.19](packages/delivery/docs/model.md#419-monitor)         |
-| Approval           | `pending`, `granted`, `rejected`, `expired`                                 | [4.13](packages/delivery/docs/model.md#413-approval)        |
-| Recovery intent    | `pending`, `succeeded`, `failed`                                            | [4.15](packages/delivery/docs/model.md#415-recovery-intent) |
-| Restore comparison | `match`, `held`                                                             | [section 6](packages/delivery/docs/model.md#6-flows)        |
+| Object          | States                                                                      | Model                                                       |
+| --------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Deployment      | `awaiting_approval`, `queued`, `running`, `succeeded`, `failed`, `canceled` | [4.12](packages/delivery/docs/model.md#412-deployment)      |
+| Monitor         | `unmonitored`, `watching`, `settled`, `alarmed`                             | [4.19](packages/delivery/docs/model.md#419-monitor)         |
+| Approval        | `pending`, `granted`, `rejected`, `expired`                                 | [4.13](packages/delivery/docs/model.md#413-approval)        |
+| Recovery intent | `pending`, `succeeded`, `failed`                                            | [4.15](packages/delivery/docs/model.md#415-recovery-intent) |
 
 A `running` deployment is the model's `owned`; `succeeded` is `accepted`.
 `recoveryRequired` is a flag on a terminal deployment, not a state: the
@@ -137,15 +136,15 @@ The specialized procedures are in the
 
 Defined in the [shared contract](packages/delivery/src/shared/contract.ts).
 
-| Scope     | Grants                                                                                            |
-| --------- | ------------------------------------------------------------------------------------------------- |
-| `read`    | Every `GET` route                                                                                 |
-| `publish` | CI build registration                                                                             |
-| `deploy`  | Deployment requests                                                                               |
-| `approve` | Approval and plan decisions; human identities only                                                |
-| `execute` | Executor routes: claim, lease, stages, handoff, successor and monitor observations                |
-| `attest`  | Operator-run stage attestations; never held with `execute`                                        |
-| `admin`   | Catalog reconcile, retirement, recovery intents, reconcile-after-restore and restore-hold accepts |
+| Scope     | Grants                                                                             |
+| --------- | ---------------------------------------------------------------------------------- |
+| `read`    | Every `GET` route                                                                  |
+| `publish` | CI build registration                                                              |
+| `deploy`  | Deployment requests                                                                |
+| `approve` | Approval and plan decisions; human identities only                                 |
+| `execute` | Executor routes: claim, lease, stages, handoff, successor and monitor observations |
+| `attest`  | Operator-run stage attestations; never held with `execute`                         |
+| `admin`   | Catalog reconcile, retirement and recovery intents                                 |
 
 ## Toolkit credentials
 
@@ -179,28 +178,13 @@ Every route is under `/api/v1`.
 | `POST /catalog/reconcile`                    | `admin`   | `deploy catalog reconcile --file <PATH>`               | [4.1](packages/delivery/docs/model.md#41-catalog)           |
 | `GET /catalog`                               | `read`    | None; the hub                                          | [4.1](packages/delivery/docs/model.md#41-catalog)           |
 | `POST /services/:id/retire`                  | `admin`   | `deploy retire <SERVICE>`                              | [S3](packages/delivery/docs/model.md#42-service)            |
-| `POST /reconcile-after-restore`              | `admin`   | `deploy snapshot reconcile`                            | [section 6](packages/delivery/docs/model.md#6-flows)        |
-| `POST /environments/:id/restore-hold/accept` | `admin`   | `deploy snapshot accept <ENVIRONMENT>`                 | [section 6](packages/delivery/docs/model.md#6-flows)        |
 | `GET /monitors/watching`                     | `execute` | None; the dispatch monitor loop                        | [W1](packages/delivery/docs/model.md#419-monitor)           |
 | `POST /deployments/:id/monitor/observations` | `execute` | None; the dispatch monitor loop                        | [W2](packages/delivery/docs/model.md#419-monitor)           |
 | `POST /deployments/:id/handoff`              | `execute` | None; the outgoing self-hosted executor                | [D8](packages/delivery/docs/model.md#412-deployment)        |
 | `POST /deployments/:id/successor`            | `execute` | None; the successor Workflow                           | [D8](packages/delivery/docs/model.md#412-deployment)        |
 
-## Cold-start snapshot
+## Backups
 
-Defined in the [model contract](packages/delivery/src/shared/model/contract.ts).
-
-| Fact            | Value                                                                                |
-| --------------- | ------------------------------------------------------------------------------------ |
-| Location        | `s3://homelab/delivery-cold-start/latest.json` on Cloudflare R2                      |
-| Immutable copy  | `s3://homelab/delivery-cold-start/<timestamp>-<catalogRevision>.json`                |
-| Written         | By the backup worker, on each acceptance of a bootstrap-chain environment            |
-| Integrity       | The writer's `fingerprint` object metadata                                           |
-| Sets            | Observed selections only, never an accepted pointer                                  |
-| Fetched by      | `toolkit deploy snapshot --output <FILE>`, with the `r2` AWS profile                 |
-| Rendered by     | `toolkit deploy render-application <ENVIRONMENT> --snapshot <FILE> --file <CATALOG>` |
-| Reconciled by   | `toolkit deploy snapshot reconcile`, which sends both identical copies to Delivery   |
-| Hold settled by | `toolkit deploy snapshot accept <ENVIRONMENT>`, or an accepted deployment            |
-
-Delivery holds no R2 credential. The snapshot's rules are decision
-[X7](packages/delivery/docs/model.md#9-decisions).
+Velero's scheduled backups are the only backup of Delivery's record and
+artifact stores ([PC1](packages/delivery/docs/model.md#2-guarantees)). Delivery
+writes no snapshot or replica of its own.

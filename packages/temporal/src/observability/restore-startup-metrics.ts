@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/bun";
 import { restoreGlitterCorpusSnapshotMetrics } from "#activities/glitter/corpus/glitter-corpus-snapshot.ts";
-import { restoreSeaweedFsBackupMetrics } from "#activities/homelab/seaweedfs-backup.ts";
 import {
   isTransientR2AuditStateError,
   restoreVeleroR2AuditMetrics,
@@ -78,38 +77,5 @@ export async function restoreGlitterCorpusMetricsAfterWorkerStart(
       "Glitter corpus snapshot metric restoration failed; corpus operations fail closed while other queues continue",
       { error: formatError(error) },
     );
-  }
-}
-
-export async function restoreSeaweedFsMetricsAfterWorkerStart(
-  isClosed: () => boolean,
-): Promise<void> {
-  try {
-    const result = await retryUntilReady({
-      operation: restoreSeaweedFsBackupMetrics,
-      shouldRetry: isTransientStorageError,
-      isClosed,
-      onRetry: ({ attempt, delayMs, error }) => {
-        jsonLog(
-          "error",
-          "SeaweedFS backup metric restoration failed; retrying",
-          { attempt, delayMs, error: formatError(error) },
-        );
-      },
-      onEscalate: ({ attempt, error }) => {
-        Sentry.captureMessage(
-          `SeaweedFS backup metric restoration has failed ${String(attempt)} consecutive times (latest error: ${formatError(error)}); still retrying`,
-          "warning",
-        );
-      },
-    });
-    if (result === "succeeded") {
-      jsonLog("info", "SeaweedFS backup metric restoration completed");
-    }
-  } catch (error: unknown) {
-    Sentry.captureException(error);
-    jsonLog("error", "SeaweedFS backup metric restoration stopped", {
-      error: formatError(error),
-    });
   }
 }

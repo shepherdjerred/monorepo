@@ -51,7 +51,6 @@ Monorepo workflows:
   discord <SUBCOMMAND>         Use the local Discord session daemon
   mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
   history <SUBCOMMAND>         Search private local agent history
-  backup seaweedfs <ACTION>    Inspect, verify, or restore off-site snapshots
 
 Global options:
   --version                    Print toolkit version
@@ -109,10 +108,6 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   [
     "history",
     () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),
-  ],
-  [
-    "backup",
-    () => import("./handlers/backup.ts").then((m) => m.handleBackupCommand),
   ],
 ]);
 

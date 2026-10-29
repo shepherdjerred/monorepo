@@ -113,8 +113,7 @@ async function githubRead(
 /**
  * Independently resolves the tag to its commit on GitHub (an annotated tag
  * resolves to the commit it points at) and requires that commit's tarball to
- * hash to the acquired digest. The stored copy is checked against the same
- * digest when it is replicated (PC1).
+ * hash to the acquired digest.
  */
 export async function verifySource(
   input: Input,

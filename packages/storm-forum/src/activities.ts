@@ -4,6 +4,7 @@ import { createForumConfig, forumFlagOptions, type Stage } from "./config.ts";
 import { resolveTheme } from "@shepherdjerred/storm-theme";
 import { updateMinecraftStatus } from "./minecraft.ts";
 import { runPhp } from "./process.ts";
+import { MAINTENANCE_MARKER } from "./maintenance.ts";
 export function createMaintainStormForum(stage: Stage) {
   const config = createForumConfig(
     createFlagConfigSource(forumFlagOptions(stage)),
@@ -27,7 +28,7 @@ export function createMaintainStormForum(stage: Stage) {
       );
   };
   async function maintainForum(): Promise<void> {
-    if (!(await Bun.file("/var/lib/storm-forum/.maintenance").exists())) {
+    if (!(await Bun.file(MAINTENANCE_MARKER).exists())) {
       heartbeat("policy");
       const [registration, choice, calendarEnabled] = await Promise.all([
         config.value("registrationEnabled"),

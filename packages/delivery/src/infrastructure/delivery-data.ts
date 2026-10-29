@@ -139,7 +139,6 @@ export function artifactView(
     build,
     originKey: _originKey,
     contentFingerprint,
-    replication,
     migratedFrom,
     store: _store,
     ...fields
@@ -149,7 +148,6 @@ export function artifactView(
     wire({
       ...fields,
       ...(contentFingerprint === null ? {} : { contentFingerprint }),
-      ...(replication === null ? {} : { replication }),
       ...(migratedFrom === null ? {} : { migratedFrom }),
       serviceId: build.serviceId,
       sourceRevision: build.sourceRevision,

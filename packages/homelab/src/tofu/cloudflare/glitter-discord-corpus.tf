@@ -10,61 +10,30 @@ resource "cloudflare_r2_bucket" "glitter_discord_corpus" {
   }
 }
 
-# Object-level off-site recovery for the protected SeaweedFS buckets. Backup
-# payloads and completed snapshot metadata are immutable for 30 days; the
-# backup worker's two-phase collector waits longer than that before deletion.
-resource "cloudflare_r2_bucket" "seaweedfs_backups" {
-  account_id    = var.cloudflare_account_id
-  name          = "seaweedfs-backups"
-  location      = "WNAM"
-  storage_class = "Standard"
+# The SeaweedFS object backup to `seaweedfs-backups` is retired: Velero's
+# scheduled backups are the only backup. Stop managing the bucket, its object
+# lock and its lifecycle without destroying anything; an operator empties and
+# deletes the bucket out-of-band once its 30-day locks have expired.
+removed {
+  from = cloudflare_r2_bucket.seaweedfs_backups
 
   lifecycle {
-    prevent_destroy = true
+    destroy = false
   }
 }
 
-resource "cloudflare_r2_bucket_lock" "seaweedfs_backups" {
-  account_id  = var.cloudflare_account_id
-  bucket_name = cloudflare_r2_bucket.seaweedfs_backups.name
+removed {
+  from = cloudflare_r2_bucket_lock.seaweedfs_backups
 
-  rules = [
-    {
-      id      = "immutable-backup-objects-30d"
-      enabled = true
-      prefix  = "objects/"
-      condition = {
-        type            = "Age"
-        max_age_seconds = 2592000
-      }
-    },
-    {
-      id      = "immutable-snapshots-30d"
-      enabled = true
-      prefix  = "snapshots/"
-      condition = {
-        type            = "Age"
-        max_age_seconds = 2592000
-      }
-    },
-  ]
+  lifecycle {
+    destroy = false
+  }
 }
 
-resource "cloudflare_r2_bucket_lifecycle" "seaweedfs_backups" {
-  account_id  = var.cloudflare_account_id
-  bucket_name = cloudflare_r2_bucket.seaweedfs_backups.name
+removed {
+  from = cloudflare_r2_bucket_lifecycle.seaweedfs_backups
 
-  rules = [
-    {
-      id         = "abort-incomplete-multipart-uploads-7d"
-      enabled    = true
-      conditions = { prefix = "" }
-      abort_multipart_uploads_transition = {
-        condition = {
-          type    = "Age"
-          max_age = 604800
-        }
-      }
-    },
-  ]
+  lifecycle {
+    destroy = false
+  }
 }

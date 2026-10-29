@@ -15,7 +15,6 @@ import {
 import type { WorkerPoolTarget, WorkerVersion } from "#shared/contract.ts";
 import { platformFixture as platform } from "./platform-fixture.ts";
 import { controlPlaneFixture as controller } from "./control-plane-fixture.ts";
-import { replicateProducedArtifacts as replicate } from "./replication.ts";
 
 export const createTestDatabase = () => createCluster();
 export const seedDelivery = (delivery: Store) => seed(delivery);
@@ -59,5 +58,3 @@ export function fakeApplicationReader(origin: string, token: string) {
     return body;
   };
 }
-export const replicateProducedArtifacts = (delivery: Store, buildId: string) =>
-  replicate(delivery, buildId);

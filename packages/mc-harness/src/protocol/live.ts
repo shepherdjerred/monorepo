@@ -130,19 +130,6 @@ export const LiveStatusResponseSchema = z.strictObject({
 });
 export type LiveStatusResponse = z.infer<typeof LiveStatusResponseSchema>;
 
-// POST /live/backup
-export const LiveBackupRequestSchema = z.strictObject({
-  reason: z.string().min(1),
-  wait: z.boolean(),
-});
-export const LiveBackupResponseSchema = z.strictObject({
-  name: z.string(),
-  phase: z.string(),
-  completedAt: z.string().nullable(),
-  journalId: z.string(),
-});
-export type LiveBackupResponse = z.infer<typeof LiveBackupResponseSchema>;
-
 export const LiveTierSchema = z.union([
   z.literal(0),
   z.literal(1),

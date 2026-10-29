@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
 
-/** The last v1 migration: WP1 added retained, attested and replicated artifacts. */
+/** The last v1 migration: WP1 added retained and attested artifacts. */
 const LAST_V1 = "20261021000000_retained_attested_replicated_artifacts";
 const V2 = "20261022000000_model_v2";
 
@@ -47,9 +47,9 @@ async function seedV1(cluster: Cluster) {
     ('art-apps-chart','build-5','chart:apps','chart','https://chartmuseum.tailnet-1a49.ts.net/charts/apps-2.0.0-5.tgz','sha256:${"8".repeat(64)}','2.0.0-5','{"kind":"first-party"}'),
     ('art-forum-bundle','build-6','archive:forum-bundle','archive','s3://storm-forum-releases/releases/${"a".repeat(64)}.zip','sha256:${"a".repeat(64)}','2.3.4','{"kind":"licensed-bundle","manifestDigest":"sha256:${"b".repeat(64)}","xenforoVersion":"2.3.4","producerSourceRevision":"${"f".repeat(40)}"}'),
     ('art-minecraft-server','build-7','image:minecraft-server','image','ghcr.io/itzg/minecraft-server','sha256:${"c".repeat(64)}','2026.10.0','{"kind":"upstream","repository":"https://ghcr.io","name":"minecraft-server","version":"2026.10.0","checksum":"sha256:${"c".repeat(64)}"}')`);
-  // WP1 columns: chart content identity and the off-cluster replica receipt.
+  // WP1 column: chart content identity.
   await sql(
-    `UPDATE "Artifact" SET "contentFingerprint" = 'sha256:${"d".repeat(64)}', "replication" = '{"store":"r2","key":"charts/arcade-1.0.0.tgz","digest":"sha256:${"2".repeat(64)}","replicatedAt":"2026-10-01T00:00:00.000Z"}' WHERE "id" = 'art-chart-1'`,
+    `UPDATE "Artifact" SET "contentFingerprint" = 'sha256:${"d".repeat(64)}' WHERE "id" = 'art-chart-1'`,
   );
   await sql(`INSERT INTO "BuildArtifactSelection" ("buildId","component","artifactId") VALUES
     ('build-1','image:arcade','art-image-1'),('build-1','chart:arcade','art-chart-1'),
@@ -243,10 +243,9 @@ async function expectArtifacts(db: Database) {
     "art-scout-image": "docker-hub",
     "art-scout-site": "delivery-artifacts",
   });
-  // WP1's columns carry through untouched.
+  // WP1's column carries through untouched.
   expect(artifacts.find((row) => row.id === "art-chart-1")).toMatchObject({
     contentFingerprint: `sha256:${"d".repeat(64)}`,
-    replication: { store: "r2", key: "charts/arcade-1.0.0.tgz" },
   });
   const builds = await db.build.findMany({ orderBy: { id: "asc" } });
   expect(builds.map((row) => row.registrationSequence)).toEqual([

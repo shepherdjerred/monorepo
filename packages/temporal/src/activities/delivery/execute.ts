@@ -26,7 +26,7 @@ import { workerRetirementClaim } from "./workers/worker-claim.ts";
 import { bootstrapDeliveryWorkerHosts } from "./workers/worker-bootstrap.ts";
 import { verifyWorkerHosts } from "./workers/worker-hosts.ts";
 import { acceptWorkerBaseline } from "./workers/worker-baseline.ts";
-import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { withActivityHeartbeat } from "#activities/activity-heartbeat.ts";
 import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
 import { workerRolloutTarget } from "#lib/delivery/workers/worker-pool.ts";
 import { prepareMinecraftDelivery } from "./minecraft.ts";
@@ -193,7 +193,7 @@ export async function applyDelivery(id: string): Promise<void> {
   // Persist intent before either external mutation. A crash leaves a visible,
   // locked recovery case rather than allowing another release to overwrite it.
   Context.current().heartbeat({ operationId });
-  await withBackupActivityHeartbeat(
+  await withActivityHeartbeat(
     Context.current(),
     async () => {
       await bootstrapDeliveryWorkerHosts(current);

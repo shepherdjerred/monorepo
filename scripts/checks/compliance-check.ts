@@ -366,7 +366,6 @@ packages/macos-ai-subscription-tracker:typecheck
 packages/homelab:build
 packages/dotfiles:build
 packages/tasknotes-e2e:build
-packages/seaweedfs-backup:build
 packages/discord-plays-mario-kart:build
 packages/discord-plays-pokemon:build
 packages/scout-for-lol:build

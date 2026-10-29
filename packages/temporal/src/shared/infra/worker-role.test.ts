@@ -14,7 +14,6 @@ describe("Temporal worker role", () => {
   it.each([
     "all",
     "agent",
-    "backup",
     "billing",
     "control",
     "delivery",

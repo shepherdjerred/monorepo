@@ -1,6 +1,5 @@
 import type { Database } from "#infrastructure/database.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 
 // The non-application recipe kinds (section 5), recorded through Delivery's
@@ -141,7 +140,6 @@ async function publishStack(
     testPublisher,
     { repositoryId: 1, pipelineNumber: pipeline },
   );
-  await replicateProducedArtifacts(delivery, build.buildId);
   await delivery.qualify(build.buildId, "verified", testExecutor);
   const [set] = await delivery.versions(stack.service);
   if (set === undefined) throw new Error("The stack archive composed no set");

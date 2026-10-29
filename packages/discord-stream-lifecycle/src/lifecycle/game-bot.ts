@@ -27,7 +27,6 @@ import {
   type VoiceOccupancySnapshot,
 } from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave";
 import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
-import type { SaveHistoryOptions } from "@shepherdjerred/discord-stream-lifecycle/persistence/save-history";
 import {
   SingleSlotSessionManager,
   type SessionManagerLogger,
@@ -51,8 +50,6 @@ export type CreateGameBotOptions<TUserbot extends PooledUserbot> = {
   readonly driver: GameDriver<TUserbot>;
   /** Root dir under which `<guildId>/` session dirs live. */
   readonly stateRootDir: string;
-  /** Per-guild save snapshots taken before each session boots. */
-  readonly saveHistory?: SaveHistoryOptions;
   /**
    * Extra per-game slash commands (`/screenshot`, `/goal`, ...). Either a static array
    * or a factory invoked at `start()` time (after the bot client is constructed) — the
@@ -144,9 +141,6 @@ export function createGameBot<TUserbot extends PooledUserbot>(
     pool,
     driver: options.driver,
     stateRootDir: options.stateRootDir,
-    ...(options.saveHistory === undefined
-      ? {}
-      : { saveHistory: options.saveHistory }),
     logger: log,
     // Cancel the alone-in-voice grace timer whenever a session ends, so a stale
     // timer armed during session A cannot stop a freshly-started session B.

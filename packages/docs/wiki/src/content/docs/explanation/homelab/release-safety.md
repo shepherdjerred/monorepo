@@ -293,9 +293,8 @@ Three conditions keep that safe:
   disabled, so drift is reverted and recorded without a floating source
   ([T4](packages/delivery/docs/model.md#411-target)).
 
-The decision is revisited if ArgoCD's health model stops covering a workload,
-or if bootstrapping ArgoCD limits cold start. Either change replaces one
-adapter and no primitive.
+The decision is revisited if ArgoCD's health model stops covering a workload.
+That change replaces one adapter and no primitive.
 
 ## Why apply safety is a preflight
 
@@ -327,29 +326,9 @@ database or claim loses exactly what those checks protect. Either option by
 itself remains insufficient. This exception is deliberately resource-scoped;
 Application-wide replacement does not bypass the check.
 
-## Why the cold-start snapshot never sets acceptance
-
-Delivery cannot run the steps that must exist before it runs. It can still be
-the record of them. Delivery writes a cold-start snapshot to off-cluster
-storage, and an operator replays the bootstrap chain from it
-([section 6](packages/delivery/docs/model.md#6-flows)).
-
-The snapshot sets observed selections only
-([X7](packages/delivery/docs/model.md#9-decisions)). A snapshot that set
-acceptance would be a second source of truth. After Delivery returns, it
-compares record, snapshot and live target for every environment. Each mismatch
-holds automatic deployments until an operator accepts the live state with
-evidence or a deployment is accepted there.
-
-The operator reads the snapshot, not Delivery. The API holds no credential to
-the off-cluster bucket, which also holds the cluster's backups. It checks that
-the snapshot it is handed carries the writer's fingerprint and names its own
-immutable copy.
-
 ## Related
 
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
-- [Restore the Delivery record](/how-to/restore-the-delivery-record/)
 - [Delivery model reference](/reference/delivery-model/)
 - [How the Delivery hub follows a change](/explanation/homelab/delivery-hub/)
 - [About the homelab](/explanation/homelab/overview/)

@@ -181,9 +181,7 @@ async function loadStorage(): Promise<{
     .min(1)
     .parse(state.outputs["storm_forum_turnstile_secret_key"]?.value);
   const releases = s3(gateway, "storm-forum-releases", "SEAWEEDFS");
-  const backups = s3(gateway, "storm-forum-backups", "SEAWEEDFS");
   await releases.list({ maxKeys: 1 });
-  await backups.list({ maxKeys: 1 });
   return { gateway, releases, siteKey, captchaKey };
 }
 
@@ -242,8 +240,6 @@ async function prepareRuntime(
     MARIADB_ROOT_PASSWORD: randomBytes(32).toString("hex"),
     BUNDLE_ACCESS_KEY: randomBytes(16).toString("hex"),
     BUNDLE_SECRET_KEY: randomBytes(32).toString("hex"),
-    BACKUP_ACCESS_KEY: randomBytes(16).toString("hex"),
-    BACKUP_SECRET_KEY: randomBytes(32).toString("hex"),
     POSTAL_SMTP_USERNAME: "XX",
     POSTAL_SMTP_PASSWORD: postal.smtpPassword,
     TURNSTILE_SITE_KEY: siteKey,
@@ -295,12 +291,6 @@ async function prepareGateway(gateway: Item, runtime: Item): Promise<boolean> {
       "storm-forum-releases",
       "BUNDLE",
       ["Read", "List"],
-    ],
-    [
-      "storm-forum-prod-backup",
-      "storm-forum-backups",
-      "BACKUP",
-      ["Read", "Write", "List"],
     ],
   ] as const) {
     const identity = config.identities.find((entry) => entry.name === name);

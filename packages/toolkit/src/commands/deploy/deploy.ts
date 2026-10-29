@@ -62,10 +62,6 @@ monitor <ENVIRONMENT>                  Inspect the accepted deployment's monitor
 retire <SERVICE> --reason <TEXT> --machine  Retire a service and its environments
 catalog reconcile [--file <PATH>] --machine  Make the record agree with a catalog document (default: the committed catalog)
 attest <DEPLOYMENT_ID> --stage <NAME> --evidence <PATH> --machine  Record operator-attested stage evidence
-snapshot --output <PATH>               Fetch the cold-start snapshot from R2; works while Delivery is down
-snapshot reconcile --machine           Compare record, snapshot and live target; hold mismatches
-snapshot accept <ENVIRONMENT> --machine  Accept the live state of a held environment with evidence
-render-application <ENVIRONMENT> --snapshot <PATH> --file <PATH>  Print the cold-start Application for kubectl
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required, --override for an override approval
@@ -83,7 +79,7 @@ Options:
   --request-id <ID>                    Idempotency key for deployment or recovery requests
   --expected-generation <N>            Require an exact environment generation
   --expected-worker-generation <N>     Require an exact worker generation for retirement
-  --reason <TEXT>                      Approval, rejection, recovery, or restore-hold reason
+  --reason <TEXT>                      Approval, rejection, or recovery reason
   --override                           start: ask for an override approval of a non-eligible deploy;
                                        approve/reject: decide that override approval
   --step <NAME>                        Sub-step a recovery intent names
@@ -91,16 +87,14 @@ Options:
   --recipe <ID>                        Recipe revision a rebind moves to
   --configuration <ID>                 Configuration revision a rebind moves to
   --stage <NAME>                       Operator-run stage an attestation settles
-  --evidence <PATH|TEXT>               attest: JSON array of evidence; snapshot accept: what was inspected
-  --output <PATH>                      Where snapshot writes the fetched cold-start snapshot
-  --snapshot <PATH>                    Cold-start snapshot render-application reads
-  --file <PATH>                        Catalog document for render-application, and for catalog reconcile
-                                       instead of the committed catalog
+  --evidence <PATH>                    attest: JSON array of evidence
+  --file <PATH>                        Catalog document for catalog reconcile instead of the committed
+                                       catalog
   --timeout <SECONDS>                  Wait deadline (default 900)
   --interval <SECONDS>                 Poll interval (default 5)
 
-Exit: 0 = command succeeded; 1 = error/failed/canceled, a refused catalog entry,
-or a held environment after restore; 2 = wait deadline reached.
+Exit: 0 = command succeeded; 1 = error/failed/canceled or a refused catalog
+entry; 2 = wait deadline reached.
 Production approvals require trusted human identity; --machine cannot approve.
 `;
 
@@ -144,8 +138,6 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   attest: 1,
   "approve-plan": 1,
   "reject-plan": 1,
-  snapshot: [0, 1, 2],
-  "render-application": 1,
   recovery: 1,
   status: [0, 1],
   wait: 1,

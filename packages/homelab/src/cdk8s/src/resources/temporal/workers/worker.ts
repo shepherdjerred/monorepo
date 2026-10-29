@@ -130,19 +130,6 @@ export function createTemporalWorkerDeployment(
     "temporal-freshrss-sync-secret",
     freshRssCredentialItem.name,
   );
-  const backupCredentialItem = new OnePasswordItem(
-    chart,
-    "temporal-seaweedfs-backup-1p",
-    {
-      metadata: { name: "temporal-seaweedfs-backup" },
-      spec: { itemPath: vaultItemPath("fkp3hqhl3wze3bxddhhaq3ykzq") },
-    },
-  );
-  const backupSecret = Secret.fromSecretName(
-    chart,
-    "temporal-seaweedfs-backup-secret",
-    backupCredentialItem.name,
-  );
   const veleroR2AuditItem = new OnePasswordItem(
     chart,
     "temporal-velero-r2-audit-1p",
@@ -355,7 +342,6 @@ export function createTemporalWorkerDeployment(
     infraDeployment,
     repoDeployment,
     scoutDeployment,
-    backupDeployment,
     billingDeployment,
   } = createTemporalOperationsWorkers(chart, {
     serverServiceName: props.serverServiceName,
@@ -370,7 +356,6 @@ export function createTemporalWorkerDeployment(
     talosConfigVolume,
     freshRssManifestVolume,
     freshRssCredentialVolume,
-    backupSecret,
     veleroR2AuditSecret,
     billingSecret: openAiUsageMonitorSecret,
   });
@@ -384,7 +369,6 @@ export function createTemporalWorkerDeployment(
     infraDeployment,
     repoDeployment,
     scoutDeployment,
-    backupDeployment,
     billingDeployment,
     glitterCorpusDeployment: corpusDeployment,
     glitterContextDeployment: contextDeployment,

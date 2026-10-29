@@ -4,9 +4,28 @@
 // production Workflow and queue constants so replay catches drift.
 import { patched, proxyActivities } from "@temporalio/workflow";
 import type { DeliveryActivities } from "#activities/delivery/index.ts";
-import type { DeliveryColdStartActivities } from "#activities/delivery/model/cold-start.ts";
+
+/** The retired cold-start activities, as this history recorded them. */
+type ColdStartActivities = {
+  settleDeliveryModel: (deploymentId: string) => Promise<unknown>;
+  recordDeliveryColdStart: (
+    deploymentId: string,
+    receipt: unknown,
+  ) => Promise<void>;
+};
+type BackupActivities = {
+  writeDeliveryColdStart: (write: unknown) => Promise<unknown>;
+};
 
 const metadata = proxyActivities<DeliveryActivities>({
+  taskQueue: "delivery",
+  startToCloseTimeout: "2 minutes",
+  retry: {
+    initialInterval: "5 seconds",
+    maximumInterval: "30 seconds",
+  },
+});
+const coldStart = proxyActivities<ColdStartActivities>({
   taskQueue: "delivery",
   startToCloseTimeout: "2 minutes",
   retry: {
@@ -29,7 +48,7 @@ const jobs = proxyActivities<DeliveryActivities>({
   heartbeatTimeout: "5 minutes",
   retry: { maximumAttempts: 1 },
 });
-const backup = proxyActivities<DeliveryColdStartActivities>({
+const backup = proxyActivities<BackupActivities>({
   taskQueue: "backup",
   scheduleToCloseTimeout: "10 minutes",
   startToCloseTimeout: "2 minutes",
@@ -52,10 +71,10 @@ export async function deliveryDeploymentWorkflow(input: {
     status: "succeeded",
     evidence,
   });
-  const coldStart = await metadata.settleDeliveryModel(input.deploymentId);
-  if (coldStart !== null)
-    await metadata.recordDeliveryColdStart(
+  const write = await coldStart.settleDeliveryModel(input.deploymentId);
+  if (write !== null)
+    await coldStart.recordDeliveryColdStart(
       input.deploymentId,
-      await backup.writeDeliveryColdStart(coldStart),
+      await backup.writeDeliveryColdStart(write),
     );
 }

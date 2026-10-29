@@ -23,7 +23,6 @@ import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
 import { applyForumSyncWaves } from "./sync-waves.ts";
 import {
-  upgradeBackupEnvironment,
   forumBootstrapEnvironment,
   forumRecoveryEnvironment,
 } from "./upgrade-environment.ts";
@@ -283,12 +282,6 @@ export function createStormForumChart(
                   name: "RUNTIME_IMAGE",
                   value: release.image,
                 },
-                ...credentials(["BACKUP_ACCESS_KEY", "BACKUP_SECRET_KEY"]),
-                {
-                  name: "BACKUP_ENDPOINT",
-                  value: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-                },
-                { name: "BACKUP_BUCKET", value: "storm-forum-backups" },
                 {
                   name: "TEMPORAL_ADDRESS",
                   value:
@@ -344,7 +337,7 @@ export function createStormForumChart(
   }
   new KubeJob(chart, "release", {
     metadata: {
-      name: `storm-forum-${release.restore ? "restore" : "release"}-${release.releaseId}`,
+      name: `storm-forum-release-${release.releaseId}`,
     },
     spec: {
       backoffLimit: 0,
@@ -358,49 +351,15 @@ export function createStormForumChart(
             {
               ...base,
               name: "release",
-              command: [
-                "bun",
-                "/opt/storm-forum/src/cli.ts",
-                release.restore ? "restore" : "release",
-              ],
+              command: ["bun", "/opt/storm-forum/src/cli.ts", "release"],
               env: [
                 ...(base.env ?? []),
                 ...forumRecoveryEnvironment(release),
-                ...(release.restore
-                  ? [
-                      ...["ACCESS_KEY", "SECRET_KEY"].map((suffix) => ({
-                        name: `BACKUP_${suffix}`,
-                        valueFrom: {
-                          secretKeyRef: {
-                            name: secret.name,
-                            key: `RESTORE_${suffix}`,
-                          },
-                        },
-                      })),
-                      {
-                        name: "BACKUP_ENDPOINT",
-                        value:
-                          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-                      },
-                      { name: "BACKUP_BUCKET", value: "storm-forum-backups" },
-                      {
-                        name: "RESTORE_MANIFEST_KEY",
-                        value: release.restore.manifestKey,
-                      },
-                    ]
-                  : [
-                      ...credentials([
-                        "ADMIN_USERNAME",
-                        "ADMIN_PASSWORD",
-                        "ADMIN_EMAIL",
-                      ]),
-                      ...(release.preUpgradeBackup
-                        ? upgradeBackupEnvironment(
-                            release.preUpgradeBackup,
-                            credentials,
-                          )
-                        : []),
-                    ]),
+                ...credentials([
+                  "ADMIN_USERNAME",
+                  "ADMIN_PASSWORD",
+                  "ADMIN_EMAIL",
+                ]),
                 {
                   name: "FORUM_URL",
                   value:

@@ -482,8 +482,6 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
-  // Drain the longest PHP request before taking the coordinated snapshot.
-  backupStormForumWorkflow: 65_000,
   // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
   goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
@@ -576,8 +574,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // prefix listings). No workflow-level sleeps; the activity carries its own
   // startToCloseTimeout + retry budget.
   "runVeleroR2OrphanAuditWorkflow",
-  "runSeaweedFsBackupWorkflow",
-  "runSeaweedFsBackupRetentionAndGcWorkflow",
   // Bounded inventory and log-retention Activities; no Workflow-level sleeps.
   "runWoodpeckerLogRetention",
   // One bounded signalWithStart Activity; durable coordination is separate.
@@ -801,6 +797,9 @@ test("terminates workflows for schedules being removed", async () => {
     'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runProtobufWatch" AND ExecutionStatus = "Running"',
     'WorkflowType = "runCiIoTelemetry" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runSeaweedFsBackupWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runSeaweedFsBackupRetentionAndGcWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "backupStormForumWorkflow" AND ExecutionStatus = "Running"',
   ]);
 });
 

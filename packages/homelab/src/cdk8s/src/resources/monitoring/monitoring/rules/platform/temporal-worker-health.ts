@@ -143,14 +143,6 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       servedNamespaces: ["prod"],
     },
     {
-      queue: "backup",
-      metricsNamespace: "temporal",
-      deploymentPattern: "temporal-temporal-backup-worker",
-      servicePattern: ".*temporal-backup-worker.*metrics.*",
-      activityPoller: true,
-      servedNamespaces: ["prod"],
-    },
-    {
       queue: "billing",
       metricsNamespace: "temporal",
       deploymentPattern: "temporal-temporal-billing-worker",

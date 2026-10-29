@@ -51,7 +51,6 @@ describe("Temporal worker role contracts", () => {
       runsGateway: false,
       runsEventBridge: false,
       restoresGlitterCorpusMetrics: false,
-      restoresSeaweedFsBackupMetrics: false,
     });
     expect(
       getWorkerRoleContract("workflows").workers.map(
@@ -163,7 +162,6 @@ describe("Temporal worker role contracts", () => {
     expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
     expect(contract.restoresGlitterCorpusMetrics).toBe(true);
-    expect(contract.restoresSeaweedFsBackupMetrics).toBe(true);
   });
 
   it("applies the planned activity concurrency by domain", () => {
@@ -183,7 +181,6 @@ describe("Temporal worker role contracts", () => {
       "workflows" | "delivery-workflows"
     >[] = [
       "agent",
-      "backup",
       "billing",
       "glitter-context",
       "glitter-corpus",

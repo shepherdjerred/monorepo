@@ -53,12 +53,6 @@ import {
   pendingRemovals,
   recordTargetRemoved,
 } from "#infrastructure/execution/removal.ts";
-import {
-  coldStartRequirement,
-  reconcileAfterRestore,
-  recordColdStartReceipt,
-  settleRestoreHold,
-} from "#infrastructure/cold-start/restore.ts";
 import type { DeliveryPolicy } from "./config.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
@@ -75,10 +69,6 @@ import {
   markQualificationAttempt,
   qualify,
 } from "./delivery-qualification.ts";
-import {
-  pendingReplication,
-  recordReplication,
-} from "./artifact-stores/replication.ts";
 import { reconcile } from "./delivery-selection.ts";
 import { registerWorker, workers } from "./worker-pool/registration.ts";
 import { retireWorker } from "./worker-pool/retirement.ts";
@@ -183,10 +173,6 @@ export class Delivery {
   pendingRemovals = pendingRemovals;
   recordTargetRemoved = recordTargetRemoved;
   recordDrift = recordDrift;
-  coldStartRequirement = coldStartRequirement;
-  recordColdStartReceipt = recordColdStartReceipt;
-  reconcileAfterRestore = reconcileAfterRestore;
-  settleRestoreHold = settleRestoreHold;
   createDeployment = createDeployment;
   requestTrmnlRepair = requestTrmnlRepair;
   requestContentRecovery = requestContentRecovery;
@@ -221,8 +207,6 @@ export class Delivery {
   build = findBuild;
   markQualificationAttempt = markQualificationAttempt;
   qualify = qualify;
-  pendingReplication = pendingReplication;
-  recordReplication = recordReplication;
   reconcile = reconcile;
   workers = workers;
   registerWorker = registerWorker;

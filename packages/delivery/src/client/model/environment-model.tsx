@@ -8,7 +8,6 @@ import type {
   EnvironmentSelection,
   RollbackCandidate,
 } from "#shared/model/contract.ts";
-import type { EnvironmentDetail } from "#shared/hub/hub-contract.ts";
 import { delivery } from "#client/api.ts";
 import { queries } from "#client/queries.ts";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
@@ -286,59 +285,10 @@ function RollbackCandidates({
 }
 
 /**
- * A reconcile-after-restore mismatch: automatic deployments stay held until an
- * administrator accepts the live state with evidence or an operator rolls back.
+ * The environment's model state: the accepted selection beside the declared
+ * binding, the accepted deployment's monitor, and its rollback candidates.
  */
-function RestoreHold({
-  hold,
-  environmentId,
-}: {
-  hold: NonNullable<EnvironmentDetail["restoreHold"]>;
-  environmentId: string;
-}) {
-  return (
-    <section
-      className="panel panel-attention"
-      aria-labelledby="restore-hold-heading"
-    >
-      <h2 id="restore-hold-heading">Held after restore</h2>
-      <p className="notice error">{hold.reason}</p>
-      <dl className="facts">
-        <div>
-          <dt>Held</dt>
-          <dd>
-            <RelativeTime value={hold.heldAt} />
-          </dd>
-        </div>
-        <div>
-          <dt>Snapshot catalog revision</dt>
-          <dd className="mono">{hold.catalogRevision}</dd>
-        </div>
-      </dl>
-      <p>
-        Automatic deployments wait until the record, the cold-start snapshot and
-        the live target agree. Roll back to a candidate below, or an
-        administrator accepts the live state with evidence:
-      </p>
-      <pre className="command">
-        <code>
-          toolkit deploy snapshot accept {environmentId} --reason &quot;…&quot;
-          --evidence &quot;…&quot; --machine
-        </code>
-      </pre>
-    </section>
-  );
-}
-
-/**
- * The environment's model state: any restore hold, the accepted selection
- * beside the declared binding, the accepted deployment's monitor, and its
- * rollback candidates.
- */
-export function EnvironmentModel({
-  restoreHold,
-  ...actions
-}: Actions & { restoreHold: EnvironmentDetail["restoreHold"] }) {
+export function EnvironmentModel(actions: Actions) {
   const selection = useQuery(queries.selection(actions.environmentId));
   const monitor = useQuery(queries.monitor(actions.environmentId));
   const candidates = useQuery(
@@ -346,9 +296,6 @@ export function EnvironmentModel({
   );
   return (
     <>
-      {restoreHold !== null && (
-        <RestoreHold hold={restoreHold} environmentId={actions.environmentId} />
-      )}
       <div className="detail-grid">
         <QueryPanel id="selection" title="Selection" query={selection}>
           {(view) => <SelectionPanel view={view} {...actions} />}
