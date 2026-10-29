@@ -223,6 +223,7 @@ public final class BodyDriver {
       case BodyCommand.UseAbility(var name) -> ability(bot, name);
       case BodyCommand.UseKit use -> useKit(bot, use, frame);
       case BodyCommand.UseStreak _ -> record(bot, actions.useStreak(id));
+      case BodyCommand.Consume(var slot) -> record(bot, actions.consume(id, slot));
     }
   }
 
@@ -232,6 +233,7 @@ public final class BodyDriver {
         requested != loadout.swordSlot()
             && requested != loadout.bowSlot()
             && requested != loadout.gappleSlot()
+            && requested != loadout.steakSlot()
             && requested != loadout.fuseSlot()
             && loadout.kitItems().stream().noneMatch(item -> item.slot() == requested);
     if (!bot.drafted().kit().isInvisibleKit() || !unreserved) return requested;

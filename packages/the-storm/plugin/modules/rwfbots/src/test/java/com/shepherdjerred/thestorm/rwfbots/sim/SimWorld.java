@@ -355,6 +355,8 @@ final class SimWorld {
       case BodyCommand.UseAbility _ -> {}
       case BodyCommand.UseKit use -> body.kitUses.add(use);
       case BodyCommand.UseStreak _ -> {}
+      // Sim bodies carry the standard loadout, which has no steak.
+      case BodyCommand.Consume _ -> throw new IllegalStateException("sim bodies carry no steak");
     }
   }
 

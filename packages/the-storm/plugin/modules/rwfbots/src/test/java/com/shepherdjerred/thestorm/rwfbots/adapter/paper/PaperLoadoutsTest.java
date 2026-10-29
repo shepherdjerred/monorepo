@@ -61,4 +61,25 @@ final class PaperLoadoutsTest {
     var kit = Loadouts.rwf(Kit.LONGBOW);
     assertThat(PaperLoadouts.available(kit, Optional.empty()).hasBow()).isFalse();
   }
+
+  @Test
+  void theSteakSlotFollowsTheSteaksTheBodyCarries() {
+    var berserker = Loadouts.rwf(Kit.BERSERKER);
+    var slot = berserker.steakSlot();
+    player.getInventory().setItem(slot, new ItemStack(Material.COOKED_BEEF, 2));
+    assertThat(PaperLoadouts.available(berserker, Optional.of(player)).steakSlot()).isEqualTo(slot);
+
+    player.getInventory().setItem(slot, null);
+    assertThat(PaperLoadouts.available(berserker, Optional.of(player)).hasSteak()).isFalse();
+    assertThat(PaperLoadouts.available(berserker, Optional.empty()).hasSteak()).isFalse();
+
+    // A supply crate's steak lands wherever there is room, for any kit.
+    var trooper = Loadouts.rwf(Kit.TROOPER);
+    player.getInventory().setItem(6, new ItemStack(Material.COOKED_BEEF));
+    assertThat(PaperLoadouts.available(trooper, Optional.of(player)).steakSlot()).isEqualTo(6);
+    // Off the hotbar, the consume port cannot reach it.
+    player.getInventory().setItem(6, null);
+    player.getInventory().setItem(20, new ItemStack(Material.COOKED_BEEF));
+    assertThat(PaperLoadouts.available(trooper, Optional.of(player)).hasSteak()).isFalse();
+  }
 }
