@@ -32,6 +32,8 @@ export type PublicationOwners = {
   chart: (name: string) => string | undefined;
   /** The owner of a first-party image's build. */
   image: (name: string) => string;
+  /** Whether the image's owner admits new publications. */
+  imageActive: (name: string) => boolean;
   /** Whether the registry declares the service. */
   owns: (serviceId: string) => boolean;
 };
@@ -59,6 +61,7 @@ export function publicationOwners(
           );
         return owner.id;
       },
+      imageActive: () => true,
       owns: (serviceId) =>
         catalog.services.some((service) => service.id === serviceId),
     };
@@ -71,7 +74,7 @@ export function publicationOwners(
       const owner = firstPartyOwner(`chart:${name}`, core);
       if (owner === undefined)
         throw new Error(`Chart ${name} has no first-party catalog owner`);
-      return owner.id;
+      return owner.lifecycle === "active" ? owner.id : undefined;
     },
     image(name) {
       const owner = firstPartyOwner(`image:${name}`, core);
@@ -81,6 +84,18 @@ export function publicationOwners(
         );
       return owner.id;
     },
-    owns: (serviceId) => catalogOwnsService(serviceId, core),
+    imageActive(name) {
+      const owner = firstPartyOwner(`image:${name}`, core);
+      if (owner === undefined)
+        throw new Error(
+          `Image shepherdjerred/${name} has no first-party catalog owner`,
+        );
+      return owner.lifecycle === "active";
+    },
+    owns: (serviceId) =>
+      catalogOwnsService(serviceId, core) &&
+      core.services.some(
+        (service) => service.id === serviceId && service.lifecycle === "active",
+      ),
   };
 }

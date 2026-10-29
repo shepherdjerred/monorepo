@@ -21,6 +21,7 @@ import {
   parseImageSelection,
 } from "../migration-core.ts";
 import {
+  CANONICAL_IMAGE_TARGETS,
   imageIdentity,
   unbuiltImageOriginals,
   type QualifiedImageInventory,
@@ -148,6 +149,20 @@ export async function selectedTargets(
     };
   }
   return parseImageSelection(selection.stdout);
+}
+
+/** Push only recipes whose catalog owners admit new builds. */
+export function publicationTargets(
+  selected: readonly string[],
+  originals: QualifiedImageInventory,
+  owners: PublicationOwners,
+): string[] {
+  const eligible = CANONICAL_IMAGE_TARGETS.filter((name) =>
+    owners.imageActive(name),
+  );
+  return expandTargets(
+    includeMissingQualifiedImages(selected, originals, eligible),
+  ).filter((name) => owners.imageActive(name));
 }
 
 export async function manifestDigest(
@@ -398,11 +413,10 @@ async function main(): Promise<void> {
     ? await readRetainableImages(undefined, undefined, owners)
     : undefined;
   const selection = await selectedTargets(options, commit, execute);
-  const bakeTargets = expandTargets(
+  const bakeTargets =
     originals === undefined
-      ? selection.targets
-      : includeMissingQualifiedImages(selection.targets, originals),
-  );
+      ? expandTargets(selection.targets)
+      : publicationTargets(selection.targets, originals, owners);
   if (bakeTargets.length === 0) {
     console.log("no image-owning packages affected — nothing to build");
     await annotate(["--report", selectionReport]);

@@ -185,6 +185,8 @@ async function addImagePublications(
     const name = key.split("/")[1];
     if (name === undefined)
       throw new Error(`Image pin key is malformed: ${key}`);
+    if (!owners.imageActive(name))
+      throw new Error(`Cannot publish image ${name} for a retired service`);
     const owner = owners.image(name);
     const uri = firstPartyImageRepository(name);
     const raw = await dependencies.inspectImage(`${uri}@${digest}`);

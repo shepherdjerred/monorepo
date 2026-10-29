@@ -20,6 +20,11 @@ test("v2 names the catalog's first-party owners and no longer registers apps", (
   expect(owners.image("woodpecker-config-extension")).toBe("woodpecker");
   expect(owners.owns("sjer-red")).toBe(true);
   expect(owners.owns("tofu-cloudflare")).toBe(true);
+  expect(owners.imageActive("discord-plays-mario-kart")).toBe(false);
+  expect(owners.imageActive("discord-plays-pokemon")).toBe(false);
+  expect(owners.imageActive("arcade")).toBe(true);
+  expect(owners.chart("mario-kart")).toBeUndefined();
+  expect(owners.owns("discord-plays-mario-kart")).toBe(false);
   expect(() => owners.chart("not-a-chart")).toThrow(
     "first-party catalog owner",
   );

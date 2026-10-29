@@ -8,14 +8,16 @@ import { INFRASTRUCTURE_IMAGE_TARGETS } from "../images/image-targets.ts";
 export function includeMissingQualifiedImages(
   selected: readonly string[],
   originals: QualifiedImageInventory,
+  eligible: readonly string[] = CANONICAL_IMAGE_TARGETS,
 ): string[] {
   return [
     ...new Set([
       ...selected,
-      ...CANONICAL_IMAGE_TARGETS.filter((name) => !originals.has(name)).map(
-        (name) =>
+      ...eligible
+        .filter((name) => !originals.has(name))
+        .map((name) =>
           INFRASTRUCTURE_IMAGE_TARGETS.includes(name) ? "infra" : name,
-      ),
+        ),
     ]),
   ].sort();
 }

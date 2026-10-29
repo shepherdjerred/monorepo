@@ -5,6 +5,7 @@ import {
   execute,
   manifestDigest,
   pushImages,
+  publicationTargets,
   runSmoke,
   selectedTargets,
   type CommandExecutor,
@@ -31,8 +32,24 @@ import {
   parseStringArray,
 } from "../migration-core.ts";
 import { imageIdentity } from "../../../scripts/lib/image-pin-catalog.ts";
+import { publicationOwners } from "../../../packages/ops-model/src/delivery-catalog/publication-owners.ts";
 import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 import type { ArtifactVersion } from "../../../packages/delivery/src/shared/contract.ts";
+
+test("v2 publication excludes retired recipes even when selected or missing", () => {
+  const targets = publicationTargets(
+    ["discord-plays-mario-kart", "infra"],
+    new Map(),
+    publicationOwners("v2"),
+  );
+  expect(targets).not.toContain("discord-plays-mario-kart");
+  expect(targets).not.toContain("discord-plays-pokemon");
+  expect(targets).toContain("arcade");
+  expect(targets).toContain("the-storm-server");
+  expect(publicationTargets([], new Map(), publicationOwners("v1"))).toContain(
+    "discord-plays-mario-kart",
+  );
+});
 function commandResult(
   exitCode = 0,
   stdout = "",

@@ -58,23 +58,25 @@ export async function readRetainableImages(
     }).latestRetainableArtifact;
   }
   const entries = await Promise.all(
-    CANONICAL_IMAGE_TARGETS.map(async (name) => {
-      const { serviceId, component, kind } = imageIdentity(name, owners);
-      try {
-        return [
-          name,
-          qualifiedImage(
+    CANONICAL_IMAGE_TARGETS.filter((name) => owners.imageActive(name)).map(
+      async (name) => {
+        const { serviceId, component, kind } = imageIdentity(name, owners);
+        try {
+          return [
             name,
-            await reader({ serviceId, component, kind, beforePipeline }),
-            owners,
-          ),
-        ] as const;
-      } catch (error) {
-        if (error instanceof DeliveryClientError && error.status === 404)
-          return;
-        throw error;
-      }
-    }),
+            qualifiedImage(
+              name,
+              await reader({ serviceId, component, kind, beforePipeline }),
+              owners,
+            ),
+          ] as const;
+        } catch (error) {
+          if (error instanceof DeliveryClientError && error.status === 404)
+            return;
+          throw error;
+        }
+      },
+    ),
   );
   return new Map(entries.filter((entry) => entry !== undefined));
 }

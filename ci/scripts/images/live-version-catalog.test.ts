@@ -266,6 +266,7 @@ test("after the window's catalog flip, retained images are looked up under their
   expect(inventory.size).toBe(0);
   expect(queried).toContain("image:caddy-s3proxy=static-site-proxy");
   expect(queried).toContain("image:woodpecker-config-extension=woodpecker");
+  expect(queried.some((entry) => entry.includes("discord-plays-"))).toBe(false);
   expect(imageIdentity("redlib", publicationOwners("v2")).serviceId).toBe(
     "redlib",
   );
