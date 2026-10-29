@@ -191,7 +191,7 @@ describe("model worker rendering (E5)", () => {
       throw new Error("temporal is a Kubernetes application recipe");
     const rendered = renderApplication(current, parsed);
     expect(
-      rendered.source.helm?.parameters.map((parameter) => parameter.name),
+      rendered.source.helm?.parameters?.map((parameter) => parameter.name),
     ).toEqual(["delivery.images.temporal-worker", "delivery.workerPool"]);
     const proof = workerImageProofInput(current);
     expect(proof.controlPlane?.selection).toMatchObject({

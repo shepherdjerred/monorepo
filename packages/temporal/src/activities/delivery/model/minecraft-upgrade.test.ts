@@ -218,7 +218,7 @@ describe("TSMC rendering and the sync fence", () => {
         throw new Error("TSMC sub-recipes are Applications");
       return renderApplication(deploying, sub.definition);
     });
-    expect(companion?.source.helm?.parameters).toEqual([]);
+    expect(companion?.source.helm?.parameters).toBeUndefined();
     expect(upgraded?.source.helm?.parameters).toEqual([
       { name: "image.repository", value: server.uri, forceString: true },
       {
