@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.sim;
 
+import com.shepherdjerred.thestorm.rwf.domain.combat.Knockback;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
@@ -14,6 +15,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.TraceHash;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.BowSolver;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
@@ -31,9 +33,12 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
@@ -62,8 +67,45 @@ final class SimWorld {
   static final int THINK_PERIOD = 8;
   static final int TEAM_PERIOD = 20;
 
+  /** rwf's hit window: a victim takes no second hit this many ticks after a full one. */
+  static final int RWF_HIT_WINDOW_TICKS = 10;
+
+  /** A loosed arrow's damage at full draw, before armour (a vanilla bow's 3 blocks a tick, x2). */
+  static final double ARROW_DAMAGE = 6;
+
+  /** How long an arrow flies before the sim drops it. */
+  private static final int ARROW_LIFE_TICKS = 200;
+
   /** Where a combatant enters the match. */
   record Spawn(int id, TeamId team, Kit kit, Vec3 pos) {}
+
+  /** Which rules hits follow. */
+  enum Combat {
+    /** The sim's original rules: an 18-tick hit delay, a half-block shove and no arrows. */
+    LEGACY,
+    /**
+     * rwf's 1.8 rules: a {@link #RWF_HIT_WINDOW_TICKS} hit window, rwf's knockback with a level for
+     * a sprinting attacker, and arrows that fly, strike and push.
+     */
+    RWF
+  }
+
+  /** An arrow in flight, loosed from its shooter's eye. */
+  static final class Arrow {
+    final SimBody shooter;
+    final double damage;
+    final long loosed;
+    Vec3 pos;
+    Vec3 vel;
+
+    Arrow(SimBody shooter, Vec3 vel, double damage, long loosed) {
+      this.shooter = shooter;
+      this.pos = shooter.pos.plus(0, CombatantView.EYE_HEIGHT, 0);
+      this.vel = vel;
+      this.damage = damage;
+      this.loosed = loosed;
+    }
+  }
 
   final NavArtifact nav;
   final SimPhysics physics;
@@ -75,6 +117,12 @@ final class SimWorld {
   final Map<TeamId, Strategy> strategies = new HashMap<>();
   long tick;
   long poisonStart = -1;
+  Combat combat = Combat.LEGACY;
+  final List<Arrow> arrows = new ArrayList<>();
+
+  /** Whether bots skip the think step and always fight the nearest enemy where they stand. */
+  boolean engageOnly;
+
   TraceHash hash = TraceHash.EMPTY;
   private List<Stimulus> stimuli = new ArrayList<>();
 
@@ -218,6 +266,7 @@ final class SimWorld {
         move(body);
       }
     }
+    flyArrows();
     tickBombs();
     poison();
   }
@@ -291,7 +340,9 @@ final class SimWorld {
     share(body, percept);
     var board = boards.get(body.team);
     var role = board.roleOf(body.id).orElseThrow();
-    if (body.decision.isEmpty() || (tick + body.id.value()) % THINK_PERIOD == 0) {
+    if (engageOnly) {
+      body.decision = Optional.of(engage(body, self, snapshot));
+    } else if (body.decision.isEmpty() || (tick + body.id.value()) % THINK_PERIOD == 0) {
       var situation = new Situation(self, snapshot, percept, board, role);
       var thought = Tactics.think(body.tactics, situation, body.tacticsContext, random);
       boards.put(body.team, board.note(body.id, thought.note()));
@@ -310,6 +361,31 @@ final class SimWorld {
     for (var command : step.commands()) {
       apply(body, command);
     }
+  }
+
+  /**
+   * A standing order to fight the nearest living enemy where the bot stands, in place of the think
+   * step: a footwork scenario whose fight must stay where it is put.
+   */
+  private Decision engage(SimBody body, CombatantView self, WorldSnapshot snapshot) {
+    var enemy =
+        snapshot.aliveEnemiesOf(self.team()).stream()
+            .min(
+                java.util.Comparator.comparingDouble(
+                    (CombatantView other) -> other.pos().distance(self.pos())));
+    return new Decision(
+        body.id,
+        Option.ENGAGE,
+        enemy.map(CombatantView::id),
+        List.of(),
+        Stance.AGGRESSIVE,
+        Optional.empty(),
+        enemy.map(CombatantView::pos),
+        Optional.empty(),
+        "engage:fight",
+        tick,
+        1,
+        Optional.empty());
   }
 
   private void share(SimBody body, Percept percept) {
@@ -370,7 +446,8 @@ final class SimWorld {
     }
     attacker.attacksOn.merge(targetId, 1, Integer::sum);
     var hits = Reflex.hitTest(nav.grid(), attacker.view(tick), attacker.look, target.view(tick));
-    if (!hits || (target.lastHurt >= 0 && tick - target.lastHurt < HIT_DELAY_TICKS)) {
+    var window = combat == Combat.RWF ? RWF_HIT_WINDOW_TICKS : HIT_DELAY_TICKS;
+    if (!hits || (target.lastHurt >= 0 && tick - target.lastHurt < window)) {
       return;
     }
     damage(attacker, target);
@@ -378,8 +455,18 @@ final class SimWorld {
 
   private void damage(SimBody attacker, SimBody target) {
     var dealt = SWORD_DAMAGE * (1 - target.armor / 25.0);
-    target.hurt(dealt, tick);
+    target.struck(attacker.id, tick, attacker.pos);
+    target.hurt(dealt, tick, SimBody.Cause.MELEE);
     stimuli.add(Stimulus.hit(target.pos, tick, attacker.id, target.id));
+    if (combat == Combat.RWF) {
+      knock(target, attacker.pos, attacker.sprinting ? 1 : 0);
+      if (attacker.sprinting) {
+        // rwf ends a sprinting attacker's sprint and keeps 0.6 of its horizontal speed.
+        attacker.sprinting = false;
+        attacker.velocity = toSim(Knockback.sprintReset(toRwf(attacker.velocity)));
+      }
+      return;
+    }
     var push = target.pos.minus(attacker.pos).horizontal();
     if (!push.isZero()) {
       var pushed = target.pos.plus(push.normalized().scale(0.5));
@@ -389,8 +476,89 @@ final class SimWorld {
     }
   }
 
+  /** rwf's knockback on {@code victim} from a blow struck at {@code from}. */
+  private void knock(SimBody victim, Vec3 from, int level) {
+    if (!victim.alive) return;
+    victim.velocity =
+        toSim(
+            Knockback.compute(
+                Knockback.Params.hit(toRwf(from), toRwf(victim.pos), toRwf(victim.velocity), level),
+                random));
+    victim.onGround = false;
+  }
+
+  private static com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3 toRwf(Vec3 v) {
+    return new com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3(v.x(), v.y(), v.z());
+  }
+
+  private static Vec3 toSim(com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3 v) {
+    return new Vec3(v.x(), v.y(), v.z());
+  }
+
+  /** Looses a drawn bow under rwf's rules: vanilla's draw power along the look, from the eye. */
+  private void loose(SimBody body) {
+    var ranged = body.reflexContext.loadout().ranged();
+    var drawn = Math.min(1.0, (tick - body.useStart) / (double) ranged.chargeTicks());
+    var power = Math.min(1.0, (drawn * drawn + 2 * drawn) / 3);
+    if (power < 0.1) return;
+    var speed = ranged.projectileSpeed() * power;
+    arrows.add(new Arrow(body, body.look.direction().scale(speed), ARROW_DAMAGE * power, tick));
+    stimuli.add(Stimulus.by(Stimulus.Kind.BOW_SHOT, body.pos, tick, body.id));
+  }
+
+  /** Flies every arrow a tick with the bow solver's drag and gravity; strikes what it meets. */
+  private void flyArrows() {
+    for (var it = arrows.iterator(); it.hasNext(); ) {
+      var arrow = it.next();
+      var next = arrow.pos.plus(arrow.vel);
+      var wall = nav.grid().raycast(arrow.pos, next, VoxelGrid.Layer.MOVEMENT);
+      var reach = wall.isPresent() ? 0 : arrow.vel.length();
+      var struck = struck(arrow, reach);
+      if (struck.isPresent()) {
+        var victim = struck.orElseThrow();
+        if (victim.lastHurt < 0 || tick - victim.lastHurt >= RWF_HIT_WINDOW_TICKS) {
+          victim.struck(arrow.shooter.id, tick, arrow.shooter.pos);
+          victim.hurt(arrow.damage * (1 - victim.armor / 25.0), tick, SimBody.Cause.ARROW);
+          stimuli.add(Stimulus.hit(victim.pos, tick, arrow.shooter.id, victim.id));
+          knock(victim, victim.pos.minus(arrow.vel.horizontal()), 0);
+        }
+        it.remove();
+        continue;
+      }
+      if (wall.isPresent() || tick - arrow.loosed > ARROW_LIFE_TICKS) {
+        it.remove();
+        continue;
+      }
+      arrow.pos = next;
+      arrow.vel = arrow.vel.scale(BowSolver.DRAG).plus(0, -BowSolver.GRAVITY, 0);
+    }
+  }
+
+  /** The first living enemy of the arrow's shooter its path meets within {@code reach}. */
+  private Optional<SimBody> struck(Arrow arrow, double reach) {
+    var direction = arrow.vel.normalized();
+    SimBody first = null;
+    var nearest = reach;
+    for (var body : bodies.values()) {
+      if (!body.alive || body.team.equals(arrow.shooter.team)) continue;
+      var entry = body.view(tick).box().rayEntry(arrow.pos, direction);
+      if (entry.isPresent() && entry.getAsDouble() <= nearest) {
+        nearest = entry.getAsDouble();
+        first = body;
+      }
+    }
+    return Optional.ofNullable(first);
+  }
+
   private void release(SimBody body) {
     var loadout = body.reflexContext == null ? null : body.reflexContext.loadout();
+    if (combat == Combat.RWF
+        && loadout != null
+        && loadout.hasBow()
+        && body.usingItem
+        && body.heldSlot == loadout.bowSlot()) {
+      loose(body);
+    }
     var eating = loadout != null && body.heldSlot == loadout.gappleSlot() && body.gapples > 0;
     if (body.usingItem && eating && tick - body.useStart >= Reflex.EAT_TICKS) {
       body.health = Math.min(body.traversal.maxHealth(), body.health + 4);

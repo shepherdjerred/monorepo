@@ -3698,7 +3698,12 @@ fuse, bomb or plant slot to see to, it walks onto the cell of a landed,
 pick-up-allowed arrow within 12 blocks so the server's touch picks it up
 (`Resupply`). A swordsman charging an archer it sees drawing, 6 to 30 blocks
 off, weaves: legs 27 degrees off its line flip every 6 to 9 ticks and a
-reaction time after each shot, never towards a drop (`Weave`). Every path a bot walks pays a per-bot
+reaction time after each shot, never towards a drop (`Weave`). In a melee a bot
+reads the ground behind itself along the push of its enemy's next blow (6 blocks
+for an enemy who can sprint): with a drop there it leans in rather than backing
+off, and circles to the side that keeps ground behind it, while it presses an
+enemy whose back is within a plain blow of a drop (`EdgeFooting`). A combat step
+may come down off a rail or a ledge up to two blocks high. Every path a bot walks pays a per-bot
 penalty per block of each primitive: seeded noise over patches of the map, a
 toll on teammates' current paths and one for leaving its lane. Long jumps pay
 for their full distance, so they cannot evade those costs by skipping intermediate
