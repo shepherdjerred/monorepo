@@ -27,6 +27,11 @@ struct FacetAccountForm: View {
     @Environment(\.scenePhase) private var scenePhase
     private var accountBusy: Bool { submitting || store.accountPresentation.isBusy }
     private var busy: Bool { accountBusy || store.isLoading }
+    private var canSignIn: Bool {
+        FacetAccountPresentation.canSignIn(
+            busy: busy, email: email, password: password, code: code,
+            needsCode: store.accountNeedsCode)
+    }
 
     var body: some View {
         NavigationStack {
@@ -62,6 +67,7 @@ struct FacetAccountForm: View {
                             #endif
                         }
                         Button {
+                            guard canSignIn else { return }
                             let submittedEmail = email
                             let submittedPassword = password
                             let submittedCode = code
@@ -80,7 +86,7 @@ struct FacetAccountForm: View {
                             } else {
                                 Text("Sign in")
                             }
-                        }.disabled(busy || email.isEmpty || password.isEmpty)
+                        }.disabled(!canSignIn)
                             .accessibilityIdentifier("facet.account.signin")
                     }
                     .disabled(busy)

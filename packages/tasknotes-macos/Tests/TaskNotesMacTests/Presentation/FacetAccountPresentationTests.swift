@@ -37,6 +37,43 @@ import Testing
         #expect(store.accountPresentation.error == nil)
     }
 
+    @Test func signInEligibilityFollowsChallengeRejectionClearAndCredentialReset() async {
+        let store = FacetStore()
+        func eligible(_ code: String = "") -> Bool {
+            FacetAccountPresentation.canSignIn(
+                busy: false, email: "synthetic@example.invalid", password: "synthetic",
+                code: code, needsCode: store.accountNeedsCode)
+        }
+        #expect(eligible())
+        await attempt(store, result: { .needsCode })
+        #expect(!eligible())
+        #expect(eligible("246802"))
+        #expect(!eligible())
+        await attempt(store, result: { .rejectedCode })
+        #expect(!eligible())
+        #expect(eligible("replacement-recovery-code"))
+        store.accountCredentialsChanged()
+        #expect(eligible())
+    }
+
+    @Test(arguments: ["246802", "recovery-code-with-hyphens", "a"])
+    func signInEligibilityAcceptsNonemptyVerificationWithoutAFormatRestriction(code: String) {
+        #expect(
+            FacetAccountPresentation.canSignIn(
+                busy: false, email: "synthetic@example.invalid", password: "synthetic",
+                code: code, needsCode: true))
+    }
+
+    @Test(arguments: [(true, "email", "password"), (false, "", "password"), (false, "email", "")])
+    func signInEligibilityPreservesBusyAndRequiredCredentialChecks(
+        busy: Bool, email: String, password: String
+    ) {
+        #expect(
+            !FacetAccountPresentation.canSignIn(
+                busy: busy, email: email, password: password, code: "recovery-code",
+                needsCode: true))
+    }
+
     @Test func emptyVaultSuccessSurvivesProgrammaticCredentialClear() async {
         let store = FacetStore()
         await attempt(store, result: { .vaults([]) })
