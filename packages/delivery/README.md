@@ -413,10 +413,13 @@ Typed configuration resolves fresh flag snapshots for `delivery-writes-enabled`,
 ownership handover read the catalog lifecycle, never
 `delivery-enabled-environments`; that flag is v1's enable list. Defaults deny writes, authorize no human logins
 and query no external integration. The enrichment flag is a JSON list drawn
-from `woodpecker`, `github` and `argocd`. The GitHub token is registered as the
-`githubReader` 1Password item in the homelab Delivery activation, with a
-`DELIVERY_GH_TOKEN` field holding a fine-grained token that can read the
-monorepo's contents and pull requests. Proxy trust is verified native ownership,
+from `woodpecker`, `github` and `argocd`. The GitHub token is the
+`githubReader` 1Password item in the homelab Delivery activation, mounted as
+`DELIVERY_GH_TOKEN`. It authenticates hub commit context and the independent
+GitHub tag and tarball reads of source acquisition, which anonymously share the
+egress IP's hourly quota with CI. It is currently CI's download token in
+`ci-github-credentials`; a fine-grained public-read token replaces it.
+Proxy trust is verified native ownership,
 not a feature flag.
 Pausing writes stops admission of new effects while allowing cancellation and
 recording results of already owned operations. Environments whose approval
