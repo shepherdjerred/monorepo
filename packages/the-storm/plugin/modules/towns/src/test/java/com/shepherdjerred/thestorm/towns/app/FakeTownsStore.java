@@ -24,11 +24,17 @@ final class FakeTownsStore implements TownsStore {
   private final Map<ChunkPos, Claim> claims = new LinkedHashMap<>();
   private final Map<UUID, TownPayout> payouts = new LinkedHashMap<>();
   private final Map<UUID, String> notices = new LinkedHashMap<>();
+  private final Map<String, UUID> activations = new LinkedHashMap<>();
   private final List<Write> pending = new ArrayList<>();
   private boolean holdReload;
   private CompletableFuture<TownsSnapshot> heldReload = new CompletableFuture<>();
 
   private record Write(Runnable apply, CompletableFuture<Void> done) {}
+
+  /** Activated heritage sites and the towns they recorded. */
+  Map<String, UUID> activations() {
+    return Map.copyOf(activations);
+  }
 
   void seed(Town town, Claim... held) {
     towns.put(town.id(), town);
@@ -93,6 +99,21 @@ final class FakeTownsStore implements TownsStore {
   @Override
   public CompletableFuture<Void> createTown(Town town) {
     return record(() -> towns.put(town.id(), town));
+  }
+
+  @Override
+  public CompletableFuture<Set<String>> heritageActivations() {
+    return CompletableFuture.completedFuture(Set.copyOf(activations.keySet()));
+  }
+
+  @Override
+  public CompletableFuture<Void> activateHeritageTown(
+      String site, UUID townId, Optional<Town> founded, Instant at) {
+    return record(
+        () -> {
+          founded.ifPresent(town -> towns.put(town.id(), town));
+          activations.put(site, townId);
+        });
   }
 
   @Override

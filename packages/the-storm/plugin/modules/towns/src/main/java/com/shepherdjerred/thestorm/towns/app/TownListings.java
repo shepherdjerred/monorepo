@@ -116,7 +116,7 @@ public final class TownListings implements TownRead {
                                       ::name)
                               .toList())
                       + " within proven footprint; staff in buffer",
-              "Reconstructed from the 2015 archive; original Towny claims unavailable"));
+              "Reconstructed from the archived map; original Towny claims unavailable"));
     }
     for (var town : state.towns()) {
       if (town.isCamp()) {

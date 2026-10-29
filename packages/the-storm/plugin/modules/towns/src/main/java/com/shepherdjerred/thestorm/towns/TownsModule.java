@@ -32,6 +32,7 @@ import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageActivations;
 import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageArchive;
 import com.shepherdjerred.thestorm.towns.domain.parcel.ParcelsConfig;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
@@ -90,6 +91,7 @@ public final class TownsModule implements StormModule {
     state.attachHeritage(
         new com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex(heritage.sites()));
     state.load(await(store.loadAll(), "towns"));
+    activateHeritageTowns(context, store, state, heritage.sites());
     var leases = new JooqLeaseStore(context.database());
     var parcels = new ParcelBook(parcelsConfig, context.time());
     parcels.load(await(leases.load(), "plot leases"));
@@ -255,6 +257,47 @@ public final class TownsModule implements StormModule {
     if (stop != null) {
       stop.run();
       stopMap = null;
+    }
+  }
+
+  /**
+   * Founds each player heritage site's town for its proven mayor, once. Runs before players can
+   * join, so the founding sees the stored towns as they are.
+   */
+  private static void activateHeritageTowns(
+      ModuleContext context,
+      JooqTownsStore store,
+      TownsState state,
+      java.util.List<com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite> sites) {
+    var now = context.time().instant();
+    var activated = await(store.heritageActivations(), "heritage activations");
+    for (var step :
+        HeritageActivations.plan(
+            sites,
+            new HeritageActivations.Stored(activated, townId -> state.town(townId).isPresent()),
+            state,
+            now)) {
+      switch (step) {
+        case HeritageActivations.Step.Found found -> {
+          await(
+              store.activateHeritageTown(
+                  found.siteId(), found.town().id(), java.util.Optional.of(found.town()), now),
+              "heritage town " + found.town().name());
+          state.addTown(found.town());
+          context
+              .logger()
+              .info("heritage site {} founded town {}", found.siteId(), found.town().name());
+        }
+        case HeritageActivations.Step.Existing existing ->
+            await(
+                store.activateHeritageTown(
+                    existing.siteId(), existing.townId(), java.util.Optional.empty(), now),
+                "heritage activation " + existing.siteId());
+        case HeritageActivations.Step.Wait waiting ->
+            context
+                .logger()
+                .warn("heritage site {} has no town yet: {}", waiting.siteId(), waiting.reason());
+      }
     }
   }
 

@@ -25,6 +25,7 @@ import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -160,6 +161,43 @@ final class JooqTownsStoreTest {
   void aClaimNeedsAStoredTown() {
     assertThatThrownBy(() -> await(store.addClaim(claim(TOWN_A, 0, 0), CLAIMED)))
         .isInstanceOf(ExecutionException.class);
+  }
+
+  @Test
+  void aHeritageActivationStoresTheTownAndIsRecordedOnce() throws Exception {
+    var town = Town.found(UUID.randomUUID(), "Karthil", FOUNDED, NOMAD);
+    await(store.activateHeritageTown("map2-karthil", town.id(), Optional.of(town), CLAIMED));
+    await(
+        store.activateHeritageTown(
+            "heritage-000", Fixtures.TOWN_B, Optional.empty(), CLAIMED.plusSeconds(1)));
+
+    assertThat(load().towns()).containsExactly(town);
+    assertThat(await(store.heritageActivations()))
+        .containsExactlyInAnyOrder("map2-karthil", "heritage-000");
+    assertThatThrownBy(
+            () ->
+                await(
+                    store.activateHeritageTown(
+                        "map2-karthil",
+                        UUID.randomUUID(),
+                        Optional.of(Town.found(UUID.randomUUID(), "Again", FOUNDED, OWNER)),
+                        CLAIMED)))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void aFailedHeritageActivationLeavesNoTownOrRecord() throws Exception {
+    await(store.createTown(Fixtures.townA()));
+    var clash = Town.found(UUID.randomUUID(), "Aegis", FOUNDED, NOMAD);
+
+    assertThatThrownBy(
+            () ->
+                await(
+                    store.activateHeritageTown(
+                        "map2-aegis", clash.id(), Optional.of(clash), CLAIMED)))
+        .isInstanceOf(ExecutionException.class);
+    assertThat(load().towns()).containsExactly(Fixtures.townA());
+    assertThat(await(store.heritageActivations())).isEmpty();
   }
 
   @Test

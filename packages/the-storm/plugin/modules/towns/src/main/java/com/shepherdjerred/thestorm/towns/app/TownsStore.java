@@ -20,6 +20,16 @@ public interface TownsStore {
   /** Stores a new town and its members. */
   CompletableFuture<Void> createTown(Town town);
 
+  /** The heritage sites whose towns have been activated. */
+  CompletableFuture<Set<String>> heritageActivations();
+
+  /**
+   * Records {@code site}'s town as activated at {@code at}, storing {@code founded} and its members
+   * in the same transaction when present.
+   */
+  CompletableFuture<Void> activateHeritageTown(
+      String site, UUID townId, Optional<Town> founded, Instant at);
+
   /** Replaces a stored town's name, Governor level and members with {@code town}'s. */
   CompletableFuture<Void> saveTown(Town town);
 

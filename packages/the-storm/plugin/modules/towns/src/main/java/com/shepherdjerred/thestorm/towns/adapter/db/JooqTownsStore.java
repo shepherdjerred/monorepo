@@ -4,6 +4,7 @@ import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWN
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM_FLAG;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM_TRUST;
+import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_HERITAGE_ACTIVATION;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_BLOCK;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_RESTORATION;
@@ -121,19 +122,54 @@ public final class JooqTownsStore implements TownsStore {
   public CompletableFuture<Void> createTown(Town town) {
     return write(
         dsl -> {
-          var id = town.id().toString();
-          dsl.insertInto(TOWNS_TOWN)
-              .set(TOWNS_TOWN.ID, id)
-              .set(TOWNS_TOWN.NAME, town.name())
-              .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
-              .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
-              .set(TOWNS_TOWN.KIND, town.kind().name())
-              .set(
-                  TOWNS_TOWN.LAST_ACTIVE_AT,
-                  town.lastActive().map(Instant::toEpochMilli).orElse(null))
-              .set(TOWNS_TOWN.EXPIRY_WARNED, town.expiryWarned() ? 1 : 0)
-              .execute();
+          insertTown(dsl, town);
           insertMembers(dsl, town);
+        });
+  }
+
+  private static void insertTown(DSLContext dsl, Town town) {
+    dsl.insertInto(TOWNS_TOWN)
+        .set(TOWNS_TOWN.ID, town.id().toString())
+        .set(TOWNS_TOWN.NAME, town.name())
+        .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
+        .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
+        .set(TOWNS_TOWN.KIND, town.kind().name())
+        .set(TOWNS_TOWN.LAST_ACTIVE_AT, town.lastActive().map(Instant::toEpochMilli).orElse(null))
+        .set(TOWNS_TOWN.EXPIRY_WARNED, town.expiryWarned() ? 1 : 0)
+        .execute();
+  }
+
+  @Override
+  public CompletableFuture<Set<String>> heritageActivations() {
+    return database.write(
+        dsl ->
+            Set.copyOf(
+                dsl.select(TOWNS_HERITAGE_ACTIVATION.SITE_ID)
+                    .from(TOWNS_HERITAGE_ACTIVATION)
+                    .fetch(TOWNS_HERITAGE_ACTIVATION.SITE_ID)));
+  }
+
+  @Override
+  public CompletableFuture<Void> activateHeritageTown(
+      String site, UUID townId, Optional<Town> founded, Instant at) {
+    founded.ifPresent(
+        town -> {
+          if (!town.id().equals(townId)) {
+            throw new IllegalArgumentException("founded town is not the site's town");
+          }
+        });
+    return write(
+        dsl -> {
+          founded.ifPresent(
+              town -> {
+                insertTown(dsl, town);
+                insertMembers(dsl, town);
+              });
+          dsl.insertInto(TOWNS_HERITAGE_ACTIVATION)
+              .set(TOWNS_HERITAGE_ACTIVATION.SITE_ID, site)
+              .set(TOWNS_HERITAGE_ACTIVATION.TOWN_ID, townId.toString())
+              .set(TOWNS_HERITAGE_ACTIVATION.ACTIVATED_AT, at.toEpochMilli())
+              .execute();
         });
   }
 
