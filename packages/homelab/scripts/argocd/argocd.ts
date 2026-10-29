@@ -85,6 +85,11 @@ import {
   type ManagedResource,
 } from "./argocd-apply-safety.ts";
 import { withIgnoredDifferencesApplied } from "./argocd-ignored-differences.ts";
+import {
+  renderedTargetState,
+  resourceIdentity,
+  type RenderedTarget,
+} from "./argocd-rendered-targets.ts";
 import { z } from "zod";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
@@ -396,15 +401,6 @@ async function getApplicationManifests(
   return ManifestResponseSchema.parse(await response.json()).manifests;
 }
 
-type RenderedTarget = {
-  readonly apiVersion: string;
-  readonly group: string;
-  readonly kind: string;
-  readonly manifest: string;
-  readonly name: string;
-  readonly namespace: string | undefined;
-};
-
 function renderedTargetsByIdentity(
   manifests: readonly string[],
 ): ReadonlyMap<string, readonly RenderedTarget[]> {
@@ -524,52 +520,6 @@ async function liveResourceState(
 }
 
 /**
- * Either side may omit the namespace for the same object: a rendered manifest
- * leaves it to the Application's destination, and `managed-resources` omits it
- * for a cluster-scoped resource whose chart still stamps `metadata.namespace`
- * (harmless — the API server ignores it). So a missing namespace on either side
- * is a wildcard, and only two *concrete, different* namespaces are a mismatch.
- *
- * That mismatch is fatal rather than silent. Returning no manifest leaves the
- * resource without a `targetState`, and `analyzeApplySafety` skips a resource
- * that has no target — so a namespace disagreement used to mean the immutable
- * checks simply never ran for it. Failing an ambiguous match loudly while
- * quietly failing an impossible one was the wrong way round.
- */
-function renderedTargetState(
-  targets: ReadonlyMap<string, readonly RenderedTarget[]>,
-  resource: ManagedResource,
-  appName: string,
-): string | undefined {
-  const identity = resourceIdentity(
-    resource.group ?? "",
-    resource.kind,
-    resource.name,
-  );
-  const candidates = targets.get(identity) ?? [];
-  const matches = candidates.filter(
-    ({ namespace }) =>
-      namespace === undefined ||
-      resource.namespace === undefined ||
-      namespace === resource.namespace,
-  );
-  if (matches.length > 1) {
-    throw new Error(
-      `Apply-safety preflight for ${appName} matched ${identity} to ${matches.length.toString()} rendered manifests`,
-    );
-  }
-  if (matches.length === 0 && candidates.length > 0) {
-    const rendered = candidates
-      .map(({ namespace }) => namespace ?? "<none>")
-      .join(", ");
-    throw new Error(
-      `Apply-safety preflight for ${appName} found ${identity} in namespace ${resource.namespace ?? "<none>"} but rendered it in ${rendered}`,
-    );
-  }
-  return matches[0]?.manifest;
-}
-
-/**
  * `managed-resources` reports the target state of the Application's configured
  * revision, so a sync that requests a different revision must be preflighted
  * against that revision's rendered manifests instead. A resource the requested
@@ -677,10 +627,6 @@ async function assertApplySafe(
       `Refusing ${appName} sync because the read-only apply-safety preflight found:\n${findings.map((finding) => `- ${finding}`).join("\n")}`,
     );
   }
-}
-
-function resourceIdentity(group: string, kind: string, name: string): string {
-  return JSON.stringify([group, kind, name]);
 }
 
 function renderedResourceIdentity(manifestSource: string): string {
