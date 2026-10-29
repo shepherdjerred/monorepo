@@ -1853,8 +1853,8 @@
       {
         "from": "red-spawn-36",
         "to": "blue-1",
-        "length": 447.61320781707764,
-        "nodes": 38
+        "length": 451.33781242370605,
+        "nodes": 39
       },
       {
         "from": "red-spawn-37",
@@ -1961,8 +1961,8 @@
       {
         "from": "red-spawn-39",
         "to": "blue-1",
-        "length": 438.33781242370605,
-        "nodes": 38
+        "length": 434.61320781707764,
+        "nodes": 37
       },
       {
         "from": "red-spawn-40",
@@ -3624,5 +3624,5 @@
   },
   "distanceFields": 87,
   "problems": [],
-  "bytes": 5819034
+  "bytes": 5819054
 }

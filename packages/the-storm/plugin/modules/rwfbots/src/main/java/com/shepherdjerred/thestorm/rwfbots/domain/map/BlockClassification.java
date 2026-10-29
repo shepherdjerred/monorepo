@@ -23,4 +23,12 @@ public interface BlockClassification {
   default int halfStepQuarters(int x, int y, int z) {
     return 0;
   }
+
+  /**
+   * Whether the cell at world coordinates slows a body moving through it to a crawl, as a cobweb
+   * does. False for every other block, and by default.
+   */
+  default boolean slowsMovement(int x, int y, int z) {
+    return false;
+  }
 }

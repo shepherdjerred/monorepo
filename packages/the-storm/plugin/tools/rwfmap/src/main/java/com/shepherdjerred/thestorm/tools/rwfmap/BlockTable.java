@@ -433,6 +433,11 @@ public final class BlockTable {
         StairQuarters.Shape.valueOf(state.property("shape").toUpperCase(Locale.ROOT)));
   }
 
+  /** Whether a canonical block state slows a body moving through it to a crawl: a cobweb. */
+  public static boolean slowsMovement(String blockState) {
+    return "cobweb".equals(BlockState.parse(blockState).id());
+  }
+
   private static Optional<Classified> flat(BlockState state) {
     if (PASSABLE_IDS.contains(state.id())
         || PASSABLE_SUFFIXES.stream().anyMatch(state::idEndsWith)) {

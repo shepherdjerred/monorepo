@@ -18,6 +18,12 @@ final class NavGraphBuilder {
   // A stair step or a slab: vanilla walks a body up one this high.
   private static final double HALF_STEP = 0.5;
 
+  /**
+   * How many times longer a step into, out of or through a cobweb takes: vanilla scales a body's
+   * motion in one to a quarter across and a twentieth down.
+   */
+  static final float COBWEB_SLOWDOWN = 4;
+
   private static final int[][] DIRECTIONS = {
     {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
   };
@@ -106,7 +112,10 @@ final class NavGraphBuilder {
       for (var edge : edges) {
         targets.add(edge.to());
         hops.add(edge.hop());
-        costs.add(edge.cost());
+        costs.add(
+            webbed(cell, bounds.cell(cellOfNode.get(edge.to())))
+                ? edge.cost() * COBWEB_SLOWDOWN
+                : edge.cost());
         damage.add(edge.damage());
       }
       edgeStart[node + 1] = targets.size();
@@ -131,6 +140,22 @@ final class NavGraphBuilder {
   }
 
   private record Edge(int to, Hop hop, float cost, int damage) {}
+
+  /**
+   * Whether a body stepping from {@code from} to {@code to} has a cobweb about it: at either end,
+   * at its feet or its head, or anywhere down the column it falls through. A tracker stood in one
+   * on warzone for 21 seconds; the graph had walked it through as open air.
+   */
+  private boolean webbed(BlockPos from, BlockPos to) {
+    if (slows(from) || slows(from.up()) || slows(to) || slows(to.up())) return true;
+    for (var y = to.y() + 2; y <= from.y() + 1; y++)
+      if (slows(new BlockPos(to.x(), y, to.z()))) return true;
+    return false;
+  }
+
+  private boolean slows(BlockPos cell) {
+    return bounds.contains(cell) && blocks.slowsMovement(cell.x(), cell.y(), cell.z());
+  }
 
   private BitSet climbable(int[] cells) {
     var result = new BitSet(cells.length);

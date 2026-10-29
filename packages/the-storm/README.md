@@ -1565,7 +1565,10 @@ and movement model 4 use server ticks for travel costs and health points for
 fall damage. Directed edges include climbing, surface and submerged swimming,
 ordinary wooden doors, jump-up steps, and sprint jumps with certified run-up
 and flight clearance. Compressed water intervals preserve intermediate depths
-without storing a graph node for every submerged block. Nodes retain actual
+without storing a graph node for every submerged block. A cobweb is passable
+but slow: a step with one at either end, at feet or head height, or in the
+column a drop falls through costs four times as long, so routes go round one
+when the way round is short. Nodes retain actual
 half-block standing heights and exact climbable-cell metadata. A climb edge
 alone does not certify that the body's feet touch a ladder or vine. A body
 already running up a sprint jump's line joins its run-up where it is, closing a

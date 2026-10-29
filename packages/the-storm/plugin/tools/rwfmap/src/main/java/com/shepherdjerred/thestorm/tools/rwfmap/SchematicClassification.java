@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockClassification;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -20,6 +21,7 @@ public final class SchematicClassification implements BlockClassification {
   private final GridBounds bounds;
   private final List<BlockTable.Classified> palette;
   private final int[] halfSteps;
+  private final BitSet slows;
 
   private SchematicClassification(
       Schematic schematic,
@@ -30,6 +32,9 @@ public final class SchematicClassification implements BlockClassification {
     this.bounds = bounds;
     this.palette = List.copyOf(palette);
     this.halfSteps = halfSteps.clone();
+    slows = new BitSet(schematic.palette().size());
+    for (var index = 0; index < schematic.palette().size(); index++)
+      slows.set(index, BlockTable.slowsMovement(schematic.palette().get(index)));
   }
 
   /**
@@ -91,6 +96,11 @@ public final class SchematicClassification implements BlockClassification {
   @Override
   public int halfStepQuarters(int x, int y, int z) {
     return halfSteps[paletteIndex(x, y, z)];
+  }
+
+  @Override
+  public boolean slowsMovement(int x, int y, int z) {
+    return slows.get(paletteIndex(x, y, z));
   }
 
   private BlockTable.Classified classified(int x, int y, int z) {
