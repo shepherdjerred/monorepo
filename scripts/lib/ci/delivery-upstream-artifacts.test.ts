@@ -1,3 +1,4 @@
+import { IdentifierSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 import { createHash } from "node:crypto";
 import { packTar } from "modern-tar";
 import { expect, test } from "vitest";
@@ -17,6 +18,7 @@ import {
 import rawVersionCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import {
+  acquisitionArtifactId,
   componentArtifactsForPublication,
   MIRRORED_CHARTS,
   v1AcquisitionCatalog,
@@ -900,4 +902,20 @@ test("an acquired source is reused while its tag is pinned and acquired again wh
   expect(stored).toEqual(requests.map((request) => request.artifact.uri));
   // The contract binds a source artifact to the commit it stored.
   expect(() => acquiredSourceVersion("8".repeat(40))).toThrow("source commit");
+});
+
+test("v2 acquisition ids name the catalog component, so a Talos installer fits Delivery's identifier", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const id = acquisitionArtifactId(
+    {
+      serviceId: "cluster-nodes",
+      component: "image:installer-liskov",
+      version: "v1.14.2",
+    },
+    digest,
+  );
+  expect(id).toBe(
+    `upstream/cluster-nodes/installer-liskov/v1.14.2/${"a".repeat(64)}`,
+  );
+  expect(IdentifierSchema.safeParse(id).success).toBe(true);
 });
