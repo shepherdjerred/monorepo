@@ -602,6 +602,23 @@ public final class NavGraph {
     return water;
   }
 
+  /**
+   * Whether water breaks a fall onto {@code cell}: it is submerged and no cell around it is a rim,
+   * a dry block a body can stand on top of. Its top is above the water's surface, so a body coming
+   * down into a one-block irrigation hole lands on the rim instead (beanstalk: bots dropped 22
+   * blocks into one and lost 19 health). A wall is no rim.
+   */
+  public boolean cushions(BlockPos cell) {
+    if (!water.contains(cell)) return false;
+    for (var dx = -1; dx <= 1; dx++) {
+      for (var dz = -1; dz <= 1; dz++) {
+        var beside = cell.offset(dx, 0, dz);
+        if (!water.contains(beside) && nodeAt(beside.up()).isPresent()) return false;
+      }
+    }
+    return true;
+  }
+
   /** Reconstructs the complete baked primitive, including its launch/run-up prerequisite. */
   public Waypoint waypoint(int edge) {
     return waypoint(edge, edgeSource(edge));
@@ -613,8 +630,11 @@ public final class NavGraph {
       throw new IllegalArgumentException("edge does not leave the supplied node");
     var from = feet(source);
     var to = feet(edgeTarget(edge));
+    // A fall lands in water only where the water breaks it; a swim or a climb wherever it is.
+    var falls = edgeHop(edge) == Hop.DROP || edgeHop(edge) == Hop.LEAP;
+    var wet = falls ? cushions(BlockPos.of(to)) : water.contains(BlockPos.of(to));
     var landing =
-        water.contains(BlockPos.of(to))
+        wet
             ? Waypoint.Landing.WATER
             : edgeHop(edge) == Hop.CLIMB ? Waypoint.Landing.CLIMB : Waypoint.Landing.GROUND;
     return new Waypoint(

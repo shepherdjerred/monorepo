@@ -45,6 +45,11 @@ public final class HealthRoutes {
         throw new IllegalArgumentException("arrival deadline must be finite and non-negative");
     }
 
+    /** The same policy with a different damage budget. */
+    public RiskPolicy withDamageBudget(double budget) {
+      return new RiskPolicy(budget, ticksPerHealthPoint, deadlineTicks);
+    }
+
     boolean allows(double ticks) {
       return deadlineTicks.isEmpty() || ticks <= deadlineTicks.orElseThrow();
     }

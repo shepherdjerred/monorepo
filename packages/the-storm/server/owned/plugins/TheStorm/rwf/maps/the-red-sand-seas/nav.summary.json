@@ -863,7 +863,7 @@
   },
   "edges": {
     "total": 132794,
-    "damaging": 8891,
+    "damaging": 9149,
     "maximumRawDamage": 21,
     "CLIMB": 352,
     "DROP": 23188,
@@ -2682,5 +2682,5 @@
   },
   "distanceFields": 52,
   "problems": [],
-  "bytes": 2618498
+  "bytes": 2618706
 }

@@ -18,7 +18,7 @@ public final class FallRisk {
     var distance =
         Math.max(0, graph.feet(graph.edgeSource(edge)).y() - target.y())
             + (hop == Hop.LEAP ? 1.3 : 0);
-    return mitigated(distance, graph.water().contains(BlockPos.of(target)), state, arrivalTick);
+    return mitigated(distance, graph.cushions(BlockPos.of(target)), state, arrivalTick);
   }
 
   /** Rechecks current equipment and effects at the actual entry to a prepared primitive. */
