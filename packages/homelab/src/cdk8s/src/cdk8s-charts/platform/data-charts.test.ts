@@ -98,11 +98,21 @@ const deliveryApp = render(".test-synth-delivery-app", (app) => {
 });
 const temporalApp = render(".test-synth-temporal-app", createTemporalChart);
 
+/** WAL archiving adds each cluster's credential mirror after the cluster. */
+function walCredentials(
+  cluster: keyof typeof POSTGRES_WAL_PREFIXES,
+): [string, string][] {
+  return postgresWalArchiving()
+    ? [["OnePasswordItem", `${cluster}-wal-archive`]]
+    : [];
+}
+
 describe("PostgreSQL data-layer charts", () => {
   test("render exactly the data-layer objects", () => {
     expect(inventory(deliveryData)).toEqual([
       ["Namespace", "delivery"],
       ["postgresql", "delivery-postgresql"],
+      ...walCredentials("delivery-postgresql"),
     ]);
     expect(inventory(temporalData)).toEqual([
       ["Namespace", "temporal"],
@@ -111,25 +121,34 @@ describe("PostgreSQL data-layer charts", () => {
       ["Issuer", "temporal-postgresql-ca-issuer"],
       ["Certificate", "temporal-postgresql"],
       ["postgresql", "temporal-postgresql"],
+      ...walCredentials("temporal-postgresql"),
       ["NetworkPolicy", "temporal-postgresql-netpol"],
     ]);
   });
 
   // Adoption must be a no-op for the live clusters: the data charts emit the
-  // same constructors' output, plus only the prune protection.
-  test("adopt the clusters byte-identically apart from prune protection", () => {
+  // same constructors' output, plus only the prune protection and, once the
+  // clusters are adopted, the WAL archiving environment.
+  test("adopt the clusters byte-identically apart from prune protection and WAL archiving", () => {
     expect(find(deliveryData, "postgresql", "delivery-postgresql")).toEqual(
       retained(
-        clusterAsReleasedToday("delivery", "delivery", (chart) =>
-          createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] }),
-        ),
+        clusterAsReleasedToday("delivery", "delivery", (chart) => {
+          const database = createSingleAppPostgreSQL(chart, {
+            app: "delivery",
+            userFlags: [],
+          });
+          archivePostgresWal(database, "delivery-postgresql");
+          return database;
+        }),
       ),
     );
     expect(find(temporalData, "postgresql", "temporal-postgresql")).toEqual(
       retained(
-        clusterAsReleasedToday("temporal", "temporal", (chart) =>
-          createTemporalPostgreSQLDatabase(chart),
-        ),
+        clusterAsReleasedToday("temporal", "temporal", (chart) => {
+          const database = createTemporalPostgreSQLDatabase(chart);
+          archivePostgresWal(database, "temporal-postgresql");
+          return database;
+        }),
       ),
     );
   });
@@ -227,11 +246,11 @@ test.runIf(transitionRendering())(
 );
 
 describe("WAL-G archiving", () => {
-  test("is off until the data layers have adopted their clusters", () => {
-    expect(postgresWalArchiving()).toBe(false);
+  test("is on once the data layers have adopted their clusters", () => {
+    expect(postgresWalArchiving()).toBe(true);
     for (const resource of [...deliveryData, ...temporalData])
       if (resource.kind === "postgresql")
-        expect(JSON.stringify(resource.spec)).not.toContain("WALG");
+        expect(JSON.stringify(resource.spec)).toContain("WALG");
   });
 
   test("archives each cluster under its declared prefix of the Velero bucket", () => {
