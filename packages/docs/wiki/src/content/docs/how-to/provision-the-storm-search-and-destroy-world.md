@@ -94,6 +94,13 @@ nav files). The module pastes it at `0,64,0` in the lobby world, so maps never
 share its space. Maps share the map world, so place new maps so their regions
 do not overlap one another; the module refuses to enable if two do.
 
+Ordinary drafts also apply `experience.maps` and `experience.kits` in
+[rwf.yml](packages/the-storm/server/owned/plugins/TheStorm/rwf.yml). Keep the
+TSMC pools limited to imported Red Warfare maps and ported kits. Storm-authored
+content remains shipped for development and test fixtures without entering
+ordinary matches. Changed pools take effect on the next map draft after the
+module restarts; `/rwf admin settings` overrides remain in memory only.
+
 ## 4. Enable the modules
 
 In [config.yml](packages/the-storm/server/owned/plugins/TheStorm/config.yml),

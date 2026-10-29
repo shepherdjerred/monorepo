@@ -28,8 +28,12 @@ Host settings and candidate visits override only `beta` to `true`;
 | `the-storm-rwf-spectator-tools-enabled`  | The dead watch their killer for three seconds, then get a compass menu, `/rwf spectate next`, `/rwf spectate previous` and `/rwf goto`. Ghosts and Wraiths stay hidden.                                                                                                  |
 | `the-storm-rwf-bomb-effects-enabled`     | Map-wide explosion audio and particles, armed-bomb hiss and smoke, and a ten-segment arming bar per team on bomb holograms.                                                                                                                                              |
 | `the-storm-rwf-stats-enabled`            | Stats commands, lobby leaderboards and persistent lifetime and per-kit totals.                                                                                                                                                                                           |
-| `the-storm-rwf-kits-enabled`             | The full kit list, credit shop and weekly free rotation. When off, access is limited to Trooper, Longbow, Shortbow and Rewind.                                                                                                                                           |
+| `the-storm-rwf-kits-enabled`             | The kit catalog, credit shop and weekly free rotation. When off, access is limited to Trooper, Longbow, Shortbow and Rewind.                                                                                                                                             |
 | `the-storm-rwf-killstreaks-enabled`      | Select three rewards at distinct thresholds before the round: compass at two kills, supply crate or wolves at four, iron golem at eight, napalm at eleven. Each selected reward is earned once per life; assists contribute their share.                                 |
+
+The kit gate does not widen the match's configured kit pool. Ordinary TSMC
+pools are declared in
+[rwf.yml](packages/the-storm/server/owned/plugins/TheStorm/rwf.yml).
 
 Admission is implemented by
 [FliptRwfGate](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfGate.java).

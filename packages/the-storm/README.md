@@ -1513,7 +1513,7 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
 
 ### Maps
 
-Original maps have deterministic programs and typed metadata in
+Storm-authored maps have deterministic programs and typed metadata in
 `tools/maps/authored/`. From this package, render and lint a candidate before
 exporting its terrain:
 

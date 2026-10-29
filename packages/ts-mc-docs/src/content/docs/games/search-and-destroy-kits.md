@@ -18,7 +18,7 @@ Medic and Teleporter. The others are bought once with Red Warfare Credits and
 are yours for good. Until the full selection reaches you, the menu offers the
 first four kits.
 
-The following are examples of kits; the in-game menu shows the full selection available to you.
+The ordinary match pool contains these 24 kits ported from Red Warfare. The in-game menu shows which kits you can use.
 
 | Kit         | Price | What it carries                                       | What it does                                                                                                      |
 | ----------- | ----- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -45,16 +45,7 @@ The following are examples of kits; the in-game menu shows the full selection av
 | Wraith      | 200   | Bow (Power II), no armor                              | Invisible like a Ghost; your arrow comes back 2 seconds after each shot                                           |
 | Bleeder     | 400   | The Bleeder (wooden sword)                            | Hits deal 2–3 damage and take that much from the enemy's max health for good                                      |
 | Equality    | 350   | Iron sword, black and white leather                   | Every hit you deal or take is 3 damage                                                                            |
-| Inertia     | 350   | Wooden sword, shield                                  | Running builds up melee damage; sharp turns lose it, and running into a wall hurts                                |
 | Sacrificial | 500   | Sacrificial Magic, shears, 10 steaks                  | Bond allies to take their damage for them; direct hits on you hurt four times as much                             |
-| Sapper      | 150   | Iron sword, chainmail                                 | Your fuse defuses 3 seconds faster, and explosions do you half damage                                             |
-| Saboteur    | 200   | Stone sword, dark leather                             | Your fuse arms 3 seconds faster, and enemies cannot see your team's arming progress until 10 seconds are left     |
-| Spotter     | 250   | Iron sword, spyglass                                  | Enemies you see through the spyglass within 60 blocks glow for your team for 6 seconds (30 second recharge)       |
-| Grappler    | 300   | Stone sword, grappling hook                           | Reel in to be pulled to where the hook landed, with no fall damage for 3 seconds (5 second recharge)              |
-| Bannerman   | 300   | Iron sword, team banner                               | Plant the banner to give allies within 6 blocks Regeneration; enemies break it in 3 hits (45 second recharge)     |
-| Engineer    | 400   | Stone sword, bricks                                   | Right-click a block to raise a 3×2 wall for 8 seconds, not near a bomb (25 second recharge)                       |
-| Tracker     | 400   | Iron sword, crossbow                                  | See enemy footprints from the last 8 seconds; your first hit marks an enemy on your team's compasses              |
-| Decoy       | 450   | Iron sword, decoy                                     | Send a running copy of yourself and turn invisible to enemies for 3 seconds (35 second recharge)                  |
 
 ### Buying kits
 
