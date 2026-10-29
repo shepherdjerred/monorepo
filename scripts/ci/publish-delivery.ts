@@ -378,6 +378,7 @@ async function main() {
         username: requireEnv("CHARTMUSEUM_USERNAME"),
         password: requireEnv("CHARTMUSEUM_PASSWORD"),
       }),
+      githubToken: () => requireEnv("GITHUB_DOWNLOAD_TOKEN"),
     },
   );
   const publications = await buildPublications(

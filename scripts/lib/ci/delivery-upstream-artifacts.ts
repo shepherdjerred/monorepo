@@ -1,3 +1,8 @@
+import { createHash } from "node:crypto";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { sourceArchiveUri } from "@shepherdjerred/delivery/artifact-contract";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import type {
@@ -16,6 +21,7 @@ import type { OwnerRegistry } from "@shepherdjerred/ops-model/delivery-catalog/p
 import {
   catalogComponentName,
   componentEntries,
+  githubSource,
   ociChart,
   upstreamName,
   type VersionCatalog,
@@ -26,6 +32,7 @@ import {
   helmRepositoryUrl,
   type ChartTransport,
 } from "./upstream-delivery-chart.ts";
+import { publishImmutableArchive } from "../artifacts/immutable-archive.ts";
 
 /**
  * Charts still copied into ChartMuseum. Nothing new is mirrored (X11); the
@@ -53,12 +60,23 @@ export type ComponentArtifactOptions = {
   transport?: ChartTransport;
   /** Delivery service owning each upstream image component; images have no catalog index. */
   imageOwners?: Record<string, string>;
+  /** GitHub reads for a source acquisition: its tag's commit and that commit's tarball. */
+  sourceTransport?: SourceTransport;
+  /** The token for GitHub's API, read only when a source is acquired. */
+  githubToken?: () => string;
+  /** Stores a source tarball in the Delivery artifact bucket. */
+  publishArchive?: typeof publishImmutableArchive;
 };
+export type SourceTransport = (
+  url: string,
+  init?: RequestInit,
+) => Promise<Response>;
 type UpstreamIntent = {
   serviceId: string;
   component: string;
-  kind: "chart" | "image";
+  kind: "chart" | "image" | "archive";
   name: string;
+  /** The pinned version: a chart version, an image tag, or a source's tag. */
   version: string;
   repository: string;
   /** Pinned bytes known before acquisition (images); charts learn theirs from the index. */
@@ -108,7 +126,9 @@ function catalogIntents(
   const identity =
     entry.artifactType === "helm-chart"
       ? chartIdentity(entry)
-      : imageIdentity(entry);
+      : entry.artifactType === "source"
+        ? sourceIdentity(entry)
+        : imageIdentity(entry);
   return owners.map((owner) => ({
     ...identity,
     component,
@@ -157,6 +177,21 @@ function registryIdentity(
     version: pinned[1],
     repository: entry.management.registryUrl,
     digest: pinned[2],
+  };
+}
+
+/** A GitHub source entry is its repository at the tag the catalog pins. */
+function sourceIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId"> {
+  if (!githubSource(entry))
+    throw new Error(`Component ${entry.name} is not a GitHub source`);
+  return {
+    component: catalogComponentName(entry),
+    kind: "archive",
+    name: entry.name,
+    version: entry.value,
+    repository: `https://github.com/${entry.name}`,
   };
 }
 
@@ -223,8 +258,15 @@ async function retained(
       return undefined;
     throw error;
   }
+  // A source's artifact version is the commit its tag named; the catalog
+  // pins the tag, which its upstream origin records. The contract already
+  // binds that commit and the stored tarball's location to the artifact.
+  const pinned =
+    intent.kind === "archive" && original.origin.kind === "upstream"
+      ? original.origin.version
+      : original.version;
   if (
-    original.version !== intent.version ||
+    pinned !== intent.version ||
     (intent.digest !== undefined && original.digest !== intent.digest)
   )
     return undefined;
@@ -241,10 +283,99 @@ async function retained(
   return original;
 }
 
+/** Delivery verifies a source tarball up to this size; a larger one never qualifies. */
+const MAX_SOURCE_BYTES = 16 * 1024 * 1024;
+
+async function githubRead(
+  transport: SourceTransport,
+  url: string,
+  headers: Record<string, string>,
+  label: string,
+): Promise<Uint8Array> {
+  const response = await transport(url, {
+    headers,
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok)
+    throw new Error(`${label} failed (${String(response.status)})`);
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.length > MAX_SOURCE_BYTES)
+    throw new Error(`${label} exceeds Delivery's 16 MiB source limit`);
+  return bytes;
+}
+
+/**
+ * A GitHub source is acquired as the tarball of the commit its pinned tag
+ * names, stored content-addressed in the Delivery artifact bucket. Delivery
+ * resolves the tag and hashes the tarball again before it qualifies.
+ */
+async function acquiredSource(
+  intent: UpstreamIntent,
+  options: ComponentArtifactOptions,
+): Promise<AcquireUpstreamArtifact["artifact"]> {
+  const transport = options.sourceTransport ?? fetch;
+  const token = options.githubToken?.();
+  const commit = new TextDecoder()
+    .decode(
+      await githubRead(
+        transport,
+        `https://api.github.com/repos/${intent.name}/commits/${encodeURIComponent(intent.version)}`,
+        {
+          accept: "application/vnd.github.sha",
+          ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
+        },
+        `GitHub tag resolution for ${intent.name}@${intent.version}`,
+      ),
+    )
+    .trim();
+  if (!/^[a-f0-9]{40}$/u.test(commit))
+    throw new Error(
+      `GitHub did not resolve ${intent.name}@${intent.version} to a commit`,
+    );
+  const tarball = await githubRead(
+    transport,
+    `https://codeload.github.com/${intent.name}/tar.gz/${commit}`,
+    {},
+    `GitHub tarball of ${intent.name}@${commit}`,
+  );
+  const digest = `sha256:${createHash("sha256").update(tarball).digest("hex")}`;
+  const uri = sourceArchiveUri(intent.name, digest);
+  const directory = await mkdtemp(path.join(tmpdir(), "delivery-source-"));
+  try {
+    const file = path.join(directory, "source.tar.gz");
+    await Bun.write(file, tarball);
+    await (options.publishArchive ?? publishImmutableArchive)({
+      uri,
+      file,
+      readback: path.join(directory, "readback.tar.gz"),
+      digest,
+    });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+  return {
+    id: `upstream/${intent.name}/${intent.version}/${digest.slice(7)}`,
+    component: intent.component,
+    kind: "archive",
+    uri,
+    digest,
+    version: commit,
+    origin: {
+      kind: "upstream",
+      repository: intent.repository,
+      name: intent.name,
+      version: intent.version,
+      commit,
+      checksum: digest,
+    },
+  };
+}
+
 async function acquiredArtifact(
   intent: UpstreamIntent,
   options: ComponentArtifactOptions,
 ): Promise<AcquireUpstreamArtifact["artifact"]> {
+  if (intent.kind === "archive") return acquiredSource(intent, options);
   // A Helm-index chart learns its digest from the index; a registry-hosted
   // entry (an image or an OCI chart) is already pinned.
   if (intent.kind === "chart" && intent.digest === undefined) {
