@@ -43,6 +43,15 @@ public final class TeamBrain {
   /** Distances past this count as this, so an unreachable slot is merely bad. */
   static final double DISTANCE_CAP = TraversalCosts.walkingTicks(128);
 
+  /**
+   * What a fuse worker's slot is worth less to a bot stuck in a fight ({@link Blackboard#pinned}):
+   * more than the whole of a capped retake route, so the next bot takes it.
+   */
+  static final double HANDOFF = 6;
+
+  /** The least gap, in ticks, between deals that hand a stuck worker's fuse on. */
+  static final int HANDOFF_PERIOD_TICKS = 10;
+
   /** How much random preference an erratic (troll) bot adds to every slot. */
   static final double ERRATIC = 0.12;
 
@@ -136,10 +145,31 @@ public final class TeamBrain {
             .filter(bomb -> bomb.threatens(board.team()))
             .map(BombView::id);
     var defenseChanged = !urgent.equals(previousUrgent);
-    if ((due || rosterChanged || defenseChanged) && !alive.isEmpty()) {
+    var handOff =
+        urgent.isPresent()
+            && snapshot.tick() - result.rolesAssignedTick() >= HANDOFF_PERIOD_TICKS
+            && stuckWorker(result, snapshot.tick());
+    if ((due || rosterChanged || defenseChanged || handOff) && !alive.isEmpty()) {
       return new Prepared(result, Optional.of(deal(result, situation, alive)), snapshot.tick());
     }
     return new Prepared(result, Optional.empty(), snapshot.tick());
+  }
+
+  /** Whether a bot holding a fuse worker's slot has been stuck in a fight too long to work it. */
+  private static boolean stuckWorker(Blackboard board, long now) {
+    var plan = board.plan();
+    return plan.assignment().entrySet().stream()
+        .anyMatch(
+            entry ->
+                plan.slot(entry.getValue()).map(slot -> slot.role() == Role.RETAKE).orElse(false)
+                    && board.pinned(entry.getKey(), now));
+  }
+
+  /** The living bots stuck in a fight, whom fuse work passes over. */
+  private static Set<CombatantId> pinned(Blackboard board, List<CombatantView> alive, long now) {
+    var out = new HashSet<CombatantId>();
+    alive.stream().map(CombatantView::id).filter(id -> board.pinned(id, now)).forEach(out::add);
+    return out;
   }
 
   /** One prepared tick, completed only with its full ordered distance matrix. */
@@ -246,7 +276,11 @@ public final class TeamBrain {
             odds.closing());
     var slots = Playbook.deal(setup);
     var nuke = objective.map(bomb -> bomb.owner() instanceof BombOwner.Nuke).orElse(false);
-    var assignment = new RoleAssignment(new Dealing(board.plan(), situation, alive, nuke), slots);
+    var assignment =
+        new RoleAssignment(
+            new Dealing(
+                board.plan(), situation, alive, nuke, pinned(board, alive, snapshot.tick())),
+            slots);
     return new Deal(
         new TeamPlan(
             Optional.of(board.strategy()),
@@ -267,7 +301,9 @@ public final class TeamBrain {
   private static Deal retakeDeal(
       Blackboard board, TeamSituation situation, List<CombatantView> alive, BombView bomb) {
     var slots = RetakeFormation.slots(situation.nav(), bomb, alive, board.plan());
-    var assignment = new RoleAssignment(new Dealing(board.plan(), situation, alive, false), slots);
+    var pinned = pinned(board, alive, situation.snapshot().tick());
+    var assignment =
+        new RoleAssignment(new Dealing(board.plan(), situation, alive, false, pinned), slots);
     return new Deal(
         new TeamPlan(
             Optional.of(board.strategy()),
@@ -464,9 +500,19 @@ public final class TeamBrain {
    * @param situation the team
    * @param alive its living bots
    * @param nuke whether the plant slot arms the nuke
+   * @param pinned bots stuck in a fight, whom a fuse worker's slot passes over
    */
   record Dealing(
-      TeamPlan previous, TeamSituation situation, List<CombatantView> alive, boolean nuke) {}
+      TeamPlan previous,
+      TeamSituation situation,
+      List<CombatantView> alive,
+      boolean nuke,
+      Set<CombatantId> pinned) {
+
+    Dealing {
+      pinned = Set.copyOf(pinned);
+    }
+  }
 
   static double profit(Dealing dealing, CombatantView bot, Slot slot, double distance) {
     var member = dealing.situation().memberOf(bot.id());
@@ -476,7 +522,8 @@ public final class TeamBrain {
             * Math.min(distance, DISTANCE_CAP)
             / DISTANCE_SCALE
             * (slot.role() == Role.RETAKE ? 4 : 1)
-        + (held ? STICKY : 0);
+        + (held ? STICKY : 0)
+        - (slot.role() == Role.RETAKE && dealing.pinned().contains(bot.id()) ? HANDOFF : 0);
   }
 
   /**

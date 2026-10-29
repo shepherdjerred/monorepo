@@ -28,6 +28,9 @@ import java.util.random.RandomGenerator;
  * @param plan the playbook's slots and their holders
  * @param chasing which enemy each bot is fighting
  * @param paths the nav nodes each bot is about to walk
+ * @param workers the fuse each bot works
+ * @param sensor the latest sensor clue
+ * @param engaged since when each bot tied up in a fight has been fighting
  */
 public record Blackboard(
     TeamId team,
@@ -40,7 +43,11 @@ public record Blackboard(
     Map<CombatantId, CombatantId> chasing,
     Map<CombatantId, Set<Integer>> paths,
     Map<CombatantId, BombId> workers,
-    Optional<SensorClue> sensor) {
+    Optional<SensorClue> sensor,
+    Map<CombatantId, Long> engaged) {
+
+  /** A bot fighting this long, in ticks, counts as stuck: its fuse goes to a teammate. */
+  public static final long PINNED_TICKS = 60;
 
   /** The longest a sighting is delayed, at zero coordination, in ticks. */
   public static final int MAX_SHARE_DELAY_TICKS = 30;
@@ -54,6 +61,7 @@ public record Blackboard(
     claimedCover = Map.copyOf(claimedCover);
     chasing = Map.copyOf(chasing);
     workers = Map.copyOf(workers);
+    engaged = Map.copyOf(engaged);
     var copiedPaths = new HashMap<CombatantId, Set<Integer>>();
     paths.forEach((bot, nodes) -> copiedPaths.put(bot, Set.copyOf(nodes)));
     paths = Map.copyOf(copiedPaths);
@@ -71,7 +79,8 @@ public record Blackboard(
         Map.of(),
         Map.of(),
         Map.of(),
-        Optional.empty());
+        Optional.empty(),
+        Map.of());
   }
 
   /**
@@ -112,7 +121,8 @@ public record Blackboard(
         chasing,
         paths,
         workers,
-        sensor);
+        sensor,
+        engaged);
   }
 
   /**
@@ -153,7 +163,8 @@ public record Blackboard(
         chases,
         paths,
         workers,
-        sensor);
+        sensor,
+        engaged);
   }
 
   /** Drops the claims, chases and paths of teammates for whom {@code gone} holds. */
@@ -162,14 +173,17 @@ public record Blackboard(
     var chases = new HashMap<>(chasing);
     var walking = new HashMap<>(paths);
     var objectives = new HashMap<>(workers);
+    var fighting = new HashMap<>(engaged);
     cover.keySet().removeIf(gone);
     chases.keySet().removeIf(gone);
     walking.keySet().removeIf(gone);
     objectives.keySet().removeIf(gone);
+    fighting.keySet().removeIf(gone);
     if (cover.size() == claimedCover.size()
         && chases.size() == chasing.size()
         && walking.size() == paths.size()
-        && objectives.size() == workers.size()) {
+        && objectives.size() == workers.size()
+        && fighting.size() == engaged.size()) {
       return this;
     }
     return new Blackboard(
@@ -183,7 +197,8 @@ public record Blackboard(
         chases,
         walking,
         objectives,
-        sensor);
+        sensor,
+        fighting);
   }
 
   public Optional<Role> roleOf(CombatantId bot) {
@@ -202,7 +217,8 @@ public record Blackboard(
         chasing,
         paths,
         workers,
-        sensor);
+        sensor,
+        engaged);
   }
 
   /** A new deal: the plan and the roles its slots carry. */
@@ -222,7 +238,8 @@ public record Blackboard(
         chasing,
         paths,
         workers,
-        sensor);
+        sensor,
+        engaged);
   }
 
   /** The slot {@code bot} holds, if the playbook has dealt it one. */
@@ -253,7 +270,8 @@ public record Blackboard(
         chasing,
         paths,
         workers,
-        sensor);
+        sensor,
+        engaged);
   }
 
   public Blackboard releaseCover(CombatantId bot) {
@@ -273,7 +291,8 @@ public record Blackboard(
         chasing,
         paths,
         workers,
-        sensor);
+        sensor,
+        engaged);
   }
 
   /** Whether some other bot already holds cover {@code node}. */
@@ -297,6 +316,12 @@ public record Blackboard(
     } else {
       walking.put(bot, note.path());
     }
+    var fighting = new HashMap<>(engaged);
+    if (note.engagedSince() >= 0) {
+      fighting.put(bot, note.engagedSince());
+    } else {
+      fighting.remove(bot);
+    }
     return new Blackboard(
         team,
         strategy,
@@ -308,7 +333,17 @@ public record Blackboard(
         chases,
         walking,
         objectives,
-        sensor);
+        sensor,
+        fighting);
+  }
+
+  /**
+   * Whether {@code bot} has been tied up fighting for at least {@link #PINNED_TICKS} by {@code
+   * now}: a fuse it was meant to work goes to a teammate.
+   */
+  public boolean pinned(CombatantId bot, long now) {
+    var since = engaged.get(bot);
+    return since != null && now - since >= PINNED_TICKS;
   }
 
   public Blackboard sensor(SensorClue clue) {
@@ -323,7 +358,8 @@ public record Blackboard(
         chasing,
         paths,
         workers,
-        Optional.of(clue));
+        Optional.of(clue),
+        engaged);
   }
 
   /** How many teammates other than {@code except} are fighting {@code enemy}. */

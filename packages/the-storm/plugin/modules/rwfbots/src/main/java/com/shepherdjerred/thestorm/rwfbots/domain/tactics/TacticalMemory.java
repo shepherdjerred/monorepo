@@ -6,14 +6,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Objective ownership, safe-resume hysteresis and bounded memory of inaccessible destinations. */
+/**
+ * Objective ownership, safe-resume hysteresis, bounded memory of inaccessible destinations, and
+ * since when the bot has been tied up fighting ({@code engagedSince}, -1 while it is not), which
+ * teammates read to take a fuse off a responder stuck in a fight.
+ */
 public record TacticalMemory(
     Optional<BombId> defusing,
     Optional<BombId> detour,
     long safeSince,
-    Map<Vec3, Long> blockedUntil) {
+    Map<Vec3, Long> blockedUntil,
+    long engagedSince) {
   public static final TacticalMemory EMPTY =
-      new TacticalMemory(Optional.empty(), Optional.empty(), -1, Map.of());
+      new TacticalMemory(Optional.empty(), Optional.empty(), -1, Map.of(), -1);
   public static final long BLOCK_TICKS = 100;
   public static final long RESUME_TICKS = 15;
 
@@ -38,7 +43,7 @@ public record TacticalMemory(
               .orElseThrow();
       copy.remove(oldest.getKey());
     }
-    return new TacticalMemory(defusing, detour, safeSince, copy);
+    return new TacticalMemory(defusing, detour, safeSince, copy, engagedSince);
   }
 
   public boolean excludes(Vec3 goal, long tick) {
@@ -47,6 +52,14 @@ public record TacticalMemory(
   }
 
   public TacticalMemory objective(Optional<BombId> task, Optional<BombId> diversion, long safe) {
-    return new TacticalMemory(task, diversion, safe, blockedUntil);
+    return new TacticalMemory(task, diversion, safe, blockedUntil, engagedSince);
+  }
+
+  /** Memory after a think at {@code now} that did or did not leave the bot fighting. */
+  public TacticalMemory engaged(boolean fighting, long now) {
+    var since = fighting ? (engagedSince >= 0 ? engagedSince : now) : -1;
+    return since == engagedSince
+        ? this
+        : new TacticalMemory(defusing, detour, safeSince, blockedUntil, since);
   }
 }

@@ -91,6 +91,32 @@ final class RetakeFormationTest {
   }
 
   @Test
+  void aFuseWorkerStuckInAFightHandsTheFuseToTheNextBot() {
+    var bots = bots(8);
+    var board =
+        TeamBrain.tick(
+            Blackboard.open(Fixtures.RED, Strategy.RUSH),
+            situation(0, false, bots),
+            new SplittableRandom(7));
+    var lit = TeamBrain.tick(board, situation(1, true, bots), new SplittableRandom(8));
+    var stuck = lit.holders(Role.RETAKE).getFirst();
+    var fighting = lit.note(stuck, TeamNote.NONE.engaged(1));
+
+    var early = TeamBrain.tick(fighting, situation(30, true, bots), new SplittableRandom(9));
+    assertThat(early.rolesAssignedTick()).as("a short fight keeps the fuse").isEqualTo(1);
+    assertThat(early.roleOf(stuck)).contains(Role.RETAKE);
+
+    var pinned = 1 + Blackboard.PINNED_TICKS;
+    var handed = TeamBrain.tick(early, situation(pinned, true, bots), new SplittableRandom(10));
+    assertThat(handed.rolesAssignedTick()).as("re-dealt before the next period").isEqualTo(pinned);
+    assertThat(handed.roleOf(stuck)).isNotEqualTo(Optional.of(Role.RETAKE));
+    assertThat(handed.holders(Role.RETAKE)).hasSize(2).doesNotContain(stuck);
+
+    var free = handed.note(stuck, TeamNote.NONE);
+    assertThat(free.pinned(stuck, pinned + 1)).as("out of the fight it may work again").isFalse();
+  }
+
+  @Test
   void tinyOrVerticalDefenseSpaceKeeps256ValidReserveJobsWithoutAFailedComputeCycle() {
     var layouts = new java.util.HashMap<String, BombScreens.Layout>();
     NAV.bombScreens()
