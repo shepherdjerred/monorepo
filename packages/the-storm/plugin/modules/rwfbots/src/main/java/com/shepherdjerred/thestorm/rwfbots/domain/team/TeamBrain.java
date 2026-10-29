@@ -286,7 +286,8 @@ public final class TeamBrain {
             sightings,
             enemyHome,
             watchers(nav, sightings, enemyHome),
-            odds.closing());
+            odds.closing(),
+            field(nav, team));
     var humans = new java.util.HashMap<CombatantId, CombatantView>();
     situation.humans(team).forEach(human -> humans.put(human.id(), human));
     var slots =
@@ -454,6 +455,25 @@ public final class TeamBrain {
         .min(
             (a, b) ->
                 Double.compare(a.cell().center().distance(pos), b.cell().center().distance(pos)));
+  }
+
+  /**
+   * How long the team's field is: the walking ticks of its shortest baked route from a spawn of its
+   * own to an enemy team's bomb, or 0 on a map without one.
+   */
+  static double field(NavArtifact nav, TeamId team) {
+    var sites = nav.sites();
+    var shortest = Double.POSITIVE_INFINITY;
+    for (var spawn : sites.spawns()) {
+      if (!ownedBy(spawn, team)) continue;
+      for (var bomb : sites.bombs()) {
+        if (bomb.team().isEmpty() || ownedBy(bomb, team)) continue;
+        for (var route : nav.routes().between(spawn.name(), bomb.name())) {
+          shortest = Math.min(shortest, route.length());
+        }
+      }
+    }
+    return Double.isFinite(shortest) ? shortest : 0;
   }
 
   private static boolean ownedBy(NavSites.Site site, TeamId team) {
