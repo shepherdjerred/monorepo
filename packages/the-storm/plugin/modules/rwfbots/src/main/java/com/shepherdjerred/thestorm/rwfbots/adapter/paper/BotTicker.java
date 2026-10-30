@@ -21,6 +21,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.StreakPlay;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.FrozenWatch;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -62,10 +64,14 @@ public final class BotTicker {
   private final com.shepherdjerred.thestorm.rwf.app.ObservationSource observations;
   private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
   private final TacticalObservations tactical;
+  private final ComponentLogger logger;
   private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
   private final LoadTelemetry load = new LoadTelemetry();
+
+  /** How long each bot body has stood still, to tell a frozen bot from one holding on purpose. */
+  private final Map<UUID, FrozenWatch.State> stillness = new HashMap<>();
 
   /** Which bot bodies stood on solid ground last tick. */
   private final Map<UUID, Boolean> groundedLastTick = new HashMap<>();
@@ -91,6 +97,10 @@ public final class BotTicker {
    * @param tickTimes the server's recent tick times in nanoseconds
    * @param nanoClock a monotonic clock
    * @param lobby drives the bots before the match
+   * @param observations what the learning harness observes
+   * @param learning the learned policy's match state
+   * @param tactical the tactical sight observations
+   * @param logger the module logger, for bots found frozen in place
    */
   public record Parts(
       Roster roster,
@@ -104,7 +114,8 @@ public final class BotTicker {
       LobbyTicker lobby,
       com.shepherdjerred.thestorm.rwf.app.ObservationSource observations,
       com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning,
-      TacticalObservations tactical) {}
+      TacticalObservations tactical,
+      ComponentLogger logger) {}
 
   public BotTicker(Parts parts) {
     this.roster = parts.roster();
@@ -119,6 +130,7 @@ public final class BotTicker {
     this.observations = parts.observations();
     this.learning = parts.learning();
     this.tactical = parts.tactical();
+    this.logger = parts.logger();
   }
 
   /** The ticks run so far; the snapshot clock. */
@@ -221,6 +233,7 @@ public final class BotTicker {
       regeneration.tick(body);
     }
     groundedLastTick.keySet().retainAll(present);
+    stillness.keySet().retainAll(present);
     regeneration.retain(present);
   }
 
@@ -325,6 +338,7 @@ public final class BotTicker {
         roster.harness().active(match.matchId())
             ? roster.harness().commands(controls)
             : learning.commands(controls);
+    watchFrozen(bot, profile, input, commands);
     if (StreakPlay.now(streaks(bot), input, bot.nextStreak())) {
       commands =
           java.util.stream.Stream.concat(
@@ -337,6 +351,43 @@ public final class BotTicker {
         commands,
         new BodyDriver.Navigation(match.ids(), tick, Optional.of(match.nav().graph().bounds())));
     driver.shutDoorBehind(bot, escape(input, percept, bot));
+  }
+
+  /**
+   * Reports a bot standing frozen while its decision sends it somewhere ({@link FrozenWatch}) and
+   * has the think loop drop the plan it froze on, so the bot rethinks or recovers instead of
+   * standing there for the rest of its plan's life.
+   */
+  private void watchFrozen(
+      BotBody bot, BotProfile profile, ReflexInput input, List<BodyCommand> commands) {
+    var step =
+        FrozenWatch.observe(
+            stillness.getOrDefault(bot.uuid(), FrozenWatch.State.START),
+            input.self(),
+            input.decision(),
+            input.snapshot());
+    stillness.put(bot.uuid(), step.state());
+    if (step.frozen().isEmpty()) return;
+    var decision = input.decision();
+    var self = input.self();
+    logger.warn(
+        "rwfbots: {} (bot {}, {}) stood frozen {} ticks at {} facing {}: option {} ({}), route {}"
+            + " waypoints to {}, last body command {}, last movement problem {}, last stuck {};"
+            + " dropping its plan",
+        profile.personalityId(),
+        profile.id().value(),
+        profile.kit(),
+        step.frozen().orElseThrow(),
+        self.pos(),
+        Math.round(self.yaw()),
+        decision.option(),
+        decision.planLabel(),
+        decision.waypoints().size(),
+        decision.waypoints().isEmpty() ? "-" : decision.waypoints().getLast(),
+        commands.isEmpty() ? "none" : commands.getLast(),
+        bot.lastMovementProblem().orElse("none"),
+        bot.lastStuck().orElse("none"));
+    loop.abandonPlan(profile.id());
   }
 
   /** What a body breaking contact weighs before pulling a door shut behind itself. */

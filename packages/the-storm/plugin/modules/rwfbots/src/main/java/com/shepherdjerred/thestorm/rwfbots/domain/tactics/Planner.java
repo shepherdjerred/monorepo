@@ -866,7 +866,10 @@ public final class Planner {
 
   // ---- progress --------------------------------------------------------------------------------
 
-  /** Whether {@code step} has achieved its purpose in {@code situation}. */
+  /**
+   * Whether {@code step} has achieved its purpose in {@code situation}. A route that ends on the
+   * node its goal snaps to also counts as done: see {@code RouteArrival.stepDone}.
+   */
   public static boolean stepDone(PlanStep step, Situation situation, long startedTick) {
     var self = situation.self();
     return switch (step) {
@@ -903,7 +906,7 @@ public final class Planner {
   }
 
   /** Whether a bot at {@code pos} stands on the cell whose feet are {@code cell}. */
-  private static boolean onCell(Vec3 pos, Vec3 cell) {
+  static boolean onCell(Vec3 pos, Vec3 cell) {
     return pos.horizontalDistance(cell) <= ON_CELL && Math.abs(pos.y() - cell.y()) < 1.5;
   }
 
@@ -1532,7 +1535,7 @@ public final class Planner {
         .orElse(false);
   }
 
-  private static boolean workerSettled(Situation situation, TacticsContext context) {
+  static boolean workerSettled(Situation situation, TacticsContext context) {
     var self = situation.self();
     return context.nav().graph().water().contains(BlockPos.of(self.pos()))
         || (self.onGround() && self.traversal().fallDistance() == 0);
@@ -1547,6 +1550,8 @@ public final class Planner {
       return new RouteResult.Unreachable(goal, RouteResult.Problem.START_OUTSIDE_NAVIGATION);
     if (to.isEmpty())
       return new RouteResult.Unreachable(goal, RouteResult.Problem.GOAL_OUTSIDE_NAVIGATION);
+    // On the node the goal snaps to, with the goal itself further off: no route gets closer.
+    if (RouteArrival.settledOnGoalNode(situation, context, goal)) return new RouteResult.Arrived();
     Optional<Set<Integer>> corridor =
         way.alongLane()
             ? situation.slot().flatMap(situation.board().plan()::laneOf).map(Lane::corridor)

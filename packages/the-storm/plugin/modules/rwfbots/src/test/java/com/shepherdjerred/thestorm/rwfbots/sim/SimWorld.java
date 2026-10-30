@@ -289,7 +289,7 @@ final class SimWorld {
     }
   }
 
-  private WorldSnapshot snapshot() {
+  WorldSnapshot snapshot() {
     var poison =
         poisonStart >= 0 && tick >= poisonStart
             ? PoisonView.startedAt(poisonStart, (tick - poisonStart) / 1200.0)

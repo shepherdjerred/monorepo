@@ -82,6 +82,7 @@ public final class ThinkLoop {
   private final ConcurrentHashMap<CombatantId, BotProfile> profiles = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<CombatantId, Integer> epochs = new ConcurrentHashMap<>();
   private final Set<CombatantId> replans = ConcurrentHashMap.newKeySet();
+  private final Set<CombatantId> abandons = ConcurrentHashMap.newKeySet();
   private final ConcurrentHashMap<CombatantId, TeamReport> reports = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<CombatantId, TeamReport> deliveredReports =
       new ConcurrentHashMap<>();
@@ -145,6 +146,7 @@ public final class ThinkLoop {
     profiles.clear();
     epochs.clear();
     replans.clear();
+    abandons.clear();
     failure.set(null);
     inbox.set(null);
     outbox.set(DecisionBoard.EMPTY);
@@ -192,6 +194,7 @@ public final class ThinkLoop {
     profiles.clear();
     epochs.clear();
     replans.clear();
+    abandons.clear();
     inbox.set(null);
     outbox.set(DecisionBoard.EMPTY);
     if (!running.get()) worker.retire();
@@ -251,6 +254,7 @@ public final class ThinkLoop {
     profiles.remove(bot);
     epochs.remove(bot);
     replans.remove(bot);
+    abandons.remove(bot);
   }
 
   public Optional<BotProfile> profile(CombatantId bot) {
@@ -269,6 +273,15 @@ public final class ThinkLoop {
 
   public int epoch(CombatantId bot) {
     return epochs.getOrDefault(bot, 0);
+  }
+
+  /**
+   * Asks the next job to drop {@code bot}'s plan and rethink it: the bot stood frozen following it
+   * ({@link com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsState#abandon}).
+   */
+  public void abandonPlan(CombatantId bot) {
+    abandons.add(bot);
+    replans.add(bot);
   }
 
   /** Asks the next job to rethink {@code bot} whether or not its tactics are due. */
@@ -1061,6 +1074,7 @@ public final class ThinkLoop {
             || mind.percept == null
             || (!forced && !due(mind.lastThought, cycle.tick(), period))) continue;
         replans.remove(id);
+        if (abandons.remove(id)) mind.tacticsState = mind.tacticsState.abandon(cycle.tick());
         selected.add(new TacticsWork(mind, team(cycle.current(), mind.profile.team()).board));
       }
       return selected;
