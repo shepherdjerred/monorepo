@@ -6,6 +6,7 @@ import { TOFU_STACK_ROOT } from "../../packages/homelab/scripts/tofu/tofu-extern
 import { restoreStaticArchive } from "./static-site-archive.ts";
 import {
   createTofuStackArchive,
+  TOFU_ARCHIVE_LAYOUT,
   tofuStackArchiveFiles,
 } from "./tofu-archive.ts";
 import {
@@ -59,6 +60,7 @@ async function fixture(options: { declaredRead?: boolean } = {}) {
     path.join(repoRoot, "packages/homelab/src/undeclared.json"),
     "{}\n",
   );
+  await Bun.write(path.join(repoRoot, TOFU_ARCHIVE_LAYOUT), "2\n");
   return { repoRoot, stack };
 }
 
@@ -67,6 +69,7 @@ describe("OpenTofu stack archives", () => {
     const { repoRoot } = await fixture();
     expect(await tofuStackArchiveFiles("cloudflare", repoRoot)).toEqual([
       "packages/homelab/src/domain-registry.json",
+      TOFU_ARCHIVE_LAYOUT,
       `${TOFU_STACK_ROOT}/cloudflare/.terraform.lock.hcl`,
       `${TOFU_STACK_ROOT}/cloudflare/backend.tf`,
       `${TOFU_STACK_ROOT}/cloudflare/main.tf`,
@@ -147,6 +150,7 @@ describe("OpenTofu stack archives", () => {
     expect(cloudflare).toContain(
       `${TOFU_STACK_ROOT}/cloudflare/modules/domain-baseline/main.tf`,
     );
+    expect(cloudflare).toContain(TOFU_ARCHIVE_LAYOUT);
     expect(cloudflare.some((file) => file.includes("/tests/"))).toBe(false);
     const anthropic = await tofuStackArchiveFiles("anthropic", repository);
     expect(anthropic).not.toContain(

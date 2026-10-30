@@ -22,6 +22,14 @@ import {
   staticArchivePath,
 } from "./static-site-archive.ts";
 
+/**
+ * Shared member of every stack archive. Its content names the archive layout
+ * the Delivery Job runner expects (2: the stack at its repository-relative
+ * path), so a layout change yields new archives, and new sets, even when the
+ * stack sources are unchanged.
+ */
+export const TOFU_ARCHIVE_LAYOUT = `${TOFU_STACK_ROOT}/ARCHIVE_LAYOUT`;
+
 /** Local working files that are never part of a stack's reviewed source. */
 function excludedFromArchive(relative: string): boolean {
   const parts = relative.split("/");
@@ -74,6 +82,7 @@ export async function tofuStackArchiveFiles(
     declared: externalFiles,
   });
   for (const external of externalFiles) files.push(staticArchivePath(external));
+  files.push(TOFU_ARCHIVE_LAYOUT);
   return [...new Set(files)].sort();
 }
 
