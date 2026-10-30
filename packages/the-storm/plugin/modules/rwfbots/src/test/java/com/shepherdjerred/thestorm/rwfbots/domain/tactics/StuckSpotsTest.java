@@ -5,12 +5,15 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
@@ -31,6 +34,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -770,5 +774,37 @@ final class StuckSpotsTest {
     // Within the pocket a drop costs only its time.
     for (var edge = graph.edgeStart(pocket); edge < graph.edgeEnd(pocket); edge++)
       assertThat(toll.cost(edge, pocket, 10)).isZero();
+  }
+
+  @Test
+  void aRouteThatStillDropsIntoAPocketOnlySprintJumpsLeaveIsScoredWithItsToll() {
+    // RouteNavigator.find weighs a graph route against a water route by their scored cost, so the
+    // toll that steered the search must stay on a route that drops into the pocket anyway.
+    var nav = nav("perfect-balance");
+    var graph = nav.graph();
+    var ledge = graph.nodeAt(new BlockPos(1028, 29, 4160)).orElseThrow();
+    var pocket = graph.nodeAt(new BlockPos(1029, 25, 4161)).orElseThrow();
+    var edges =
+        new HealthRoutes.EdgePolicy(
+            edge -> 0, new NavGraph.EdgeMotion(graph::edgeCost, edge -> true, 1));
+    var risk =
+        new TraversalRisk.Query(
+            new HealthRoutes.RiskPolicy(19, 0),
+            edges,
+            node -> 0,
+            false,
+            new TraversalRisk.Source(combatant(1, RED, graph.feet(ledge)), 0));
+    var tolls = new RouteNavigator.Tolls(risk, node -> 0);
+    var context = context(nav);
+
+    var into =
+        RouteNavigator.score(
+                context,
+                graph.feet(ledge),
+                List.of(new Waypoint(graph.feet(pocket), Hop.DROP)),
+                tolls)
+            .orElseThrow();
+
+    assertThat(into.cost()).isCloseTo(into.ticks() + RouteNavigator.LEAP_TRAP_TOLL, within(1e-9));
   }
 }
