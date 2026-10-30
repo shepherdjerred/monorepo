@@ -12,7 +12,8 @@ import {
   tofuPlanReceipt,
   tofuRecipe,
 } from "#lib/delivery/model/tofu-testing.ts";
-import { modelApplyInput } from "#lib/delivery/model/tofu.ts";
+import { modelApplyInput, modelPlanInput } from "#lib/delivery/model/tofu.ts";
+import { tofuOperation } from "#lib/delivery/platform/tofu-input.ts";
 import { requireModelRecipe } from "#lib/delivery/model/recipe.ts";
 
 const api = vi.hoisted(() => {
@@ -86,6 +87,28 @@ afterEach(() => {
 });
 
 describe("model tofu steps (section 5, X8)", () => {
+  it("hands a platform stack's frozen desired state to its plan and apply Jobs (X8)", () => {
+    const value = detail(tofu, archive, []);
+    const recipe = requireModelRecipe(value);
+    if (recipe.kind !== "tofu") throw new Error("Expected a tofu recipe");
+    expect(
+      tofuOperation(modelPlanInput(value, recipe)).desiredState,
+    ).toBeUndefined();
+    const desiredState = '{"platform":"cloudflare-tokens"}\n';
+    const configured = {
+      ...value,
+      configuration: {
+        ...value.configuration,
+        content: { "desired-state.json": desiredState },
+      },
+    };
+    expect(tofuOperation(modelPlanInput(configured, recipe)).desiredState).toBe(
+      desiredState,
+    );
+    expect(
+      tofuOperation(modelApplyInput(configured, recipe, receipt)).desiredState,
+    ).toBe(desiredState);
+  });
   it("plans from the frozen stack archive and records the saved plan", async () => {
     current([]);
     const runner = job(saved);

@@ -2,7 +2,10 @@ import type {
   DeploymentDetail,
   TofuPlanReceipt,
 } from "@shepherdjerred/delivery/contract";
-import { tofuModelJobInput } from "#lib/delivery/platform/tofu-input.ts";
+import {
+  TOFU_DESIRED_STATE_KEY,
+  tofuModelJobInput,
+} from "#lib/delivery/platform/tofu-input.ts";
 import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
 import { frozenRunnerImage } from "./oracle-inputs.ts";
 import type { TofuRecipe } from "./recipe.ts";
@@ -48,9 +51,16 @@ export function modelTofuSource(
   };
 }
 
+/** The frozen configuration's desired state, which a platform stack's Jobs receive with their input (X8). */
+export function modelTofuDesiredState(
+  current: Pick<DeploymentDetail, "configuration">,
+): string | undefined {
+  return current.configuration.content[TOFU_DESIRED_STATE_KEY];
+}
+
 /** The plan step's Job input. */
 export function modelPlanInput(
-  current: Pick<DeploymentDetail, "versionSet">,
+  current: Pick<DeploymentDetail, "versionSet" | "configuration">,
   recipe: TofuRecipe,
 ): unknown {
   const source = modelTofuSource(current, recipe);
@@ -62,12 +72,16 @@ export function modelPlanInput(
       sourceRevision: source.sourceRevision,
     },
     source.archive,
+    modelTofuDesiredState(current),
   );
 }
 
 /** The apply step's Job input: the saved plan this same deployment produced. */
 export function modelApplyInput(
-  current: Pick<DeploymentDetail, "versionSet" | "deployment">,
+  current: Pick<
+    DeploymentDetail,
+    "versionSet" | "deployment" | "configuration"
+  >,
   recipe: TofuRecipe,
   plan: TofuPlanReceipt,
 ): unknown {
@@ -81,5 +95,6 @@ export function modelApplyInput(
       plan,
     },
     source.archive,
+    modelTofuDesiredState(current),
   );
 }

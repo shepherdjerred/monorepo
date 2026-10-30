@@ -110,6 +110,52 @@ test("an extracted archive runs the stack at its repository-relative path", asyn
     "-chdir=/workspace/stack/packages/homelab/src/tofu/cloudflare",
   ]);
 });
+async function effect() {
+  // Only the resolved environment matters here.
+}
+test("an archived platform stack takes its desired state from the frozen configuration, never the archive", async () => {
+  for (const key of [
+    "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+    "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
+    "ANTHROPIC_ADMIN_API_KEY",
+    "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_TOKEN",
+  ])
+    vi.stubEnv(key, "fixture-provider-value");
+  const committed = await Bun.file(
+    `${import.meta.dirname}/../../src/tofu/anthropic/desired-state.json`,
+  ).text();
+  const environments: Record<string, string>[] = [];
+  const runner = async (
+    _command: readonly string[],
+    environment: Record<string, string>,
+  ) => {
+    environments.push(environment);
+    return { stdout: "", exitCode: 0 };
+  };
+  await withDeliveryTofuStack("anthropic", effect, runner);
+  await withDeliveryTofuStack("anthropic", effect, runner, {
+    directory: "/workspace/stack",
+    desiredState: committed,
+  });
+  const [checkout, archived] = environments;
+  expect(archived?.["TF_VAR_anthropic_api_keys"]).toBeDefined();
+  expect(archived?.["TF_VAR_anthropic_api_keys"]).toBe(
+    checkout?.["TF_VAR_anthropic_api_keys"],
+  );
+  await expect(
+    withDeliveryTofuStack("anthropic", effect, runner, {
+      directory: "/workspace/stack",
+    }),
+  ).rejects.toThrow("lacks its frozen configuration's desired-state.json");
+  await expect(
+    withDeliveryTofuStack("cloudflare", effect, runner, {
+      directory: "/workspace/stack",
+      desiredState: committed,
+    }),
+  ).rejects.toThrow("has no platform desired state");
+});
 test("public review counts replacement once and reject unknown provider actions", () => {
   expect(
     deliveryTofuChanges({

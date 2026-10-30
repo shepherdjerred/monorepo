@@ -575,7 +575,9 @@ Each stack is a service, `tofu-<stack>`, with one component,
 `archive:tofu-<stack>`. CI freezes the stack directory, lock file and local
 modules into that archive; `desired-state.json` is configuration, with
 `forwardOnly` keys where a value must never decrease
-([X8](docs/model.md#9-decisions)). A `tofu` deployment runs plan, approval
+([X8](docs/model.md#9-decisions)). The archive leaves it out, so each plan,
+apply and recovery Job receives the frozen configuration's desired state in
+its input. A `tofu` deployment runs plan, approval
 where the environment's policy requires one, and apply as steps of one
 deployment under the stack lock and the `platform` shared lock
 ([T1](docs/model.md#411-target)). Operator-only stacks are `operator-run`

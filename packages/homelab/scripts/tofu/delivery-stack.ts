@@ -13,7 +13,10 @@ import {
 } from "./tofu-stack.ts";
 import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
 import { TOFU_STACK_ROOT } from "./tofu-external-files.ts";
-import { loadPlatformDesiredState } from "#scripts/platform-desired-state.ts";
+import {
+  loadPlatformDesiredState,
+  platformDesiredStateVariables,
+} from "#scripts/platform-desired-state.ts";
 import { hasLiveCompletionStatus } from "./github-ruleset-ready.ts";
 
 export const DeliveryTofuStateSchema = z.object({
@@ -132,20 +135,46 @@ export function deliveryTofuChanges(input: unknown): DeliveryTofuChanges {
   return counts;
 }
 
+/**
+ * Platform variables come from the stack's desired state. A checkout reads the
+ * committed file; an archive excludes it, so the Job passes the frozen
+ * configuration's `desired-state.json` instead (X8).
+ */
+async function desiredStateVariables(
+  stack: TofuStack,
+  stackDirectory: string,
+  options: DeliveryTofuOptions,
+): Promise<Record<string, unknown>> {
+  const platform = STACK_MANIFEST[stack].platform;
+  if (platform === undefined) {
+    if (options.desiredState !== undefined)
+      throw new Error(`OpenTofu stack ${stack} has no platform desired state`);
+    return {};
+  }
+  if (options.directory === undefined)
+    return await loadPlatformDesiredState(stackDirectory, platform);
+  if (options.desiredState === undefined)
+    throw new Error(
+      `Archive-mode OpenTofu stack ${stack} lacks its frozen configuration's desired-state.json`,
+    );
+  return platformDesiredStateVariables(
+    JSON.parse(options.desiredState),
+    platform,
+  );
+}
+
 async function environment(
   stack: TofuStack,
   stackDirectory: string,
   workspace: string,
+  options: DeliveryTofuOptions,
 ): Promise<Record<string, string>> {
   const env = buildTofuEnvironment(stack);
   env["TF_DATA_DIR"] = path.join(workspace, "data");
   env["TF_IN_AUTOMATION"] = "true";
-  const platform = STACK_MANIFEST[stack].platform;
-  if (platform !== undefined) {
-    const desired = await loadPlatformDesiredState(stackDirectory, platform);
-    for (const [key, value] of Object.entries(desired))
-      env[`TF_VAR_${key}`] = desiredStateVariableValue(value);
-  }
+  const desired = await desiredStateVariables(stack, stackDirectory, options);
+  for (const [key, value] of Object.entries(desired))
+    env[`TF_VAR_${key}`] = desiredStateVariableValue(value);
   if (stack === "github") {
     const token = z.string().min(1).parse(env["TF_VAR_github_token"]);
     if (!(await hasLiveCompletionStatus(token)))
@@ -156,16 +185,19 @@ async function environment(
   return env;
 }
 
+export type DeliveryTofuOptions = { directory?: string; desiredState?: string };
+
 /**
  * One saved plan, one stack, and native state locking; callers cannot supply
  * flags or provider values. `options.directory` runs the stack from an
- * extracted archive instead of this checkout's `src/tofu/<stack>` (X8).
+ * extracted archive instead of this checkout's `src/tofu/<stack>`, with
+ * `options.desiredState` as its platform desired state (X8).
  */
 export async function withDeliveryTofuStack<T>(
   rawStack: unknown,
   effect: (context: DeliveryTofuContext) => Promise<T>,
   runner: DeliveryTofuRunner = run,
-  options: { directory?: string } = {},
+  options: DeliveryTofuOptions = {},
 ): Promise<T> {
   const stack = TofuStackSchema.parse(rawStack);
   if (!["automatic", "reviewed-plan"].includes(tofuStackPolicy(stack).mode))
@@ -180,7 +212,7 @@ export async function withDeliveryTofuStack<T>(
       options.directory === undefined
         ? path.join(root, "src/tofu", stack)
         : path.join(options.directory, TOFU_STACK_ROOT, stack);
-    const env = await environment(stack, stackDirectory, workspace);
+    const env = await environment(stack, stackDirectory, workspace, options);
     const command = async (
       args: readonly string[],
       allowedCodes: readonly number[] = [0],
