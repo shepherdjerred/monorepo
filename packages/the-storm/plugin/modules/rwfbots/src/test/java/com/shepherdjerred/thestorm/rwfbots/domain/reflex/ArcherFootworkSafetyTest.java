@@ -29,7 +29,12 @@ final class ArcherFootworkSafetyTest {
   private record Scene(
       VoxelGrid grid, CombatantView self, CombatantView ally, CombatantView target) {}
 
+  /** A sword further off than an archer backs away from ({@link BowSpacing#SWORD_NEAR}). */
   private static Scene scene(boolean ledge, boolean hurt) {
+    return scene(ledge, hurt, 14.5);
+  }
+
+  private static Scene scene(boolean ledge, boolean hurt, double targetX) {
     var bounds = new GridBounds(new BlockPos(0, 0, 0), 16, 8, 16);
     var floor = new BitSet(bounds.volume());
     for (var x = 0; x < 16; x++)
@@ -38,7 +43,7 @@ final class ArcherFootworkSafetyTest {
         new VoxelGrid(bounds, floor, floor, floor),
         combatant(1, RED, new Vec3(5.5, 1, 5.1)).withHealth(1, 0).withLastHurtTick(hurt ? 0 : -1),
         combatant(3, RED, new Vec3(5.5, 1, 6.1)),
-        combatant(2, BLUE, new Vec3(12.5, 1, 5.1)));
+        combatant(2, BLUE, new Vec3(targetX, 1, 5.1)));
   }
 
   private static List<BodyCommand> commands(Scene scene) {
@@ -109,5 +114,22 @@ final class ArcherFootworkSafetyTest {
     assertThat(commands)
         .contains(
             new BodyCommand.MoveToward(new Vec3(5.5, 1, 4.1), false), new BodyCommand.StartUse());
+  }
+
+  @Test
+  void anArcherBacksAwayFromASwordInsideItsNearEdgeAsItDraws() {
+    var scene = scene(false, false, 11.5);
+    var commands = commands(scene);
+    var move =
+        commands.stream()
+            .filter(BodyCommand.MoveToward.class::isInstance)
+            .map(BodyCommand.MoveToward.class::cast)
+            .findFirst()
+            .orElseThrow();
+    var step = move.waypoint().minus(scene.self().pos()).horizontal().normalized();
+    // The teammate a block beside it pushes it aside as well.
+    assertThat(step.x()).as("away from the sword: %s", step).isLessThan(-0.5);
+    assertThat(move.sprint()).isFalse();
+    assertThat(commands).contains(new BodyCommand.StartUse());
   }
 }

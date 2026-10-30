@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.BowSpacing;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.CombatFootwork;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Lane;
@@ -1272,20 +1273,23 @@ public final class Planner {
     /**
      * Backs off an enemy inside the band: up a ladder or ledge when a sword chases it, to cover
      * further away otherwise; an archer already above a sword that must climb to it holds and
-     * shoots.
+     * shoots. A sword in sight is held at {@link BowSpacing#SWORD_NEAR} rather than the kit's near
+     * edge, and the archer keeps drawing on it as it backs off, down to the range where it takes
+     * out its own sword.
      */
     Optional<Engagement> back() {
       var keep = context.keep();
       var distance = distance();
-      if (distance >= keep.min()
-          || distance <= Reflex.BOW_MIN_RANGE
-          || HighGround.holds(situation, context)) {
+      var sword = shoot.flatMap(situation.percept()::visible).filter(BowSpacing::sword);
+      var near = sword.map(view -> BowSpacing.nearEdge(keep.min(), view)).orElseGet(keep::min);
+      var floor = sword.isPresent() ? Reflex.BOW_KEEP_RANGE : Reflex.BOW_MIN_RANGE;
+      if (distance >= near || distance <= floor || HighGround.holds(situation, context)) {
         return Optional.empty();
       }
       var refuge = HighGround.refuge(situation, context);
       if (refuge.isPresent())
         return Optional.of(move(refuge.orElseThrow().pos(), Stance.EVASIVE, "-climb"));
-      var back = self().plus(outward().scale(keep.min() - distance + 3));
+      var back = self().plus(outward().scale(near - distance + 3));
       var cover =
           coverWhere(
                   situation,
@@ -1294,7 +1298,8 @@ public final class Planner {
                   feet -> feet.distance(enemy) > distance)
               .map(CoverSpot::pos)
               .orElse(back);
-      return Optional.of(move(cover, Stance.EVASIVE, "-back"));
+      return Optional.of(
+          move(cover, sword.isPresent() ? Stance.CAUTIOUS : Stance.EVASIVE, "-back"));
     }
 
     Optional<Engagement> peek() {

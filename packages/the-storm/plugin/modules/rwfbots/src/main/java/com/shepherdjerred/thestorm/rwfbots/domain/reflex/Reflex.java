@@ -36,13 +36,14 @@ public final class Reflex {
   public static final double MELEE_ALERT = 4.0;
 
   /** Bows are used on targets further than this. */
-  public static final double BOW_MIN_RANGE = 6.0;
+  public static final double BOW_MIN_RANGE = 5.0;
 
   /**
    * A bow already drawn stays up until the target is this close, so a target hovering at the
-   * minimum range does not flip the bot between drawing and swinging.
+   * minimum range does not flip the bot between drawing and swinging. A sword is a block from reach
+   * here: the archer backs off drawing ({@link BowSpacing}) until then.
    */
-  public static final double BOW_KEEP_RANGE = 4.5;
+  public static final double BOW_KEEP_RANGE = 4.0;
 
   /**
    * How long a drawn bow stays up, aimed where its target was, after the target leaves sight.
@@ -102,6 +103,10 @@ public final class Reflex {
   static final double CROWDED = 0.3;
 
   private static final double BOW_AIM_TOLERANCE = 5.0;
+
+  /** How much of a hurt archer's evading step goes away from its attacker; the rest goes across. */
+  private static final double EVADE_AWAY = 0.6;
+
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
@@ -452,8 +457,10 @@ public final class Reflex {
       if (state.waypointIndex() < input.decision().waypoints().size()) {
         walk(Optional.of(false));
         state = state.withAim(aim);
+      } else if (BowSpacing.backsOff(self, target)) {
+        evade(target, BowSpacing.AWAY, BowSpacing.ACROSS);
       } else if (self.lastHurtTick() >= 0 && now - self.lastHurtTick() <= 20) {
-        evade(target);
+        evade(target, EVADE_AWAY, 1);
       } else {
         standApart();
       }
@@ -627,16 +634,19 @@ public final class Reflex {
       // navigation still jumps over terrain, and external combat actions can request a jump.
     }
 
-    /** Keeps a threatened archer moving while its aim remains on the opponent. */
-    private void evade(CombatantView target) {
-      var away = self.pos().minus(target.pos()).horizontal();
-      if (away.isZero()) {
+    /**
+     * Keeps a threatened archer moving while its aim remains on the opponent: {@code away} of each
+     * step straight away from it and {@code across} of it to the side.
+     */
+    private void evade(CombatantView target, double away, double across) {
+      var off = self.pos().minus(target.pos()).horizontal();
+      if (off.isZero()) {
         commands.add(new BodyCommand.Stop());
         return;
       }
-      var radial = away.normalized();
-      var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var move = side.plus(radial.scale(0.6)).plus(walkingApart());
+      var radial = off.normalized();
+      var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir() * across);
+      var move = side.plus(radial.scale(away)).plus(walkingApart());
       var preferred = move.isZero() ? radial : move.normalized();
       var safe = CombatFootwork.steer(context.grid(), self, preferred, radial);
       commands.add(

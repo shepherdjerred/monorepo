@@ -3686,7 +3686,10 @@ within 12 pairs alternate mover and holder; it holds its slot from cover,
 claiming cover on the blackboard so teammates do not share it. At most two
 bots chase one enemy unless it is nearly dead; bows keep their kit's band
 (longbow and snipers 15 to 30 blocks), reach their assigned team position along
-its lane when that position fits the band, then shoot from the edge of cover; the
+its lane when that position fits the band, then shoot from the edge of cover. A
+sword in sight is held at 8 blocks or more: closer, the archer backs off drawing
+and shoots as it goes, and only within 4 blocks takes out its own sword
+(`BowSpacing`); the
 Rewind kit uses its clock only when a model of rwf's Rewind ability says it
 is ready and lands away from the threat. A kit whose shots spend arrows (a
 crossbow, or a bow without Infinity) reads its arrow count each tick. Below 10
