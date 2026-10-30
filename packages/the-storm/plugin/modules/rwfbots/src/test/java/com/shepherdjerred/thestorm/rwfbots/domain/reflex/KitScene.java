@@ -150,7 +150,7 @@ record KitScene(
             .filter(view -> !view.team().equals(self.team()))
             .sorted(java.util.Comparator.comparingDouble(view -> view.pos().distance(self.pos())))
             .toList();
-    return new ReflexInput(self, world, decision, target, 0, seen);
+    return new ReflexInput(self, world, decision, target, 0, seen, Optional.empty());
   }
 
   /** The kit's one item, as its hotbar holds it. */

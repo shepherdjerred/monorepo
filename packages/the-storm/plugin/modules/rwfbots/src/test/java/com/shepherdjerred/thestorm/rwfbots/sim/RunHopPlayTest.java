@@ -111,7 +111,8 @@ final class RunHopPlayTest {
       var step =
           Reflex.tick(
               state,
-              new ReflexInput(self, world, decision, Optional.empty(), 0, List.of()),
+              new ReflexInput(
+                  self, world, decision, Optional.empty(), 0, List.of(), Optional.empty()),
               context,
               random);
       state = step.state();

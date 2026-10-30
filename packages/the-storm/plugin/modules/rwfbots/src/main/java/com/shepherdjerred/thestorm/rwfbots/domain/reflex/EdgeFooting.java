@@ -62,6 +62,11 @@ final class EdgeFooting {
       if (hold) return Math.min(weight, HOLD_STRAFE);
       return opening ? Math.min(weight, OPENING_STRAFE) : weight;
     }
+
+    /** Whether a drop near enough to matter lies behind the bot or either way round it. */
+    boolean ledged() {
+      return exposed || hold || side != 0;
+    }
   }
 
   /** How hard a bot with a drop behind it leans in on its enemy. */

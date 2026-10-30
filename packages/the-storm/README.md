@@ -3706,7 +3706,14 @@ reads the ground behind itself along the push of its enemy's next blow (6 blocks
 for an enemy who can sprint): with a drop there it leans in rather than backing
 off, and circles to the side that keeps ground behind it, while it presses an
 enemy whose back is within a plain blow of a drop (`EdgeFooting`). A combat step
-may come down off a rail or a ledge up to two blocks high. Every path a bot walks pays a per-bot
+may come down off a rail or a ledge up to two blocks high. In a sword fight a
+bot presses in to the 2.6 to 2.9 block band and holds inside it rather than
+backing out, sprinting for sprint hits, and gives ground only when at 30% health
+or less, outnumbered within 6 blocks, or crowded by a teammate
+(`MeleePressure`). It fights an enemy within 3.5 blocks before one the think step
+chose further off, faces an enemy within 3.5 blocks that it sees, or felt or
+heard in the last second, whatever path it walks, stops eating for one, and
+swings back a reaction time after a blow. Every path a bot walks pays a per-bot
 penalty per block of each primitive: seeded noise over patches of the map, a
 toll on teammates' current paths and one for leaving its lane. Long jumps pay
 for their full distance, so they cannot evade those costs by skipping intermediate

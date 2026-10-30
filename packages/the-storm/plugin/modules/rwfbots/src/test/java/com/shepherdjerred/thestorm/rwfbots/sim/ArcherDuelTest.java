@@ -227,7 +227,8 @@ final class ArcherDuelTest {
       var step =
           Reflex.tick(
               state,
-              new ReflexInput(self, world, decision, Optional.of(bow), 0, List.of(bow)),
+              new ReflexInput(
+                  self, world, decision, Optional.of(bow), 0, List.of(bow), Optional.empty()),
               context,
               random);
       state = step.state();

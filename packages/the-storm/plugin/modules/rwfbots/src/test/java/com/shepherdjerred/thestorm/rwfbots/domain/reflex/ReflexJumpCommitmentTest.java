@@ -120,7 +120,8 @@ final class ReflexJumpCommitmentTest {
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
-            new ReflexInput(self, world, decision, Optional.empty(), 0, List.of()),
+            new ReflexInput(
+                self, world, decision, Optional.empty(), 0, List.of(), Optional.empty()),
             CONTEXT,
             new SplittableRandom(196));
     assertThat(step.state().waypointIndex()).isEqualTo(1);
@@ -154,7 +155,8 @@ final class ReflexJumpCommitmentTest {
         Reflex.tick(
             ReflexState.initial(self.facing())
                 .withActiveJump(Optional.of(active(ORIGINAL, ActiveJump.Stage.RUN_UP))),
-            new ReflexInput(self, world, decision, Optional.of(enemy), 0, List.of()),
+            new ReflexInput(
+                self, world, decision, Optional.of(enemy), 0, List.of(), Optional.empty()),
             CONTEXT,
             new SplittableRandom(196));
     assertThat(step.commands()).anyMatch(BodyCommand.Attack.class::isInstance);
@@ -165,7 +167,8 @@ final class ReflexJumpCommitmentTest {
         Reflex.tick(
             ReflexState.initial(self.facing())
                 .withActiveJump(Optional.of(active(ORIGINAL, ActiveJump.Stage.AIRBORNE))),
-            new ReflexInput(flying, world, decision, Optional.of(enemy), 0, List.of()),
+            new ReflexInput(
+                flying, world, decision, Optional.of(enemy), 0, List.of(), Optional.empty()),
             CONTEXT,
             new SplittableRandom(196));
     assertThat(airborne.state().activeJump()).isPresent();
@@ -310,7 +313,7 @@ final class ReflexJumpCommitmentTest {
       var step =
           Reflex.tick(
               ReflexState.initial(self.facing()).withEating(1, true),
-              new ReflexInput(self, world, decision, target, 3, List.of()),
+              new ReflexInput(self, world, decision, target, 3, List.of(), Optional.empty()),
               CONTEXT,
               new SplittableRandom(196));
       var move = new BodyCommand.MoveToward(contact.pos(), false, Hop.DROP);
@@ -409,7 +412,7 @@ final class ReflexJumpCommitmentTest {
             List.of());
     return Reflex.tick(
         ReflexState.initial(self.facing()).withActiveJump(Optional.of(active)),
-        new ReflexInput(self, world, decision, Optional.empty(), 0, List.of()),
+        new ReflexInput(self, world, decision, Optional.empty(), 0, List.of(), Optional.empty()),
         CONTEXT,
         new SplittableRandom(196));
   }

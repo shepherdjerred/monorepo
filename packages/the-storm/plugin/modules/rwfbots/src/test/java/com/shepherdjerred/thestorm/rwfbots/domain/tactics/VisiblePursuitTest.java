@@ -103,7 +103,14 @@ final class VisiblePursuitTest {
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
-            new ReflexInput(self, snapshot(self, enemy), route, Optional.of(enemy), 0, List.of()),
+            new ReflexInput(
+                self,
+                snapshot(self, enemy),
+                route,
+                Optional.of(enemy),
+                0,
+                List.of(),
+                Optional.empty()),
             new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
             new SplittableRandom(196));
     var first = path.getFirst();
@@ -132,7 +139,8 @@ final class VisiblePursuitTest {
   void reachingOpenSwordContactOverridesAnOldApproachRoute() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var enemy = combatant(2, BLUE, new Vec3(8, 1, 5.5));
-    var oldApproach = new Waypoint(new Vec3(5.5, 1, 4.5), Hop.WALK);
+    // Three blocks off: a one-block footwork step never lands on it by chance.
+    var oldApproach = new Waypoint(new Vec3(5.5, 1, 2.5), Hop.WALK);
     var route =
         new Decision(
             self.id(),
@@ -151,7 +159,14 @@ final class VisiblePursuitTest {
     var step =
         Reflex.tick(
             ReflexState.initial(look),
-            new ReflexInput(self, snapshot(self, enemy), route, Optional.of(enemy), 0, List.of()),
+            new ReflexInput(
+                self,
+                snapshot(self, enemy),
+                route,
+                Optional.of(enemy),
+                0,
+                List.of(),
+                Optional.empty()),
             new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
             new SplittableRandom(196));
     assertThat(step.commands()).anyMatch(BodyCommand.Attack.class::isInstance);

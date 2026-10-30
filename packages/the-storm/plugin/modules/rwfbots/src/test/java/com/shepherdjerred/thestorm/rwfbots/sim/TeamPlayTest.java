@@ -151,7 +151,8 @@ final class TeamPlayTest {
   // a run-up the body is already on is joined rather than walked back to.
   // Bots keep sprinting while strafing in contact; sprint jumps boost along the steering heading.
   // Bots sprint-jump along straight runs, and route to a melee target their first step cannot take.
-  private static final String PINNED_YARD_HASH = "122c1947e7ca75d3";
+  // Archers shoot as they back off a sword; bots press in the band and face an enemy in contact.
+  private static final String PINNED_YARD_HASH = "f98565cc58073ae8";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

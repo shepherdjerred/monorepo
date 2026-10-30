@@ -195,9 +195,9 @@ final class SimBody {
   Optional<Death> death = Optional.empty();
 
   /** Who struck it last, when, and from how far. */
-  private Optional<CombatantId> struckBy = Optional.empty();
+  Optional<CombatantId> struckBy = Optional.empty();
 
-  private long struckTick = -1;
+  long struckTick = -1;
   private double struckFrom = -1;
 
   /** Records a blow by {@code attacker} standing at {@code from}, for the death's credit. */

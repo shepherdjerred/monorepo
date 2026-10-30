@@ -149,7 +149,13 @@ final class MatchLearningTest {
             List.of());
     var input =
         new ReflexInput(
-            self, snapshot, Decision.idle(self.id(), tick, 1), Optional.of(target), 3, List.of());
+            self,
+            snapshot,
+            Decision.idle(self.id(), tick, 1),
+            Optional.of(target),
+            3,
+            List.of(),
+            Optional.empty());
     var authored =
         new Reflex.Step(
             ReflexState.initial(Facing.SOUTH),
@@ -311,7 +317,8 @@ final class MatchLearningTest {
             original.decision(),
             Optional.of(target),
             original.gapplesLeft(),
-            List.of());
+            List.of(),
+            Optional.empty());
     return new CombatHarness.Frame(
         frame.matchId(),
         frame.body(),

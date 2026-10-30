@@ -150,7 +150,13 @@ final class CombatControlsTest {
               Optional.empty());
       var input =
           new ReflexInput(
-              source.self(), source.snapshot(), decision, source.target(), 3, List.of());
+              source.self(),
+              source.snapshot(),
+              decision,
+              source.target(),
+              3,
+              List.of(),
+              Optional.empty());
       var context = context(authored, input);
       assertThat(CombatCommands.eligible(context)).as("planned %s", hop).isFalse();
       assertThat(
@@ -180,14 +186,22 @@ final class CombatControlsTest {
     var authored =
         List.<BodyCommand>of(
             new BodyCommand.Look(90, 5), new BodyCommand.MoveToward(new Vec3(5.5, 1, 5.5), false));
-    var flat = new ReflexInput(body, source.snapshot(), decision, source.target(), 3, List.of());
+    var flat =
+        new ReflexInput(
+            body, source.snapshot(), decision, source.target(), 3, List.of(), Optional.empty());
     var ticket = ticket(new CombatAction(7, false, false, true, true));
     assertThat(CombatCommands.eligible(context(authored, flat), ticket)).isTrue();
     var falling = body.withTraversal(body.traversal().withFallDistance(8));
     var fallSource = input(falling);
     var input =
         new ReflexInput(
-            falling, fallSource.snapshot(), decision, fallSource.target(), 3, List.of());
+            falling,
+            fallSource.snapshot(),
+            decision,
+            fallSource.target(),
+            3,
+            List.of(),
+            Optional.empty());
     var context = context(authored, input);
     assertThat(CombatCommands.eligible(context)).isFalse();
     assertThat(CombatCommands.eligible(context, ticket)).isFalse();
@@ -372,6 +386,12 @@ final class CombatControlsTest {
             List.of(),
             List.of());
     return new ReflexInput(
-        self, snapshot, Decision.idle(self.id(), 100, 1), Optional.of(target), 3, List.of());
+        self,
+        snapshot,
+        Decision.idle(self.id(), 100, 1),
+        Optional.of(target),
+        3,
+        List.of(),
+        Optional.empty());
   }
 }

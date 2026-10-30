@@ -73,7 +73,8 @@ final class SteakTest {
         fight(self, target, 0),
         Optional.of(target),
         0,
-        List.of(target));
+        List.of(target),
+        Optional.empty());
   }
 
   private static Reflex.Step tick(ReflexState state, ReflexInput input, ReflexContext ctx) {
