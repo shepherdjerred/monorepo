@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Shared Bugsink data collection policy (Sentry SDK)",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "build": "bun --no-install build src/index.ts --outdir dist --target browser",

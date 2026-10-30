@@ -1,7 +1,7 @@
 // trmnl-dashboard runs on Bun (`bun run src/index.ts`), so we use `@sentry/bun`
 // — `@sentry/node` silently fails to ship events under Bun.
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 
 /**
  * Initialize Bugsink error reporting. No-op when BUGSINK_DSN is unset (local
@@ -16,10 +16,11 @@ export function initializeBugsink(): void {
   }
 
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn,
-    environment: Bun.env["ENVIRONMENT"] ?? "production",
-    release: Bun.env["VERSION"],
+    ...bugsinkServerOptions({
+      dsn,
+      environment: Bun.env["ENVIRONMENT"] ?? "production",
+      release: Bun.env["VERSION"],
+    }),
     // Bugsink does not support performance tracing.
     tracesSampleRate: 0,
   });

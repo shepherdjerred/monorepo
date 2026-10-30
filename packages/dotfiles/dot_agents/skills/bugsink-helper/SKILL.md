@@ -355,6 +355,13 @@ done
 
 Bugsink is compatible with Sentry SDKs. Use the DSN from the project detail endpoint.
 
+In the monorepo, applications do not build these options by hand. Bun services
+spread `bugsinkServerOptions({ dsn, environment, release })` from
+`@shepherdjerred/bugsink-config/server`, and browser apps use
+`bugsinkBrowserOptions` from `@shepherdjerred/bugsink-config`. Both apply the
+shared privacy policy (`bugsinkDataCollection()`), and the server helper
+rejects `SENTRY_*` environment variables.
+
 ### Python
 
 ```python
@@ -362,8 +369,7 @@ import sentry_sdk
 
 sentry_sdk.init(
     dsn="http://key@your-bugsink-instance.example.com/1",
-    send_default_pii=True,
-    traces_sample_rate=0,  # Bugsink does not support tracing
+    send_default_pii=False,
 )
 ```
 
@@ -374,8 +380,7 @@ import * as Sentry from "@sentry/browser";
 
 Sentry.init({
   dsn: "http://key@your-bugsink-instance.example.com/1",
-  sendDefaultPii: true,
-  tracesSampleRate: 0, // Bugsink does not support tracing
+  sendDefaultPii: false,
 });
 ```
 
@@ -386,12 +391,14 @@ const Sentry = require("@sentry/node");
 
 Sentry.init({
   dsn: "http://key@your-bugsink-instance.example.com/1",
-  sendDefaultPii: true,
-  tracesSampleRate: 0, // Bugsink does not support tracing
+  sendDefaultPii: false,
 });
 ```
 
-**Important:** Set `traces_sample_rate=0` (or `tracesSampleRate: 0`) because Bugsink does not support performance tracing. Set `send_default_pii=True` to include user context in error reports.
+**Important:** Bugsink does not support performance tracing. Leave
+`traces_sample_rate` / `tracesSampleRate` unset: any value, including 0, turns
+on SDK span recording. Keep `send_default_pii` off; attach user context
+explicitly when an error needs it.
 
 ---
 

@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import {
   context,
   propagation,
@@ -26,9 +26,11 @@ export function initializeObservability(
   if (config.OTEL_EXPORTER_OTLP_ENDPOINT === undefined)
     throw new Error("Tracing requires an OTLP endpoint");
   Sentry.init({
-    dsn: config.BUGSINK_DSN,
-    environment: config.ENVIRONMENT,
-    dataCollection: bugsinkDataCollection(),
+    ...bugsinkServerOptions({
+      dsn: config.BUGSINK_DSN,
+      environment: config.ENVIRONMENT,
+      release: config.VERSION,
+    }),
     beforeSend(event) {
       delete event.request;
       delete event.user;

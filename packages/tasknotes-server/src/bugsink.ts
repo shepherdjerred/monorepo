@@ -1,15 +1,16 @@
 import * as SentryLib from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 
 const dsn = Bun.env["BUGSINK_DSN"];
 const enabled = Bun.env["BUGSINK_ENABLED"] === "true";
 
 if (enabled && dsn !== undefined && dsn !== "") {
   SentryLib.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn,
-    environment: Bun.env["BUGSINK_ENVIRONMENT"] ?? "development",
-    release: Bun.env["BUGSINK_RELEASE"],
+    ...bugsinkServerOptions({
+      dsn,
+      environment: Bun.env["BUGSINK_ENVIRONMENT"] ?? "development",
+      release: Bun.env["BUGSINK_RELEASE"],
+    }),
     // Disable tracing - Bugsink does not support performance monitoring
     tracesSampleRate: 0,
   });

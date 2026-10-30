@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
 import type {
@@ -109,11 +109,12 @@ export function initializeGameObservability(
   >,
 ): void {
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn: Bun.env["BUGSINK_DSN"] ?? options.bugsinkDsn,
-    environment: Bun.env.NODE_ENV ?? "development",
-    // VERSION is baked into the image at build time.
-    release: Bun.env["VERSION"],
+    ...bugsinkServerOptions({
+      dsn: Bun.env["BUGSINK_DSN"] ?? options.bugsinkDsn,
+      environment: Bun.env.NODE_ENV ?? "development",
+      // VERSION is baked into the image at build time.
+      release: Bun.env["VERSION"],
+    }),
     // Don't let the Sentry SDK register the global OTel TracerProvider/Propagator/
     // ContextManager. It runs before initializeTracing(), so it lands first and
     // the NodeSDK below fails registration ("duplicate registration of API:

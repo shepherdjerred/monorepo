@@ -6,7 +6,7 @@
  *  `src/index.ts` is imported, so initializing Bugsink there would have left
  *  those failures visible only in container logs. */
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import configuration from "#src/configuration.ts";
 import { filterStarlightBugsinkEvent } from "#src/bugsink-filters.ts";
 
@@ -21,10 +21,11 @@ export function initObservability(): void {
   initialized = true;
 
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn: configuration.bugsinkDsn,
-    environment: configuration.environment,
-    release: configuration.gitSha,
+    ...bugsinkServerOptions({
+      dsn: configuration.bugsinkDsn,
+      environment: configuration.environment,
+      release: configuration.gitSha,
+    }),
     beforeSend: filterStarlightBugsinkEvent,
   });
   console.warn("[App] Bugsink initialized");

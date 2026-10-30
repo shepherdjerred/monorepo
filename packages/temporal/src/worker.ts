@@ -1,6 +1,6 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
 import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
 import type { Worker } from "@temporalio/worker";
@@ -128,11 +128,12 @@ function initializeBugsink(): void {
   }
 
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
+    ...bugsinkServerOptions({
+      dsn,
+      environment: Bun.env["ENVIRONMENT"] ?? "production",
+      release: Bun.env["VERSION"],
+    }),
     beforeBreadcrumb: sanitizeHttpCredentialBreadcrumb,
-    dsn,
-    environment: Bun.env["ENVIRONMENT"] ?? "production",
-    release: Bun.env["VERSION"],
     // The Sentry SDK would otherwise call setGlobalTracerProvider/Propagator/ContextManager
     // before initializeTracing() runs, which makes our NodeSDK.start() collide
     // with the duplicate-registration check and silently fall back to a no-op
