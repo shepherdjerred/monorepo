@@ -393,6 +393,33 @@ final class RwfKitMenuTest {
   }
 
   @Test
+  void aChargedPurchaseCanSettleAfterThePoolExcludesIt() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    fund(harness, alice, 800);
+    harness
+        .database
+        .write(
+            dsl ->
+                dsl.execute(
+                    "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
+                        + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
+        .join();
+    alice.performCommand("rwf buy berserker");
+    harness.until(() -> said(alice, "Berserker is still being completed"));
+    harness.database.write(dsl -> dsl.execute("DROP TRIGGER reject_kit_grant")).join();
+
+    alice.performCommand("rwf admin settings kits trooper");
+    alice.performCommand("rwf admin stop");
+    harness.ticks(5);
+    alice.performCommand("rwf buy berserker");
+
+    harness.until(() -> said(alice, "Purchased kit Berserker"));
+    assertThat(credits(harness, alice)).isEqualTo(400);
+  }
+
+  @Test
   void rotationAndCreditsAreOneCommandAway() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");

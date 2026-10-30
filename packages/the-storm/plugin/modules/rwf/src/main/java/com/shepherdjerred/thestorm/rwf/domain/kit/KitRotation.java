@@ -95,23 +95,43 @@ public final class KitRotation {
    *     repeating the last
    */
   public static List<KitSpec> of(Week week, List<KitSpec> kits, long seed) {
+    return ofOptional(week, kits, seed)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "too few bought kits to rotate " + SIZE + " a week without repeats"));
+  }
+
+  /** The rotation when the pool supports it, or empty when its tiers or repeats prevent one. */
+  public static java.util.Optional<List<KitSpec>> ofOptional(
+      Week week, List<KitSpec> kits, long seed) {
     var bought = kits.stream().filter(KitSpec::purchasable).toList();
     Set<String> previous = Set.of();
     var start = EPOCH.isAfter(week.monday()) ? week.monday() : EPOCH;
     var current = new Week(start);
     List<KitSpec> chosen = List.of();
     while (!current.monday().isAfter(week.monday())) {
-      chosen = pick(current, bought, previous, seed);
+      var next = pick(current, bought, previous, seed);
+      if (next.isEmpty()) {
+        return java.util.Optional.empty();
+      }
+      chosen = next.orElseThrow();
       previous = ids(chosen);
       current = current.next();
     }
     var order = kits.stream().map(KitSpec::id).toList();
-    return chosen.stream().sorted(Comparator.comparingInt(kit -> order.indexOf(kit.id()))).toList();
+    return java.util.Optional.of(
+        chosen.stream().sorted(Comparator.comparingInt(kit -> order.indexOf(kit.id()))).toList());
   }
 
   /** The kits free in {@code week} under the fixed {@link #SEED}. */
   public static List<KitSpec> of(Week week, List<KitSpec> kits) {
     return of(week, kits, SEED);
+  }
+
+  /** The optional rotation in {@code week} under the fixed {@link #SEED}. */
+  public static java.util.Optional<List<KitSpec>> ofOptional(Week week, List<KitSpec> kits) {
+    return ofOptional(week, kits, SEED);
   }
 
   /** The ids of {@link #of}. */
@@ -125,7 +145,7 @@ public final class KitRotation {
     return Set.copyOf(ids);
   }
 
-  private static List<KitSpec> pick(
+  private static java.util.Optional<List<KitSpec>> pick(
       Week week, List<KitSpec> bought, Set<String> previous, long seed) {
     var index = ChronoUnit.WEEKS.between(EPOCH, week.monday());
     var random = new SplittableRandom(seed ^ (index * WEEK_SALT));
@@ -142,12 +162,11 @@ public final class KitRotation {
     shuffle(others, random);
     var otherCount = SIZE - basicCount;
     if (basics.size() < basicCount || others.size() < otherCount) {
-      throw new IllegalStateException(
-          "too few bought kits to rotate " + SIZE + " a week without repeats");
+      return java.util.Optional.empty();
     }
     var chosen = new ArrayList<KitSpec>(basics.subList(0, basicCount));
     chosen.addAll(others.subList(0, otherCount));
-    return List.copyOf(chosen);
+    return java.util.Optional.of(List.copyOf(chosen));
   }
 
   /** A Fisher-Yates shuffle driven by {@code random}, so the order is seeded. */

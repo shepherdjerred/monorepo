@@ -88,10 +88,7 @@ final class Armory {
     var admitted = pool.get();
     if (!current.equals(week) || !admitted.equals(rotationPool)) {
       var candidates = kits();
-      rotation =
-          candidates.stream().filter(KitSpec::purchasable).count() < KitRotation.SIZE
-              ? List.of()
-              : KitRotation.of(current, candidates);
+      rotation = KitRotation.ofOptional(current, candidates).orElseGet(List::of);
       week = current;
       rotationPool = admitted;
     }
@@ -229,10 +226,6 @@ final class Armory {
    */
   void buy(UUID player, KitSpec kit, Consumer<Result<Purchase, ShopError>> done) {
     var admitted = pool.get();
-    if (!admitted.allows(kit.id())) {
-      done.accept(Result.err(new ShopError.NotForSale(kit.id())));
-      return;
-    }
     if (!buying.add(player)) {
       done.accept(Result.err(new ShopError.InProgress(kit.id())));
       return;
