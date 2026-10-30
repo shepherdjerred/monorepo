@@ -34,6 +34,12 @@ import java.util.Set;
  * the lanes that grows every deal until the team makes contact ({@link #ADVANCE} a deal from {@link
  * #START_PUSH}), so the side lanes advance with the planter instead of waiting at home.
  *
+ * <p>About one bot in four anchors the own bomb, more on a field longer than a retake can walk
+ * ({@link #defenders}). The anchors screen the bomb's approaches; where none of that screen would
+ * stand within {@link #HOME_RANGE} of it (cover above, below or far from it), the first stays home
+ * within {@link #HOME_HOLD} of the bomb, so a lit fuse always has a teammate beside it. Every
+ * anchor stands where it can walk to the bomb and back.
+ *
  * <p>The nuke is just another objective: a strategy names which bomb it plays for, it never wins by
  * being closest. Static slots keep at least {@link #SPACING} blocks apart; escorts are a wedge
  * relative to the planter and are placed where the planter is when dealt.
@@ -94,6 +100,33 @@ public final class Playbook {
   /** Guard the approaches with room to fan out, instead of hugging the bomb's base. */
   static final double ANCHOR_MIN = 10;
 
+  /**
+   * A teammate this close to the own bomb answers a lit fuse at once. In prod (tsmc, Oct 18-23) six
+   * teams had one this close less than 40% of the time: their anchors held 13 to 25 blocks out, on
+   * cover above or beside the bomb, and a fuse lit there burned while they walked back.
+   */
+  public static final double HOME_RANGE = 12;
+
+  /**
+   * The home anchor's slot stands at most this far from the bomb, so a holder straying about it on
+   * patrol (3.5 blocks) stays within {@link #HOME_RANGE}.
+   */
+  public static final double HOME_HOLD = 8;
+
+  /** The home anchor keeps off the bomb's own block and the fuse workers' places beside it. */
+  static final double HOME_NEAREST = 3;
+
+  /**
+   * How far a retake may walk, in ticks: a 60 s fuse less a lone ten-second defuse and a ten-second
+   * reserve. A field whose route from spawn to the enemy's bomb is longer than this (floating-isles
+   * 1232 to 1445, hemispheres 980 to 1043, beanstalk 947 to 984) takes a team further from home
+   * than a retake from up the field can make good, so it keeps more of itself home.
+   */
+  public static final double RETAKE_REACH = 800;
+
+  /** However long the field, at most this much more of a team stands home than on a short one. */
+  static final double MAX_STRETCH = 4.0 / 3;
+
   /** How far along its lane a pair with no sighting to chase sweeps. */
   static final double SWEEP_PROGRESS = 0.6;
 
@@ -130,6 +163,8 @@ public final class Playbook {
    * @param enemyHome where the enemy starts
    * @param watchers nav regions the enemy can see from, for picking hidden flank points
    * @param closing whether the team is closing out the round: the plant rush and the hunt
+   * @param field the walking ticks of the team's shortest baked route from its spawn to an enemy
+   *     bomb, or 0 when it has none
    */
   public record Setup(
       NavArtifact nav,
@@ -145,7 +180,8 @@ public final class Playbook {
       List<Vec3> sightings,
       Vec3 enemyHome,
       Set<Integer> watchers,
-      boolean closing) {
+      boolean closing,
+      double field) {
 
     public Setup {
       lanes = List.copyOf(lanes);
@@ -159,6 +195,9 @@ public final class Playbook {
       }
       if (objective.isPresent() && lanes.isEmpty()) {
         throw new IllegalArgumentException("an objective needs at least one lane to it");
+      }
+      if (!(field >= 0) || Double.isInfinite(field)) {
+        throw new IllegalArgumentException("field must be a finite walk: " + field);
       }
     }
   }
@@ -189,11 +228,38 @@ public final class Playbook {
    * without an objective, hold and hunt.
    */
   static List<Want> wants(Strategy strategy, int size, boolean objective, boolean closing) {
+    if (objective) return attacking(strategy, size, closing, 0);
     var out = new ArrayList<Want>(size);
     for (var i = 0; out.size() < size; i++) {
-      out.add(objective ? attack(strategy, i, closing) : guard(i));
+      out.add(guard(i));
     }
-    return objective && size >= 4 && !closing ? balanceDefenders(out) : out;
+    return out;
+  }
+
+  /**
+   * The first {@code size} wants of {@code strategy} with an objective, or of the closing rush
+   * while {@code closing}, with as many anchors as {@link #defenders} keeps home on a field {@code
+   * field} ticks long.
+   */
+  static List<Want> attacking(Strategy strategy, int size, boolean closing, double field) {
+    var out = new ArrayList<Want>(size);
+    for (var i = 0; out.size() < size; i++) {
+      out.add(attack(strategy, i, closing));
+    }
+    var defenders = defenders(size, field);
+    return defenders > 0 && !closing ? balanceDefenders(out, defenders) : out;
+  }
+
+  /**
+   * How many anchors a team of {@code size} keeps home on a field {@code field} ticks long: about
+   * one in four from four bots up; on a field longer than {@link #RETAKE_REACH}, from three bots up
+   * and up to {@link #MAX_STRETCH} times as many, as a retake from up such a field comes too late.
+   */
+  public static int defenders(int size, double field) {
+    var stretched = field > RETAKE_REACH;
+    if (size < (stretched ? 3 : 4)) return 0;
+    var stretch = Math.clamp(field / RETAKE_REACH, 1, MAX_STRETCH);
+    return Math.max(1, (int) Math.round(size / 4.0 * stretch));
   }
 
   /**
@@ -213,9 +279,8 @@ public final class Playbook {
     return 1 + Math.max(0, size - 1) / PLANTER_EVERY;
   }
 
-  private static List<Want> balanceDefenders(List<Want> wants) {
+  private static List<Want> balanceDefenders(List<Want> wants, int desired) {
     var out = new ArrayList<>(wants);
-    var desired = Math.max(1, (int) Math.round(out.size() / 4.0));
     var present = (int) out.stream().filter(want -> want.kind() == SlotKind.ANCHOR).count();
     for (var index = out.size() - 1; index >= 0 && present > desired; index--) {
       if (out.get(index).kind() == SlotKind.ANCHOR) {
@@ -359,8 +424,11 @@ public final class Playbook {
   public static List<Slot> deal(Setup setup) {
     var deal = new Deal(setup);
     var slots = new ArrayList<Slot>(setup.size());
-    for (var want :
-        wants(setup.strategy(), setup.size(), setup.objective().isPresent(), setup.closing())) {
+    var wants =
+        setup.objective().isPresent()
+            ? attacking(setup.strategy(), setup.size(), setup.closing(), setup.field())
+            : wants(setup.strategy(), setup.size(), false, setup.closing());
+    for (var want : wants) {
       slots.add(deal.slot(want));
     }
     return slots;
@@ -581,40 +649,121 @@ public final class Playbook {
       var threat = setup.sightings().stream().findFirst().orElseGet(setup::enemyHome);
       var toEnemy = threat.minus(guard).horizontal();
       var facing = toEnemy.isZero() ? axis : toEnemy.normalized();
+      var screen =
+          bestAnchor(
+              guard,
+              facing,
+              new Band(Math.max(setup.guardClear(), ANCHOR_MIN), ANCHOR_MAX, false),
+              coverNodes());
+      // The first anchor holds home only where the screen would leave the bomb out of reach: on
+      // the training yard's flat ground a screening anchor already stands within range, and holding
+      // it at the bomb's back cost plants (ObjectivePlayTest).
+      var covered = screen.filter(point -> point.distance(guard) <= HOME_RANGE).isPresent();
+      var home = index == 0 && !covered ? home(guard, facing) : Optional.<Vec3>empty();
+      var at =
+          home.or(() -> screen).map(this::keep).orElseGet(() -> place(ring(guard, facing, index)));
+      var direction = at.minus(guard).horizontal();
+      var out = direction.isZero() ? facing : direction.normalized();
+      anchorDirections.add(out);
+      // The home anchor stands at the bomb's back and watches past it towards the threat.
+      var watch = home.isPresent() ? guard.plus(facing.scale(16)) : at.plus(out.scale(16));
+      return new Slot(
+          key, SlotKind.ANCHOR, want.role(), at, watch, -1, want.pair(), Optional.empty(), 0);
+    }
+
+    /**
+     * How far from the bomb an anchor may stand.
+     *
+     * @param least the nearest
+     * @param most the furthest
+     * @param close whether the distance is measured in three dimensions, so cover on a ledge above
+     *     or below the bomb is not counted as close to it
+     */
+    private record Band(double least, double most, boolean close) {
+
+      double distance(Vec3 feet, Vec3 guard) {
+        return close ? feet.distance(guard) : feet.minus(guard).horizontal().length();
+      }
+    }
+
+    /**
+     * The first anchor's place: within {@link #HOME_HOLD} of the bomb, on cover if there is any
+     * there, else on any walkable node, so a lit fuse always has a teammate beside it. It stands on
+     * the side away from the threat: the bomb usually sits in the base, and in front of it lies the
+     * team's way out (the training yard's spawns ring its bombs). Empty when the team has no bomb
+     * to guard (its anchors hold home), when poison keeps anchors further out, or when nothing
+     * walkable lies that close.
+     */
+    private Optional<Vec3> home(Vec3 guard, Vec3 facing) {
+      var band = new Band(Math.max(setup.guardClear(), HOME_NEAREST), HOME_HOLD, true);
+      if (band.least() >= band.most() || setup.nav().bombApproach(BlockPos.of(guard)).isEmpty())
+        return Optional.empty();
+      var back = facing.scale(-1);
+      return bestAnchor(guard, back, band, coverNodes())
+          .or(() -> bestAnchor(guard, back, band, nodesAround(guard, band)));
+    }
+
+    private List<Integer> coverNodes() {
+      return setup.nav().cover().points().stream().map(point -> point.node()).toList();
+    }
+
+    /** The walkable nodes found on rings about {@code guard} within {@code band}. */
+    private List<Integer> nodesAround(Vec3 guard, Band band) {
+      var out = new ArrayList<Integer>();
+      var seen = new HashSet<Integer>();
+      for (var radius = (int) Math.ceil(band.least()); radius <= band.most(); radius++) {
+        var steps = 8 * radius;
+        for (var k = 0; k < steps; k++) {
+          var angle = 2 * Math.PI * k / steps;
+          var probe = guard.plus(StrictMath.cos(angle) * radius, 0, StrictMath.sin(angle) * radius);
+          var node = graph.nearestNodeWithin(probe, 2);
+          if (node.isPresent() && seen.add(node.getAsInt())) out.add(node.getAsInt());
+        }
+      }
+      return out;
+    }
+
+    /**
+     * The best of {@code nodes} for an anchor within {@code band} of {@code guard}: dry, spaced
+     * from the slots dealt, off the team's way out, spread from the other anchors and facing the
+     * threat.
+     */
+    private Optional<Vec3> bestAnchor(Vec3 guard, Vec3 facing, Band band, List<Integer> nodes) {
+      var bomb = setup.nav().bombApproach(BlockPos.of(guard));
+      var anchorage = bomb.isPresent() ? bomb : graph.nearestNodeWithin(guard, SNAP * 2);
       Optional<Vec3> best = Optional.empty();
       var bestScore = Double.NEGATIVE_INFINITY;
-      for (var point : setup.nav().cover().points()) {
-        var feet = graph.feet(point.node());
-        var offset = feet.minus(guard).horizontal();
-        var distance = offset.length();
+      for (var node : nodes) {
+        var feet = graph.feet(node);
+        var distance = band.distance(feet, guard);
         if (wet(feet)
-            || distance < Math.max(setup.guardClear(), ANCHOR_MIN)
-            || distance > ANCHOR_MAX
+            || distance < band.least()
+            || distance > band.most()
             || nearestPlaced(feet) < SPACING
-            || onWayOut(point.node(), feet)) {
+            || onWayOut(node, feet)
+            || !roundTrip(anchorage, node)) {
           continue;
         }
-        var direction = offset.normalized();
+        var offset = feet.minus(guard).horizontal();
+        var direction = offset.isZero() ? facing : offset.normalized();
         var score = spread(direction) + 0.2 * direction.dot(facing) - 0.02 * distance;
         if (score > bestScore) {
           bestScore = score;
           best = Optional.of(feet);
         }
       }
-      var at = best.map(this::keep).orElseGet(() -> place(ring(guard, facing, index)));
-      var direction = at.minus(guard).horizontal();
-      var out = direction.isZero() ? facing : direction.normalized();
-      anchorDirections.add(out);
-      return new Slot(
-          key,
-          SlotKind.ANCHOR,
-          want.role(),
-          at,
-          at.plus(out.scale(16)),
-          -1,
-          want.pair(),
-          Optional.empty(),
-          0);
+      return best;
+    }
+
+    /**
+     * Whether an anchor at {@code node} can walk to the bomb it holds ({@code anchorage}, its
+     * approach) and back. The-harshest-harvest: anchors were dealt cover on a ledge beside red's
+     * bomb that no path reaches, and their holders stepped about in recovery all match.
+     */
+    private boolean roundTrip(java.util.OptionalInt anchorage, int node) {
+      if (anchorage.isEmpty()) return true;
+      var bomb = anchorage.getAsInt();
+      return graph.reachable(bomb, node) && graph.reachable(node, bomb);
     }
 
     /**

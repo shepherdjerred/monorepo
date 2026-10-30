@@ -159,6 +159,14 @@ final class PlaybookTest {
         anchors.stream().mapToDouble(slot -> slot.pos().z()).max().orElseThrow()
             - anchors.stream().mapToDouble(slot -> slot.pos().z()).min().orElseThrow();
     assertThat(width).isGreaterThanOrEqualTo(16);
+    // On the yard's flat ground a screening anchor already stands within range of the bomb, so
+    // none has to hold at its back.
+    assertThat(
+            anchors.stream()
+                .mapToDouble(slot -> slot.pos().distance(guard.pos()))
+                .min()
+                .orElseThrow())
+        .isLessThanOrEqualTo(Playbook.HOME_RANGE);
   }
 
   @Test
@@ -185,6 +193,32 @@ final class PlaybookTest {
             .as("%s team size %d", strategy, size)
             .isEqualTo(Math.round(size / 4.0));
       }
+    }
+  }
+
+  @Test
+  void aLongFieldKeepsMoreOfTheTeamHomeAndFromThreeBotsUp() {
+    // The yard's field is 148 ticks: one anchor in four, from four bots.
+    assertThat(Playbook.defenders(3, 148)).isZero();
+    assertThat(Playbook.defenders(12, 148)).isEqualTo(3);
+    // Floating-isles (1232 ticks) and hemispheres (980) are longer than a retake can walk.
+    assertThat(Playbook.defenders(3, 1232)).isEqualTo(1);
+    assertThat(Playbook.defenders(12, 1232)).isEqualTo(4);
+    assertThat(Playbook.defenders(36, 1232)).isEqualTo(12);
+    assertThat(Playbook.defenders(36, 980)).isEqualTo(11);
+    for (var strategy : Strategy.values()) {
+      for (var size = 3; size <= 36; size++) {
+        var wants = Playbook.attacking(strategy, size, false, 1232);
+        assertThat(wants.stream().filter(want -> want.kind() == SlotKind.ANCHOR).count())
+            .as("%s team size %d", strategy, size)
+            .isEqualTo(Playbook.defenders(size, 1232));
+        assertThat(wants.stream().filter(want -> want.kind() == SlotKind.PLANT).count())
+            .as("%s team size %d keeps its planters", strategy, size)
+            .isEqualTo(Playbook.planters(size));
+      }
+      // The endgame closer is dealt as before.
+      assertThat(Playbook.attacking(strategy, 8, true, 1232))
+          .isEqualTo(Playbook.wants(strategy, 8, true, true));
     }
   }
 
@@ -328,7 +362,8 @@ final class PlaybookTest {
                   List.of(pond),
                   pond,
                   Set.of(),
-                  false));
+                  false,
+                  0));
       assertThat(slots)
           .as(strategy.name())
           .allSatisfy(slot -> assertThat(slot.pos().x()).isLessThan(9));
