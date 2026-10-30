@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "allowance": {
+    "tier": "Muse Code High Usage",
+    "window": { "usedPercent": 62, "resetsAtMs": 1789923600000 },
+    "weekly": { "usedPercent": 25, "resetsAtMs": 1790035200000 },
+    "asOfMs": 1789920000000,
+    "source": "mint"
+  },
+  "reason": null,
+  "hint": null
+}

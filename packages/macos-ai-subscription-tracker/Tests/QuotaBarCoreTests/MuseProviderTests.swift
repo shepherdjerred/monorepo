@@ -6,7 +6,7 @@ import XCTest
 final class MuseProviderTests: XCTestCase {
   func testMuseParsesWindowAndWeeklyPools() throws {
     let now = date("2026-09-20T12:00:00Z")
-    let snapshot = try MuseProvider.parse(data: fixture("muse-success"), now: now)
+    let snapshot = try MuseProvider.parse(data: fixture("muse-usage-success"), now: now)
 
     XCTAssertEqual(snapshot.provider, .muse)
     XCTAssertEqual(snapshot.accountLabel, "Muse Code High Usage")
@@ -17,18 +17,14 @@ final class MuseProviderTests: XCTestCase {
     XCTAssertEqual(snapshot.sourceTimestamp, now)
     XCTAssertTrue(
       snapshot.notes.contains(
-        "Uses the signed-in Muse OAuth credential read-only; only quota data is kept."))
+        "Uses the signed-in Muse CLI without reading or storing its token."))
   }
 
-  func testMuseInactiveSubscriptionIsUnsupported() {
-    XCTAssertThrowsError(try MuseProvider.parse(data: fixture("muse-inactive"))) { error in
-      XCTAssertEqual(error as? QuotaError, .unsupportedResponse(.muse))
-    }
-  }
-
-  func testMuseMissingUsageBlockIsUnsupported() {
-    XCTAssertThrowsError(try MuseProvider.parse(data: fixture("muse-no-usage"))) { error in
-      XCTAssertEqual(error as? QuotaError, .unsupportedResponse(.muse))
+  func testMuseMissingAllowanceIsCredentialsMissing() {
+    let signedOut = Data(
+      #"{"schemaVersion":1,"allowance":null,"reason":"not_signed_in","hint":null}"#.utf8)
+    XCTAssertThrowsError(try MuseProvider.parse(data: signedOut)) { error in
+      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.muse))
     }
     XCTAssertThrowsError(try MuseProvider.parse(data: Data("not-json".utf8))) { error in
       XCTAssertEqual(error as? QuotaError, .malformedResponse(.muse))
@@ -36,122 +32,118 @@ final class MuseProviderTests: XCTestCase {
   }
 
   func testMuseDropsWindowsWithoutUsablePercentages() throws {
-    let missingWeekly = museResponse(windowUsed: 62, weeklyUsed: nil)
-    let snapshot = try MuseProvider.parse(data: missingWeekly)
+    let snapshot = try MuseProvider.parse(data: museUsage(windowUsed: 62, weeklyUsed: nil))
     XCTAssertEqual(snapshot.windows.map(\.label), ["5-hour"])
   }
 
   func testMuseRejectsPresentButUnusableValues() {
     // A present negative percentage fails loudly instead of dropping the window.
-    let negativeWindow = museResponse(windowUsed: -5)
-    XCTAssertThrowsError(try MuseProvider.parse(data: negativeWindow)) { error in
+    XCTAssertThrowsError(try MuseProvider.parse(data: museUsage(windowUsed: -5))) { error in
       XCTAssertEqual(error as? QuotaValidationError, .invalidPercentage)
     }
     // A present percentage with an unexpected type surfaces provider drift as malformed.
     let stringPercent = Data(
-      (#"{"is_subs_active":true,"subs_usage":{"window":{"used_percent":"62","#
-        + #""window_duration_mins":300},"weekly":{"used_percent":25}}}"#).utf8)
+      (#"{"schemaVersion":1,"allowance":{"tier":"Muse Code High Usage","#
+        + #""window":{"usedPercent":"62","resetsAtMs":1789923600000},"#
+        + #""weekly":{"usedPercent":25,"resetsAtMs":1790035200000}}}"#).utf8)
     XCTAssertThrowsError(try MuseProvider.parse(data: stringPercent)) { error in
       XCTAssertEqual(error as? QuotaError, .malformedResponse(.muse))
     }
-    // A present duration with an unexpected type is malformed, not a silent relabel.
-    let stringDuration = Data(
-      (#"{"is_subs_active":true,"subs_usage":{"window":{"used_percent":62,"#
-        + #""window_duration_mins":"300"},"weekly":{"used_percent":25}}}"#).utf8)
-    XCTAssertThrowsError(try MuseProvider.parse(data: stringDuration)) { error in
-      XCTAssertEqual(error as? QuotaError, .malformedResponse(.muse))
-    }
   }
 
-  func testMuseAcceptsFloatPercentagesAndStringResets() throws {
-    let response = museResponse(windowUsed: 62.5, windowReset: .string("2026-09-20T17:00:00Z"))
-    let snapshot = try MuseProvider.parse(data: response)
+  func testMuseAcceptsFloatPercentages() throws {
+    let snapshot = try MuseProvider.parse(data: museUsage(windowUsed: 62.5))
     XCTAssertEqual(snapshot.windows.compactMap(\.usedPercent), [62.5, 25])
-    XCTAssertEqual(snapshot.windows[0].resetAt, date("2026-09-20T17:00:00Z"))
   }
 
   func testMuseOverQuotaClampsToFullWithNote() throws {
-    let snapshot = try MuseProvider.parse(data: museResponse(windowUsed: 142))
+    let snapshot = try MuseProvider.parse(data: museUsage(windowUsed: 142))
     XCTAssertEqual(snapshot.windows.compactMap(\.usedPercent), [100, 25])
     XCTAssertTrue(
       snapshot.notes.contains("Muse reports over-quota usage; shown as fully used."))
   }
 
-  func testMuseLabelsNonStandardDurations() throws {
-    let snapshot = try MuseProvider.parse(data: museResponse(windowMinutes: 1_440))
-    XCTAssertEqual(snapshot.windows.map(\.label), ["1d", "Weekly"])
-  }
-
-  func testMuseFetchPostsVersionedSubscriptionRequest() async throws {
-    let endpoint = try XCTUnwrap(URL(string: "https://example.com/muse-code/key"))
-    let transport = StubTransport([
-      .success(ProviderResponse(statusCode: 200, data: fixture("muse-success")))
-    ])
-    let credentials = StubCredentialStore(tokens: ["muse-token"])
-    let client = ProviderHTTPClient(transport: transport, credentials: credentials)
-    let snapshot = try await MuseProvider(client: client, endpoint: endpoint).fetch()
-
-    XCTAssertEqual(snapshot.provider, .muse)
-    let requests = await transport.requests
-    let request = try XCTUnwrap(requests.first)
-    XCTAssertEqual(request.method, .post)
-    XCTAssertEqual(request.url, endpoint)
-    XCTAssertEqual(request.bearerToken, "muse-token")
-    XCTAssertEqual(request.headers["x-api-version"], "1.0.0")
-    XCTAssertEqual(request.headers["Content-Type"], "application/json")
-    XCTAssertEqual(request.body, Data("{}".utf8))
-  }
-
-  func testMuseFetchUnauthorizedSurfacesExpiredCredentials() async throws {
-    let endpoint = try XCTUnwrap(URL(string: "https://example.com/muse-code/key"))
-    let transport = StubTransport([
-      .success(ProviderResponse(statusCode: 401, data: Data())),
-      .success(ProviderResponse(statusCode: 401, data: Data())),
-    ])
-    let client = ProviderHTTPClient(
-      transport: transport,
-      credentials: StubCredentialStore(tokens: ["stale-token", "fresh-token"])
-    )
-    do {
-      _ = try await MuseProvider(client: client, endpoint: endpoint).fetch()
-      XCTFail("Expected unauthorized for a twice-rejected token")
-    } catch {
-      XCTAssertEqual(error as? QuotaError, .unauthorized(.muse))
+  func testMuseAllowanceWithoutPoolsIsUnsupported() {
+    let empty = Data(
+      #"{"schemaVersion":1,"allowance":{"tier":"Muse Code High Usage"}}"#.utf8)
+    XCTAssertThrowsError(try MuseProvider.parse(data: empty)) { error in
+      XCTAssertEqual(error as? QuotaError, .unsupportedResponse(.muse))
     }
   }
 
-  func testMuseSubscriptionURLIsFixed() {
+  func testMuseFetchRunsUsageJSON() async throws {
+    let executable = URL(fileURLWithPath: "/opt/homebrew/bin/muse")
+    let runner = StubCommandRunner(
+      result: .success(
+        CommandResult(stdout: fixture("muse-usage-success"), terminationStatus: 0)))
+    let snapshot = try await MuseProvider(commandRunner: runner, executableURL: executable)
+      .fetch()
+
+    XCTAssertEqual(snapshot.provider, .muse)
+    let calls = await runner.calls
+    XCTAssertEqual(calls.map(\.executableURL), [executable])
+    XCTAssertEqual(calls.map(\.arguments), [["usage", "--json"]])
+  }
+
+  func testMuseFetchNonZeroExitIsCredentialsMissing() async {
+    let runner = StubCommandRunner(
+      result: .success(CommandResult(stdout: Data(), terminationStatus: 1)))
+    let provider = MuseProvider(
+      commandRunner: runner, executableURL: URL(fileURLWithPath: "/opt/homebrew/bin/muse"))
+    do {
+      _ = try await provider.fetch()
+      XCTFail("Expected credentialsMissing")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.muse))
+    }
+  }
+
+  func testMuseExecutableDiscoveryUsesPathWithoutShell() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let executable = root.appendingPathComponent("bin/muse")
+    try write("#!/bin/sh\n", to: executable)
+    try FileManager.default.setAttributes(
+      [.posixPermissions: 0o755],
+      ofItemAtPath: executable.path
+    )
+
     XCTAssertEqual(
-      MuseProvider.subscriptionURL.absoluteString, "https://api.meta.ai/muse-code/key")
+      try MuseProvider.locateExecutable(
+        environment: ["PATH": executable.deletingLastPathComponent().path],
+        homeDirectory: root
+      ).standardizedFileURL,
+      executable.standardizedFileURL
+    )
   }
 }
 
-private enum MuseResetValue {
-  case seconds(Int64)
-  case string(String)
-}
-
-private func museResponse(
-  windowUsed: Double? = 62,
-  windowMinutes: Int = 300,
-  windowReset: MuseResetValue = .seconds(1_789_923_600),
-  weeklyUsed: Double? = 25,
-  weeklyReset: Int64 = 1_790_035_200
-) -> Data {
-  let head = "\"window\":{"
-  let used = windowUsed.map { "\"used_percent\":\($0)," } ?? ""
-  let duration = "\"window_duration_mins\":\(windowMinutes),"
-  let reset: String
-  switch windowReset {
-  case .seconds(let seconds):
-    reset = "\"resets_at\":\(seconds)"
-  case .string(let string):
-    reset = "\"resets_at\":\"\(string)\""
-  }
-  let weeklyUsed = weeklyUsed.map { "\"used_percent\":\($0)," } ?? ""
-  let weekly =
-    "\"weekly\":{\(weeklyUsed)\"resets_at\":\(weeklyReset)},\"tier\":\"1000000000000001\""
+private func museUsage(windowUsed: Double? = 62, weeklyUsed: Double? = 25) -> Data {
+  let windowPercent = windowUsed.map { "\"usedPercent\":\($0)," } ?? ""
+  let weeklyPercent = weeklyUsed.map { "\"usedPercent\":\($0)," } ?? ""
   let body =
-    "{\"is_subs_active\":true,\"subs_usage\":{\(head)\(used)\(duration)\(reset)},\(weekly)}}"
+    "{\"schemaVersion\":1,\"allowance\":{\"tier\":\"Muse Code High Usage\","
+    + "\"window\":{\(windowPercent)\"resetsAtMs\":1789923600000},"
+    + "\"weekly\":{\(weeklyPercent)\"resetsAtMs\":1790035200000},"
+    + "\"asOfMs\":1789920000000,\"source\":\"mint\"},\"reason\":null,\"hint\":null}"
   return Data(body.utf8)
+}
+
+private actor StubCommandRunner: CommandRunning {
+  struct Call: Sendable {
+    let executableURL: URL
+    let arguments: [String]
+  }
+
+  let result: Result<CommandResult, QuotaError>
+  private(set) var calls: [Call] = []
+
+  init(result: Result<CommandResult, QuotaError>) {
+    self.result = result
+  }
+
+  func run(executableURL: URL, arguments: [String]) throws -> CommandResult {
+    calls.append(Call(executableURL: executableURL, arguments: arguments))
+    return try result.get()
+  }
 }

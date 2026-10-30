@@ -14,7 +14,7 @@ final class PersistenceSettingsTests: XCTestCase {
     XCTAssertEqual(try store.load(), [.codex: value])
   }
 
-  func testCorruptDuplicateAndStaleCachesFail() throws {
+  func testCorruptAndDuplicateCachesFail() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     let url = root.appendingPathComponent("snapshots.json")
@@ -24,9 +24,15 @@ final class PersistenceSettingsTests: XCTestCase {
     let value = snapshot(provider: .codex, remaining: 80)
     try JSONEncoder().encode([value, value]).write(to: url)
     XCTAssertThrowsError(try JSONSnapshotStore(url: url).load())
-    XCTAssertThrowsError(
-      try JSONSnapshotStore(url: url).save([.codex: value.markedStale(reason: "old")])
-    )
+  }
+
+  func testStaleCacheRoundTrips() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let store = JSONSnapshotStore(url: root.appendingPathComponent("snapshots.json"))
+    let stale = snapshot(provider: .codex, remaining: 80).markedStale(reason: "offline")
+    try store.save([.codex: stale])
+    XCTAssertEqual(try store.load(), [.codex: stale])
   }
 
   func testCacheWriteFailureIsObservable() throws {

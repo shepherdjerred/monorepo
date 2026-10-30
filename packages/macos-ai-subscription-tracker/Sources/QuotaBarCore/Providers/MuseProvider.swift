@@ -2,63 +2,82 @@ public import Foundation
 
 public struct MuseProvider: UsageProvider {
   public let id = ProviderID.muse
-  private let client: ProviderHTTPClient
-  private let endpoint: URL
+  private let commandRunner: any CommandRunning
+  private let executableURL: URL?
 
-  /// The CLI's startup and `/usage`-panel subscription call. The OAuth token is only ever
-  /// sent here, so this URL is fixed and never comes from configuration. Contract documented
-  /// by herdr-agent-quota's Muse collector (MIT): the call is idempotent for a signed-in
-  /// account, returning the stored key rather than rotating it.
-  public static var subscriptionURL: URL {
-    guard let url = URL(string: "https://api.meta.ai/muse-code/key") else {
-      preconditionFailure("Muse subscription URL is invalid.")
-    }
-    return url
-  }
-
-  public init(client: ProviderHTTPClient, endpoint: URL) {
-    self.client = client
-    self.endpoint = endpoint
+  /// Quota comes from the signed-in `muse` CLI itself (`muse usage --json`, the
+  /// CLI's no-model-turn allowance read). The CLI owns the OAuth credential and
+  /// its Keychain item: `muse` rewrites that item on every token refresh, which
+  /// resets its ACL, so Brim reading it directly turned every poll during an
+  /// active Muse session into a Keychain fight. Asking the CLI keeps Brim out
+  /// of the credential entirely — it never reads, stores, or sends the token.
+  public init(commandRunner: any CommandRunning, executableURL: URL? = nil) {
+    self.commandRunner = commandRunner
+    self.executableURL = executableURL
   }
 
   public func fetch() async throws -> UsageSnapshot {
-    let data = try await client.post(
-      provider: id,
-      url: endpoint,
-      body: Data("{}".utf8),
-      headers: [
-        "x-api-version": "1.0.0",
-        "Content-Type": "application/json",
-      ]
+    let executableURL = try executableURL ?? Self.locateExecutable()
+    let result = try await commandRunner.run(
+      executableURL: executableURL,
+      arguments: ["usage", "--json"]
     )
-    return try Self.parse(data: data)
+    guard result.terminationStatus == 0 else {
+      throw QuotaError.credentialsMissing(id)
+    }
+    return try Self.parse(data: result.stdout)
+  }
+
+  public static func locateExecutable(
+    environment: [String: String] = ProcessInfo.processInfo.environment,
+    homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
+    fileManager: FileManager = .default
+  ) throws -> URL {
+    var candidates: [URL] = []
+    if let path = environment["PATH"] {
+      candidates.append(
+        contentsOf: path.split(separator: ":").map {
+          URL(fileURLWithPath: String($0), isDirectory: true).appendingPathComponent("muse")
+        })
+    }
+    candidates.append(contentsOf: [
+      URL(fileURLWithPath: "/opt/homebrew/bin/muse"),
+      URL(fileURLWithPath: "/usr/local/bin/muse"),
+      homeDirectory.appendingPathComponent(".local/bin/muse"),
+      homeDirectory.appendingPathComponent(".local/share/mise/shims/muse"),
+    ])
+    var inspected: Set<String> = []
+    for candidate in candidates where inspected.insert(candidate.standardizedFileURL.path).inserted
+    {
+      if fileManager.isExecutableFile(atPath: candidate.path) { return candidate }
+    }
+    throw QuotaError.credentialsMissing(.muse)
   }
 
   public static func parse(data: Data, now: Date = .now) throws -> UsageSnapshot {
     let response = try ProviderDecoder.decode(
-      MuseSubscriptionResponse.self, from: data, provider: .muse)
-    if response.isSubsActive == false {
-      throw QuotaError.unsupportedResponse(.muse)
+      MuseUsageResponse.self, from: data, provider: .muse)
+    guard let allowance = response.allowance else {
+      throw QuotaError.credentialsMissing(.muse)
     }
-    guard let usage = response.subsUsage else {
-      throw QuotaError.unsupportedResponse(.muse)
-    }
-    var notes = [
-      "Uses the signed-in Muse OAuth credential read-only; only quota data is kept."
-    ]
+    var notes = ["Uses the signed-in Muse CLI without reading or storing its token."]
     var windows: [UsageWindow] = []
-    if let window = try rollingWindow(usage.window, notes: &notes, now: now) {
+    if let window = try quotaWindow(
+      allowance.window, id: "muse-window", label: "5-hour",
+      kind: .rolling(durationSeconds: 300 * 60), notes: &notes, now: now
+    ) {
       windows.append(window)
     }
-    if let window = try fixedWindow(
-      usage.weekly, id: "muse-weekly", label: "Weekly", kind: .weekly, notes: &notes, now: now
+    if let window = try quotaWindow(
+      allowance.weekly, id: "muse-weekly", label: "Weekly", kind: .weekly, notes: &notes,
+      now: now
     ) {
       windows.append(window)
     }
     guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.muse) }
     return UsageSnapshot(
       provider: .muse,
-      accountLabel: accountLabel(response: response, usage: usage),
+      accountLabel: accountLabel(tier: allowance.tier),
       windows: windows.sorted { $0.label < $1.label },
       notes: notes,
       sourceTimestamp: now
@@ -67,38 +86,15 @@ public struct MuseProvider: UsageProvider {
 
   /// A window without a usable percentage is dropped rather than failing the snapshot; a
   /// provider that stops reporting a pool degrades to the pools it still reports.
-  private static func rollingWindow(
-    _ window: MuseQuotaWindow?,
-    notes: inout [String],
-    now: Date
-  ) throws -> UsageWindow? {
-    // A missing pool drops the window; a present pool with an unusable value fails loudly.
-    // Brim's rolling kind requires a known positive duration, so an unknown length drops
-    // the window instead of fabricating one.
-    guard let window, let used = window.usedPercent else { return nil }
-    guard used.isFinite, used >= 0 else { throw QuotaValidationError.invalidPercentage }
-    guard let minutes = window.windowDurationMinutes else { return nil }
-    let (durationSeconds, overflow) = minutes.multipliedReportingOverflow(by: 60)
-    guard !overflow, durationSeconds > 0 else { throw QuotaValidationError.invalidDuration }
-    let clamped = clampOverQuota(used, notes: &notes)
-    return try UsageWindow.validated(
-      id: "muse-window",
-      label: minutes == 300 ? "5-hour" : durationLabel(minutes: minutes),
-      kind: .rolling(durationSeconds: durationSeconds),
-      usedPercent: clamped,
-      resetAt: resetDate(window.resetsAt),
-      sourceTimestamp: now
-    )
-  }
-
-  private static func fixedWindow(
-    _ window: MuseQuotaWindow?,
+  private static func quotaWindow(
+    _ window: MuseUsageWindow?,
     id: String,
     label: String,
     kind: WindowKind,
     notes: inout [String],
     now: Date
   ) throws -> UsageWindow? {
+    // A missing pool drops the window; a present pool with an unusable value fails loudly.
     guard let window, let used = window.usedPercent else { return nil }
     guard used.isFinite, used >= 0 else { throw QuotaValidationError.invalidPercentage }
     let clamped = clampOverQuota(used, notes: &notes)
@@ -107,12 +103,12 @@ public struct MuseProvider: UsageProvider {
       label: label,
       kind: kind,
       usedPercent: clamped,
-      resetAt: resetDate(window.resetsAt),
+      resetAt: resetDate(window.resetsAtMs),
       sourceTimestamp: now
     )
   }
 
-  /// The provider reports over-quota percentages above 100 verbatim; Brim windows cap at 100
+  /// The CLI reports over-quota percentages above 100 verbatim; Brim windows cap at 100
   /// and say so instead of failing the whole snapshot.
   private static func clampOverQuota(_ value: Double, notes: inout [String]) -> Double {
     guard value > 100 else { return value }
@@ -120,123 +116,29 @@ public struct MuseProvider: UsageProvider {
     return 100
   }
 
-  private static func resetDate(_ value: MuseReset?) -> Date? {
-    switch value {
-    case .seconds(let seconds):
-      guard seconds > 0 else { return nil }
-      return Date(timeIntervalSince1970: Double(seconds))
-    case .iso8601(let string):
-      return ISO8601.parse(string)
-    case nil:
-      return nil
-    }
+  private static func resetDate(_ milliseconds: Double?) -> Date? {
+    guard let milliseconds, milliseconds.isFinite, milliseconds > 0 else { return nil }
+    return Date(timeIntervalSince1970: milliseconds / 1_000)
   }
 
-  private static func durationLabel(minutes: Int) -> String {
-    if minutes.isMultiple(of: 1_440) { return "\(minutes / 1_440)d" }
-    if minutes.isMultiple(of: 60) { return "\(minutes / 60)h" }
-    return "\(minutes)m"
-  }
-
-  private static func accountLabel(
-    response: MuseSubscriptionResponse,
-    usage: MuseSubsUsage
-  ) -> String? {
-    if let name = response.subsTierName?.trimmingCharacters(in: .whitespacesAndNewlines),
-      !name.isEmpty
-    {
-      return name
-    }
-    if let tier = usage.tier?.trimmingCharacters(in: .whitespacesAndNewlines), !tier.isEmpty {
-      return tier
-    }
-    return nil
-  }
-
-  /// Redirects are refused: the OAuth token is only ever for the fixed subscription host,
-  /// so a redirect is an error, not a new target.
-  public static func noRedirectTransport() -> URLSessionTransport {
-    URLSessionTransport(
-      session: URLSession(
-        configuration: .ephemeral,
-        delegate: MuseRedirectRefusal(),
-        delegateQueue: nil
-      ))
+  private static func accountLabel(tier: String?) -> String? {
+    guard let tier = tier?.trimmingCharacters(in: .whitespacesAndNewlines), !tier.isEmpty
+    else { return nil }
+    return tier
   }
 }
 
-private final class MuseRedirectRefusal: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
-  func urlSession(
-    _ session: URLSession,
-    task: URLSessionTask,
-    willPerformHTTPRedirection response: HTTPURLResponse,
-    newRequest request: URLRequest
-  ) async -> URLRequest? {
-    nil
-  }
+private struct MuseUsageResponse: Decodable {
+  let allowance: MuseAllowance?
 }
 
-private struct MuseSubscriptionResponse: Decodable {
-  let isSubsActive: Bool?
-  let subsTierName: String?
-  let subsUsage: MuseSubsUsage?
-
-  enum CodingKeys: String, CodingKey {
-    case isSubsActive = "is_subs_active"
-    case subsTierName = "subs_tier_name"
-    case subsUsage = "subs_usage"
-  }
-}
-
-private struct MuseSubsUsage: Decodable {
+private struct MuseAllowance: Decodable {
   let tier: String?
-  let window: MuseQuotaWindow?
-  let weekly: MuseQuotaWindow?
+  let window: MuseUsageWindow?
+  let weekly: MuseUsageWindow?
 }
 
-private struct MuseQuotaWindow: Decodable {
+private struct MuseUsageWindow: Decodable {
   let usedPercent: Double?
-  let windowDurationMinutes: Int?
-  let resetsAt: MuseReset?
-
-  enum CodingKeys: String, CodingKey {
-    case usedPercent = "used_percent"
-    case windowDurationMinutes = "window_duration_mins"
-    case resetsAt = "resets_at"
-  }
-
-  init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    // Absent pools degrade to nil and drop that window; a present pool with an unexpected
-    // type throws so provider drift surfaces as malformed instead of a silent partial
-    // snapshot. resets_at stays lenient (a display-only field): unparseable values drop
-    // just the reset time.
-    if container.contains(.usedPercent), try !container.decodeNil(forKey: .usedPercent) {
-      self.usedPercent = try container.decode(Double.self, forKey: .usedPercent)
-    } else {
-      self.usedPercent = nil
-    }
-    if container.contains(.windowDurationMinutes),
-      try !container.decodeNil(forKey: .windowDurationMinutes)
-    {
-      self.windowDurationMinutes = try container.decode(
-        Int.self, forKey: .windowDurationMinutes)
-    } else {
-      self.windowDurationMinutes = nil
-    }
-    if !container.contains(.resetsAt) {
-      self.resetsAt = nil
-    } else if let seconds = try? container.decode(Int64.self, forKey: .resetsAt) {
-      self.resetsAt = .seconds(seconds)
-    } else if let string = try? container.decode(String.self, forKey: .resetsAt) {
-      self.resetsAt = .iso8601(string)
-    } else {
-      self.resetsAt = nil
-    }
-  }
-}
-
-private enum MuseReset: Sendable {
-  case seconds(Int64)
-  case iso8601(String)
+  let resetsAtMs: Double?
 }

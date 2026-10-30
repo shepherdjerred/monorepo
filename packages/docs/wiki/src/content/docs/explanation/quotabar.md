@@ -21,7 +21,7 @@ flowchart LR
   C[Local credentials or Keychain] --> A[Authenticated HTTP adapters]
   G[Signed-in Antigravity CLI] --> A
   S[Cursor local session] --> A
-  M[Signed-in Muse OAuth login] --> A
+  M[Signed-in Muse CLI] --> A
   A --> V[Validated UsageSnapshot]
   V --> P[(Application Support cache)]
   V --> U[MenuBarExtra popover]
@@ -131,16 +131,16 @@ Those boundaries are implemented by the
 and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 
 Meta Muse means the Muse Code subscription, not Meta Model API token spend.
-Brim reuses the signed-in `muse` OAuth login and calls the same subscription
-endpoint the CLI itself uses at startup (`POST
-https://api.meta.ai/muse-code/key`), keeping only the returned `subs_usage`
-rolling and weekly windows. The CLI remains the credential owner: Brim never
-rotates, refreshes, logs, or persists the Meta token, and an expired token
-surfaces as a sign-in state. An API-key login carries no subscription, and
-over-quota percentages above 100 are shown as fully used with a note. The
-keychain token is cached in memory and re-read only when the auth file changes
-or the cached token is rejected; a failed read backs off for an hour. Those
-boundaries are implemented by the
+Brim asks the signed-in `muse` CLI for its allowance (`muse usage --json`)
+and keeps only the returned rolling 5-hour and weekly windows. The CLI is the
+credential owner in the strongest sense: Brim never reads the Meta token at
+all. That boundary exists because `muse` rewrites its Keychain item on every
+token refresh and each rewrite resets the item's access-control list, so Brim
+reading the item directly turned every poll during an active Muse session
+into a recurring Keychain prompt. A signed-out CLI — or an API-key login,
+which carries no subscription — returns no allowance and surfaces as a
+sign-in state. Over-quota percentages above 100 are shown as fully used with
+a note. Those boundaries are implemented by the
 [Muse adapter](https://github.com/shepherdjerred/monorepo/blob/029db3520e63631d4c17457072a2fffe1e524b3a/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/MuseProvider.swift).
 
 ## Runtime behavior
@@ -149,9 +149,12 @@ All enabled providers refresh in parallel every five minutes by default, with
 bounded request and provider timeouts. A 401 reloads local credentials once. A
 429 or network error retains the last successful windows and marks them stale.
 Independent Codex/Grok surfaces may preserve valid partial data with a warning.
-Successful snapshots are stored as JSON under the user's Brim Application
-Support directory; corrupt and failed writes are visible, and loading the cache
-always marks it stale until a fresh response arrives.
+The latest snapshot per provider is stored as JSON under the user's Brim
+Application Support directory, including that stale marker: the cache is the
+status feed other readers consume, so a provider whose fetcher is failing must
+not keep its frozen numbers labeled current there. Corrupt and failed writes
+are visible, and loading the cache always marks it stale until a fresh
+response arrives.
 See the [polling coordinator](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/QuotaBarModel.swift),
 [HTTP client](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Networking.swift),
 and [snapshot store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Persistence.swift).

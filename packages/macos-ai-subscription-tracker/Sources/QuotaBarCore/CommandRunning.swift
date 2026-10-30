@@ -34,7 +34,7 @@ public struct FoundationCommandRunner: CommandRunning, Sendable {
         } catch is CancellationError {
           throw CancellationError()
         } catch {
-          throw QuotaError.commandFailed("agy")
+          throw QuotaError.commandFailed(executableURL.lastPathComponent)
         }
         if control.isCancelled { throw CancellationError() }
         return CommandResult(

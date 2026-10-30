@@ -129,56 +129,6 @@ struct OpenCodeAuthFile: Decodable {
   }
 }
 
-struct MuseAuthFile: Decodable {
-  let providers: MuseAuthProviders?
-}
-
-struct MuseAuthProviders: Decodable {
-  let meta: MuseMetaCredential?
-}
-
-struct MuseMetaCredential: Decodable {
-  let mechanism: String?
-  let accessToken: String?
-  let storage: String?
-
-  enum CodingKeys: String, CodingKey {
-    case mechanism
-    case accessToken = "access_token"
-    case storage
-  }
-
-  /// Only an OAuth account login carries a subscription; an API-key login bills the Model
-  /// API instead and has no windows to report.
-  var oauthToken: TokenValue? {
-    guard mechanism == "oauth" else { return nil }
-    guard let token = accessToken?.trimmingCharacters(in: .whitespacesAndNewlines),
-      !token.isEmpty
-    else { return nil }
-    return TokenValue(accessToken: token, expiresAt: nil)
-  }
-
-  /// A `storage: "keychain"` login keeps the OAuth token out of the file entirely. Keychain
-  /// discovery also requires an OAuth login: an API-key login bills the Model API and has
-  /// no subscription even when a keychain item exists.
-  var usesKeychain: Bool { mechanism == "oauth" && storage == "keychain" }
-}
-
-struct MuseKeychainBundle: Decodable {
-  let accessToken: String?
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken = "access_token"
-  }
-
-  var oauthToken: TokenValue? {
-    guard let token = accessToken?.trimmingCharacters(in: .whitespacesAndNewlines),
-      !token.isEmpty
-    else { return nil }
-    return TokenValue(accessToken: token, expiresAt: nil)
-  }
-}
-
 struct OpenCodeOAuthCredential: Decodable {
   let access: String
   let expires: Double?
