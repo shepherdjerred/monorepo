@@ -15,6 +15,7 @@ import {
 import { lock, required, wire } from "#infrastructure/delivery-records.ts";
 import { requireRollbackCandidate } from "./candidates.ts";
 import { declaredComponents } from "#infrastructure/composition/automatic.ts";
+import { V1_BACKFILL } from "#infrastructure/catalog/carry.ts";
 
 /** The frozen inputs a request selects (model 4.9). */
 export type FrozenSelection = {
@@ -59,14 +60,17 @@ async function acceptedDeployment(tx: Transaction, env: Environment) {
  * newer declared revision reaches the environment only through `rebind`.
  * A carried selection is re-keyed onto the catalog's component names
  * (section 7), which only the declared recipe names; the pre-catalog recipe
- * it records is provenance, so it binds like no acceptance at all. So does a
- * pre-cutover platform recipe, which only its typed request may run.
+ * it records is provenance, so it binds like no acceptance at all. So does
+ * any other pre-catalog (v1 backfill) acceptance, whose recipe names v1
+ * components, and a pre-cutover platform recipe, which only its typed
+ * request may run.
  */
 async function currentBinding(tx: Transaction, env: Environment) {
   const accepted = await acceptedDeployment(tx, env);
   if (
     accepted === null ||
     accepted.kind === "carry" ||
+    accepted.catalogRevision === V1_BACKFILL ||
     legacyPlatformRecipe(
       await pipelineRevision(tx, accepted.pipelineRevisionId),
     )

@@ -244,5 +244,12 @@ describe("renderApplication (T2)", () => {
       targetRevision: "4.3.2",
       helm: { valuesObject: { a: true } },
     });
+    const bare = renderApplication({
+      recipe: recipe({ artifactParameters: {} }),
+      environmentId: "openebs/prod",
+      configuration: {},
+      artifacts,
+    });
+    expect(bare.spec.source).not.toHaveProperty("helm");
   });
 });
