@@ -77,6 +77,13 @@ export async function createZfsZpoolMonitoring(chart: Chart) {
     },
   });
 
+  // The container copies its script once at start, so a script change must
+  // replace the pods.
+  zfsZpoolDaemonSet.podMetadata.addAnnotation(
+    "checksum/script",
+    new Bun.CryptoHasher("sha256").update(scriptContent).digest("hex"),
+  );
+
   // liskov has its own ZFS pool (CI caches) that needs pool health metrics.
   zfsZpoolDaemonSet.scheduling.tolerate(ciNodeTaintedNode());
 

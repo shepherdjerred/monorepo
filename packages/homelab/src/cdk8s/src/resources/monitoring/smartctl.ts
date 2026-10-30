@@ -62,6 +62,13 @@ export async function createSmartctlMonitoring(chart: Chart) {
     },
   });
 
+  // The container copies its script once at start, so a script change must
+  // replace the pods.
+  smartctlDaemonSet.podMetadata.addAnnotation(
+    "checksum/script",
+    new Bun.CryptoHasher("sha256").update(scriptContent).digest("hex"),
+  );
+
   // Disk monitoring must cover the CI-only node too.
   smartctlDaemonSet.scheduling.tolerate(ciNodeTaintedNode());
 
