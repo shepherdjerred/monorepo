@@ -1,6 +1,6 @@
 # Landing pages constraints
 
-Static Astro site for `https://pages.sjer.red`, the shared host for landing and
+Static Astro site for `https://public.ts-mc.net`, the shared host for landing and
 campaign pages across projects. `README.md` owns the item layout and the
 tracking contract.
 

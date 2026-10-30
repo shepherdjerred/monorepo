@@ -6,8 +6,11 @@
     "immutablePrefixes": ["_astro/"],
     "extraExcludes": [],
     "entrypoints": ["index.html"],
-    "verification": { "url": "https://pages.sjer.red/", "expectedStatus": 200 },
-    "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+    "verification": {
+      "url": "https://public.ts-mc.net/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "efb999158b3977e07b26f6a74809c80a",
     "kind": "static-site"
   }
 }

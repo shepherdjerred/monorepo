@@ -34,7 +34,7 @@ for (const dns of [
 export default defineConfig({
   devToolbar: { enabled: false },
   output: "static",
-  site: "https://pages.sjer.red",
+  site: "https://public.ts-mc.net",
   trailingSlash: "always",
   build: { format: "directory" },
 });

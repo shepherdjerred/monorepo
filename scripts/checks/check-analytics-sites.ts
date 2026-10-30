@@ -79,7 +79,7 @@ const staticTrackers = [
   {
     path: "packages/landing-pages/public/posthog.js",
     entrypoint: "packages/landing-pages/src/layouts/Base.astro",
-    hostname: "pages.sjer.red",
+    hostname: "public.ts-mc.net",
     masksAllText: false,
     wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
   },
@@ -184,7 +184,7 @@ const expectedHostnames = new Set([
   "cook.sjer.red",
   "stocks.sjer.red",
   "wiki.sjer.red",
-  "pages.sjer.red",
+  "public.ts-mc.net",
 ]);
 const actualHostnames = new Set(registry.sites.map((site) => site.hostname));
 if (

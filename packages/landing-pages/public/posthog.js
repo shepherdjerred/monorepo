@@ -71,7 +71,7 @@
       // this host stay separable in PostHog.
       posthog.register({
         site_key: "landing-pages",
-        site_hostname: "pages.sjer.red",
+        site_hostname: "public.ts-mc.net",
         page_key: document.documentElement.dataset["pageKey"],
       });
     },

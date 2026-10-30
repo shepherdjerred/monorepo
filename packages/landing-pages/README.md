@@ -1,12 +1,12 @@
 # Landing pages
 
-Static Astro site served at `https://pages.sjer.red` from the `landing-pages`
+Static Astro site served at `https://public.ts-mc.net` from the `landing-pages`
 bucket. It is the shared host for landing and campaign pages, such as ad
 destinations, across projects. Each page is an _item_.
 
-| Item        | URL                                 | Purpose                                |
-| ----------- | ----------------------------------- | -------------------------------------- |
-| `the-storm` | `https://pages.sjer.red/the-storm/` | Pinterest ad destination for The Storm |
+| Item        | URL                                   | Purpose                                |
+| ----------- | ------------------------------------- | -------------------------------------- |
+| `the-storm` | `https://public.ts-mc.net/the-storm/` | Pinterest ad destination for The Storm |
 
 The root lists the items and is not indexed. `404.astro` covers unknown paths.
 
@@ -17,7 +17,7 @@ The root lists the items and is not indexed. `404.astro` covers unknown paths.
 2. Render through `src/layouts/Base.astro` with `pageKey="<item>"`. It sets
    the head metadata, the optional share image, and the PostHog tracker.
 3. Add any third-party tracker as `public/<item>/<name>.js`, gated on the
-   `pages.sjer.red` hostname and the `/<item>/` path prefix. Allow its hosts
+   `public.ts-mc.net` hostname and the `/<item>/` path prefix. Allow its hosts
    in `landingPagesCsp` (`packages/homelab/.../s3-static-sites/sites.ts`) and
    register it in `scripts/checks/check-analytics-sites.ts`.
 4. Add the item to the table above and to the root index. Add an
@@ -52,7 +52,7 @@ The Storm item adds:
   `storm_discord_clicked`.
 
 Ad destination URLs use
-`https://pages.sjer.red/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>`.
+`https://public.ts-mc.net/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>`.
 
 ## The Storm item
 

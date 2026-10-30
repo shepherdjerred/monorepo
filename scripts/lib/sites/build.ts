@@ -137,7 +137,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
   {
     bucket: "landing-pages",
     name: "landing-pages",
-    url: "https://pages.sjer.red",
+    url: "https://public.ts-mc.net",
     buildDir: "packages/landing-pages",
     buildCmd: "bun --no-install run astro build",
     distDir: "packages/landing-pages/dist",

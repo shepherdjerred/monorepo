@@ -1,6 +1,6 @@
 (function () {
   if (
-    window.location.hostname !== "pages.sjer.red" ||
+    window.location.hostname !== "public.ts-mc.net" ||
     !window.location.pathname.startsWith("/the-storm/") ||
     navigator.doNotTrack === "1" ||
     navigator.globalPrivacyControl === true

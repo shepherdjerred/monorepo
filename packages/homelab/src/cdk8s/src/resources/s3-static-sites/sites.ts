@@ -273,7 +273,7 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
   // Shared host for landing and campaign pages; each item is a top-level route.
   {
-    hostname: "pages.sjer.red",
+    hostname: "public.ts-mc.net",
     bucket: "landing-pages",
     probes: [
       {

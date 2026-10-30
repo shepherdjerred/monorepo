@@ -61,7 +61,7 @@ resource "aws_s3_bucket" "ts_mc_docs" {
   bucket = "ts-mc-docs"
 }
 
-# pages.sjer.red: shared landing and campaign pages (packages/landing-pages).
+# public.ts-mc.net: shared landing and campaign pages (packages/landing-pages).
 resource "aws_s3_bucket" "landing_pages" {
   bucket = "landing-pages"
 }

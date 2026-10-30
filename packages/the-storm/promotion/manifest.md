@@ -98,9 +98,9 @@ Messages requiring native Enter were eventually sent and verified; no drafts rem
 
 ## Paid placements
 
-| Account     | Creative                                                        | Destination                                                                                                                        | Tracking                                                                                                                                          |
-| ----------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pinterest` | Friendly set `01`–`10` (`Assets/pinterest/2026-10-20/friendly`) | `https://pages.sjer.red/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>` | Scout's shared Pinterest tag: `pagevisit`, plus `lead` on the first address copy. PostHog `page_key=the-storm`. Source: `packages/landing-pages`. |
+| Account     | Creative                                                        | Destination                                                                                                                          | Tracking                                                                                                                                          |
+| ----------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pinterest` | Friendly set `01`–`10` (`Assets/pinterest/2026-10-20/friendly`) | `https://public.ts-mc.net/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>` | Scout's shared Pinterest tag: `pagevisit`, plus `lead` on the first address copy. PostHog `page_key=the-storm`. Source: `packages/landing-pages`. |
 
 ## Pending, paused, and deferred placements
 
