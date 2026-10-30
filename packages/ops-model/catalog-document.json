@@ -3019,8 +3019,8 @@
     {
       "id": "minecraft/tsmc",
       "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
+      "approvalPolicy": "required",
+      "automatic": false,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
       "recipeRevisionId": "minecraft-tsmc/7",
       "configurationRevisionId": "minecraft-tsmc/7"
