@@ -1,5 +1,5 @@
 {
-  "id": "redlib/prod/1",
+  "id": "redlib/prod/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {

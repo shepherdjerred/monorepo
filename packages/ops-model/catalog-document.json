@@ -3166,7 +3166,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "redlib/prod/1",
+      "recipeRevisionId": "redlib/prod/2",
       "configurationRevisionId": "redlib/prod/1"
     },
     {
