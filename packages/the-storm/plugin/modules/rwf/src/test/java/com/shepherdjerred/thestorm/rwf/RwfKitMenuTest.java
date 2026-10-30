@@ -487,6 +487,26 @@ final class RwfKitMenuTest {
   }
 
   @Test
+  void aRestrictedPoolAlsoFiltersTheMilestoneOnlyMenu() throws java.io.IOException {
+    var harness = RwfHarness.prepare(directory);
+    var config = directory.resolve("rwf.yml");
+    var original = java.nio.file.Files.readString(config);
+    var restricted = original.replace("  kits: []", "  kits: [trooper, berserker]");
+    assertThat(restricted).isNotEqualTo(original);
+    java.nio.file.Files.writeString(config, restricted);
+    JoinGate closed = player -> CompletableFuture.completedFuture(false);
+    harness.kitGates = new FeatureGates(closed, JoinGate.open());
+    running = harness.enable(directory);
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+
+    var top = openMenu(harness, alice).getTopInventory();
+
+    assertThat(name(requireNonNull(top.getItem(0)))).isEqualTo("Trooper");
+    assertThat(top.getItem(1)).isNull();
+  }
+
+  @Test
   void withTheKitsFlagOffOnlyTheFirstFourKitsAreOffered() {
     var harness = RwfHarness.prepare(directory);
     JoinGate closed = player -> CompletableFuture.completedFuture(false);

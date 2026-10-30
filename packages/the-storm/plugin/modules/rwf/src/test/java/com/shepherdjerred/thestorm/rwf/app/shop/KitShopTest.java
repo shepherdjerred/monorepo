@@ -146,7 +146,7 @@ final class KitShopTest {
   }
 
   @Test
-  void retryAfterAFailedGrantFinishesTheChargedPurchaseWithoutAnotherDebit() {
+  void aChargedPurchaseCanStillBeSettledAfterThePoolExcludesIt() {
     fund(800);
     var buying = shop();
     database
@@ -166,7 +166,8 @@ final class KitShopTest {
     assertThat(held()).isEqualTo(400);
     database.write(dsl -> dsl.execute("DROP TRIGGER reject_kit_grant")).join();
 
-    assertThat(buying.buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0.plusSeconds(1)).join())
+    var laterPool = new KitPool(java.util.Set.of("trooper"));
+    assertThat(buying.buy(ALICE, laterPool, KitBook.BERSERKER, T0.plusSeconds(1)).join())
         .isEqualTo(Result.ok(pending.getFirst()));
     assertThat(store.owned(ALICE).join()).containsExactly("berserker");
     assertThat(store.pending().join()).isEmpty();

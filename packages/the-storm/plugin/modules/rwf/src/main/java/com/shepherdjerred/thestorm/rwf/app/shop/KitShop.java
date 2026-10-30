@@ -80,10 +80,9 @@ public final class KitShop {
   /** {@code player} buys {@code kit} from {@code pool} at {@code now}: the purchase, or why not. */
   public CompletableFuture<Result<Purchase, ShopError>> buy(
       UUID player, KitPool pool, KitSpec kit, Instant now) {
-    if (!kit.purchasable() || !pool.allows(kit.id())) {
+    if (!kit.purchasable()) {
       return CompletableFuture.completedFuture(Result.err(new ShopError.NotForSale(kit.id())));
     }
-    var purchase = new Purchase(ids.get(), player, kit.id(), kit.price(), now);
     return store
         .owned(player)
         .thenCompose(
@@ -93,9 +92,30 @@ public final class KitShop {
                     Result.<Purchase, ShopError>err(new ShopError.AlreadyOwned(kit.id())));
               }
               return store
-                  .begin(purchase)
+                  .pending()
                   .thenCompose(
-                      opened -> opened ? charge(purchase, now) : resume(player, kit.id(), now));
+                      pending -> {
+                        var previous =
+                            pending.stream()
+                                .filter(
+                                    purchase ->
+                                        purchase.player().equals(player)
+                                            && purchase.kit().equals(kit.id()))
+                                .findFirst();
+                        if (previous.isPresent()) {
+                          return resume(player, kit.id(), now);
+                        }
+                        if (!pool.allows(kit.id())) {
+                          return CompletableFuture.completedFuture(
+                              Result.<Purchase, ShopError>err(new ShopError.NotForSale(kit.id())));
+                        }
+                        var purchase = new Purchase(ids.get(), player, kit.id(), kit.price(), now);
+                        return store
+                            .begin(purchase)
+                            .thenCompose(
+                                opened ->
+                                    opened ? charge(purchase, now) : resume(player, kit.id(), now));
+                      });
             });
   }
 

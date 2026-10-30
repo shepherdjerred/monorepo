@@ -75,6 +75,13 @@ final class Armory {
     return kits.stream().filter(kit -> admitted.allows(kit.id())).toList();
   }
 
+  List<KitSpec> milestones() {
+    var admitted = kits();
+    return com.shepherdjerred.thestorm.rwf.domain.kit.KitBook.MILESTONE_ONE.stream()
+        .filter(admitted::contains)
+        .toList();
+  }
+
   /** The kits free this week, in menu order. */
   List<KitSpec> rotation(Instant now) {
     var current = KitRotation.Week.of(now);

@@ -99,7 +99,11 @@ Ordinary drafts also apply `experience.maps` and `experience.kits` in
 TSMC pools limited to imported Red Warfare maps and ported kits. Storm-authored
 content remains shipped for development and test fixtures without entering
 ordinary matches. Changed pools take effect on the next map draft after the
-module restarts; `/rwf admin settings` overrides remain in memory only.
+module restarts, as wired by
+[RwfPaper](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/RwfPaper.java)
+and
+[BotPopulation](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/BotPopulation.java).
+[Admin overrides remain in memory only](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/ExperienceCommands.java).
 
 ## 4. Enable the modules
 
