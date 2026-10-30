@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.TreeMap;
+import java.util.function.IntPredicate;
 
 /**
  * Everything baked from one map, stored once and loaded per match.
@@ -89,6 +90,42 @@ public record NavArtifact(
       return field == null ? OptionalInt.empty() : ApproachNodes.baked(graph, site.cell(), field);
     }
     return graph.nearestNode(site.cell().feet());
+  }
+
+  /**
+   * The nodes a bot that is not stranded can get back to: the approach nodes of the spawns and the
+   * bombs. Spawns alone are not enough: cors-path's spawns are ledges every route drops off, so
+   * almost no node on the map reached one and every bot that left its spawn counted as stranded.
+   */
+  public int[] anchors() {
+    var nodes = new ArrayList<Integer>();
+    for (var site : sites.spawns()) approachNode(site).ifPresent(nodes::add);
+    for (var site : sites.bombs()) approachNode(site).ifPresent(nodes::add);
+    return nodes.stream().mapToInt(Integer::intValue).distinct().toArray();
+  }
+
+  /**
+   * Whether a body standing at {@code node} can get back to an {@link #anchors anchor}: over every
+   * edge, or without sprint jumps for a body that may not sprint. A map without anchors anchors
+   * every node.
+   */
+  public boolean anchored(int node, boolean leaps) {
+    return graph.reachesAny(node, sites, this::anchors, leaps);
+  }
+
+  /**
+   * Whether {@code node} lies where only sprint jumps lead back to an anchor: a body that misses
+   * one of them falls back in, and a body that may not sprint never gets out.
+   */
+  public boolean leapOnlyExit(int node) {
+    return leapOnlyExits().test(node);
+  }
+
+  /** {@link #leapOnlyExit} for every node, looked up once for a search that asks it per edge. */
+  public IntPredicate leapOnlyExits() {
+    var anyway = graph.reaching(sites, this::anchors, true);
+    var walking = graph.reaching(sites, this::anchors, false);
+    return node -> anyway.test(node) && !walking.test(node);
   }
 
   /** The validated interaction position for the bomb at {@code cell}. */

@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.IntPredicate;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.Supplier;
 
 /**
  * The walkable cells of a map and the typed edges between them, in compressed sparse row form.
@@ -71,6 +72,9 @@ public final class NavGraph {
   private final int[] reverseStart;
   private final int[] reverseEdge;
   private final DirectedReachability reachability;
+
+  /** The nodes reaching each {@link #reachesAny} target set. */
+  private final AnchorReach anchorReach = new AnchorReach(this);
 
   /**
    * @param bounds the cuboid the cells live in
@@ -415,6 +419,22 @@ public final class NavGraph {
     requireNode(from);
     requireNode(to);
     return reachability.reaches(from, to);
+  }
+
+  /**
+   * Whether some node of {@code targets} can be reached from {@code from} over the edges a body
+   * takes: every edge, or every edge but a sprint jump for a body that may not sprint. The nodes
+   * reaching them are found once per {@code key}, which must name the same targets every time (a
+   * map's sites, for their approach nodes). No targets at all leave every node free to go anywhere.
+   */
+  public boolean reachesAny(int from, Object key, Supplier<int[]> targets, boolean leaps) {
+    requireNode(from);
+    return reaching(key, targets, leaps).test(from);
+  }
+
+  /** {@link #reachesAny} for every node at once, for a search that asks it of each edge. */
+  public IntPredicate reaching(Object key, Supplier<int[]> targets, boolean leaps) {
+    return anchorReach.reaching(key, targets, leaps);
   }
 
   /** Nodes reachable from every supplied source; an empty source list imposes no restriction. */
