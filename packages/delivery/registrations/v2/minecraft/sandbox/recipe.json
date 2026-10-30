@@ -1,5 +1,5 @@
 {
-  "id": "minecraft/sandbox/1",
+  "id": "minecraft/sandbox/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {

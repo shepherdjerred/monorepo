@@ -3013,7 +3013,7 @@
       "role": "qualification",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "minecraft/sandbox/1",
+      "recipeRevisionId": "minecraft/sandbox/2",
       "configurationRevisionId": "minecraft/sandbox/1"
     },
     {
