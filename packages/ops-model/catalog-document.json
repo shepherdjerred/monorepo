@@ -3207,7 +3207,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/2"
+      "configurationRevisionId": "argocd/prod/3"
     },
     {
       "id": "chartmuseum/prod",
@@ -3293,8 +3293,8 @@
       "id": "tofu-dockerhub/prod",
       "role": "durable",
       "approvalPolicy": "none",
-      "automatic": false,
-      "recipeRevisionId": "tofu-dockerhub/prod/1",
+      "automatic": true,
+      "recipeRevisionId": "tofu-dockerhub/prod/2",
       "configurationRevisionId": "tofu-dockerhub/prod/1"
     },
     {

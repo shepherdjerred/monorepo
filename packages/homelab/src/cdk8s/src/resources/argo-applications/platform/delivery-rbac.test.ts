@@ -21,6 +21,7 @@ import {
   deliveryManagedApplications,
   deliveryRootApplications,
   OPERATOR_RUN_APPLICATIONS,
+  TOFU_ARGOCD_ACCOUNT,
 } from "./delivery-rbac.ts";
 import { ARGOCD_PROJECTS, applicationProject } from "./projects.ts";
 
@@ -438,7 +439,8 @@ test.each(["off", "on"] as const)(
       .split("\n")
       .map((row) => row.trim())
       .filter((row) => row.startsWith("p, "))
-      .map((row) => row.split(",").map((cell) => cell.trim()));
+      .map((row) => row.split(",").map((cell) => cell.trim()))
+      .filter((row) => row[2] === "applications");
     expect(rows.length).toBeGreaterThan(100);
     for (const row of rows) {
       const [project, name] = z.string().parse(row[4]).split("/");
@@ -546,4 +548,52 @@ test("under transition rendering Delivery creates the baseline and companion App
           !row.startsWith("p, delivery-platform, "),
       ),
   ).toEqual([]);
+});
+
+async function allows(
+  state: SwitchState,
+  action: string,
+  resource: string,
+  object: string,
+): Promise<boolean> {
+  return await argoRbacAllows({
+    subject: TOFU_ARGOCD_ACCOUNT,
+    action,
+    resource,
+    object,
+    policyFile: policyFiles[state],
+    kubeconfig,
+    home: directory,
+    builtinPolicy: false,
+  });
+}
+
+test("the argocd stack's account issues only the tokens the stack mints", async () => {
+  for (const state of ["off", "on"] as const)
+    for (const account of [
+      "delivery",
+      "delivery-observer",
+      "delivery-platform",
+    ]) {
+      // The native evaluator knows only create and update for accounts, but
+      // the server checks `get` on GetAccount, so that row is asserted as text.
+      expect(policyRows[state]).toContain(
+        `p, ${TOFU_ARGOCD_ACCOUNT}, accounts, get, ${account}, allow`,
+      );
+      expect(
+        await allows(state, "update", "accounts", account),
+        `${state} ${account}`,
+      ).toBe(true);
+    }
+  expect(await allows("on", "update", "accounts", "operator-run")).toBe(true);
+  expect(await allows("off", "update", "accounts", "operator-run")).toBe(false);
+  for (const account of ["operator", "admin", TOFU_ARGOCD_ACCOUNT])
+    expect(await allows("on", "update", "accounts", account), account).toBe(
+      false,
+    );
+  for (const action of ["get", "update", "sync", "delete"])
+    expect(
+      await allows("on", action, "applications", "workloads/delivery"),
+      action,
+    ).toBe(false);
 });

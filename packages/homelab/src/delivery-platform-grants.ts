@@ -30,6 +30,9 @@ export const DELIVERY_PLATFORM_ITEMS = {
     itemId: "rzxdklctncniksfcywoypt3fs4",
   },
   "posthog-tofu-credentials": { itemId: "yh3xvqemmr4ic2up5zluo2rkcq" },
+  // DOCKERHUB_USERNAME, the repository-scoped DOCKERHUB_MANAGEMENT_TOKEN PAT and
+  // the stack's state passphrase; never the account login dockerhub-tokens needs.
+  "dockerhub-tofu-credentials": { itemId: "w7ix43s3kakrjd5zjemaszm4v4" },
   "discord-birmel-credentials": { itemId: "w5c27dzybxor3j6dzl7lub2soe" },
   "discord-starlight-beta-credentials": {
     itemId: "tdxe6cq7ozhv7cesfvnlkl5gh4",
@@ -53,6 +56,7 @@ const providerSecrets: Readonly<Record<string, Secret>> = {
   discord: "discord-tofu-credentials",
   "cloudflare-tokens": "cloudflare-tokens-tofu-credentials",
   posthog: "posthog-tofu-credentials",
+  dockerhub: "dockerhub-tofu-credentials",
 };
 const discord: Readonly<Record<string, Secret>> = {
   DISCORD_BIRMEL_BOT_TOKEN: "discord-birmel-credentials",

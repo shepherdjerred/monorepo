@@ -85,10 +85,13 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
       },
     ],
   },
+  // The tofu-argocd account's token, never the operator's own ARGOCD_AUTH_TOKEN:
+  // that account can only read and issue tokens for the accounts this stack
+  // mints. Operator-run until Delivery Jobs have a 1Password write path.
   argocd: {
     externalFiles: [],
     credentials: [
-      { source: "ARGOCD_AUTH_TOKEN", target: "TF_VAR_argocd_auth_token" },
+      { source: "TOFU_ARGOCD_AUTH_TOKEN", target: "TF_VAR_argocd_auth_token" },
       {
         source: "OP_SERVICE_ACCOUNT_TOKEN",
         target: "OP_SERVICE_ACCOUNT_TOKEN",

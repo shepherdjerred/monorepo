@@ -67,6 +67,7 @@ test("platform modes and dependency order preserve existing release controls", (
   ).toEqual([
     "arr",
     "cloudflare",
+    "dockerhub",
     "github",
     "posthog",
     "seaweedfs",

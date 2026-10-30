@@ -1,5 +1,5 @@
 variable "argocd_auth_token" {
-  description = "Operator ArgoCD administrator credential for issuing dedicated Delivery account tokens; never projected into Delivery or CI"
+  description = "Token of the tofu-argocd ArgoCD account, which may only read and issue tokens for the Delivery accounts this stack mints"
   type        = string
   sensitive   = true
 }

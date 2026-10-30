@@ -19,6 +19,15 @@ import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/nam
  */
 export const OPERATOR_RUN_ACCOUNT = "operator-run";
 
+/**
+ * The `argocd` OpenTofu stack's account, whose token Delivery's platform Jobs
+ * for `tofu-argocd/prod` hold. It has no Application grant. It reads and
+ * issues tokens only for the accounts whose tokens the stack mints: ArgoCD
+ * checks `accounts, get` on GetAccount and `accounts, update` on CreateToken
+ * and DeleteToken, and an account may always renew its own token.
+ */
+export const TOFU_ARGOCD_ACCOUNT = "tofu-argocd";
+
 export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery": "apiKey",
   "accounts.delivery.enabled": true,
@@ -26,6 +35,8 @@ export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery-observer.enabled": true,
   "accounts.delivery-platform": "apiKey",
   "accounts.delivery-platform.enabled": true,
+  [`accounts.${TOFU_ARGOCD_ACCOUNT}`]: "apiKey",
+  [`accounts.${TOFU_ARGOCD_ACCOUNT}.enabled`]: true,
 } as const;
 const OPERATOR_RUN_ARGO_ACCOUNT = {
   [`accounts.${OPERATOR_RUN_ACCOUNT}`]: "apiKey",
@@ -155,6 +166,22 @@ function releaseRootRows(transition: boolean): string[] {
   ];
 }
 
+/** The accounts whose tokens the `argocd` stack mints, and nothing else. */
+function tofuArgocdRows(transition: boolean): string[] {
+  const accounts = [
+    "delivery",
+    "delivery-observer",
+    "delivery-platform",
+    ...(transition ? [OPERATOR_RUN_ACCOUNT] : []),
+  ];
+  return accounts.flatMap((account) =>
+    ["get", "update"].map(
+      (action) =>
+        `p, ${TOFU_ARGOCD_ACCOUNT}, accounts, ${action}, ${account}, allow`,
+    ),
+  );
+}
+
 /** Local accounts have explicit targets in each Application's reviewed project; only the CP dispatch barrier has an exact workload edit grant. */
 export function deliveryArgoPolicy(
   transition: boolean = transitionRendering(),
@@ -206,7 +233,7 @@ export function deliveryArgoPolicy(
       ["get"],
     );
   }
-  rows.push(...releaseRootRows(transition));
+  rows.push(...releaseRootRows(transition), ...tofuArgocdRows(transition));
   // Before the window, release-root already holds its rows in the transition
   // projects too (window step 3b installs them): the final v1 root release
   // (step 4b) moves every child into `cluster` or `workloads` before `argocd`
