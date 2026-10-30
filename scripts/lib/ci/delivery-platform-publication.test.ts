@@ -77,8 +77,8 @@ test("ordinary changes do not invent platform deploys; direct stacks retain thei
       "packages/homelab/src/tofu/cloudflare-tokens/main.tf",
     ]),
   ).toEqual(["cloudflare-tokens"]);
-  expect(changedPlatformStacks(["bun.lock"])).toHaveLength(10);
-  expect(changedPlatformStacks(undefined)).toHaveLength(10);
+  expect(changedPlatformStacks(["bun.lock"])).toHaveLength(11);
+  expect(changedPlatformStacks(undefined)).toHaveLength(11);
 });
 
 test("a stack's declared external inputs select it like its own directory", () => {
@@ -90,7 +90,7 @@ test("a stack's declared external inputs select it like its own directory", () =
   ]);
   expect(
     changedPlatformStacks(["packages/version-catalog/src/image-registry.json"]),
-  ).toEqual([]);
+  ).toEqual(["dockerhub"]);
 });
 
 test("root and DNS releases freeze the complete ordered dependency closure", () => {
