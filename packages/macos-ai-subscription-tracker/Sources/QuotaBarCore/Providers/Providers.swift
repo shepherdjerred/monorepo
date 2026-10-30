@@ -7,6 +7,7 @@ public enum Providers {
     endpoints: ProviderEndpoints? = nil,
     commandRunner: any CommandRunning = FoundationCommandRunner(),
     antigravityExecutableURL: URL? = nil,
+    museExecutableURL: URL? = nil,
     providerIDs: Set<ProviderID> = ProviderID.standard
   ) throws -> [any UsageProvider] {
     let endpoints = try endpoints ?? ProviderEndpoints.live()
@@ -40,13 +41,7 @@ public enum Providers {
           resetEndpoint: endpoints.grokResets
         )
       case .muse:
-        return MuseProvider(
-          client: ProviderHTTPClient(
-            transport: MuseProvider.noRedirectTransport(),
-            credentials: credentials
-          ),
-          endpoint: MuseProvider.subscriptionURL
-        )
+        return MuseProvider(commandRunner: commandRunner, executableURL: museExecutableURL)
       }
     }
   }

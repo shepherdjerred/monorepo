@@ -153,23 +153,18 @@ logs, or persists Google's token. Gemini CLI and Code Assist quotas are outside
 this integration. See the
 [Antigravity usage command](https://antigravity.google/docs/cli/commands/usage).
 
-Muse reuses the signed-in `muse` OAuth login. Brim reads the local credential
-(`$MUSE_AUTH_PATH`, `$XDG_CONFIG_HOME/muse/auth.json`, or
-`~/.config/muse/auth.json`, including a `storage: "keychain"` login via the
-`ai.meta.dev.credentials` keychain item) and calls the same subscription
-endpoint the CLI itself uses at startup: `POST
-https://api.meta.ai/muse-code/key` with the OAuth Bearer token and an
-`x-api-version: 1.0.0` header. The call is idempotent, redirects are refused so
-the token only ever reaches that host, and Brim keeps only the returned
-`subs_usage` block: the rolling window (usually the 5-hour block) and weekly
-buckets with their reset times. `muse login` remains the owner of that
-session: Brim never rotates, refreshes, logs, or persists the token, and an
-expired token surfaces as a sign-in state that a fresh `muse login` clears. An
-API-key login bills the Model API instead and carries no subscription, so Brim
-reports it as signed out. Over-quota percentages above 100 are shown as fully
-used with a note. Brim caches the keychain token in memory and re-reads only
-when the auth file changes or the cached token is rejected, so macOS prompts
-at most once per rotation; a failed read backs off for an hour.
+Muse asks the signed-in `muse` CLI for its allowance. Brim locates `muse` on
+the current process `PATH` or in standard Homebrew, local, and mise locations
+and runs `muse usage --json`, displaying the returned rolling 5-hour and
+weekly windows with their reset times. The CLI owns the OAuth credential and
+its Keychain item: `muse` rewrites that item on every token refresh, which
+resets its access-control list, so Brim reading the item directly turned
+every poll during an active Muse session into a Keychain fight. Brim
+therefore never reads, copies, refreshes, logs, or persists the Meta token. A
+signed-out CLI — or an API-key login, which bills the Model API instead of
+carrying a subscription — returns no allowance, so Brim reports Muse as
+signed out. Over-quota percentages above 100 are shown as fully used with a
+note.
 
 Cursor reads only `cursorAuth/accessToken` from Cursor's local `state.vscdb`
 and sends an empty Connect JSON request to Cursor's current-period usage
@@ -222,8 +217,8 @@ stay out of this slice.
 
 Provider contracts are isolated in focused files under `Sources/QuotaBarCore`.
 Claude and Codex endpoints are authenticated subscription web surfaces;
-Antigravity uses its CLI contract and Muse reuses the CLI's own subscription
-endpoint; Cursor uses the unsupported personal-client contract described above.
+Antigravity and Muse use their CLI contracts; Cursor uses the unsupported
+personal-client contract described above.
 Grok and Kimi use private subscription quota surfaces. Provider response
 changes produce an
 explicit unavailable, partial, or stale state rather than a fabricated zero.

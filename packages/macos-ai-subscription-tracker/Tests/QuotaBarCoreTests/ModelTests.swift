@@ -76,7 +76,10 @@ final class ModelTests: XCTestCase {
       return
     }
     XCTAssertNotEqual(value.freshness, .current)
-    XCTAssertEqual(store.saveCount, 0)
+    // The stale marker is published so cache readers stop treating the
+    // retained windows as current.
+    XCTAssertEqual(store.savedSnapshots[.codex]?.freshness, value.freshness)
+    XCTAssertEqual(store.saveCount, 1)
   }
 
   func testAuthenticationAndNetworkFailuresAreDistinct() async {
@@ -378,6 +381,37 @@ final class ModelTests: XCTestCase {
     while !(await condition()), clock.now < deadline {
       try? await Task.sleep(for: .milliseconds(5))
     }
+  }
+}
+
+@MainActor
+final class StalePublishingTests: XCTestCase {
+  func testFailurePublishesStaleAndNextSuccessRestoresCurrent() async {
+    let snapshot = UsageSnapshot(
+      provider: .codex, windows: [window(remaining: 60)], sourceTimestamp: .now)
+    let codex = FakeProvider(
+      id: .codex,
+      results: [.failure(.network(.codex)), .success(snapshot)]
+    )
+    let store = MemorySnapshotStore(loaded: [.codex: snapshot])
+    let model = QuotaBarModel(
+      providers: [codex],
+      settings: AppSettings(
+        store: MemoryModelSettingsStore(enabled: [.codex]), minimumPollingInterval: 60),
+      store: store,
+      historyStore: MemoryHistoryStore(),
+      providerTimeout: .seconds(1)
+    )
+
+    await model.refresh()
+    guard case .stale = store.savedSnapshots[.codex]?.freshness else {
+      XCTFail("Expected the failed refresh to publish a stale snapshot")
+      return
+    }
+
+    await model.refresh()
+    XCTAssertEqual(store.savedSnapshots[.codex]?.freshness, .current)
+    XCTAssertEqual(model.overallStatus, .healthy)
   }
 }
 

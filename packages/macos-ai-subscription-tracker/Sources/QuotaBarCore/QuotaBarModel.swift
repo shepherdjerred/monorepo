@@ -201,19 +201,18 @@ public final class QuotaBarModel {
     for provider in enabled {
       providerRefreshAttempts[provider.id, default: 0] += 1
     }
-    let didSucceed = await withTaskGroup(of: ProviderFetchResult.self) { group in
+    await withTaskGroup(of: ProviderFetchResult.self) { group in
       for provider in enabled {
         group.addTask { [providerTimeout] in
           await Self.fetch(provider: provider, timeout: providerTimeout)
         }
       }
-      var didSucceed = false
-      for await result in group where apply(result) {
-        didSucceed = true
+      for await result in group {
+        apply(result)
       }
-      return didSucceed
     }
-    guard didSucceed else { return }
+    // Persist even when every fetch failed: failure rounds are exactly when
+    // the on-disk freshness markers change.
     persistLastSuccessful()
   }
 
@@ -258,6 +257,7 @@ public final class QuotaBarModel {
     await refresh()
   }
 
+  @discardableResult
   private func apply(_ result: ProviderFetchResult) -> Bool {
     switch result {
     case let .success(provider, snapshot):
@@ -267,7 +267,12 @@ public final class QuotaBarModel {
       return true
     case let .failure(provider, error):
       if let snapshot = lastSuccessful[provider] {
-        states[provider] = .available(snapshot.markedStale(reason: error.localizedDescription))
+        // Publish the stale marker alongside the retained windows so the
+        // persisted cache stops presenting this provider's frozen numbers
+        // as current to external readers.
+        let stale = snapshot.markedStale(reason: error.localizedDescription)
+        lastSuccessful[provider] = stale
+        states[provider] = .available(stale)
       } else if error.isAuthenticationError {
         states[provider] = .unauthenticated(message: error.localizedDescription)
       } else {
