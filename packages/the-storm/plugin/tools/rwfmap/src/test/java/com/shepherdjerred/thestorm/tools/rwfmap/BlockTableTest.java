@@ -130,6 +130,14 @@ final class BlockTableTest {
   }
 
   @Test
+  void aCobwebIsPassableButSlowsMovement() {
+    assertThat(BlockTable.classify("minecraft:cobweb").shape()).isEqualTo(BlockShape.PASSABLE);
+    assertThat(BlockTable.slowsMovement("minecraft:cobweb")).isTrue();
+    assertThat(BlockTable.slowsMovement("minecraft:air")).isFalse();
+    assertThat(BlockTable.slowsMovement("minecraft:short_grass")).isFalse();
+  }
+
+  @Test
   void unknownStateIsAHardErrorNamingTheState() {
     assertThatThrownBy(() -> BlockTable.classify("minecraft:sculk_shrieker[can_summon=false]"))
         .isInstanceOf(UnknownBlockStateException.class)
