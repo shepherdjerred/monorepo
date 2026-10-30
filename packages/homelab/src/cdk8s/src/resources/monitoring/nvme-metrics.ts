@@ -72,6 +72,13 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
     },
   });
 
+  // The container copies its script once at start, so a script change must
+  // replace the pods.
+  nvmeMetricsDaemonSet.podMetadata.addAnnotation(
+    "checksum/script",
+    new Bun.CryptoHasher("sha256").update(scriptContent).digest("hex"),
+  );
+
   // NVMe wear/TBW monitoring must cover the CI-only node — CI writes are the
   // main endurance concern that motivated the node.
   nvmeMetricsDaemonSet.scheduling.tolerate(ciNodeTaintedNode());

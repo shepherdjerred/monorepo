@@ -76,6 +76,13 @@ export async function createZfsSnapshotsMonitoring(chart: Chart) {
     },
   );
 
+  // The container copies its script once at start, so a script change must
+  // replace the pods.
+  zfsSnapshotsDaemonSet.podMetadata.addAnnotation(
+    "checksum/script",
+    new Bun.CryptoHasher("sha256").update(scriptContent).digest("hex"),
+  );
+
   // liskov has its own ZFS pool (CI caches); snapshot metrics should cover it.
   zfsSnapshotsDaemonSet.scheduling.tolerate(ciNodeTaintedNode());
 

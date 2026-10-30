@@ -71,6 +71,13 @@ export async function createR2ExporterMonitoring(chart: Chart) {
     replicas: 1,
   });
 
+  // Python reads the script once at start, so a script change must replace
+  // the pod.
+  deployment.podMetadata.addAnnotation(
+    "checksum/script",
+    new Bun.CryptoHasher("sha256").update(scriptContent).digest("hex"),
+  );
+
   // Configure the container
   const container = deployment.addContainer({
     name: "r2-exporter",
