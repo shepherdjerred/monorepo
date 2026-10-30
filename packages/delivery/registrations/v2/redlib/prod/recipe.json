@@ -48,7 +48,10 @@
     ],
     "oracle": {
       "probes": [
-        { "url": "https://redlib.tailnet-1a49.ts.net/", "expectedStatus": 200 }
+        {
+          "url": "https://redlib.tailnet-1a49.ts.net/settings",
+          "expectedStatus": 200
+        }
       ],
       "tests": []
     }

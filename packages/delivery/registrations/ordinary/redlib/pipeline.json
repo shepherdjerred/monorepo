@@ -10,7 +10,7 @@
     "delivery.images.redlib": "image:redlib"
   },
   "verification": {
-    "url": "https://redlib.tailnet-1a49.ts.net/",
+    "url": "https://redlib.tailnet-1a49.ts.net/settings",
     "expectedStatus": 200
   }
 }
