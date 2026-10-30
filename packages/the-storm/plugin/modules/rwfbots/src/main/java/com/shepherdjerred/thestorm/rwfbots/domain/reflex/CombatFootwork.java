@@ -43,18 +43,93 @@ public final class CombatFootwork {
     return self.lastHurtTick() >= 0 && now - self.lastHurtTick() < REEL_TICKS;
   }
 
+  /**
+   * How far a plain blow's push is checked for ground, in blocks: rwf's 1.8 knockback carries a
+   * body about three blocks.
+   */
+  public static final double PUSH_REACH = 3;
+
+  /**
+   * How far a sprinting attacker's blow is checked: its knockback level carries a body about six
+   * and a half blocks before it comes down (7.6 with the slide), less when the body presses in.
+   */
+  public static final double SPRINT_PUSH_REACH = 6;
+
+  /** Ground more than this many blocks under the feet is a fall that hurts, or the void. */
+  public static final int DROP_DEPTH = 4;
+
+  private static final double PUSH_STEP = 0.5;
+
+  /**
+   * Whether a blow pushing a body standing at {@code feet} along {@code push} carries it over a
+   * drop within {@code reach}: a column without ground within {@link #DROP_DEPTH} under the path
+   * before a wall would stop it. {@link #safe} only checks the step ahead; knockback goes the other
+   * way, and 26 production bot deaths came off edges after a blow.
+   */
+  public static boolean dropAlong(VoxelGrid grid, Vec3 feet, Vec3 push, double reach) {
+    var along = push.horizontal();
+    if (along.isZero()) return false;
+    var unit = along.normalized();
+    var floor = cell(feet.y() - 0.1);
+    for (var step = PUSH_STEP; step <= reach + 1e-9; step += PUSH_STEP) {
+      var x = cell(feet.x() + unit.x() * step);
+      var z = cell(feet.z() + unit.z() * step);
+      if (solid(grid, x, floor + 1, z) && solid(grid, x, floor + 2, z)) return false;
+      if (!grounded(grid, x, floor, z)) return true;
+    }
+    return false;
+  }
+
+  /** How far a blow carries its victim: further when the attacker sprints. */
+  public static double pushReach(boolean sprinting) {
+    return sprinting ? SPRINT_PUSH_REACH : PUSH_REACH;
+  }
+
+  /**
+   * Whether the column at {@code x}, {@code z} has ground within {@link #DROP_DEPTH} of a floor.
+   */
+  static boolean grounded(VoxelGrid grid, int x, int floor, int z) {
+    for (var y = floor + 1; y > floor - DROP_DEPTH; y--) {
+      if (solid(grid, x, y, z)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * A cell that holds a body up. Below the baked map is the void, not the solid wall movement
+   * treats every cell outside it as; beside it the wall stands, as nobody walks there.
+   */
+  private static boolean solid(VoxelGrid grid, int x, int y, int z) {
+    return y >= grid.bounds().origin().y() && grid.blocks(x, y, z, VoxelGrid.Layer.MOVEMENT);
+  }
+
+  /** Whether {@code feet} stand over ground no deeper than {@link #DROP_DEPTH}. */
+  static boolean grounded(VoxelGrid grid, Vec3 feet) {
+    return grounded(grid, cell(feet.x()), cell(feet.y() - 0.1), cell(feet.z()));
+  }
+
+  /**
+   * How many blocks below its floor a combat step may come down: off a rail or a fence top a blow
+   * left the body on, or a step of a stair. A deeper drop belongs to navigation.
+   */
+  static final int STEP_DOWN = 2;
+
   public static boolean safe(VoxelGrid grid, CombatantView self, Vec3 heading) {
     if (heading.isZero()) return true;
     var delta = heading.horizontal().normalized();
-    if (self.onGround()
-        && !grid.blocks(
-            cell(self.pos().x() + delta.x()),
-            cell(self.pos().y() - 0.1),
-            cell(self.pos().z() + delta.z()),
-            VoxelGrid.Layer.MOVEMENT)) {
+    if (self.onGround() && !stepSupported(grid, self.pos().plus(delta))) {
       return false;
     }
     return clearSweep(grid, self.pos(), delta);
+  }
+
+  /** Whether ground under {@code feet} lies within {@link #STEP_DOWN} of their floor. */
+  private static boolean stepSupported(VoxelGrid grid, Vec3 feet) {
+    var floor = cell(feet.y() - 0.1);
+    for (var y = floor; y > floor - 1 - STEP_DOWN; y--) {
+      if (solid(grid, cell(feet.x()), y, cell(feet.z()))) return true;
+    }
+    return false;
   }
 
   /** Every possible future steering direction must still land on certified supported terrain. */

@@ -160,8 +160,60 @@ final class SimBody {
         fallDistance);
   }
 
+  /** What dealt a body's damage. */
+  enum Cause {
+    MELEE,
+    ARROW,
+    /** Landing from a fall. */
+    FALL,
+    /** Falling out of the world. */
+    VOID,
+    OTHER
+  }
+
+  /**
+   * How a body died.
+   *
+   * @param cause what dealt the last damage
+   * @param tick when
+   * @param by who last struck it, if anyone did within {@link #CREDIT_TICKS}: rwf credits a fall or
+   *     the void to whoever pushed the body
+   * @param distance how far the striker stood when it struck the last blow, or -1 with nobody
+   */
+  record Death(Cause cause, long tick, Optional<CombatantId> by, double distance) {
+
+    /** A fall or the void, rather than a weapon. */
+    boolean offEdge() {
+      return cause == Cause.FALL || cause == Cause.VOID;
+    }
+  }
+
+  /** A fall or a drop into the void this soon after a blow is credited to the striker. */
+  static final long CREDIT_TICKS = 100;
+
+  /** How it died, once dead. */
+  Optional<Death> death = Optional.empty();
+
+  /** Who struck it last, when, and from how far. */
+  private Optional<CombatantId> struckBy = Optional.empty();
+
+  private long struckTick = -1;
+  private double struckFrom = -1;
+
+  /** Records a blow by {@code attacker} standing at {@code from}, for the death's credit. */
+  void struck(CombatantId attacker, long tick, Vec3 from) {
+    struckBy = Optional.of(attacker);
+    struckTick = tick;
+    struckFrom = from.distance(pos);
+  }
+
   /** Applies {@code damage} through absorption, then health; returns whether it was fatal. */
   boolean hurt(double damage, long tick) {
+    return hurt(damage, tick, Cause.OTHER);
+  }
+
+  /** Applies {@code damage} dealt by {@code cause}; returns whether it was fatal. */
+  boolean hurt(double damage, long tick, Cause cause) {
     var fromAbsorption = Math.min(absorption, damage);
     absorption -= fromAbsorption;
     health -= damage - fromAbsorption;
@@ -170,6 +222,11 @@ final class SimBody {
       health = 0;
       alive = false;
       moveTarget = Optional.empty();
+      var credited = struckTick >= 0 && tick - struckTick <= CREDIT_TICKS;
+      death =
+          Optional.of(
+              new Death(
+                  cause, tick, credited ? struckBy : Optional.empty(), credited ? struckFrom : -1));
       return true;
     }
     return false;

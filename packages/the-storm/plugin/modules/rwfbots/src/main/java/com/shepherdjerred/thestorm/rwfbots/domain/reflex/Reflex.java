@@ -599,14 +599,18 @@ public final class Reflex {
         return;
       }
       var radial = toTarget.normalized();
+      // Near a drop the ground picks the side to circle to and whether to back off ({@link
+      // EdgeFooting}); a weave's legs already keep off drops.
+      var edge = weave ? EdgeFooting.NONE : EdgeFooting.read(context.grid(), self, target, radial);
+      if (edge.side() != 0) state = state.withStrafe(edge.side(), state.nextStrafeFlip());
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
       // Combat movement needs the same reaction-window personal space as formation movement.
       var apart = walkingApart();
-      var closing = closing(distance, apart);
+      var closing = edge.closing(closing(distance, apart));
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.
-      var strafeWeight = weave ? Weave.WEIGHT : strafeWeight(charging, distance);
+      var strafeWeight = weave ? Weave.WEIGHT : edge.strafe(strafeWeight(charging, distance));
       var move = side.scale(strafeWeight).plus(radial.scale(closing)).plus(apart.scale(2.5));
       var preferred = move.isZero() ? radial : move.normalized();
       var alternative = radial.scale(closing < 0 ? -1 : 1);

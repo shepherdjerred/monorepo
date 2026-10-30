@@ -80,7 +80,8 @@ final class SimPhysics {
     var gravity = submerged ? 0.02 : slowFalling(body, tick) ? 0.01 : 0.08;
     var vertical = body.onGround ? 0 : (body.velocity.y() - gravity) * 0.98;
     body.velocity = new Vec3(body.velocity.x() * friction, vertical, body.velocity.z() * friction);
-    if (body.pos.y() < nav.graph().bounds().origin().y() - 64) body.hurt(1000, tick);
+    if (body.pos.y() < nav.graph().bounds().origin().y() - 64)
+      body.hurt(1000, tick, SimBody.Cause.VOID);
   }
 
   private void vertical(SimBody body, double dy, long tick) {
@@ -106,7 +107,7 @@ final class SimPhysics {
   private void land(SimBody body, long tick) {
     if (body.fallDistance > 0 && !water(body.pos)) {
       var damage = FallRisk.damage(new Waypoint(body.pos, Hop.DROP), body.view(tick), tick);
-      if (damage > 0) body.hurt(damage, tick);
+      if (damage > 0) body.hurt(damage, tick, SimBody.Cause.FALL);
     }
     body.fallDistance = 0;
   }
