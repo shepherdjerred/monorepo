@@ -3,6 +3,7 @@ import {
   DELIVERY_ARGO_ACCOUNTS,
   DELIVERY_ARGO_SERVER_SETTINGS,
   OPERATOR_RUN_ACCOUNT,
+  TOFU_ARGOCD_ACCOUNT,
   deliveryArgoPolicy,
 } from "#cdk8s/src/resources/argo-applications/platform/delivery-rbac.ts";
 import type { BootstrapApplication } from "./bootstrap-selection.ts";
@@ -12,6 +13,7 @@ const Principals = new Set([
   "delivery-observer",
   "delivery-platform",
   OPERATOR_RUN_ACCOUNT,
+  TOFU_ARGOCD_ACCOUNT,
 ]);
 const protectedValues = new Set([
   ...Object.keys({

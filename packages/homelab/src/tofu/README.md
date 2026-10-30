@@ -38,7 +38,8 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `cloudflare` — `CLOUDFLARE_API_TOKEN`, `TF_VAR_cloudflare_account_id`
   - `github` — `TF_VAR_github_token` (fine-grained PAT, classic PAT, or GitHub App token)
   - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
-  - `argocd` — ArgoCD admin credentials plus `OP_SERVICE_ACCOUNT_TOKEN` for 1Password item writes
+  - `argocd` — the `tofu-argocd` account's token as `TOFU_ARGOCD_AUTH_TOKEN` (`argocd.env`) plus `OP_SERVICE_ACCOUNT_TOKEN` for 1Password item writes
+  - `dockerhub` — `DOCKERHUB_USERNAME`, the repository-management PAT `DOCKERHUB_MANAGEMENT_TOKEN`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
   - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
   - `backblaze` — master `B2_APPLICATION_KEY_ID` / `B2_APPLICATION_KEY` for an account in `us-west-004`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
@@ -84,16 +85,16 @@ authentication prompts for each provider or CLI invocation. Use a separate
 3. Prefix commands that need this vault with the wrapper. It reads the token
    from Keychain into the child process environment without invoking desktop
    authentication. An already supplied `OP_SERVICE_ACCOUNT_TOKEN` also works
-   on non-macOS hosts. Set `ARGOCD_AUTH_TOKEN` to the admin token's secret
-   reference in this vault before an ArgoCD plan or apply. The separate
-   `service-account.env` contains only vault references the service account can
-   read; the general `.env` also contains Personal vault references. Do not
-   print the token:
+   on non-macOS hosts. The separate `service-account.env` contains only vault
+   references the service account can read; the general `.env` also contains
+   Personal vault references. The ArgoCD plan or apply adds `argocd.env`, the
+   `tofu-argocd` account's token. Do not print the token:
 
    ```bash
    scripts/onepassword/with-service-account.sh op vault list
    scripts/onepassword/with-service-account.sh \
-     op run --env-file packages/homelab/src/tofu/service-account.env -- \
+     op run --env-file packages/homelab/src/tofu/service-account.env \
+     --env-file packages/homelab/src/tofu/argocd.env -- \
      bun packages/homelab/scripts/tofu/tofu-stack.ts argocd plan
    ```
 
@@ -145,7 +146,7 @@ consume the exact encrypted saved plan; stacks marked `reviewed-plan` require
 a human decision on that plan. Stack modes and prerequisites are declared in
 `packages/ops-model/platform-policy.json`.
 
-Operator-only stacks run locally through
+Delivery plans and applies `dockerhub` automatically. Operator-only stacks run locally through
 `packages/homelab/scripts/tofu/tofu-stack.ts` with their existing authenticated
 wrappers. They are not automated by Delivery or CI. The `asuswrt` stack also
 requires connectivity to both the LAN and tailnet; see
@@ -368,9 +369,16 @@ Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality p
 
 ### ArgoCD
 
-Mints the `delivery`, `delivery-platform`, and read-only `delivery-observer` ArgoCD account tokens and writes each to
-its own 1Password item. ArgoCD's chart owns the account registrations and RBAC;
-reconcile that chart before applying a newly registered account's token. Delivery
+Mints the `delivery`, `delivery-platform`, read-only `delivery-observer`, and
+`operator-run` ArgoCD account tokens and writes each to its own 1Password item.
+ArgoCD's chart owns the account registrations and RBAC;
+reconcile that chart before applying a newly registered account's token.
+The stack authenticates as the `tofu-argocd` account, which may only read and
+issue tokens for those accounts. The account renews its own token; its first
+token comes from a cluster administrator
+(`argocd account generate-token --core --account tofu-argocd` inside
+`argocd-server`), written straight into the `tofu-argocd-token` item. The stack
+stays operator-run until Delivery Jobs have a 1Password write path. Delivery
 consumes its token separately from its API machine credentials so OpenTofu
 remains the token lifecycle owner.
 

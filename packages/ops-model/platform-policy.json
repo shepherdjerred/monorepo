@@ -15,7 +15,7 @@
     },
     "cloudflare-tokens": { "mode": "reviewed-plan", "prerequisites": [] },
     "discord": { "mode": "reviewed-plan", "prerequisites": [] },
-    "dockerhub": { "mode": "operator-only", "prerequisites": [] },
+    "dockerhub": { "mode": "automatic", "prerequisites": [] },
     "dockerhub-tokens": { "mode": "operator-only", "prerequisites": [] },
     "github": { "mode": "automatic", "prerequisites": [] },
     "google": { "mode": "operator-only", "prerequisites": [] },

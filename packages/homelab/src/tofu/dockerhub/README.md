@@ -26,8 +26,11 @@ Read-only validation needs no live credentials:
 bun packages/homelab/scripts/tofu/tofu-stack.ts dockerhub validate
 ```
 
-Use the repository stack wrapper for authenticated plans and applies. Inspect
-the exact plan before applying. If a declared repository already exists,
+Delivery plans and applies this stack automatically as `tofu-dockerhub/prod`.
+Its Jobs receive only the `dockerhub-tofu-credentials` item: the username, the
+management PAT and the state passphrase. No plan can destroy or replace a
+repository, because every declared repository has `prevent_destroy`, so an
+apply needs no approval. If a declared repository already exists,
 adopt it through a declarative import block after verifying its namespace and
 visibility; never delete and recreate it. Registry ownership does not change
 application release pins, activate workloads, or delete GHCR packages.
