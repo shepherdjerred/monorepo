@@ -223,7 +223,7 @@ public final class EssentialsPaper {
                 runtime,
                 app.players(),
                 new SessionListener.Presence(app.afk(), tpa, flow, safe),
-                new SessionListener.Arrival(destinations, kits, placements)),
+                new SessionListener.Arrival(config.newcomerSpawn(), kits, placements)),
             afkListener);
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
