@@ -1,11 +1,45 @@
 {
   "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor working"
+      }
+    ],
+    "preCompact": [
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor working"
+      }
+    ],
     "preToolUse": [
-      { "command": "toolkit tracker identity-hook cursor", "matcher": "Shell" }
+      {
+        "command": "toolkit tracker identity-hook cursor",
+        "matcher": "Shell"
+      },
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor working"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor clear"
+      }
     ],
     "sessionStart": [
       {
         "command": "bash '/Users/jerred/.cursor/herdr-agent-state.sh' session"
+      },
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor idle"
+      }
+    ],
+    "stop": [
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor done"
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "/Users/jerred/.local/bin/hc-agent-status --app cursor working"
       }
     ]
   },
