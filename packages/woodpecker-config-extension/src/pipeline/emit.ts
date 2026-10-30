@@ -1,4 +1,4 @@
-import { stringify } from "yaml";
+import { Scalar, parseDocument, stringify, visit } from "yaml";
 import { sharedCacheEnvironment } from "#src/pipeline/cache.ts";
 import {
   SOURCE_CACHE_PATH,
@@ -476,7 +476,33 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
         }),
   };
 
-  return escapeSubstitution(stringify(workflow, { lineWidth: 0 }));
+  return escapeSubstitution(stringifyWithoutEscapes(workflow));
+}
+
+/**
+ * Serialize with no YAML escape sequences, so Woodpecker reads the same values
+ * from the text before and after its substitution.
+ *
+ * Woodpecker compiles the substituted text but lints the raw text, and both
+ * parses must succeed. Escapes live only in double-quoted scalars, where the
+ * doubled `\"` that {@link escapeSubstitution} leaves in the raw text ends the
+ * scalar early. Single-quoted, plain and block scalars read every backslash
+ * literally, so preferring single quotes keeps both texts valid. The library
+ * still forces double quotes for control characters and whitespace around a
+ * newline; such a value fails here rather than at pipeline compile time.
+ */
+function stringifyWithoutEscapes(workflow: unknown): string {
+  const yaml = stringify(workflow, { lineWidth: 0, singleQuote: true });
+  visit(parseDocument(yaml), {
+    Scalar(_key, node) {
+      if (node.type === Scalar.QUOTE_DOUBLE) {
+        throw new Error(
+          `Workflow value needs a YAML escape sequence: ${JSON.stringify(node.value)}`,
+        );
+      }
+    },
+  });
+  return yaml;
 }
 
 /**
@@ -487,11 +513,11 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
  * through envsubst before parsing it. That rewrites any braced `${NAME}`,
  * blanking names it does not know, and rejects bash forms such as
  * `"${array[@]}"` outright, failing the whole pipeline at compile time. It
- * also unescapes `\\` and `\/`, so a YAML `\\1` reaches the parser as the
- * invalid escape `\1`. None of the emitted text is a Woodpecker template:
- * steps read `CI_*` from their environment at run time. envsubst collapses
- * `$$` and `\\` pairwise, so doubling is exact rather than a guess about which
- * forms it would have touched.
+ * also unescapes `\\` and `\/`. None of the emitted text is a Woodpecker
+ * template: steps read `CI_*` from their environment at run time. envsubst
+ * collapses `$$` and `\\` pairwise, so doubling is exact rather than a guess
+ * about which forms it would have touched. The doubled raw text is still valid
+ * YAML for Woodpecker's linter only because it contains no escape sequences.
  */
 export function escapeSubstitution(yaml: string): string {
   return yaml.replaceAll(/[$\\]/gu, (character) => character.repeat(2));

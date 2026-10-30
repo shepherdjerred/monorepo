@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
-import { parse } from "yaml";
+import { parse, parseDocument } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
@@ -13,6 +13,15 @@ import { TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
 
 const EmittedCommands = z.object({
   steps: z.tuple([z.object({ commands: z.array(z.string()) })]),
+});
+
+const EmittedStep = z.object({
+  steps: z.tuple([
+    z.object({
+      commands: z.array(z.string()),
+      environment: z.record(z.string(), z.string()),
+    }),
+  ]),
 });
 
 test("checkout-free startup uses the existing workspace mount instead of creating a checkout", () => {
@@ -77,21 +86,81 @@ describe("variable substitution", () => {
     expect(command).toContain("${#filters[@]}");
   });
 
-  /** A sed backreference once emitted `\\1`, which envsubst left as `\1`. */
+  /**
+   * A sed backreference once emitted `\\1`, which envsubst left as `\1`.
+   * Doubling it then left `\\"` in the raw text the linter parses.
+   */
   test("keeps backslashes intact", () => {
     const sites = steps.find((step) => step.key === "sites");
     expect(sites).toBeDefined();
     if (sites === undefined) return;
-    const commands = [
-      String.raw`sed -nE 's/"v": "([0-9.]+)"/\1/p' "$manifest"`,
-      String.raw`printf '%s\n' 'a\/b' 'c\\d'`,
-    ];
-    const emitted = EmittedCommands.parse(
-      parse(substitute(emitWorkflow({ ...sites, commands }, TEST_IDENTITY))),
-    ).steps[0].commands;
-    expect(emitted).toEqual(wrapCommands({ ...sites, commands }));
+    const probe = String.raw`sed -nE 's/"v": "([0-9.]+)"/\1/p' "$manifest"`;
+    const commands = [probe, String.raw`printf '%s\n' 'a\/b' 'c\\d'`];
+    // Wrapped commands become block scalars; a one-line value does not.
+    const raw = emitWorkflow(
+      {
+        ...sites,
+        commands,
+        environment: { ...sites.environment, PROBE: probe },
+      },
+      TEST_IDENTITY,
+    );
+    expectWoodpeckerAccepts(raw);
+    const emitted = EmittedStep.parse(parse(substitute(raw))).steps[0];
+    expect(emitted.commands).toEqual(wrapCommands({ ...sites, commands }));
+    expect(emitted.environment["PROBE"]).toBe(probe);
+  });
+
+  /**
+   * Woodpecker compiles the substituted text but lints the raw text, and a
+   * parse error from either fails the pipeline. Services carry commands too.
+   */
+  test("every workflow parses before and after substitution", () => {
+    for (const step of steps) {
+      expectWoodpeckerAccepts(emitWorkflow(step, TEST_IDENTITY));
+    }
+  });
+
+  test("refuses a value that needs a YAML escape sequence", () => {
+    const sites = steps.find((step) => step.key === "sites");
+    expect(sites).toBeDefined();
+    if (sites === undefined) return;
+    expect(() =>
+      emitWorkflow({ ...sites, commands: ["printf '\u{7}'"] }, TEST_IDENTITY),
+    ).toThrow(/YAML escape sequence/u);
   });
 });
+
+/**
+ * Both texts must parse, and to the same values once substitution has run
+ * over the raw ones: a YAML escape would read differently in each.
+ */
+function expectWoodpeckerAccepts(raw: string): void {
+  const linted = parseStrict(raw);
+  const compiled = parseStrict(substitute(raw));
+  expect(compiled).toEqual(substituteValues(linted));
+}
+
+function parseStrict(text: string): unknown {
+  const document = parseDocument(text, { uniqueKeys: true });
+  expect(document.errors.map((error) => error.message)).toEqual([]);
+  return document.toJS();
+}
+
+function substituteValues(value: unknown): unknown {
+  if (typeof value === "string") return substitute(value);
+  if (Array.isArray(value))
+    return value.map((entry) => substituteValues(entry));
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [
+        substitute(key),
+        substituteValues(entry),
+      ]),
+    );
+  }
+  return value;
+}
 
 describe("Bun cache install mode", () => {
   test("sets a valid install mode on every workflow and locks shared cache use", () => {

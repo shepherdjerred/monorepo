@@ -41,7 +41,9 @@ function paperStartCommand(dataDir: string, pluginDir: string): string {
     `ln -s ${dataDir}/logs /data/logs`,
     `until test -f ${pluginDir}/.ready; do sleep 1; done`,
     `manifest=${manifest}`,
-    String.raw`paper_version=$(sed -nE '/"paper"/,/paperDefaults/ s/.*"version": "([0-9][0-9.]*-[0-9]+)".*/\1/p' "$manifest")`,
+    // Trims around the pin instead of capturing it, so the command carries no
+    // backslash for Woodpecker's substitution to rewrite.
+    `paper_version=$(sed -nE '/"paper"/,/paperDefaults/ { /"version": "[0-9][0-9.]*-[0-9]+"/ { s/.*"version": "//; s/".*//; p; }; }' "$manifest")`,
     "VERSION=${paper_version%-*}",
     "PAPER_BUILD=${paper_version#*-}",
     'if [ -z "$VERSION" ] || [ -z "$PAPER_BUILD" ] || [ "$VERSION-$PAPER_BUILD" != "$paper_version" ]; then echo "Could not read the Paper pin from plugins.json" >&2; exit 1; fi',
