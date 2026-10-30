@@ -87,7 +87,7 @@ final class SpawnPreparationTest {
     server.getScheduler().performOneTick();
     assertThat(login(preparation)).isEqualTo(AsyncPlayerPreLoginEvent.Result.ALLOWED);
     assertThat(stopped.get()).isFalse();
-    assertThat(world.requestedGeneration).isFalse();
+    assertThat(world.requestedGeneration).isTrue();
   }
 
   @Test
