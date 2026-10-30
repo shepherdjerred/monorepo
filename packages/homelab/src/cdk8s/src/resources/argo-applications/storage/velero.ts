@@ -125,12 +125,14 @@ export function createVeleroApp(chart: Chart) {
       },
     },
     // Baseline request (no limits) so the backup controller isn't BestEffort.
-    // 30d peak ~140m / ~470Mi with 20 MiB parts; a ZFS stream's part pool
-    // now adds up to 6 × ZFS_STREAM_PART_SIZE.
+    // 30d peak ~140m / ~470Mi with 20 MiB parts. A ZFS stream's part pool
+    // adds up to 6 × ZFS_STREAM_PART_SIZE above this baseline. torvalds'
+    // memory requests are near allocatable, so a request sized for that peak
+    // leaves the pod Pending; with no limit, the burst uses free node memory.
     resources: {
       requests: {
         cpu: "100m",
-        memory: "1280Mi",
+        memory: "512Mi",
       },
     },
     configuration: {
