@@ -236,8 +236,15 @@ final class RouteNavigator {
     return false;
   }
 
+  /**
+   * What following {@code points} from {@code source} costs: time, density, the {@link
+   * #LEAP_TRAP_TOLL} the graph search charged for each drop into a leap-only pocket, and health. A
+   * graph route that drops into a pocket anyway carries that toll when {@link #find} weighs it
+   * against the water route.
+   */
   static Optional<Candidate> score(
       TacticsContext context, Vec3 source, List<Waypoint> points, Tolls tolls) {
+    var trap = trapped(context, (edge, from, duration) -> 0);
     double ticks = 0;
     double cost = 0;
     var damage = 0;
@@ -245,8 +252,10 @@ final class RouteNavigator {
     for (var point : points) {
       var leg = leg(context, previous, point, tolls.risk());
       ticks += leg.ticks();
-      if (leg.edge() >= 0)
+      if (leg.edge() >= 0) {
         damage = Math.addExact(damage, tolls.risk().edges().damage().damage(leg.edge(), ticks));
+        cost += trap.cost(leg.edge(), leg.from(), leg.ticks());
+      }
       if (damage > tolls.risk().policy().damageBudget()) return Optional.empty();
       cost +=
           leg.ticks() + densityCost(context, tolls, new Span(previous, point.pos(), leg.ticks()));
@@ -256,7 +265,8 @@ final class RouteNavigator {
     return Optional.of(new Candidate(points, ticks, cost, damage));
   }
 
-  private record Leg(double ticks, int edge) {}
+  /** A leg's time, and the graph edge it follows from node {@code from} (both -1 off the graph). */
+  private record Leg(double ticks, int edge, int from) {}
 
   private static Leg leg(
       TacticsContext context, Vec3 from, Waypoint point, TraversalRisk.Query risk) {
@@ -268,11 +278,12 @@ final class RouteNavigator {
           edge < graph.edgeEnd(source.getAsInt());
           edge++)
         if (graph.edgeTarget(edge) == target.getAsInt() && graph.edgeHop(edge) == point.hop())
-          return new Leg(risk.edges().motion().duration().applyAsDouble(edge), edge);
+          return new Leg(
+              risk.edges().motion().duration().applyAsDouble(edge), edge, source.getAsInt());
     }
     if (point.hop() == Hop.LEAP || point.hop() == Hop.DROP)
       throw new IllegalStateException("damaging primitive lost its directed graph edge");
-    return new Leg(virtualDuration(from, point, risk.sprint()), -1);
+    return new Leg(virtualDuration(from, point, risk.sprint()), -1, -1);
   }
 
   private static double virtualDuration(Vec3 from, Waypoint point, boolean sprint) {
