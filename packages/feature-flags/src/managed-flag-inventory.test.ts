@@ -388,10 +388,6 @@ describe("The Storm companion pilot rollout", () => {
   });
 
   test.each([
-    ["the-storm-companions-enabled", "the-storm"],
-    ["the-storm-staff-tools-enabled", "the-storm"],
-    ["the-storm-identity-enabled", "the-storm"],
-    ["the-storm-letters-enabled", "the-storm"],
     ["the-storm-ip-enforcement-enabled", "the-storm"],
     ["storm-brain-conversation-enabled", "storm"],
   ])(
@@ -418,6 +414,32 @@ describe("The Storm companion pilot rollout", () => {
         namespace,
       ).find((flag) => flag.key === key);
       expect(prod).toMatchObject({ default: false, rollouts: [] });
+    },
+  );
+});
+
+describe("The Storm production gameplay rollout", () => {
+  test.each([
+    ["the-storm-companions-enabled", "the-storm"],
+    ["the-storm-staff-tools-enabled", "the-storm"],
+    ["the-storm-identity-enabled", "the-storm"],
+    ["the-storm-letters-enabled", "the-storm"],
+    ["the-storm-rwf-candidate-visits-enabled", "the-storm"],
+    ["the-storm-rwf-host-settings-enabled", "the-storm"],
+    ["the-storm-rwf-recording-archive-enabled", "temporal"],
+  ])(
+    "enables %s in production while the fallback stays off",
+    (key, namespace) => {
+      expect(
+        managedFlagInventory.flags.find((flag) => flag.key === key),
+      ).toMatchObject({ default: false, rollouts: [] });
+
+      const prod = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(prod).toMatchObject({ default: true, rollouts: [] });
     },
   );
 });
