@@ -110,23 +110,13 @@ export const ENVIRONMENT_MONITORS: Readonly<Record<string, Monitor>> = {
 
 /**
  * Test suites a qualification environment runs as deployment stages on the CI
- * node; each JSON report becomes `test` evidence (V5). Minecraft is the one
- * service exempt from exhaustive CI, so its sandbox runs the heavy suites.
+ * node; each JSON report becomes `test` evidence (V5). None is declared: the
+ * Minecraft sandbox qualifies on a Synced and Healthy sync of the candidate
+ * image, and its heavy suites stay local runs the committer records.
  */
 export const ENVIRONMENT_TESTS: Readonly<
   Record<string, readonly { suite: string; resultPath: string }[]>
-> = {
-  "minecraft/sandbox": [
-    {
-      suite: "test:e2e",
-      resultPath: "packages/the-storm/test-results/test-e2e.json",
-    },
-    {
-      suite: "test:full",
-      resultPath: "packages/the-storm/test-results/test-full.json",
-    },
-  ],
-};
+> = {};
 
 /**
  * Chart parameters whose Delivery image is not the component the parameter

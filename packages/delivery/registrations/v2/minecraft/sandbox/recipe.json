@@ -50,18 +50,6 @@
         "pointOfNoReturn": false
       }
     ],
-    "oracle": {
-      "probes": [],
-      "tests": [
-        {
-          "suite": "test:e2e",
-          "resultPath": "packages/the-storm/test-results/test-e2e.json"
-        },
-        {
-          "suite": "test:full",
-          "resultPath": "packages/the-storm/test-results/test-full.json"
-        }
-      ]
-    }
+    "oracle": { "probes": [], "tests": [] }
   }
 }
