@@ -39,7 +39,9 @@ function signal() {
 
 /**
  * HTTPS chart bytes must match the artifact digest, and an OCI chart's tag
- * must still resolve to it; other stores serve the recorded version.
+ * must still resolve to it; other stores serve the recorded version. The
+ * digest binds the bytes, so the read follows a release host's redirect to
+ * its download storage (GitHub release assets always redirect).
  */
 async function verifySourceBytes(
   rendered: RenderedApplication,
@@ -56,7 +58,7 @@ async function verifySourceBytes(
     };
   const response = await fetch(artifact.uri, {
     signal: AbortSignal.any([signal(), AbortSignal.timeout(30_000)]),
-    redirect: "error",
+    redirect: "follow",
   });
   if (!response.ok)
     throw new Error(
