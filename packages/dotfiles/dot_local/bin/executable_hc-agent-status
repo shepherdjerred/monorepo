@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# Reports a coding agent's status to herdr-core (hc) for agents that do not emit
+# it natively (kimi, cursor-agent), so they show live status in Herdr.
+#
+#   hc-agent-status [--app NAME] <idle|working|done|blocked|error|clear> [kind]
+#
+# NAME defaults to $HC_AGENT_APP; kind is permission, question or auth.
+#
+# hc reads status only from OSC 7501 on the terminal's pty, and agents run hooks
+# detached with piped stdio, so this walks up parent processes to the first one
+# with a controlling tty (the agent itself) and writes the sequence there.
+#
+# A status report must never break the agent: this prints nothing and always
+# exits 0. Hooks may parse stdout (cursor treats it as a decision).
+
+exec >/dev/null 2>&1
+
+# Drain the hook's JSON payload so the agent never sees a broken pipe, without
+# waiting on a caller that keeps stdin open.
+[ -t 0 ] || cat >/dev/null &
+
+[ -n "${HC_TERMINAL_ID:-}" ] || exit 0
+
+app=${HC_AGENT_APP:-}
+if [ "${1:-}" = --app ]; then
+  app=${2:-}
+  shift 2 || exit 0
+fi
+state=${1:-}
+kind=${2:-}
+
+case $app in '' | *[!A-Za-z0-9._-]*) exit 0 ;; esac
+case $state in idle | working | done | blocked | error | clear) ;; *) exit 0 ;; esac
+case $kind in '' | permission | question | auth) ;; *) exit 0 ;; esac
+
+set -f # ps prints ?? (macOS) or ? (Linux) for no tty; keep it from globbing
+pid=$$
+depth=0
+tty=
+while [ "$pid" -gt 1 ] && [ "$depth" -lt 32 ]; do
+  # shellcheck disable=SC2046 # split "PPID TTY" into $1 $2
+  set -- $(ps -o ppid=,tty= -p "$pid")
+  [ $# -eq 2 ] || exit 0
+  case $2 in
+  tty* | pts/*)
+    tty=/dev/$2
+    break
+    ;;
+  esac
+  pid=$1
+  depth=$((depth + 1))
+done
+[ -n "$tty" ] && [ -w "$tty" ] || exit 0
+
+report="state=$state:app=$app"
+[ -z "$kind" ] || report="$report:kind=$kind"
+# shellcheck disable=SC1003 # ESC \ (ST) ends the sequence; no quote is escaped
+printf '\033]7501;%s\033\\' "$report" >"$tty"
+exit 0
