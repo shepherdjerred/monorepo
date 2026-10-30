@@ -317,7 +317,7 @@
     },
     "packages/landing-pages": {
       "entry": ["src/**/*.astro"],
-      "project": ["src/**/*.{ts,astro,css}", "*.ts"]
+      "project": ["src/**/*.{ts,astro}", "*.ts"]
     },
     "packages/stocks-sjer-red": {
       "entry": ["src/**/*.astro"],
