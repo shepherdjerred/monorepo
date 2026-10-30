@@ -270,7 +270,7 @@ final class NavGraphBuilder {
   private Edge descent(BlockPos cell, BlockPos below, int landing) {
     var depth = Math.max(1, fallDepth(cell, below));
     var submerged = shape(below).swim();
-    var damage = submerged ? 0 : TraversalCosts.fallDamage(depth, false);
+    var damage = cushions(below) ? 0 : TraversalCosts.fallDamage(depth, false);
     var swimming = shape(cell).swim() && submerged;
     return new Edge(
         landing,
@@ -305,9 +305,20 @@ final class NavGraphBuilder {
       return Optional.empty();
     var flight = flights.duration(cell, landing);
     if (flight.isEmpty()) return Optional.empty();
-    var damage =
-        shape(landing).swim() ? 0 : TraversalCosts.fallDamage(fallDepth(cell, landing), true);
+    var damage = cushions(landing) ? 0 : TraversalCosts.fallDamage(fallDepth(cell, landing), true);
     return Optional.of(new Edge(target, Hop.LEAP, flight.orElseThrow(), damage));
+  }
+
+  /** Whether water breaks a fall onto {@code cell}, as {@link NavGraph#cushions} decides it. */
+  private boolean cushions(BlockPos cell) {
+    if (!shape(cell).swim()) return false;
+    for (var dx = -1; dx <= 1; dx++) {
+      for (var dz = -1; dz <= 1; dz++) {
+        var beside = cell.offset(dx, 0, dz);
+        if (!shape(beside).swim() && nodeAt(beside.up()) >= 0) return false;
+      }
+    }
+    return true;
   }
 
   private boolean clearCorner(BlockPos cell, int dx, int dz) {

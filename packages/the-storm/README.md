@@ -1577,8 +1577,13 @@ up the line of costs no setup, so it is planned before the takeoff node. Prepare
 keep their launch on the route, whatever the route's goal;
 takeoff rechecks position, momentum, health and expiring protection. Routes account for
 cumulative fall damage, actual movement and protection capabilities, effect
-expiry, available healing, known enemy exposure and bomb deadlines. A
-successful bake proves graph connectivity; native movement must also be checked
+expiry, available healing, known enemy exposure and bomb deadlines. Water
+breaks a fall only where the landing cell and the eight around it are
+submerged: a body dropping into a one-block irrigation hole lands on its rim,
+above the water's surface. Away from a lit fuse, a route spends at most 4 health
+on falls when a way down that does takes at most 80 walked blocks longer; a fuse
+to beat spends what the health budget allows, which never includes a fall the
+bot would not survive. A successful bake proves graph connectivity; native movement must also be checked
 in the pinned Paper/Citizens runtime.
 Between authored jumps, a sprinting body with the technique for it sprint-jumps
 along a straight, level run of at least six blocks, with no fight on its hands

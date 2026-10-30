@@ -25,11 +25,34 @@ final class RouteNavigator {
 
   record Tolls(TraversalRisk.Query risk, IntToDoubleFunction penalty) {}
 
-  record Candidate(List<Waypoint> points, double ticks, double cost) {
+  /**
+   * A route the bot could take.
+   *
+   * @param points its waypoints
+   * @param ticks how long it takes
+   * @param cost what it costs the bot: time, tolls and the health it loses, weighted
+   * @param damage the health it loses to falls, in health points
+   */
+  record Candidate(List<Waypoint> points, double ticks, double cost, int damage) {
     Candidate {
       points = List.copyOf(points);
     }
+
+    /** A route that costs no health. */
+    Candidate(List<Waypoint> points, double ticks, double cost) {
+      this(points, ticks, cost, 0);
+    }
   }
+
+  /**
+   * The most health a route away from a lit fuse spends on falls when a gentler way exists: two
+   * hearts. Pricing health alone sent bots off 7-damage spawn ledges on cors-path to save two
+   * seconds and down a 21-block shaft on beanstalk (18 damage) past its stairs.
+   */
+  static final int GENTLE_FALLS = 4;
+
+  /** How much longer, in ticks, the gentler way may take before the hurtful one is taken. */
+  static final double GENTLE_DETOUR = TraversalCosts.walkingTicks(80);
 
   static List<Waypoint> find(TacticsContext context, Endpoints endpoints, Tolls query) {
     var tolls =
@@ -48,7 +71,8 @@ final class RouteNavigator {
     }
     var candidates = new ArrayList<Candidate>();
     var risk = tolls.risk().policy();
-    graph(context, endpoints, tolls, risk).ifPresent(candidates::add);
+    gentle(context, endpoints, tolls, graph(context, endpoints, tolls, risk))
+        .ifPresent(candidates::add);
     water(context, endpoints, tolls).ifPresent(candidates::add);
     var feasible =
         candidates.stream()
@@ -66,6 +90,28 @@ final class RouteNavigator {
         .min(Comparator.comparingDouble(Candidate::ticks))
         .map(Candidate::points)
         .orElseGet(List::of);
+  }
+
+  /**
+   * The gentler way when {@code hurtful} falls further than {@link #GENTLE_FALLS} and a lit fuse is
+   * not waiting: the cheapest route within that much fall damage, unless it takes {@link
+   * #GENTLE_DETOUR} longer. A fuse to beat spends whatever health its budget allows.
+   */
+  private static Optional<Candidate> gentle(
+      TacticsContext context, Endpoints endpoints, Tolls tolls, Optional<Candidate> hurtful) {
+    var risk = tolls.risk().policy();
+    if (hurtful.isEmpty()
+        || hurtful.orElseThrow().damage() <= GENTLE_FALLS
+        || risk.deadlineTicks().isPresent()) return hurtful;
+    var gentle =
+        graph(
+            context,
+            endpoints,
+            tolls,
+            risk.withDamageBudget(Math.min(risk.damageBudget(), GENTLE_FALLS)));
+    return gentle
+        .filter(route -> route.ticks() <= hurtful.orElseThrow().ticks() + GENTLE_DETOUR)
+        .or(() -> hurtful);
   }
 
   private static boolean allows(HealthRoutes.RiskPolicy risk, double ticks) {
@@ -207,7 +253,7 @@ final class RouteNavigator {
       previous = point.pos();
     }
     cost += damage * tolls.risk().policy().ticksPerHealthPoint();
-    return Optional.of(new Candidate(points, ticks, cost));
+    return Optional.of(new Candidate(points, ticks, cost, damage));
   }
 
   private record Leg(double ticks, int edge) {}
