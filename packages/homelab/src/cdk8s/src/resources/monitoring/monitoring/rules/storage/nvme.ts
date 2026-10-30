@@ -6,6 +6,7 @@ import {
   PROD_NODE_HOSTNAME,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { CI_WORKSPACE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 // nvme_* metrics are keyed by `device` (e.g. nvme0n1) — the kernel's NVMe
 // enumeration name, which is NOT stable across reboots or slot changes. The
@@ -76,6 +77,10 @@ export const ZFS_POOL_WRITE_AMPLIFICATION_24H =
   "zfs_pool:write_amplification:ratio24h";
 export const CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H =
   "ci_workspace:physical_written_bytes_per_pvc:ratio24h";
+// CI series carry `step`, the workflow's ci.sjer.red/step-key pod label.
+export const CI_STEP_WORKSPACE_LOGICAL_BYTES_24H =
+  "ci_step:workspace_logical_written_bytes:sum24h";
+export const CI_STEP_WORKSPACES_24H = "ci_step:workspaces:count24h";
 
 const usedRatio = bySerial("nvme_percentage_used_ratio");
 const lifetimeWrittenBytes = `${bySerial("nvme_data_units_written_total")} * ${String(NVME_DATA_UNIT_BYTES)}`;
@@ -97,6 +102,27 @@ const poolPhysicalWrites = NVME_POOL_DRIVES.map(
   ({ node, zpool, serial }) =>
     `max by (node, zpool) (label_replace(${NVME_DRIVE_WRITTEN_BYTES_24H}{node="${node}",serial="${serial}"}, "zpool", "${zpool}", "", ""))`,
 ).join(" or ");
+
+/**
+ * Logical bytes each CI workspace claim wrote in the last 24h, labelled by
+ * claim. A workspace dataset lives for minutes and its nwritten counter starts
+ * at zero, so its last scraped value is its total; increase() would drop the
+ * bytes written before the first scrape. Writes after the final scrape before
+ * the dataset is destroyed are still lost. Claims still Pending carry an empty
+ * volumename and are skipped.
+ */
+function ciWorkspaceWrites(node: string, zpool: string): string {
+  const datasetWrites = `label_replace(max by (dataset) (max_over_time(node_zfs_zpool_dataset_nwritten{node="${node}",dataset=~"${zpool}/pvc-.*"}[24h])), "volumename", "$1", "dataset", "[^/]+/(.+)")`;
+  const claims = `max by (volumename, persistentvolumeclaim) (last_over_time(kube_persistentvolumeclaim_info{namespace="${WOODPECKER_CI_NAMESPACE}",storageclass="${CI_WORKSPACE_STORAGE_CLASS}",volumename!=""}[24h]))`;
+  return `(${datasetWrites} * on(volumename) group_left(persistentvolumeclaim) ${claims})`;
+}
+
+/**
+ * Each workspace claim's step: the step-key label of the pods that mounted it.
+ * Clone pods carry no step key, and every workflow has one step pod, so a
+ * claim maps to one step.
+ */
+const ciClaimSteps = `label_replace(max by (persistentvolumeclaim, label_ci_sjer_red_step_key) (last_over_time(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace="${WOODPECKER_CI_NAMESPACE}",persistentvolumeclaim=~"wp-.*"}[24h]) * on(pod) group_left(label_ci_sjer_red_step_key) max by (pod, label_ci_sjer_red_step_key) (last_over_time(kube_pod_labels{namespace="${WOODPECKER_CI_NAMESPACE}",label_ci_sjer_red_step_key!=""}[24h]))), "step", "$1", "label_ci_sjer_red_step_key", "(.+)")`;
 
 function ciPoolDrive(): (typeof NVME_POOL_DRIVES)[number] {
   const drive = NVME_POOL_DRIVES.find(
@@ -174,6 +200,21 @@ function getNvmeWriteBudgetRuleGroup(): PrometheusRuleSpecGroups {
         record: CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           `${ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H}{node="${ciPool.node}",zpool="${ciPool.zpool}"} / on() group_left() (count(count by (namespace, persistentvolumeclaim) (last_over_time(kube_persistentvolumeclaim_info{storageclass="${CI_WORKSPACE_STORAGE_CLASS}"}[24h]))) > 0)`,
+        ),
+      },
+      // Where the CI pool's workspace bytes go, by step. Bytes per workspace
+      // is the logical sum over the count; physical is that times the pool's
+      // amplification.
+      {
+        record: CI_STEP_WORKSPACE_LOGICAL_BYTES_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `sum by (step) (${ciWorkspaceWrites(ciPool.node, ciPool.zpool)} * on(persistentvolumeclaim) group_left(step) max by (persistentvolumeclaim, step) (${ciClaimSteps}))`,
+        ),
+      },
+      {
+        record: CI_STEP_WORKSPACES_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `count by (step) (${ciWorkspaceWrites(ciPool.node, ciPool.zpool)} * on(persistentvolumeclaim) group_left(step) max by (persistentvolumeclaim, step) (${ciClaimSteps}))`,
         ),
       },
     ],

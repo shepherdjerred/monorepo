@@ -45,6 +45,20 @@ done <<<$'1\tsize_bytes\tTotal size of the storage pool
 4\tdedupratio\tThe deduplication ratio
 5\tfragmentation\tThe amount of fragmentation in the pool'
 
+# Block cloning properties exist only in newer OpenZFS. Query them on their
+# own so a zpool without them drops only these metrics, not the pool's size.
+clone_info="$(zpool list -Hp -o name,bcloneused,bclonesaved,bcloneratio 2>/dev/null)" &&
+[ -n "$clone_info" ] &&
+while read -r col metric help; do
+  echo "# HELP ${ZPOOL}_${metric} ${help}"
+  echo "# TYPE ${ZPOOL}_${metric} gauge"
+  while read -r -a line; do
+    echo "${ZPOOL}_${metric}{${ZPOOL_NAME}=\"${line[0]}\"} ${line[$col]/%-/0}"
+  done <<<"$clone_info"
+done <<<$'1\tbcloneused_bytes\tThe amount of space used by block-cloned blocks
+2\tbclonesaved_bytes\tThe amount of space block cloning saves
+3\tbcloneratio\tThe block cloning ratio'
+
 ### zpool scan / scrub metrics ###
 
 # Month name to zero-padded number lookup. Using a function instead of
