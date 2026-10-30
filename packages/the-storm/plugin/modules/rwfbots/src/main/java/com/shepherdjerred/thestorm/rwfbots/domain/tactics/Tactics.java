@@ -241,6 +241,12 @@ public final class Tactics {
     if (!assignedDefuser(situation)) scores.put(Option.DEFUSE, 0.0);
     if (situation.litOwnBomb().isPresent())
       scores.put(Option.RETAKE, ObjectivePolicy.guards(situation, context) ? 0.9 : 0);
+    if (ObjectivePolicy.guardsLitNuke(situation)) {
+      // The nuke's fuse wins the round: its guard stays and fights whoever comes to defuse it.
+      for (var away : List.of(Option.ARM, Option.HELP_ARM, Option.RETAKE, Option.HUNT)) {
+        scores.put(away, 0.0);
+      }
+    }
   }
 
   private record Planning(Plan plan, int lifeEpoch, ObjectivePolicy.Directive objective) {}
