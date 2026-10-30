@@ -1,0 +1,49 @@
+diff --git a/pkg/zfs/zfs_util.go b/pkg/zfs/zfs_util.go
+--- a/pkg/zfs/zfs_util.go
++++ b/pkg/zfs/zfs_util.go
+@@ -436,7 +436,12 @@
+ 		sendArgs = append(sendArgs, curSnap)
+ 	}
+ 
+-	ncArgs = []string{"-w", "3", bkpAddr[0], bkpAddr[1]}
++	// Cloud upload backpressure can pause an otherwise valid stream. OpenBSD
++	// nc's -w is an idle timeout that exits cleanly, so a short bound kills zfs
++	// send with SIGPIPE and hands the receiver an EOF that looks complete. -N
++	// half-closes once zfs send finishes, so the receiver sees the real end
++	// immediately rather than after the idle timeout.
++	ncArgs = []string{"-N", "-w", "300", bkpAddr[0], bkpAddr[1]}
+ 
+ 	return sendArgs, ncArgs, nil
+ }
+@@ -454,7 +459,9 @@
+ 		return nil, nil, fmt.Errorf("zfs: invalid restore server address %s", restoreSrc)
+ 	}
+ 
+-	ncArgs = []string{"-w", "3", rstrAddr[0], rstrAddr[1]}
++	// Cloud reads and receive backpressure can pause an otherwise valid stream.
++	// Keep a finite idle bound without terminating it after only three seconds.
++	ncArgs = []string{"-w", "300", rstrAddr[0], rstrAddr[1]}
+ 
+ 	recvArgs = []string{ZFSRecvArg}
+ 
+diff --git a/pkg/zfs/volume_test.go b/pkg/zfs/volume_test.go
+--- a/pkg/zfs/volume_test.go
++++ b/pkg/zfs/volume_test.go
+@@ -251,7 +251,7 @@
+ 		t.Fatalf("unexpected error: %v", err)
+ 	}
+ 	nc := strings.Join(ncArgs, " ")
+-	if want := "-w 3 10.0.0.1 9000"; nc != want {
++	if want := "-w 300 10.0.0.1 9000"; nc != want {
+ 		t.Errorf("nc args = %q, want %q", nc, want)
+ 	}
+ 	cmd := strings.Join(recvArgs, " ")
+@@ -301,7 +301,7 @@
+ 	if sendArgs[0] != ZFSSendArg {
+ 		t.Errorf("send args[0] = %q, want %q", sendArgs[0], ZFSSendArg)
+ 	}
+-	if want := "-w 3 10.0.0.1 9000"; strings.Join(ncArgs, " ") != want {
++	if want := "-N -w 300 10.0.0.1 9000"; strings.Join(ncArgs, " ") != want {
+ 		t.Errorf("nc args = %q, want %q", strings.Join(ncArgs, " "), want)
+ 	}
+ }

@@ -29,7 +29,7 @@ func TestRestoreIdleTimeoutPreservesReceiveArguments(t *testing.T) {
 	}
 }
 
-func TestRestoreTimeoutDoesNotChangeBackup(t *testing.T) {
+func TestBackupIdleTimeoutPreservesSendArguments(t *testing.T) {
 	backup := &apis.ZFSBackup{Spec: apis.ZFSBackupSpec{BackupDest: "127.0.0.1:9011", SnapName: "snapshot"}}
 	volume := &apis.ZFSVolume{Spec: apis.VolumeInfo{PoolName: "pool"}}
 	volume.Name = "original"
@@ -43,8 +43,20 @@ func TestRestoreTimeoutDoesNotChangeBackup(t *testing.T) {
 		if previous != "" {
 			want = []string{"send", "-i", "pool/original@previous", "pool/original@snapshot"}
 		}
-		if !reflect.DeepEqual(send, want) || !reflect.DeepEqual(nc, []string{"-w", "3", "127.0.0.1", "9011"}) {
-			t.Fatalf("backup arguments changed: %v | %v", send, nc)
+		if !reflect.DeepEqual(send, want) {
+			t.Fatalf("send arguments = %v, want %v", send, want)
+		}
+		if want := []string{"-N", "-w", "300", "127.0.0.1", "9011"}; !reflect.DeepEqual(nc, want) {
+			t.Fatalf("backup transport = %v, want %v", nc, want)
+		}
+	}
+}
+
+func TestBackupIdleTimeoutRejectsInvalidRemote(t *testing.T) {
+	volume := &apis.ZFSVolume{Spec: apis.VolumeInfo{PoolName: "pool"}}
+	for _, remote := range []string{"missing-port", "host:9011:extra"} {
+		if _, _, err := buildVolumeBackupArgs(&apis.ZFSBackup{Spec: apis.ZFSBackupSpec{BackupDest: remote, SnapName: "snapshot"}}, volume); err == nil {
+			t.Fatalf("accepted invalid backup endpoint %q", remote)
 		}
 	}
 }

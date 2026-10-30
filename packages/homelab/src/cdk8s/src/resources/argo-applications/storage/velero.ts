@@ -15,6 +15,19 @@ import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/
 /** The homelab R2 bucket's credential item, which Velero writes its backups with. */
 export const HOMELAB_R2_ITEM_ID = "ypce2djferc6zf7bocxft36n6a";
 
+/** S3 and R2 reject a multipart upload's 10,001st part. */
+export const MULTIPART_UPLOAD_MAX_PARTS = 10_000;
+
+/**
+ * The multipart part size the openebs plugin streams `zfs send` output to R2
+ * with. A stream's size is unknown up front, so the part size alone bounds the
+ * largest stream that can complete: 128 MiB allows 1.22 TiB, above the 1 TiB
+ * SeaweedFS volume, where 20 MiB failed every full stream past 195 GiB. Fewer
+ * parts also cut per-object request load on R2. The uploader buffers up to six
+ * parts (five in flight plus one filling) in the Velero pod.
+ */
+export const ZFS_STREAM_PART_SIZE = Size.mebibytes(128);
+
 /** The Velero namespace. */
 export function createVeleroNamespaces(chart: Chart): void {
   new Namespace(chart, `velero-namespace`, {
@@ -112,11 +125,12 @@ export function createVeleroApp(chart: Chart) {
       },
     },
     // Baseline request (no limits) so the backup controller isn't BestEffort.
-    // 30d peak ~140m / ~470Mi.
+    // 30d peak ~140m / ~470Mi with 20 MiB parts; a ZFS stream's part pool
+    // now adds up to 6 × ZFS_STREAM_PART_SIZE.
     resources: {
       requests: {
         cpu: "100m",
-        memory: "512Mi",
+        memory: "1280Mi",
       },
     },
     configuration: {
@@ -154,7 +168,7 @@ export function createVeleroApp(chart: Chart) {
               "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
             s3ForcePathStyle: "true",
             prefix: "torvalds/zfs/",
-            multiPartChunkSize: Size.mebibytes(20).asString(),
+            multiPartChunkSize: ZFS_STREAM_PART_SIZE.asString(),
           },
         },
         ...VELERO_SCHEDULES.map((schedule) => ({
@@ -172,7 +186,7 @@ export function createVeleroApp(chart: Chart) {
               "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
             s3ForcePathStyle: "true",
             prefix: "torvalds/zfs/",
-            multiPartChunkSize: Size.mebibytes(20).asString(),
+            multiPartChunkSize: ZFS_STREAM_PART_SIZE.asString(),
           },
         })),
       ],

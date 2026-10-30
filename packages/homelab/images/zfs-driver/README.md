@@ -1,9 +1,14 @@
 # Maintained ZFS driver
 
-This image builds the pinned OpenEBS ZFS LocalPV driver with one restore
-transport change: the restore client's idle timeout is 300 seconds instead of
-three. Backup transport and pipeline error propagation remain unchanged.
-The build runs the upstream driver tests and the restore argument regression.
+This image builds the pinned OpenEBS ZFS LocalPV driver with one transport
+change: the `nc` idle timeout on both the backup and restore streams is 300
+seconds instead of three. OpenBSD `nc -w` is an idle timeout that exits
+cleanly, so a cloud stall longer than three seconds killed `zfs send` with
+SIGPIPE and handed the Velero plugin an EOF that looked like a complete, but
+truncated, stream. The backup client also passes `-N` so the plugin sees the
+real end of the stream as soon as `zfs send` finishes, rather than after the
+idle timeout. Pipeline error propagation is unchanged. The build runs the
+upstream driver tests and the netcat argument regressions.
 
 The existing OpenEBS Helm Application consumes the immutable image selected
 by the root chart's `delivery.dependencies.zfs-driver` binding. Its upstream
