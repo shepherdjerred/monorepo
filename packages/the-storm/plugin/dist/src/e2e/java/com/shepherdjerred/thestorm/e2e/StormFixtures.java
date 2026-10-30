@@ -70,7 +70,9 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     }
     if (enabled(modules, "essentials", prepared)) {
       world.setSpawnLocation(0, 65, 0);
-      stand(section(yaml("essentials.yml"), "spawn"));
+      var essentials = yaml("essentials.yml");
+      stand(section(essentials, "spawn"));
+      stand(section(essentials, "newcomerSpawn"));
     }
     if (enabled(modules, "npcs", prepared)) {
       npcFixtures();
