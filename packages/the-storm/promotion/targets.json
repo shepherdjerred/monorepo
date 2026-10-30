@@ -126,7 +126,7 @@
       "id": "reddit-mcservers",
       "name": "r/mcservers",
       "url": "https://old.reddit.com/r/mcservers/",
-      "rulesUrl": "https://old.reddit.com/r/mcservers/wiki/rules",
+      "rulesUrl": "https://old.reddit.com/r/mcservers/wiki/index",
       "account": "reddit",
       "hosts": ["old.reddit.com"],
       "action": "repost",
@@ -155,7 +155,7 @@
       "hosts": ["old.reddit.com"],
       "action": "repost",
       "content": "reddit-minecraftserver",
-      "minimumIntervalSeconds": 0,
+      "minimumIntervalSeconds": 86400,
       "notes": "Use u/the_storm_mc and the approved copy. Preserve the history of filtered post 1x72z1f and report the actual submission outcome."
     },
     {
