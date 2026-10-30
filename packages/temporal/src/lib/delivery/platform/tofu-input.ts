@@ -65,22 +65,33 @@ export const TofuModelOperationSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 export type TofuOperation = z.infer<typeof TofuModelOperationSchema>;
+/** The configuration key holding a platform stack's desired state (X8). */
+export const TOFU_DESIRED_STATE_KEY = "desired-state.json";
+
 const TofuModelInputSchema = z.strictObject({
   model: TofuModelOperationSchema,
   archive: DeliveryJobArchiveSchema,
+  // The frozen configuration's desired state; the archive never carries it.
+  desiredState: z.string().min(1).optional(),
 });
 
 /** What a Tofu Job does, from either a v1 frozen snapshot or a model step input. */
 export function tofuOperation(raw: unknown): {
   operation: TofuOperation;
   archive: DeliveryJobArchive | undefined;
+  desiredState: string | undefined;
 } {
   const model = TofuModelInputSchema.safeParse(raw);
   if (model.success)
-    return { operation: model.data.model, archive: model.data.archive };
+    return {
+      operation: model.data.model,
+      archive: model.data.archive,
+      desiredState: model.data.desiredState,
+    };
   const { snapshot, archive } = tofuJobInput(raw);
   return {
     archive,
+    desiredState: undefined,
     operation:
       snapshot.kind === "tofu-plan"
         ? {
@@ -103,8 +114,30 @@ export function tofuOperation(raw: unknown): {
 export function tofuModelJobInput(
   operation: TofuOperation,
   archive: DeliveryJobArchive,
+  desiredState?: string,
 ): unknown {
-  return TofuModelInputSchema.parse({ model: operation, archive });
+  return TofuModelInputSchema.parse(
+    desiredState === undefined
+      ? { model: operation, archive }
+      : { model: operation, archive, desiredState },
+  );
+}
+
+/** The withDeliveryTofuStack options of a Job: the extracted archive and the frozen desired state. */
+export function tofuStackOptions(
+  input: {
+    archive: DeliveryJobArchive | undefined;
+    desiredState?: string | undefined;
+  },
+  env: Record<string, string | undefined> = Bun.env,
+): { directory?: string; desiredState?: string } {
+  const directory = tofuStackDirectory(input, env);
+  return {
+    ...(directory === undefined ? {} : { directory }),
+    ...(input.desiredState === undefined
+      ? {}
+      : { desiredState: input.desiredState }),
+  };
 }
 
 /** The component that carries a stack's archive once CI produces it (X8). */

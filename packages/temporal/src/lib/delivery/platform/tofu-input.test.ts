@@ -6,6 +6,7 @@ import {
   tofuOperation,
   tofuJobRequestInput,
   tofuStackDirectory,
+  tofuStackOptions,
   tofuStateMarkerKey,
   writeTofuStateMarker,
   type MarkerStore,
@@ -94,6 +95,25 @@ describe("Tofu Job input", () => {
       ),
     ).toThrow("not an archive artifact");
   });
+  it("carries a platform stack's frozen desired state with the model Job input (X8)", () => {
+    const model = {
+      kind: "plan" as const,
+      stack: "openai" as const,
+      sourceBuildId: "build/5",
+      sourceRevision: "e".repeat(40),
+    };
+    const desiredState = '{"platform":"openai"}\n';
+    const input = tofuOperation(
+      tofuModelJobInput(model, archive, desiredState),
+    );
+    expect(input).toEqual({ operation: model, archive, desiredState });
+    expect(
+      tofuStackOptions(input, {
+        DELIVERY_STACK_ARCHIVE_DIR: "/workspace/stack",
+      }),
+    ).toEqual({ directory: "/workspace/stack", desiredState });
+    expect(() => tofuOperation({ model, archive, desiredState: "" })).toThrow();
+  });
   it("resolves the extracted directory only in archive mode", () => {
     expect(tofuStackDirectory({ archive: undefined }, {})).toBeUndefined();
     expect(
@@ -162,10 +182,12 @@ describe("Tofu state marker", () => {
     expect(tofuOperation(tofuModelJobInput(model, archive))).toEqual({
       operation: model,
       archive,
+      desiredState: undefined,
     });
     expect(tofuOperation({ snapshot, archive })).toEqual({
       operation: model,
       archive,
+      desiredState: undefined,
     });
     expect(() =>
       tofuModelJobInput(model, { ...archive, digest: "x" }),

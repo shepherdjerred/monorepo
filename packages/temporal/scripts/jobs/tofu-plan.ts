@@ -11,7 +11,7 @@ import {
 import { encryptDeliveryPlan } from "#lib/delivery/platform/plan-crypto.ts";
 import {
   tofuOperation,
-  tofuStackDirectory,
+  tofuStackOptions,
 } from "#lib/delivery/platform/tofu-input.ts";
 import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
 
@@ -28,7 +28,6 @@ export async function run(request: DeliveryJobRequest): Promise<unknown> {
     operation.sourceRevision !== request.sourceRevision
   )
     throw new Error("Saved plan Job differs from its qualified frozen source");
-  const directory = tofuStackDirectory(input);
   return await withDeliveryTofuStack(
     operation.stack,
     async (context) => {
@@ -86,6 +85,6 @@ export async function run(request: DeliveryJobRequest): Promise<unknown> {
       );
     },
     undefined,
-    directory === undefined ? {} : { directory },
+    tofuStackOptions(input),
   );
 }

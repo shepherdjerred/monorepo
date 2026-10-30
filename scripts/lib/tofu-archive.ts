@@ -25,8 +25,9 @@ import {
 /**
  * Shared member of every stack archive. Its content names the archive layout
  * the Delivery Job runner expects (2: the stack at its repository-relative
- * path), so a layout change yields new archives, and new sets, even when the
- * stack sources are unchanged.
+ * path; 3: platform desired state arrives with the Job input), so a layout
+ * change yields new archives, and new sets, even when the stack sources are
+ * unchanged.
  */
 export const TOFU_ARCHIVE_LAYOUT = `${TOFU_STACK_ROOT}/ARCHIVE_LAYOUT`;
 

@@ -457,6 +457,14 @@ export async function loadPlatformDesiredState(
   expectedPlatform: PlatformStack,
 ): Promise<Record<string, unknown>> {
   const raw: unknown = await Bun.file(`${stackDir}/desired-state.json`).json();
+  return platformDesiredStateVariables(raw, expectedPlatform);
+}
+
+/** Typed variables from one parsed desired-state document of the expected platform. */
+export function platformDesiredStateVariables(
+  raw: unknown,
+  expectedPlatform: PlatformStack,
+): Record<string, unknown> {
   const actualPlatform = declaredPlatform(raw);
   if (actualPlatform !== expectedPlatform) {
     throw new Error(

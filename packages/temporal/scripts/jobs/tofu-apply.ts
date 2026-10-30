@@ -11,7 +11,7 @@ import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
 import {
   stateMarkerStore,
   tofuOperation,
-  tofuStackDirectory,
+  tofuStackOptions,
   writeTofuStateMarker,
   type MarkerStore,
 } from "#lib/delivery/platform/tofu-input.ts";
@@ -40,7 +40,6 @@ export async function run(
     stored,
     z.string().min(32).parse(Bun.env["DELIVERY_PLAN_ENCRYPTION_PASSPHRASE"]),
   );
-  const directory = tofuStackDirectory(input);
   return await withDeliveryTofuStack(
     operation.stack,
     async (context) => {
@@ -89,6 +88,6 @@ export async function run(
       };
     },
     undefined,
-    directory === undefined ? {} : { directory },
+    tofuStackOptions(input),
   );
 }

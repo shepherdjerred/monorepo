@@ -29,8 +29,11 @@ import {
 } from "./tofu-original.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { requireModelRecipe } from "#lib/delivery/model/recipe.ts";
-import { modelTofuSource } from "#lib/delivery/model/tofu.ts";
-import { tofuStackDirectory } from "#lib/delivery/platform/tofu-input.ts";
+import {
+  modelTofuDesiredState,
+  modelTofuSource,
+} from "#lib/delivery/model/tofu.ts";
+import { tofuStackOptions } from "#lib/delivery/platform/tofu-input.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import type { RecoveryAction } from "./request.ts";
 type Snapshot = Extract<
@@ -231,13 +234,13 @@ async function modelRecoveryTarget(
 
 /**
  * The frozen source a recovery runs from, and the extracted stack archive
- * directory a model recipe's Job stages (X8); a v1 snapshot uses the
- * checked-out source.
+ * directory and frozen desired state a model recipe's Job stages (X8); a v1
+ * snapshot uses the checked-out source.
  */
 async function recoverySource(context: PlatformRecoveryContext) {
   const snapshot = context.deployment.deployment.platformSnapshot;
   if (snapshot?.kind === "tofu-plan" || snapshot?.kind === "tofu-apply")
-    return { target: legacyTofuTarget(snapshot), directory: undefined };
+    return { target: legacyTofuTarget(snapshot), options: {} };
   if (snapshot !== null)
     throw new Error("Recovery has no frozen OpenTofu source");
   const recipe = requireModelRecipe(context.deployment);
@@ -245,8 +248,9 @@ async function recoverySource(context: PlatformRecoveryContext) {
     throw new Error("Recovery has no frozen OpenTofu source");
   return {
     target: await modelRecoveryTarget(context.deployment),
-    directory: tofuStackDirectory({
+    options: tofuStackOptions({
       archive: modelTofuSource(context.deployment, recipe).archive,
+      desiredState: modelTofuDesiredState(context.deployment),
     }),
   };
 }
@@ -258,7 +262,7 @@ export async function runTofuRecovery(
   native: DeliveryJobReceipt,
   fence: () => Promise<void>,
 ) {
-  const { target, directory } = await recoverySource(context);
+  const { target, options } = await recoverySource(context);
   return await withDeliveryTofuStack(
     target.stack,
     async (tofu) =>
@@ -274,7 +278,7 @@ export async function runTofuRecovery(
         tofu,
       ),
     undefined,
-    directory === undefined ? {} : { directory },
+    options,
   );
 }
 /** An apply's recovery acts only on the state lineage its saved plan read, at or after that serial. */
