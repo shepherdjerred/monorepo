@@ -12,6 +12,7 @@ import {
   desiredStateVariableValue,
 } from "./tofu-stack.ts";
 import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
+import { TOFU_STACK_ROOT } from "./tofu-external-files.ts";
 import { loadPlatformDesiredState } from "#scripts/platform-desired-state.ts";
 import { hasLiveCompletionStatus } from "./github-ruleset-ready.ts";
 
@@ -173,8 +174,12 @@ export async function withDeliveryTofuStack<T>(
   await chmod(workspace, 0o700);
   try {
     const root = path.resolve(import.meta.dirname, "../..");
+    // An archive keeps repository-relative paths (its external files live
+    // outside the stack), so the stack sits at TOFU_STACK_ROOT inside it.
     const stackDirectory =
-      options.directory ?? path.join(root, "src/tofu", stack);
+      options.directory === undefined
+        ? path.join(root, "src/tofu", stack)
+        : path.join(options.directory, TOFU_STACK_ROOT, stack);
     const env = await environment(stack, stackDirectory, workspace);
     const command = async (
       args: readonly string[],

@@ -86,6 +86,30 @@ test("saved execution uses native locks, private disposable state, and only prov
   ]);
   await expect(stat(directory)).rejects.toMatchObject({ code: "ENOENT" });
 });
+test("an extracted archive runs the stack at its repository-relative path", async () => {
+  for (const key of [
+    "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+    "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_TOKEN",
+  ])
+    vi.stubEnv(key, "fixture-provider-value");
+  const seen: string[] = [];
+  await withDeliveryTofuStack(
+    "cloudflare",
+    async () => {
+      // The effect only needs the resolved stack directory.
+    },
+    async (command) => {
+      seen.push(command[1] ?? "");
+      return { stdout: "", exitCode: 0 };
+    },
+    { directory: "/workspace/stack" },
+  );
+  expect(seen).toEqual([
+    "-chdir=/workspace/stack/packages/homelab/src/tofu/cloudflare",
+  ]);
+});
 test("public review counts replacement once and reject unknown provider actions", () => {
   expect(
     deliveryTofuChanges({

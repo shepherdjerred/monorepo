@@ -502,6 +502,24 @@ test("a rebind right after reconcile moves the carried selection to the declared
   });
 });
 
+test("a carried environment drops its v1 suppression threshold with the new lineage", async () => {
+  await seedV1Site();
+  await context.cluster.database.environment.update({
+    where: { id: "static-sites/sjer-red" },
+    data: { automaticSuppressedThroughRevision: 41 },
+  });
+  await context.delivery.reconcileCatalog(
+    await catalogDocument(),
+    testOperator,
+    V1_CATALOG_MIGRATION,
+  );
+  expect(
+    await context.cluster.database.environment.findUniqueOrThrow({
+      where: { id: "sjer-red/prod" },
+    }),
+  ).toMatchObject({ automaticSuppressedThroughRevision: 0 });
+});
+
 test("a deploy right after reconcile runs the carried selection under the declared recipe", async () => {
   await seedV1Site();
   await context.delivery.reconcileCatalog(

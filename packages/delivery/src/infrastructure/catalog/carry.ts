@@ -33,7 +33,7 @@ type Planned =
 
 const RequiresSchema = z.record(z.string(), z.string());
 /** The catalog revision the model v2 migration gave every v1 deployment. */
-const V1_BACKFILL = "v1-backfill";
+export const V1_BACKFILL = "v1-backfill";
 /** Deployments of retired v1 platform kinds froze no selection to carry. */
 const UNSELECTED_KINDS = new Set([
   "root-release",
@@ -318,11 +318,14 @@ async function acceptCarried(
     "finish",
   );
   // An acceptance moves the accepted pointer and the binding generation (V1).
+  // The carried set starts the service's lineage at revision 1, so a v1
+  // suppression threshold would hide every later set (D3).
   await tx.environment.update({
     where: { id: env.id },
     data: {
       acceptedDeploymentId: deployment.id,
       generation: { increment: 1 },
+      automaticSuppressedThroughRevision: 0,
     },
   });
   await pointAtCarried(tx, env.id, accepted.versionSetRevisionId, carriedId);

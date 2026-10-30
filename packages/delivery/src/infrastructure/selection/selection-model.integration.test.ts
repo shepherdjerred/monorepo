@@ -407,6 +407,36 @@ describe("binding over a pre-cutover acceptance (E0, section 7)", () => {
       configurationId: env.declaredConfigurationId,
     });
   });
+
+  test("a deploy over a v1-backfill acceptance runs under the declared recipe", async () => {
+    const baseline = await acceptedBaseline();
+    const env = await environmentRow();
+    // The v1 acceptance records a pre-catalog recipe revision of its own.
+    const declared = await context.cluster.database.pipeline.findUniqueOrThrow({
+      where: { id: env.pipelineRevisionId },
+    });
+    await context.cluster.database.pipeline.create({
+      data: { id: "arcade/v1", definition: declared.definition ?? {} },
+    });
+    await context.cluster.database.deployment.update({
+      where: { id: baseline.id },
+      data: { pipelineRevisionId: "arcade/v1", catalogRevision: "v1-backfill" },
+    });
+    const deploy = await context.delivery.createDeployment(
+      {
+        requestId: crypto.randomUUID(),
+        environmentId: env.id,
+        versionSetRevisionId: context.fixture.versionSet.id,
+        expectedGeneration: env.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    expect(deploy).toMatchObject({
+      pipelineRevisionId: env.pipelineRevisionId,
+      configurationId: env.declaredConfigurationId,
+    });
+  });
 });
 
 describe("eligibility through a promotion source (4.12, M2, W3)", () => {
