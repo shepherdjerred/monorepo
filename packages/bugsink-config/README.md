@@ -36,7 +36,7 @@ Applications pass the DSN, release, environment, and sample rates to
 `Sentry.init` explicitly from their own `BUGSINK_*` configuration. The SDK
 would otherwise read `SENTRY_*` environment variables on its own.
 
-Bun and Node services build their options with `bugsinkServerOptions` from the
+Bun services build their options with `bugsinkServerOptions` from the
 `@shepherdjerred/bugsink-config/server` export:
 
 ```ts
