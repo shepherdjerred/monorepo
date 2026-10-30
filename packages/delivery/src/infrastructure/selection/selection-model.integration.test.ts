@@ -373,6 +373,25 @@ describe("selections (4.9, 4.12)", () => {
   });
 });
 
+async function expectDeployUnderDeclaredRecipe(
+  env: Awaited<ReturnType<typeof environmentRow>>,
+) {
+  const deploy = await context.delivery.createDeployment(
+    {
+      requestId: crypto.randomUUID(),
+      environmentId: env.id,
+      versionSetRevisionId: context.fixture.versionSet.id,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  expect(deploy).toMatchObject({
+    pipelineRevisionId: env.pipelineRevisionId,
+    configurationId: env.declaredConfigurationId,
+  });
+}
+
 describe("binding over a pre-cutover acceptance (E0, section 7)", () => {
   test("a deploy over a pre-cutover platform acceptance runs under the declared recipe", async () => {
     const baseline = await acceptedBaseline();
@@ -392,20 +411,7 @@ describe("binding over a pre-cutover acceptance (E0, section 7)", () => {
       data: { pipelineRevisionId: "platform/tofu:github/1" },
     });
     const env = await environmentRow();
-    const deploy = await context.delivery.createDeployment(
-      {
-        requestId: crypto.randomUUID(),
-        environmentId: env.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
-        expectedGeneration: env.generation,
-        kind: "deploy",
-      },
-      testOperator,
-    );
-    expect(deploy).toMatchObject({
-      pipelineRevisionId: env.pipelineRevisionId,
-      configurationId: env.declaredConfigurationId,
-    });
+    await expectDeployUnderDeclaredRecipe(env);
   });
 
   test("a deploy over a v1-backfill acceptance runs under the declared recipe", async () => {
@@ -422,20 +428,7 @@ describe("binding over a pre-cutover acceptance (E0, section 7)", () => {
       where: { id: baseline.id },
       data: { pipelineRevisionId: "arcade/v1", catalogRevision: "v1-backfill" },
     });
-    const deploy = await context.delivery.createDeployment(
-      {
-        requestId: crypto.randomUUID(),
-        environmentId: env.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
-        expectedGeneration: env.generation,
-        kind: "deploy",
-      },
-      testOperator,
-    );
-    expect(deploy).toMatchObject({
-      pipelineRevisionId: env.pipelineRevisionId,
-      configurationId: env.declaredConfigurationId,
-    });
+    await expectDeployUnderDeclaredRecipe(env);
   });
 });
 
