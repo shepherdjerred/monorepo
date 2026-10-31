@@ -228,6 +228,12 @@ target "_arcade-spaghetti" {
   target = "spaghetti-builder"
 }
 
+target "_arcade-emerald-abi" {
+  context = "."
+  dockerfile = "packages/discord-plays-pokemon/Dockerfile"
+  target = "wasm-abi-test"
+}
+
 target "_arcade-dolphin" {
   context = "."
   dockerfile = "packages/arcade/runtimes/brawl/Dockerfile"
@@ -240,6 +246,7 @@ target "arcade" {
   contexts = {
     arcade-spaghetti = "target:_arcade-spaghetti"
     arcade-dolphin = "target:_arcade-dolphin"
+    arcade-emerald-abi = "target:_arcade-emerald-abi"
   }
   tags = imagetags("arcade")
   cache-from = cachefrom("arcade")

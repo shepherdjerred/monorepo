@@ -146,9 +146,11 @@ source revision and attribution are recorded in
 [Arcade](../arcade/) runs this backend; the package has no image or homelab
 deployment of its own. The `Dockerfile` remains the build recipe for
 `pokeemerald.wasm`: its `wasm-builder` stage builds the patched engine and its
-`wasm-abi-test` stage runs the engine bridge tests against that artifact
-(`docker buildx build --target wasm-abi-test -f packages/discord-plays-pokemon/Dockerfile .`
-from the repository root). A standalone run reads a mounted `config.toml` —
+`wasm-abi-test` stage runs the engine bridge tests against that artifact.
+Arcade's image build requires that stage as its `arcade-emerald-abi` context,
+so CI runs the tests whenever Arcade's image builds. To run them alone:
+`docker buildx build --target wasm-abi-test -f packages/discord-plays-pokemon/Dockerfile .`
+from the repository root. A standalone run reads a mounted `config.toml` —
 see `config.example.toml`.
 
 Each guild's progress lives under `saves/<guildId>/`. Saves are written with a

@@ -146,14 +146,17 @@ RUN cd packages/discord-plays-pokemon/packages/frontend && bun run build
 # The source test may skip on a plain checkout because the generated binary is
 # intentionally gitignored. This stage makes the artifact present and is the
 # source for the runtime COPY below, so an image build cannot bypass the ABI
-# regression test.
+# regression test. Arcade's image build copies /wasm-abi-passed from this stage
+# (its `arcade-emerald-abi` context), so the bridge Arcade imports is proven
+# against the real artifact on every Arcade build.
 FROM build AS wasm-abi-test
 COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
   /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
 RUN cd /app/packages/discord-plays-pokemon/packages/backend && \
   bun --no-install --bun vitest --config ../../../../vitest.config.ts run \
   src/emulator/emulator-symbols.integration.test.ts \
-  src/emulator/audio/audio-fingerprint.test.ts
+  src/emulator/audio/audio-fingerprint.test.ts && \
+  touch /wasm-abi-passed
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps

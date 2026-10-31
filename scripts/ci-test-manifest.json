@@ -221,11 +221,11 @@
       "excludedSuites": [
         {
           "path": "src/emulator/emulator-symbols.integration.test.ts",
-          "reason": "Needs the generated artifact; run it through the discord-plays-pokemon Dockerfile wasm-abi-test stage, which the wasm-builder supplies."
+          "reason": "Needs the generated artifact; Arcade's image build runs it in the discord-plays-pokemon Dockerfile wasm-abi-test stage, which the wasm-builder supplies."
         },
         {
           "path": "src/emulator/audio/audio-fingerprint.test.ts",
-          "reason": "Needs the generated artifact; run it through the discord-plays-pokemon Dockerfile wasm-abi-test stage, which the wasm-builder supplies."
+          "reason": "Needs the generated artifact; Arcade's image build runs it in the discord-plays-pokemon Dockerfile wasm-abi-test stage, which the wasm-builder supplies."
         }
       ]
     },

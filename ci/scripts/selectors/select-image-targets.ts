@@ -62,10 +62,14 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     // toolkit is deliberately not a runtime workspace dependency.
     "temporal-worker": ["packages/toolkit/"],
     // Arcade's native SpaghettiKart context is the Mario Kart Dockerfile's
-    // spaghetti-builder stage, built from the pinned spaghetti-src inputs.
+    // spaghetti-builder stage, built from the pinned spaghetti-src inputs. Its
+    // Emerald ABI context is the Pokemon Dockerfile's wasm-abi-test stage,
+    // built from the pinned wasm-src inputs.
     arcade: [
       "packages/discord-plays-mario-kart/Dockerfile",
       "packages/discord-plays-mario-kart/spaghetti-src/",
+      "packages/discord-plays-pokemon/Dockerfile",
+      "packages/discord-plays-pokemon/wasm-src/",
     ],
     infra: [
       "packages/homelab/src/domain-registry.json",
