@@ -12,6 +12,12 @@
       "mtaStsPublished": true,
       "fastmailReady": true
     },
+    "discord-plays-pokemon.com": {
+      "wildcardMail": true,
+      "tls13": "on",
+      "mtaStsPublished": true,
+      "fastmailReady": true
+    },
     "glitter-boys.com": {
       "wildcardMail": true,
       "tls13": "on",

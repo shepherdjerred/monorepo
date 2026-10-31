@@ -88,6 +88,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_chartmuseum" {
   proxied = true
 }
 
+resource "cloudflare_dns_record" "sjer_red_cname_discord_plays_pokemon_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "discord-plays-pokemon.com"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # files.sjer.red CNAME is auto-managed by Cloudflare R2 custom domain
 
 resource "cloudflare_dns_record" "sjer_red_cname_freshrss" {
