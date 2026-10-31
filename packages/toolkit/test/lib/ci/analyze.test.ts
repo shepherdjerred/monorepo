@@ -8,8 +8,7 @@ import {
   uncachedTasks,
 } from "#lib/ci/analyze/report.ts";
 import { compactDiagnostics, type VerifyRun } from "#lib/ci/analyze/runs.ts";
-
-const entry = new URL("../../../src/index.ts", import.meta.url).pathname;
+import { runCi } from "./cli-process.ts";
 
 function task(
   id: string,
@@ -204,15 +203,7 @@ describe("hot files", () => {
 
 test("analyze help and bad flags need no credentials", async () => {
   for (const args of [["--help"], ["--top", "0"], ["unexpected"]]) {
-    const child = Bun.spawn(
-      [process.execPath, "run", entry, "ci", "analyze", ...args],
-      { stdout: "pipe", stderr: "pipe" },
-    );
-    const [output, error, code] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
+    const { output, error, code } = await runCi(["analyze", ...args]);
     if (args[0] === "--help") {
       expect(code, error).toBe(0);
       expect(output).toContain("hot files");
