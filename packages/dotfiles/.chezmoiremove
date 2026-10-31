@@ -12,3 +12,4 @@
 .gemini/config/hooks/herdr-agent-state.sh
 .claude/hooks/herdr-agent-state.sh
 .config/opencode/herdr-tui-session.js
+.agents/skills/oai-solution-reviewer
