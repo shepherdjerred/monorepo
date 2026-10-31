@@ -13,6 +13,7 @@ import type {
   CiStep,
   ResourceTier,
 } from "#src/pipeline/model.ts";
+import { GOLDEN_MARKER } from "#src/checkout/golden.ts";
 import { WORKSPACE_SEEDS } from "#src/pipeline/performance.ts";
 import { ramScratchProfile } from "./ram-scratch.ts";
 
@@ -311,6 +312,22 @@ function ordinaryCloneConfiguration(
     // metadata that its implicit clone cannot inherit.
     clone: [
       {
+        // A workspace may be a golden clone (workspace-clone-policy.ts in
+        // homelab); the Git plugin expects an empty directory. Deleting the
+        // clone's files writes nothing back to the pool.
+        name: "clear-golden",
+        image: SOURCE_CACHE_PREPARATION_IMAGE,
+        commands: [
+          `if [ -e ${GOLDEN_MARKER} ]; then find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +; fi`,
+        ],
+        backend_options: {
+          kubernetes: {
+            ...podOptions(step, identity, LIGHT_TIER),
+            securityContext: { allowPrivilegeEscalation: false },
+          },
+        },
+      },
+      {
         name: "clone",
         image: ORDINARY_CLONE_IMAGE,
         settings: {
@@ -395,8 +412,11 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
               // The ZFS driver does not apply fsGroup to RWX claims. Only the
               // empty workspace and mounted cache roots need ownership setup;
               // traversing cached objects would serialize every warm checkout.
+              // A golden clone's Git directory was last owned by root, and the
+              // non-root helper updates it in place.
               commands: [
                 `chown 1000:1000 . ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH}`,
+                `if [ -e ${GOLDEN_MARKER} ]; then chown -R 1000:1000 .git; fi`,
               ],
               volumes: [
                 `${step.sourceCache.claim}:${SOURCE_CACHE_PATH}`,

@@ -25,7 +25,10 @@ import {
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
-import { CI_WORKSPACE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  CI_WORKSPACE_STORAGE_CLASS,
+  CI_WORKSPACE_VOLUME_SIZE,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   WOODPECKER_GRPC_PORT,
@@ -227,7 +230,7 @@ function createAgentDeployment(
         // workflow writes. Verify peaks above 13 GB before step scratch
         // (TMPDIR, tool homes) moves here off the node's OS disk.
         WOODPECKER_BACKEND_K8S_VOLUME_SIZE: EnvValue.fromValue(
-          config?.queue === "ci-gates" ? "1G" : "32G",
+          config?.queue === "ci-gates" ? "1G" : CI_WORKSPACE_VOLUME_SIZE,
         ),
       },
       securityContext: {

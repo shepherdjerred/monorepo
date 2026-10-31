@@ -38,6 +38,13 @@ export const NVME_STORAGE_CLASS_LZ4 = "zfs-ssd-lz4";
  *   putting a workspace on the production node's pool.
  */
 export const CI_WORKSPACE_STORAGE_CLASS = "ci-workspace";
+/**
+ * Size of every non-gate Woodpecker workspace claim. A ZFS quota, not a
+ * reservation. A workspace cloned from the golden snapshot must request
+ * exactly the golden claim's size: the ZFS driver refuses a clone whose
+ * rounded size differs from its snapshot's.
+ */
+export const CI_WORKSPACE_VOLUME_SIZE = "32G";
 
 export function createStorageClasses(chart: Chart) {
   new KubeStorageClass(chart, "host-zfs-ssd", {

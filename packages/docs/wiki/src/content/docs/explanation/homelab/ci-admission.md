@@ -189,6 +189,28 @@ terminal step pods left with them, every 15 minutes. The
 `WoodpeckerWorkspaceClaimLeaked` alert fires only when a leak survives two
 hours past that age, which means the reaper is paused or failing.
 
+## Workspaces start as clones
+
+Filling an empty workspace dominated the CI pool's writes. Every workflow
+checked out about 1 GB of Git objects and installed a 5.7 GB dependency tree
+into its own new volume. That is about 1,300 times a day against a drive
+budgeted for 600 GB a day.
+
+A workspace now starts as a ZFS clone of a golden workspace instead. The
+golden workspace is a verified main checkout with its dependencies installed.
+A Temporal maintenance kind refreshes it when dependency inputs change, and
+at least daily, then snapshots it. A mutating admission policy gives each new
+workspace claim that snapshot as its data source. The clone costs constant
+time and writes nothing until the workflow changes a file. Checkout then
+moves the clone to the requested commit, writing only the files that differ.
+Each lane's own frozen install still decides its dependencies.
+
+The policy's parameter is a ConfigMap Temporal owns. Emptying it makes new
+workspaces start empty again; no workflow depends on a clone. Gate workspaces
+never clone, because the ZFS driver only clones into a claim of the
+snapshot's exact size. A snapshot that still has clones cannot be destroyed,
+so superseded snapshots linger until their workspaces are deleted.
+
 ## What is watched
 
 Prometheus scrapes Kueue's controller through a ServiceMonitor in
@@ -210,6 +232,10 @@ kubelet eviction, whatever the queue says.
 - Pod guard: `resources/woodpecker/ci-pod-guard.ts`
 - Agent pod defaults: `resources/woodpecker/agent.ts`
 - Workspace class: `misc/storage/storage-classes.ts`
+- Golden workspace clone policy:
+  `resources/woodpecker/workspace-clone-policy.ts`
+- Golden refresh and snapshot:
+  `packages/temporal/src/activities/maintenance/ci-workspace-golden.ts`
 - Per-step resource tiers:
   `packages/woodpecker-config-extension/src/pipeline/tiers.ts`
 - Budget proof: `scripts/checks/ci/check-ci-admission-budget.ts`

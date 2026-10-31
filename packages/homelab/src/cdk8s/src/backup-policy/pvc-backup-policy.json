@@ -145,6 +145,12 @@
   },
   {
     "namespace": "woodpecker-ci",
+    "name": "woodpecker-workspace-golden",
+    "backup": "disabled",
+    "reason": "Golden CI workspace that new workspaces clone - rebuildable from verified main"
+  },
+  {
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-format-main",
     "backup": "disabled",
     "reason": "Disposable content-validated formatter results for main"

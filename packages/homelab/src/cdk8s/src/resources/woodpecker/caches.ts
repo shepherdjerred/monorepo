@@ -4,7 +4,10 @@ import {
   KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  CI_WORKSPACE_VOLUME_SIZE,
+  NVME_STORAGE_CLASS_LZ4,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 /**
@@ -52,6 +55,14 @@ export const WOODPECKER_SCCACHE_CLAIM = "woodpecker-sccache";
 export const WOODPECKER_GO_CACHE_CLAIM = "woodpecker-go-cache";
 export const WOODPECKER_TOOL_CACHE_CLAIM = "woodpecker-tool-cache";
 export const WOODPECKER_GRADLE_HOME_CLAIM = "woodpecker-gradle-home";
+/**
+ * A main checkout with dependencies installed, laid out like a workflow
+ * workspace. Temporal snapshots it after each refresh, and new workspace
+ * claims are cloned from the newest snapshot (workspace-clone-policy.ts), so
+ * a workflow writes only what differs from it. Its size must equal the
+ * workspace claim size for the driver to clone it.
+ */
+export const WOODPECKER_WORKSPACE_GOLDEN_CLAIM = "woodpecker-workspace-golden";
 
 const DISPOSABLE_CACHE_LABELS = {
   "velero.io/backup": "disabled",
@@ -106,6 +117,12 @@ export function createWoodpeckerCaches(chart: Chart): void {
     "woodpecker-workspace-seeds-pvc",
     "woodpecker-workspace-seeds",
     "60Gi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-workspace-golden-pvc",
+    WOODPECKER_WORKSPACE_GOLDEN_CLAIM,
+    CI_WORKSPACE_VOLUME_SIZE,
   );
   createCacheClaim(
     chart,

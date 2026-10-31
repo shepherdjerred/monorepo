@@ -1,26 +1,10 @@
-import { App, Chart } from "cdk8s";
 import { expect, test } from "vitest";
-import { parseAllDocuments } from "yaml";
-import { z } from "zod";
 import { RAM_SCRATCH_PROFILES } from "@shepherdjerred/woodpecker-config-extension/src/pipeline/ram-scratch.ts";
+import { renderAdmissionPolicies } from "./admission-policy-test-support.ts";
 import { createRamScratchPolicy } from "./ram-scratch-policy.ts";
 
-const Manifest = z.object({
-  kind: z.string(),
-  metadata: z.object({
-    name: z.string(),
-    namespace: z.string().optional(),
-    annotations: z.record(z.string(), z.string()),
-  }),
-  spec: z.record(z.string(), z.unknown()),
-});
-
 test("RAM scratch policies preserve namespace isolation and fail closed before workloads", () => {
-  const app = new App();
-  createRamScratchPolicy(new Chart(app, "scratch"));
-  const manifests = parseAllDocuments(app.synthYaml()).map((doc) =>
-    Manifest.parse(doc.toJS()),
-  );
+  const manifests = renderAdmissionPolicies(createRamScratchPolicy);
   // One mutation and binding per lane profile, plus the shared guard pair.
   expect(manifests).toHaveLength(6);
   for (const manifest of manifests) {

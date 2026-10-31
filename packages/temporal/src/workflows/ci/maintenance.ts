@@ -8,9 +8,11 @@ import {
   upsertMemo,
 } from "@temporalio/workflow";
 import type { CiMaintenanceActivities } from "#activities/maintenance/ci-maintenance.ts";
+import type { CiWorkspaceGoldenActivities } from "#activities/maintenance/ci-workspace-golden.ts";
 import {
   initialMaintenanceState,
   nextMaintenanceCandidate,
+  recordGoldenSnapshot,
   recordMaintenanceObservation,
   type MaintenanceState,
   type CiMaintenanceKind,
@@ -28,6 +30,14 @@ const writes = proxyActivities<CiMaintenanceActivities>({
   // A lost POST response never authorizes another submission.
   retry: { maximumAttempts: 1 },
 });
+// The infra worker holds the CI namespace snapshot grant. The activity is
+// idempotent per request, so retries resume the same snapshot.
+const golden = proxyActivities<CiWorkspaceGoldenActivities>({
+  taskQueue: TASK_QUEUES.INFRA,
+  startToCloseTimeout: "20 minutes",
+  heartbeatTimeout: "2 minutes",
+  retry: { maximumAttempts: 3, initialInterval: "30 seconds" },
+});
 export const maintenanceTick = defineSignal("maintenanceTick");
 export const maintenanceRetry =
   defineSignal<[{ kind: CiMaintenanceKind; requestId: string }]>(
@@ -36,6 +46,18 @@ export const maintenanceRetry =
 export const maintenanceConfirmAbsent = defineSignal<
   [{ requestId: string; evidence: string }]
 >("maintenanceConfirmAbsent");
+
+/** A failed snapshot stays pending and is retried next tick; other maintenance continues. */
+async function selectGoldenSnapshot(state: MaintenanceState): Promise<void> {
+  const pending = state.goldenSnapshot;
+  if (pending === undefined || pending === null) return;
+  try {
+    const published = await golden.publishCiWorkspaceGoldenSnapshot(pending);
+    recordGoldenSnapshot(state, published.snapshot);
+  } catch {
+    state.observation = "Golden workspace snapshot failed; retrying next tick";
+  }
+}
 
 export async function runCiMaintenanceTick(): Promise<void> {
   await reads.wakeCiMaintenance();
@@ -85,6 +107,7 @@ export async function runCiMaintenanceCoordinator(
     try {
       const observation = await reads.inspectCiMaintenance(state.pending);
       recordMaintenanceObservation(state, observation);
+      await selectGoldenSnapshot(state);
       if (!observation.enabled || state.pending !== null || observation.busy)
         continue;
       const candidate = nextMaintenanceCandidate(state, observation.candidates);

@@ -7,6 +7,7 @@ import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.t
 import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 import { createRamScratchPolicy } from "./ram-scratch-policy.ts";
+import { createWorkspaceClonePolicy } from "./workspace-clone-policy.ts";
 
 /**
  * Label Woodpecker's Kubernetes backend stamps on every pod it creates --
@@ -82,6 +83,15 @@ export function createWoodpeckerCiPodGuard(chart: Chart): void {
           reason: "Forbidden",
         },
         {
+          // Every new workspace clones the golden checkout, so only the
+          // verified-main maintenance publisher may write it.
+          expression:
+            "!has(object.spec.volumes) || !object.spec.volumes.exists(v, has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName == 'woodpecker-workspace-golden') || (has(object.metadata.labels) && 'ci.sjer.red/step-key' in object.metadata.labels && object.metadata.labels['ci.sjer.red/step-key'] == 'maintenance-workspace-golden' && has(object.metadata.annotations) && 'ci.sjer.red/branch' in object.metadata.annotations && object.metadata.annotations['ci.sjer.red/branch'] == 'main' && 'ci.sjer.red/event' in object.metadata.annotations && object.metadata.annotations['ci.sjer.red/event'] == 'manual')",
+          message:
+            "The golden workspace may only be mounted by its main maintenance publisher",
+          reason: "Forbidden",
+        },
+        {
           expression: `has(object.spec.nodeSelector) && 'kubernetes.io/hostname' in object.spec.nodeSelector && object.spec.nodeSelector['kubernetes.io/hostname'] == '${CI_NODE_HOSTNAME}'`,
           message: `CI pods must select the CI node (kubernetes.io/hostname: ${CI_NODE_HOSTNAME})`,
           reason: "Forbidden",
@@ -124,6 +134,7 @@ export function createWoodpeckerCiPodGuard(chart: Chart): void {
     },
   });
   createRamScratchPolicy(chart);
+  createWorkspaceClonePolicy(chart);
 }
 
 /** Keep the CSI mount RW for ZFS; only container bind mounts become RO. */

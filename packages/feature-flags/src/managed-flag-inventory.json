@@ -467,6 +467,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "ci-workspace-golden-refresh-enabled",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "ci-maintenance",
+      "purpose": "Refresh and snapshot the golden CI workspace that new workspace claims are cloned from.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "woodpecker-source-incremental-enabled",
       "owner": "platform",
       "namespace": "woodpecker",
