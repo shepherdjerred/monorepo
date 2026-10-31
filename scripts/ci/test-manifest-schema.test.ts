@@ -4,8 +4,10 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   loadTestManifest,
+  readWorkspaceTests,
   WorkspaceTestsSchema,
   workspaceDirectories,
+  workspaceTestsSchemaReference,
 } from "./test-manifest-schema.ts";
 
 const root = {
@@ -43,6 +45,7 @@ const appTests = {
   package: "@example/app",
   steps: [{ runner: "vitest" }],
 };
+const appPackage = { name: "@example/app" };
 
 describe("loadTestManifest", () => {
   test("assembles each workspace's ci-tests.json in root package order", async () => {
@@ -50,6 +53,8 @@ describe("loadTestManifest", () => {
       { packages: ["packages/app", "packages/docs", "scripts"] },
       {
         "packages/app/ci-tests.json": appTests,
+        "packages/app/package.json": appPackage,
+        "scripts/package.json": { name: "@example/scripts" },
         "scripts/ci-tests.json": {
           $schema: "ci-tests.schema.json",
           package: "@example/scripts",
@@ -85,9 +90,65 @@ describe("loadTestManifest", () => {
   test("rejects a workspace file with an unknown field", async () => {
     const directory = await fixture(["packages/app"], {
       "packages/app/ci-tests.json": { ...appTests, typo: true },
+      "packages/app/package.json": appPackage,
     });
     try {
       await expect(loadTestManifest(directory)).rejects.toThrow();
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+  });
+});
+
+describe("readWorkspaceTests", () => {
+  test("is undefined for a workspace without CI test steps", async () => {
+    const directory = await fixture(["packages/docs"], {
+      "packages/docs/package.json": { name: "@example/docs" },
+    });
+    try {
+      expect(await readWorkspaceTests(directory, "packages/docs")).toBe(
+        undefined,
+      );
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+  });
+
+  test("requires the exact relative schema path", async () => {
+    expect(workspaceTestsSchemaReference("scripts")).toBe(
+      "ci-tests.schema.json",
+    );
+    expect(workspaceTestsSchemaReference("packages/a/packages/b")).toBe(
+      "../../../../scripts/ci-tests.schema.json",
+    );
+    const directory = await fixture(["packages/app"], {
+      // Names the shared file, but from the wrong directory.
+      "packages/app/ci-tests.json": {
+        ...appTests,
+        $schema: "../scripts/ci-tests.schema.json",
+      },
+      "packages/app/package.json": appPackage,
+    });
+    try {
+      await expect(loadTestManifest(directory)).rejects.toThrow(
+        'packages/app/ci-tests.json must set "$schema" to "../../scripts/ci-tests.schema.json", not "../scripts/ci-tests.schema.json"',
+      );
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+  });
+
+  test("requires the workspace's package.json name", async () => {
+    const directory = await fixture(["packages/app"], {
+      "packages/app/ci-tests.json": { ...appTests, package: "@example/other" },
+      "packages/app/package.json": appPackage,
+    });
+    try {
+      await expect(
+        readWorkspaceTests(directory, "packages/app"),
+      ).rejects.toThrow(
+        'packages/app/ci-tests.json names package "@example/other", but packages/app/package.json is "@example/app"',
+      );
     } finally {
       await rm(directory, { force: true, recursive: true });
     }

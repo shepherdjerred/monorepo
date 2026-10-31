@@ -31,7 +31,9 @@
       "inputs": [
         "$TURBO_ROOT$/vitest.config.ts",
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/ci/scripts/**"
+        "$TURBO_ROOT$/ci/scripts/**",
+        // The repository-wide manifest tests read every workspace's entry.
+        "$TURBO_ROOT$/packages/**/ci-tests.json"
       ]
     },
     "test:ci": {
@@ -40,6 +42,7 @@
         "$TURBO_ROOT$/ci/**",
         "$TURBO_ROOT$/packages/**/package.json",
         "$TURBO_ROOT$/packages/**/turbo.json",
+        "$TURBO_ROOT$/packages/**/ci-tests.json",
         "$TURBO_ROOT$/renovate.json",
         "$TURBO_ROOT$/packages/version-catalog/src/catalog.json",
         "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",

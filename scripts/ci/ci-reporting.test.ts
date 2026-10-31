@@ -390,6 +390,27 @@ describe("workspace ci-tests.json files", () => {
   });
 });
 
+describe("root script test inputs", () => {
+  test("re-run the repository-wide manifest tests when any entry changes", async () => {
+    const ScriptsTurboSchema = z.object({
+      tasks: z.record(
+        z.string(),
+        z.object({ inputs: z.array(z.string()).optional() }).loose(),
+      ),
+    });
+    const config = ScriptsTurboSchema.parse(
+      Bun.JSONC.parse(
+        await Bun.file(path.join(repositoryRoot, "scripts/turbo.json")).text(),
+      ),
+    );
+    for (const task of ["test", "test:ci"]) {
+      expect(config.tasks[task]?.inputs, task).toContain(
+        `$TURBO_ROOT$/packages/**/${WORKSPACE_TESTS_FILE}`,
+      );
+    }
+  });
+});
+
 describe("CI reporting manifest", () => {
   test("covers every declared test script without placeholder passes", async () => {
     const manifest = await loadTestManifest(repositoryRoot);
