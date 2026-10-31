@@ -249,11 +249,14 @@ Peer Relays (beta, v1.86+) use existing tailnet nodes as relay servers instead o
 | **Setup**        | Automatic        | Manual opt-in      |
 | **Availability** | All plans        | All plans (2 free) |
 
-Enable peer relay on a node:
+Enable peer relay on a node by giving it a UDP port to relay on (0 picks a random unused port; an empty string disables it). Use `--relay-server-static-endpoints` to advertise fixed `IP:port` candidates, for example behind a port-forward:
 
 ```bash
-tailscale set --advertise-peer-relay
+tailscale set --relay-server-port=40000
+tailscale set --relay-server-static-endpoints="192.0.2.1:40000"
 ```
+
+The tailnet policy must also allow clients to use the relay; follow the official peer relay documentation for the grant.
 
 Best for: locked-down cloud infrastructure, strict firewalls, high-bandwidth workloads.
 

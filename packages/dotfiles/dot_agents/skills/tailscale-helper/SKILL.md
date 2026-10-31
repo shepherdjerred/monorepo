@@ -1,245 +1,71 @@
 ---
 name: tailscale-helper
-description: |
-  Tailscale VPN and networking - CLI operations, MagicDNS, ACLs, SSH, funnel, serve, and network administration
-  When user mentions Tailscale, tailscale commands, VPN, MagicDNS, tailnet, or Tailscale networking
+description: Current Tailscale guidance for the CLI, MagicDNS, Serve and Funnel, Taildrop, Tailscale SSH, ACLs and grants, exit nodes, subnet routers, containers, and Kubernetes. Use when operating a tailnet, reaching a dev server or sending files between machines, exposing a service, or debugging connectivity.
 ---
 
-# Tailscale Helper Agent
+# Tailscale
 
-## What's New (2025-2026)
+Tailscale is a WireGuard mesh VPN. Each device gets a stable `100.64.0.0/10`
+address and a MagicDNS name (`<machine>.<tailnet>.ts.net`); traffic flows
+directly between peers when NAT traversal succeeds and over a relay otherwise.
 
-**Tailscale Services (GA, Jan 2026)** - Decouple apps from hosting devices with stable TailVIPs and MagicDNS names. Define services via API or admin console with virtual IPs auto-accepted across platforms.
+## Current baseline
 
-**Peer Relays (Beta, Oct 2025)** - Use tailnet nodes as high-throughput relay servers when direct connections fail. Throughput approaches direct connections; orders of magnitude faster than managed DERP relays. Two free peer relays on all plans. Requires v1.86+.
-
-**Tailnet Lock (GA, Jun 2025)** - Verify that only trusted nodes join the tailnet via cryptographic signing. Shifts trust from Tailscale coordination server to your own signing nodes.
-
-**Grants (GA, May 2025)** - Unified network and application-layer access controls replacing traditional ACLs. Combine network rules with app capabilities in a single policy.
-
-**Visual Policy Editor (GA, Oct 2025)** - Graphical ACL management in the admin console.
-
-**4via6 Subnet Routers (GA, Jan 2025)** - Handle overlapping IPv4 subnets by mapping them through IPv6.
-
-**Fast User Switching (GA, Jan 2025)** - Switch between multiple Tailscale accounts on a single device.
-
-**Node Key Sealing (GA, v1.90)** - Hardware-backed node key protection on Linux, Windows, and macOS using TPM.
-
-**v1.94 Highlights:** Workload identity tokens auto-generated, Peer Relay performance improvements, container/K8s Operator updates.
-
-**v1.92 Highlights:** State file encryption, TPM attestation defaults, K8s workload identity federation, Funnel/Serve PROXY protocol support, network flow logs auto-recording.
-
-## Overview
-
-Tailscale is a WireGuard-based mesh VPN that creates a secure overlay network (tailnet) connecting devices across any network topology. Every device gets a stable Tailscale IP from the CGNAT range (`100.64.0.0/10`) that persists regardless of physical location. Tailscale handles NAT traversal, key management, and peer discovery automatically through a coordination server, while all data flows directly between devices via encrypted WireGuard tunnels.
-
-## Public Product Reference
-
-The upstream Tailscale skill is an Alpha reference index, not an authority for
-this workstation or homelab. Use `references/public-product-reference.md` for
-the broader product map (grants, device management, Kubernetes, Taildrop,
-Taildrive, Serve, Funnel, session recording, and `tsnet`) and fetch the linked
-official documentation when syntax or product availability may have changed.
-
-Local rules remain mandatory: probe authentication with the exact read-only
-operation needed, verify live state before claiming a change worked, treat
-Serve/Funnel as exposure changes, and preserve the homelab's encryption and
-access-control requirements. Do not install or invoke an MCP server for this
-reference.
-
-## CLI Quick Reference
+Verified against Tailscale 1.104.2 on 2026-10-31:
 
 ```bash
-# Authentication & Connection
-tailscale up                          # Connect and authenticate
-tailscale up --auth-key=<key>         # Connect with pre-auth key
-tailscale down                        # Disconnect from tailnet
-tailscale login                       # Authenticate without connecting
-tailscale logout                      # Disconnect and expire session
-tailscale switch <account>            # Switch Tailscale account
-tailscale switch --list               # List available accounts
-
-# Status & Info
-tailscale status                      # Show connection status
-tailscale status --json               # JSON output
-tailscale ip                          # Show Tailscale IP
-tailscale ip --4                      # IPv4 only
-tailscale ip --6                      # IPv6 only
-tailscale whois <ip>                  # Identify device/user by IP
-tailscale version                     # Show version
-tailscale netcheck                    # Network diagnostics
-
-# Connectivity
-tailscale ping <hostname>             # Ping over Tailscale
-tailscale ping --icmp <hostname>      # ICMP ping
-tailscale ssh user@host               # SSH via Tailscale
-
-# Configuration
-tailscale set --hostname=<name>       # Set device hostname
-tailscale set --ssh                   # Enable Tailscale SSH
-tailscale set --advertise-exit-node   # Advertise as exit node
-tailscale set --exit-node=<ip|name>   # Use exit node
-tailscale set --advertise-routes=<cidr> # Advertise subnet routes
-tailscale set --accept-routes         # Accept subnet routes
-tailscale set --accept-dns            # Accept MagicDNS
-tailscale set --shields-up            # Block incoming connections
-
-# File Sharing (Taildrop)
-tailscale file cp <file> <host>:      # Send file
-tailscale file get <dir>              # Receive files
-
-# Service Exposure
-tailscale serve <port>                # Serve to tailnet (HTTPS)
-tailscale serve --http=80 <port>      # Serve HTTP
-tailscale serve status                # Show serve config
-tailscale serve reset                 # Clear serve config
-tailscale funnel <port>               # Expose to internet
-tailscale funnel status               # Show funnel config
-
-# Drive Sharing
-tailscale drive share <name> <path>   # Share directory
-tailscale drive unshare <name>        # Stop sharing
-tailscale drive list                  # List shares
-
-# Certificates
-tailscale cert <domain>               # Generate TLS cert
-tailscale cert --cert-file=<f> --key-file=<f> <domain>
-
-# Exit Nodes
-tailscale exit-node list              # List available exit nodes
-tailscale exit-node suggest           # Suggest optimal node
-
-# Tailnet Lock
-tailscale lock init                   # Initialize Tailnet Lock
-tailscale lock status                 # View lock status
-tailscale lock sign nodekey:<key>     # Sign a node
-tailscale lock add tlpub:<key>        # Add signing node
-tailscale lock remove tlpub:<key>     # Remove signing node
-tailscale lock disable <secret>       # Disable Tailnet Lock
-
-# Diagnostics
-tailscale bugreport                   # Generate bug report
-tailscale bugreport --diagnose        # With diagnostics
-tailscale dns status                  # DNS resolver status
-tailscale metrics print               # Show client metrics
-
-# Updates
-tailscale update                      # Update client
-tailscale update --dry-run            # Check for updates
+tailscale version
+tailscale <command> --help   # authoritative for flags; this skill can lag
 ```
 
-## Key Features
+Flags and product availability change quickly. Check `--help` and the linked
+official documentation before relying on a flag from this skill.
 
-### MagicDNS
+## Working rules
 
-Automatically registers DNS names for tailnet devices. Access machines by hostname (`ssh user@myserver`) instead of IP. Full domain: `<machine>.<tailnet-name>.ts.net`. Enabled by default for new tailnets.
+- Probe live state first with a read-only command (`tailscale status`,
+  `tailscale serve status`, `tailscale funnel status`). Re-read it afterwards;
+  do not claim success from a command exiting 0.
+- Serve and Funnel are exposure changes. Funnel publishes to the internet and
+  needs explicit confirmation. Never Funnel a dev server.
+- A workstation's Serve configuration can hold unrelated listeners. Remove only
+  the listener you added (`tailscale serve --https=<port> off`); never run
+  `serve reset` or `funnel reset` unless asked.
+- Use the MagicDNS label from `tailscale status`, not the OS hostname, and read
+  the tailnet suffix from live output instead of assuming it.
+- ACLs, grants, and SSH rules cannot be read from the CLI. Reachability that
+  depends on policy is unverified until checked in the admin console or API.
+- Do not install or invoke an MCP server for Tailscale.
 
-### Tailscale SSH
-
-Replace SSH key management with identity-based access. Run `tailscale set --ssh` on destination, configure SSH ACLs in policy file. Supports check mode requiring periodic re-authentication.
-
-### Funnel
-
-Expose local services to the public internet through encrypted relay. Limited to ports 443, 8443, and 10000. Traffic is end-to-end encrypted through Funnel relay servers.
-
-### Serve
-
-Share local services within the tailnet. Supports reverse proxy, file serving, static text, and TCP forwarding. Auto-provisions HTTPS certificates. Use `-bg` flag for persistence across reboots.
-
-### Taildrop
-
-Peer-to-peer encrypted file transfer between tailnet devices. Send with `tailscale file cp`, receive with `tailscale file get`.
-
-### Exit Nodes
-
-Route all internet traffic through a designated tailnet device. Use for travel security, geo-access, or compliance. Supports Mullvad exit nodes for commercial VPN integration.
-
-### Subnet Routers
-
-Extend tailnet to devices without Tailscale installed. Advertise routes with `tailscale set --advertise-routes=<cidr>`, approve in admin console or via autoApprovers.
-
-### Peer Relays
-
-Client-to-client relay fallback when direct connections fail. Higher throughput than DERP relays. Configure with `tailscale set --advertise-peer-relay`.
-
-### Tailscale Services
-
-Define stable virtual services with TailVIPs and MagicDNS names, independent of hosting devices. Supports high availability and granular access controls.
-
-## Docker & Containers
+## Most-used commands
 
 ```bash
-# Pull official image
-docker pull tailscale/tailscale:latest
-
-# Run with auth key
-docker run -d \
-  -e TS_AUTHKEY=tskey-auth-... \
-  -e TS_HOSTNAME=my-container \
-  -e TS_STATE_DIR=/var/lib/tailscale \
-  -v ts-state:/var/lib/tailscale \
-  tailscale/tailscale:latest
+tailscale status [--json]                 # peers, online state, health
+tailscale ping --verbose <host>           # direct vs DERP; works when OS ping is firewalled
+tailscale serve --bg <port>               # tailnet-only HTTPS proxy to 127.0.0.1:<port>
+tailscale serve status
+tailscale file cp <file> <host>:          # Taildrop send (trailing colon)
+tailscale file get <dir>                  # Taildrop receive (Linux; GUI apps use Downloads)
+tailscale ssh user@host
+tailscale nc <host> <port>                # test a port over the tailnet
 ```
 
-Key environment variables: `TS_AUTHKEY`, `TS_HOSTNAME`, `TS_STATE_DIR`, `TS_ROUTES`, `TS_USERSPACE`, `TS_EXTRA_ARGS`, `TS_ACCEPT_DNS`, `TS_ENABLE_HEALTH_CHECK`, `TS_ENABLE_METRICS`.
+## Route by problem
 
-Use sidecar pattern with `network_mode: service:tailscale` for other containers.
+Read only the reference the task needs.
 
-## ACL Policy Basics
+- [Common tasks](references/common-tasks.md): reach a dev server from another
+  machine, send files, rsync/scp, an exposure checklist, and a "can't reach
+  host" sequence.
+- [CLI reference](references/cli-reference.md): every subcommand with flags and
+  workflows.
+- [Networking](references/networking.md): MagicDNS, subnet routers, exit nodes,
+  DERP and peer relays, containers, Kubernetes, Services, app connectors.
+- [ACLs and security](references/acls-security.md): policy syntax, grants,
+  tags, SSH rules, auth keys, API, Tailnet Lock.
+- [Public product reference](references/public-product-reference.md): product
+  map and the stable operating pattern.
+- [Releases](references/releases.md): dated feature ledger; a snapshot, not an
+  authority.
 
-```jsonc
-{
-  // Groups for role-based access
-  "groups": {
-    "group:engineering": ["user@example.com"],
-  },
-  // Tag ownership
-  "tagOwners": {
-    "tag:server": ["group:engineering"],
-  },
-  // Access rules (deny-by-default)
-  "acls": [
-    {
-      "action": "accept",
-      "src": ["group:engineering"],
-      "dst": ["tag:server:*"],
-    },
-  ],
-  // SSH access
-  "ssh": [
-    {
-      "action": "accept",
-      "src": ["group:engineering"],
-      "dst": ["tag:server"],
-      "users": ["root"],
-    },
-  ],
-  // Auto-approve routes
-  "autoApprovers": {
-    "routes": { "10.0.0.0/8": ["tag:server"] },
-    "exitNode": ["tag:server"],
-  },
-}
-```
-
-Use huJSON format (comments and trailing commas allowed). Grants are the recommended modern alternative to ACLs.
-
-## Reference Files
-
-- **`references/cli-reference.md`** - Complete CLI command reference with all subcommands, flags, and usage patterns
-- **`references/networking.md`** - MagicDNS, subnet routers, exit nodes, DERP, NAT traversal, containers, Kubernetes
-- **`references/acls-security.md`** - ACL policy syntax, grants, groups, tags, SSH ACLs, auth keys, API, Tailnet Lock
-
-## Common Troubleshooting
-
-| Issue                     | Command                                        |
-| ------------------------- | ---------------------------------------------- |
-| Check connection status   | `tailscale status`                             |
-| Network diagnostics       | `tailscale netcheck`                           |
-| Test peer connectivity    | `tailscale ping <host>`                        |
-| DNS resolution issues     | `tailscale dns status`                         |
-| Generate bug report       | `tailscale bugreport --diagnose`               |
-| Check daemon logs (Linux) | `journalctl -u tailscaled`                     |
-| Check daemon logs (macOS) | `log show --predicate 'process=="tailscaled"'` |
-| Force reconnect           | `tailscale down && tailscale up`               |
-| Verify routes             | `tailscale status --json \| jq '.Peer'`        |
+Canonical documentation: <https://tailscale.com/docs/>.

@@ -68,11 +68,16 @@ Change individual preferences without re-specifying all settings. Preferred over
 tailscale set [flags]
 ```
 
-**Flags (same as `up` plus):**
+**Flags** (a subset of the `up` flags, plus a few that exist only on `set`; `tailscale set --help` is authoritative):
 
-- `--auto-update` - Enable automatic updates
+- `--accept-dns`, `--accept-routes`, `--shields-up`, `--hostname`, `--ssh`
+- `--advertise-exit-node`, `--exit-node`, `--exit-node-allow-lan-access`, `--advertise-routes`
 - `--advertise-connector` - Advertise as app connector
-- `--webclient` - Enable web client interface
+- `--auto-update`, `--update-check` - Automatic updates and update notifications
+- `--nickname`, `--operator`, `--webclient`, `--report-posture`, `--accept-risk`
+- `--relay-server-port`, `--relay-server-static-endpoints` - Run a peer relay
+
+`set` has no `--auth-key`, `--login-server`, `--reset`, `--timeout`, or `--advertise-tags`; use `up` for those.
 
 **Examples:**
 
@@ -166,27 +171,31 @@ tailscale ip myserver     # Show peer's IP
 
 ## tailscale ping
 
-Ping a tailnet device to test connectivity and measure latency. Uses TSMP (Tailscale Message Protocol) by default.
+Ping a tailnet device at the Tailscale layer and report how each reply was routed (direct or via DERP). The default is a disco ping. If `tailscale ping` works but a normal ping does not, an OS firewall on one side is blocking packets.
 
 ```bash
 tailscale ping [flags] <hostname|ip>
 ```
 
+By default it stops after 10 pings or once a direct (non-DERP) path is established, whichever comes first. The first replies often go over DERP while NAT traversal finds a direct path.
+
 **Flags:**
 
-- `--c=<count>` - Number of pings (default: 10)
-- `--timeout=<duration>` - Timeout per ping (default: 5s)
-- `--icmp` - Use ICMP instead of TSMP
-- `--tsmp` - Use TSMP (default)
-- `--until-direct` - Ping until a direct connection is established
+- `--c=<count>` - Max pings to send; 0 for infinity (default: 10)
+- `--timeout=<duration>` - Timeout per ping
+- `--icmp` - ICMP-level ping through WireGuard, not the local OS stack
+- `--tsmp` - TSMP ping instead of disco
+- `--peerapi` - Hit the peer's PeerAPI HTTP server
+- `--size=<bytes>` - Message size (disco pings only)
+- `--until-direct` - Stop once a direct path is found (default: on)
 - `--verbose` - Verbose output
 
 **Examples:**
 
 ```bash
 tailscale ping myserver
+tailscale ping --verbose myserver
 tailscale ping --c=3 --icmp 100.64.0.5
-tailscale ping --until-direct myserver   # Wait for direct path
 ```
 
 ## tailscale ssh
@@ -210,6 +219,8 @@ tailscale netcheck [flags]
 **Flags:**
 
 - `--every=<duration>` - Repeat at interval
+- `--bind-address=<ip>` - Send and receive probes from this local address
+- `--bind-port=<port>` - Send and receive probes from this UDP port
 - `--format=<json|text>` - Output format
 - `--verbose` - Include extra details
 
@@ -231,20 +242,29 @@ tailscale serve [flags] <target>
 - `--tls-terminated-tcp=<port>` - TLS-terminated TCP
 - `--set-path=<path>` - URL path prefix
 - `--proxy-protocol=<1|2>` - PROXY protocol version
-- `-bg` - Run in background (persists across reboots)
+- `--bg` - Run in the background. Without it the config lasts only while the command runs; with it the config persists across `down`/`up` and reboots
+- `--service=<svc>` - Serve for a Tailscale Service's virtual IP instead of the node (implies `--bg`)
+- `--tun` - Forward all traffic to the local machine (Services only)
+- `--accept-app-caps=<caps>` - Forward app capabilities to the server (comma-separated)
+- `--yes` - Update without interactive prompts
 
 **Target types:**
 
-- `localhost:3000` - Reverse proxy to local HTTP service
+- `3000`, `localhost:3000`, `http://127.0.0.1:3000/path` - Reverse proxy to a local HTTP service
+- `https+insecure://localhost:8443` - Proxy to a local HTTPS service with an invalid or self-signed certificate
+- `unix:/path/to.sock` - Unix domain socket (Linux, macOS, BSD)
 - `/path/to/dir` - Serve files from directory
 - `text:"Hello"` - Serve static text response
 
 **Subcommands:**
 
 - `status [--json]` - Show active serve configuration
-- `reset` - Clear all serve configuration
-- `get-config <file>` - Export config to file
-- `set-config <file>` - Import config from file
+- `reset` - Clear all serve configuration; on a shared workstation prefer `off` for the one listener you added
+- `drain <svc>` - Drain a Service from this node
+- `clear <svc>` - Remove all configuration for a Service
+- `advertise <svc>` - Advertise this node as a proxy for a Service
+- `get-config <file>` - Export Service configuration to a file
+- `set-config <file>` - Define Service configuration from a file
 
 **Examples:**
 
@@ -255,8 +275,8 @@ tailscale serve --https=443 localhost:3000
 # Serve files
 tailscale serve /var/www/html
 
-# Background mode (survives reboots)
-tailscale serve -bg localhost:8080
+# Background mode (survives down/up and reboots)
+tailscale serve --bg localhost:8080
 
 # Multiple ports
 tailscale serve --https=443 localhost:3000
@@ -268,8 +288,8 @@ tailscale serve --tcp=5432 localhost:5432
 # TLS termination with PROXY protocol
 tailscale serve --tls-terminated-tcp=443 --proxy-protocol=2 localhost:8080
 
-# Turn off
-tailscale serve --https=443 localhost:3000 off
+# Turn off one listener
+tailscale serve --https=443 off
 ```
 
 ## tailscale funnel
@@ -291,7 +311,7 @@ Accepts the same flags as `tailscale serve`. Limited to ports 443, 8443, and 100
 tailscale funnel 3000
 
 # Background mode
-tailscale funnel -bg 8080
+tailscale funnel --bg 8080
 
 # Specific port
 tailscale funnel --https=8443 localhost:3000
@@ -314,6 +334,7 @@ tailscale file cp [flags] <file...> <target>:
 
 - `--name=<name>` - Override filename
 - `--targets` - List available targets
+- `--update-interval=<duration>` - Progress update interval
 - `--verbose` - Verbose output
 
 ### tailscale file get
@@ -347,7 +368,7 @@ tailscale file get --loop --wait ~/incoming
 
 ## tailscale drive
 
-Share directories via Tailscale Drive (Taildrive).
+Share directories via Tailscale Drive (Taildrive). With the macOS GUI app these commands exit with "Taildrive CLI commands are not supported when using the macOS GUI app"; configure Taildrive from the menu bar app's settings instead.
 
 ```bash
 tailscale drive share <name> <path>     # Share a directory
@@ -425,21 +446,53 @@ Identify the device and user associated with a Tailscale IP address.
 tailscale whois [--json] <ip[:port]>
 ```
 
+## tailscale whoami
+
+Show the machine and user identity of the current machine. Equivalent to `whois` against one of its own Tailscale IPs.
+
+```bash
+tailscale whoami [--json]
+```
+
 ## tailscale nc
 
-Proxy TCP connections through Tailscale. Connects stdin/stdout to a port on a tailnet host.
+Proxy TCP connections through Tailscale. Connects stdin/stdout to a port on a tailnet host. Useful for testing whether a port is reachable over the tailnet.
 
 ```bash
 tailscale nc <host> <port>
 ```
 
-## tailscale dns
+## tailscale get
 
-Manage DNS settings and resolution.
+Show the current value of one or all preferences. Setting names are the flag names accepted by `tailscale set`.
 
 ```bash
-tailscale dns status [--all]     # Show DNS resolver info
-tailscale dns query <name>       # Query DNS through Tailscale
+tailscale get [--json] [setting-name | all]
+```
+
+## tailscale wait
+
+Block until `tailscaled` is running, the Tailscale interface is up, and it has a Tailscale IP. Run it first in boot scripts and launch agents that bind to the tailnet address.
+
+```bash
+tailscale wait [--timeout=<duration>]
+```
+
+## tailscale service
+
+Interact with Tailscale Services (virtual services with their own IPs). Which Services a node can reach follows the tailnet's ACLs.
+
+```bash
+tailscale service list           # Services this node can access
+```
+
+## tailscale dns
+
+Diagnose the internal DNS forwarder (100.100.100.100).
+
+```bash
+tailscale dns status [--all] [--json]   # Show DNS resolver info
+tailscale dns query [--json] <name> [type]   # Query DNS through Tailscale
 ```
 
 ## tailscale metrics
@@ -654,19 +707,17 @@ tailscale bugreport --diagnose
 # Start local dev server
 npm run dev  # Runs on localhost:3000
 
-# Share within tailnet (private)
-tailscale serve localhost:3000
-
-# Share to internet (public)
-tailscale funnel 3000
-
-# Check what's being served
+# Check existing listeners first
 tailscale serve status
 
-# Stop serving
-tailscale serve reset
-tailscale funnel reset
+# Share within tailnet (private)
+tailscale serve --bg 3000
+
+# Stop serving only this listener
+tailscale serve --https=443 off
 ```
+
+Funnel (`tailscale funnel --bg 3000`) publishes to the public internet; use it only for something meant to be public, never a dev server. `tailscale serve reset` and `tailscale funnel reset` clear every listener, including ones you did not add.
 
 ### Multi-Account Management
 
