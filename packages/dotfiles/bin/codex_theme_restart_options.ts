@@ -5,8 +5,7 @@ export type Options = {
   onChange: boolean;
   worker: boolean;
   probeIdentities: boolean;
-  session?: string;
-  pane?: string;
+  terminal?: string;
 };
 
 function optionValue(flag: string, value: string | undefined): string {
@@ -39,28 +38,19 @@ export function parseOptions(args: readonly string[]): Options {
       case "--probe-identities":
         options.probeIdentities = true;
         break;
-      case "--session":
-      case "--pane": {
-        const value = optionValue(flag, args[++index]);
-        if (flag === "--session") options.session = value;
-        else options.pane = value;
+      case "--terminal":
+        options.terminal = optionValue(flag, args[++index]);
         break;
-      }
       default:
         throw new Error(`Unknown option: ${flag}`);
     }
   }
-  if (options.pane !== undefined && options.session === undefined)
-    throw new Error("--pane requires --session");
   if (options.probeIdentities && (options.dryRun || options.onChange))
     throw new Error(
       "--probe-identities cannot be combined with --dry-run or --on-change",
     );
-  if (
-    options.onChange &&
-    (options.session !== undefined || options.pane !== undefined)
-  ) {
-    throw new Error("--on-change covers all local sessions");
+  if (options.onChange && options.terminal !== undefined) {
+    throw new Error("--on-change covers all local terminals");
   }
   return options;
 }

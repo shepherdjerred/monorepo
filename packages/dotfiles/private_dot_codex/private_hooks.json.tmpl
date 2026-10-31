@@ -1,16 +1,6 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/jerred/.codex/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ]
-      }
-    ]{{ if eq .chezmoi.os "darwin" }},
+{{- if eq .chezmoi.os "darwin" }}
     "Stop": [
       {
         "hooks": [
@@ -21,6 +11,7 @@
           }
         ]
       }
-    ]{{ end }}
+    ]
+{{- end }}
   }
 }

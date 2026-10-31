@@ -7,12 +7,10 @@ import path from "node:path";
 import {
   discover,
   errorMessage,
-  object,
   restart,
-  runningSessions,
   type Outcome,
-  type Runtime,
 } from "./codex_theme_restart_core.ts";
+import { object, parseJson, type Runtime } from "./codex_theme_restart_terminal.ts";
 import {
   parseOptions,
   type Options,
@@ -23,12 +21,13 @@ import {
   themeForAppearance,
 } from "./codex_theme_restart_config.ts";
 
+const hcPath = path.join(homedir(), ".local/bin/hc");
 const stateDirectory = path.join(homedir(), ".local/state/codex-theme-restart");
 const logPath = path.join(stateDirectory, "restart.log");
 const statePath = path.join(stateDirectory, "appearance.json");
 
 // In particular, do not retain a password-manager service token or another
-// pane's socket/thread identity in this long-lived, independent worker.
+// terminal's hc address or thread identity in this long-lived, independent worker.
 function commandEnvironment(): Record<string, string> {
   const environment: Record<string, string> = {};
   for (const key of [
@@ -45,14 +44,6 @@ function commandEnvironment(): Record<string, string> {
     if (value !== undefined) environment[key] = value;
   }
   return environment;
-}
-
-function jsonResponse(output: string): unknown {
-  try {
-    return JSON.parse(output);
-  } catch {
-    throw new Error("Invalid JSON response from Herdr");
-  }
 }
 
 async function command(args: string[], timeout = 15_000): Promise<string> {
@@ -73,14 +64,13 @@ async function command(args: string[], timeout = 15_000): Promise<string> {
   // Never include native argv, environment, or raw tool output in diagnostics.
   if (exitCode !== 0) {
     const operation =
-      program === "herdr" ? args.slice(3, 5).join(" ") : path.basename(program);
+      program === hcPath ? (args[1] ?? "hc") : path.basename(program);
     let code = "tooling_error";
-    if (program === "herdr" && exitCode === 1) {
-      const value = object(object(jsonResponse(stderr)).get("error")).get(
-        "code",
-      );
+    if (program === hcPath) {
+      // hc writes {error: {kind, message, hint}} to stderr.
+      const value = object(object(parseJson(stderr)).get("error")).get("kind");
       if (typeof value !== "string" || !/^[a-z_]+$/.test(value))
-        throw new TypeError("Invalid Herdr error code");
+        throw new TypeError("Invalid hc error kind");
       code = value;
     }
     throw new Error(`${operation} failed: ${code} (exit ${String(exitCode)})`);
@@ -116,22 +106,7 @@ const runtime: Runtime = {
       catalog.close();
     }
   },
-  async call(session, args) {
-    const output = await command(
-      ["herdr", "--session", session, ...args],
-      35_000,
-    );
-    // Hook reporting commands deliberately produce no response body. Their
-    // effects are verified by the following structured pane read.
-    if (
-      args[0] === "pane" &&
-      (args[1] === "report-agent-session" || args[1] === "send-text")
-    )
-      return {};
-    if (args[0] === "pane" && args[1] === "read") return output;
-    const response = jsonResponse(output);
-    return object(response).get("result");
-  },
+  hc: (args) => command([hcPath, ...args], 35_000),
   now: Date.now,
   sleep: (milliseconds) =>
     new Promise((resolve) => setTimeout(resolve, milliseconds)),
@@ -201,19 +176,18 @@ async function acquireLock(): Promise<Database> {
 
 function report(outcome: Outcome): void {
   console.log(
-    `${outcome.status}: ${outcome.session}/${outcome.pane}: ${outcome.message}`,
+    `${outcome.status}: ${outcome.terminal}: ${outcome.message}`,
   );
 }
 
-async function processSession(
+async function restartTerminals(
   options: Options,
-  session: string,
   mode: Appearance,
-  continued: Set<string>,
 ): Promise<Outcome[]> {
+  const continued = new Set<string>();
   try {
-    const discovered = await discover(runtime, session, mode, {
-      ...(options.pane === undefined ? {} : { pane: options.pane }),
+    const discovered = await discover(runtime, mode, {
+      ...(options.terminal === undefined ? {} : { terminal: options.terminal }),
       probe: !options.dryRun,
     });
     const outcomes = [...discovered.outcomes];
@@ -221,17 +195,15 @@ async function processSession(
     for (const target of discovered.targets) {
       const outcome: Outcome = options.probeIdentities
         ? {
-            session,
-            pane: target.agent.pane,
+            terminal: target.terminal,
             status: "identified",
-            message: `Native /status verified conversation ${String(target.agent.thread)}; client left running`,
+            message: `Native /status verified conversation ${String(target.thread)}; client left running`,
           }
         : options.dryRun
           ? {
-              session,
-              pane: target.agent.pane,
+              terminal: target.terminal,
               status: "would-restart",
-              message: `${mode} appearance; ${target.agent.status}; exact conversation identified`,
+              message: `${mode} appearance; ${target.status}; conversation is verified by native /status at restart`,
             }
           : await restart(runtime, target, continued);
       outcomes.push(outcome);
@@ -240,8 +212,7 @@ async function processSession(
     return outcomes;
   } catch (error) {
     const outcome: Outcome = {
-      session,
-      pane: options.pane ?? "*",
+      terminal: options.terminal ?? "*",
       status: "failed",
       message: errorMessage(error),
     };
@@ -262,13 +233,6 @@ async function run(options: Options): Promise<number> {
     console.log(`Initialized ${mode} appearance; no restarts`);
     return 0;
   }
-  const sessions =
-    options.session === undefined
-      ? runningSessions(
-          jsonResponse(await command(["herdr", "session", "list", "--json"])),
-        )
-      : [options.session];
-  const outcomes: Outcome[] = [];
   if (!options.dryRun && !options.probeIdentities)
     await syncCodexAppearance(mode, path.join(homedir(), ".codex"));
   // Record an event before side effects. A duplicate must not repeat a prompt
@@ -276,13 +240,10 @@ async function run(options: Options): Promise<number> {
   if (
     !options.dryRun &&
     !options.probeIdentities &&
-    options.session === undefined
+    options.terminal === undefined
   )
     await recordAppearance(mode);
-  const continued = new Set<string>();
-  for (const session of sessions) {
-    outcomes.push(...(await processSession(options, session, mode, continued)));
-  }
+  const outcomes = await restartTerminals(options, mode);
   const count = (status: Outcome["status"]) =>
     outcomes.filter((outcome) => outcome.status === status).length;
   console.log(
@@ -294,7 +255,7 @@ async function run(options: Options): Promise<number> {
 async function main(): Promise<number> {
   if (process.argv.includes("--help")) {
     console.log(
-      "Usage: restart-codex-panes [--dry-run | --probe-identities | --on-change] [--session NAME [--pane ID]]\nManual runs restart immediately; --on-change deduplicates appearance events.\n--dry-run is read-only; --probe-identities queries native /status without restarting.\nWorkers run independently and append results to " +
+      "Usage: restart-codex-panes [--dry-run | --probe-identities | --on-change] [--terminal ADDRESS]\nManual runs restart immediately; --on-change deduplicates appearance events.\n--dry-run is read-only; --probe-identities queries native /status without restarting.\nWorkers run independently and append results to " +
         logPath,
     );
     return 0;
