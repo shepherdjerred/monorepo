@@ -8,6 +8,7 @@ import type { Principal } from "#shared/contract.ts";
 import { wire, lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import { terminal, id } from "./delivery-data.ts";
+import { releaseDeploymentLocks } from "./recovery-settlement.ts";
 
 export async function pending(this: Delivery) {
   const rows = await this.database.outbox.findMany({
@@ -111,8 +112,7 @@ export async function orphan(
       },
     });
     if (!recoveryRequired) {
-      await tx.targetLock.deleteMany({ where: { deploymentId } });
-      await tx.platformLock.deleteMany({ where: { deploymentId } });
+      await releaseDeploymentLocks(tx, deploymentId);
       await tx.environment.updateMany({
         where: { id: row.environmentId, activeDeploymentId: deploymentId },
         data: { activeDeploymentId: null },

@@ -34,6 +34,7 @@ import { validatePlatformSuccess } from "#infrastructure/platform/lifecycle.ts";
 import { validateControlPlaneSuccess } from "#infrastructure/control-plane/lifecycle.ts";
 import { recomposeTracking } from "#infrastructure/composition/automatic.ts";
 import { startMonitor } from "#infrastructure/monitor/monitor.ts";
+import { releaseDeploymentLocks } from "#infrastructure/recovery-settlement.ts";
 import {
   advancesAcceptance,
   type DeploymentRow,
@@ -318,10 +319,7 @@ export async function finish(
         where: { deploymentId, status: "pending" },
         data: { status: "expired", decidedAt: now },
       });
-    if (!input.recoveryRequired) {
-      await tx.targetLock.deleteMany({ where: { deploymentId } });
-      await tx.platformLock.deleteMany({ where: { deploymentId } });
-    }
+    if (!input.recoveryRequired) await releaseDeploymentLocks(tx, deploymentId);
     await audit(tx, actor, {
       action: `deployment.${input.status}`,
       entityId: deploymentId,

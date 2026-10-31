@@ -14,6 +14,7 @@ import {
   findIntent,
   intentDetail,
 } from "#infrastructure/recovery-intents.ts";
+import { releaseDeploymentLocks } from "#infrastructure/recovery-settlement.ts";
 import { recoveryOwnership, workerIntentView } from "./recovery.ts";
 
 function routeKey(route: {
@@ -104,9 +105,7 @@ export async function completeWorkerRecovery(
       input.evidence,
       `worker-recovery/${intentId}`,
     );
-    await tx.targetLock.deleteMany({
-      where: { deploymentId: intent.deploymentId },
-    });
+    await releaseDeploymentLocks(tx, intent.deploymentId);
     await tx.environment.update({
       where: { id: context.pool.environmentId },
       data: { activeDeploymentId: null },
