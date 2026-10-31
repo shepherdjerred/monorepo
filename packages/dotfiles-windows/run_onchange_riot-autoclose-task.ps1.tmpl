@@ -6,7 +6,9 @@ $name = 'RiotClientAutoClose'
 $script = '{{ .chezmoi.homeDir }}/.local/bin/riot-autoclose.ps1'
 $pwsh = (Get-Command pwsh).Source
 
-$action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -WindowStyle Hidden -File `"$script`""
+# -WindowStyle Hidden is ignored when Windows Terminal is the default console,
+# so run under a headless conhost instead.
+$action = New-ScheduledTaskAction -Execute 'conhost.exe' -Argument "--headless `"$pwsh`" -NoProfile -File `"$script`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
     -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew `
