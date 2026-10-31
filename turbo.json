@@ -495,6 +495,7 @@
         "scripts/ci-test-manifest.json",
         "scripts/package.json",
         "packages/**/package.json",
+        "packages/**/turbo.json",
         "!packages/**/node_modules/**",
         "packages/*/eslint.config.*",
         "packages/*/tsconfig.json"

@@ -479,3 +479,68 @@ test("rejects native compiler aliases that no script invokes", async () => {
     await rm(root, { force: true, recursive: true });
   }
 });
+
+const splitScripts = {
+  build: "gradle assemble",
+  test: "gradle test",
+  "lint:jvm": "gradle spotlessCheck",
+  "lint:ts": "eslint .",
+  "typecheck:jvm": "gradle compileJava",
+  "typecheck:ts": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+};
+
+async function errorsFor(
+  scripts: Record<string, string>,
+  tasks: Record<string, { dependsOn: string[] }>,
+): Promise<string[]> {
+  const root = await mkdtemp(path.join(tmpdir(), "compliance-transit-"));
+  try {
+    await writeRootManifest(root, ["packages/split"]);
+    await writeWorkspacePackage(root, "packages/split", {
+      scripts,
+      devDependencies: { "@typescript/native": "npm:typescript@7.0.2" },
+    });
+    await Bun.write(
+      `${root}/packages/split/turbo.json`,
+      JSON.stringify({ extends: ["//"], tasks }),
+    );
+    return await findComplianceErrors(root);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+}
+
+describe("lint and typecheck as Turbo transit tasks", () => {
+  test("accepts transit tasks over the package's own real scripts", async () => {
+    expect(
+      await errorsFor(splitScripts, {
+        lint: { dependsOn: ["lint:jvm", "lint:ts"] },
+        typecheck: { dependsOn: ["typecheck:jvm", "typecheck:ts"] },
+      }),
+    ).toEqual([]);
+  });
+
+  test("rejects a transit task over a missing or no-op script", async () => {
+    expect(
+      await errorsFor(
+        { ...splitScripts, "lint:ts": "true" },
+        {
+          lint: { dependsOn: ["lint:jvm", "lint:ts"] },
+          typecheck: { dependsOn: ["typecheck:jvm", "typecheck:missing"] },
+        },
+      ),
+    ).toEqual([
+      "packages/split missing lint script",
+      "packages/split missing typecheck script",
+    ]);
+  });
+
+  test("rejects a transit task over another package's task", async () => {
+    expect(
+      await errorsFor(splitScripts, {
+        lint: { dependsOn: ["^lint"] },
+        typecheck: { dependsOn: ["typecheck:jvm", "typecheck:ts"] },
+      }),
+    ).toEqual(["packages/split missing lint script"]);
+  });
+});
