@@ -57,10 +57,10 @@ describe("SeaweedFS data-preserving capacity migration", () => {
         "argocd.argoproj.io/sync-wave": "-1",
         "argocd.argoproj.io/sync-options": "Prune=false",
       });
-      // Velero's scheduled backups are SeaweedFS's only backup.
+      // filer.backup copies SeaweedFS's objects; Velero skips its volumes.
       expect(claim.metadata.labels).toEqual({
-        "velero.io/backup": "enabled",
-        "velero.io/exclude-from-backup": "false",
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
       });
       const spec = z
         .object({

@@ -500,26 +500,26 @@
   {
     "namespace": "seaweedfs",
     "name": "data-filer-seaweedfs-filer-0",
-    "backup": "enabled",
-    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
+    "backup": "disabled",
+    "reason": "SeaweedFS objects are copied to Backblaze by filer.backup (seaweedfs-backup.ts), not as volume snapshots"
   },
   {
     "namespace": "seaweedfs",
     "name": "data-seaweedfs-seaweedfs-master-0",
-    "backup": "enabled",
-    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
+    "backup": "disabled",
+    "reason": "SeaweedFS objects are copied to Backblaze by filer.backup (seaweedfs-backup.ts), not as volume snapshots"
   },
   {
     "namespace": "seaweedfs",
     "name": "data-seaweedfs-volume-0",
-    "backup": "enabled",
-    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
+    "backup": "disabled",
+    "reason": "SeaweedFS objects are copied to Backblaze by filer.backup (seaweedfs-backup.ts), not as volume snapshots"
   },
   {
     "namespace": "seaweedfs",
     "name": "idx-seaweedfs-volume-0",
-    "backup": "enabled",
-    "reason": "SeaweedFS buckets; Velero's scheduled backups are their only backup"
+    "backup": "disabled",
+    "reason": "SeaweedFS objects are copied to Backblaze by filer.backup (seaweedfs-backup.ts), not as volume snapshots"
   },
   {
     "namespace": "stash",

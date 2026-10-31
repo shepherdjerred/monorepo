@@ -36,8 +36,8 @@ export const MULTIPART_UPLOAD_MAX_PARTS = 10_000;
 /**
  * The multipart part size the openebs plugin streams `zfs send` output with.
  * A stream's size is unknown up front, so the part size alone bounds the
- * largest stream that can complete: 128 MiB allows 1.22 TiB, above the 1 TiB
- * SeaweedFS volume, where 20 MiB failed every full stream past 195 GiB. Fewer
+ * largest stream that can complete: 128 MiB allows 1.22 TiB, above a 1 TiB
+ * volume, where 20 MiB failed every full stream past 195 GiB. Fewer
  * parts also cut per-object request load. The uploader buffers up to six
  * parts (five in flight plus one filling) in the Velero pod.
  */
