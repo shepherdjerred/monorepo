@@ -1,0 +1,13 @@
+{
+  "zoom": 1,
+  "sounds": {
+    "enabled": true
+  },
+  "minimum_contrast": 1,
+  "font": "Berkeley Mono",
+  "font_size": 13,
+  "theme": {
+    "light": "catppuccin-latte",
+    "dark": "catppuccin-mocha"
+  }
+}

@@ -42,6 +42,23 @@ entries have no package and are a record only. Games and runtimes are left out.
 To find installed software that is not recorded yet, compare
 `winget export -o packages.json` with `packages.yaml`.
 
+## Herdr app
+
+`~/.config/herdr-app` carries the Catppuccin themes, the `settings.json` that
+selects them, and the `agents-filter` mod: a copy of the shipped `agents`
+sidebar mod with a funnel menu that hides agents by provider (the choice is
+saved in the app's shared state) and a Windows or laptop icon on each row for
+the machine it runs on. The `spaces-nobranch` mod is the shipped `spaces` mod
+without the branch and repo text on each row. The app does not take a new mod
+into an existing layout, so `layouts/main.json` is managed here too: it is the
+shipped `main` layout with the `agents` block on `agents-filter` and the
+`spaces` block on `spaces-nobranch`. The app can rewrite that file when the
+layout is edited in the window (resizing the sidebar is kept in
+`layouts/.state/`, which is not managed); after an app update or a layout
+change, compare it with `chezmoi diff` and bring changes back with
+`chezmoi re-add`. The macOS and Linux source carries the themes and mods but
+not the layout or `settings.json`.
+
 ## Changing a managed file
 
 Edit the source here, then preview and apply only that target:
