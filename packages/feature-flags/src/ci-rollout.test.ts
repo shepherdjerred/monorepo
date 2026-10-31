@@ -61,6 +61,7 @@ test.each([
   ["woodpecker", "woodpecker-ram-scratch-enabled"],
   ["woodpecker", "woodpecker-bun-copyfile-enabled"],
   ["temporal", "ci-maintenance-dispatch-enabled"],
+  ["temporal", "ci-workspace-golden-refresh-enabled"],
 ] as const)(
   "production enables %s/%s with a complete override",
   (namespace, key) => {
