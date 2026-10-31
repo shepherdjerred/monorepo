@@ -55,8 +55,7 @@ async function writeRootManifest(
     `${root}/scripts/ci-test-manifest.json`,
     JSON.stringify({
       $schema: "./ci-test-manifest.schema.json",
-      version: 2,
-      workspaces: [],
+      version: 3,
       testlessWorkspaces: [],
       separateTests,
     }),

@@ -1,0 +1,19 @@
+{
+  "$schema": "../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": [
+        "test/unit",
+        "test/e2e/run.test.ts",
+        "test/e2e/run-smoke.test.ts"
+      ]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "test/e2e/gateway-archive.e2e.test.ts",
+      "reason": "Service-backed observability E2E; requires the Tempo and MinIO containers provided only by the dedicated docker-e2e lanes. Full reporting is deliberately test-only and does not stand up service containers."
+    }
+  ]
+}

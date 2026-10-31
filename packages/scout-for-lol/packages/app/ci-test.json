@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "e2e",
+      "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+    }
+  ]
+}

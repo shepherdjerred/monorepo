@@ -168,7 +168,7 @@ them alone. The first is already done for you:
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ESLint     | Nothing — `@shepherdjerred/eslint-config` ignores `**/architecture-fixtures/**/*` by default. **But `ignores` replaces that default**, so a package passing its own list must repeat the entry. |
 | TypeScript | The fixture directory must not be compiled. Packages with an explicit `include` already exclude it; a package without one needs `"exclude": ["architecture-fixtures"]`.                         |
-| Meta-test  | Put it where the package's `test` script **and** its `scripts/ci-test-manifest.json` entry actually look, and reach the config through `#architecture`. **Verify, do not assume** — see below.  |
+| Meta-test  | Put it where the package's `test` script **and** its `ci-test.json` steps actually look, and reach the config through `#architecture`. **Verify, do not assume** — see below.                   |
 
 A meta-test that is never discovered is the same failure this harness exists to
 prevent, one level up: the suite stays green while proving nothing. Several

@@ -46,7 +46,7 @@
         "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
-        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+        "ci-test.json",
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "**/*.rs",
         "**/Cargo.toml",

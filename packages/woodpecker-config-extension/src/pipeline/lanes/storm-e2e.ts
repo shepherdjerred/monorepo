@@ -160,6 +160,7 @@ function stormSmokeStep(images: CiImages): CiStep {
         "ci/scripts/selectors/ci-changed.ts",
         "scripts/ci-test-manifest.json",
         "scripts/ci-test-manifest.schema.json",
+        "scripts/ci-test.schema.json",
         "packages/the-storm/**",
         "packages/mc-harness/**",
         "packages/eslint-config/**",

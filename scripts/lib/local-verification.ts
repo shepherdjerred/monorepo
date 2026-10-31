@@ -1,13 +1,11 @@
-import { TestManifestSchema } from "../ci/test-manifest-schema.ts";
+import { readCentralTestManifest } from "../ci/test-manifest-schema.ts";
 
 /** Resolve reviewed local script names without exempting any required check. */
 export async function loadLocalVerification(
   root: string,
   packages: ReadonlyMap<string, { name?: string | undefined }>,
 ) {
-  const manifest = TestManifestSchema.parse(
-    await Bun.file(`${root}/scripts/ci-test-manifest.json`).json(),
-  );
+  const manifest = await readCentralTestManifest(root);
   const entries = manifest.separateTests.filter(
     (entry) => entry.localScripts !== undefined,
   );

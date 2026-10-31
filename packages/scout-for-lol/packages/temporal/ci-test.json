@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src", "--exclude", "src/workflows/**/*.test.ts"]
+    },
+    {
+      "runner": "vitest",
+      "name": "workflows",
+      "runtime": "node",
+      "runtimeReason": "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
+      "args": ["src/workflows", "--no-file-parallelism"]
+    }
+  ]
+}

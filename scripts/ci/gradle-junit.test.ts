@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { namespaceJUnit, syntheticJUnit } from "./ci-reporting.ts";
-import { TestManifestSchema } from "./test-manifest-schema.ts";
+import { WorkspaceTestConfigSchema } from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
   mergeJUnitReports,
@@ -28,16 +28,8 @@ const gradleFailingSuite = [
   "</testsuite>",
 ].join("\n");
 
-function manifestWithStep(step: Record<string, unknown>) {
-  return {
-    $schema: "./ci-test-manifest.schema.json",
-    version: 2,
-    workspaces: [
-      { package: "java", directory: "packages/java", steps: [step] },
-    ],
-    testlessWorkspaces: [],
-    separateTests: [],
-  };
+function workspaceWithStep(step: Record<string, unknown>) {
+  return { $schema: "../../scripts/ci-test.schema.json", steps: [step] };
 }
 
 describe("Gradle JUnit reporting", () => {
@@ -73,18 +65,18 @@ describe("Gradle JUnit reporting", () => {
 
   test("accepts a Gradle step only with arguments", () => {
     expect(
-      TestManifestSchema.safeParse(
-        manifestWithStep({ runner: "gradle", args: ["test"] }),
+      WorkspaceTestConfigSchema.safeParse(
+        workspaceWithStep({ runner: "gradle", args: ["test"] }),
       ).success,
     ).toBe(true);
     expect(
-      TestManifestSchema.safeParse(
-        manifestWithStep({ runner: "gradle", args: [] }),
+      WorkspaceTestConfigSchema.safeParse(
+        workspaceWithStep({ runner: "gradle", args: [] }),
       ).success,
     ).toBe(false);
     expect(
-      TestManifestSchema.safeParse(
-        manifestWithStep({
+      WorkspaceTestConfigSchema.safeParse(
+        workspaceWithStep({
           runner: "gradle",
           args: ["test"],
           coverageConfig: "x",

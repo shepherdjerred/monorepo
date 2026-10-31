@@ -110,8 +110,8 @@ check consumes those fresh reports and applies the same baseline and changed-lin
 ratchets. `bun run coverage:portable` remains the standalone local command that
 runs both suites and checks coverage. The checked-in `projects.json` classifies every project, and the
 quality checker proves the portable solution includes every portable project
-and excludes every WinUI, MSIX, and UI Automation project. The CI test
-manifest lists both Windows-only suites with explicit reasons; they are not
+and excludes every WinUI, MSIX, and UI Automation project. The package's
+`ci-test.json` lists both Windows-only suites with explicit reasons; they are not
 silently omitted.
 
 ## Architecture

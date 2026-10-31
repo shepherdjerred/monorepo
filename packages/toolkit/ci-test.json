@@ -1,0 +1,26 @@
+{
+  "$schema": "../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": [
+        "test/lib",
+        "test/bugsink",
+        "test/s3",
+        "test/deployed",
+        "test/screenshot",
+        "test/history",
+        "test/discord",
+        "test/mc",
+        "scripts",
+        "test-integration/catalog.integration.test.ts"
+      ]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "test-integration/screenshot.integration.test.ts",
+      "reason": "Drives a real PinchTab browser against a locally served site; run it with test:integration on a workstation with PinchTab."
+    }
+  ]
+}

@@ -52,6 +52,12 @@ checks that used to queue behind long test suites. Vitest workers are what
 oversubscribe the pod, so verify caps each suite at two workers. Six suites
 then stay within the 12-CPU limit.
 
+Each workspace that reports tests to CI declares its steps in its own
+`ci-test.json` beside its `package.json`. Turbo hashes that file into only that
+workspace's `test:ci` task, so changing one package's test steps reruns only
+that package's tests. `scripts/ci-test-manifest.json` lists the other
+workspaces: those without tests and those whose tests run in a separate lane.
+
 Owner-requested local verification declares its build and test command names
 in `localScripts` on the existing `separateTests` entry in
 `scripts/ci-test-manifest.json`. Compliance checks require those commands to

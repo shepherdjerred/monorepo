@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "vitest",
+      "name": "vitest",
+      "args": ["src"]
+    }
+  ]
+}

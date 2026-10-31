@@ -1,0 +1,46 @@
+{
+  "$schema": "../../scripts/ci-test.schema.json",
+  "coverageAlways": true,
+  "excludedSuites": [
+    {
+      "path": "tests/TaskNotes.Windows.App.Tests/TaskNotes.Windows.App.Tests.csproj",
+      "reason": "Requires a Windows 11 x64 WinUI desktop session; classified windows-only-test in projects.json."
+    },
+    {
+      "path": "tests/TaskNotes.Windows.E2E/TaskNotes.Windows.E2E.csproj",
+      "reason": "Requires packaged MSIX installation and direct Windows UI Automation; classified windows-only-test in projects.json."
+    }
+  ],
+  "steps": [
+    {
+      "runner": "dotnet",
+      "args": [
+        "tests/TaskNotes.Windows.Tests/TaskNotes.Windows.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--property:RestoreLockedMode=true"
+      ],
+      "coverageConfig": "coverage.settings.xml",
+      "name": "unit",
+      "mstest": {
+        "parallel": true,
+        "timeoutMs": 30000
+      }
+    },
+    {
+      "runner": "dotnet",
+      "args": [
+        "tests/TaskNotes.Windows.IntegrationTests/TaskNotes.Windows.IntegrationTests.csproj",
+        "--configuration",
+        "Release",
+        "--property:RestoreLockedMode=true"
+      ],
+      "coverageConfig": "coverage.settings.xml",
+      "name": "integration",
+      "mstest": {
+        "parallel": true,
+        "timeoutMs": 120000
+      }
+    }
+  ]
+}

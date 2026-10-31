@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../../scripts/ci-test.schema.json",
+  "defaultEnv": {
+    "DATABASE_URL": "postgres://scout@127.0.0.1:5471/scout_test_unbound"
+  },
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["--testTimeout", "20000"]
+    }
+  ]
+}

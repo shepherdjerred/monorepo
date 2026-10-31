@@ -6,7 +6,7 @@ import {
   mstestConfiguration,
   prepareMstestConfiguration,
 } from "./mstest-configuration.ts";
-import { TestManifestSchema } from "./test-manifest-schema.ts";
+import { loadTestManifest } from "./test-manifest-schema.ts";
 
 describe("shared MSTest configuration", () => {
   test("preserves randomization, enforced timeouts, and strict failures", () => {
@@ -79,10 +79,8 @@ describe("shared MSTest configuration", () => {
   });
 
   test("CI instruments both portable suites once with their existing limits", async () => {
-    const manifest = TestManifestSchema.parse(
-      await Bun.file(
-        path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-      ).json(),
+    const manifest = await loadTestManifest(
+      path.resolve(import.meta.dir, "..", ".."),
     );
     const windows = manifest.workspaces.find(
       (workspace) => workspace.package === "tasknotes-windows",

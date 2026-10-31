@@ -10,7 +10,13 @@ import {
   sanitizeWorkspace,
   testStepReportName,
 } from "./ci-reporting.ts";
-import { TestManifestSchema, type TestStep } from "./test-manifest-schema.ts";
+import {
+  WORKSPACE_TEST_CONFIG_FILE,
+  readWorkspaceTestConfig,
+  workspaceDirectories,
+  workspacesNestedUnder,
+  type TestStep,
+} from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
   writeGradleJUnitReport,
@@ -26,22 +32,21 @@ const requestedGroup =
 if (requestedGroup === undefined && cliArguments.length > 0) {
   throw new Error(`Unknown arguments: ${cliArguments.join(", ")}`);
 }
-const manifest = TestManifestSchema.parse(
-  await Bun.file(
-    path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-  ).json(),
-);
 const workspaceDirectory = path
   .relative(repositoryRoot, process.cwd())
   .split(path.sep)
   .join("/");
-const workspaceEntry = manifest.workspaces.find(
-  (entry) => entry.directory === workspaceDirectory,
+// Read only this workspace's configuration and the root package.json: both
+// are already in this task's Turbo hash, so another workspace's test
+// configuration never invalidates it.
+const workspaceEntry = await readWorkspaceTestConfig(
+  repositoryRoot,
+  workspaceDirectory,
 );
 
 if (workspaceEntry === undefined) {
   throw new Error(
-    `No CI test reporting entry exists for workspace ${workspaceDirectory}`,
+    `No CI test reporting entry exists for workspace ${workspaceDirectory}; add ${workspaceDirectory}/${WORKSPACE_TEST_CONFIG_FILE}`,
   );
 }
 const workspace = workspaceEntry;
@@ -60,14 +65,10 @@ if (requestedGroup !== undefined && !groups.has(requestedGroup)) {
     `${workspace.package} has no CI test group ${requestedGroup}`,
   );
 }
-const nestedWorkspaceDirectories = [
-  ...manifest.workspaces,
-  ...manifest.testlessWorkspaces,
-  ...manifest.separateTests,
-]
-  .map((entry) => entry.directory)
-  .filter((directory) => directory.startsWith(`${workspaceDirectory}/`))
-  .map((directory) => directory.slice(workspaceDirectory.length + 1));
+const nestedWorkspaceDirectories = workspacesNestedUnder(
+  workspaceDirectory,
+  await workspaceDirectories(repositoryRoot),
+);
 
 const outputDirectory = path.join(
   repositoryRoot,

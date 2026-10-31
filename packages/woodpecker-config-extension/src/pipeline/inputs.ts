@@ -16,4 +16,7 @@ export const GLOBAL_SELECTOR_INPUTS = [
   "ci/scripts/selectors/ensure-ancestor.ts",
   "scripts/lib/json.ts",
   "scripts/ci-test-manifest.json",
+  // Each reporting workspace's CI test steps, split out of the central
+  // manifest so they key only their own workspace's Turbo test:ci hash.
+  "**/ci-test.json",
 ] as const;

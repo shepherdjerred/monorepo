@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../../scripts/ci-test.schema.json",
+  "defaultEnv": {
+    "PUBLIC_SCOUT_SITE_FLAVOR": "beta"
+  },
+  "steps": [
+    {
+      "runner": "command",
+      "name": "build",
+      "command": ["bun", "run", "build"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ]
+}

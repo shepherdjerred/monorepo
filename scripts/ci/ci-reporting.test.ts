@@ -12,13 +12,24 @@ import {
   sanitizeWorkspace,
   syntheticJUnit,
 } from "./ci-reporting.ts";
-import { TestManifestSchema, type TestStep } from "./test-manifest-schema.ts";
+import {
+  TestManifestSchema,
+  WORKSPACE_TEST_CONFIG_FILE,
+  WorkspaceTestConfigSchema,
+  loadTestManifest,
+  type TestManifest,
+  type TestStep,
+} from "./test-manifest-schema.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
 const WorkspacePackageSchema = z.object({
   scripts: z.record(z.string(), z.string()).optional(),
 });
+
+function testManifest(manifest: TestManifest): TestManifest {
+  return manifest;
+}
 
 /**
  * A workspace runs its manifest steps through one test:ci script, or through
@@ -61,16 +72,34 @@ describe("CI reporting boundaries", () => {
   });
 
   test("rejects unknown properties at every manifest object boundary", () => {
+    const validWorkspace = {
+      $schema: "../../scripts/ci-test.schema.json",
+      steps: [{ runner: "vitest" }],
+    };
+    expect(WorkspaceTestConfigSchema.safeParse(validWorkspace).success).toBe(
+      true,
+    );
+    expect(
+      WorkspaceTestConfigSchema.safeParse({ ...validWorkspace, defaultENV: {} })
+        .success,
+    ).toBe(false);
+    expect(
+      WorkspaceTestConfigSchema.safeParse({
+        ...validWorkspace,
+        steps: [{ runner: "vitest", arg: "test.ts" }],
+      }).success,
+    ).toBe(false);
+    // The package identity comes from the workspace; the file must not repeat it.
+    expect(
+      WorkspaceTestConfigSchema.safeParse({
+        ...validWorkspace,
+        package: "package",
+      }).success,
+    ).toBe(false);
+
     const validManifest = {
       $schema: "./ci-test-manifest.schema.json",
-      version: 2,
-      workspaces: [
-        {
-          package: "package",
-          directory: "packages/package",
-          steps: [{ runner: "vitest" }],
-        },
-      ],
+      version: 3,
       testlessWorkspaces: [
         {
           package: "no-tests",
@@ -90,22 +119,11 @@ describe("CI reporting boundaries", () => {
     expect(
       TestManifestSchema.safeParse({ ...validManifest, typo: true }).success,
     ).toBe(false);
+    expect(TestManifestSchema.safeParse(validManifest).success).toBe(true);
+    // Reporting workspaces live in their own ci-test.json, never centrally.
     expect(
-      TestManifestSchema.safeParse({
-        ...validManifest,
-        workspaces: [{ ...validManifest.workspaces[0], defaultENV: {} }],
-      }).success,
-    ).toBe(false);
-    expect(
-      TestManifestSchema.safeParse({
-        ...validManifest,
-        workspaces: [
-          {
-            ...validManifest.workspaces[0],
-            steps: [{ runner: "vitest", arg: "test.ts" }],
-          },
-        ],
-      }).success,
+      TestManifestSchema.safeParse({ ...validManifest, workspaces: [] })
+        .success,
     ).toBe(false);
     expect(
       TestManifestSchema.safeParse({
@@ -124,11 +142,7 @@ describe("CI reporting boundaries", () => {
   });
 
   test("committed manifest never runs a suite it documents as excluded", async () => {
-    const manifest = TestManifestSchema.parse(
-      await Bun.file(
-        path.join(repositoryRoot, "scripts", "ci-test-manifest.json"),
-      ).json(),
-    );
+    const manifest = await loadTestManifest(repositoryRoot);
     expect(() => {
       assertExcludedSuitesAreUncovered(manifest);
     }).not.toThrow();
@@ -148,9 +162,7 @@ describe("CI reporting boundaries", () => {
   });
 
   test("rejects an excluded suite that a reporting step still runs", () => {
-    const manifest = TestManifestSchema.parse({
-      $schema: "./ci-test-manifest.schema.json",
-      version: 2,
+    const manifest = testManifest({
       workspaces: [
         {
           package: "package",
@@ -170,9 +182,7 @@ describe("CI reporting boundaries", () => {
   });
 
   test("allows a documented suite excluded by a broad Vitest filter", () => {
-    const manifest = TestManifestSchema.parse({
-      $schema: "./ci-test-manifest.schema.json",
-      version: 2,
+    const manifest = testManifest({
       workspaces: [
         {
           package: "package",
@@ -301,9 +311,7 @@ describe("CI test reporting", () => {
   });
 
   test("derives reported workspaces from emitted report paths", () => {
-    const manifest = TestManifestSchema.parse({
-      $schema: "./ci-test-manifest.schema.json",
-      version: 2,
+    const manifest = testManifest({
       workspaces: [
         {
           package: "@scope/package",
@@ -361,12 +369,43 @@ describe("CI test reporting", () => {
   });
 });
 
+describe("workspace CI test configuration", () => {
+  test("reads every ci-test.json from a declared workspace", async () => {
+    const workspaceJsonSchema = z
+      .object({ required: z.array(z.string()) })
+      .loose()
+      .parse(
+        await Bun.file(
+          path.join(import.meta.dir, "..", "ci-test.schema.json"),
+        ).json(),
+      );
+    expect(workspaceJsonSchema.required).toEqual(["$schema", "steps"]);
+    // A ci-test.json outside a declared workspace would never be read.
+    const configPathspec = `:(glob)**/${WORKSPACE_TEST_CONFIG_FILE}`;
+    const listed =
+      await Bun.$`git ls-files -co --exclude-standard -- ${configPathspec}`
+        .cwd(repositoryRoot)
+        .text();
+    const configDirectories = listed
+      .split("\n")
+      .filter(Boolean)
+      .map((file) => path.posix.dirname(file))
+      .sort();
+    const manifest = await loadTestManifest(repositoryRoot);
+    expect(configDirectories).toEqual(
+      manifest.workspaces.map((entry) => entry.directory).sort(),
+    );
+  });
+});
+
 describe("CI reporting manifest", () => {
   test("covers every declared test script without placeholder passes", async () => {
-    const manifestJson = await Bun.file(
-      path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-    ).json();
-    const manifest = TestManifestSchema.parse(manifestJson);
+    const central = TestManifestSchema.parse(
+      await Bun.file(
+        path.join(import.meta.dir, "..", "ci-test-manifest.json"),
+      ).json(),
+    );
+    const manifest = await loadTestManifest(repositoryRoot);
     const manifestJsonSchema = z
       .object({
         required: z.array(z.string()),
@@ -380,7 +419,7 @@ describe("CI reporting manifest", () => {
         ).json(),
       );
     expect(manifestJsonSchema.required).toContain("$schema");
-    expect(manifestJsonSchema.properties.$schema.const).toBe(manifest.$schema);
+    expect(manifestJsonSchema.properties.$schema.const).toBe(central.$schema);
     const rootPackage = RootPackageSchema.parse(
       await Bun.file(path.join(repositoryRoot, "package.json")).json(),
     );
@@ -563,7 +602,6 @@ describe("test:ci runner inputs", () => {
     const runnerInputs = [
       "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
       "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
-      "$TURBO_ROOT$/scripts/ci-test-manifest.json",
       "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
       "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
       "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
@@ -591,6 +629,14 @@ describe("test:ci runner inputs", () => {
         expect.arrayContaining(["$TURBO_ROOT$/vitest.config.ts"]),
       );
     }
+    // Each workspace's test:ci hash covers its own ci-test.json through
+    // $TURBO_DEFAULT$; no repository-wide test configuration may join it.
+    expect(root.tasks["test:ci"]?.inputs).not.toContain(
+      "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+    );
+    expect(root.globalDependencies).not.toContain(
+      "scripts/ci-test-manifest.json",
+    );
     // A package override replaces the root inputs unless it extends them.
     const PackageTurboSchema = z.object({
       tasks: z
@@ -600,11 +646,7 @@ describe("test:ci runner inputs", () => {
         )
         .optional(),
     });
-    const manifest = TestManifestSchema.parse(
-      await Bun.file(
-        path.join(repositoryRoot, "scripts/ci-test-manifest.json"),
-      ).json(),
-    );
+    const manifest = await loadTestManifest(repositoryRoot);
     for (const { directory } of manifest.workspaces) {
       const turboFile = Bun.file(
         path.join(repositoryRoot, directory, "turbo.json"),
@@ -615,12 +657,35 @@ describe("test:ci runner inputs", () => {
       );
       for (const [task, definition] of Object.entries(config.tasks ?? {})) {
         if (task !== "test:ci" && !task.startsWith("test:ci:")) continue;
-        const inputs = definition.inputs;
-        if (inputs === undefined || inputs[0] === "$TURBO_EXTENDS$") continue;
-        expect(inputs, `${directory}#${task}`).toEqual(
-          expect.arrayContaining(runnerInputs),
+        expectOverrideKeepsRunnerInputs(
+          `${directory}#${task}`,
+          definition.inputs,
+          runnerInputs,
         );
       }
     }
   });
 });
+
+/**
+ * A package test:ci override must keep the shared runner and its own
+ * ci-test.json, and must not hash the repository-wide manifest.
+ */
+function expectOverrideKeepsRunnerInputs(
+  label: string,
+  inputs: readonly string[] | undefined,
+  runnerInputs: readonly string[],
+): void {
+  if (inputs === undefined || inputs[0] === "$TURBO_EXTENDS$") return;
+  expect(inputs, label).toEqual(
+    expect.arrayContaining([
+      ...runnerInputs,
+      inputs.includes("$TURBO_DEFAULT$")
+        ? "$TURBO_DEFAULT$"
+        : WORKSPACE_TEST_CONFIG_FILE,
+    ]),
+  );
+  expect(inputs, label).not.toContain(
+    "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+  );
+}

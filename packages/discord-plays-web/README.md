@@ -48,7 +48,7 @@ verified against both frontends.
 
 `build` emits type declarations into `dist` to validate the package's public
 surface. Frontend bundlers continue to consume its TypeScript source exports.
-The shared CI test manifest runs all suites in `test/` and retains their reports.
+Its `ci-test.json` runs all suites in `test/` in CI and retains their reports.
 
 ```bash
 bun run build

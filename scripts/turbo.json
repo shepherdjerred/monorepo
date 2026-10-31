@@ -27,11 +27,13 @@
     "lint": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/ci/**"]
     },
+    // The root script tests validate every workspace's ci-test.json.
     "test": {
       "inputs": [
         "$TURBO_ROOT$/vitest.config.ts",
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/ci/scripts/**"
+        "$TURBO_ROOT$/ci/scripts/**",
+        "$TURBO_ROOT$/packages/**/ci-test.json"
       ]
     },
     "test:ci": {
@@ -40,6 +42,7 @@
         "$TURBO_ROOT$/ci/**",
         "$TURBO_ROOT$/packages/**/package.json",
         "$TURBO_ROOT$/packages/**/turbo.json",
+        "$TURBO_ROOT$/packages/**/ci-test.json",
         "$TURBO_ROOT$/renovate.json",
         "$TURBO_ROOT$/packages/version-catalog/src/catalog.json",
         "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",

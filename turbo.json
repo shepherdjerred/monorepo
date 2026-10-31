@@ -90,10 +90,13 @@
     },
     // CI uses the same cache semantics as `test`, but packages emit JUnit on
     // cache misses. Reports are deliberately not outputs: a cache hit must not
-    // restore a stale report from another build. The shared runner and its
-    // manifest are inputs here rather than global dependencies, so editing
-    // them reruns test:ci without invalidating every build, lint and
-    // typecheck. A package that overrides test:ci inputs must keep them.
+    // restore a stale report from another build. The shared runner is an
+    // input here rather than a global dependency, so editing it reruns
+    // test:ci without invalidating every build, lint and typecheck. Each
+    // package's own ci-test.json reaches its hash through $TURBO_DEFAULT$;
+    // the runner reads no other package's configuration, so one package's
+    // test configuration never invalidates another's. A package that
+    // overrides test:ci inputs must keep the runner and its ci-test.json.
     "test:ci": {
       "env": ["NODE_ENV"],
       "passThroughEnv": ["MISE_DATA_DIR"],
@@ -104,7 +107,6 @@
         "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
-        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "$TURBO_ROOT$/vitest.config.ts"
       ]

@@ -3,7 +3,9 @@
 import path from "node:path";
 import { z } from "zod";
 import {
-  TestManifestSchema,
+  WORKSPACE_TEST_CONFIG_FILE,
+  loadTestManifest,
+  type ReportingWorkspace,
   type TestStep,
 } from "../ci/test-manifest-schema.ts";
 import { unrunTestFiles } from "../ci/test-manifest-coverage.ts";
@@ -70,14 +72,15 @@ export function packageScriptViolations(
 }
 
 export function manifestStepViolations(
-  packageName: string,
+  workspace: Pick<ReportingWorkspace, "package" | "directory">,
   steps: readonly TestStep[],
 ): string[] {
+  const source = `${workspace.directory}/${WORKSPACE_TEST_CONFIG_FILE} (${workspace.package})`;
   const violations: string[] = [];
   for (const step of steps) {
-    if (isInvalidNodeHostedVitestStep(packageName, step)) {
+    if (isInvalidNodeHostedVitestStep(workspace.package, step)) {
       violations.push(
-        `scripts/ci-test-manifest.json (${packageName}): Node-hosted Vitest is restricted to Temporal SDK workflow tests with an explicit reason`,
+        `${source}: Node-hosted Vitest is restricted to Temporal SDK workflow tests with an explicit reason`,
       );
     }
     if (
@@ -86,7 +89,7 @@ export function manifestStepViolations(
         nonVitestRunner.test(step.command.join(" ")))
     ) {
       violations.push(
-        `scripts/ci-test-manifest.json (${packageName}): JavaScript/TypeScript test steps must use the vitest runner`,
+        `${source}: JavaScript/TypeScript test steps must use the vitest runner`,
       );
     }
   }
@@ -159,15 +162,9 @@ async function main(): Promise<void> {
     violations.push(...packageScriptViolations(file, manifest));
   }
 
-  const manifest = TestManifestSchema.parse(
-    await Bun.file(
-      path.join(repositoryRoot, "scripts/ci-test-manifest.json"),
-    ).json(),
-  );
+  const manifest = await loadTestManifest(repositoryRoot);
   for (const workspace of manifest.workspaces) {
-    violations.push(
-      ...manifestStepViolations(workspace.package, workspace.steps),
-    );
+    violations.push(...manifestStepViolations(workspace, workspace.steps));
   }
   const existingFiles: string[] = [];
   for (const file of trackedFiles) {

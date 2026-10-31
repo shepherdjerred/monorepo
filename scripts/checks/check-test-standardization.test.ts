@@ -6,6 +6,10 @@ import {
 } from "./check-test-standardization.ts";
 import type { TestStep } from "../ci/test-manifest-schema.ts";
 
+function workspace(name: string) {
+  return { package: name, directory: `packages/${name}` };
+}
+
 describe("test standardization guard", () => {
   test("rejects Bun and Node test imports", () => {
     expect(
@@ -66,10 +70,12 @@ describe("test standardization guard", () => {
     };
 
     expect(
-      manifestStepViolations("@shepherdjerred/temporal", [temporalStep]),
+      manifestStepViolations(workspace("@shepherdjerred/temporal"), [
+        temporalStep,
+      ]),
     ).toEqual([]);
     expect(
-      manifestStepViolations("@scout-for-lol/temporal", [
+      manifestStepViolations(workspace("@scout-for-lol/temporal"), [
         {
           ...temporalStep,
           args: ["src/workflows", "--no-file-parallelism"],
@@ -77,10 +83,10 @@ describe("test standardization guard", () => {
       ]),
     ).toEqual([]);
     expect(
-      manifestStepViolations("other-package", [temporalStep]),
+      manifestStepViolations(workspace("other-package"), [temporalStep]),
     ).toHaveLength(1);
     expect(
-      manifestStepViolations("@shepherdjerred/temporal", [
+      manifestStepViolations(workspace("@shepherdjerred/temporal"), [
         {
           runner: "vitest",
           name: "workflows",
@@ -94,7 +100,7 @@ describe("test standardization guard", () => {
       ]),
     ).toHaveLength(1);
     expect(
-      manifestStepViolations("other-package", [
+      manifestStepViolations(workspace("other-package"), [
         {
           runner: "command",
           name: "custom test suite",

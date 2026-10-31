@@ -7,7 +7,11 @@
  * Vitest step or named in the workspace's `excludedSuites` with the reason it
  * runs elsewhere. A CLI `--exclude` alone is not evidence that a test runs.
  */
-import type { TestManifest, TestStep } from "./test-manifest-schema.ts";
+import {
+  WORKSPACE_TEST_CONFIG_FILE,
+  type TestManifest,
+  type TestStep,
+} from "./test-manifest-schema.ts";
 import { minimatch } from "minimatch";
 
 type Workspace = TestManifest["workspaces"][number];
@@ -136,7 +140,7 @@ export function unrunTestFiles(
       .filter((file) => !isAccountedFor(workspace, file))
       .map(
         (file) =>
-          `scripts/ci-test-manifest.json (${workspace.package}): no step runs ${file}; add it to a step or to excludedSuites with the reason it runs elsewhere`,
+          `${workspace.directory}/${WORKSPACE_TEST_CONFIG_FILE} (${workspace.package}): no step runs ${file}; add it to a step or to excludedSuites with the reason it runs elsewhere`,
       ),
   );
   const testsInTestlessWorkspaces = manifest.testlessWorkspaces.flatMap(

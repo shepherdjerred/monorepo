@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "world-archive",
+      "command": ["bun", "run", "test"]
+    }
+  ]
+}

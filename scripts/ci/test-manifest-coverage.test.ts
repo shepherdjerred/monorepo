@@ -21,8 +21,6 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
 
 function manifest(workspaces: Workspace[]): TestManifest {
   return {
-    $schema: "./ci-test-manifest.schema.json",
-    version: 2,
     workspaces,
     testlessWorkspaces: [],
     separateTests: [],
@@ -211,7 +209,7 @@ describe("unrunTestFiles", () => {
         ["scripts"],
       ),
     ).toEqual([
-      "scripts/ci-test-manifest.json (@shepherdjerred/root-scripts): no step runs ../ci/scripts/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+      "scripts/ci-test.json (@shepherdjerred/root-scripts): no step runs ../ci/scripts/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
 
@@ -223,7 +221,7 @@ describe("unrunTestFiles", () => {
         ["packages/pkg"],
       ),
     ).toEqual([
-      "scripts/ci-test-manifest.json (@example/pkg): no step runs test/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+      "packages/pkg/ci-test.json (@example/pkg): no step runs test/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
 

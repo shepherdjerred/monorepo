@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../../scripts/ci-test.schema.json",
+  "steps": [
+    {
+      "runner": "vitest"
+    },
+    {
+      "runner": "command",
+      "name": "gpu-resources",
+      "command": ["bun", "run", "test:gpu-resources"]
+    }
+  ]
+}
