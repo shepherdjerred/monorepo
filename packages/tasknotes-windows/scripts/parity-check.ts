@@ -65,6 +65,13 @@ async function loadTestSource(): Promise<string> {
   const sourceTexts = await Promise.all(
     sources.map((source) => Bun.file(path.join(testRoot, source)).text()),
   );
+  sourceTexts.push(
+    ...(await Promise.all(
+      ["server-driver.cs.txt", "server-scenarios.cs.txt"].map((source) =>
+        Bun.file(path.join(packageRoot, "e2e/reference", source)).text(),
+      ),
+    )),
+  );
   return sourceTexts.join("\n");
 }
 
@@ -199,7 +206,7 @@ async function main(): Promise<void> {
 
   await Bun.write(
     Bun.stdout,
-    `TaskNotes Windows parity: ${String(featureIds.size)} features, ${String(scenarioIds.size)} E2E scenarios, ${String(assertionOwners.size)} runtime assertions\n`,
+    `TaskNotes Windows historical porting inventory: ${String(featureIds.size)} features, ${String(scenarioIds.size)} reference scenarios, ${String(assertionOwners.size)} original assertions. This source inventory does not establish current standalone runtime parity.\n`,
   );
 }
 

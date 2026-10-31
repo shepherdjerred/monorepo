@@ -19,6 +19,7 @@ namespace TaskNotes.Windows.App.Views
 
         private UiOperationQueue? _operations;
         private Func<Func<Task>, Task<bool>>? _execute;
+        private TaskItem? _draggedTask;
 
         /// <summary>Initializes the compiled board view.</summary>
         public BoardView()
@@ -49,38 +50,41 @@ namespace TaskNotes.Windows.App.Views
         private void Board_DragItemsStarting(object sender, DragItemsStartingEventArgs eventArgs)
         {
             _ = sender;
+            _draggedTask = null;
             if (eventArgs.Items.FirstOrDefault() is TaskItem task)
             {
+                _draggedTask = task;
                 eventArgs.Data.SetText(task.Id);
                 eventArgs.Data.RequestedOperation = DataPackageOperation.Move;
             }
         }
 
+        private void Board_DragItemsCompleted(object sender, DragItemsCompletedEventArgs eventArgs)
+        {
+            _ = sender;
+            _ = eventArgs;
+            _draggedTask = null;
+        }
+
         private void AdvanceBoardTask_Click(object sender, RoutedEventArgs eventArgs)
         {
             _ = eventArgs;
-            if (
-                sender is not FrameworkElement { Tag: string taskId }
-                || RequireViewModel()
-                    .State.AllTasks.SingleOrDefault(task =>
-                        string.Equals(task.Id, taskId, StringComparison.Ordinal)
-                    )
-                    is not TaskItem task
-            )
+            if (sender is not FrameworkElement { Tag: TaskItem task })
             {
                 return;
             }
 
-            string status = task.Status switch
-            {
-                "open" => "in-progress",
-                "in-progress" => "waiting",
-                "waiting" => "delegated",
-                "delegated" => "done",
-                "done" or "cancelled" => "open",
-                _ => throw new InvalidOperationException($"Unknown board status '{task.Status}'."),
-            };
-            Run("advance-board-task", () => RequireViewModel().MoveBoardTaskAsync(taskId, status));
+            var choices = RequireViewModel().State.StatusChoices;
+            int index = choices
+                .Select(choice => choice.Value)
+                .ToList()
+                .FindIndex(value => value == task.Status);
+            if (index < 0 || choices.Count == 0)
+                throw new InvalidOperationException(
+                    "The task workflow is not in this vault's configuration."
+                );
+            string status = choices[(index + 1) % choices.Count].Value;
+            Run("advance-board-task", () => RequireViewModel().MoveBoardTaskAsync(task, status));
         }
 
         private void Board_Drop(object sender, DragEventArgs eventArgs)
@@ -88,17 +92,21 @@ namespace TaskNotes.Windows.App.Views
             if (
                 sender is not ListView { Tag: string status }
                 || !eventArgs.DataView.Contains(StandardDataFormats.Text)
+                || _draggedTask is not TaskItem task
             )
             {
                 return;
             }
 
+            _draggedTask = null;
             Run(
                 "board-drop",
                 async () =>
                 {
                     string taskId = await eventArgs.DataView.GetTextAsync();
-                    await RequireViewModel().MoveBoardTaskAsync(taskId, status);
+                    if (taskId != task.Id)
+                        return;
+                    await RequireViewModel().MoveBoardTaskAsync(task, status);
                     eventArgs.AcceptedOperation = DataPackageOperation.Move;
                 }
             );

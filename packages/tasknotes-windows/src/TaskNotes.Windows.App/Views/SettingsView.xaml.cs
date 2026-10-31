@@ -19,7 +19,7 @@ namespace TaskNotes.Windows.App.Views
         /// <summary>Identifies the settings view-model dependency property.</summary>
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
             nameof(ViewModel),
-            typeof(SettingsViewModel),
+            typeof(FacetSettingsViewModel),
             typeof(SettingsView),
             new PropertyMetadata(null)
         );
@@ -38,13 +38,59 @@ namespace TaskNotes.Windows.App.Views
         }
 
         /// <summary>Gets or sets settings and parked-change state.</summary>
-        public SettingsViewModel? ViewModel
+        public FacetSettingsViewModel? ViewModel
         {
-            get => GetValue(ViewModelProperty) is SettingsViewModel viewModel ? viewModel : null;
+            get =>
+                GetValue(ViewModelProperty) is FacetSettingsViewModel viewModel ? viewModel : null;
             set => SetValue(ViewModelProperty, value);
         }
 
         internal event RoutedEventHandler? SaveRequested;
+        internal event Action<bool>? TaskSoundsChanged;
+        private bool _settingTaskSounds;
+
+        internal void SetTaskSounds(bool enabled)
+        {
+            _settingTaskSounds = true;
+            TaskSoundsToggle.IsOn = enabled;
+            _settingTaskSounds = false;
+        }
+
+        private void TaskSounds_Toggled(object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            if (!_settingTaskSounds)
+                TaskSoundsChanged?.Invoke(TaskSoundsToggle.IsOn);
+        }
+
+        internal void SetBackgroundStatus(string status) => BackgroundSyncStatusText.Text = status;
+
+        internal void SetReminderStatus(string status) => ReminderStatusText.Text = status;
+
+        internal event RoutedEventHandler? EnableRemindersRequested;
+        internal event RoutedEventHandler? DisableRemindersRequested;
+        internal event RoutedEventHandler? EnableBackgroundSyncRequested;
+        internal event RoutedEventHandler? DisableBackgroundSyncRequested;
+
+        private void EnableBackgroundSync_Click(object sender, RoutedEventArgs args) =>
+            EnableBackgroundSyncRequested?.Invoke(sender, args);
+
+        private void DisableBackgroundSync_Click(object sender, RoutedEventArgs args) =>
+            DisableBackgroundSyncRequested?.Invoke(sender, args);
+
+        private void EnableReminders_Click(object sender, RoutedEventArgs args) =>
+            EnableRemindersRequested?.Invoke(sender, args);
+
+        private void DisableReminders_Click(object sender, RoutedEventArgs args) =>
+            DisableRemindersRequested?.Invoke(sender, args);
+
+        internal event RoutedEventHandler? ConnectVaultRequested;
+        internal event RoutedEventHandler? SelectProfileRequested;
+        internal event RoutedEventHandler? RemoveProfileRequested;
+        internal event RoutedEventHandler? LocalFolderRequested;
+        internal event RoutedEventHandler? SignOutRequested;
+        internal event RoutedEventHandler? ReauthorizeRequested;
         internal event RoutedEventHandler? ApplyHotkeyRequested;
         internal event RoutedEventHandler? ClearHotkeyRequested;
         internal event RoutedEventHandler? CreateSavedViewRequested;
@@ -54,18 +100,36 @@ namespace TaskNotes.Windows.App.Views
         internal event RoutedEventHandler? DeleteSavedViewRequested;
         internal event RoutedEventHandler? RetryParkedRequested;
         internal event RoutedEventHandler? DiscardParkedRequested;
+        internal event RoutedEventHandler? ReviewConflictRequested;
+        internal event RoutedEventHandler? ResumeActionRequested;
+        internal event RoutedEventHandler? RetireActionRequested;
+        internal event Action<Host.FacetGenerationFailure>? RepairGenerationRequested;
 
-        internal string ServerUrl
+        private void RepairGeneration_Click(object sender, RoutedEventArgs args)
         {
-            get => ServerUrlTextBox.Text;
-            set => ServerUrlTextBox.Text = value;
+            _ = args;
+            if (sender is not FrameworkElement { DataContext: Host.FacetGenerationFailure failure })
+                throw new InvalidDataException("The generation repair lost its original outcome.");
+            RepairGenerationRequested?.Invoke(failure);
         }
 
-        internal string Token
+        internal string Email => EmailTextBox.Text;
+        internal string Password => AccountPasswordBox.Password;
+        internal string Mfa => MfaTextBox.Text;
+        internal string VaultPassword => VaultPasswordBox.Password;
+        internal bool ApproveStandard => ApproveStandardCheckBox.IsChecked == true;
+        internal Host.ObsidianVaultChoice? SelectedVault =>
+            VaultComboBox.SelectedItem as Host.ObsidianVaultChoice;
+        internal Host.FacetProfileRegistration? SelectedProfile =>
+            ProfileComboBox.SelectedItem as Host.FacetProfileRegistration;
+
+        internal void ClearAccountSecrets()
         {
-            get => TokenPasswordBox.Password;
-            set => TokenPasswordBox.Password = value;
+            AccountPasswordBox.Password = "";
+            MfaTextBox.Text = "";
         }
+
+        internal void ClearVaultPassword() => VaultPasswordBox.Password = "";
 
         internal string Hotkey
         {
@@ -85,10 +149,28 @@ namespace TaskNotes.Windows.App.Views
             set => HotkeyStatusText.Text = value;
         }
 
-        internal void FocusServerUrl()
+        internal void FocusAccount()
         {
-            _ = ServerUrlTextBox.Focus(FocusState.Programmatic);
+            _ = EmailTextBox.Focus(FocusState.Programmatic);
         }
+
+        private void ConnectVault_Click(object sender, RoutedEventArgs args) =>
+            ConnectVaultRequested?.Invoke(sender, args);
+
+        private void SelectProfile_Click(object sender, RoutedEventArgs args) =>
+            SelectProfileRequested?.Invoke(sender, args);
+
+        private void RemoveProfile_Click(object sender, RoutedEventArgs args) =>
+            RemoveProfileRequested?.Invoke(sender, args);
+
+        private void LocalFolder_Click(object sender, RoutedEventArgs args) =>
+            LocalFolderRequested?.Invoke(sender, args);
+
+        private void SignOut_Click(object sender, RoutedEventArgs args) =>
+            SignOutRequested?.Invoke(sender, args);
+
+        private void Reauthorize_Click(object sender, RoutedEventArgs args) =>
+            ReauthorizeRequested?.Invoke(sender, args);
 
         private void Save_Click(object sender, RoutedEventArgs eventArgs) =>
             SaveRequested?.Invoke(sender, eventArgs);
@@ -119,5 +201,14 @@ namespace TaskNotes.Windows.App.Views
 
         private void DiscardParked_Click(object sender, RoutedEventArgs eventArgs) =>
             DiscardParkedRequested?.Invoke(sender, eventArgs);
+
+        private void ReviewConflict_Click(object sender, RoutedEventArgs args) =>
+            ReviewConflictRequested?.Invoke(sender, args);
+
+        private void ResumeAction_Click(object sender, RoutedEventArgs args) =>
+            ResumeActionRequested?.Invoke(sender, args);
+
+        private void RetireAction_Click(object sender, RoutedEventArgs args) =>
+            RetireActionRequested?.Invoke(sender, args);
     }
 }

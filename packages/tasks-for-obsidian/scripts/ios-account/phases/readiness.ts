@@ -1,0 +1,66 @@
+import assert from "node:assert/strict";
+import path from "node:path";
+import { readOwnedMacVMJSON } from "tasknotes-macos/scripts/apple-acceptance/mac-vm-export.ts";
+import {
+  StatusSchema,
+  clientState,
+  type Manifest,
+} from "../../apple-sync-live/model";
+
+type NormalAccountReadiness = {
+  capturedAt: string;
+  accountStage: string;
+  accountBusy: boolean;
+  profiles: readonly unknown[];
+};
+
+/** Probe completion leaves a normal account session, never the stopped fixture owner. */
+export async function prepareNormalAccountAfterProof(steps: {
+  verifyProofs: () => Promise<void>;
+  launchNormalIos: () => Promise<void>;
+  awaitPublication: (launchedAt: number) => Promise<void>;
+  validateAccount: () => Promise<NormalAccountReadiness>;
+}) {
+  await steps.verifyProofs();
+  const launchedAt = Date.now();
+  await steps.launchNormalIos();
+  await steps.awaitPublication(launchedAt);
+  const status = await steps.validateAccount();
+  assert.equal(status.accountStage, "credentials");
+  assert.equal(status.accountBusy, false);
+  assert.equal(status.profiles.length, 0);
+  assert.ok(Date.parse(status.capturedAt) >= launchedAt);
+  return { capturedAt: status.capturedAt };
+}
+
+/** Wait for evidence from this normal cold launch, never a stale pre-launch status. */
+export async function awaitFreshIOSPublication(
+  manifest: Manifest,
+  launchedAt: number,
+) {
+  const deadline = Date.now() + 30_000;
+  const file = path.join(
+    clientState(manifest, "ios").stateDirectory,
+    "control/status.json",
+  );
+  for (;;) {
+    try {
+      const status = StatusSchema.parse(await readOwnedMacVMJSON(file));
+      assert.equal(status.runID.toLowerCase(), manifest.runID.toLowerCase());
+      const captured = Date.parse(status.capturedAt);
+      if (captured >= launchedAt && Date.now() - captured <= 5000) return;
+    } catch (error) {
+      if (!(
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ))
+        throw error;
+    }
+    assert.ok(
+      Date.now() < deadline,
+      "Owned iOS app did not publish fresh post-launch status",
+    );
+    await Bun.sleep(100);
+  }
+}

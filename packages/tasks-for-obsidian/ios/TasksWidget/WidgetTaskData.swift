@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct WidgetTask: Codable, Identifiable {
   let id: String
@@ -54,25 +55,59 @@ struct WidgetDataEnvelope: Codable {
   let projections: [String: WidgetData]
 
   static func load() -> WidgetDataEnvelope? {
-    guard let defaults = UserDefaults(suiteName: "group.com.tasksforobsidian"),
-          let data = defaults.data(forKey: "widgetData") else {
+    guard let group = FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: "group.com.tasksforobsidian") else {
       return nil
     }
-    guard let envelope = try? JSONDecoder().decode(WidgetDataEnvelope.self, from: data),
-          envelope.schemaVersion == 2 else {
+    do {
+      let data = try read(group.appendingPathComponent("FacetWidgetSnapshot.json"))
+      let envelope = try JSONDecoder().decode(WidgetDataEnvelope.self, from: data)
+      guard envelope.schemaVersion == 2 else { throw WidgetSnapshotError.invalidEnvelope }
+      return envelope
+    } catch let error as NSError
+      where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoSuchFileError {
+      return nil
+    } catch {
+      Logger(subsystem: "red.sjer.facet", category: "Widget")
+        .error("The widget snapshot could not be read. Open Facet to refresh it.")
       return nil
     }
-    return envelope
   }
 
-  func projection(for date: Date, calendar: Calendar = .current) -> WidgetData? {
-    let components = calendar.dateComponents([.year, .month, .day], from: date)
-    guard let year = components.year,
-          let month = components.month,
-          let day = components.day else {
-      return nil
+  private static func read(_ url: URL) throws -> Data {
+    let handle = try FileHandle(forReadingFrom: url)
+    do {
+      let limit = 4 * 1024 * 1024
+      var bytes = Data()
+      while let chunk = try handle.read(upToCount: min(1024 * 1024, limit + 1 - bytes.count)),
+        !chunk.isEmpty {
+        bytes.append(chunk)
+        guard bytes.count <= limit else { throw WidgetSnapshotError.invalidEnvelope }
+      }
+      try handle.close()
+      return bytes
+    } catch {
+      let failure = error
+      do { try handle.close() } catch {
+        Logger(subsystem: "red.sjer.facet", category: "Widget").error("Widget snapshot cleanup failed.")
+      }
+      throw failure
     }
-    let key = String(format: "%04d-%02d-%02d", year, month, day)
+  }
+
+  func projection(for date: Date, calendar: Calendar = .gregorianLocal) -> WidgetData? {
+    let key = date.formatted(
+      Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day())
     return projections[key]
+  }
+}
+
+private enum WidgetSnapshotError: Error { case invalidEnvelope }
+
+extension Calendar {
+  static var gregorianLocal: Calendar {
+    var value = Calendar(identifier: .gregorian)
+    value.timeZone = .current
+    return value
   }
 }

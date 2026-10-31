@@ -1,0 +1,50 @@
+{
+  "version": "4.13.8",
+  "source": "https://raw.githubusercontent.com/callumalpass/tasknotes/4.13.8/src/settings/defaults.ts",
+  "statuses": [
+    {
+      "id": "none",
+      "value": "none",
+      "label": "None",
+      "color": "#cccccc",
+      "isCompleted": false,
+      "excludeFromCycle": false,
+      "order": 0,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    },
+    {
+      "id": "open",
+      "value": "open",
+      "label": "Open",
+      "color": "#808080",
+      "isCompleted": false,
+      "excludeFromCycle": false,
+      "order": 1,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    },
+    {
+      "id": "in-progress",
+      "value": "in-progress",
+      "label": "In progress",
+      "color": "#0066cc",
+      "isCompleted": false,
+      "excludeFromCycle": false,
+      "order": 2,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    },
+    {
+      "id": "done",
+      "value": "done",
+      "label": "Done",
+      "color": "#00aa00",
+      "isCompleted": true,
+      "excludeFromCycle": false,
+      "order": 3,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    }
+  ]
+}

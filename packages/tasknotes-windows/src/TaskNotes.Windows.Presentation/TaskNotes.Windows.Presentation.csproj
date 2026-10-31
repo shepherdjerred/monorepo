@@ -4,10 +4,34 @@
     <RootNamespace>TaskNotes.Windows.Presentation</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/feedback.json"
+      LogicalName="FeedbackPolicy.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/feedback.schema.json"
+      LogicalName="FeedbackSchema.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/audio/palette.json"
+      LogicalName="FeedbackPalette.json"
+    />
     <ProjectReference Include="../TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/color-policy.json"
+      LogicalName="PresentationColorPolicy.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/tokens.json"
+      LogicalName="PresentationTokens.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/presentation.schema.json"
+      LogicalName="PresentationSchema.json"
+    />
   </ItemGroup>
 </Project>

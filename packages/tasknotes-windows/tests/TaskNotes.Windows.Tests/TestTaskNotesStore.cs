@@ -2,8 +2,26 @@ using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.Tests
 {
-    internal sealed class TestTaskNotesStore : ITaskNotesStore
+    internal class TestTaskNotesStore : ITaskNotesStore, IFacetDependencyEditorStore
     {
+        internal Func<
+            string,
+            CancellationToken,
+            Task<DependencyEditorMetadata>
+        >? DependencyMetadata { get; set; }
+
+        public Task<DependencyEditorMetadata> ReadDependencyEditorMetadataAsync(
+            string profileId,
+            CancellationToken cancellationToken = default
+        ) =>
+            DependencyMetadata?.Invoke(profileId, cancellationToken)
+            ?? Task.FromResult(
+                new DependencyEditorMetadata(
+                    ["FINISHTOSTART", "STARTTOSTART", "FINISHTOFINISH", "STARTTOFINISH"],
+                    null
+                )
+            );
+
         internal int AddCount { get; private set; }
         internal int DeleteCount { get; private set; }
         internal int RefreshCount { get; private set; }
@@ -14,17 +32,22 @@ namespace TaskNotes.Windows.Tests
         internal int ScheduleCount { get; private set; }
         internal int PrioritizeCount { get; private set; }
         internal int DeleteManyCount { get; private set; }
-        internal int TimingCount { get; private set; }
-        internal int PomodoroCount { get; private set; }
         internal int ParkedCount { get; private set; }
         internal string? LastAddedInput { get; private set; }
         internal TaskListQuery? LastAddContext { get; private set; }
         internal TaskListQuery? LastQuery { get; private set; }
         internal TaskEditInput? LastEdit { get; private set; }
+        internal Func<TaskEditInput, CancellationToken, Task>? Update { get; set; }
         internal string? LastDeletedId { get; private set; }
         internal QuickAddPreview Preview { get; set; } =
             new("Preview", null, "normal", [], [], [], null);
         internal Func<string?, string?, CancellationToken, Task>? Reconfigure { get; set; }
+        internal Func<
+            string,
+            CancellationToken,
+            Task<QuickAddPreview>
+        >? PreviewOperation { get; set; }
+        internal Func<string, TaskListQuery, CancellationToken, Task>? AddOperation { get; set; }
 
         public event EventHandler? StateChanged;
 
@@ -69,7 +92,7 @@ namespace TaskNotes.Windows.Tests
         public Task<QuickAddPreview> PreviewQuickAddAsync(
             string input,
             CancellationToken cancellationToken = default
-        ) => Task.FromResult(Preview);
+        ) => PreviewOperation?.Invoke(input, cancellationToken) ?? Task.FromResult(Preview);
 
         public Task AddAsync(
             string input,
@@ -80,7 +103,7 @@ namespace TaskNotes.Windows.Tests
             AddCount++;
             LastAddedInput = input;
             LastAddContext = context;
-            return Task.CompletedTask;
+            return AddOperation?.Invoke(input, context, cancellationToken) ?? Task.CompletedTask;
         }
 
         public Task UpdateTaskAsync(
@@ -89,7 +112,7 @@ namespace TaskNotes.Windows.Tests
         )
         {
             LastEdit = input;
-            return Task.CompletedTask;
+            return Update?.Invoke(input, cancellationToken) ?? Task.CompletedTask;
         }
 
         public Task DeleteTaskAsync(string taskId, CancellationToken cancellationToken = default)
@@ -163,40 +186,6 @@ namespace TaskNotes.Windows.Tests
             return Task.CompletedTask;
         }
 
-        public Task LoadTaskTimeAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task StartTimeTrackingAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task StopTimeTrackingAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task LoadTimeReportAsync(
-            string period = "all",
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task LoadPomodoroAsync(CancellationToken cancellationToken = default) =>
-            RecordPomodoroAsync();
-
-        public Task StartPomodoroAsync(
-            string? taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordPomodoroAsync();
-
-        public Task PauseOrResumePomodoroAsync(CancellationToken cancellationToken = default) =>
-            RecordPomodoroAsync();
-
-        public Task StopPomodoroAsync(CancellationToken cancellationToken = default) =>
-            RecordPomodoroAsync();
-
         public Task<SavedViewDefinition> CreateSavedViewAsync(
             string name,
             string symbol,
@@ -241,18 +230,6 @@ namespace TaskNotes.Windows.Tests
         ) => RecordParkedAsync();
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-
-        private Task RecordTimingAsync()
-        {
-            TimingCount++;
-            return Task.CompletedTask;
-        }
-
-        private Task RecordPomodoroAsync()
-        {
-            PomodoroCount++;
-            return Task.CompletedTask;
-        }
 
         private Task RecordParkedAsync()
         {

@@ -1,9 +1,15 @@
 import path from "node:path";
 import { resolveMise } from "./mise.ts";
+import { toolchainVersionMatches, toolchainVersions } from "./toolchain.ts";
 
 const failures: string[] = [];
 const decoder = new TextDecoder();
 const mise = await resolveMise();
+const toolchain = toolchainVersions(
+  Bun.TOML.parse(
+    await Bun.file(path.resolve(import.meta.dir, "../../../.mise.toml")).text(),
+  ),
+);
 
 function run(command: string[], cwd = process.cwd()): string {
   let result: ReturnType<typeof Bun.spawnSync>;
@@ -133,9 +139,9 @@ requireValue(
   "mise is missing. Install it with: winget install jdx.mise",
 );
 const dotnetVersion = run([mise, "exec", "--", "dotnet", "--version"]);
-if (dotnetVersion !== "10.0.302") {
+if (!toolchainVersionMatches("dotnet", toolchain.dotnet, dotnetVersion)) {
   failures.push(
-    `Expected .NET SDK 10.0.302 through mise; found '${dotnetVersion || "nothing"}'. Run mise install.`,
+    `Expected .NET SDK ${toolchain.dotnet} from the root mise manifest; found '${dotnetVersion || "nothing"}'. Run mise install.`,
   );
 }
 const winuiTemplates = run([
@@ -153,9 +159,9 @@ if (!winuiTemplates.includes("winui")) {
   );
 }
 const rustVersion = run([mise, "exec", "--", "rustc", "--version"]);
-if (!rustVersion.startsWith("rustc 1.97.1 ")) {
+if (!toolchainVersionMatches("rust", toolchain.rust, rustVersion)) {
   failures.push(
-    `Expected Rust 1.97.1 through mise; found '${rustVersion || "nothing"}'. Run mise install.`,
+    `Expected Rust ${toolchain.rust} from the root mise manifest; found '${rustVersion || "nothing"}'. Run mise install.`,
   );
 }
 requireValue(

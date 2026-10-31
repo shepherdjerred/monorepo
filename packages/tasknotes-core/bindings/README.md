@@ -1,6 +1,7 @@
-# `bindings/` — the committed Swift bindings
+# `bindings/` — committed native bindings
 
-Machine-generated. Never hand-edit anything under `Sources/` or `ffi/`; run
+Machine-generated. Never hand-edit anything under `Sources/`, `ffi/`,
+`csharp/`, or `kotlin/`; run
 `cargo xtask generate-bindings` and commit the result.
 
 ```text
@@ -11,6 +12,13 @@ bindings/
 ├── ffi/module.modulemap                   generated — the clang module
 └── artifacts/TaskNotesCoreFFI.xcframework  built, gitignored
 ```
+
+C# output is `csharp/TaskNotesCore.cs`; Kotlin output is
+`kotlin/uniffi/TaskNotesCore/TaskNotesCore.kt`. Both are generated from the same Rust metadata as
+Swift. Kotlin uses the matching first-party UniFFI CLI; C# uses the pinned
+generator retarget. `generate-bindings` and `check-bindings` include all three
+languages. Kotlin generation proves metadata availability; Android compilation
+and native library packaging require their own platform checks.
 
 ## Why these files are committed
 

@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "officialAsarSHA256": "3a349274f789b62c5b35ad19de10311909a94e8783033569c2210a4bac491780",
+  "limits": {
+    "frameBytes": 8192,
+    "sessionMs": 60000,
+    "clockSkewMs": 5000,
+    "deliveryMs": 10000,
+    "minimumRemainingMs": 12000
+  },
+  "probeCode": "135790",
+  "methodWords": {
+    "allowedPattern": "(?:2.factor|two.factor) authentication|\\b6-digit 2FA code\\b",
+    "forbiddenPattern": "recovery|(?:sent|send|inbox).{0,120}email|email.{0,120}(?:sent|send|inbox)"
+  },
+  "preparationPhases": [
+    "input",
+    "verification-protocol",
+    "verification-binding",
+    "verification-owner",
+    "verification-archive",
+    "verification-form",
+    "verification-ready"
+  ],
+  "frameModes": {
+    "init": "verification-session",
+    "prepare": "verification-prepare"
+  },
+  "frames": {
+    "prepare": [
+      "purpose",
+      "mode",
+      "operation",
+      "sessionID",
+      "challengeID",
+      "runID",
+      "referenceDirectory",
+      "officialExportID",
+      "executable",
+      "pid",
+      "configFile",
+      "configSHA256",
+      "binarySHA256"
+    ],
+    "init": [
+      "purpose",
+      "mode",
+      "operation",
+      "sessionID",
+      "challengeID",
+      "runID",
+      "referenceDirectory",
+      "officialExportID",
+      "executable",
+      "pid",
+      "startSeconds",
+      "startMicroseconds",
+      "launchDate",
+      "configFile",
+      "configSHA256",
+      "binarySHA256"
+    ],
+    "ready": [
+      "kind",
+      "sessionID",
+      "challengeID",
+      "runID",
+      "pid",
+      "startSeconds",
+      "startMicroseconds",
+      "launchDate",
+      "clockEpochMs",
+      "formKind",
+      "codeFieldSecure",
+      "loginEnabled"
+    ],
+    "probe": ["kind", "sessionID", "challengeID", "runID"],
+    "code": [
+      "kind",
+      "sessionID",
+      "challengeID",
+      "runID",
+      "code",
+      "issuedAtEpochMs",
+      "validUntilEpochMs"
+    ],
+    "finished": [
+      "kind",
+      "sessionID",
+      "challengeID",
+      "runID",
+      "cleared",
+      "codeLength",
+      "submitActionCount"
+    ],
+    "proof": [
+      "schemaVersion",
+      "kind",
+      "sessionID",
+      "runID",
+      "configSHA256",
+      "binarySHA256",
+      "challengeID",
+      "pid",
+      "startSeconds",
+      "startMicroseconds",
+      "launchDate",
+      "formKind",
+      "codeFieldSecure",
+      "cleared",
+      "codeLength",
+      "submitActionCount"
+    ]
+  },
+  "fields": {
+    "purpose": { "type": "string", "enum": ["live"] },
+    "mode": {
+      "type": "string",
+      "enum": ["verification-session", "verification-prepare"]
+    },
+    "operation": { "type": "string", "enum": ["probe", "verify"] },
+    "kind": {
+      "type": "string",
+      "enum": ["ready", "probe", "code", "finished", "proof"]
+    },
+    "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "sessionID": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "challengeID": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "runID": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "officialExportID": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "referenceDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^[^\u0000-\u001f\u007f]+$"
+    },
+    "executable": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^[^\u0000-\u001f\u007f]+$"
+    },
+    "configFile": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^[^\u0000-\u001f\u007f]+$"
+    },
+    "configSHA256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "binarySHA256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "pid": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+    "startSeconds": { "type": "integer", "minimum": 0 },
+    "startMicroseconds": { "type": "integer", "minimum": 0, "maximum": 999999 },
+    "launchDate": { "type": "number", "minimum": 1 },
+    "clockEpochMs": { "type": "integer", "minimum": 1 },
+    "issuedAtEpochMs": { "type": "integer", "minimum": 1 },
+    "validUntilEpochMs": { "type": "integer", "minimum": 1 },
+    "formKind": { "type": "string", "enum": ["totp"] },
+    "codeFieldSecure": { "type": "boolean", "enum": [false] },
+    "loginEnabled": { "type": "boolean", "enum": [true] },
+    "cleared": { "type": "boolean" },
+    "codeLength": { "type": "integer", "minimum": 6, "maximum": 6 },
+    "submitActionCount": { "type": "integer", "minimum": 0, "maximum": 1 },
+    "code": {
+      "type": "string",
+      "minLength": 6,
+      "maxLength": 6,
+      "pattern": "^[0-9]{6}$"
+    }
+  }
+}

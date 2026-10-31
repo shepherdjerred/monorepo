@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "runtimeAcceptance": "unverified",
+  "originalAssertions": [
+    {
+      "id": "settings.invalid-url",
+      "status": "replaced",
+      "reason": "Standalone has no server URL; closed descriptor/private-profile validation replaces that configuration boundary.",
+      "replacement": "standalone.production-local-vault"
+    },
+    {
+      "id": "settings.authentication",
+      "status": "live-required",
+      "scenario": "live-account-vault",
+      "reason": "Use real Obsidian sign-in, MFA when required, discovery and an authorized synthetic remote vault."
+    },
+    {
+      "id": "settings.connected",
+      "status": "replaced",
+      "reason": "The standalone production store opens a real app-private Markdown vault with no backend connection.",
+      "replacement": "standalone.production-local-vault"
+    },
+    {
+      "id": "credentials.token-separation",
+      "status": "live-required",
+      "scenario": "live-account-vault",
+      "reason": "Verify actual Obsidian tokens and owner-qualified vault keys stay in Windows Credential Locker, without logging or plaintext artifacts."
+    },
+    {
+      "id": "sync.offline",
+      "status": "replaced",
+      "reason": "Local operation without an account/server replaces the server-cache dependency. Real remote outage behavior remains in live-sync-round-trip.",
+      "replacement": "standalone.production-local-vault"
+    },
+    {
+      "id": "sync.cached-restart",
+      "status": "replaced",
+      "reason": "The production replica and original journal survive owned process termination/relaunch without resetting package data.",
+      "replacement": "package.persisted-local-relaunch"
+    },
+    {
+      "id": "sync.replayed-markdown",
+      "status": "live-required",
+      "scenario": "live-sync-round-trip",
+      "reason": "A local edit must upload to the real synthetic remote vault and appear in an independently opened Obsidian client."
+    },
+    {
+      "id": "navigation.fixed",
+      "status": "implemented",
+      "replacement": "navigation.fixed"
+    },
+    {
+      "id": "query.search",
+      "status": "implemented",
+      "replacement": "query.search"
+    },
+    {
+      "id": "query.sort-group",
+      "status": "implemented",
+      "replacement": "query.sort-group"
+    },
+    {
+      "id": "quick-add.preview",
+      "status": "implemented",
+      "replacement": "quick-add.preview"
+    },
+    {
+      "id": "tasks.created-markdown",
+      "status": "implemented",
+      "replacement": "tasks.created-markdown"
+    },
+    {
+      "id": "editor.all-fields-markdown",
+      "status": "implemented",
+      "replacement": "editor.all-fields-markdown"
+    },
+    {
+      "id": "editor.validation-unsaved",
+      "status": "replaced",
+      "reason": "Current autosave validation retains the inspector draft and exact admitted action; obsolete save/discard-dialog mechanics are not counted.",
+      "replacement": "editor.validation-retained-draft"
+    },
+    {
+      "id": "tasks.deleted-markdown",
+      "status": "implemented",
+      "replacement": "tasks.deleted-markdown"
+    },
+    {
+      "id": "completion.plain-undo",
+      "status": "replaced",
+      "reason": "The local check strengthens status-only Undo to exact original Markdown bytes.",
+      "replacement": "completion.plain-undo-exact-bytes"
+    },
+    {
+      "id": "completion.recurring-undo",
+      "status": "replaced",
+      "reason": "Exercise real generated child completion and compare the complete vault byte for byte after Undo, preserving the user window's separate Undo authority.",
+      "replacement": "completion.recurring-undo-exact-bytes"
+    },
+    {
+      "id": "bulk.complete-undo",
+      "status": "replaced",
+      "reason": "One grouped Undo must restore both selected files byte for byte.",
+      "replacement": "bulk.complete-undo-exact-bytes"
+    },
+    {
+      "id": "bulk.schedule-priority-delete",
+      "status": "implemented",
+      "replacement": "bulk.schedule-priority-delete"
+    },
+    {
+      "id": "saved-view.query",
+      "status": "implemented",
+      "replacement": "saved-view.query"
+    },
+    {
+      "id": "saved-view.lifecycle-persistence",
+      "status": "implemented",
+      "replacement": "saved-view.lifecycle-persistence"
+    },
+    {
+      "id": "activation.fixed",
+      "status": "implemented",
+      "replacement": "activation.fixed"
+    },
+    {
+      "id": "activation.entities",
+      "status": "implemented",
+      "replacement": "activation.entities"
+    },
+    {
+      "id": "activation.search",
+      "status": "implemented",
+      "replacement": "activation.search"
+    },
+    {
+      "id": "kanban.columns",
+      "status": "implemented",
+      "replacement": "kanban.columns"
+    },
+    {
+      "id": "kanban.move-persisted",
+      "status": "implemented",
+      "replacement": "kanban.move-persisted"
+    },
+    {
+      "id": "kanban.failure-visible",
+      "status": "replaced",
+      "reason": "A real Windows denied-file replacement retains the production action and exposes Settings recovery, replacing a server HTTP 500 injection.",
+      "replacement": "kanban.retained-file-failure-visible"
+    },
+    {
+      "id": "sync.parked",
+      "status": "replaced",
+      "reason": "A real stale local revision leaves the exact submitted action visible; the obsolete server 422 parked-request model is removed. Retained remote Sync conflicts remain a separate live scenario.",
+      "replacement": "recovery.rejected-action-visible"
+    },
+    {
+      "id": "sync.retry-discard",
+      "status": "replaced",
+      "reason": "Production recovery resumes an exact blocked action and retires a rejected stale decision without overwriting concurrent Markdown; no server queue is reintroduced.",
+      "replacement": "recovery.retire-rejected-action"
+    },
+    {
+      "id": "hotkey.invoke-cancel",
+      "status": "implemented",
+      "replacement": "hotkey.invoke-cancel"
+    },
+    {
+      "id": "hotkey.rebind-collision",
+      "status": "implemented",
+      "replacement": "hotkey.rebind-collision"
+    },
+    {
+      "id": "package.cold-launch",
+      "status": "replaced",
+      "reason": "Cold launch binds the exact package, executable, process creation lifetime and one descriptor-owned window.",
+      "replacement": "standalone.production-local-vault"
+    },
+    {
+      "id": "package.restart",
+      "status": "replaced",
+      "reason": "The original app-private replica and production journal persist across owned process relaunch.",
+      "replacement": "package.persisted-local-relaunch"
+    },
+    {
+      "id": "window.state-restored",
+      "status": "implemented",
+      "replacement": "window.state-restored"
+    },
+    {
+      "id": "accessibility.names-roles-values",
+      "status": "implemented",
+      "replacement": "accessibility.names-roles-values"
+    },
+    {
+      "id": "accessibility.live-status",
+      "status": "replaced",
+      "reason": "A real polite Quick Add preview announcement replaces an artificial offline-server error announcement.",
+      "replacement": "accessibility.live-status"
+    },
+    {
+      "id": "keyboard.search-focus",
+      "status": "implemented",
+      "replacement": "keyboard.search-focus"
+    },
+    {
+      "id": "visual.profile-match",
+      "status": "implemented",
+      "replacement": "visual.profile-match"
+    },
+    {
+      "id": "visual.usable-bounds",
+      "status": "implemented",
+      "replacement": "visual.usable-bounds"
+    },
+    {
+      "id": "visual.screenshot",
+      "status": "replaced",
+      "reason": "Capture only the exact owned window with PrintWindow, reject visible credential surfaces and blank output, and retain four canonical states in each actual profile.",
+      "replacement": "visual.screenshot"
+    }
+  ],
+  "liveScenarios": [
+    {
+      "id": "live-occurrence-maintenance",
+      "requirements": "Use the actual authorized Windows Direct Sync replica. Prove no automatic generation before configuration/index and initial download settle; then prove rolling generation, explicit Generate/user Undo, current-input typed repair after restart, external child deletion and new Sync data retriggering discovery, no self-upload loop, and account/profile change during an awaited plan stopping later writes while retaining admitted actions. Local E2E does not fake this barrier."
+    },
+    {
+      "id": "live-account-vault",
+      "requirements": "Unlocked interactive Windows 11 x64 host; packaged candidate; normal 1Password-approved real sign-in; unused synthetic remote slot. Prove sign-in/MFA, vault discovery, initial download, secure credential separation and account/vault reauthorization without touching existing vaults."
+    },
+    {
+      "id": "live-sync-round-trip",
+      "requirements": "The authorized synthetic remote vault plus an independent official Obsidian client. Prove create/edit/complete/delete in both directions, offline local edit and process restart, reconnect/upload exactly once, preserved binary/unknown metadata, and no old-account late publish."
+    },
+    {
+      "id": "live-retained-sync-conflicts",
+      "requirements": "Two independently edited synthetic replicas. Prove an actual concurrent Sync conflict retains both bytes through restart, then exercise explicit Keep local and Keep remote decisions; never synthesize a fake account or remote."
+    }
+  ]
+}

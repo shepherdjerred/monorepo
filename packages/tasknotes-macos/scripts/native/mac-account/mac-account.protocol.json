@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "kind": "mac-private-account-input",
+  "limits": { "frameBytes": 8192, "sessionMilliseconds": 120000 },
+  "timingDefinition": "account-input.schema.json#/$defs/verification-timing/const",
+  "operations": {
+    "credentials-probe": {
+      "phase": "credentials",
+      "probe": true,
+      "initialStage": "credentials",
+      "accountSubmits": 0,
+      "codeSubmits": 0,
+      "connects": 0
+    },
+    "verification-probe": {
+      "phase": "verification",
+      "probe": true,
+      "initialStage": "credentials",
+      "accountSubmits": 1,
+      "codeSubmits": 0,
+      "connects": 0
+    },
+    "credentials": {
+      "phase": "credentials",
+      "probe": false,
+      "initialStage": "credentials",
+      "accountSubmits": 1,
+      "codeSubmits": 0,
+      "connects": 0
+    },
+    "verification": {
+      "phase": "verification",
+      "probe": false,
+      "initialStage": "verification",
+      "accountSubmits": 0,
+      "codeSubmits": 1,
+      "connects": 0
+    },
+    "vault": {
+      "phase": "vaults",
+      "probe": false,
+      "initialStage": "vaults",
+      "accountSubmits": 0,
+      "codeSubmits": 0,
+      "connects": 1
+    }
+  },
+  "frames": {
+    "init": [
+      "schemaVersion",
+      "kind",
+      "mode",
+      "operation",
+      "sessionID",
+      "runID",
+      "remoteID",
+      "runDirectory",
+      "executable",
+      "container",
+      "stateDirectory",
+      "lifecycle",
+      "guestConfigSHA256",
+      "pid",
+      "startSeconds",
+      "startMicroseconds",
+      "launchDate",
+      "requestID",
+      "helperSHA256",
+      "protocolSHA256",
+      "timingSHA256",
+      "approvalSHA256"
+    ],
+    "credentials": ["kind", "sessionID", "email", "password"],
+    "verification": ["kind", "sessionID", "code", "expiresAtUnixMilliseconds"],
+    "vault": ["kind", "sessionID", "vaultPassword"],
+    "probe": ["kind", "sessionID", "email", "password", "code"],
+    "ready": [
+      "schemaVersion",
+      "kind",
+      "sessionID",
+      "runID",
+      "operation",
+      "phase",
+      "pid",
+      "startSeconds",
+      "startMicroseconds",
+      "launchDate",
+      "requestID",
+      "clockUnixMilliseconds"
+    ],
+    "finished": [
+      "schemaVersion",
+      "kind",
+      "sessionID",
+      "runID",
+      "operation",
+      "phase",
+      "cleared",
+      "secureField",
+      "submitActionCount",
+      "verificationCodeSubmitActionCount",
+      "intentRecorded"
+    ],
+    "rejected": [
+      "schemaVersion",
+      "kind",
+      "sessionID",
+      "runID",
+      "operation",
+      "phase",
+      "reason",
+      "intentRecorded",
+      "submitActionCount"
+    ],
+    "intent": [
+      "schemaVersion",
+      "runID",
+      "sessionID",
+      "operation",
+      "phase",
+      "pid",
+      "startSeconds",
+      "startMicroseconds",
+      "launchDate",
+      "requestID",
+      "remoteID",
+      "helperSHA256",
+      "protocolSHA256"
+    ],
+    "approval": [
+      "schemaVersion",
+      "kind",
+      "runID",
+      "guestConfigSHA256",
+      "helperSHA256",
+      "protocolSHA256",
+      "timingSHA256",
+      "credentialsProofSHA256",
+      "verificationProofSHA256",
+      "measurementSHA256",
+      "credentialsPassed",
+      "verificationPassed"
+    ]
+  },
+  "failureReasons": [
+    "input",
+    "process",
+    "run",
+    "window",
+    "field",
+    "setter",
+    "action",
+    "session",
+    "deadline",
+    "proof",
+    "intent"
+  ]
+}

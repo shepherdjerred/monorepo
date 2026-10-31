@@ -1,6 +1,14 @@
 import { expect, test } from "vitest";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  rm,
+  mkdir,
+  writeFile,
+  stat,
+  readdir,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
@@ -30,12 +38,97 @@ import {
   type ChartInput,
 } from "./helm-release-core.ts";
 import { runCommand, stageChart } from "./helm-push.ts";
+import { validateHelmTemplate } from "./helm-template-validation.ts";
+import { z } from "zod";
 
 const parameter = (field: string, name: string) =>
   `{{ required \`Delivery requires image:${name}\` (get (get (.Values.delivery | default dict) "${field}" | default dict) "${name}") }}`;
 
 const version = "2.0.0-1000042";
 const digest = `sha256:${"a".repeat(64)}`;
+
+async function validationChart(
+  root: string,
+  template: string,
+): Promise<string> {
+  const chart = path.join(root, "chart");
+  await mkdir(path.join(chart, "templates"), { recursive: true });
+  await writeFile(
+    path.join(chart, "Chart.yaml"),
+    "apiVersion: v2\nname: validation\nversion: 1.0.0\n",
+  );
+  await writeFile(path.join(chart, "templates", "fixture.yaml"), template);
+  return chart;
+}
+
+test("successful real Helm validation discards complete render output outside the packaged chart", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "helm-private-validation-"));
+  try {
+    const chart = await validationChart(
+      root,
+      'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: example\ndata:\n  payload: {{ repeat 65536 "x" | quote }}\n',
+    );
+    await validateHelmTemplate(chart, [], root);
+    expect(await readdir(root)).toEqual(["chart"]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("failed real Helm validation retains bounded private diagnostics without echoing rendered values", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "helm-private-failure-"));
+  try {
+    const chart = await validationChart(
+      root,
+      '{{ fail (repeat 65537 "x") }}\n',
+    );
+    const failure: unknown = await validateHelmTemplate(chart, [], root).catch(
+      (error: unknown) => error,
+    );
+    expect(String(failure)).toContain("output limit exceeded: true");
+    const { cause } = z
+      .object({
+        cause: z.object({ outputPath: z.string(), diagnosticPath: z.string() }),
+      })
+      .parse(failure);
+    const diagnosticStat = await stat(cause.diagnosticPath);
+    const outputStat = await stat(cause.outputPath);
+    const directoryStat = await stat(path.dirname(cause.outputPath));
+    expect(diagnosticStat.size).toBe(65_536);
+    expect(diagnosticStat.mode & 0o777).toBe(0o600);
+    expect(outputStat.mode & 0o777).toBe(0o600);
+    expect(directoryStat.mode & 0o777).toBe(0o700);
+    const diagnostic = await readFile(cause.diagnosticPath, "utf8");
+    expect(diagnostic).toContain("execution error");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("real Helm failure still fails below the output bound and keeps its cause private", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "helm-private-required-"));
+  try {
+    const chart = await validationChart(
+      root,
+      '{{ required "synthetic owner image required" .Values.image }}\n',
+    );
+    const failure: unknown = await validateHelmTemplate(chart, [], root).catch(
+      (error: unknown) => error,
+    );
+    expect(String(failure)).toContain("exit 1, output limit exceeded: false");
+    expect(String(failure)).not.toContain("synthetic owner image required");
+    const { cause } = z
+      .object({ cause: z.object({ diagnosticPath: z.string() }) })
+      .parse(failure);
+    expect(await readFile(cause.diagnosticPath, "utf8")).toContain(
+      "synthetic owner image required",
+    );
+    await rm(chart, { recursive: true });
+    expect(await Bun.file(cause.diagnosticPath).exists()).toBe(true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 test("the real synth child receives the parent's exact chart revision inventory", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "helm-child-inventory-"));

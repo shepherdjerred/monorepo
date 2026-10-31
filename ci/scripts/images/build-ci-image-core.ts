@@ -58,7 +58,21 @@ export function ciImageDefinition(name: string): CiImageDefinition {
         digestFile: "ci/ci-image/DIGEST",
         stateFile: "ci/ci-image/STATE.json",
         branch: "chore/ci-base-pin-pending",
-        sourceFiles: ["ci/ci-image/Dockerfile", ".mise.toml", "mise.lock"],
+        sourceFiles: [
+          "ci/ci-image/Dockerfile",
+          "ci/scripts/swiftlint/pins.json",
+          "ci/scripts/swiftlint/extract-source.py",
+          "ci/scripts/swiftlint/producer.py",
+          "ci/scripts/swiftlint/runtime-libraries.txt",
+          "ci/scripts/swiftlint/runtime.sh",
+          "ci/scripts/swiftlint/verify-capabilities.sh",
+          "ci/scripts/android-sdk.sh",
+          "packages/tasknotes-macos/.swiftlint.yml",
+          "packages/tasknotes-macos/.swiftlint-appkit-baseline.json",
+          "packages/version-catalog/src/catalog.json",
+          ".mise.toml",
+          "mise.lock",
+        ],
       };
     case "ci-playwright":
       return {

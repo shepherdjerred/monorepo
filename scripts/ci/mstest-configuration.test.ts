@@ -89,6 +89,7 @@ describe("shared MSTest configuration", () => {
     );
     expect(windows?.coverageAlways).toBe(true);
     expect(windows?.steps).toEqual([
+      { runner: "vitest", args: ["scripts"] },
       expect.objectContaining({
         runner: "dotnet",
         name: "unit",

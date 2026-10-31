@@ -1,38 +1,163 @@
 using System.Diagnostics;
-using System.Drawing.Imaging;
-using System.Globalization;
-using System.IO;
-using System.Text;
+using System.Text.Json;
 using System.Windows.Automation;
+using TaskNotes.Windows.App.Acceptance;
 
 namespace TaskNotes.Windows.E2E
 {
     internal sealed class UiAutomationSession : IAsyncDisposable
     {
         private const int DefaultTimeoutSeconds = 30;
-        private readonly ScenarioConfiguration _configuration;
-        private Process? _applicationProcess;
-
-        private UiAutomationSession(ScenarioConfiguration configuration, AutomationElement window)
-        {
-            _configuration = configuration;
-            Window = window;
-            _applicationProcess = Process.GetProcessById(window.Current.ProcessId);
-        }
+        private readonly OwnedPackageLifetime _ownership;
+        private readonly string _runId;
+        private readonly StandaloneMarkdownReader _markdown;
 
         internal AutomationElement Window { get; private set; }
 
-        internal static async Task<UiAutomationSession> LaunchAsync(
-            ScenarioConfiguration configuration,
+        private UiAutomationSession(
+            OwnedPackageLifetime ownership,
+            string runId,
+            AutomationElement window,
+            StandaloneMarkdownReader markdown
+        )
+        {
+            _ownership = ownership;
+            _runId = runId;
+            Window = window;
+            _markdown = markdown;
+        }
+
+        internal static async Task<UiAutomationSession> LaunchStandaloneAsync(
+            StandaloneAcceptanceDescriptor descriptor,
+            string executable,
+            string descriptorPath,
             CancellationToken cancellationToken
         )
         {
-            StartPackage(configuration.PackageFamilyName);
-            AutomationElement window = await Task.Run(
-                () => WaitForRootWindow(cancellationToken),
+            OwnedPackageLifetime ownership = new(
+                descriptor.PackageFamilyName,
+                executable,
+                descriptorPath
+            );
+            StandaloneMarkdownReader? markdown = null;
+            try
+            {
+                ownership.Activate();
+                AutomationElement window = await Task.Run(
+                    () => WaitForStandaloneWindow(ownership, descriptor.RunId, cancellationToken),
+                    cancellationToken
+                );
+                markdown = await StandaloneMarkdownReader.CreateAsync(
+                    descriptor,
+                    cancellationToken
+                );
+                ownership.RequireWindow(window, descriptor.RunId);
+                return new UiAutomationSession(ownership, descriptor.RunId, window, markdown);
+            }
+            catch
+            {
+                try
+                {
+                    if (markdown is not null)
+                        await markdown.DisposeAsync();
+                }
+                finally
+                {
+                    await ownership.DisposeAsync();
+                }
+                throw;
+            }
+        }
+
+        private static AutomationElement WaitForStandaloneWindow(
+            OwnedPackageLifetime ownership,
+            string runId,
+            CancellationToken cancellationToken
+        )
+        {
+            AutomationElement result = WaitForCondition(
+                () =>
+                    AutomationElement.RootElement.FindFirst(
+                        TreeScope.Children,
+                        new AndCondition(
+                            new PropertyCondition(
+                                AutomationElement.ProcessIdProperty,
+                                ownership.ProcessId
+                            ),
+                            new PropertyCondition(
+                                AutomationElement.NameProperty,
+                                "Facet Acceptance " + runId
+                            )
+                        )
+                    ),
+                "descriptor-bound standalone workspace",
                 cancellationToken
             );
-            return new UiAutomationSession(configuration, window);
+            ownership.RequireWindow(result, runId);
+            return result;
+        }
+
+        internal void RequireOwnedWindow()
+        {
+            _ownership.RequireWindow(Window, _runId);
+        }
+
+        internal async Task<JsonElement?> ReadPropertiesAsync(
+            string filename,
+            CancellationToken cancellation
+        )
+        {
+            RequireOwnedWindow();
+            var properties = await _markdown.ReadAsync(filename, cancellation);
+            RequireOwnedWindow();
+            return properties;
+        }
+
+        internal async Task WaitForPropertyAsync(
+            string filename,
+            string field,
+            string expected,
+            CancellationToken cancellation
+        )
+        {
+            using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellation
+            );
+            timeout.CancelAfter(TimeSpan.FromSeconds(DefaultTimeoutSeconds));
+            while (true)
+            {
+                var properties = await ReadPropertiesAsync(filename, timeout.Token);
+                if (
+                    properties is JsonElement document
+                    && document.TryGetProperty(field, out var value)
+                )
+                {
+                    if (value.ValueKind != JsonValueKind.String)
+                        throw new AssertFailedException(
+                            "A fixture scalar has an unexpected core type."
+                        );
+                    if (value.GetString() == expected)
+                    {
+                        await WaitForMutationSettlementAsync(timeout.Token);
+                        return;
+                    }
+                }
+                await Task.Delay(TimeSpan.FromMilliseconds(100), timeout.Token);
+            }
+        }
+
+        internal async Task WaitForMutationSettlementAsync(CancellationToken cancellation)
+        {
+            using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellation
+            );
+            timeout.CancelAfter(TimeSpan.FromSeconds(DefaultTimeoutSeconds));
+            while (!await _markdown.HasSettledAsync(timeout.Token))
+            {
+                RequireOwnedWindow();
+                await Task.Delay(TimeSpan.FromMilliseconds(50), timeout.Token);
+            }
+            RequireOwnedWindow();
         }
 
         internal AutomationElement WaitForAutomationId(
@@ -159,6 +284,21 @@ namespace TaskNotes.Windows.E2E
             );
         }
 
+        internal string WaitForText(
+            string automationId,
+            Func<string, bool> predicate,
+            CancellationToken cancellationToken
+        )
+        {
+            var element = WaitForAutomationId(automationId, cancellationToken);
+            _ = WaitForCondition(
+                () => predicate(ReadText(element)) ? element : null,
+                "owned text predicate",
+                cancellationToken
+            );
+            return ReadText(element);
+        }
+
         internal void Invoke(string automationId)
         {
             InvokeElement(WaitForAutomationId(automationId, CancellationToken.None));
@@ -210,6 +350,25 @@ namespace TaskNotes.Windows.E2E
             SetElementValue(WaitForAutomationId(automationId, CancellationToken.None), value);
         }
 
+        internal void SetNamedValue(string name, string value)
+        {
+            AutomationElement element = WaitForElement(
+                () =>
+                    FindInApplication(
+                        new AndCondition(
+                            new PropertyCondition(AutomationElement.NameProperty, name),
+                            new PropertyCondition(
+                                AutomationElement.IsValuePatternAvailableProperty,
+                                true
+                            )
+                        )
+                    ),
+                "owned editable field '" + name + "'",
+                CancellationToken.None
+            );
+            SetElementValue(element, value);
+        }
+
         internal static void SetElementValue(AutomationElement element, string value)
         {
             if (
@@ -240,6 +399,7 @@ namespace TaskNotes.Windows.E2E
 
         internal void SelectComboValue(string automationName, string value)
         {
+            RequireOwnedWindow();
             AutomationElement comboBox = WaitForElement(
                 () =>
                     Window.FindFirst(
@@ -255,29 +415,21 @@ namespace TaskNotes.Windows.E2E
                 $"combo box '{automationName}'",
                 CancellationToken.None
             );
+            SelectComboValue(comboBox, value);
+        }
+
+        internal void ChooseMenuItem(string menuName, string itemName)
+        {
+            RequireOwnedWindow();
+            AutomationElement menu = WaitForName(menuName, CancellationToken.None);
             if (
-                comboBox.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out object pattern)
+                menu.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out object pattern)
                 && pattern is ExpandCollapsePattern expand
             )
-            {
                 expand.Expand();
-            }
-            AutomationElement item = WaitForElement(
-                () =>
-                    AutomationElement.RootElement.FindFirst(
-                        TreeScope.Descendants,
-                        new AndCondition(
-                            new PropertyCondition(AutomationElement.NameProperty, value),
-                            new PropertyCondition(
-                                AutomationElement.ControlTypeProperty,
-                                ControlType.ListItem
-                            )
-                        )
-                    ),
-                $"combo box value '{value}'",
-                CancellationToken.None
-            );
-            Select(item, false);
+            else
+                InvokeElement(menu);
+            InvokeByName(itemName);
         }
 
         internal void SelectComboValueByAutomationId(string automationId, string value)
@@ -376,6 +528,32 @@ namespace TaskNotes.Windows.E2E
             }
         }
 
+        internal void OpenTask(string title)
+        {
+            RequireOwnedWindow();
+            AutomationElement label = WaitForName(title, CancellationToken.None);
+            AutomationElement item =
+                AscendToPattern(label, InvokePattern.Pattern)
+                ?? throw new AssertFailedException(
+                    "The task row has no native ItemClick Invoke pattern."
+                );
+            InvokeElement(item);
+        }
+
+        internal void OpenTaskByPath(string path)
+        {
+            var row = WaitForAutomationId(
+                TaskNotes.Windows.Host.AutomationIds.TaskRow(path),
+                CancellationToken.None
+            );
+            var item =
+                AscendToPattern(row, InvokePattern.Pattern)
+                ?? throw new AssertFailedException(
+                    "The exact task path has no ItemClick Invoke pattern."
+                );
+            InvokeElement(item);
+        }
+
         internal static void ActivateProtocol(string uri)
         {
             _ = Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
@@ -383,43 +561,29 @@ namespace TaskNotes.Windows.E2E
 
         internal void Focus()
         {
+            RequireOwnedWindow();
             Window.SetFocus();
+        }
+
+        internal void SendOwnedKeys(string keys)
+        {
+            RequireOwnedWindow();
+            _ownership.RequireForeground();
+            SendKeys.SendWait(keys);
+        }
+
+        internal void RequireWindowScale(uint dpi)
+        {
+            _ownership.RequireWindowScale(Window, _runId, dpi);
         }
 
         internal async Task RestartAsync(CancellationToken cancellationToken)
         {
-            CloseWindow();
-            if (_applicationProcess is not null)
-            {
-                await _applicationProcess.WaitForExitAsync(cancellationToken);
-                _applicationProcess.Dispose();
-            }
-            StartPackage(_configuration.PackageFamilyName);
-            Window = await Task.Run(() => WaitForRootWindow(cancellationToken), cancellationToken);
-            _applicationProcess = Process.GetProcessById(Window.Current.ProcessId);
-        }
-
-        internal async Task CaptureDiagnosticsAsync(
-            string artifactDirectory,
-            CancellationToken cancellationToken
-        )
-        {
-            _ = Directory.CreateDirectory(artifactDirectory);
-            await CaptureScreenshotAsync(
-                Path.Combine(artifactDirectory, "failure.png"),
-                cancellationToken
-            );
-            await File.WriteAllTextAsync(
-                Path.Combine(artifactDirectory, "uia-tree.txt"),
-                DescribeAutomationTree(Window),
-                cancellationToken
-            );
-            string processInfo = _applicationProcess is null
-                ? "application process unavailable"
-                : $"pid={_applicationProcess.Id.ToString(CultureInfo.InvariantCulture)} name={_applicationProcess.ProcessName} exited={_applicationProcess.HasExited}";
-            await File.WriteAllTextAsync(
-                Path.Combine(artifactDirectory, "app-process.txt"),
-                processInfo,
+            RequireOwnedWindow();
+            await _ownership.StopAsync(cancellationToken);
+            _ownership.Activate();
+            Window = await Task.Run(
+                () => WaitForStandaloneWindow(_ownership, _runId, cancellationToken),
                 cancellationToken
             );
         }
@@ -427,75 +591,20 @@ namespace TaskNotes.Windows.E2E
         internal Task CaptureScreenshotAsync(string path, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            System.Windows.Rect bounds = Window.Current.BoundingRectangle;
-            if (bounds.IsEmpty || bounds.Width <= 0 || bounds.Height <= 0)
-            {
-                throw new AssertFailedException(
-                    "The TaskNotes window has no capturable UIA bounds."
-                );
-            }
-            int width = checked((int)Math.Ceiling(bounds.Width));
-            int height = checked((int)Math.Ceiling(bounds.Height));
-            using Bitmap bitmap = new(width, height, PixelFormat.Format32bppArgb);
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            graphics.CopyFromScreen(
-                checked((int)Math.Floor(bounds.Left)),
-                checked((int)Math.Floor(bounds.Top)),
-                0,
-                0,
-                new Size(width, height),
-                CopyPixelOperation.SourceCopy
-            );
-            bitmap.Save(path, ImageFormat.Png);
+            _ownership.CaptureWindow(Window, _runId, path);
             return Task.CompletedTask;
         }
 
         public async ValueTask DisposeAsync()
         {
-            CloseWindow();
-            if (_applicationProcess is not null)
+            try
             {
-                if (!_applicationProcess.HasExited)
-                {
-                    _applicationProcess.Kill(true);
-                }
-                await _applicationProcess.WaitForExitAsync();
-                _applicationProcess.Dispose();
-                _applicationProcess = null;
+                await _markdown.DisposeAsync();
             }
-        }
-
-        private static void StartPackage(string packageFamilyName)
-        {
-            ProcessStartInfo start = new(
-                "explorer.exe",
-                $"shell:AppsFolder\\{packageFamilyName}!App"
-            )
+            finally
             {
-                UseShellExecute = true,
-            };
-            _ =
-                Process.Start(start)
-                ?? throw new InvalidOperationException("Unable to activate the E2E MSIX package.");
-        }
-
-        private static AutomationElement WaitForRootWindow(CancellationToken cancellationToken)
-        {
-            return WaitForCondition(
-                () =>
-                    AutomationElement.RootElement.FindFirst(
-                        TreeScope.Children,
-                        new AndCondition(
-                            new PropertyCondition(AutomationElement.NameProperty, "TaskNotes E2E"),
-                            new PropertyCondition(
-                                AutomationElement.ControlTypeProperty,
-                                ControlType.Window
-                            )
-                        )
-                    ),
-                "TaskNotes E2E top-level window",
-                cancellationToken
-            );
+                await _ownership.DisposeAsync();
+            }
         }
 
         private static AutomationElement WaitForElement(
@@ -509,7 +618,21 @@ namespace TaskNotes.Windows.E2E
 
         private AutomationElement? FindInApplication(Condition condition)
         {
-            AutomationElement? local = Window.FindFirst(TreeScope.Descendants, condition);
+            RequireOwnedWindow();
+            AutomationElement? dialog = Window.FindFirst(
+                TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(
+                        AutomationElement.AutomationIdProperty,
+                        "TaskNotes.QuickAdd.Dialog"
+                    ),
+                    new PropertyCondition(AutomationElement.IsOffscreenProperty, false)
+                )
+            );
+            AutomationElement? local = (dialog ?? Window).FindFirst(
+                TreeScope.Descendants,
+                condition
+            );
             return local
                 ?? AutomationElement.RootElement.FindFirst(
                     TreeScope.Descendants,
@@ -592,6 +715,11 @@ namespace TaskNotes.Windows.E2E
 
         private static string ReadText(AutomationElement element)
         {
+            if (
+                element.TryGetCurrentPattern(TextPattern.Pattern, out object text)
+                && text is TextPattern textPattern
+            )
+                return textPattern.DocumentRange.GetText(-1);
             return
                 element.TryGetCurrentPattern(ValuePattern.Pattern, out object pattern)
                 && pattern is ValuePattern valuePattern
@@ -649,71 +777,6 @@ namespace TaskNotes.Windows.E2E
                 current = TreeWalker.ControlViewWalker.GetParent(current);
             }
             return null;
-        }
-
-        private void CloseWindow()
-        {
-            try
-            {
-                if (
-                    Window.TryGetCurrentPattern(WindowPattern.Pattern, out object pattern)
-                    && pattern is WindowPattern window
-                )
-                {
-                    window.Close();
-                }
-            }
-            catch (ElementNotAvailableException)
-            {
-                return;
-            }
-        }
-
-        private static string DescribeAutomationTree(AutomationElement root)
-        {
-            StringBuilder output = new();
-            Describe(root, output, 0);
-            return output.ToString();
-        }
-
-        private static void Describe(AutomationElement element, StringBuilder output, int depth)
-        {
-            if (depth > 20)
-            {
-                return;
-            }
-            try
-            {
-                _ = output
-                    .Append(' ', depth * 2)
-                    .Append(element.Current.ControlType.ProgrammaticName)
-                    .Append(" name=")
-                    .Append(JSON(element.Current.Name))
-                    .Append(" id=")
-                    .Append(JSON(element.Current.AutomationId))
-                    .Append(" enabled=")
-                    .Append(element.Current.IsEnabled)
-                    .Append(" focusable=")
-                    .Append(element.Current.IsKeyboardFocusable)
-                    .AppendLine();
-                AutomationElementCollection children = element.FindAll(
-                    TreeScope.Children,
-                    Condition.TrueCondition
-                );
-                foreach (AutomationElement child in children.Cast<AutomationElement>().Take(200))
-                {
-                    Describe(child, output, depth + 1);
-                }
-            }
-            catch (ElementNotAvailableException)
-            {
-                _ = output.Append(' ', depth * 2).AppendLine("<element unavailable>");
-            }
-        }
-
-        private static string JSON(string value)
-        {
-            return System.Text.Json.JsonSerializer.Serialize(value);
         }
     }
 }

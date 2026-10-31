@@ -118,7 +118,7 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
             try JSONSerialization.jsonObject(with: Data(text.utf8))
         }
         guard let elements = parsed as? [Any] else {
-            throw CoreError.Validation(message: "the cached task list is not a JSON array")
+            throw CoreError.Validation(detail: "the cached task list is not a JSON array")
         }
 
         var tasks: [CoreTask] = []
@@ -205,7 +205,7 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
         guard let text = try readText(.lastSyncTime) else { return nil }
         guard let millis = Int64(text.trimmed) else {
             throw CoreError.Validation(
-                message: "the stored last-sync time is not an integer: \(text)"
+                detail: "the stored last-sync time is not an integer: \(text)"
             )
         }
         return millis
@@ -227,7 +227,7 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
         guard let text = try readText(.schemaVersion) else { return 0 }
         guard let version = UInt32(text.trimmed) else {
             throw CoreError.Validation(
-                message: "the stored schema version is not an integer: \(text)"
+                detail: "the stored schema version is not an integer: \(text)"
             )
         }
         return version

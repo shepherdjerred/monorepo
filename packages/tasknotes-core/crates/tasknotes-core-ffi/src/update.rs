@@ -80,14 +80,6 @@ field_update!(
 );
 
 field_update!(
-    /// A clearable whole-minutes field.
-    ///
-    /// The exported counterpart of [`tasknotes_core::domain::MinutesUpdate`].
-    MinutesUpdate,
-    u32
-);
-
-field_update!(
     /// A clearable recurrence anchor.
     ///
     /// The exported counterpart of
@@ -125,8 +117,6 @@ pub struct UpdateTaskRequest {
     pub recurrence: TextUpdate,
     /// What the recurrence is measured from; `Clear` deletes it.
     pub recurrence_anchor: RecurrenceAnchorUpdate,
-    /// The estimate in whole minutes; `Clear` deletes it.
-    pub time_estimate: MinutesUpdate,
     /// The full replacement set of extra frontmatter keys, as a JSON object
     /// string.
     pub extra_fields: Option<ExtraFields>,
@@ -146,7 +136,6 @@ impl From<tasknotes_core::domain::UpdateTaskRequest> for UpdateTaskRequest {
             tags,
             recurrence,
             recurrence_anchor,
-            time_estimate,
             extra_fields,
         } = request;
         Self {
@@ -161,7 +150,6 @@ impl From<tasknotes_core::domain::UpdateTaskRequest> for UpdateTaskRequest {
             tags,
             recurrence: recurrence.into(),
             recurrence_anchor: recurrence_anchor.into(),
-            time_estimate: time_estimate.into(),
             extra_fields,
         }
     }
@@ -181,7 +169,6 @@ impl From<UpdateTaskRequest> for tasknotes_core::domain::UpdateTaskRequest {
             tags,
             recurrence,
             recurrence_anchor,
-            time_estimate,
             extra_fields,
         } = request;
         Self {
@@ -196,7 +183,6 @@ impl From<UpdateTaskRequest> for tasknotes_core::domain::UpdateTaskRequest {
             tags,
             recurrence: recurrence.into(),
             recurrence_anchor: recurrence_anchor.into(),
-            time_estimate: time_estimate.into(),
             extra_fields,
         }
     }
@@ -207,7 +193,7 @@ mod tests {
     use serde_json::json;
     use tasknotes_core::domain::{FieldUpdate, RecurrenceAnchor};
 
-    use super::{MinutesUpdate, RecurrenceAnchorUpdate, TextUpdate, UpdateTaskRequest};
+    use super::{RecurrenceAnchorUpdate, TextUpdate, UpdateTaskRequest};
 
     #[test]
     fn every_field_update_state_round_trips() {
@@ -217,15 +203,6 @@ mod tests {
             FieldUpdate::Set("2026-08-08".to_owned()),
         ] {
             let exported = TextUpdate::from(update.clone());
-            assert_eq!(FieldUpdate::from(exported), update);
-        }
-
-        for update in [
-            FieldUpdate::Unchanged,
-            FieldUpdate::Clear,
-            FieldUpdate::Set(30),
-        ] {
-            let exported = MinutesUpdate::from(update);
             assert_eq!(FieldUpdate::from(exported), update);
         }
 
@@ -256,7 +233,6 @@ mod tests {
             "status": "done",
             "due": "2026-08-08",
             "recurrenceAnchor": "completion",
-            "timeEstimate": null,
         }))
         .unwrap();
 
@@ -269,7 +245,6 @@ mod tests {
             }
         );
         assert_eq!(exported.scheduled, TextUpdate::Unchanged);
-        assert_eq!(exported.time_estimate, MinutesUpdate::Clear);
         assert_eq!(
             exported.recurrence_anchor,
             RecurrenceAnchorUpdate::Set {

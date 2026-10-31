@@ -4,6 +4,50 @@
 # cache (near-free when unchanged); the toolchain layers invalidate on
 # .mise.toml changes.
 
+ARG SWIFTLINT_BUILDER_IMAGE=docker.io/library/swift:6.3.2-jammy@sha256:5f846f008aa76859377d4e9dafe2826c74dde99421bbc60ae2b98d0f1daf72cf
+
+# Build against Jammy's older libc. The upstream 0.65.1 Linux executable
+# requires GLIBC_2.38 and cannot execute on our Bookworm image (GLIBC_2.36).
+# The compiler stays in this stage; only its declared runtime libraries leave it.
+FROM ${SWIFTLINT_BUILDER_IMAGE} AS swiftlint-builder
+ARG SWIFTLINT_BUILDER_IMAGE
+WORKDIR /swiftlint-source
+COPY ci/scripts/swiftlint/pins.json /swiftlint-input/pins.json
+COPY ci/scripts/swiftlint/extract-source.py /swiftlint-input/extract-source.py
+COPY ci/scripts/swiftlint/producer.py /swiftlint-input/producer.py
+RUN python3 /swiftlint-input/producer.py prepare-source \
+    && python3 /swiftlint-input/producer.py compile-source
+COPY ci/scripts/swiftlint/runtime-libraries.txt /swiftlint-input/runtime-libraries.txt
+RUN set -eu; \
+    mkdir -p /swiftlint-output/opt/swiftlint/bin /swiftlint-output/opt/swiftlint/lib /swiftlint-output/opt/swiftlint/licenses; \
+    cp .build/release/swiftlint /swiftlint-output/opt/swiftlint/bin/swiftlint; \
+    cp LICENSE /swiftlint-output/opt/swiftlint/licenses/SwiftLint-LICENSE; \
+    cp /swiftlint-input/licenses/* /swiftlint-output/opt/swiftlint/licenses/; \
+    while IFS= read -r runtime_library; do \
+      cp -L "$runtime_library" /swiftlint-output/opt/swiftlint/lib/; \
+    done < /swiftlint-input/runtime-libraries.txt
+RUN python3 /swiftlint-input/producer.py collect-licenses
+
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS swiftlint-runtime
+# hadolint ignore=DL3008
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    ca-certificates libcurl4 libxml2 libstdc++6 libgcc-s1 libatomic1 \
+    zlib1g libtinfo6 libedit2 libsqlite3-0 libz3-4 python3 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=swiftlint-builder /swiftlint-output/ /
+COPY ci/scripts/swiftlint/producer.py /swiftlint-input/producer.py
+COPY ci/scripts/swiftlint/runtime.sh /opt/swiftlint/swiftlint
+COPY ci/scripts/swiftlint/pins.json ci/scripts/swiftlint/verify-capabilities.sh /opt/swiftlint/contract/
+COPY packages/tasknotes-macos/.swiftlint.yml packages/tasknotes-macos/.swiftlint-appkit-baseline.json /opt/swiftlint/contract/
+RUN chmod 755 /opt/swiftlint/swiftlint \
+    && ln -s /opt/swiftlint/swiftlint /usr/local/bin/swiftlint \
+    && version="$(python3 -c 'import json; print(json.load(open("/opt/swiftlint/contract/pins.json"))["version"])')" \
+    && bash /opt/swiftlint/contract/verify-capabilities.sh /usr/local/bin/swiftlint /opt/swiftlint/contract/.swiftlint.yml "$version"
+RUN python3 /swiftlint-input/producer.py export-runtime
+
+FROM scratch AS swiftlint-export
+COPY --from=swiftlint-runtime /runtime.tar.gz /runtime.tar.gz.sha256 /runtime.manifest.json /
+
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS base
 
 # Fail-fast shell for every RUN: a failing producer in a pipeline (curl | sh,
@@ -17,7 +61,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
-    build-essential pkg-config libssl-dev libxml2 util-linux ffmpeg \
+    build-essential pkg-config libssl-dev libxml2 libcurl4 libatomic1 \
+    libtinfo6 libedit2 libsqlite3-0 libz3-4 util-linux ffmpeg \
     && flock --version \
     && ffmpeg -version && ffprobe -version \
     && rm -rf /var/lib/apt/lists/*
@@ -26,16 +71,9 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
 COPY --from=docker:29-cli@sha256:1a4c7cb63513f349bdad01fcc6e0f3f2f67d37b9da86f14dc0d4a0942eecda00 /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker/buildx-bin:0.38.0@sha256:abcf2315937f37bdb52615d1698a4696e3952e88c440a07e7552cbefbc72b1b6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
-# swiftlint from the official release zip: the -static build is
-# self-contained (the dynamic binary needs Swift runtime libs neither the
-# zip nor realm's image lays out where we can copy them). Same recipe as
-# ci/scripts/toolchain.sh — keep the two in sync.
-# renovate: datasource=github-releases depName=realm/SwiftLint
-ARG SWIFTLINT_VERSION=0.61.0
-RUN curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip \
-    && unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint \
-    && ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint \
-    && rm /tmp/swiftlint.zip
+# Full configured SwiftLint, without retaining the compiler toolchain.
+COPY --from=swiftlint-runtime /opt/swiftlint /opt/swiftlint
+RUN ln -s /opt/swiftlint/swiftlint /usr/local/bin/swiftlint
 
 # mise, pinned to the portable musl release assets; tools come from the
 # repo's .mise.toml. Verify the release's signed checksum manifest so Renovate
@@ -72,6 +110,15 @@ RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true 
     mise trust .mise.toml && mise install --locked && mise reshim \
     && ln -sf "$(mise which gh)" /usr/local/bin/gh \
     && gh --version
+
+# Android build tools and NDK are published for Linux x86_64. Keep the ARM64
+# base image usable for every other workspace; Android actions fail explicitly
+# when invoked on that unsupported host architecture.
+COPY ci/scripts/android-sdk.sh /workspace/ci/scripts/android-sdk.sh
+ENV ANDROID_HOME=/opt/android-sdk \
+    ANDROID_SDK_ROOT=/opt/android-sdk
+RUN if [ "${TARGETARCH}" = amd64 ]; then bash ci/scripts/android-sdk.sh; \
+    else echo "Android NDK provisioning omitted: Linux ARM64 host tools are unsupported"; fi
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv

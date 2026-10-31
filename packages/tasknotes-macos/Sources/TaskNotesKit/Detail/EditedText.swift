@@ -72,7 +72,7 @@ public struct EditedText: Equatable, Sendable {
     /// Record that `dispatched` reached the core.
     ///
     /// Called only when a mutation was actually recorded, so a value the core
-    /// *refused* — an emptied title, an estimate that is not a number, an
+    /// *refused* — an emptied title or an
     /// enqueue that failed — stays an edit and stays committable, rather than
     /// being adopted as the baseline and then quietly dropped.
     ///

@@ -11,8 +11,6 @@ import { envelopeMiddleware } from "./middleware/envelope.ts";
 import { loggerMiddleware } from "./middleware/logger.ts";
 import { metricsMiddleware } from "./middleware/metrics.ts";
 import { healthRoutes } from "./routes/health.ts";
-import { pomodoroRoutes } from "./routes/pomodoro.ts";
-import { PomodoroStore } from "./store/pomodoro-store.ts";
 import { loadModelConfig } from "./engine/model-config.ts";
 import { TaskRepository } from "./engine/task-repository.ts";
 import { watchVault } from "./engine/watcher.ts";
@@ -20,8 +18,7 @@ import { v2Routes } from "./v2/routes.ts";
 
 /**
  * Server: @tasknotes/model-backed engine serving the upstream plugin
- * contract on `/api/*` (the app target). Pomodoro state is ephemeral and
- * vault-independent; its store mounts on the same surface.
+ * task contract on `/api/*`.
  */
 
 const app = new Hono();
@@ -31,7 +28,6 @@ const { config: modelConfig, source: configSource } = await loadModelConfig(
   config.vaultPath,
 );
 const repo = new TaskRepository(config.vaultPath, config.tasksDir, modelConfig);
-const pomodoroStore = new PomodoroStore();
 // Dot-directory: excluded from vault scans, hidden from Obsidian, but on the
 // vault PVC so replay dedup survives pod restarts.
 const idempotencyStore = new IdempotencyStore(
@@ -51,7 +47,6 @@ app.route(
   "/",
   v2Routes({ repo, config: modelConfig, vaultPath: config.vaultPath }),
 );
-app.route("/", pomodoroRoutes(pomodoroStore));
 
 // Engine visibility: parse skips and config provenance, next to /api/health.
 app.get("/api/engine-status", (c) =>

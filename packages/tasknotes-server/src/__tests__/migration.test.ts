@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { resolveModelConfig } from "tasknotes-types/v2";
+import { parseFrontmatter, resolveModelConfig } from "tasknotes-types/v2";
 
 import { migrateVaultFile } from "../migration/migrate.ts";
 
@@ -19,8 +19,22 @@ Body text stays.
 `;
 
 describe("migrateVaultFile", () => {
+  test("migration preserves retired metadata as opaque data", () => {
+    const source = LEGACY_SERVER_FILE.replace(
+      "priority: normal",
+      "priority: normal\ntimeEntries: [vendor-entry]\ntimeEstimate: unknown\npomodoro: {vendor: true}",
+    );
+    const result = migrateVaultFile(source, config);
+    const original = parseFrontmatter(source);
+    const migrated = parseFrontmatter(result.content);
+    for (const key of ["timeEntries", "timeEstimate", "pomodoro"]) {
+      expect(migrated.frontmatter[key]).toEqual(original.frontmatter[key]);
+    }
+    expect(migrated.body).toBe(original.body);
+  });
+
   test("adds the task tag, drops the injected id, keeps everything else", () => {
-    const result = migrateVaultFile(LEGACY_SERVER_FILE, config, () => []);
+    const result = migrateVaultFile(LEGACY_SERVER_FILE, config);
     expect(result.changed).toBe(true);
     expect(result.actions).toEqual(['add tag "task"', "drop injected id key"]);
     expect(result.content).toContain("- task");
@@ -30,58 +44,16 @@ describe("migrateVaultFile", () => {
     expect(result.content).toContain("due:");
   });
 
-  test("folds side-store time entries keyed by the legacy id, deduped", () => {
-    const result = migrateVaultFile(LEGACY_SERVER_FILE, config, (id) =>
-      id === "1a2b3c4d"
-        ? [
-            {
-              taskId: "1a2b3c4d",
-              startTime: "2026-07-01T09:00:00Z",
-              endTime: "2026-07-01T09:30:00Z",
-              duration: 30,
-            },
-          ]
-        : [],
-    );
-    expect(result.changed).toBe(true);
-    expect(result.content).toContain("timeEntries:");
-    expect(result.content).toContain("startTime: 2026-07-01T09:00:00Z");
-    expect(result.content).not.toContain("taskId");
-  });
-
-  test("folds time entries for an all-digit id that YAML parsed as a number", () => {
-    // `id: 12345678` re-parses as the NUMBER 12345678; the side-store keys are
-    // strings. Regression guard: without string coercion these entries would be
-    // silently dropped and lost when the side-store is renamed to .migrated.
-    const numericIdFile = `---
-id: 12345678
-title: Numeric id task
-status: open
----
-
-Body.
-`;
-    const result = migrateVaultFile(numericIdFile, config, (id) =>
-      id === "12345678"
-        ? [{ taskId: "12345678", startTime: "2026-07-02T10:00:00Z" }]
-        : [],
-    );
-    expect(result.changed).toBe(true);
-    expect(result.actions).toContain("fold 1 time entrie(s) from side-store");
-    expect(result.content).toContain("startTime: 2026-07-02T10:00:00Z");
-    expect(result.content).not.toContain("id: 12345678");
-  });
-
   test("is idempotent: migrating the output changes nothing", () => {
-    const first = migrateVaultFile(LEGACY_SERVER_FILE, config, () => []);
-    const second = migrateVaultFile(first.content, config, () => []);
+    const first = migrateVaultFile(LEGACY_SERVER_FILE, config);
+    const second = migrateVaultFile(first.content, config);
     expect(second.changed).toBe(false);
     expect(second.content).toBe(first.content);
   });
 
   test("non-task markdown is untouched", () => {
     const note = "# Just a note\n\nNo task frontmatter.\n";
-    const result = migrateVaultFile(note, config, () => []);
+    const result = migrateVaultFile(note, config);
     expect(result.changed).toBe(false);
     expect(result.content).toBe(note);
   });
@@ -94,7 +66,7 @@ tags:
   - task
 ---
 `;
-    const result = migrateVaultFile(pluginFile, config, () => []);
+    const result = migrateVaultFile(pluginFile, config);
     expect(result.changed).toBe(false);
   });
 
@@ -109,7 +81,7 @@ status: draft
 
 Not a TaskNotes task.
 `;
-    const result = migrateVaultFile(note, config, () => []);
+    const result = migrateVaultFile(note, config);
     expect(result.changed).toBe(false);
     expect(result.content).toBe(note);
   });

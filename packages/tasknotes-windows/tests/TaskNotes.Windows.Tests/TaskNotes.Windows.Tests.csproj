@@ -9,6 +9,54 @@
     <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource
+      Include="Fixtures/AndroidDependencyEditCommand.json"
+      LogicalName="AndroidDependencyEditCommand.json"
+    />
+    <Compile
+      Include="../TaskNotes.Windows.E2E/OwnedOperationCleanup.cs"
+      Link="Adapters/OwnedOperationCleanup.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Acceptance/StandaloneAcceptanceDescriptor.cs"
+      Link="Adapters/StandaloneAcceptanceDescriptor.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Acceptance/StandaloneAcceptanceBootstrap.cs"
+      Link="Adapters/StandaloneAcceptanceBootstrap.cs"
+    />
+    <EmbeddedResource
+      Include="../../e2e/standalone/contract.json"
+      LogicalName="StandaloneAcceptanceSchema.json"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/ShellPreferencesCodec.cs"
+      Link="Adapters/ShellPreferencesCodec.cs"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-retained-actions.json"
+      LogicalName="FacetRetainedActionCases.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-core/crates/obsidian-sync/tests/reference/protocol.json"
+      LogicalName="ObsidianProtocolCapture.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-contract.json"
+      LogicalName="FacetContractCases.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-agenda-contract.json"
+      LogicalName="FacetAgendaContractCases.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-occurrence-contract.json"
+      LogicalName="FacetOccurrenceContractCases.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-raw-contract.json"
+      LogicalName="FacetRawContractCases.json"
+    />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" />
   </ItemGroup>
   <ItemGroup>

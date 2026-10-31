@@ -31,77 +31,77 @@ use tasknotes_core::{Error, ErrorKind};
 /// committed bindings diff.
 ///
 /// ⚠️ UniFFI keeps Rust's `PascalCase` for error cases, so this reads
-/// `.Invariant(message:)` in Swift while a plain `uniffi::Enum` reads
+/// `.Invariant(detail:)` in Swift while a plain `uniffi::Enum` reads
 /// `.inProgress`. That inconsistency is upstream and expected; the generated
 /// target is lint-exempt, so it will not fail a build.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error, uniffi::Error)]
 pub enum CoreError {
     /// A caller broke a documented contract, or the engine reached a state it
     /// believes is unreachable.
-    #[error("invariant violated: {message}")]
+    #[error("invariant violated: {detail}")]
     Invariant {
         /// What was expected, and what was seen instead.
-        message: String,
+        detail: String,
     },
 
     /// The request never reached the server, or the response never arrived.
-    #[error("{message}")]
+    #[error("{detail}")]
     Network {
         /// What the transport reported.
-        message: String,
+        detail: String,
     },
 
     /// The server answered with a non-success HTTP status.
-    #[error("{message}")]
+    #[error("{detail}")]
     Api {
         /// What the server said, or what the client inferred.
-        message: String,
+        detail: String,
         /// The HTTP status. `0` is used for an envelope-level `success: false`,
         /// which carries no HTTP status of its own.
         status: u16,
     },
 
     /// A payload did not match its schema, in either direction.
-    #[error("{message}")]
+    #[error("{detail}")]
     Validation {
         /// Which field failed, and how.
-        message: String,
+        detail: String,
     },
 
     /// The addressed resource does not exist.
-    #[error("{message}")]
+    #[error("{detail}")]
     NotFound {
-        /// The rendered `"<resource> not found: <id>"` message.
-        message: String,
+        /// The rendered `"<resource> not found: <id>"` detail.
+        detail: String,
     },
 
     /// No server could be reached at the configured address at all.
-    #[error("{message}")]
+    #[error("{detail}")]
     Connection {
         /// Why the connection could not be established.
-        message: String,
+        detail: String,
     },
 }
 
 impl From<Error> for CoreError {
     fn from(error: Error) -> Self {
-        let message = error.message().to_owned();
+        let detail = error.message().to_owned();
         match error.kind() {
-            ErrorKind::Invariant => Self::Invariant { message },
-            ErrorKind::Network => Self::Network { message },
+            ErrorKind::Invariant => Self::Invariant { detail },
+            ErrorKind::Network => Self::Network { detail },
             // `status()` is `Some` on exactly `Api` and `NotFound` — see
             // `tasknotes_core::Error::status`. A `None` here would mean the core
             // broke its own documented invariant, so it is reported as one
             // rather than papered over with a plausible-looking status code.
             ErrorKind::Api => match error.status() {
-                Some(status) => Self::Api { message, status },
+                Some(status) => Self::Api { detail, status },
                 None => Self::Invariant {
-                    message: format!("an api error carried no http status: {message}"),
+                    detail: format!("an api error carried no http status: {detail}"),
                 },
             },
-            ErrorKind::Validation => Self::Validation { message },
-            ErrorKind::NotFound => Self::NotFound { message },
-            ErrorKind::Connection => Self::Connection { message },
+            ErrorKind::Validation => Self::Validation { detail },
+            ErrorKind::NotFound => Self::NotFound { detail },
+            ErrorKind::Connection => Self::Connection { detail },
         }
     }
 }
@@ -120,17 +120,20 @@ impl From<CoreError> for Error {
     /// directions, which is what the retry classifier reads. `NotFound` is
     /// built by naming the variant rather than through
     /// [`Error::not_found`](tasknotes_core::Error::not_found), because that
-    /// constructor *renders* `"<resource> not found: <id>"` and the message
+    /// constructor *renders* `"<resource> not found: <id>"` and the detail
     /// coming back from the host is already rendered — re-rendering it would
     /// nest the prefix.
     fn from(error: CoreError) -> Self {
         match error {
-            CoreError::Invariant { message } => Self::Invariant { message },
-            CoreError::Network { message } => Self::Network { message },
-            CoreError::Api { message, status } => Self::Api { message, status },
-            CoreError::Validation { message } => Self::Validation { message },
-            CoreError::NotFound { message } => Self::NotFound { message },
-            CoreError::Connection { message } => Self::Connection { message },
+            CoreError::Invariant { detail } => Self::Invariant { message: detail },
+            CoreError::Network { detail } => Self::Network { message: detail },
+            CoreError::Api { detail, status } => Self::Api {
+                message: detail,
+                status,
+            },
+            CoreError::Validation { detail } => Self::Validation { message: detail },
+            CoreError::NotFound { detail } => Self::NotFound { message: detail },
+            CoreError::Connection { detail } => Self::Connection { message: detail },
         }
     }
 }
@@ -146,38 +149,38 @@ mod tests {
         assert_eq!(
             CoreError::from(Error::invariant("bug")),
             CoreError::Invariant {
-                message: "bug".to_owned()
+                detail: "bug".to_owned()
             }
         );
         assert_eq!(
             CoreError::from(Error::network("offline")),
             CoreError::Network {
-                message: "offline".to_owned()
+                detail: "offline".to_owned()
             }
         );
         assert_eq!(
             CoreError::from(Error::api("boom", 503)),
             CoreError::Api {
-                message: "boom".to_owned(),
+                detail: "boom".to_owned(),
                 status: 503
             }
         );
         assert_eq!(
             CoreError::from(Error::validation("bad")),
             CoreError::Validation {
-                message: "bad".to_owned()
+                detail: "bad".to_owned()
             }
         );
         assert_eq!(
             CoreError::from(Error::not_found("Task", "Tasks/gone.md")),
             CoreError::NotFound {
-                message: "Task not found: Tasks/gone.md".to_owned()
+                detail: "Task not found: Tasks/gone.md".to_owned()
             }
         );
         assert_eq!(
             CoreError::from(Error::connection()),
             CoreError::Connection {
-                message: "Unable to connect to TaskNotes server".to_owned()
+                detail: "Unable to connect to TaskNotes server".to_owned()
             }
         );
     }
@@ -204,15 +207,15 @@ mod tests {
     }
 
     #[test]
-    fn a_not_found_message_is_not_re_rendered_on_the_way_back_in() {
+    fn a_not_found_detail_is_not_re_rendered_on_the_way_back_in() {
         let lifted = Error::from(CoreError::NotFound {
-            message: "Task not found: Tasks/gone.md".to_owned(),
+            detail: "Task not found: Tasks/gone.md".to_owned(),
         });
         assert_eq!(lifted.message(), "Task not found: Tasks/gone.md");
     }
 
     #[test]
-    fn keeps_the_core_rendering_of_every_message() {
+    fn keeps_the_core_rendering_of_every_detail() {
         for error in [
             Error::invariant("bug"),
             Error::network("offline"),

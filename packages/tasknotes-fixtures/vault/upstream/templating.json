@@ -1,0 +1,497 @@
+[
+  {
+    "id": "templating.0001",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.parse_sections",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "templateText": "---\ntitle: {{title}}\nstatus: {{status}}\n---\nBody {{details}}",
+      "expected": {
+        "frontmatterRaw": "title: {{title}}\nstatus: {{status}}",
+        "body": "Body {{details}}"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "$contains": {
+          "frontmatterRaw": "title: {{title}}\nstatus: {{status}}",
+          "body": "Body {{details}}"
+        }
+      }
+    }
+  },
+  {
+    "id": "templating.0002",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.parse_sections",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "templateText": "No frontmatter here",
+      "expected": {
+        "frontmatterRaw": "",
+        "body": "No frontmatter here"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "$contains": {
+          "frontmatterRaw": "",
+          "body": "No frontmatter here"
+        }
+      }
+    }
+  },
+  {
+    "id": "templating.0003",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.expand_variables",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "{{title}} - {{status}}",
+      "values": {
+        "title": "Pay bill",
+        "status": "open"
+      },
+      "expected": "Pay bill - open"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Pay bill - open"
+      }
+    }
+  },
+  {
+    "id": "templating.0004",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.expand_variables",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "{{title}} {{unknown}}",
+      "values": {
+        "title": "Pay bill"
+      },
+      "unknownVariablePolicy": "preserve",
+      "expected": "Pay bill {{unknown}}"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Pay bill {{unknown}}"
+      }
+    }
+  },
+  {
+    "id": "templating.0005",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.expand_variables",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "{{title}} {{unknown}}",
+      "values": {
+        "title": "Pay bill"
+      },
+      "unknownVariablePolicy": "empty",
+      "expected": "Pay bill "
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Pay bill "
+      }
+    }
+  },
+  {
+    "id": "templating.0006",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.expand_variables",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "{{title}} {{priority}} {{dueDate}} {{scheduledDate}} {{details}} {{contexts}} {{tags}} {{timeEstimate}} {{date}} {{time}}",
+      "values": {
+        "title": "Pay bill",
+        "priority": "high",
+        "dueDate": "2026-02-20",
+        "scheduledDate": "2026-02-19",
+        "details": "foo",
+        "contexts": "@home",
+        "tags": "#task",
+        "timeEstimate": "60",
+        "date": "2026-02-20",
+        "time": "10:00"
+      },
+      "expected": "Pay bill high 2026-02-20 2026-02-19 foo @home #task 60 2026-02-20 10:00"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Pay bill high 2026-02-20 2026-02-19 foo @home #task 60 2026-02-20 10:00"
+      }
+    }
+  },
+  {
+    "id": "templating.0007",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.expand_variables",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "{{title}} {{status}} {{priority}} {{dueDate}} {{scheduledDate}} {{details}} {{contexts}} {{tags}} {{hashtags}} {{timeEstimate}} {{parentNote}} {{date}} {{time}} {{year}} {{month}} {{day}}",
+      "values": {
+        "title": "Write report",
+        "status": "open",
+        "priority": "normal",
+        "dueDate": "2026-02-20",
+        "scheduledDate": "2026-02-19",
+        "details": "ship weekly update",
+        "contexts": "work, home",
+        "tags": "task, writing",
+        "hashtags": "#task #writing",
+        "timeEstimate": "45",
+        "parentNote": "Projects/Alpha",
+        "date": "2026-02-20",
+        "time": "10:00",
+        "year": "2026",
+        "month": "02",
+        "day": "20"
+      },
+      "expected": "Write report open normal 2026-02-20 2026-02-19 ship weekly update work, home task, writing #task #writing 45 Projects/Alpha 2026-02-20 10:00 2026 02 20"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Write report open normal 2026-02-20 2026-02-19 ship weekly update work, home task, writing #task #writing 45 Projects/Alpha 2026-02-20 10:00 2026 02 20"
+      }
+    }
+  },
+  {
+    "id": "templating.0008",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.tokenize",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "{{title}} {{status}} {{priority}}",
+      "expectedTokens": [
+        "title",
+        "status",
+        "priority"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "tokens": [
+          "title",
+          "status",
+          "priority"
+        ]
+      }
+    }
+  },
+  {
+    "id": "templating.0009",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.tokenize",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "template": "prefix {{title}} mid {{unknown}} suffix",
+      "expectedTokens": [
+        "title",
+        "unknown"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "tokens": [
+          "title",
+          "unknown"
+        ]
+      }
+    }
+  },
+  {
+    "id": "templating.0010",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.merge_frontmatter",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "baseFrontmatter": {
+        "title": "A",
+        "status": "open",
+        "priority": "normal"
+      },
+      "templateFrontmatter": {
+        "title": "B",
+        "status": "done",
+        "project": "X"
+      },
+      "expected": {
+        "title": "A",
+        "status": "open",
+        "priority": "normal",
+        "project": "X"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "title": "A",
+          "status": "open",
+          "priority": "normal",
+          "project": "X"
+        }
+      }
+    }
+  },
+  {
+    "id": "templating.0011",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.merge_frontmatter",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "baseFrontmatter": {
+        "title": "A",
+        "tags": [
+          "one"
+        ]
+      },
+      "templateFrontmatter": {
+        "tags": [
+          "two"
+        ],
+        "extra": true
+      },
+      "expected": {
+        "title": "A",
+        "tags": [
+          "one"
+        ],
+        "extra": true
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "title": "A",
+          "tags": [
+            "one"
+          ],
+          "extra": true
+        }
+      }
+    }
+  },
+  {
+    "id": "templating.0012",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.create_pipeline",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "baseFrontmatter": {
+        "title": "Base title",
+        "status": "open",
+        "priority": "normal"
+      },
+      "templateFrontmatter": {
+        "title": "Template title",
+        "status": "done",
+        "project": "A"
+      },
+      "callerBody": "Caller body",
+      "templateBody": "Template body",
+      "expectedFrontmatter": {
+        "title": "Base title",
+        "status": "open",
+        "priority": "normal",
+        "project": "A"
+      },
+      "expectedBody": "Template body"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "title": "Base title",
+          "status": "open",
+          "priority": "normal",
+          "project": "A"
+        },
+        "body": "Template body"
+      }
+    }
+  },
+  {
+    "id": "templating.0013",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.create_pipeline",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "baseFrontmatter": {
+        "title": "Base title",
+        "status": "open"
+      },
+      "templateFrontmatter": {
+        "status": "done",
+        "project": "A"
+      },
+      "callerBody": "Caller body",
+      "templateBody": "",
+      "expectedFrontmatter": {
+        "title": "Base title",
+        "status": "open",
+        "project": "A"
+      },
+      "expectedBody": "Caller body"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "title": "Base title",
+          "status": "open",
+          "project": "A"
+        },
+        "body": "Caller body"
+      }
+    }
+  },
+  {
+    "id": "templating.0014",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.handle_failure",
+    "assertion": "envelope_error",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "failureMode": "error",
+      "errorCode": "template_missing",
+      "shouldError": true
+    },
+    "expect": {
+      "error": {
+        "$regex": "template_missing|template_parse_failed|template"
+      }
+    }
+  },
+  {
+    "id": "templating.0015",
+    "section": "§5.3.5",
+    "profile": "templating",
+    "operation": "templating.handle_failure",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "failureMode": "warning_fallback",
+      "errorCode": "template_parse_failed",
+      "shouldError": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "mode": "fallback"
+      }
+    }
+  },
+  {
+    "id": "templating.0016",
+    "section": "§9.14",
+    "profile": "templating",
+    "operation": "templating.config_defaults",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "enabled": true,
+      "template_path": "Templates/Task.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "failure_mode": "warning_fallback",
+        "unknown_variable_policy": "preserve"
+      }
+    }
+  },
+  {
+    "id": "templating.0017",
+    "section": "§7.3.3",
+    "profile": "templating",
+    "operation": "templating.profile_claim_requirements",
+    "assertion": "envelope_equals",
+    "requires": [
+      "templating"
+    ],
+    "input": {
+      "supports_create_time_templating": true,
+      "supports_failure_mode": true,
+      "supports_variable_set": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "claim_valid"
+      }
+    }
+  }
+]

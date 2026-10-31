@@ -20,10 +20,6 @@ public struct RootView: View {
 
     private let environment: AppEnvironment
 
-    /// Opens the pomodoro and time-report windows, by the ids ``TimingWindow``
-    /// names.
-    @Environment(\.openWindow) private var openWindow
-
     /// Opens the Settings scene — the same window `⌘,` opens, not a second
     /// copy of it.
     @Environment(\.openSettings) private var openSettings
@@ -159,10 +155,6 @@ public struct RootView: View {
             searchFocusToken &+= 1
         case .settings:
             openSettings()
-        case .pomodoro:
-            openWindow(id: TimingWindow.pomodoro.rawValue)
-        case .timeReport:
-            openWindow(id: TimingWindow.timeReport.rawValue)
         }
     }
 
