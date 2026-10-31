@@ -82,8 +82,6 @@ brew "gping"
 brew "hadolint"
 # Kubernetes package manager
 brew "helm"
-# Agent multiplexer that lives in your terminal
-brew "herdr"
 # Command-line benchmarking tool
 brew "hyperfine"
 # Tool to unpack installers created by Inno Setup

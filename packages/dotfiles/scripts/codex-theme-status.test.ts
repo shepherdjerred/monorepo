@@ -6,7 +6,7 @@ import {
   requireEmptyComposer,
   statusCommandStaged,
 } from "../bin/codex_theme_restart_status.ts";
-import type { Runtime } from "../bin/codex_theme_restart_core.ts";
+import type { Runtime } from "../bin/codex_theme_restart_terminal.ts";
 
 const thread = "01a1429e-a0a6-7371-aef3-1a877d28b29b";
 const composer =
@@ -70,16 +70,16 @@ function dialogFixture(initial: string, choice: string, completed: string) {
     sleep: (milliseconds) => Bun.sleep(milliseconds),
     conversationSaved: () => true,
     appearanceConfigured: () => true,
-    async call(_session, args) {
-      if (args[0] === "pane") return screen;
-      keys.push(String(args[3]));
-      if (args[3] === "down")
+    hc: async (args) => {
+      if (args[0] === "read") return screen;
+      keys.push(String(args[2]));
+      if (args[2] === "down")
         screen = screen.replace("› 1.", "  1.").replace("  2.", "› 2.");
-      if (args[3] === "enter") {
+      if (args[2] === "enter") {
         expect(screen).toContain(`› 2. ${choice}`);
         screen = completed;
       }
-      return {};
+      return "{}";
     },
   };
   return { runtime, keys, screen: () => screen };
@@ -91,7 +91,7 @@ test("exits an active client through Run in background without cancelling its ta
     "Run in background",
     "shell",
   );
-  await backgroundRunningTask(fixture.runtime, "default", "w1:p1");
+  await backgroundRunningTask(fixture.runtime, "t5");
   expect(fixture.keys).toEqual(["down", "enter"]);
   expect(fixture.screen()).toBe("shell");
 });
@@ -108,7 +108,7 @@ test.each(["paused", "stalled"])(
       "Leave paused",
       inactiveComposer,
     );
-    await preservePausedGoal(fixture.runtime, "default", "w1:p1");
+    await preservePausedGoal(fixture.runtime, "t5");
     expect(fixture.keys).toEqual(["down", "enter"]);
     expect(fixture.screen()).toBe(inactiveComposer);
   },

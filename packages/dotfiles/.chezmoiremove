@@ -4,3 +4,11 @@
 .agents/skills/buildkite-helper
 .agents/skills/pagerduty-helper
 .agents/skills/sentry-helper
+.config/herdr
+.config/herdr-dev
+.codex/herdr-agent-state.sh
+.cursor/herdr-agent-state.sh
+.gemini/config/hooks.json
+.gemini/config/hooks/herdr-agent-state.sh
+.claude/hooks/herdr-agent-state.sh
+.config/opencode/herdr-tui-session.js

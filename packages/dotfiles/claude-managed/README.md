@@ -47,7 +47,7 @@ never consulted when everything not denied/asked is already permitted).
 
 The managed `SessionStart` hook runs `toolkit tracker identity-hook claude-code`
 to persist the native session ID and exact transcript path in `CLAUDE_ENV_FILE`.
-It appends its exports and leaves other hooks and Herdr scripts intact. Install
+It appends its exports and leaves other hooks intact. Install
 a toolkit build containing `tracker` before installing this policy, then
 restart Claude Code to load it.
 

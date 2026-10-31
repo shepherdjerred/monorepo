@@ -1,81 +1,82 @@
 import { expect, test } from "vitest";
 import {
   discover,
-  parseAgent,
   restart,
-  runningSessions,
-  type Runtime,
   type Target,
 } from "../bin/codex_theme_restart_core.ts";
-import { resumeArguments } from "../bin/codex_theme_restart_launch.ts";
+import {
+  launchCommand,
+  resumeArguments,
+} from "../bin/codex_theme_restart_launch.ts";
 import { parseOptions } from "../bin/codex_theme_restart_options.ts";
+import {
+  parseCodexTerminals,
+  parseSnapshot,
+  type Runtime,
+} from "../bin/codex_theme_restart_terminal.ts";
 
 const thread = "01a10355-2454-79f2-9a92-942bcf20a30d";
 const otherThread = "01a10390-cb7a-7a90-86b2-25c8c08c9ea5";
-function agent(status = "idle", conversation: string | null = thread) {
+const bypassFlag = "--dangerously-bypass-approvals-and-sandbox";
+
+function terminal(overrides: Record<string, unknown> = {}) {
   return {
-    agent: "codex",
-    agent_status: status,
-    pane_id: "w1:p2",
-    terminal_id: "terminal-1",
-    name: "my-codex",
-    ...(conversation
-      ? {
-          agent_session: {
-            agent: "codex",
-            kind: "id",
-            source: "herdr:codex",
-            value: conversation,
-          },
-        }
-      : {}),
-  };
-}
-function processes(
-  foreground = 20,
-  argv = ["/opt/homebrew/bin/codex", "--no-daemon"],
-) {
-  return {
-    shell_pid: 10,
-    foreground_process_group_id: foreground,
-    foreground_processes: [
-      { pid: foreground, argv, cwd: "/worktrees/path with 'quotes'" },
-    ],
+    address: "t5",
+    pid: 10,
+    state: "live",
+    status: { app: "codex", state: "idle" },
+    foreground: {
+      pid: 20,
+      argv: ["/opt/homebrew/bin/codex", "--no-daemon"],
+      cwd: "/worktrees/path with 'quotes'",
+    },
+    ...overrides,
   };
 }
 
-test("parses explicit session/pane targeting and rejects ambiguous scopes", () => {
-  expect(
-    parseOptions(["--dry-run", "--session", "test", "--pane", "w1:p2"]),
-  ).toEqual({
+test("parses terminal targeting and rejects ambiguous scopes", () => {
+  expect(parseOptions(["--dry-run", "--terminal", "t5"])).toEqual({
     dryRun: true,
     onChange: false,
     worker: false,
     probeIdentities: false,
-    session: "test",
-    pane: "w1:p2",
+    terminal: "t5",
   });
-  expect(() => parseOptions(["--pane", "w1:p2"])).toThrow("requires --session");
-  expect(() => parseOptions(["--session"])).toThrow("requires a value");
-  expect(() => parseOptions(["--on-change", "--session", "test"])).toThrow(
-    "all local sessions",
+  expect(() => parseOptions(["--terminal"])).toThrow("requires a value");
+  expect(() => parseOptions(["--on-change", "--terminal", "t5"])).toThrow(
+    "all local terminals",
   );
+  expect(() => parseOptions(["--session", "test"])).toThrow("Unknown option");
   expect(() => parseOptions(["--unknown"])).toThrow("Unknown option");
 });
 
-test("lists running local sessions without starting stopped ones", () => {
+test("lists only live local Codex terminals", () => {
   expect(
-    runningSessions({
-      sessions: [
-        { name: "default", running: true },
-        { name: "stopped", running: false },
-        { name: "other", running: true },
+    parseCodexTerminals({
+      terminals: [
+        { address: "t1", agent: "claude-code", state: "live" },
+        { address: "t5", agent: "codex", state: "live", status: "idle" },
+        { address: "t6", agent: "codex", state: "finished" },
+        { address: "desktop/t2", agent: "codex", state: "live" },
+        { address: "t7", agent: "fish", state: "live" },
       ],
     }),
-  ).toEqual(["default", "other"]);
+  ).toEqual(["t5"]);
+  expect(() => parseCodexTerminals({ terminals: "none" })).toThrow("array");
+});
+
+test("reads status and the foreground process, treating a plain program as unreported", () => {
+  expect(parseSnapshot(terminal())).toEqual({
+    terminal: "t5",
+    status: "idle",
+    shell: 10,
+    foreground: { pid: 20, argv: ["/opt/homebrew/bin/codex", "--no-daemon"] },
+  });
+  expect(parseSnapshot(terminal({ status: null })).status).toBe("unknown");
   expect(() =>
-    runningSessions({ sessions: [{ name: "bad", running: "true" }] }),
-  ).toThrow("Invalid");
+    parseSnapshot(terminal({ status: { app: "codex", state: "novel" } })),
+  ).toThrow("Unrecognized");
+  expect(() => parseSnapshot(terminal({ pid: 0 }))).toThrow("process ID");
 });
 
 test("retains observed bypass flags, other launch policy and argument boundaries", () => {
@@ -85,7 +86,7 @@ test("retains observed bypass flags, other launch policy and argument boundaries
       "--no-daemon",
       "resume",
       otherThread,
-      "--dangerously-bypass-approvals-and-sandbox",
+      bypassFlag,
       "--dangerously-bypass-hook-trust",
       "--profile",
       "with spaces",
@@ -107,7 +108,7 @@ test("retains observed bypass flags, other launch policy and argument boundaries
     "resume",
     thread,
     "--no-daemon",
-    "--dangerously-bypass-approvals-and-sandbox",
+    bypassFlag,
     "--dangerously-bypass-hook-trust",
     "--profile",
     "with spaces",
@@ -134,28 +135,23 @@ test("drops stale UI overrides without adding flags that disable the shared daem
   expect(() => resumeArguments(["codex", "-c"], thread)).toThrow("Missing");
 });
 
-test("requires an authoritative current UUID rather than launch argv or another agent kind", () => {
-  expect(parseAgent({ agent: "claude" })).toBeUndefined();
-  expect(parseAgent(agent("idle", null))?.thread).toBeUndefined();
-  expect(() => parseAgent(agent("idle", "malformed"))).toThrow("UUID");
-  expect(() => parseAgent(agent("new-unrecognized-state"))).toThrow(
-    "Unrecognized",
+test("quotes the launch line for the interactive shell or refuses before stopping anything", () => {
+  expect(
+    launchCommand(
+      ["/opt/homebrew/bin/codex", "--no-daemon", "--profile", "with spaces"],
+      thread,
+    ),
+  ).toBe(`codex resume ${thread} --no-daemon --profile 'with spaces'`);
+  expect(() => launchCommand(["codex", "--profile", "it's"], thread)).toThrow(
+    "cannot be quoted",
   );
-});
-
-test("accepts an absent or null pane name while rejecting malformed names", () => {
-  for (const name of [undefined, null]) {
-    expect(parseAgent({ ...agent(), name })?.name).toBeUndefined();
-  }
-  expect(() => parseAgent({ ...agent(), name: 12 })).toThrow(
-    "Expected a nonempty string",
-  );
+  expect(() =>
+    launchCommand(["codex", "--profile", String.raw`a\b`], thread),
+  ).toThrow("cannot be quoted");
 });
 
 type Scenario = {
-  nativeStatus?: boolean;
   nativeChanged?: boolean;
-  staleHook?: boolean;
   draft?: boolean;
   staleStatus?: boolean;
   staticStatus?: boolean;
@@ -163,131 +159,137 @@ type Scenario = {
   unsaved?: boolean;
   status?: string;
   resumedStatus?: string;
-  changed?: boolean;
-  unknown?: boolean;
+  unreportedStart?: boolean;
   neverExits?: boolean;
   replacedProcess?: boolean;
   replacedShell?: boolean;
-  noResumedIdentity?: boolean;
   wrongResumedThread?: boolean;
+  resumedDifferent?: boolean;
   promptFailure?: boolean;
   startupFailure?: boolean;
   lostStartAcknowledgement?: boolean;
   bypass?: boolean;
   lostBypass?: boolean;
-  unnamed?: boolean;
-  hiddenNameReservation?: boolean;
 };
+
+const isStatusKeys = (call: string[]) =>
+  call[0] === "keys" && call.slice(2).join("") === "/status";
+const isEnter = (call: string[]) =>
+  call[0] === "keys" && call[2] === "enter" && call.length === 3;
+const isCtrlC = (call: string[]) => call[0] === "keys" && call[2] === "ctrl+c";
+const isLaunch = (call: string[]) =>
+  call[0] === "send" && (call[2]?.startsWith("codex ") ?? false);
+const isPrompt = (call: string[]) => call[0] === "send" && !isLaunch(call);
+
 function fixture(scenario: Scenario = {}) {
   const calls: string[][] = [];
   let time = 0;
-  let keys = 0;
+  let ctrlC = 0;
   let started = false;
-  let launchedArguments: readonly string[] = [];
-  let reported = false;
-  let afterDiscovery = false;
-  let name: string | null = scenario.unnamed ? null : "my-codex";
-  let reservedName = scenario.hiddenNameReservation ?? false;
+  let startedGets = 0;
+  let launchLine = "";
   let statusQueries = 0;
   let statusStaged = false;
   let nativeThread = thread;
-  let reportedConversation: string | undefined;
-  const handlers: Record<string, (args: readonly string[]) => unknown> = {
-    "agent list": () => ({
-      agents: [
-        { agent: "claude" },
-        {
-          ...agent(
-            scenario.status,
-            scenario.unknown ? null : scenario.staleHook ? otherThread : thread,
-          ),
-          name,
-        },
-      ],
-    }),
-    "pane process-info": () => {
-      const exited = keys >= 2 && !scenario.neverExits;
-      const info = processes(started ? 30 : exited ? 10 : 20);
-      if (started)
-        info.foreground_processes[0]?.argv.push(
-          "resume",
-          scenario.wrongResumedThread ? otherThread : thread,
-        );
-      if (started) {
-        info.foreground_processes[0]?.argv.push(
-          ...launchedArguments.filter(
-            (argument) =>
-              argument.startsWith("--dangerously-bypass-") &&
-              !scenario.lostBypass,
-          ),
-        );
-      } else if (scenario.bypass) {
-        info.foreground_processes[0]?.argv.push(
-          "--dangerously-bypass-approvals-and-sandbox",
-        );
-      }
-      if (afterDiscovery && scenario.replacedProcess)
-        info.foreground_process_group_id = 99;
-      if (afterDiscovery && scenario.replacedShell) info.shell_pid = 99;
-      return { process_info: info };
-    },
-    "pane get": () => {
-      afterDiscovery = true;
-      if (!started && keys >= 2 && !scenario.neverExits)
-        return { pane: { agent_status: "unknown" } };
-      const status = started
-        ? (scenario.resumedStatus ?? "idle")
-        : (scenario.status ?? "idle");
-      const conversation = scenario.changed
-        ? otherThread
-        : !reported && started && scenario.noResumedIdentity
-          ? null
-          : (reportedConversation ??
-            (scenario.staleHook ? otherThread : thread));
-      return { pane: { ...agent(status, conversation), name } };
-    },
-    "agent send-keys": (args) => {
-      if (args[3] === "enter") {
+  let afterDiscovery = false;
+  const shell = 10;
+  const foregroundPid = () => {
+    if (started) return 30;
+    if (ctrlC >= 2 && !scenario.neverExits) return shell;
+    return afterDiscovery && scenario.replacedProcess ? 99 : 20;
+  };
+  const foregroundArgv = () => {
+    if (started) {
+      const flags = launchLine
+        .split(" ")
+        .filter((word) => word.startsWith("--dangerously-bypass-"));
+      return [
+        "/opt/homebrew/bin/codex",
+        "resume",
+        scenario.wrongResumedThread ? otherThread : thread,
+        ...(scenario.lostBypass ? [] : flags),
+      ];
+    }
+    if (foregroundPid() === shell) return ["/opt/homebrew/bin/fish", "-l"];
+    return [
+      "/opt/homebrew/bin/codex",
+      "--no-daemon",
+      ...(scenario.bypass ? [bypassFlag] : []),
+    ];
+  };
+  const status = () => {
+    if (!started && foregroundPid() === shell) return null;
+    if (started) {
+      return scenario.unreportedStart && startedGets++ < 4
+        ? null
+        : { app: "codex", state: scenario.resumedStatus ?? "idle" };
+    }
+    return scenario.status === "unknown"
+      ? null
+      : { app: "codex", state: scenario.status ?? "idle" };
+  };
+  const handlers: Record<string, (args: string[]) => string> = {
+    ls: () =>
+      JSON.stringify({
+        terminals: [
+          { address: "t1", agent: "claude-code", state: "live" },
+          { address: "desktop/t2", agent: "codex", state: "live" },
+          { address: "t5", agent: "codex", state: "live" },
+        ],
+      }),
+    get: () =>
+      JSON.stringify(
+        terminal({
+          pid: afterDiscovery && scenario.replacedShell ? 99 : shell,
+          status: status(),
+          foreground: {
+            pid: foregroundPid(),
+            argv: foregroundArgv(),
+            cwd: "/worktrees",
+          },
+        }),
+      ),
+    keys: (args) => {
+      if (isStatusKeys(args)) {
+        statusStaged = true;
+      } else if (isEnter(args)) {
         statusStaged = scenario.lostSubmission ?? false;
         statusQueries++;
         if (scenario.nativeChanged && statusQueries > 1)
           nativeThread = otherThread;
-        return {};
+      } else if (isCtrlC(args)) {
+        ctrlC++;
       }
-      keys++;
-      return {};
+      return "{}";
     },
-    "pane report-agent-session": (args) => {
-      reported = true;
-      reportedConversation = args[args.indexOf("--agent-session-id") + 1];
-      return {};
-    },
-    "agent rename": () => ({}),
-    "pane read": () => {
+    read: () => {
+      const shown =
+        started && scenario.resumedDifferent ? otherThread : nativeThread;
       const cards = scenario.staleStatus
         ? ""
         : Array.from(
             { length: scenario.staticStatus ? 1 : statusQueries },
             () =>
-              `/status\n\n  >_ OpenAI Codex (v0.162.1)\n  Session:             ${nativeThread}\n`,
+              `/status\n\n  >_ OpenAI Codex (v0.162.1)\n  Session:             ${shown}\n`,
           ).join("\n");
-      return `${cards}\n› ${scenario.draft ? "unfinished user draft" : statusStaged ? "/status" : "Ask Codex to do anything"}\n\n  model · /worktree             Vim: Insert`;
+      const composer = scenario.draft
+        ? "unfinished user draft"
+        : statusStaged
+          ? "/status"
+          : "Ask Codex to do anything";
+      return `${cards}\n› ${composer}\n\n  model · /worktree             Vim: Insert`;
     },
-    "pane send-text": () => {
-      statusStaged = true;
-      return {};
-    },
-    "agent start": () => {
-      if (scenario.startupFailure) throw new Error("shell_not_ready");
-      started = true;
-      if (scenario.lostStartAcknowledgement)
-        throw new Error("agent_name_not_found");
-      return {};
-    },
-    "agent prompt": () => {
+    send: (args) => {
+      if (isLaunch(args)) {
+        if (scenario.startupFailure) throw new Error("not_found");
+        started = true;
+        launchLine = args[2] ?? "";
+        if (scenario.lostStartAcknowledgement) throw new Error("timeout");
+        return "{}";
+      }
       if (scenario.promptFailure)
         throw new Error("Delivery acknowledgement uncertain");
-      return {};
+      return "{}";
     },
   };
   const runtime: Runtime = {
@@ -297,158 +299,95 @@ function fixture(scenario: Scenario = {}) {
     sleep: async (milliseconds) => {
       time += milliseconds;
     },
-    async call(session, args) {
-      calls.push([session, ...args]);
-      if (args[0] === "agent" && args[1] === "start") {
-        if (reservedName) throw new Error("agent_name_taken");
-        launchedArguments = args;
-        if (args[2] === undefined) throw new Error("Missing start name");
-        name = args[2];
-      }
-      if (args[0] === "agent" && args[1] === "rename") {
-        if (args[3] === undefined) throw new Error("Missing rename argument");
-        name = args[3] === "--clear" ? null : args[3];
-        if (args[3] === "--clear") reservedName = false;
-      }
-      const handler = handlers[`${args[0] ?? ""} ${args[1] ?? ""}`];
+    async hc(args) {
+      calls.push([...args]);
+      const handler = handlers[args[0] ?? ""];
       if (handler === undefined) throw new Error("Unexpected test command");
-      return handler(args);
+      return handler([...args]);
     },
   };
   async function execute() {
-    const result = await discover(runtime, "test-session", "dark", {
-      probe: scenario.nativeStatus ?? false,
-    });
+    const result = await discover(runtime, "dark", { probe: true });
+    afterDiscovery = true;
     const target = result.targets[0];
-    if (!target) throw new Error("Expected an eligible fixture target");
+    if (!target)
+      throw new Error(
+        `Expected an eligible fixture target: ${JSON.stringify(result.outcomes)}`,
+      );
     return restart(runtime, target);
   }
   return { calls, runtime, execute };
 }
 
-test("unknown conversations stay running even when argv contains a resume UUID", async () => {
-  const { calls, runtime } = fixture({ unknown: true });
-  const result = await discover(runtime, "test-session", "dark");
-  expect(result.targets).toEqual([]);
-  expect(result.outcomes).toEqual([
-    {
-      session: "test-session",
-      pane: "w1:p2",
-      status: "skipped",
-      message: "No authoritative conversation ID; pane left running",
-    },
+test("a read-only preview lists eligible terminals without typing anything", async () => {
+  const { calls, runtime } = fixture();
+  const result = await discover(runtime, "dark");
+  expect(result.outcomes).toEqual([]);
+  expect(result.targets).toMatchObject([
+    { terminal: "t5", status: "idle", thread: undefined },
   ]);
-  expect(calls).toHaveLength(1);
+  expect(calls.map((call) => call[0])).toEqual(["ls", "get"]);
 });
 
-test("uses shell-aware agent start, preserves the name/directory, and continues working panes once", async () => {
+test("ignores remote and non-Codex terminals", async () => {
+  const { calls, runtime } = fixture();
+  await discover(runtime, "dark");
+  expect(calls.filter((call) => call[0] === "get")).toEqual([
+    ["get", "t5", "--json"],
+  ]);
+});
+
+test("restarts through the terminal's shell and continues a working turn once", async () => {
   const { calls, execute } = fixture({ status: "working" });
+  expect(await execute()).toMatchObject({
+    terminal: "t5",
+    status: "restarted",
+    message: "Same conversation restored; continuation submitted once",
+  });
+  expect(calls.filter((call) => isLaunch(call))).toEqual([
+    ["send", "t5", `codex resume ${thread} --no-daemon`],
+  ]);
+  const prompts = calls.filter((call) => isPrompt(call));
+  expect(prompts).toHaveLength(1);
+  expect(prompts[0]?.[2]).toContain(
+    "external actions whose outcome is uncertain",
+  );
+  expect(calls.filter((call) => isCtrlC(call))).toHaveLength(2);
+  expect(calls.some((call) => call[0] === "kill" || call[0] === "run")).toBe(
+    false,
+  );
+});
+
+test.each(["idle", "done"])(
+  "does not prompt a previously %s terminal",
+  async (status) => {
+    const { calls, execute } = fixture({ status });
+    expect(await execute()).toMatchObject({ status: "restarted" });
+    expect(calls.filter((call) => isPrompt(call))).toEqual([]);
+  },
+);
+
+test("waits for a freshly started client to report before continuing a working turn", async () => {
+  const { calls, execute } = fixture({
+    status: "working",
+    unreportedStart: true,
+  });
   expect(await execute()).toMatchObject({
     status: "restarted",
     message: "Same conversation restored; continuation submitted once",
   });
-  const start = calls.find((call) => call[2] === "start");
-  expect(start).toEqual([
-    "test-session",
-    "agent",
-    "start",
-    "my-codex",
-    "--kind",
-    "codex",
-    "--pane",
-    "w1:p2",
-    "--timeout",
-    "30000",
-    "--",
-    "resume",
-    thread,
-    "--no-daemon",
-  ]);
-  const prompts = calls.filter((call) => call[2] === "prompt");
-  expect(prompts).toHaveLength(1);
-  expect(prompts[0]?.[4]).toContain(
-    "external actions whose outcome is uncertain",
-  );
-  expect(calls.filter((call) => call[2] === "send-keys")).toHaveLength(2);
-  expect(
-    calls.some((call) => call.includes("focus") || call.includes("close")),
-  ).toBe(false);
+  expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
 });
 
-test.each(["idle", "done", "blocked", "unknown"])(
-  "does not prompt a previously %s pane",
-  async (status) => {
-    const { calls, execute } = fixture({ status });
-    expect(await execute()).toMatchObject({ status: "restarted" });
-    expect(calls.filter((call) => call[2] === "prompt")).toEqual([]);
-  },
-);
-
-test.each(["idle", "working"])(
-  "preserves an unnamed %s pane after verifying its replacement",
-  async (status) => {
-    const { calls, runtime, execute } = fixture({ status, unnamed: true });
-    expect(await execute()).toMatchObject({ status: "restarted" });
-    const start = calls.findIndex((call) => call[2] === "start");
-    const clear = calls.findIndex(
-      (call, index) => index > start && call[2] === "rename",
-    );
-    expect(calls[start]?.[3]).toMatch(/^theme-[a-f0-9]{12}$/);
-    expect(clear).toBeGreaterThan(start);
-    expect(
-      calls.slice(start + 1, clear).some((call) => call[2] === "process-info"),
-    ).toBe(true);
-    expect(calls[clear]).toEqual([
-      "test-session",
-      "agent",
-      "rename",
-      "w1:p2",
-      "--clear",
-    ]);
-    const prompt = calls.findIndex((call) => call[2] === "prompt");
-    if (status === "working") expect(prompt).toBeGreaterThan(clear);
-    else expect(prompt).toBe(-1);
-    const rediscovered = await discover(runtime, "test-session", "dark");
-    expect(rediscovered.targets[0]?.agent.name).toBeUndefined();
-  },
-);
-
-test("does not rename an unverified replacement of an unnamed pane", async () => {
-  const { calls, execute } = fixture({
-    unnamed: true,
-    wrongResumedThread: true,
-  });
-  expect(await execute()).toMatchObject({ status: "failed" });
-  const start = calls.findIndex((call) => call[2] === "start");
-  expect(calls.slice(start + 1).filter((call) => call[2] === "rename")).toEqual(
-    [],
-  );
-});
-
-test("clears hidden persisted name reservations before exiting an unnamed client", async () => {
-  const { calls, execute } = fixture({
-    unnamed: true,
-    hiddenNameReservation: true,
-  });
-  expect(await execute()).toMatchObject({ status: "restarted" });
-  const clear = calls.findIndex((call) => call[2] === "rename");
-  const exit = calls.findIndex((call) => call[2] === "send-keys");
-  expect(clear).toBeGreaterThan(-1);
-  expect(clear).toBeLessThan(exit);
-});
-
-test("verifies an uncertain launch by pane without repeating the start command", async () => {
-  const { calls, execute } = fixture({
-    nativeStatus: true,
-    lostStartAcknowledgement: true,
-  });
+test("verifies an uncertain launch by process without repeating the send", async () => {
+  const { calls, execute } = fixture({ lostStartAcknowledgement: true });
   expect(await execute()).toMatchObject({
     status: "restarted",
     message: expect.stringContaining(
-      "acknowledgement failed but pane verified",
+      "acknowledgement failed but terminal verified",
     ),
   });
-  expect(calls.filter((call) => call[2] === "start")).toHaveLength(1);
+  expect(calls.filter((call) => isLaunch(call))).toHaveLength(1);
 });
 
 test("does not inject another prompt if the shared daemon is already continuing work", async () => {
@@ -460,23 +399,50 @@ test("does not inject another prompt if the shared daemon is already continuing 
     status: "restarted",
     message: "Existing turn is already working; no duplicate prompt sent",
   });
-  expect(calls.filter((call) => call[2] === "prompt")).toEqual([]);
+  expect(calls.filter((call) => isPrompt(call))).toEqual([]);
 });
 
-test.each([
-  { changed: true, expected: "skipped" },
-  { replacedProcess: true, expected: "failed" },
-  { replacedShell: true, expected: "failed" },
-])(
-  "rechecks the target before sending keys: %j",
-  async ({ expected, ...scenario }) => {
-    const { calls, execute } = fixture(scenario);
-    expect(await execute()).toMatchObject({ status: expected });
-    expect(
-      calls.filter((call) => call[2] === "send-keys" || call[2] === "start"),
-    ).toEqual([]);
+test.each(["blocked", "unknown", "error"])(
+  "leaves a %s terminal untouched",
+  async (status) => {
+    const { calls, runtime } = fixture({ status });
+    const result = await discover(runtime, "dark", { probe: true });
+    expect(result.targets).toEqual([]);
+    expect(result.outcomes[0]).toMatchObject({
+      terminal: "t5",
+      status: "skipped",
+    });
+    expect(calls.some((call) => call[0] === "keys" || call[0] === "send")).toBe(
+      false,
+    );
   },
 );
+
+test.each([{ replacedProcess: true }, { replacedShell: true }])(
+  "rechecks the process before sending keys: %j",
+  async (scenario) => {
+    const { calls, execute } = fixture(scenario);
+    expect(await execute()).toMatchObject({
+      status: "skipped",
+      message: "Terminal process changed before restart",
+    });
+    expect(
+      calls.some((call) => isCtrlC(call)) ||
+        calls.some((call) => isLaunch(call)),
+    ).toBe(false);
+  },
+);
+
+test("a native conversation switch after discovery is detected before any exit keys", async () => {
+  const { calls, execute } = fixture({ nativeChanged: true });
+  expect(await execute()).toMatchObject({
+    status: "skipped",
+    message: "Terminal conversation changed before restart",
+  });
+  expect(
+    calls.some((call) => isCtrlC(call)) || calls.some((call) => isLaunch(call)),
+  ).toBe(false);
+});
 
 test("bounds exit attempts without force-killing or writing commands into Codex", async () => {
   const { calls, execute } = fixture({ neverExits: true });
@@ -484,38 +450,24 @@ test("bounds exit attempts without force-killing or writing commands into Codex"
     status: "failed",
     message: "Codex did not exit within 5 seconds; no force-kill attempted",
   });
-  expect(calls.filter((call) => call[2] === "send-keys")).toHaveLength(3);
-  expect(calls.filter((call) => call[2] === "start")).toEqual([]);
-  expect(calls.findLast((call) => call[2] === "rename")).toEqual([
-    "test-session",
-    "agent",
-    "rename",
-    "w1:p2",
-    "my-codex",
-  ]);
+  expect(calls.filter((call) => isCtrlC(call))).toHaveLength(3);
+  expect(calls.filter((call) => isLaunch(call))).toEqual([]);
+  expect(calls.some((call) => call[0] === "kill")).toBe(false);
 });
 
 test.each([
   { status: "working", resumedStatus: "blocked" },
   { status: "working", wrongResumedThread: true },
+  { status: "working", resumedDifferent: true },
   { status: "working", startupFailure: true },
 ])(
   "does not continue a blocked or unidentified startup: %j",
   async (scenario) => {
     const { calls, execute } = fixture(scenario);
     expect(await execute()).toMatchObject({ status: "failed" });
-    expect(calls.filter((call) => call[2] === "prompt")).toEqual([]);
+    expect(calls.filter((call) => isPrompt(call))).toEqual([]);
   },
 );
-
-test("records the verified exact resume before Codex emits its first SessionStart", async () => {
-  const { calls, execute } = fixture({ noResumedIdentity: true });
-  expect(await execute()).toMatchObject({ status: "restarted" });
-  expect(
-    calls.filter((call) => call[2] === "report-agent-session"),
-  ).toHaveLength(1);
-  expect(calls.filter((call) => call[2] === "prompt")).toEqual([]);
-});
 
 test("does not retry a continuation after uncertain delivery", async () => {
   const { calls, execute } = fixture({
@@ -523,15 +475,14 @@ test("does not retry a continuation after uncertain delivery", async () => {
     promptFailure: true,
   });
   expect(await execute()).toMatchObject({ status: "failed" });
-  expect(calls.filter((call) => call[2] === "prompt")).toHaveLength(1);
+  expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
 });
 
-test("passes observed bypass to the wrapper and verifies the replacement process", async () => {
+test("passes observed bypass to the shell and verifies the replacement process", async () => {
   const { calls, execute } = fixture({ status: "working", bypass: true });
   expect(await execute()).toMatchObject({ status: "restarted" });
-  const start = calls.find((call) => call[2] === "start");
-  expect(start).toContain("--dangerously-bypass-approvals-and-sandbox");
-  expect(calls.filter((call) => call[2] === "prompt")).toHaveLength(1);
+  expect(calls.find((call) => isLaunch(call))?.[2]).toContain(bypassFlag);
+  expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
 });
 
 test("does not continue if the replacement loses the observed bypass flag", async () => {
@@ -545,38 +496,29 @@ test("does not continue if the replacement loses the observed bypass flag", asyn
     message:
       "Wrapper did not preserve observed bypass flags; no continuation sent",
   });
-  expect(calls.filter((call) => call[2] === "prompt")).toEqual([]);
+  expect(calls.filter((call) => isPrompt(call))).toEqual([]);
 });
 
-test("reports a missing explicitly selected pane without touching other panes", async () => {
+test("reports a missing explicitly selected terminal without touching others", async () => {
   const { calls, runtime } = fixture();
-  const result = await discover(runtime, "test-session", "light", {
-    pane: "missing",
-  });
+  const result = await discover(runtime, "light", { terminal: "t9" });
   expect(result.targets).toEqual([]);
   expect(result.outcomes[0]).toMatchObject({
-    pane: "missing",
+    terminal: "t9",
     status: "skipped",
   });
-  expect(calls).toHaveLength(1);
+  expect(calls).toEqual([["ls", "--json"]]);
 });
 
-test("a closed pane is a failure without a blind retry", async () => {
+test("a closed terminal is a failure without a blind retry", async () => {
   const target: Target = {
-    session: "test-session",
-    agent: {
-      pane: "closed",
-      terminal: "terminal-1",
-      thread,
-      sessionSource: "herdr:codex",
-      status: "idle",
-      name: undefined,
-    },
-    pid: 20,
+    terminal: "closed",
+    status: "idle",
+    thread,
     shell: 10,
-    args: [],
+    pid: 20,
+    argv: ["codex"],
     bypass: [],
-    nativeStatus: false,
     mode: "dark",
   };
   let calls = 0;
@@ -585,112 +527,55 @@ test("a closed pane is a failure without a blind retry", async () => {
     conversationSaved: () => true,
     now: Date.now,
     sleep: async () => {
-      throw new Error("No polling expected for a closed pane");
+      throw new Error("No polling expected for a closed terminal");
     },
-    call: async () => {
+    hc: async () => {
       calls++;
-      throw new Error("pane_not_found");
+      throw new Error("get failed: not_found (exit 3)");
     },
   };
   expect(await restart(runtime, target)).toMatchObject({
     status: "failed",
-    message: "pane_not_found",
+    message: "get failed: not_found (exit 3)",
   });
   expect(calls).toBe(1);
 });
 
 test("a native UUID without saved history is never stopped", async () => {
   const { calls, runtime } = fixture({ unsaved: true });
-  const result = await discover(runtime, "test-session", "dark", {
-    probe: true,
-  });
+  const result = await discover(runtime, "dark", { probe: true });
   expect(result.targets).toEqual([]);
   expect(result.outcomes[0]?.message).toContain("no saved history");
   expect(
-    calls.some((call) => call[4] === "ctrl+c" || call[2] === "start"),
-  ).toBe(false);
-});
-
-test("native probing recovers missing hook identities and verifies the same resumed thread", async () => {
-  const { calls, execute } = fixture({
-    nativeStatus: true,
-    unknown: true,
-    status: "working",
-  });
-  expect(await execute()).toMatchObject({ status: "restarted" });
-  expect(
-    calls.filter((call) => call[2] === "send-text" && call[4] === "/status"),
-  ).toHaveLength(3);
-  expect(
-    calls.filter((call) => call[2] === "prompt" && call[4] !== "/status"),
-  ).toHaveLength(1);
-});
-
-test("fresh native identity replaces an incorrect hook UUID", async () => {
-  const { calls, execute } = fixture({ nativeStatus: true, staleHook: true });
-  expect(await execute()).toMatchObject({ status: "restarted" });
-  const start = calls.find((call) => call[2] === "start");
-  expect(start).toContain(thread);
-  expect(start).not.toContain(otherThread);
-});
-
-test("a native conversation switch after discovery is detected before any exit keys", async () => {
-  const { calls, execute } = fixture({
-    nativeStatus: true,
-    nativeChanged: true,
-  });
-  expect(await execute()).toMatchObject({
-    status: "skipped",
-    message: "Pane conversation changed before restart",
-  });
-  expect(
-    calls.some((call) => call[4] === "ctrl+c" || call[2] === "start"),
+    calls.some((call) => isCtrlC(call)) || calls.some((call) => isLaunch(call)),
   ).toBe(false);
 });
 
 test("native probing rejects drafts without typing or exiting", async () => {
   const { calls, runtime } = fixture({ draft: true });
-  const result = await discover(runtime, "test-session", "dark", {
-    probe: true,
-  });
+  const result = await discover(runtime, "dark", { probe: true });
   expect(result.targets).toEqual([]);
   expect(result.outcomes[0]?.message).toContain(
     "draft or dialog left untouched",
   );
-  expect(
-    calls.some((call) => call[2] === "prompt" || call[2] === "send-keys"),
-  ).toBe(false);
+  expect(calls.some((call) => call[0] === "keys" || call[0] === "send")).toBe(
+    false,
+  );
 });
-
-test.each(["blocked", "unknown"])(
-  "native probing leaves %s panes untouched",
-  async (status) => {
-    const { calls, runtime } = fixture({ status });
-    const result = await discover(runtime, "test-session", "dark", {
-      probe: true,
-    });
-    expect(result.targets).toEqual([]);
-    expect(
-      calls.some((call) => call[2] === "prompt" || call[2] === "send-keys"),
-    ).toBe(false);
-  },
-);
 
 test("native probe times out on missing status output without exiting or retrying its command", async () => {
   const { calls, runtime } = fixture({ staleStatus: true });
-  const result = await discover(runtime, "test-session", "dark", {
-    probe: true,
-  });
+  const result = await discover(runtime, "dark", { probe: true });
   expect(result.targets).toEqual([]);
   expect(result.outcomes[0]?.message).toContain(
     "Native /status did not complete",
   );
-  expect(calls.filter((call) => call[2] === "send-text")).toHaveLength(1);
-  expect(calls.some((call) => call[4] === "ctrl+c")).toBe(false);
+  expect(calls.filter((call) => isStatusKeys(call))).toHaveLength(1);
+  expect(calls.some((call) => isCtrlC(call))).toBe(false);
 });
 
 test("identical rendered status cards remain usable after observing command staging and completion", async () => {
-  const { execute } = fixture({ nativeStatus: true, staticStatus: true });
+  const { execute } = fixture({ staticStatus: true });
   expect(await execute()).toMatchObject({ status: "restarted" });
 });
 
@@ -699,12 +584,10 @@ test("an old card is insufficient when the staged native command never completes
     staticStatus: true,
     lostSubmission: true,
   });
-  const result = await discover(runtime, "test-session", "dark", {
-    probe: true,
-  });
+  const result = await discover(runtime, "dark", { probe: true });
   expect(result.targets).toEqual([]);
   expect(result.outcomes[0]?.message).toContain("did not complete");
-  expect(calls.some((call) => call[4] === "ctrl+c")).toBe(false);
+  expect(calls.some((call) => isCtrlC(call))).toBe(false);
 });
 
 test("probe-only options are explicit and do not mix with a read-only preview or appearance event", () => {
@@ -717,15 +600,15 @@ test("probe-only options are explicit and do not mix with a read-only preview or
   );
 });
 
-test("a continuation is reserved before delivery and never repeated across views of one thread", async () => {
+test("a continuation is reserved before delivery and never repeated across one thread", async () => {
   const continued = new Set<string>([thread]);
   const { calls, runtime } = fixture({ status: "working" });
-  const result = await discover(runtime, "test-session", "dark");
+  const result = await discover(runtime, "dark", { probe: true });
   const target = result.targets[0];
   if (target === undefined) throw new Error("Missing target");
   expect(await restart(runtime, target, continued)).toMatchObject({
     status: "restarted",
     message: "Same conversation restored; continuation already handled",
   });
-  expect(calls.filter((call) => call[2] === "prompt")).toHaveLength(0);
+  expect(calls.filter((call) => isPrompt(call))).toHaveLength(0);
 });

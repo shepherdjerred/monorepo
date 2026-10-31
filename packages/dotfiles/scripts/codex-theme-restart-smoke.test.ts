@@ -9,7 +9,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { object } from "../bin/codex_theme_restart_core.ts";
+import { object } from "../bin/codex_theme_restart_terminal.ts";
 
 const directories: string[] = [];
 const stopServers: (() => Promise<void>)[] = [];
@@ -22,21 +22,19 @@ afterEach(async () => {
   );
 });
 
-const mockHerdr = String.raw`#!/usr/bin/env bun
+const mockHc = String.raw`#!/usr/bin/env bun
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 const home = process.env.HOME;
-for (const key of ['OP_SERVICE_ACCOUNT_TOKEN', 'OPENAI_API_KEY', 'CODEX_THREAD_ID', 'HERDR_SOCKET_PATH']) {
+for (const key of ['OP_SERVICE_ACCOUNT_TOKEN', 'OPENAI_API_KEY', 'CODEX_THREAD_ID', 'HC_TERMINAL_ID', 'HC_TERMINAL_SOCKET', 'HC_SESSION']) {
   if (process.env[key] !== undefined) process.exit(42);
 }
 const args = process.argv.slice(2);
 appendFileSync(home + '/calls', JSON.stringify(args) + '\n');
-if (args[0] === 'session') {
+if (args[0] === 'ls') {
   if (existsSync(home + '/delay')) await Bun.sleep(Number(readFileSync(home + '/delay', 'utf8')));
-  console.log(JSON.stringify({sessions: [
-    {name: 'default', running: true}, {name: 'other', running: true}, {name: 'stopped', running: false}
+  console.log(JSON.stringify({terminals: [
+    {address: 't1', agent: 'claude-code', state: 'live'}, {address: 'desktop/t2', agent: 'codex', state: 'live'}
   ]}));
-} else if (args[2] === 'agent' && args[3] === 'list') {
-  console.log(JSON.stringify({result: {agents: []}}));
 } else process.exit(43);
 `;
 const mockAppearance = `#!/usr/bin/env bun
@@ -71,6 +69,7 @@ async function fixture(configStatus = "ok") {
     "codex_theme_restart_core.ts",
     "codex_theme_restart_options.ts",
     "codex_theme_restart_status.ts",
+    "codex_theme_restart_terminal.ts",
     "codex_theme_restart_config.ts",
   ]) {
     await writeFile(
@@ -79,9 +78,11 @@ async function fixture(configStatus = "ok") {
     );
   }
   await writeFile(path.join(directory, "mode"), "light");
-  await writeFile(path.join(directory, "herdr"), mockHerdr);
+  // The worker runs hc by absolute path under HOME, not through PATH.
+  await mkdir(path.join(directory, ".local/bin"), { recursive: true });
+  await writeFile(path.join(directory, ".local/bin/hc"), mockHc);
   await writeFile(path.join(directory, "dark-notify"), mockAppearance);
-  await chmod(path.join(directory, "herdr"), 0o700);
+  await chmod(path.join(directory, ".local/bin/hc"), 0o700);
   await chmod(path.join(directory, "dark-notify"), 0o700);
   const control = path.join(directory, ".codex/app-server-control");
   await mkdir(control, { recursive: true });
@@ -124,7 +125,9 @@ async function fixture(configStatus = "ok") {
         OP_SERVICE_ACCOUNT_TOKEN: "test-sentinel",
         OPENAI_API_KEY: "test-sentinel",
         CODEX_THREAD_ID: "test-sentinel",
-        HERDR_SOCKET_PATH: "test-sentinel",
+        HC_TERMINAL_ID: "test-sentinel",
+        HC_TERMINAL_SOCKET: "test-sentinel",
+        HC_SESSION: "test-sentinel",
       },
       stdin: "ignore",
       stdout: "pipe",
@@ -163,7 +166,7 @@ async function waitFor(check: () => boolean | Promise<boolean>): Promise<void> {
   }
 }
 
-test("initializes without restart, deduplicates events, and traverses only running local sessions", async () => {
+test("initializes without restart, deduplicates events, and scans live local terminals once", async () => {
   const context = await fixture();
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
@@ -179,11 +182,7 @@ test("initializes without restart, deduplicates events, and traverses only runni
     code: 0,
     stdout: expect.stringContaining("Appearance dark"),
   });
-  expect(await context.calls()).toEqual([
-    ["session", "list", "--json"],
-    ["--session", "default", "agent", "list"],
-    ["--session", "other", "agent", "list"],
-  ]);
+  expect(await context.calls()).toEqual([["ls", "--json"]]);
   expect(JSON.parse(await readFile(context.state, "utf8"))).toEqual({
     appearance: "dark",
   });
@@ -203,7 +202,7 @@ test("initializes without restart, deduplicates events, and traverses only runni
     code: 0,
     stdout: expect.stringContaining("Appearance remains dark"),
   });
-  expect(await context.calls()).toHaveLength(3);
+  expect(await context.calls()).toHaveLength(1);
 });
 
 test("dry-run creates no state directory and sends only discovery commands", async () => {
@@ -215,21 +214,15 @@ test("dry-run creates no state directory and sends only discovery commands", asy
   expect(
     await Bun.file(path.join(context.directory, "config-edits.json")).exists(),
   ).toBe(false);
-  expect(await context.calls()).toEqual([
-    ["session", "list", "--json"],
-    ["--session", "default", "agent", "list"],
-    ["--session", "other", "agent", "list"],
-  ]);
+  expect(await context.calls()).toEqual([["ls", "--json"]]);
 });
 
-test("requires native settings confirmation before operating on any pane", async () => {
+test("requires native settings confirmation before operating on any terminal", async () => {
   const context = await fixture("overridden");
-  expect(await context.run(["--worker", "--session", "default"])).toMatchObject(
-    {
-      code: 1,
-      stderr: expect.stringContaining("no clients stopped"),
-    },
-  );
+  expect(await context.run(["--worker", "--terminal", "t5"])).toMatchObject({
+    code: 1,
+    stderr: expect.stringContaining("no clients stopped"),
+  });
   expect(await context.calls()).toEqual([]);
   expect(await Bun.file(context.state).exists()).toBe(false);
 });
@@ -245,7 +238,7 @@ test("serializes concurrent appearance events with a real SQLite lock", async ()
   const results = await Promise.all([finish(first), finish(second)]);
   expect(results.map((result) => result.code)).toEqual([0, 0]);
   expect(results[1]?.stdout).toContain("Appearance remains dark");
-  expect(await context.calls()).toHaveLength(3);
+  expect(await context.calls()).toHaveLength(1);
 });
 
 test("releases the lock after a worker crash without a stale PID file", async () => {
@@ -256,12 +249,12 @@ test("releases the lock after a worker crash without a stale PID file", async ()
   first.kill("SIGKILL");
   await finish(first);
   expect(await context.run(["--worker"])).toMatchObject({ code: 0 });
-  expect(await context.calls()).toHaveLength(4);
+  expect(await context.calls()).toHaveLength(2);
 });
 
 test("launches a detached worker with scrubbed credentials and reports its eventual result", async () => {
   const context = await fixture();
-  const launched = await context.run(["--session", "default"]);
+  const launched = await context.run(["--terminal", "t5"]);
   expect(launched.code).toBe(0);
   expect(launched.stdout).toContain("Restart worker");
   const log = path.join(context.stateDirectory, "restart.log");
@@ -277,12 +270,10 @@ test("launches a detached worker with scrubbed credentials and reports its event
       throw new Error("Detached worker did not finish");
     await Bun.sleep(20);
   }
-  expect(await context.calls()).toEqual([
-    ["--session", "default", "agent", "list"],
-  ]);
+  expect(await context.calls()).toEqual([["ls", "--json"]]);
 });
 
-test("corrupt appearance state fails loudly before any pane operation", async () => {
+test("corrupt appearance state fails loudly before any terminal operation", async () => {
   const context = await fixture();
   await context.run(["--worker", "--on-change"]);
   await writeFile(context.state, '{"appearance":"invalid"}');

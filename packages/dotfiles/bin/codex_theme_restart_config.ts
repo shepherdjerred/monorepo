@@ -1,5 +1,5 @@
 import path from "node:path";
-import { object } from "./codex_theme_restart_core.ts";
+import { object } from "./codex_theme_restart_terminal.ts";
 import type { Appearance } from "./codex_theme_restart_options.ts";
 
 export function themeForAppearance(mode: Appearance): string {

@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import type { Runtime, Target } from "./codex_theme_restart_core.ts";
+import type { Runtime } from "./codex_theme_restart_terminal.ts";
 
 export const uuid =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
@@ -76,7 +75,7 @@ function nativeOption(
   if (!inline && (booleanFlags.has(flag) || bypassFlags.has(flag)))
     return { retained: [flag], consumed: 1 };
   if (!inline && discardedFlags.has(flag)) return { retained: [], consumed: 1 };
-  throw new Error("Unsupported Codex launch option; pane left running");
+  throw new Error("Unsupported Codex launch option; terminal left running");
 }
 
 const otherCommands = new Set([
@@ -164,36 +163,41 @@ export function resumeArguments(
   // The worker writes appearance settings through the daemon before restarting.
   return ["resume", thread, ...retained];
 }
-/** Herdr may lose its temporary name while acknowledging a successful launch.
- * Never retry this write: the caller must verify the exact pane and native UUID.
+const plainWord = /^[\w@%+=:,./-]+$/;
+
+/**
+ * Quote one argument for the interactive shell. Fish and zsh agree on single
+ * quotes only when the text has no quote or backslash, so refuse the rest
+ * before anything is stopped rather than guess an escape.
+ */
+function shellWord(value: string): string {
+  if (plainWord.test(value)) return value;
+  if (/['\\\r\n]/.test(value))
+    throw new Error(
+      "Launch argument cannot be quoted for the shell; terminal left running",
+    );
+  return `'${value}'`;
+}
+
+/** The line typed into the interactive shell, so its `codex` wrapper policy still applies. */
+export function launchCommand(argv: readonly string[], thread: string): string {
+  return ["codex", ...resumeArguments(argv, thread)].map((word) => shellWord(word)).join(" ");
+}
+
+/**
+ * Type the launch line into the terminal's shell. Never retry this write: an
+ * uncertain acknowledgement is resolved by verifying the exact process and
+ * native conversation UUID.
  */
 export async function launchReplacement(
   runtime: Runtime,
-  target: Target,
+  terminal: string,
+  command: string,
 ): Promise<string | undefined> {
-  const { session, agent } = target;
-  const name =
-    agent.name ??
-    `theme-${createHash("sha256").update(`${session}/${agent.terminal}`).digest("hex").slice(0, 12)}`;
   try {
-    // Launch through the existing interactive shell to retain its wrapper policy.
-    await runtime.call(session, [
-      "agent",
-      "start",
-      name,
-      "--kind",
-      "codex",
-      "--pane",
-      agent.pane,
-      "--timeout",
-      "30000",
-      "--",
-      ...target.args,
-    ]);
+    await runtime.hc(["send", terminal, command]);
     return undefined;
   } catch (error) {
-    return error instanceof Error
-      ? error.message
-      : "Unknown Herdr launch error";
+    return error instanceof Error ? error.message : "Unknown hc launch error";
   }
 }

@@ -82,8 +82,8 @@ packages:
       note: "Self-updating native installer: irm bun.sh/install.ps1 | iex (winget only has a portable zip)"
     - name: Grok CLI
       note: "Self-updating native installer: irm https://x.ai/cli/install.ps1 | iex (winget xAI.GrokBuild is a portable copy)"
-    - name: herdr
-      note: Standalone release under ~/.herdr/packages
+    - name: herdr-core
+      note: Per-user install under %LOCALAPPDATA%\Programs\herdr-core; the Herdr app and the macOS core connect to it
     - name: .NET SDK and Windows SDK
       note: Installed as Visual Studio workloads
     - name: NVIDIA graphics driver and NVIDIA Broadcast
