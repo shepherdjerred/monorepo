@@ -88,10 +88,7 @@ test("platform modes and dependency order preserve existing release controls", (
     "tofu:seaweedfs",
   ]);
   expect(tofuStackPolicy("arr").prerequisites).toEqual(["tofu:tailscale"]);
-  expect(tofuStackPolicy("cloudflare").prerequisites).toEqual([
-    "root",
-    "static-sites",
-  ]);
+  expect(tofuStackPolicy("cloudflare").prerequisites).toEqual(["root"]);
   expect(TofuStackSchema.safeParse("tailscale-delivery").success).toBe(false);
   expect(tofuStackPolicy("application-secrets").mode).toBe("validate-only");
   expect(TofuStackSchema.safeParse("unknown").success).toBe(false);

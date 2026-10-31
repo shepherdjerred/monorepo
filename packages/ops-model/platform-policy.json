@@ -11,7 +11,7 @@
     "backblaze": { "mode": "operator-only", "prerequisites": [] },
     "cloudflare": {
       "mode": "automatic",
-      "prerequisites": ["root", "static-sites"]
+      "prerequisites": ["root"]
     },
     "cloudflare-tokens": { "mode": "reviewed-plan", "prerequisites": [] },
     "discord": { "mode": "reviewed-plan", "prerequisites": [] },

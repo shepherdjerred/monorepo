@@ -5167,11 +5167,6 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "better-skill-capped/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "bugsink/prod",
       "rule": "any-accepted"
     },
@@ -5192,37 +5187,12 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "cook/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "cross-compilers/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "freshrss/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "glitter-boys-ppl/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "glitter-boys/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "home/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "landing-pages/prod",
       "rule": "any-accepted"
     },
     {
@@ -5247,32 +5217,7 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "resume/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "scout-design-system/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "sjer-red/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "static-site-proxy/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "statically-typed/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "stocks-sjer-red/prod",
       "rule": "any-accepted"
     },
     {
@@ -5293,21 +5238,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "trmnl-dashboard/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "ts-mc-docs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "webring/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "wiki-sjer-red/prod",
       "rule": "any-accepted"
     },
     {

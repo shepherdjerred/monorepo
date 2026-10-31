@@ -24,7 +24,6 @@ export const TofuStackSchema = z.enum([
 export type TofuStack = z.infer<typeof TofuStackSchema>;
 export const PlatformPrerequisiteSchema = z.enum([
   "root",
-  "static-sites",
   "tofu:seaweedfs",
   "tofu:tailscale",
   "tofu:arr",
