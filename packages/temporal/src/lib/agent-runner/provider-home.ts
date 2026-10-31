@@ -1,4 +1,4 @@
-import { chmod, mkdir, stat } from "node:fs/promises";
+import { chmod, mkdir, realpath, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
@@ -24,8 +24,21 @@ export async function prepareProviderHomeParent(
   await mkdir(lifecycleDirectory, { recursive: true, mode: 0o700 });
   const directories: { directory: string; mode: number }[] = [];
   try {
+    const tempRoots = new Set([
+      path.resolve(os.tmpdir()),
+      "/tmp",
+      "/private/tmp",
+    ]);
+    try {
+      tempRoots.add(await realpath(os.tmpdir()));
+    } catch {
+      // ignore
+    }
+
     let directory = lifecycleDirectory;
     for (;;) {
+      const resolved = path.resolve(directory);
+      if (tempRoots.has(resolved)) break;
       const directoryStat = await stat(directory);
       const mode = directoryStat.mode & 0o7777;
       const providerExecuteBit =
@@ -35,7 +48,7 @@ export async function prepareProviderHomeParent(
         directories.push({ directory, mode });
       }
       const parent = path.dirname(directory);
-      if (parent === directory) break;
+      if (parent === directory || tempRoots.has(path.resolve(parent))) break;
       directory = parent;
     }
   } catch (error: unknown) {

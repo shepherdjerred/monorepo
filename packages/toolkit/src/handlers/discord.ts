@@ -32,7 +32,7 @@ Commands (talk to the running daemon):
   toolkit discord guilds [--json]                        List guilds per identity
   toolkit discord channels <guildId> [--json]            List channels
   toolkit discord send <channelId> <message…> [--as bot|user]
-  toolkit discord read <channelId> [-n 20] [--json]      Recent messages (incl. embeds)
+  toolkit discord read <channelId> [-n 20] [--as bot|user] [--json]      Recent messages (incl. embeds)
   toolkit discord wait <channelId> [--from <userId>] [--contains <str>] [--timeout 30]
   toolkit discord slash <channelId> <botId> <command> [args…]   Invoke another bot's slash command (userbot)
     --direct [--wait-public] [--contains <str>] [--timeout 30]   Use an isolated one-shot user gateway
@@ -125,6 +125,7 @@ async function handleRead(args: string[]): Promise<void> {
     options: {
       json: { type: "boolean", default: false },
       n: { type: "string", short: "n" },
+      as: { type: "string" },
     },
     allowPositionals: true,
   });
@@ -132,10 +133,12 @@ async function handleRead(args: string[]): Promise<void> {
     positionals,
     0,
     "channel id",
-    "toolkit discord read <channelId> [-n 20] [--json]",
+    "toolkit discord read <channelId> [-n 20] [--as bot|user] [--json]",
   );
   const limit = values.n == null ? 20 : Number.parseInt(values.n, 10);
-  await readCommand(channelId, { limit, json: values.json });
+  const as =
+    values.as == null ? undefined : IdentityKindSchema.parse(values.as);
+  await readCommand(channelId, { limit, as, json: values.json });
 }
 
 async function handleWait(args: string[]): Promise<void> {

@@ -230,4 +230,45 @@ describe("deployed command without cluster evidence", () => {
       expect(boundary.argo).toHaveBeenCalledExactlyOnceWith("arcade");
     }
   });
+
+  test("deliveryEvidence falls back to acceptedVersionSetRevisionId when desired is null", async () => {
+    boundary.overview.mockResolvedValueOnce({
+      environments: [
+        {
+          id: "minecraft/tsmc",
+          application: "tsmc",
+          desiredVersionSetRevisionId: null,
+          observedVersionSetRevisionId: "version:observed",
+          acceptedVersionSetRevisionId: "version:accepted",
+          observedAt: null,
+          activeDeploymentId: null,
+        },
+      ],
+      versionSets: [
+        {
+          id: "version:accepted",
+          components: {
+            "image:tsmc": {
+              kind: "image",
+              digest: "sha256:accepted",
+              runtimeDigests: [],
+              sourceRevision: "a".repeat(40),
+            },
+          },
+        },
+      ],
+    });
+    const { deliveryEvidence } = await import("#lib/deployed/delivery.ts");
+    const overview = await boundary.overview();
+    const result = await deliveryEvidence(
+      overview,
+      "tsmc",
+      "a".repeat(40),
+      () => Promise.resolve(true),
+    );
+    expect(result).not.toBeNull();
+    expect(result?.accepted).toBe("version:accepted");
+    expect(result?.artifacts).toHaveLength(1);
+    expect(result?.artifacts[0]?.digest).toBe("sha256:accepted");
+  });
 });

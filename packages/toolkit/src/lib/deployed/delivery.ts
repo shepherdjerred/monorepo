@@ -11,8 +11,12 @@ export async function deliveryEvidence(
     (candidate) => candidate.application === application,
   );
   if (environment === undefined) return null;
+  const targetVersionSetId =
+    environment.desiredVersionSetRevisionId ??
+    environment.acceptedVersionSetRevisionId ??
+    environment.observedVersionSetRevisionId;
   const selected = overview.versionSets.find(
-    (version) => version.id === environment.desiredVersionSetRevisionId,
+    (version) => version.id === targetVersionSetId,
   );
   const artifacts = await Promise.all(
     Object.entries(selected?.components ?? {})

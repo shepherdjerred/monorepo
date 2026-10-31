@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   DaemonStateSchema,
   MessageSchema,
+  ReadRequestSchema,
   StatusResponseSchema,
 } from "#lib/discord/ipc.ts";
 
@@ -69,6 +70,29 @@ describe("ipc schemas", () => {
         ttlSeconds: 60,
         identities: {},
       }),
+    ).toThrow();
+  });
+
+  test("read request accepts optional explicit identity kind", () => {
+    const withoutAs = ReadRequestSchema.parse({ channelId: "123", limit: 20 });
+    expect(withoutAs.as).toBeUndefined();
+
+    const withUser = ReadRequestSchema.parse({
+      channelId: "123",
+      limit: 20,
+      as: "user",
+    });
+    expect(withUser.as).toBe("user");
+
+    const withBot = ReadRequestSchema.parse({
+      channelId: "123",
+      limit: 20,
+      as: "bot",
+    });
+    expect(withBot.as).toBe("bot");
+
+    expect(() =>
+      ReadRequestSchema.parse({ channelId: "123", limit: 20, as: "invalid" }),
     ).toThrow();
   });
 });

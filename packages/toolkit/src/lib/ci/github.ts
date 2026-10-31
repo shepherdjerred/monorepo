@@ -156,12 +156,24 @@ export class GitHubClient {
     schema: z.ZodType<T>,
     signal?: AbortSignal,
   ): Promise<T> {
-    const response = await this.response(path, signal);
-    if (!response.ok)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Bun.sleep(
+          Bun.env.NODE_ENV === "test" ? 5 : 1000 * 2 ** (attempt - 1),
+        );
+      }
+      const response = await this.response(path, signal);
+      if (response.ok) {
+        return schema.parse(await response.json());
+      }
+      if (response.status >= 500 && response.status < 600 && attempt < 2) {
+        continue;
+      }
       throw new Error(
         `GitHub request failed (${String(response.status)}): ${path}`,
       );
-    return schema.parse(await response.json());
+    }
+    throw new Error(`GitHub request failed: ${path}`);
   }
 
   async pages<T>(
@@ -403,17 +415,17 @@ export async function resolvePrNumber(
 ): Promise<number> {
   if (number !== undefined)
     return z.coerce.number().int().positive().parse(number);
-  const pr = await captureJson(
-    [
-      "gh",
-      "pr",
-      "view",
-      "--repo",
-      repo,
-      "--json",
-      "number,title,url,headRefName,headRefOid,baseRefName,state,isDraft,mergeable,reviewDecision",
-    ],
-    PullRequestSchema,
+  const branchResult = Bun.spawnSync(["git", "branch", "--show-current"]);
+  const branch =
+    branchResult.exitCode === 0 ? branchResult.stdout.toString().trim() : "";
+  const args = ["gh", "pr", "view"];
+  if (branch.length > 0) args.push(branch);
+  args.push(
+    "--repo",
+    repo,
+    "--json",
+    "number,title,url,headRefName,headRefOid,baseRefName,state,isDraft,mergeable,reviewDecision",
   );
+  const pr = await captureJson(args, PullRequestSchema);
   return pr.number;
 }

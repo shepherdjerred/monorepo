@@ -150,7 +150,13 @@ function providerFeedback(
       contents: review.body ?? "",
       rawCommand: `toolkit gh api repos/${sources.input.repo}/pulls/reviews/${String(review.id)}`,
     };
-  throw new Error("Provider finding has no readable GitHub surface");
+  return {
+    ...finding,
+    author: null,
+    provider: provider.id,
+    contents: finding.contents ?? finding.title ?? "",
+    rawCommand: "",
+  };
 }
 
 function additionalFeedback(

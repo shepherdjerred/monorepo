@@ -27,11 +27,11 @@ Use the bare `lightpanda` command. Current flags use hyphens, such as
 ## Ideal Command for AI Content Extraction
 
 ```bash
-lightpanda fetch --dump markdown --strip-mode full --log-level fatal <url>
+lightpanda fetch --dump markdown --strip-mode clutter --log-level fatal <url>
 ```
 
 - `--dump markdown` converts the rendered document to Markdown
-- `--strip-mode full` removes scripts, stylesheets, images, video, and SVG
+- `--strip-mode clutter` removes scripts, stylesheets, and non-content clutter (reader mode)
 - `--log-level fatal` keeps routine logs out of stderr
 
 ## CLI Reference
@@ -50,15 +50,17 @@ lightpanda fetch --dump markdown --strip-mode full --log-level fatal <url>
 | Flag                   | Description                                |
 | ---------------------- | ------------------------------------------ |
 | `--dump <mode>`        | Output `html`, `markdown`, or a semantic tree |
-| `--strip-mode <modes>` | Comma-separated: `js`, `css`, `ui`, `invisible`, `full` |
+| `--strip-mode <modes>` | Tag group to remove: `clutter`, `css`, `js`, `invisible`, `shell`, `ui` (can be repeated) |
 | `--with-base`          | Add `<base>` tag to output                 |
 
 Strip modes:
 
+- `clutter` -- heuristic to keep only main content (recommended for AI)
 - `js` -- remove script tags and preload links
 - `css` -- remove style tags and stylesheet links
 - `ui` -- remove img, picture, video, css, svg
-- `full` -- all of the above (recommended for AI)
+- `shell` -- remove page chrome (nav, aside, dialog, header, footer)
+- `invisible` -- remove hidden elements (display:none, template)
 
 ### Common Options (fetch and serve)
 
@@ -86,25 +88,25 @@ Strip modes:
 ### Fetch a page (clean content)
 
 ```bash
-lightpanda fetch --dump markdown --strip-mode full --log-level fatal https://example.com
+lightpanda fetch --dump markdown --strip-mode clutter --log-level fatal https://example.com
 ```
 
 ### Fetch with extended timeout (slow sites)
 
 ```bash
-lightpanda fetch --dump markdown --strip-mode full --log-level fatal --http-timeout 15000 https://example.com
+lightpanda fetch --dump markdown --strip-mode clutter --log-level fatal --http-timeout 15000 https://example.com
 ```
 
 ### Fetch respecting robots.txt
 
 ```bash
-lightpanda fetch --dump markdown --strip-mode full --log-level fatal --obey-robots https://example.com
+lightpanda fetch --dump markdown --strip-mode clutter --log-level fatal --obey-robots https://example.com
 ```
 
 ### Fetch with base tag (for resolving relative URLs)
 
 ```bash
-lightpanda fetch --dump markdown --strip-mode full --log-level fatal --with-base https://example.com
+lightpanda fetch --dump markdown --strip-mode clutter --log-level fatal --with-base https://example.com
 ```
 
 ## Output Behavior

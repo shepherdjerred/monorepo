@@ -100,7 +100,7 @@ while disabling RWF, which requires the provisioned `rwf` world and production
 recording salt. Docker and Kubernetes mount the overlay at the config file path,
 leaving the image's baked plugins visible. The overlay uses a clearly fake RWF
 salt and does not copy production world or plugin data. Both profiles set an unreachable Flipt
-bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
+bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=prod`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
 
@@ -125,7 +125,7 @@ The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 its `paper-plugin.yml` requires (LuckPerms, CoreProtect, Multiverse; Citizens
 is already staged), `TheStormFixtures.jar` to prepare the protected arena worlds,
 and the inert local Flipt bootstrap required during plugin startup
-(`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`). Rollout checks
+(`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=prod`). Rollout checks
 therefore fail closed without requiring credentials or a running Flipt service,
 the repository-owned TheStorm and Citizens config with
 only the economy, mail, chat, tracks, skylands, towns, tickets, and creative

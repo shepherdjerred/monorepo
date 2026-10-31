@@ -45,6 +45,7 @@ export type Finding = {
   threadId: string | null;
   commentId: number | null;
   url: string | null;
+  contents?: string | null | undefined;
 };
 
 /** Every provider finding on the PR, deduplicated across surfaces. */

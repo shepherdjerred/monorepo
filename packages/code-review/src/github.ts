@@ -432,6 +432,7 @@ export async function resolveReviewState(input: {
       token,
       provider,
       headPushedAt,
+      headSha: head,
     });
     if (blockedReason !== null) {
       return {
@@ -586,6 +587,7 @@ async function resolveReviewAtHeadState(input: {
     token,
     provider,
     headPushedAt,
+    headSha: head,
   });
   return {
     state: blockedReason === null ? "reviewing" : "errored",

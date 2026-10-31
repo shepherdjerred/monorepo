@@ -22,7 +22,7 @@
     },
     "packages/birmel/scripts/generate-prisma.ts|packages/starlight-karma-bot/scripts/generate-prisma.ts": {
       "clones": 1,
-      "tokens": 254
+      "tokens": 599
     },
     "packages/birmel/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
       "clones": 1,

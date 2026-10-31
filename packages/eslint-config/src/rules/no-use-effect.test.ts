@@ -29,28 +29,31 @@ ruleTester.run("no-use-effect", noUseEffect, {
   invalid: [
     {
       code: `function Component() { useEffect(() => { console.log("mount"); }, []); return <div />; }`,
-      output: `function Component() { ; return <div />; }`,
       errors: [{ messageId: "useEffectWithoutDeps" }],
     },
     {
       code: `function Component() { useEffect(() => { console.log("every render"); }); return <div />; }`,
-      output: `function Component() { ; return <div />; }`,
       errors: [{ messageId: "useEffectWithoutDeps" }],
     },
     {
       code: `function Component() { useEffect(() => { setFiltered(data.filter(x => x > 0)); }, [data]); return <div />; }`,
-      output: `function Component() { ; return <div />; }`,
       errors: [{ messageId: "useEffectTransformData" }],
     },
     {
       code: `function Component() { useEffect(() => { window.addEventListener("resize", handler); }, [handler]); return <div />; }`,
-      output: `function Component() { ; return <div />; }`,
       errors: [{ messageId: "useEffectEventHandler" }],
     },
     {
       code: `function Component() { useEffect(() => { setComment(""); }, [postId]); return <div />; }`,
-      output: `function Component() { ; return <div />; }`,
       errors: [{ messageId: "useEffectStateSync" }],
+    },
+    {
+      code: `function Component() { useEffect(() => { const socket = io(); return () => { socket.disconnect(); }; }, []); return <div />; }`,
+      errors: [{ messageId: "useEffectWithoutDeps" }],
+    },
+    {
+      code: `function Component() { useEffect(() => { if (disabled) releaseAll(); }, [disabled, releaseAll]); return <div />; }`,
+      errors: [{ messageId: "useEffectWithDeps" }],
     },
   ],
 });

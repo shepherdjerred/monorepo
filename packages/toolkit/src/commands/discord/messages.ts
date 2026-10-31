@@ -26,11 +26,12 @@ export async function sendCommand(
 
 export async function readCommand(
   channelId: string,
-  options: { limit: number; json: boolean },
+  options: { limit: number; as?: IdentityKind | undefined; json: boolean },
 ): Promise<void> {
   const result = await daemonRequest(ReadResponseSchema, "/read", {
     channelId,
     limit: options.limit,
+    as: options.as,
   });
   if (options.json) {
     console.log(JSON.stringify(result.messages, null, 2));

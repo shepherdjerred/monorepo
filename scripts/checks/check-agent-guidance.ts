@@ -1,164 +1,62 @@
 #!/usr/bin/env bun
+import os from "node:os";
 import path from "node:path";
-import { parse } from "yaml";
-import { z } from "zod";
 import {
+  addBudgetViolations,
+  AGENT_MAX_BYTES,
+  AGENT_MAX_LINES,
+  byteCount,
+  catalogRoot,
+  CATALOG_MAX_BYTES,
+  claudeCompatibilityPath as libClaudeCompatibilityPath,
+  CLIENT_SKILL_DIRECTORIES,
+  CURSOR_ADAPTER_CONTENT,
+  CURSOR_ADAPTER_PATH,
+  GEMINI_SKILL_DIRECTORIES,
+  GEMINI_SOURCE_ADAPTER_PATH,
+  gitPath,
+  hasPathOrDescendant,
+  isArchived,
+  isGlobalReferenceSkill,
+  isSkill,
   listGuidanceEntries,
+  parseSkillFrontmatter,
+  PERSONAL_AGENT_PATH,
+  PERSONAL_SKILLS_PATH,
+  PORTABLE_SKILL_FIELDS,
+  REQUIRED_SOURCE_ADAPTERS,
+  ROOT_AGENT_MAX_BYTES,
+  ROOT_AGENT_MAX_LINES,
+  ROOT_AGENT_PATHS,
+  ROOT_SYMLINKS,
+  SKILL_ID,
+  SKILL_MAX_BYTES,
+  SKILL_MAX_LINES,
+  skillDirectoryName,
+  validateHomeAgentDrift as libValidateHomeAgentDrift,
   type GuidanceReadMode,
   type GuidanceEntry,
 } from "../lib/agent-guidance-files.ts";
+
 export type GuidanceViolation = { rule: string; path: string; message: string };
-const SkillFrontmatterSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().min(1),
-});
-const PORTABLE_SKILL_FIELDS = new Set([
-  "name",
-  "description",
-  "license",
-  "compatibility",
-  "metadata",
-  "allowed-tools",
-]);
-const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const ROOT_AGENT_PATHS = new Set(["AGENTS.md", "packages/dotfiles/AGENTS.md"]);
-const ARCHIVE_PREFIX = "sandbox/archive/";
-const AGENT_MAX_LINES = 120;
-const AGENT_MAX_BYTES = 8 * 1024;
-const ROOT_AGENT_MAX_LINES = 200;
-const ROOT_AGENT_MAX_BYTES = 16 * 1024;
-const SKILL_MAX_LINES = 160;
-const SKILL_MAX_BYTES = 12 * 1024;
-const CATALOG_MAX_BYTES = 24 * 1024;
-const PERSONAL_AGENT_PATH = "packages/dotfiles/AGENTS.md";
-const PERSONAL_SKILLS_PATH = "packages/dotfiles/dot_agents/skills";
-const gitPath = path.posix;
-const CLIENT_SKILL_DIRECTORIES = new Set(
-  [
-    ".claude .codex .cursor .opencode .gemini",
-    "dot_claude dot_codex dot_cursor dot_opencode",
-    "private_dot_claude private_dot_codex private_dot_cursor private_dot_opencode",
-  ].flatMap((group) => group.split(" ")),
-);
-const GEMINI_SKILL_DIRECTORIES = new Set(
-  ".gemini dot_gemini private_dot_gemini".split(" "),
-);
-const CURSOR_ADAPTER_PATH =
-  "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc";
-const GEMINI_SOURCE_ADAPTER_PATH =
-  "packages/dotfiles/dot_gemini/symlink_GEMINI.md";
-const CURSOR_ADAPTER_CONTENT =
-  "---\ndescription: Use the canonical personal and repository agent guidance\nalwaysApply: true\n---\n\n" +
-  "Follow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching\nskills from `.agents/skills`; do not duplicate their instructions here.";
-const REQUIRED_SOURCE_ADAPTERS = new Map([
-  ["packages/dotfiles/private_dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
-  ["packages/dotfiles/private_dot_claude/symlink_skills", "../.agents/skills"],
-  ["packages/dotfiles/private_dot_codex/symlink_AGENTS.md", "../AGENTS.md"],
-  [GEMINI_SOURCE_ADAPTER_PATH, "../AGENTS.md"],
-  [
-    "packages/dotfiles/dot_gemini/config/symlink_skills",
-    "../../.agents/skills",
-  ],
-]);
-const ROOT_SYMLINKS = new Map([
-  ["CLAUDE.md", "AGENTS.md"],
-  [".claude/skills", "../.agents/skills"],
-]);
-function lineCount(contents: string): number {
-  if (contents === "") return 0;
-  const count = contents.split(/\r?\n/).length;
-  return contents.endsWith("\n") ? count - 1 : count;
-}
-function byteCount(contents: string): number {
-  return new TextEncoder().encode(contents).byteLength;
-}
-function isArchived(entryPath: string): boolean {
-  return entryPath.startsWith(ARCHIVE_PREFIX);
-}
-function isSkill(entryPath: string): boolean {
-  return entryPath.endsWith("/SKILL.md");
-}
-function isGlobalReferenceSkill(entryPath: string): boolean {
-  return entryPath.startsWith("packages/dotfiles/dot_agents/skills/");
-}
-function skillDirectoryName(entryPath: string): string {
-  return gitPath.basename(gitPath.dirname(entryPath));
-}
+
 export function claudeCompatibilityPath(agentPath: string): string {
-  return gitPath.join(gitPath.dirname(agentPath), "CLAUDE.md");
+  return libClaudeCompatibilityPath(agentPath);
 }
-function catalogRoot(entryPath: string): string | undefined {
-  const personalMarker = "packages/dotfiles/dot_agents/skills/";
-  if (entryPath.startsWith(personalMarker)) {
-    return "packages/dotfiles/dot_agents/skills";
-  }
-  const marker = "/.agents/skills/";
-  if (entryPath.startsWith(".agents/skills/")) return ".agents/skills";
-  const index = entryPath.indexOf(marker);
-  const end = index + marker.length - 1;
-  return index === -1 ? undefined : entryPath.slice(0, end);
-}
-function parseSkillFrontmatter(
-  entry: GuidanceEntry,
-):
-  | Readonly<
-      z.infer<typeof SkillFrontmatterSchema> & { keys: readonly string[] }
-    >
-  | undefined {
-  if (!entry.contents.startsWith("---\n")) return undefined;
-  const closing = entry.contents.indexOf("\n---\n", 4);
-  if (closing === -1) return undefined;
-  try {
-    const parsed = z
-      .record(z.string(), z.unknown())
-      .parse(parse(entry.contents.slice(4, closing)));
-    return {
-      ...SkillFrontmatterSchema.parse(parsed),
-      keys: Object.keys(parsed),
-    };
-  } catch {
-    return undefined;
-  }
-}
-function addBudgetViolations(
-  entry: GuidanceEntry,
-  values: Readonly<{
-    lineRule: string;
-    byteRule: string;
-    maxLines: number;
-    maxBytes: number;
-  }>,
-  violations: GuidanceViolation[],
-): void {
-  const lines = lineCount(entry.contents);
-  const bytes = byteCount(entry.contents);
-  if (lines > values.maxLines) {
-    violations.push({
-      rule: values.lineRule,
-      path: entry.path,
-      message: `${lines.toString()} lines exceeds ${values.maxLines.toString()}`,
-    });
-  }
-  if (bytes > values.maxBytes) {
-    violations.push({
-      rule: values.byteRule,
-      path: entry.path,
-      message: `${bytes.toString()} bytes exceeds ${values.maxBytes.toString()}`,
-    });
-  }
-}
-type LinkExpectation = Readonly<{ path: string; target: string; rule: string }>;
-function hasPathOrDescendant(
-  entries: ReadonlyMap<string, GuidanceEntry>,
-  entryPath: string,
-): boolean {
-  return (
-    entries.has(entryPath) ||
-    [...entries.keys()].some((candidate) =>
-      candidate.startsWith(`${entryPath}/`),
-    )
+
+export function validateHomeAgentDrift(
+  personalAgentContent: string | undefined,
+  liveContent: string | undefined,
+  homeAgentPath?: string,
+): GuidanceViolation | undefined {
+  return libValidateHomeAgentDrift(
+    personalAgentContent,
+    liveContent,
+    homeAgentPath,
   );
 }
+
+type LinkExpectation = Readonly<{ path: string; target: string; rule: string }>;
 function validateSymlink(
   entries: ReadonlyMap<string, GuidanceEntry>,
   expectation: LinkExpectation,
@@ -432,8 +330,14 @@ function validateCatalogSizes(
   }
   return violations;
 }
+export type ValidateAgentGuidanceOptions = Readonly<{
+  homeAgentPath?: string | undefined;
+  liveContent?: string | undefined;
+}>;
+
 export function validateAgentGuidance(
   inputEntries: readonly GuidanceEntry[],
+  options?: ValidateAgentGuidanceOptions,
 ): GuidanceViolation[] {
   const entries = inputEntries.filter((entry) => !isArchived(entry.path));
   const byPath = new Map(entries.map((entry) => [entry.path, entry]));
@@ -442,6 +346,17 @@ export function validateAgentGuidance(
     catalogSizes: new Map<string, number>(),
   };
   const violations = validateClientLayout(byPath);
+  if (options?.liveContent !== undefined) {
+    const personalEntry = byPath.get(PERSONAL_AGENT_PATH);
+    addWhenPresent(
+      violations,
+      validateHomeAgentDrift(
+        personalEntry?.contents,
+        options.liveContent,
+        options.homeAgentPath ?? "~/AGENTS.md",
+      ),
+    );
+  }
   for (const entry of entries) {
     if (entry.path !== ".claude/skills") {
       violations.push(...validateClientSpecificEntry(entry));
@@ -472,6 +387,7 @@ export function validateAgentGuidance(
 }
 export async function checkAgentGuidance(
   readMode: GuidanceReadMode = "worktree",
+  options?: ValidateAgentGuidanceOptions,
 ): Promise<void> {
   const extraTrackedPaths = new Set([
     ...REQUIRED_SOURCE_ADAPTERS.keys(),
@@ -482,7 +398,19 @@ export async function checkAgentGuidance(
     undefined,
     readMode,
   );
-  const violations = validateAgentGuidance(entries);
+  const homeAgentPath =
+    options?.homeAgentPath ?? path.join(os.homedir(), "AGENTS.md");
+  let liveContent = options?.liveContent;
+  if (liveContent === undefined) {
+    const homeFile = Bun.file(homeAgentPath);
+    if (await homeFile.exists()) {
+      liveContent = await homeFile.text();
+    }
+  }
+  const violations = validateAgentGuidance(entries, {
+    homeAgentPath,
+    liveContent,
+  });
   if (violations.length > 0) {
     throw new Error(
       `Agent guidance guard failed:\n${violations

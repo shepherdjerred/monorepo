@@ -160,7 +160,7 @@
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/llm-models": {
-      "entry": ["src/index.ts", "test/**/*.ts"],
+      "entry": ["test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/glitter-context": {

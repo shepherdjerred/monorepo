@@ -34,16 +34,16 @@ export async function getPullRequest(
 export async function getPullRequestForBranch(
   repo?: string,
 ): Promise<PullRequest | null> {
-  const result = await runGhCommand(
-    [
-      "pr",
-      "view",
-      "--json",
-      "number,title,url,headRefName,headRefOid,baseRefName,state,isDraft,mergeable,reviewDecision",
-    ],
-    PullRequestSchema,
-    repo,
+  const branchResult = Bun.spawnSync(["git", "branch", "--show-current"]);
+  const branch =
+    branchResult.exitCode === 0 ? branchResult.stdout.toString().trim() : "";
+  const args = ["pr", "view"];
+  if (branch.length > 0) args.push(branch);
+  args.push(
+    "--json",
+    "number,title,url,headRefName,headRefOid,baseRefName,state,isDraft,mergeable,reviewDecision",
   );
+  const result = await runGhCommand(args, PullRequestSchema, repo);
 
   if (!result.success) {
     if (result.error !== undefined && result.error.length > 0) {

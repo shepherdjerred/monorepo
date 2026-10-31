@@ -9,6 +9,10 @@ import {
   isCredentialFreePassthrough,
   runPassthrough,
 } from "#lib/passthrough.ts";
+import {
+  handleWoodpeckerPipelineLsJson,
+  isWoodpeckerPipelineLsJson,
+} from "#lib/woodpecker/pipeline-ls.ts";
 
 const TOOLKIT_VERSION = "0.1.0";
 
@@ -174,6 +178,11 @@ async function main(): Promise<void> {
 
   if (!isCredentialFreePassthrough(command, args.slice(1))) {
     await resolveCommandCredentials(command, args);
+  }
+
+  if (isWoodpeckerPipelineLsJson(command, args.slice(1))) {
+    await handleWoodpeckerPipelineLsJson(args.slice(1));
+    return;
   }
 
   const passthrough = buildPassthroughInvocation(

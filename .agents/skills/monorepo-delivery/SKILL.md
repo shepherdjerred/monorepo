@@ -76,3 +76,8 @@ commands instead. State unperformed live or production checks in the PR body.
 Complex work may use several commits inside this one branch. Use multiple
 stacked PRs only when each branch is independently landable and the requested
 scope permits more than one PR.
+
+## Merge when authorized
+
+Do not merge a PR unless the task authorizes it. For an authorized merge, use
+`toolkit git-spice branch merge --method squash`.
