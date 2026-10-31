@@ -6,6 +6,10 @@ orphan alerts fire (`VeleroR2OrphanPrefixes` /
 `VeleroR2OrphanBytesExcessive`). Triage first: the inventory distinguishes
 accumulated orphans from legitimate chain growth.
 
+Velero now writes to the Backblaze `sjerred-velero` bucket, so `homelab` holds
+only backups taken before that move and no longer grows. Keep it until a
+restore from Backblaze has been done.
+
 The Velero ZFS plugin deletes an expired backup's `zfspv-incr` data when
 Velero deletes the backup, sweeping its whole schedule+volume family (see
 `packages/homelab/images/velero-plugin/README.md`). Orphans therefore mean a

@@ -55,6 +55,33 @@ func TestCloudLineageRotationAndPublication(t *testing.T) {
 	}
 }
 
+func TestPreviousStreamInNewLocation(t *testing.T) {
+	ctx := context.Background()
+	bucket := memblob.OpenBucket(nil)
+	defer bucket.Close()
+	c := &Conn{ctx: ctx, bucket: bucket, Log: logrus.New(), prefix: "node/zfs/", backupPathPrefix: "zfspv-incr"}
+	// The previous backup's stream is in another location: start with a full.
+	base, err := c.PreviousZFSStream("pvc-volume", "six-hourly-v2", "six-hourly-v2-001", 11)
+	if err != nil || base != "" {
+		t.Fatalf("empty family base=%s err=%v", base, err)
+	}
+	data := make([]byte, 312)
+	binary.LittleEndian.PutUint64(data[8:16], 0x2f5bacbac)
+	binary.LittleEndian.PutUint64(data[40:48], 2)
+	key := c.GenerateRemoteFileWithSchd("pvc-volume", "six-hourly-v2", "six-hourly-v2-002")
+	if err := bucket.WriteAll(ctx, key, data, nil); err != nil {
+		t.Fatal(err)
+	}
+	// Once the family has a stream here, a missing previous one is an error.
+	if _, err := c.PreviousZFSStream("pvc-volume", "six-hourly-v2", "six-hourly-v2-001", 11); err == nil {
+		t.Fatal("accepted a previous stream missing from its family")
+	}
+	base, err = c.PreviousZFSStream("pvc-volume", "six-hourly-v2", "six-hourly-v2-002", 11)
+	if err != nil || base != "six-hourly-v2-002" {
+		t.Fatalf("incremental base=%s err=%v", base, err)
+	}
+}
+
 func TestZFSChain(t *testing.T) {
 	streams := []ZFSStream{{Backup: "expired-full", ToGUID: "1", FromGUID: "0"}, {Backup: "retained", ToGUID: "2", FromGUID: "1"}, {Backup: "unrelated-full", ToGUID: "3", FromGUID: "0"}}
 	chain, err := ResolveZFSChain(streams, "retained")

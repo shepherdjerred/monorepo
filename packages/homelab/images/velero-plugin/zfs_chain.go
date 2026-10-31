@@ -117,6 +117,15 @@ func ResolveZFSChain(streams []ZFSStream, target string) ([]string, error) {
 }
 
 func (c *Conn) ZFSChain(volume, schedule, target string) ([]string, error) {
+	streams, err := c.zfsStreams(volume, schedule, target)
+	if err != nil {
+		return nil, err
+	}
+	return ResolveZFSChain(streams, target)
+}
+
+// zfsStreams lists the completed streams of target's schedule+volume family.
+func (c *Conn) zfsStreams(volume, schedule, target string) ([]ZFSStream, error) {
 	names := []string{target}
 	if schedule != "" {
 		var err error
@@ -141,12 +150,24 @@ func (c *Conn) ZFSChain(volume, schedule, target string) ([]string, error) {
 		}
 		streams = append(streams, stream)
 	}
-	return ResolveZFSChain(streams, target)
+	return streams, nil
 }
 
 // PreviousZFSStream rotates by actual ancestry depth, independent of CR TTL.
+//
+// A family with no completed stream in this location starts with a full: the
+// previous backup was written somewhere else, such as a storage location the
+// snapshots have since moved from, and an incremental needs its parent where
+// it is restored from. A family that has streams but not target still fails.
 func (c *Conn) PreviousZFSStream(volume, schedule, target string, incremental uint64) (string, error) {
-	chain, err := c.ZFSChain(volume, schedule, target)
+	streams, err := c.zfsStreams(volume, schedule, target)
+	if err != nil {
+		return "", err
+	}
+	if len(streams) == 0 {
+		return "", nil
+	}
+	chain, err := ResolveZFSChain(streams, target)
 	if err != nil {
 		return "", err
 	}

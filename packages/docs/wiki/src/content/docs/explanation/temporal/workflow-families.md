@@ -158,9 +158,10 @@ work.
 Live maintenance that acts directly on running systems with no PR in the loop.
 
 The backup workflows are **detection-only**. `velero-orphan-audit` flags PVC
-snapshots with no matching live backup. `velero-r2-orphan-audit` flags
-off-site data that no retained backup needs. Both emit gauges, a JSON summary,
-and a pointer to the remediation runbook.
+snapshots with no matching live backup. `velero-r2-orphan-audit` flags data in
+the R2 `homelab` bucket that no retained backup needs. That bucket holds only
+backups taken before Velero moved to Backblaze. Both audits emit gauges, a JSON
+summary, and a pointer to the remediation runbook.
 
 Pruning off-site backup data was declined in 2026-06-06 and reversed in
 2026-10. The objection was to an audit inferring from absence that data is
