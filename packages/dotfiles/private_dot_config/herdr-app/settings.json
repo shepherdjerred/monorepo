@@ -1,0 +1,9 @@
+{
+  "zoom": 1,
+  "sounds": {
+    "enabled": true
+  },
+  "font": "Berkeley Mono",
+  "minimum_contrast": 1,
+  "font_size": 13
+}

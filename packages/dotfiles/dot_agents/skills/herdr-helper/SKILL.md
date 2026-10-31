@@ -49,10 +49,14 @@ same directory. There is no hosted mod API reference.
 
 ## Where our config lives
 
-User mods and themes are chezmoi-managed under
-`packages/dotfiles/private_dot_config/herdr-app/`. Layouts, `keys.json`, and
-`settings.json` in `~/.config/herdr-app/` are not tracked, so check the live copy
-before assuming the repo matches. The Codex theme-restart automation under
+What you own in `~/.config/herdr-app/` is chezmoi-managed under
+`packages/dotfiles/private_dot_config/herdr-app/`: `keys.json`, `settings.json`,
+`layouts/mine.json`, your mod clones, and themes. Herdr's own layouts, shipped
+mods, generated `.d.ts` files, and state files (`view.json`, `shared.json`,
+`window.json`, `installed.json`, `layouts/.state`) are not tracked and must not
+be. The app also rewrites `keys.json` and `settings.json` from its UI, so after
+changing them there, run `chezmoi add` on the path to capture it; applying the
+stale source would revert the change. The Codex theme-restart automation under
 `packages/dotfiles/bin/` drives Codex terminals through `hc`. Use
 `chezmoi-helper` for deployment.
 
