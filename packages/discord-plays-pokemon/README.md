@@ -128,15 +128,14 @@ chooses its own identity or channel.
 
 When the web API is enabled, set `WEB_PUBLIC_ORIGIN` to the page's origin and
 `DISCORD_CLIENT_SECRET` to the bot application's OAuth secret. Register
-`https://pokebot.sjer.red/api/auth/discord/callback` in that application's
-Discord OAuth redirect list before deploying. For local sign-in, register the
+the origin plus `/api/auth/discord/callback` in that application's Discord
+OAuth redirect list before deploying. For local sign-in, register the
 local origin plus `/api/auth/discord/callback` and use that origin for the page
 and backend proxy. Cookies are HttpOnly and Secure on HTTPS; SQLite sessions
 live at `<state_root_dir>/web-sessions.sqlite` on the saves volume.
 
 Enable `[driver_feed].enabled` or `DRIVER_FEED_ENABLED=true` to serve the feed.
-Homelab enables it and injects the OAuth secret from the `pokemon-config`
-1Password item. WebSockets admit only the configured origin. Signed-out
+WebSockets admit only the configured origin. Signed-out
 visitors can read the progress panels; the video requires voice membership.
 Party and journal cards use locally served Emerald-era Pokémon sprites; the
 source revision and attribution are recorded in
@@ -144,19 +143,17 @@ source revision and attribution are recorded in
 
 ## Deployment
 
-Runs on the homelab Kubernetes cluster via ArgoCD
-(`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). CI builds and smokes
-the image on every affected PR and pushes it on merge to `main` (the
-`discord-plays-pokemon` target in
-[`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts),
-driven by Woodpecker). Configuration is a mounted `config.toml`
-— see `config.example.toml`.
+[Arcade](../arcade/) runs this backend; the package has no image or homelab
+deployment of its own. The `Dockerfile` remains the build recipe for
+`pokeemerald.wasm`: its `wasm-builder` stage builds the patched engine and its
+`wasm-abi-test` stage runs the engine bridge tests against that artifact
+(`docker buildx build --target wasm-abi-test -f packages/discord-plays-pokemon/Dockerfile .`
+from the repository root). A standalone run reads a mounted `config.toml` —
+see `config.example.toml`.
 
-Each guild's progress lives under `saves/<guildId>/` on the PVC. Saves are
-written with a temp file, fsync, and rename, and the session's final flush
-completes before `/stop` replies. A wrong-size flash save refuses `/play` and
-is left untouched. The cluster's Velero schedules are the only backup of the
-PVC.
+Each guild's progress lives under `saves/<guildId>/`. Saves are written with a
+temp file, fsync, and rename, and the session's final flush completes before
+`/stop` replies. A wrong-size flash save refuses `/play` and is left untouched.
 
 ## Disclaimer
 

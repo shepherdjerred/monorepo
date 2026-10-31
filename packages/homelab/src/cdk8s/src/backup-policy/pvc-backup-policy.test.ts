@@ -113,15 +113,15 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 65 included and 40 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 60 included and 40 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(105);
-  expect(new Set(keys).size).toBe(105);
+  expect(keys).toHaveLength(100);
+  expect(new Set(keys).size).toBe(100);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(65);
+  ).toHaveLength(60);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
   ).toHaveLength(40);

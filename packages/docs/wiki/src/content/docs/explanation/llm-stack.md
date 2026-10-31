@@ -126,7 +126,7 @@ The gateway keeps whole traces that contain `gen_ai.*` spans, deciding after a
 two-minute wait. Whole traces keep the root span, so a trace reads as one
 trajectory rather than orphaned LLM calls. Kept traces route to
 per-service-stage projects — `scout-beta`, `scout-prod`, `birmel`,
-`temporal`, `discord-plays`, `misc` — through explicit allowlist branches.
+`temporal`, `misc` — through explicit allowlist branches.
 Each branch sets the `x-project-name` header and shares one system API key. A
 service listed in no branch reaches no project. That exclusion bounds
 Phoenix's database growth, so there is deliberately no catch-all branch.

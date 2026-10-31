@@ -41,7 +41,6 @@ import { GLOBAL_IMAGE_INPUTS } from "./select-image-targets-inputs.ts";
 const SHARED_APPLICATION_IMAGE_INPUTS = [
   "ci/application-image-smoke.Dockerfile",
   "ci/scripts/images/application-image-runtime.ts",
-  "ci/scripts/images/smoke-app-configs.ts",
   "ci/scripts/images/smoke-app-in-image.ts",
   // Every application Dockerfile projects its install closure and completes
   // its production tree with these.
@@ -62,9 +61,12 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     // Temporal compiles toolkit into the worker image as an embedded CLI, but
     // toolkit is deliberately not a runtime workspace dependency.
     "temporal-worker": ["packages/toolkit/"],
-    "discord-plays-pokemon": ["packages/discord-plays-pokemon/"],
-    "discord-plays-mario-kart": ["packages/discord-plays-mario-kart/"],
-    arcade: ["packages/discord-plays-mario-kart/spaghetti-src/"],
+    // Arcade's native SpaghettiKart context is the Mario Kart Dockerfile's
+    // spaghetti-builder stage, built from the pinned spaghetti-src inputs.
+    arcade: [
+      "packages/discord-plays-mario-kart/Dockerfile",
+      "packages/discord-plays-mario-kart/spaghetti-src/",
+    ],
     infra: [
       "packages/homelab/src/domain-registry.json",
       "packages/homelab/src/domain-registry.ts",

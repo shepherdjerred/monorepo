@@ -294,30 +294,6 @@
     "reason": "Replaceable observability log data"
   },
   {
-    "namespace": "mario-kart",
-    "name": "mario-kart-data-volume",
-    "backup": "enabled",
-    "reason": "Mario Kart application data"
-  },
-  {
-    "namespace": "mario-kart",
-    "name": "mario-kart-edge-data",
-    "backup": "enabled",
-    "reason": "Public HTTPS certificate keys and ACME account state"
-  },
-  {
-    "namespace": "mario-kart",
-    "name": "mario-kart-rom-volume",
-    "backup": "enabled",
-    "reason": "Mario Kart runtime ROM state"
-  },
-  {
-    "namespace": "mario-kart",
-    "name": "mario-kart-volume",
-    "backup": "enabled",
-    "reason": "Mario Kart emulator and game state"
-  },
-  {
     "namespace": "media",
     "name": "bazarr-pvc",
     "backup": "enabled",
@@ -454,12 +430,6 @@
     "name": "pinchtab-data",
     "backup": "disabled",
     "reason": "Replaceable browser automation state"
-  },
-  {
-    "namespace": "pokemon",
-    "name": "pokemon-volume",
-    "backup": "enabled",
-    "reason": "Pokemon game and application state"
   },
   {
     "namespace": "postal",

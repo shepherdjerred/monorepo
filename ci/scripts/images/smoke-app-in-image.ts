@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 
-import { marioSmokeConfig, pokemonSmokeConfig } from "./smoke-app-configs.ts";
-
 /**
  * Runs production-image smoke assertions inside a BuildKit solve.
  *
@@ -446,54 +444,11 @@ const commands: Record<
     command: "cd /app/packages/arcade && bun packages/backend/src/smoke.ts",
     env: {},
   },
-  "discord-plays-pokemon": {
-    command: [
-      "set -eu",
-      "cd /app/packages/discord-plays-pokemon",
-      "set +e",
-      'output="$(timeout 60s bun packages/backend/src/index.ts 2>&1)"',
-      "status=$?",
-      String.raw`printf '%s\n' "$output"`,
-      String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
-        discordAuthPattern +
-        '|used disallowed intents"',
-    ].join("\n"),
-    env: { BUGSINK_DSN: "" },
-  },
-  "discord-plays-mario-kart": {
-    command: [
-      "set -eu",
-      "cd /app/packages/discord-plays-mario-kart/packages/backend",
-      "bun run smoke:spaghetti-install",
-      "cd /app/packages/discord-plays-mario-kart",
-      "set +e",
-      'output="$(timeout 60s sh -c "cd packages/backend && bun x --no-install prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts" 2>&1)"',
-      "status=$?",
-      String.raw`printf '%s\n' "$output"`,
-      String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
-        discordAuthPattern +
-        '|used disallowed intents"',
-    ].join("\n"),
-    env: { BUGSINK_DSN: "", DATABASE_PATH: "/tmp/smoke-leaderboard.db" },
-  },
 };
 
 const command = commands[target];
 if (command === undefined) {
   throw new Error(`no in-image smoke command exists for ${target}`);
-}
-
-if (target === "discord-plays-pokemon") {
-  await Bun.write(
-    "/app/packages/discord-plays-pokemon/config.toml",
-    pokemonSmokeConfig,
-  );
-}
-if (target === "discord-plays-mario-kart") {
-  await Bun.write(
-    "/app/packages/discord-plays-mario-kart/config.toml",
-    marioSmokeConfig,
-  );
 }
 
 assertPassed(

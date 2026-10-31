@@ -12,7 +12,7 @@ services around them — and delivered by ArgoCD.
 ```mermaid
 flowchart LR
   accTitle: Homelab topology
-  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Woodpecker step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress. Mario Kart also supports direct HTTPS through the home router and Caddy.
+  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Woodpecker step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress. Arcade also supports direct HTTPS through the home router and Caddy.
 
   PR[Pull request] --> CI[Woodpecker CI]
   CI --> CM[ChartMuseum<br/>immutable charts]
@@ -22,7 +22,7 @@ flowchart LR
   T --> ZFS[(node-local ZFS)]
   TS[Tailscale] -->|private| T
   CF[Cloudflare Tunnel] -->|public| T
-  DIRECT[Direct HTTPS] -->|Mario Kart controller| T
+  DIRECT[Direct HTTPS] -->|Arcade controller| T
 ```
 
 ## Two nodes, deliberately unequal
@@ -111,11 +111,11 @@ survive the next sync.
 Private services use a **Tailscale ingress** and are reachable only from the
 tailnet. Public services normally go through a **Cloudflare Tunnel**.
 
-Mario Kart's controller also has a direct HTTPS ingress because extra proxy
+Arcade's game controller also has a direct HTTPS ingress because extra proxy
 distance adds visible input delay. Caddy owns browser-trusted certificates;
 Cloudflare owns DNS without carrying the game traffic after cutover.
 The existing tunnel remains available during certificate bootstrap and recovery.
-The [Mario Kart chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/mario-kart.ts)
+The [Arcade edge](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/arcade-edge.ts)
 owns this exception. Use the [direct-ingress cutover guide](/how-to/cut-over-mario-kart-direct-ingress/)
 to activate it after the HTTPS listener is verified.
 

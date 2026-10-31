@@ -121,34 +121,6 @@
       ]
     },
     {
-      "id": "discord-plays-pokemon",
-      "images": ["discord-plays-pokemon"],
-      "title": "Discord Plays Pokémon",
-      "kind": "product",
-      "package": "discord-plays-pokemon",
-      "aliases": ["pokemon"],
-      "namespaces": ["pokemon"],
-      "argoApps": ["pokemon"],
-      "bugsinkProjects": ["discord-plays-pokemon"],
-      "analyticsSites": ["pokemon"],
-      "grafanaDashboards": ["discord-plays-stream-health"],
-      "deploy": []
-    },
-    {
-      "id": "discord-plays-mario-kart",
-      "images": ["discord-plays-mario-kart"],
-      "title": "Discord Plays Mario Kart",
-      "kind": "product",
-      "package": "discord-plays-mario-kart",
-      "aliases": ["mario-kart"],
-      "namespaces": ["mario-kart"],
-      "argoApps": ["mario-kart"],
-      "bugsinkProjects": ["discord-plays-mario-kart"],
-      "analyticsSites": ["mario-kart"],
-      "grafanaDashboards": ["discord-plays-stream-health"],
-      "deploy": []
-    },
-    {
       "id": "starlight-karma-bot",
       "images": ["starlight-karma-bot"],
       "title": "Starlight Karma Bot",

@@ -15,8 +15,6 @@ import { createGolinkChart } from "./cdk8s-charts/platform/golink.ts";
 import { createFreshRssChart } from "./cdk8s-charts/media/freshrss.ts";
 import { createPinchtabChart } from "./cdk8s-charts/pinchtab.ts";
 import { createFliptChart } from "./cdk8s-charts/platform/flipt.ts";
-import { createPokemonChart } from "./cdk8s-charts/games/pokemon.ts";
-import { createMarioKartChart } from "./cdk8s-charts/games/mario-kart.ts";
 import { createArcadeChart } from "./cdk8s-charts/games/arcade.ts";
 import { createGickupChart } from "./cdk8s-charts/gickup.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
@@ -104,8 +102,6 @@ export async function setupCharts(app: App): Promise<void> {
   await createFreshRssChart(app);
   createPinchtabChart(app);
   createFliptChart(app);
-  createPokemonChart(app);
-  createMarioKartChart(app);
   createArcadeChart(app);
   await createGickupChart(app);
   createGrafanaDbChart(app);

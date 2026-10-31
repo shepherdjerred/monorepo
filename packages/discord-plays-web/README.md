@@ -35,9 +35,9 @@ parts that behave the same in both:
 - `src/vite/game-vite-config.ts` — `defineGameViteConfig()`: shared plugins
   and the `vite dev` proxies for `/socket.io`, `/video`, and `/api`.
 
-The PostHog snippet stays in each game's `index.html`, because
-`scripts/checks/check-analytics-sites.ts` verifies every site's snippet and
-masking settings statically.
+This package carries no analytics. A site that adds PostHog keeps the snippet
+in its own `index.html`, because `scripts/checks/check-analytics-sites.ts`
+verifies every site's snippet and masking settings statically.
 
 ## Consumption
 

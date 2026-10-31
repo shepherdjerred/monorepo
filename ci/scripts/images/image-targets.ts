@@ -35,12 +35,6 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
   "scout-for-lol": {
     owner: "@scout-for-lol/backend",
   },
-  "discord-plays-pokemon": {
-    owner: "@discord-plays-pokemon/backend",
-  },
-  "discord-plays-mario-kart": {
-    owner: "@discord-plays-mario-kart/backend",
-  },
   "woodpecker-config-extension": {
     owner: "@shepherdjerred/woodpecker-config-extension",
   },

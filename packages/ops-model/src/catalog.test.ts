@@ -256,7 +256,8 @@ describe("ServiceIndex", () => {
 
   test("joins every upstream name to one service", () => {
     expect(index.byNamespace("scout-prod")?.id).toBe("scout-for-lol");
-    expect(index.byArgoApp("pokemon")?.id).toBe("discord-plays-pokemon");
+    expect(index.byArgoApp("arcade")?.id).toBe("arcade");
+    expect(index.byArgoApp("pokemon")).toBeUndefined();
     expect(index.byBugsinkProject("tasknotes-api")?.id).toBe(
       "tasknotes-server",
     );

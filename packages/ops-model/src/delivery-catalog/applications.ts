@@ -12,8 +12,6 @@ export const ENVIRONMENT_APPLICATIONS: Readonly<Record<string, string>> = {
   "scout-for-lol/beta": "scout-beta",
   "scout-for-lol/prod": "scout-prod",
   "tasknotes-server/prod": "tasknotes",
-  "discord-plays-pokemon/prod": "pokemon",
-  "discord-plays-mario-kart/prod": "mario-kart",
   "starlight-karma-bot/beta": "starlight-karma-bot-beta",
   "starlight-karma-bot/prod": "starlight-karma-bot-prod",
   "streambot/prod": "media",

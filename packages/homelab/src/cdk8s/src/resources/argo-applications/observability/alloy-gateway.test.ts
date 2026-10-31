@@ -124,14 +124,7 @@ describe("Alloy gateway tailnet metrics receiver", () => {
 });
 
 describe("Alloy gateway Phoenix branches", () => {
-  const PROJECTS = [
-    "scout-beta",
-    "scout-prod",
-    "birmel",
-    "temporal",
-    "discord-plays",
-    "misc",
-  ];
+  const PROJECTS = ["scout-beta", "scout-prod", "birmel", "temporal", "misc"];
 
   it("routes each allowlisted project to Phoenix by header", () => {
     for (const project of PROJECTS) {

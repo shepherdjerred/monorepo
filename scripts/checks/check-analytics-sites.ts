@@ -32,16 +32,6 @@ const staticTrackers = [
     masksAllText: false,
   },
   {
-    path: "packages/discord-plays-mario-kart/packages/frontend/index.html",
-    hostname: "mariokart.sjer.red",
-    masksAllText: true,
-  },
-  {
-    path: "packages/discord-plays-pokemon/packages/frontend/index.html",
-    hostname: "pokebot.sjer.red",
-    masksAllText: true,
-  },
-  {
     path: "packages/cooklang-rich-preview/public/posthog.js",
     entrypoint: "packages/cooklang-rich-preview/src/layouts/Layout.astro",
     hostname: "cook.sjer.red",
@@ -174,8 +164,6 @@ const expectedHostnames = new Set([
   "resume.sjer.red",
   "webring.sjer.red",
   "better-skill-capped.com",
-  "mariokart.sjer.red",
-  "pokebot.sjer.red",
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
   "ts-mc.net",

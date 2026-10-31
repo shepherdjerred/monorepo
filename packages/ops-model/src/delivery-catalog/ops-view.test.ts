@@ -42,7 +42,7 @@ describe("catalog core", () => {
         .filter((service) => service.lifecycle === "retired")
         .map((service) => service.id)
         .toSorted(),
-    ).toEqual(["discord-plays-mario-kart", "discord-plays-pokemon"]);
+    ).toEqual([]);
     expect(
       CATALOG_CORE.environments
         .filter((environment) => environment.approvalPolicy === "required")

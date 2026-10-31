@@ -33,21 +33,32 @@ import {
 } from "../migration-core.ts";
 import { imageIdentity } from "../../../scripts/lib/image-pin-catalog.ts";
 import { publicationOwners } from "../../../packages/ops-model/src/delivery-catalog/publication-owners.ts";
+import {
+  CATALOG_CORE,
+  type CatalogCore,
+} from "../../../packages/ops-model/src/delivery-catalog/core.ts";
 import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 import type { ArtifactVersion } from "../../../packages/delivery/src/shared/contract.ts";
 
 test("v2 publication excludes retired recipes even when selected or missing", () => {
+  const core: CatalogCore = {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.map((service) =>
+      service.id === "arcade"
+        ? { ...service, lifecycle: "retired" as const }
+        : service,
+    ),
+  };
   const targets = publicationTargets(
-    ["discord-plays-mario-kart", "infra"],
+    ["arcade", "infra"],
     new Map(),
-    publicationOwners("v2"),
+    publicationOwners("v2", { core }),
   );
-  expect(targets).not.toContain("discord-plays-mario-kart");
-  expect(targets).not.toContain("discord-plays-pokemon");
-  expect(targets).toContain("arcade");
+  expect(targets).not.toContain("arcade");
+  expect(targets).toContain("birmel");
   expect(targets).toContain("the-storm-server");
   expect(publicationTargets([], new Map(), publicationOwners("v1"))).toContain(
-    "discord-plays-mario-kart",
+    "arcade",
   );
 });
 function commandResult(
