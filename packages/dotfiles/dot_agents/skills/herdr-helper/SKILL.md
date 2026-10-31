@@ -5,14 +5,14 @@ description: Route Herdr work to the right product and its built-in manual. Use 
 
 # Herdr
 
-Three different programs share the name. Pick the right one before running
-anything.
+Two programs do the work, and a third with the same name is being retired.
+Pick the right one before running anything.
 
 | Command | What it is |
 | --- | --- |
 | `hc` | herdr-core: the daemon that owns terminals and agents and keeps them alive when the window closes. Start, read, message, and wait on agents here. |
 | `herdr-app` | The desktop window (spaces, tabs, panes) and its mods, layouts, keys, and themes. It is a client of `hc`; use it only to change what the person sees. |
-| `herdr` (`/opt/homebrew/bin`) | The older terminal multiplexer. A different program with its own sessions and config. |
+| `herdr` (`/opt/homebrew/bin`) | The older Homebrew terminal multiplexer, superseded by the two above. The dotfiles no longer install or configure it and chezmoi removes its config, but a leftover binary can remain. Do not use it for new work. |
 
 ## Read the live manual first
 
@@ -22,7 +22,6 @@ Do not guess syntax from memory or from this file.
 ```bash
 hc --skill               # terminals, agents, machines, events
 herdr-app --skill        # driving the window
-herdr --skill            # legacy multiplexer; its own rules require HERDR_ENV=1
 hc <command> --help      # exact arguments
 herdr-app commands       # every window command, works without a window
 hc schema                # the full API as JSON Schema
@@ -51,16 +50,15 @@ same directory. There is no hosted mod API reference.
 ## Where our config lives
 
 User mods and themes are chezmoi-managed under
-`packages/dotfiles/private_dot_config/herdr-app/`; the legacy multiplexer's
-config is `packages/dotfiles/private_dot_config/private_herdr/`. Layouts,
-`keys.json`, and `settings.json` in `~/.config/herdr-app/` are not tracked, so
-check the live copy before assuming the repo matches. The Codex theme-restart
-automation under `packages/dotfiles/bin/` calls the legacy `herdr` CLI. Use
+`packages/dotfiles/private_dot_config/herdr-app/`. Layouts, `keys.json`, and
+`settings.json` in `~/.config/herdr-app/` are not tracked, so check the live copy
+before assuming the repo matches. The Codex theme-restart automation under
+`packages/dotfiles/bin/` drives Codex terminals through `hc`. Use
 `chezmoi-helper` for deployment.
 
 ## Docs
 
 - <https://herdr.dev/llms.txt> and <https://herdr.dev/agent-guide.md>
-- <https://github.com/herdrdev/herdr-core>, <https://github.com/herdrdev/herdr-app>,
-  <https://github.com/herdrdev/herdr> (each has `docs/`)
+- <https://github.com/herdrdev/herdr-core> and <https://github.com/herdrdev/herdr-app>
+  (each has `docs/`)
 - Shared mods and layouts: <https://herdr.dev/mods>
