@@ -65,7 +65,7 @@ Voice receive is load-bearing and depends on a patched libdatachannel
 announces speaker SSRCs lazily, so unregistered inbound RTP is dropped. The
 patched binary ships as vendored prebuilds under
 `packages/discord-video-stream/prebuilds-patched/`, overlaid at install; every
-consumer image (`streambot`, `discord-plays-pokemon`, `discord-plays-mario-kart`)
+consumer image (`streambot`, `arcade`)
 must `COPY` that directory before `bun install` or the overlay hard-errors. The
 `assertIncomingAudioSupported()` boot guard refuses an unpatched binary. The
 realtime turn completes only after every observed function call reaches

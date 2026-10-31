@@ -15,7 +15,6 @@ ARG EXPECTED_CONTRACT_HASH
 USER 0:0
 COPY --chown=1000:1000 \
   ci/scripts/images/smoke-app-in-image.ts \
-  ci/scripts/images/smoke-app-configs.ts \
   /app/ci/scripts/images/
 
 # Scout's production image deliberately excludes PostgreSQL. Its exact-digest
@@ -32,20 +31,6 @@ RUN case "${SMOKE_TARGET}" in \
         apt-get update \
         && apt-get install -y --no-install-recommends postgresql postgresql-client \
         && rm -rf /var/lib/apt/lists/* \
-        ;; \
-    esac
-
-# These applications write their smoke config at the production working
-# directory. Prepare only the writable file while root, then run every smoke
-# as the deployment uid.
-RUN case "${SMOKE_TARGET}" in \
-      discord-plays-pokemon) \
-        touch /app/packages/discord-plays-pokemon/config.toml \
-        && chown 1000:1000 /app/packages/discord-plays-pokemon/config.toml \
-        ;; \
-      discord-plays-mario-kart) \
-        touch /app/packages/discord-plays-mario-kart/config.toml \
-        && chown 1000:1000 /app/packages/discord-plays-mario-kart/config.toml \
         ;; \
     esac
 

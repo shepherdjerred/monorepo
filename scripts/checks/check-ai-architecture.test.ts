@@ -293,10 +293,6 @@ describe("AI architecture compatibility exceptions", () => {
           contents: "const seed = environment.CODEX_AUTH_JSON_B64;",
         },
         {
-          path: "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
-          contents: 'const key = "CODEX_ACCESS_TOKEN";',
-        },
-        {
           path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
           contents:
             'CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({\nkey: "CODEX_AUTH_JSON_B64",',

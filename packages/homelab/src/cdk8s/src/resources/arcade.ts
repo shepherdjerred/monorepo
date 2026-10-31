@@ -322,5 +322,4 @@ model = "gpt-5.6-sol"
     path: "/metrics",
     matchLabels: { app: "arcade" },
   });
-  // The existing Mario Kart edge proxies this service across namespaces.
 }

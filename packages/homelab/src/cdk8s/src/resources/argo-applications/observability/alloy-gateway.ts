@@ -67,13 +67,6 @@ const PHOENIX_BRANCHES: PhoenixBranch[] = [
     ],
   },
   {
-    project: "discord-plays",
-    river: "px_discord_plays",
-    drop: [
-      `not(${SERVICE_NAME} == "discord-plays-pokemon" or ${SERVICE_NAME} == "discord-plays-mario-kart")`,
-    ],
-  },
-  {
     project: "misc",
     river: "px_misc",
     drop: [

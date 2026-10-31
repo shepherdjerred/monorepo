@@ -324,12 +324,12 @@ test("the full catalog publication preserves the smaller coordinated root invent
   // 14 upstream-chart companions and the three following charts (Velero's
   // Schedules, Kueue's queues and ArgoCD's tunnel) are owned now and publish
   // once transition rendering synthesizes them; none joins the root inventory.
-  expect(charts).toHaveLength(65);
+  expect(charts).toHaveLength(63);
   const dataLayers = rootInventory.filter(({ name }) =>
     ["delivery-data", "temporal-data"].includes(name),
   ).length;
   expect([0, 2]).toContain(dataLayers);
-  expect(rootInventory).toHaveLength(23 + dataLayers);
+  expect(rootInventory).toHaveLength(21 + dataLayers);
   expect(result.charts).toEqual(charts);
   expect(result.rootInventory).toEqual(rootInventory);
 });

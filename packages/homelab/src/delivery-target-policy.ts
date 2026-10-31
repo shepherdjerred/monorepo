@@ -53,7 +53,6 @@ const INFRASTRUCTURE_SERVICE_OWNERS = new Set([
   "delivery-data",
   "temporal-data",
 ]);
-const RETIRED_APPLICATIONS = new Set(["pokemon", "mario-kart"]);
 
 export type ApplicationReleasePolicy =
   | {
@@ -76,11 +75,6 @@ export function applicationReleasePolicy(
       owner: "delivery",
       environmentId: specialized,
       adapter: "specialized",
-    };
-  if (RETIRED_APPLICATIONS.has(application))
-    return {
-      owner: "release-root",
-      reason: "Stopped legacy streaming owner; Arcade owns runtime execution",
     };
   const catalog = new ServiceIndex();
   const service =

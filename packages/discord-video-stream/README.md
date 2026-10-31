@@ -1,8 +1,8 @@
 # @shepherdjerred/discord-video-stream
 
 A vendored fork of [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream)
-`6.0.0`, maintained in this monorepo so the streaming bots (`streambot`,
-`discord-plays-pokemon`, `discord-plays-mario-kart`) share one source of truth.
+`6.0.0`, maintained in this monorepo so the streaming bots (`streambot` and
+`arcade`, which runs the Pokémon and Mario Kart backends) share one source of truth.
 
 Upstream is licensed ISC (declared in its `package.json`; the repo ships no `LICENSE`
 file). The ISC text and original copyright are retained in [`LICENSE`](./LICENSE).

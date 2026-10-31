@@ -177,7 +177,7 @@ The **ROM is resolved** from, in order: an explicit `--rom`/positional arg →
 `MK64_ROM` env → `~/syncthing/Sync/roms/mariokart64.z64` →
 `~/Sync/Sync/roms/mariokart64.z64` (both Syncthing spellings are checked because
 the root differs by machine; the canonical copy lives in Syncthing — see
-[Deployment](#one-time-provisioning)). All four failing prints where to put it.
+[ROM](#rom)). All four failing prints where to put it.
 
 ```bash
 cd packages/backend
@@ -237,51 +237,22 @@ time from sending an input to the first frame that latched it.
 
 ## Deployment
 
-Runs on the homelab Kubernetes cluster via ArgoCD
-(`packages/homelab/src/cdk8s/src/resources/mario-kart.ts`). Image builds and
-smokes run in Woodpecker CI; main builds push the deployable image. Configuration
-is a mounted `config.toml` — see
-[`config.example.toml`](./config.example.toml). The web UI is reachable at
-`mariokart.sjer.red` (and via Tailscale as `mariokart`); the Go-Live stream is
-outbound-only.
+[Arcade](../arcade/) runs this backend; the package has no image or homelab
+deployment of its own. Arcade's image build takes the native port from this
+package's `Dockerfile` `spaghetti-builder` stage.
 
-The pod requests the node's Intel iGPU for VAAPI encoding; the game's OpenGL
-rendering uses the same render node through Mesa.
+### ROM
 
-### One-time provisioning
-
-Three things are provisioned out-of-band (by design):
-
-1. **Config secret** — create a 1Password item (vault
-   `v64ocnykdqju4ui6j6pua56xw4`) with a `config.toml` field, then replace the
-   placeholder item id in `resources/mario-kart.ts`. With the web API enabled,
-   the item also needs a `DISCORD_CLIENT_SECRET` field; the Deployment passes it
-   to the pod with `WEB_PUBLIC_ORIGIN` (`https://mariokart.sjer.red`), and the
-   backend refuses to start without either.
-1. **Discord sign-in** — on the bot's application in the Discord developer
-   portal (OAuth2), register the redirect
-   `<WEB_PUBLIC_ORIGIN>/api/auth/discord/callback` and copy the client secret into
-   the item's `DISCORD_CLIENT_SECRET` field. Sign-in only works on that origin,
-   not over the Tailscale hostname. For local runs, also register
-   `http://localhost:8081/api/auth/discord/callback` and set
-   `WEB_PUBLIC_ORIGIN=http://localhost:8081`.
-1. **ROM** — the canonical copy lives in Syncthing at
-   `~/syncthing/Sync/roms/mariokart64.z64` (replicated across your machines; the
-   manual harness reads it from there by default). Copy it into the ROM PVC once:
-
-   ```sh
-   kubectl cp ~/syncthing/Sync/roms/mariokart64.z64 \
-     <pod>:/workspace/packages/discord-plays-mario-kart/roms/mariokart64.z64
-   ```
-
-   The ROM is **copyrighted** — it is never baked into the image, committed to
-   git (the repo is public + has a 5 MB file limit), or stored in a Secret. You
-   must supply your own copy; Syncthing is just where this project keeps it.
+The ROM is **copyrighted**: it is never baked into an image, committed to git
+(the repo is public and has a 5 MB file limit), or stored in a Secret. Supply
+your own copy. The canonical copy lives in Syncthing at
+`~/syncthing/Sync/roms/mariokart64.z64`, where the manual harness reads it by
+default.
 
 > **Self-bot caveat.** Discord blocks video from bot tokens, so Go-Live requires
 > a _user_ token. This violates Discord's ToS and the token invalidates on a
-> password change — use a dedicated throwaway account and rotate via 1Password +
-> `kubectl rollout restart`.
+> password change — use a dedicated throwaway account and rotate it through
+> 1Password.
 
 ## Disclaimer
 

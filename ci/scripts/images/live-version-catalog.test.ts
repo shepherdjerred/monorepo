@@ -135,9 +135,9 @@ function original(name: string) {
   });
 }
 
-test("all22 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
-  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(22);
-  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(22);
+test("all20 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(20);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(20);
   expect(CANONICAL_IMAGE_TARGETS).toContain("zfs-driver");
   expect(imageIdentity("zfs-driver")).toMatchObject({
     serviceId: "storage",

@@ -39,20 +39,6 @@
       "aliases": ["tasknotes"]
     },
     {
-      "id": "discord-plays-pokemon",
-      "title": "Discord Plays Pokémon",
-      "kind": "product",
-      "package": "discord-plays-pokemon",
-      "aliases": ["pokemon"]
-    },
-    {
-      "id": "discord-plays-mario-kart",
-      "title": "Discord Plays Mario Kart",
-      "kind": "product",
-      "package": "discord-plays-mario-kart",
-      "aliases": ["mario-kart"]
-    },
-    {
       "id": "starlight-karma-bot",
       "title": "Starlight Karma Bot",
       "kind": "product",
@@ -422,58 +408,6 @@
             "argoApp": "tasknotes"
           }
         ]
-      }
-    },
-    {
-      "id": "discord-plays-pokemon",
-      "title": "Discord Plays Pokémon",
-      "package": "discord-plays-pokemon",
-      "lifecycle": "retired",
-      "selfHosted": false,
-      "group": "discord-plays-pokemon",
-      "components": [
-        {
-          "name": "image:discord-plays-pokemon",
-          "producer": "first-party"
-        },
-        {
-          "name": "chart:pokemon",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "product",
-        "namespaces": ["pokemon"],
-        "argoApps": ["pokemon"],
-        "bugsinkProjects": ["discord-plays-pokemon"],
-        "analyticsSites": ["pokemon"],
-        "grafanaDashboards": ["discord-plays-stream-health"]
-      }
-    },
-    {
-      "id": "discord-plays-mario-kart",
-      "title": "Discord Plays Mario Kart",
-      "package": "discord-plays-mario-kart",
-      "lifecycle": "retired",
-      "selfHosted": false,
-      "group": "discord-plays-mario-kart",
-      "components": [
-        {
-          "name": "image:discord-plays-mario-kart",
-          "producer": "first-party"
-        },
-        {
-          "name": "chart:mario-kart",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "product",
-        "namespaces": ["mario-kart"],
-        "argoApps": ["mario-kart"],
-        "bugsinkProjects": ["discord-plays-mario-kart"],
-        "analyticsSites": ["mario-kart"],
-        "grafanaDashboards": ["discord-plays-stream-health"]
       }
     },
     {
@@ -2847,24 +2781,6 @@
       "configurationRevisionId": "tasknotes-server/prod/1"
     },
     {
-      "id": "discord-plays-pokemon/prod",
-      "role": "durable",
-      "lifecycle": "retired",
-      "approvalPolicy": "none",
-      "automatic": false,
-      "recipeRevisionId": "discord-plays-pokemon/prod/1",
-      "configurationRevisionId": "discord-plays-pokemon/prod/1"
-    },
-    {
-      "id": "discord-plays-mario-kart/prod",
-      "role": "durable",
-      "lifecycle": "retired",
-      "approvalPolicy": "none",
-      "automatic": false,
-      "recipeRevisionId": "discord-plays-mario-kart/prod/1",
-      "configurationRevisionId": "discord-plays-mario-kart/prod/1"
-    },
-    {
       "id": "starlight-karma-bot/beta",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3232,7 +3148,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/3"
+      "configurationRevisionId": "argocd/prod/4"
     },
     {
       "id": "chartmuseum/prod",
@@ -3352,7 +3268,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "tofu-openai/prod/1",
-      "configurationRevisionId": "tofu-openai/prod/1"
+      "configurationRevisionId": "tofu-openai/prod/2"
     },
     {
       "id": "tofu-posthog/prod",
@@ -3456,7 +3372,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "alloy-gateway/prod/1",
-      "configurationRevisionId": "alloy-gateway/prod/1"
+      "configurationRevisionId": "alloy-gateway/prod/2"
     },
     {
       "id": "promtail/prod",
@@ -4052,46 +3968,6 @@
     {
       "dependent": "delivery/prod",
       "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-mario-kart/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-mario-kart/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-mario-kart/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-mario-kart/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-pokemon/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-pokemon/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-pokemon/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "discord-plays-pokemon/prod",
-      "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },
     {

@@ -3,6 +3,7 @@
 # No disc dumps, translated WASM, or extracted game assets enter this image.
 ARG SPAGHETTI_CONTEXT=arcade-spaghetti
 ARG DOLPHIN_CONTEXT=arcade-dolphin
+ARG EMERALD_ABI_CONTEXT=arcade-emerald-abi
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
@@ -60,6 +61,9 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM ${SPAGHETTI_CONTEXT} AS native-spaghetti
 FROM ${DOLPHIN_CONTEXT} AS native-dolphin
+# The Emerald engine bridge's ABI tests pass against the real pokeemerald.wasm;
+# only their marker enters this image, never the WASM.
+FROM ${EMERALD_ABI_CONTEXT} AS emerald-abi
 
 FROM base AS runtime
 # Debian archives remove superseded patch releases. Intel VAAPI is amd64-only.
@@ -99,6 +103,7 @@ COPY --from=build /app/packages/arcade/packages/common/dist packages/arcade/pack
 COPY --from=build /app/packages/arcade/packages/frontend/dist packages/arcade/packages/frontend/dist
 COPY --from=native-spaghetti /out packages/discord-plays-mario-kart/packages/backend/assets/spaghettikart
 COPY --from=native-dolphin /opt/dolphin /opt/dolphin
+COPY --from=emerald-abi /wasm-abi-passed /opt/arcade/emerald-wasm-abi-passed
 RUN install -D -m 0755 packages/discord-plays-pokemon/packages/backend/src/goal/control/pokemonctl-entrypoint.sh /usr/local/bin/pokemonctl \
   && install -D -m 0644 packages/discord-plays-pokemon/packages/backend/src/goal/control/pokemonctl-output.ts /usr/local/bin/pokemonctl-output.ts \
   && ldd /opt/dolphin/bin/dolphin-emu-nogui > /tmp/dolphin-libraries \

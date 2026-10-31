@@ -1,14 +1,8 @@
-import { App, Chart } from "cdk8s";
+import { App } from "cdk8s";
 import { describe, expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/arcade.ts";
-import { createMarioKartChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/mario-kart.ts";
-import { createPokemonChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/pokemon.ts";
-import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
-import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/mario-kart.ts";
-import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/pokemon.ts";
-import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 
 const Resource = z.object({
   kind: z.string(),
@@ -25,41 +19,13 @@ const Resource = z.object({
 function resources() {
   const app = new App();
   createArcadeChart(app);
-  createMarioKartChart(app);
-  createPokemonChart(app);
   return parseAllDocuments(app.synthYaml()).map((document) =>
     Resource.parse(document.toJSON()),
   );
 }
 
 describe("Arcade account handover", () => {
-  test("reconciles the shared owner after both legacy applications", () => {
-    const app = new App();
-    const root = new Chart(app, "apps", { namespace: "argocd" });
-    createArcadeApp(root);
-    createMarioKartApp(root);
-    createPokemonApp(root);
-    // The central policy overwrites annotations declared by individual factories.
-    applyApplicationReleasePolicy(app);
-    const applications = parseAllDocuments(app.synthYaml()).map((document) =>
-      Resource.parse(document.toJSON()),
-    );
-    const wave = (name: string) => {
-      const application = applications.find(
-        (resource) => resource.metadata.name === name,
-      );
-      if (application === undefined) throw new Error(`Missing ${name}`);
-      // Argo's declared default is wave zero when the annotation is absent.
-      const value =
-        application.metadata.annotations?.["argocd.argoproj.io/sync-wave"] ??
-        "0";
-      if (!/^-?\d+$/u.test(value)) throw new Error(`Invalid wave for ${name}`);
-      return Number(value);
-    };
-    expect(wave("arcade")).toBeGreaterThan(wave("mario-kart"));
-    expect(wave("arcade")).toBeGreaterThan(wave("pokemon"));
-  });
-  test("runs exactly one command owner while retaining the original save claims", () => {
+  test("runs exactly one command owner without the legacy game resources", () => {
     const manifests = resources();
     const deployments = manifests.filter(
       (resource) => resource.kind === "Deployment",
@@ -70,21 +36,6 @@ describe("Arcade account handover", () => {
     expect(
       deployments.find((resource) => resource.metadata.name === "arcade")?.spec,
     ).toMatchObject({ replicas: 1 });
-    for (const name of [
-      "mario-kart-volume",
-      "mario-kart-data-volume",
-      "mario-kart-rom-volume",
-      "mario-kart-edge-data",
-      "pokemon-volume",
-    ]) {
-      expect(
-        manifests.some(
-          (resource) =>
-            resource.kind === "PersistentVolumeClaim" &&
-            resource.metadata.name === name,
-        ),
-      ).toBe(true);
-    }
     const config = manifests.find(
       (resource) => resource.metadata.name === "arcade-arcade-config",
     );
@@ -122,35 +73,6 @@ describe("Arcade account handover", () => {
         },
       },
     });
-  });
-
-  test("legacy charts retain only their original recovery claims", () => {
-    const manifests = resources();
-    for (const [namespace, names] of [
-      [
-        "mario-kart",
-        [
-          "mario-kart-volume",
-          "mario-kart-data-volume",
-          "mario-kart-rom-volume",
-          "mario-kart-edge-data",
-        ],
-      ],
-      ["pokemon", ["pokemon-volume"]],
-    ] as const) {
-      const retained = manifests.filter(
-        (resource) => resource.metadata.namespace === namespace,
-      );
-      expect(
-        retained.every((resource) => resource.kind === "PersistentVolumeClaim"),
-      ).toBe(true);
-      expect(
-        retained.map((resource) => resource.metadata.name).toSorted(),
-      ).toEqual([...names].toSorted());
-    }
-    expect(
-      manifests.filter((resource) => resource.kind === "PersistentVolumeClaim"),
-    ).toHaveLength(10);
   });
 
   test("routes the canonical hostname through the edge without legacy aliases", () => {

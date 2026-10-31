@@ -29,8 +29,6 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
   // ships in the image without becoming a dependency of the HTTP service.
   "woodpecker-config-extension": ["@shepherdjerred/code-review"],
   "temporal-worker": ["@shepherdjerred/toolkit"],
-  "discord-plays-pokemon": ["@discord-plays-pokemon/frontend"],
-  "discord-plays-mario-kart": ["@discord-plays-mario-kart/frontend"],
 };
 
 // Repository tooling is installed in the build stage but is not copied into

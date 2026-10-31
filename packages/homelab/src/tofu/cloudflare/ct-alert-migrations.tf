@@ -8,10 +8,6 @@ moved {
   to   = module.domain_baseline["clauderon.com"].cloudflare_ct_alerting.ct[0]
 }
 moved {
-  from = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_ct_alerting.ct
-  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_ct_alerting.ct[0]
-}
-moved {
   from = module.domain_baseline["glitter-boys.com"].cloudflare_ct_alerting.ct
   to   = module.domain_baseline["glitter-boys.com"].cloudflare_ct_alerting.ct[0]
 }

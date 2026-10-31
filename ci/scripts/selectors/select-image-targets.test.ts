@@ -94,15 +94,13 @@ describe("selectImageTargets", () => {
     expect(targets).toContain("temporal-worker");
   });
 
-  test("selects nested game families without an always-on fallback", async () => {
-    expect(
-      await select([
-        "packages/discord-plays-pokemon/wasm-src/patches/example.patch",
-      ]),
-    ).toEqual(["discord-plays-pokemon"]);
+  test("selects Arcade for its native game inputs without an always-on fallback", async () => {
     expect(
       await select(["packages/discord-plays-mario-kart/spaghetti-src/a.patch"]),
-    ).toEqual(["arcade", "discord-plays-mario-kart"]);
+    ).toEqual(["arcade"]);
+    expect(
+      await select(["packages/discord-plays-mario-kart/Dockerfile"]),
+    ).toEqual(["arcade"]);
   });
 
   test("groups the homelab image family", async () => {
@@ -218,7 +216,6 @@ describe("selectImageTargets", () => {
     for (const path of [
       "ci/application-image-smoke.Dockerfile",
       "ci/scripts/images/application-image-runtime.ts",
-      "ci/scripts/images/smoke-app-configs.ts",
       "ci/scripts/images/smoke-app-in-image.ts",
       "ci/scripts/images/complete-bin-links.ts",
       "ci/scripts/images/workspace-manifests.ts",
@@ -537,12 +534,7 @@ describe("patch attribution", () => {
       await select([
         "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
       ]),
-    ).toEqual([
-      "arcade",
-      "discord-plays-mario-kart",
-      "discord-plays-pokemon",
-      "streambot",
-    ]);
+    ).toEqual(["arcade", "streambot"]);
   });
 
   test("a patch resolved through several packages selects only those images", async () => {
@@ -550,12 +542,7 @@ describe("patch attribution", () => {
       await select([
         "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
       ]),
-    ).toEqual([
-      "arcade",
-      "discord-plays-mario-kart",
-      "discord-plays-pokemon",
-      "streambot",
-    ]);
+    ).toEqual(["arcade", "streambot"]);
   });
 
   test("a patch for a dep outside every image closure selects nothing", async () => {

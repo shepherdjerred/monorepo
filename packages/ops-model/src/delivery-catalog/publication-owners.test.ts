@@ -1,4 +1,8 @@
 import { expect, test } from "vitest";
+import {
+  CATALOG_CORE,
+  type CatalogCore,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 
 test("v1 names services.json groups until the window's catalog flip", () => {
@@ -20,12 +24,26 @@ test("v2 names the catalog's first-party owners and no longer registers apps", (
   expect(owners.image("woodpecker-config-extension")).toBe("woodpecker");
   expect(owners.owns("sjer-red")).toBe(true);
   expect(owners.owns("tofu-cloudflare")).toBe(true);
-  expect(owners.imageActive("discord-plays-mario-kart")).toBe(false);
-  expect(owners.imageActive("discord-plays-pokemon")).toBe(false);
   expect(owners.imageActive("arcade")).toBe(true);
-  expect(owners.chart("mario-kart")).toBeUndefined();
-  expect(owners.owns("discord-plays-mario-kart")).toBe(false);
+  expect(owners.chart("arcade")).toBe("arcade");
+  expect(owners.owns("arcade")).toBe(true);
   expect(() => owners.chart("not-a-chart")).toThrow(
     "first-party catalog owner",
   );
+});
+
+test("v2 keeps a retired service's builds unregistered and its images inactive", () => {
+  const core: CatalogCore = {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.map((service) =>
+      service.id === "arcade"
+        ? { ...service, lifecycle: "retired" as const }
+        : service,
+    ),
+  };
+  const owners = publicationOwners("v2", { core });
+  expect(owners.image("arcade")).toBe("arcade");
+  expect(owners.imageActive("arcade")).toBe(false);
+  expect(owners.chart("arcade")).toBeUndefined();
+  expect(owners.owns("arcade")).toBe(false);
 });

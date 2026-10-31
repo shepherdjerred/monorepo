@@ -85,10 +85,9 @@ describe("application image inputs", () => {
     );
   });
 
-  test("ships the local in-image smoke configuration module", async () => {
+  test("ships the local in-image smoke harness", async () => {
     const dockerfile = await read("ci/application-image-smoke.Dockerfile");
     expect(dockerfile).toContain("ci/scripts/images/smoke-app-in-image.ts");
-    expect(dockerfile).toContain("ci/scripts/images/smoke-app-configs.ts");
   });
 
   test("keeps Storm Forum PHP-FPM in the foreground with stderr logging", async () => {

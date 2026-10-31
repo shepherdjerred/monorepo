@@ -4,10 +4,9 @@ description: Privacy configuration, public-token setup, and production verificat
 ---
 
 PostHog Cloud US provides analytics for `sjer.red`, `resume.sjer.red`,
-`webring.sjer.red`, `better-skill-capped.com`, `mariokart.sjer.red`,
-`pokebot.sjer.red`, `scout-for-lol.com`, `beta.scout-for-lol.com`,
-`docs.ts-mc.net`, `ppl.glitter-boys.com`, `cook.sjer.red`, `stocks.sjer.red`,
-`wiki.sjer.red`, and `public.ts-mc.net`.
+`webring.sjer.red`, `better-skill-capped.com`, `scout-for-lol.com`,
+`beta.scout-for-lol.com`, `ts-mc.net`, `docs.ts-mc.net`, `ppl.glitter-boys.com`,
+`cook.sjer.red`, `stocks.sjer.red`, `wiki.sjer.red`, and `public.ts-mc.net`.
 Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
 managed external service: the cluster has no PostHog namespace, database,
 volume, DNS record, secret, or readiness dependency.
@@ -46,11 +45,10 @@ clicks, web vitals, and session replay with inputs masked. Every site respects
 Do Not Track, so a DNT browser sends nothing at all.
 
 Input masking is not sufficient everywhere. `maskAllInputs` masks form values,
-not arbitrary text nodes, so the three sites that render a signed-in identity as
-ordinary text mask every text node instead (`maskTextSelector: "*"`): Mario
-Kart's seat picker, the Pokémon profile card, and the whole Scout web app, whose
-workspace shows guild names, Discord display names, Riot accounts, player
-aliases, and channel names. An element-level allowlist was rejected because it
+not arbitrary text nodes, so the sites that render a signed-in identity as
+ordinary text mask every text node instead (`maskTextSelector: "*"`): The Storm
+forum and the whole Scout web app, whose workspace shows guild names, Discord
+display names, Riot accounts, player aliases, and channel names. An element-level allowlist was rejected because it
 fails open the first time a new component renders a name. Replay still captures
 layout, navigation, and rage or dead clicks. See PostHog's
 [JavaScript configuration](https://posthog.com/docs/libraries/js/config) and
@@ -204,7 +202,7 @@ is precisely how the cookieless outage went unnoticed.
   backend events.
 - Confirm session recordings appear for all configured hosts with input masking
   active, and that no username, guild name, Riot account, or player alias is
-  legible in a Mario Kart, Pokémon, or Scout recording.
+  legible in a Scout or Storm forum recording.
 - Repeat with Do Not Track enabled and confirm the browser sends no PostHog
   events.
 - Sign into Scout and confirm the pre-login anonymous person merges into the

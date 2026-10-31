@@ -17,7 +17,6 @@ import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog
 import {
   ORDINARY_DELIVERY_ENVIRONMENTS,
   SPECIALIZED_DELIVERY_ENVIRONMENTS,
-  applicationReleasePolicy,
 } from "homelab/src/delivery-target-policy.ts";
 import {
   catalogRevisions,
@@ -213,16 +212,6 @@ describe("catalog revisions", () => {
       expect(owners.get(application), application).toEqual([
         catalogEnvironmentOf(v1),
       ]);
-    }
-    for (const name of ["pokemon", "mario-kart"]) {
-      expect(applicationReleasePolicy(name).owner).toBe("release-root");
-      const environmentId = owners.get(name)?.[0];
-      expect(
-        CATALOG_CORE.environments.find(
-          (environment) => environment.id === environmentId,
-        )?.lifecycle,
-        name,
-      ).toBe("retired");
     }
   });
 

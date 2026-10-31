@@ -96,8 +96,6 @@ group "app" {
     "temporal-worker",
     "trmnl-dashboard",
     "scout-for-lol",
-    "discord-plays-pokemon",
-    "discord-plays-mario-kart",
     "arcade",
     "storm-brain",
     "storm-forum",
@@ -216,22 +214,6 @@ target "scout-for-lol" {
   cache-to   = cacheto("scout-for-lol")
 }
 
-target "discord-plays-pokemon" {
-  inherits   = ["_app"]
-  dockerfile = "packages/discord-plays-pokemon/Dockerfile"
-  tags       = imagetags("discord-plays-pokemon")
-  cache-from = cachefrom("discord-plays-pokemon")
-  cache-to   = cacheto("discord-plays-pokemon")
-}
-
-target "discord-plays-mario-kart" {
-  inherits   = ["_app"]
-  dockerfile = "packages/discord-plays-mario-kart/Dockerfile"
-  tags       = imagetags("discord-plays-mario-kart")
-  cache-from = cachefrom("discord-plays-mario-kart")
-  cache-to   = cacheto("discord-plays-mario-kart")
-}
-
 target "storm-brain" {
   inherits   = ["_app"]
   dockerfile = "packages/storm-brain/Dockerfile"
@@ -246,6 +228,12 @@ target "_arcade-spaghetti" {
   target = "spaghetti-builder"
 }
 
+target "_arcade-emerald-abi" {
+  context = "."
+  dockerfile = "packages/discord-plays-pokemon/Dockerfile"
+  target = "wasm-abi-test"
+}
+
 target "_arcade-dolphin" {
   context = "."
   dockerfile = "packages/arcade/runtimes/brawl/Dockerfile"
@@ -258,6 +246,7 @@ target "arcade" {
   contexts = {
     arcade-spaghetti = "target:_arcade-spaghetti"
     arcade-dolphin = "target:_arcade-dolphin"
+    arcade-emerald-abi = "target:_arcade-emerald-abi"
   }
   tags = imagetags("arcade")
   cache-from = cachefrom("arcade")
