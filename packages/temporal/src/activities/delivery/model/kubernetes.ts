@@ -1,5 +1,10 @@
 import { Context } from "@temporalio/activity";
-import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
+import { ApplicationFailure } from "@temporalio/common";
+import {
+  effectSignal,
+  interruptedByWorkerShutdown,
+} from "#lib/delivery/model/effect-signal.ts";
+import { DELIVERY_EXECUTOR_REPLACED } from "#shared/delivery-executor.ts";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type {
@@ -200,8 +205,31 @@ async function waitForReadback(
  * The sync step: the guarded, request-identified sync of the rendered source
  * and its readback proof. A resumed step whose request already reached the
  * Application only reads back; it never syncs twice.
+ *
+ * A self-hosted sync may replace the very worker running it (D8). When that
+ * worker's shutdown kills the step while it still holds the lease, the step
+ * fails as `DeliveryExecutorReplaced`, leaving its stage `running`, and the
+ * Workflow runs it again on the replacement worker. Every other failure,
+ * a Failed or Error owned operation included, fails as before.
  */
 export async function sync(
+  current: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+  key: string,
+) {
+  try {
+    await syncOwned(current, recipe, key);
+  } catch (error) {
+    if (!current.selfHosted || !interruptedByWorkerShutdown()) throw error;
+    throw ApplicationFailure.create({
+      type: DELIVERY_EXECUTOR_REPLACED,
+      message: `The ${key} step was interrupted by its own executor's replacement; it resumes by reading back request ${deliveryOperationId(current.deployment.id)}`,
+      ...(error instanceof Error ? { cause: error } : {}),
+    });
+  }
+}
+
+async function syncOwned(
   current: DeploymentDetail,
   recipe: KubernetesApplicationRecipe,
   key: string,

@@ -93,6 +93,59 @@ function successorActivities(calls: string[]) {
   };
 }
 
+/**
+ * A self-hosted deployment's activities (D8): `sync` runs as its sync step,
+ * after the step is journaled.
+ */
+function selfHostedActivities(calls: string[], sync: () => void) {
+  return {
+    ...modelActivities(calls),
+    planDeliveryModel: () => ({
+      keys: ["step-apply-safety", "step-sync"],
+      resumeAt: 0,
+      platform: [],
+      handoff: true,
+    }),
+    runDeliveryModelStep: (_id: string, key: string) => {
+      calls.push(key);
+      if (key === "step-sync") sync();
+      return { waiting: false };
+    },
+    handOffDelivery: () => {
+      calls.push("handoff");
+    },
+  };
+}
+
+/**
+ * The sync step's first `times` attempts are killed by their own worker's
+ * shutdown, as the step reports it; later attempts read back and settle.
+ */
+function interruptedSync(calls: string[], times: number) {
+  let attempts = 0;
+  return () => {
+    attempts++;
+    if (attempts > times) return;
+    calls.push("replaced");
+    throw ApplicationFailure.create({
+      type: "DeliveryExecutorReplaced",
+      message:
+        "The step-sync step was interrupted by its own executor's replacement; it resumes by reading back its request",
+    });
+  };
+}
+
+async function executeDeployment(
+  environment: TestWorkflowEnvironment,
+  workflowId: string,
+) {
+  await environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+    workflowId,
+    taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+    args: [{ deploymentId: "deployment-7" }],
+  });
+}
+
 /** The retired backup queue's cold-start write, as recorded histories ran it. */
 async function backupWorker(
   environment: TestWorkflowEnvironment,
@@ -540,6 +593,150 @@ describe("Delivery self-hosted handoff (D8)", () => {
         ),
       ).rejects.toThrow("Workflow execution failed");
       expect(calls).toEqual(["claim", "accept", "fail-handoff"]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});
+
+describe("A self-hosted step interrupted by its own executor's replacement (D8)", () => {
+  it("a sync interrupted by its own executor's replacement runs again on the successor worker, then hands off (D8)", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(
+      environment,
+      selfHostedActivities(calls, interruptedSync(calls, 1)),
+    );
+    try {
+      const workflowId = `model-replaced-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(executeDeployment(environment, workflowId)),
+      );
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        "step-sync",
+        "replaced",
+        "lease",
+        "step-sync",
+        "handoff",
+      ]);
+      await replayDelivery(environment, workflowId);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("a genuinely failed self-hosted sync, an ordinary deployment's replacement, and a crash loop still finish failed", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const run = async (
+      definitions: NonNullable<Parameters<typeof createDeliveryWorkers>[1]>,
+    ) => {
+      calls.length = 0;
+      const { workflows, activities } = await createDeliveryWorkers(
+        environment,
+        definitions,
+      );
+      await expect(
+        workflows.runUntil(
+          activities.runUntil(
+            executeDeployment(environment, `model-${crypto.randomUUID()}`),
+          ),
+        ),
+      ).rejects.toThrow("Workflow execution failed");
+    };
+    try {
+      // A Failed owned operation is the step's verdict, never a replacement.
+      await run(
+        selfHostedActivities(calls, () => {
+          throw ApplicationFailure.nonRetryable(
+            "Owned sync of delivery ended Failed: one or more objects failed",
+          );
+        }),
+      );
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        "step-sync",
+        "finish:failed",
+      ]);
+      // Only a self-hosted deployment's plan resumes after a replacement.
+      await run({
+        ...selfHostedActivities(calls, interruptedSync(calls, 1)),
+        planDeliveryModel: () => ({
+          keys: ["step-apply-safety", "step-sync"],
+          resumeAt: 0,
+          platform: [],
+          handoff: false,
+        }),
+      });
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        "step-sync",
+        "replaced",
+        "finish:failed",
+      ]);
+      // A step replaced on every attempt is a crash loop, not a handoff.
+      await run(selfHostedActivities(calls, interruptedSync(calls, 10)));
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        ...Array.from({ length: 3 }, () => [
+          "step-sync",
+          "replaced",
+          "lease",
+        ]).flat(),
+        "step-sync",
+        "replaced",
+        "finish:failed",
+      ]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("replays a replaced self-hosted sync recorded before it resumed as it ran", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const workflowId = `deployment-before-resume-${crypto.randomUUID()}`;
+    const connection = {
+      connection: environment.nativeConnection,
+      namespace: "default",
+    };
+    const before = await Worker.create({
+      ...connection,
+      taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+      workflowsPath: new URL(
+        "replay-fixtures/delivery-deployment-before-executor-resume.ts",
+        import.meta.url,
+      ).pathname,
+    });
+    const activities = await Worker.create({
+      ...connection,
+      taskQueue: TASK_QUEUES.DELIVERY,
+      activities: selfHostedActivities(calls, interruptedSync(calls, 1)),
+    });
+    try {
+      await expect(
+        before.runUntil(
+          activities.runUntil(executeDeployment(environment, workflowId)),
+        ),
+      ).rejects.toThrow("Workflow execution failed");
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        "step-sync",
+        "replaced",
+        "finish:failed",
+      ]);
+      await replayDelivery(environment, workflowId);
     } finally {
       await environment.teardown();
     }
