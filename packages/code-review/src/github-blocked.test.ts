@@ -217,27 +217,27 @@ describe("fetchBlockedReason", () => {
   });
 });
 
+function mockStatusFetch(
+  statuses: { context: string; description: string; state: string }[],
+) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = requestUrl(input);
+    if (url.includes("/comments")) return Response.json([]);
+    return url.includes("/statuses") || url.includes("/status")
+      ? Response.json(statuses)
+      : Response.json({});
+  });
+}
+
 describe("fetchBlockedReason commit status", () => {
   test("returns usage-limited when CodeRabbit reports rate limited via commit status", async () => {
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
-      const url = requestUrl(input);
-      if (url.includes("/comments")) {
-        return Response.json([]);
-      }
-      if (
-        url.includes("/commits/head-123/statuses") ||
-        url.includes("/commits/head-123/status")
-      ) {
-        return Response.json([
-          {
-            context: "CodeRabbit",
-            description: "Review rate limited",
-            state: "error",
-          },
-        ]);
-      }
-      return Response.json({});
-    });
+    mockStatusFetch([
+      {
+        context: "CodeRabbit",
+        description: "Review rate limited",
+        state: "error",
+      },
+    ]);
 
     try {
       await expect(
@@ -295,30 +295,18 @@ describe("fetchBlockedReason commit status", () => {
   });
 
   test("ignores unrelated commit statuses", async () => {
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
-      const url = requestUrl(input);
-      if (url.includes("/comments")) {
-        return Response.json([]);
-      }
-      if (
-        url.includes("/commits/head-123/statuses") ||
-        url.includes("/commits/head-123/status")
-      ) {
-        return Response.json([
-          {
-            context: "CodeRabbit",
-            description: "Review completed successfully",
-            state: "success",
-          },
-          {
-            context: "ci/woodpecker",
-            description: "Pipeline succeeded",
-            state: "success",
-          },
-        ]);
-      }
-      return Response.json({});
-    });
+    mockStatusFetch([
+      {
+        context: "CodeRabbit",
+        description: "Review completed successfully",
+        state: "success",
+      },
+      {
+        context: "ci/woodpecker",
+        description: "Pipeline succeeded",
+        state: "success",
+      },
+    ]);
 
     try {
       await expect(

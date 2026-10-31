@@ -91,7 +91,7 @@
       "dependsOn": ["^build", "^generate", "generate"]
     },
     "test": {
-      "dependsOn": ["^build", "^generate", "generate"],
+      "dependsOn": ["^build", "generate"],
       "env": ["NODE_ENV"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/vitest.config.ts"]
     },
