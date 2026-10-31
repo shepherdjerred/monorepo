@@ -119,6 +119,8 @@ export async function completeContentRecovery(
       ],
       `content-recovery/${id}`,
     );
+    // The platform lock stays held: it is the journaled producer barrier,
+    // and only the observed producer restoration releases it.
     await settleRecoveryTarget(tx, {
       deploymentId: row.id,
       environmentId: env.id,

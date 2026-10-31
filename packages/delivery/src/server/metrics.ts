@@ -28,6 +28,37 @@ const RecoveryRequiredSchema = z.array(
 const EnvironmentValueSchema = z.array(
   z.object({ environment: IdentifierSchema, value: Value }),
 );
+const PlatformLockSchema = z
+  .array(
+    z.object({
+      environment: IdentifierSchema,
+      service: IdentifierSchema,
+      status: DeploymentStatusSchema,
+      recoveryRequired: z.boolean(),
+      producerBarrier: z.boolean(),
+      value: Value,
+    }),
+  )
+  .max(1);
+
+/**
+ * The single shared-resources platform lock (T1), with its holder's status.
+ * A running holder is ordinary; a recovery-required holder is already a
+ * DeliveryRecoveryRequired alert; a content recovery holds it as the
+ * journaled producer barrier until the producer is restored. Any other
+ * holder stranded the lock, and every platform deployment stays queued.
+ */
+function platformLock(database: Database) {
+  return database.$queryRaw`
+    SELECT d."environmentId" AS environment, d."serviceId" AS service,
+      d.status AS status, d."recoveryRequired" AS "recoveryRequired",
+      EXISTS (SELECT 1 FROM "RecoveryIntent" r
+        WHERE r."deploymentId" = d.id AND r.barrier IS NOT NULL
+          AND r."barrierRestoredAt" IS NULL) AS "producerBarrier",
+      GREATEST(EXTRACT(EPOCH FROM (now() - p."createdAt")), 0)::float8 AS value
+    FROM "PlatformLock" p JOIN "Deployment" d ON d.id = p."deploymentId"
+  `;
+}
 
 /**
  * Recovery-required deployments keep their ownership, so each one stalls the
@@ -98,6 +129,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     recoveries,
     waits,
     supersessions,
+    platform,
   ] = await Promise.all([
     database.deployment.groupBy({
       by: ["status", "kind"],
@@ -139,6 +171,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     recoveryRequired(database),
     queuedWait(database),
     superseded(database),
+    platformLock(database),
   ]);
   const [state] = z.array(StateSchema).length(1).parse(raw);
   if (state === undefined)
@@ -234,6 +267,20 @@ export async function deliveryMetrics(database: Database): Promise<string> {
       value: row.value,
     })),
     "counter",
+  );
+  metric(
+    "delivery_platform_lock_held_seconds",
+    "Age of the held shared-resources platform lock, labeled by its holder's environment, service, status, recovery state and content producer barrier; absent when free.",
+    PlatformLockSchema.parse(platform).map((row) => ({
+      labels: {
+        environment: row.environment,
+        service_id: row.service,
+        holder_status: row.status,
+        recovery_required: String(row.recoveryRequired),
+        producer_barrier: String(row.producerBarrier),
+      },
+      value: row.value,
+    })),
   );
   for (const [name, help, value] of [
     [

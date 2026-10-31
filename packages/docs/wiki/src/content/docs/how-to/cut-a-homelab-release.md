@@ -359,14 +359,15 @@ deployment. Only an intent settled by the independent reader may release it.
 
 ## Respond to a stalled Delivery dispatch
 
-Two alerts report deployments that stop dispatching. The
+Three alerts report deployments that stop dispatching. The
 [Delivery README](packages/delivery/README.md#operations) lists their metrics
 and thresholds.
 
-| Alert                      | Meaning                                                                                                                                               |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DeliveryRecoveryRequired` | A recovery-required deployment of the alert's `environment` holds the [dispatch barrier](packages/delivery/src/infrastructure/execution/admission.ts) |
-| `DeliveryQueueStalled`     | A queued deployment of the alert's `environment` has waited past the stall threshold, counting requests a newer set revision superseded               |
+| Alert                          | Meaning                                                                                                                                               |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeliveryRecoveryRequired`     | A recovery-required deployment of the alert's `environment` holds the [dispatch barrier](packages/delivery/src/infrastructure/execution/admission.ts) |
+| `DeliveryQueueStalled`         | A queued deployment of the alert's `environment` has waited past the stall threshold, counting requests a newer set revision superseded               |
+| `DeliveryPlatformLockStranded` | A settled deployment of the alert's `environment` that is not running still holds the shared-resources platform lock                                  |
 
 A `self_hosted="true"` holder makes every claim answer `BUSY`. Any other holder
 stops every self-hosted deployment, including `delivery-control-plane`.
@@ -385,7 +386,21 @@ stops every self-hosted deployment, including `delivery-control-plane`.
    A worker deployment uses `toolkit deploy workers recover` instead; see the
    [toolkit README](packages/toolkit/README.md#delivery). Dispatch resumes on
    the next claim once the last holder settles.
-3. If `DeliveryQueueStalled` fires with no recovery-required deployment, check
+3. If `DeliveryPlatformLockStranded` fires, confirm the holder from a
+   [read-only Delivery database session](/how-to/connect-to-a-homelab-database/#read-only-session):
+
+   ```sql
+   SELECT p."deploymentId", d."environmentId", d.status, d."recoveryRequired", p."createdAt"
+   FROM "PlatformLock" p JOIN "Deployment" d ON d.id = p."deploymentId";
+   ```
+
+   Finish and every recovery settlement release the lock, except a content
+   recovery, which keeps it as its producer barrier until restoration. A
+   failed or canceled holder that no longer requires recovery stranded it.
+   Record the holder on a Tracker `AI` issue. Releasing the row is a reviewed
+   database repair, not a routine step.
+
+4. If `DeliveryQueueStalled` fires with no recovery-required deployment, check
    the remaining causes in order:
 
    | Cause                                     | Check                                                                                                      |
@@ -394,7 +409,7 @@ stops every self-hosted deployment, including `delivery-control-plane`.
    | A prerequisite edge is unmet              | [Z1](packages/delivery/docs/model.md#418-prerequisite-edge): the prerequisite has no qualifying acceptance |
    | Dispatch is paused for maintenance        | `toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch`                      |
 
-4. Confirm the alert resolves. Then follow the environment's claimed
+5. Confirm the alert resolves. Then follow the environment's claimed
    deployment to its result with `toolkit deploy wait DEPLOYMENT_ID --json`.
 
 ## Run an operator-run deployment
