@@ -812,20 +812,24 @@ and request IDs and actors are not metric labels.
 The activated homelab service includes a matching ServiceMonitor and the
 [Delivery alerts](../homelab/src/cdk8s/src/resources/delivery/monitoring.ts).
 
-| Metric                                                                       | Alert                      | Fires when                                                                                    |
-| ---------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
-| `up`                                                                         | `DeliveryUnavailable`      | the endpoint is not scraped for 5 minutes                                                     |
-| `delivery_outbox_oldest_seconds`                                             | `DeliveryDispatchDelayed`  | a submission awaits Temporal acknowledgement over 10 minutes                                  |
-| `delivery_recovery_required_deployments{environment,service_id,self_hosted}` | `DeliveryRecoveryRequired` | a recovery-required deployment holds the dispatch barrier for 5 minutes, one alert per target |
-| `delivery_queued_oldest_seconds{environment}`                                | `DeliveryQueueStalled`     | an environment has waited over 3 hours to dispatch, for 10 minutes                            |
+| Metric                                                                                                         | Alert                          | Fires when                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `up`                                                                                                           | `DeliveryUnavailable`          | the endpoint is not scraped for 5 minutes                                                                                       |
+| `delivery_outbox_oldest_seconds`                                                                               | `DeliveryDispatchDelayed`      | a submission awaits Temporal acknowledgement over 10 minutes                                                                    |
+| `delivery_recovery_required_deployments{environment,service_id,self_hosted}`                                   | `DeliveryRecoveryRequired`     | a recovery-required deployment holds the dispatch barrier for 5 minutes, one alert per target                                   |
+| `delivery_queued_oldest_seconds{environment}`                                                                  | `DeliveryQueueStalled`         | an environment has waited over 3 hours to dispatch, for 10 minutes                                                              |
+| `delivery_platform_lock_held_seconds{environment,service_id,holder_status,recovery_required,producer_barrier}` | `DeliveryPlatformLockStranded` | a holder that is not running, not recovery-required and holds no content producer barrier keeps the platform lock for 5 minutes |
 
 `delivery_queued_oldest_seconds` counts from the oldest queued request's outbox
 entry, and keeps counting through supersession: a queued automatic request a
 newer set revision canceled still counts until the environment's next claim.
 `delivery_deployments_superseded_total{environment}` counts those cancellations.
 Three hours exceeds the longest bounded holder of the barrier, the control
-plane's 150-minute activity, so ordinary serialization never reaches it. The
-response is
+plane's 150-minute activity, so ordinary serialization never reaches it.
+`delivery_platform_lock_held_seconds` is absent while the platform lock is
+free. Finish and every independent recovery settlement release the lock with
+the holder's target locks; content recovery alone keeps it as the journaled
+producer barrier until the producer's restoration releases it. The response is
 [Respond to a stalled Delivery dispatch](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#respond-to-a-stalled-delivery-dispatch).
 
 PostgreSQL is the permanent record and audit source; Temporal owns durable

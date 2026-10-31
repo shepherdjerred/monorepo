@@ -83,6 +83,10 @@ export async function claimTrmnlRepair(
       where: { deploymentId: source.id },
       data: { deploymentId: row.id },
     });
+    await tx.platformLock.updateMany({
+      where: { deploymentId: source.id },
+      data: { deploymentId: row.id },
+    });
     await tx.environment.update({
       where: { id: env.id },
       data: { activeDeploymentId: row.id },

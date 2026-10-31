@@ -15,11 +15,12 @@ import {
   evidence,
 } from "#infrastructure/delivery-data.ts";
 import { findIntent } from "#infrastructure/recovery-intents.ts";
+import { releaseDeploymentLocks } from "#infrastructure/recovery-settlement.ts";
 
 /**
  * Settles a pending `argo` recovery intent with independent Application
  * readback (4.15, I1, I2): the only way an ambiguous ordinary release
- * gives up its locks. The intent comes first; settlement rechecks its
+ * gives up its locks, target and platform alike. The intent comes first; settlement rechecks its
  * binding generation and keeps the deployment's original result (I3).
  */
 export async function settleArgoIntent(
@@ -73,7 +74,9 @@ export async function settleArgoIntent(
       [...settledEvidence, { kind: "preflight", summary: reason }],
       `recovery/${intent.id}`,
     );
-    await tx.targetLock.deleteMany({ where: { deploymentId } });
+    // Settled, the deployment is no longer recovery-required: like finish,
+    // it gives up every lock it holds, the platform lock included.
+    await releaseDeploymentLocks(tx, deploymentId);
     await tx.environment.updateMany({
       where: { id: row.environmentId, activeDeploymentId: deploymentId },
       data: { activeDeploymentId: null },
