@@ -55,17 +55,32 @@ The React client is the homelab's CI/CD hub. Every page has a URL, so links,
 history, new tabs and bookmarks behave like any website. Routes are code-based
 TanStack Router definitions in `src/client/router.tsx`:
 
-| URL                            | Page                                                         |
-| ------------------------------ | ------------------------------------------------------------ |
-| `/pipelines` (home)            | Every pipeline's newest execution, attention items, tools    |
-| `/pipelines/:id`               | Promotion: source, build, test, version set, environments    |
-| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed    |
-| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts     |
-| `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval |
-| `/environments/:id`            | Selection, monitor, rollback candidates, form                |
-| `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
-| `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones |
-| `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles |
+| URL                            | Page                                                           |
+| ------------------------------ | -------------------------------------------------------------- |
+| `/commits` (home)              | Recent commits, each with a one-line "is it deployed?" verdict |
+| `/commits/:sha`                | One commit: CI, and every changed service by environment       |
+| `/pipelines`                   | Every pipeline's newest execution, attention items, tools      |
+| `/pipelines/:id`               | Promotion: source, build, test, version set, environments      |
+| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed      |
+| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts       |
+| `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval   |
+| `/environments/:id`            | Selection, monitor, rollback candidates, form                  |
+| `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence        |
+| `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones   |
+| `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles   |
+
+A commit has one build per service, but only a build that produced a version
+set (or a platform deployment) changed anything. `GET /api/v1/commits` and
+`GET /api/v1/commits/:sha` (a full sha or an unambiguous prefix of at least
+seven digits) answer "is it deployed?" from those rows alone. An environment
+has the change when its accepted selection is the same or a later revision of
+the same lineage; otherwise the newest deployment aimed at it says what is
+happening. A commit's verdict is the most urgent of its services, then of its
+builds: CI failed, deploy failed, needs approval, CI running, deploying, not
+released, deployed. The response also regroups the same rows by environment name, `prod` first,
+so a commit that touches many services still answers "is it in prod?" as one
+count with its stragglers named. The pure rules live in
+`src/infrastructure/hub/commit-status.ts`.
 
 Filters and pages are search parameters. Forms are native `<form>` elements
 and confirmations are native `<dialog>` elements. The server returns

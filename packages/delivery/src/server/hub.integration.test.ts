@@ -7,6 +7,8 @@ import { Delivery } from "#infrastructure/delivery.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import {
   ActivityPageSchema,
+  CommitListSchema,
+  CommitStatusSchema,
   DeploymentPageSchema,
   EnvironmentDetailSchema,
   ExecutionPageSchema,
@@ -337,5 +339,59 @@ describe("hub release kind", () => {
         },
       });
     }
+  });
+});
+
+describe("hub commits", () => {
+  test("a commit with a running deployment is deploying", async () => {
+    const commit = CommitStatusSchema.parse(
+      await body(`/api/v1/commits/${"a".repeat(40)}`),
+    );
+    expect(commit.verdict).toBe("deploying");
+    expect(commit.buildId).toBe(fixture.publication.buildId);
+    expect(commit.environments).toMatchObject([
+      {
+        name: "prod",
+        verdict: "deploying",
+        liveCount: 0,
+        total: 1,
+        members: [{ serviceId: "arcade", state: "deploying" }],
+      },
+    ]);
+    expect(commit.changed).toHaveLength(1);
+    expect(commit.changed[0]).toMatchObject({
+      service: { id: "arcade" },
+      verdict: "deploying",
+      versionSet: { id: fixture.versionSet.id },
+      environments: [{ environmentId: "arcade/prod", state: "deploying" }],
+    });
+  });
+
+  test("a prefix finds the same commit and the list summarizes it", async () => {
+    const prefixed = CommitStatusSchema.parse(
+      await body("/api/v1/commits/AAAAAAA"),
+    );
+    expect(prefixed.sha).toBe("a".repeat(40));
+    const list = CommitListSchema.parse(await body("/api/v1/commits"));
+    expect(list.items[0]).toMatchObject({
+      sha: "a".repeat(40),
+      verdict: "deploying",
+      changedCount: 1,
+      liveCount: 0,
+      environments: [{ name: "prod", liveCount: 0, total: 1 }],
+      blocker: { service: "Arcade", environment: "prod", state: "deploying" },
+    });
+  });
+
+  test("an unseen commit is unknown and a malformed one is rejected", async () => {
+    const unseen = CommitStatusSchema.parse(
+      await body(`/api/v1/commits/${"b".repeat(40)}`),
+    );
+    expect(unseen).toMatchObject({
+      verdict: "unknown",
+      buildId: null,
+      changed: [],
+    });
+    expect(await status("/api/v1/commits/not-a-sha")).toBe(400);
   });
 });

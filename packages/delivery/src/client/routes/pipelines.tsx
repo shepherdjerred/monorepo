@@ -251,7 +251,7 @@ const pipelinesRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <Navigate to="/pipelines" replace />,
+  component: () => <Navigate to="/commits" replace />,
 });
 
 export const pipelineListRoutes = [indexRoute, pipelinesRoute];

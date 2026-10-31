@@ -245,3 +245,119 @@ export type ActivityQuery = z.infer<typeof ActivityQuerySchema>;
 export const ExecutionQuerySchema = z.object({
   cursor: z.string().min(1).optional(),
 });
+
+/** Where one change stands in one environment, from the person's point of view. */
+export const CommitEnvironmentStateSchema = z.enum([
+  "live",
+  "superseded",
+  "deploying",
+  "awaiting_approval",
+  "failed",
+  "canceled",
+  "manual",
+  "waiting",
+]);
+export type CommitEnvironmentState = z.infer<
+  typeof CommitEnvironmentStateSchema
+>;
+
+export const CommitEnvironmentSchema = z.object({
+  environmentId: IdentifierSchema,
+  name: z.string(),
+  state: CommitEnvironmentStateSchema,
+  deploymentId: IdentifierSchema.nullable(),
+});
+export type CommitEnvironment = z.infer<typeof CommitEnvironmentSchema>;
+
+/** The answer to "is it deployed?" for one service, or for a whole commit. */
+export const CommitVerdictSchema = z.enum([
+  "unknown",
+  "building",
+  "build_failed",
+  "nothing_to_deploy",
+  "waiting",
+  "deploying",
+  "awaiting_approval",
+  "failed",
+  "deployed",
+]);
+export type CommitVerdict = z.infer<typeof CommitVerdictSchema>;
+
+export const CommitServiceSchema = z.object({
+  service: ServiceSummarySchema,
+  build: BuildViewSchema,
+  versionSet: z
+    .object({ id: IdentifierSchema, revision: z.number().int().positive() })
+    .nullable(),
+  verdict: CommitVerdictSchema,
+  environments: z.array(CommitEnvironmentSchema),
+});
+export type CommitService = z.infer<typeof CommitServiceSchema>;
+
+/** One service's standing in one environment. */
+export const CommitEnvironmentMemberSchema = z.object({
+  serviceId: IdentifierSchema,
+  serviceTitle: z.string(),
+  environmentId: IdentifierSchema,
+  state: CommitEnvironmentStateSchema,
+  deploymentId: IdentifierSchema.nullable(),
+});
+
+/**
+ * Every changed service seen from one environment name, so "is it in prod?"
+ * reads as one answer even when a commit touches many services.
+ */
+export const CommitEnvironmentGroupSchema = z.object({
+  name: z.string(),
+  verdict: CommitVerdictSchema,
+  liveCount: z.number().int().nonnegative(),
+  total: z.number().int().positive(),
+  /** Services not yet live first, most urgent first. */
+  members: z.array(CommitEnvironmentMemberSchema),
+});
+export type CommitEnvironmentGroup = z.infer<
+  typeof CommitEnvironmentGroupSchema
+>;
+
+export const CommitStatusSchema = z.object({
+  sha: z.string().min(7),
+  verdict: CommitVerdictSchema,
+  /** A build of this commit, for its lazily fetched headline; null if unseen. */
+  buildId: IdentifierSchema.nullable(),
+  /** First time Delivery heard of this commit. */
+  seenAt: TimestampSchema.nullable(),
+  /** The commit seen per environment name, prod first. */
+  environments: z.array(CommitEnvironmentGroupSchema),
+  /** Services this commit changed, most urgent first. */
+  changed: z.array(CommitServiceSchema),
+  /** Services whose build passed with nothing to deploy. */
+  unchangedCount: z.number().int().nonnegative(),
+  /** Builds that failed or are still running, whether or not they changed anything. */
+  failedBuilds: z.array(BuildViewSchema),
+  pendingBuilds: z.array(BuildViewSchema),
+});
+export type CommitStatus = z.infer<typeof CommitStatusSchema>;
+
+export const CommitSummarySchema = CommitStatusSchema.pick({
+  sha: true,
+  verdict: true,
+  seenAt: true,
+}).extend({
+  changedCount: z.number().int().nonnegative(),
+  liveCount: z.number().int().nonnegative(),
+  environments: z.array(CommitEnvironmentGroupSchema.omit({ members: true })),
+  buildId: IdentifierSchema,
+  /** The most urgent unfinished service, so the strip can say what is stuck. */
+  blocker: z
+    .object({
+      service: z.string(),
+      environment: z.string().nullable(),
+      state: CommitVerdictSchema,
+    })
+    .nullable(),
+});
+export type CommitSummary = z.infer<typeof CommitSummarySchema>;
+
+export const CommitListSchema = z.object({
+  items: z.array(CommitSummarySchema),
+});

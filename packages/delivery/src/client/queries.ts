@@ -17,6 +17,13 @@ export const queries = {
       staleTime: Infinity,
     }),
   hub: () => queryOptions({ queryKey: ["hub"], queryFn: () => hub.hub() }),
+  commits: () =>
+    queryOptions({ queryKey: ["commits"], queryFn: () => hub.commits() }),
+  commit: (sha: string) =>
+    queryOptions({
+      queryKey: ["commits", sha],
+      queryFn: () => hub.commit(sha),
+    }),
   pipeline: (serviceId: string) =>
     queryOptions({
       queryKey: ["service", serviceId, "pipeline"],
