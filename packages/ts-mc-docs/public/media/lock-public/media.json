@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "lock-public",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/lock-public/original.webp",
+  "poster": "/media/lock-public/poster.webp",
+  "alt": "A public lock allows anyone to use the container.",
+  "caption": "A public lock allows anyone to use the container.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.59, 0.65],
+      "to": [0.32, 0.84],
+      "text": "Public",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

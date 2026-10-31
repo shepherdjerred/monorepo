@@ -5,7 +5,17 @@ description: Buy and sell items using signs and crystals.
 
 Player shops use a sign attached to a stocked container. The sign shows the quantity, item, and price for one trade. Right-click to buy from the shop and left-click to sell to it. A sign can offer either or both directions. You need enough space, items, or crystals for the whole trade.
 
+<div><storm-media data-manifest="/media/shop-customer-buy/media.json"><figure><img alt="The customer receives sixteen planks and pays the shop owner fifty crystals." src="/media/shop-customer-buy/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The customer receives sixteen planks and pays the shop owner fifty crystals.</figcaption></figure></storm-media></div>
+<p><a href="/media/shop-customer-buy/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/shop-customer-sell/media.json"><figure><img alt="Selling back pays the sign's S price, which can differ from its B price." src="/media/shop-customer-sell/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Selling back pays the sign's S price, which can differ from its B price.</figcaption></figure></storm-media></div>
+<p><a href="/media/shop-customer-sell/annotated.webp" download>Download annotated image</a></p>
+
 New spawn market shop rentals may not be open to every player. A shop can also be made wherever you have the required permissions.
+
+![A preserved player-built shop in the old market](/screenshots/historic-market-shop.webp)
+
+The old market includes preserved player-built shops. Historical signs may use an older format; use the format below for a new shop.
 
 ## Make a shop
 
@@ -19,6 +29,10 @@ oak_planks
 ```
 
 Leave the first line blank to use your name. In this example, a customer buys 16 oak planks for 50 crystals or sells 16 for 40 crystals. You can leave out either price. Put items in the container to stock your shop, and keep enough crystals in your balance if you want to buy items from customers.
+
+![A registered player shop sign on a barrel, offering 16 oak planks at buy and sell prices.](/screenshots/player-shop-sign.webp)
+
+The server fills in the owner and item names when it opens the shop.
 
 You can write `?` on the item line instead, then right-click the finished sign while holding the item to set it. To change a shop sign, break it and make a new one. Look at a shop and use `/shop info` to see its details.
 

@@ -42,6 +42,10 @@ public record ModuleContext(
     ComponentLogger logger,
     ProductAnalytics analytics) {
   public ModuleContext {
+    if (services.find(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class).isEmpty())
+      services.provide(
+          com.shepherdjerred.thestorm.core.capture.CaptureInspection.class,
+          new com.shepherdjerred.thestorm.core.capture.CaptureInspection());
     if (services.find(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class).isEmpty()) {
       services.provide(
           com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class,

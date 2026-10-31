@@ -5,6 +5,10 @@ description: Set plot permissions and options, invite builders, and visit plots.
 
 Manage a plot you own in the [creative world](/creative/).
 
+<div><storm-media data-manifest="/media/creative-plot-claim/media.json"><figure><img src="/media/creative-plot-claim/original.webp" width="2560" height="1440" loading="lazy" alt="Your claimed plot remains part of the recovered creative world." /><figcaption>Your claimed plot remains part of the recovered creative world. <a href="/media/creative-plot-claim/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/creative-plot-access/media.json"><figure><img src="/media/creative-plot-access/original.webp" width="2560" height="1440" loading="lazy" alt="The owner trusts an online helper and enables visitor interactions on this plot." /><figcaption>The owner trusts an online helper and enables visitor interactions on this plot. <a href="/media/creative-plot-access/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
 ## Name, trust, and visit
 
 | Role    | Build | Manage members | Trust or deny players |

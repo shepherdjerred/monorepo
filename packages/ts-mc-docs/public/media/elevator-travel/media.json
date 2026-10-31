@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "elevator-travel",
+  "kind": "video",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/elevator-travel/clip.mp4",
+  "poster": "/media/elevator-travel/poster.webp",
+  "alt": "Using the elevator to travel up and return to ground level",
+  "caption": "The signs move the player between aligned stops.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.28],
+      "to": [0.5, 0.5],
+      "text": "Upper stop",
+      "startMs": 233,
+      "endMs": 2033
+    },
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.28],
+      "to": [0.5, 0.5],
+      "text": "Back at ground",
+      "startMs": 2433,
+      "endMs": 4233
+    }
+  ]
+}

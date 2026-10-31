@@ -13,6 +13,7 @@ import { LiveGuardRefusal, type LiveWriteOp } from "#src/live/guard.ts";
 import { LiveError, type LiveService } from "#src/live/service.ts";
 import type { Target } from "#src/target.ts";
 import { body, DaemonError, reply } from "./http.ts";
+import type { ClientManager } from "./clients.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -21,17 +22,37 @@ type Log = (msg: string, extra?: Record<string, unknown>) => void;
  * through the guard (reason, players, snapshot, journal).
  */
 export async function guarded<T>(
-  call: { target: Target; request: Request; ctx: { live: LiveService } },
+  call: {
+    target: Target;
+    request: Request;
+    ctx: { live: LiveService; clients?: ClientManager };
+  },
   op: () => Promise<LiveWriteOp>,
   run: (target: Target) => Promise<T>,
 ): Promise<T> {
-  return call.target.kind === "live"
-    ? call.ctx.live.write(
-        await op(),
-        readLiveWriteFlags(call.request.headers),
-        run,
-      )
-    : run(call.target);
+  if (call.target.kind !== "live") return run(call.target);
+  let nearbyParticipant: string | undefined;
+  const controller = call.request.headers.get("x-mc-capture-client");
+  if (controller !== null) {
+    const manager = call.ctx.clients;
+    if (manager === undefined)
+      throw new DaemonError("Capture controller is unavailable", 409);
+    const { client, state } = await manager.status(controller);
+    const { players } = await call.target.bridge.players();
+    const player = players.find(
+      (candidate) =>
+        candidate.uuid === state["uuid"] && candidate.name === controller,
+    );
+    if (player === undefined || client.target !== "live" || !state.connected)
+      throw new DaemonError("Capture controller identity differs", 409);
+    nearbyParticipant = player.uuid;
+  }
+  return call.ctx.live.write(
+    await op(),
+    readLiveWriteFlags(call.request.headers),
+    run,
+    nearbyParticipant,
+  );
 }
 
 /** The box a snapshot covers, so restoring it is guarded like a write. */

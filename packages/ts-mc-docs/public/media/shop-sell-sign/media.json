@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "shop-sell-sign",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/shop-sell-sign/original.webp",
+  "poster": "/media/shop-sell-sign/poster.webp",
+  "alt": "S 40 lets a customer sell sixteen oak planks for forty crystals.",
+  "caption": "S 40 lets a customer sell sixteen oak planks for forty crystals.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.7, 0.3],
+      "to": [0.5, 0.51],
+      "text": "16 for 40",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

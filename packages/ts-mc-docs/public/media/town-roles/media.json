@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "town-roles",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/town-roles/original.webp",
+  "poster": "/media/town-roles/poster.webp",
+  "alt": "Town information lists the owner, assistants, and members.",
+  "caption": "Town information lists the owner, assistants, and members.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.58, 0.63],
+      "to": [0.27, 0.84],
+      "text": "Owner + assistant",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

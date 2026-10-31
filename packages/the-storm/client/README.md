@@ -30,6 +30,19 @@ addresses are valid only while the preview is running. Ctrl-C or the `stop`
 command closes this session's client and server. Screenshots, command
 transcripts, and logs remain under `.cache/client/<session>/`.
 
+## Connect to live The Storm
+
+On macOS, `bun run client live` delegates to
+`toolkit mc client start --target live --account XiguaJerred --reason ...`.
+The harness builds the mod, owns the temporary Prism instance, and journals
+live actions. It requires the existing `26.3` Prism instance and signed-in
+account. The session file printed on connection routes actions through the
+harness; live world interactions require a bounded capture scene. `viewpoint`,
+`tour`, `smoke`, and fixture controls are sandbox-only. Client actions and
+commands affect the live server; use them only for authorized work. Captures
+and command transcripts remain under `~/.toolkit/mc/clients/` and can contain player
+information. The server may need to be awake before connecting.
+
 ## Inspect and control
 
 ```sh
@@ -43,6 +56,8 @@ bun run client use --session <session.json>
 bun run client attack --session <session.json>
 bun run client inventory --session <session.json> --args '{"open":true}'
 bun run client close --session <session.json>
+bun run client respawn --session <session.json>
+bun run client sign-write --session <session.json> --args '{"lines":["[Shelf]","cobblestone","",""]}'
 bun run client release --session <session.json>
 bun run client command --session <session.json> --args '{"text":"arena join settlement"}'
 bun run client stop --session <session.json>
@@ -78,11 +93,32 @@ or state is rejected. Modes are `pickup` and `quick_move`; mouse buttons are
 or hyphens, and the completed response gives the PNG path.
 
 `close` dismisses the current screen through its ordinary close action, including
-the first-arrival dialog. Named viewpoints live in `tools/client/viewpoints.json`. `tour` captures the
+the first-arrival dialog. `respawn` presses the ordinary respawn action when the
+death screen is open. `sign-write` types four lines into an open sign editor and
+submits it; use a freshly placed blank sign, and check the result because the
+game may reject text that does not fit. Named viewpoints live in `tools/client/viewpoints.json`. `tour` captures the
 lobby, market, mystery box, and foundry. This tool supplies scripted inputs and
 inspection; it does not implement autonomous navigation or a full-match player.
 
 ## Record rendered footage
+
+For documentation of ordinary gameplay and menus, use `toolkit mc capture`
+and its scenes, recovery, annotations, review, and export workflow documented
+in `packages/mc-harness/README.md`. The generic native actions are
+`record-arm`, `record-start`, `record-marker`, `record-status`, and
+`record-cancel`. They retain the actual HUD, screen, world, and camera and
+produce schema 4 `mc-docs-frames` receipts. Cancellation and missed sampling
+slots produce incomplete receipts that cannot be exported. `release-inputs`
+releases held keys without cancelling the recording; `release` cancels both.
+`screen-inspect`, `screen-activate`, and cursor-based `messages` expose UI readiness.
+`screen-type` edits an observed text field using its current revision and control
+ID. `chat-open` expands real command output, `advancements` opens the vanilla
+advancement screen (optionally selecting an installed root with `tab`), and `hover-slot` positions the pointer over an observed
+container slot to render its ordinary tooltip. Hovering requires the current
+container ID and state ID and never transfers an item. Local capture scenes
+can cycle paintings only when the entire observed entity fits their declared
+fixture; live entity interactions remain refused.
+The spectator workflow below retains its independent RWF contract.
 
 Place a spectator observer at the desired viewpoint in the owned sandbox's
 visible windowed preview, close

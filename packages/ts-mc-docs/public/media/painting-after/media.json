@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "painting-after",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/painting-after/original.webp",
+  "poster": "/media/painting-after/poster.webp",
+  "alt": "A different two-by-two painting on the same wall",
+  "caption": "The picture changes while its dimensions stay the same.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.75, 0.27],
+      "to": [0.62, 0.63],
+      "text": "Same size",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

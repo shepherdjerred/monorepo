@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "lock-supply",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/lock-supply/original.webp",
+  "poster": "/media/lock-supply/poster.webp",
+  "alt": "A supply lock lets visitors take items without adding them.",
+  "caption": "A supply lock lets visitors take items without adding them.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.59, 0.65],
+      "to": [0.32, 0.84],
+      "text": "Take only",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

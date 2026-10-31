@@ -100,6 +100,300 @@ public final class ServerService {
     return mainThread.call(this::collectPlayers, MainThread.DEFAULT_TIMEOUT);
   }
 
+  /** Bounded module state for fixture admission and cleanup verification. */
+  public JsonObject captureInspection(com.shepherdjerred.mcbridge.domain.Box box) {
+    requireStorm();
+    box.requireVolumeAtMost(32768);
+    return mainThread.call(
+        () -> {
+          var access =
+              server
+                  .getServicesManager()
+                  .load(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+          if (access == null)
+            throw new BridgeException(ErrorCode.UNSUPPORTED, "Capture inspection is unavailable");
+          var world = world(box.world());
+          box.requireWithinHeight(world.getMinHeight(), world.getMaxHeight() - 1);
+          var area =
+              new com.shepherdjerred.thestorm.core.capture.CaptureArea(
+                  world.getName(),
+                  world.getUID(),
+                  box.min().x(),
+                  box.min().y(),
+                  box.min().z(),
+                  box.max().x(),
+                  box.max().y(),
+                  box.max().z());
+          var response = new JsonObject();
+          var inspection = new JsonObject();
+          access.inspect(area).forEach(inspection::addProperty);
+          response.add("inspection", inspection);
+          return response;
+        },
+        MainThread.DEFAULT_TIMEOUT);
+  }
+
+  public JsonObject capturePlayer(String name) {
+    requireStorm();
+    return mainThread.call(
+        () -> {
+          var player = server.getPlayerExact(name);
+          if (player == null)
+            throw new BridgeException(ErrorCode.NOT_FOUND, "Capture player is not online");
+          var result = new JsonObject();
+          result.addProperty("name", player.getName());
+          result.addProperty("uuid", player.getUniqueId().toString());
+          result.addProperty(
+              "inventory", java.util.Base64.getEncoder().encodeToString(inventoryBytes(player)));
+          result.addProperty("gameMode", player.getGameMode().name());
+          result.addProperty("health", player.getHealth());
+          result.addProperty("food", player.getFoodLevel());
+          result.addProperty("saturation", player.getSaturation());
+          result.addProperty("exhaustion", player.getExhaustion());
+          result.addProperty("allowFlight", player.getAllowFlight());
+          result.addProperty("flying", player.isFlying());
+          result.addProperty("flySpeed", player.getFlySpeed());
+          result.addProperty("invulnerable", player.isMarkedInvulnerable());
+          result.addProperty("fireTicks", player.getFireTicks());
+          result.addProperty("level", player.getLevel());
+          result.addProperty("exp", player.getExp());
+          result.addProperty("totalExp", player.getTotalExperience());
+          result.addProperty("slot", player.getInventory().getHeldItemSlot());
+          var effects = new JsonArray();
+          for (var effect : player.getActivePotionEffects()) {
+            var row = new JsonObject();
+            row.addProperty("type", effect.getType().getKey().toString());
+            row.addProperty("duration", effect.getDuration());
+            row.addProperty("amplifier", effect.getAmplifier());
+            row.addProperty("ambient", effect.isAmbient());
+            row.addProperty("particles", effect.hasParticles());
+            row.addProperty("icon", effect.hasIcon());
+            effects.add(row);
+          }
+          result.add("effects", effects);
+          var access =
+              server
+                  .getServicesManager()
+                  .load(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+          if (access == null)
+            throw new BridgeException(ErrorCode.UNSUPPORTED, "Capture inspection is unavailable");
+          var modules = new JsonObject();
+          access.player(player.getUniqueId()).forEach(modules::addProperty);
+          result.add("moduleState", modules);
+          return result;
+        },
+        MainThread.DEFAULT_TIMEOUT);
+  }
+
+  public JsonObject captureCleanup(String name, String resource, String id) {
+    requireStorm();
+    return mainThread.callAsync(
+        () -> {
+          var player = server.getPlayerExact(name);
+          var access =
+              server
+                  .getServicesManager()
+                  .load(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+          if (player == null || access == null)
+            throw new BridgeException(ErrorCode.UNSUPPORTED, "Capture recovery is unavailable");
+          return access
+              .cleanup(player.getUniqueId(), resource, id)
+              .thenApply(
+                  _ -> {
+                    var result = new JsonObject();
+                    result.addProperty("removed", true);
+                    return result;
+                  });
+        },
+        MainThread.DEFAULT_TIMEOUT);
+  }
+
+  public JsonObject restoreCapturePlayer(com.shepherdjerred.mcbridge.adapter.http.Fields request) {
+    requireStorm();
+    var checkpoint =
+        request.object(
+            "checkpoint",
+            java.util.Set.of(
+                "uuid",
+                "name",
+                "inventory",
+                "gameMode",
+                "health",
+                "food",
+                "saturation",
+                "exhaustion",
+                "allowFlight",
+                "flying",
+                "flySpeed",
+                "invulnerable",
+                "fireTicks",
+                "level",
+                "exp",
+                "totalExp",
+                "slot",
+                "effects",
+                "moduleState"));
+    var items =
+        org.bukkit.inventory.ItemStack.deserializeItemsFromBytes(
+            java.util.Base64.getDecoder().decode(checkpoint.string("inventory")));
+    var expected = request.string("expectedInventory");
+    return mainThread.call(
+        () -> {
+          var player = server.getPlayerExact(checkpoint.string("name"));
+          if (player == null || !player.getUniqueId().toString().equals(checkpoint.string("uuid")))
+            throw new BridgeException(ErrorCode.NOT_FOUND, "Capture player identity changed");
+          var current = java.util.Base64.getEncoder().encodeToString(inventoryBytes(player));
+          if (!current.equals(expected))
+            throw BridgeException.badRequest("Inventory changed since recovery inspection");
+          var effects = captureEffects(checkpoint);
+          var values = captureVitals(checkpoint, player, items.length);
+          var flight = captureFlight(checkpoint);
+          player.getInventory().setContents(items);
+          for (var effect : player.getActivePotionEffects())
+            player.removePotionEffect(effect.getType());
+          effects.forEach(player::addPotionEffect);
+          player.setGameMode(values.mode());
+          player.setHealth(values.health());
+          player.setFoodLevel(values.food());
+          player.setSaturation(values.saturation());
+          player.setExhaustion(flight.exhaustion());
+          player.setAllowFlight(flight.allowed());
+          player.setFlying(flight.flying());
+          player.setFlySpeed(flight.speed());
+          player.setInvulnerable(flight.invulnerable());
+          player.setFireTicks(flight.fireTicks());
+          player.setLevel(values.level());
+          player.setExp(values.exp());
+          player.setTotalExperience(values.totalExp());
+          player.getInventory().setHeldItemSlot(values.slot());
+          var result = new JsonObject();
+          result.addProperty("restored", true);
+          return result;
+        },
+        MainThread.DEFAULT_TIMEOUT);
+  }
+
+  private record CaptureFlight(
+      float exhaustion,
+      boolean allowed,
+      boolean flying,
+      float speed,
+      boolean invulnerable,
+      int fireTicks) {}
+
+  private static CaptureFlight captureFlight(
+      com.shepherdjerred.mcbridge.adapter.http.Fields checkpoint) {
+    var exhaustion = checkpoint.number("exhaustion");
+    var speed = checkpoint.number("flySpeed");
+    var allowed = checkpoint.bool("allowFlight");
+    var flying = checkpoint.bool("flying");
+    if (exhaustion < 0 || speed < -1 || speed > 1 || (flying && !allowed))
+      throw BridgeException.badRequest("Invalid flight checkpoint");
+    return new CaptureFlight(
+        (float) exhaustion,
+        allowed,
+        flying,
+        (float) speed,
+        checkpoint.bool("invulnerable"),
+        checkpoint.integer("fireTicks"));
+  }
+
+  private record CaptureVitals(
+      org.bukkit.GameMode mode,
+      double health,
+      int food,
+      float saturation,
+      int level,
+      float exp,
+      int totalExp,
+      int slot) {}
+
+  private static CaptureVitals captureVitals(
+      com.shepherdjerred.mcbridge.adapter.http.Fields checkpoint, Player player, int slots) {
+    var mode = org.bukkit.GameMode.valueOf(checkpoint.string("gameMode"));
+    var health = checkpoint.number("health");
+    var food = checkpoint.integer("food");
+    var saturation = checkpoint.number("saturation");
+    var level = checkpoint.integer("level");
+    var exp = checkpoint.number("exp");
+    var total = checkpoint.integer("totalExp");
+    var slot = checkpoint.integer("slot");
+    var maxHealth =
+        java.util.Objects.requireNonNull(
+                player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH))
+            .getValue();
+    if (slots != player.getInventory().getSize()
+        || !Double.isFinite(health)
+        || health <= 0
+        || health > maxHealth
+        || food < 0
+        || food > 20
+        || !Double.isFinite(saturation)
+        || saturation < 0
+        || saturation > 20
+        || level < 0
+        || !Double.isFinite(exp)
+        || exp < 0
+        || exp > 1
+        || total < 0
+        || slot < 0
+        || slot > 8) throw BridgeException.badRequest("Invalid player checkpoint");
+    return new CaptureVitals(
+        mode, health, food, (float) saturation, level, (float) exp, total, slot);
+  }
+
+  private static List<org.bukkit.potion.PotionEffect> captureEffects(
+      com.shepherdjerred.mcbridge.adapter.http.Fields checkpoint) {
+    var effects = new ArrayList<org.bukkit.potion.PotionEffect>();
+    for (var row : checkpoint.array("effects")) {
+      var effect =
+          com.shepherdjerred.mcbridge.adapter.http.Fields.of(
+              row,
+              "effect",
+              java.util.Set.of("type", "duration", "amplifier", "ambient", "particles", "icon"));
+      var key = org.bukkit.NamespacedKey.fromString(effect.string("type"));
+      var type = key == null ? null : org.bukkit.Registry.MOB_EFFECT.get(key);
+      if (type == null) throw BridgeException.badRequest("Unknown potion effect");
+      effects.add(
+          new org.bukkit.potion.PotionEffect(
+              type,
+              effect.integer("duration"),
+              effect.integer("amplifier"),
+              effect.bool("ambient"),
+              effect.bool("particles"),
+              effect.bool("icon")));
+    }
+    return effects;
+  }
+
+  private void requireStorm() {
+    if (server.getPluginManager().getPlugin("TheStorm") == null)
+      throw new BridgeException(ErrorCode.UNSUPPORTED, "The Storm capture service is unavailable");
+  }
+
+  public boolean captureSupported() {
+    if (server.getPluginManager().getPlugin("TheStorm") == null) return false;
+    return mainThread.call(
+        () ->
+            server
+                    .getServicesManager()
+                    .load(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class)
+                != null,
+        MainThread.DEFAULT_TIMEOUT);
+  }
+
+  private static byte[] inventoryBytes(Player player) {
+    var items =
+        java.util.Arrays.stream(player.getInventory().getContents())
+            .map(
+                item ->
+                    item == null
+                        ? new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR)
+                        : item)
+            .toArray(org.bukkit.inventory.ItemStack[]::new);
+    return org.bukkit.inventory.ItemStack.serializeItemsAsBytes(items);
+  }
+
   private JsonObject collectPlayers() {
     JsonArray players = new JsonArray();
     for (Player player : server.getOnlinePlayers()) {

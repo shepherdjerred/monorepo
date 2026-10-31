@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "mob-arena-wave",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/mob-arena-wave/original.webp",
+  "poster": "/media/mob-arena-wave/poster.webp",
+  "alt": "The arena announces each new wave; defeat its monsters to move on.",
+  "caption": "The arena announces each new wave; defeat its monsters to move on.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.7, 0.63],
+      "to": [0.15, 0.88],
+      "text": "Wave announced",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

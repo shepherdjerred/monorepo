@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "help-mail",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/help-mail/original.webp",
+  "poster": "/media/help-mail/poster.webp",
+  "alt": "Use /help followed by a command to see its syntax.",
+  "caption": "Use /help followed by a command to see its syntax.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.68],
+      "to": [0.2, 0.84],
+      "text": "Command syntax",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

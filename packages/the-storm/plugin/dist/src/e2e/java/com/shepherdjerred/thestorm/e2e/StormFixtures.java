@@ -311,9 +311,26 @@ public final class StormFixtures extends JavaPlugin implements Listener {
         com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
             content.toPath().resolve("towns.yml"),
             com.shepherdjerred.thestorm.towns.domain.TownsConfig.class);
+    var modules = section(yaml("config.yml"), "modules");
+    towns.claims().worlds().stream()
+        .filter(
+            name ->
+                !(name.equals("skylands") && switchedOn(modules, "skylands"))
+                    && !(name.equals("creative") && switchedOn(modules, "creative")))
+        .filter(name -> getServer().getWorld(name) == null)
+        .forEach(this::voidWorld);
     towns.regions().stream()
         .flatMap(region -> region.areas().all().stream())
         .map(com.shepherdjerred.thestorm.towns.domain.region.Area::world)
+        .distinct()
+        .filter(name -> getServer().getWorld(name) == null)
+        .forEach(this::voidWorld);
+    var parcels =
+        com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+            content.toPath().resolve("parcels.yml"),
+            com.shepherdjerred.thestorm.towns.domain.parcel.ParcelsConfig.class);
+    parcels.parcels().stream()
+        .map(parcel -> parcel.area().world())
         .distinct()
         .filter(name -> getServer().getWorld(name) == null)
         .forEach(this::voidWorld);

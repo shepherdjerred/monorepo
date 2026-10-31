@@ -23,24 +23,26 @@ public final class PreviewClient implements ClientModInitializer {
     actions.startCaptures();
     var bridge = new LocalBridge(session, actions);
     ClientTickEvents.END_CLIENT_TICK.register(actions::tick);
+    var connected = new boolean[] {false};
+    ClientTickEvents.END_CLIENT_TICK.register(
+        client -> {
+          if (connected[0] || !(client.gui.screen() instanceof TitleScreen title)) return;
+          connected[0] = true;
+          var data = new ServerData("Storm Preview", session.server(), ServerData.Type.OTHER);
+          ConnectScreen.startConnecting(
+              title, client, ServerAddress.parseString(session.server()), data, false, null);
+        });
     ClientLifecycleEvents.CLIENT_STARTED.register(
         client -> {
           client.options.pauseOnLostFocus = false;
           client.options.fov().set(70);
-          client.options.guiScale().set(2);
+          client.options.guiScale().set(4);
+          client.resizeGui();
           client
               .options
               .inactivityFpsLimit()
               .set(net.minecraft.client.InactivityFpsLimit.MINIMIZED);
           bridge.start(client);
-          var data = new ServerData("Storm Preview", session.server(), ServerData.Type.OTHER);
-          ConnectScreen.startConnecting(
-              new TitleScreen(),
-              client,
-              ServerAddress.parseString(session.server()),
-              data,
-              false,
-              null);
         });
     ClientLifecycleEvents.CLIENT_STOPPING.register(
         client -> {

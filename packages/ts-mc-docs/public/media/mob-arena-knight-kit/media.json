@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "mob-arena-knight-kit",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/mob-arena-knight-kit/original.webp",
+  "poster": "/media/mob-arena-knight-kit/poster.webp",
+  "alt": "Choosing Knight equips its arena armor and weapons; your survival belongings return when you leave.",
+  "caption": "Choosing Knight equips its arena armor and weapons; your survival belongings return when you leave.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.32],
+      "to": [0.44, 0.44],
+      "text": "Arena kit",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

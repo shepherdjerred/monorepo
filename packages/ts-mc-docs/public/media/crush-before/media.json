@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "crush-before",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/crush-before/original.webp",
+  "poster": "/media/crush-before/poster.webp",
+  "alt": "A Crush piston faces a single oak plank before receiving redstone power.",
+  "caption": "A Crush piston faces a single oak plank before receiving redstone power.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.35, 0.29],
+      "to": [0.6, 0.5],
+      "text": "Block to crush",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

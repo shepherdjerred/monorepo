@@ -45,36 +45,102 @@ export const ProfileSchema = z.enum([
   "storm-prod",
   "storm-candidate",
 ]);
-export const WorldKindSchema = z.enum(["flat", "void"]);
+export const WorldKindSchema = z.enum(["flat", "void", "real-map"]);
+export const MapSourceSchema = z.strictObject({
+  sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  files: z.number().int().positive(),
+  bytes: z.number().int().positive(),
+  dimensions: z
+    .array(z.string().regex(/^[a-z0-9_.-]+:[a-z0-9_./-]+$/u))
+    .min(1)
+    .optional(),
+});
 /** Where a sandbox runs: local Docker, or the homelab cluster's mc-sandbox namespace. */
 export const ProviderKindSchema = z.enum(["docker", "kubernetes"]);
 export type ProviderKind = z.infer<typeof ProviderKindSchema>;
+export const CaptureFeatureSchema = z.enum([
+  "stargates",
+  "quests",
+  "shards",
+  "arena",
+  "rwf",
+  "advancements",
+]);
 
-export const SandboxCreateRequestSchema = z
-  .strictObject({
-    profile: ProfileSchema,
-    world: WorldKindSchema,
-    ttlSeconds: z
-      .number()
-      .int()
-      .min(60)
-      .max(24 * 60 * 60),
-    keep: z.boolean(),
-    /** Defaults to the profile's provider (Kubernetes for the storm images). */
-    provider: ProviderKindSchema.optional(),
-    publishedArtifact: ArtifactVersionSchema.optional(),
-    publishedConfig: z
-      .strictObject({
-        sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
-        sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-        yaml: z
-          .string()
-          .min(1)
-          .max(64 * 1024),
-      })
-      .optional(),
-  })
-  .superRefine((input, context) => {
+const RolloutBootstrapSchema = z.strictObject({
+  url: z.url().refine((value) => {
+    if (!URL.canParse(value)) return false;
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.username === "" &&
+      url.password === "" &&
+      url.pathname === "/" &&
+      url.search === "" &&
+      url.hash === ""
+    );
+  }, "Rollout bootstrap requires an uncredentialed HTTPS endpoint"),
+  environment: z.enum(["prod", "beta"]),
+});
+
+const SandboxCreateInputSchema = z.strictObject({
+  profile: ProfileSchema,
+  world: WorldKindSchema,
+  mapDirectory: z.string().min(1).optional(),
+  rollout: RolloutBootstrapSchema.optional(),
+  captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
+  mapSpawn: z
+    .tuple([z.number(), z.number().min(-63).max(318), z.number()])
+    .optional(),
+  ttlSeconds: z
+    .number()
+    .int()
+    .min(60)
+    .max(24 * 60 * 60),
+  keep: z.boolean(),
+  /** Defaults to the profile's provider (Kubernetes for the storm images). */
+  provider: ProviderKindSchema.optional(),
+  publishedArtifact: ArtifactVersionSchema.optional(),
+  publishedConfig: z
+    .strictObject({
+      sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
+      sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+      yaml: z
+        .string()
+        .min(1)
+        .max(64 * 1024),
+    })
+    .optional(),
+});
+
+function invalidMapRequest(
+  input: z.infer<typeof SandboxCreateInputSchema>,
+): boolean {
+  return (
+    (input.world === "real-map") !== (input.mapDirectory !== undefined) ||
+    (input.world === "real-map") !== (input.mapSpawn !== undefined) ||
+    (input.world === "real-map" &&
+      (input.provider === "kubernetes" || input.profile !== "storm-dev"))
+  );
+}
+
+export const SandboxCreateRequestSchema = SandboxCreateInputSchema.superRefine(
+  (input, context) => {
+    if (
+      (input.rollout !== undefined || input.captureFeatures !== undefined) &&
+      input.world !== "real-map"
+    )
+      context.addIssue({
+        code: "custom",
+        message:
+          "Capture features and rollout bootstrap require a real-map session",
+      });
+    if (invalidMapRequest(input))
+      context.addIssue({
+        code: "custom",
+        message:
+          "Real-map capture requires a map directory, safe map spawn, and the local Docker storm-dev profile",
+      });
     const published =
       input.profile === "storm-prod" || input.profile === "storm-candidate";
     const selected = input.publishedArtifact;
@@ -105,7 +171,8 @@ export const SandboxCreateRequestSchema = z
         code: "custom",
         message: "Only published Storm profiles accept a frozen artifact",
       });
-  });
+  },
+);
 export type SandboxCreateRequest = z.infer<typeof SandboxCreateRequestSchema>;
 
 const EndpointSchema = z.strictObject({
@@ -119,6 +186,9 @@ export const SandboxSummarySchema = z.strictObject({
   provider: ProviderKindSchema,
   profile: ProfileSchema,
   world: WorldKindSchema,
+  mapSource: MapSourceSchema.optional(),
+  rollout: RolloutBootstrapSchema.optional(),
+  captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
   status: z.enum(["ready", "stopped"]),
   createdAt: z.string(),
   expiresAt: z.string(),

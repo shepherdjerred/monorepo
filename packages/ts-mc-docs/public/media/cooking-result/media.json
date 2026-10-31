@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "cooking-result",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/cooking-result/original.webp",
+  "poster": "/media/cooking-result/poster.webp",
+  "alt": "A cooked porkchop in the player inventory after using the cooking pot",
+  "caption": "The cooking pot turns the raw porkchop into cooked food.",
+  "annotations": []
+}

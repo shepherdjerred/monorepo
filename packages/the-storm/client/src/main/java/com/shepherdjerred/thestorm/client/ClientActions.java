@@ -19,10 +19,13 @@ import tools.jackson.databind.JsonNode;
 final class ClientActions {
   private final Session session;
   private final InputLease inputs = new InputLease();
+  private final CameraPan pan = new CameraPan();
   private final Captures captures;
   private final VideoCapture videos;
   private final DuelCapture duels;
   private final FramePacing pacing;
+  private final DocsCapture docs;
+  private final ClientObservations observations = new ClientObservations();
   private final RecordedControls recording = new RecordedControls();
   private int automationTicks;
 
@@ -32,11 +35,18 @@ final class ClientActions {
     videos = new VideoCapture(session.artifacts());
     duels = new DuelCapture(session.artifacts(), videos::marker);
     pacing = new FramePacing(session.artifacts());
+    docs = new DocsCapture(session.artifacts());
+    net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register(
+        observations::message);
   }
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
     var args = request.arguments();
-    if (Set.of("status", "shutdown", "release", "server-list").contains(request.action())) {
+    if (Set.of("messages", "screen-inspect", "screen-activate", "screen-type")
+        .contains(request.action())) return observe(client, request);
+    if (request.action().startsWith("record-")) return record(client, request);
+    if (Set.of("status", "shutdown", "release", "release-inputs", "server-list", "respawn")
+        .contains(request.action())) {
       return control(client, request);
     }
     if (request.action().startsWith("frame-pacing-")) return framePacing(client, request);
@@ -44,13 +54,101 @@ final class ClientActions {
     if (request.action().startsWith("duel-")) return duel(client, request);
     if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
     if (request.action().equals("capture")) return captures.capture(client, args);
+    if (request.action().equals("sign-write")) return writeSign(client, args);
     requireWorld(client);
+    if (request.action().equals("pan")) return pan.start(client, peer, args);
     if (request.action().equals("input")) return input(client, peer, args);
     return CompletableFuture.completedFuture(ordinary(client, request));
   }
 
+  private CompletableFuture<Object> observe(Minecraft client, Protocol.Request request) {
+    var result =
+        switch (request.action()) {
+          case "messages" -> observations.messages(request.arguments());
+          case "screen-inspect" -> {
+            Protocol.keys(request.arguments(), Set.of());
+            yield observations.screen(client);
+          }
+          case "screen-activate" -> {
+            if (videos.active())
+              throw new IllegalStateException("Rendered capture owns the camera");
+            yield observations.activate(client, request.arguments());
+          }
+          case "screen-type" -> {
+            if (videos.active())
+              throw new IllegalStateException("Rendered capture owns the camera");
+            yield observations.type(client, request.arguments());
+          }
+          default -> throw new IllegalArgumentException("Unknown observation action");
+        };
+    return CompletableFuture.completedFuture(result);
+  }
+
+  private CompletableFuture<Object> record(Minecraft client, Protocol.Request request) {
+    if (videos.active() || pacing.active())
+      throw new IllegalStateException("Another capture is active");
+    if (request.action().equals("record-arm")) return docs.arm(client, request.arguments());
+    if (request.action().equals("record-marker"))
+      return CompletableFuture.completedFuture(docs.marker(request.arguments()));
+    Protocol.keys(request.arguments(), Set.of());
+    var result =
+        switch (request.action()) {
+          case "record-start" -> docs.start();
+          case "record-status" -> docs.status();
+          case "record-cancel" -> {
+            docs.cancel(client);
+            yield docs.status();
+          }
+          default -> throw new IllegalArgumentException("Unknown docs recorder action");
+        };
+    return CompletableFuture.completedFuture(result);
+  }
+
+  private CompletableFuture<Object> writeSign(Minecraft client, JsonNode args) {
+    requireWorld(client);
+    Protocol.keys(args, Set.of("lines"));
+    var lines = args.required("lines");
+    if (!lines.isArray() || lines.size() != 4) {
+      throw new IllegalArgumentException("Sign text requires four lines");
+    }
+    for (var line : lines) {
+      if (!line.isString() || line.stringValue().length() > 15) {
+        throw new IllegalArgumentException("Invalid sign line");
+      }
+    }
+    if (!(client.gui.screen()
+        instanceof net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen screen)) {
+      throw new IllegalStateException("Open a sign editor first");
+    }
+    for (var line : lines) {
+      line.stringValue()
+          .codePoints()
+          .forEach(code -> screen.charTyped(new net.minecraft.client.input.CharacterEvent(code)));
+      // Minecraft 26.3 uses SDL keycodes; 81 is the down arrow.
+      screen.keyPressed(new net.minecraft.client.input.KeyEvent(81, 0, 0));
+    }
+    screen.onClose();
+    return CompletableFuture.completedFuture("Sign submitted");
+  }
+
   private CompletableFuture<Object> control(Minecraft client, Protocol.Request request) {
     var args = request.arguments();
+    if (request.action().equals("release-inputs")) {
+      Protocol.keys(args, Set.of());
+      inputs.release();
+      apply(client);
+      return CompletableFuture.completedFuture("Inputs released");
+    }
+    if (request.action().equals("respawn")) {
+      requireWorld(client);
+      Protocol.keys(args, Set.of());
+      if (!(client.gui.screen() instanceof net.minecraft.client.gui.screens.DeathScreen)
+          || client.player == null) {
+        throw new IllegalStateException("Respawn requires the death screen");
+      }
+      client.player.respawn();
+      return CompletableFuture.completedFuture("Respawn requested");
+    }
     if (request.action().equals("status")) {
       Protocol.keys(args, Set.of());
       var state = Protocol.JSON.valueToTree(ClientSnapshot.read(client));
@@ -99,15 +197,24 @@ final class ClientActions {
       case "look" -> look(client, args);
       case "hotbar" -> hotbar(client, args);
       case "inventory" -> inventory(client, args);
+      case "chat-open", "advancements" -> ClientScreens.open(client, request.action(), args);
+      case "hover-slot" -> ClientScreens.hover(client, args);
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);
+      case "clear-overlays" -> {
+        Protocol.keys(args, Set.of());
+        client.gui.hud.getChat().clearMessages(false);
+        client.gui.toastManager().clear();
+        yield "Transient overlays cleared";
+      }
       case "attack", "use" -> interact(client, request);
       default -> throw new IllegalArgumentException("Unknown action: " + request.action());
     };
   }
 
   private CompletableFuture<Object> video(Minecraft client, Protocol.Request request) {
+    if (docs.active()) throw new IllegalStateException("Docs capture is active");
     var args = request.arguments();
     if (request.action().equals("video-arm") || request.action().equals("video-duel-arm")) {
       if (pacing.active()) throw new IllegalStateException("Frame pacing measurement is active");
@@ -140,7 +247,8 @@ final class ClientActions {
   private CompletableFuture<Object> framePacing(Minecraft client, Protocol.Request request) {
     if (request.action().equals("frame-pacing-start")) {
       requireWorld(client);
-      if (videos.active()) throw new IllegalStateException("Video capture is active");
+      if (videos.active() || docs.active())
+        throw new IllegalStateException("Video capture is active");
       return CompletableFuture.completedFuture(pacing.start(client, request.arguments()));
     }
     Protocol.keys(request.arguments(), Set.of());
@@ -170,6 +278,8 @@ final class ClientActions {
   }
 
   void tick(Minecraft client) {
+    pan.tick(client);
+    docs.tick(client);
     pacing.tick(client);
     var server = client.getCurrentServer();
     duels.tick(
@@ -178,12 +288,15 @@ final class ClientActions {
             && client.player.isSpectator()
             && server != null
             && server.ip.equals(session.server()));
-    recording.tick(client, inputs.active() || automationTicks > 0 || videos.active());
+    recording.tick(
+        client,
+        inputs.active() || pan.active() || automationTicks > 0 || videos.active() || docs.active());
     videos.tick(client);
     automationTicks = Math.max(0, automationTicks - 1);
     if (!inputs.active()) return;
     if (client.player == null || client.player.isDeadOrDying() || client.gui.screen() != null) {
-      release(client);
+      inputs.release();
+      apply(client);
     } else {
       inputs.tick();
       apply(client);
@@ -191,12 +304,15 @@ final class ClientActions {
   }
 
   void disconnect(Minecraft client, UUID peer) {
+    pan.disconnect(peer);
     if (!inputs.active()) return;
     inputs.disconnect(peer);
     apply(client);
   }
 
   void release(Minecraft client) {
+    pan.cancel();
+    docs.cancel(client);
     videos.cancel(client);
     duels.cancel();
     if (!inputs.active()) return;
@@ -206,9 +322,12 @@ final class ClientActions {
 
   void startCaptures() {
     RenderCapture.install(videos, pacing);
+    RenderCapture.installDocs(docs);
   }
 
   void closeCaptures(Minecraft client) {
+    docs.cancel(client);
+    docs.close();
     videos.cancel(client);
     RenderCapture.remove(videos);
     videos.close();
@@ -345,9 +464,11 @@ final class ClientActions {
     var mode = java.util.Objects.requireNonNull(client.gameMode);
     var hit = client.hitResult;
     if (request.action().equals("attack")) {
-      if (!(hit instanceof EntityHitResult entity))
-        throw new IllegalStateException("Aim at an entity");
-      mode.attack(player, entity.getEntity());
+      if (hit instanceof EntityHitResult entity) mode.attack(player, entity.getEntity());
+      else if (hit instanceof BlockHitResult block
+          && hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK)
+        mode.startDestroyBlock(block.getBlockPos(), block.getDirection());
+      else throw new IllegalStateException("Aim at an entity or block");
     } else if (hit instanceof BlockHitResult block
         && hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
       mode.useItemOn(player, InteractionHand.MAIN_HAND, block);

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "moving-bridge",
+  "kind": "video",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/moving-bridge/clip.mp4",
+  "poster": "/media/moving-bridge/poster.webp",
+  "alt": "A sign-controlled bridge opens and closes over a trench",
+  "caption": "Right-click either Bridge sign to toggle the moving section.",
+  "annotations": [
+    {
+      "kind": "label",
+      "from": [0.15, 0.2],
+      "to": [0.15, 0.2],
+      "text": "Walkway extended",
+      "startMs": 300,
+      "endMs": 1800
+    },
+    {
+      "kind": "label",
+      "from": [0.15, 0.2],
+      "to": [0.15, 0.2],
+      "text": "Walkway retracted",
+      "startMs": 2033,
+      "endMs": 3533
+    }
+  ]
+}

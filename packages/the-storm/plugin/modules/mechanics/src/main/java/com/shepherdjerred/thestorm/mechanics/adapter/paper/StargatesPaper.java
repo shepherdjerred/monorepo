@@ -30,6 +30,46 @@ public final class StargatesPaper {
     this.enabled = enabled;
   }
 
+  private static void registerCapture(ModuleContext context, StargateBook book) {
+    var capture =
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+    capture.registerCleanup("stargate-network", book::removeCaptureNetwork);
+    capture.registerPlayer(
+        "stargate.networks",
+        player -> {
+          if (!book.ready()) throw new IllegalStateException("Stargates are loading or saving");
+          return book.registry().networks().stream()
+              .filter(
+                  network ->
+                      network.access()
+                              instanceof
+                              com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess
+                                  .Private(var owner, _)
+                          && owner.equals(player))
+              .map(network -> network.id() + ":" + network.name())
+              .sorted()
+              .collect(java.util.stream.Collectors.joining(","));
+        });
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class)
+        .register(
+            "stargates",
+            area -> {
+              if (!book.ready()) throw new IllegalStateException("Stargates are loading or saving");
+              return book.registry().gates().stream()
+                  .filter(
+                      gate ->
+                          area.contains(
+                              gate.worldId(), gate.sign().x(), gate.sign().y(), gate.sign().z()))
+                  .map(gate -> gate.id().toString())
+                  .sorted()
+                  .collect(java.util.stream.Collectors.joining(","));
+            });
+  }
+
   public static StargatesPaper start(
       ModuleContext context, StargateConfig config, @Nullable FliptStargatesGate rollout) {
     var enabled = new AtomicBoolean(false);
@@ -40,6 +80,7 @@ public final class StargatesPaper {
         new StargateAccess(
             context.services().require(TrackLevels.class),
             context.services().require(TownMembership.class));
+    registerCapture(context, book);
     var settings = new StargateSettings(config.openFor(), enabled::get);
     var portals = new StargatePortals(context, book, access, settings);
     context

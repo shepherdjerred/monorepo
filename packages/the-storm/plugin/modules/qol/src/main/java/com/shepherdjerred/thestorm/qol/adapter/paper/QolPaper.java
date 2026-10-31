@@ -122,6 +122,43 @@ public final class QolPaper {
     var combat = new CombatListener(runtime, app.combat(), config.combat(), app.sealed());
     var sleep = new SleepListener(runtime, app.afk(), config.sleep().percent());
     var banks = new BankBook();
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class)
+        .register(
+            "banks",
+            area -> {
+              if (!banks.isLoaded()) throw new IllegalStateException("Banks are loading");
+              return banks.all().stream()
+                  .filter(
+                      bank ->
+                          area.contains(
+                                  bank.sign().world(),
+                                  bank.sign().x(),
+                                  bank.sign().y(),
+                                  bank.sign().z())
+                              || area.contains(
+                                  bank.container().world(),
+                                  bank.container().x(),
+                                  bank.container().y(),
+                                  bank.container().z())
+                              || bank.shelves().stream()
+                                  .anyMatch(
+                                      shelf ->
+                                          area.contains(
+                                                  shelf.sign().world(),
+                                                  shelf.sign().x(),
+                                                  shelf.sign().y(),
+                                                  shelf.sign().z())
+                                              || area.contains(
+                                                  shelf.container().world(),
+                                                  shelf.container().x(),
+                                                  shelf.container().y(),
+                                                  shelf.container().z())))
+                  .map(Object::toString)
+                  .sorted()
+                  .collect(java.util.stream.Collectors.joining("\n"));
+            });
     var bankListener =
         new Banks(
             new Banks.Gear(

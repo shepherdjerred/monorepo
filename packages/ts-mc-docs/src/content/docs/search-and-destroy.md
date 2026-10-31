@@ -11,6 +11,8 @@ Search and Destroy is rolling out and may not be available to every player yet.
 
 Type `/rwf join` to enter the lobby and wait for the next round. Bots fill out the teams, so you can play even if you are the only human.
 
+![Search and Destroy lobby, with map vote boards ahead and the kit and leave items in the hotbar.](/screenshots/search-lobby.webp)
+
 Pick a kit by right-clicking the nether star in your hotbar. Your first kit is Trooper unless you choose another. Your survival inventory, XP, health and effects are saved and restored when you leave.
 
 ## Play

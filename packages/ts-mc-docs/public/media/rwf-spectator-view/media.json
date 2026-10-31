@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "rwf-spectator-view",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-spectator-view/original.webp",
+  "poster": "/media/rwf-spectator-view/poster.webp",
+  "alt": "The spectator overlook keeps you outside the fight; this view shows Valley of Death between rounds.",
+  "caption": "The spectator overlook keeps you outside the fight; this view shows Valley of Death between rounds.",
+  "annotations": []
+}

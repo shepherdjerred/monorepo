@@ -5,6 +5,10 @@ description: Choose a primary track and buy new abilities with crystals.
 
 Tracks unlock abilities you buy with crystals. Use `/perks` to see your levels and next prices, and `/perks info <track>` to inspect a track before choosing. Buy its next level with `/perks buy <track>`; repeat the command within 30 seconds to confirm.
 
+<div><storm-media data-manifest="/media/perks-overview/media.json"><figure><img src="/media/perks-overview/original.webp" width="2560" height="1440" loading="lazy" alt="The perks overview shows your level and the next price for every track." /><figcaption>The perks overview shows your level and the next price for every track. <a href="/media/perks-overview/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/perks-mechanic/media.json"><figure><img src="/media/perks-mechanic/original.webp" width="2560" height="1440" loading="lazy" alt="The Mechanic detail lists the builds unlocked at each level." /><figcaption>The Mechanic detail lists the builds unlocked at each level. <a href="/media/perks-mechanic/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
 Your first purchase selects your **primary track**. Other tracks cannot rise above its level, and changing the primary requires an administrator reset. Choose the one you want to lead with care. Levels must be bought in order, and after any purchase there is a 24-hour wait before buying another level in any track.
 
 | Track ID      | What it opens up                                         |

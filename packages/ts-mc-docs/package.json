@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && astro build && bun ../../scripts/checks/check-built-internal-links.ts ts-mc-docs",
+    "build": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && astro build && bun scripts/check-media.ts && bun ../../scripts/checks/check-built-internal-links.ts ts-mc-docs",
     "preview": "astro preview",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "astro check",
@@ -16,6 +16,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/mc-harness": "workspace:*",
     "@shepherdjerred/storm-theme": "workspace:*",
     "@astrojs/check": "^0.9.10",
     "@astrojs/sitemap": "^3.7.3",

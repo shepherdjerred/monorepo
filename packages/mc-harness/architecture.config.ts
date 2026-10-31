@@ -22,7 +22,15 @@ export default defineArchitecture({
         "build",
         "playtest",
         "live",
+        "capture",
       ],
+    },
+    {
+      name: "capture-is-a-daemon-client",
+      comment:
+        "Capture scenes use the journaled daemon API and never receive bridge credentials.",
+      from: "capture",
+      to: ["daemon", "providers", "bridge", "live"],
     },
     {
       name: "playtest-is-a-daemon-client",

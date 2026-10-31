@@ -84,6 +84,10 @@ public final class StargateRegistry {
     return List.copyOf(gates.values());
   }
 
+  public List<StargateNetwork> networks() {
+    return List.copyOf(networks.values());
+  }
+
   public Optional<Stargate> sign(UUID world, Pos pos) {
     return Optional.ofNullable(signs.get(new Place(world, pos))).flatMap(this::gate);
   }

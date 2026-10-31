@@ -111,7 +111,7 @@ describe("toolkit mc client", () => {
     expect(unknown.stderr).toContain('unknown client action "dance"');
   });
 
-  test("never starts against live tsmc", async () => {
+  test("requires explicit account and reason before contacting live tsmc", async () => {
     const { stderr, exitCode } = await runMcCommand([
       "client",
       "start",
@@ -119,7 +119,7 @@ describe("toolkit mc client", () => {
       "live",
     ]);
     expect(exitCode).toBe(1);
-    expect(stderr).toContain("joins sandboxes only");
+    expect(stderr).toContain("requires --account XiguaJerred and --reason");
   });
 
   test("negative look angles reach the daemon", async () => {
@@ -132,5 +132,17 @@ describe("toolkit mc client", () => {
     expect(exitCode).toBe(1);
     expect(stderr).not.toContain("Unknown option");
     expect(stderr).toContain("toolkit mc daemon start");
+  });
+
+  test("empty-body inspection actions reach the daemon without requiring --args", async () => {
+    const result = await runMcCommand([
+      "client",
+      "screen-inspect",
+      "--name",
+      "XiguaJerred",
+    ]);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).not.toContain("unknown client action");
+    expect(result.stderr).toContain("toolkit mc daemon start");
   });
 });

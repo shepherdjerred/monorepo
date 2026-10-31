@@ -202,6 +202,7 @@ export type LiveWeOp = {
 };
 
 export type LiveWriteOp =
+  | { kind: "client-act"; name: string; uuid: string; action: string; box: Box }
   | { kind: "command"; command: string }
   | { kind: "we"; world: string; ops: readonly LiveWeOp[] }
   | { kind: "paste"; world: string; box: Box }
@@ -309,6 +310,16 @@ export function assessLiveWrite(
   affects?: Box,
 ): LiveAssessment {
   switch (op.kind) {
+    case "client-act": {
+      return {
+        read: false,
+        tier: blockTier(config, op.box, false),
+        dangerous: false,
+        world: op.box.world,
+        box: op.box,
+        summary: `client ${op.name} ${op.action}`,
+      };
+    }
     case "command": {
       return { ...assessCommand(op.command), summary: op.command };
     }
@@ -411,6 +422,9 @@ function assessActorAct(
 }
 
 export type LiveAuthorizationInput = {
+  /** Verified controller for a native interaction; never applies to WorldEdit or restoration. */
+  participant?: string | undefined;
+  nearbyParticipant?: string | undefined;
   assessment: LiveAssessment;
   flags: LiveWriteFlags;
   players: readonly Player[];
@@ -427,9 +441,13 @@ export type LiveAuthorization = {
 function checkPlayers(
   box: Box,
   humans: readonly Player[],
-  allowPlayers: boolean,
-  radius: number,
+  options: {
+    allowPlayers: boolean;
+    radius: number;
+    nearbyParticipant: string | undefined;
+  },
 ): void {
+  const { allowPlayers, radius, nearbyParticipant } = options;
   const nearby = humans.filter((player) => player.world === box.world);
   const inside = nearby.filter(
     (player) => distanceToBox(box, player.pos) === 0,
@@ -440,7 +458,9 @@ function checkPlayers(
     );
   }
   const close = nearby.filter(
-    (player) => distanceToBox(box, player.pos) <= radius,
+    (player) =>
+      player.uuid !== nearbyParticipant &&
+      distanceToBox(box, player.pos) <= radius,
   );
   if (!allowPlayers && close.length > 0) {
     throw new LiveGuardRefusal(
@@ -491,9 +511,12 @@ export function authorizeLiveWrite(
     );
     checkPlayers(
       assessment.box,
-      humans,
-      flags.allowPlayers === true,
-      config.nearPlayerRadius,
+      humans.filter((player) => player.uuid !== input.participant),
+      {
+        allowPlayers: flags.allowPlayers === true,
+        radius: config.nearPlayerRadius,
+        nearbyParticipant: input.nearbyParticipant,
+      },
     );
   }
   if (assessment.dangerous && flags.confirmDangerous !== true) {

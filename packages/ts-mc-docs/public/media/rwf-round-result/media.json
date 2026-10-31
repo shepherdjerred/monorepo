@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "rwf-round-result",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-round-result/original.webp",
+  "poster": "/media/rwf-round-result/poster.webp",
+  "alt": "The completed round reports Blue Team as the winner and awards Red Warfare Credits.",
+  "caption": "The completed round reports Blue Team as the winner and awards Red Warfare Credits.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.3],
+      "to": [0.12, 0.6],
+      "text": "Winner and credits",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

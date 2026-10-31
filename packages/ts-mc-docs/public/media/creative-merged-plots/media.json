@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "creative-merged-plots",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/creative-merged-plots/original.webp",
+  "poster": "/media/creative-merged-plots/poster.webp",
+  "alt": "Merge neighboring plots you own; their road remains in place.",
+  "caption": "Merge neighboring plots you own; their road remains in place.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.68, 0.62],
+      "to": [0.19, 0.84],
+      "text": "Merge confirmed",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

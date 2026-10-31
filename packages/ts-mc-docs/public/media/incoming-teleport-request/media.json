@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "incoming-teleport-request",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/incoming-teleport-request/original.webp",
+  "poster": "/media/incoming-teleport-request/poster.webp",
+  "alt": "A real second player requests a visit; the recipient can accept or deny it.",
+  "caption": "A real second player requests a visit; the recipient can accept or deny it.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.68, 0.6],
+      "to": [0.32, 0.84],
+      "text": "Accept or deny",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

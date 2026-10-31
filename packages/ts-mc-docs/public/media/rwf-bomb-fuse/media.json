@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "rwf-bomb-fuse",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-bomb-fuse/original.webp",
+  "poster": "/media/rwf-bomb-fuse/poster.webp",
+  "alt": "Every kit carries the Bomb Fuse; hold it to arm enemy bombs and defuse your own.",
+  "caption": "Every kit carries the Bomb Fuse; hold it to arm enemy bombs and defuse your own.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.76, 0.39],
+      "to": [0.51, 0.68],
+      "text": "Bomb Fuse",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

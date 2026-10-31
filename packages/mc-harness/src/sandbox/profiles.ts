@@ -1,5 +1,9 @@
 import path from "node:path";
 import {
+  captureModules,
+  importedNormalWorlds,
+} from "#sandbox/capture-features.ts";
+import {
   citizens,
   coreProtect,
   luckPerms,
@@ -8,7 +12,11 @@ import {
   worldEdit,
   type PluginPin,
 } from "#src/pins.ts";
-import type { ProviderKind, SandboxCreateRequest } from "#protocol/ipc.ts";
+import type {
+  ProviderKind,
+  SandboxCreateRequest,
+  SandboxSummary,
+} from "#protocol/ipc.ts";
 import { BRIDGE_BUILD_COMMAND, BRIDGE_JAR } from "#protocol/paths.ts";
 import { basePaperEnv } from "#sandbox/paper-env.ts";
 import {
@@ -33,6 +41,25 @@ const VOID_GENERATOR = JSON.stringify({
  * `target` is relative to /plugins. Missing build outputs fail with `build`.
  */
 export type StagedEntry =
+  | {
+      kind: "capture-content";
+      source: string;
+      target: string;
+      content:
+        | "towns"
+        | "parcels"
+        | "heritage"
+        | "essentials"
+        | "world"
+        | "travel"
+        | "stargates"
+        | "multiverse"
+        | "arena-survival"
+        | "shards";
+      spawn: [number, number, number];
+      sha256: string;
+      additionalWorlds?: readonly string[];
+    }
   | { kind: "repo-file"; source: string; target: string; build?: string }
   | { kind: "repo-dir"; source: string; target: string }
   | {
@@ -110,6 +137,9 @@ function serverEnv(
 ): Record<string, string> {
   return {
     ...basePaperEnv("seeded"),
+    ...(world === "real-map"
+      ? { LEVEL_TYPE: "minecraft:normal", VIEW_DISTANCE: "12", MEMORY: "3G" }
+      : {}),
     ...(world === "void" ? { GENERATOR_SETTINGS: VOID_GENERATOR } : {}),
     ...bridgeAndRconEnv(secrets),
   };
@@ -286,9 +316,16 @@ const PROFILES: Record<
 export function resolveProfile(
   request: Pick<
     SandboxCreateRequest,
-    "profile" | "world" | "publishedArtifact" | "publishedConfig"
+    | "profile"
+    | "world"
+    | "publishedArtifact"
+    | "publishedConfig"
+    | "mapSpawn"
+    | "rollout"
+    | "captureFeatures"
   >,
   secrets: Secrets,
+  mapSource?: SandboxSummary["mapSource"],
 ): ResolvedProfile {
   if (
     request.profile === "storm-prod" ||
@@ -307,7 +344,135 @@ export function resolveProfile(
       request.publishedConfig,
     )(request.world, secrets);
   }
-  return PROFILES[request.profile](request.world, secrets);
+  const profile = PROFILES[request.profile](request.world, secrets);
+  if (request.world !== "real-map") return profile;
+  if (mapSource === undefined || request.mapSpawn === undefined)
+    throw new Error(
+      "Real-map profile requires the imported map fingerprint and safe spawn",
+    );
+  const spawn = request.mapSpawn;
+  const additional = captureModules(request.captureFeatures, mapSource);
+  const additionalWorlds = importedNormalWorlds(mapSource);
+  return {
+    ...profile,
+    env: {
+      ...profile.env,
+      THESTORM_CREATIVE_BOOTSTRAP: "false",
+      ...(additional.includes("rwf")
+        ? { RWF_RECORDING_SALT: "mc-harness-local-capture-pseudonym-salt" }
+        : {}),
+      ...(request.rollout === undefined
+        ? {}
+        : {
+            FLIPT_URL: request.rollout.url,
+            FLIPT_ENVIRONMENT: request.rollout.environment,
+          }),
+    },
+    staged: [
+      ...profile.staged
+        .filter(
+          (entry) =>
+            !(
+              entry.kind === "repo-file" &&
+              [
+                "TheStormFixtures.jar",
+                "TheStormMechanicsE2E.jar",
+                "TheStormMechanicsE2E/mechanics.yml",
+              ].includes(entry.target)
+            ),
+        )
+        .map((entry) =>
+          entry.kind === "storm-config"
+            ? {
+                ...entry,
+                modules: [
+                  "economy",
+                  "mail",
+                  "chat",
+                  "tracks",
+                  "skylands",
+                  "towns",
+                  "tickets",
+                  "essentials",
+                  "world",
+                  "qol",
+                  "shops",
+                  "mechanics",
+                  "skills",
+                  "spells",
+                  "seasonal",
+                  ...additional,
+                  ...(mapSource.dimensions?.includes("minecraft:creative") ===
+                  true
+                    ? ["creative"]
+                    : []),
+                ],
+              }
+            : entry,
+        ),
+      {
+        kind: "capture-content",
+        source: path.join(STORM_PATHS.ownedConfigDir, "world.yml"),
+        target: "Multiverse-Core/worlds.yml",
+        content: "multiverse",
+        spawn,
+        sha256: mapSource.sha256,
+        additionalWorlds,
+      },
+      {
+        kind: "capture-content",
+        source: path.join(STORM_PATHS.ownedConfigDir, "towns.yml"),
+        target: "TheStorm/towns.yml",
+        content: "towns",
+        spawn,
+        sha256: mapSource.sha256,
+      },
+      {
+        kind: "capture-content",
+        source: path.join(STORM_PATHS.ownedConfigDir, "parcels.yml"),
+        target: "TheStorm/parcels.yml",
+        content: "parcels",
+        spawn,
+        sha256: mapSource.sha256,
+      },
+      {
+        kind: "capture-content",
+        source: path.join(STORM_PATHS.ownedConfigDir, "heritage.yml"),
+        target: "TheStorm/heritage.yml",
+        content: "heritage",
+        spawn,
+        sha256: mapSource.sha256,
+      },
+      {
+        kind: "capture-content",
+        source: path.join(STORM_PATHS.ownedConfigDir, "essentials.yml"),
+        target: "TheStorm/essentials.yml",
+        content: "essentials",
+        spawn,
+        sha256: mapSource.sha256,
+      },
+      ...(["world", "travel", "stargates", "shards"] as const).map(
+        (content) => ({
+          kind: "capture-content" as const,
+          source: path.join(STORM_PATHS.ownedConfigDir, `${content}.yml`),
+          target: `TheStorm/${content}.yml`,
+          content,
+          spawn,
+          sha256: mapSource.sha256,
+          additionalWorlds,
+        }),
+      ),
+      ...["survival", "rustworks"].map((arena) => ({
+        kind: "capture-content" as const,
+        source: path.join(STORM_PATHS.ownedConfigDir, "arena", `${arena}.yml`),
+        target: `TheStorm/arena/${arena}.yml`,
+        content: "arena-survival" as const,
+        spawn,
+        sha256: mapSource.sha256,
+        additionalWorlds,
+      })),
+    ],
+  };
 }
 
 /** The provider a request runs on: its own choice, else the profile's default. */

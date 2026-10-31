@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "bridge-extended",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/bridge-extended/original.webp",
+  "poster": "/media/bridge-extended/poster.webp",
+  "alt": "Bridge planks span the five spaces between its fixed ends",
+  "caption": "Activating either sign extends the walkway across the gap.",
+  "annotations": []
+}
