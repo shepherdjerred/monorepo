@@ -27,6 +27,7 @@ import { createRelayChart } from "./cdk8s-charts/relay.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
 import { createTurboCacheChart } from "./cdk8s-charts/platform/turbo-cache.ts";
+import { createGradleBuildCacheChart } from "./cdk8s-charts/platform/gradle-build-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/platform/buildkitd.ts";
 import { createAlertDashboardChart } from "./cdk8s-charts/platform/alert-dashboard.ts";
 import { createStashChart } from "./cdk8s-charts/media/stash.ts";
@@ -115,6 +116,7 @@ export async function setupCharts(app: App): Promise<void> {
   createDeliveryControlPlaneChart(app);
   createTrmnlDashboardChart(app);
   createTurboCacheChart(app);
+  createGradleBuildCacheChart(app);
   createBuildkitdChart(app);
   createStashChart(app);
   createStormBrainChart(app);

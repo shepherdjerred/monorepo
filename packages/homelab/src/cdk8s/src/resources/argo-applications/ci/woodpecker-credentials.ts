@@ -80,6 +80,10 @@ const CI_CREDENTIAL_ITEMS = [
     secretName: "ci-turbo-cache-credentials",
     itemId: "mzvcz4pqqbda75ufu7l5myd4ey",
   },
+  {
+    secretName: "ci-gradle-build-cache-credentials",
+    itemId: "gradle-build-cache",
+  },
   { secretName: "ci-npm-credentials", itemId: "4fmd5otmvwcpsrxjaptrloppvu" },
   {
     secretName: "ci-release-openai-credentials",
@@ -97,6 +101,15 @@ const CI_CREDENTIAL_ITEMS = [
  * literal item id, so both consumers move together.
  */
 export const CI_NPM_CREDENTIALS_ITEM = ciCredentialItem("ci-npm-credentials");
+
+/**
+ * The Gradle build cache node renders its users from the same item CI's
+ * per-step grants read (fields GRADLE_BUILD_CACHE_READ_PASSWORD and
+ * GRADLE_BUILD_CACHE_WRITE_PASSWORD), so a rotation changes both sides.
+ */
+export const CI_GRADLE_BUILD_CACHE_ITEM = ciCredentialItem(
+  "ci-gradle-build-cache-credentials",
+);
 
 function ciCredentialItem(
   secretName: (typeof CI_CREDENTIAL_ITEMS)[number]["secretName"],

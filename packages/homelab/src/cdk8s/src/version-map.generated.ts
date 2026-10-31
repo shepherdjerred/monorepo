@@ -77,6 +77,7 @@ export const VersionMapSchema = z
     "woodpecker-ci/plugin-git": z.string(),
     "woodpeckerci/plugin-git": z.string(),
     "ducktors/turborepo-remote-cache": z.string(),
+    "gradle/build-cache-node": z.string(),
     kueue: z.string(),
     "tonistiigi/binfmt": z.string(),
     "moby/buildkit": z.string(),
