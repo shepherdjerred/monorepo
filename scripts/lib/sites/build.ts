@@ -135,6 +135,16 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     immutablePrefixes: ["_astro/"],
   },
   {
+    bucket: "landing-pages",
+    name: "landing-pages",
+    url: "https://public.ts-mc.net",
+    buildDir: "packages/landing-pages",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/landing-pages/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  {
     bucket: "wiki-sjer-red",
     name: "wiki",
     url: "https://wiki.sjer.red",

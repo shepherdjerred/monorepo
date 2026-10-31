@@ -122,6 +122,28 @@ const tsMcDocsCsp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+/**
+ * CSP for the shared landing-page host. Every item is a static page whose only
+ * third parties are PostHog through the managed proxy host and, for items that
+ * opt in, the Pinterest conversion tag (its `core.js`, beacon image, event
+ * endpoint and hidden frame), with the same hosts as `scoutCsp`. Fonts and
+ * images are same-origin build output.
+ */
+const landingPagesCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://j.sjer.red https://s.pinimg.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' https://ct.pinterest.com data:",
+  "font-src 'self'",
+  "connect-src 'self' https://j.sjer.red https://ct.pinterest.com",
+  "frame-src https://ct.pinterest.com",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 const scoutDocsProbes = [
   {
     endpoint: "scoutql-sources",
@@ -249,6 +271,19 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "cook.sjer.red", bucket: "cook" },
   { hostname: "cross-compilers.sjer.red", bucket: "cross-compilers" },
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
+  // Shared host for landing and campaign pages; each item is a top-level route.
+  {
+    hostname: "public.ts-mc.net",
+    bucket: "landing-pages",
+    probes: [
+      {
+        endpoint: "the-storm",
+        path: "/the-storm/",
+        module: "http_200_no_redirect",
+      },
+    ],
+    responseHeaders: { "Content-Security-Policy": landingPagesCsp },
+  },
   {
     hostname: "wiki.sjer.red",
     bucket: "wiki-sjer-red",

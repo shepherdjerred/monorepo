@@ -1,0 +1,320 @@
+---
+import { Picture } from "astro:assets";
+import Layout from "../../items/the-storm/Layout.astro";
+import { server } from "../../items/the-storm/server.ts";
+import windmill from "../../items/the-storm/assets/windmill.jpg";
+import clockTower from "../../items/the-storm/assets/clock-tower.jpg";
+import townHouse from "../../items/the-storm/assets/town-house.jpg";
+
+const formats = ["avif", "webp"];
+// On desktop the hero fills a tall column and crops the landscape shot, so it
+// needs a source about as wide as the viewport, not half of it.
+const widths = [480, 800, 1200, 1600];
+---
+
+<Layout
+  title="Come play Minecraft with us · The Storm"
+  description="A simple, friendly Minecraft SMP for Java and Bedrock. Build, explore, and hang out with us. Java: ts-mc.net. Bedrock: mc.ts-mc.net, port 30004."
+>
+  <main>
+    <section class="tone-cream hero">
+      <div class="hero-copy">
+        <p class="chip">minecraft smp</p>
+        <h1>
+          come play minecraft <em>with us.</em>
+        </h1>
+        <p class="lede">
+          a simple, friendly survival server. build something, explore a little,
+          or just hang out.
+        </p>
+      </div>
+
+      <figure class="frame hero-photo">
+        <Picture
+          src={windmill}
+          formats={formats}
+          widths={widths}
+          sizes="(min-width: 960px) 1600px, 100vw"
+          alt="A tall timber windmill above a golden wheat field under a blue sky."
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
+
+      <div class="connect" aria-label="Server address" data-edition="java">
+        <div class="connect-head">
+          <div
+            class="edition-toggle"
+            role="group"
+            aria-label="Minecraft edition"
+          >
+            <button
+              type="button"
+              data-edition-choice="java"
+              aria-pressed="true"
+            >
+              Java
+            </button>
+            <button
+              type="button"
+              data-edition-choice="bedrock"
+              aria-pressed="false"
+            >
+              Bedrock
+            </button>
+          </div>
+          <button type="button" class="copy" data-copy-address>
+            copy
+          </button>
+        </div>
+        <div class="edition" data-edition-panel="java">
+          <span class="label">Java Edition {server.java.versions}</span>
+          <span class="address">{server.java.address}</span>
+          <p class="note">
+            playing on a computer? go to Multiplayer → Add Server and paste it
+            in.
+          </p>
+          <p class="note">
+            runs best on {server.java.bestOn}, but older versions can join too.
+          </p>
+        </div>
+        <div class="edition" data-edition-panel="bedrock" hidden>
+          <span class="label">Bedrock Edition, {server.bedrock.version}</span>
+          <span class="address">{server.bedrock.address}</span>
+          <span class="port">
+            Port: <strong>{server.bedrock.port}</strong>
+          </span>
+          <p class="note">
+            on a phone, tablet or Windows? go to Play → Servers → Add Server and
+            pop in the address and port.
+          </p>
+          <p class="note">
+            on Switch, Xbox or PlayStation? there’s one extra step.{" "}
+            <a href="#consoles" data-track="console" data-placement="card">
+              here’s how
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+
+      <div class="ctas">
+        <a
+          class="button primary"
+          href={server.discord}
+          data-track="discord"
+          data-placement="hero"
+        >
+          join the discord
+        </a>
+        <a
+          class="button"
+          href="#join"
+          data-track="section"
+          data-placement="hero"
+        >
+          how to join
+        </a>
+      </div>
+    </section>
+
+    <section class="tone-lilac together">
+      <div class="section-copy">
+        <h2>
+          java + bedrock. <em>let’s play.</em>
+        </h2>
+        <p class="lede">come hang out with us.</p>
+      </div>
+      <div class="pair">
+        <figure class="frame">
+          <Picture
+            src={clockTower}
+            formats={formats}
+            widths={[400, 640, 960]}
+            sizes="(min-width: 960px) 30vw, 50vw"
+            alt="A timber clock tower rising between spruce trees."
+          />
+        </figure>
+        <figure class="frame">
+          <Picture
+            src={townHouse}
+            formats={formats}
+            widths={[400, 640, 960]}
+            sizes="(min-width: 960px) 30vw, 50vw"
+            alt="A timber house with a striped awning beside a flower garden and market stalls."
+          />
+        </figure>
+      </div>
+      <ul class="points">
+        <li>
+          <strong>start a town.</strong> claim your land and build at your own
+          pace.
+        </li>
+        <li>
+          <strong>quests and crystals.</strong> follow quests around spawn and
+          trade with crystals.
+        </li>
+        <li>
+          <strong>solo or with friends.</strong> come on your own or bring
+          someone along.
+        </li>
+      </ul>
+    </section>
+
+    <section class="tone-sage join" id="join">
+      <div class="section-copy">
+        <h2>
+          got a build <em>in mind?</em>
+        </h2>
+        <p class="lede">here’s how to get in.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="label">Java {server.java.versions}</span>
+          <p>
+            Multiplayer → Add Server, then enter{" "}
+            <strong>{server.java.address}</strong>.
+          </p>
+        </li>
+        <li>
+          <span class="label">Bedrock, {server.bedrock.version}</span>
+          <p>
+            Play → Servers → Add Server, then enter{" "}
+            <strong>{server.bedrock.address}</strong> and port{" "}
+            <strong>{server.bedrock.port}</strong>.
+          </p>
+        </li>
+        <li>
+          <span class="label">Switch, Xbox or PlayStation</span>
+          <p>
+            consoles need one quick extra step to add a server.{" "}
+            <a href="#consoles" data-track="console" data-placement="steps">
+              we’ll walk you through it
+            </a>
+            .
+          </p>
+        </li>
+        <li>
+          <span class="label">Then</span>
+          <p>
+            you start at the windmill with supplies, a welcome book, and 500
+            crystals. type <code>/guide</code> to find your way around.
+          </p>
+        </li>
+      </ol>
+      <div class="ctas">
+        <a
+          class="button primary"
+          href={server.discord}
+          data-track="discord"
+          data-placement="join"
+        >
+          say hi on discord
+        </a>
+        <a
+          class="button"
+          href={server.joinGuide}
+          data-track="docs"
+          data-placement="join"
+        >
+          full join guide
+        </a>
+      </div>
+    </section>
+
+    <section class="tone-peach consoles" id="consoles">
+      <div class="section-copy">
+        <p class="chip">switch · xbox · playstation</p>
+        <h2>
+          on a console? <em>no problem.</em>
+        </h2>
+        <p class="lede">
+          consoles don’t have an Add Server button, so we take a quick detour
+          through BedrockConnect, a free server list made by the community.
+        </p>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="label">step 1</span>
+          <p>
+            <strong>change your DNS.</strong> in your console’s internet
+            settings, set DNS to manual and enter:
+          </p>
+          <dl class="dns">
+            <div>
+              <dt>Switch or Xbox</dt>
+              <dd>
+                <span>primary</span>
+                <strong>{server.bedrockConnect.switchXboxDns}</strong>
+              </dd>
+              <dd>
+                <span>secondary</span>
+                <strong>{server.bedrockConnect.secondaryDns}</strong>
+              </dd>
+            </div>
+            <div>
+              <dt>PlayStation</dt>
+              <dd>
+                <span>primary</span>
+                <strong>{server.bedrockConnect.playStationDns}</strong>
+              </dd>
+              <dd>
+                <span>secondary</span>
+                <strong>{server.bedrockConnect.secondaryDns}</strong>
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <span class="label">step 2</span>
+          <p>
+            <strong>open a featured server.</strong> in Minecraft, go to Servers
+            and join The Hive or Lifeboat. a server list pops up instead.
+          </p>
+        </li>
+        <li>
+          <span class="label">step 3</span>
+          <p>
+            <strong>add the storm.</strong> pick Connect to a Server, enter{" "}
+            <strong>{server.bedrock.address}</strong> and port{" "}
+            <strong>{server.bedrock.port}</strong>, and turn on Add to server
+            list so it’s saved for next time.
+          </p>
+        </li>
+      </ol>
+      <div class="aside">
+        <p>
+          that’s it, see you at the windmill! to undo it later, set your DNS
+          back to automatic.
+        </p>
+        <p>
+          stuck? a friend on a phone or PC can join first, and you can hop in
+          from your Friends tab. or ask in the{" "}
+          <a
+            href={server.discord}
+            data-track="discord"
+            data-placement="consoles"
+          >
+            discord
+          </a>
+          .
+        </p>
+        <p class="credit">
+          <a href={server.bedrockConnect.url}>BedrockConnect</a> is run by its
+          own volunteers, not by The Storm.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="tone-cream">
+    <p class="wordmark">The Storm</p>
+    <nav aria-label="More from The Storm">
+      <a href={server.docs} data-track="docs" data-placement="footer">
+        player docs
+      </a>
+      <a href={server.map}>live map</a>
+      <a href={server.forum}>forum</a>
+    </nav>
+  </footer>
+</Layout>

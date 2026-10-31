@@ -75,6 +75,11 @@
       "sessionReplay": true
     },
     {
+      "key": "landing-pages",
+      "hostname": "public.ts-mc.net",
+      "sessionReplay": true
+    },
+    {
       "key": "wiki",
       "hostname": "wiki.sjer.red",
       "sessionReplay": true

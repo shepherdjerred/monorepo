@@ -728,6 +728,23 @@
       }
     },
     {
+      "id": "landing-pages",
+      "title": "Landing pages",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:landing-pages",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["landing-pages"]
+      }
+    },
+    {
       "id": "statically-typed",
       "title": "Statically Typed",
       "lifecycle": "active",
@@ -2953,6 +2970,14 @@
       "configurationRevisionId": "wiki-sjer-red/prod/1"
     },
     {
+      "id": "landing-pages/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "landing-pages/prod/1",
+      "configurationRevisionId": "landing-pages/prod/1"
+    },
+    {
       "id": "statically-typed/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -4295,6 +4320,11 @@
       "rule": "any-accepted"
     },
     {
+      "dependent": "landing-pages/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
       "dependent": "loki/prod",
       "prerequisite": "argocd/prod",
       "rule": "any-accepted"
@@ -5312,6 +5342,11 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "home/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "landing-pages/prod",
       "rule": "any-accepted"
     },
     {

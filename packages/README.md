@@ -56,6 +56,7 @@ hold only scoped invariants that agents must keep in context.
 | [statically-typed](statically-typed/)           | Minimal Berkeley Mono anchor page with a Bun build             |
 | [resume](resume/)                               | LaTeX resume, built and deployed from CI                       |
 | [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)              |
+| [landing-pages](landing-pages/)                 | Shared landing pages at `public.ts-mc.net` (Astro)             |
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin   |
 | [glitter-boys](glitter-boys/)                   | Glitter Boys homepage and game setup guides (Astro/Starlight)  |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                                 |

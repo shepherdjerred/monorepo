@@ -61,6 +61,11 @@ resource "aws_s3_bucket" "ts_mc_docs" {
   bucket = "ts-mc-docs"
 }
 
+# public.ts-mc.net: shared landing and campaign pages (packages/landing-pages).
+resource "aws_s3_bucket" "landing_pages" {
+  bucket = "landing-pages"
+}
+
 resource "aws_s3_bucket" "webring" {
   bucket = "webring"
 }
@@ -196,6 +201,7 @@ locals {
     "cook"                = ["_astro/"]
     "cross-compilers"     = ["_astro/"]
     "stocks-sjer-red"     = ["_astro/"]
+    "landing-pages"       = ["_astro/"]
     "wiki-sjer-red"       = ["_astro/"]
     "better-skill-capped" = ["assets/"]
     "ts-mc"               = ["_astro/"]
@@ -222,6 +228,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.cook,
     aws_s3_bucket.cross_compilers,
     aws_s3_bucket.stocks_sjer_red,
+    aws_s3_bucket.landing_pages,
     aws_s3_bucket.wiki_sjer_red,
     aws_s3_bucket.better_skill_capped,
     aws_s3_bucket.ts_mc,

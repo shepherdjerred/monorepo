@@ -1,0 +1,20 @@
+---
+import Base from "../layouts/Base.astro";
+import "../styles/host.css";
+---
+
+<Base
+  pageKey="404"
+  title="Not found · public.ts-mc.net"
+  description="This page does not exist."
+  themeColor="#fafaf9"
+  noindex
+>
+  <link slot="head" rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <main>
+    <h1>Not found</h1>
+    <p>
+      This page does not exist. <a href="/">See all pages</a>.
+    </p>
+  </main>
+</Base>
