@@ -267,7 +267,6 @@ FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
-COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=discord-plays-pokemon
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # The smoke harness writes its temporary config at the application's normal

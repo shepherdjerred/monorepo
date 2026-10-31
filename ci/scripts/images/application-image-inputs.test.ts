@@ -85,6 +85,27 @@ describe("application image inputs", () => {
     );
   });
 
+  test("only copies ci/ files that exist into image build contexts", async () => {
+    const missing: string[] = [];
+    const dockerfiles = new Bun.Glob("**/*Dockerfile").scan({
+      cwd: repoRoot,
+      onlyFiles: true,
+    });
+    for await (const path of dockerfiles) {
+      if (path.includes("node_modules/") || path.startsWith(".claude/")) {
+        continue;
+      }
+      const text = await read(path);
+      for (const match of text.matchAll(/^COPY\s+(?:--\S+\s+)*(ci\/\S+)\s/gm)) {
+        const source = match[1] ?? "";
+        if (!(await Bun.file(`${repoRoot}/${source}`).exists())) {
+          missing.push(`${path}: ${source}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
   test("ships the local in-image smoke harness", async () => {
     const dockerfile = await read("ci/application-image-smoke.Dockerfile");
     expect(dockerfile).toContain("ci/scripts/images/smoke-app-in-image.ts");

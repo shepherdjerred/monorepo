@@ -84,7 +84,6 @@ CMD ["bun", "src/server/index.ts"]
 
 FROM runtime AS smoke
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
-COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=alert-dashboard
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Exercise Prisma as the deployed non-root user so a missing baked engine fails

@@ -77,7 +77,6 @@ CMD ["bun", "src/server/index.ts"]
 
 FROM runtime AS smoke
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
-COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=delivery
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 RUN bunx --no-install prisma --version && bun /app/ci/scripts/images/smoke-app-in-image.ts
