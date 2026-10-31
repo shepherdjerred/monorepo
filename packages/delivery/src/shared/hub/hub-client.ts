@@ -3,6 +3,8 @@ import { ApprovalQueueItemSchema } from "#shared/model/route-contract.ts";
 import {
   ActivityPageSchema,
   BuildPageSchema,
+  CommitListSchema,
+  CommitStatusSchema,
   DeploymentPageSchema,
   EnvironmentDetailSchema,
   ExecutionPageSchema,
@@ -33,6 +35,9 @@ export function createHubClient(options: RequestOptions) {
   const request = createRequester(options);
   return {
     hub: () => request("/hub", HubOverviewSchema),
+    commits: () => request("/commits", CommitListSchema),
+    commit: (sha: string) =>
+      request(`/commits/${segment(sha)}`, CommitStatusSchema),
     pipeline: (serviceId: string) =>
       request(
         `/services/${segment(serviceId)}/pipeline`,

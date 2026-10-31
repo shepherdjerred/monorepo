@@ -15,6 +15,7 @@ import { awaitsDecision } from "#client/model/view.ts";
 export type RouterContext = { queryClient: QueryClient; feed: ChangeFeed };
 
 const NAVIGATION = [
+  { to: "/commits", label: "Commits", exact: false },
   { to: "/pipelines", label: "Pipelines", exact: false },
   { to: "/deployments", label: "Deployments", exact: false },
   { to: "/approvals", label: "Approvals", exact: false },
@@ -87,7 +88,7 @@ function RootLayout() {
         Skip to content
       </a>
       <header className="masthead">
-        <Link to="/pipelines" className="brand">
+        <Link to="/commits" className="brand">
           <span className="brand-mark" aria-hidden="true">
             ⟶
           </span>

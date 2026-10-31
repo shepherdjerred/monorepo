@@ -60,7 +60,7 @@ test("routine Minecraft restart keeps the ordinary lock notice without preservat
 test("select an immutable release, inspect queued execution, and cancel safely", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/pipelines");
   await page
     .getByRole("row")
     .filter({ has: page.getByRole("link", { name: "Arcade", exact: true }) })
