@@ -24,6 +24,9 @@
   // `bunx` calls use BUN_INSTALL instead.
   "globalPassThroughEnv": [
     "CI_FORMAT_CACHE_ROOT",
+    // Vitest worker cap that scripts/verify.ts sets for its parallel tasks;
+    // it changes scheduling, not results.
+    "CI_VITEST_MAX_WORKERS",
     "GRADLE_RO_DEP_CACHE",
     "BUN_INSTALL",
     "CARGO_INCREMENTAL",

@@ -60,6 +60,17 @@ const coverageExclusions =
         ]
       : ["**/node_modules/**"];
 
+function vitestMaxWorkers(value: string | undefined): number {
+  if (value === undefined) return 4;
+  const workers = Number(value);
+  if (!Number.isInteger(workers) || workers < 1) {
+    throw new Error(
+      `CI_VITEST_MAX_WORKERS must be a positive integer: ${value}`,
+    );
+  }
+  return workers;
+}
+
 function replaceBunImportMetaDir(code: string, filename: string): string {
   const directory = JSON.stringify(path.dirname(filename));
   const filePath = JSON.stringify(filename);
@@ -189,9 +200,9 @@ export default {
   test: {
     env: { TZ: "UTC" },
     pool: "forks",
-    // A verify run admits three package tasks at once on a 12-CPU pod.
-    // Bound each test runner as well, or nested worker pools oversubscribe it.
-    maxWorkers: 4,
+    // Verify runs several package tasks at once on a 12-CPU pod and sets
+    // CI_VITEST_MAX_WORKERS so nested worker pools cannot oversubscribe it.
+    maxWorkers: vitestMaxWorkers(process.env["CI_VITEST_MAX_WORKERS"]),
     exclude: [
       ...defaultTestExclude,
       // Globs, so forward slashes: `path.join` gives backslashes on Windows,

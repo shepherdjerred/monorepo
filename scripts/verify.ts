@@ -60,6 +60,9 @@ const turboTasks = [
   "test:contract",
 ] as const;
 
+const VERIFY_CONCURRENCY = 6;
+const VERIFY_VITEST_MAX_WORKERS = 2;
+
 type GitValidator = (command: readonly string[]) => Promise<number>;
 type ChangedFilesReader = (
   base: string,
@@ -209,10 +212,14 @@ export async function main(
       "run",
       ...turboTasks,
       "--continue",
-      // The CI verify pod has a 12-CPU limit. Several package test tasks each
-      // start their own Vitest workers, so Turbo's default parallelism can
-      // overwhelm the pod before any individual test reaches its timeout.
-      ...(hasConcurrencyOverride ? [] : ["--concurrency=3"]),
+      // The CI verify pod has a 12-CPU limit. Most tasks are short lint,
+      // typecheck and root checks that queued behind long test suites at
+      // three slots, so Turbo runs six. Vitest workers are what oversubscribe
+      // the pod, so each suite is capped at VERIFY_VITEST_MAX_WORKERS instead:
+      // six suites at two workers stay within the limit.
+      ...(hasConcurrencyOverride
+        ? []
+        : [`--concurrency=${VERIFY_CONCURRENCY}`]),
       ...affectedFilters,
       ...forwardedArgs,
     ],
@@ -220,7 +227,12 @@ export async function main(
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-      env: await rootCheckEnvironment(environment),
+      env: {
+        ...(await rootCheckEnvironment(environment)),
+        CI_VITEST_MAX_WORKERS:
+          environment["CI_VITEST_MAX_WORKERS"] ??
+          String(VERIFY_VITEST_MAX_WORKERS),
+      },
     },
   );
   const turboExitCode = await turbo.exited;
