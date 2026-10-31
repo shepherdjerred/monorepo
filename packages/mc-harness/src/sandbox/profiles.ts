@@ -159,7 +159,7 @@ function stormDevProfile(
       // TheStorm requires bootstrap Flipt settings even when rollout checks
       // are intentionally inert in a disposable local sandbox.
       FLIPT_URL: "http://127.0.0.1:9",
-      FLIPT_ENVIRONMENT: "beta",
+      FLIPT_ENVIRONMENT: "prod",
       // Loads an empty creative plot world before the module enables. Production
       // does not set this, so a missing restored world still refuses to start.
       THESTORM_CREATIVE_BOOTSTRAP: "true",
@@ -248,7 +248,7 @@ function stormImageProfile(
       // Keep companion gameplay suspended while the disposable server boots;
       // the unreachable Flipt endpoint makes rollout evaluation fail closed.
       FLIPT_URL: "http://127.0.0.1:9",
-      FLIPT_ENVIRONMENT: "beta",
+      FLIPT_ENVIRONMENT: "prod",
       ...bridgeAndRconEnv(secrets),
     },
     plugins: [],

@@ -271,6 +271,7 @@ export async function resolveIssueCommentReview(input: {
     token: input.token,
     provider: input.provider,
     headPushedAt: input.headPushedAt,
+    headSha: input.head,
   });
   if (blockedReason !== null) {
     return {

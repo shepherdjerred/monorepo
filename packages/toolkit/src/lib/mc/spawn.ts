@@ -73,30 +73,45 @@ export async function startMcDaemon(
   await rm(SOCKET_PATH, { force: true });
   await rm(STATE_PATH, { force: true });
 
-  // Detached + stdio ignore: the daemon writes its own logs to LOGS_DIR.
+  // Pipe stderr to capture startup diagnostics until the daemon is ready or exits.
   const child = spawn(bun, ["run", entry], {
     cwd: root,
     detached: true,
-    stdio: "ignore",
+    stdio: ["ignore", "ignore", "pipe"],
     env: { ...Bun.env, TOOLKIT_MC_TTL_SECONDS: String(ttlSeconds) },
   });
-  child.unref();
 
-  const status = await awaitDaemonReady(() => child.exitCode);
-  assertProtocol(status);
-  return status;
+  let stderr = "";
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk: string) => {
+    stderr += chunk;
+  });
+
+  try {
+    const status = await awaitDaemonReady(
+      () => child.exitCode,
+      () => stderr,
+    );
+    assertProtocol(status);
+    return status;
+  } finally {
+    child.stderr.destroy();
+    child.unref();
+  }
 }
 
-async function awaitDaemonReady(
+export async function awaitDaemonReady(
   exitCode: () => number | null,
+  getStderr: () => string = () => "",
 ): Promise<StatusResponse> {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     await Bun.sleep(300);
     const code = exitCode();
     if (code !== null) {
+      const stderr = getStderr();
       throw new Error(
-        `mc daemon exited early with code ${String(code)}. Logs: ${daemonLogPath()}`,
+        `mc daemon exited early with code ${String(code)}: ${stderr.trim() || `Logs: ${daemonLogPath()}`}`,
       );
     }
     if (await pathExists(SOCKET_PATH)) {

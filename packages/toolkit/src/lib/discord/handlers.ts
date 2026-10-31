@@ -182,7 +182,8 @@ async function handleSend(ctx: DaemonContext, body: unknown): Promise<unknown> {
 
 async function handleRead(ctx: DaemonContext, body: unknown): Promise<unknown> {
   const request = ReadRequestSchema.parse(body);
-  if (ctx.bot !== null) {
+  const as: IdentityKind = request.as ?? (ctx.bot === null ? "user" : "bot");
+  if (as === "bot") {
     const channel = await requireBotChannel(ctx, request.channelId);
     const fetched = await channel.messages.fetch({ limit: request.limit });
     const messages = [...fetched.values()]

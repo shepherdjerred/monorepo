@@ -147,7 +147,7 @@ export function createResolver<D extends Record<string, ConfigKeyDefinition>>(
     }
     if (lastValues.has(cacheKey)) {
       const previous = lastValues.get(cacheKey);
-      if (!Object.is(previous, next)) {
+      if (!Object.is(previous, next) && !Bun.deepEquals(previous, next)) {
         onChange({ key, previous, next, source });
       }
     } else if (lastValues.size >= limit) {

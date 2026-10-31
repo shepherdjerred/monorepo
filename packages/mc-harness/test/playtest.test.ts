@@ -241,7 +241,7 @@ describe("profiles and staging", () => {
     ]);
     expect(storm.env).toMatchObject({
       FLIPT_URL: "http://127.0.0.1:9",
-      FLIPT_ENVIRONMENT: "beta",
+      FLIPT_ENVIRONMENT: "prod",
       THESTORM_CREATIVE_BOOTSTRAP: "true",
     });
     const stormConfig = storm.staged.find(
@@ -269,7 +269,7 @@ describe("profiles and staging", () => {
       const image = resolveProfile(publishedStorm(profile), secrets);
       expect(image.env).toMatchObject({
         FLIPT_URL: "http://127.0.0.1:9",
-        FLIPT_ENVIRONMENT: "beta",
+        FLIPT_ENVIRONMENT: "prod",
         RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
       });
       expect(image.staged).toHaveLength(2);

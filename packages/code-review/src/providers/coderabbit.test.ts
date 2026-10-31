@@ -11,6 +11,7 @@ import type { ReviewThread } from "../types.ts";
 import {
   CODERABBIT_LOGIN,
   coderabbitProvider,
+  isCoderabbitRateLimitedStatus,
   parseCoderabbitReviewBodies,
   parseCoderabbitSeverity,
 } from "./coderabbit.ts";
@@ -295,5 +296,27 @@ describe("coderabbitProvider", () => {
     expect(blocked?.reason).toBe("usage-limited");
     expect(matchesBlockedSignal(blocked!, RATE_LIMITED)).toBe(true);
     expect(matchesBlockedSignal(blocked!, INLINE_MAJOR)).toBe(false);
+  });
+
+  test("identifies CodeRabbit rate-limited commit status", () => {
+    expect(
+      isCoderabbitRateLimitedStatus("CodeRabbit", "Review rate limited"),
+    ).toBe(true);
+    expect(
+      isCoderabbitRateLimitedStatus("coderabbit", "Review rate limit reached"),
+    ).toBe(true);
+    expect(
+      isCoderabbitRateLimitedStatus("CODERABBIT", "Organization rate limit"),
+    ).toBe(true);
+    expect(
+      isCoderabbitRateLimitedStatus("CodeRabbit", "Review completed"),
+    ).toBe(false);
+    expect(
+      isCoderabbitRateLimitedStatus("other-context", "Review rate limited"),
+    ).toBe(false);
+    expect(isCoderabbitRateLimitedStatus(null, "Review rate limited")).toBe(
+      false,
+    );
+    expect(isCoderabbitRateLimitedStatus("CodeRabbit", null)).toBe(false);
   });
 });

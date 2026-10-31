@@ -88,10 +88,10 @@
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^build", "generate"]
+      "dependsOn": ["^build", "^generate", "generate"]
     },
     "test": {
-      "dependsOn": ["^build", "generate"],
+      "dependsOn": ["^build", "^generate", "generate"],
       "env": ["NODE_ENV"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/vitest.config.ts"]
     },

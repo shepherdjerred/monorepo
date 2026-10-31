@@ -240,6 +240,20 @@ export function parseCoderabbitReviewBodies(
   return findings;
 }
 
+/** True when a GitHub commit status represents CodeRabbit's rate limit block. */
+export function isCoderabbitRateLimitedStatus(
+  context: string | null,
+  description: string | null,
+): boolean {
+  if (context === null || description === null) return false;
+  const c = context.toLowerCase();
+  const d = description.toLowerCase();
+  return (
+    c === "coderabbit" &&
+    (d.includes("rate limited") || d.includes("rate limit"))
+  );
+}
+
 export const coderabbitProvider: ReviewProvider = {
   id: "coderabbit",
   displayName: "CodeRabbit",
@@ -264,7 +278,8 @@ export const coderabbitProvider: ReviewProvider = {
   // of a review (PRs #915/#921), so without this the gate polls to its
   // deadline on a head that will never be reviewed. The notice names both the
   // hourly refill and the exhausted organisation credits; either one means no
-  // review happened for this head.
+  // review happened for this head. CodeRabbit also reports exact-head rate
+  // limits through GitHub commit status (description="Review rate limited").
   detectBlocked: [
     {
       matches: ["rate limited by coderabbit.ai", "Review limit reached"],

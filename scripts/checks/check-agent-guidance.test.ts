@@ -359,4 +359,44 @@ describe("agent guidance compatibility", () => {
       await rm(repositoryRoot, { recursive: true, force: true });
     }
   });
+
+  test("detects drift between ~/AGENTS.md and packages/dotfiles/AGENTS.md", async () => {
+    const tempDir = await mkdtemp(nodePath.join(tmpdir(), "agent-drift-"));
+    try {
+      const homeAgentPath = nodePath.join(tempDir, "AGENTS.md");
+      await writeFile(homeAgentPath, "# Live Home Guidance\n");
+
+      const entries = validFixture();
+      const violations = validateAgentGuidance(entries, {
+        homeAgentPath,
+        liveContent: "# Live Home Guidance\n",
+      });
+      expect(violations).toContainEqual({
+        rule: "personal-agent-drift",
+        path: "packages/dotfiles/AGENTS.md",
+        message: `differs from live ${homeAgentPath}; run 'chezmoi apply' to sync`,
+      });
+
+      // When contents match, no drift violation is reported
+      await writeFile(homeAgentPath, "# Personal\n");
+      const cleanViolations = validateAgentGuidance(entries, {
+        homeAgentPath,
+        liveContent: "# Personal\n",
+      });
+      expect(cleanViolations).toEqual([]);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("ignores drift check if liveContent is undefined", () => {
+    const entries = validFixture();
+    const nonExistentPath = nodePath.join(
+      tmpdir(),
+      "non-existent-agents-file.md",
+    );
+    expect(
+      validateAgentGuidance(entries, { homeAgentPath: nonExistentPath }),
+    ).toEqual([]);
+  });
 });

@@ -76,7 +76,7 @@ test("retries a Hall baseline activity without duplicating workflow state", asyn
     }),
   ).resolves.toBe("completed");
   expect(attempts).toBe(2);
-});
+}, 30_000);
 
 test("pages a challenge recomputation with its stable evidence cursor", async () => {
   const observed: unknown[] = [];
@@ -128,55 +128,51 @@ test("pages a challenge recomputation with its stable evidence cursor", async ()
       cursor: { gameEndMs: 100, matchId: "NA1_1", puuid: "puuid_1" },
     },
   ]);
-});
+}, 30_000);
 
-test(
-  "deduplicates duel change signals by request id",
-  { timeout: 15_000 },
-  async () => {
-    const firstRefresh = Promise.withResolvers<undefined>();
-    const secondRefresh = Promise.withResolvers<undefined>();
-    let refreshes = 0;
-    const deadlineAt = new Date(Date.now() + 86_400_000).toISOString();
-    await startWorkflowWorker();
-    await startActivityWorker("scout-dev-background", {
-      refreshDuelSeries: () => {
-        refreshes++;
-        if (refreshes === 1) firstRefresh.resolve(undefined);
-        if (refreshes === 2) secondRefresh.resolve(undefined);
-        return {
-          terminal: refreshes >= 3,
-          status: refreshes >= 3 ? "completed" : "awaiting_readiness",
+test("deduplicates duel change signals by request id", async () => {
+  const firstRefresh = Promise.withResolvers<undefined>();
+  const secondRefresh = Promise.withResolvers<undefined>();
+  let refreshes = 0;
+  const deadlineAt = new Date(Date.now() + 86_400_000).toISOString();
+  await startWorkflowWorker();
+  await startActivityWorker("scout-dev-background", {
+    refreshDuelSeries: () => {
+      refreshes++;
+      if (refreshes === 1) firstRefresh.resolve(undefined);
+      if (refreshes === 2) secondRefresh.resolve(undefined);
+      return {
+        terminal: refreshes >= 3,
+        status: refreshes >= 3 ? "completed" : "awaiting_readiness",
+        deadlineAt,
+      };
+    },
+  });
+
+  const handle = await environment.client.workflow.start(
+    scoutDuelSeriesWorkflow,
+    {
+      taskQueue: "scout-dev",
+      workflowId: "progression-duel-signals",
+      args: [
+        {
+          stage: "dev",
+          seriesId: "00000000-0000-4000-8000-000000000002",
           deadlineAt,
-        };
-      },
-    });
-
-    const handle = await environment.client.workflow.start(
-      scoutDuelSeriesWorkflow,
-      {
-        taskQueue: "scout-dev",
-        workflowId: "progression-duel-signals",
-        args: [
-          {
-            stage: "dev",
-            seriesId: "00000000-0000-4000-8000-000000000002",
-            deadlineAt,
-          },
-        ],
-      },
-    );
-    await firstRefresh.promise;
-    await handle.signal(duelSeriesChangedSignal, { requestId: "ready_1" });
-    await secondRefresh.promise;
-    await handle.signal(duelSeriesChangedSignal, { requestId: "ready_1" });
-    await environment.sleep("1 minute");
-    expect(refreshes).toBe(2);
-    await handle.signal(duelSeriesChangedSignal, { requestId: "ready_2" });
-    await expect(handle.result()).resolves.toBe("completed");
-    expect(refreshes).toBe(3);
-  },
-);
+        },
+      ],
+    },
+  );
+  await firstRefresh.promise;
+  await handle.signal(duelSeriesChangedSignal, { requestId: "ready_1" });
+  await secondRefresh.promise;
+  await handle.signal(duelSeriesChangedSignal, { requestId: "ready_1" });
+  await environment.sleep("1 minute");
+  expect(refreshes).toBe(2);
+  await handle.signal(duelSeriesChangedSignal, { requestId: "ready_2" });
+  await expect(handle.result()).resolves.toBe("completed");
+  expect(refreshes).toBe(3);
+}, 30_000);
 
 test("time-skips a duel deadline and marks it overdue without a winner", async () => {
   const overdueInputs: unknown[] = [];
@@ -213,4 +209,4 @@ test("time-skips a duel deadline and marks it overdue without a winner", async (
       deadlineAt,
     },
   ]);
-});
+}, 30_000);

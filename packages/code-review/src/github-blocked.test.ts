@@ -43,6 +43,12 @@ describe("matchesBlockedSignal", () => {
   });
 });
 
+function requestUrl(input: unknown): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.toString();
+  return input instanceof Request ? input.url : "";
+}
+
 function mockIssueComments(
   comments: readonly {
     body: string;
@@ -205,6 +211,126 @@ describe("fetchBlockedReason", () => {
         }),
       ).resolves.toBeNull();
       expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+});
+
+describe("fetchBlockedReason commit status", () => {
+  test("returns usage-limited when CodeRabbit reports rate limited via commit status", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes("/comments")) {
+        return Response.json([]);
+      }
+      if (
+        url.includes("/commits/head-123/statuses") ||
+        url.includes("/commits/head-123/status")
+      ) {
+        return Response.json([
+          {
+            context: "CodeRabbit",
+            description: "Review rate limited",
+            state: "error",
+          },
+        ]);
+      }
+      return Response.json({});
+    });
+
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: coderabbitProvider,
+          headPushedAt,
+          headSha: "head-123",
+        }),
+      ).resolves.toBe("usage-limited");
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  test("fetches PR head commit and returns usage-limited on case-insensitive rate limit status", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes("/comments")) {
+        return Response.json([]);
+      }
+      if (url.includes("/pulls/1")) {
+        return Response.json({ head: { sha: "head-from-pr" } });
+      }
+      if (
+        url.includes("/commits/head-from-pr/statuses") ||
+        url.includes("/commits/head-from-pr/status")
+      ) {
+        return Response.json([
+          {
+            context: "coderabbit",
+            description: "Review rate limit exceeded",
+            state: "failure",
+          },
+        ]);
+      }
+      return Response.json({});
+    });
+
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: coderabbitProvider,
+          headPushedAt,
+        }),
+      ).resolves.toBe("usage-limited");
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  test("ignores unrelated commit statuses", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes("/comments")) {
+        return Response.json([]);
+      }
+      if (
+        url.includes("/commits/head-123/statuses") ||
+        url.includes("/commits/head-123/status")
+      ) {
+        return Response.json([
+          {
+            context: "CodeRabbit",
+            description: "Review completed successfully",
+            state: "success",
+          },
+          {
+            context: "ci/woodpecker",
+            description: "Pipeline succeeded",
+            state: "success",
+          },
+        ]);
+      }
+      return Response.json({});
+    });
+
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: coderabbitProvider,
+          headPushedAt,
+          headSha: "head-123",
+        }),
+      ).resolves.toBeNull();
     } finally {
       vi.restoreAllMocks();
     }

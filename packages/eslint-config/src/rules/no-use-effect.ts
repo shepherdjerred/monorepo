@@ -36,7 +36,6 @@ export const noUseEffect = createRule<[], MessageIds>({
       useEffectStateSync:
         "useEffect is being used to synchronize state based on props. Use the key prop to reset state when prop changes, or calculate derived values during rendering instead.",
     },
-    fixable: "code",
     schema: [],
   },
   defaultOptions: [],
@@ -103,11 +102,6 @@ export const noUseEffect = createRule<[], MessageIds>({
           context.report({
             node,
             messageId: suggestion,
-            fix(fixer) {
-              // Provide a comment removal fix - this removes the useEffect call
-              // but doesn't auto-fix the logic (too complex to determine the right fix)
-              return fixer.remove(node);
-            },
           });
         }
       },

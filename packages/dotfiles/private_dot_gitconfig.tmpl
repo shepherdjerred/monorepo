@@ -70,6 +70,10 @@
 # `git-spice commit create -m "type(scope): …"`. See the monorepo-delivery skill.
 [spice "branchCreate"]
   commit = false
+[spice "branchMerge"]
+	method = squash
+[spice "merge"]
+	method = squash
 
 [include]
   path = ~/.config/delta/themes/catppuccin.gitconfig

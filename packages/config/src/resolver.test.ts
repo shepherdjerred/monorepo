@@ -353,6 +353,62 @@ describe("change detection", () => {
     expect(changes).toEqual(["a→b"]);
   });
 
+  test("does not notify onChange when an array or object flag is refreshed with identical contents", async () => {
+    let currentArray = ["en"];
+    let currentObject = { language: "en" };
+    const changes: string[] = [];
+    const resolver = defineConfig({
+      definition: {
+        languages: {
+          schema: z.array(z.string()),
+          sources: ["flag", "default"],
+          default: ["en"],
+        },
+        settings: {
+          schema: z.object({ language: z.string() }),
+          sources: ["flag", "default"],
+          default: { language: "en" },
+        },
+      } as const,
+      sources: {
+        flag: {
+          name: "flag",
+          get: (names) => {
+            if (names.key === "languages") {
+              return Promise.resolve({ value: currentArray });
+            }
+            return names.key === "settings"
+              ? Promise.resolve({ value: currentObject })
+              : Promise.resolve(undefined);
+          },
+        },
+      },
+      hooks: {
+        onChange: (event) => {
+          changes.push(event.key);
+        },
+      },
+    });
+
+    await resolver.get("languages");
+    await resolver.get("settings");
+    expect(changes).toEqual([]);
+
+    // Refresh with freshly materialized arrays/objects with identical contents
+    currentArray = ["en"];
+    currentObject = { language: "en" };
+    await resolver.get("languages");
+    await resolver.get("settings");
+    expect(changes).toEqual([]);
+
+    // Now change to genuinely different contents
+    currentArray = ["fr"];
+    currentObject = { language: "fr" };
+    await resolver.get("languages");
+    await resolver.get("settings");
+    expect(changes).toEqual(["languages", "settings"]);
+  });
+
   test("a targeted key does not report a change across different entities", async () => {
     // A per-guild flag legitimately answers differently per guild. Keyed on the
     // config key alone, alternating reads would log a "change" every time and

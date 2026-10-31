@@ -25,6 +25,21 @@ describe("basePaperEnv", () => {
       expect(env["EULA"]).toBe("TRUE");
       expect(env["ONLINE_MODE"]).toBe("FALSE");
       expect(env["SKIP_DOWNLOAD_DEFAULTS"]).toBe("true");
+      expect(env["MEMORY"]).toBe("2G");
+    }
+  });
+
+  it("allows overriding MEMORY via MC_SANDBOX_MEMORY", () => {
+    const original = Bun.env["MC_SANDBOX_MEMORY"];
+    try {
+      Bun.env["MC_SANDBOX_MEMORY"] = "4G";
+      expect(basePaperEnv("seeded")["MEMORY"]).toBe("4G");
+    } finally {
+      if (original === undefined) {
+        delete Bun.env["MC_SANDBOX_MEMORY"];
+      } else {
+        Bun.env["MC_SANDBOX_MEMORY"] = original;
+      }
     }
   });
 });
