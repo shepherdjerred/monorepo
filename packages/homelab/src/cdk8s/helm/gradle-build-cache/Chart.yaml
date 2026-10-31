@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gradle-build-cache
+description: Gradle build cache node shared by CI's Gradle builds
+type: application
+version: "$version"
+appVersion: "$appVersion"

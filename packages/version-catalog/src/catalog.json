@@ -923,6 +923,21 @@
       ]
     },
     {
+      "name": "gradle/build-cache-node",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "21.2@sha256:5bacbee677a967ee239a0e68f6e6a93659bbc2d230d0f196071882c910f77826",
+      "notes": [
+        "Remote Gradle build cache shared by CI's The Storm builds. Gradle stops distributing and supporting the standalone node after 2026-12-31; the pinned image keeps working but receives no fixes."
+      ]
+    },
+    {
       "name": "kueue",
       "category": "upstream",
       "artifactType": "helm-chart",

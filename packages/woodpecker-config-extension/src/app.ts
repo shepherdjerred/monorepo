@@ -11,6 +11,7 @@ import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
+import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
@@ -364,13 +365,17 @@ export function createApp(options: AppOptions): Hono {
       ...step,
       environment: { ...step.environment, CI_REPO_ID: String(repo.id) },
     }));
+    const trustDomain = prVerification ? "pull-request" : "trusted";
     const selected = groupSmallChecks(
-      signRemoteCacheSteps(
-        selectSteps(maintenance.enabled ? separateMaintenance(steps) : steps, {
-          ...selectionContext,
-          changedFiles: changedFiles ?? [],
-        }),
-        prVerification ? "pull-request" : "trusted",
+      grantGradleBuildCache(
+        signRemoteCacheSteps(
+          selectSteps(
+            maintenance.enabled ? separateMaintenance(steps) : steps,
+            { ...selectionContext, changedFiles: changedFiles ?? [] },
+          ),
+          trustDomain,
+        ),
+        trustDomain,
       ),
       emit.performance.grouping,
       prVerification,

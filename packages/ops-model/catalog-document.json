@@ -2233,6 +2233,25 @@
       }
     },
     {
+      "id": "gradle-build-cache",
+      "title": "Gradle build cache",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
+        {
+          "name": "chart:gradle-build-cache",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["gradle-build-cache"],
+        "argoApps": ["gradle-build-cache"]
+      }
+    },
+    {
       "id": "kueue",
       "title": "Kueue",
       "lifecycle": "active",
@@ -3148,7 +3167,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/4"
+      "configurationRevisionId": "argocd/prod/5"
     },
     {
       "id": "chartmuseum/prod",
@@ -3421,6 +3440,14 @@
       "automatic": true,
       "recipeRevisionId": "turbo-cache/prod/1",
       "configurationRevisionId": "turbo-cache/prod/1"
+    },
+    {
+      "id": "gradle-build-cache/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "gradle-build-cache/prod/1",
+      "configurationRevisionId": "gradle-build-cache/prod/1"
     },
     {
       "id": "openebs/prod",
@@ -4092,6 +4119,31 @@
     },
     {
       "dependent": "golink/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gradle-build-cache/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gradle-build-cache/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gradle-build-cache/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gradle-build-cache/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gradle-build-cache/prod",
       "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },

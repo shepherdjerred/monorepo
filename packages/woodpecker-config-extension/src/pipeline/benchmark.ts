@@ -7,6 +7,10 @@ import { diagnosticCommands } from "./diagnostics.ts";
 import { cacheSourceSteps } from "./source-cache.ts";
 import { performanceSteps } from "./performance.ts";
 import { signRemoteCacheSteps } from "./turbo-cache.ts";
+import {
+  grantGradleBuildCache,
+  withoutGradleBuildCache,
+} from "./gradle-build-cache.ts";
 import { RAM_SCRATCH } from "./ram-scratch.ts";
 import {
   DISABLED_PERFORMANCE,
@@ -122,7 +126,11 @@ export function benchmarkSteps(
     commands,
     dependsOn: [],
     environment: {
-      ...template.environment,
+      // A cold benchmark measures a build with no shared results, so it must
+      // not load Gradle outputs either.
+      ...(request.cache === "cold"
+        ? withoutGradleBuildCache(template.environment)
+        : template.environment),
       CI_CHANGED_BASE: "",
       CI_BENCHMARK_PROFILE: request.profile,
       CI_BENCHMARK_VARIANT: request.variant,
@@ -147,9 +155,13 @@ export function benchmarkSteps(
           },
         }),
   }));
-  return signRemoteCacheSteps(
-    performanceSteps(cached, options, request.main, false),
-    request.main ? "trusted" : "pull-request",
+  const trustDomain = request.main ? "trusted" : "pull-request";
+  return grantGradleBuildCache(
+    signRemoteCacheSteps(
+      performanceSteps(cached, options, request.main, false),
+      trustDomain,
+    ),
+    trustDomain,
   ).map((candidate) => ({
     ...candidate,
     commands: candidate.commands.map((command) =>
