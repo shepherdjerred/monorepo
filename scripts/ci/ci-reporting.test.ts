@@ -12,13 +12,35 @@ import {
   sanitizeWorkspace,
   syntheticJUnit,
 } from "./ci-reporting.ts";
-import { TestManifestSchema } from "./test-manifest-schema.ts";
+import { TestManifestSchema, type TestStep } from "./test-manifest-schema.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
 const WorkspacePackageSchema = z.object({
   scripts: z.record(z.string(), z.string()).optional(),
 });
+
+/**
+ * A workspace runs its manifest steps through one test:ci script, or through
+ * test:ci:<group> scripts that Turbo reaches via a transit test:ci task.
+ */
+function expectTestCiScripts(
+  scripts: Readonly<Record<string, string>>,
+  steps: readonly TestStep[],
+  relativeRunner: string,
+): void {
+  const groups = [...new Set(steps.flatMap((step) => step.group ?? []))];
+  if (groups.length === 0) {
+    expect(scripts["test:ci"]).toBe(`bun ${relativeRunner}`);
+    return;
+  }
+  expect(scripts["test:ci"]).toBeUndefined();
+  for (const group of groups) {
+    expect(scripts[`test:ci:${group}`]).toBe(
+      `bun ${relativeRunner} --group ${group}`,
+    );
+  }
+}
 
 describe("CI reporting boundaries", () => {
   test("applies defaults to unset and empty environment values", () => {
@@ -434,6 +456,7 @@ describe("CI reporting manifest", () => {
           "scripts/ci/delivery-handover-root.test.ts",
           "scripts/tofu/credential-handoff.test.ts",
           "src/talos/catalog-pins.test.ts",
+          "scripts/homelab-build-inputs.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
         ],
       },
@@ -483,7 +506,7 @@ describe("CI reporting manifest", () => {
           .relative(directory, "scripts/ci/run-ci-test.ts")
           .split(path.sep)
           .join("/");
-        expect(scripts["test:ci"]).toBe(`bun ${relativeRunner}`);
+        expectTestCiScripts(scripts, manifestEntry.steps, relativeRunner);
         expect(scripts["test:report"]).toBeUndefined();
       }
       if (noTestDirectories.has(directory)) {
@@ -561,6 +584,13 @@ describe("test:ci runner inputs", () => {
         input.replace("$TURBO_ROOT$/", ""),
       );
     }
+    // The shared Vitest config re-runs tests, not every build and lint.
+    expect(root.globalDependencies).not.toContain("vitest.config.ts");
+    for (const task of ["test", "test:ci"]) {
+      expect(root.tasks[task]?.inputs).toEqual(
+        expect.arrayContaining(["$TURBO_ROOT$/vitest.config.ts"]),
+      );
+    }
     // A package override replaces the root inputs unless it extends them.
     const PackageTurboSchema = z.object({
       tasks: z
@@ -583,9 +613,14 @@ describe("test:ci runner inputs", () => {
       const config = PackageTurboSchema.parse(
         Bun.JSONC.parse(await turboFile.text()),
       );
-      const inputs = config.tasks?.["test:ci"]?.inputs;
-      if (inputs === undefined || inputs[0] === "$TURBO_EXTENDS$") continue;
-      expect(inputs, directory).toEqual(expect.arrayContaining(runnerInputs));
+      for (const [task, definition] of Object.entries(config.tasks ?? {})) {
+        if (task !== "test:ci" && !task.startsWith("test:ci:")) continue;
+        const inputs = definition.inputs;
+        if (inputs === undefined || inputs[0] === "$TURBO_EXTENDS$") continue;
+        expect(inputs, `${directory}#${task}`).toEqual(
+          expect.arrayContaining(runnerInputs),
+        );
+      }
     }
   });
 });

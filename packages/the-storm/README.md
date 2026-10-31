@@ -96,6 +96,25 @@ outside CI. Run the suites relevant to the change locally and record the
 commands and results in the PR's verification evidence. This policy is a
 Minecraft-only exception; other packages retain their normal CI gates.
 
+The headless whole-match bot simulations are part of that acceptance. Their
+classes carry the JUnit tag `simulation`; the Gradle `test` task excludes the
+tag, so CI never runs them. Run them after changing bot behavior, rwf match
+rules, kits or shipped maps:
+
+```bash
+cd packages/the-storm/plugin
+mise exec -- gradle :rwfbots:simulationTest
+```
+
+Tag a new test `simulation` when it plays whole matches or long scenarios
+rather than checking one unit of behavior.
+
+CI splits the remaining suites into two Turbo chains with separate cache keys.
+The JVM chain (`build`, `typecheck:jvm`, `lint:jvm`, `test:ci:jvm`) hashes only
+the files Gradle reads, so unrelated TypeScript packages never re-run it. The
+TypeScript tools chain (`typecheck:ts`, `lint:ts`, `test:ci:tools`) keeps the
+workspace dependencies its imports need.
+
 The disposable fixture plugin enables before TheStorm to prepare its synthetic
 worlds. It releases shared plugin resources on TheStorm's disable event, before
 the product classloader closes; later fixture shutdown does not repeat cleanup.
@@ -3626,8 +3645,8 @@ with its own line pool and the same delivery limits.
 `adapter.remote.FliptChatGate` evaluates the independent managed chat gate off
 the main thread. `RwfBotsPaper` wires its refresh loop into the chat director;
 the settings, targeting and environment values are in the feature flags
-reference above. `verifyManagedChatFlag` checks the client's keys against
-`packages/feature-flags` at build time.
+reference above. `scripts/check-managed-flags.ts` checks the client's keys
+against `packages/feature-flags` in the `lint:ts` task.
 
 Lobby life. Before the match the bots act like players waiting for it.
 `LobbyTicker` (`adapter.paper`, driven by `BotTicker` while rwf's phase is

@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
  * their own bomb less than 40% of the time (miner-dispute red 0.02, hemispheres blue 0.12), their
  * anchors holding cover 13 to 25 blocks out.
  */
+@Tag("simulation")
 final class HomeGuardPlayTest {
 
   /** Where the first anchor is checked: every shipped map the sim loads. */

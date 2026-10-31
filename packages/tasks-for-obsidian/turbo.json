@@ -50,7 +50,12 @@
     // server change invalidates this task via that task's hash.
     "test:contract": {
       "dependsOn": ["tasknotes-server#typecheck"],
-      "inputs": ["contract-tests/**", "src/data/**", "src/domain/**"]
+      "inputs": [
+        "$TURBO_ROOT$/vitest.config.ts",
+        "contract-tests/**",
+        "src/data/**",
+        "src/domain/**"
+      ]
     },
     // The sync suite is driven by the shared JSON scenario corpus in
     // packages/tasknotes-fixtures, which the Rust core runs too. It is read
@@ -59,6 +64,7 @@
     // $TURBO_DEFAULT$ keeps the normal package files in the hash.
     "test": {
       "inputs": [
+        "$TURBO_ROOT$/vitest.config.ts",
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/tasknotes-fixtures/**"
       ]

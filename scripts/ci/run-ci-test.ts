@@ -17,8 +17,14 @@ import {
 } from "./gradle-junit.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
-if (process.argv.slice(2).length > 0) {
-  throw new Error(`Unknown arguments: ${process.argv.slice(2).join(", ")}`);
+const cliArguments = process.argv.slice(2);
+const [groupFlag, groupName, ...extraArguments] = cliArguments;
+const requestedGroup =
+  groupFlag === "--group" && extraArguments.length === 0
+    ? groupName
+    : undefined;
+if (requestedGroup === undefined && cliArguments.length > 0) {
+  throw new Error(`Unknown arguments: ${cliArguments.join(", ")}`);
 }
 const manifest = TestManifestSchema.parse(
   await Bun.file(
@@ -39,6 +45,21 @@ if (workspaceEntry === undefined) {
   );
 }
 const workspace = workspaceEntry;
+const groups = new Set(
+  workspace.steps.flatMap((step) =>
+    step.group === undefined ? [] : [step.group],
+  ),
+);
+if (requestedGroup === undefined && groups.size > 0) {
+  throw new Error(
+    `${workspace.package} splits its CI tests into groups; pass --group with one of: ${[...groups].join(", ")}`,
+  );
+}
+if (requestedGroup !== undefined && !groups.has(requestedGroup)) {
+  throw new Error(
+    `${workspace.package} has no CI test group ${requestedGroup}`,
+  );
+}
 const nestedWorkspaceDirectories = [
   ...manifest.workspaces,
   ...manifest.testlessWorkspaces,
@@ -269,7 +290,9 @@ function expectedCoveragePath(
     : path.join(rawCoverageDirectory, artifactFilename);
 }
 
+// Report names keep each step's manifest index, so groups never collide.
 for (const [index, step] of workspace.steps.entries()) {
+  if (step.group !== requestedGroup) continue;
   const name = testStepReportName(step, index);
   const reportPath = path.resolve(outputDirectory, `${name}.xml`);
   await removeExistingReport(reportPath);

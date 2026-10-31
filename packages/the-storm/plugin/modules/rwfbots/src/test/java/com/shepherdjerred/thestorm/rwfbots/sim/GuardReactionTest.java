@@ -10,9 +10,11 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /** A bomb's guards meet an attacker on its way in, not once it is already at the bomb. */
+@Tag("simulation")
 final class GuardReactionTest {
 
   /** Closer than this to the bomb, an attacker is already on it. */

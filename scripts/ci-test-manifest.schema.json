@@ -53,6 +53,10 @@
                   "properties": {
                     "runner": { "const": "vitest" },
                     "name": { "type": "string", "minLength": 1 },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*$"
+                    },
                     "runtime": { "enum": ["bun", "node"] },
                     "runtimeReason": { "type": "string", "minLength": 1 },
                     "runtimeArgs": {
@@ -72,6 +76,10 @@
                   "properties": {
                     "runner": { "const": "go" },
                     "name": { "type": "string", "minLength": 1 },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*$"
+                    },
                     "args": {
                       "type": "array",
                       "items": { "type": "string" }
@@ -85,6 +93,10 @@
                   "properties": {
                     "runner": { "const": "cargo" },
                     "name": { "type": "string", "minLength": 1 },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*$"
+                    },
                     "args": {
                       "type": "array",
                       "items": { "type": "string" }
@@ -98,6 +110,10 @@
                   "properties": {
                     "runner": { "const": "dotnet" },
                     "name": { "type": "string", "minLength": 1 },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*$"
+                    },
                     "args": {
                       "type": "array",
                       "minItems": 1,
@@ -125,6 +141,10 @@
                   "properties": {
                     "runner": { "const": "gradle" },
                     "name": { "type": "string", "minLength": 1 },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*$"
+                    },
                     "args": {
                       "type": "array",
                       "minItems": 1,
@@ -139,6 +159,10 @@
                   "properties": {
                     "runner": { "const": "command" },
                     "name": { "type": "string", "minLength": 1 },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*$"
+                    },
                     "command": {
                       "type": "array",
                       "minItems": 1,

@@ -28,7 +28,11 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/ci/**"]
     },
     "test": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/ci/scripts/**"]
+      "inputs": [
+        "$TURBO_ROOT$/vitest.config.ts",
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/ci/scripts/**"
+      ]
     },
     "test:ci": {
       "inputs": [

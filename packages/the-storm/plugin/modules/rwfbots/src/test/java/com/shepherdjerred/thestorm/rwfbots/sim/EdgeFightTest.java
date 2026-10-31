@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.List;
 import java.util.SplittableRandom;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
  * bot deaths came off an edge, 5 of them on hemispheres' diagonal bridge. A bot keeps ground behind
  * itself and, when it can, puts its enemy's back to the drop.
  */
+@Tag("simulation")
 final class EdgeFightTest {
 
   /** A seven-wide bridge over the void between two landings, straight or corner to corner. */

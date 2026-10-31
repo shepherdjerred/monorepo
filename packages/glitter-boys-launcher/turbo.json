@@ -47,6 +47,7 @@
     },
     "test:local": {
       "inputs": [
+        "$TURBO_ROOT$/vitest.config.ts",
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",

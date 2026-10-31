@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SplittableRandom;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
  * In production bow-kit bots got most of their kills in melee (the longbow 10 of 12): an archer
  * that keeps its distance and draws while it backs off kills with its bow.
  */
+@Tag("simulation")
 final class BowKitDuelTest {
 
   /** A flat 64-block stone field with a few pillars. */

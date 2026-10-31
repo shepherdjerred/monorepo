@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.Test;
  * how often it lands a swing, how fast it closes as it swings and how often it is backing off, and
  * how soon a bot struck from behind swings back.
  */
+@Tag("simulation")
 final class ContactFightTest {
 
   /** A flat 64-block stone field. */

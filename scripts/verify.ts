@@ -219,7 +219,7 @@ export async function main(
       // six suites at two workers stay within the limit.
       ...(hasConcurrencyOverride
         ? []
-        : [`--concurrency=${VERIFY_CONCURRENCY}`]),
+        : [`--concurrency=${String(VERIFY_CONCURRENCY)}`]),
       ...affectedFilters,
       ...forwardedArgs,
     ],

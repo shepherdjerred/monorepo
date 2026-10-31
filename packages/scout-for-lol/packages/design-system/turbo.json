@@ -2,6 +2,14 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    "lint": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // ESLint resolves the parent Scout config; it is an input of these
+        // lint tasks only, not a global dependency.
+        "$TURBO_ROOT$/packages/scout-for-lol/eslint.config.ts"
+      ]
+    },
     "build": {
       "dependsOn": ["generate", "^build"],
       // Composition changes the emitted manager, so a composed build must not

@@ -29,7 +29,13 @@
      * dependency, added for the identical race in build 5789.
      */
     "lint": {
-      "dependsOn": ["build", "^build", "generate"]
+      "dependsOn": ["build", "^build", "generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // ESLint resolves the parent Scout config; it is an input of these
+        // lint tasks only, not a global dependency.
+        "$TURBO_ROOT$/packages/scout-for-lol/eslint.config.ts"
+      ]
     },
     "test": {
       "dependsOn": ["build", "^build", "generate"]

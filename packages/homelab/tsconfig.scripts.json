@@ -28,6 +28,7 @@
     "scripts/argocd/argocd.ts",
     "scripts/argocd/argocd-delivery.ts",
     "scripts/argocd/argocd-delivery.test.ts",
+    "scripts/homelab-build-inputs.test.ts",
     "scripts/argocd/argocd-verified-receipt.ts",
     "scripts/argocd/argocd-verified-receipt.test.ts",
     "scripts/argocd/argocd-apply-safety.ts",

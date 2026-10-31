@@ -29,7 +29,13 @@
     // generate and every prisma.competitionParticipant access became an error
     // type (build 5789). Same edge typecheck/test already carry via root.
     "lint": {
-      "dependsOn": ["^build", "generate"]
+      "dependsOn": ["^build", "generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // ESLint resolves the parent Scout config; it is an input of these
+        // lint tasks only, not a global dependency.
+        "$TURBO_ROOT$/packages/scout-for-lol/eslint.config.ts"
+      ]
     },
     // Branding writes data-package imports as text; it executes only its
     // local logger. Application builds belong on the consuming build task.

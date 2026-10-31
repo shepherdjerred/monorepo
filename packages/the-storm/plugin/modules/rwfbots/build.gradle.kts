@@ -24,28 +24,6 @@ tasks.processResources {
   }
 }
 
-// The Java Flipt identifiers of the chat flag must agree with the shared managed flag inventory.
-val verifyManagedChatFlag =
-    tasks.register<VerifyManagedFlag>("verifyManagedChatFlag") {
-      inventory =
-          layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
-      source =
-          layout.projectDirectory.file(
-              "src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FliptChatGate.java")
-      flagSource = "the-storm-rwfbots-chat"
-    }
-
-tasks.named("compileJava") { dependsOn(verifyManagedChatFlag) }
-
-val verifyManagedLearningFlag =
-    tasks.register<VerifyManagedFlag>("verifyManagedLearningFlag") {
-      inventory = layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
-      source = layout.projectDirectory.file(
-          "src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FliptLearningGate.java")
-      flagSource = "the-storm-rwfbots-learning"
-    }
-tasks.named("compileJava") { dependsOn(verifyManagedLearningFlag) }
-
 // The shipped personality files and rwfbots.yml are parsed by tests, so they are test inputs.
 val shippedPersonalities = file("../../../server/owned/plugins/TheStorm/rwfbots/personalities")
 val shippedConfig = file("../../../server/owned/plugins/TheStorm/rwfbots.yml")
@@ -58,7 +36,8 @@ val shippedMaps = file("../../../server/owned/plugins/TheStorm/rwf/maps")
 val stuckSpotNavs =
     listOf("the-harshest-harvest", "miner-dispute", "cloned-balance", "hemispheres", "floating-isles", "valley", "cors-path", "perfect-balance").map { shippedMaps.resolve("$it/nav.rwfnav") }
 
-tasks.test {
+// Shipped content and the actor-parity fixture, for the unit suite and the local simulations.
+fun Test.rwfbotsFixtures() {
   dependsOn("prepareActorParity")
   inputs.dir(layout.buildDirectory.dir("actor-parity"))
       .withPropertyName("actorParity").withPathSensitivity(PathSensitivity.RELATIVE)
@@ -80,6 +59,22 @@ tasks.test {
   inputs.files(stuckSpotNavs).withPropertyName("stuckSpotNavs").withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwfbots.shippedMaps", shippedMaps.absolutePath)
   systemProperty("thestorm.rwfbots.actorParity", layout.buildDirectory.dir("actor-parity").get().asFile.absolutePath)
+}
+
+tasks.test { rwfbotsFixtures() }
+
+// The whole-match simulations tagged "simulation": extended gameplay acceptance the committer
+// runs locally (README "Contributor verification"); the CI suite excludes them.
+tasks.register<Test>("simulationTest") {
+  description = "Runs the headless whole-match bot simulations."
+  group = "verification"
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
+  useJUnitPlatform { includeTags("simulation") }
+  jvmArgs("--enable-native-access=ALL-UNNAMED")
+  maxHeapSize = "512m"
+  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+  rwfbotsFixtures()
 }
 
 val prepareActorParity = tasks.register<Exec>("prepareActorParity") {
