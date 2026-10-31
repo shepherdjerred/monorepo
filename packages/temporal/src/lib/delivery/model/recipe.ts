@@ -143,6 +143,41 @@ export function stepRecipe(
   return sub.definition;
 }
 
+/** The Application steps a `retire-host` deployment runs (E5). */
+const RETIREMENT_STEP_KINDS = new Set<KubernetesStep["kind"]>([
+  "apply-safety",
+  "sync",
+  "worker-rollout",
+]);
+
+/**
+ * The steps a deployment runs: every frozen step of its recipe, except that
+ * a `retire-host` deployment only re-syncs the worker Application with its
+ * retiring host at zero and proves it, as v1 does. It re-selects the
+ * accepted set revision, so it activates no site or plugin archive and
+ * migrates nothing; the Application's oracle suites still run. Each step
+ * keeps its frozen stage key, so resume and recovery read the same stages.
+ */
+export function deploymentSteps(detail: DeploymentDetail): ModelStep[] {
+  const steps = modelSteps(requireModelRecipe(detail));
+  if (detail.deployment.kind !== "retire-host") return steps;
+  const rollout = steps.find(
+    (step) =>
+      step.adapter === "kubernetes" && step.step.kind === "worker-rollout",
+  );
+  if (rollout === undefined)
+    throw new Error("A retire-host deployment froze no worker-rollout step");
+  // A compound recipe retires within the sub-recipe that owns the pool.
+  const prefix = SUB_RECIPE_KEY.exec(rollout.key)?.[0] ?? "";
+  return steps.filter(
+    (step) =>
+      step.key.startsWith(prefix) &&
+      (step.adapter === "test" ||
+        (step.adapter === "kubernetes" &&
+          RETIREMENT_STEP_KINDS.has(step.step.kind))),
+  );
+}
+
 /** The HTTP probes every Application recipe within the recipe declares (4.14). */
 export function oracleProbes(
   recipe: RecipeDefinition,
