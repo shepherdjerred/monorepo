@@ -554,9 +554,14 @@ ownership flag on a terminal result, not a fifth state: the result is kept
   frozen before applying. After applying, the outgoing executor leaves the
   deployment `owned` with a `handoff` marker and a frozen lease that does
   not expire; the successor executor takes ownership by reading the frozen
-  record, verifies acceptance and finishes it. If no successor finishes it
-  while the barrier is held, an operator settles it through a recovery
-  intent. An ambiguous result retains the barrier.
+  record, verifies acceptance and finishes it. Applying may replace the
+  worker running the step itself: when that worker's own shutdown
+  interrupts a sync while the lease is still held, the stage stays running
+  and the same executor runs the step again on the replacement worker,
+  which only reads back the recorded request; a lost lease, a requested
+  cancellation or a failed operation is never such an interruption. If no
+  successor finishes it while the barrier is held, an operator settles it
+  through a recovery intent. An ambiguous result retains the barrier.
 - D9. The API computes an environment's rollback candidates from previously
   accepted selections, excluding any that would cross a `forwardOnly`
   configuration key or a `pointOfNoReturn` sub-step since acceptance, or

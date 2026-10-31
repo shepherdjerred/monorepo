@@ -41,6 +41,21 @@ acceptance and finishes. A refused claim changes nothing; an unverified
 successor finishes recovery-required with the locks and barrier held.
 Histories recorded before `delivery-self-hosted-handoff-v1` accept as before.
 
+The sync that applies a self-hosted change can replace the Delivery worker
+running it. The SDK cancels that Activity with `WORKER_SHUTDOWN`, which kills
+the guarded Argo command; while the lease is still held the step fails as
+`DeliveryExecutorReplaced` with its stage left `running`, and the Workflow
+renews the lease and runs the same step on the replacement worker. Because the
+request already reached the Application, that attempt only reads it back (or
+adopts the live matching operation through the guarded command) and settles the
+stage, so the deployment hands off instead of ending recovery-required. A
+Failed owned operation, a refused or failed guarded command, a lost lease, a
+requested cancellation, an ordinary deployment, and a fourth consecutive
+replacement of one step still fail as before. The classification runs on the
+outgoing worker, so it applies once the running Delivery worker carries it;
+histories recorded before `delivery-executor-replaced-resume-v1` finish
+failed as they did.
+
 `scripts/rollout/delivery-settlement-recovery.ts` provides independent result
 settlement when an unavailable executor cannot finish its recorded result.
 Its required arguments are `--deployment`, `--run`, `--activity`, `--url`, and

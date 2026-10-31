@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { Context } from "@temporalio/activity";
+import { CancelledFailure } from "@temporalio/common";
 
 /** The running model step's lease-loss signal, set by `withLeaseRenewal`. */
 const leaseLoss = new AsyncLocalStorage<AbortSignal>();
@@ -32,6 +33,22 @@ export function effectContext() {
       context.heartbeat(details);
     },
   };
+}
+
+/**
+ * Whether this Activity was cancelled because its own worker is shutting
+ * down while the step still held its lease. The SDK cancels every running
+ * Activity with a `WORKER_SHUTDOWN` CancelledFailure on worker shutdown, so
+ * `effectSignal` killed the step's effects; nothing about the target was
+ * decided. A lost lease, a requested cancellation or a timeout is never this.
+ */
+export function interruptedByWorkerShutdown(): boolean {
+  const reason: unknown = Context.current().cancellationSignal.reason;
+  return (
+    reason instanceof CancelledFailure &&
+    reason.message === "WORKER_SHUTDOWN" &&
+    leaseLoss.getStore()?.aborted !== true
+  );
 }
 
 /** Runs one step with `lost` as the lease-loss half of its `effectSignal`. */

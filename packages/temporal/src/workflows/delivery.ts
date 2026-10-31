@@ -1,4 +1,5 @@
 import {
+  ActivityFailure,
   ApplicationFailure,
   CancellationScope,
   isCancellation,
@@ -8,6 +9,7 @@ import {
 } from "@temporalio/workflow";
 import type { DeliveryActivities } from "#activities/delivery/index.ts";
 import type { PlatformDeliveryActivities } from "#activities/delivery/platform/index.ts";
+import { DELIVERY_EXECUTOR_REPLACED } from "#shared/delivery-executor.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
@@ -182,6 +184,28 @@ export const DELIVERY_COLD_START_RETRY_PATCH = "delivery-cold-start-retry-v1";
 export const DELIVERY_SELF_HOSTED_HANDOFF_PATCH =
   "delivery-self-hosted-handoff-v1";
 
+/**
+ * D8: a self-hosted step interrupted by its own executor's replacement runs
+ * again on the replacement worker instead of finishing the deployment
+ * failed. Histories recorded before it finished such a deployment failed.
+ */
+export const DELIVERY_EXECUTOR_REPLACED_PATCH =
+  "delivery-executor-replaced-resume-v1";
+
+/**
+ * Consecutive replacements one step may survive. Each needs a real worker
+ * shutdown mid-step; more than this is a crash loop, which fails loudly.
+ */
+const EXECUTOR_REPLACEMENTS_PER_STEP = 3;
+
+function executorReplaced(error: unknown): boolean {
+  return (
+    error instanceof ActivityFailure &&
+    error.cause instanceof ApplicationFailure &&
+    error.cause.type === DELIVERY_EXECUTOR_REPLACED
+  );
+}
+
 /** Artifacts a recorded replication tick replicated; the rest waited. */
 const REPLICATIONS_PER_DISPATCH = 10;
 
@@ -352,10 +376,29 @@ async function runModelRecipe(
 ): Promise<"accepted" | "handed-off"> {
   const plan = await metadata.planDeliveryModel(deploymentId);
   // Tofu steps hold platform authority and run on the platform queue.
-  const run = async (key: string) =>
+  const runOnce = async (key: string) =>
     plan.platform.includes(key)
       ? await platform.runDeliveryModelPlatformStep(deploymentId, key)
       : await jobs.runDeliveryModelStep(deploymentId, key);
+  // D8: applying a self-hosted change may replace the worker running the
+  // step. Its stage stays running, and the same step runs again on the
+  // replacement worker, which only reads back the recorded request.
+  const run = async (key: string) => {
+    for (let replaced = 0; ; replaced++) {
+      try {
+        return await runOnce(key);
+      } catch (error) {
+        if (
+          !plan.handoff ||
+          replaced >= EXECUTOR_REPLACEMENTS_PER_STEP ||
+          !executorReplaced(error) ||
+          !patched(DELIVERY_EXECUTOR_REPLACED_PATCH)
+        )
+          throw error;
+        await metadata.renewDeliveryLease(deploymentId);
+      }
+    }
+  };
   for (const key of plan.keys.slice(plan.resumeAt)) {
     await metadata.renewDeliveryLease(deploymentId);
     let step = await run(key);
