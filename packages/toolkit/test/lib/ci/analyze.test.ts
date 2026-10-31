@@ -130,19 +130,30 @@ describe("hot files", () => {
         taskId: "lib#build",
         directory: "packages/lib",
         inputs: { "src/index.ts": "1", "../shared/config.json": "2" },
-        dependents: ["app#test"],
+        dependents: ["app#test", "app#check"],
+        command: "bun run build",
       },
       {
         taskId: "app#test",
         directory: "packages/app",
         inputs: { "test/app.test.ts": "3" },
         dependents: [],
+        command: "vitest run",
       },
       {
         taskId: "//#lint",
         directory: "",
         inputs: { "scripts/lint.ts": "4" },
         dependents: [],
+        command: "bun scripts/lint.ts",
+      },
+      {
+        // A transit task: reached, but it executes nothing.
+        taskId: "app#check",
+        directory: "packages/app",
+        inputs: {},
+        dependents: [],
+        command: "<NONEXISTENT>",
       },
     ],
   });
@@ -172,6 +183,8 @@ describe("hot files", () => {
       ["lib#build", 60],
       ["app#test", 600],
       ["//#lint", 30],
+      // Recorded before app#check became a transit task.
+      ["app#check", 900],
     ]);
     const ranked = hotFiles(graph, commits, costs, 7);
     expect(ranked.map((file) => file.file)).toEqual([
@@ -181,11 +194,11 @@ describe("hot files", () => {
     ]);
     expect(ranked[0]).toMatchObject({
       commits: 2,
-      tasks: 2,
+      tasks: 3,
       secondsPerEdit: 660,
       weeklySeconds: 1320,
     });
-    expect(ranked[1]).toMatchObject({ tasks: 3, secondsPerEdit: 690 });
+    expect(ranked[1]).toMatchObject({ tasks: 4, secondsPerEdit: 690 });
   });
 });
 

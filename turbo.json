@@ -55,6 +55,10 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      // A build's hash reaches every dependent's tasks through ^build, and no
+      // build reads its README, so documentation edits stay local. A package
+      // task that reads its own README keeps it through $TURBO_DEFAULT$.
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["dist/**"]
     },
     "@shepherdjerred/statically-typed#build": {
@@ -75,6 +79,9 @@
     // Live-credential codegen lives in generate:live and is NEVER in a
     // default chain (temporal → live Home Assistant, helm-types → chart repos).
     "generate": {
+      // Like build: generate feeds dependents' hashes and no generator reads
+      // a README.
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["generated/**"]
     },
     "generate:live": {

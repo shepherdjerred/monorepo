@@ -14,6 +14,7 @@ const DryRunSchema = z
           directory: z.string(),
           inputs: z.record(z.string(), z.string()),
           dependents: z.array(z.string()),
+          command: z.string(),
         })
         .loose(),
     ),
@@ -41,6 +42,12 @@ export function taskGraphFromDryRun(raw: unknown): TaskGraph {
     ),
     dependents: new Map(
       dryRun.tasks.map((task) => [task.taskId, task.dependents]),
+    ),
+    // A task without a package script runs nothing; it only links hashes.
+    transit: new Set(
+      dryRun.tasks
+        .filter((task) => task.command === "<NONEXISTENT>")
+        .map((task) => task.taskId),
     ),
     globalFiles: [
       ...new Set([

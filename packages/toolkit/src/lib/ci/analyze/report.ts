@@ -130,6 +130,8 @@ export type TaskGraph = {
   readonly inputs: ReadonlyMap<string, readonly string[]>;
   /** Tasks whose hash includes each task's hash. */
   readonly dependents: ReadonlyMap<string, readonly string[]>;
+  /** Tasks with no package script: they link hashes but execute nothing. */
+  readonly transit: ReadonlySet<string>;
   /** Files every task hash includes. */
   readonly globalFiles: readonly string[];
 };
@@ -192,7 +194,8 @@ export function hotFiles(
       reached = {
         tasks: tasks.size,
         seconds: [...tasks].reduce(
-          (sum, task) => sum + (costs.get(task) ?? 0),
+          (sum, task) =>
+            sum + (graph.transit.has(task) ? 0 : (costs.get(task) ?? 0)),
           0,
         ),
       };
