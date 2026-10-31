@@ -111,6 +111,61 @@ moved {
 }
 
 moved {
+  from = cloudflare_zone_dnssec.discord_plays_pokemon_com
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_zone_dnssec.dnssec
+}
+
+moved {
+  from = cloudflare_zone_setting.discord_plays_pokemon_com_min_tls_version
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_zone_setting.min_tls_version
+}
+
+moved {
+  from = cloudflare_zone_setting.discord_plays_pokemon_com_security_header
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_zone_setting.security_header
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_spf
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.spf
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_dmarc
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.dmarc
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_caa_iodef
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.caa_iodef
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_caa_issue_letsencrypt
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.caa_issue["letsencrypt"]
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_caa_issue_google_trust_services
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.caa_issue["google_trust_services"]
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_caa_issue_sectigo
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.caa_issue["sectigo"]
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_caa_issue_ssl_com
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.caa_issue["ssl_com"]
+}
+
+moved {
+  from = cloudflare_dns_record.discord_plays_pokemon_com_caa_issuewild_none
+  to   = module.domain_baseline["discord-plays-pokemon.com"].cloudflare_dns_record.caa_issuewild["letsencrypt"]
+}
+
+moved {
   from = cloudflare_zone_dnssec.glitter_boys_com
   to   = module.domain_baseline["glitter-boys.com"].cloudflare_zone_dnssec.dnssec
 }
@@ -463,6 +518,11 @@ moved {
 moved {
   from = cloudflare_dns_record.sjer_red_dmarc_report_clauderon_com
   to   = cloudflare_dns_record.dmarc_report["clauderon.com"]
+}
+
+moved {
+  from = cloudflare_dns_record.sjer_red_dmarc_report_discord_plays_pokemon_com
+  to   = cloudflare_dns_record.dmarc_report["discord-plays-pokemon.com"]
 }
 
 moved {

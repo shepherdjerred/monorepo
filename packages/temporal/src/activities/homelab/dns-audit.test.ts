@@ -3,12 +3,13 @@ import { dnsAuditActivities } from "./dns-audit.ts";
 
 describe("dnsAuditActivities", () => {
   describe("getDomains", () => {
-    it("audits all nine onboarded domains as email domains", async () => {
+    it("audits all ten onboarded domains as email domains", async () => {
       const result = await dnsAuditActivities.getDomains();
 
       expect(result.emailDomains.toSorted()).toEqual([
         "better-skill-capped.com",
         "clauderon.com",
+        "discord-plays-pokemon.com",
         "glitter-boys.com",
         "jerredshepherd.com",
         "scout-for-lol.com",
