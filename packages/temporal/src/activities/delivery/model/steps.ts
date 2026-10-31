@@ -4,7 +4,7 @@ import type { EvidenceInput } from "@shepherdjerred/delivery/contract";
 import type { RecipeDefinition } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import {
-  modelSteps,
+  deploymentSteps,
   oracleProbes,
   requireModelRecipe,
   requireSettledBefore,
@@ -36,7 +36,7 @@ import {
 /** The frozen step keys and the first unsettled one (intent before effect). */
 export async function planDeliveryModel(id: string) {
   const current = await requireOwned(id);
-  const steps = modelSteps(requireModelRecipe(current));
+  const steps = deploymentSteps(current);
   return {
     keys: steps.map((step) => step.key),
     resumeAt: resumeAt(steps, current.stages),
@@ -139,7 +139,7 @@ async function runOwnedStep(
   key: string,
 ): Promise<{ waiting: boolean }> {
   const recipe = requireModelRecipe(current);
-  const steps = modelSteps(recipe);
+  const steps = deploymentSteps(current);
   const step = requireStep(steps, key);
   // A compound recipe's step runs against its own sub-recipe.
   const owner = stepRecipe(recipe, key);
@@ -181,7 +181,7 @@ export async function acceptDeliveryModel(
   const recipe = requireModelRecipe(current);
   return await oracleEvidence(
     current,
-    modelSteps(recipe).map((step) => step.key),
+    deploymentSteps(current).map((step) => step.key),
     oracleProbes(recipe),
   );
 }

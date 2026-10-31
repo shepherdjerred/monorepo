@@ -13,11 +13,10 @@ vi.mock("./stages.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof Stages>()),
   requireOwned: () => Promise.resolve(state.current),
 }));
-vi.mock("./lease.ts", () => ({
-  stepLease: () => ({}),
-  withLeaseRenewal: async (_lease: unknown, run: () => Promise<unknown>) =>
-    await run(),
-}));
+vi.mock("./lease.ts", async () => {
+  const { heldLease } = await import("#lib/delivery/model/step-testing.ts");
+  return heldLease;
+});
 vi.mock("./static-site.ts", () => ({
   runStaticSiteStep: (_current: unknown, _policy: unknown, key: string) => {
     state.ran.push(key);

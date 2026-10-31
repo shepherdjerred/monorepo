@@ -26,7 +26,10 @@ import {
   runGuardedArgoCommand,
 } from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned, stageOf } from "./stages.ts";
-import { workerRolloutPreflight } from "./worker-rollout.ts";
+import {
+  workerRetirementFence,
+  workerRolloutPreflight,
+} from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
 import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
 
@@ -211,6 +214,9 @@ export async function sync(
       `Application ${rendered.name} is missing; the apply-safety step writes it first`,
     );
   const before = applicationProgress(raw, rendered, requestId);
+  // A retirement re-proves its host drained and unrouted immediately before
+  // the sync scales it to zero, as v1 does; a requested sync only reads back.
+  if (!before.requested) await workerRetirementFence(current);
   // Every attempt, resumed ones included, records the same intent before any
   // Argo effect: the server accepts it only from the executor that owns the
   // deployment under a live lease (D7), which a read cannot prove.

@@ -209,6 +209,17 @@ its intent, proves every host, then records the preflight's routing plan as
 evidence before promoting and verifying. A resumed step routes by that recorded
 plan and reattaches to any Job whose stage is already recorded.
 
+A `retire-host` deployment of a model recipe runs only the worker
+Application's apply-safety, sync, `worker-rollout` and oracle suite steps; it
+re-selects the accepted set revision, so it activates no site or plugin
+archive. Apply-safety and sync each submit a fresh drainage and routing proof
+to the deployment's claim immediately before writing the body and before
+syncing it, as the v1 executor does before its sync. The sync renders the
+retiring host at zero replicas. The `worker-rollout` step then promotes
+nothing: it reads the hosts back until the retired host has no Pod and every
+retained host is ready with healthy pollers, and proves every served route
+still reaches a retained host.
+
 A compound recipe, such as TSMC's companion and server, runs its sub-recipes'
 steps in recipe order under one deployment and one lease. Each step key is
 prefixed with its sub-recipe's position (`sub2-step-sync`). A model
