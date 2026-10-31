@@ -1,0 +1,25 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/alert-dashboard",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "generate",
+      "command": ["bun", "run", "generate"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "e2e",
+      "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+    },
+    {
+      "path": "integration/sqlite.integration.test.ts",
+      "reason": "Runs in its own pipeline step (test:sqlite) against a real SQLite database file."
+    }
+  ]
+}

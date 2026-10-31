@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "windows-cross-compiler",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ]
+}

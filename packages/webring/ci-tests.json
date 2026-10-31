@@ -1,0 +1,15 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "webring",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "typedoc",
+      "command": ["bun", "run", "typedoc"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["src/"]
+    }
+  ]
+}

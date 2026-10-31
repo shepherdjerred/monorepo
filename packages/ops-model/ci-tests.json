@@ -1,0 +1,9 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/ops-model",
+  "steps": [
+    {
+      "runner": "vitest"
+    }
+  ]
+}

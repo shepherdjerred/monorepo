@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../../scripts/ci-tests.schema.json",
+  "package": "@scout-for-lol/desktop",
+  "steps": [
+    {
+      "runner": "cargo",
+      "args": ["--workspace", "--all-features", "--locked"]
+    }
+  ]
+}

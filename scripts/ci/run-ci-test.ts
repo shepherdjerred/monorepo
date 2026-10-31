@@ -10,7 +10,12 @@ import {
   sanitizeWorkspace,
   testStepReportName,
 } from "./ci-reporting.ts";
-import { TestManifestSchema, type TestStep } from "./test-manifest-schema.ts";
+import {
+  WORKSPACE_TESTS_FILE,
+  WorkspaceTestsSchema,
+  workspaceDirectories,
+  type TestStep,
+} from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
   writeGradleJUnitReport,
@@ -26,25 +31,19 @@ const requestedGroup =
 if (requestedGroup === undefined && cliArguments.length > 0) {
   throw new Error(`Unknown arguments: ${cliArguments.join(", ")}`);
 }
-const manifest = TestManifestSchema.parse(
-  await Bun.file(
-    path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-  ).json(),
-);
 const workspaceDirectory = path
   .relative(repositoryRoot, process.cwd())
   .split(path.sep)
   .join("/");
-const workspaceEntry = manifest.workspaces.find(
-  (entry) => entry.directory === workspaceDirectory,
-);
-
-if (workspaceEntry === undefined) {
+// Only this workspace's own file: an edit to another workspace's steps
+// never changes this task's inputs.
+const testsFile = Bun.file(path.join(process.cwd(), WORKSPACE_TESTS_FILE));
+if (!(await testsFile.exists())) {
   throw new Error(
-    `No CI test reporting entry exists for workspace ${workspaceDirectory}`,
+    `No ${WORKSPACE_TESTS_FILE} declares CI tests for workspace ${workspaceDirectory}`,
   );
 }
-const workspace = workspaceEntry;
+const workspace = WorkspaceTestsSchema.parse(await testsFile.json());
 const groups = new Set(
   workspace.steps.flatMap((step) =>
     step.group === undefined ? [] : [step.group],
@@ -60,12 +59,8 @@ if (requestedGroup !== undefined && !groups.has(requestedGroup)) {
     `${workspace.package} has no CI test group ${requestedGroup}`,
   );
 }
-const nestedWorkspaceDirectories = [
-  ...manifest.workspaces,
-  ...manifest.testlessWorkspaces,
-  ...manifest.separateTests,
-]
-  .map((entry) => entry.directory)
+const allWorkspaceDirectories = await workspaceDirectories(repositoryRoot);
+const nestedWorkspaceDirectories = allWorkspaceDirectories
   .filter((directory) => directory.startsWith(`${workspaceDirectory}/`))
   .map((directory) => directory.slice(workspaceDirectory.length + 1));
 
@@ -271,7 +266,7 @@ async function commandForStep(
     case "gradle":
       if (coverageEnabled) {
         throw new Error(
-          "Gradle steps do not collect coverage; remove coverageAlways from this workspace's manifest entry.",
+          "Gradle steps do not collect coverage; remove coverageAlways from this workspace's ci-tests.json.",
         );
       }
       return ["mise", "exec", "--", "gradle", ...step.args, "--continue"];
@@ -290,7 +285,7 @@ function expectedCoveragePath(
     : path.join(rawCoverageDirectory, artifactFilename);
 }
 
-// Report names keep each step's manifest index, so groups never collide.
+// Report names keep each step's index in ci-tests.json, so groups never collide.
 for (const [index, step] of workspace.steps.entries()) {
   if (step.group !== requestedGroup) continue;
   const name = testStepReportName(step, index);

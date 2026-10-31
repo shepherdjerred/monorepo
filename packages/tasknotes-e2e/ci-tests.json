@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@tasknotes/e2e",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["tests"]
+    }
+  ]
+}

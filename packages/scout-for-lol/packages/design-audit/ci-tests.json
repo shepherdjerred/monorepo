@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../../scripts/ci-tests.schema.json",
+  "package": "@scout-for-lol/design-audit",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "tests",
+      "reason": "Playwright design audit; runs in the design-audit lane (test:e2e:ci), not in Vitest reporting."
+    }
+  ]
+}

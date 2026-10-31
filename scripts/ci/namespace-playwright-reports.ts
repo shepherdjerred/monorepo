@@ -15,15 +15,13 @@ import path from "node:path";
 import { mkdir } from "node:fs/promises";
 import { Glob } from "bun";
 import { namespaceJUnit, sanitizeWorkspace } from "./ci-reporting.ts";
-import { TestManifestSchema } from "./test-manifest-schema.ts";
+import { loadTestManifest } from "./test-manifest-schema.ts";
 
 const reportsRoot =
   process.argv[2] ?? path.join(process.cwd(), ".ci-reports", "junit");
 
-const manifest = TestManifestSchema.parse(
-  await Bun.file(
-    path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-  ).json(),
+const manifest = await loadTestManifest(
+  path.resolve(import.meta.dir, "..", ".."),
 );
 const packagesByReportDirectory = new Map(
   [...manifest.workspaces, ...manifest.separateTests].map((entry) => [

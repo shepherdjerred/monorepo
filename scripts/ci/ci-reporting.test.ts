@@ -12,7 +12,13 @@ import {
   sanitizeWorkspace,
   syntheticJUnit,
 } from "./ci-reporting.ts";
-import { TestManifestSchema, type TestStep } from "./test-manifest-schema.ts";
+import {
+  loadTestManifest,
+  TestManifestSchema,
+  WORKSPACE_TESTS_FILE,
+  workspaceDirectories as declaredWorkspaceDirectories,
+  type TestStep,
+} from "./test-manifest-schema.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
@@ -124,11 +130,7 @@ describe("CI reporting boundaries", () => {
   });
 
   test("committed manifest never runs a suite it documents as excluded", async () => {
-    const manifest = TestManifestSchema.parse(
-      await Bun.file(
-        path.join(repositoryRoot, "scripts", "ci-test-manifest.json"),
-      ).json(),
-    );
+    const manifest = await loadTestManifest(repositoryRoot);
     expect(() => {
       assertExcludedSuitesAreUncovered(manifest);
     }).not.toThrow();
@@ -361,12 +363,36 @@ describe("CI test reporting", () => {
   });
 });
 
+describe("workspace ci-tests.json files", () => {
+  test("every ci-tests.json belongs to a workspace and names the shared schema", async () => {
+    const listing =
+      await Bun.$`git ls-files --cached --others --exclude-standard -- ${`*${WORKSPACE_TESTS_FILE}`}`
+        .cwd(repositoryRoot)
+        .text();
+    const tracked = listing
+      .split("\n")
+      .filter((file) => file.endsWith(`/${WORKSPACE_TESTS_FILE}`));
+    const workspaces = new Set(
+      await declaredWorkspaceDirectories(repositoryRoot),
+    );
+    expect(tracked.length).toBeGreaterThan(0);
+    for (const file of tracked) {
+      const directory = path.dirname(file);
+      expect(workspaces.has(directory), file).toBe(true);
+      const { $schema } = z
+        .object({ $schema: z.string() })
+        .loose()
+        .parse(await Bun.file(path.join(repositoryRoot, file)).json());
+      expect(path.join(directory, $schema), file).toBe(
+        "scripts/ci-tests.schema.json",
+      );
+    }
+  });
+});
+
 describe("CI reporting manifest", () => {
   test("covers every declared test script without placeholder passes", async () => {
-    const manifestJson = await Bun.file(
-      path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-    ).json();
-    const manifest = TestManifestSchema.parse(manifestJson);
+    const manifest = await loadTestManifest(repositoryRoot);
     const manifestJsonSchema = z
       .object({
         required: z.array(z.string()),
@@ -563,7 +589,6 @@ describe("test:ci runner inputs", () => {
     const runnerInputs = [
       "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
       "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
-      "$TURBO_ROOT$/scripts/ci-test-manifest.json",
       "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
       "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
       "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
@@ -584,6 +609,10 @@ describe("test:ci runner inputs", () => {
         input.replace("$TURBO_ROOT$/", ""),
       );
     }
+    // Each workspace hashes its own ci-tests.json, never every workspace's.
+    expect(root.tasks["test:ci"]?.inputs).not.toContain(
+      "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+    );
     // The shared Vitest config re-runs tests, not every build and lint.
     expect(root.globalDependencies).not.toContain("vitest.config.ts");
     for (const task of ["test", "test:ci"]) {
@@ -600,11 +629,7 @@ describe("test:ci runner inputs", () => {
         )
         .optional(),
     });
-    const manifest = TestManifestSchema.parse(
-      await Bun.file(
-        path.join(repositoryRoot, "scripts/ci-test-manifest.json"),
-      ).json(),
-    );
+    const manifest = await loadTestManifest(repositoryRoot);
     for (const { directory } of manifest.workspaces) {
       const turboFile = Bun.file(
         path.join(repositoryRoot, directory, "turbo.json"),
@@ -620,6 +645,11 @@ describe("test:ci runner inputs", () => {
         expect(inputs, `${directory}#${task}`).toEqual(
           expect.arrayContaining(runnerInputs),
         );
+        expect(
+          inputs.includes("$TURBO_DEFAULT$") ||
+            inputs.includes("ci-tests.json"),
+          `${directory}#${task} must hash its own ci-tests.json`,
+        ).toBe(true);
       }
     }
   });

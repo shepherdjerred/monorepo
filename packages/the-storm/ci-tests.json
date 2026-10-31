@@ -1,0 +1,118 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/the-storm",
+  "steps": [
+    {
+      "runner": "command",
+      "group": "jvm",
+      "name": "livemap",
+      "command": ["bun", "run", "test:server"]
+    },
+    {
+      "runner": "gradle",
+      "group": "jvm",
+      "args": ["-p", "plugin", "test"]
+    },
+    {
+      "runner": "vitest",
+      "group": "tools",
+      "args": [
+        "tests/rcon.test.ts",
+        "tests/rwf-recording.test.ts",
+        "tests/rwf-status.test.ts",
+        "tests/public-status.test.ts",
+        "tests/server-files.test.ts",
+        "tests/external-server.test.ts",
+        "tools/sandbox-qualification",
+        "tests/capacity/capacity-bars.test.ts",
+        "tests/capacity/runtime.test.ts",
+        "tests/capacity/native-combat.test.ts",
+        "tests/capacity/behavior.test.ts",
+        "tests/capacity/features.test.ts",
+        "tests/capacity/map-readiness.test.ts",
+        "tests/capacity/native-readiness.test.ts",
+        "tools/capacity",
+        "scripts/bots/mineskin.test.ts",
+        "scripts/bots/expanded-kit-weights.test.ts",
+        "scripts/bots/archery.test.ts",
+        "scripts/check-managed-flags.test.ts"
+      ]
+    },
+    {
+      "runner": "gradle",
+      "group": "jvm",
+      "name": "client",
+      "args": ["-p", "client", "test"]
+    },
+    {
+      "runner": "vitest",
+      "group": "tools",
+      "name": "client-controller",
+      "args": ["tools/client", "--exclude", "**/.cache/**"]
+    },
+    {
+      "runner": "command",
+      "group": "tools",
+      "name": "rwf-learning-python",
+      "command": ["bun", "run", "test:learning-python"]
+    },
+    {
+      "runner": "vitest",
+      "group": "tools",
+      "name": "rwf-learning",
+      "args": ["tools/learning", "--exclude", "**/.cache/**"]
+    },
+    {
+      "runner": "command",
+      "group": "tools",
+      "name": "rwf-maps-python",
+      "command": ["bun", "run", "test:maps-python"]
+    },
+    {
+      "runner": "vitest",
+      "group": "tools",
+      "name": "rwf-maps",
+      "args": ["tools/maps", "--exclude", "**/.cache/**"]
+    },
+    {
+      "runner": "vitest",
+      "group": "tools",
+      "name": "preference-media",
+      "args": ["tests/media"]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "tests/e2e",
+      "reason": "The paper-smoke-pr Woodpecker lane runs only plugin.e2e.test.ts and server.e2e.test.ts through test:smoke. The committer runs applicable extended gameplay checks locally through test:e2e. The reporting task does not start Paper."
+    },
+    {
+      "path": "tests/full",
+      "reason": "The committer runs applicable all-module acceptance checks locally through test:full with disposable world fixtures. This extended Minecraft suite does not run in CI."
+    },
+    {
+      "path": "tests/startup",
+      "reason": "The committer runs fresh and restarted Paper lobby acceptance locally through test:startup. This extended Minecraft suite does not run in CI."
+    },
+    {
+      "path": "tests/stargate-restart",
+      "reason": "The committer runs persisted Stargate acceptance locally through test:stargate-restart with an owned disposable Paper server. This extended Minecraft restart suite does not run in CI."
+    },
+    {
+      "path": "tests/load",
+      "reason": "The committer runs the 20/50/100-bot rwf load profile locally through test:load on a 4-CPU, 8G-heap Paper container when applicable; it measures tick time and does not run in CI."
+    },
+    {
+      "path": "tests/capacity/rwf-capacity.e2e.test.ts",
+      "reason": "The committer runs the 64/100/128/192/256-combatant capacity matrix locally through test:capacity on imported maps with measured CPU budgets; this extended Paper load suite does not run in CI."
+    },
+    {
+      "path": "tests/capacity/native.e2e.test.ts",
+      "reason": "The committer runs rendered 256-combatant acceptance locally through test:capacity-native; this extended native Minecraft client suite does not run in CI."
+    },
+    {
+      "path": "tests/capacity/frame-pacing.e2e.test.ts",
+      "reason": "The committer runs real Mac renderer timing windows locally through test:capacity-frame-pacing; this extended native Minecraft client suite does not run in CI."
+    }
+  ]
+}

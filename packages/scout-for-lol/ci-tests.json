@@ -1,0 +1,17 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "scout-for-lol",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": [
+        "scripts/create-minimal-png.test.ts",
+        "scripts/install-pkgs.test.ts",
+        "scripts/migration-smoke.test.ts",
+        "scripts/dev/",
+        "scripts/discord-smoke/",
+        "src/dev-web.test.ts"
+      ]
+    }
+  ]
+}

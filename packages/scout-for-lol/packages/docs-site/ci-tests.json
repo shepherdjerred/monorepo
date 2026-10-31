@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../../scripts/ci-tests.schema.json",
+  "package": "@scout-for-lol/docs-site",
+  "defaultEnv": {
+    "PUBLIC_SCOUT_SITE_FLAVOR": "beta"
+  },
+  "steps": [
+    {
+      "runner": "command",
+      "name": "build",
+      "command": ["bun", "run", "build"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ]
+}

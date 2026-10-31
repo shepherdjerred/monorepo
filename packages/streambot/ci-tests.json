@@ -1,0 +1,16 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/streambot",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["test/", "src/sports/"]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "integration",
+      "reason": "Needs real ffmpeg/ffprobe with libass, zimg and fonts, as in the streambot image; run it with test:integration there."
+    }
+  ]
+}

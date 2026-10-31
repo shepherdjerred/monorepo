@@ -3,178 +3,14 @@
   "$id": "https://sjer.red/schemas/ci-test-manifest.schema.json",
   "title": "Monorepo CI test reporting manifest",
   "type": "object",
-  "required": [
-    "$schema",
-    "version",
-    "workspaces",
-    "testlessWorkspaces",
-    "separateTests"
-  ],
+  "required": ["$schema", "version", "testlessWorkspaces", "separateTests"],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "const": "./ci-test-manifest.schema.json" },
-    "version": { "const": 2 },
-    "workspaces": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["package", "directory", "steps"],
-        "properties": {
-          "package": { "type": "string", "minLength": 1 },
-          "directory": { "type": "string", "minLength": 1 },
-          "coverageAlways": { "type": "boolean" },
-          "defaultEnv": {
-            "type": "object",
-            "additionalProperties": { "type": "string" }
-          },
-          "excludedSuites": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["path", "reason"],
-              "properties": {
-                "path": { "type": "string", "minLength": 1 },
-                "reason": { "type": "string", "minLength": 1 }
-              }
-            }
-          },
-          "steps": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner"],
-                  "properties": {
-                    "runner": { "const": "vitest" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "group": {
-                      "type": "string",
-                      "pattern": "^[a-z][a-z0-9-]*$"
-                    },
-                    "runtime": { "enum": ["bun", "node"] },
-                    "runtimeReason": { "type": "string", "minLength": 1 },
-                    "runtimeArgs": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    },
-                    "args": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner", "args"],
-                  "properties": {
-                    "runner": { "const": "go" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "group": {
-                      "type": "string",
-                      "pattern": "^[a-z][a-z0-9-]*$"
-                    },
-                    "args": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner", "args"],
-                  "properties": {
-                    "runner": { "const": "cargo" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "group": {
-                      "type": "string",
-                      "pattern": "^[a-z][a-z0-9-]*$"
-                    },
-                    "args": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner", "args"],
-                  "properties": {
-                    "runner": { "const": "dotnet" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "group": {
-                      "type": "string",
-                      "pattern": "^[a-z][a-z0-9-]*$"
-                    },
-                    "args": {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": { "type": "string" }
-                    },
-                    "coverageConfig": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "mstest": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "required": ["parallel", "timeoutMs"],
-                      "properties": {
-                        "parallel": { "type": "boolean" },
-                        "timeoutMs": { "type": "integer", "minimum": 1 }
-                      }
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner", "args"],
-                  "properties": {
-                    "runner": { "const": "gradle" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "group": {
-                      "type": "string",
-                      "pattern": "^[a-z][a-z0-9-]*$"
-                    },
-                    "args": {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": { "type": "string" }
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["runner", "name", "command"],
-                  "properties": {
-                    "runner": { "const": "command" },
-                    "name": { "type": "string", "minLength": 1 },
-                    "group": {
-                      "type": "string",
-                      "pattern": "^[a-z][a-z0-9-]*$"
-                    },
-                    "command": {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": { "type": "string" }
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
+    "$schema": {
+      "const": "./ci-test-manifest.schema.json"
+    },
+    "version": {
+      "const": 2
     },
     "testlessWorkspaces": {
       "type": "array",
@@ -183,9 +19,18 @@
         "additionalProperties": false,
         "required": ["package", "directory", "reason"],
         "properties": {
-          "package": { "type": "string", "minLength": 1 },
-          "directory": { "type": "string", "minLength": 1 },
-          "reason": { "type": "string", "minLength": 1 }
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "directory": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -196,18 +41,31 @@
         "additionalProperties": false,
         "required": ["package", "directory", "reason"],
         "properties": {
-          "package": { "type": "string", "minLength": 1 },
-          "directory": { "type": "string", "minLength": 1 },
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "directory": {
+            "type": "string",
+            "minLength": 1
+          },
           "localScripts": {
             "type": "object",
             "additionalProperties": false,
             "required": ["test"],
             "properties": {
-              "build": { "const": "build:local" },
-              "test": { "const": "test:local" }
+              "build": {
+                "const": "build:local"
+              },
+              "test": {
+                "const": "test:local"
+              }
             }
           },
-          "reason": { "type": "string", "minLength": 1 }
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

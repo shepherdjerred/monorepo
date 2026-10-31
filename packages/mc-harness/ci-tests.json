@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/mc-harness",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["test", "evals/test"]
+    }
+  ]
+}
