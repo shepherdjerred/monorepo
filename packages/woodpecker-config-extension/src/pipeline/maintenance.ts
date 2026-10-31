@@ -79,6 +79,24 @@ export function requestedMaintenanceSteps(
     : maintenanceSteps(images, kind);
 }
 
+/**
+ * Woodpecker starts a manual pipeline at the branch tip, but main usually
+ * advances before its pipelines finish. A request names the verified main
+ * commit it was selected for; while that commit is still the verified one, the
+ * workflow runs against it in place of the tip.
+ */
+export function maintenanceSourcePipeline(
+  pipeline: Pipeline,
+  verifiedMain: string | undefined,
+): Pipeline {
+  const source = pipeline.variables["CI_MAINTENANCE_SOURCE"];
+  return source !== undefined &&
+    source === verifiedMain &&
+    source !== pipeline.commit
+    ? { ...pipeline, commit: source }
+    : pipeline;
+}
+
 /** A manual seed request cannot promote an unverified main revision. */
 export async function eligibleMaintenanceSteps(
   images: CiImages,
@@ -86,6 +104,11 @@ export async function eligibleMaintenanceSteps(
   pipeline: Pipeline,
   verifiedSource: () => Promise<string | undefined>,
 ) {
+  // A request whose source was not adopted is superseded, never failed: the
+  // coordinator selects the newly verified source on its next tick.
+  const expectedSource = pipeline.variables["CI_MAINTENANCE_SOURCE"];
+  if (expectedSource !== undefined && expectedSource !== pipeline.commit)
+    return requestedMaintenanceSteps(images, kind, pipeline);
   if (
     (kind === "workspace-seeds" || kind === "workspace-golden") &&
     (await verifiedSource()) !== pipeline.commit

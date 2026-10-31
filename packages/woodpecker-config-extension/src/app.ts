@@ -18,6 +18,7 @@ import { limitedPrSteps } from "#src/pipeline/draft.ts";
 import {
   maintenanceMode,
   eligibleMaintenanceSteps,
+  maintenanceSourcePipeline,
   separateMaintenance,
 } from "#src/pipeline/maintenance.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
@@ -177,7 +178,7 @@ async function pipelineEmitter(
       ),
       identity,
     );
-  return Object.assign(emit, { performance });
+  return Object.assign(emit, { performance, sourceCache: enabled });
 }
 
 async function authenticatedRequest(context: Context, options: AppOptions) {
@@ -239,6 +240,22 @@ function withPrCompletion(
   ];
 }
 
+/**
+ * Only the source-cache checkout fetches a commit other than the tip that
+ * Woodpecker started; without it the request keeps the tip and is superseded.
+ */
+async function maintenanceEmitter(
+  pipeline: Pipeline,
+  candidate: Pipeline,
+  build: (target: Pipeline) => ReturnType<typeof pipelineEmitter>,
+) {
+  if (candidate !== pipeline) {
+    const emit = await build(candidate);
+    if (emit.sourceCache) return { target: candidate, emit };
+  }
+  return { target: pipeline, emit: await build(pipeline) };
+}
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
   const maintenanceEnabled =
@@ -287,30 +304,48 @@ export function createApp(options: AppOptions): Hono {
       defaultBranch: repo.default_branch,
       changedFiles: pipeline.changed_files,
     };
-    const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
     const credentiallessAutomation = await needsCredentiallessHostedAutomation(
       authorization.actorClass,
       pipeline,
       options.hostedAutomationApproved,
     );
+    if (maintenance.kind !== undefined) {
+      let verified: Promise<string | undefined> | undefined;
+      const verifiedMain = () =>
+        (verified ??= options.changedBase(repo.id, repo.default_branch));
+      const source = pipeline.variables["CI_MAINTENANCE_SOURCE"];
+      const { target, emit } = await maintenanceEmitter(
+        pipeline,
+        source === undefined || source === pipeline.commit
+          ? pipeline
+          : maintenanceSourcePipeline(pipeline, await verifiedMain()),
+        (selected) =>
+          pipelineEmitter(
+            options,
+            selected,
+            repo.default_branch,
+            credentiallessAutomation,
+          ),
+      );
+      const images = await resolveCiImages(target.commit, options.imageFetcher);
+      return context.json({
+        configs: emit(
+          await eligibleMaintenanceSteps(
+            images,
+            maintenance.kind,
+            target,
+            verifiedMain,
+          ),
+        ),
+      });
+    }
+    const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
     const emit = await pipelineEmitter(
       options,
       pipeline,
       repo.default_branch,
       credentiallessAutomation,
     );
-    if (maintenance.kind !== undefined) {
-      return context.json({
-        configs: emit(
-          await eligibleMaintenanceSteps(
-            images,
-            maintenance.kind,
-            pipeline,
-            () => options.changedBase(repo.id, repo.default_branch),
-          ),
-        ),
-      });
-    }
     if (!isWorkEvent(selectionContext)) {
       return context.json({
         configs: emit([noWorkStep(images.base)]),

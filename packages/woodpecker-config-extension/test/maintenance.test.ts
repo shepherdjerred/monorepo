@@ -5,6 +5,7 @@ import {
   separateMaintenance,
   maintenanceSteps,
   eligibleMaintenanceSteps,
+  maintenanceSourcePipeline,
 } from "#src/pipeline/maintenance.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
@@ -29,6 +30,35 @@ test("seed maintenance requires the exact fully verified source, including manua
     () => Promise.resolve(pipeline.commit),
   );
   expect(verified[0]?.key).toBe("maintenance-workspace-seeds");
+});
+test("only the verified source replaces the tip, and any other source supersedes the request", async () => {
+  const tip = PipelineSchema.parse(fixture.pipeline);
+  const verified = "b".repeat(40);
+  const requested = {
+    ...tip,
+    variables: { ...tip.variables, CI_MAINTENANCE_SOURCE: verified },
+  };
+  expect(maintenanceSourcePipeline(requested, verified).commit).toBe(verified);
+  expect(maintenanceSourcePipeline(requested, "c".repeat(40))).toBe(requested);
+  expect(maintenanceSourcePipeline(requested, undefined)).toBe(requested);
+  expect(maintenanceSourcePipeline(tip, verified)).toBe(tip);
+  // A stale golden request is superseded, not failed into a blocked kind.
+  const stale = await eligibleMaintenanceSteps(
+    TEST_IMAGES,
+    "workspace-golden",
+    requested,
+    () => Promise.resolve("c".repeat(40)),
+  );
+  expect(stale.map((step) => step.key)).toEqual(["maintenance-superseded"]);
+  const adopted = await eligibleMaintenanceSteps(
+    TEST_IMAGES,
+    "workspace-golden",
+    maintenanceSourcePipeline(requested, verified),
+    () => Promise.resolve(verified),
+  );
+  expect(adopted.map((step) => step.key)).toEqual([
+    "maintenance-workspace-golden",
+  ]);
 });
 test("workspace seeds publish both isolated profiles and emit their final receipt only after both", () => {
   const [step] = maintenanceSteps(TEST_IMAGES, "workspace-seeds");

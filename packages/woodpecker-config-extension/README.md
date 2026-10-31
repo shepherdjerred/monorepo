@@ -525,8 +525,13 @@ main's verification verdict.
 The signed manual request must target the default branch and set
 `CI_MAINTENANCE_KIND` to `release-notes`, `ci-images`, or `workspace-seeds`.
 The workspace stream has its own default-off Temporal flag. A Temporal dispatcher
-also supplies `CI_MAINTENANCE_SOURCE` and a fingerprint. If Woodpecker resolves
-a different commit during submission, the extension emits a no-work receipt.
+also supplies `CI_MAINTENANCE_SOURCE` and a fingerprint. The source is the newest
+main push whose pipeline succeeded as a complete release build (verify, images,
+helm-push and delivery-publish), not the branch tip: main usually advances
+before its pipelines finish. Woodpecker still starts the manual pipeline at the
+tip. When the source is still that verified commit, the extension checks it out
+through the source cache in place of the tip. Otherwise, or without the source
+cache, it emits a no-work receipt and the dispatcher selects again.
 Maintenance runs in the PR pool at draft priority, sharing one concurrency
 group across all kinds. It leaves the main and ready-PR reservations intact.
 

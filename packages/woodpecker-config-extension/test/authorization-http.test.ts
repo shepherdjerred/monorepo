@@ -31,6 +31,9 @@ function harness(
     ),
   );
   const base = vi.fn(() => Promise.resolve(undefined));
+  const changedBase = vi.fn((): Promise<string | undefined> =>
+    Promise.resolve(undefined),
+  );
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
   const app = createApp({
@@ -41,13 +44,20 @@ function harness(
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
     imageFetcher,
-    changedBase: base,
+    changedBase,
     verifyBase: base,
     imageReleaseBase: base,
     cancelSupersededPr,
     hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
   });
-  return { app, imageFetcher, base, cancelSupersededPr, sourceCacheEnabled };
+  return {
+    app,
+    imageFetcher,
+    base,
+    changedBase,
+    cancelSupersededPr,
+    sourceCacheEnabled,
+  };
 }
 
 async function request(
@@ -161,9 +171,11 @@ describe("signed Justin pipeline authorization", () => {
     { from_fork: true },
     { author: "app/justin-principal-engineer" },
   ])("refuses %j before reading forge data", async (overrides) => {
-    const { app, imageFetcher, base, cancelSupersededPr } = harness();
+    const { app, imageFetcher, base, changedBase, cancelSupersededPr } =
+      harness();
     const response = await app.request(await request(overrides));
     expect(response.status).toBe(403);
+    expect(changedBase).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({
       error: "actor is not permitted to run CI",
     });
@@ -213,7 +225,7 @@ describe("signed maintenance routing", () => {
   test.each(["release-notes", "ci-images"])(
     "emits one %s workflow in the PR pool below ready priority",
     async (kind) => {
-      const { app, base } = harness(false, undefined, false, true);
+      const { app, base, changedBase } = harness(false, undefined, false, true);
       const response = await app.request(
         await request({ ...manual, variables: { CI_MAINTENANCE_KIND: kind } }),
       );
@@ -225,6 +237,7 @@ describe("signed maintenance routing", () => {
       expect(body.configs[0]?.data).toContain("priority-class: ci-draft");
       expect(body.configs[0]?.data).toContain("group: ci-maintenance");
       expect(base).not.toHaveBeenCalled();
+      expect(changedBase).not.toHaveBeenCalled();
     },
   );
   test("main moving during submission emits no maintenance writes", async () => {
@@ -238,6 +251,34 @@ describe("signed maintenance routing", () => {
         },
       }),
     );
+    const body = ConfigResponseSchema.parse(await response.json());
+    expect(body.configs.map((config) => config.name)).toEqual([
+      ".woodpecker/maintenance-superseded.yaml",
+    ]);
+  });
+  const verified = "b".repeat(40);
+  const gate = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  const behindTip = {
+    ...manual,
+    variables: { ...manual.variables, CI_MAINTENANCE_SOURCE: verified },
+  };
+  test("a request for the verified commit behind the tip checks out that commit", async () => {
+    const { app, changedBase } = harness(false, gate, true, true);
+    changedBase.mockResolvedValue(verified);
+    const response = await app.request(await request(behindTip));
+    const body = ConfigResponseSchema.parse(await response.json());
+    expect(body.configs.map((config) => config.name)).toEqual([
+      ".woodpecker/maintenance-release-notes.yaml",
+    ]);
+    expect(body.configs[0]?.data).toContain(`checkout.sh`);
+    expect(body.configs[0]?.data).toContain(verified);
+    expect(body.configs[0]?.data).not.toContain(fixture.pipeline.commit);
+    expect(changedBase).toHaveBeenCalledOnce();
+  });
+  test("without the source cache a verified source behind the tip is superseded", async () => {
+    const { app, changedBase } = harness(false, gate, false, true);
+    changedBase.mockResolvedValue(verified);
+    const response = await app.request(await request(behindTip));
     const body = ConfigResponseSchema.parse(await response.json());
     expect(body.configs.map((config) => config.name)).toEqual([
       ".woodpecker/maintenance-superseded.yaml",

@@ -59,10 +59,6 @@ export async function maintenanceGithub() {
   const { token } = await createGitHubAppInstallationToken();
   return new Octokit({ auth: token, request: { timeout: 15_000 } });
 }
-export async function currentMaintenanceSource(github: Octokit) {
-  const branch = await github.rest.repos.getBranch({ ...REPO, branch: "main" });
-  return branch.data.commit.sha;
-}
 export async function maintenanceApi(
   path: string,
   init: RequestInit = {},
@@ -156,6 +152,14 @@ export async function maintenancePipeline(number: number) {
     await maintenanceApi(`/${number.toString()}`),
   );
 }
+// The workflows every main push runs since Delivery v2: a pipeline without
+// them did not build and register a release.
+const COMPLETE_MAIN_WORKFLOWS = [
+  "verify",
+  "images",
+  "helm-push",
+  "delivery-publish",
+];
 export function isCompleteMain(pipeline: MaintenancePipeline, source: string) {
   return (
     pipeline.commit === source &&
@@ -163,26 +167,32 @@ export function isCompleteMain(pipeline: MaintenancePipeline, source: string) {
     pipeline.ref === "refs/heads/main" &&
     ["push", "manual"].includes(pipeline.event) &&
     pipeline.workflows.every((workflow) => workflow.state === "success") &&
-    [
-      "verify",
-      "homelab-release-admission",
-      "images",
-      "helm-push",
-      "argocd-sync",
-    ].every((name) =>
+    COMPLETE_MAIN_WORKFLOWS.every((name) =>
       pipeline.workflows.some((workflow) => workflow.name === name),
     )
   );
 }
-export async function verifiedMaintenanceSource(source: string) {
-  const recent = await recentMaintenancePipelines("push,manual");
-  const candidates = recent.filter(
-    (pipeline) => pipeline.commit === source && pipeline.status === "success",
-  );
-  for (const candidate of candidates)
-    if (isCompleteMain(await maintenancePipeline(candidate.number), source))
-      return true;
-  return false;
+/**
+ * The newest main push whose pipeline succeeded, if that pipeline is a
+ * complete main build. Main usually advances faster than its pipelines finish,
+ * so maintenance runs on this commit rather than the branch tip. The config
+ * extension selects the same commit (`lastSuccessfulCommit`) and checks it out
+ * in place of the tip.
+ */
+export async function newestVerifiedMaintenanceSource(): Promise<
+  string | undefined
+> {
+  const pushes = await recentMaintenancePipelines("push");
+  const newest = pushes
+    .filter(
+      (pipeline) =>
+        pipeline.status === "success" && pipeline.ref === "refs/heads/main",
+    )
+    .toSorted((a, b) => b.number - a.number)[0];
+  if (newest === undefined) return undefined;
+  return isCompleteMain(await maintenancePipeline(newest.number), newest.commit)
+    ? newest.commit
+    : undefined;
 }
 
 const IMAGE_INPUTS = [
@@ -312,11 +322,19 @@ export async function findMaintenanceReceipt(
     !receipt.message.includes(`ci-maintenance/${request.requestId}`)
   )
     throw new Error("Maintenance receipt identity mismatch");
+  // Woodpecker runs a manual pipeline at the branch tip, and the extension
+  // checks out the requested verified source in its place. It supersedes the
+  // request instead when that source is no longer the verified one.
+  const source = receipt.workflows.some(
+    (workflow) => workflow.name === "maintenance-superseded",
+  )
+    ? receipt.commit
+    : request.source;
   return {
     number: receipt.number,
-    source: receipt.commit,
+    source,
     status: receipt.status,
-    ...(receipt.status === "success" && receipt.commit === request.source
+    ...(receipt.status === "success" && source === request.source
       ? { deferred: await maintenanceWasDeferred(receipt, request.kind) }
       : {}),
   };

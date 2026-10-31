@@ -198,10 +198,9 @@ test("maintenance success cannot qualify as verified main", () => {
   expect(isCompleteMain(pipeline, candidate.source)).toBe(false);
   pipeline.workflows = [
     "verify",
-    "homelab-release-admission",
     "images",
     "helm-push",
-    "argocd-sync",
+    "delivery-publish",
   ].map((name) => ({ name, state: "success" as const }));
   expect(isCompleteMain(pipeline, candidate.source)).toBe(true);
 });
