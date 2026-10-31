@@ -180,6 +180,51 @@ export async function workspaceDirectories(
     : root.workspaces.packages;
 }
 
+/** The shared schema every `ci-tests.json` names, from the repository root. */
+export const WORKSPACE_TESTS_SCHEMA = "scripts/ci-tests.schema.json";
+
+/** The exact `$schema` a workspace's `ci-tests.json` must carry. */
+export function workspaceTestsSchemaReference(directory: string): string {
+  return path.posix.relative(directory, WORKSPACE_TESTS_SCHEMA);
+}
+
+const WorkspacePackageSchema = z.object({ name: z.string().min(1) }).loose();
+
+export type WorkspaceTests = z.infer<typeof WorkspaceTestsSchema>;
+
+/**
+ * Read one workspace's `ci-tests.json`, or undefined when it has none. The
+ * file must name the shared schema by its exact relative path, so editors
+ * resolve it, and its `package` must be the workspace's package.json name,
+ * so a copied or renamed entry cannot report under another package.
+ */
+export async function readWorkspaceTests(
+  repositoryRoot: string,
+  directory: string,
+): Promise<WorkspaceTests | undefined> {
+  const file = Bun.file(
+    path.join(repositoryRoot, directory, WORKSPACE_TESTS_FILE),
+  );
+  if (!(await file.exists())) return undefined;
+  const label = `${directory}/${WORKSPACE_TESTS_FILE}`;
+  const tests = WorkspaceTestsSchema.parse(await file.json());
+  const schema = workspaceTestsSchemaReference(directory);
+  if (tests.$schema !== schema) {
+    throw new Error(
+      `${label} must set "$schema" to "${schema}", not "${tests.$schema}"`,
+    );
+  }
+  const { name } = WorkspacePackageSchema.parse(
+    await Bun.file(path.join(repositoryRoot, directory, "package.json")).json(),
+  );
+  if (tests.package !== name) {
+    throw new Error(
+      `${label} names package "${tests.package}", but ${directory}/package.json is "${name}"`,
+    );
+  }
+  return tests;
+}
+
 /** The root manifest with every workspace's `ci-tests.json` steps. */
 export async function loadTestManifest(
   repositoryRoot: string,
@@ -191,13 +236,9 @@ export async function loadTestManifest(
   );
   const workspaces: TestManifest["workspaces"] = [];
   for (const directory of await workspaceDirectories(repositoryRoot)) {
-    const file = Bun.file(
-      path.join(repositoryRoot, directory, WORKSPACE_TESTS_FILE),
-    );
-    if (!(await file.exists())) continue;
-    const { $schema: _schema, ...entry } = WorkspaceTestsSchema.parse(
-      await file.json(),
-    );
+    const tests = await readWorkspaceTests(repositoryRoot, directory);
+    if (tests === undefined) continue;
+    const { $schema: _schema, ...entry } = tests;
     workspaces.push({ ...entry, directory });
   }
   return TestManifestSchema.parse({ ...root, workspaces });

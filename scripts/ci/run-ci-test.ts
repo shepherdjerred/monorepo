@@ -12,7 +12,7 @@ import {
 } from "./ci-reporting.ts";
 import {
   WORKSPACE_TESTS_FILE,
-  WorkspaceTestsSchema,
+  readWorkspaceTests,
   workspaceDirectories,
   type TestStep,
 } from "./test-manifest-schema.ts";
@@ -37,13 +37,16 @@ const workspaceDirectory = path
   .join("/");
 // Only this workspace's own file: an edit to another workspace's steps
 // never changes this task's inputs.
-const testsFile = Bun.file(path.join(process.cwd(), WORKSPACE_TESTS_FILE));
-if (!(await testsFile.exists())) {
+const workspaceTests = await readWorkspaceTests(
+  repositoryRoot,
+  workspaceDirectory,
+);
+if (workspaceTests === undefined) {
   throw new Error(
     `No ${WORKSPACE_TESTS_FILE} declares CI tests for workspace ${workspaceDirectory}`,
   );
 }
-const workspace = WorkspaceTestsSchema.parse(await testsFile.json());
+const workspace = workspaceTests;
 const groups = new Set(
   workspace.steps.flatMap((step) =>
     step.group === undefined ? [] : [step.group],
