@@ -302,9 +302,6 @@ export const CommitEnvironmentMemberSchema = z.object({
   state: CommitEnvironmentStateSchema,
   deploymentId: IdentifierSchema.nullable(),
 });
-export type CommitEnvironmentMember = z.infer<
-  typeof CommitEnvironmentMemberSchema
->;
 
 /**
  * Every changed service seen from one environment name, so "is it in prod?"
