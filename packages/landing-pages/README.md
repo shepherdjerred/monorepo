@@ -32,9 +32,9 @@ The root lists the items and is not indexed. `404.astro` covers unknown paths.
 The Storm item adds:
 
 - An address card with a Java/Bedrock toggle and one copy button for the
-  selected edition. Phones and tablets open on Bedrock. Java shows "26.3 & older" (the server runs 26.3,
-  and ViaBackwards admits older clients); Bedrock says
-  "latest version", because its support follows the live Geyser build.
+  selected edition. Phones and tablets open on Bedrock. Java shows "26.3 &
+  older": the server runs 26.3, and ViaBackwards admits older clients. Bedrock
+  says "latest version", because its support follows the live Geyser build.
 - Join steps and a console section (`#consoles`) live on the page itself, so
   visitors from an ad don't have to leave for the docs. Consoles have no Add
   Server button, so the section walks through BedrockConnect's DNS method.
@@ -57,12 +57,12 @@ Ad destination URLs use
 ## The Storm item
 
 Copy stays casual and lowercase, like the ads; visitors arrive from Pinterest,
-not from the docs. The design follows the friendly Pinterest set: Outfit and Lora italic, cream,
-lilac and sage grounds, and rounded paper frames. The screenshots are owned
-January 2015 Storm originals from the same archive as the ads (the windmill
-from `@shepherdjerred/storm-theme` brand assets, plus the clock tower and town
-house). They are exported as JPEG quality 90, and Astro generates responsive
-AVIF and WebP from them.
+not from the docs. The design follows the friendly Pinterest set: Outfit and
+Lora italic, cream, lilac and sage grounds, and rounded paper frames. The
+screenshots are owned January 2015 Storm originals from the same archive as the
+ads (the windmill from `@shepherdjerred/storm-theme` brand assets, plus the
+clock tower and town house). They are exported as JPEG quality 90, and Astro
+generates responsive AVIF and WebP from them.
 
 ## Development
 
