@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqKitStore;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitPool;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
@@ -74,7 +75,7 @@ final class KitShopTest {
   void aPurchaseTakesThePriceInCreditsOnceAndOwnsTheKit() {
     fund(450);
 
-    var bought = shop().buy(ALICE, KitBook.BERSERKER, T0).join();
+    var bought = shop().buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join();
 
     assertThat(bought).isInstanceOf(Result.Ok.class);
     assertThat(held()).isEqualTo(50);
@@ -89,9 +90,9 @@ final class KitShopTest {
   @Test
   void anOwnedKitIsNeverChargedAgain() {
     fund(1000);
-    shop().buy(ALICE, KitBook.BERSERKER, T0).join();
+    shop().buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join();
 
-    var again = shop().buy(ALICE, KitBook.BERSERKER, T0).join();
+    var again = shop().buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join();
 
     assertThat(again).isEqualTo(Result.err(new ShopError.AlreadyOwned("berserker")));
     assertThat(held()).isEqualTo(600);
@@ -101,21 +102,35 @@ final class KitShopTest {
   void tooFewCreditsBuysNothingAndLeavesNothingPending() {
     fund(399);
 
-    var refused = shop().buy(ALICE, KitBook.BERSERKER, T0).join();
+    var refused = shop().buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join();
 
     assertThat(refused).isEqualTo(Result.err(new ShopError.TooPoor(400, 399)));
     assertThat(held()).isEqualTo(399);
     assertThat(store.owned(ALICE).join()).isEmpty();
     assertThat(store.pending().join()).isEmpty();
     fund(400);
-    assertThat(shop().buy(ALICE, KitBook.BERSERKER, T0).join()).isInstanceOf(Result.Ok.class);
+    assertThat(shop().buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join())
+        .isInstanceOf(Result.Ok.class);
   }
 
   @Test
   void freeKitsAreNotForSale() {
-    assertThat(shop().buy(ALICE, KitBook.MEDIC, T0).join())
+    assertThat(shop().buy(ALICE, KitPool.ALL, KitBook.MEDIC, T0).join())
         .isEqualTo(Result.err(new ShopError.NotForSale("medic")));
     assertThat(wallets.receipts()).isEmpty();
+  }
+
+  @Test
+  void anExcludedKitIsRefusedBeforeTheOutboxOrLedger() {
+    fund(1000);
+    var pool = new KitPool(java.util.Set.of("trooper", "berserker"));
+
+    var refused = shop().buy(ALICE, pool, KitBook.SAPPER, T0).join();
+
+    assertThat(refused).isEqualTo(Result.err(new ShopError.NotForSale("sapper")));
+    assertThat(held()).isEqualTo(1000);
+    assertThat(store.pending().join()).isEmpty();
+    assertThat(store.owned(ALICE).join()).isEmpty();
   }
 
   @Test
@@ -124,14 +139,14 @@ final class KitShopTest {
     assertThat(store.begin(first).join()).isTrue();
     fund(1000);
 
-    var second = shop().buy(ALICE, KitBook.BERSERKER, T0).join();
+    var second = shop().buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join();
 
     assertThat(second).isEqualTo(Result.err(new ShopError.InProgress("berserker")));
     assertThat(held()).isEqualTo(1000);
   }
 
   @Test
-  void retryAfterAFailedGrantFinishesTheChargedPurchaseWithoutAnotherDebit() {
+  void aChargedPurchaseCanStillBeSettledAfterThePoolExcludesIt() {
     fund(800);
     var buying = shop();
     database
@@ -142,7 +157,7 @@ final class KitShopTest {
                         + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
         .join();
 
-    assertThatThrownBy(() -> buying.buy(ALICE, KitBook.BERSERKER, T0).join())
+    assertThatThrownBy(() -> buying.buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join())
         .isInstanceOf(CompletionException.class)
         .hasMessageContaining("grant unavailable");
     var pending = store.pending().join();
@@ -151,7 +166,8 @@ final class KitShopTest {
     assertThat(held()).isEqualTo(400);
     database.write(dsl -> dsl.execute("DROP TRIGGER reject_kit_grant")).join();
 
-    assertThat(buying.buy(ALICE, KitBook.BERSERKER, T0.plusSeconds(1)).join())
+    var laterPool = new KitPool(java.util.Set.of("trooper"));
+    assertThat(buying.buy(ALICE, laterPool, KitBook.BERSERKER, T0.plusSeconds(1)).join())
         .isEqualTo(Result.ok(pending.getFirst()));
     assertThat(store.owned(ALICE).join()).containsExactly("berserker");
     assertThat(store.pending().join()).isEmpty();
@@ -197,7 +213,7 @@ final class KitShopTest {
     assertThat(held()).as("nothing was taken").isEqualTo(400);
     assertThat(store.pending().join()).isEmpty();
     // The player can buy it afresh.
-    assertThat(shop().buy(ALICE, KitBook.VENOM, T0.plusSeconds(61)).join())
+    assertThat(shop().buy(ALICE, KitPool.ALL, KitBook.VENOM, T0.plusSeconds(61)).join())
         .isInstanceOf(Result.Ok.class);
   }
 

@@ -104,11 +104,14 @@ export type RwfOverlay = {
   /** Whether `/rwf admin loadtest <n>` is allowed; the owned value (off) when absent. */
   loadtest?: boolean;
   /**
-   * The only map folders staged under rwf/maps; every shipped map when absent.
-   * The rotation opens on the first map in id order, so a suite written for
-   * the training yard stages it alone.
+   * The only map folders staged under rwf/maps and the maps admitted to the
+   * fixture rotation; every shipped map when absent. The rotation opens on the
+   * first map in id order, so a suite written for the training yard stages it
+   * alone.
    */
   maps?: string[];
+  /** The kits admitted to the fixture; keeps the authored pool when absent. */
+  kits?: string[];
 };
 
 export async function overlayRwf(
@@ -119,6 +122,10 @@ export async function overlayRwf(
     lobby: rwf.lobbyWorld,
     maps: rwf.world,
     lobbyProvisioning: "owned-void",
+  });
+  await overlaySection(stagedRwfYml, "experience", {
+    maps: rwf.maps === undefined ? "[]" : `[${rwf.maps.join(", ")}]`,
+    ...(rwf.kits === undefined ? {} : { kits: `[${rwf.kits.join(", ")}]` }),
   });
   await overlaySection(stagedRwfYml, "match", {
     ...(rwf.voteLead === undefined ? {} : { voteLead: rwf.voteLead }),
@@ -171,12 +178,18 @@ async function overlaySection(
   const end = after === -1 ? lines.length : after;
   for (const [key, value] of Object.entries(fields)) {
     const index = lines.findIndex(
-      (line, at) => at > start && at < end && line.startsWith(`  ${key}: `),
+      (line, at) =>
+        at > start &&
+        at < end &&
+        (line.trimEnd() === `  ${key}:` || line.startsWith(`  ${key}: `)),
     );
     if (index === -1) {
       throw new Error(`No ${section}.${key} line to overlay in ${file}`);
     }
     lines[index] = `  ${key}: ${value.toString()}`;
+    while (/^ {4}\S/u.test(lines.at(index + 1) ?? "")) {
+      lines.splice(index + 1, 1);
+    }
   }
   await Bun.write(file, lines.join("\n"));
 }

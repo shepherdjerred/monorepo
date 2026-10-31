@@ -43,7 +43,7 @@ final class SpawnPreparation implements Listener {
       }
       var _ =
           at.getWorld()
-              .getChunkAtAsync(at.getBlockX() >> 4, at.getBlockZ() >> 4, false, true)
+              .getChunkAtAsync(at.getBlockX() >> 4, at.getBlockZ() >> 4, true, true)
               .whenComplete(
                   (chunk, failure) ->
                       context

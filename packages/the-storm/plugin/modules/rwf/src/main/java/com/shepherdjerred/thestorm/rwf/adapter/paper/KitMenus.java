@@ -7,7 +7,6 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.app.shop.Purchase;
 import com.shepherdjerred.thestorm.rwf.app.shop.ShopError;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
-import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBrowser;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import java.util.HashMap;
@@ -68,7 +67,7 @@ final class KitMenus {
           var access = armory.access(id).orElseThrow();
           var view =
               new KitMenu.View(
-                  access.expanded() ? armory.kits() : KitBook.MILESTONE_ONE,
+                  access.expanded() ? armory.kits() : armory.milestones(),
                   access,
                   picked,
                   armory.rotation(now),

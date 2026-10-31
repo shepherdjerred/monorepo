@@ -1,12 +1,18 @@
 # Red Warfare Search and Destroy kits
 
-`domain/kit/KitBook.java` lists 51 kits in menu order: Red Warfare's twenty-two
-playable kits in the order of the original `SearchAndDestroy`, then Equality, Inertia and
-Sacrificial, which the original never offered in play, then The Storm's first eight
-designed kits and the eighteen kits in `domain/kit/ExpansionKits.java`.
-Each kit's ability is a pure class under `domain/ability/kits`,
+`domain/kit/KitBook.java` lists 51 kit definitions in menu order: Red Warfare's
+twenty-two playable kits in the order of the original `SearchAndDestroy`, then
+Equality, Inertia and Sacrificial, which the original never offered in play,
+then The Storm's first eight designed kits and the eighteen kits in
+`domain/kit/ExpansionKits.java`. TSMC's ordinary match pool in `rwf.yml` admits
+only the 24 ported kits: the original twenty-two plus Equality and Sacrificial.
+Inertia and the Storm-designed kits remain available to development and test
+profiles without entering ordinary TSMC matches.
+
+The ability of each kit that has one is a pure class under `domain/ability/kits`,
 registered in `AbilityBook` and driven by match events with randomness from the
-match seed. `rwf/kits.yml` must describe the same kits, kit for kit.
+match seed.
+`rwf/kits.yml` must describe the same kit definitions, kit for kit.
 
 Every kit carries the gold "Bomb Fuse" in hotbar slot 0. A kit's fuse bonus
 (`FuseType`) takes a second per level off arming, defusing or both. A bow kit's
@@ -186,6 +192,11 @@ equivalent used instead.
     `poof`.
 
 ## Buying, the rotation and layouts
+
+The menu, lobby alcove displays, new purchases and weekly rotation include only
+the current draft's kit pool. A pool that cannot fill four slots with the
+required tiers and no repeats has no weekly free rotation. A charged pending
+purchase can still settle after a draft change excludes its kit.
 
 - `/rwf buy <kit>` or the kit menu's confirmation buys a kit with Red Warfare
   credits (3 for a win, 1 for a loss). A purchase is written as a pending row

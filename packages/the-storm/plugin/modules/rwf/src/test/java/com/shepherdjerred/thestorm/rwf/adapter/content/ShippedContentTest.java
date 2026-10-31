@@ -61,7 +61,67 @@ final class ShippedContentTest {
     assertThat(content.config().match().maxCombatants()).isEqualTo(108);
     assertThat(content.config().match().automaticSizing()).isTrue();
     assertThat(content.config().experience())
-        .isEqualTo(com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT);
+        .isEqualTo(
+            com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT
+                .withMaps(
+                    java.util.Set.of(
+                        "apex-expanse",
+                        "battle-scarred",
+                        "beanstalk",
+                        "cloned-balance",
+                        "cloned-beanstalks",
+                        "cors-path",
+                        "fairylands",
+                        "fancy-castles",
+                        "fjords",
+                        "floating-isles",
+                        "flying-ships",
+                        "gardens",
+                        "grove-wars",
+                        "hemispheres",
+                        "main-street",
+                        "miner-dispute",
+                        "modified-tropicals",
+                        "mountains",
+                        "perfect-balance",
+                        "pirate-island",
+                        "rival-castles",
+                        "rotated-hemispheres",
+                        "the-harshest-harvest",
+                        "the-lost-kingdom",
+                        "the-red-sand-seas",
+                        "tropical-resort",
+                        "valley",
+                        "village-skirmish",
+                        "warlords-castles",
+                        "warzone",
+                        "wet-britches"))
+                .withKits(
+                    java.util.Set.of(
+                        "trooper",
+                        "berserker",
+                        "demolitions",
+                        "dwarf",
+                        "explosive",
+                        "ghost",
+                        "juggernaut",
+                        "longbow",
+                        "medic",
+                        "pyro",
+                        "rewind",
+                        "shortbow",
+                        "spy",
+                        "teleporter",
+                        "vampire",
+                        "venom",
+                        "warper",
+                        "ninja",
+                        "frost",
+                        "skinner",
+                        "wraith",
+                        "bleeder",
+                        "equality",
+                        "sacrificial")));
     assertThat(content.config().matchSettings().maxPlayers()).isEqualTo(108);
   }
 

@@ -294,6 +294,22 @@ final class KitEconomyTest {
     }
 
     @Test
+    void anUnsupportedPoolGetsNoRotationInsteadOfFailingTheLobby() {
+      var consecutive =
+          List.of(
+              KitBook.EXPLOSIVE,
+              KitBook.GHOST,
+              KitBook.DEMOLITIONS,
+              KitBook.JUGGERNAUT,
+              KitBook.SPY);
+      var week = new KitRotation.Week(KitRotation.EPOCH);
+      assertThat(KitRotation.of(week, consecutive)).hasSize(KitRotation.SIZE);
+      assertThat(KitRotation.ofOptional(week.next(), consecutive)).isEmpty();
+      var noBasicTier = List.of(KitBook.BERSERKER, KitBook.DWARF, KitBook.VENOM, KitBook.BLEEDER);
+      assertThat(KitRotation.ofOptional(week, noBasicTier)).isEmpty();
+    }
+
+    @Test
     void tooFewKitsToRotateFailLoudly() {
       assertThatThrownBy(
               () ->

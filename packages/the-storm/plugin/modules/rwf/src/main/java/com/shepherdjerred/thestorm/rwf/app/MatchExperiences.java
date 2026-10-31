@@ -18,6 +18,10 @@ public final class MatchExperiences {
     return pending;
   }
 
+  public ExperienceSettings currentOrPending() {
+    return current.map(Frozen::settings).orElse(pending);
+  }
+
   public void select(ExperienceSettings settings) {
     pending = java.util.Objects.requireNonNull(settings);
   }

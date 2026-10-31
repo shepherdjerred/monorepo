@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwf.app.shop.Purchase;
 import com.shepherdjerred.thestorm.rwf.app.shop.ShopError;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitLayout;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitPool;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitRotation;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import java.time.Instant;
@@ -42,33 +43,54 @@ final class Armory {
   /** The flag answer and owned kits, before the prefs join them. */
   private record Access(boolean expanded, Set<String> owned) {}
 
+  record Parts(
+      PaperContext context,
+      KitShop shop,
+      JoinGate gate,
+      List<KitSpec> kits,
+      java.util.function.Supplier<KitPool> pool) {}
+
   private final PaperContext context;
   private final KitShop shop;
   private final JoinGate gate;
   private final List<KitSpec> kits;
+  private final java.util.function.Supplier<KitPool> pool;
   private final Map<UUID, Loaded> loaded = new HashMap<>();
   private final Map<UUID, List<Runnable>> waiting = new HashMap<>();
   private final Set<UUID> buying = new HashSet<>();
   private KitRotation.@Nullable Week week;
+  private @Nullable KitPool rotationPool;
   private List<KitSpec> rotation = List.of();
 
-  Armory(PaperContext context, KitShop shop, JoinGate gate, List<KitSpec> kits) {
-    this.context = context;
-    this.shop = shop;
-    this.gate = gate;
-    this.kits = List.copyOf(kits);
+  Armory(Parts parts) {
+    this.context = parts.context();
+    this.shop = parts.shop();
+    this.gate = parts.gate();
+    this.kits = List.copyOf(parts.kits());
+    this.pool = parts.pool();
   }
 
   List<KitSpec> kits() {
-    return kits;
+    var admitted = pool.get();
+    return kits.stream().filter(kit -> admitted.allows(kit.id())).toList();
+  }
+
+  List<KitSpec> milestones() {
+    var admitted = kits();
+    return com.shepherdjerred.thestorm.rwf.domain.kit.KitBook.MILESTONE_ONE.stream()
+        .filter(admitted::contains)
+        .toList();
   }
 
   /** The kits free this week, in menu order. */
   List<KitSpec> rotation(Instant now) {
     var current = KitRotation.Week.of(now);
-    if (!current.equals(week)) {
-      rotation = KitRotation.of(current, kits);
+    var admitted = pool.get();
+    if (!current.equals(week) || !admitted.equals(rotationPool)) {
+      var candidates = kits();
+      rotation = KitRotation.ofOptional(current, candidates).orElseGet(List::of);
       week = current;
+      rotationPool = admitted;
     }
     return rotation;
   }
@@ -203,11 +225,12 @@ final class Armory {
    * at a time per player.
    */
   void buy(UUID player, KitSpec kit, Consumer<Result<Purchase, ShopError>> done) {
+    var admitted = pool.get();
     if (!buying.add(player)) {
       done.accept(Result.err(new ShopError.InProgress(kit.id())));
       return;
     }
-    var future = shop.buy(player, kit, context.time().instant());
+    var future = shop.buy(player, admitted, kit, context.time().instant());
     var _ =
         future.whenCompleteAsync(
             (result, failure) -> {

@@ -15,9 +15,9 @@ fall out of it you are put back on the plaza.
 
 - The **rules** and the **match board** show how to play, the map, how many
   players and bots have joined, and how long until the round starts.
-- The **armory** has an alcove for every kit, grouped into basic, mid and
-  advanced spines. Each alcove shows a kit's icon, name and what it carries,
-  with the command to pick it.
+- The **armory** has kit alcoves grouped into basic, mid and advanced spines.
+  Each alcove shows a kit's icon, name and what it carries, with the command
+  to pick it. Only kits in the current match pool can be selected.
 - The armory's **rotation wall** shows the four kits that are free to play
   this week.
 - Three **vote podiums** show the maps you can vote for, and the
@@ -91,12 +91,10 @@ generative AI. Their chat uses prewritten lines chosen for what is happening,
 sometimes with a player's name filled in.
 
 Bots choose from the first four kits unless the full kit list is enabled for
-at least one player in the match. In that case, they can choose any kit, even
-one you haven't unlocked. They use
-their kit's items too. A Medic heals hurt teammates, an Explosive fires RPGs
-and grenades, Demolitions and Teleporter bots set down mines and teleporters
-where they wait, a Spotter marks you, an Engineer or a Decoy reaches for its
-item when hurt, and a Grappler hooks its way across the map.
+at least one player in the match. In that case, they can choose any kit in the
+current match pool, even one you haven't unlocked. They use their kit's items
+too. A Medic heals hurt teammates, an Explosive fires RPGs and grenades, and
+Demolitions and Teleporter bots set down mines and teleporters where they wait.
 
 Bots arrive in the lobby a few at a time during the countdown, like players
 do. While they wait they wander about, come over to say hello (often by

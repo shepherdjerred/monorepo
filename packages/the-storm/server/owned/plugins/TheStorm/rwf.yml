@@ -23,9 +23,66 @@ experience:
   difficulty: hard
   style: varied
   variety: high
-  # Empty pools admit every otherwise available map and kit. Commands override in memory only.
-  maps: []
-  kits: []
+  # Empty pools admit every otherwise available map and kit. These pools keep
+  # TSMC on imported Red Warfare maps and ported kits; authored content still
+  # ships for development and testing. Commands override in memory only.
+  maps:
+    - apex-expanse
+    - battle-scarred
+    - beanstalk
+    - cloned-balance
+    - cloned-beanstalks
+    - cors-path
+    - fairylands
+    - fancy-castles
+    - fjords
+    - floating-isles
+    - flying-ships
+    - gardens
+    - grove-wars
+    - hemispheres
+    - main-street
+    - miner-dispute
+    - modified-tropicals
+    - mountains
+    - perfect-balance
+    - pirate-island
+    - rival-castles
+    - rotated-hemispheres
+    - the-harshest-harvest
+    - the-lost-kingdom
+    - the-red-sand-seas
+    - tropical-resort
+    - valley
+    - village-skirmish
+    - warlords-castles
+    - warzone
+    - wet-britches
+  kits:
+    - trooper
+    - berserker
+    - demolitions
+    - dwarf
+    - explosive
+    - ghost
+    - juggernaut
+    - longbow
+    - medic
+    - pyro
+    - rewind
+    - shortbow
+    - spy
+    - teleporter
+    - vampire
+    - venom
+    - warper
+    - ninja
+    - frost
+    - skinner
+    - wraith
+    - bleeder
+    - equality
+    - sacrificial
 match:
   # A match counts down and starts only with at least this many humans.
   minHumans: 1

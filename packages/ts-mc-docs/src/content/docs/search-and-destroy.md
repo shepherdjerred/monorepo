@@ -3,7 +3,7 @@ title: Search and Destroy
 description: Join your first Search and Destroy round on The Storm.
 ---
 
-Search and Destroy is a team game where you fight to be the last team standing or destroy an enemy team's bomb. It is based on the 2013–2014 Red Warfare game and takes place in its own world on The Storm.
+Search and Destroy is a team game where you fight to be the last team standing or destroy an enemy team's bomb. It is based on the 2013–2014 Red Warfare game and takes place in its own world on The Storm. Regular matches use maps and kits ported from the original game.
 
 Search and Destroy is rolling out and may not be available to every player yet.
 

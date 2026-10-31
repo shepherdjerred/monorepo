@@ -38,6 +38,8 @@ final class ContentFilesTest {
 
   private Path shippedCopy() {
     copy("rwf.yml");
+    edit("rwf.yml", "(?m)^  maps:\\n(?:    - [a-z0-9-]+\\n)+", "  maps: []\n");
+    edit("rwf.yml", "(?m)^  kits:\\n(?:    - [a-z0-9-]+\\n)+", "  kits: []\n");
     copy("rwf/kits.yml");
     copy("rwf/maps/training-yard/map.yml");
     copy("rwf/maps/training-yard/blocks.schem");

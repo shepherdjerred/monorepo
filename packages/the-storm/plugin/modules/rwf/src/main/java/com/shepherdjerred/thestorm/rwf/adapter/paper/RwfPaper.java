@@ -195,7 +195,17 @@ public final class RwfPaper {
                 sealed));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
-    var armory = new Armory(context, app.shop(), app.kitGates().kits(), content.kits());
+    var experiences = new com.shepherdjerred.thestorm.rwf.app.MatchExperiences(config.experience());
+    var armory =
+        new Armory(
+            new Armory.Parts(
+                context,
+                app.shop(),
+                app.kitGates().kits(),
+                content.kits(),
+                () ->
+                    new com.shepherdjerred.thestorm.rwf.domain.kit.KitPool(
+                        experiences.currentOrPending().kits())));
     // Kit picks, map votes and finished matches; the killstreaks and kit shop call its hooks.
     var productEvents = new RwfAnalytics(context.analytics());
     var menus = new KitMenus(context, kits, armory, productEvents);
@@ -220,6 +230,7 @@ public final class RwfPaper {
                 keys,
                 lobby,
                 kits,
+                armory::kits,
                 app.hooks().displayStyle(),
                 () -> armory.anyExpanded() ? armory.rotation(context.time().instant()) : List.of(),
                 () -> Optional.ofNullable(statsHolder.get()).map(Stats::leaders).orElseGet(Map::of),
@@ -252,6 +263,7 @@ public final class RwfPaper {
             new MatchRunner.Parts(
                 context,
                 config,
+                experiences,
                 snapshots,
                 kits,
                 boards,

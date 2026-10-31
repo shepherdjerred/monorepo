@@ -393,6 +393,33 @@ final class RwfKitMenuTest {
   }
 
   @Test
+  void aChargedPurchaseCanSettleAfterThePoolExcludesIt() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    fund(harness, alice, 800);
+    harness
+        .database
+        .write(
+            dsl ->
+                dsl.execute(
+                    "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
+                        + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
+        .join();
+    alice.performCommand("rwf buy berserker");
+    harness.until(() -> said(alice, "Berserker is still being completed"));
+    harness.database.write(dsl -> dsl.execute("DROP TRIGGER reject_kit_grant")).join();
+
+    alice.performCommand("rwf admin settings kits trooper");
+    alice.performCommand("rwf admin stop");
+    harness.ticks(5);
+    alice.performCommand("rwf buy berserker");
+
+    harness.until(() -> said(alice, "Purchased kit Berserker"));
+    assertThat(credits(harness, alice)).isEqualTo(400);
+  }
+
+  @Test
   void rotationAndCreditsAreOneCommandAway() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");
@@ -447,6 +474,63 @@ final class RwfKitMenuTest {
                   assertThat(PlainTextComponentSerializer.plainText().serialize(display.text()))
                       .isEqualTo(kit.name()));
     }
+  }
+
+  @Test
+  void aRestrictedPoolLimitsTheMenuRotationAndPurchases() throws java.io.IOException {
+    var harness = RwfHarness.prepare(directory);
+    var config = directory.resolve("rwf.yml");
+    var original = java.nio.file.Files.readString(config);
+    var restricted = original.replace("  kits: []", "  kits: [trooper, berserker]");
+    assertThat(restricted).isNotEqualTo(original);
+    java.nio.file.Files.writeString(config, restricted);
+    running = harness.enable(directory);
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    fund(harness, alice, 1000);
+
+    var top = openMenu(harness, alice).getTopInventory();
+
+    assertThat(name(requireNonNull(top.getItem(0)))).isEqualTo("Trooper");
+    assertThat(name(requireNonNull(top.getItem(1)))).isEqualTo("Berserker");
+    assertThat(top.getItem(2)).isNull();
+    var tag = new org.bukkit.NamespacedKey("thestorm", "rwf_lobby");
+    assertThat(
+            harness.lobbyWorld.getEntities().stream()
+                .map(
+                    entity ->
+                        entity
+                            .getPersistentDataContainer()
+                            .get(tag, org.bukkit.persistence.PersistentDataType.STRING))
+                .filter(part -> part != null && part.startsWith("alcove-"))
+                .toList())
+        .containsExactlyInAnyOrder("alcove-item:trooper", "alcove-label:trooper");
+    alice.performCommand("rwf rotation");
+    harness.until(() -> said(alice, "Free this week: . Changes in"));
+    assertThat(heard).noneMatch(message -> message.contains("Sapper"));
+    alice.performCommand("rwf buy sapper");
+    harness.until(() -> said(alice, "Sapper is not for sale"));
+    assertThat(credits(harness, alice)).isEqualTo(1000);
+  }
+
+  @Test
+  void aRestrictedPoolAlsoFiltersTheMilestoneOnlyMenu() throws java.io.IOException {
+    var harness = RwfHarness.prepare(directory);
+    var config = directory.resolve("rwf.yml");
+    var original = java.nio.file.Files.readString(config);
+    var restricted = original.replace("  kits: []", "  kits: [trooper, berserker]");
+    assertThat(restricted).isNotEqualTo(original);
+    java.nio.file.Files.writeString(config, restricted);
+    JoinGate closed = player -> CompletableFuture.completedFuture(false);
+    harness.kitGates = new FeatureGates(closed, JoinGate.open());
+    running = harness.enable(directory);
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+
+    var top = openMenu(harness, alice).getTopInventory();
+
+    assertThat(name(requireNonNull(top.getItem(0)))).isEqualTo("Trooper");
+    assertThat(top.getItem(1)).isNull();
   }
 
   @Test
