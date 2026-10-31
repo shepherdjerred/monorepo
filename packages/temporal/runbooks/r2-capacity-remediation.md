@@ -36,9 +36,9 @@ aws --version            # local CLI present
 
 The R2 commands use the repository's standard operator environment names. Run
 the commands below from the repository root through the service-account
-wrapper with these references (same 1Password
-item as the Velero cloud credentials); do not resolve them into a checked-in
-env file:
+wrapper with these references from the R2 1Password item, which Velero no
+longer uses (it reads `backblaze-velero`); do not resolve them into a
+checked-in env file:
 
 ```bash
 export CLOUDFLARE_R2_ACCESS_KEY_ID='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/ymzh6wey7jw3mwpspsfbft7neu'

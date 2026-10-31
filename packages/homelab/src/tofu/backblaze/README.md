@@ -13,7 +13,8 @@ Velero writes its backups and ZFS streams to `sjerred-velero` with the
 `backblaze-velero` item. That item's `cloud` field is the AWS credentials file
 Velero mounts. Backups taken before the move stay in the R2 `homelab` bucket
 and were not copied. `seaweedfs-backups` and `sjerred-postgres-wal` have no
-writer. A change to `keys.tf` needs an operator apply before a workload reads
+writer: the SeaweedFS object backup, Delivery replication and WAL-G that would
+have used them were retired. A change to `keys.tf` needs an operator apply before a workload reads
 the changed item.
 
 ```sh

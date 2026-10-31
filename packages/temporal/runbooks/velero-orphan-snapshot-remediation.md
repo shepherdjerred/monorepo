@@ -21,7 +21,8 @@ Moving Velero to the Backblaze `sjerred-velero` bucket orphaned every earlier
 backup on purpose. Velero removed their Backup CRs because the new location
 holds no metadata for them. Their ZFSBackup CRs and local snapshots remained.
 The objects themselves stay in the R2 `homelab` bucket. Prune those snapshots
-only after every backed-up volume has a completed full in `sjerred-velero`.
+only after every schedule-and-volume family has a completed full in
+`sjerred-velero`; a full under one schedule does not cover another.
 
 ## Prerequisites
 
