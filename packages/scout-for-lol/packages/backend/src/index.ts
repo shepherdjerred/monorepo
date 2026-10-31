@@ -8,7 +8,7 @@ import { startScoutRuntime } from "#src/runtime/boot.ts";
 import { scoutRuntimeSubsystems } from "#src/runtime/subsystems.ts";
 import "@scout-for-lol/backend/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 
 const logger = createLogger("app");
 
@@ -39,15 +39,16 @@ if (
 ) {
   logger.info("🔍 Initializing Bugsink error tracking");
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn: configuration.bugsinkDsn,
-    environment: configuration.environment,
+    ...bugsinkServerOptions({
+      dsn: configuration.bugsinkDsn,
+      environment: configuration.environment,
+      // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
+      // events per deploy and matches what ArgoCD reports.
+      release: configuration.version,
+    }),
     // Scout's NodeSDK owns the global OpenTelemetry providers. The Sentry SDK remains
     // responsible for error tracking without attempting a second registration.
     enableOpenTelemetrySetup: false,
-    // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
-    // events per deploy and matches what ArgoCD reports.
-    release: configuration.version,
     // Drop expected noise (Riot upstream 5xx, boundary Riot-ID validation)
     // before it leaves the SDK. See packages/backend/src/bugsink-filters.ts
     // for the rationale.

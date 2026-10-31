@@ -12,6 +12,7 @@ export const BootstrapSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().min(1),
   AWS_SECRET_ACCESS_KEY: z.string().min(1),
   BUGSINK_DSN: z.url().optional(),
+  VERSION: z.string().min(1).optional(),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   ENVIRONMENT: z
     .enum(["production", "beta", "development", "test"])

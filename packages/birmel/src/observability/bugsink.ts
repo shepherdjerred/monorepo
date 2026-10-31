@@ -5,7 +5,7 @@
 // Confirmed by comparison with scout-for-lol/backend (working) which also
 // runs on Bun and uses @sentry/bun.
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { filterBirmelBugsinkEvent } from "./bugsink-filters.ts";
 
@@ -31,12 +31,15 @@ export function initializeBugsink(): void {
   }
 
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn: config.bugsink.dsn,
-    environment: config.bugsink.environment,
-    ...(config.bugsink.release != null && config.bugsink.release.length > 0
-      ? { release: config.bugsink.release }
-      : {}),
+    ...bugsinkServerOptions({
+      dsn: config.bugsink.dsn,
+      environment: config.bugsink.environment,
+      release:
+        config.bugsink.release === undefined ||
+        config.bugsink.release.length === 0
+          ? undefined
+          : config.bugsink.release,
+    }),
     sampleRate: config.bugsink.sampleRate,
     // Bugsink does not support performance monitoring; keep traces off.
     tracesSampleRate: config.bugsink.tracesSampleRate,

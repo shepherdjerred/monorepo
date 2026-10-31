@@ -69,7 +69,7 @@ Already in the original plan's Part 3. Introduce `z.string().brand<"ChampionKey"
 
 ### P5 — Weekly Riot `queues.json` sync check
 
-Cron job (Buildkite scheduled pipeline or GitHub Action) that fetches `https://static.developer.riotgames.com/docs/lol/queues.json`, diffs against `QueueTypeSchema` in `state.ts`, and opens an issue when Riot adds a queue we don't know about.
+Temporal Schedule whose Activities fetch `https://static.developer.riotgames.com/docs/lol/queues.json`, diff it against `QueueTypeSchema` in `state.ts`, and open an issue when Riot adds a queue we don't know about.
 
 ### P6 — Fix `searchChampions` apostrophe
 

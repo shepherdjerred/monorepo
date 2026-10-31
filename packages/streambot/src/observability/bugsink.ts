@@ -3,7 +3,7 @@
 // Node HTTP-module hooks that silently fail under Bun, so events are queued
 // but never POSTed to Bugsink.
 import * as Sentry from "@sentry/bun";
-import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("observability:bugsink");
@@ -22,10 +22,11 @@ export function initializeBugsink(): void {
   }
 
   Sentry.init({
-    dataCollection: bugsinkDataCollection(),
-    dsn,
-    environment: Bun.env["ENVIRONMENT"] ?? "production",
-    release: Bun.env["VERSION"],
+    ...bugsinkServerOptions({
+      dsn,
+      environment: Bun.env["ENVIRONMENT"] ?? "production",
+      release: Bun.env["VERSION"],
+    }),
     // Streambot owns the global OpenTelemetry providers so its manually bounded voice spans and
     // OTLP logs reach Tempo and Loki. The Sentry SDK remains the error-only Bugsink client.
     enableOpenTelemetrySetup: false,

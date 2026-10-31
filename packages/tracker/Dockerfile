@@ -47,6 +47,9 @@ COPY --parents packages/config packages/feature-flags packages/bugsink-config ./
 RUN cd packages/tracker && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
  && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/tracker
+# The Bugsink release; declared after the build steps so it never busts caches.
+ARG VERSION=dev
+ENV VERSION=${VERSION}
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7351

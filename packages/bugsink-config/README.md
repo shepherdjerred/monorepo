@@ -36,6 +36,24 @@ Applications pass the DSN, release, environment, and sample rates to
 `Sentry.init` explicitly from their own `BUGSINK_*` configuration. The SDK
 would otherwise read `SENTRY_*` environment variables on its own.
 
+Bun services build their options with `bugsinkServerOptions` from the
+`@shepherdjerred/bugsink-config/server` export:
+
+```ts
+import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
+
+Sentry.init({
+  ...bugsinkServerOptions({ dsn, environment, release }),
+  enableOpenTelemetrySetup: false,
+});
+```
+
+It sets `debug` explicitly and throws when any `SENTRY_*` variable is present,
+because the SDK reads some of them, such as `SENTRY_TRACE` and
+`SENTRY_BAGGAGE`, regardless of the options passed. It leaves
+`tracesSampleRate` unset, since any value, including 0, enables SDK span
+recording.
+
 ```bash
 bun run build
 bun run typecheck
