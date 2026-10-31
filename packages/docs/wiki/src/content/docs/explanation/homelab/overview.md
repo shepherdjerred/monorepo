@@ -146,7 +146,8 @@ follows the filer's change stream and copies each object to Backblaze as it
 changes. Copying objects rather than volume snapshots means a change moves
 only the objects it touched, never a 600 GB ZFS stream. It also lets
 rebuildable buckets, such as static sites and release artifacts, stay out.
-Velero skips the SeaweedFS volumes.
+The [PVC backup policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json)
+excludes the SeaweedFS volumes from Velero.
 
 Secrets come from 1Password. Backup coverage is an explicit list, not an
 inference — a volume nobody added is a volume nobody is backing up, and the
