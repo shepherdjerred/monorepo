@@ -7,6 +7,8 @@ import { DeploymentSchema } from "#shared/contract.ts";
 import { api, expectNoHorizontalOverflow } from "./helpers.ts";
 
 const ROUTES = [
+  ["/commits", "Commits"],
+  ["/commits/aaaaaaa", "Commit aaaaaaa"],
   ["/pipelines", "Pipelines"],
   ["/pipelines/arcade", "Arcade"],
   ["/pipelines/arcade/executions", "Arcade"],
@@ -44,10 +46,32 @@ test("every route deep-links to its own page and title", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("the pipelines list is home and filters through the URL", async ({
+test("the commit list is home and answers per environment", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page).toHaveURL(/\/commits$/u);
+  await page.getByRole("link", { name: /^aaaaaaa/u }).click();
+  await expect(page).toHaveURL(/\/commits\/a{40}$/u);
+  await expect(page.locator("#main-heading")).toBeFocused();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "By environment" }),
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: /^prod/u })).toContainText(
+    "services live",
+  );
+  await page.goBack();
+  const search = page.getByRole("search", { name: "Find a commit" });
+  await search.getByLabel("Commit SHA").fill("aaaaaaa");
+  await search.getByRole("button", { name: "Find" }).click();
+  await expect(page).toHaveURL(/\/commits\/aaaaaaa$/u);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Commit aaaaaaa" }),
+  ).toBeVisible();
+});
+
+test("the pipelines list filters through the URL", async ({ page }) => {
+  await page.goto("/pipelines");
   await expect(page).toHaveURL(/\/pipelines$/u);
   const table = page.getByRole("table");
   await expect(
@@ -69,7 +93,7 @@ test("the pipelines list is home and filters through the URL", async ({
 test("links keep history: back and forward restore each page", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/pipelines");
   await page.getByRole("link", { name: "Arcade", exact: true }).click();
   await expect(page).toHaveURL(/\/pipelines\/arcade$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
@@ -96,7 +120,7 @@ test("links are real anchors that open in a new tab", async ({
   page,
   context,
 }) => {
-  await page.goto("/");
+  await page.goto("/pipelines");
   const link = page.getByRole("link", { name: "Arcade", exact: true });
   await expect(link).toHaveAttribute("href", "/pipelines/arcade");
   const opened = context.waitForEvent("page");
