@@ -35,7 +35,7 @@ export async function reconcileStormCompanions(
   if (
     pod.status?.phase !== "Running" ||
     pod.status.containerStatuses?.some(
-      (container) => container.name === "minecraft" && container.ready,
+      (container) => container.name === "minecraft-tsmc" && container.ready,
     ) !== true
   )
     return "sleeping";
@@ -45,7 +45,7 @@ export async function reconcileStormCompanions(
     "minecraft-tsmc",
     "minecraft-tsmc-0",
     "-c",
-    "minecraft",
+    "minecraft-tsmc",
     "--",
     "rcon-cli",
     "companion reconcile",
