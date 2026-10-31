@@ -3467,6 +3467,14 @@
           "thresholdRollouts": []
         },
         {
+          "key": "ci-workspace-golden-refresh-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "storm-forum-registration-enabled",
           "type": "boolean",
           "default": false,
