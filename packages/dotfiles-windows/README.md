@@ -53,3 +53,13 @@ chezmoi apply ~/.config/fish/config.fish
 
 When an app rewrites its own settings file, bring the change back with
 `chezmoi re-add <target>`.
+
+## Riot Client auto-close
+
+Riot removed the option to close the Riot Client window when a game starts.
+`~/.local/bin/riot-autoclose.ps1` restores it: while League or VALORANT is
+running, and for 30 seconds after, it closes the `Riot Client` UI window. It
+never touches `RiotClientServices`, Vanguard or the game.
+`run_onchange_riot-autoclose-task.ps1.tmpl` registers it as the logon task
+`RiotClientAutoClose`; remove it with
+`Unregister-ScheduledTask RiotClientAutoClose`.

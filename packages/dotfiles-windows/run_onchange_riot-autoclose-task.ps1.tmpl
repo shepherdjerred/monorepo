@@ -1,0 +1,17 @@
+$ErrorActionPreference = 'Stop'
+
+# Registers the logon task that runs ~/.local/bin/riot-autoclose.ps1.
+# Script hash: {{ include "dot_local/bin/riot-autoclose.ps1" | sha256sum }}
+$name = 'RiotClientAutoClose'
+$script = '{{ .chezmoi.homeDir }}/.local/bin/riot-autoclose.ps1'
+$pwsh = (Get-Command pwsh).Source
+
+$action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -WindowStyle Hidden -File `"$script`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew `
+    -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+
+Stop-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
+Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
+Start-ScheduledTask -TaskName $name
