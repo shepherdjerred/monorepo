@@ -1,4 +1,4 @@
-import { lstat, readdir, rm } from "node:fs/promises";
+import { lstat, readdir, rename, rm } from "node:fs/promises";
 import nodePath from "node:path";
 import { z } from "zod";
 import { CommitSchema } from "./git.ts";
@@ -30,8 +30,7 @@ export async function goldenMarker(
     if (!info.isFile())
       throw new Error("Golden workspace marker is not a file");
   } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT")
-      return undefined;
+    if (missing(error)) return undefined;
     throw error;
   }
   return GoldenMarkerSchema.parse(await Bun.file(path).json());
@@ -41,4 +40,30 @@ export async function goldenMarker(
 export async function clearWorkspace(workspace: string): Promise<void> {
   for (const entry of await readdir(workspace))
     await rm(nodePath.join(workspace, entry), { recursive: true, force: true });
+}
+
+function missing(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+/**
+ * Moves a complete tree to `target`, retiring any tree already there. The
+ * golden claim may be snapshotted at any moment, and a recursive delete or
+ * copy in place would leave a snapshot with a partial checkout, possibly
+ * still marked. Renames leave only the old tree, no tree, or the new tree;
+ * a clone of "no tree" is an ordinary empty workspace.
+ */
+export async function replaceTree(
+  staging: string,
+  target: string,
+): Promise<void> {
+  const retired = `${target}.retired`;
+  await rm(retired, { recursive: true, force: true });
+  try {
+    await rename(target, retired);
+  } catch (error) {
+    if (!missing(error)) throw error;
+  }
+  await rename(staging, target);
+  await rm(retired, { recursive: true, force: true });
 }

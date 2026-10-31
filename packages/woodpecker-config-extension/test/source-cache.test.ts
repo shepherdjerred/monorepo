@@ -17,7 +17,11 @@ import { z } from "zod";
 import { parse } from "yaml";
 import { git } from "#src/checkout/git.ts";
 import { checkoutSource } from "#src/checkout/snapshot.ts";
-import { clearWorkspace, GOLDEN_MARKER } from "#src/checkout/golden.ts";
+import {
+  clearWorkspace,
+  GOLDEN_MARKER,
+  replaceTree,
+} from "#src/checkout/golden.ts";
 import {
   collectPreparedSeeds,
   publishPreparedSeed,
@@ -589,4 +593,23 @@ test("clearing a golden clone leaves an empty workspace", async () => {
   expect(await readdir(clone)).toEqual([]);
   const result = await checkoutSource({ ...input, workspace: clone });
   expect(result.goldenSha).toBeNull();
+});
+
+test.each([
+  ["replaces the previous tree whole", ["monorepo"]],
+  ["needs no previous tree", []],
+  [
+    "discards a tree retired by an interrupted publication",
+    ["monorepo", "monorepo.retired"],
+  ],
+])("golden publication %s", async (_case, existing) => {
+  const root = await mkdtemp(join(tmpdir(), "ci-golden-test-"));
+  roots.push(root);
+  for (const name of existing) await Bun.write(join(root, name, name), name);
+  await Bun.write(join(root, "monorepo.staging", "new"), "new");
+
+  await replaceTree(join(root, "monorepo.staging"), join(root, "monorepo"));
+
+  expect(await readdir(join(root, "monorepo"))).toEqual(["new"]);
+  expect(await readdir(root)).toEqual(["monorepo"]);
 });

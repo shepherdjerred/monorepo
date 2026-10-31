@@ -4,6 +4,7 @@ import {
   GOLDEN_MARKER,
   GOLDEN_ROOT,
   GoldenMarkerSchema,
+  replaceTree,
   WORKSPACE_ROOT,
 } from "../../packages/woodpecker-config-extension/src/checkout/golden.ts";
 import { git } from "../../packages/woodpecker-config-extension/src/checkout/git.ts";
@@ -26,13 +27,16 @@ if (
   throw new Error("Golden workspace source has modified tracked files");
 const marker = GoldenMarkerSchema.parse({ version: 1, commit });
 const target = path.join(GOLDEN_ROOT, relative);
-await rm(target, { recursive: true, force: true });
+// The new tree is built beside the target and swapped in complete, so a
+// snapshot taken during publication never holds a partial checkout.
+const staging = `${target}.staging`;
+await rm(staging, { recursive: true, force: true });
 await mkdir(path.dirname(target), { recursive: true });
-await cloneTree(workspace, target);
+await cloneTree(workspace, staging);
 // The install ran as root and the copy keeps owners, but checkout and the
 // prepared-seed clear run as UID 1000 and must rewrite or delete anything in
 // a clone. Hand the whole tree to that user once here, not in every workflow.
-const chown = Bun.spawn(["chown", "-R", "1000:1000", target], {
+const chown = Bun.spawn(["chown", "-R", "1000:1000", staging], {
   stdout: "ignore",
   stderr: "pipe",
 });
@@ -40,6 +44,7 @@ if ((await chown.exited) !== 0)
   throw new Error(
     `chown of the golden workspace failed: ${await new Response(chown.stderr).text()}`,
   );
-await Bun.write(path.join(target, GOLDEN_MARKER), JSON.stringify(marker));
+await Bun.write(path.join(staging, GOLDEN_MARKER), JSON.stringify(marker));
+await replaceTree(staging, target);
 console.log(`CI_WORKSPACE_GOLDEN ${JSON.stringify(marker)}`);
 console.log(`CI_MAINTENANCE_RESULT ${JSON.stringify({ status: "completed" })}`);
