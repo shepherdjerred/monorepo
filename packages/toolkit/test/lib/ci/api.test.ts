@@ -507,3 +507,31 @@ test("GraphQL quota refusals answered with HTTP 200 raise the typed error", asyn
   );
   expect(failure).toBeInstanceOf(GitHubRateLimitError);
 });
+
+test("GitHub transient 500 server error retries and recovers", async () => {
+  let callCount = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => {
+      callCount++;
+      if (callCount === 1) {
+        return new Response("Internal Server Error", { status: 500 });
+      }
+      return Response.json({
+        number: 1,
+        html_url: "https://github.com/o/r/pull/1",
+        state: "open",
+        merged: false,
+        draft: false,
+        mergeable: true,
+        mergeable_state: "clean",
+        head: { sha: CI_HEAD },
+        base: { sha: "b".repeat(40), ref: "main" },
+      });
+    }),
+  );
+  const github = new GitHubClient("test");
+  const result = await github.pr(1);
+  expect(result.number).toBe(1);
+  expect(callCount).toBe(2);
+});

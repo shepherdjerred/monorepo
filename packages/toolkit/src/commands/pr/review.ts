@@ -168,7 +168,22 @@ export async function reviewResolveCommand(
   const matches = findings.filter(
     (finding) => finding.key === key || finding.title === key,
   );
-  if (matches.length === 0) {
+  let finding = matches[0];
+  if (finding === undefined && key.startsWith("thread:")) {
+    finding = {
+      key,
+      title: key,
+      priority: null,
+      path: null,
+      line: null,
+      isResolved: false,
+      isOutdated: false,
+      threadId: key.slice("thread:".length),
+      commentId: null,
+      url: null,
+    };
+  }
+  if (finding === undefined) {
     throw new Error(
       `No finding matching "${key}" on ${repo}#${String(number)}`,
     );
@@ -178,8 +193,6 @@ export async function reviewResolveCommand(
       `"${key}" matches ${String(matches.length)} findings; use the exact key`,
     );
   }
-  const finding = matches[0];
-  if (finding === undefined) throw new Error("unreachable: no finding");
 
   const outcome = await resolveFinding({
     repo,

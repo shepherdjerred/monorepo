@@ -9,6 +9,7 @@ const LogsSchema = z.array(
 );
 
 export function decodeLogs(raw: unknown): string[] {
+  if (raw === null || raw === undefined) return [];
   return LogsSchema.parse(raw)
     .toSorted((a, b) => a.line - b.line)
     .flatMap((entry) => {
