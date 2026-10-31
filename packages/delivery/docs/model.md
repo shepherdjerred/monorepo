@@ -816,7 +816,11 @@ eligible for `promote`. Minecraft is the only consumer, by
 repository policy: the extended
 Paper, gameplay, all-module, load, and native-client suites that the
 repository already keeps out of CI become the oracle of
-`minecraft/sandbox`, and `minecraft/tsmc` promotes from it.
+`minecraft/sandbox`, and `minecraft/tsmc` promotes from it. That promotion
+is automatic. A release restarts the server, so the TSMC server's sub-recipe
+leads with a `players-offline` step. The step waits until the server console
+reports nobody connected, or the server is asleep, and only then lets the
+sync run.
 
 **Monitoring.** After acceptance, the environment's monitor watches its
 alarms until the evidence threshold is met. Scout prod is the first

@@ -1,5 +1,5 @@
 {
-  "id": "minecraft-tsmc/7",
+  "id": "minecraft-tsmc/8",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -138,6 +138,11 @@
           },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [
+            {
+              "kind": "players-offline",
+              "instance": "application:minecraft-tsmc",
+              "pointOfNoReturn": false
+            },
             {
               "kind": "apply-safety",
               "instance": "application:minecraft-tsmc",

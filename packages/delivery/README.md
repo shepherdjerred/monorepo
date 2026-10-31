@@ -206,6 +206,10 @@ and completed-stage immutability remain mandatory; other stages retain indexed
 evidence identities. A Minecraft release does not append a backup or restored
 copy. Scheduled Velero backups are the only backup.
 
+TSMC promotes automatically from the sandbox. Its server sub-recipe leads with
+a `players-offline` step, which holds the release until nobody is connected.
+The recipe contract allows at most one such gate and places it before sync.
+
 The TSMC recipe's `minecraft-upgrade` step declares its `releaseMode`. A release
 restarts the retained world PVC and requires the usual exact source, image,
 reconciliation and runtime acceptance. Scheduled Velero backups are the only

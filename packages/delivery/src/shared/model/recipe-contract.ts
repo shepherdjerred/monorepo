@@ -219,6 +219,7 @@ export const KubernetesStepSchema = z.discriminatedUnion("kind", [
     imageComponent: ImageComponentNameSchema,
     releaseMode: MinecraftReleaseModeSchema,
   }),
+  z.strictObject({ kind: z.literal("players-offline"), ...stepFields }),
 ]);
 export type KubernetesStep = z.infer<typeof KubernetesStepSchema>;
 
@@ -254,6 +255,7 @@ function stepInstanceExpectation(
     case "archive":
     case "forum-bundle":
     case "minecraft-upgrade":
+    case "players-offline":
       return application;
   }
 }
@@ -271,6 +273,7 @@ export function stepComponents(step: KubernetesStep): string[] {
       return [step.imageComponent, step.bundleComponent];
     case "apply-safety":
     case "sync":
+    case "players-offline":
       return [];
   }
 }

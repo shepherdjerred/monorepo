@@ -48,11 +48,7 @@ describe("catalog core", () => {
         .filter((environment) => environment.approvalPolicy === "required")
         .map((environment) => environment.id)
         .toSorted(),
-    ).toEqual([
-      "minecraft/tsmc",
-      "scout-for-lol/prod",
-      "starlight-karma-bot/prod",
-    ]);
+    ).toEqual(["scout-for-lol/prod", "starlight-karma-bot/prod"]);
   });
 
   test("every first-party image has exactly one producing service", () => {

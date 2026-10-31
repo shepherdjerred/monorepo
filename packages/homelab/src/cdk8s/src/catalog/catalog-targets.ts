@@ -119,6 +119,15 @@ export const ENVIRONMENT_TESTS: Readonly<
 > = {};
 
 /**
+ * Environments whose release restarts a server people play on. Each holds
+ * its release at a leading players-offline step until nobody is connected,
+ * so an automatic promotion never disconnects anyone.
+ */
+export const PLAYER_GATED_ENVIRONMENTS: ReadonlySet<string> = new Set([
+  "minecraft/tsmc",
+]);
+
+/**
  * Chart parameters whose Delivery image is not the component the parameter
  * names. The control-plane chart runs the Temporal worker image, and the
  * sandbox pod guard admits the candidate Storm image of the deployment's own

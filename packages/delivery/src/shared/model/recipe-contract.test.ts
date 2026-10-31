@@ -296,6 +296,45 @@ describe("recipeFromPipeline", () => {
     ]);
   });
 
+  test("a players-offline gate holds the restarting sync, once", async () => {
+    const tsmc = await registered("specialized/minecraft-tsmc/pipeline.json");
+    const recipe = recipeFromPipeline(tsmc);
+    if (recipe.kind !== "kubernetes-application")
+      throw new Error("TSMC maps onto an Application recipe");
+    const gate = {
+      kind: "players-offline" as const,
+      instance: recipe.steps[0]?.instance ?? "",
+      pointOfNoReturn: false,
+    };
+    expect(
+      RecipeDefinitionSchema.safeParse({
+        ...recipe,
+        steps: [gate, ...recipe.steps],
+      }).success,
+    ).toBe(true);
+    expect(
+      RecipeDefinitionSchema.safeParse({
+        ...recipe,
+        steps: [...recipe.steps, gate],
+      }).error?.issues,
+    ).toEqual([
+      expect.objectContaining({
+        message:
+          "A players-offline gate runs before sync, which restarts the server",
+      }),
+    ]);
+    expect(
+      RecipeDefinitionSchema.safeParse({
+        ...recipe,
+        steps: [gate, gate, ...recipe.steps],
+      }).error?.issues,
+    ).toEqual([
+      expect.objectContaining({
+        message: "A recipe holds at most one players-offline gate",
+      }),
+    ]);
+  });
+
   test("maps Tofu stacks by their reviewed policy mode", () => {
     expect(tofu("github")).toMatchObject({
       kind: "tofu",

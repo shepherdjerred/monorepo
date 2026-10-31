@@ -31,6 +31,7 @@ import {
   ENVIRONMENT_TESTS,
   OPERATOR_RUN_STAGES,
   PLATFORM_LOCK_ENVIRONMENTS,
+  PLAYER_GATED_ENVIRONMENTS,
 } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-targets.ts";
 import {
   sourceComponent,
@@ -128,6 +129,17 @@ function withOracleAndLock(
   const tests = ENVIRONMENT_TESTS[environmentId];
   return RecipeDefinitionSchema.parse({
     ...recipe,
+    ...(PLAYER_GATED_ENVIRONMENTS.has(environmentId)
+      ? {
+          steps: [
+            {
+              kind: "players-offline",
+              instance: `application:${recipe.application.name}`,
+            },
+            ...recipe.steps,
+          ],
+        }
+      : {}),
     ...(PLATFORM_LOCK_ENVIRONMENTS.has(environmentId)
       ? { sharedLock: "platform" }
       : {}),

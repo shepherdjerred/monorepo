@@ -16,6 +16,7 @@ import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/re
 import type { DeliveryExecutorActivation } from "./activation.ts";
 import { createDeliveryJobs } from "./jobs.ts";
 import { createDeliveryPlatformWorker } from "./platform-worker.ts";
+import { createPlayersOfflineGrant } from "./players-offline-grant.ts";
 import { deliveryTrmnlEnvironment } from "./trmnl-bootstrap.ts";
 
 const tcp = (port: number) => ({
@@ -137,6 +138,11 @@ export function createDeliveryWorker(
       },
     );
   }
+  const account =
+    activation.workerRegistryItemId === undefined
+      ? undefined
+      : createDeliveryJobs(chart, "worker", activation.workerRegistryItemId);
+  if (account !== undefined) createPlayersOfflineGrant(chart, account);
   const deployment = createTemporalDomainWorker(chart, {
     name: "temporal-delivery-worker",
     deploymentName: "temporal-delivery-worker",
@@ -145,16 +151,9 @@ export function createDeliveryWorker(
     cpuLimit: Cpu.millis(1000),
     memoryRequest: Size.mebibytes(256),
     memoryLimit: Size.gibibytes(1),
-    ...(activation.workerRegistryItemId === undefined
+    ...(account === undefined
       ? {}
-      : {
-          serviceAccount: createDeliveryJobs(
-            chart,
-            "worker",
-            activation.workerRegistryItemId,
-          ),
-          automountServiceAccountToken: true,
-        }),
+      : { serviceAccount: account, automountServiceAccountToken: true }),
     envVariables: {
       ...deliveryTrmnlEnvironment(chart, activation),
       ...staticStorageEnvironment,
