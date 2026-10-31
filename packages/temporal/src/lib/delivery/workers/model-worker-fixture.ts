@@ -124,6 +124,38 @@ export function temporal(
   });
 }
 
+/**
+ * The same deployment as a `retire-host` of the drained stable host: the
+ * accepted candidate stays live and exactly the stable host is frozen at
+ * zero replicas, as Delivery freezes a retirement (E5).
+ */
+export function retiringStable(current: DeploymentDetail): DeploymentDetail {
+  const pool = current.deployment.workerSnapshot;
+  if (pool === null) throw new Error("The fixture has no worker pool");
+  return DeploymentDetailSchema.parse({
+    ...current,
+    deployment: {
+      ...current.deployment,
+      kind: "retire-host",
+      workerSnapshot: {
+        ...pool,
+        workerOperation: "retire",
+        retiringWorkerId: `worker/${STABLE}`,
+        versions: pool.versions.map((worker) =>
+          worker.buildId === STABLE
+            ? {
+                ...worker,
+                replicas: 0,
+                generation: worker.generation + 1,
+                retiredAt: "2026-10-31T00:00:00.000Z",
+              }
+            : worker,
+        ),
+      },
+    },
+  });
+}
+
 export const PLAN: WorkerRolloutPlan = {
   target: "central",
   namespace: "prod",

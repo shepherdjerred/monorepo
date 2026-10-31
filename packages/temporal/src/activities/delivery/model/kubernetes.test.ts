@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
-import { renderApplication } from "#lib/delivery/model/application.ts";
+import { argoApplication } from "#lib/delivery/model/step-testing.ts";
 import { forumDetail } from "#lib/delivery/model/forum-testing.ts";
 import { artifact } from "#lib/delivery/model/testing.ts";
 import type * as Activity from "@temporalio/activity";
@@ -24,14 +24,11 @@ vi.mock("@temporalio/activity", async (importOriginal) => ({
 }));
 // The forum chart's tag still resolves to its frozen digest; oci-chart.test.ts
 // covers a moved tag.
-vi.mock("./oci-chart.ts", () => ({
-  verifyOciChart: (chart: { id: string }, operationId: string) =>
-    Promise.resolve({
-      kind: "preflight",
-      operationId,
-      summary: `Source ${chart.id} still resolves to its frozen digest`,
-    }),
-}));
+vi.mock("./oci-chart.ts", async () => {
+  const { frozenOciChart } =
+    await import("#lib/delivery/model/step-testing.ts");
+  return frozenOciChart;
+});
 vi.mock("#lib/delivery/argo-client.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof ArgoClient>()),
   getArgoApplication: () => {
@@ -96,29 +93,7 @@ function fixture(stages: { key: string; status: "running" }[] = []) {
 /** The written Application, before and after this deployment's owned sync. */
 function application(synced: boolean) {
   const { current, recipe } = fixture();
-  const rendered = renderApplication(current, recipe);
-  const info = [
-    {
-      name: "ci.sjer.red/request-id",
-      value: deliveryOperationId(current.deployment.id),
-    },
-    { name: "ci.sjer.red/operation-id", value: "operation-1" },
-  ];
-  return {
-    metadata: { ...rendered.body.metadata, uid: "application-uid" },
-    spec: { source: rendered.source },
-    status: synced
-      ? {
-          sync: { status: "Synced", revision: rendered.revision },
-          health: { status: "Healthy" },
-          operationState: {
-            phase: "Succeeded",
-            operation: { info },
-            syncResult: { revision: rendered.revision },
-          },
-        }
-      : {},
-  };
+  return argoApplication(current, recipe, synced);
 }
 
 afterEach(() => {

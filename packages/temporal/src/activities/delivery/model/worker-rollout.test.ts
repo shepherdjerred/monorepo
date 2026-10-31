@@ -10,10 +10,12 @@ import {
   chart,
   definition,
   planEvidence,
+  retiringStable,
   temporal,
 } from "#lib/delivery/workers/model-worker-fixture.ts";
 import {
   runWorkerRolloutStep,
+  workerRetirementFence,
   workerRolloutPreflight,
   type WorkerRolloutEffects,
 } from "./worker-rollout.ts";
@@ -35,10 +37,19 @@ function rolling(jobs: string[]) {
   );
 }
 
-/** Effects that journal every call; `states` are the successive reloads. */
-function effects(states: DeploymentDetail[], deployments: unknown[] = []) {
+/**
+ * Effects that journal every call; `states` are the successive reloads.
+ * The first `unsettledHosts` host readbacks fail, as they do while a
+ * retired host's Pods still terminate.
+ */
+function effects(
+  states: DeploymentDetail[],
+  deployments: unknown[] = [],
+  unsettledHosts = 0,
+) {
   const calls: string[] = [];
   let reload = 0;
+  let readbacks = 0;
   const recorded: WorkerRolloutEffects = {
     load: async () => {
       calls.push("load");
@@ -62,6 +73,11 @@ function effects(states: DeploymentDetail[], deployments: unknown[] = []) {
     },
     hosts: async () => {
       calls.push("hosts");
+      readbacks += 1;
+      if (readbacks <= unsettledHosts)
+        throw new Error(
+          "Retired worker still has Pods, including terminating Pods",
+        );
     },
     prepare: async () => {
       calls.push("prepare");
@@ -70,6 +86,12 @@ function effects(states: DeploymentDetail[], deployments: unknown[] = []) {
     step: async (_id, plan, action) => {
       expect(plan).toEqual(PLAN);
       calls.push(`step ${action}`);
+    },
+    retirement: async () => {
+      calls.push("retirement");
+    },
+    pause: async () => {
+      calls.push("pause");
     },
   };
   return { calls, effects: recorded };
@@ -180,6 +202,94 @@ describe("worker-rollout step (E5)", () => {
     await expect(
       runWorkerRolloutStep(unplanned, KEY, effects([unplanned]).effects),
     ).rejects.toThrow(/exactly one routing plan/u);
+  });
+});
+
+const retiring = (stages: Parameters<typeof temporal>[0]) =>
+  retiringStable(temporal(stages));
+
+describe("worker retirement on a model recipe (E5)", () => {
+  test("a rollout pool proves no retirement before its sync", async () => {
+    const run = effects([]);
+    await workerRetirementFence(temporal([]), run.effects);
+    expect(run.calls).toEqual([]);
+  });
+
+  test("the preflight proves images and routes, then re-proves the retiring host's drainage", async () => {
+    const run = effects([]);
+    await workerRolloutPreflight(
+      retiring([{ key: "worker-prior-source", status: "succeeded" }]),
+      run.effects,
+    );
+    expect(run.calls).toEqual([
+      "inspect",
+      "routing",
+      "deployments",
+      "retirement",
+    ]);
+  });
+
+  test("the sync's fence re-proves drainage for a retirement", async () => {
+    const run = effects([]);
+    await workerRetirementFence(retiring([]), run.effects);
+    expect(run.calls).toEqual(["retirement"]);
+  });
+
+  test("the step promotes nothing: it reads back the retired host, then routing, and settles", async () => {
+    const synced = retiring([{ key: "step-sync", status: "succeeded" }]);
+    const run = effects([synced], [], 2);
+    await runWorkerRolloutStep(synced, KEY, run.effects);
+    expect(run.calls).toEqual([
+      `record ${KEY} running`,
+      "hosts",
+      "pause",
+      "load",
+      "hosts",
+      "pause",
+      "load",
+      "hosts",
+      "routing",
+      `record ${KEY} succeeded`,
+    ]);
+  });
+
+  test("a resumed retirement keeps its recorded intent", async () => {
+    const resumed = retiring([
+      { key: "step-sync", status: "succeeded" },
+      { key: KEY, status: "running" },
+    ]);
+    const run = effects([resumed]);
+    await runWorkerRolloutStep(resumed, KEY, run.effects);
+    expect(run.calls).toEqual(["hosts", "routing", `record ${KEY} succeeded`]);
+  });
+
+  test("a retired host that never settles fails its bounded readback", async () => {
+    const synced = retiring([{ key: "step-sync", status: "succeeded" }]);
+    const run = effects([synced], [], Number.POSITIVE_INFINITY);
+    await expect(
+      runWorkerRolloutStep(synced, KEY, run.effects),
+    ).rejects.toThrow(/terminating Pods/u);
+    expect(run.calls.filter((call) => call === "hosts")).toHaveLength(60);
+    expect(run.calls).not.toContain(`record ${KEY} succeeded`);
+  });
+
+  test("a frozen pool is refused under another deployment kind", async () => {
+    const rollout = temporal([]);
+    const retirement = retiring([]);
+    const mismatched: DeploymentDetail[] = [
+      {
+        ...retirement,
+        deployment: { ...retirement.deployment, kind: "deploy" },
+      },
+      {
+        ...rollout,
+        deployment: { ...rollout.deployment, kind: "retire-host" },
+      },
+    ];
+    for (const current of mismatched)
+      await expect(
+        runWorkerRolloutStep(current, KEY, effects([current]).effects),
+      ).rejects.toThrow(/its own deployment kind/u);
   });
 });
 
