@@ -2,6 +2,7 @@ import type { QueryKey } from "@tanstack/react-query";
 import type { ChangeDomain, ChangeEvent } from "#shared/hub/change-contract.ts";
 
 const RELEASE: QueryKey[] = [
+  ["commits"],
   ["deployments"],
   ["approvals"],
   ["environment"],
@@ -11,6 +12,7 @@ const RELEASE: QueryKey[] = [
   ["integration", "runtime"],
 ];
 const CATALOG: QueryKey[] = [
+  ["commits"],
   ["service"],
   ["trace"],
   ["builds"],
@@ -34,10 +36,10 @@ const BY_DOMAIN: Record<ChangeDomain, (change: ChangeEvent) => QueryKey[]> = {
   build: () => CATALOG,
   versionSet: () => CATALOG,
   artifact: () => CATALOG,
-  environment: () => [["environment"], ["service"], ["overview"]],
+  environment: () => [["commits"], ["environment"], ["service"], ["overview"]],
   pipeline: () => [["environment"], ["service"], ["overview"]],
   worker: () => [["workers"], ...INTENT],
-  platform: () => [...INTENT, ["service"]],
+  platform: () => [...INTENT, ["commits"], ["service"]],
   content: () => INTENT,
   minecraft: () => INTENT,
   forum: () => INTENT,

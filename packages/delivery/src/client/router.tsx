@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { ChangeFeed } from "./change-feed.ts";
 import { Route as rootRoute } from "./routes/root.tsx";
 import { pipelineListRoutes } from "./routes/pipelines.tsx";
+import { commitRoutes } from "./routes/commits.tsx";
 import { serviceTree } from "./routes/service.tsx";
 import { Route as buildRoute } from "./routes/build.tsx";
 import { Route as versionRoute } from "./routes/version.tsx";
@@ -13,6 +14,7 @@ import { listRoutes } from "./routes/lists.tsx";
 
 const routeTree = rootRoute.addChildren([
   ...pipelineListRoutes,
+  ...commitRoutes,
   serviceTree,
   buildRoute,
   versionRoute,
