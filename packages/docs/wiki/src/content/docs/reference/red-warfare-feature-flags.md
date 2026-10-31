@@ -13,8 +13,8 @@ owns their declarations, environment overrides and targeting.
 These flags use namespace `the-storm`. Every declaration defaults to `false`,
 without targeting rules. Admission, kits, rewards and the seven original match
 features override both `beta` and `prod` to `true`.
-Host settings and candidate visits override only `beta` to `true`;
-`prod` inherits their declared `false` default.
+Host settings and candidate visits also override both `beta` and `prod` to
+`true`.
 
 | Flag                                     | Enabled behavior                                                                                                                                                                                                                                                         |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -80,11 +80,11 @@ These declarations also default to `false`. Environment values below include
 inherited defaults when no override exists; the inventory declares no targeting
 for these controls.
 
-| Flag                                      | Declared environment values                   |
-| ----------------------------------------- | --------------------------------------------- |
-| `the-storm-rwfbots-chat-enabled`          | Namespace `the-storm`; beta and prod `true`.  |
-| `the-storm-rwfbots-learning-enabled`      | Namespace `the-storm`; beta and prod `false`. |
-| `the-storm-rwf-recording-archive-enabled` | Namespace `temporal`; beta and prod `false`.  |
+| Flag                                      | Declared environment values                      |
+| ----------------------------------------- | ------------------------------------------------ |
+| `the-storm-rwfbots-chat-enabled`          | Namespace `the-storm`; beta and prod `true`.     |
+| `the-storm-rwfbots-learning-enabled`      | Namespace `the-storm`; beta and prod `false`.    |
+| `the-storm-rwf-recording-archive-enabled` | Namespace `temporal`; beta `false`, prod `true`. |
 
 Bot speech also requires `chat.enabled` in `rwfbots.yml`.
 Bot chat uses fixed entity `the-storm-rwfbots-chat` with `world` context.

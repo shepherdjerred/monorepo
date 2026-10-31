@@ -357,12 +357,12 @@ inbox, 64 entities per operation, 32 blocks of effect radius, 16 blocks of jail
 radius and 30 seconds for confirmation. Managed rollout declarations live in
 `packages/feature-flags/src/managed-flag-inventory.json`:
 
-| Flag in namespace `the-storm`      | Production/fallback | Beta |
-| ---------------------------------- | ------------------- | ---- |
-| `the-storm-staff-tools-enabled`    | false               | true |
-| `the-storm-identity-enabled`       | false               | true |
-| `the-storm-letters-enabled`        | false               | true |
-| `the-storm-ip-enforcement-enabled` | false               | true |
+| Flag in namespace `the-storm`      | Fallback | Production | Beta |
+| ---------------------------------- | -------- | ---------- | ---- |
+| `the-storm-staff-tools-enabled`    | false    | true       | true |
+| `the-storm-identity-enabled`       | false    | true       | true |
+| `the-storm-letters-enabled`        | false    | true       | true |
+| `the-storm-ip-enforcement-enabled` | false    | false      | true |
 
 IP enforcement additionally requires a verified public address forwarded by
 a trusted private PROXY-protocol peer. Private, loopback, link-local,
