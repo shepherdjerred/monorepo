@@ -19,8 +19,8 @@
     "ephemeral-storage": "4Gi"
   },
   "pools": {
-    "pr": { "maxWorkflows": 6, "queue": "default" },
-    "main": { "maxWorkflows": 2, "queue": "default" },
+    "pr": { "maxWorkflows": 4, "queue": "default" },
+    "main": { "maxWorkflows": 4, "queue": "default" },
     "review": { "maxWorkflows": 3, "queue": "ci-gates" },
     "completion": { "maxWorkflows": 1, "queue": "ci-gates" }
   },
