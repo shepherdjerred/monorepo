@@ -1,23 +1,40 @@
 /**
  * A minecraft-upgrade reads the retained volume back after sync. Historical
- * `verified-restore` rows take that same path.
+ * `verified-restore` rows take that same path. A players-offline gate holds
+ * the restart until the server is empty, so it comes before sync, and only
+ * once.
  */
 export function misplacedUpgrades(
   steps: readonly { kind: string; releaseMode?: string }[],
 ) {
   const sync = steps.findIndex((step) => step.kind === "sync");
-  return steps.flatMap((step, index) =>
-    step.kind === "minecraft-upgrade" && index < sync
+  const gates = steps.filter((step) => step.kind === "players-offline");
+  return [
+    ...steps.flatMap((step, index) =>
+      (step.kind === "minecraft-upgrade" && index < sync) ||
+      (step.kind === "players-offline" && index > sync)
+        ? [
+            {
+              code: "custom" as const,
+              path: ["steps", index],
+              message:
+                step.kind === "minecraft-upgrade"
+                  ? "A minecraft-upgrade runs after sync and reads back the retained volume"
+                  : "A players-offline gate runs before sync, which restarts the server",
+            },
+          ]
+        : [],
+    ),
+    ...(gates.length > 1
       ? [
           {
             code: "custom" as const,
-            path: ["steps", index],
-            message:
-              "A minecraft-upgrade runs after sync and reads back the retained volume",
+            path: ["steps"],
+            message: "A recipe holds at most one players-offline gate",
           },
         ]
-      : [],
-  );
+      : []),
+  ];
 }
 
 /**

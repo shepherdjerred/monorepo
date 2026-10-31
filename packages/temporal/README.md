@@ -217,6 +217,13 @@ reads back that the server runs exactly `repository:version@digest`. Historical
 `verified-restore` rows take the same path; scheduled Velero backups are the
 only backup.
 
+Before that sync, the server sub-recipe's `players-offline` step runs
+`rcon-cli list` in `minecraft-tsmc-0`. The Delivery worker holds a Role
+limited to that pod for this. The public Query feed omits hidden staff, so the
+gate reads the console instead. A sleeping or unready server counts as empty.
+While anyone is connected, or the console does not answer, the step waits and
+asks again each tick. An unknown reply fails it.
+
 Rollbacks of TSMC stay refused.
 
 A `channel` recipe freezes two steps, and only the npm store has an adapter

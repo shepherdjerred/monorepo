@@ -3044,10 +3044,10 @@
     {
       "id": "minecraft/tsmc",
       "role": "durable",
-      "approvalPolicy": "required",
-      "automatic": false,
+      "approvalPolicy": "none",
+      "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/7",
+      "recipeRevisionId": "minecraft-tsmc/8",
       "configurationRevisionId": "minecraft-tsmc/7"
     },
     {

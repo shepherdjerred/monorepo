@@ -19,6 +19,7 @@ import { oracleEvidence, runTestStep } from "./oracle.ts";
 import { awaitAttestations } from "./operator-run.ts";
 import { runWorkerRolloutStep } from "./worker-rollout.ts";
 import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
+import { runPlayersOfflineStep } from "./players-offline.ts";
 import { runChannelStep } from "./channel.ts";
 import { stepLease, withLeaseRenewal } from "./lease.ts";
 import { runStaticSiteStep } from "./static-site.ts";
@@ -91,6 +92,9 @@ async function runKubernetesStep(
     case "minecraft-upgrade":
       requireSettledBefore(steps, current.stages, key);
       return await runMinecraftUpgradeStep(current, key);
+    case "players-offline":
+      requireSettledBefore(steps, current.stages, key);
+      return await runPlayersOfflineStep(current, key);
     case "static-site":
       requireSyncedBefore(steps, key, step.kind);
       requireSettledBefore(steps, current.stages, key);
