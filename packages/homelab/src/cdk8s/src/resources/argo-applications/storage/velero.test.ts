@@ -13,7 +13,7 @@ import {
 const ResourceSchema = z.object({
   kind: z.string(),
   metadata: z.object({ name: z.string() }).loose(),
-  spec: z.unknown(),
+  spec: z.unknown().optional(),
 });
 
 const ObjectStoreConfigSchema = z

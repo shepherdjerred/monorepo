@@ -134,13 +134,20 @@ deliberately never configured.
 Persistent volumes are ZFS on OpenEBS, across an NVMe pool and an HDD pool. They
 are scrubbed weekly and covered by an explicit Velero backup inventory.
 
-The backup strategy is Velero's scheduled backups (6-hourly, daily, weekly and
-monthly) and nothing else: no database WAL archives, object replicas or
-application-level dumps.
+The backup strategy has two parts, both written to Backblaze. Velero's
+scheduled backups (6-hourly, daily, weekly and monthly) cover volumes. A
+continuous object copy covers SeaweedFS. There are no database WAL archives
+or application-level dumps.
 
 Object storage is SeaweedFS, which backs S3 buckets for Scout images, Glitter's
-corpus, LLM observability archives, and public PR artifacts. Its volumes are
-backed up by those same Velero schedules.
+corpus, LLM observability archives, and public PR artifacts.
+[`filer.backup`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/storage/seaweedfs-backup.ts)
+follows the filer's change stream and copies each object to Backblaze as it
+changes. Copying objects rather than volume snapshots means a change moves
+only the objects it touched, never a 600 GB ZFS stream. It also lets
+rebuildable buckets, such as static sites and release artifacts, stay out.
+Until that copy is proven by a restore, Velero also keeps backing up the
+SeaweedFS volumes.
 
 Secrets come from 1Password. Backup coverage is an explicit list, not an
 inference — a volume nobody added is a volume nobody is backing up, and the

@@ -7,7 +7,7 @@ import { createSeaweedfsApp } from "./seaweedfs.ts";
 const ResourceSchema = z.object({
   kind: z.string(),
   metadata: z.object({ name: z.string() }).loose(),
-  spec: z.unknown(),
+  spec: z.unknown().optional(),
 });
 
 const ClaimMetadataSchema = z.object({

@@ -74,9 +74,9 @@ some things I'm proud of:
 - Close to zero host setup — a few commands deploy the entire cluster
 - Entirely written in TypeScript built with [cdk8s](https://cdk8s.io/) and
   [Bun](https://bun.sh/)
-- Automated backups: Velero's 6-hourly, daily, weekly and monthly schedules
-  back up PVCs, SeaweedFS included, by an explicit per-volume policy. They are
-  the only backup
+- Automated backups to Backblaze: Velero's 6-hourly, daily, weekly and
+  monthly schedules back up PVCs by an explicit per-volume policy, and
+  `filer.backup` copies SeaweedFS objects as they change
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
 - Declarative GitOps deployment via ArgoCD, selected and verified by Delivery

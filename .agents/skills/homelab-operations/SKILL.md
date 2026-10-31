@@ -31,8 +31,9 @@ apply-safety preflight, or request UUID ownership.
 Storage and backup work is data-sensitive. Inspect the StorageClass, PVC/PV,
 snapshot or backup object, retention policy, and restore path before mutation.
 Treat a successful backup job and a verified restore as separate claims.
-Velero's scheduled backups are the only backup; there is no other copy to
-restore from.
+Velero's scheduled backups are the only backup of volumes. SeaweedFS objects
+are also copied to the Backblaze `seaweedfs-backups` bucket by `filer.backup`,
+except the rebuildable buckets it excludes.
 
 Prefer a GitOps repair when the source is wrong. A narrowly scoped live action
 is appropriate for diagnosis or emergency recovery only when authorized; record

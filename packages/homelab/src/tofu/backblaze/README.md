@@ -12,10 +12,15 @@ State and plans are encrypted with `TOFU_STATE_ENCRYPTION_PASSPHRASE`.
 Velero writes its backups and ZFS streams to `sjerred-velero` with the
 `backblaze-velero` item. That item's `cloud` field is the AWS credentials file
 Velero mounts. Backups taken before the move stay in the R2 `homelab` bucket
-and were not copied. `seaweedfs-backups` and `sjerred-postgres-wal` have no
-writer: the SeaweedFS object backup, Delivery replication and WAL-G that would
-have used them were retired. A change to `keys.tf` needs an operator apply before a workload reads
-the changed item.
+and were not copied.
+
+The `seaweedfs-backup` Deployment (`weed filer.backup`) copies SeaweedFS
+objects to `seaweedfs-backups` with the `backblaze-seaweedfs-backups` item.
+`sjerred-postgres-wal` has no writer: WAL-G, which would have used it, was
+retired.
+
+A change to `keys.tf` needs an operator apply before a workload reads the
+changed item.
 
 ```sh
 bun packages/homelab/scripts/tofu/tofu-stack.ts backblaze validate

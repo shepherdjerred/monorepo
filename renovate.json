@@ -233,6 +233,11 @@
       "schedule": ["at any time"]
     },
     {
+      "description": "filer.backup's image (chrislusf/seaweedfs) must run the same SeaweedFS version as the seaweedfs chart's servers, so bump both in one PR",
+      "matchPackageNames": ["seaweedfs", "chrislusf/seaweedfs"],
+      "groupName": "seaweedfs"
+    },
+    {
       "description": "packages/the-storm/server/Dockerfile builds FROM the version catalog's itzg/minecraft-server pin (minecraft-tsmc.test.ts requires them equal), so bump both in one PR",
       "matchPackageNames": ["itzg/minecraft-server"],
       "groupName": "itzg/minecraft-server"
