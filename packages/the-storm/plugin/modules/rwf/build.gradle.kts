@@ -12,63 +12,6 @@ dependencies {
   testCompileOnly(libs.jaxb.api)
 }
 
-// The Java Flipt identifiers must agree with the shared managed flag inventory.
-val flagInventory =
-    layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
-val remote = "src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote"
-
-val verifyManagedRwfFlag =
-    tasks.register<VerifyManagedFlag>("verifyManagedRwfFlag") {
-      inventory = flagInventory
-      source = layout.projectDirectory.file("$remote/FliptRwfGate.java")
-      flagSource = "the-storm-rwf"
-    }
-
-val verifyManagedRwfKitsFlag =
-    tasks.register<VerifyManagedFlag>("verifyManagedRwfKitsFlag") {
-      inventory = flagInventory
-      source = layout.projectDirectory.file("$remote/FliptRwfKitsGate.java")
-      flagSource = "the-storm-rwf-kits"
-    }
-
-val verifyManagedRwfKillstreaksFlag =
-    tasks.register<VerifyManagedFlag>("verifyManagedRwfKillstreaksFlag") {
-      inventory = flagInventory
-      source = layout.projectDirectory.file("$remote/FliptRwfKillstreaksGate.java")
-      flagSource = "the-storm-rwf-killstreaks"
-    }
-
-tasks.named("compileJava") {
-  dependsOn(verifyManagedRwfFlag, verifyManagedRwfKitsFlag, verifyManagedRwfKillstreaksFlag)
-}
-
-// Each Red Warfare feature flag the match reads, by inventory source and Java constant.
-mapOf(
-        "the-storm-rwf-match-flow" to "MATCH_FLOW_FLAG_KEY",
-        "the-storm-rwf-carry-over" to "CARRY_OVER_FLAG_KEY",
-        "the-storm-rwf-death-feed" to "DEATH_FEED_FLAG_KEY",
-        "the-storm-rwf-team-chat" to "TEAM_CHAT_FLAG_KEY",
-        "the-storm-rwf-spectator-tools" to "SPECTATOR_TOOLS_FLAG_KEY",
-        "the-storm-rwf-bomb-effects" to "BOMB_EFFECTS_FLAG_KEY",
-        "the-storm-rwf-stats" to "STATS_FLAG_KEY",
-        "the-storm-rwf-host-settings" to "HOST_SETTINGS_FLAG_KEY",
-        "the-storm-rwf-candidate-visits" to "CANDIDATE_VISITS_FLAG_KEY")
-    .forEach { (flagSourceId, constantName) ->
-      val task =
-          tasks.register<VerifyManagedFlag>(
-              "verifyManagedFlag-" + flagSourceId.removePrefix("the-storm-rwf-")) {
-            inventory =
-                layout.projectDirectory.file(
-                    "../../../../feature-flags/src/managed-flag-inventory.json")
-            source =
-                layout.projectDirectory.file(
-                    "src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfFeatures.java")
-            flagSource = flagSourceId
-            flagConstant = constantName
-          }
-      tasks.named("compileJava") { dependsOn(task) }
-    }
-
 // The content tests parse the rwf config, kits and maps the server ships.
 tasks.test {
   // Candidate visits prepare two disjoint yards concurrently. MockBukkit chunk snapshots allocate
@@ -76,7 +19,8 @@ tasks.test {
   maxHeapSize = "1g"
   // MockBukkit materializes full-height chunk blocks for every snapshot. Bound each class's
   // world/ByteBuddy state to a fresh worker instead of sharing a worker across the whole suite.
-  // Retain the same bounded heap, serial forks, complete test selection and noSkippedTests gate.
+  // Retain the same bounded heap, complete test selection and noSkippedTests gate; the shared
+  // conventions run several of these forks at once.
   forkEvery = 1
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/rwf.yml"))

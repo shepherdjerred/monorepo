@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
  * near it come to cover it and click the fuse with it, and with nothing going on one bot keeps it
  * company instead of leaving it alone.
  */
+@Tag("simulation")
 final class HumanSupportPlayTest {
 
   /** When a bot must stand beside the arming human, in ticks. */

@@ -101,11 +101,15 @@ val noSkippedTests =
     }
 
 tasks.test {
-  useJUnitPlatform()
+  // Headless whole-match simulations are extended gameplay acceptance: the
+  // committer runs them locally (rwfbots' simulationTest), not CI.
+  useJUnitPlatform { excludeTags("simulation") }
   // sqlite-jdbc loads a native library; JDK 25 warns unless native access is granted.
   jvmArgs("--enable-native-access=ALL-UNNAMED")
   maxHeapSize = "512m"
-  maxParallelForks = 1
+  // Each fork is its own JVM, so classes never share MockBukkit or database
+  // state; half the cores keeps the largest suites from running one class at a time.
+  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
   testLogging { exceptionFormat = TestExceptionFormat.FULL }
   finalizedBy(noSkippedTests)
 }

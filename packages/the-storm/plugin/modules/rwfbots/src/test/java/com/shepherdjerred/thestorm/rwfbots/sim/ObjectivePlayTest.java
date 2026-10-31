@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
  * holding the line until one side is nearly wiped out, and a team two to one up rushes the plant
  * and hunts the rest.
  */
+@Tag("simulation")
 final class ObjectivePlayTest {
 
   /** When the planter of an even team must have been sent, in ticks. */

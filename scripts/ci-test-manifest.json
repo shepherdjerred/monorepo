@@ -380,6 +380,7 @@
             "scripts/ci/delivery-handover-root.test.ts",
             "scripts/tofu/credential-handoff.test.ts",
             "src/talos/catalog-pins.test.ts",
+            "scripts/homelab-build-inputs.test.ts",
             "scripts/tofu/application-secrets.integration.test.ts"
           ]
         }
@@ -1108,15 +1109,18 @@
       "steps": [
         {
           "runner": "command",
+          "group": "jvm",
           "name": "livemap",
           "command": ["bun", "run", "test:server"]
         },
         {
           "runner": "gradle",
+          "group": "jvm",
           "args": ["-p", "plugin", "test"]
         },
         {
           "runner": "vitest",
+          "group": "tools",
           "args": [
             "tests/rcon.test.ts",
             "tests/rwf-recording.test.ts",
@@ -1135,41 +1139,49 @@
             "tools/capacity",
             "scripts/bots/mineskin.test.ts",
             "scripts/bots/expanded-kit-weights.test.ts",
-            "scripts/bots/archery.test.ts"
+            "scripts/bots/archery.test.ts",
+            "scripts/check-managed-flags.test.ts"
           ]
         },
         {
           "runner": "gradle",
+          "group": "jvm",
           "name": "client",
           "args": ["-p", "client", "test"]
         },
         {
           "runner": "vitest",
+          "group": "tools",
           "name": "client-controller",
           "args": ["tools/client", "--exclude", "**/.cache/**"]
         },
         {
           "runner": "command",
+          "group": "tools",
           "name": "rwf-learning-python",
           "command": ["bun", "run", "test:learning-python"]
         },
         {
           "runner": "vitest",
+          "group": "tools",
           "name": "rwf-learning",
           "args": ["tools/learning", "--exclude", "**/.cache/**"]
         },
         {
           "runner": "command",
+          "group": "tools",
           "name": "rwf-maps-python",
           "command": ["bun", "run", "test:maps-python"]
         },
         {
           "runner": "vitest",
+          "group": "tools",
           "name": "rwf-maps",
           "args": ["tools/maps", "--exclude", "**/.cache/**"]
         },
         {
           "runner": "vitest",
+          "group": "tools",
           "name": "preference-media",
           "args": ["tests/media"]
         }

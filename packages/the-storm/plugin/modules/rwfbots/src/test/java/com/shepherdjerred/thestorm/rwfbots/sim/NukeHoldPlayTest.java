@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
  * defused one nuke twelve times over five and a half minutes: whoever defused it walked off to its
  * strategy's bomb, and the other side walked back and armed it again.
  */
+@Tag("simulation")
 final class NukeHoldPlayTest {
 
   private static final int TICKS = 6000;

@@ -7,7 +7,11 @@
     // file). If turbo can't hash ignored files, this must revert to cache:false.
     "test": {
       "env": ["NODE_ENV"],
-      "inputs": ["$TURBO_DEFAULT$", ".env.test"]
+      "inputs": [
+        "$TURBO_ROOT$/vitest.config.ts",
+        "$TURBO_DEFAULT$",
+        ".env.test"
+      ]
     },
     "test:ci": {
       "env": ["NODE_ENV"],

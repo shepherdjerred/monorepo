@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -40,6 +41,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * back towards its own side: the run-up started only at the takeoff, braked, and then backed up to
  * the measured run-up start. A body already running at the takeoff joins the run-up where it is.
  */
+@Tag("simulation")
 final class OpeningRunUpTest {
   private static final double MEASURED_MINIMUM = 0.27000001072883606;
   private static final Vec3 TAKEOFF = new Vec3(6.7, 1, 4.5);

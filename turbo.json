@@ -9,9 +9,10 @@
     "patches/**",
     "packages/homelab/tsconfig.base.json",
     "packages/scout-for-lol/tsconfig.base.json",
-    "packages/scout-for-lol/eslint.config.ts",
-    "tsconfig.base.json",
-    "vitest.config.ts"
+    "tsconfig.base.json"
+    // vitest.config.ts and packages/scout-for-lol/eslint.config.ts are inputs
+    // of the tasks that read them (test, test:ci and Scout's lint tasks), not
+    // global dependencies: each edit used to re-run every task in the repo.
   ],
   // Where scratch, toolchains and download caches live, not what a task
   // produces, so they pass through without entering task hashes. Strict env
@@ -24,6 +25,9 @@
   // `bunx` calls use BUN_INSTALL instead.
   "globalPassThroughEnv": [
     "CI_FORMAT_CACHE_ROOT",
+    // Vitest worker cap that scripts/verify.ts sets for its parallel tasks;
+    // it changes scheduling, not results.
+    "CI_VITEST_MAX_WORKERS",
     "GRADLE_RO_DEP_CACHE",
     "BUN_INSTALL",
     "CARGO_INCREMENTAL",
@@ -81,7 +85,8 @@
     },
     "test": {
       "dependsOn": ["^build", "generate"],
-      "env": ["NODE_ENV"]
+      "env": ["NODE_ENV"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/vitest.config.ts"]
     },
     // CI uses the same cache semantics as `test`, but packages emit JUnit on
     // cache misses. Reports are deliberately not outputs: a cache hit must not
@@ -100,7 +105,8 @@
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
         "$TURBO_ROOT$/scripts/ci-test-manifest.json",
-        "$TURBO_ROOT$/scripts/ci/run-ci-test.ts"
+        "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
+        "$TURBO_ROOT$/vitest.config.ts"
       ]
     },
     "lint": {
@@ -489,6 +495,7 @@
         "scripts/ci-test-manifest.json",
         "scripts/package.json",
         "packages/**/package.json",
+        "packages/**/turbo.json",
         "!packages/**/node_modules/**",
         "packages/*/eslint.config.*",
         "packages/*/tsconfig.json"

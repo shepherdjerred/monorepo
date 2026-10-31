@@ -2,6 +2,10 @@ import { Glob } from "bun";
 import { z } from "zod";
 import { isNoopScript } from "../misc/migration-core.ts";
 import { loadLocalVerification } from "../lib/local-verification.ts";
+import {
+  requiredScriptName,
+  satisfiedByTransitTask,
+} from "./compliance-required-scripts.ts";
 
 const PackageJsonSchema = z
   .object({
@@ -63,6 +67,7 @@ const RootPackageJsonSchema = z
   .loose();
 
 const requiredScripts = ["build", "test", "lint", "typecheck"] as const;
+
 const nativeTypeScriptPathAssignment =
   "PATH=node_modules/@typescript/native/bin:$PATH";
 const nativeTypeScriptCommand = `${nativeTypeScriptPathAssignment} tsc`;
@@ -463,24 +468,32 @@ export async function findComplianceErrors(root: string): Promise<string[]> {
     errors.push(...collectTypeScriptToolchainErrors(directory, packageJson));
     if (directory === "scripts") continue;
     for (const script of requiredScripts) {
-      const key = `${directory}:${script}`;
-      const localNames = localVerification.scriptNames.get(directory);
-      const scriptName =
-        script === "build" || script === "test"
-          ? (localNames?.[script] ?? script)
-          : script;
+      const scriptName = requiredScriptName(
+        script,
+        localVerification.scriptNames.get(directory),
+      );
       const command = packageJson.scripts?.[scriptName];
-      const missingOrNoop = command === undefined || isNoopScript(command);
-      if (!missingOrNoop) continue;
+      if (command !== undefined && !isNoopScript(command)) continue;
+      if (
+        await satisfiedByTransitTask(
+          root,
+          directory,
+          packageJson.scripts,
+          script,
+        )
+      ) {
+        continue;
+      }
+      const key = `${directory}:${script}`;
       if (exemptions.has(key)) {
         usedExemptions.add(key);
-      } else if (command === undefined) {
-        errors.push(`${directory} missing ${scriptName} script`);
-      } else {
-        errors.push(
-          `${directory} has no-op stub ${scriptName} script: ${command}`,
-        );
+        continue;
       }
+      errors.push(
+        command === undefined
+          ? `${directory} missing ${scriptName} script`
+          : `${directory} has no-op stub ${scriptName} script: ${command}`,
+      );
     }
   }
   // An exemption whose script now exists and does real work is stale; failing

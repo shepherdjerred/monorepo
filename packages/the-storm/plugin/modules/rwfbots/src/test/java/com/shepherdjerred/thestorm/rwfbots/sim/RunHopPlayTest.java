@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
  * team whose enemies are gone runs its shipped-map routes faster than the same team kept on its
  * feet, and never lands a hop hurt.
  */
+@Tag("simulation")
 final class RunHopPlayTest {
   private static final List<String> MAPS = List.of("hemispheres", "miner-dispute", "valley");
   private static final int TICKS = 1200;

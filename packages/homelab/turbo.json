@@ -2,6 +2,20 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    // homelab has no build script, so this is a transit task whose hash every
+    // TypeScript consumer (temporal, cdk8s) inherits through ^build. They import
+    // only scripts/** and top-level src modules (homelab-build-inputs.test.ts
+    // proves those import nothing else), so Talos, OpenTofu, Helm and image
+    // edits no longer re-run their suites.
+    "build": {
+      "inputs": [
+        "package.json",
+        "tsconfig*.json",
+        "scripts/**",
+        "src/*.ts",
+        "src/*.json"
+      ]
+    },
     // The pinned Talos installer in patches/image.yaml must match what the
     // image.yaml schematic produces (old CI: talos-schematic-sync).
     "check:talos": {

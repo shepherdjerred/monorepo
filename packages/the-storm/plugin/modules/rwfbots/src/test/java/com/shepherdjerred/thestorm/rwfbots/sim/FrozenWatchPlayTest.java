@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
  * the nuke armed at tick 242 and the blue bomb at 780. The watch counts that as work, not as a
  * frozen bot.
  */
+@Tag("simulation")
 final class FrozenWatchPlayTest {
 
   @Test

@@ -15,10 +15,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /** The Paper showcase's per-round, all-eight forward floor, including defensive strategies. */
+@Tag("simulation")
 final class WholeRosterAdvanceTest {
 
   private static final long BY_TICK = 200;

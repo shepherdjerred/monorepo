@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
  * First contact here comes at 5 to 8 s, when the lanes meet in the middle, so how far a team got is
  * taken at 10 s rather than at contact.
  */
+@Tag("simulation")
 final class AdvanceTest {
 
   private static final List<Strategy> ATTACKING =

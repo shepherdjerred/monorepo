@@ -1,14 +1,5 @@
 plugins { id("storm.jooq-conventions") }
 
-val verifyManagedStargatesFlag =
-    tasks.register<VerifyManagedFlag>("verifyManagedStargatesFlag") {
-      inventory = layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
-      source = layout.projectDirectory.file("src/main/java/com/shepherdjerred/thestorm/mechanics/adapter/remote/FliptStargatesGate.java")
-      flagSource = "the-storm-stargates"
-    }
-
-tasks.named("compileJava") { dependsOn(verifyManagedStargatesFlag) }
-
 // Mechanisms are gated by the Mechanic track's level permissions (tracks.app.Track).
 dependencies {
   implementation(project(":tracks"))

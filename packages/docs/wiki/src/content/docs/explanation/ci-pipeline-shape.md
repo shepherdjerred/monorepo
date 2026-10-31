@@ -45,9 +45,12 @@ compare the head to the last fully green main build, so a failed release's
 changes stay selected on the next push. If that comparison cannot prove the
 complete diff, the extension emits the full graph. The Linux `verify` workflow
 uses its own last successful base, and checks PR changes against the merge base
-with the PR target branch. Within that workflow, Turbo runs at most three tasks
-at once and each Vitest process uses at most four workers, matching the pod's
-12-CPU limit.
+with the PR target branch. Within that workflow,
+[`scripts/verify.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/verify.ts)
+runs six Turbo tasks at once. Most of them are short lint, typecheck and root
+checks that used to queue behind long test suites. Vitest workers are what
+oversubscribe the pod, so verify caps each suite at two workers. Six suites
+then stay within the 12-CPU limit.
 
 Owner-requested local verification declares its build and test command names
 in `localScripts` on the existing `separateTests` entry in

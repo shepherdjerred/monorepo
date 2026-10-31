@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
  * one path in a clump, rushes and splits use more than one lane, bots that see an enemy get into
  * cover they claimed, and archetypes fight at different ranges.
  */
+@Tag("simulation")
 final class TeamPlayTest {
 
   private static final long[] SEEDS = {1, 2, 3, 4, 5, 6};
