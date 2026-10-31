@@ -116,7 +116,8 @@ the full endpointed utterance. A manual window contains the same per-speaker
 decoded samples supplied to wake processing. It does not mix speakers.
 
 The private bucket expires objects below `voice-captures/` after 90 days. It is
-not public and is not backed up outside SeaweedFS.
+not public. The SeaweedFS object backup copies it to Backblaze, which keeps an
+expired capture's last version for 30 more days.
 
 ## Manifest version 2
 
