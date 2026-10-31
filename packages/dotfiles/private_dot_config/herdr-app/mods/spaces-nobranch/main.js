@@ -6,6 +6,7 @@
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import {
+  agents,
   spaces,
   machines,
   panes,
@@ -40,6 +41,25 @@ function place(s, ps) {
   return ps.find((p) => tabs.has(p.tab) && p.cwd)?.cwd || s.folder;
 }
 const rowHeight = ({ tree }) => (tree ? 28 : 30);
+
+// Spaces whose agents are all from providers the agents list hides (its filter).
+// A space with no agents, or the one in front, stays.
+function hiddenSpaces(sp) {
+  const hidden = shared("agents.hidden") ?? [];
+  if (!hidden.length) return new Set();
+  const all = agents();
+  return new Set(
+    sp
+      .filter((w) => {
+        if (w.active) return false;
+        const mine = all.filter((a) => a.space === w.id);
+        return (
+          mine.length > 0 && mine.every((a) => hidden.includes(a.program?.key))
+        );
+      })
+      .map((w) => w.id),
+  );
+}
 const where = (s, ps) => JSON.stringify([s.machine ?? null, place(s, ps)]);
 const base = (path) => path.replace(/\/+$/, "").split("/").pop();
 // Changes made outside Herdr (an editor's save, a commit in another app): looked
@@ -298,9 +318,10 @@ export default class Spaces extends View {
       Date.now() - (this.born[w.id] ??= Date.now()) > 1500;
     for (const w of sp)
       if (!this.shown.has(w.id) && ready(w)) this.shown.add(w.id);
+    const away = hiddenSpaces(sp);
     const list = sp
       .map((w, i) => ({ w, i, g: this.git[where(w, ps)] ?? null }))
-      .filter((r) => this.shown.has(r.w.id));
+      .filter((r) => this.shown.has(r.w.id) && !away.has(r.w.id));
     const mains = new Set(
       list.filter((r) => r.g && !r.g.linked).map((r) => r.g.repo),
     );
@@ -591,6 +612,7 @@ export default class Spaces extends View {
     const collapsed = narrow();
     const palette = ["ansi6", "ansi3", "ansi4", "ansi5", "ansi2", "ansi1"];
     const sp = spaces();
+    const away = hiddenSpaces(sp).size;
     const ids = new Set(sp.map((p) => p.id));
     const kept = Object.fromEntries(
       Object.entries(shared("space.colors") ?? {}).filter(([id]) =>
@@ -623,7 +645,9 @@ export default class Spaces extends View {
           .justify_between()
           .text_size(11.5)
           .text_color(t.dim)
-          .when(!collapsed, (el) => el.child("Spaces"))
+          .when(!collapsed, (el) =>
+            el.child(away ? `Spaces · ${away} hidden` : "Spaces"),
+          )
           .child(
             div()
               .id("space-new")
