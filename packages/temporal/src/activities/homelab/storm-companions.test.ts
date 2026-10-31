@@ -34,7 +34,7 @@ describe("companion core-hour reconciliation", () => {
           phase: "Running",
           containerStatuses: [
             { name: "sidecar", ready: true },
-            { name: "minecraft", ready: false },
+            { name: "minecraft-tsmc", ready: false },
           ],
         },
       }),
@@ -50,7 +50,7 @@ describe("companion core-hour reconciliation", () => {
     const pod = JSON.stringify({
       status: {
         phase: "Running",
-        containerStatuses: [{ name: "minecraft", ready: true }],
+        containerStatuses: [{ name: "minecraft-tsmc", ready: true }],
       },
     });
     const { command, calls } = fixture(pod);
@@ -61,7 +61,7 @@ describe("companion core-hour reconciliation", () => {
       "minecraft-tsmc",
       "minecraft-tsmc-0",
       "-c",
-      "minecraft",
+      "minecraft-tsmc",
       "--",
       "rcon-cli",
       "companion reconcile",
