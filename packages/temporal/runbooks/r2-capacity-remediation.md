@@ -6,6 +6,10 @@ orphan alerts fire (`VeleroR2OrphanPrefixes` /
 `VeleroR2OrphanBytesExcessive`). Triage first: the inventory distinguishes
 accumulated orphans from legitimate chain growth.
 
+Velero now writes to the Backblaze `sjerred-velero` bucket, so `homelab` holds
+only backups taken before that move and no longer grows. Keep it until a
+restore from Backblaze has been done.
+
 The Velero ZFS plugin deletes an expired backup's `zfspv-incr` data when
 Velero deletes the backup, sweeping its whole schedule+volume family (see
 `packages/homelab/images/velero-plugin/README.md`). Orphans therefore mean a
@@ -32,9 +36,9 @@ aws --version            # local CLI present
 
 The R2 commands use the repository's standard operator environment names. Run
 the commands below from the repository root through the service-account
-wrapper with these references (same 1Password
-item as the Velero cloud credentials); do not resolve them into a checked-in
-env file:
+wrapper with these references from the R2 1Password item, which Velero no
+longer uses (it reads `backblaze-velero`); do not resolve them into a
+checked-in env file:
 
 ```bash
 export CLOUDFLARE_R2_ACCESS_KEY_ID='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/ymzh6wey7jw3mwpspsfbft7neu'

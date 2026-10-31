@@ -12,18 +12,33 @@ import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/ve
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
-/** The homelab R2 bucket's credential item, which Velero writes its backups with. */
-export const HOMELAB_R2_ITEM_ID = "ypce2djferc6zf7bocxft36n6a";
+/**
+ * The `backblaze-velero` item (OpenTofu `backblaze` stack): a key scoped to
+ * the Velero bucket, with the AWS credentials file Velero mounts as `cloud`.
+ */
+export const BACKBLAZE_VELERO_ITEM_ID = "i3upt4mhwczcau7ojyxfpw2s6e";
 
-/** S3 and R2 reject a multipart upload's 10,001st part. */
+/**
+ * Where Velero writes backup metadata and the openebs plugin writes ZFS
+ * streams. Every storage and snapshot location must name the same bucket and
+ * endpoint: the plugin's expiry sweep refuses to run otherwise. Backups taken
+ * before the move to Backblaze stay in the R2 `homelab` bucket.
+ */
+export const VELERO_OBJECT_STORE = {
+  bucket: "sjerred-velero",
+  region: "us-west-004",
+  s3Url: "https://s3.us-west-004.backblazeb2.com",
+} as const;
+
+/** S3 and Backblaze B2 reject a multipart upload's 10,001st part. */
 export const MULTIPART_UPLOAD_MAX_PARTS = 10_000;
 
 /**
- * The multipart part size the openebs plugin streams `zfs send` output to R2
- * with. A stream's size is unknown up front, so the part size alone bounds the
+ * The multipart part size the openebs plugin streams `zfs send` output with.
+ * A stream's size is unknown up front, so the part size alone bounds the
  * largest stream that can complete: 128 MiB allows 1.22 TiB, above the 1 TiB
  * SeaweedFS volume, where 20 MiB failed every full stream past 195 GiB. Fewer
- * parts also cut per-object request load on R2. The uploader buffers up to six
+ * parts also cut per-object request load. The uploader buffers up to six
  * parts (five in flight plus one filling) in the Velero pod.
  */
 export const ZFS_STREAM_PART_SIZE = Size.mebibytes(128);
@@ -52,7 +67,7 @@ export function createVeleroResources(chart: Chart): OnePasswordItem {
     "velero-cloud-credentials-onepassword",
     {
       spec: {
-        itemPath: vaultItemPath(HOMELAB_R2_ITEM_ID),
+        itemPath: vaultItemPath(BACKBLAZE_VELERO_ITEM_ID),
       },
       metadata: {
         name: "cloud-credentials",
@@ -139,17 +154,16 @@ export function createVeleroApp(chart: Chart) {
       backupStorageLocation: [
         {
           name: "default",
-          bucket: "homelab",
+          bucket: VELERO_OBJECT_STORE.bucket,
           default: true,
           provider: "aws",
           // Deliberately a literal, NOT misc/nodes.ts's PROD_NODE_HOSTNAME:
-          // this is a historical R2 object prefix (cluster-global in
-          // practice), and renaming it would orphan existing backups.
+          // this is a historical object prefix (cluster-global in practice),
+          // kept so every bucket Velero has used shares one layout.
           prefix: "torvalds/backups/",
           config: {
-            region: "auto", // Cloudflare R2 uses "auto" region
-            s3Url:
-              "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+            region: VELERO_OBJECT_STORE.region,
+            s3Url: VELERO_OBJECT_STORE.s3Url,
             s3ForcePathStyle: "true",
           },
         },
@@ -159,15 +173,14 @@ export function createVeleroApp(chart: Chart) {
           name: "zfspv-incr",
           provider: "openebs.io/zfspv-blockstore",
           config: {
-            bucket: "homelab",
+            bucket: VELERO_OBJECT_STORE.bucket,
             incrBackupCount: "15", // number of incremental backups we want to have
             fullBackupPrefix: "zfspv-full",
             backupPathPrefix: "zfspv-incr",
             namespace: "openebs",
             provider: "aws",
-            region: "auto",
-            s3Url:
-              "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+            region: VELERO_OBJECT_STORE.region,
+            s3Url: VELERO_OBJECT_STORE.s3Url,
             s3ForcePathStyle: "true",
             prefix: "torvalds/zfs/",
             multiPartChunkSize: ZFS_STREAM_PART_SIZE.asString(),
@@ -177,15 +190,14 @@ export function createVeleroApp(chart: Chart) {
           name: schedule.snapshotLocation,
           provider: "openebs.io/zfspv-blockstore",
           config: {
-            bucket: "homelab",
+            bucket: VELERO_OBJECT_STORE.bucket,
             incrBackupCount: schedule.incrementalCount.toString(),
             fullBackupPrefix: "zfspv-full",
             backupPathPrefix: "zfspv-incr",
             namespace: "openebs",
             provider: "aws",
-            region: "auto",
-            s3Url:
-              "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+            region: VELERO_OBJECT_STORE.region,
+            s3Url: VELERO_OBJECT_STORE.s3Url,
             s3ForcePathStyle: "true",
             prefix: "torvalds/zfs/",
             multiPartChunkSize: ZFS_STREAM_PART_SIZE.asString(),

@@ -3528,7 +3528,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "velero/prod/1",
-      "configurationRevisionId": "velero/prod/3"
+      "configurationRevisionId": "velero/prod/4"
     },
     {
       "id": "postgres-operator/prod",

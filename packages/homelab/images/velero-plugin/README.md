@@ -32,8 +32,16 @@ a versioned `.chain.json` description beside the actual stream.
 
 Full rotation uses the previous stream's ancestry depth. It never counts live
 ZFSBackup CRs, whose TTL can remove the records needed by count-based rotation.
-The new per-cadence snapshot locations define their incremental counts; the
-legacy location retains its original configuration for historical restores.
+The new per-cadence snapshot locations define their incremental counts. The
+legacy `zfspv-incr` location keeps its incremental count but now points at the
+Backblaze bucket like every other location. Restoring a stream written before
+that move needs a snapshot location configured for the R2 `homelab` bucket.
+
+The previous backup comes from live ZFSBackup CRs, which survive a move of the
+snapshot locations to another bucket. When the schedule+volume family has no
+completed stream in the configured bucket, the next backup is a full, so the
+first backup after a move starts a chain where it can be restored. Once the
+family has streams there, a previous backup missing from it still fails.
 
 ## Expiry sweep
 

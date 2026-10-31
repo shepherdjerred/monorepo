@@ -17,6 +17,13 @@ dashboard ledger and the operator email.
 - A PVC reads `100%` full unexpectedly and `zfs list` shows large `USED` vs small `REFER` (snapshot bloat — same root cause)
 - Velero was just re-deployed (helm uninstall + reinstall, ArgoCD app re-creation, etc.)
 
+Moving Velero to the Backblaze `sjerred-velero` bucket orphaned every earlier
+backup on purpose. Velero removed their Backup CRs because the new location
+holds no metadata for them. Their ZFSBackup CRs and local snapshots remained.
+The objects themselves stay in the R2 `homelab` bucket. Prune those snapshots
+only after every schedule-and-volume family has a completed full in
+`sjerred-velero`; a full under one schedule does not cover another.
+
 ## Prerequisites
 
 ```bash
@@ -291,7 +298,7 @@ The alerts auto-resolve in Alertmanager and the alert dashboard once the metrics
 
 ## Common pitfalls
 
-- **Don't run this immediately after a Velero re-deploy.** Wait at least 5 minutes for `BackupSyncController` to recreate Backup CRs from R2 metadata. Otherwise you'll see the entire backup set as "orphan" and might delete recoverable state. The workflow's 24h `for:` window naturally guards against this; if you're running manually, mind the timing.
+- **Don't run this immediately after a Velero re-deploy.** Wait at least 5 minutes for `BackupSyncController` to recreate Backup CRs from the storage location's metadata. Otherwise you'll see the entire backup set as "orphan" and might delete recoverable state. The workflow's 24h `for:` window naturally guards against this; if you're running manually, mind the timing.
 - **Don't strip `metadata.finalizers` from Backup CRs to "fix" stuck deletions.** That's exactly how the original orphan event happened. If a Backup CR is stuck, debug the plugin instead.
 - **Don't `zfs destroy -R`.** Recursive destroy would also delete child datasets and clones. Always destroy individual snapshots only.
 - **Don't bypass the guarded R2 tool with an ad-hoc `aws s3 rm`.** The reviewed manifest, metadata union, age fence, and apply-time revalidation are the safety boundary.

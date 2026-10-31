@@ -158,9 +158,14 @@ work.
 Live maintenance that acts directly on running systems with no PR in the loop.
 
 The backup workflows are **detection-only**. `velero-orphan-audit` flags PVC
-snapshots with no matching live backup. `velero-r2-orphan-audit` flags
-off-site data that no retained backup needs. Both emit gauges, a JSON summary,
-and a pointer to the remediation runbook.
+snapshots with no matching live backup. The
+[`velero-r2-orphan-audit`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/velero-r2-orphan-audit.ts)
+flags unreferenced data in the R2 `homelab` bucket older than its safety fence.
+It does not establish that the data is safe to delete. That bucket holds only
+backups taken before
+[Velero moved to Backblaze](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/storage/velero.ts).
+Both audits emit gauges, a JSON summary, and a pointer to the
+[remediation runbook](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/runbooks/velero-orphan-snapshot-remediation.md).
 
 Pruning off-site backup data was declined in 2026-06-06 and reversed in
 2026-10. The objection was to an audit inferring from absence that data is

@@ -6,6 +6,7 @@ import { createSeaweedfsApp } from "./seaweedfs.ts";
 import {
   createVeleroApp,
   MULTIPART_UPLOAD_MAX_PARTS,
+  VELERO_OBJECT_STORE,
   ZFS_STREAM_PART_SIZE,
 } from "./velero.ts";
 
@@ -15,16 +16,30 @@ const ResourceSchema = z.object({
   spec: z.unknown(),
 });
 
+const ObjectStoreConfigSchema = z
+  .object({ region: z.string(), s3Url: z.string() })
+  .loose();
+
 const VeleroApplicationSchema = z.object({
   source: z.object({
     helm: z.object({
       valuesObject: z.object({
         configuration: z.object({
+          backupStorageLocation: z.array(
+            z.object({
+              name: z.string(),
+              bucket: z.string(),
+              config: ObjectStoreConfigSchema,
+            }),
+          ),
           volumeSnapshotLocation: z.array(
             z.object({
               name: z.string(),
               provider: z.string(),
-              config: z.object({ multiPartChunkSize: z.string() }).loose(),
+              config: ObjectStoreConfigSchema.extend({
+                bucket: z.string(),
+                multiPartChunkSize: z.string(),
+              }),
             }),
           ),
         }),
@@ -32,6 +47,14 @@ const VeleroApplicationSchema = z.object({
     }),
   }),
 });
+
+function veleroConfiguration() {
+  const application = synthesize(createVeleroApp).find(
+    (resource) => resource.kind === "Application",
+  );
+  return VeleroApplicationSchema.parse(application?.spec).source.helm
+    .valuesObject.configuration;
+}
 
 const ClaimSpecSchema = z.object({
   resources: z.object({ requests: z.object({ storage: z.string() }) }),
@@ -60,13 +83,34 @@ function binaryBytes(quantity: string): number {
   return Number(match[1]) * 1024 ** exponent;
 }
 
+describe("Velero object store", () => {
+  // The plugin's expiry sweep refuses to delete when any storage location's
+  // bucket or endpoint differs from the snapshot location's.
+  test("every storage and snapshot location uses the one object store", () => {
+    const configuration = veleroConfiguration();
+    const locations = [
+      ...configuration.backupStorageLocation.map((location) => ({
+        bucket: location.bucket,
+        ...location.config,
+      })),
+      ...configuration.volumeSnapshotLocation.map(
+        (location) => location.config,
+      ),
+    ];
+    expect(locations.length).toBeGreaterThan(2);
+    for (const location of locations) {
+      expect({
+        bucket: location.bucket,
+        region: location.region,
+        s3Url: location.s3Url,
+      }).toEqual(VELERO_OBJECT_STORE);
+    }
+  });
+});
+
 describe("Velero ZFS stream uploads", () => {
   test("every ZFS snapshot location streams with the shared part size", () => {
-    const application = synthesize(createVeleroApp).find(
-      (resource) => resource.kind === "Application",
-    );
-    const locations = VeleroApplicationSchema.parse(application?.spec).source
-      .helm.valuesObject.configuration.volumeSnapshotLocation;
+    const locations = veleroConfiguration().volumeSnapshotLocation;
     expect(locations.length).toBeGreaterThan(1);
     for (const location of locations) {
       expect(location.provider).toBe("openebs.io/zfspv-blockstore");

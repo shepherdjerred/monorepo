@@ -4,6 +4,8 @@ locals {
   keys = {
     seaweedfs_backups = {
       title = "backblaze-seaweedfs-backups"
+      # Velero alone reads an AWS credentials file (`cloud`); see below.
+      aws_credentials_file = false
       capabilities = [
         "listBuckets",
         "listFiles",
@@ -15,7 +17,8 @@ locals {
       ]
     }
     velero = {
-      title = "backblaze-velero"
+      title                = "backblaze-velero"
+      aws_credentials_file = true
       capabilities = [
         "listBuckets",
         "listFiles",
@@ -25,7 +28,8 @@ locals {
       ]
     }
     postgres_wal = {
-      title = "backblaze-postgres-wal"
+      title                = "backblaze-postgres-wal"
+      aws_credentials_file = false
       capabilities = [
         "listBuckets",
         "listFiles",
@@ -65,6 +69,22 @@ resource "onepassword_item" "backup" {
       label = "B2_SECRET_ACCESS_KEY"
       type  = "CONCEALED"
       value = b2_application_key.backup[each.key].application_key
+    }
+
+    # The Velero chart mounts its secret's `cloud` key as the AWS shared
+    # credentials file that Velero and the openebs plugin authenticate with.
+    dynamic "field" {
+      for_each = each.value.aws_credentials_file ? [true] : []
+
+      content {
+        label = "cloud"
+        type  = "CONCEALED"
+        value = <<-EOT
+          [default]
+          aws_access_key_id=${b2_application_key.backup[each.key].application_key_id}
+          aws_secret_access_key=${b2_application_key.backup[each.key].application_key}
+        EOT
+      }
     }
   }
 }
