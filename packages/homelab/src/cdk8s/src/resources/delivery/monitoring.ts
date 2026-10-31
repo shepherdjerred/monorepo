@@ -10,6 +10,18 @@ import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-c
 const expr = (expression: string) =>
   PrometheusRuleSpecGroupsRulesExpr.fromString(expression);
 
+const DELIVERY_TARGET = 'namespace="delivery",service="delivery"';
+const STALLED_DISPATCH_RUNBOOK =
+  "https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#respond-to-a-stalled-delivery-dispatch";
+
+/**
+ * A queued deployment that has waited this long has outwaited any single
+ * legitimate holder. The longest bounded Delivery activity is the control
+ * plane's (150 minutes schedule-to-close, packages/temporal/src/workflows/delivery.ts),
+ * and self-hosted deployments serialize behind one such holder at a time (D8).
+ */
+export const DELIVERY_QUEUE_STALL_SECONDS = 3 * 60 * 60;
+
 /** Only rendered with an activated service, so absent bootstrap targets do not alert. */
 /**
  * Delivery's post-acceptance monitor (model 4.19) raised an alarm: a firing
@@ -19,7 +31,7 @@ const expr = (expression: string) =>
 const DELIVERY_MONITOR_ALARMED = {
   alert: "DeliveryMonitorAlarmed",
   expr: expr(
-    'max by (environment) (delivery_monitor_state{namespace="delivery",service="delivery",state="alarmed"}) > 0',
+    `max by (environment) (delivery_monitor_state{${DELIVERY_TARGET},state="alarmed"}) > 0`,
   ),
   for: "1m",
   labels: { severity: "warning" },
@@ -30,6 +42,74 @@ const DELIVERY_MONITOR_ALARMED = {
     ),
   },
 };
+
+/** The Delivery control plane's alerts; the monitor alarm loads with transition rendering. */
+export function deliveryAlertRules(transition: boolean) {
+  return [
+    {
+      alert: "DeliveryUnavailable",
+      expr: expr(
+        `(up{${DELIVERY_TARGET}} == 0) or absent(up{${DELIVERY_TARGET}})`,
+      ),
+      for: "5m",
+      labels: { severity: "warning" },
+      annotations: {
+        summary: "Delivery control plane is unavailable",
+        message:
+          "The database-backed Delivery metrics endpoint is not scraping. Existing workloads may still be healthy; inspect the control plane and use its independent recovery procedure.",
+      },
+    },
+    {
+      alert: "DeliveryDispatchDelayed",
+      expr: expr(`delivery_outbox_oldest_seconds{${DELIVERY_TARGET}} > 600`),
+      for: "5m",
+      labels: { severity: "warning" },
+      annotations: {
+        summary: "Delivery submissions are not reaching Temporal",
+        message:
+          "A nonterminal deployment has awaited durable Workflow submission acknowledgement for more than ten minutes. Inspect the dispatch Schedule, executor and outbox before retrying.",
+      },
+    },
+    {
+      // One alert per held target: recovery-required never clears itself, so
+      // a short hold is already evidence, and a new holder opens a new alert
+      // even while an older one is still firing.
+      alert: "DeliveryRecoveryRequired",
+      expr: expr(
+        `max by (environment, service_id, self_hosted) (delivery_recovery_required_deployments{${DELIVERY_TARGET}}) > 0`,
+      ),
+      for: "5m",
+      labels: { severity: "warning" },
+      annotations: {
+        summary: escapePrometheusTemplate(
+          "{{ $labels.environment }} requires recovery and holds the Delivery dispatch barrier",
+        ),
+        message: escapePrometheusTemplate(
+          'A deployment of {{ $labels.environment }} (service {{ $labels.service_id }}) ended recovery-required and keeps its locks. {{ if eq $labels.self_hosted "true" }}It is self-hosted, so it holds the global dispatch barrier (D8): every claim answers BUSY, and queued deployments stay queued until a newer set revision supersedes them.{{ else }}The dispatch barrier (D8) waits for it to settle, so no self-hosted deployment (delivery, delivery-control-plane, temporal, argocd) can start.{{ end }} Find its ID with `toolkit deploy status --json` (recoveryRequired). For an argo deployment, open an intent with `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason <why> --machine`, then settle it with the same `--request-id` and `--operation-id <ARGO_OPERATION_UUID>`. For a worker deployment use `toolkit deploy workers recover <DEPLOYMENT_ID> --machine --expected-generation <N> --reason <why>`. Never delete the lock row.',
+        ),
+        runbook_url: STALLED_DISPATCH_RUNBOOK,
+      },
+    },
+    {
+      alert: "DeliveryQueueStalled",
+      expr: expr(
+        `max by (environment) (delivery_queued_oldest_seconds{${DELIVERY_TARGET}}) > ${String(DELIVERY_QUEUE_STALL_SECONDS)}`,
+      ),
+      for: "10m",
+      labels: { severity: "warning" },
+      annotations: {
+        summary: escapePrometheusTemplate(
+          `{{ $labels.environment }} has waited over ${String(DELIVERY_QUEUE_STALL_SECONDS / 3600)} hours to dispatch`,
+        ),
+        message: escapePrometheusTemplate(
+          "A queued deployment of {{ $labels.environment }} has waited {{ $value | humanizeDuration }} without a claim, counting the queued requests a newer set revision superseded. That is longer than any single bounded holder of the dispatch barrier (D8). Check for DeliveryRecoveryRequired first, then a long-running self-hosted deployment, an unmet prerequisite and a paused delivery-dispatch Schedule.",
+        ),
+        runbook_url: STALLED_DISPATCH_RUNBOOK,
+      },
+    },
+    ...(transition ? [DELIVERY_MONITOR_ALARMED] : []),
+  ];
+}
 
 export function createDeliveryMonitoring(
   chart: Chart,
@@ -42,48 +122,7 @@ export function createDeliveryMonitoring(
       groups: [
         {
           name: "delivery-control-plane",
-          rules: [
-            {
-              alert: "DeliveryUnavailable",
-              expr: expr(
-                '(up{namespace="delivery",service="delivery"} == 0) or absent(up{namespace="delivery",service="delivery"})',
-              ),
-              for: "5m",
-              labels: { severity: "warning" },
-              annotations: {
-                summary: "Delivery control plane is unavailable",
-                message:
-                  "The database-backed Delivery metrics endpoint is not scraping. Existing workloads may still be healthy; inspect the control plane and use its independent recovery procedure.",
-              },
-            },
-            {
-              alert: "DeliveryDispatchDelayed",
-              expr: expr(
-                'delivery_outbox_oldest_seconds{namespace="delivery",service="delivery"} > 600',
-              ),
-              for: "5m",
-              labels: { severity: "warning" },
-              annotations: {
-                summary: "Delivery submissions are not reaching Temporal",
-                message:
-                  "A nonterminal deployment has awaited durable Workflow submission acknowledgement for more than ten minutes. Inspect the dispatch Schedule, executor and outbox before retrying.",
-              },
-            },
-            {
-              alert: "DeliveryRecoveryRequired",
-              expr: expr(
-                'delivery_recovery_required{namespace="delivery",service="delivery"} > 0',
-              ),
-              for: "5m",
-              labels: { severity: "warning" },
-              annotations: {
-                summary: "A Delivery operation needs independent recovery",
-                message:
-                  "Delivery retained target ownership after an ambiguous external result. Inspect exact operation and Job identities; do not delete the database lock or assume the release was undone.",
-              },
-            },
-            ...(transition ? [DELIVERY_MONITOR_ALARMED] : []),
-          ],
+          rules: deliveryAlertRules(transition),
         },
       ],
     },

@@ -357,6 +357,46 @@ Never delete a lock row or replace a foreign ArgoCD operation to release a
 deployment. Only an intent settled by the independent reader may release it.
 :::
 
+## Respond to a stalled Delivery dispatch
+
+Two alerts report deployments that stop dispatching. The
+[Delivery README](packages/delivery/README.md#operations) lists their metrics
+and thresholds.
+
+| Alert                      | Meaning                                                                                                                                               |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeliveryRecoveryRequired` | A recovery-required deployment of the alert's `environment` holds the [dispatch barrier](packages/delivery/src/infrastructure/execution/admission.ts) |
+| `DeliveryQueueStalled`     | A queued deployment of the alert's `environment` has waited past the stall threshold, counting requests a newer set revision superseded               |
+
+A `self_hosted="true"` holder makes every claim answer `BUSY`. Any other holder
+stops every self-hosted deployment, including `delivery-control-plane`.
+
+1. Find the recovery-required deployments:
+
+   ```bash
+   toolkit deploy status --json | jq -r '.deployments[] | select(.recoveryRequired) | [.id, .environmentId] | @tsv'
+   ```
+
+   The overview lists the newest 100 deployments. For an older holder, open
+   the alert's environment in the Delivery hub, which lists its deployments.
+
+2. Recover each one with
+   [Recover a deployment that requires recovery](#recover-a-deployment-that-requires-recovery).
+   A worker deployment uses `toolkit deploy workers recover` instead; see the
+   [toolkit README](packages/toolkit/README.md#delivery). Dispatch resumes on
+   the next claim once the last holder settles.
+3. If `DeliveryQueueStalled` fires with no recovery-required deployment, check
+   the remaining causes in order:
+
+   | Cause                                     | Check                                                                                                      |
+   | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+   | A self-hosted deployment is still running | `toolkit deploy status --json` shows it `running`; its lease scan recovers a lapsed lease                  |
+   | A prerequisite edge is unmet              | [Z1](packages/delivery/docs/model.md#418-prerequisite-edge): the prerequisite has no qualifying acceptance |
+   | Dispatch is paused for maintenance        | `toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch`                      |
+
+4. Confirm the alert resolves. Then follow the environment's claimed
+   deployment to its result with `toolkit deploy wait DEPLOYMENT_ID --json`.
+
 ## Run an operator-run deployment
 
 Operator-run environments cover work Delivery cannot execute from inside the

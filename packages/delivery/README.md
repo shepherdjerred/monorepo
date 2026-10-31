@@ -807,9 +807,26 @@ its scoped copy together; do not restore broad item projections.
 
 The machine listener's `/metrics` endpoint exposes database-backed queue,
 outbox, ownership, recovery and retained-worker gauges. Labels use bounded
-operation enums; artifact IDs, actors and request IDs are not metric labels.
-The activated homelab service includes a matching ServiceMonitor and alerts
-for unavailability, delayed dispatch and required independent recovery.
+operation enums and catalog environment and service IDs; deployment, artifact
+and request IDs and actors are not metric labels.
+The activated homelab service includes a matching ServiceMonitor and the
+[Delivery alerts](../homelab/src/cdk8s/src/resources/delivery/monitoring.ts).
+
+| Metric                                                                       | Alert                      | Fires when                                                                                    |
+| ---------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| `up`                                                                         | `DeliveryUnavailable`      | the endpoint is not scraped for 5 minutes                                                     |
+| `delivery_outbox_oldest_seconds`                                             | `DeliveryDispatchDelayed`  | a submission awaits Temporal acknowledgement over 10 minutes                                  |
+| `delivery_recovery_required_deployments{environment,service_id,self_hosted}` | `DeliveryRecoveryRequired` | a recovery-required deployment holds the dispatch barrier for 5 minutes, one alert per target |
+| `delivery_queued_oldest_seconds{environment}`                                | `DeliveryQueueStalled`     | an environment has waited over 3 hours to dispatch, for 10 minutes                            |
+
+`delivery_queued_oldest_seconds` counts from the oldest queued request's outbox
+entry, and keeps counting through supersession: a queued automatic request a
+newer set revision canceled still counts until the environment's next claim.
+`delivery_deployments_superseded_total{environment}` counts those cancellations.
+Three hours exceeds the longest bounded holder of the barrier, the control
+plane's 150-minute activity, so ordinary serialization never reaches it. The
+response is
+[Respond to a stalled Delivery dispatch](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#respond-to-a-stalled-delivery-dispatch).
 
 PostgreSQL is the permanent record and audit source; Temporal owns durable
 execution. Scheduled Velero backups of the database volumes are the only
