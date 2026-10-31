@@ -17,11 +17,12 @@ tasks.test {
   // Candidate visits prepare two disjoint yards concurrently. MockBukkit chunk snapshots allocate
   // blocks across the world's full height, so this fixture exceeds the shared 512m test heap.
   maxHeapSize = "1g"
-  // MockBukkit materializes full-height chunk blocks for every snapshot. Bound each class's
-  // world/ByteBuddy state to a fresh worker instead of sharing a worker across the whole suite.
-  // Retain the same bounded heap, complete test selection and noSkippedTests gate; the shared
-  // conventions run several of these forks at once.
-  forkEvery = 1
+  // MockBukkit materializes full-height chunk blocks for every snapshot. Bound world/ByteBuddy
+  // state by recycling each worker after ten classes instead of sharing one across the whole
+  // suite; a fresh JVM per class made rwf the slowest module (264s against 153-185s for ten,
+  // which stays within the 1g heap). Retain the same complete test selection and noSkippedTests
+  // gate; the shared conventions run several of these forks at once.
+  forkEvery = 10
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/rwf.yml"))
       .withPropertyName("shippedConfig")
