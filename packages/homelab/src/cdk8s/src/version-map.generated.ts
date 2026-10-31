@@ -102,6 +102,7 @@ export const VersionMapSchema = z
     "resmoio/kubernetes-event-exporter": z.string(),
     redis: z.string(),
     seaweedfs: z.string(),
+    "chrislusf/seaweedfs": z.string(),
     mariadb: z.string(),
     "bitnami/mariadb": z.string(),
     "bitnami/mysqld-exporter": z.string(),

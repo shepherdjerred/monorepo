@@ -1262,6 +1262,22 @@
       "component": true
     },
     {
+      "name": "chrislusf/seaweedfs",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
+      "notes": [
+        "Runs weed filer.backup beside the seaweedfs chart, whose servers use the chart's own image.",
+        "renovate.json groups both so filer.backup tracks the server version."
+      ]
+    },
+    {
       "name": "mariadb",
       "category": "upstream",
       "artifactType": "helm-chart",

@@ -20,6 +20,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import { createSeaweedfsBackup } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs-backup.ts";
 
 const FILER_UPSTREAM_PORT = 8888;
 const FILER_GATEWAY_PORT = 8889;
@@ -92,6 +93,8 @@ export function createSeaweedfsResources(chart: Chart): void {
       namespace: "seaweedfs",
     },
   });
+
+  createSeaweedfsBackup(chart);
 
   new OnePasswordItem(chart, "seaweedfs-filer-auth-onepassword", {
     spec: {
