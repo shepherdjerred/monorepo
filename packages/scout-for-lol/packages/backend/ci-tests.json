@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../../scripts/ci-tests.schema.json",
+  "package": "@scout-for-lol/backend",
+  "defaultEnv": {
+    "DATABASE_URL": "postgres://scout@127.0.0.1:5471/scout_test_unbound"
+  },
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["--testTimeout", "20000"]
+    }
+  ]
+}

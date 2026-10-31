@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../../scripts/ci-tests.schema.json",
+  "package": "@homelab/cdk8s",
+  "steps": [
+    {
+      "runner": "vitest"
+    },
+    {
+      "runner": "command",
+      "name": "gpu-resources",
+      "command": ["bun", "run", "test:gpu-resources"]
+    }
+  ]
+}

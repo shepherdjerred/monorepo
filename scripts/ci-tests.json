@@ -1,0 +1,15 @@
+{
+  "$schema": "ci-tests.schema.json",
+  "package": "@shepherdjerred/root-scripts",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": [".", "../ci/scripts"]
+    },
+    {
+      "runner": "command",
+      "name": "toolchain-shell",
+      "command": ["bash", "../ci/scripts/toolchain.test.sh"]
+    }
+  ]
+}

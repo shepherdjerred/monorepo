@@ -1,0 +1,49 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/temporal",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "ha-schema",
+      "command": ["bun", "run", "scripts/homelab/ensure-ha-schema.ts"]
+    },
+    {
+      "runner": "vitest",
+      "args": [
+        "src/activities",
+        "src/event-bridge",
+        "src/observability",
+        "src/config",
+        "src/schedules",
+        "src/shared",
+        "src/lib",
+        "src/workflows/agent-task.test.ts",
+        "src/config/imessage.test.ts",
+        "src/config/photon.test.ts",
+        "src/config/woodpecker-retention.test.ts",
+        "src/worker-config.test.ts",
+        "scripts/check-workflow-tracing-safety.test.ts",
+        "scripts/cli-arguments.test.ts",
+        "scripts/rollout/temporal-operator-credentials.test.ts"
+      ]
+    },
+    {
+      "runner": "vitest",
+      "name": "workflows",
+      "runtime": "node",
+      "runtimeReason": "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
+      "args": [
+        "src/workflows",
+        "--exclude",
+        "src/workflows/agent-task.test.ts",
+        "--no-file-parallelism"
+      ]
+    }
+  ],
+  "excludedSuites": [
+    {
+      "path": "src/integration.test.ts",
+      "reason": "Requires a live Temporal server on localhost:7233; run it with test:integration against a dev server."
+    }
+  ]
+}

@@ -1,13 +1,9 @@
 import path from "node:path";
 import { reportedWorkspacesForReports } from "./ci-reporting.ts";
-import { TestManifestSchema } from "./test-manifest-schema.ts";
+import { loadTestManifest } from "./test-manifest-schema.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
-const manifest = TestManifestSchema.parse(
-  await Bun.file(
-    path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-  ).json(),
-);
+const manifest = await loadTestManifest(repositoryRoot);
 const reportRoot = path.join(repositoryRoot, ".ci-reports");
 const junitRoot = path.join(reportRoot, "junit");
 const reports: string[] = [];

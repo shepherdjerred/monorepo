@@ -342,12 +342,25 @@ toolkit ci explain 3447                # Current blockers and bounded failure lo
 toolkit ci main                        # Current main verification and last completed verdict
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit ci timings --since 72h --json   # Recent timing cohorts and per-workflow phases
+toolkit ci analyze --since 72h           # Uncached work, critical path, repeated misses, hot files
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
 CI commands resolve `WOODPECKER_TOKEN` through the registered credential broker,
 as the native Woodpecker command does. An explicit token retains precedence;
 custom server URLs or repository IDs require an explicit token.
+
+`toolkit ci analyze` reads each finished ready-PR and main pipeline's verify
+Turbo diagnostics from `ci-handoff` (profile `seaweedfs`, or `--profile`) and
+compacts them under `~/.cache/toolkit/ci-analyze`. It ranks executed tasks by
+total seconds, names the task each run finished on, and finds misses whose own
+inputs an earlier run had already executed, which points at `dependsOn` fan-out
+or cache isolation. Its hot-file table runs `turbo run --dry=json` over
+verify's task list in the current checkout. Each file's commits on `--ref`
+(default `origin/main`) over `--churn-days` are multiplied by the median miss
+cost of every task hash the file reaches, directly or through `dependsOn`.
+`--no-hot-files` skips the local graph. Costs come from task IDs seen in the
+window, so a renamed task counts as free until new runs record it.
 
 `toolkit ci benchmark evidence <PIPELINE> --head <full SHA> --variant baseline|candidate`
 recovers a terminal manual verify canary's retained resource evidence without

@@ -1,0 +1,15 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/discord-stream-lifecycle",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "build",
+      "command": ["bun", "run", "build"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["test/"]
+    }
+  ]
+}

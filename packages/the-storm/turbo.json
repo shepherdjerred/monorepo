@@ -14,6 +14,8 @@
     // Gradle builds overwrite each other's class files (CI build 17316: "bad
     // class file ... NoSuchFileException"), so the chain stays serial.
     //
+    // No task reads Markdown, so README and docs edits never re-run a suite.
+    //
     // TS tools: typecheck:ts, lint:ts and test:ci:tools never start Gradle.
     // They import mc-harness and mc-build source, so they keep ^build to hash
     // those packages.
@@ -33,6 +35,7 @@
         "tools/learning/maps/protocol.json",
         "$TURBO_ROOT$/packages/mc-harness/src/protocol/evidence-contract.json",
         "$TURBO_ROOT$/packages/storm-brain/contracts/**",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**/build/**",
@@ -58,6 +61,7 @@
         "tools/learning/maps/protocol.json",
         "$TURBO_ROOT$/packages/mc-harness/src/protocol/evidence-contract.json",
         "$TURBO_ROOT$/packages/storm-brain/contracts/**",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**/build/**",
@@ -83,6 +87,7 @@
         "tools/learning/maps/protocol.json",
         "$TURBO_ROOT$/packages/mc-harness/src/protocol/evidence-contract.json",
         "$TURBO_ROOT$/packages/storm-brain/contracts/**",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**/build/**",
@@ -106,7 +111,7 @@
         "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
-        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+        "ci-tests.json",
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "client/**",
         "plugin/**",
@@ -116,6 +121,7 @@
         "tools/learning/**",
         "$TURBO_ROOT$/packages/mc-harness/src/protocol/evidence-contract.json",
         "$TURBO_ROOT$/packages/storm-brain/contracts/**",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**/build/**",
@@ -136,6 +142,7 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!**/*.md",
         "!plugin/**",
         "!client/**",
         "!tools/**/.venv/**",
@@ -152,6 +159,7 @@
         // check:managed-flags compares the plugin's Java Flipt clients with
         // the shared inventory.
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**",
@@ -172,8 +180,8 @@
         "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
-        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**/build/**",
@@ -202,6 +210,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/mc-harness/src/protocol/evidence-contract.json",
         "$TURBO_ROOT$/packages/storm-brain/contracts/**",
+        "!**/*.md",
         "!plugin/**/build/**",
         "!plugin/**/.gradle/**",
         "!client/**/build/**",

@@ -6,6 +6,21 @@ import {
 
 const REPO_ROOT = new URL("../../", import.meta.url);
 
+test("--list-tasks prints verify's Turbo task list for toolkit ci analyze", async () => {
+  const child = Bun.spawn(
+    ["bun", "--no-install", "scripts/verify.ts", "--list-tasks"],
+    { cwd: REPO_ROOT.pathname, stdout: "pipe", stderr: "pipe" },
+  );
+  const [output, code] = await Promise.all([
+    new Response(child.stdout).text(),
+    child.exited,
+  ]);
+  expect(code).toBe(0);
+  expect(JSON.parse(output)).toEqual(
+    expect.arrayContaining(["build", "typecheck", "test:ci", "lint"]),
+  );
+});
+
 describe("root scripts external inputs", () => {
   test.each(ROOT_SCRIPTS_EXTERNAL_INPUTS)("%s exists", async (input) => {
     // stat() also resolves for the directory inputs that end in "/".

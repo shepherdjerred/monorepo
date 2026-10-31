@@ -1,0 +1,20 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/glitter-context",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "generate",
+      "command": ["bun", "run", "scripts/generate.ts"]
+    },
+    {
+      "runner": "vitest",
+      "args": ["test"]
+    },
+    {
+      "runner": "command",
+      "name": "python-validation",
+      "command": ["uv", "run", "python/validate_context.py"]
+    }
+  ]
+}

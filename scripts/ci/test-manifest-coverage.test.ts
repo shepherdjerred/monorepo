@@ -211,7 +211,7 @@ describe("unrunTestFiles", () => {
         ["scripts"],
       ),
     ).toEqual([
-      "scripts/ci-test-manifest.json (@shepherdjerred/root-scripts): no step runs ../ci/scripts/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+      "scripts/ci-tests.json (@shepherdjerred/root-scripts): no step runs ../ci/scripts/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
 
@@ -223,7 +223,7 @@ describe("unrunTestFiles", () => {
         ["packages/pkg"],
       ),
     ).toEqual([
-      "scripts/ci-test-manifest.json (@example/pkg): no step runs test/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
+      "packages/pkg/ci-tests.json (@example/pkg): no step runs test/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
 

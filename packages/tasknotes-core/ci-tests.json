@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "tasknotes-core",
+  "steps": [
+    {
+      "runner": "cargo",
+      "args": ["--workspace"]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "astro-opengraph-images",
+  "steps": [
+    {
+      "runner": "vitest",
+      "name": "vitest",
+      "args": ["src"]
+    }
+  ]
+}

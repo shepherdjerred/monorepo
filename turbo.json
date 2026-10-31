@@ -55,6 +55,10 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      // A build's hash reaches every dependent's tasks through ^build, and no
+      // build reads its README, so documentation edits stay local. A package
+      // task that reads its own README keeps it through $TURBO_DEFAULT$.
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["dist/**"]
     },
     "@shepherdjerred/statically-typed#build": {
@@ -75,6 +79,9 @@
     // Live-credential codegen lives in generate:live and is NEVER in a
     // default chain (temporal → live Home Assistant, helm-types → chart repos).
     "generate": {
+      // Like build: generate feeds dependents' hashes and no generator reads
+      // a README.
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["generated/**"]
     },
     "generate:live": {
@@ -90,10 +97,12 @@
     },
     // CI uses the same cache semantics as `test`, but packages emit JUnit on
     // cache misses. Reports are deliberately not outputs: a cache hit must not
-    // restore a stale report from another build. The shared runner and its
-    // manifest are inputs here rather than global dependencies, so editing
-    // them reruns test:ci without invalidating every build, lint and
-    // typecheck. A package that overrides test:ci inputs must keep them.
+    // restore a stale report from another build. The shared runner is an
+    // input here rather than a global dependency, so editing it reruns
+    // test:ci without invalidating every build, lint and typecheck. Each
+    // workspace's steps live in its own ci-tests.json, inside
+    // $TURBO_DEFAULT$, so editing one workspace's steps reruns only that
+    // workspace. A package that overrides test:ci inputs must keep both.
     "test:ci": {
       "env": ["NODE_ENV"],
       "passThroughEnv": ["MISE_DATA_DIR"],
@@ -104,7 +113,6 @@
         "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
-        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
         "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "$TURBO_ROOT$/vitest.config.ts"
       ]

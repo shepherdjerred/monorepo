@@ -1,0 +1,15 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/birmel",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "generate",
+      "command": ["bun", "--env-file=.env.test", "run", "generate"]
+    },
+    {
+      "runner": "vitest",
+      "runtimeArgs": ["--env-file=.env.test"]
+    }
+  ]
+}

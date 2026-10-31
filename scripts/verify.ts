@@ -198,6 +198,11 @@ export async function main(
   const forwardedArgs = process.argv
     .slice(2)
     .filter((argument) => argument !== "--");
+  // `toolkit ci analyze` reads the task list instead of copying it.
+  if (forwardedArgs.length === 1 && forwardedArgs[0] === "--list-tasks") {
+    console.log(JSON.stringify(turboTasks));
+    return 0;
+  }
   const hasConcurrencyOverride = forwardedArgs.some(
     (argument) =>
       argument === "--concurrency" || argument.startsWith("--concurrency="),

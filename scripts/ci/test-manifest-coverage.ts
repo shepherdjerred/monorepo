@@ -136,7 +136,7 @@ export function unrunTestFiles(
       .filter((file) => !isAccountedFor(workspace, file))
       .map(
         (file) =>
-          `scripts/ci-test-manifest.json (${workspace.package}): no step runs ${file}; add it to a step or to excludedSuites with the reason it runs elsewhere`,
+          `${workspace.directory}/ci-tests.json (${workspace.package}): no step runs ${file}; add it to a step or to excludedSuites with the reason it runs elsewhere`,
       ),
   );
   const testsInTestlessWorkspaces = manifest.testlessWorkspaces.flatMap(

@@ -4,6 +4,7 @@ import { ciCommand } from "#commands/ci.ts";
 import { parseTimeout } from "#lib/ci/arguments.ts";
 import { ciBenchmarkCommand } from "#commands/ci-benchmark.ts";
 import { ciSourceProofCommand } from "#commands/ci-source-proof.ts";
+import { ciAnalyzeCommand } from "#commands/ci-analyze.ts";
 import {
   requiredCredentialsFor,
   resolveCredentials,
@@ -43,6 +44,17 @@ function validateOptions(
     throw new Error("--head requires a PR wait or explanation");
 }
 
+async function runAnalyze(args: string[]): Promise<void> {
+  try {
+    await ciAnalyzeCommand(args, async () => {
+      await resolveCredentials(requiredCredentialsFor("ci", "analyze"));
+    });
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 2;
+  }
+}
+
 export async function handleCiCommand(
   subcommand: string | undefined,
   args: string[],
@@ -53,6 +65,10 @@ export async function handleCiCommand(
   }
   if (subcommand === "source-proof") {
     await ciSourceProofCommand(args);
+    return;
+  }
+  if (subcommand === "analyze") {
+    await runAnalyze(args);
     return;
   }
   const json = args.includes("--json");
@@ -71,6 +87,7 @@ export async function handleCiCommand(
   main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
   timings         Report recent latency by actual workflow class and attempt
+  analyze         Rank uncached tasks, critical paths, repeated misses and hot files
   maintenance     Show recent maintenance runs and coordinator inspection details
   benchmark       Inspect and archive retained canary resource evidence
   source-proof PR --source SHA  Verify exact reviewed, green source is merged into main before bootstrap

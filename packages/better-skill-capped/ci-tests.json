@@ -1,0 +1,9 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "better-skill-capped",
+  "steps": [
+    {
+      "runner": "vitest"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/ts-mc-docs",
+  "steps": [
+    {
+      "runner": "command",
+      "name": "world-archive",
+      "command": ["bun", "run", "test"]
+    }
+  ]
+}
