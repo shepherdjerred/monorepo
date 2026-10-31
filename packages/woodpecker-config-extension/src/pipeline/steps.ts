@@ -32,6 +32,7 @@ import {
   TURBO_REMOTE_CACHE_ENVIRONMENT,
 } from "#src/pipeline/turbo-cache.ts";
 import { npmPackageArchiveSteps } from "#src/pipeline/lanes/npm-packages.ts";
+import { GRADLE_BUILD_CACHE_ENVIRONMENT } from "#src/pipeline/gradle-build-cache.ts";
 
 /**
  * The CI graph, as data.
@@ -162,6 +163,9 @@ export function buildPipelineSteps({
       environment: {
         ...sharedEnvironment,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
+        // The Storm's Gradle builds (~30 plugin modules) dominate verify when
+        // their Turbo task misses; the node returns unchanged modules' outputs.
+        ...GRADLE_BUILD_CACHE_ENVIRONMENT,
         CI_CHANGED_BASE: verifyBase ?? changedBase,
       },
       // A first run in a new trust domain must rebuild every cache entry rather

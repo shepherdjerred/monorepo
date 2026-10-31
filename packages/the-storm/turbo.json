@@ -4,6 +4,9 @@
   "tasks": {
     // Two independent chains, so each cache key covers only what its work
     // reads.
+    // GRADLE_BUILD_CACHE_* carries CI's remote build cache identity
+    // (plugin/settings.gradle.kts); it selects where outputs come from, not
+    // what a task produces, so it stays out of task hashes.
     //
     // JVM: build → typecheck:jvm → lint:jvm → test:ci:jvm. Gradle reads
     // nothing from the TypeScript workspace graph, so this chain has no
@@ -46,7 +49,8 @@
         "MISE_DATA_DIR",
         "JAVA_HOME",
         "GRADLE_USER_HOME",
-        "GRADLE_OPTS"
+        "GRADLE_OPTS",
+        "GRADLE_BUILD_CACHE_*"
       ]
     },
     "typecheck:jvm": {
@@ -72,7 +76,8 @@
         "MISE_DATA_DIR",
         "JAVA_HOME",
         "GRADLE_USER_HOME",
-        "GRADLE_OPTS"
+        "GRADLE_OPTS",
+        "GRADLE_BUILD_CACHE_*"
       ]
     },
     "lint:jvm": {
@@ -98,7 +103,8 @@
         "MISE_DATA_DIR",
         "JAVA_HOME",
         "GRADLE_USER_HOME",
-        "GRADLE_OPTS"
+        "GRADLE_OPTS",
+        "GRADLE_BUILD_CACHE_*"
       ]
     },
     // The plugin's archive and world-maintenance tests run Python from
@@ -135,7 +141,8 @@
         "MISE_DATA_DIR",
         "JAVA_HOME",
         "GRADLE_USER_HOME",
-        "GRADLE_OPTS"
+        "GRADLE_OPTS",
+        "GRADLE_BUILD_CACHE_*"
       ]
     },
     "typecheck:ts": {
@@ -224,7 +231,8 @@
         "MISE_DATA_DIR",
         "JAVA_HOME",
         "GRADLE_USER_HOME",
-        "GRADLE_OPTS"
+        "GRADLE_OPTS",
+        "GRADLE_BUILD_CACHE_*"
       ]
     },
     // Real-server e2e against the built TheStorm.jar in a disposable Paper

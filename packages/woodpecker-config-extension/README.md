@@ -114,6 +114,14 @@ workspace. Verify and Playwright use `TURBO_CACHE=remote:rw`: each is one Turbo
 run in a fresh workspace, so a local cache there would be written and never
 read.
 
+Verify also names the homelab Gradle build cache (nginx WebDAV) in
+`GRADLE_BUILD_CACHE_URL`. `grantGradleBuildCache` gives every step carrying
+that variable one identity for its trust domain: `ci-main` with
+`GRADLE_BUILD_CACHE_WRITE_PASSWORD` on the default branch, or
+`ci-pull-request` with `GRADLE_BUILD_CACHE_READ_PASSWORD` for a pull request.
+nginx rejects writes from the read user. A cold benchmark drops the URL so it
+measures a build without shared Gradle outputs.
+
 ### Experimental workspace reuse
 
 The `woodpecker-performance` flag declarations default off in production and
