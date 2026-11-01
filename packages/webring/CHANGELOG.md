@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.12.0...webring-v1.12.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **delivery:** give the Minecraft sandbox's healthy-sync oracle its own recipe revision ([#4178](https://github.com/shepherdjerred/monorepo/issues/4178)) ([2927c3b](https://github.com/shepherdjerred/monorepo/commit/2927c3b2afb3024bee41bf4f018c9bdbc4f3842a))
+* **homelab:** carry group A's admission inventory and source-guard fixes to main ([#4054](https://github.com/shepherdjerred/monorepo/issues/4054)) ([407ea49](https://github.com/shepherdjerred/monorepo/commit/407ea498ee87114be0eddd665a0d1eb31117bef1))
+* keep emoji whole when truncating published-library text ([#3973](https://github.com/shepherdjerred/monorepo/issues/3973)) ([32409d1](https://github.com/shepherdjerred/monorepo/commit/32409d12c6eccb6bc044ebf91c1612243110f4da))
+
+
+### Performance Improvements
+
+* **ci:** detect hot files and stop the worst from re-running suites ([#4218](https://github.com/shepherdjerred/monorepo/issues/4218)) ([8308f64](https://github.com/shepherdjerred/monorepo/commit/8308f6445eebc357b64549b793580ca39a5deed7))
+
 ## [1.12.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.11.0...webring-v1.12.0) (2026-10-09)
 
 Safer feed previews and a small runtime dependency update.
