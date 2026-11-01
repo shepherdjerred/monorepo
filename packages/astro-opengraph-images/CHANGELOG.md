@@ -2,17 +2,9 @@
 
 ## [1.20.5](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.4...astro-opengraph-images-v1.20.5) (2026-11-01)
 
+No public API changes.
 
-### Bug Fixes
-
-* **delivery:** give the Minecraft sandbox's healthy-sync oracle its own recipe revision ([#4178](https://github.com/shepherdjerred/monorepo/issues/4178)) ([2927c3b](https://github.com/shepherdjerred/monorepo/commit/2927c3b2afb3024bee41bf4f018c9bdbc4f3842a))
-* **homelab:** carry group A's admission inventory and source-guard fixes to main ([#4054](https://github.com/shepherdjerred/monorepo/issues/4054)) ([407ea49](https://github.com/shepherdjerred/monorepo/commit/407ea498ee87114be0eddd665a0d1eb31117bef1))
-* keep emoji whole when truncating published-library text ([#3973](https://github.com/shepherdjerred/monorepo/issues/3973)) ([32409d1](https://github.com/shepherdjerred/monorepo/commit/32409d12c6eccb6bc044ebf91c1612243110f4da))
-
-
-### Performance Improvements
-
-* **ci:** detect hot files and stop the worst from re-running suites ([#4218](https://github.com/shepherdjerred/monorepo/issues/4218)) ([8308f64](https://github.com/shepherdjerred/monorepo/commit/8308f6445eebc357b64549b793580ca39a5deed7))
+- Custom-property descriptions now truncate at grapheme boundaries, keeping emoji, flags, and ZWJ sequences whole ([32409d1](https://github.com/shepherdjerred/monorepo/commit/32409d12c6eccb6bc044ebf91c1612243110f4da))
 
 ## [1.20.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.3...astro-opengraph-images-v1.20.4) (2026-10-09)
 
