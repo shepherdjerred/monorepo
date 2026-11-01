@@ -271,8 +271,10 @@ export function createStreambotDeployment(
           request: Cpu.millis(2000),
           limit: Cpu.millis(12_000),
         },
+        // Request the measured p95 working set (454Mi over 7d, 2026-10-31);
+        // 4K remux bursts (1.8Gi in that window) use the limit.
         memory: {
-          request: Size.gibibytes(2),
+          request: Size.mebibytes(512),
           limit: Size.gibibytes(12),
         },
       },

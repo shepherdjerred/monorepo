@@ -62,9 +62,10 @@ export function createScoutPostgreSQLDatabase(chart: Chart, stage: Stage) {
         scout: "scout",
       },
       resources: {
+        // Measured p95 working set (7d, 2026-10-31) is 244-253Mi per stage.
         requests: {
           cpu: "50m",
-          memory: "128Mi",
+          memory: "288Mi",
         },
         limits: {
           cpu: "250m",

@@ -2964,7 +2964,7 @@
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
       "recipeRevisionId": "minecraft-tsmc/8",
-      "configurationRevisionId": "minecraft-tsmc/7"
+      "configurationRevisionId": "minecraft-tsmc/8"
     },
     {
       "id": "mc-router/prod",
@@ -3148,7 +3148,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/4"
+      "configurationRevisionId": "argocd/prod/5"
     },
     {
       "id": "chartmuseum/prod",
@@ -3300,7 +3300,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/1",
-      "configurationRevisionId": "prometheus/prod/1"
+      "configurationRevisionId": "prometheus/prod/2"
     },
     {
       "id": "prometheus-adapter/prod",
@@ -3308,7 +3308,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus-adapter/prod/1",
-      "configurationRevisionId": "prometheus-adapter/prod/1"
+      "configurationRevisionId": "prometheus-adapter/prod/2"
     },
     {
       "id": "blackbox-exporter/prod",
@@ -3340,7 +3340,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "loki/prod/1",
-      "configurationRevisionId": "loki/prod/1"
+      "configurationRevisionId": "loki/prod/2"
     },
     {
       "id": "tempo/prod",
@@ -3356,7 +3356,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "pyroscope/prod/1",
-      "configurationRevisionId": "pyroscope/prod/1"
+      "configurationRevisionId": "pyroscope/prod/2"
     },
     {
       "id": "alloy/prod",
@@ -3364,7 +3364,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "alloy/prod/1",
-      "configurationRevisionId": "alloy/prod/1"
+      "configurationRevisionId": "alloy/prod/2"
     },
     {
       "id": "alloy-gateway/prod",
@@ -3428,7 +3428,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "openebs/prod/1",
-      "configurationRevisionId": "openebs/prod/1"
+      "configurationRevisionId": "openebs/prod/2"
     },
     {
       "id": "seaweedfs/prod",
@@ -3436,7 +3436,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "seaweedfs/prod/1",
-      "configurationRevisionId": "seaweedfs/prod/1"
+      "configurationRevisionId": "seaweedfs/prod/2"
     },
     {
       "id": "velero/prod",
@@ -3452,7 +3452,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "postgres-operator/prod/1",
-      "configurationRevisionId": "postgres-operator/prod/1"
+      "configurationRevisionId": "postgres-operator/prod/2"
     },
     {
       "id": "gickup/prod",
@@ -3492,7 +3492,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "cert-manager/prod/1",
-      "configurationRevisionId": "cert-manager/prod/1"
+      "configurationRevisionId": "cert-manager/prod/2"
     },
     {
       "id": "kueue/prod",
@@ -3500,7 +3500,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "kueue/prod/1",
-      "configurationRevisionId": "kueue/prod/1"
+      "configurationRevisionId": "kueue/prod/2"
     },
     {
       "id": "ddns/prod",

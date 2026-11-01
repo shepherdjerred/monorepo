@@ -91,7 +91,8 @@ export function createTemporalOperationsWorkers(
     automountServiceAccountToken: true,
     cpuRequest: Cpu.millis(500),
     cpuLimit: Cpu.millis(1500),
-    memoryRequest: Size.mebibytes(768),
+    // Measured p95 working set (7d, 2026-10-31) is 2.0Gi, max 3.9Gi.
+    memoryRequest: Size.mebibytes(2176),
     memoryLimit: Size.gibibytes(6),
     envVariables: {
       ...temporalRuntimeEnv(
@@ -166,7 +167,7 @@ export function createTemporalOperationsWorkers(
     component: "repo-worker",
     cpuRequest: Cpu.millis(250),
     cpuLimit: Cpu.millis(1500),
-    memoryRequest: Size.mebibytes(512),
+    memoryRequest: Size.mebibytes(288),
     memoryLimit: Size.gibibytes(4),
     envVariables: {
       ...temporalRuntimeEnv(

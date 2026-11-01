@@ -1,7 +1,7 @@
 {
-  "id": "postgres-operator/prod/1",
+  "id": "postgres-operator/prod/2",
   "content": {
-    "helm.valuesObject": "{\"configGeneral\":{\"kubernetes_use_configmaps\":true,\"workers\":1},\"configKubernetes\":{\"cluster_labels\":{\"application\":\"spilo\"},\"cluster_name_label\":\"cluster-name\",\"enable_cross_namespace_secret\":true,\"enable_pod_disruption_budget\":false,\"inherited_labels\":[\"velero.io/backup\",\"velero.io/exclude-from-backup\"]},\"configMajorVersionUpgrade\":{\"major_version_upgrade_mode\":\"off\"},\"configPatroni\":{\"enable_patroni_failsafe_mode\":true},\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"500Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}}}"
+    "helm.valuesObject": "{\"configGeneral\":{\"kubernetes_use_configmaps\":true,\"workers\":1},\"configKubernetes\":{\"cluster_labels\":{\"application\":\"spilo\"},\"cluster_name_label\":\"cluster-name\",\"enable_cross_namespace_secret\":true,\"enable_pod_disruption_budget\":false,\"inherited_labels\":[\"velero.io/backup\",\"velero.io/exclude-from-backup\"]},\"configMajorVersionUpgrade\":{\"major_version_upgrade_mode\":\"off\"},\"configPatroni\":{\"enable_patroni_failsafe_mode\":true},\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"500Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"64Mi\"}}}"
   },
   "forwardOnly": []
 }

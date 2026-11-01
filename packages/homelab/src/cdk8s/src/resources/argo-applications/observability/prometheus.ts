@@ -205,12 +205,13 @@ export async function createPrometheusApp(chart: Chart) {
         // node and was the kernel's preferred victim in the 2026-07-11 global-OOM
         // storms (OOMKilled x5, e.g. 06:07:15Z) — exactly when its resolves
         // matter most. A real request keeps its score low so it survives storms;
-        // the limit keeps it from becoming a problem itself (normal usage
-        // ~50-100Mi).
+        // the limit keeps it from becoming a problem itself. The request is
+        // the measured p95 working set (507Mi over 7d, 2026-10-31) plus a
+        // margin.
         resources: {
           requests: {
             cpu: "50m",
-            memory: "512Mi",
+            memory: "640Mi",
           },
           limits: {
             memory: "1Gi",
@@ -419,12 +420,13 @@ export async function createPrometheusApp(chart: Chart) {
         retention: "365d", // Keep data for 1 year
         retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
         // Baseline request so Prometheus isn't BestEffort (first evicted under
-        // memory pressure). Steady ~1.9Gi, 30d spike to ~17.6Gi (compaction/big
-        // queries) — request covers steady state; deliberately no limit.
+        // memory pressure). 7d working set (2026-10-31): p95 5.3Gi, spike to
+        // ~26.6Gi (compaction/big queries) — request covers p95 plus a margin;
+        // deliberately no limit.
         resources: {
           requests: {
             cpu: "200m",
-            memory: "4Gi",
+            memory: "6Gi",
           },
         },
         // Required so Tempo's metrics-generator can push service-graph,

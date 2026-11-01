@@ -129,11 +129,12 @@ export function createCertManagerApp(chart: Chart) {
       },
     },
     // Baseline requests (no limits) so cert renewal isn't BestEffort.
-    // All three components idle under 10m / 150Mi (30d).
+    // All three components idle under 10m / 150Mi (30d); the controller's
+    // 7d p95 working set is 53Mi (2026-10-31).
     resources: {
       requests: {
         cpu: "10m",
-        memory: "128Mi",
+        memory: "64Mi",
       },
     },
     webhook: {

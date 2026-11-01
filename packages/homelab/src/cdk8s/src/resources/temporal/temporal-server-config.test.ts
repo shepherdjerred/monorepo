@@ -160,8 +160,8 @@ describe("Temporal server configuration", () => {
     const containerResources = serverDeployment().containers[0]?.resources;
 
     expect(containerResources).toEqual({
-      requests: { cpu: "100m", memory: "2048Mi" },
-      limits: { cpu: "1000m", memory: "4096Mi" },
+      requests: { cpu: "100m", memory: "3584Mi" },
+      limits: { cpu: "1000m", memory: "5120Mi" },
     });
   });
 

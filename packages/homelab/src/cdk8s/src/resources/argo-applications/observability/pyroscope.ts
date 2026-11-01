@@ -70,11 +70,11 @@ export function createPyroscopeApp(chart: Chart) {
         size: Size.gibibytes(32).asString(),
       },
       // Baseline request (no limits) so the profiling store isn't BestEffort.
-      // 30d peak ~35m / ~200Mi.
+      // 7d working set (2026-10-31): p95 298Mi, 14d max 454Mi.
       resources: {
         requests: {
           cpu: "50m",
-          memory: "256Mi",
+          memory: "320Mi",
         },
       },
       // The chart defaults to debug: ~3.4M lines a day, over a third of

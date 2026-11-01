@@ -98,7 +98,8 @@ export function createScryptedDeployment(chart: Chart) {
           limit: Cpu.millis(2000),
         },
         memory: {
-          request: Size.mebibytes(512),
+          // Measured p95 working set (7d, 2026-10-31) is 756Mi.
+          request: Size.mebibytes(768),
           // Also hit an OOMKill at the old 2Gi limit; doubled for HKSV clip-encoding
           // headroom.
           limit: Size.gibibytes(4),

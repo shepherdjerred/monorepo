@@ -266,10 +266,12 @@ export function createLokiApp(chart: Chart) {
     deploymentMode: "SingleBinary",
     singleBinary: {
       replicas: 1,
+      // Memory request: measured p95 working set (1.67Gi over 7d,
+      // 2026-10-31) plus a margin; the limit covers the 2.4Gi 14d peak.
       resources: {
         requests: {
           cpu: "250m",
-          memory: "3Gi",
+          memory: "1920Mi",
         },
         limits: {
           cpu: "4",

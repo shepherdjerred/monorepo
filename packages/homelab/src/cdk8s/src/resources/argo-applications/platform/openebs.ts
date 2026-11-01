@@ -61,10 +61,12 @@ export function createOpenEBSApp(chart: Chart) {
         },
       },
       zfsController: {
+        // Each controller container's measured p95 working set is 31-53Mi
+        // (7d, 2026-10-31).
         resources: {
           requests: {
             cpu: "25m",
-            memory: "128Mi",
+            memory: "64Mi",
           },
         },
       },

@@ -375,7 +375,8 @@ export function createPostalDeployment(
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(256),
+          // Measured p95 working set (7d, 2026-10-31) is 348Mi.
+          request: Size.mebibytes(352),
           limit: Size.gibibytes(2),
         },
       },

@@ -193,7 +193,8 @@ export function createTurboCacheDeployment(chart: Chart) {
   new TailscaleIngress(chart, "turbo-cache-tailscale-ingress", {
     service,
     host: "turbo-cache",
-    proxyClass: "medium",
+    // Its proxy's measured p95 working set is 123Mi (7d, 2026-10-31).
+    proxyClass: "heavy",
     // "/" has no route (404); /v8/artifacts/status answers 200 without a
     // token (verified live 2026-07-24).
     probePath: "/v8/artifacts/status",

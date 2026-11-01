@@ -6,13 +6,16 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import type { TailscaleProxyClass } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
+// Memory requests follow each class's measured p95 proxy working set (7d,
+// 2026-10-31): standard 25-48Mi (most ~28Mi), medium 25-51Mi, heavy 70-123Mi.
+// Bursts above the request use free node memory; proxies have no limit.
 const PROXY_REQUESTS: Record<
   TailscaleProxyClass,
   { cpu: string; memory: string }
 > = {
-  standard: { cpu: "20m", memory: "64Mi" },
-  medium: { cpu: "20m", memory: "128Mi" },
-  heavy: { cpu: "50m", memory: "256Mi" },
+  standard: { cpu: "20m", memory: "32Mi" },
+  medium: { cpu: "20m", memory: "64Mi" },
+  heavy: { cpu: "50m", memory: "128Mi" },
 };
 
 export function createTailscaleProxyClasses(chart: Chart): void {

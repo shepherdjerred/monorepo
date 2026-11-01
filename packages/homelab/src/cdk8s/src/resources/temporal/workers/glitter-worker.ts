@@ -144,7 +144,9 @@ export function createTemporalGlitterWorkers(
       envVariables: props.corpusEnvVariables,
       cpuRequest: Cpu.millis(250),
       cpuLimit: Cpu.units(1),
-      memoryRequest: Size.mebibytes(768),
+      // Measured p95 working set (7d, 2026-10-31) is 326Mi; corpus runs
+      // burst toward 2.7Gi within the limit.
+      memoryRequest: Size.mebibytes(352),
       memoryLimit: Size.gibibytes(4),
     }),
     contextDeployment: createGlitterWorker(chart, {
@@ -155,7 +157,8 @@ export function createTemporalGlitterWorkers(
       // bursts.
       cpuRequest: Cpu.millis(250),
       cpuLimit: Cpu.units(2),
-      memoryRequest: Size.mebibytes(512),
+      // Measured p95 working set (7d, 2026-10-31) is 319Mi, max 1.7Gi.
+      memoryRequest: Size.mebibytes(320),
       memoryLimit: Size.gibibytes(6),
     }),
   };

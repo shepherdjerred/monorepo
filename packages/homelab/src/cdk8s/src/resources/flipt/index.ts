@@ -408,7 +408,7 @@ export function createFliptDeployment(chart: Chart) {
       ports: [{ name: "upstream", number: FLIPT_UPSTREAM_PORT }],
       resources: {
         cpu: { request: Cpu.millis(25), limit: Cpu.millis(500) },
-        memory: { request: Size.mebibytes(128), limit: Size.mebibytes(512) },
+        memory: { request: Size.mebibytes(64), limit: Size.mebibytes(512) },
       },
       securityContext: FLIPT_SECURITY_CONTEXT,
       ...createFliptHealthProbes(),

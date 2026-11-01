@@ -243,7 +243,7 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   [
     "birmel/main",
     {
-      requests: { cpu: "50m", memory: "384Mi" },
+      requests: { cpu: "50m", memory: "224Mi" },
       limits: { memory: "2048Mi" },
     },
   ],
@@ -258,7 +258,7 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
     "media-qbittorrent/qbittorrent-config-seed",
     { requests: { cpu: "10m", memory: "16Mi" } },
   ],
-  ["media-qbittorrent/gluetun", { requests: { cpu: "25m", memory: "128Mi" } }],
+  ["media-qbittorrent/gluetun", { requests: { cpu: "25m", memory: "64Mi" } }],
   [
     "media-qbittorrent/qbittorrent",
     {
@@ -272,13 +272,13 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   ],
   [
     "media-plex/main",
-    { requests: { memory: "4096Mi" }, limits: { memory: "16384Mi" } },
+    { requests: { memory: "2816Mi" }, limits: { memory: "20480Mi" } },
   ],
   ["media-plex/plex-exporter", { requests: { cpu: "10m", memory: "32Mi" } }],
   [
     "arcade/main",
     {
-      requests: { cpu: "2", memory: "3072Mi" },
+      requests: { cpu: "2", memory: "256Mi" },
       limits: { cpu: "12", memory: "16384Mi" },
     },
   ],
@@ -292,35 +292,35 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   [
     "stash/stash",
     {
-      requests: { cpu: "250m", memory: "192Mi" },
+      requests: { cpu: "250m", memory: "96Mi" },
       limits: { cpu: "4", memory: "4096Mi" },
     },
   ],
   [
     "pinchtab/main",
     {
-      requests: { cpu: "250m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "1024Mi" },
       limits: { cpu: "2000m", memory: "4096Mi" },
     },
   ],
   [
     "scout-beta-scout-backend/main",
     {
-      requests: { cpu: "50m", memory: "2048Mi" },
+      requests: { cpu: "50m", memory: "2304Mi" },
       limits: { memory: "8192Mi" },
     },
   ],
   [
     "scout-prod-scout-backend/main",
     {
-      requests: { cpu: "100m", memory: "2560Mi" },
+      requests: { cpu: "100m", memory: "2176Mi" },
       limits: { memory: "8192Mi" },
     },
   ],
   [
     "temporal-temporal-workflows-candidate/temporal-workflows-candidate",
     {
-      requests: { cpu: "250m", memory: "768Mi" },
+      requests: { cpu: "250m", memory: "512Mi" },
       limits: { cpu: "1000m", memory: "2048Mi" },
     },
   ],
@@ -330,23 +330,23 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   ],
   [
     "temporal-temporal-home-worker/temporal-home-worker",
-    { requests: { cpu: "100m", memory: "512Mi" } },
+    { requests: { cpu: "100m", memory: "288Mi" } },
   ],
   [
     "temporal-temporal-reports-worker/temporal-reports-worker",
-    { requests: { cpu: "100m", memory: "512Mi" } },
+    { requests: { cpu: "100m", memory: "352Mi" } },
   ],
   [
     "temporal-temporal-infra-worker/temporal-infra-worker",
     {
-      requests: { cpu: "500m", memory: "768Mi" },
+      requests: { cpu: "500m", memory: "2176Mi" },
       limits: { cpu: "1500m", memory: "6144Mi" },
     },
   ],
   [
     "temporal-temporal-repo-worker/temporal-repo-worker",
     {
-      requests: { cpu: "250m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "288Mi" },
       limits: { cpu: "1500m", memory: "4096Mi" },
     },
   ],
@@ -360,21 +360,21 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<
   [
     "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",
     {
-      requests: { cpu: "250m", memory: "768Mi" },
+      requests: { cpu: "250m", memory: "352Mi" },
       limits: { cpu: "1", memory: "4096Mi" },
     },
   ],
   [
     "temporal-temporal-glitter-context-worker/temporal-glitter-context-worker",
     {
-      requests: { cpu: "250m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "320Mi" },
       limits: { cpu: "2", memory: "6144Mi" },
     },
   ],
   [
     "temporal-temporal-agent-worker/temporal-agent-worker",
     {
-      requests: { cpu: "250m", memory: "768Mi" },
+      requests: { cpu: "250m", memory: "256Mi" },
       limits: { cpu: "1500m", memory: "1024Mi" },
     },
   ],
@@ -508,7 +508,7 @@ describe("Burst-memory sharing policy", () => {
     });
     for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
       ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
-      ["minecraft-tsmc", "3", "10Gi", "16Gi", "8G", 8100, "bluemap"],
+      ["minecraft-tsmc", "3", "11Gi", "16Gi", "8G", 8100, "bluemap"],
       ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
     ] as const) {
       const values = applications.find((app) => app.metadata.name === name)

@@ -266,10 +266,13 @@ export function createArgoCdApp(chart: Chart) {
           },
         },
       },
+      // Memory requests across ArgoCD follow each component's measured p95
+      // working set (7d, 2026-10-31): server 88Mi, applicationset 121Mi,
+      // repo-server 110Mi (render bursts reach 3.8Gi), dex 34Mi.
       resources: {
         requests: {
           cpu: "50m",
-          memory: "256Mi",
+          memory: "96Mi",
         },
       },
     },
@@ -286,7 +289,7 @@ export function createArgoCdApp(chart: Chart) {
       resources: {
         requests: {
           cpu: "25m",
-          memory: "256Mi",
+          memory: "128Mi",
         },
       },
     },
@@ -320,7 +323,7 @@ export function createArgoCdApp(chart: Chart) {
       resources: {
         requests: {
           cpu: "100m",
-          memory: "512Mi",
+          memory: "128Mi",
         },
       },
     },
@@ -328,7 +331,7 @@ export function createArgoCdApp(chart: Chart) {
       resources: {
         requests: {
           cpu: "10m",
-          memory: "128Mi",
+          memory: "64Mi",
         },
       },
     },

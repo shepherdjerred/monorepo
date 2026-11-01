@@ -106,7 +106,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           limit: Cpu.millis(250),
         },
         memory: {
-          request: Size.mebibytes(128),
+          request: Size.mebibytes(64),
           limit: Size.mebibytes(384),
         },
       },

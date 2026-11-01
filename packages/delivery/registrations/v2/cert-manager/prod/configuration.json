@@ -1,7 +1,7 @@
 {
-  "id": "cert-manager/prod/1",
+  "id": "cert-manager/prod/2",
   "content": {
-    "helm.valuesObject": "{\"cainjector\":{\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\":\"128Mi\"}}},\"installCRDs\":true,\"prometheus\":{\"enabled\":true,\"servicemonitor\":{\"enabled\":true,\"labels\":{\"release\":\"prometheus\"}}},\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\":\"128Mi\"}},\"webhook\":{\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\":\"64Mi\"}}}}"
+    "helm.valuesObject": "{\"cainjector\":{\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\":\"128Mi\"}}},\"installCRDs\":true,\"prometheus\":{\"enabled\":true,\"servicemonitor\":{\"enabled\":true,\"labels\":{\"release\":\"prometheus\"}}},\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\":\"64Mi\"}},\"webhook\":{\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\":\"64Mi\"}}}}"
   },
   "forwardOnly": []
 }

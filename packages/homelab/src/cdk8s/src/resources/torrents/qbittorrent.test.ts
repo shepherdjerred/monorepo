@@ -189,7 +189,7 @@ function getContainer(name: string): z.infer<typeof ContainerSchema> {
 describe("qBittorrent deployment", () => {
   it("uses the audited resource reservations", () => {
     expect(getContainer("gluetun").resources).toEqual({
-      requests: { cpu: "25m", memory: "128Mi" },
+      requests: { cpu: "25m", memory: "64Mi" },
     });
     expect(getContainer("qbittorrent").resources).toEqual({
       requests: { cpu: "200m", memory: "4608Mi" },

@@ -1,6 +1,6 @@
 # ZFS kernel module parameters
 # ARC maximum set to 16 GiB (aligned with sysfs override in image.yaml).
-# Kept BELOW the kubelet `systemReserved.memory: 24Gi` (kubelet.yaml) so ARC can
+# Kept BELOW the kubelet `systemReserved.memory: 18Gi` (kubelet.yaml) so ARC can
 # never grow past the memory kubelet has accounted for as non-pod; otherwise
 # ARC + pod allocatable + OS could demand more than physical RAM and wedge the
 # node under CI build storms (see

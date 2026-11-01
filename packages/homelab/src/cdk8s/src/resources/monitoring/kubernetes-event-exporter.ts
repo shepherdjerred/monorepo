@@ -180,10 +180,11 @@ receivers:
                 // 2026-05-05 home-zwave-js-ui FailedScheduling event storm
                 // (4 OOM kills in ~21 minutes; 23 restarts over 13 days).
                 // Doubling the limit gives ~2x headroom for typical event
-                // surges; keep request at the original steady-state.
+                // surges; the request is the measured p95 working set (64Mi
+                // over 7d, 2026-10-31).
                 requests: {
                   cpu: Quantity.fromString("50m"),
-                  memory: Quantity.fromString("128Mi"),
+                  memory: Quantity.fromString("64Mi"),
                 },
                 limits: {
                   cpu: Quantity.fromString("100m"),

@@ -39,6 +39,9 @@ import {
   scoutTemporalMetricsServicePort,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
+/** Gateway's measured p95 working set (7d, 2026-10-31) is 365-392Mi across stages. */
+const SCOUT_GATEWAY_MEMORY_REQUEST = Size.mebibytes(416);
+
 /** Pod label every gateway-role resource selects on. */
 export const SCOUT_GATEWAY_APP_LABEL = "scout-gateway";
 
@@ -213,17 +216,18 @@ export function createScoutGatewayDeployment(
       // No Temporal activity workers, no lake fold and no report rendering,
       // but this is the pod that loads the Hey Scout voice runtime (three
       // sherpa int8 graphs, silero VAD and the openWakeWord cascade) and runs
-      // in-process Explore queries. The 1Gi request covers its normal resident
-      // baseline; voice graphs and DuckDB's 3GB query budget use shared burst
+      // in-process Explore queries. The 416Mi request covers its measured p95
+      // resident baseline (7d, 2026-10-31); voice graphs and DuckDB's 3GB
+      // query budget use shared burst
       // memory within the existing 8Gi limit. Reserving those independent peaks
       // at idle prevents other interactive services from scheduling.
       // Identical probe paths to the application role. `httpSurface: "admin"`
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
-      ...scoutAdminRoleContainerBase(),
+      ...scoutAdminRoleContainerBase(SCOUT_GATEWAY_MEMORY_REQUEST),
       ports: [
-        ...scoutAdminRoleContainerBase().ports,
+        ...scoutAdminRoleContainerBase(SCOUT_GATEWAY_MEMORY_REQUEST).ports,
         scoutTemporalMetricsContainerPort,
       ],
       volumeMounts: [

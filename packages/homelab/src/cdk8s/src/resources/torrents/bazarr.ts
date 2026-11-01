@@ -191,7 +191,8 @@ export function createBazarrDeployment(
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
+          // Measured p95 working set (7d, 2026-10-31) is 524Mi.
+          request: Size.mebibytes(640),
           // Bumped 2 → 3 GiB after the 2026-05-07 OOMKilled at the 2 GiB limit
           // (subtitle queue under load). 2 GiB was tight for steady-state.
           limit: Size.gibibytes(3),

@@ -139,9 +139,10 @@ export class PostalMariaDB extends Construct {
           },
         },
         resources: {
+          // Measured p95 working set (7d, 2026-10-31) is 442Mi.
           requests: {
             cpu: "100m",
-            memory: "256Mi",
+            memory: "512Mi",
           },
           limits: {
             cpu: "2000m",
