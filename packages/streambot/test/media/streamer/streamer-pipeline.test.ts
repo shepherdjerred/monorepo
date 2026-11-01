@@ -8,7 +8,10 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import type { EnvLookup } from "@shepherdjerred/streambot/config/index.ts";
 import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
-import { buildVoiceJoinOptions } from "@shepherdjerred/streambot/streamer/join-voice.ts";
+import {
+  buildVoiceJoinOptions,
+  joinStreamerVoice,
+} from "@shepherdjerred/streambot/streamer/join-voice.ts";
 import { streamSegmentsTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
 import {
   STREAMER_USER_TOKEN as USER_TOKEN,
@@ -437,6 +440,12 @@ describe("volume reaches the audio for both transports", () => {
   });
 });
 
+function abortedJoin(signal: AbortSignal): Error {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new Error("Voice join aborted");
+}
+
 describe("voice join options", () => {
   test("send audio is requested unconditionally, independent of the receive gate", () => {
     // The packetizer is installed on `receiveAudio || sendAudio`, and without one every music
@@ -462,5 +471,82 @@ describe("voice join options", () => {
       sendAudio: true,
       receiveObserver: observer,
     });
+  });
+
+  test("cancellation is forwarded to the Discord handshake", async () => {
+    const controller = new AbortController();
+    let forwarded: AbortSignal | undefined;
+    const pending = joinStreamerVoice({
+      streamer: {
+        voiceConnection: undefined,
+        joinVoice: (_guildId, _channelId, options) =>
+          new Promise<never>((_resolve, reject) => {
+            forwarded = options?.signal;
+            const signal = options?.signal;
+            if (signal === undefined) {
+              reject(new Error("missing cancellation"));
+              return;
+            }
+            if (signal.aborted) {
+              reject(abortedJoin(signal));
+              return;
+            }
+            signal.addEventListener(
+              "abort",
+              () => {
+                reject(abortedJoin(signal));
+              },
+              { once: true },
+            );
+          }),
+      },
+      input: VOICE,
+      receiveAudio: false,
+      now: () => 0,
+      onClose: null,
+      onAudio: null,
+      receiveObserver: null,
+      signal: controller.signal,
+    });
+    controller.abort(new Error("lease released"));
+    await expect(pending).rejects.toThrow("lease released");
+    expect(forwarded?.aborted).toBe(true);
+  });
+
+  test("the streamer passes lease cancellation through to the transport", async () => {
+    const controller = new AbortController();
+    let forwarded: AbortSignal | undefined;
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env()),
+      Date.now,
+      {
+        joinStreamerVoice: (options) =>
+          new Promise<never>((_resolve, reject) => {
+            forwarded = options.signal;
+            const signal = options.signal;
+            if (signal === undefined) {
+              reject(new Error("missing cancellation"));
+              return;
+            }
+            if (signal.aborted) {
+              reject(abortedJoin(signal));
+              return;
+            }
+            signal.addEventListener(
+              "abort",
+              () => {
+                reject(abortedJoin(signal));
+              },
+              { once: true },
+            );
+          }),
+      },
+    );
+    const pending = streamer.joinVoice(VOICE, controller.signal);
+    controller.abort(new Error("lease released"));
+    await expect(pending).rejects.toThrow("lease released");
+    expect(forwarded).toBe(controller.signal);
+    await streamer.destroy();
   });
 });

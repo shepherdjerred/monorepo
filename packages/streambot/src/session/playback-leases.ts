@@ -13,6 +13,8 @@ import {
   type PlaybackChannelNumber,
 } from "@shepherdjerred/streambot/types/playback-channel.ts";
 
+const VOICE_JOIN_ABORTED = "Voice join aborted";
+
 type Lease = {
   room: string;
   group: number;
@@ -25,9 +27,64 @@ type Lease = {
     }
   >;
   joined: Promise<VoiceHandle> | null;
+  /** Cancels an in-flight shared handshake when the last holder leaves. */
+  joinAbort: AbortController | null;
   target: JoinVoiceInput | null;
   closing: Promise<void> | null;
 };
+
+function joinAbortError(signal: AbortSignal): Error {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new Error(VOICE_JOIN_ABORTED);
+}
+
+/**
+ * Channels 1 and 2 share one handshake. A slot's machine aborts its own signal
+ * when that slot leaves `joining`, including after a successful join, so
+ * cancellation belongs to the lease: only the last holder may abandon it.
+ * The race settles even when `join` ignores the signal, which is what used to
+ * pin the only account after the session had already ended.
+ */
+function sharedVoiceJoin(
+  join: StreamerLike["joinVoice"],
+  input: JoinVoiceInput,
+  controller: AbortController,
+  onFailure: () => void,
+): Promise<VoiceHandle> {
+  let onAbort: (() => void) | undefined;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    onAbort = () => {
+      reject(joinAbortError(controller.signal));
+    };
+    if (controller.signal.aborted) {
+      onAbort();
+      return;
+    }
+    controller.signal.addEventListener("abort", onAbort, { once: true });
+  });
+  const detach = () => {
+    if (onAbort !== undefined) {
+      controller.signal.removeEventListener("abort", onAbort);
+    }
+  };
+  // Race before yielding. An already-aborted signal rejects synchronously, and
+  // this attaches the handler in the same turn. After success, detach runs
+  // before the caller continues, so a later release cannot reject it.
+  const raced = Promise.race([join(input, controller.signal), aborted]);
+  return (async () => {
+    try {
+      return await raced;
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        onFailure();
+      }
+      throw error;
+    } finally {
+      detach();
+    }
+  })();
+}
 
 /** The pool remains account-exclusive. Only this room-local lease shares 1+2. */
 export class PlaybackLeases {
@@ -57,6 +114,7 @@ export class PlaybackLeases {
         physical,
         children: new Map(),
         joined: null,
+        joinAbort: null,
         target: null,
         closing: null,
       };
@@ -87,16 +145,15 @@ export class PlaybackLeases {
       close: ((info: VoiceCloseInfo) => void) | null;
     } = { number, close: null };
     const join = owner.physical.userbot.joinVoice;
-    lane.joinVoice = (input: JoinVoiceInput, signal: AbortSignal) => {
+    lane.joinVoice = (input: JoinVoiceInput, _signal: AbortSignal) => {
       owner.target = input;
-      owner.joined ??= (async () => {
-        try {
-          return await join(input, signal);
-        } catch (error) {
+      if (owner.joined === null) {
+        const controller = new AbortController();
+        owner.joinAbort = controller;
+        owner.joined = sharedVoiceJoin(join, input, controller, () => {
           owner.joined = null;
-          throw error;
-        }
-      })();
+        });
+      }
       return owner.joined;
     };
     lane.setVoiceCloseListener = (listener) => {
@@ -128,11 +185,15 @@ export class PlaybackLeases {
       return;
     }
     owner.closing = (async () => {
+      // Abort before waiting. A handshake Discord never answers used to stay
+      // pending here, and the only account stayed leased after the session ended.
+      const pending = owner.joined;
+      owner.joinAbort?.abort(new Error(VOICE_JOIN_ABORTED));
       await entry.userbot.destroy();
       try {
-        await owner.joined;
+        await pending;
       } catch {
-        // A failed join still needs connection cleanup before reuse.
+        // A failed or cancelled join still needs connection cleanup before reuse.
       }
       owner.physical.userbot.setVoiceCloseListener(null);
       if (owner.target !== null) {

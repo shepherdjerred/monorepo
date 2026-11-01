@@ -12,7 +12,6 @@ import type {
   LeaveVoiceInput,
   PipelineMode,
   RunStreamInput,
-  VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   endedShortError,
@@ -315,7 +314,7 @@ export class StreambotStreamer implements StreamerLike {
     }
   }
 
-  readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
+  readonly joinVoice = async (input: JoinVoiceInput, signal?: AbortSignal) => {
     const generation = ++this.voiceGeneration;
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
@@ -324,6 +323,7 @@ export class StreambotStreamer implements StreamerLike {
       input,
       receiveAudio: this.config.voice.enabled,
       now: this.now,
+      ...(signal === undefined ? {} : { signal }),
       onClose: (info) => {
         if (generation === this.voiceGeneration)
           this.voiceCloseListener?.(info);

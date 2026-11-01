@@ -17,6 +17,18 @@ import { withVoiceSpan } from "@shepherdjerred/streambot/observability/tracing.t
 
 const log = logger.child("streamer");
 
+function throwIfVoiceJoinAborted(signal: AbortSignal | undefined): void {
+  if (signal === undefined) {
+    return;
+  }
+  if (!signal.aborted) {
+    return;
+  }
+  throw signal.reason instanceof Error
+    ? signal.reason
+    : new Error("Voice join aborted");
+}
+
 function onConnectionAudioError(error: Error): void {
   log.warn("Discord voice receive failed", { error: getErrorMessage(error) });
 }
@@ -46,14 +58,17 @@ export function buildVoiceJoinOptions(options: {
 }
 
 export async function joinStreamerVoice(options: {
-  streamer: Streamer;
+  streamer: Pick<Streamer, "joinVoice" | "voiceConnection">;
   input: JoinVoiceInput;
   receiveAudio: boolean;
   now: () => number;
   onClose: ((info: VoiceCloseInfo) => void) | null;
   onAudio: ((audio: ReceivedVoiceAudio) => void) | null;
   receiveObserver: VoiceReceiveObserver | null;
+  /** Lease cancellation. The playback machine's own signal is not this one. */
+  signal?: AbortSignal;
 }): Promise<VoiceCloseTracker> {
+  throwIfVoiceJoinAborted(options.signal);
   await withVoiceSpan(
     "streambot.voice.transport_join",
     {
@@ -65,9 +80,12 @@ export async function joinStreamerVoice(options: {
       await options.streamer.joinVoice(
         options.input.guildId,
         options.input.channelId,
-        // Built by the exported function above rather than inline, so the test that pins
-        // `sendAudio: true` is pinning the object this call actually makes.
-        buildVoiceJoinOptions(options),
+        {
+          // Built by the exported function above rather than inline, so the test that pins
+          // `sendAudio: true` is pinning the object this call actually makes.
+          ...buildVoiceJoinOptions(options),
+          ...(options.signal === undefined ? {} : { signal: options.signal }),
+        },
       );
     },
   );
