@@ -19,13 +19,16 @@ the environment's declared recipe kind.
 
 | Kind              | Selects                                                                    | Model                                                       |
 | ----------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `deploy`          | A named set revision with the accepted recipe and configuration            | [4.12](packages/delivery/docs/model.md#412-deployment)      |
+| `deploy`          | A named set revision with the declared recipe and configuration            | [4.12](packages/delivery/docs/model.md#412-deployment)      |
 | `promote`         | The set revision accepted in the promotion source, settled or unmonitored  | [M2](packages/delivery/docs/model.md#416-promotion-tree)    |
 | `rollback`        | A previously accepted selection, named by the deployment that froze it     | [V2](packages/delivery/docs/model.md#414-acceptance)        |
 | `rebind`          | The accepted set revision with the declared recipe or configuration        | [L2](packages/delivery/docs/model.md#49-selection)          |
 | `retire-host`     | Removal of one retained host after drainage proof                          | [E5](packages/delivery/docs/model.md#410-environment)       |
 | `channel-publish` | A named set revision published to an audience-facing channel               | [section 5](packages/delivery/docs/model.md#5-target-kinds) |
 | `operator-run`    | A named set revision applied by an operator, accepted on attested evidence | [section 5](packages/delivery/docs/model.md#5-target-kinds) |
+
+Every kind that names or promotes a set revision freezes the environment's
+declared recipe and configuration. Only `rollback` restores an earlier binding.
 
 Two specialized kinds have their own requests: `adopt-worker` for host-only
 worker adoption, and `repair-trmnl` for a TRMNL plugin repair. Records may

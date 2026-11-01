@@ -143,8 +143,8 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       where: { id: context.fixture.environment.id },
       data: { declaredConfigurationId: "config/2" },
     });
-    // A deploy keeps the accepted selection's configuration; the declared
-    // revision reaches the environment only through a rebind (L2).
+    // A deploy freezes the declared configuration (4.12); a rebind applies
+    // it to the accepted set revision alone (L2).
     const next = await context.delivery.createDeployment(
       { ...context.input("next"), expectedGeneration: 1 },
       testOperator,
@@ -157,7 +157,8 @@ describe("PostgreSQL delivery invariants 2.2", () => {
     expect(snapshot.previousAcceptedVersionSet?.id).toBe(
       context.fixture.versionSet.id,
     );
-    expect(snapshot.configuration.id).toBe(first.configurationId);
+    expect(first.configurationId).toBe("config/1");
+    expect(snapshot.configuration.id).toBe("config/2");
     await context.delivery.cancel(next.id, testOperator);
     const rebind = await context.delivery.createDeployment(
       {

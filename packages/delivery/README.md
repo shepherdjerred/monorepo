@@ -155,8 +155,8 @@ sending and each response before use.
   retirement. `MonitorStatusSchema` carries the declared monitor and the
   latest observation so evidence reads against its threshold. The selection
   view names the declared recipe's kind, and the hub's environment detail
-  names the release kind: that of the recipe a release freezes, the accepted
-  selection's until a rebind. An `operator-run` recipe is requested as one.
+  names the release kind: that of the declared recipe a release freezes. An
+  `operator-run` recipe is requested as one.
   `releaseKindOf` reads the stored kind as admission does, so a v1 `manual`
   pipeline is a `deploy` although the selection view normalises it to
   `operator-run`.

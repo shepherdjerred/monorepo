@@ -193,8 +193,9 @@ toolkit deploy recovery <INTENT_ID>
 
 `start` requests an exact set revision the way the recipe the release
 freezes realises it: `deploy`, or `channel-publish` and `operator-run` for
-those recipe kinds. That is the accepted selection's recipe until a `rebind`,
-and the declared recipe only before the first acceptance. It takes that kind
+those recipe kinds. A release freezes the environment's declared recipe and
+configuration, so a registered catalog change ships with it; `rebind` applies
+one to the accepted set revision alone. It takes that kind
 from the environment detail's `releaseKind`, which reads the stored kind as
 admission does, so a v1 `manual` pipeline is a `deploy` although the
 selection view names it `operator-run`. `--override` asks for the approval a non-eligible `deploy`

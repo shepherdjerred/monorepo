@@ -92,8 +92,8 @@ export function modelRoutes(request: ReturnType<typeof createRequester>) {
       request(environmentPath(environmentId, "monitor"), MonitorStatusSchema),
     /**
      * One environment with what a release needs, including `releaseKind`:
-     * what the server realises a set revision by under the recipe it
-     * freezes (E0, L2).
+     * what the server realises a set revision by under the declared recipe
+     * it freezes (4.12).
      */
     environmentDetail: (environmentId: string) =>
       request(

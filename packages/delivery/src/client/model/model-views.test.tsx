@@ -395,9 +395,9 @@ function releaseForm(releaseKind: "deploy" | "operator-run") {
 }
 
 describe("release form", () => {
-  test("requests the kind of the recipe the release freezes, not the declared one", () => {
-    // The fixture's declared pipeline is a plain recipe; the server reports
-    // that the accepted recipe is operator-run until a rebind.
+  test("requests the release kind the server reports, not the pipeline's own", () => {
+    // The server reports the release kind from the declared recipe's stored
+    // kind; the form follows it rather than reading the pipeline it shows.
     const operated = releaseForm("operator-run");
     expect(operated).toContain("Run a version with the operator tool");
     expect(operated).not.toContain("Ask for an override approval");

@@ -35,9 +35,9 @@ this procedure to choose one explicitly.
    verified, every prerequisite edge holds and, with a promotion source, it is
    accepted there ([eligibility](packages/delivery/docs/model.md#412-deployment)).
 
-2. Request the deployment. It keeps the environment's accepted recipe and
-   configuration. For a channel or operator-run recipe, `start` requests that
-   kind instead:
+2. Request the deployment. It takes the environment's declared recipe and
+   configuration, so a registered catalog change ships with it. For a channel
+   or operator-run recipe, `start` requests that kind instead:
 
    ```bash
    toolkit deploy start ENVIRONMENT SET_REVISION --json
@@ -200,8 +200,10 @@ with no promotion source receives the live set on the next dispatch
 
 ## Change a recipe or configuration
 
-A recipe or configuration change is its own deployment, called a rebind. It
-keeps the accepted set revision.
+Every new deployment or promotion takes the environment's declared recipe and
+configuration, so a catalog change ships with the next set revision. To apply it
+without a new set revision, request a rebind: a deployment that keeps the
+accepted set revision.
 
 1. Merge the catalog change that adds the new recipe or configuration
    revision and binds the environment to it.

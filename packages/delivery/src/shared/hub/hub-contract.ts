@@ -195,10 +195,9 @@ export const EnvironmentDetailSchema = z.object({
   pipeline: PipelineRevisionSchema,
   sourceEnvironment: EnvironmentSchema.nullable(),
   /**
-   * What a release of a set revision is realised by: the kind of the recipe
-   * the server freezes, the accepted selection's until a rebind and the
-   * declared one before the first acceptance (E0, L2), read by
-   * `releaseKindOf` from the stored kind as admission reads it.
+   * What a release of a set revision is realised by: the kind of the
+   * declared recipe the server freezes (4.12), read by `releaseKindOf` from
+   * the stored kind as admission reads it.
    */
   releaseKind: DeploymentKindV2Schema.extract([
     "deploy",

@@ -493,9 +493,11 @@ binds the authenticated actor and the exact inputs.
 
 **Kinds.**
 
-- `deploy` selects any eligible set revision with the environment's current
-  recipe and configuration.
-- `promote` selects the set revision accepted in the promotion source.
+- `deploy` selects any eligible set revision with the environment's declared
+  recipe and configuration: the catalog's binding is authoritative for every
+  new selection.
+- `promote` selects the set revision accepted in the promotion source, with
+  the environment's declared recipe and configuration.
 - `rollback` selects a previously accepted selection in full.
 - `rebind` keeps the accepted set revision and changes the recipe or
   configuration revision.
@@ -795,9 +797,13 @@ inside a chart, the chart build reads the intent and the chart artifact
 changes. From there the flow is identical to a first-party change.
 
 **Configuration or recipe change.** A catalog PR adds a new recipe or
-configuration revision as a candidate. Nothing runs. An operator or policy
-requests a `rebind` deployment naming the new selection; it is admitted,
-approved where required, executed, and accepted like any other deployment.
+configuration revision and binds the environment to it. Nothing runs (C3).
+The environment's next `deploy` or `promote` freezes the new binding with its
+set revision, so a change that couples stack source with configuration ships
+as one selection. To apply the binding to the accepted set revision alone, an
+operator or policy requests a `rebind` deployment naming the new selection;
+it is admitted, approved where required, executed, and accepted like any
+other deployment.
 
 **Release to an audience.** A release is a deployment; an internal upload is
 not. CI builds the package, image, or installer, stores it in the service's
