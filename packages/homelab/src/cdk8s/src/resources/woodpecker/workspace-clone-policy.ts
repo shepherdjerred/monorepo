@@ -10,7 +10,8 @@ import {
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 /**
- * Names the current golden snapshot in key `snapshot`. Temporal's
+ * Names the current golden snapshot in key `snapshot` and its restore size in
+ * key `restoreSize`. Temporal's
  * `publishCiWorkspaceGoldenSnapshot` owns it, not ArgoCD: it changes with
  * every refresh. Absent or empty, workspaces start empty as before, so
  * clearing it is the rollback. Must match packages/temporal's
@@ -40,7 +41,10 @@ const claimRules = {
 const workspaceClaim = `has(object.spec.storageClassName) && object.spec.storageClassName == '${CI_WORKSPACE_STORAGE_CLASS}'`;
 const sized = `has(object.spec.resources) && has(object.spec.resources.requests) && 'storage' in object.spec.resources.requests && quantity(object.spec.resources.requests['storage']).compareTo(quantity('${CI_WORKSPACE_VOLUME_SIZE}')) == 0`;
 const sourced = "has(object.spec.dataSource) || has(object.spec.dataSourceRef)";
-const golden = `has(params.data) && 'snapshot' in params.data && params.data['snapshot'].startsWith('${CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX}')`;
+// A clone must request at least its snapshot's restore size, and workspaces
+// request exactly CI_WORKSPACE_VOLUME_SIZE. A parameter without a matching
+// recorded size (an older publisher, or any mismatch) mutates nothing.
+const golden = `has(params.data) && 'snapshot' in params.data && params.data['snapshot'].startsWith('${CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX}') && 'restoreSize' in params.data && quantity(params.data['restoreSize']).compareTo(quantity('${CI_WORKSPACE_VOLUME_SIZE}')) == 0`;
 type SourceField = "dataSource" | "dataSourceRef";
 // dataSource and dataSourceRef are atomic structs, which an ApplyConfiguration
 // may not set; a JSON patch adds them whole.

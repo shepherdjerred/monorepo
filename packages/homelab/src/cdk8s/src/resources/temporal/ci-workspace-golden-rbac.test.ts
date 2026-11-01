@@ -32,6 +32,12 @@ describe("CI workspace golden RBAC", () => {
         resourceNames: ["ci-workspace-golden"],
         verbs: ["get", "update"],
       },
+      {
+        apiGroups: [""],
+        resources: ["persistentvolumeclaims"],
+        resourceNames: ["woodpecker-workspace-golden"],
+        verbs: ["get"],
+      },
     ]);
     expect(binding.metadata.namespace).toBe("woodpecker-ci");
     expect(binding).toMatchObject({

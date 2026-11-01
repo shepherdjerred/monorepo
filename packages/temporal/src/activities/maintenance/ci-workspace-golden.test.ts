@@ -1,8 +1,10 @@
 import { expect, test } from "vitest";
 import {
+  CI_WORKSPACE_VOLUME_BYTES,
   goldenSnapshotName,
   planGoldenPrune,
   publishGoldenSnapshot,
+  quantityBytes,
   type CiWorkspaceGoldenClient,
   type GoldenSnapshot,
 } from "./ci-workspace-golden.ts";
@@ -27,6 +29,7 @@ function snapshot(
     ready: true,
     error: undefined,
     deleting: false,
+    restoreBytes: CI_WORKSPACE_VOLUME_BYTES,
     ...extra,
   };
 }
@@ -34,9 +37,15 @@ function snapshot(
 function fakeClient(
   polls: (GoldenSnapshot | null)[],
   existing: GoldenSnapshot[],
+  claim: { capacity?: number | undefined; selected?: string } = {},
 ) {
   const calls: string[] = [];
   const client: CiWorkspaceGoldenClient = {
+    claimCapacityBytes: () =>
+      Promise.resolve(
+        "capacity" in claim ? claim.capacity : CI_WORKSPACE_VOLUME_BYTES,
+      ),
+    selectedSnapshot: () => Promise.resolve(claim.selected),
     createSnapshot: (name, source) => {
       calls.push(`create ${name} ${source}`);
       return Promise.resolve();
@@ -118,4 +127,50 @@ test("a failed or vanished snapshot is never selected", async () => {
     publishGoldenSnapshot(vanished.client, request, () => Promise.resolve()),
   ).rejects.toThrow("disappeared");
   expect(vanished.calls.some((call) => call.startsWith("select"))).toBe(false);
+});
+
+test("a wrong-size snapshot is never selected, and is replaced unless selected", async () => {
+  const name = goldenSnapshotName(request);
+  // 32G rounds up to 30Gi on ZFS: the snapshot outgrows a 32Gi workspace.
+  const oversized = fakeClient(
+    [snapshot(name, 5, { restoreBytes: quantityBytes("30Gi") })],
+    [],
+  );
+  await expect(
+    publishGoldenSnapshot(oversized.client, request, () => Promise.resolve()),
+  ).rejects.toThrow("not the 34359738368 every workspace requests");
+  expect(oversized.calls).toEqual([
+    `create ${name} ${request.source}`,
+    `delete ${name}`,
+  ]);
+  const selected = fakeClient(
+    [snapshot(name, 5, { restoreBytes: undefined })],
+    [],
+    { selected: name },
+  );
+  await expect(
+    publishGoldenSnapshot(selected.client, request, () => Promise.resolve()),
+  ).rejects.toThrow("restores undefined bytes");
+  expect(selected.calls).toEqual([`create ${name} ${request.source}`]);
+  const deleting = fakeClient([snapshot(name, 5, { deleting: true })], []);
+  await expect(
+    publishGoldenSnapshot(deleting.client, request, () => Promise.resolve()),
+  ).rejects.toThrow("still being deleted");
+});
+
+test("an unresized golden claim is not snapshotted", async () => {
+  for (const capacity of [quantityBytes("30Gi"), undefined]) {
+    const growing = fakeClient([], [], { capacity });
+    await expect(
+      publishGoldenSnapshot(growing.client, request, () => Promise.resolve()),
+    ).rejects.toThrow("waiting for it to resize");
+    expect(growing.calls).toEqual([]);
+  }
+});
+
+test("restore sizes parse binary and decimal quantities and reject others", () => {
+  expect(quantityBytes("32Gi")).toBe(CI_WORKSPACE_VOLUME_BYTES);
+  expect(quantityBytes("32G")).toBe(32_000_000_000);
+  expect(quantityBytes("1024")).toBe(1024);
+  expect(() => quantityBytes("1.5Gi")).toThrow("Unsupported");
 });

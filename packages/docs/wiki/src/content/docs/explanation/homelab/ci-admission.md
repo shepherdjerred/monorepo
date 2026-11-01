@@ -208,8 +208,18 @@ Each lane's own frozen install still decides its dependencies.
 The policy's parameter is a ConfigMap Temporal owns. Emptying it makes new
 workspaces start empty again; no workflow depends on a clone. Gate workspaces
 never clone, because the ZFS driver only clones into a claim of the
-snapshot's exact size. A snapshot that still has clones cannot be destroyed,
-so superseded snapshots linger until their workspaces are deleted.
+snapshot's exact size. That is also why the
+[workspace size](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/storage/storage-classes.ts)
+is a whole number of GiB. ZFS rounds a volume up to whole GiB, so a decimal
+size leaves the snapshot larger than the claims that clone it. The CSI
+provisioner refuses those clones.
+[Temporal](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/maintenance/ci-workspace-golden.ts)
+selects a snapshot only when its restore size is the workspace size, and
+records that size in the parameter. The
+[policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/workspace-clone-policy.ts)
+clones only when the recorded size matches.
+A snapshot that still has clones cannot be destroyed, so superseded snapshots
+linger until their workspaces are deleted.
 
 ## What is watched
 
