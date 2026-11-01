@@ -102,7 +102,9 @@ export function createAlertDashboardDeployment(chart: Chart) {
       ports: [{ name: "http", number: 7341 }],
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
-        memory: { request: Size.mebibytes(128), limit: Size.mebibytes(512) },
+        // Measured p95 working set (7d, 2026-10-31) sat at the old 512Mi
+        // limit, which OOM-killed it 191 times in that week.
+        memory: { request: Size.mebibytes(512), limit: Size.gibibytes(1) },
       },
       securityContext: {
         user: 1000,

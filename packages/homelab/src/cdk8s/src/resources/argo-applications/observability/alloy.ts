@@ -126,12 +126,13 @@ export function createAlloyApp(chart: Chart) {
         content: ALLOY_EBPF_CONFIG,
       },
       // Chart default is 10m/50Mi; eBPF profiling actually runs at ~200m/900Mi
-      // peak (30d), so request honest steady-state values. No limits — profiling
-      // load scales with pod churn and a kill here loses profiles.
+      // peak, so request honest steady-state values (7d p95 working set 600Mi,
+      // 2026-10-31). No limits — profiling load scales with pod churn and a
+      // kill here loses profiles.
       resources: {
         requests: {
           cpu: "100m",
-          memory: "512Mi",
+          memory: "768Mi",
         },
       },
     },

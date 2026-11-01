@@ -74,7 +74,7 @@ export function createTasknotesDeployment(chart: Chart) {
           limit: Cpu.millis(500),
         },
         memory: {
-          request: Size.mebibytes(256),
+          request: Size.mebibytes(64),
           limit: Size.gibibytes(1),
         },
       },

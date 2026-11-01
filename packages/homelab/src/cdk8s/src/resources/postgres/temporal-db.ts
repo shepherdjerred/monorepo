@@ -180,9 +180,11 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
       resources: {
         // Shared buffers are only part of PostgreSQL's memory. Connections,
         // concurrent query workspaces, WAL, and Patroni need separate headroom.
+        // The request is the measured p95 working set (451Mi over 7d,
+        // 2026-10-31) plus a margin; the limit keeps the burst headroom.
         requests: {
           cpu: "50m",
-          memory: "1Gi",
+          memory: "512Mi",
         },
         limits: {
           cpu: "250m",

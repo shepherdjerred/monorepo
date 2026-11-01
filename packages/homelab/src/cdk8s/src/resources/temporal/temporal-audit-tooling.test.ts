@@ -389,11 +389,11 @@ describe("Temporal domain worker isolation", () => {
     );
     expect(corpus.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1", memory: "4096Mi" },
-      requests: { cpu: "250m", memory: "768Mi" },
+      requests: { cpu: "250m", memory: "352Mi" },
     });
     expect(context.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "2", memory: "6144Mi" },
-      requests: { cpu: "250m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "320Mi" },
     });
 
     const corpusEnv = envNames(corpus);
@@ -439,13 +439,13 @@ describe("Temporal domain worker isolation", () => {
         deployment: home,
         component: "home-worker",
         serviceAccountName: "temporal-home-worker",
-        resources: { requests: { cpu: "100m", memory: "512Mi" } },
+        resources: { requests: { cpu: "100m", memory: "288Mi" } },
       },
       {
         deployment: reports,
         component: "reports-worker",
         serviceAccountName: "temporal-reports-worker",
-        resources: { requests: { cpu: "100m", memory: "512Mi" } },
+        resources: { requests: { cpu: "100m", memory: "352Mi" } },
       },
     ];
     for (const definition of definitions) {
@@ -546,11 +546,11 @@ describe("Temporal operations worker isolation", () => {
     });
     expect(infra.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1500m", memory: "6144Mi" },
-      requests: { cpu: "500m", memory: "768Mi" },
+      requests: { cpu: "500m", memory: "2176Mi" },
     });
     expect(repo.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1500m", memory: "4096Mi" },
-      requests: { cpu: "250m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "288Mi" },
     });
     expect(scout.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1500m", memory: "4096Mi" },

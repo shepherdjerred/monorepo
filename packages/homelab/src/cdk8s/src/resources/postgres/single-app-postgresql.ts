@@ -78,9 +78,11 @@ export function createSingleAppPostgreSQL(
         [database]: app,
       },
       resources: {
+        // Measured p95 working set (7d, 2026-10-31) across phoenix, bugsink,
+        // delivery and tracker is 154-237Mi with 128MB shared_buffers.
         requests: {
           cpu: "50m",
-          memory: "128Mi",
+          memory: "256Mi",
         },
         limits: {
           cpu: "250m",

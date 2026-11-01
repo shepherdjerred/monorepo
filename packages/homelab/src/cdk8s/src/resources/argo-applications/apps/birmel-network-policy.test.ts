@@ -201,7 +201,7 @@ describe("birmel runtime deployment", () => {
       expect.objectContaining({ mountPath: "/tmp/birmel-sandbox" }),
     ]);
     expect(sandbox.resources).toEqual({
-      requests: { cpu: "50m", memory: "256Mi" },
+      requests: { cpu: "50m", memory: "32Mi" },
       limits: { cpu: "1000m", memory: "2560Mi" },
     });
     expect(sandbox.securityContext).toMatchObject({

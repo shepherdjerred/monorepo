@@ -275,10 +275,11 @@ export function createSeaweedfsApp(chart: Chart) {
       // deploys. Bigger volumes decouple the slot count from disk: the same data
       // now needs a few dozen slots, governed by actual bytes, not slot count.
       volumeSizeLimitMB: 30_000,
+      // Measured p95 working set (7d, 2026-10-31) is 49Mi.
       resources: {
         requests: {
           cpu: "25m",
-          memory: "128Mi",
+          memory: "64Mi",
         },
       },
       data: {
@@ -293,10 +294,11 @@ export function createSeaweedfsApp(chart: Chart) {
     volume: {
       enabled: true,
       replicas: 1,
+      // Measured p95 working set (7d, 2026-10-31) is 286Mi.
       resources: {
         requests: {
           cpu: "50m",
-          memory: "256Mi",
+          memory: "320Mi",
         },
       },
       dataDirs: [
@@ -333,10 +335,11 @@ export function createSeaweedfsApp(chart: Chart) {
     filer: {
       enabled: true,
       replicas: 1,
+      // Measured p95 working set (7d, 2026-10-31) is 787Mi.
       resources: {
         requests: {
           cpu: "50m",
-          memory: "512Mi",
+          memory: "896Mi",
         },
       },
       data: {
@@ -410,10 +413,11 @@ export function createSeaweedfsApp(chart: Chart) {
       replicas: 1,
       enableAuth: true,
       existingConfigSecret: "seaweedfs-s3-credentials",
+      // Measured p95 working set (7d, 2026-10-31) is 1.11Gi, 14d max 2.4Gi.
       resources: {
         requests: {
           cpu: "100m",
-          memory: "1Gi",
+          memory: "1280Mi",
         },
       },
       logs: {

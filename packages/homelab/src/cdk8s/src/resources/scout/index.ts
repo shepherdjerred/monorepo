@@ -87,10 +87,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
-        // The isolated application keeps its pre-voice 2Gi baseline. The
-        // gateway owns voice and reserves its own resident baseline; voice
-        // and report peaks share the node's burst memory within their limits.
-        memoryRequest: Size.gibibytes(2),
+        // Measured p95 working set (7d, 2026-10-31) is 2.17Gi. The gateway
+        // owns voice and reserves its own resident baseline; voice and report
+        // peaks share the node's burst memory within their limits.
+        memoryRequest: Size.mebibytes(2304),
       };
     })
     .with("prod", () => {
@@ -100,7 +100,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         s3BucketName: "scout-prod",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
         cpuRequest: Cpu.millis(100),
-        memoryRequest: Size.mebibytes(2560),
+        // Measured p95 working set (7d, 2026-10-31) is 2.04Gi.
+        memoryRequest: Size.mebibytes(2176),
       };
     })
     .exhaustive();

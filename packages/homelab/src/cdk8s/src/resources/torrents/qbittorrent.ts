@@ -175,7 +175,7 @@ export function createQBitTorrentDeployment(
     withCommonProps({
       resources: {
         cpu: { request: Cpu.millis(25) },
-        memory: { request: Size.mebibytes(128) },
+        memory: { request: Size.mebibytes(64) },
       },
       name: "gluetun",
       image: `ghcr.io/qdm12/gluetun:${versions["qdm12/gluetun"]}`,

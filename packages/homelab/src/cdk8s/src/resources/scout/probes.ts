@@ -38,7 +38,7 @@ export function scoutRuntimeProbes() {
 }
 
 /** Shared admin surface and baseline reservation for Scout's split roles. */
-export function scoutAdminRoleContainerBase() {
+export function scoutAdminRoleContainerBase(memoryRequest: Size) {
   return {
     image:
       '{{ required `Delivery requires image:scout-for-lol` (get (get (.Values.delivery | default dict) "images" | default dict) "scout-for-lol") }}',
@@ -50,10 +50,10 @@ export function scoutAdminRoleContainerBase() {
     resources: {
       cpu: { request: Cpu.millis(50) },
       memory: {
-        // Reserve normal resident usage, not simultaneous voice/query peaks.
-        // Idle gateways stay below 512Mi; activity workers reserve 1Gi for
-        // resident usage. Both retain 8Gi for voice, DuckDB and report bursts.
-        request: Size.gibibytes(1),
+        // Each role requests its measured p95 working set (7d, 2026-10-31),
+        // not simultaneous voice/query peaks. Both retain 8Gi for voice,
+        // DuckDB and report bursts.
+        request: memoryRequest,
         limit: Size.gibibytes(8),
       },
     },

@@ -19,8 +19,10 @@ export function createDeliveryWorkflowWorker(
     featureFlagsEnabled: false,
     cpuRequest: Cpu.millis(100),
     cpuLimit: Cpu.millis(1000),
-    memoryRequest: Size.mebibytes(256),
-    memoryLimit: Size.gibibytes(1),
+    // Measured working set (7d, 2026-10-31): p95 630Mi, max 999Mi, and the
+    // 1Gi limit OOM-killed it. Request the p95 and leave headroom above max.
+    memoryRequest: Size.mebibytes(640),
+    memoryLimit: Size.mebibytes(1536),
     envVariables: {
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${serverServiceName}:7233`),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),

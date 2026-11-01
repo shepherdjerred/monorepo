@@ -1,7 +1,7 @@
 {
-  "id": "pyroscope/prod/1",
+  "id": "pyroscope/prod/2",
   "content": {
-    "helm.valuesObject": "{\"alloy\":{\"enabled\":false},\"pyroscope\":{\"extraArgs\":{\"log.level\":\"info\"},\"persistence\":{\"enabled\":true,\"size\":\"32Gi\",\"storageClassName\":\"zfs-ssd\"},\"resources\":{\"requests\":{\"cpu\":\"50m\",\"memory\":\"256Mi\"}}}}"
+    "helm.valuesObject": "{\"alloy\":{\"enabled\":false},\"pyroscope\":{\"extraArgs\":{\"log.level\":\"info\"},\"persistence\":{\"enabled\":true,\"size\":\"32Gi\",\"storageClassName\":\"zfs-ssd\"},\"resources\":{\"requests\":{\"cpu\":\"50m\",\"memory\":\"320Mi\"}}}}"
   },
   "forwardOnly": []
 }

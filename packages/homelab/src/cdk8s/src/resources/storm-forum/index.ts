@@ -29,6 +29,21 @@ import {
 import type { ForumRelease, ForumStage } from "./release-schema.ts";
 import { forumTemplateInputs } from "./delivery-inputs.ts";
 
+// Requests follow each container's measured p95 working set (7d,
+// 2026-10-31): php 112Mi, activities 135Mi, nginx 4Mi.
+function forumResources(memoryRequest: string) {
+  return {
+    requests: {
+      cpu: Quantity.fromString("100m"),
+      memory: Quantity.fromString(memoryRequest),
+    },
+    limits: {
+      cpu: Quantity.fromString("2"),
+      memory: Quantity.fromString("1Gi"),
+    },
+  };
+}
+
 // The caller supplies verified published artifacts and provisioned secret IDs.
 // No placeholder image digest, empty secret item, or automatic install on restart.
 export function createStormForumChart(
@@ -101,16 +116,7 @@ export function createStormForumChart(
       allowPrivilegeEscalation: false,
       capabilities: { drop: ["ALL"] },
     },
-    resources: {
-      requests: {
-        cpu: Quantity.fromString("100m"),
-        memory: Quantity.fromString("256Mi"),
-      },
-      limits: {
-        cpu: Quantity.fromString("2"),
-        memory: Quantity.fromString("1Gi"),
-      },
-    },
+    resources: forumResources("128Mi"),
     volumeMounts: sharedMounts,
   };
   const pod: PodSpec = {
@@ -221,6 +227,7 @@ export function createStormForumChart(
               name: "nginx",
               image: `nginx:${versions["library/nginx"]}`,
               env: [],
+              resources: forumResources("32Mi"),
               command: ["nginx", "-g", "daemon off;"],
               ports: [
                 { name: "http", containerPort: 8080 },
@@ -268,6 +275,7 @@ export function createStormForumChart(
               ...base,
               name: "activities",
               command: ["bun", "/opt/storm-forum/src/cli.ts", "worker"],
+              resources: forumResources("160Mi"),
               volumeMounts: [
                 ...sharedMounts,
                 {

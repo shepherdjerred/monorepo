@@ -128,8 +128,10 @@ export function createGrafanaValues(
       // changing on every render and conflicting with grafana.ini overrides.
       existingSecret: rendererSecretName,
       image: { tag: versions["grafana/grafana-image-renderer"] },
+      // Idle p95 working set is 14Mi (7d, 2026-10-31); renders burst into
+      // free node memory.
       resources: {
-        requests: { cpu: "50m", memory: "512Mi" },
+        requests: { cpu: "50m", memory: "32Mi" },
       },
       serverURL:
         "http://prometheus-grafana-image-renderer.prometheus:8081/render",

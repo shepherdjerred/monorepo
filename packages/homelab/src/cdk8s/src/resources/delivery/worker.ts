@@ -149,7 +149,7 @@ export function createDeliveryWorker(
     component: "delivery-worker",
     cpuRequest: Cpu.millis(100),
     cpuLimit: Cpu.millis(1000),
-    memoryRequest: Size.mebibytes(256),
+    memoryRequest: Size.mebibytes(320),
     memoryLimit: Size.gibibytes(1),
     ...(account === undefined
       ? {}

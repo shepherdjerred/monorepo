@@ -60,7 +60,7 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
         resources: z.object({
           requests: z.object({
             cpu: z.literal("250m"),
-            memory: z.literal("3Gi"),
+            memory: z.literal("1920Mi"),
           }),
           limits: z.object({
             cpu: z.literal("4"),
@@ -112,7 +112,7 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
     .parse(applicationValues(documents, "loki"));
 
   expect(loki.singleBinary.resources).toEqual({
-    requests: { cpu: "250m", memory: "3Gi" },
+    requests: { cpu: "250m", memory: "1920Mi" },
     limits: { cpu: "4", memory: "6Gi" },
   });
   expect(loki.resultsCache).toEqual({
@@ -181,7 +181,7 @@ function assertMonitoringHelpers(documents: readonly unknown[]): void {
           resources: z.object({
             requests: z.object({
               cpu: z.literal("50m"),
-              memory: z.literal("512Mi"),
+              memory: z.literal("32Mi"),
             }),
           }),
         }),
@@ -201,13 +201,13 @@ function assertMonitoringHelpers(documents: readonly unknown[]): void {
       resources: z.object({
         requests: z.object({
           cpu: z.literal("20m"),
-          memory: z.literal("128Mi"),
+          memory: z.literal("64Mi"),
         }),
       }),
     })
     .parse(applicationValues(documents, "prometheus-adapter"));
   expect(adapter.resources).toEqual({
-    requests: { cpu: "20m", memory: "128Mi" },
+    requests: { cpu: "20m", memory: "64Mi" },
   });
 }
 
@@ -248,9 +248,9 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
       ]),
     ),
   ).toEqual({
-    standard: { requests: { cpu: "20m", memory: "64Mi" } },
-    medium: { requests: { cpu: "20m", memory: "128Mi" } },
-    heavy: { requests: { cpu: "50m", memory: "256Mi" } },
+    standard: { requests: { cpu: "20m", memory: "32Mi" } },
+    medium: { requests: { cpu: "20m", memory: "64Mi" } },
+    heavy: { requests: { cpu: "50m", memory: "128Mi" } },
   });
 
   const tailscaleValues = z
@@ -306,7 +306,7 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
     "media/media-maintainerr-tailscale-ingress-ingress": "medium",
     "pinchtab/pinchtab-pinchtab-tailscale-ingress-ingress": "medium",
     "stash/stash-stash-ingress-ingress": "medium",
-    "turbo-cache/turbo-cache-turbo-cache-tailscale-ingress-ingress": "medium",
+    "turbo-cache/turbo-cache-turbo-cache-tailscale-ingress-ingress": "heavy",
   });
 }
 

@@ -231,11 +231,10 @@ ip6tables -L OUTPUT -n`,
           limit: Cpu.millis(2000),
         },
         memory: {
-          // The 30d working-set peak is ~237MiB. Keep a rounded 512MiB
-          // scheduler reservation, while the limit must still comfortably
-          // exceed the 2Gi Memory-backed /dev/shm below plus Chrome's working
-          // set.
-          request: Size.mebibytes(512),
+          // Measured working set (7d, 2026-10-31): p95 915MiB, max 1.05GiB.
+          // The limit must still comfortably exceed the 2Gi Memory-backed
+          // /dev/shm below plus Chrome's working set.
+          request: Size.gibibytes(1),
           limit: Size.gibibytes(4),
         },
       },

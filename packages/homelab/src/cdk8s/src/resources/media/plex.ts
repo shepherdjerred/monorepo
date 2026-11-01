@@ -64,8 +64,10 @@ export function createPlexDeployment(
   deployment.addContainer(
     withCommonProps({
       resources: {
-        // Reserve the baseline; share spare RAM for transcoding bursts.
-        memory: { request: Size.gibibytes(4), limit: Size.gibibytes(16) },
+        // Reserve the measured p95 working set (2.7Gi over 7d, 2026-10-31);
+        // share spare RAM for transcoding bursts. The 7d max reached 14.9Gi
+        // and the 16Gi limit OOM-killed Plex, so the limit has headroom.
+        memory: { request: Size.mebibytes(2816), limit: Size.gibibytes(20) },
       },
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {

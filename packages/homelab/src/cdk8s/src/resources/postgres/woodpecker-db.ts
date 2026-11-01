@@ -76,9 +76,10 @@ export function createWoodpeckerPostgreSQLDatabase(chart: Chart) {
         woodpecker_db: "woodpecker",
       },
       resources: {
+        // Measured p95 working set (7d, 2026-10-31) is 237Mi.
         requests: {
           cpu: "50m",
-          memory: "128Mi",
+          memory: "256Mi",
         },
         limits: {
           cpu: "500m",

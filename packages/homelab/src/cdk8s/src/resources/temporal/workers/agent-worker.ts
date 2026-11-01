@@ -164,10 +164,10 @@ ip6tables -L OUTPUT -n`,
           // The 30d working-set peak is ~505MiB, and that peak is a real bound
           // because the agent-task worker pins maxConcurrentActivityTaskExecutions
           // to 1 (packages/temporal/src/worker.ts), so overlapping scheduled
-          // tasks queue instead of multiplying provider subprocesses. Keep a
-          // rounded 768MiB request and 1GiB limit for task bursts without
-          // reserving the 3GiB used by the larger infra and glitter workers.
-          request: Size.mebibytes(768),
+          // tasks queue instead of multiplying provider subprocesses. Request
+          // the measured p95 working set (249MiB over 7d, 2026-10-31) and
+          // keep the 1GiB limit for task bursts.
+          request: Size.mebibytes(256),
           limit: Size.gibibytes(1),
         },
       },

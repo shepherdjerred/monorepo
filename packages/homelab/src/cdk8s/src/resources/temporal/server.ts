@@ -171,9 +171,11 @@ export function createTemporalServerDeployment(
           request: Cpu.millis(100),
           limit: Cpu.millis(1000),
         },
+        // Measured working set (7d, 2026-10-31): p95 3.16Gi, max 3.5Gi.
+        // Request p95 plus a margin; the limit leaves room above the max.
         memory: {
-          request: Size.gibibytes(2),
-          limit: Size.gibibytes(4),
+          request: Size.mebibytes(3584),
+          limit: Size.gibibytes(5),
         },
       },
       liveness: Probe.fromTcpSocket({

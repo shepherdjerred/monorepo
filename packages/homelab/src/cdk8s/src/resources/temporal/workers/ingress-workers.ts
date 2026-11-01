@@ -100,7 +100,7 @@ export function createTemporalIngressWorkers(
     name: "temporal-home-worker",
     component: "home-worker",
     cpuRequest: Cpu.millis(100),
-    memoryRequest: Size.mebibytes(512),
+    memoryRequest: Size.mebibytes(288),
     envVariables: {
       ...temporalRuntimeEnv(
         props.serverServiceName,
@@ -120,7 +120,7 @@ export function createTemporalIngressWorkers(
     name: "temporal-reports-worker",
     component: "reports-worker",
     cpuRequest: Cpu.millis(100),
-    memoryRequest: Size.mebibytes(512),
+    memoryRequest: Size.mebibytes(352),
     envVariables: {
       ...temporalRuntimeEnv(
         props.serverServiceName,

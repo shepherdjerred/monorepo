@@ -19,7 +19,10 @@ function createWorkflowWorker(
     podLabels: { "worker-family": "central-workflows" },
     cpuRequest: Cpu.millis(250),
     cpuLimit: Cpu.millis(1000),
-    memoryRequest: Size.mebibytes(768),
+    // Delivery clones this candidate host into every retained
+    // `delivery-wf-retained-*` host, most of which idle once drained. Their
+    // measured p95 working set (7d, 2026-10-31) is 420-580Mi.
+    memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(2),
     automountServiceAccountToken: false,
     // Unlike application secrets, Flipt reachability is not a credential —

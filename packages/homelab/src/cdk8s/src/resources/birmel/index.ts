@@ -122,14 +122,14 @@ done`,
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      // Reserve the baseline while bounding bursts independently. 30d working
-      // set: p95 201 MiB, peak 262 MiB.
+      // Reserve the baseline while bounding bursts independently. 7d working
+      // set (2026-10-31): p95 208 MiB, 14d peak 293 MiB.
       resources: {
         cpu: {
           request: Cpu.millis(50),
         },
         memory: {
-          request: Size.mebibytes(384),
+          request: Size.mebibytes(224),
           limit: Size.gibibytes(2),
         },
       },
@@ -306,7 +306,9 @@ done`,
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
         memory: {
-          request: Size.mebibytes(256),
+          // Idle p95 working set is 13Mi (7d, 2026-10-31); snippet runs burst
+          // into the limit.
+          request: Size.mebibytes(32),
           // Descendant creation is blocked per run, so two concurrent Bun
           // snippets can each reach only their single 1 GiB address space.
           // Leave another 512 MiB for the broker and cleanup.

@@ -125,10 +125,12 @@ export function createKueueApp(chart: Chart) {
         // renewals crash-looped kueue (2026-07-18). Requests are the cgroup
         // weight under contention; this is a correctness knob here, not a
         // capacity one.
+        // Memory request: measured p95 working set (195Mi over 7d,
+        // 2026-10-31) plus a margin.
         resources: {
           requests: {
             cpu: "500m",
-            memory: "512Mi",
+            memory: "256Mi",
           },
           limits: {
             cpu: "2000m",

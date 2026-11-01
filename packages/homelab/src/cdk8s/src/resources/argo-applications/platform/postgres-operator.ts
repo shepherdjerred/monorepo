@@ -57,9 +57,10 @@ export function createPostgresOperatorApp(chart: Chart) {
         cpu: "500m",
         memory: "500Mi",
       },
+      // Measured p95 working set (7d, 2026-10-31) is 52Mi.
       requests: {
         cpu: "100m",
-        memory: "250Mi",
+        memory: "64Mi",
       },
     },
   };

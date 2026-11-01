@@ -467,6 +467,6 @@ test("application rollbacks never render the separately owned control-plane role
   ]);
   expect({ cpuMillis: steadyCpu, memoryMiB: steadyMemory }).toEqual({
     cpuMillis: 300,
-    memoryMiB: 768,
+    memoryMiB: 1216,
   });
 });

@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { Duration } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   Deployment,
   DeploymentStrategy,
@@ -81,7 +81,10 @@ export function createScoutActivityWorkerDeployment(
   // scheduling constraint rather than an accident of current node placement.
   deployment.scheduling.colocate(options.colocateWith);
 
-  const containerBase = scoutAdminRoleContainerBase();
+  // Measured p95 working set (7d, 2026-10-31): beta 3.45Gi, prod 1.70Gi.
+  const containerBase = scoutAdminRoleContainerBase(
+    stage === "beta" ? Size.mebibytes(3584) : Size.mebibytes(1792),
+  );
   deployment.addContainer(
     withCommonProps({
       ...containerBase,

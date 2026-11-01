@@ -243,8 +243,9 @@ model = "gpt-5.6-sol"
       resources: {
         cpu: { request: Cpu.units(2), limit: Cpu.units(12) },
         // Working set peaked at 2.8 GiB (p95 1.2 GiB) over its first four
-        // days; the limit keeps room for bursts.
-        memory: { request: Size.gibibytes(3), limit: Size.gibibytes(16) },
+        // days, then settled: 7d p95 230 MiB, 14d max 1.7 GiB (2026-10-31).
+        // Request the steady state; the limit keeps room for bursts.
+        memory: { request: Size.mebibytes(256), limit: Size.gibibytes(16) },
       },
       ports: [{ name: "ui", number: 8081 }],
       startup: Probe.fromHttpGet("/health", {

@@ -199,8 +199,9 @@ export function createWoodpeckerServer(chart: Chart) {
       }),
       resources: {
         cpu: { request: Cpu.millis(100), limit: Cpu.millis(1000) },
+        // Measured p95 working set (7d, 2026-10-31) is 114Mi.
         memory: {
-          request: Size.mebibytes(256),
+          request: Size.mebibytes(128),
           limit: Size.gibibytes(1),
         },
       },
