@@ -9,8 +9,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   maintenanceApi,
   maintenanceGithub,
-  currentMaintenanceSource,
-  verifiedMaintenanceSource,
+  newestVerifiedMaintenanceSource,
   recentMaintenancePipelines,
   maintenanceAdmissionBusy,
   findMaintenanceReceipt,
@@ -44,10 +43,10 @@ export const ciMaintenanceActivities = {
       pending === null ? null : await findMaintenanceReceipt(pending, manual);
     if (!enabled || busy || pending !== null)
       return { enabled, candidates: [], pending: receipt, busy };
-    const github = await maintenanceGithub();
-    const source = await currentMaintenanceSource(github);
-    if (!(await verifiedMaintenanceSource(source)))
+    const source = await newestVerifiedMaintenanceSource();
+    if (source === undefined)
       return { enabled, candidates: [], pending: null, busy: false };
+    const github = await maintenanceGithub();
     return {
       enabled,
       candidates: await maintenanceCandidates(github, source),
@@ -59,8 +58,7 @@ export const ciMaintenanceActivities = {
     request: MaintenanceRequest,
   ): Promise<number | null> {
     if (!(await ciMaintenanceEnabled())) return null;
-    const github = await maintenanceGithub();
-    if ((await currentMaintenanceSource(github)) !== request.source)
+    if ((await newestVerifiedMaintenanceSource()) !== request.source)
       return null;
     // A canary can arrive after candidate inspection. Recheck immediately
     // before the single external write; a deferral leaves no pipeline receipt.

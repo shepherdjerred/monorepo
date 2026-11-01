@@ -16,8 +16,7 @@ const mocks = vi.hoisted(() => ({
   pipelines: vi.fn<typeof MaintenanceClient.recentMaintenancePipelines>(),
   admission: vi.fn<typeof MaintenanceClient.maintenanceAdmissionBusy>(),
   github: vi.fn<typeof MaintenanceClient.maintenanceGithub>(),
-  source: vi.fn<typeof MaintenanceClient.currentMaintenanceSource>(),
-  verified: vi.fn<typeof MaintenanceClient.verifiedMaintenanceSource>(),
+  verified: vi.fn<typeof MaintenanceClient.newestVerifiedMaintenanceSource>(),
   candidates: vi.fn<typeof MaintenanceClient.maintenanceCandidates>(),
   receipt: vi.fn<typeof MaintenanceClient.findMaintenanceReceipt>(),
   api: vi.fn<typeof MaintenanceClient.maintenanceApi>(),
@@ -31,8 +30,7 @@ vi.mock("./ci-maintenance-client.ts", async (importOriginal) => ({
   recentMaintenancePipelines: mocks.pipelines,
   maintenanceAdmissionBusy: mocks.admission,
   maintenanceGithub: mocks.github,
-  currentMaintenanceSource: mocks.source,
-  verifiedMaintenanceSource: mocks.verified,
+  newestVerifiedMaintenanceSource: mocks.verified,
   maintenanceCandidates: mocks.candidates,
   findMaintenanceReceipt: mocks.receipt,
   maintenanceApi: mocks.api,
@@ -66,8 +64,7 @@ beforeEach(() => {
   mocks.pipelines.mockResolvedValue([]);
   mocks.admission.mockResolvedValue(false);
   mocks.github.mockResolvedValue(new Octokit());
-  mocks.source.mockResolvedValue(source);
-  mocks.verified.mockResolvedValue(true);
+  mocks.verified.mockResolvedValue(source);
   mocks.candidates.mockResolvedValue([candidate]);
 });
 
@@ -158,5 +155,22 @@ test("admission read failures reject without an external submission", async () =
   await expect(
     ciMaintenanceActivities.submitCiMaintenance(request),
   ).rejects.toThrow("Native CI read failed");
+  expect(mocks.api).not.toHaveBeenCalled();
+});
+
+test("without a verified main build there are no candidates and no GitHub reads", async () => {
+  mocks.verified.mockResolvedValue(undefined);
+  expect(await ciMaintenanceActivities.inspectCiMaintenance(null)).toEqual({
+    enabled: true,
+    candidates: [],
+    pending: null,
+    busy: false,
+  });
+  expect(mocks.github).not.toHaveBeenCalled();
+});
+
+test("submission drops a request once a newer build is verified", async () => {
+  mocks.verified.mockResolvedValue("c".repeat(40));
+  expect(await ciMaintenanceActivities.submitCiMaintenance(request)).toBeNull();
   expect(mocks.api).not.toHaveBeenCalled();
 });

@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
+  findMaintenanceReceipt,
   maintenanceAdmissionBusy,
   MaintenancePipelineSchema,
+  newestVerifiedMaintenanceSource,
   recentMaintenancePipelines,
 } from "./ci-maintenance-client.ts";
+import type { MaintenanceRequest } from "#shared/ci-maintenance.ts";
 
 const canary = MaintenancePipelineSchema.parse({
   number: 20,
@@ -127,4 +130,105 @@ test("receipt history retains its bounded main-only query", async () => {
   });
   expect(await recentMaintenancePipelines("manual")).toHaveLength(200);
   expect(fetch).toHaveBeenCalledTimes(4);
+});
+
+const verifiedSource = "b".repeat(40);
+const mainPush = {
+  ...canary,
+  event: "push",
+  branch: "main",
+  ref: "refs/heads/main",
+  status: "success",
+  message: "feat: change",
+};
+const releaseWorkflows = ["verify", "images", "helm-push", "delivery-publish"];
+
+function servePipelines(
+  list: readonly object[],
+  details: Record<number, object>,
+) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = nativeUrl(input);
+    const number = /\/pipelines\/(\d+)$/u.exec(url.pathname)?.[1];
+    return Promise.resolve(
+      Response.json(number === undefined ? list : details[Number(number)]),
+    );
+  });
+}
+
+test("maintenance targets the newest successful main push when it is a complete release build", async () => {
+  const newest = { ...mainPush, number: 31, commit: verifiedSource };
+  const fetch = servePipelines(
+    [
+      { ...mainPush, number: 32, commit: "c".repeat(40), status: "running" },
+      newest,
+      { ...mainPush, number: 29 },
+    ],
+    {
+      31: {
+        ...newest,
+        workflows: releaseWorkflows.map((name) => ({
+          name,
+          state: "success",
+        })),
+      },
+    },
+  );
+  expect(await newestVerifiedMaintenanceSource()).toBe(verifiedSource);
+  const listing = nativeUrl(fetch.mock.calls[0]?.[0] ?? "");
+  expect(listing.searchParams.get("event")).toBe("push");
+  expect(listing.searchParams.get("branch")).toBe("main");
+});
+
+test("an incomplete newest build is not replaced by an older one", async () => {
+  const newest = { ...mainPush, number: 31, commit: verifiedSource };
+  servePipelines([newest, { ...mainPush, number: 29 }], {
+    31: {
+      ...newest,
+      workflows: [{ name: "verify", state: "success" }],
+    },
+  });
+  expect(await newestVerifiedMaintenanceSource()).toBeUndefined();
+});
+
+test("a receipt at the branch tip reports the verified source the extension ran", async () => {
+  const request: MaintenanceRequest = {
+    kind: "workspace-golden",
+    source: verifiedSource,
+    fingerprint: "golden-v1",
+    frozen: false,
+    requestId: "request-1",
+    pipeline: 40,
+  };
+  const receipt = {
+    ...canary,
+    number: 40,
+    branch: "main",
+    ref: "refs/heads/main",
+    status: "running",
+    message: "ci-maintenance/request-1",
+  };
+  servePipelines([], {
+    40: {
+      ...receipt,
+      workflows: [{ name: "maintenance-workspace-golden", state: "running" }],
+    },
+  });
+  expect(await findMaintenanceReceipt(request, [])).toMatchObject({
+    number: 40,
+    source: verifiedSource,
+  });
+  vi.restoreAllMocks();
+  servePipelines([], {
+    40: {
+      ...receipt,
+      status: "success",
+      workflows: [{ name: "maintenance-superseded", state: "success" }],
+    },
+  });
+  expect(await findMaintenanceReceipt(request, [])).toEqual({
+    number: 40,
+    source: canary.commit,
+    status: "success",
+  });
 });
