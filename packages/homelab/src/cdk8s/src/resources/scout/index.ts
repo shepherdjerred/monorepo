@@ -113,7 +113,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   });
   // Hey Scout's OpenAI Realtime credential. A dedicated item rather than a
   // field on scout-for-lol-1p so it rotates on its own (OpenTofu mints it as
-  // the `scout-voice-2026-09` service account), and beta-only because
+  // the dated `scout-voice-*` service account), and beta-only because
   // production is hard-disabled for voice in code.
   const voiceOpenAiSecret =
     stage === "beta"

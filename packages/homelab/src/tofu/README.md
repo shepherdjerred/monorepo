@@ -271,11 +271,13 @@ every inference workload and environment has its own project and service
 account, with a hard spend limit, a spend alert, and a model allowlist.
 OpenAI subscription/Codex authentication is a separate boundary.
 
-OpenAI rejects reads of a service account in an archived project, and OpenTofu
-refreshes every resource in state, including one a `removed` block forgets.
-Before archiving a project in the dashboard, remove its service accounts from
-desired state and apply that change; otherwise every later plan fails until the
-unreadable service account is removed from state.
+OpenAI rejects reads of a service account or model allowlist in an archived
+project; the project itself and its spend alerts and limits stay readable.
+OpenTofu refreshes every resource in state, including one a `removed` block
+forgets. Before archiving a project in the dashboard, remove its service
+accounts and model allowlist from desired state and apply that change;
+otherwise every later plan fails until each unreadable resource is removed from
+state.
 
 Spend controls denominate their thresholds inconsistently upstream, and the
 committed values rely on it: `openai_project_spend_limit` /
