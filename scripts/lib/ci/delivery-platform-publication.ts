@@ -72,7 +72,6 @@ export function platformDependencyClosure(
   const stacks = new Set(selected);
   let requireRoot = root;
   function include(prerequisite: z.infer<typeof PlatformPrerequisiteSchema>) {
-    if (prerequisite === "static-sites") return;
     if (prerequisite === "root") {
       requireRoot = true;
       return;

@@ -269,12 +269,13 @@ export function derivedEdges(inputs: EdgeInputs): PrerequisiteEdge[] {
     new Set(inputs.core.environments.map((environment) => environment.id)),
   );
   const classes = platformClassNames(inputs.app);
-  // DNS for a tunnel route or a site follows the route and the site content.
+  // DNS for a tunnel route follows the route's content. A static site's DNS
+  // follows only the proxy route (DECLARED_EDGES): the site's acceptance reads
+  // its public URL, so for a new hostname the record must exist first.
   const dnsPrerequisites: string[] = [];
   for (const [environmentId, revision] of inputs.revisions) {
     if (revision.recipe.definition.kind === "static-site") {
       edges.add(environmentId, SEAWEEDFS_STACK);
-      dnsPrerequisites.push(environmentId);
       continue;
     }
     const names = recipeApplications(revision.recipe.definition);

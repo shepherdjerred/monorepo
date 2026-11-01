@@ -168,13 +168,11 @@ describe("agreement with the v1 definition sources", () => {
           expect(edges).toContain(
             `tofu-${prerequisite.slice("tofu:".length)}/prod -> ${dependent}`,
           );
-        else if (prerequisite === "static-sites")
-          for (const bucket of Object.keys(STATIC_SITE_DESTINATIONS).filter(
-            (key) => !key.startsWith("scout-"),
-          ))
-            expect(edges).toContain(`${bucket}/prod -> ${dependent}`);
         else expect(edges).toContain(`static-site-proxy/prod -> ${dependent}`);
       }
+    // A site's acceptance reads its public URL, so its DNS cannot wait for it.
+    for (const bucket of Object.keys(STATIC_SITE_DESTINATIONS))
+      expect(edges).not.toContain(`${bucket}/prod -> tofu-cloudflare/prod`);
     // The root's three: buckets precede their users, tags precede the
     // operator, and the arr stack follows the media Application it configures.
     expect(PLATFORM_POLICY.rootPrerequisites).toEqual([
