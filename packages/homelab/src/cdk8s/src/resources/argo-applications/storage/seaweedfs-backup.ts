@@ -152,9 +152,13 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
       user: 1000,
       group: 1000,
     },
+    // TLS and request signing for every object make the walk CPU-bound: at a
+    // 1-CPU limit its five workers copied small objects at ~3 MB/s. Each
+    // worker can buffer up to four 64 MiB parts (1.25 GiB in all). torvalds'
+    // requests are near allocatable, so only the limits are generous.
     resources: {
-      cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
-      memory: { request: Size.mebibytes(128), limit: Size.mebibytes(1024) },
+      cpu: { request: Cpu.millis(500), limit: Cpu.millis(4000) },
+      memory: { request: Size.mebibytes(128), limit: Size.mebibytes(2048) },
     },
   });
   const configVolume = Volume.fromConfigMap(
