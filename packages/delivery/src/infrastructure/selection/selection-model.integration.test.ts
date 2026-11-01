@@ -373,6 +373,107 @@ describe("selections (4.9, 4.12)", () => {
   });
 });
 
+describe("the binding a new selection freezes (4.12, P2)", () => {
+  test("a deploy of a new set revision freezes the declared binding; a rollback restores its own (4.12, P2)", async () => {
+    const baseline = await acceptedBaseline();
+    // The catalog binds a new recipe and configuration together with the
+    // stack change a new set revision carries.
+    const db = context.cluster.database;
+    const recipe = await db.pipeline.findUniqueOrThrow({
+      where: { id: baseline.pipelineRevisionId },
+    });
+    await db.pipeline.create({
+      data: { id: "arcade/2", definition: recipe.definition ?? {} },
+    });
+    await db.environment.update({
+      where: { id: context.fixture.environment.id },
+      data: { pipelineRevisionId: "arcade/2" },
+    });
+    await declareConfiguration("config/2", { replicas: "3" });
+    const set = await secondSet();
+    const env = await environmentRow();
+    const deployed = await context.delivery.createDeployment(
+      {
+        requestId: crypto.randomUUID(),
+        environmentId: env.id,
+        versionSetRevisionId: set.id,
+        expectedGeneration: env.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    expect(deployed).toMatchObject({
+      versionSetRevisionId: set.id,
+      pipelineRevisionId: "arcade/2",
+      configurationId: "config/2",
+      previousAcceptedDeploymentId: baseline.id,
+    });
+    await accept(deployed.id, set.id);
+    // The accepted selection already runs the declared binding.
+    await expect(rebind("config/2")).rejects.toThrow(/already runs/u);
+    const after = await environmentRow();
+    const rollback = await context.delivery.createDeployment(
+      {
+        requestId: crypto.randomUUID(),
+        environmentId: after.id,
+        expectedGeneration: after.generation,
+        kind: "rollback",
+        selectionDeploymentId: baseline.id,
+      },
+      testOperator,
+    );
+    expect(rollback).toMatchObject({
+      versionSetRevisionId: context.fixture.versionSet.id,
+      pipelineRevisionId: baseline.pipelineRevisionId,
+      configurationId: baseline.configurationId,
+      restoredDeploymentId: baseline.id,
+    });
+  });
+
+  test("a promotion freezes the target's declared binding, not its accepted one (4.12)", async () => {
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await canary();
+    const db = context.cluster.database;
+    await db.configuration.createMany({
+      data: [
+        { id: "canary/1", content: { replicas: "1" } },
+        { id: "canary/2", content: { replicas: "2" } },
+      ],
+    });
+    async function promote(declaredConfigurationId: string) {
+      const env = await db.environment.update({
+        where: { id: "arcade/canary" },
+        data: { declaredConfigurationId },
+      });
+      return context.delivery.createDeployment(
+        {
+          requestId: crypto.randomUUID(),
+          environmentId: env.id,
+          expectedGeneration: env.generation,
+          kind: "promote",
+          sourceEnvironmentId: context.fixture.environment.id,
+        },
+        testOperator,
+      );
+    }
+    const first = await promote("canary/1");
+    expect(first).toMatchObject({
+      versionSetRevisionId: context.fixture.versionSet.id,
+      pipelineRevisionId: "arcade/1",
+      configurationId: "canary/1",
+    });
+    await accept(first.id, context.fixture.versionSet.id);
+    // The canary's accepted selection runs canary/1; the catalog now binds
+    // canary/2, and the next promotion freezes it.
+    expect(await promote("canary/2")).toMatchObject({
+      versionSetRevisionId: context.fixture.versionSet.id,
+      configurationId: "canary/2",
+      previousAcceptedDeploymentId: first.id,
+    });
+  });
+});
+
 async function expectDeployUnderDeclaredRecipe(
   env: Awaited<ReturnType<typeof environmentRow>>,
 ) {

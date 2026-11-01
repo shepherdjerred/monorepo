@@ -152,9 +152,9 @@ async function start(
   versionSetRevisionId: string,
   options: ModelOptions,
 ): ModelResult {
-  // The server reports the kind of the recipe a release freezes, the accepted
-  // selection's until a rebind, read from the stored kind as admission reads
-  // it; the view's declared kind is normalised and may differ (E0, L2).
+  // The server reports the kind of the declared recipe a release freezes,
+  // read from the stored kind as admission reads it; the view's declared
+  // kind is normalised and may differ for a v1 manual recipe (4.12).
   const [view, { releaseKind: kind }] = await Promise.all([
     client.selection(environmentId),
     client.environmentDetail(environmentId),

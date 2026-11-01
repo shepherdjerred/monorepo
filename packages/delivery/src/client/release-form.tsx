@@ -89,8 +89,8 @@ export function ReleaseForm({
   onRequested: (deployment: Deployment) => Promise<void>;
 }) {
   const { environment, sourceEnvironment } = detail;
-  // The server freezes the accepted recipe until a rebind, so the declared
-  // recipe's kind would be refused after a catalog change (E0, L2).
+  // The server reports the declared recipe's stored kind, as admission
+  // reads it; the normalised kind would misread a v1 manual recipe.
   const realising = detail.releaseKind;
   const promotable = sourceEnvironment?.acceptedVersionSetRevisionId ?? null;
   const [kind, setKind] = useState<Kind>(

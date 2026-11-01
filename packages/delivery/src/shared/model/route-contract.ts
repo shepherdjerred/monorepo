@@ -55,9 +55,8 @@ export const EnvironmentSelectionSchema = z
     declared: z.strictObject({
       recipeRevisionId: RevisionIdSchema,
       /**
-       * The declared recipe's kind. A release freezes the accepted
-       * deployment's recipe until a rebind moves the binding, so this is
-       * what a release becomes only before the first acceptance.
+       * The declared recipe's kind, normalised: a v1 `manual` recipe reads
+       * as `operator-run`, though admission realises it by `deploy`.
        */
       recipeKind: RecipeKindSchema,
       configurationRevisionId: RevisionIdSchema,

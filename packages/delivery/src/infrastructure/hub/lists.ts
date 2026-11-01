@@ -87,69 +87,40 @@ export async function activityPage(database: Database, query: ActivityQuery) {
   };
 }
 
-/**
- * The recipe a release freezes: the accepted selection's until a rebind
- * moves it to the declared one, the declared recipe before the first
- * acceptance (E0, L2).
- */
-async function releaseRecipeId(
-  database: Database,
-  env: { acceptedDeploymentId: string | null; pipelineRevisionId: string },
-) {
-  if (env.acceptedDeploymentId === null) return env.pipelineRevisionId;
-  const accepted = required(
-    await database.deployment.findUnique({
-      where: { id: env.acceptedDeploymentId },
-      select: { pipelineRevisionId: true },
-    }),
-    "Accepted deployment",
-  );
-  return accepted.pipelineRevisionId;
-}
-
 /** One environment with what its release forms need. */
 export async function environmentDetail(
   database: Database,
   environmentId: string,
 ): Promise<EnvironmentDetail> {
   const env = await readEnvironment(database, environmentId);
-  const [
-    pipeline,
-    releasePipeline,
-    sourceEnvironment,
-    versionRows,
-    deployments,
-  ] = await Promise.all([
-    database.pipeline.findUnique({ where: { id: env.pipelineRevisionId } }),
-    releaseRecipeId(database, env).then(async (id) =>
-      database.pipeline.findUnique({ where: { id } }),
-    ),
-    env.promotionSourceEnvironmentId === null
-      ? null
-      : readEnvironment(database, env.promotionSourceEnvironmentId),
-    database.versionSet.findMany({
-      where: { serviceId: env.serviceId },
-      orderBy: { revision: "desc" },
-      take: 50,
-    }),
-    database.deployment.findMany({
-      where: { environmentId },
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      take: 20,
-    }),
-  ]);
+  const [pipelineRow, sourceEnvironment, versionRows, deployments] =
+    await Promise.all([
+      database.pipeline.findUnique({ where: { id: env.pipelineRevisionId } }),
+      env.promotionSourceEnvironmentId === null
+        ? null
+        : readEnvironment(database, env.promotionSourceEnvironmentId),
+      database.versionSet.findMany({
+        where: { serviceId: env.serviceId },
+        orderBy: { revision: "desc" },
+        take: 50,
+      }),
+      database.deployment.findMany({
+        where: { environmentId },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 20,
+      }),
+    ]);
+  const pipeline = PipelineRevisionSchema.parse(
+    wire(required(pipelineRow, "Pipeline")),
+  );
   return {
     environment: env,
     service: serviceSummary(env.serviceId),
-    pipeline: PipelineRevisionSchema.parse(
-      wire(required(pipeline, "Pipeline")),
-    ),
+    pipeline,
     sourceEnvironment,
-    releaseKind: releaseKindOf(
-      PipelineRevisionSchema.parse(
-        wire(required(releasePipeline, "Release pipeline")),
-      ).definition.kind,
-    ),
+    // A release freezes the declared recipe (4.12), realised as admission
+    // reads its stored kind.
+    releaseKind: releaseKindOf(pipeline.definition.kind),
     versionSets: await Promise.all(
       versionRows.map((row) => version(database, row.id)),
     ),

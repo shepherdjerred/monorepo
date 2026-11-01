@@ -15,7 +15,6 @@ import {
 import { lock, required, wire } from "#infrastructure/delivery-records.ts";
 import { requireRollbackCandidate } from "./candidates.ts";
 import { declaredComponents } from "#infrastructure/composition/automatic.ts";
-import { V1_BACKFILL } from "#infrastructure/catalog/carry.ts";
 
 /** The frozen inputs a request selects (model 4.9). */
 export type FrozenSelection = {
@@ -55,33 +54,16 @@ async function acceptedDeployment(tx: Transaction, env: Environment) {
 }
 
 /**
- * The recipe and configuration a deploy or promote carries: the accepted
- * selection's, or the declared binding while nothing is accepted (E0). A
- * newer declared revision reaches the environment only through `rebind`.
- * A carried selection is re-keyed onto the catalog's component names
- * (section 7), which only the declared recipe names; the pre-catalog recipe
- * it records is provenance, so it binds like no acceptance at all. So does
- * any other pre-catalog (v1 backfill) acceptance, whose recipe names v1
- * components, and a pre-cutover platform recipe, which only its typed
- * request may run.
+ * The recipe and configuration a deploy or promote freezes: the binding the
+ * catalog declares for the environment (4.12). The catalog is the authority
+ * for every new selection, so a recipe or configuration change reaches the
+ * environment with its next set revision, or with a `rebind` of the accepted
+ * one (section 6). Only a rollback restores an older binding (P2).
  */
-async function currentBinding(tx: Transaction, env: Environment) {
-  const accepted = await acceptedDeployment(tx, env);
-  if (
-    accepted === null ||
-    accepted.kind === "carry" ||
-    accepted.catalogRevision === V1_BACKFILL ||
-    legacyPlatformRecipe(
-      await pipelineRevision(tx, accepted.pipelineRevisionId),
-    )
-  )
-    return {
-      recipeId: env.pipelineRevisionId,
-      configurationId: env.declaredConfigurationId,
-    };
+function declaredBinding(env: Environment) {
   return {
-    recipeId: accepted.pipelineRevisionId,
-    configurationId: accepted.configurationId,
+    recipeId: env.pipelineRevisionId,
+    configurationId: env.declaredConfigurationId,
   };
 }
 
@@ -363,10 +345,11 @@ async function frozen(
 }
 
 /**
- * The selection a model request freezes: `deploy` names a set revision,
- * `promote` takes the source's accepted one, `rollback` restores the named
- * deployment's selection in full, `rebind` keeps the accepted set revision
- * under the declared recipe or configuration (4.9, 4.12, L2, P2).
+ * The selection a model request freezes: `deploy` names a set revision and
+ * `promote` takes the source's accepted one, both under the declared recipe
+ * and configuration; `rollback` restores the named deployment's selection in
+ * full; `rebind` keeps the accepted set revision under the declared recipe
+ * or configuration (4.9, 4.12, L2, P2).
  */
 export async function selectDeployment(
   tx: Transaction,
@@ -377,13 +360,12 @@ export async function selectDeployment(
     case "deploy":
     case "channel-publish":
     case "operator-run": {
-      const binding = await currentBinding(tx, env);
       const selected = await frozen(tx, env, {
         versionSetId: required(
           input.versionSetRevisionId ?? null,
           "Set revision",
         ),
-        ...binding,
+        ...declaredBinding(env),
       });
       return {
         ...selected,
@@ -400,7 +382,7 @@ export async function selectDeployment(
       );
       const selected = await frozen(tx, env, {
         versionSetId,
-        ...(await currentBinding(tx, env)),
+        ...declaredBinding(env),
       });
       const reasons = await eligibility(tx, env, selected.versionSet);
       if (reasons.length > 0)

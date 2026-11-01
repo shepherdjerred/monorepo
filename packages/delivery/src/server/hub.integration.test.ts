@@ -274,7 +274,7 @@ async function releaseKind() {
 }
 
 describe("hub release kind", () => {
-  test("a release realises the accepted recipe until a rebind, the declared one before acceptance", async () => {
+  test("a release realises the declared recipe, before and after an acceptance", async () => {
     const db = delivery.database;
     const original = await db.environment.findUniqueOrThrow({
       where: { id: "arcade/prod" },
@@ -319,8 +319,8 @@ describe("hub release kind", () => {
         },
       });
       expect(await releaseKind()).toBe("operator-run");
-      // Once a deployment under the earlier recipe is accepted, a release
-      // freezes that recipe until a rebind, so it is still a deploy.
+      // A deployment accepted under the earlier recipe does not hold the
+      // release to it: the release freezes the declared recipe (4.12).
       const accepted = await db.deployment.findFirstOrThrow({
         where: { environmentId: "arcade/prod" },
       });
@@ -329,7 +329,7 @@ describe("hub release kind", () => {
         where: { id: "arcade/prod" },
         data: { acceptedDeploymentId: accepted.id },
       });
-      expect(await releaseKind()).toBe("deploy");
+      expect(await releaseKind()).toBe("operator-run");
     } finally {
       await db.environment.update({
         where: { id: "arcade/prod" },
