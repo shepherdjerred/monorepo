@@ -7,9 +7,10 @@ import clockTower from "../../items/the-storm/assets/clock-tower.jpg";
 import townHouse from "../../items/the-storm/assets/town-house.jpg";
 
 const formats = ["avif", "webp"];
-// On desktop the hero fills a tall column and crops the landscape shot, so it
-// needs a source about as wide as the viewport, not half of it.
+// On desktop the hero is a square crop of a 1.89:1 shot, so the drawn image is
+// about 1.9 times its half-width column: roughly 85vw, at most about 1440px.
 const widths = [480, 800, 1200, 1600];
+const heroSizes = "(min-width: 1800px) 1440px, (min-width: 960px) 85vw, 100vw";
 ---
 
 <Layout
@@ -34,7 +35,7 @@ const widths = [480, 800, 1200, 1600];
           src={windmill}
           formats={formats}
           widths={widths}
-          sizes="(min-width: 960px) 1600px, 100vw"
+          sizes={heroSizes}
           alt="A tall timber windmill above a golden wheat field under a blue sky."
           loading="eager"
           fetchpriority="high"

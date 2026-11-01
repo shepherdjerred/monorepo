@@ -1,8 +1,6 @@
 ---
-import "@fontsource-variable/outfit/wght.css";
-import "@fontsource-variable/lora/wght-italic.css";
 import "./landing.css";
-import { getImage } from "astro:assets";
+import { Font, getImage } from "astro:assets";
 import Base from "../../layouts/Base.astro";
 import windmill from "./assets/windmill.jpg";
 
@@ -34,6 +32,8 @@ const card = await getImage({
   }}
 >
   <Fragment slot="head">
+    <Font cssVariable="--font-outfit" />
+    <Font cssVariable="--font-lora" />
     <link rel="icon" type="image/svg+xml" href="/the-storm/favicon.svg" />
     <script is:inline src="/the-storm/pinterest.js" defer></script>
   </Fragment>

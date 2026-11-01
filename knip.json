@@ -317,7 +317,13 @@
     },
     "packages/landing-pages": {
       "entry": ["src/**/*.astro"],
-      "project": ["src/**/*.{ts,astro}", "*.ts"]
+      "project": ["src/**/*.{ts,astro}", "*.ts"],
+      // Astro's font API resolves these woff2 package paths from string
+      // sources in astro.config.ts, which knip cannot see as imports.
+      "ignoreDependencies": [
+        "@fontsource-variable/lora",
+        "@fontsource-variable/outfit"
+      ]
     },
     "packages/stocks-sjer-red": {
       "entry": ["src/**/*.astro"],
