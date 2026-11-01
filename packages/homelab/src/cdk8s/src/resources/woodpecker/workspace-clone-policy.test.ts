@@ -69,9 +69,10 @@ test("only unsourced workspace-sized ci-workspace claims are given the golden sn
     expect(patch).toContain(
       `path: '/spec/${field}', value: Object.spec.${field}{apiGroup: 'snapshot.storage.k8s.io', kind: 'VolumeSnapshot', name: params.data['snapshot']}`,
     );
-  // An absent, empty, or foreign parameter leaves the claim empty.
+  // An absent, empty, or foreign parameter leaves the claim empty, and so
+  // does a snapshot whose recorded restore size is not the workspace size.
   expect(patch).toContain(
-    `params.data['snapshot'].startsWith('${CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX}') ? [`,
+    `params.data['snapshot'].startsWith('${CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX}') && 'restoreSize' in params.data && quantity(params.data['restoreSize']).compareTo(quantity('32Gi')) == 0 ? [`,
   );
   expect(patch).toContain("] : []");
 

@@ -15,10 +15,11 @@ export const CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX = "ci-workspace-golden-";
 /** Must match WOODPECKER_WORKSPACE_GOLDEN_CLAIM in the homelab CI caches. */
 export const CI_WORKSPACE_GOLDEN_CLAIM = "woodpecker-workspace-golden";
 /**
- * Must match CI_WORKSPACE_VOLUME_SIZE (32Gi) in the homelab storage classes.
- * Every workspace claim requests exactly this, and the CSI provisioner
- * refuses a clone that requests less than its snapshot's restore size.
+ * Must match CI_WORKSPACE_VOLUME_SIZE in the homelab storage classes. Every
+ * workspace claim requests exactly this, and the CSI provisioner refuses a
+ * clone that requests less than its snapshot's restore size.
  */
+export const CI_WORKSPACE_VOLUME_SIZE = "32Gi";
 export const CI_WORKSPACE_VOLUME_BYTES = 32 * 1024 ** 3;
 const SNAPSHOT_CLASS = "host-zfs-snapshot";
 const GOLDEN_LABEL = "ci.sjer.red/workspace-golden";
@@ -44,13 +45,20 @@ export type GoldenSnapshot = {
 };
 
 export type CiWorkspaceGoldenClient = {
+  /** The golden claim's provisioned capacity, once bound. */
+  claimCapacityBytes: () => Promise<number | undefined>;
   /** Creates the snapshot; one that already exists is left as it is. */
   createSnapshot: (name: string, source: string) => Promise<void>;
   getSnapshot: (name: string) => Promise<GoldenSnapshot | null>;
   listSnapshots: () => Promise<GoldenSnapshot[]>;
   /** Deletes the snapshot; one already gone is not an error. */
   deleteSnapshot: (name: string) => Promise<void>;
-  /** Names the snapshot new workspaces clone. */
+  /** The snapshot the clone policy's parameter names, if any. */
+  selectedSnapshot: () => Promise<string | undefined>;
+  /**
+   * Names the snapshot new workspaces clone and its restore size; the policy
+   * clones only when that size is the workspace size.
+   */
   selectSnapshot: (name: string, source: string) => Promise<void>;
 };
 
@@ -88,6 +96,42 @@ export function planGoldenPrune(
 }
 
 /**
+ * Waits for the driver to report the snapshot ready. A ready snapshot of the
+ * wrong size is never selected: unless it is somehow already selected, it is
+ * deleted so the next attempt recreates it from the resized claim.
+ */
+async function awaitReadySnapshot(
+  client: CiWorkspaceGoldenClient,
+  name: string,
+  wait: (ms: number) => Promise<void>,
+  heartbeat: (progress: Record<string, unknown>) => void,
+): Promise<void> {
+  for (;;) {
+    const snapshot = await client.getSnapshot(name);
+    if (snapshot === null)
+      throw new Error(`Golden workspace snapshot ${name} disappeared`);
+    if (snapshot.deleting)
+      throw new Error(
+        `Golden workspace snapshot ${name} is still being deleted`,
+      );
+    if (snapshot.error !== undefined)
+      throw new Error(
+        `Golden workspace snapshot ${name} failed: ${snapshot.error}`,
+      );
+    if (snapshot.ready) {
+      if (snapshot.restoreBytes === CI_WORKSPACE_VOLUME_BYTES) return;
+      if ((await client.selectedSnapshot()) !== name)
+        await client.deleteSnapshot(name);
+      throw new Error(
+        `Golden workspace snapshot ${name} restores ${String(snapshot.restoreBytes)} bytes, not the ${CI_WORKSPACE_VOLUME_BYTES.toString()} every workspace requests`,
+      );
+    }
+    heartbeat({ snapshot: name, ready: false });
+    await wait(READY_POLL_MS);
+  }
+}
+
+/**
  * Snapshots the golden claim the maintenance publisher just refreshed, waits
  * for the driver to report it ready, selects it, and deletes superseded
  * snapshots. Selecting only a ready snapshot keeps new workspace claims from
@@ -102,27 +146,15 @@ export async function publishGoldenSnapshot(
   },
 ): Promise<{ snapshot: string; deleted: string[] }> {
   const name = goldenSnapshotName(request);
+  // A claim still growing to the workspace size would be snapshotted at its
+  // old, smaller size; wait for the resize instead.
+  const capacity = await client.claimCapacityBytes();
+  if (capacity !== CI_WORKSPACE_VOLUME_BYTES)
+    throw new Error(
+      `Golden workspace claim holds ${String(capacity)} bytes, not ${CI_WORKSPACE_VOLUME_BYTES.toString()}; waiting for it to resize`,
+    );
   await client.createSnapshot(name, request.source);
-  for (;;) {
-    const snapshot = await client.getSnapshot(name);
-    if (snapshot === null)
-      throw new Error(`Golden workspace snapshot ${name} disappeared`);
-    if (snapshot.error !== undefined)
-      throw new Error(
-        `Golden workspace snapshot ${name} failed: ${snapshot.error}`,
-      );
-    if (snapshot.ready) {
-      // A workspace claim cannot clone a snapshot larger than itself, and
-      // selecting one would leave every new CI workspace unprovisionable.
-      if (snapshot.restoreBytes !== CI_WORKSPACE_VOLUME_BYTES)
-        throw new Error(
-          `Golden workspace snapshot ${name} restores ${String(snapshot.restoreBytes)} bytes, not the ${CI_WORKSPACE_VOLUME_BYTES.toString()} every workspace requests`,
-        );
-      break;
-    }
-    heartbeat({ snapshot: name, ready: false });
-    await wait(READY_POLL_MS);
-  }
+  await awaitReadySnapshot(client, name, wait, heartbeat);
   await client.selectSnapshot(name, request.source);
   const deleted = planGoldenPrune(await client.listSnapshots(), name);
   for (const stale of deleted) {
@@ -224,6 +256,26 @@ export function kubernetesCiWorkspaceGoldenClient(
         if (apiCode(error) !== 409) throw error;
       }
     },
+    async claimCapacityBytes() {
+      const claim = await core.readNamespacedPersistentVolumeClaim({
+        name: CI_WORKSPACE_GOLDEN_CLAIM,
+        namespace: CI_NAMESPACE,
+      });
+      const capacity = claim.status?.capacity?.["storage"];
+      return capacity === undefined ? undefined : quantityBytes(capacity);
+    },
+    async selectedSnapshot() {
+      try {
+        const current = await core.readNamespacedConfigMap({
+          name: CI_WORKSPACE_GOLDEN_CONFIG_MAP,
+          namespace: CI_NAMESPACE,
+        });
+        return current.data?.["snapshot"];
+      } catch (error: unknown) {
+        if (apiCode(error) === 404) return;
+        throw error;
+      }
+    },
     async getSnapshot(name) {
       try {
         return toSnapshot(
@@ -268,7 +320,10 @@ export function kubernetesCiWorkspaceGoldenClient(
       if (current === undefined) {
         await core.createNamespacedConfigMap({
           namespace: CI_NAMESPACE,
-          body: { metadata, data: { snapshot: name } },
+          body: {
+            metadata,
+            data: { snapshot: name, restoreSize: CI_WORKSPACE_VOLUME_SIZE },
+          },
         });
         return;
       }
@@ -284,7 +339,7 @@ export function kubernetesCiWorkspaceGoldenClient(
             ...metadata,
             resourceVersion,
           },
-          data: { snapshot: name },
+          data: { snapshot: name, restoreSize: CI_WORKSPACE_VOLUME_SIZE },
         },
       });
     },

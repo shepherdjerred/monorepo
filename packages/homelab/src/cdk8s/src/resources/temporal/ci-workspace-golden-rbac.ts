@@ -6,12 +6,13 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 import { CI_WORKSPACE_GOLDEN_CONFIG_MAP } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/workspace-clone-policy.ts";
+import { WOODPECKER_WORKSPACE_GOLDEN_CLAIM } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/caches.ts";
 
 export const CI_WORKSPACE_GOLDEN_ROLE = "temporal-worker-ci-workspace-golden";
 
 /**
- * Lets the infra worker's `publishCiWorkspaceGoldenSnapshot` snapshot the
- * golden workspace claim, point the workspace clone policy's parameter at the
+ * Lets the infra worker's `publishCiWorkspaceGoldenSnapshot` read the golden
+ * workspace claim's capacity, snapshot it, point the workspace clone policy's parameter at the
  * new snapshot, and delete superseded snapshots. A snapshot that still has
  * workspace clones stays until they are gone; ZFS refuses to destroy it.
  *
@@ -39,6 +40,12 @@ export function createTemporalWorkerCiWorkspaceGoldenRbac(
         resources: ["configmaps"],
         resourceNames: [CI_WORKSPACE_GOLDEN_CONFIG_MAP],
         verbs: ["get", "update"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["persistentvolumeclaims"],
+        resourceNames: [WOODPECKER_WORKSPACE_GOLDEN_CLAIM],
+        verbs: ["get"],
       },
     ],
   });
