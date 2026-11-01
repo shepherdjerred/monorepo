@@ -3268,7 +3268,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "tofu-openai/prod/1",
-      "configurationRevisionId": "tofu-openai/prod/2"
+      "configurationRevisionId": "tofu-openai/prod/3"
     },
     {
       "id": "tofu-posthog/prod",

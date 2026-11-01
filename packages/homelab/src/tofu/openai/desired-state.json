@@ -33,9 +33,6 @@
       "project_id": "proj_CD2snFoT6oC5EvglqNvIfGCT",
       "name": "Streambot"
     },
-    "scout-beta": {
-      "name": "Scout for LoL (beta)"
-    },
     "woodpecker": {
       "name": "Woodpecker CI"
     },
@@ -47,6 +44,9 @@
     },
     "temporal-active-2026-09": {
       "name": "Temporal"
+    },
+    "scout-beta-active-2026-09": {
+      "name": "Scout for LoL (beta)"
     },
     "storm-brain": {
       "name": "Storm Brain"
@@ -93,9 +93,9 @@
         }
       ]
     },
-    "scout-beta-2026-09": {
-      "project_key": "scout-beta",
-      "name": "scout beta 2026-09",
+    "scout-beta-2026-10": {
+      "project_key": "scout-beta-active-2026-09",
+      "name": "scout beta 2026-10",
       "onepassword_targets": [
         {
           "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
@@ -169,8 +169,8 @@
       "notification_channel_recipients": ["openai@sjer.red"],
       "notification_channel_subject_prefix": "scout-prod-openai"
     },
-    "scout-beta-monthly": {
-      "project_key": "scout-beta",
+    "scout-beta-active-monthly-2026-09": {
+      "project_key": "scout-beta-active-2026-09",
       "threshold_amount": 5,
       "currency": "USD",
       "interval": "month",
@@ -242,8 +242,8 @@
         "text-embedding-3-small"
       ]
     },
-    "scout-beta": {
-      "project_key": "scout-beta",
+    "scout-beta-active-2026-09": {
+      "project_key": "scout-beta-active-2026-09",
       "mode": "allow_list",
       "model_ids": [
         "gpt-5.4-mini",
@@ -305,8 +305,8 @@
       "currency": "USD",
       "interval": "month"
     },
-    "scout-beta-monthly": {
-      "project_key": "scout-beta",
+    "scout-beta-active-monthly-2026-09": {
+      "project_key": "scout-beta-active-2026-09",
       "threshold_amount": 1000,
       "currency": "USD",
       "interval": "month"
