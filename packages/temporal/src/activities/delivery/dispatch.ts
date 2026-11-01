@@ -13,6 +13,7 @@ import {
 import { createTemporalClient } from "#client";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { qualifyPendingBuilds } from "./qualification-sweep.ts";
 
 const closedStatus = z.enum([
   "COMPLETED",
@@ -55,20 +56,15 @@ export async function qualifyDeliveryBuilds() {
       ),
     }),
   );
-  const outcomes = await Promise.allSettled(
-    qualification.builds
-      .slice(0, 3)
-      .map(
-        async (build) =>
-          await deliveryRequest(
-            `builds/${encodeURIComponent(build.id)}/qualify`,
-            z.object({ status: z.enum(["pending", "verified", "failed"]) }),
-            {},
-          ),
+  await qualifyPendingBuilds(
+    qualification.builds,
+    async (buildId) =>
+      await deliveryRequest(
+        `builds/${encodeURIComponent(buildId)}/qualify`,
+        z.object({ status: z.enum(["pending", "verified", "failed"]) }),
+        {},
       ),
   );
-  for (const outcome of outcomes)
-    if (outcome.status === "rejected") throw outcome.reason;
 }
 
 type TemporalClient = Awaited<ReturnType<typeof createTemporalClient>>;
