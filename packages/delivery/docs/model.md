@@ -35,7 +35,7 @@ Woodpecker builds. 1Password holds secrets. Target adapters reconcile.
 | --- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
 | G1  | Reproducibility | Any previously accepted selection can be identified, fetched byte-for-byte, and redeployed.                                                                                                                                                              | A1, A6, R1, P1, F1, precondition PC1 |
 | G2  | Consistency     | An environment's accepted selection is one set revision whose components satisfied every declared constraint; in settled state only the accepted selection and retained hosts are live; while a deployment is owned, its desired selection is also live. | K1, R2, A3, E4, M2, T3               |
-| G3  | Independence    | One service's release never waits on, or is broken by, another service's release unless a declared edge (a tracking reference or a prerequisite) says so.                                                                                                | S2, T1, A5, Z1                       |
+| G3  | Independence    | One service's release never waits on, or is broken by, another service's release unless a declared edge (a tracking reference or a prerequisite) says so.                                                                                                | S2, T1, D11, A5, Z1                  |
 | G4  | Evidence        | Every change to a running system is a recorded deployment with recorded acceptance, or, for `operator-run`, an operator attestation recorded with its evidence. Nothing is believed because a file in Git says so.                                       | C3, D1, V1, V3, T5                   |
 | G5  | Recoverability  | Any ambiguous effect leaves ownership held until an independent inspection settles it. The record survives loss of the executor, and loss of the record is detectable and reconcilable.                                                                  | D1, D5, D7, I1, precondition PC1     |
 
@@ -523,7 +523,8 @@ recorded, optionally carrying a `handoff` marker for a self-hosted
 deployment awaiting its successor executor (D8); then exactly one terminal
 result: `accepted`, `failed`, or `canceled`. `recovery-required` is an
 ownership flag on a terminal result, not a fifth state: the result is kept
-(I3) and the deployment keeps its locks until a recovery intent settles it.
+(I3) and the deployment keeps its locks until a recovery intent settles it,
+which releases them (D11).
 
 **Invariants.**
 
@@ -571,6 +572,18 @@ ownership flag on a terminal result, not a fifth state: the result is kept
   exclusion.
 - D10. A global executor concurrency bound, held as configuration, limits
   simultaneously `owned` deployments.
+- D11. A terminal deployment that is not `recovery-required` holds nothing:
+  no target lock, no shared lock, and no environment names it as its owner.
+  Every transition that ends a deployment or settles its recovery (finish,
+  cancellation, rejection, orphan recovery, every recovery settlement, a
+  repair taking over its quarantined source) releases all three in the same
+  transaction. The one retained row is a content recovery's journaled
+  producer barrier, which belongs to its recovery intent until the observed
+  producer restoration releases it. Each dispatch tick reconciles the
+  invariant: it releases any ownership a settled deployment still holds,
+  audits and counts each release, and never touches an `owned` or
+  `recovery-required` deployment. Such a release is evidence of a transition
+  that leaked, not a recovery mechanism.
 
 **Is not.** A Kubernetes rollout, a Helm release, a sync, or a Git commit.
 Those are effects a target may produce while executing a deployment.

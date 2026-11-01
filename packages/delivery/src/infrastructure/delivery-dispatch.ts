@@ -8,7 +8,7 @@ import type { Principal } from "#shared/contract.ts";
 import { wire, lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import { terminal, id } from "./delivery-data.ts";
-import { releaseDeploymentLocks } from "./recovery-settlement.ts";
+import { releaseTerminalOwnership } from "./terminal-ownership.ts";
 
 export async function pending(this: Delivery) {
   const rows = await this.database.outbox.findMany({
@@ -111,13 +111,7 @@ export async function orphan(
         finishedAt: new Date(),
       },
     });
-    if (!recoveryRequired) {
-      await releaseDeploymentLocks(tx, deploymentId);
-      await tx.environment.updateMany({
-        where: { id: row.environmentId, activeDeploymentId: deploymentId },
-        data: { activeDeploymentId: null },
-      });
-    }
+    if (!recoveryRequired) await releaseTerminalOwnership(tx, deploymentId);
     await tx.outbox.deleteMany({ where: { deploymentId } });
     await audit(tx, actor, {
       action: "deployment.orphan_recovered",

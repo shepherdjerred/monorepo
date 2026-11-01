@@ -125,7 +125,6 @@ export async function completeContentRecovery(
       deploymentId: row.id,
       environmentId: env.id,
       expectedGeneration: env.generation,
-      releaseGlobal: false,
     });
     const updated = await tx.recoveryIntent.update({
       where: { id },

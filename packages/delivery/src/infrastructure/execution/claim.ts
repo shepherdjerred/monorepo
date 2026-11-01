@@ -38,6 +38,7 @@ import {
   requireDispatchBarrier,
 } from "#infrastructure/execution/admission.ts";
 import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
+import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 import { staleSource } from "#infrastructure/selection/selection.ts";
 import {
   expireApproval,
@@ -85,6 +86,7 @@ async function rejectStale(
     where: { id: input.deploymentId },
     data: { status: "failed", message, finishedAt: new Date() },
   });
+  await releaseTerminalOwnership(tx, input.deploymentId);
   await expireApproval(tx, input.deploymentId);
   await tx.outbox.deleteMany({ where: { deploymentId: input.deploymentId } });
   await audit(tx, input.actor, {

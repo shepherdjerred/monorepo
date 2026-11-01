@@ -14,7 +14,7 @@ import {
   findIntent,
   intentDetail,
 } from "#infrastructure/recovery-intents.ts";
-import { releaseDeploymentLocks } from "#infrastructure/recovery-settlement.ts";
+import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 import { recoveryOwnership, workerIntentView } from "./recovery.ts";
 
 function routeKey(route: {
@@ -105,15 +105,11 @@ export async function completeWorkerRecovery(
       input.evidence,
       `worker-recovery/${intentId}`,
     );
-    await releaseDeploymentLocks(tx, intent.deploymentId);
-    await tx.environment.update({
-      where: { id: context.pool.environmentId },
-      data: { activeDeploymentId: null },
-    });
     await tx.deployment.update({
       where: { id: intent.deploymentId },
       data: { recoveryRequired: false },
     });
+    await releaseTerminalOwnership(tx, intent.deploymentId);
     const updated = await tx.recoveryIntent.update({
       where: { id: intentId },
       data: {

@@ -11,6 +11,10 @@ import {
 } from "./delivery-data.ts";
 import { reconcilePlatform } from "./platform/selection.ts";
 import { legacyPipelineOf } from "./execution/legacy-recipe.ts";
+import {
+  releaseStrandedOwnership,
+  releaseTerminalOwnership,
+} from "./terminal-ownership.ts";
 
 /** Platform and control-plane pipelines reconcile through their own typed requests. */
 function specializedPipeline(stored: StoredRecipeDefinition) {
@@ -166,6 +170,12 @@ export async function reconcile(
   actor: Principal,
 ) {
   const leasesExpired = await expireLeases.call(this, actor);
+  // Before selection, so a queued deployment is not held back by ownership a
+  // settled deployment never released.
+  const ownershipReleased = await releaseStrandedOwnership(
+    this.database,
+    actor,
+  );
   const selected: string[] = await restoreAlarmed.call(
     this,
     enabledEnvironments,
@@ -186,6 +196,7 @@ export async function reconcile(
     deployments: [...selected, ...platform.deployments],
     ...(platform.waiting.length === 0 ? {} : { waiting: platform.waiting }),
     ...(leasesExpired.length === 0 ? {} : { leasesExpired }),
+    ...(ownershipReleased.length === 0 ? {} : { ownershipReleased }),
   };
 }
 
@@ -295,6 +306,7 @@ export async function supersedeQueuedAutomatic(
       },
     });
     await tx.outbox.deleteMany({ where: { deploymentId } });
+    await releaseTerminalOwnership(tx, deploymentId);
     await audit(tx, actor, {
       action: "deployment.superseded",
       entityId: deploymentId,

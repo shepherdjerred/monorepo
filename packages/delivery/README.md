@@ -488,7 +488,8 @@ settled. Every other kind is refused there and settled by its own reader.
 Settlement records what it found and releases ownership without accepting the
 failed deployment or moving the accepted selection. Intent creation and
 settlement work while writes are paused and while Temporal or ArgoCD's API is
-unavailable; no route releases a lock without an intent.
+unavailable; no route releases a recovery-required deployment's lock without
+an intent.
 
 `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason
 <EXPLANATION> --machine` opens the intent; with `--operation-id
@@ -827,13 +828,14 @@ and request IDs and actors are not metric labels.
 The activated homelab service includes a matching ServiceMonitor and the
 [Delivery alerts](../homelab/src/cdk8s/src/resources/delivery/monitoring.ts).
 
-| Metric                                                                                                         | Alert                          | Fires when                                                                                                                      |
-| -------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `up`                                                                                                           | `DeliveryUnavailable`          | the endpoint is not scraped for 5 minutes                                                                                       |
-| `delivery_outbox_oldest_seconds`                                                                               | `DeliveryDispatchDelayed`      | a submission awaits Temporal acknowledgement over 10 minutes                                                                    |
-| `delivery_recovery_required_deployments{environment,service_id,self_hosted}`                                   | `DeliveryRecoveryRequired`     | a recovery-required deployment holds the dispatch barrier for 5 minutes, one alert per target                                   |
-| `delivery_queued_oldest_seconds{environment}`                                                                  | `DeliveryQueueStalled`         | an environment has waited over 3 hours to dispatch, for 10 minutes                                                              |
-| `delivery_platform_lock_held_seconds{environment,service_id,holder_status,recovery_required,producer_barrier}` | `DeliveryPlatformLockStranded` | a holder that is not running, not recovery-required and holds no content producer barrier keeps the platform lock for 5 minutes |
+| Metric                                                                                                         | Alert                            | Fires when                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `up`                                                                                                           | `DeliveryUnavailable`            | the endpoint is not scraped for 5 minutes                                                                                       |
+| `delivery_outbox_oldest_seconds`                                                                               | `DeliveryDispatchDelayed`        | a submission awaits Temporal acknowledgement over 10 minutes                                                                    |
+| `delivery_recovery_required_deployments{environment,service_id,self_hosted}`                                   | `DeliveryRecoveryRequired`       | a recovery-required deployment holds the dispatch barrier for 5 minutes, one alert per target                                   |
+| `delivery_queued_oldest_seconds{environment}`                                                                  | `DeliveryQueueStalled`           | an environment has waited over 3 hours to dispatch, for 10 minutes                                                              |
+| `delivery_platform_lock_held_seconds{environment,service_id,holder_status,recovery_required,producer_barrier}` | `DeliveryPlatformLockStranded`   | a holder that is not running, not recovery-required and holds no content producer barrier keeps the platform lock for 5 minutes |
+| `delivery_stale_ownership_released_total{kind}`                                                                | `DeliveryStaleOwnershipReleased` | the dispatch sweep released a lock or active pointer from a settled deployment in the last hour                                 |
 
 `delivery_queued_oldest_seconds` counts from the oldest queued request's outbox
 entry, and keeps counting through supersession: a queued automatic request a
@@ -842,9 +844,19 @@ newer set revision canceled still counts until the environment's next claim.
 Three hours exceeds the longest bounded holder of the barrier, the control
 plane's 150-minute activity, so ordinary serialization never reaches it.
 `delivery_platform_lock_held_seconds` is absent while the platform lock is
-free. Finish and every independent recovery settlement release the lock with
-the holder's target locks; content recovery alone keeps it as the journaled
-producer barrier until the producer's restoration releases it. The response is
+free. A terminal deployment that is not recovery-required holds nothing
+([D11](docs/model.md#412-deployment)): finish, cancellation, rejection, orphan
+recovery and every independent recovery settlement release its target locks,
+the platform lock and the environment's active pointer in one transaction.
+Content recovery alone keeps the platform lock as the journaled producer
+barrier until the producer's restoration releases it. Each dispatch tick
+(`POST /api/v1/reconcile`) also releases any such ownership a settled
+deployment still holds, records a `deployment.stale_ownership_released` audit
+row per released row, and counts it in
+`delivery_stale_ownership_released_total{kind}` (`target_lock`,
+`platform_lock`, `active_deployment`). It never touches a running or
+recovery-required deployment. A release means some transition, or a manual
+database change, settled a deployment without releasing it. The response is
 [Respond to a stalled Delivery dispatch](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#respond-to-a-stalled-delivery-dispatch).
 
 PostgreSQL is the permanent record and audit source; Temporal owns durable

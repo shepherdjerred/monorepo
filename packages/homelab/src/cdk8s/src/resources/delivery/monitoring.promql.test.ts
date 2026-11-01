@@ -13,6 +13,7 @@ const ALERTS = new Set([
   "DeliveryRecoveryRequired",
   "DeliveryQueueStalled",
   "DeliveryPlatformLockStranded",
+  "DeliveryStaleOwnershipReleased",
 ]);
 
 /** Undo the Helm escaping so Prometheus sees the templates the cluster renders. */
@@ -83,6 +84,14 @@ const platformLock = (
   values: string,
 ) => ({
   series: `delivery_platform_lock_held_seconds{namespace="${owner.namespace ?? "delivery"}",service="delivery",environment="${environment}",service_id="${environment.split("/")[0] ?? ""}",holder_status="${owner.status}",recovery_required="${String(owner.recoveryRequired ?? false)}",producer_barrier="${String(owner.producerBarrier ?? false)}"}`,
+  values,
+});
+const sweptOwnership = (
+  kind: string,
+  values: string,
+  namespace = "delivery",
+) => ({
+  series: `delivery_stale_ownership_released_total{namespace="${namespace}",service="delivery",kind="${kind}"}`,
   values,
 });
 const stranded = (environment: string, status: string) => ({
@@ -218,6 +227,36 @@ test("stalled-dispatch alerts fire on held targets, queue age and stranded platf
               },
             ],
           },
+          {
+            name: "a sweep release alerts for an hour by kind; an unchanged counter does not",
+            interval: "1m",
+            input_series: [
+              sweptOwnership("platform_lock", "0x10 1x100"),
+              sweptOwnership("target_lock", "2x110"),
+              sweptOwnership("active_deployment", "0x10 1x100", "elsewhere"),
+            ],
+            alert_rule_test: [
+              {
+                alertname: "DeliveryStaleOwnershipReleased",
+                eval_time: "5m",
+                exp_alerts: [],
+              },
+              {
+                alertname: "DeliveryStaleOwnershipReleased",
+                eval_time: "15m",
+                exp_alerts: [
+                  {
+                    exp_labels: { severity: "warning", kind: "platform_lock" },
+                  },
+                ],
+              },
+              {
+                alertname: "DeliveryStaleOwnershipReleased",
+                eval_time: "100m",
+                exp_alerts: [],
+              },
+            ],
+          },
         ],
       }),
     );
@@ -237,6 +276,15 @@ test("recovery commands and the dispatch barrier are named in the alert", () => 
   expect(rule?.annotations.message).toContain("--operation-id");
   expect(rule?.annotations.message).toContain("toolkit deploy workers recover");
   expect(rule?.annotations.message).toContain("dispatch barrier");
+});
+
+test("the stale ownership alert names the audit action that identifies the leaking deployment", () => {
+  const rule = deliveryAlertRules(true).find(
+    (candidate) => candidate.alert === "DeliveryStaleOwnershipReleased",
+  );
+  expect(rule?.annotations.message).toContain(
+    "deployment.stale_ownership_released",
+  );
 });
 
 test("the stranded platform lock alert names its holder and consequence", () => {

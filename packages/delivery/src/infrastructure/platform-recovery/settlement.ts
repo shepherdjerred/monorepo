@@ -205,7 +205,6 @@ export async function completePlatformRecovery(
       deploymentId: row.id,
       environmentId: env.id,
       expectedGeneration: env.generation,
-      releaseGlobal: true,
     });
     const result = await tx.recoveryIntent.update({
       where: { id },

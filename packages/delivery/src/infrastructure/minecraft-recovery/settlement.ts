@@ -13,7 +13,7 @@ import {
   findIntent,
   intentDetail,
 } from "#infrastructure/recovery-intents.ts";
-import { releaseDeploymentLocks } from "#infrastructure/recovery-settlement.ts";
+import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 import { minecraftIntentView } from "./requests.ts";
 import { minecraftRecoveryOwnership } from "./ownership.ts";
 import type { InspectMinecraftRecovery } from "./inspector.ts";
@@ -78,15 +78,11 @@ export async function completeMinecraftRecovery(
         "CONFLICT",
         "Minecraft recovery lost its frozen source, native receipt or environment generation",
       );
-    await releaseDeploymentLocks(tx, intent.deploymentId);
-    await tx.environment.update({
-      where: { id: context.environment.id },
-      data: { activeDeploymentId: null },
-    });
     await tx.deployment.update({
       where: { id: intent.deploymentId },
       data: { recoveryRequired: false },
     });
+    await releaseTerminalOwnership(tx, intent.deploymentId);
     const updated = await tx.recoveryIntent.update({
       where: { id: intentId },
       data: {

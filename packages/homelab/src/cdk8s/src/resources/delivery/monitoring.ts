@@ -111,7 +111,9 @@ export function deliveryAlertRules(transition: boolean) {
       // A running holder is ordinary, a recovery-required one already fires
       // DeliveryRecoveryRequired, and a content recovery holds the lock as its
       // journaled producer barrier until restoration. Any other holder is
-      // terminal and settled, yet still blocks every platform deployment.
+      // terminal and settled, yet still blocks every platform deployment:
+      // the dispatch sweep releases it within a tick, so this outlasting
+      // five minutes means the sweep is not running.
       alert: "DeliveryPlatformLockStranded",
       expr: expr(
         `max by (environment, service_id, holder_status) (delivery_platform_lock_held_seconds{${DELIVERY_TARGET},holder_status!="running",recovery_required="false",producer_barrier="false"})`,
@@ -123,7 +125,25 @@ export function deliveryAlertRules(transition: boolean) {
           "A {{ $labels.holder_status }} deployment of {{ $labels.environment }} holds the Delivery platform lock",
         ),
         message: escapePrometheusTemplate(
-          "The shared-resources platform lock has been held for {{ $value | humanizeDuration }} by a {{ $labels.holder_status }} deployment of {{ $labels.environment }} (service {{ $labels.service_id }}) that is not running, not recovery-required and holds no content producer barrier. Finish and every recovery settlement release it, so this is a lock a settlement path stranded. Every deployment needing the platform lock (OpenTofu stacks, cluster admission, delivery-control-plane) answers BUSY and stays queued. Find the holder with `toolkit deploy status --json`, then follow the runbook. Do not start another platform operation until the lock is released.",
+          "The shared-resources platform lock has been held for {{ $value | humanizeDuration }} by a {{ $labels.holder_status }} deployment of {{ $labels.environment }} (service {{ $labels.service_id }}) that is not running, not recovery-required and holds no content producer barrier. Finish and every recovery settlement release it, and the sweep on every delivery-dispatch tick releases any a settled holder kept, so a lock that stays held means that sweep is not running: check the delivery-dispatch Schedule and the reconcile activity. Every deployment needing the platform lock (OpenTofu stacks, cluster admission, delivery-control-plane) answers BUSY and stays queued. Find the holder with `toolkit deploy status --json`, then follow the runbook. Do not start another platform operation until the lock is released.",
+        ),
+        runbook_url: STALLED_DISPATCH_RUNBOOK,
+      },
+    },
+    {
+      // The dispatch sweep already released the rows, so nothing is blocked
+      // now; the alert names a transition that still leaks ownership.
+      alert: "DeliveryStaleOwnershipReleased",
+      expr: expr(
+        `sum by (kind) (increase(delivery_stale_ownership_released_total{${DELIVERY_TARGET}}[1h])) > 0`,
+      ),
+      labels: { severity: "warning" },
+      annotations: {
+        summary: escapePrometheusTemplate(
+          "The Delivery dispatch sweep released a {{ $labels.kind }} a settled deployment kept",
+        ),
+        message: escapePrometheusTemplate(
+          "In the last hour the dispatch sweep released {{ $value }} {{ $labels.kind }} row(s) held by a deployment that was terminal and not recovery-required. Finish, cancellation and every recovery settlement release the target locks, platform lock and active pointer of the deployment themselves, so some path (or a manual database change) made a deployment terminal or cleared recoveryRequired without releasing them. Nothing is blocked now; find the deployment in the Delivery audit rows with action deployment.stale_ownership_released, trace how it became settled and fix that path.",
         ),
         runbook_url: STALLED_DISPATCH_RUNBOOK,
       },
