@@ -9,7 +9,11 @@ import {
 } from "./monitoring.ts";
 
 const target = 'namespace="delivery",service="delivery"';
-const ALERTS = new Set(["DeliveryRecoveryRequired", "DeliveryQueueStalled"]);
+const ALERTS = new Set([
+  "DeliveryRecoveryRequired",
+  "DeliveryQueueStalled",
+  "DeliveryPlatformLockStranded",
+]);
 
 /** Undo the Helm escaping so Prometheus sees the templates the cluster renders. */
 function unescapeHelm(value: string) {
@@ -68,8 +72,29 @@ const wait = (environment: string, values: string, namespace = "delivery") => ({
 const stalled = (environment: string) => ({
   exp_labels: { severity: "warning", environment },
 });
+const platformLock = (
+  environment: string,
+  owner: {
+    status: string;
+    recoveryRequired?: boolean;
+    producerBarrier?: boolean;
+    namespace?: string;
+  },
+  values: string,
+) => ({
+  series: `delivery_platform_lock_held_seconds{namespace="${owner.namespace ?? "delivery"}",service="delivery",environment="${environment}",service_id="${environment.split("/")[0] ?? ""}",holder_status="${owner.status}",recovery_required="${String(owner.recoveryRequired ?? false)}",producer_barrier="${String(owner.producerBarrier ?? false)}"}`,
+  values,
+});
+const stranded = (environment: string, status: string) => ({
+  exp_labels: {
+    severity: "warning",
+    environment,
+    service_id: environment.split("/")[0] ?? "",
+    holder_status: status,
+  },
+});
 
-test("stalled-dispatch alerts fire on held targets and queue age, not on cleared or fresh waits", async () => {
+test("stalled-dispatch alerts fire on held targets, queue age and stranded platform locks, not on cleared or fresh waits", async () => {
   const start = DELIVERY_QUEUE_STALL_SECONDS - 600;
   const directory = await mkdtemp(path.join(tmpdir(), "delivery-promql-"));
   try {
@@ -144,6 +169,55 @@ test("stalled-dispatch alerts fire on held targets and queue age, not on cleared
               },
             ],
           },
+          {
+            name: "a settled holder that keeps the platform lock alerts; running, recovering and barrier holders do not",
+            interval: "1m",
+            // Only one row can hold the lock; each series is its own scenario.
+            input_series: [
+              platformLock(
+                "delivery-control-plane/prod",
+                { status: "failed" },
+                "60+60x30",
+              ),
+              platformLock(
+                "tofu-github/prod",
+                { status: "canceled" },
+                "60+60x3 _x27",
+              ),
+              platformLock(
+                "tofu-cloudflare/prod",
+                { status: "running" },
+                "60+60x30",
+              ),
+              platformLock(
+                "cluster-admission/prod",
+                { status: "failed", recoveryRequired: true },
+                "60+60x30",
+              ),
+              platformLock(
+                "blog/prod",
+                { status: "failed", producerBarrier: true },
+                "60+60x30",
+              ),
+              platformLock(
+                "tofu-arr/prod",
+                { status: "failed", namespace: "elsewhere" },
+                "60+60x30",
+              ),
+            ],
+            alert_rule_test: [
+              {
+                alertname: "DeliveryPlatformLockStranded",
+                eval_time: "4m",
+                exp_alerts: [],
+              },
+              {
+                alertname: "DeliveryPlatformLockStranded",
+                eval_time: "10m",
+                exp_alerts: [stranded("delivery-control-plane/prod", "failed")],
+              },
+            ],
+          },
         ],
       }),
     );
@@ -163,4 +237,17 @@ test("recovery commands and the dispatch barrier are named in the alert", () => 
   expect(rule?.annotations.message).toContain("--operation-id");
   expect(rule?.annotations.message).toContain("toolkit deploy workers recover");
   expect(rule?.annotations.message).toContain("dispatch barrier");
+});
+
+test("the stranded platform lock alert names its holder and consequence", () => {
+  const rule = deliveryAlertRules(true).find(
+    (candidate) => candidate.alert === "DeliveryPlatformLockStranded",
+  );
+  expect(rule?.annotations.message).toContain("platform lock");
+  expect(rule?.annotations.message).toContain("BUSY");
+  expect(rule?.annotations).toMatchObject({
+    runbook_url: expect.stringContaining(
+      "respond-to-a-stalled-delivery-dispatch",
+    ),
+  });
 });

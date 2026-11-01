@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
+import { requestStackDeployment } from "#testing/tofu-stack-fixture.ts";
 import { deliveryMetrics } from "./metrics.ts";
 
 const context = useDeliveryFixture();
@@ -142,4 +143,43 @@ test("unknown persisted operation states fail the scrape instead of creating arb
     data: { status: "invalid-persisted-state" },
   });
   await expect(deliveryMetrics(context.cluster.database)).rejects.toThrow();
+});
+
+test("the platform lock gauge names its holder's status, so a stranded lock is visible", async () => {
+  const database = context.cluster.database;
+  const { deployment } = await requestStackDeployment(context);
+  expect(await deliveryMetrics(database)).not.toContain(
+    "delivery_platform_lock_held_seconds{",
+  );
+  await context.delivery.claim(deployment.id, testExecutor);
+  expect(await deliveryMetrics(database)).toMatch(
+    /delivery_platform_lock_held_seconds\{environment="tofu-cloudflare\/prod",service_id="tofu-cloudflare",holder_status="running",recovery_required="false",producer_barrier="false"\} [\d.]+\n/u,
+  );
+  await context.delivery.finish(
+    deployment.id,
+    {
+      status: "failed",
+      message: "Failed before any external effect",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  expect(await database.platformLock.count()).toBe(0);
+  // The lock a settled, failed holder kept before AI-417's fix.
+  await database.platformLock.create({
+    data: {
+      id: "platform",
+      deploymentId: deployment.id,
+      createdAt: new Date(Date.now() - 3_600_000),
+    },
+  });
+  const stranded = await deliveryMetrics(database);
+  const age =
+    /delivery_platform_lock_held_seconds\{environment="tofu-cloudflare\/prod",service_id="tofu-cloudflare",holder_status="failed",recovery_required="false",producer_barrier="false"\} ([\d.]+)\n/u.exec(
+      stranded,
+    )?.[1];
+  expect(Number(age)).toBeGreaterThanOrEqual(3595);
+  expect(Number(age)).toBeLessThan(3660);
+  expect(stranded).not.toContain(deployment.id);
 });

@@ -20,6 +20,8 @@ import { createApplicationReader } from "#infrastructure/kubernetes/application-
 import { PipelineDefinitionSchema } from "#shared/pipeline-contract.ts";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { requestStackDeployment } from "#testing/tofu-stack-fixture.ts";
+import { publishCiRunner } from "#testing/model-fixture.ts";
 
 const context = useDeliveryFixture();
 const admin: Principal = {
@@ -32,7 +34,12 @@ async function responseStatus(pending: Promise<Response> | Response) {
   return response.status;
 }
 
-async function failedWorker() {
+async function failedWorker(
+  recipe?: (workers: Awaited<ReturnType<typeof workerFixture>>) => {
+    id: string;
+    definition: object;
+  },
+) {
   const workers = await workerFixture(context.delivery);
   const baseline = await workers.acceptedPool();
   const deployment = await context.delivery.retireWorker(
@@ -45,7 +52,7 @@ async function failedWorker() {
     testOperator,
   );
   // A retirement freezes the accepted release's reviewed worker recipe.
-  await workers.frozenRecipe(deployment.id);
+  await workers.frozenRecipe(deployment.id, recipe?.(workers));
   await context.delivery.claim(
     deployment.id,
     testExecutor,
@@ -119,23 +126,16 @@ function api(readers?: WorkerRecoveryReaders) {
   return { app, client, post };
 }
 
-test("independent recovery works through authenticated HTTP while workflows/writes are unavailable and preserves failed result", async () => {
-  const { baseline, deployment, pool, before } = await failedWorker();
-  const { client, post } = api();
-  const input = {
-    requestId: "independent-recovery",
-    expectedEnvironmentGeneration: pool.generation,
-    reason:
-      "Inspect exact quarantined operation independently of the Workflow worker",
-  };
-  const intent = await client.requestWorkerRecovery(deployment.id, input);
-  expect(await client.requestWorkerRecovery(deployment.id, input)).toEqual(
-    intent,
-  );
-  const current = await client.workerRecovery(intent.id);
-  expect(current.pool).toEqual(pool);
-  expect(current.deployment.deployment.status).toBe("failed");
-  const observation: CompleteWorkerRecovery = {
+/** An independent observation of stable routing to the retained worker B host. */
+function stableObservation(
+  intent: {
+    expectedEnvironmentGeneration: number;
+    snapshotFingerprint: string;
+    poolFingerprint: string;
+  },
+  baseline: Awaited<ReturnType<typeof failedWorker>>["baseline"],
+): CompleteWorkerRecovery {
+  return {
     expectedEnvironmentGeneration: intent.expectedEnvironmentGeneration,
     snapshotFingerprint: intent.snapshotFingerprint,
     poolFingerprint: intent.poolFingerprint,
@@ -160,6 +160,25 @@ test("independent recovery works through authenticated HTTP while workflows/writ
       },
     ],
   };
+}
+
+test("independent recovery works through authenticated HTTP while workflows/writes are unavailable and preserves failed result", async () => {
+  const { baseline, deployment, pool, before } = await failedWorker();
+  const { client, post } = api();
+  const input = {
+    requestId: "independent-recovery",
+    expectedEnvironmentGeneration: pool.generation,
+    reason:
+      "Inspect exact quarantined operation independently of the Workflow worker",
+  };
+  const intent = await client.requestWorkerRecovery(deployment.id, input);
+  expect(await client.requestWorkerRecovery(deployment.id, input)).toEqual(
+    intent,
+  );
+  const current = await client.workerRecovery(intent.id);
+  expect(current.pool).toEqual(pool);
+  expect(current.deployment.deployment.status).toBe("failed");
+  const observation = stableObservation(intent, baseline);
   expect(
     await responseStatus(
       post(`/worker-recovery/${intent.id}/complete`, observation, false),
@@ -257,26 +276,7 @@ test("pool CAS and immutable recovery failures keep original quarantine intact",
   await expect(
     context.delivery.completeWorkerRecovery(
       intent.id,
-      {
-        expectedEnvironmentGeneration: intent.expectedEnvironmentGeneration,
-        snapshotFingerprint: intent.snapshotFingerprint,
-        poolFingerprint: intent.poolFingerprint,
-        observedAt: new Date().toISOString(),
-        routes: baseline.workerB.host.routes.map((route) => ({
-          ...route,
-          currentBuildId: baseline.workerB.buildId,
-          rampingBuildId: null,
-          routingConflictToken: "token",
-        })),
-        evidence: [
-          {
-            kind: "reconciliation",
-            operationId: "recorded-operation",
-            summary: "Read-only boundary fixture",
-          },
-          { kind: "runtime", summary: "Read-only host fixture" },
-        ],
-      },
+      stableObservation(intent, baseline),
       testExecutor,
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
@@ -466,4 +466,58 @@ test("a frozen recipe that rolls the pool from another Application is refused be
   const { response, reads } = await compoundRecovery("temporal-ui");
   expect(response.status).toBe(400);
   expect(reads).toEqual([]);
+});
+
+/** The fixture's worker recipe declaring the shared platform lock, so admission takes it. */
+function platformLockedWorkerRecipe(
+  workers: Awaited<ReturnType<typeof workerFixture>>,
+) {
+  return {
+    id: "central/platform-locked-worker",
+    definition: RecipeDefinitionSchema.parse({
+      ...recipeFromPipeline(
+        PipelineDefinitionSchema.parse(workers.workerPipeline.definition),
+      ),
+      sharedLock: "platform",
+    }),
+  };
+}
+
+test("worker recovery settlement releases the platform lock its holder kept, so a queued platform deployment claims", async () => {
+  // A model recipe binds the CI runner by reference (C2).
+  await publishCiRunner(context.delivery);
+  const { baseline, deployment, pool } = await failedWorker(
+    platformLockedWorkerRecipe,
+  );
+  const db = context.cluster.database;
+  expect(
+    await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
+  ).toMatchObject({ deploymentId: deployment.id });
+  const { deployment: stack } = await requestStackDeployment(context);
+  await expect(
+    context.delivery.claim(stack.id, testExecutor),
+  ).rejects.toMatchObject({ code: "BUSY" });
+  const intent = await context.delivery.requestWorkerRecovery(
+    deployment.id,
+    {
+      requestId: "recovery/platform-lock",
+      expectedEnvironmentGeneration: pool.generation,
+      reason: "Independently inspect the platform-locked worker operation",
+    },
+    admin,
+  );
+  await context.delivery.completeWorkerRecovery(
+    intent.id,
+    stableObservation(intent, baseline),
+    testExecutor,
+  );
+  expect(
+    await db.deployment.findUniqueOrThrow({ where: { id: deployment.id } }),
+  ).toMatchObject({ status: "failed", recoveryRequired: false });
+  expect(await db.platformLock.count()).toBe(0);
+  expect(await db.targetLock.count()).toBe(0);
+  await context.delivery.claim(stack.id, testExecutor);
+  expect(
+    await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
+  ).toMatchObject({ deploymentId: stack.id });
 });
