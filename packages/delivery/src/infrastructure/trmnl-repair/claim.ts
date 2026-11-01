@@ -11,6 +11,7 @@ import {
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
 import { audit, lock, required } from "#infrastructure/delivery-records.ts";
+import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 
 function requireSameTarget(row: Deployment, source: Deployment) {
   if (
@@ -95,6 +96,8 @@ export async function claimTrmnlRepair(
       where: { id: source.id },
       data: { recoveryRequired: false },
     });
+    // Every row moved to the repair above, so the settled source holds nothing.
+    await releaseTerminalOwnership(tx, source.id);
     await tx.deployment.update({
       where: { id: row.id },
       data: { status: "running", startedAt: new Date() },

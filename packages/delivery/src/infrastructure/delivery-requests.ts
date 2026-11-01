@@ -25,6 +25,7 @@ import {
   ensureService,
   requestApproval,
 } from "./delivery-data.ts";
+import { releaseTerminalOwnership } from "./terminal-ownership.ts";
 import {
   requireKindForRecipe,
   selectDeployment,
@@ -340,6 +341,7 @@ export async function approve(
           finishedAt: now,
         },
       });
+      await releaseTerminalOwnership(tx, deploymentId);
       await audit(tx, actor, {
         action: "deployment.approval_expired",
         entityId: deploymentId,
@@ -386,6 +388,7 @@ export async function approve(
       await tx.outbox.create({
         data: { deploymentId, workflowId: deliveryWorkflowId(deploymentId) },
       });
+    else await releaseTerminalOwnership(tx, deploymentId);
     await audit(tx, actor, {
       action: `deployment.${input.decision}`,
       entityId: deploymentId,
@@ -422,7 +425,10 @@ export async function cancel(
             }),
       },
     });
-    if (!running) await tx.outbox.deleteMany({ where: { deploymentId } });
+    if (!running) {
+      await tx.outbox.deleteMany({ where: { deploymentId } });
+      await releaseTerminalOwnership(tx, deploymentId);
+    }
     await audit(tx, actor, {
       action: "deployment.cancel_requested",
       entityId: deploymentId,

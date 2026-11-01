@@ -361,15 +361,17 @@ deployment. Only an intent settled by the independent reader may release it.
 
 ## Respond to a stalled Delivery dispatch
 
-Three alerts report deployments that stop dispatching. The
+Four alerts report deployments that stop dispatching, or ownership a settled
+deployment kept. The
 [Delivery README](packages/delivery/README.md#operations) lists their metrics
 and thresholds.
 
-| Alert                          | Meaning                                                                                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DeliveryRecoveryRequired`     | A recovery-required deployment of the alert's `environment` holds the [dispatch barrier](packages/delivery/src/infrastructure/execution/admission.ts) |
-| `DeliveryQueueStalled`         | A queued deployment of the alert's `environment` has waited past the stall threshold, counting requests a newer set revision superseded               |
-| `DeliveryPlatformLockStranded` | A settled deployment of the alert's `environment` that is not running still holds the shared-resources platform lock                                  |
+| Alert                            | Meaning                                                                                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeliveryRecoveryRequired`       | A recovery-required deployment of the alert's `environment` holds the [dispatch barrier](packages/delivery/src/infrastructure/execution/admission.ts) |
+| `DeliveryQueueStalled`           | A queued deployment of the alert's `environment` has waited past the stall threshold, counting requests a newer set revision superseded               |
+| `DeliveryPlatformLockStranded`   | A settled deployment of the alert's `environment` that is not running still holds the shared-resources platform lock                                  |
+| `DeliveryStaleOwnershipReleased` | The dispatch sweep released a lock or active pointer of the alert's `kind` that a settled deployment kept                                             |
 
 A `self_hosted="true"` holder makes every claim answer `BUSY`. Any other holder
 stops every self-hosted deployment, including `delivery-control-plane`.
@@ -397,12 +399,32 @@ stops every self-hosted deployment, including `delivery-control-plane`.
    ```
 
    Finish and every recovery settlement release the lock, except a content
-   recovery, which keeps it as its producer barrier until restoration. A
-   failed or canceled holder that no longer requires recovery stranded it.
-   Record the holder on a Tracker `AI` issue. Releasing the row is a reviewed
-   database repair, not a routine step.
+   recovery, which keeps it as its producer barrier until restoration. The
+   `delivery-dispatch` tick releases a lock a failed or canceled holder that
+   no longer requires recovery kept, so a lock that stays held means that
+   tick is not running. Check the Schedule and its last runs:
 
-4. If `DeliveryQueueStalled` fires with no recovery-required deployment, check
+   ```bash
+   toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
+   ```
+
+   Do not delete the row by hand; restore the dispatch tick instead.
+
+4. If `DeliveryStaleOwnershipReleased` fires, nothing is blocked any more:
+   the dispatch tick already released the rows. Find which deployment kept
+   them from the same read-only session:
+
+   ```sql
+   SELECT a."entityId" AS deployment, a.metadata, a."occurredAt"
+   FROM "Audit" a WHERE a.action = 'deployment.stale_ownership_released'
+   ORDER BY a."occurredAt" DESC LIMIT 20;
+   ```
+
+   Read that deployment's audit history to find the transition that ended or
+   settled it without releasing its ownership, and record it on a Tracker `AI`
+   issue.
+
+5. If `DeliveryQueueStalled` fires with no recovery-required deployment, check
    the remaining causes in order:
 
    | Cause                                     | Check                                                                                                      |
@@ -411,7 +433,7 @@ stops every self-hosted deployment, including `delivery-control-plane`.
    | A prerequisite edge is unmet              | [Z1](packages/delivery/docs/model.md#418-prerequisite-edge): the prerequisite has no qualifying acceptance |
    | Dispatch is paused for maintenance        | `toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch`                      |
 
-5. Confirm the alert resolves. Then follow the environment's claimed
+6. Confirm the alert resolves. Then follow the environment's claimed
    deployment to its result with `toolkit deploy wait DEPLOYMENT_ID --json`.
 
 ## Run an operator-run deployment

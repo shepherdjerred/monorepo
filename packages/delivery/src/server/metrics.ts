@@ -1,6 +1,10 @@
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import {
+  OWNERSHIP_KINDS,
+  STALE_OWNERSHIP_RELEASED,
+} from "#infrastructure/terminal-ownership.ts";
+import {
   BuildSummarySchema,
   DeploymentSchema,
   DeploymentStatusSchema,
@@ -118,6 +122,23 @@ function superseded(database: Database) {
   `;
 }
 
+const StaleOwnershipSchema = z.array(
+  z.object({ kind: z.enum(OWNERSHIP_KINDS), value: Value }),
+);
+
+/**
+ * Ownership the dispatch tick's sweep released from a settled terminal
+ * deployment. Finish and every settlement release it themselves, so each
+ * count is a path that still leaks; the audit rows name the deployment.
+ */
+function staleOwnershipReleased(database: Database) {
+  return database.$queryRaw`
+    SELECT a.metadata->>'kind' AS kind, count(*)::float8 AS value
+    FROM "Audit" a WHERE a.action = ${STALE_OWNERSHIP_RELEASED}
+    GROUP BY 1 ORDER BY 1
+  `;
+}
+
 /** Database gauges survive restarts; labels are closed enums, never request IDs. */
 export async function deliveryMetrics(database: Database): Promise<string> {
   const [
@@ -130,6 +151,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     waits,
     supersessions,
     platform,
+    staleOwnership,
   ] = await Promise.all([
     database.deployment.groupBy({
       by: ["status", "kind"],
@@ -172,6 +194,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     queuedWait(database),
     superseded(database),
     platformLock(database),
+    staleOwnershipReleased(database),
   ]);
   const [state] = z.array(StateSchema).length(1).parse(raw);
   if (state === undefined)
@@ -281,6 +304,17 @@ export async function deliveryMetrics(database: Database): Promise<string> {
       },
       value: row.value,
     })),
+  );
+  // Every kind is always present, so the first release is an increase.
+  const released = StaleOwnershipSchema.parse(staleOwnership);
+  metric(
+    "delivery_stale_ownership_released_total",
+    "Locks and active pointers the dispatch sweep released from settled terminal deployments, by ownership kind; any increase is a path that did not release them.",
+    OWNERSHIP_KINDS.map((kind) => ({
+      labels: { kind },
+      value: released.find((row) => row.kind === kind)?.value ?? 0,
+    })),
+    "counter",
   );
   for (const [name, help, value] of [
     [

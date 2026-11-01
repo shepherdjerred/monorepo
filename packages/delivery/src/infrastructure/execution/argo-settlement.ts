@@ -15,7 +15,7 @@ import {
   evidence,
 } from "#infrastructure/delivery-data.ts";
 import { findIntent } from "#infrastructure/recovery-intents.ts";
-import { releaseDeploymentLocks } from "#infrastructure/recovery-settlement.ts";
+import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 
 /**
  * Settles a pending `argo` recovery intent with independent Application
@@ -76,15 +76,11 @@ export async function settleArgoIntent(
     );
     // Settled, the deployment is no longer recovery-required: like finish,
     // it gives up every lock it holds, the platform lock included.
-    await releaseDeploymentLocks(tx, deploymentId);
-    await tx.environment.updateMany({
-      where: { id: row.environmentId, activeDeploymentId: deploymentId },
-      data: { activeDeploymentId: null },
-    });
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
       data: { recoveryRequired: false },
     });
+    await releaseTerminalOwnership(tx, deploymentId);
     await tx.recoveryIntent.update({
       where: { id: intent.id },
       data: {
