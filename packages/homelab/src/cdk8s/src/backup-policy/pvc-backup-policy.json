@@ -594,6 +594,12 @@
     "reason": "Rebuildable Turbo cache"
   },
   {
+    "namespace": "gradle-build-cache",
+    "name": "gradle-build-cache-liskov",
+    "backup": "disabled",
+    "reason": "Rebuildable Gradle build cache"
+  },
+  {
     "namespace": "flipt",
     "name": "flipt-data",
     "backup": "enabled",

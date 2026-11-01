@@ -1453,7 +1453,10 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.6-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2"
+      "value": "1.31.6-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2",
+      "notes": [
+        "Also CI's Gradle build cache, which relies on the image's WebDAV module and BusyBox cryptpw; keep the alpine variant."
+      ]
     },
     {
       "name": "bugsink/bugsink",

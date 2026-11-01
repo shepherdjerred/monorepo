@@ -307,6 +307,8 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
     "pinchtab/pinchtab-pinchtab-tailscale-ingress-ingress": "medium",
     "stash/stash-stash-ingress-ingress": "medium",
     "turbo-cache/turbo-cache-turbo-cache-tailscale-ingress-ingress": "heavy",
+    "gradle-build-cache/gradle-build-cache-gradle-build-cache-ingress-ingress":
+      "medium",
   });
 }
 
