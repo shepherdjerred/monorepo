@@ -74,8 +74,8 @@ function createCacheClaim(
   id: string,
   name: string,
   size: string,
-): void {
-  new KubePersistentVolumeClaim(chart, id, {
+): KubePersistentVolumeClaim {
+  return new KubePersistentVolumeClaim(chart, id, {
     metadata: {
       name,
       namespace: WOODPECKER_CI_NAMESPACE,
@@ -118,12 +118,15 @@ export function createWoodpeckerCaches(chart: Chart): void {
     "woodpecker-workspace-seeds",
     "60Gi",
   );
+  // The golden claim binds when its first refresh mounts it (the class waits
+  // for a consumer). ArgoCD reports a Pending claim as Progressing, which
+  // would hold the whole Woodpecker application unhealthy until then.
   createCacheClaim(
     chart,
     "woodpecker-workspace-golden-pvc",
     WOODPECKER_WORKSPACE_GOLDEN_CLAIM,
     CI_WORKSPACE_VOLUME_SIZE,
-  );
+  ).metadata.addAnnotation("argocd.argoproj.io/ignore-healthcheck", "true");
   createCacheClaim(
     chart,
     "woodpecker-source-main-pvc",
