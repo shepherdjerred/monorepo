@@ -58,7 +58,7 @@ test("only unsourced workspace-sized ci-workspace claims are given the golden sn
     "object.spec.storageClassName == 'ci-workspace'",
   );
   // Gate claims are 1G; a clone must equal its snapshot's size.
-  expect(conditions).toContain("quantity('32G')");
+  expect(conditions).toContain("quantity('32Gi')");
   expect(conditions).toContain(
     "!(has(object.spec.dataSource) || has(object.spec.dataSourceRef))",
   );
@@ -92,7 +92,7 @@ test("the guard admits only golden snapshot sources of the workspace size", () =
     expect(validations).toContain(
       `object.spec.${field}.kind == 'VolumeSnapshot' && object.spec.${field}.name.startsWith('${CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX}')`,
     );
-  expect(validations).toContain("quantity('32G')");
+  expect(validations).toContain("quantity('32Gi')");
   expect(find("ValidatingAdmissionPolicyBinding").spec).toEqual({
     policyName: "woodpecker-workspace-clone-guard.sjer.red",
     validationActions: ["Deny"],

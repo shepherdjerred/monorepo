@@ -14,6 +14,12 @@ export const CI_WORKSPACE_GOLDEN_CONFIG_MAP = "ci-workspace-golden";
 export const CI_WORKSPACE_GOLDEN_SNAPSHOT_PREFIX = "ci-workspace-golden-";
 /** Must match WOODPECKER_WORKSPACE_GOLDEN_CLAIM in the homelab CI caches. */
 export const CI_WORKSPACE_GOLDEN_CLAIM = "woodpecker-workspace-golden";
+/**
+ * Must match CI_WORKSPACE_VOLUME_SIZE (32Gi) in the homelab storage classes.
+ * Every workspace claim requests exactly this, and the CSI provisioner
+ * refuses a clone that requests less than its snapshot's restore size.
+ */
+export const CI_WORKSPACE_VOLUME_BYTES = 32 * 1024 ** 3;
 const SNAPSHOT_CLASS = "host-zfs-snapshot";
 const GOLDEN_LABEL = "ci.sjer.red/workspace-golden";
 const SOURCE_ANNOTATION = "ci.sjer.red/source";
@@ -33,6 +39,8 @@ export type GoldenSnapshot = {
   ready: boolean;
   error: string | undefined;
   deleting: boolean;
+  /** Bytes a clone must request at least; known once the snapshot is ready. */
+  restoreBytes: number | undefined;
 };
 
 export type CiWorkspaceGoldenClient = {
@@ -103,7 +111,15 @@ export async function publishGoldenSnapshot(
       throw new Error(
         `Golden workspace snapshot ${name} failed: ${snapshot.error}`,
       );
-    if (snapshot.ready) break;
+    if (snapshot.ready) {
+      // A workspace claim cannot clone a snapshot larger than itself, and
+      // selecting one would leave every new CI workspace unprovisionable.
+      if (snapshot.restoreBytes !== CI_WORKSPACE_VOLUME_BYTES)
+        throw new Error(
+          `Golden workspace snapshot ${name} restores ${String(snapshot.restoreBytes)} bytes, not the ${CI_WORKSPACE_VOLUME_BYTES.toString()} every workspace requests`,
+        );
+      break;
+    }
     heartbeat({ snapshot: name, ready: false });
     await wait(READY_POLL_MS);
   }
@@ -125,6 +141,7 @@ const SnapshotSchema = z.object({
   status: z
     .object({
       readyToUse: z.boolean().optional(),
+      restoreSize: z.string().optional(),
       error: z.object({ message: z.string().optional() }).optional(),
     })
     .optional(),
@@ -141,7 +158,32 @@ function toSnapshot(value: unknown): GoldenSnapshot {
         ? undefined
         : (parsed.status.error.message ?? "unknown error"),
     deleting: parsed.metadata.deletionTimestamp !== undefined,
+    restoreBytes:
+      parsed.status?.restoreSize === undefined
+        ? undefined
+        : quantityBytes(parsed.status.restoreSize),
   };
+}
+
+const QUANTITY_UNITS: Record<string, number> = {
+  "": 1,
+  k: 1e3,
+  M: 1e6,
+  G: 1e9,
+  T: 1e12,
+  Ki: 1024,
+  Mi: 1024 ** 2,
+  Gi: 1024 ** 3,
+  Ti: 1024 ** 4,
+};
+
+/** Kubernetes quantities as the snapshot controller writes a restore size. */
+export function quantityBytes(quantity: string): number {
+  const match = /^(\d+)([kMGT]|[KMGT]i)?$/u.exec(quantity);
+  const unit = QUANTITY_UNITS[match?.[2] ?? ""];
+  if (unit === undefined || match?.[1] === undefined)
+    throw new Error(`Unsupported snapshot restore size ${quantity}`);
+  return Number(match[1]) * unit;
 }
 
 function apiCode(error: unknown): number | undefined {

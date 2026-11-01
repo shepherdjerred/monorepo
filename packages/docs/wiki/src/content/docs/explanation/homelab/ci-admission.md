@@ -208,8 +208,12 @@ Each lane's own frozen install still decides its dependencies.
 The policy's parameter is a ConfigMap Temporal owns. Emptying it makes new
 workspaces start empty again; no workflow depends on a clone. Gate workspaces
 never clone, because the ZFS driver only clones into a claim of the
-snapshot's exact size. A snapshot that still has clones cannot be destroyed,
-so superseded snapshots linger until their workspaces are deleted.
+snapshot's exact size. That is also why the workspace size is a whole number
+of GiB. ZFS rounds a volume up to whole GiB, so a decimal size leaves the
+snapshot larger than the claims that clone it, and the CSI provisioner refuses
+those clones. Temporal checks the snapshot's restore size before selecting it.
+A snapshot that still has clones cannot be destroyed, so superseded snapshots
+linger until their workspaces are deleted.
 
 ## What is watched
 
