@@ -54,6 +54,18 @@ describe("tracker actor attribution", () => {
       });
     },
   );
+  test("records the hc terminal address and ignores the retired Herdr workspace", () => {
+    const actor = detectActor(
+      {
+        CODEX_THREAD_ID: "session",
+        HC_TERMINAL_ID: "t7",
+        HERDR_WORKSPACE_ID: "retired",
+      },
+      context,
+    );
+    expect(actor.metadata).toMatchObject({ hcTerminal: "t7" });
+    expect(actor.metadata).not.toHaveProperty("herdrWorkspace");
+  });
   test("explicit runners override native identity and include configured metadata", () => {
     const actor = detectActor(
       {

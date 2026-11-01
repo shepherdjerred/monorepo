@@ -97,7 +97,7 @@ function actorMetadata(
     executable: env["CLAUDE_CODE_EXECPATH"],
     sessionLink: env["CLAUDE_CODE_BRIDGE_SESSION_ID"],
     model: env["TRACKER_ACTOR_MODEL"] ?? context.model,
-    herdrWorkspace: env["HERDR_WORKSPACE_ID"],
+    hcTerminal: env["HC_TERMINAL_ID"],
     parentKey: env["TRACKER_PARENT_ACTOR_KEY"],
     plan: env["TRACKER_ACTOR_PLAN"],
   };
