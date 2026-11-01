@@ -446,6 +446,25 @@ function abortedJoin(signal: AbortSignal): Error {
     : new Error("Voice join aborted");
 }
 
+function failWhenCancelled(
+  signal: AbortSignal | undefined,
+  reject: (error: Error) => void,
+): AbortSignal | undefined {
+  if (signal === undefined) {
+    reject(new Error("missing cancellation"));
+    return undefined;
+  }
+  const fail = () => {
+    reject(abortedJoin(signal));
+  };
+  if (signal.aborted) {
+    fail();
+    return signal;
+  }
+  signal.addEventListener("abort", fail, { once: true });
+  return signal;
+}
+
 describe("voice join options", () => {
   test("send audio is requested unconditionally, independent of the receive gate", () => {
     // The packetizer is installed on `receiveAudio || sendAudio`, and without one every music
@@ -481,23 +500,7 @@ describe("voice join options", () => {
         voiceConnection: undefined,
         joinVoice: (_guildId, _channelId, options) =>
           new Promise<never>((_resolve, reject) => {
-            forwarded = options?.signal;
-            const signal = options?.signal;
-            if (signal === undefined) {
-              reject(new Error("missing cancellation"));
-              return;
-            }
-            if (signal.aborted) {
-              reject(abortedJoin(signal));
-              return;
-            }
-            signal.addEventListener(
-              "abort",
-              () => {
-                reject(abortedJoin(signal));
-              },
-              { once: true },
-            );
+            forwarded = failWhenCancelled(options?.signal, reject);
           }),
       },
       input: VOICE,
@@ -523,23 +526,7 @@ describe("voice join options", () => {
       {
         joinStreamerVoice: (options) =>
           new Promise<never>((_resolve, reject) => {
-            forwarded = options.signal;
-            const signal = options.signal;
-            if (signal === undefined) {
-              reject(new Error("missing cancellation"));
-              return;
-            }
-            if (signal.aborted) {
-              reject(abortedJoin(signal));
-              return;
-            }
-            signal.addEventListener(
-              "abort",
-              () => {
-                reject(abortedJoin(signal));
-              },
-              { once: true },
-            );
+            forwarded = failWhenCancelled(options.signal, reject);
           }),
       },
     );

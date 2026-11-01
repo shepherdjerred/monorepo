@@ -52,38 +52,40 @@ function sharedVoiceJoin(
   controller: AbortController,
   onFailure: () => void,
 ): Promise<VoiceHandle> {
-  let onAbort: (() => void) | undefined;
-  const aborted = new Promise<never>((_resolve, reject) => {
-    onAbort = () => {
-      reject(joinAbortError(controller.signal));
+  // One settlement, the same as `await join()`. Promise.race adds a turn, and
+  // a play command returns before that extra turn promotes the queued item.
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (settle: () => void) => {
+      if (settled) return;
+      settled = true;
+      controller.signal.removeEventListener("abort", onAbort);
+      settle();
+    };
+    const onAbort = () => {
+      finish(() => {
+        reject(joinAbortError(controller.signal));
+      });
     };
     if (controller.signal.aborted) {
       onAbort();
       return;
     }
     controller.signal.addEventListener("abort", onAbort, { once: true });
-  });
-  const detach = () => {
-    if (onAbort !== undefined) {
-      controller.signal.removeEventListener("abort", onAbort);
-    }
-  };
-  // Race before yielding. An already-aborted signal rejects synchronously, and
-  // this attaches the handler in the same turn. After success, detach runs
-  // before the caller continues, so a later release cannot reject it.
-  const raced = Promise.race([join(input, controller.signal), aborted]);
-  return (async () => {
-    try {
-      return await raced;
-    } catch (error) {
-      if (!controller.signal.aborted) {
-        onFailure();
+    void (async () => {
+      try {
+        const handle = await join(input, controller.signal);
+        finish(() => {
+          resolve(handle);
+        });
+      } catch (error) {
+        finish(() => {
+          if (!controller.signal.aborted) onFailure();
+          reject(error instanceof Error ? error : new Error(String(error)));
+        });
       }
-      throw error;
-    } finally {
-      detach();
-    }
-  })();
+    })();
+  });
 }
 
 /** The pool remains account-exclusive. Only this room-local lease shares 1+2. */
