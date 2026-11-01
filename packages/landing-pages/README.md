@@ -64,6 +64,13 @@ ads (the windmill from `@shepherdjerred/storm-theme` brand assets, plus the
 clock tower and town house). They are exported as JPEG quality 90, and Astro
 generates responsive AVIF and WebP from them.
 
+The page targets every common screen from a 280px folding phone to a 3840px
+monitor in Safari, Chrome, Firefox and Edge. Below 960px the address card comes
+before the photo, so it is on an ad visitor's first screen; wider screens keep
+the content in one centred `--page` column. Styles are inlined, and fonts come
+from the installed Fontsource files through Astro's font API with
+metric-matched fallbacks, so text paints immediately without a later shift.
+
 ## Development
 
 ```bash

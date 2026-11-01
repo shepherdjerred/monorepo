@@ -39,13 +39,28 @@ const panels = [
   ...connect.querySelectorAll<HTMLElement>("[data-edition-panel]"),
 ];
 
+function addressNode(edition: Edition): HTMLElement {
+  return required(
+    connect,
+    `[data-edition-panel="${edition}"] .address`,
+    HTMLElement,
+  );
+}
+
 function addressFor(edition: Edition): string {
-  const address = connect
-    .querySelector(`[data-edition-panel="${edition}"] .address`)
-    ?.textContent.trim();
-  if (address === undefined || address === "")
-    throw new Error(`No ${edition} address on the card`);
+  const address = addressNode(edition).textContent.trim();
+  if (address === "") throw new Error(`No ${edition} address on the card`);
   return address;
+}
+
+/** Leaves the address selected so a visitor can copy it by hand. */
+function selectAddress(edition: Edition) {
+  const selection = window.getSelection();
+  if (selection === null) return;
+  const range = document.createRange();
+  range.selectNodeContents(addressNode(edition));
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 function select(edition: Edition) {
@@ -88,6 +103,15 @@ copyButton.addEventListener("click", () => {
   const edition = connect.dataset["edition"];
   if (!isEdition(edition))
     throw new Error(`Unknown edition: ${String(edition)}`);
+  // Older Safari and insecure contexts have no async clipboard at all.
+  const failed = () => {
+    selectAddress(edition);
+    flash("select it", "failed");
+  };
+  if (!("clipboard" in navigator)) {
+    failed();
+    return;
+  }
   navigator.clipboard.writeText(addressFor(edition)).then(
     () => {
       flash("copied!", "copied");
@@ -101,10 +125,8 @@ copyButton.addEventListener("click", () => {
         }),
       );
     },
-    // Clipboard access can be denied; the address text stays selectable.
-    () => {
-      flash("select it", "failed");
-    },
+    // Clipboard access can be denied; select the address for a manual copy.
+    failed,
   );
 });
 

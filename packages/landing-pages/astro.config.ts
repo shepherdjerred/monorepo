@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { defineConfig } from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 import { server } from "./src/items/the-storm/server.ts";
 
 // The Storm page repeats facts that live in other packages without a shared
@@ -36,5 +36,45 @@ export default defineConfig({
   output: "static",
   site: "https://public.ts-mc.net",
   trailingSlash: "always",
-  build: { format: "directory" },
+  // Pages are small; inline styles save the only render-blocking request.
+  build: { format: "directory", inlineStylesheets: "always" },
+  // Fonts come from the installed Fontsource files, so the build stays
+  // offline. Astro preloads them and emits metric-matched fallbacks, so the
+  // swap from the fallback face does not shift the layout.
+  fonts: [
+    {
+      provider: fontProviders.local(),
+      name: "Outfit",
+      cssVariable: "--font-outfit",
+      fallbacks: ["sans-serif"],
+      options: {
+        variants: [
+          {
+            src: [
+              "@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2",
+            ],
+            weight: "100 900",
+            style: "normal",
+          },
+        ],
+      },
+    },
+    {
+      provider: fontProviders.local(),
+      name: "Lora",
+      cssVariable: "--font-lora",
+      fallbacks: ["serif"],
+      options: {
+        variants: [
+          {
+            src: [
+              "@fontsource-variable/lora/files/lora-latin-wght-italic.woff2",
+            ],
+            weight: "400 700",
+            style: "italic",
+          },
+        ],
+      },
+    },
+  ],
 });
