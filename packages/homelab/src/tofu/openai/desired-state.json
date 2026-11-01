@@ -10,7 +10,7 @@
       "project_id": "proj_QrJyOV4FfAHWITH4KItJavYU",
       "name": "Scout for LoL"
     },
-    "scout-active-2026-09": {
+    "scout-active-2026-10": {
       "name": "Scout for LoL"
     },
     "birmel": {
@@ -39,7 +39,7 @@
     "birmel-active-2026-09": {
       "name": "Birmel"
     },
-    "scout-prod-active-2026-09": {
+    "scout-prod-active-2026-10": {
       "name": "Scout for LoL (prod)"
     },
     "temporal-active-2026-09": {
@@ -63,9 +63,9 @@
         }
       ]
     },
-    "scout-voice-2026-09": {
-      "project_key": "scout-active-2026-09",
-      "name": "Scout voice 2026-09",
+    "scout-voice-2026-10": {
+      "project_key": "scout-active-2026-10",
+      "name": "Scout voice 2026-10",
       "onepassword_targets": [
         {
           "vault_item_id": "aqksmuq6o3qwe4qqiauqdu2pge",
@@ -83,9 +83,9 @@
         }
       ]
     },
-    "scout-prod-2026-09": {
-      "project_key": "scout-prod-active-2026-09",
-      "name": "scout prod 2026-09",
+    "scout-prod-2026-10": {
+      "project_key": "scout-prod-active-2026-10",
+      "name": "scout prod 2026-10",
       "onepassword_targets": [
         {
           "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
@@ -142,8 +142,8 @@
   },
   "openai_project_users": {},
   "openai_project_spend_alerts": {
-    "scout-monthly": {
-      "project_key": "scout-active-2026-09",
+    "scout-active-monthly-2026-10": {
+      "project_key": "scout-active-2026-10",
       "threshold_amount": 10,
       "currency": "USD",
       "interval": "month",
@@ -160,8 +160,8 @@
       "notification_channel_recipients": ["openai@sjer.red"],
       "notification_channel_subject_prefix": "birmel-openai"
     },
-    "scout-prod-monthly": {
-      "project_key": "scout-prod-active-2026-09",
+    "scout-prod-active-monthly-2026-10": {
+      "project_key": "scout-prod-active-2026-10",
       "threshold_amount": 15,
       "currency": "USD",
       "interval": "month",
@@ -230,8 +230,8 @@
         "text-embedding-3-small"
       ]
     },
-    "scout-prod": {
-      "project_key": "scout-prod-active-2026-09",
+    "scout-prod-active-2026-10": {
+      "project_key": "scout-prod-active-2026-10",
       "mode": "allow_list",
       "model_ids": [
         "gpt-5.4-mini",
@@ -287,8 +287,8 @@
   },
   "openai_project_hosted_tool_permissions": {},
   "openai_project_spend_limits": {
-    "scout-active-monthly-2026-09": {
-      "project_key": "scout-active-2026-09",
+    "scout-active-monthly-2026-10": {
+      "project_key": "scout-active-2026-10",
       "threshold_amount": 2500,
       "currency": "USD",
       "interval": "month"
@@ -323,8 +323,8 @@
       "currency": "USD",
       "interval": "month"
     },
-    "scout-prod-monthly": {
-      "project_key": "scout-prod-active-2026-09",
+    "scout-prod-active-monthly-2026-10": {
+      "project_key": "scout-prod-active-2026-10",
       "threshold_amount": 2500,
       "currency": "USD",
       "interval": "month"
