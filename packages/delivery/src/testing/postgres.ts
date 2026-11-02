@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:net";
@@ -65,11 +65,16 @@ async function postgresOwner(argv: string[]) {
 
 const migrationsRoot = new URL("../../prisma/migrations/", import.meta.url);
 
+/** Every visible cluster directory starts with this and holds `owner.pid`. */
+const CLUSTER_PREFIX = "delivery-pg-";
+/** A cluster is assembled under this name; the reaper never looks at it. */
+const STAGING_PREFIX = "delivery-pgstage-";
+
 /**
  * A cluster whose owner process is gone still holds a System V shared-memory
- * slot. The same process is never an orphan, even before it has written a
- * pid, so a parallel create in this process is left alone once the pid file
- * exists. A missing pid is a cluster leaked by an older build.
+ * slot. A cluster appears under CLUSTER_PREFIX only by an atomic rename after
+ * its owner pid is written, so a missing pid is a cluster leaked by an older
+ * build, never one another process is still creating.
  */
 export function isOrphanedTestCluster(
   ownerPid: number | null,
@@ -119,7 +124,7 @@ async function stopCluster(directory: string): Promise<void> {
 async function reapOrphanedTestClusters(): Promise<void> {
   const entries = await readdir(tmpdir(), { withFileTypes: true });
   for (const entry of entries) {
-    if (!entry.isDirectory() || !entry.name.startsWith("delivery-pg-"))
+    if (!entry.isDirectory() || !entry.name.startsWith(CLUSTER_PREFIX))
       continue;
     const cluster = path.join(tmpdir(), entry.name);
     const ownerPid = await readOwnerPid(cluster);
@@ -129,18 +134,20 @@ async function reapOrphanedTestClusters(): Promise<void> {
   }
 }
 
-function writeOwnerPid(root: string): void {
-  const file = path.join(root, "owner.pid");
-  const written = Bun.spawnSync(["tee", file], {
-    stdin: Buffer.from(`${String(process.pid)}\n`),
-    stdout: "ignore",
-    stderr: "pipe",
-  });
-  if (written.exitCode !== 0) {
-    throw new Error(
-      `could not record the test Postgres owner: ${written.stderr.toString()}`,
-    );
-  }
+/**
+ * Creates the cluster directory with its owner already recorded. Another
+ * process's reaper lists CLUSTER_PREFIX directories concurrently; exposing one
+ * before its pid exists would let that reaper stop and delete a live server.
+ */
+async function createClusterRoot(): Promise<string> {
+  const staging = await mkdtemp(path.join(tmpdir(), STAGING_PREFIX));
+  await Bun.write(path.join(staging, "owner.pid"), `${String(process.pid)}\n`);
+  const root = path.join(
+    tmpdir(),
+    CLUSTER_PREFIX + path.basename(staging).slice(STAGING_PREFIX.length),
+  );
+  await rename(staging, root);
+  return root;
 }
 
 /** Committed migration directories in application order. */
@@ -168,10 +175,7 @@ export async function createTestDatabase(options: { through?: string } = {}) {
   if (options.through !== undefined && !names.includes(options.through))
     throw new Error(`Unknown Delivery migration ${options.through}`);
   await reapOrphanedTestClusters();
-  const root = await mkdtemp(path.join(tmpdir(), "delivery-pg-"));
-  // Before any await, so a concurrent create does not treat this directory
-  // as a pid-less leak. spawnSync blocks the event loop for the write.
-  writeOwnerPid(root);
+  const root = await createClusterRoot();
   const directory = path.join(root, "data");
   const port = await availablePort();
   try {

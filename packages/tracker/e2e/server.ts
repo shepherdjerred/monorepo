@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { startTestPostgres, cloneTestDatabase } from "#testing/postgres.ts";
 import { memoryObjectStore } from "#testing/memory-object-store.ts";
 import { PrismaUnitOfWork } from "#infrastructure/prisma-unit-of-work.ts";
@@ -9,6 +10,9 @@ import { createApp } from "#server/app.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { CreateIssueSchema } from "#shared/schema.ts";
 
+// playwright.config.ts selects the port per checkout and passes it here;
+// validate it before starting PostgreSQL.
+const port = z.coerce.number().int().min(1).max(65_535).parse(process.argv[2]);
 const cluster = await startTestPostgres();
 const suite = await cloneTestDatabase(cluster.adminUrl);
 const unit = new PrismaUnitOfWork(suite.database);
@@ -95,7 +99,7 @@ const app = createApp({
 });
 const server = Bun.serve({
   hostname: "127.0.0.1",
-  port: 17_351,
+  port,
   fetch: app.fetch,
 });
 console.warn(`Tracker acceptance server on ${String(server.port)}`);
