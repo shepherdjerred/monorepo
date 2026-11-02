@@ -537,6 +537,18 @@ function immutableFields(kind: string): readonly ImmutableField[] {
           liveOnlyKeys: "removes-managed-key",
         },
       ];
+    case "Job":
+      // spec.template is immutable on an existing Job. The API server adds
+      // pod defaults (dnsPolicy and the like) that the chart never writes, so
+      // only declared keys are compared. Dropping a key the chart used to set
+      // can slip through; flagging those defaults would block every Job.
+      return [
+        {
+          path: ["spec", "template"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "api-populates",
+        },
+      ];
     case "Service":
       // All three are assigned by the cluster, not the chart. Each holds a
       // string or a list of strings, so there is no key inside for the API
