@@ -34,6 +34,7 @@ describe("tracker actor attribution", () => {
     ["CLAUDE_CODE_SESSION_ID", "claude-code"],
     ["CURSOR_CONVERSATION_ID", "cursor"],
     ["OPENCODE_SESSION_ID", "opencode"],
+    ["GROK_SESSION_ID", "grok"],
   ])(
     "native %s stays stable on resume and differs across sessions",
     (variable, harness) => {
@@ -92,6 +93,18 @@ describe("tracker actor attribution", () => {
     });
     expect(JSON.stringify(actor)).not.toContain("never-record-this");
   });
+  test("an explicit harness selects Grok over an inherited parent session", () => {
+    expect(
+      detectActor(
+        {
+          CODEX_THREAD_ID: "parent",
+          GROK_SESSION_ID: "grok-session",
+          TRACKER_ACTOR_HARNESS: "grok",
+        },
+        context,
+      ).key,
+    ).toBe("grok:grok-session");
+  });
   test("interactive humans are named; noninteractive or unidentified agents fail", () => {
     expect(detectActor({}, { ...context, interactive: true }).key).toBe(
       "human:jerred",
@@ -99,6 +112,9 @@ describe("tracker actor attribution", () => {
     expect(() => detectActor({}, context)).toThrow("native session ID");
     expect(() =>
       detectActor({ CLAUDECODE: "1" }, { ...context, interactive: true }),
+    ).toThrow("native session ID");
+    expect(() =>
+      detectActor({ GROK_AGENT: "1" }, { ...context, interactive: true }),
     ).toThrow("native session ID");
     expect(() =>
       detectActor({ TRACKER_ACTOR_KEY: "runner:job" }, context),

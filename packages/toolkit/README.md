@@ -272,10 +272,13 @@ CLI `--actor-key`, `--actor-kind`, and `--actor-name` override those values.
 `TRACKER_ACTOR_MODEL`, `TRACKER_ACTOR_PLAN`, and `TRACKER_PARENT_ACTOR_KEY` add
 optional metadata. Arbitrary environment variables are never recorded.
 
-Codex uses `CODEX_THREAD_ID` directly. The dotfiles install a Claude SessionStart
-hook through `CLAUDE_ENV_FILE`, a Cursor Shell `preToolUse` hook through
-`updated_input`, and an OpenCode `shell.env` plugin. They forward the native
-session ID and select the child harness when another harness launched it.
+Codex uses `CODEX_THREAD_ID` directly. Grok uses `GROK_SESSION_ID` directly;
+`GROK_AGENT` still fails closed when that session id is missing. The dotfiles
+install a Claude SessionStart hook through `CLAUDE_ENV_FILE`, a Cursor Shell
+`preToolUse` hook through `updated_input`, and an OpenCode `shell.env` plugin.
+They forward the native session ID and select the child harness when another
+harness launched it. An earlier session id wins when several are set, unless
+`TRACKER_ACTOR_HARNESS` names the child.
 Claude model detection reads only the transcript explicitly provided by that
 session's hook. Missing session identity fails with an actionable error.
 Install the compiled toolkit before activating these hooks; existing sessions
