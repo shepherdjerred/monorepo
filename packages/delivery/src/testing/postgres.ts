@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:net";
@@ -65,6 +65,84 @@ async function postgresOwner(argv: string[]) {
 
 const migrationsRoot = new URL("../../prisma/migrations/", import.meta.url);
 
+/**
+ * A cluster whose owner process is gone still holds a System V shared-memory
+ * slot. The same process is never an orphan, even before it has written a
+ * pid, so a parallel create in this process is left alone once the pid file
+ * exists. A missing pid is a cluster leaked by an older build.
+ */
+export function isOrphanedTestCluster(
+  ownerPid: number | null,
+  selfPid: number,
+  alive: (pid: number) => boolean,
+): boolean {
+  return ownerPid === null || (ownerPid !== selfPid && !alive(ownerPid));
+}
+
+function pidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    const code =
+      error instanceof Error && "code" in error ? error.code : undefined;
+    return code === "EPERM";
+  }
+}
+
+async function readOwnerPid(cluster: string): Promise<number | null> {
+  const text = await Bun.file(path.join(cluster, "owner.pid"))
+    .text()
+    .catch(() => "");
+  const parsed = Number(text.trim());
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+async function stopCluster(directory: string): Promise<void> {
+  try {
+    await run(
+      await postgresOwner([
+        "pg_ctl",
+        "-D",
+        directory,
+        "-m",
+        "immediate",
+        "-w",
+        "stop",
+      ]),
+    );
+  } catch {
+    // initdb never finished, or the server is already gone.
+  }
+}
+
+async function reapOrphanedTestClusters(): Promise<void> {
+  const entries = await readdir(tmpdir(), { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !entry.name.startsWith("delivery-pg-"))
+      continue;
+    const cluster = path.join(tmpdir(), entry.name);
+    const ownerPid = await readOwnerPid(cluster);
+    if (!isOrphanedTestCluster(ownerPid, process.pid, pidAlive)) continue;
+    await stopCluster(path.join(cluster, "data"));
+    await rm(cluster, { recursive: true, force: true });
+  }
+}
+
+function writeOwnerPid(root: string): void {
+  const file = path.join(root, "owner.pid");
+  const written = Bun.spawnSync(["tee", file], {
+    stdin: Buffer.from(`${String(process.pid)}\n`),
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  if (written.exitCode !== 0) {
+    throw new Error(
+      `could not record the test Postgres owner: ${written.stderr.toString()}`,
+    );
+  }
+}
+
 /** Committed migration directories in application order. */
 export function migrationNames() {
   const names = [
@@ -89,91 +167,101 @@ export async function createTestDatabase(options: { through?: string } = {}) {
   const names = migrationNames();
   if (options.through !== undefined && !names.includes(options.through))
     throw new Error(`Unknown Delivery migration ${options.through}`);
+  await reapOrphanedTestClusters();
   const root = await mkdtemp(path.join(tmpdir(), "delivery-pg-"));
+  // Before any await, so a concurrent create does not treat this directory
+  // as a pid-less leak. spawnSync blocks the event loop for the write.
+  writeOwnerPid(root);
   const directory = path.join(root, "data");
   const port = await availablePort();
-  if (process.getuid?.() === 0) await run(["chown", "nobody", root]);
-  await run(
-    await postgresOwner([
-      "initdb",
-      "-D",
-      directory,
-      "-U",
-      "delivery",
-      "--auth=trust",
-      "--encoding=UTF8",
-      "--no-locale",
-    ]),
-  );
-  await run(
-    await postgresOwner([
-      "pg_ctl",
-      "-D",
-      directory,
-      "-w",
-      "-t",
-      "30",
-      "-l",
-      path.join(root, "server.log"),
-      "-o",
-      `-p ${String(port)} -c listen_addresses=127.0.0.1 -c unix_socket_directories='' -c fsync=off -c synchronous_commit=off`,
-      "start",
-    ]),
-  );
-  const url = `postgres://delivery@127.0.0.1:${String(port)}/postgres`;
-  const database = createDatabase(url);
-  const applied = new Set<string>();
-  async function migrate(through?: string) {
-    if (through !== undefined && !names.includes(through))
-      throw new Error(`Unknown Delivery migration ${through}`);
-    for (const name of names) {
-      if (applied.has(name)) continue;
-      if (through !== undefined && name > through) break;
-      await run([
-        "psql",
-        "--no-psqlrc",
-        "--set=ON_ERROR_STOP=1",
-        "--dbname",
-        url,
-        "--file",
-        new URL(`${name}/migration.sql`, migrationsRoot).pathname,
-      ]);
-      applied.add(name);
-    }
-  }
-  const close = async () => {
-    await database.$disconnect();
+  try {
+    if (process.getuid?.() === 0) await run(["chown", "nobody", root]);
+    await run(
+      await postgresOwner([
+        "initdb",
+        "-D",
+        directory,
+        "-U",
+        "delivery",
+        "--auth=trust",
+        "--encoding=UTF8",
+        "--no-locale",
+      ]),
+    );
     await run(
       await postgresOwner([
         "pg_ctl",
         "-D",
         directory,
-        "-m",
-        applied.size === names.length ? "fast" : "immediate",
         "-w",
-        "stop",
+        "-t",
+        "30",
+        "-l",
+        path.join(root, "server.log"),
+        "-o",
+        `-p ${String(port)} -c listen_addresses=127.0.0.1 -c unix_socket_directories='' -c fsync=off -c synchronous_commit=off`,
+        "start",
       ]),
     );
-    await rm(root, { recursive: true });
-  };
-  try {
-    await migrate(options.through);
-    // A fully migrated cluster starts with the catalog's services registered,
-    // as after a reconcile; a partial one is a migration test's v1 record.
-    if (options.through === undefined) await registerTestServices(database);
+    const url = `postgres://delivery@127.0.0.1:${String(port)}/postgres`;
+    const database = createDatabase(url);
+    const applied = new Set<string>();
+    async function migrate(through?: string) {
+      if (through !== undefined && !names.includes(through))
+        throw new Error(`Unknown Delivery migration ${through}`);
+      for (const name of names) {
+        if (applied.has(name)) continue;
+        if (through !== undefined && name > through) break;
+        await run([
+          "psql",
+          "--no-psqlrc",
+          "--set=ON_ERROR_STOP=1",
+          "--dbname",
+          url,
+          "--file",
+          new URL(`${name}/migration.sql`, migrationsRoot).pathname,
+        ]);
+        applied.add(name);
+      }
+    }
+    const close = async () => {
+      await database.$disconnect();
+      await run(
+        await postgresOwner([
+          "pg_ctl",
+          "-D",
+          directory,
+          "-m",
+          applied.size === names.length ? "fast" : "immediate",
+          "-w",
+          "stop",
+        ]),
+      );
+      await rm(root, { recursive: true });
+    };
+    try {
+      await migrate(options.through);
+      // A fully migrated cluster starts with the catalog's services registered,
+      // as after a reconcile; a partial one is a migration test's v1 record.
+      if (options.through === undefined) await registerTestServices(database);
+    } catch (error) {
+      await close();
+      throw error;
+    }
+    return {
+      database,
+      url,
+      /** Apply the remaining committed migrations, optionally stopping after one. */
+      migrate,
+      /** Names applied so far, in order. */
+      get applied() {
+        return names.filter((name) => applied.has(name));
+      },
+      close,
+    };
   } catch (error) {
-    await close();
+    await stopCluster(directory);
+    await rm(root, { recursive: true, force: true });
     throw error;
   }
-  return {
-    database,
-    url,
-    /** Apply the remaining committed migrations, optionally stopping after one. */
-    migrate,
-    /** Names applied so far, in order. */
-    get applied() {
-      return names.filter((name) => applied.has(name));
-    },
-    close,
-  };
 }
