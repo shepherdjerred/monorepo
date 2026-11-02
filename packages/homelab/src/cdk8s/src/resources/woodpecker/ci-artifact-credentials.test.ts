@@ -91,6 +91,7 @@ test("CI mirrors minimal publication/handoff items and retains no deployment pro
       "ci-dockerhub-publisher-credentials",
       "ci-github-credentials",
       "ci-turbo-cache-credentials",
+      "ci-gradle-build-cache-credentials",
       "ci-npm-credentials",
       "ci-release-openai-credentials",
       "ci-chartmuseum-credentials",

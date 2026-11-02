@@ -331,3 +331,32 @@ test("grouped checks retain separate secrets and both run after an independent c
     ).some((step) => step.key === "small-pr-checks"),
   ).toBe(false);
 });
+
+test("verify benchmarks use the Gradle cache only when warm, in their trust domain", () => {
+  const request = {
+    profile: "verify",
+    variant: "baseline",
+    source: "0".repeat(40),
+    feature: "gradle",
+  } as const;
+  const verify = (cache: "cold" | "warm", main: boolean) =>
+    benchmarkSteps(
+      TEST_IMAGES,
+      { ...request, cache, main },
+      DISABLED_PERFORMANCE,
+      helper,
+    )[0];
+  const passwords = (step: ReturnType<typeof verify>) =>
+    (step?.secrets ?? [])
+      .map((grant) => grant.env)
+      .filter((env) => env.startsWith("GRADLE_BUILD_CACHE_"));
+  expect(passwords(verify("warm", true))).toEqual([
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+  ]);
+  expect(passwords(verify("warm", false))).toEqual([
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+  ]);
+  const cold = verify("cold", true);
+  expect(passwords(cold)).toEqual([]);
+  expect(cold?.environment?.["GRADLE_BUILD_CACHE_URL"]).toBeUndefined();
+});

@@ -66,6 +66,7 @@ import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/a
 import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/service-probes.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts";
 import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/turbo-cache.ts";
+import { createGradleBuildCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/gradle-build-cache.ts";
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkitd.ts";
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
@@ -176,6 +177,7 @@ export async function createAppsChart(app: App) {
   createServiceProbesApp(chart);
   createTrmnlDashboardApp(chart);
   createTurboCacheApp(chart);
+  createGradleBuildCacheApp(chart);
   createBuildkitdApp(chart);
   createAlertDashboardApp(chart);
   createStashApp(chart);

@@ -44,6 +44,15 @@ mise exec -- gradle --write-verification-metadata sha256 build
 
 The jar is `plugin/dist/build/libs/TheStorm.jar`.
 
+Local builds use Gradle's local build cache only. In CI, `settings.gradle.kts`
+also enables Gradle's HTTP build cache, served by the homelab's nginx WebDAV
+endpoint rather than Gradle's end-of-life build cache node, when
+`GRADLE_BUILD_CACHE_URL` is set; it then
+requires `GRADLE_BUILD_CACHE_USERNAME` and exactly one of the write or read
+passwords, and stores entries only with the write password. See
+[CI pipeline shape](https://wiki.sjer.red/explanation/ci-pipeline-shape/) for
+the trust boundary.
+
 ## Content admission and evidence
 
 The `safety` module runs before chat. Its shared `core.safety.ContentSafety`

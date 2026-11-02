@@ -43,6 +43,38 @@ dependencyResolutionManagement {
 
 rootProject.name = "the-storm"
 
+// CI's Gradle user home lasts one workflow, so its local build cache always starts
+// empty. CI's verify step names the homelab build cache (gradle-build-cache, nginx
+// serving WebDAV GET/PUT) and one of two users: default-branch builds hold the write
+// password and store task outputs; pull requests hold the read-only password and only
+// load them. The server accepts PUT only from the write user. Without
+// GRADLE_BUILD_CACHE_URL, builds use the local cache.
+val remoteBuildCacheUrl = providers.environmentVariable("GRADLE_BUILD_CACHE_URL").orNull
+
+if (remoteBuildCacheUrl != null) {
+  val username =
+      providers.environmentVariable("GRADLE_BUILD_CACHE_USERNAME").orNull
+          ?: error("GRADLE_BUILD_CACHE_URL requires GRADLE_BUILD_CACHE_USERNAME")
+  val writePassword = providers.environmentVariable("GRADLE_BUILD_CACHE_WRITE_PASSWORD").orNull
+  val readPassword = providers.environmentVariable("GRADLE_BUILD_CACHE_READ_PASSWORD").orNull
+  check((writePassword == null) != (readPassword == null)) {
+    "GRADLE_BUILD_CACHE_URL requires exactly one of GRADLE_BUILD_CACHE_WRITE_PASSWORD " +
+        "or GRADLE_BUILD_CACHE_READ_PASSWORD"
+  }
+  buildCache {
+    remote<HttpBuildCache> {
+      url = uri(remoteBuildCacheUrl)
+      isAllowInsecureProtocol = false
+      isAllowUntrustedServer = false
+      isPush = writePassword != null
+      credentials {
+        this.username = username
+        password = writePassword ?: readPassword
+      }
+    }
+  }
+}
+
 // Every gameplay module is registered here up front (Phase 0 scaffolding), so
 // parallel work never has to touch this file.
 val modules =

@@ -107,6 +107,31 @@ stores and returns each client's artifact signature unchanged. Signing keys
 stay with their respective clients. Turbo rejects missing or invalid signatures,
 so a successful artifact download alone does not prove a cache hit.
 
+Turbo caches whole package tasks, so any change to The Storm reruns its entire
+Gradle build. Each workflow's Gradle user home is private, which leaves Gradle's
+own local build cache empty. Verify therefore also uses a remote Gradle build
+cache (`packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts`) over
+the tailnet: unchanged plugin modules load their compile and test outputs
+instead of rebuilding. Gradle's HTTP build cache needs only `GET` and `PUT` of
+opaque entries, so the server is nginx's WebDAV module on a claim. Gradle's
+standalone build cache node reaches end of life after 2026-12-31, and its
+successor, Develocity Edge, requires a paid Develocity installation.
+
+Gradle has no signature check, so the trust split is enforced by the server's
+Basic-auth users instead. Default-branch verify holds the only write password;
+pull requests hold a read-only one, and nginx checks every method other than
+`GET` and `HEAD` against a file that lists only the write user. The
+[pipeline](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/app.ts)
+attaches exactly one of them per trust domain
+(`packages/woodpecker-config-extension/src/pipeline/gradle-build-cache.ts`), and
+[the build settings](https://github.com/shepherdjerred/monorepo/blob/main/packages/the-storm/plugin/settings.gradle.kts)
+push only with the write password. Gradle stops using the remote cache for the
+rest of a build after a failed request, so an unavailable or full server costs
+speed, not correctness. Gradle stores each key once and never rewrites it, so
+every pod start evicts entries stored more than 30 days ago. Between starts the
+cluster's generic PVC usage and projected-fill alerts watch the claim;
+restarting the deployment is the remedy they call for.
+
 Woodpecker reports a GitHub status per workflow. A final, clone-free PR
 workflow checks the selected blocking workflows at the same pipeline URL and
 reports the single required `ci/woodpecker/pr/ci-complete` status. This avoids a

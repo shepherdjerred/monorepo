@@ -544,9 +544,16 @@
         "woodpecker-ci",
         "buildkitd",
         "turbo-cache",
+        "gradle-build-cache",
         "kueue-system"
       ],
-      "argoApps": ["woodpecker", "buildkitd", "turbo-cache", "kueue"],
+      "argoApps": [
+        "woodpecker",
+        "buildkitd",
+        "turbo-cache",
+        "gradle-build-cache",
+        "kueue"
+      ],
       "grafanaDashboards": ["ci-capacity-dashboard", "buildkitd-dashboard"]
     },
     {

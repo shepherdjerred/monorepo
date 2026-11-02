@@ -452,6 +452,10 @@
       "clones": 2,
       "tokens": 201
     },
+    "packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts|packages/homelab/src/cdk8s/src/resources/turbo-cache.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
     "packages/homelab/src/cdk8s/src/resources/home/eufy-security-ws.ts|packages/homelab/src/cdk8s/src/resources/home/zwave-js-ui.ts": {
       "clones": 1,
       "tokens": 73

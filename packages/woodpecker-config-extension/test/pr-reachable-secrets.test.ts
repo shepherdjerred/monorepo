@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { selectSteps } from "#src/pipeline/select.ts";
 import { testPipelineSteps } from "./identity.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
+import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
 
 /**
  * What a pull request can reach.
@@ -31,14 +32,32 @@ function credentialHolders(env: string): string[] {
 
 /** The worst case: a pull request against the default branch, touching anything. */
 const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
-  signRemoteCacheSteps(
-    selectSteps(steps, {
-      event: "pull_request",
-      branch: "main",
-      defaultBranch: "main",
-      changedFiles: [],
-    }),
+  grantGradleBuildCache(
+    signRemoteCacheSteps(
+      selectSteps(steps, {
+        event: "pull_request",
+        branch: "main",
+        defaultBranch: "main",
+        changedFiles: [],
+      }),
+      "pull-request",
+    ),
     "pull-request",
+  );
+
+/** A push to the default branch, touching anything. */
+const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
+  grantGradleBuildCache(
+    signRemoteCacheSteps(
+      selectSteps(steps, {
+        event: "push",
+        branch: "main",
+        defaultBranch: "main",
+        changedFiles: [],
+      }),
+      "trusted",
+    ),
+    "trusted",
   );
 
 /**
@@ -53,6 +72,7 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  * - `codex-review-gate` mints a review token.
  * - `SEAWEEDFS_HANDOFF_*` reaches only the `ci-handoff` bucket.
  * - OpenTofu validation is offline and has no provider or state credentials.
+ * - `GRADLE_BUILD_CACHE_READ_PASSWORD` is the Gradle cache's read-only user.
  */
 const PR_REACHABLE_SECRETS = [
   "GITHUB_APP_ID",
@@ -60,6 +80,7 @@ const PR_REACHABLE_SECRETS = [
   "GITHUB_APP_PRIVATE_KEY",
   "GITHUB_DOWNLOAD_TOKEN",
   "GITHUB_REVIEW_TOKEN",
+  "GRADLE_BUILD_CACHE_READ_PASSWORD",
   "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
   "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
   "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
@@ -80,6 +101,7 @@ const RELEASE_ONLY_SECRETS = [
   "CHARTMUSEUM_PASSWORD",
   "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
   "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
+  "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
 ];
 
 /**
@@ -155,15 +177,7 @@ describe("what a pull request can reach", () => {
       ),
     ).toBe(true);
 
-    const trustedCacheSteps = signRemoteCacheSteps(
-      selectSteps(allSteps(), {
-        event: "push",
-        branch: "main",
-        defaultBranch: "main",
-        changedFiles: [],
-      }),
-      "trusted",
-    ).filter((step) =>
+    const trustedCacheSteps = defaultBranchPush(allSteps()).filter((step) =>
       step.secrets?.some((grant) => grant.env === "TURBO_TOKEN"),
     );
     expect(trustedCacheSteps.length).toBeGreaterThan(0);
@@ -210,15 +224,7 @@ describe("what a pull request can reach", () => {
    * that quietly stopped selecting anything.
    */
   test("still grants them on a push to the default branch", () => {
-    const selected = signRemoteCacheSteps(
-      selectSteps(allSteps(), {
-        event: "push",
-        branch: "main",
-        defaultBranch: "main",
-        changedFiles: [],
-      }),
-      "trusted",
-    );
+    const selected = defaultBranchPush(allSteps());
     const reachable = new Set(
       selected.flatMap((step) =>
         (step.secrets ?? []).map((grant) => grant.env),
@@ -229,6 +235,40 @@ describe("what a pull request can reach", () => {
         true,
       );
     }
+  });
+
+  /**
+   * Gradle cache entries are build outputs that later builds load instead of
+   * compiling, so a writer is as trusted as the code it builds. Only verify on
+   * the default branch may store entries; a pull request reads.
+   */
+  test("lets only default-branch verify write the Gradle build cache", () => {
+    const holders = (
+      steps: ReturnType<typeof allSteps>,
+      env: string,
+    ): string[] =>
+      steps
+        .filter((step) => step.secrets?.some((grant) => grant.env === env))
+        .map((step) => step.key)
+        .sort();
+    const main = defaultBranchPush(allSteps());
+    const pullRequest = pullRequestAgainstMain(allSteps());
+    expect(holders(main, "GRADLE_BUILD_CACHE_WRITE_PASSWORD")).toEqual([
+      "verify",
+    ]);
+    expect(holders(main, "GRADLE_BUILD_CACHE_READ_PASSWORD")).toEqual([]);
+    expect(holders(pullRequest, "GRADLE_BUILD_CACHE_READ_PASSWORD")).toEqual([
+      "verify",
+    ]);
+    expect(holders(pullRequest, "GRADLE_BUILD_CACHE_WRITE_PASSWORD")).toEqual(
+      [],
+    );
+    expect(
+      pullRequest.find((step) => step.key === "verify")?.environment,
+    ).toMatchObject({ GRADLE_BUILD_CACHE_USERNAME: "ci-pull-request" });
+    expect(
+      main.find((step) => step.key === "verify")?.environment,
+    ).toMatchObject({ GRADLE_BUILD_CACHE_USERNAME: "ci-main" });
   });
 
   test("keeps Argo credentials out of every pull-request workflow", () => {
