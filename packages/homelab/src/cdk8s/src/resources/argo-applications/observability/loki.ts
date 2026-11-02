@@ -227,6 +227,27 @@ groups:
           description: "The profiler on {{ "{{" }} $labels.node_name {{ "}}" }} logged 'unwind info array full' and is skipping new executables. Capture diagnostics and recover only that node's profiler after verifying its peer. Map scale does not increase this table."
 `;
 
+// filer.backup retries a failed Backblaze write on the same event without
+// advancing its checkpoint, and the filer's send metric cannot see that.
+// glog writes errors as "E<mmdd> ...", so sustained error lines are the
+// direct signal that SeaweedFS objects are not reaching Backblaze.
+const seaweedfsBackupAlertRules = `
+groups:
+  - name: seaweedfs-backup-logs
+    rules:
+      - alert: SeaweedFSBackupSinkErrors
+        expr: |
+          sum(
+            count_over_time({namespace="seaweedfs", container="filer-backup"} |~ "^E[0-9]{4} " [15m])
+          ) > 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "filer.backup keeps failing to write SeaweedFS objects to Backblaze"
+          description: "The seaweedfs-backup container has logged errors for 45 minutes. Failed objects are retried without advancing the checkpoint, so they are missing from the Backblaze seaweedfs-backups bucket until the error clears."
+`;
+
 /** The ConfigMap Loki's ruler mounts for every repo-owned log alert. */
 export function createLokiAlertRules(chart: Chart): ConfigMap {
   return new ConfigMap(chart, "loki-alert-rules", {
@@ -240,6 +261,7 @@ export function createLokiAlertRules(chart: Chart): ConfigMap {
       "tasknotes-rules.yaml": tasknotesAlertRules,
       "golink-rules.yaml": golinkAlertRules,
       "alloy-rules.yaml": alloyAlertRules,
+      "seaweedfs-backup-rules.yaml": seaweedfsBackupAlertRules,
     },
   });
 }

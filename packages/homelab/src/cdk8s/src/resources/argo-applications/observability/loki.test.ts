@@ -50,7 +50,10 @@ const LokiRetentionSchema = z.object({
 const LokiRulesConfigMapSchema = z.object({
   kind: z.literal("ConfigMap"),
   metadata: z.object({ name: z.literal("loki-alert-rules") }),
-  data: z.object({ "alloy-rules.yaml": z.string() }),
+  data: z.object({
+    "alloy-rules.yaml": z.string(),
+    "seaweedfs-backup-rules.yaml": z.string(),
+  }),
 });
 
 const LokiRuleFileSchema = z.object({
@@ -147,6 +150,31 @@ describe("Loki Argo CD application", () => {
       '{namespace="alloy", container="alloy"} |= "unwind info array full"',
     );
     expect(rule.expr).toContain("sum by (namespace, pod, node_name)");
+    expect(rule.labels.severity).toBe("warning");
+  });
+
+  it("alerts on sustained filer.backup error lines", () => {
+    const app = new App();
+    const chart = new Chart(app, "test");
+    createLokiApp(chart);
+    const rulesConfigMap = parseAllDocuments(app.synthYaml())
+      .map((document) => LokiRulesConfigMapSchema.safeParse(document.toJS()))
+      .find((result) => result.success);
+    if (!rulesConfigMap?.success) {
+      throw new Error("loki-alert-rules ConfigMap was not synthesized");
+    }
+    const rule = LokiRuleFileSchema.parse(
+      parseAllDocuments(
+        rulesConfigMap.data.data["seaweedfs-backup-rules.yaml"],
+      )[0]?.toJS(),
+    )
+      .groups.flatMap((group) => group.rules)
+      .find((entry) => entry.alert === "SeaweedFSBackupSinkErrors");
+    if (rule === undefined)
+      throw new Error("Missing SeaweedFSBackupSinkErrors");
+    expect(rule.expr).toContain(
+      '{namespace="seaweedfs", container="filer-backup"} |~ "^E[0-9]{4} "',
+    );
     expect(rule.labels.severity).toBe("warning");
   });
 

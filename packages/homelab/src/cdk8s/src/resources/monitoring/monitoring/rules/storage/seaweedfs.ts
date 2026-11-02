@@ -10,6 +10,9 @@ import { SEAWEEDFS_BACKUP_CLIENT } from "@shepherdjerred/homelab/cdk8s/src/resou
 // quiet hour with no writes is not lag.
 const BACKUP_SENT = `SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="${SEAWEEDFS_BACKUP_CLIENT}"}`;
 const FILER_SENT = `SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName=~"filer:.*"}`;
+// The filer keeps a disconnected subscriber's series, so its absence only
+// proves the backup never attached; a stale series shows up as lag instead.
+const BACKUP_AVAILABLE = `kube_deployment_status_replicas_available{namespace="seaweedfs",deployment="seaweedfs-backup"}`;
 
 // SeaweedFS alerting. The store twice reded main CI when the volume server ran out
 // of volume *slots* (maxVolumes) and every PutObject needing a fresh volume got an
@@ -67,10 +70,10 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "SeaweedFS objects are not being copied to Backblaze",
             message:
-              "No filer.backup subscriber is attached to the SeaweedFS filer. New and changed objects are not reaching the Backblaze seaweedfs-backups bucket. Check the seaweedfs-backup Deployment.",
+              "The seaweedfs-backup Deployment has no available replica, or filer.backup never attached to the SeaweedFS filer. New and changed objects are not reaching the Backblaze seaweedfs-backups bucket.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `absent(${BACKUP_SENT})`,
+            `absent(${BACKUP_SENT}) or max(${BACKUP_AVAILABLE}) < 1`,
           ),
           for: "30m",
           labels: {

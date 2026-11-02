@@ -8,6 +8,10 @@ import { getSeaweedfsRuleGroups } from "./seaweedfs.ts";
 const METRIC = "SeaweedFS_filer_last_send_timestamp_of_subscribe";
 const FILER = `${METRIC}{clientName="filer:10.0.0.1:8888.18888",path="/",sourceFiler="10.0.0.1:8888"}`;
 const BACKUP = `${METRIC}{clientName="backup_s3",path="/buckets/",sourceFiler="10.0.0.1:8888"}`;
+const AVAILABLE = (replicas: number) => ({
+  series: `kube_deployment_status_replicas_available{namespace="seaweedfs",deployment="seaweedfs-backup"}`,
+  values: `${String(replicas)}+0x4`,
+});
 /** A subscriber that last received an event `ago` seconds before 1.7e9 s. */
 const sent = (series: string, ago: number) => ({
   series,
@@ -25,7 +29,7 @@ test("SeaweedFS backup alerts measure lag against the filer, not the clock", asy
   const cases = [
     {
       name: "caught up",
-      input: [sent(FILER, 0), sent(BACKUP, 0)],
+      input: [sent(FILER, 0), sent(BACKUP, 0), AVAILABLE(1)],
       lag: [],
       absent: [],
     },
@@ -40,6 +44,12 @@ test("SeaweedFS backup alerts measure lag against the filer, not the clock", asy
       input: [sent(FILER, 0), sent(BACKUP, 7200)],
       lag: [{ labels: "{}", value: 7200 }],
       absent: [],
+    },
+    {
+      name: "the Deployment has no available replica",
+      input: [sent(FILER, 0), sent(BACKUP, 0), AVAILABLE(0)],
+      lag: [],
+      absent: [{ labels: "{}", value: 0 }],
     },
     {
       name: "no backup subscriber",
