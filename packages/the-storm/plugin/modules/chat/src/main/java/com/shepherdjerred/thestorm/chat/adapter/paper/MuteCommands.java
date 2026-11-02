@@ -106,11 +106,20 @@ public final class MuteCommands {
     return Command.SINGLE_SUCCESS;
   }
 
-  /** The player called {@code name}, online or seen before. Reads only the server's caches. */
+  /** The player called {@code name}, by account name or nickname, online or seen before. */
   private Optional<UUID> known(String name) {
-    var online = server.getPlayerExact(name);
-    if (online != null) {
-      return Optional.of(online.getUniqueId());
+    var online = com.shepherdjerred.thestorm.core.players.PlayerHandles.online(server, name);
+    if (online.isPresent()) {
+      return Optional.of(online.orElseThrow().getUniqueId());
+    }
+    var nick =
+        Optional.ofNullable(
+                server
+                    .getServicesManager()
+                    .load(com.shepherdjerred.thestorm.core.players.Nicknames.class))
+            .flatMap(names -> names.named(name));
+    if (nick.isPresent()) {
+      return nick;
     }
     return Optional.ofNullable(server.getOfflinePlayerIfCached(name))
         .map(OfflinePlayer::getUniqueId);

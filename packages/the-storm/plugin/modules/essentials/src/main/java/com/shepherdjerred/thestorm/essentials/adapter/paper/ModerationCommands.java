@@ -9,6 +9,9 @@ import static java.time.format.DateTimeFormatter.ofPattern;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.shepherdjerred.thestorm.core.module.Services;
+import com.shepherdjerred.thestorm.core.players.Nicknames;
+import com.shepherdjerred.thestorm.core.players.PlayerHandles;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import com.shepherdjerred.thestorm.essentials.app.PlayerDirectory;
@@ -50,11 +53,17 @@ final class ModerationCommands {
   private final PaperRuntime runtime;
   private final ModerationService moderation;
   private final PlayerDirectory players;
+  private final Services services;
 
-  ModerationCommands(PaperRuntime runtime, ModerationService moderation, PlayerDirectory players) {
+  ModerationCommands(
+      PaperRuntime runtime,
+      ModerationService moderation,
+      PlayerDirectory players,
+      Services services) {
     this.runtime = runtime;
     this.moderation = moderation;
     this.players = players;
+    this.services = services;
   }
 
   /** A player named in a command, online or not. */
@@ -334,9 +343,15 @@ final class ModerationCommands {
       var name = player.map(Player::getName).or(() -> players.name(uuid)).orElse(input);
       return Optional.of(new Target(uuid, name, player));
     }
-    var online = online(input);
+    var online = PlayerHandles.online(runtime.server(), services.find(Nicknames.class), input);
     if (online.isPresent()) {
       return online.map(this::target);
+    }
+    var nick = services.find(Nicknames.class).flatMap(names -> names.named(input));
+    if (nick.isPresent()) {
+      var uuid = nick.orElseThrow();
+      var name = players.name(uuid).orElse(input);
+      return Optional.of(new Target(uuid, name, Optional.empty()));
     }
     var known = players.find(input);
     if (known.isEmpty()) {
@@ -352,7 +367,7 @@ final class ModerationCommands {
   }
 
   private Optional<Player> online(String name) {
-    return Optional.ofNullable(runtime.server().getPlayerExact(name));
+    return PlayerHandles.online(runtime.server(), services.find(Nicknames.class), name);
   }
 
   /** Refuses (and says why) when the target is exempt, or offline and the sender is not console. */

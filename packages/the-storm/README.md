@@ -74,7 +74,10 @@ Loaded saved signs, containers and entity names are snapshots with unknown creat
 their observers receive no offense attribution. Visual map art is not text screening.
 
 CoreProtect owns block and item history and rollback. Safety adds denied interactions,
-inventory metadata, text, and Grim findings with gameplay context. Activity snapshots
+inventory metadata, text, and Grim findings with gameplay context. The console also
+records each player command (authentication arguments redacted), a position sample
+every minute, and each teleport, so a session can be read from Loki without opening
+the evidence archive. Activity snapshots
 retain their original payloads and timestamps in batches of up to 128, with one
 activity database job in flight so bursts do not fill the shared writer queue.
 Shutdown queues any remaining snapshots before the database closes. Safety requires the
@@ -292,9 +295,12 @@ for that owner. Maintenance that stops the always-running server uses this gate
 first; a restart clears the in-memory gate.
 
 The Storm implements the selected EssentialsX-style surface inside its own
-Essentials, Chat and Mail modules. Commands resolve players by real username
-and UUID; nicknames never become command identifiers. `/help` shows the
-sender's permitted commands, and `/help <command>` shows usage.
+Essentials, Chat and Mail modules. Commands that name a player resolve the
+account name first and, when that misses, the player's nickname. `/help` shows
+the sender's permitted commands, and `/help <command>` shows usage. A camp is
+stored under its founder's account name. An accepted `/tpa` or `/tpahere`
+lands even when the destination is claimed; building there still needs an
+invite.
 
 | Audience                       | Commands                                                                                                                                                                                      |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

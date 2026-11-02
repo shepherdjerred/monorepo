@@ -55,7 +55,9 @@ public final class SafetyChatRoutes {
       var pieces = text.split("\\s+", 3);
       var label = pieces[0].substring(1).toLowerCase(Locale.ROOT).replaceFirst("^[^:]+:", "");
       if (java.util.Set.of("msg", "tell", "whisper", "w").contains(label) && pieces.length >= 2) {
-        var recipient = server.getPlayerExact(pieces[1]);
+        var recipient =
+            com.shepherdjerred.thestorm.core.players.PlayerHandles.online(server, pieces[1])
+                .orElse(null);
         if (recipient == null) return "private-unresolved:" + player;
         var pair =
             java.util.stream.Stream.of(player.toString(), recipient.getUniqueId().toString())

@@ -20,7 +20,7 @@ final class CampRulesTest {
 
   @Test
   void anOnlineMemberRefreshesTheClock() {
-    var camp = Town.camp(CAMP, FOUNDED, OWNER);
+    var camp = Town.camp(CAMP, "Camp", FOUNDED, OWNER);
 
     assertThat(CampClock.decide(camp, FOUNDED.plusSeconds(1), true, POLICY))
         .isEqualTo(CampClock.Action.REFRESH);
@@ -28,7 +28,7 @@ final class CampRulesTest {
 
   @Test
   void theWarningWindowFiresOnce() {
-    var camp = Town.camp(CAMP, FOUNDED, OWNER);
+    var camp = Town.camp(CAMP, "Camp", FOUNDED, OWNER);
     var inside = FOUNDED.plus(POLICY.idle()).minus(POLICY.warn());
 
     assertThat(CampClock.decide(camp, inside, false, POLICY)).isEqualTo(CampClock.Action.WARN);
@@ -38,7 +38,7 @@ final class CampRulesTest {
 
   @Test
   void anIdleCampLapses() {
-    var camp = Town.camp(CAMP, FOUNDED, OWNER);
+    var camp = Town.camp(CAMP, "Camp", FOUNDED, OWNER);
 
     assertThat(CampClock.decide(camp, FOUNDED.plus(POLICY.idle()), false, POLICY))
         .isEqualTo(CampClock.Action.LAPSE);
@@ -99,7 +99,7 @@ final class CampRulesTest {
 
   @Test
   void graduatingKeepsTheMembersAndDropsTheClock() {
-    var camp = Town.camp(CAMP, FOUNDED, OWNER).withMember(MEMBER, TownRole.MEMBER);
+    var camp = Town.camp(CAMP, "Camp", FOUNDED, OWNER).withMember(MEMBER, TownRole.MEMBER);
     var directory =
         new TownDirectory() {
           @Override
@@ -127,7 +127,7 @@ final class CampRulesTest {
 
   @Test
   void graduatingWithoutGovernorIIsRefused() {
-    var camp = Town.camp(CAMP, FOUNDED, OWNER);
+    var camp = Town.camp(CAMP, "Camp", FOUNDED, OWNER);
     TownDirectory directory =
         new TownDirectory() {
           @Override

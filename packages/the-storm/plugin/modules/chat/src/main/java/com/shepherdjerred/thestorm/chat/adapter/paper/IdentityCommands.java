@@ -154,7 +154,10 @@ public final class IdentityCommands implements Listener {
         actor.sendMessage(Component.text("You cannot change another player's nickname."));
         return;
       }
-      var found = context.plugin().getServer().getPlayerExact(parts[0]);
+      var found =
+          com.shepherdjerred.thestorm.core.players.PlayerHandles.online(
+                  context.plugin().getServer(), parts[0])
+              .orElse(null);
       if (found == null || !PlayerVisibility.visibleTo(actor, found)) {
         actor.sendMessage(Component.text("That player is not online."));
         return;

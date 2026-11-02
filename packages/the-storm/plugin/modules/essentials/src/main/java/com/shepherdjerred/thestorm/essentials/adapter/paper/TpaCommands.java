@@ -7,6 +7,9 @@ import static io.papermc.paper.command.brigadier.Commands.literal;
 
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.shepherdjerred.thestorm.core.module.Services;
+import com.shepherdjerred.thestorm.core.players.Nicknames;
+import com.shepherdjerred.thestorm.core.players.PlayerHandles;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.essentials.app.TpaDesk;
@@ -41,16 +44,25 @@ final class TpaCommands {
   private final TpaDesk desk;
   private final Duration timeout;
   private final com.shepherdjerred.thestorm.core.expansion.ManagedGameplay flags;
+  private final Services services;
 
   record Rollout(
       Duration timeout, com.shepherdjerred.thestorm.core.expansion.ManagedGameplay flags) {}
 
-  TpaCommands(PaperRuntime runtime, TeleportFlow flow, TpaDesk desk, Rollout rollout) {
+  /** Rollout plus the services a named player is resolved from. */
+  record Scope(Rollout rollout, Services services) {}
+
+  TpaCommands(PaperRuntime runtime, TeleportFlow flow, TpaDesk desk, Scope scope) {
     this.runtime = runtime;
     this.flow = flow;
     this.desk = desk;
-    this.timeout = rollout.timeout();
-    this.flags = rollout.flags();
+    this.timeout = scope.rollout().timeout();
+    this.flags = scope.rollout().flags();
+    this.services = scope.services();
+  }
+
+  private Optional<Player> named(String token) {
+    return PlayerHandles.online(runtime.server(), services.find(Nicknames.class), token);
   }
 
   void register(Commands commands) {
@@ -140,7 +152,7 @@ final class TpaCommands {
   }
 
   private void send(Player requester, String targetName, TpaRequest.Direction direction) {
-    var target = runtime.server().getPlayerExact(targetName);
+    var target = named(targetName).orElse(null);
     if (target == null
         || !com.shepherdjerred.thestorm.core.players.PlayerVisibility.visibleTo(
             requester, target)) {
@@ -200,7 +212,7 @@ final class TpaCommands {
   }
 
   private void answerFrom(Player target, String requesterName, Optional<Long> id, boolean accept) {
-    var requester = runtime.server().getPlayerExact(requesterName);
+    var requester = named(requesterName).orElse(null);
     if (requester == null) {
       Say.error(target, Say.TELEPORT, requesterName + " is not online.");
       return;

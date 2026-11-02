@@ -8,6 +8,8 @@ import static java.util.Objects.requireNonNull;
 import com.shepherdjerred.thestorm.core.expansion.ExpansionSettings;
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.players.Nicknames;
+import com.shepherdjerred.thestorm.core.players.PlayerHandles;
 import com.shepherdjerred.thestorm.core.players.PlayerVisibility;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
@@ -344,7 +346,10 @@ final class StaffCommands {
   }
 
   Player player(CommandSender actor, String name) {
-    var target = context.plugin().getServer().getPlayerExact(name);
+    var target =
+        PlayerHandles.online(
+                context.plugin().getServer(), context.services().find(Nicknames.class), name)
+            .orElse(null);
     if (target == null || !PlayerVisibility.visibleTo(actor, target))
       throw new IllegalArgumentException("That player is not online.");
     if (sealed.isSealed(target.getWorld()))

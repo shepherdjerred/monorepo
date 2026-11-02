@@ -81,7 +81,8 @@ final class TeleportFlowArrivalTest {
                 harness.sealed,
                 nowhere(),
                 new com.shepherdjerred.thestorm.essentials.domain.place.Position(
-                    "unused", 0, 64, 0, 0, 0)),
+                    "unused", 0, 64, 0, 0, 0),
+                new com.shepherdjerred.thestorm.core.players.VisitPasses()),
             Duration.ZERO,
             (player, destination) -> completedFuture(true));
 

@@ -119,9 +119,17 @@ public final class TownsPaper {
     var notices =
         new Notices(
             state,
-            new DenialThrottle(config.denialCooldownMillis()),
-            context.time(),
-            context.scheduler());
+            new Notices.Rates(
+                new DenialThrottle(config.denialCooldownMillis()),
+                new com.shepherdjerred.thestorm.towns.domain.protection.OwnerAlerts(
+                    com.shepherdjerred.thestorm.towns.domain.protection.OwnerAlerts
+                        .COOLDOWN_MILLIS)),
+            new Notices.Clock(context.time(), context.scheduler()),
+            new Notices.Delivery(
+                server,
+                services.require(com.shepherdjerred.thestorm.core.players.PlayerDirectory.class),
+                services,
+                context.logger()));
     var plugin = context.plugin();
     var culprits =
         new Culprits(
@@ -238,7 +246,10 @@ public final class TownsPaper {
             new InteractListener(guard, kinds, locks),
             new EntityListener(guard),
             new CombatListener(guard, loaded.pvp()),
-            new MovementListener(guard, kinds),
+            new MovementListener(
+                guard,
+                kinds,
+                services.require(com.shepherdjerred.thestorm.core.players.VisitPass.class)),
             new WorldListener(guard, kinds),
             new ParcelInventoryListener(guard),
             new FireListener(guard, kinds),
