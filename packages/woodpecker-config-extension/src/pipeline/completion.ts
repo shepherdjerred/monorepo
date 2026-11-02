@@ -7,7 +7,7 @@ import { shellQuote } from "#src/pipeline/emit.ts";
  * Keep the required verdict in the trusted configuration extension, without
  * cloning PR-controlled code into the completion workflow.
  */
-export const CHECK_STATUSES = `
+export const CHECK_STATUSES = String.raw`
 const expected = JSON.parse(process.env.CI_EXPECTED_CONTEXTS);
 const pipeline = process.env.CI_PIPELINE_URL;
 const repository = process.env.CI_REPO;
@@ -16,22 +16,35 @@ const token = process.env.GITHUB_DOWNLOAD_TOKEN;
 if (!pipeline || !repository || !commit || !token || !Array.isArray(expected) || expected.length === 0) {
   throw new Error("missing completion-check input");
 }
-const url = new URL("https://api.github.com/repos/" + repository + "/commits/" + commit + "/status");
-url.searchParams.set("per_page", "100");
+const headers = {
+  authorization: "Bearer " + token,
+  accept: "application/vnd.github+json",
+  "x-github-api-version": "2022-11-28",
+};
+// Combined /status stops at 100 contexts. The list endpoint is newest-first
+// and paginated; the first state we see for a context is the current one.
+async function statusesForPipeline() {
+  const latest = new Map();
+  let next = "https://api.github.com/repos/" + repository + "/commits/" + commit + "/statuses?per_page=100";
+  while (next) {
+    const response = await fetch(next, { headers });
+    if (!response.ok) throw new Error("GitHub status read failed: HTTP " + response.status);
+    const page = await response.json();
+    if (!Array.isArray(page)) throw new Error("GitHub returned no status list");
+    for (const status of page) {
+      if (typeof status.context !== "string") continue;
+      if (typeof status.target_url !== "string" || !status.target_url.startsWith(pipeline + "/")) continue;
+      if (latest.has(status.context)) continue;
+      latest.set(status.context, status.state);
+    }
+    const link = response.headers.get("link") ?? "";
+    const match = /<([^>]+)>;\s*rel="next"/u.exec(link);
+    next = match?.[1] ?? "";
+  }
+  return latest;
+}
 for (let attempt = 0; attempt < 20; attempt++) {
-  const response = await fetch(url, {
-    headers: {
-      authorization: "Bearer " + token,
-      accept: "application/vnd.github+json",
-      "x-github-api-version": "2022-11-28",
-    },
-  });
-  if (!response.ok) throw new Error("GitHub status read failed: HTTP " + response.status);
-  const result = await response.json();
-  if (!Array.isArray(result.statuses)) throw new Error("GitHub returned no status list");
-  const current = new Map(result.statuses
-    .filter((status) => typeof status.target_url === "string" && status.target_url.startsWith(pipeline + "/"))
-    .map((status) => [status.context, status.state]));
+  const current = await statusesForPipeline();
   const failed = expected.filter((context) => ["failure", "error"].includes(current.get(context)));
   if (failed.length > 0) throw new Error("Required workflows failed: " + failed.join(", "));
   const incomplete = expected.filter((context) => current.get(context) !== "success");

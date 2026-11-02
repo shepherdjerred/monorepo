@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { protectArgoTokenDefault } from "./argocd-options.ts";
 import { isArgoHelpCommand } from "./argocd-metadata.ts";
 
@@ -154,6 +156,34 @@ function argsBeforeBoundary(args: readonly string[]): readonly string[] {
   return boundary === -1 ? args : args.slice(0, boundary);
 }
 
+/**
+ * Help renders every token it was given, including a token passed as a flag
+ * or read back from the config file that flag selected. Drop both before the
+ * payload boundary. Tokens after `--` are positional and are left untouched.
+ */
+function withoutHelpCredentials(args: readonly string[]): string[] {
+  const boundary = args.indexOf("--");
+  const head = boundary === -1 ? args : args.slice(0, boundary);
+  const tail = boundary === -1 ? [] : args.slice(boundary);
+  const kept: string[] = [];
+  for (let index = 0; index < head.length; index += 1) {
+    const argument = head[index];
+    if (argument === undefined) continue;
+    if (argument === "--auth-token" || argument === "--config") {
+      index += 1;
+      continue;
+    }
+    if (
+      argument.startsWith("--auth-token=") ||
+      argument.startsWith("--config=")
+    ) {
+      continue;
+    }
+    kept.push(argument);
+  }
+  return [...kept, ...tail];
+}
+
 /** Exact native metadata invocations that never need brokered credentials. */
 export function isCredentialFreePassthrough(
   command: string,
@@ -214,6 +244,8 @@ export function buildPassthroughInvocation(
     return null;
   }
 
+  const help = command === "argocd" && isArgoHelpCommand(args);
+  const forwardedArgs = help ? withoutHelpCredentials(args) : args;
   const defaultArgs = (spec.defaultArgs ?? []).flatMap((entry) => {
     const overriddenByEnvironment = (entry.overrideEnvironment ?? []).some(
       (name) => hasEnvironmentValue(environment, name),
@@ -243,7 +275,7 @@ export function buildPassthroughInvocation(
 
   return {
     executable: spec.executable,
-    args: [...defaultArgs, ...(spec.prefixArgs ?? []), ...args],
+    args: [...defaultArgs, ...(spec.prefixArgs ?? []), ...forwardedArgs],
     env,
   };
 }
@@ -263,6 +295,23 @@ function resolveExecutable(invocation: PassthroughInvocation): string | null {
   return lookupExecutable(invocation.executable, invocation.env["PATH"]);
 }
 
+function isolatedConfigHome(): string {
+  const directory = path.join(
+    tmpdir(),
+    `toolkit-argocd-help-${crypto.randomUUID()}`,
+  );
+  const created = Bun.spawnSync(["mkdir", directory], {
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  if (created.exitCode !== 0) {
+    throw new Error(
+      `could not isolate ArgoCD help config: ${created.stderr.toString()}`,
+    );
+  }
+  return directory;
+}
+
 function nativeEnvironment(invocation: PassthroughInvocation) {
   const env = { ...invocation.env };
   if (invocation.executable !== "argocd") return env;
@@ -271,6 +320,15 @@ function nativeEnvironment(invocation: PassthroughInvocation) {
   // empty flag default prevents help/usage disclosure while the API client
   // still reads ARGOCD_AUTH_TOKEN; explicit CLI flags retain precedence.
   env["ARGOCD_OPTS"] = protectArgoTokenDefault(options);
+  // Help also prints credentials stored in the user's ArgoCD config. On
+  // Darwin that file is under $HOME/Library; elsewhere os.UserConfigDir
+  // follows XDG_CONFIG_HOME, and the legacy path is $HOME/.argocd. An empty
+  // home hides all three. Operational commands keep the real home and token.
+  if (isArgoHelpCommand(invocation.args)) {
+    const isolated = isolatedConfigHome();
+    env["HOME"] = isolated;
+    env["XDG_CONFIG_HOME"] = isolated;
+  }
   return env;
 }
 

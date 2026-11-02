@@ -17,6 +17,7 @@ const PIPELINE = "https://woodpecker.sjer.red/repos/1/pipeline/1200";
 async function check(
   states: Readonly<Record<string, string>>,
   wrongPipeline = false,
+  pageSize = 100,
 ): Promise<{ code: number; stderr: string }> {
   const statuses = Object.entries(states).map(([context, state], index) => ({
     context,
@@ -24,7 +25,20 @@ async function check(
     target_url: `${wrongPipeline ? PIPELINE + "-old" : PIPELINE}/${(index + 1).toString()}`,
   }));
   const source = [
-    `globalThis.fetch = async () => Response.json({ statuses: ${JSON.stringify(statuses)} });`,
+    `const statuses = ${JSON.stringify(statuses)};`,
+    `const pageSize = ${String(pageSize)};`,
+    `globalThis.fetch = async (input) => {
+      const url = new URL(String(input));
+      const page = Number(url.searchParams.get("page") ?? "1");
+      const start = (page - 1) * pageSize;
+      const slice = statuses.slice(start, start + pageSize);
+      const headers = new Headers();
+      if (start + pageSize < statuses.length) {
+        url.searchParams.set("page", String(page + 1));
+        headers.set("link", "<" + url.toString() + '>; rel="next"');
+      }
+      return new Response(JSON.stringify(slice), { headers });
+    };`,
     CHECK_STATUSES.replace("Bun.sleep(3000)", "Bun.sleep(0)"),
   ].join("\n");
   const child = Bun.spawn(["bun", "-e", source], {
@@ -151,6 +165,60 @@ describe("complete PR status", () => {
     const stale = await check(good, true);
     expect(stale.code).not.toBe(0);
     expect(stale.stderr).toContain("no completed status");
+  });
+
+  test("reads a success that is only on a later page and ignores an older failure", async () => {
+    const paged = await check(good, false, 1);
+    expect(paged.code).toBe(0);
+
+    const staleNewer = [
+      {
+        context: "ci/woodpecker/pr/verify",
+        state: "success",
+        target_url: `${PIPELINE}/9`,
+      },
+      {
+        context: "ci/woodpecker/pr/pr-dryrun",
+        state: "success",
+        target_url: `${PIPELINE}/8`,
+      },
+      {
+        context: "ci/woodpecker/pr/verify",
+        state: "failure",
+        target_url: `${PIPELINE}/1`,
+      },
+    ];
+    const source = [
+      `const statuses = ${JSON.stringify(staleNewer)};`,
+      `globalThis.fetch = async (input) => {
+        const url = new URL(String(input));
+        const page = Number(url.searchParams.get("page") ?? "1");
+        const slice = statuses.slice(page - 1, page);
+        const headers = new Headers();
+        if (page < statuses.length) {
+          url.searchParams.set("page", String(page + 1));
+          headers.set("link", "<" + url.toString() + '>; rel="next"');
+        }
+        return new Response(JSON.stringify(slice), { headers });
+      };`,
+      CHECK_STATUSES.replace("Bun.sleep(3000)", "Bun.sleep(0)"),
+    ].join("\n");
+    const child = Bun.spawn(["bun", "-e", source], {
+      env: {
+        ...Bun.env,
+        CI_EXPECTED_CONTEXTS: JSON.stringify([
+          "ci/woodpecker/pr/verify",
+          "ci/woodpecker/pr/pr-dryrun",
+        ]),
+        CI_PIPELINE_URL: PIPELINE,
+        CI_REPO: "shepherdjerred/monorepo",
+        CI_COMMIT_SHA: SHA,
+        GITHUB_DOWNLOAD_TOKEN: "test-token",
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    expect(await child.exited).toBe(0);
   });
 
   test("fails closed on failure or a missing status", async () => {

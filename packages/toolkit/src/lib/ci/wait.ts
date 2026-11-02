@@ -49,6 +49,24 @@ export function timeoutResult(
 /** Spread concurrent waiters so they do not all retry at the same reset. */
 const RATE_LIMIT_JITTER_MS = 5000;
 
+const TRANSIENT_NETWORK =
+  /unable to connect|failed to fetch|socket connection was closed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENETUNREACH|EAI_AGAIN|network connection/iu;
+
+/**
+ * A 30s snapshot deadline or a dropped connection is not a CI result. The
+ * Woodpecker event-stream connect timer uses a different message and must
+ * end the wait. Caller abort is checked separately.
+ */
+export function isRetriableSnapshotError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message !== "Woodpecker event connection timed out" &&
+    (error.name === "TimeoutError" ||
+      error.message === "The operation timed out." ||
+      (error instanceof TypeError && TRANSIENT_NETWORK.test(error.message)))
+  );
+}
+
 /**
  * Sleep until GitHub's quota resets. Woodpecker events are ignored meanwhile:
  * every snapshot needs GitHub, so waking early would only be refused again.
@@ -157,13 +175,25 @@ async function runLoop(context: WaitContext): Promise<WaitResult> {
       );
       result = await candidate(context, current);
     } catch (error) {
-      if (!(error instanceof GitHubRateLimitError)) throw error;
-      await sleepUntilRateLimitReset(
-        error,
-        context.signal,
-        context.dependencies.rateLimited,
-      );
-      continue;
+      if (error instanceof GitHubRateLimitError) {
+        await sleepUntilRateLimitReset(
+          error,
+          context.signal,
+          context.dependencies.rateLimited,
+        );
+        continue;
+      }
+      // The snapshot's own 30s timer aborts that read. The wait itself is
+      // still running, so the next poll tries again. A caller abort, a real
+      // CI failure, and the event-stream connect timeout do not.
+      if (!context.signal.aborted && isRetriableSnapshotError(error)) {
+        await context.updates.wait(
+          context.options.pollMs ?? 30_000,
+          context.signal,
+        );
+        continue;
+      }
+      throw error;
     }
     context.snapshot = result.snapshot;
     context.signal.throwIfAborted();

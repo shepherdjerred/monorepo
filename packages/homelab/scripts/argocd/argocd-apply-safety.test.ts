@@ -680,6 +680,61 @@ describe("ArgoCD probe handler safety", () => {
   });
 });
 
+function jobTemplateChange(
+  live: unknown,
+  target: unknown,
+  annotations?: Record<string, string>,
+) {
+  return {
+    group: "batch",
+    kind: "Job",
+    namespace: "delivery",
+    name: "migrate",
+    liveState: state({ spec: { template: live } }),
+    targetState: state({
+      ...(annotations === undefined ? {} : { metadata: { annotations } }),
+      spec: { template: target },
+    }),
+  };
+}
+
+describe("ArgoCD Job template immutability", () => {
+  const template = {
+    spec: { containers: [{ name: "migrate", image: "migrate:1" }] },
+  };
+  const changed = {
+    spec: { containers: [{ name: "migrate", image: "migrate:2" }] },
+  };
+  const withDefault = {
+    spec: {
+      containers: [{ name: "migrate", image: "migrate:1" }],
+      dnsPolicy: "ClusterFirst",
+    },
+  };
+  const withPullSecret = {
+    spec: {
+      containers: [{ name: "migrate", image: "migrate:1" }],
+      imagePullSecrets: [{ name: "regcred" }],
+    },
+  };
+
+  test("reports an immutable Job pod template change", () => {
+    expect(
+      analyzeApplySafety([
+        jobTemplateChange(template, changed),
+        jobTemplateChange(template, withPullSecret),
+        jobTemplateChange(withDefault, template),
+        jobTemplateChange(template, changed, {
+          "argocd.argoproj.io/sync-options": "Force=true, Replace=true",
+        }),
+      ]),
+    ).toEqual([
+      "batch/Job delivery/migrate changes immutable /spec/template",
+      "batch/Job delivery/migrate changes immutable /spec/template",
+    ]);
+  });
+});
+
 // An internal image pin moving backwards is how an unmerged `version
 // commit-back` bump PR silently rolls production back: the release renders from
 // the version catalog whenever a build pushes no digests of its own.

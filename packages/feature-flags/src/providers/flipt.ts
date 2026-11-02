@@ -304,9 +304,9 @@ export class FliptProvider implements Provider {
   }
 
   /**
-   * Re-reads the key set from the current snapshot. Called after init and after
-   * any evaluation that finds a key missing, so a flag created in the UI starts
-   * resolving on the next poll rather than needing a restart.
+   * Re-reads the key set from the in-memory snapshot. A flag created after the
+   * last fetch is still absent until {@link refreshForEvaluation} replaces
+   * that snapshot.
    */
   private refreshKnownKeys(): void {
     if (this.client === undefined) {
@@ -389,16 +389,42 @@ export class FliptProvider implements Provider {
     }
   }
 
+  /**
+   * Absence is decided from the in-memory snapshot. A missing key refreshes
+   * once and is evaluated again; a failed refresh keeps the absent result.
+   * A flag that is still missing after that refresh stays `FLAG_NOT_FOUND`.
+   */
+  private async resolveWithRefresh<T>(
+    flagKey: string,
+    defaultValue: T,
+    context: EvaluationContext,
+    run: (
+      client: FliptEvaluationClient,
+      entityId: string,
+      ctx: Record<string, string>,
+    ) => T,
+  ): Promise<ResolutionDetails<T>> {
+    const first = this.evaluate(flagKey, defaultValue, context, run);
+    if (first.errorCode !== ErrorCode.FLAG_NOT_FOUND) return first;
+    const refreshed = await this.refreshForEvaluation();
+    return refreshed
+      ? this.evaluate(flagKey, defaultValue, context, run)
+      : first;
+  }
+
   resolveBooleanEvaluation(
     flagKey: string,
     defaultValue: boolean,
     context: EvaluationContext,
   ): Promise<ResolutionDetails<boolean>> {
-    return Promise.resolve(
-      this.evaluate(flagKey, defaultValue, context, (client, entityId, ctx) => {
+    return this.resolveWithRefresh(
+      flagKey,
+      defaultValue,
+      context,
+      (client, entityId, ctx) => {
         return client.evaluateBoolean({ flagKey, entityId, context: ctx })
           .enabled;
-      }),
+      },
     );
   }
 
@@ -407,11 +433,14 @@ export class FliptProvider implements Provider {
     defaultValue: string,
     context: EvaluationContext,
   ): Promise<ResolutionDetails<string>> {
-    return Promise.resolve(
-      this.evaluate(flagKey, defaultValue, context, (client, entityId, ctx) => {
+    return this.resolveWithRefresh(
+      flagKey,
+      defaultValue,
+      context,
+      (client, entityId, ctx) => {
         return client.evaluateVariant({ flagKey, entityId, context: ctx })
           .variantKey;
-      }),
+      },
     );
   }
 
@@ -420,7 +449,7 @@ export class FliptProvider implements Provider {
     defaultValue: number,
     context: EvaluationContext,
   ): Promise<ResolutionDetails<number>> {
-    const details = this.evaluate(
+    return this.resolveWithRefresh(
       flagKey,
       defaultValue,
       context,
@@ -439,7 +468,6 @@ export class FliptProvider implements Provider {
         return parsed;
       },
     );
-    return Promise.resolve(details);
   }
 
   resolveObjectEvaluation<T extends JsonValue>(

@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
-import { waitForCi, type WaitDependencies } from "#lib/ci/wait.ts";
+import {
+  isRetriableSnapshotError,
+  waitForCi,
+  type WaitDependencies,
+} from "#lib/ci/wait.ts";
 import { ciFixture, pendingCi, CI_HEAD } from "./fixtures.ts";
 
 function subscription(
@@ -215,5 +219,75 @@ describe("GitHub rate limits during a wait", () => {
     await expect(
       waitForCi({ head: CI_HEAD, until: "first-failure" }, deps),
     ).rejects.toThrow("404");
+  });
+});
+
+function snapshotTimeout(): Error {
+  const error = new Error("The operation timed out.");
+  error.name = "TimeoutError";
+  return error;
+}
+
+describe("snapshot timeouts during a wait", () => {
+  test("retries a timed-out snapshot and still reports CI", async () => {
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls += 1;
+      if (calls === 1) throw snapshotTimeout();
+      return ciFixture();
+    });
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure", pollMs: 1 },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("ready");
+    expect(calls).toBeGreaterThan(1);
+  });
+
+  test("retries one dropped connection", async () => {
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls += 1;
+      if (calls === 1) {
+        throw new TypeError(
+          "Unable to connect. Is the computer able to access the url?",
+        );
+      }
+      return ciFixture();
+    });
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure", pollMs: 1 },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("ready");
+  });
+
+  test("does not retry after the caller aborts", async () => {
+    const controller = new AbortController();
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls += 1;
+      controller.abort();
+      throw snapshotTimeout();
+    });
+    await expect(
+      waitForCi(
+        { head: CI_HEAD, until: "first-failure", signal: controller.signal },
+        deps,
+      ),
+    ).rejects.toThrow(/timed out|aborted/iu);
+    expect(calls).toBe(1);
+  });
+
+  test("does not retry a contract error or the event-stream connect timeout", () => {
+    expect(
+      isRetriableSnapshotError(new Error("snapshot schema mismatch")),
+    ).toBe(false);
+    expect(
+      isRetriableSnapshotError(
+        new Error("Woodpecker event connection timed out"),
+      ),
+    ).toBe(false);
+    expect(isRetriableSnapshotError(snapshotTimeout())).toBe(true);
   });
 });

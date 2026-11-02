@@ -1,4 +1,13 @@
+import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
+import { listenerCwd, selectE2ePort } from "./src/e2e-port.ts";
+
+const checkout = path.resolve(import.meta.dir, "../..");
+const ci = Bun.env["CI"] === "true";
+const port = selectE2ePort(checkout, ci, (candidate) =>
+  ci ? null : listenerCwd(candidate),
+);
+const baseURL = `http://127.0.0.1:${String(port)}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,7 +28,7 @@ export default defineConfig({
           ],
         ]
       : "list",
-  use: { baseURL: "http://127.0.0.1:17351", trace: "retain-on-failure" },
+  use: { baseURL, trace: "retain-on-failure" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     {
@@ -29,8 +38,9 @@ export default defineConfig({
   ],
   webServer: {
     command: "bun e2e/server.ts",
-    url: "http://127.0.0.1:17351/readyz",
+    url: `${baseURL}/readyz`,
     timeout: 60_000,
-    reuseExistingServer: Bun.env["CI"] !== "true",
+    // The selected port is free or already belongs to this checkout.
+    reuseExistingServer: !ci,
   },
 });

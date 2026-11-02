@@ -18,6 +18,18 @@ const ObservedSchema = z.object({
         .object({ status: z.string(), revision: z.string().optional() })
         .optional(),
       health: z.object({ status: z.string() }).optional(),
+      resources: z
+        .array(
+          z.object({
+            status: z.string().optional(),
+            requiresPruning: z.boolean().optional(),
+            group: z.string().optional(),
+            kind: z.string().optional(),
+            namespace: z.string().optional(),
+            name: z.string().optional(),
+          }),
+        )
+        .optional(),
       operationState: z
         .object({
           phase: z.enum([
@@ -44,6 +56,8 @@ export type ApplicationProgress =
       requested: true;
       operationId: string;
       revision: string;
+      /** OutOfSync resources that are only waiting to be pruned. Never pruned here. */
+      prunePending: readonly string[];
     };
 
 function requestOf(info: z.infer<typeof InfoSchema>, name: string) {
@@ -75,11 +89,47 @@ export function requireRenderedSource(
   return observed;
 }
 
+function resourceIdentity(resource: {
+  group?: string | undefined;
+  kind?: string | undefined;
+  namespace?: string | undefined;
+  name?: string | undefined;
+}): string {
+  return `${resource.group ?? ""}/${resource.kind ?? "Resource"} ${resource.namespace ?? "_cluster"}/${resource.name ?? "unnamed"}`;
+}
+
+/**
+ * OutOfSync is settled only when every drifted resource already asks to be
+ * pruned. Missing or empty resources fail closed. This does not prune them.
+ */
+function prunePendingResources(
+  resources:
+    | readonly {
+        status?: string | undefined;
+        requiresPruning?: boolean | undefined;
+        group?: string | undefined;
+        kind?: string | undefined;
+        namespace?: string | undefined;
+        name?: string | undefined;
+      }[]
+    | undefined,
+): readonly string[] | null {
+  if (resources === undefined || resources.length === 0) return null;
+  const drifting = resources.filter(
+    (resource) => resource.status === "OutOfSync",
+  );
+  return drifting.length === 0 ||
+    drifting.some((resource) => resource.requiresPruning !== true)
+    ? null
+    : drifting.map((resource) => resourceIdentity(resource));
+}
+
 /**
  * Readback of the owned Application (A2): it is Delivery's for this
  * environment, carries exactly the rendered source, and its last operation
- * is this deployment's request. Settled only when that operation succeeded
- * at the exact revision and the Application is Synced and Healthy.
+ * is this deployment's request. Settled when that operation succeeded at the
+ * exact revision, health is Healthy, and the Application is Synced — or
+ * OutOfSync only because every drifted resource requires pruning.
  */
 export function applicationProgress(
   raw: unknown,
@@ -101,15 +151,22 @@ export function applicationProgress(
     state.operation.info,
     "ci.sjer.red/operation-id",
   );
+  const syncStatus = observed.status.sync?.status;
+  const prunePending =
+    syncStatus === "Synced"
+      ? []
+      : syncStatus === "OutOfSync"
+        ? prunePendingResources(observed.status.resources)
+        : null;
   if (
     operationId === null ||
+    prunePending === null ||
     state.phase !== "Succeeded" ||
-    observed.status.sync?.status !== "Synced" ||
     observed.status.health?.status !== "Healthy"
   )
     return { settled: false, uid: observed.metadata.uid, requested: true };
   if (
-    observed.status.sync.revision !== desired.revision ||
+    observed.status.sync?.revision !== desired.revision ||
     state.syncResult?.revision !== desired.revision
   )
     throw new Error(
@@ -121,5 +178,6 @@ export function applicationProgress(
     requested: true,
     operationId,
     revision: desired.revision,
+    prunePending,
   };
 }
