@@ -239,6 +239,8 @@ describe("Application readback proof (A2)", () => {
     request?: string;
     revision?: string;
     health?: string;
+    sync?: string;
+    resources?: unknown;
   }) {
     return {
       metadata: {
@@ -250,8 +252,14 @@ describe("Application readback proof (A2)", () => {
       },
       spec: { source: overrides.source ?? rendered.source },
       status: {
-        sync: { status: "Synced", revision: overrides.revision ?? "1.0.1" },
+        sync: {
+          status: overrides.sync ?? "Synced",
+          revision: overrides.revision ?? "1.0.1",
+        },
         health: { status: overrides.health ?? "Healthy" },
+        ...(overrides.resources === undefined
+          ? {}
+          : { resources: overrides.resources }),
         operationState: {
           phase: overrides.phase ?? "Succeeded",
           operation: {
@@ -289,6 +297,58 @@ describe("Application readback proof (A2)", () => {
     expect(
       applicationProgress(
         observed({ health: "Progressing" }),
+        rendered,
+        requestId,
+      ),
+    ).toMatchObject({ settled: false });
+  });
+
+  test("settles an OutOfSync application whose only drift requires pruning", () => {
+    const leftover = {
+      group: "batch",
+      kind: "Job",
+      namespace: "delivery",
+      name: "migrate",
+      status: "OutOfSync",
+      requiresPruning: true,
+    };
+    expect(
+      applicationProgress(
+        observed({ sync: "OutOfSync", resources: [leftover] }),
+        rendered,
+        requestId,
+      ),
+    ).toMatchObject({
+      settled: true,
+      prunePending: ["batch/Job delivery/migrate"],
+    });
+    expect(
+      applicationProgress(
+        observed({
+          sync: "OutOfSync",
+          resources: [{ ...leftover, requiresPruning: false }],
+        }),
+        rendered,
+        requestId,
+      ),
+    ).toMatchObject({ settled: false });
+    expect(
+      applicationProgress(observed({ sync: "OutOfSync" }), rendered, requestId),
+    ).toMatchObject({ settled: false });
+    expect(
+      applicationProgress(
+        observed({ sync: "OutOfSync", resources: [] }),
+        rendered,
+        requestId,
+      ),
+    ).toMatchObject({ settled: false });
+    expect(
+      applicationProgress(
+        observed({
+          sync: "OutOfSync",
+          health: "Progressing",
+          resources: [leftover],
+        }),
         rendered,
         requestId,
       ),

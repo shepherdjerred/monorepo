@@ -280,7 +280,11 @@ async function syncOwned(
       {
         kind: "reconciliation",
         operationId: proof.operationId,
-        summary: `Owned operation ${proof.operationId} synced ${rendered.name} to ${proof.revision}; Synced and Healthy with the exact rendered source`,
+        summary: `Owned operation ${proof.operationId} synced ${rendered.name} to ${proof.revision}; Synced and Healthy with the exact rendered source${
+          proof.prunePending.length === 0
+            ? ""
+            : `; prune pending: ${proof.prunePending.join(", ")}`
+        }`,
       },
     ],
   });
