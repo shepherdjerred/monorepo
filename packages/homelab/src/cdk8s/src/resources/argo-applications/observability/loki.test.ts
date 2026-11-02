@@ -70,6 +70,28 @@ const LokiRuleFileSchema = z.object({
   ),
 });
 
+/** One alert rule from a file of the synthesized `loki-alert-rules` ConfigMap. */
+function lokiRule(
+  file: keyof z.infer<typeof LokiRulesConfigMapSchema>["data"],
+  alert: string,
+) {
+  const app = new App();
+  createLokiApp(new Chart(app, "test"));
+  const rulesConfigMap = parseAllDocuments(app.synthYaml())
+    .map((document) => LokiRulesConfigMapSchema.safeParse(document.toJS()))
+    .find((result) => result.success);
+  if (!rulesConfigMap?.success) {
+    throw new Error("loki-alert-rules ConfigMap was not synthesized");
+  }
+  const rule = LokiRuleFileSchema.parse(
+    parseAllDocuments(rulesConfigMap.data.data[file])[0]?.toJS(),
+  )
+    .groups.flatMap((group) => group.rules)
+    .find((entry) => entry.alert === alert);
+  if (rule === undefined) throw new Error(`Missing ${alert}`);
+  return rule;
+}
+
 function lokiValues(): unknown {
   const app = new App();
   const chart = new Chart(app, "test");
@@ -126,26 +148,7 @@ describe("Loki Argo CD application", () => {
   });
 
   it("alerts on the profiler's unwind-table rejection log per node", () => {
-    const app = new App();
-    const chart = new Chart(app, "test");
-    createLokiApp(chart);
-    const rulesConfigMap = parseAllDocuments(app.synthYaml())
-      .map((document) => LokiRulesConfigMapSchema.safeParse(document.toJS()))
-      .find((result) => result.success);
-    if (!rulesConfigMap?.success) {
-      throw new Error("loki-alert-rules ConfigMap was not synthesized");
-    }
-    const rules = LokiRuleFileSchema.parse(
-      parseAllDocuments(
-        rulesConfigMap.data.data["alloy-rules.yaml"],
-      )[0]?.toJS(),
-    ).groups.flatMap((group) => group.rules);
-    const rule = rules.find(
-      (entry) => entry.alert === "AlloyUnwindInfoArrayFull",
-    );
-    if (rule === undefined) {
-      throw new Error("Missing AlloyUnwindInfoArrayFull");
-    }
+    const rule = lokiRule("alloy-rules.yaml", "AlloyUnwindInfoArrayFull");
     expect(rule.expr).toContain(
       '{namespace="alloy", container="alloy"} |= "unwind info array full"',
     );
@@ -154,24 +157,10 @@ describe("Loki Argo CD application", () => {
   });
 
   it("alerts on sustained filer.backup error lines", () => {
-    const app = new App();
-    const chart = new Chart(app, "test");
-    createLokiApp(chart);
-    const rulesConfigMap = parseAllDocuments(app.synthYaml())
-      .map((document) => LokiRulesConfigMapSchema.safeParse(document.toJS()))
-      .find((result) => result.success);
-    if (!rulesConfigMap?.success) {
-      throw new Error("loki-alert-rules ConfigMap was not synthesized");
-    }
-    const rule = LokiRuleFileSchema.parse(
-      parseAllDocuments(
-        rulesConfigMap.data.data["seaweedfs-backup-rules.yaml"],
-      )[0]?.toJS(),
-    )
-      .groups.flatMap((group) => group.rules)
-      .find((entry) => entry.alert === "SeaweedFSBackupSinkErrors");
-    if (rule === undefined)
-      throw new Error("Missing SeaweedFSBackupSinkErrors");
+    const rule = lokiRule(
+      "seaweedfs-backup-rules.yaml",
+      "SeaweedFSBackupSinkErrors",
+    );
     expect(rule.expr).toContain(
       '{namespace="seaweedfs", container="filer-backup"} |~ "^E[0-9]{4} "',
     );
