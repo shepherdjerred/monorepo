@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.safety.adapter.grim;
 
 import ac.grim.grimac.api.GrimAPIProvider;
 import ac.grim.grimac.api.event.events.FlagEvent;
+import com.shepherdjerred.thestorm.core.expansion.FlagProviderUnavailableException;
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.safety.ContentSafety;
@@ -131,11 +132,18 @@ public final class GrimHooks implements Listener, AutoCloseable {
                 (enabled, failure) -> {
                   if (!player.isOnline()) return;
                   if (failure != null) {
+                    var cause = FlagProviderUnavailableException.unwrap(failure);
+                    var inner = cause.getCause();
+                    var reported = inner == null ? cause : inner;
+                    var detail =
+                        reported.getClass().getSimpleName()
+                            + (reported.getMessage() == null ? "" : ": " + reported.getMessage());
                     context
                         .logger()
                         .error(
-                            "Anticheat correction rollout unavailable; retaining detection only",
-                            failure);
+                            "Anticheat correction rollout unavailable; retaining detection only ({})",
+                            detail,
+                            cause);
                     apply(player, false);
                   } else apply(player, Boolean.TRUE.equals(enabled));
                 },
