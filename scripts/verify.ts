@@ -262,6 +262,18 @@ export async function main(
   const designTokenExitCode = await designTokenCheck.exited;
   if (designTokenExitCode !== 0) return designTokenExitCode;
 
+  const dockerfileCopies = Bun.spawn(
+    ["bun", "--no-install", "scripts/checks/dockerfile-workspace-copies.ts"],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  const dockerfileCopiesExitCode = await dockerfileCopies.exited;
+  if (dockerfileCopiesExitCode !== 0) return dockerfileCopiesExitCode;
+
   const analyticsCheck = Bun.spawn(
     ["bun", "--no-install", "scripts/checks/check-analytics-sites.ts"],
     {
