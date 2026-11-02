@@ -305,9 +305,11 @@ These procedures document how to execute automated or semi-automated outreach sa
 
 2. **Daemon Management**:
    - Start the isolated toolkit Discord daemon:
+
      ```bash
      TOOLKIT_DISCORD_DIR="$HOME/.toolkit/discord/storm-promotion" toolkit discord daemon start --ttl 4h
      ```
+
    - Verify status via `toolkit discord daemon status`. It must report `userbot: the.storm.mc`.
 
 3. **Sending and Reading**:
