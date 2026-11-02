@@ -1,11 +1,13 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.SealedParticipants;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -17,6 +19,8 @@ import java.util.UUID;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Players watching the match without playing it. Watching snapshots the player through the same
@@ -28,6 +32,13 @@ import org.bukkit.entity.Player;
  */
 final class Watchers {
 
+  /**
+   * Multiverse's one-tick {@code enforce-gamemode} turns a watcher into survival, which makes
+   * follow a no-op. These nodes are the proven bypass for the RWF world and its lobby.
+   */
+  private static final List<String> GAMEMODE_BYPASS =
+      List.of("mv.bypass.gamemode.rwf", "mv.bypass.gamemode.rwf_lobby");
+
   private final MatchRunner runner;
   private final Snapshots snapshots;
   private final Scoreboards boards;
@@ -37,6 +48,8 @@ final class Watchers {
   private final Set<UUID> joining = new LinkedHashSet<>();
   private final Set<UUID> nextGame = new LinkedHashSet<>();
   private final Map<UUID, Object> admissions = new HashMap<>();
+  private final Map<UUID, PermissionAttachment> spectatorBypass = new HashMap<>();
+  private final Map<UUID, Cancellable> spectatorReassert = new HashMap<>();
 
   Watchers(MatchRunner runner, Snapshots snapshots, Scoreboards boards, PaperContext context) {
     this.runner = runner;
@@ -71,6 +84,7 @@ final class Watchers {
     if (watching.contains(id)) {
       unfollow(player);
       runner.move(player, runner.watchPoint());
+      holdSpectator(player);
       Texts.info(player, "Back at the spectator point.");
       return Optional.empty();
     }
@@ -90,6 +104,7 @@ final class Watchers {
     }
     PlayerStates.wipe(player, GameMode.SPECTATOR);
     runner.move(player, runner.watchPoint());
+    holdSpectator(player);
     boards.show(player);
     Texts.info(
         player,
@@ -160,6 +175,7 @@ final class Watchers {
       var player = context.server().getPlayer(id);
       if (player == null) {
         watching.remove(id);
+        releaseSpectator(id, null);
         context.activity().left(id);
       } else {
         restore(player);
@@ -176,6 +192,7 @@ final class Watchers {
     runner.streakPicker().forget(id);
     context.activity().left(id);
     watching.remove(id);
+    releaseSpectator(id, player);
     unfollow(player);
     boards.hide(player);
     if (snapshots.restore(player) == SnapshotKeeper.Outcome.NOTHING) {
@@ -274,8 +291,58 @@ final class Watchers {
       if (player != null) {
         unfollow(player);
         runner.move(player, runner.watchPoint());
+        holdSpectator(player);
       }
     }
+  }
+
+  /**
+   * Grant the Multiverse bypass for this watch and put the player back in spectator on the next
+   * ticks. {@code enforce-gamemode} runs one tick after the world change, including a later map
+   * move, so the correction repeats until the watch ends.
+   */
+  private void holdSpectator(Player player) {
+    var id = player.getUniqueId();
+    var attachment = spectatorBypass.get(id);
+    if (attachment == null) {
+      attachment = player.addAttachment(context.plugin());
+      for (var node : GAMEMODE_BYPASS) {
+        attachment.setPermission(node, true);
+      }
+      spectatorBypass.put(id, attachment);
+    }
+    player.setGameMode(GameMode.SPECTATOR);
+    reassertSpectator(id);
+  }
+
+  private void reassertSpectator(UUID id) {
+    var previous = spectatorReassert.remove(id);
+    if (previous != null) previous.cancel();
+    if (!watching.contains(id)) return;
+    var task =
+        context
+            .scheduler()
+            .runOnMainThreadLater(
+                Duration.ofMillis(50),
+                () -> {
+                  spectatorReassert.remove(id);
+                  if (!watching.contains(id)) return;
+                  var online = context.server().getPlayer(id);
+                  if (online == null || !online.isOnline()) return;
+                  if (online.getGameMode() != GameMode.SPECTATOR) {
+                    online.setGameMode(GameMode.SPECTATOR);
+                  }
+                  reassertSpectator(id);
+                });
+    spectatorReassert.put(id, task);
+  }
+
+  /** Drop the bypass before a snapshot restore, so it cannot fight the returned gamemode. */
+  private void releaseSpectator(UUID id, @Nullable Player player) {
+    var task = spectatorReassert.remove(id);
+    if (task != null) task.cancel();
+    var attachment = spectatorBypass.remove(id);
+    if (attachment != null && player != null) player.removeAttachment(attachment);
   }
 
   /** The server only lets a player in spectator mode follow (or stop following) anyone. */

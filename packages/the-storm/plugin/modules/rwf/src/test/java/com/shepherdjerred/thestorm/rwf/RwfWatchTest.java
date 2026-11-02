@@ -156,6 +156,24 @@ final class RwfWatchTest {
   }
 
   @Test
+  void watchingStaysSpectatorWhenTheGamemodeIsFlipped() {
+    var harness = start();
+    var bob = harness.loadedPlayer("Bob");
+    watch(bob);
+
+    assertThat(bob.hasPermission("mv.bypass.gamemode.rwf")).isTrue();
+    assertThat(bob.hasPermission("mv.bypass.gamemode.rwf_lobby")).isTrue();
+    bob.setGameMode(GameMode.SURVIVAL);
+    harness.ticks(2);
+    assertThat(bob.getGameMode()).isEqualTo(GameMode.SPECTATOR);
+
+    bob.performCommand("rwf leave");
+    assertRestored(bob);
+    assertThat(bob.hasPermission("mv.bypass.gamemode.rwf")).isFalse();
+    assertThat(bob.hasPermission("mv.bypass.gamemode.rwf_lobby")).isFalse();
+  }
+
+  @Test
   void aWatcherWhoQuitsIsRestoredBeforeTheServerSavesThem() {
     var harness = start();
     var bob = harness.loadedPlayer("Bob");
