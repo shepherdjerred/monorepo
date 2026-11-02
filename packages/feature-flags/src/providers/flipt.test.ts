@@ -30,6 +30,45 @@ describe("FliptProvider — explicit freshness with one client", () => {
     vi.useRealTimers();
   });
 
+  test("a flag created after startup resolves after one fresh snapshot", async () => {
+    const without = {
+      ...snapshot,
+      flags: snapshot.flags.filter((flag) => flag.key !== "plain-on"),
+    };
+    const fake = createFakeFetcher({ kind: "snapshot", body: without });
+    provider = await providerWithFixture(fake);
+    const before = fake.callCount();
+    await expect(
+      provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).resolves.toMatchObject({ errorCode: ErrorCode.FLAG_NOT_FOUND });
+    expect(fake.callCount()).toBe(before + 1);
+
+    fake.setBehavior({ kind: "snapshot", body: snapshot });
+    const refreshed = fake.callCount();
+    await expect(
+      provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).resolves.toMatchObject({ value: true, reason: "TARGETING_MATCH" });
+    expect(fake.callCount()).toBe(refreshed + 1);
+    const cached = fake.callCount();
+    await expect(
+      provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).resolves.toMatchObject({ value: true });
+    expect(fake.callCount()).toBe(cached);
+  });
+
+  test("a missing flag stays missing when the fresh snapshot cannot be loaded", async () => {
+    const without = {
+      ...snapshot,
+      flags: snapshot.flags.filter((flag) => flag.key !== "plain-on"),
+    };
+    const fake = createFakeFetcher({ kind: "snapshot", body: without });
+    provider = await providerWithFixture(fake);
+    fake.setBehavior({ kind: "network-error", message: "offline" });
+    await expect(
+      provider.resolveBooleanEvaluation("plain-on", false, CONTEXT),
+    ).resolves.toMatchObject({ errorCode: ErrorCode.FLAG_NOT_FOUND });
+  });
+
   test("outage leaves ordinary cached answers intact, but strict checks fail and later recover", async () => {
     const fake = createFakeFetcher({ kind: "snapshot", body: snapshot });
     provider = await providerWithFixture(fake);
