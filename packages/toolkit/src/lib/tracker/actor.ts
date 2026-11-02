@@ -24,6 +24,7 @@ function sessionIdentity(
     ["claude-code", env["CLAUDE_CODE_SESSION_ID"]],
     ["cursor", env["CURSOR_CONVERSATION_ID"]],
     ["opencode", env["OPENCODE_SESSION_ID"]],
+    ["grok", env["GROK_SESSION_ID"]],
   ] as const;
   const preferred = env["TRACKER_ACTOR_HARNESS"];
   for (const [harness, session] of sessions) {
@@ -44,9 +45,14 @@ export function detectActor(
   const session = sessionIdentity(env);
   const agentPresent =
     session !== null ||
-    ["AI_AGENT", "CLAUDECODE", "CODEX_HOME", "CURSOR_AGENT", "OPENCODE"].some(
-      (key) => Boolean(env[key]),
-    );
+    [
+      "AI_AGENT",
+      "CLAUDECODE",
+      "CODEX_HOME",
+      "CURSOR_AGENT",
+      "OPENCODE",
+      "GROK_AGENT",
+    ].some((key) => Boolean(env[key]));
   if (
     explicitKey === undefined &&
     session === null &&
