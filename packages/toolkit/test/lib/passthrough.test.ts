@@ -1,8 +1,17 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { chmod, mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { buildPassthroughInvocation } from "#lib/passthrough.ts";
+
+const HelpReport = z.object({
+  args: z.array(z.string()),
+  homes: z.array(z.string()),
+  token: z.string(),
+  opts: z.string(),
+  found: z.array(z.string()),
+});
 
 const temporaryDirectories: string[] = [];
 
@@ -475,6 +484,120 @@ test.each(["--auth-token synthetic-secret", "--auth-token=synthetic-secret"])(
     expect(result.stderr).not.toContain("synthetic-secret");
   },
 );
+
+test("help cannot read a config-file token or a token passed on the command line", async () => {
+  const sentinel = "sentinel-argocd-help-token";
+  const home = await mkdtemp(path.join(tmpdir(), "toolkit-argocd-home-"));
+  temporaryDirectories.push(home);
+  const configDirectory = path.join(
+    home,
+    "Library",
+    "Application Support",
+    "argocd",
+  );
+  await mkdir(configDirectory, { recursive: true });
+  await Bun.write(
+    path.join(configDirectory, "config"),
+    `contexts:\n  current: {token: ${sentinel}}\n`,
+  );
+  await Bun.write(path.join(home, ".argocd"), `token: ${sentinel}\n`);
+  const xdg = path.join(home, ".config");
+  await mkdir(path.join(xdg, "argocd"), { recursive: true });
+  await Bun.write(path.join(xdg, "argocd", "config"), `token: ${sentinel}\n`);
+  const selected = path.join(home, "selected-config");
+  await Bun.write(selected, `token: ${sentinel}\n`);
+
+  const directory = await fakePath();
+  await writeExecutable(
+    directory,
+    "argocd",
+    `#!${process.execPath}
+import { readFileSync } from "node:fs";
+const homes = [process.env.HOME, process.env.XDG_CONFIG_HOME];
+const candidates = [
+  process.env.HOME + "/Library/Application Support/argocd/config",
+  process.env.HOME + "/.argocd",
+  process.env.XDG_CONFIG_HOME + "/argocd/config",
+];
+const found = [];
+for (const candidate of candidates) {
+  try {
+    found.push(readFileSync(candidate, "utf8"));
+  } catch {
+    found.push("missing");
+  }
+}
+console.log(JSON.stringify({
+  args: process.argv.slice(2),
+  homes,
+  token: process.env.ARGOCD_AUTH_TOKEN ?? "",
+  opts: process.env.ARGOCD_OPTS ?? "",
+  found,
+}));
+`,
+  );
+
+  const help = await runToolkit(
+    directory,
+    [
+      "argocd",
+      "--auth-token",
+      sentinel,
+      "--config",
+      selected,
+      "app",
+      "get",
+      "--help",
+    ],
+    "",
+    {
+      extraEnv: {
+        ARGOCD_AUTH_TOKEN: sentinel,
+        HOME: home,
+        XDG_CONFIG_HOME: xdg,
+      },
+    },
+  );
+  expect(help.code).toBe(0);
+  expect(help.stdout).not.toContain(sentinel);
+  expect(help.stderr).not.toContain(sentinel);
+  const reported = HelpReport.parse(JSON.parse(help.stdout));
+  expect(reported.token).toBe("");
+  expect(reported.args).not.toContain("--auth-token");
+  expect(reported.args).not.toContain("--config");
+  expect(reported.args).not.toContain(selected);
+  expect(reported.args).toContain("--help");
+  expect(reported.opts).toContain('--auth-token ""');
+  expect(reported.homes[0]).not.toBe(home);
+  expect(reported.homes[1]).toBe(reported.homes[0]);
+  expect(reported.found).toEqual(["missing", "missing", "missing"]);
+  if (reported.homes[0] !== undefined)
+    temporaryDirectories.push(reported.homes[0]);
+
+  const operational = await runToolkit(
+    directory,
+    ["argocd", "--auth-token", sentinel, "app", "list"],
+    "",
+    {
+      extraEnv: {
+        ARGOCD_AUTH_TOKEN: sentinel,
+        HOME: home,
+        XDG_CONFIG_HOME: xdg,
+      },
+    },
+  );
+  expect(operational.code).toBe(0);
+  const kept = HelpReport.pick({
+    args: true,
+    homes: true,
+    token: true,
+  }).parse(JSON.parse(operational.stdout));
+  expect(kept.token).toBe(sentinel);
+  expect(kept.args).toContain("--auth-token");
+  expect(kept.args).toContain(sentinel);
+  expect(kept.homes[0]).toBe(home);
+  expect(kept.homes[1]).toBe(xdg);
+});
 
 test("authenticated Argo keeps terminal detection and waits for a negative confirmation", async () => {
   const directory = await fakePath();
