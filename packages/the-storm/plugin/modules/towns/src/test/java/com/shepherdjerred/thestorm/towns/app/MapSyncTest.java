@@ -151,7 +151,7 @@ final class MapSyncTest {
   }
 
   private UUID campWithAPersonalChunk() {
-    assertThat(towns.foundCamp(NOMAD).isOk()).isTrue();
+    assertThat(towns.foundCamp(NOMAD, "Nomad").isOk()).isTrue();
     store.succeed();
     assertThat(towns.claim(NOMAD, chunk(40, 40)).isOk()).isTrue();
     store.succeed();

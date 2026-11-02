@@ -139,7 +139,10 @@ public final class EssentialsPaper {
                 context
                     .services()
                     .require(com.shepherdjerred.thestorm.core.world.SpawnArrivals.class),
-                destinations.spawn()),
+                destinations.spawn(),
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.players.VisitPass.class)),
             teleports.warmup());
     context
         .services()
@@ -172,11 +175,13 @@ public final class EssentialsPaper {
             runtime,
             flow,
             tpa,
-            new TpaCommands.Rollout(
-                teleports.tpaTimeout(),
-                context
-                    .services()
-                    .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)));
+            new TpaCommands.Scope(
+                new TpaCommands.Rollout(
+                    teleports.tpaTimeout(),
+                    context
+                        .services()
+                        .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)),
+                context.services()));
     var teleportInfo = new TeleportInfoCommands(runtime, flow);
     var playerCommands =
         new PlayerCommands(
@@ -184,7 +189,8 @@ public final class EssentialsPaper {
             KitItems.readable(config.rules()),
             KitItems.readable(config.kits().guide()),
             app.afk());
-    var moderationCommands = new ModerationCommands(runtime, app.moderation(), app.players());
+    var moderationCommands =
+        new ModerationCommands(runtime, app.moderation(), app.players(), context.services());
     context
         .lifecycle()
         .registerEventHandler(

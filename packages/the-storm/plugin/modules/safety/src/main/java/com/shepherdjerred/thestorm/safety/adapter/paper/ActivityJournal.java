@@ -117,6 +117,23 @@ public final class ActivityJournal implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void teleport(PlayerTeleportEvent event) {
+    var player = event.getPlayer();
+    if (com.shepherdjerred.thestorm.core.players.Humans.isHuman(player)
+        && event.getTo() != null
+        && event.getFrom().getWorld() != null
+        && event.getTo().getWorld() != null) {
+      context
+          .logger()
+          .info(
+              "{}",
+              PlayLog.teleport(
+                  player.getName(),
+                  PlayLog.move(
+                      event.getFrom(),
+                      event.getTo(),
+                      event.getCause().name(),
+                      event.isCancelled())));
+    }
     record(
         event.getPlayer(),
         "teleport " + event.getCause() + " " + event.getFrom() + " -> " + event.getTo(),

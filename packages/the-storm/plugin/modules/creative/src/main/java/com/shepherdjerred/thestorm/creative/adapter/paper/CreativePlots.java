@@ -985,7 +985,9 @@ public final class CreativePlots {
   }
 
   private @Nullable Player online(Player actor, String name) {
-    var target = actor.getServer().getPlayerExact(name);
+    var target =
+        com.shepherdjerred.thestorm.core.players.PlayerHandles.online(actor.getServer(), name)
+            .orElse(null);
     if (target == null || !Humans.isHuman(target)) {
       error(actor, "That player is not online.");
       return null;

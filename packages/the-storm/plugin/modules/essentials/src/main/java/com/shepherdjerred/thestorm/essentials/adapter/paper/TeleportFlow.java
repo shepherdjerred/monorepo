@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
+import com.shepherdjerred.thestorm.core.players.VisitPass;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
@@ -90,6 +91,7 @@ final class TeleportFlow implements TeleportTravel {
    * @param sealed worlds no teleport may leave or enter
    * @param arrivals world-spawn squares where warmup is skipped
    * @param spawn the essentials spawn; nearby departures also skip warmup
+   * @param visits one accepted tpa landing, so the move is not refused at the claim
    */
   record Services(
       TeleportPayments payments,
@@ -98,7 +100,8 @@ final class TeleportFlow implements TeleportTravel {
       BackRecorder back,
       SealedWorlds sealed,
       SpawnArrivals arrivals,
-      Position spawn) {}
+      Position spawn,
+      VisitPass visits) {}
 
   private record Pending(Ticket ticket, Position start, Cancellable task) {}
 
@@ -571,6 +574,9 @@ final class TeleportFlow implements TeleportTravel {
     }
     var mover = ticket.mover();
     var left = Positions.of(mover);
+    if (ticket.kind() == TeleportKind.TPA) {
+      services.visits().allowNextPluginTeleport(mover.getUniqueId());
+    }
     CompletableFuture<Boolean> arrival;
     try {
       var landing = landings.get(mover.getUniqueId());
@@ -579,6 +585,9 @@ final class TeleportFlow implements TeleportTravel {
               ? landing.move().move(mover, safe)
               : this.arrival.move(mover, safe);
     } catch (RuntimeException e) {
+      if (ticket.kind() == TeleportKind.TPA) {
+        services.visits().consumePluginTeleport(mover.getUniqueId());
+      }
       runtime.report("teleporting a player", e);
       cancel(ticket, payment, "the teleport failed");
       return;
@@ -586,7 +595,12 @@ final class TeleportFlow implements TeleportTravel {
     runtime.onMain(
         arrival,
         "teleporting a player",
-        moved -> landed(ticket, payment, left, Boolean.TRUE.equals(moved)),
+        moved -> {
+          if (ticket.kind() == TeleportKind.TPA && !Boolean.TRUE.equals(moved)) {
+            services.visits().consumePluginTeleport(mover.getUniqueId());
+          }
+          landed(ticket, payment, left, Boolean.TRUE.equals(moved));
+        },
         failure -> cancel(ticket, payment, "the teleport failed"));
   }
 
@@ -726,6 +740,9 @@ final class TeleportFlow implements TeleportTravel {
     var guard = services.guards().check(mover, destination);
     if (guard.isPresent() || !playerChosen(ticket.kind())) {
       return guard;
+    }
+    if (ticket.kind() == TeleportKind.TPA) {
+      return Optional.empty();
     }
     return switch (services.protection().check(mover, ProtectedAction.TELEPORT_INTO, destination)) {
       case Decision.Allowed() -> Optional.empty();

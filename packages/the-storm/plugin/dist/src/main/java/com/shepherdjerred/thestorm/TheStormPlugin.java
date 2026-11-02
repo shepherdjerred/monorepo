@@ -103,7 +103,10 @@ public final class TheStormPlugin extends JavaPlugin {
     compute = pool;
     db.migrate("core", getClass().getClassLoader());
     var players = new SqlPlayerDirectory(db);
-    services.provide(PlayerDirectory.class, players);
+    services.provide(PlayerDirectory.class, new com.shepherdjerred.thestorm.core.players.NickDirectory(players, services));
+    services.provide(
+        com.shepherdjerred.thestorm.core.players.VisitPass.class,
+        new com.shepherdjerred.thestorm.core.players.VisitPasses());
     var resets = new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry();
     services.provide(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class, resets);
     resets.diagnostics(message -> getComponentLogger().info("{}", message));

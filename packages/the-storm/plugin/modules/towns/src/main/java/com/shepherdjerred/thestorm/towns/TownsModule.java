@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.towns.adapter.db.JooqRecoveryStore;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqTownsStore;
 import com.shepherdjerred.thestorm.towns.adapter.paper.TownsPaper;
 import com.shepherdjerred.thestorm.towns.adapter.remote.FliptRentalGate;
+import com.shepherdjerred.thestorm.towns.app.CampRenames;
 import com.shepherdjerred.thestorm.towns.app.Clocks;
 import com.shepherdjerred.thestorm.towns.app.LockBook;
 import com.shepherdjerred.thestorm.towns.app.LockService;
@@ -90,6 +91,19 @@ public final class TownsModule implements StormModule {
     state.attachHeritage(
         new com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex(heritage.sites()));
     state.load(await(store.loadAll(), "towns"));
+    var renamed =
+        await(
+            CampRenames.apply(
+                state,
+                store,
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.players.PlayerDirectory.class),
+                message -> context.logger().info("{}", message)),
+            "camp names");
+    if (renamed > 0) {
+      context.logger().info("Renamed {} camps to their founders' names", renamed);
+    }
     var leases = new JooqLeaseStore(context.database());
     var parcels = new ParcelBook(parcelsConfig, context.time());
     parcels.load(await(leases.load(), "plot leases"));

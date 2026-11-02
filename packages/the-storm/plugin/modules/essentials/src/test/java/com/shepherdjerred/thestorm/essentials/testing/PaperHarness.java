@@ -76,6 +76,9 @@ public final class PaperHarness implements AutoCloseable {
     var services = harness.services;
     services.provide(Wallets.class, wallets);
     services.provide(Protection.class, new AllowAllProtection());
+    services.provide(
+        com.shepherdjerred.thestorm.core.players.VisitPass.class,
+        new com.shepherdjerred.thestorm.core.players.VisitPasses());
     services.provide(SealedWorlds.class, harness.sealed);
     services.provide(
         com.shepherdjerred.thestorm.core.world.SpawnArrivals.class,

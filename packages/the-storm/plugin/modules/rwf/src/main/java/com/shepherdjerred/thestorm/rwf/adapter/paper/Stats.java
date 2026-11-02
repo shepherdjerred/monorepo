@@ -122,9 +122,21 @@ final class Stats {
     if (!open(sender)) {
       return;
     }
-    var online = context.server().getPlayerExact(name);
-    if (online != null) {
-      show(sender, online.getUniqueId(), online.getName());
+    var online =
+        com.shepherdjerred.thestorm.core.players.PlayerHandles.online(context.server(), name);
+    if (online.isPresent()) {
+      show(sender, online.orElseThrow().getUniqueId(), online.orElseThrow().getName());
+      return;
+    }
+    var nick =
+        java.util.Optional.ofNullable(
+                context
+                    .server()
+                    .getServicesManager()
+                    .load(com.shepherdjerred.thestorm.core.players.Nicknames.class))
+            .flatMap(names -> names.named(name));
+    if (nick.isPresent()) {
+      show(sender, nick.orElseThrow(), name);
       return;
     }
     var cached = context.server().getOfflinePlayerIfCached(name);

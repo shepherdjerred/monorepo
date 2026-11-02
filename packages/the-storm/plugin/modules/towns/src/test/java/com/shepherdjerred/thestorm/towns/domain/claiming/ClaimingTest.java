@@ -249,7 +249,7 @@ final class ClaimingTest {
   void aCampStaysAtItsOwnCapWhenTheOwnerIsAHighGovernor() {
     var allowance = new ClaimAllowance(16, List.of(8, 16, 32, 48, 64));
     var limits = ClaimLimits.holding(allowance, 16);
-    var camp = Town.camp(UUID.randomUUID(), Fixtures.FOUNDED, OWNER).withGovernorLevel(5);
+    var camp = Town.camp(UUID.randomUUID(), "Camp", Fixtures.FOUNDED, OWNER).withGovernorLevel(5);
     var town = Fixtures.townA().withGovernorLevel(5);
 
     assertThat(limits.maxClaims(camp)).isEqualTo(16);

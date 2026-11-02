@@ -119,6 +119,9 @@ public class TownsTestPlugin extends JavaPlugin {
           }
         });
     services.provide(PlayerDirectory.class, new Directory());
+    services.provide(
+        com.shepherdjerred.thestorm.core.players.VisitPass.class,
+        new com.shepherdjerred.thestorm.core.players.VisitPasses());
     services.provide(SealedWorlds.class, sealed);
     services.provide(ExpansionSettings.class, new ExpansionSettings(2000, 10, 100, 64, 32, 16, 30));
     services.provide(

@@ -66,6 +66,17 @@ public final class ChatModule implements StormModule {
     context
         .services()
         .provide(com.shepherdjerred.thestorm.chat.app.IdentityService.class, identities);
+    var nicknames = new com.shepherdjerred.thestorm.chat.adapter.paper.ChatNicknames(identities);
+    context.services().provide(com.shepherdjerred.thestorm.core.players.Nicknames.class, nicknames);
+    context
+        .plugin()
+        .getServer()
+        .getServicesManager()
+        .register(
+            com.shepherdjerred.thestorm.core.players.Nicknames.class,
+            nicknames,
+            context.plugin(),
+            org.bukkit.plugin.ServicePriority.Normal);
     context
         .services()
         .provide(

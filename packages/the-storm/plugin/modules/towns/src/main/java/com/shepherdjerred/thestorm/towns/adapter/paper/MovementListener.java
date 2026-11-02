@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.players.VisitPass;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
@@ -22,10 +23,12 @@ final class MovementListener implements Listener {
 
   private final Guard guard;
   private final BlockKinds kinds;
+  private final VisitPass visits;
 
-  MovementListener(Guard guard, BlockKinds kinds) {
+  MovementListener(Guard guard, BlockKinds kinds, VisitPass visits) {
     this.guard = guard;
     this.kinds = kinds;
+    this.visits = visits;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -62,6 +65,9 @@ final class MovementListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onTeleport(PlayerTeleportEvent event) {
+    if (acceptedVisit(visits, event.getPlayer().getUniqueId(), event.getCause())) {
+      return;
+    }
     var subject =
         switch (event.getCause()) {
           case ENDER_PEARL -> Subject.ENDER_PEARL;
@@ -81,6 +87,18 @@ final class MovementListener implements Listener {
     if (!guard.permits(event.getPlayer(), act, guard.land(event.getTo()))) {
       event.setCancelled(true);
     }
+  }
+
+  /**
+   * True when this plugin or command teleport spends an accepted-visit pass. Other causes leave the
+   * pass armed for the landing that follows.
+   */
+  static boolean acceptedVisit(
+      VisitPass visits, java.util.UUID player, PlayerTeleportEvent.TeleportCause cause) {
+    return switch (cause) {
+      case PLUGIN, COMMAND -> visits.consumePluginTeleport(player);
+      default -> false;
+    };
   }
 
   @EventHandler(priority = EventPriority.MONITOR)

@@ -3,18 +3,17 @@ package com.shepherdjerred.thestorm.chat.adapter.paper;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.chat.app.ChatService;
 import com.shepherdjerred.thestorm.chat.app.Correspondent;
 import com.shepherdjerred.thestorm.chat.app.PrivateLine;
 import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
+import com.shepherdjerred.thestorm.core.players.PlayerHandles;
 import com.shepherdjerred.thestorm.core.result.Result;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import java.util.List;
+import java.util.Locale;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
@@ -54,15 +53,33 @@ public final class PrivateCommands {
     return Commands.literal(label)
         .requires(source -> service.ready() && source.getSender() instanceof Player)
         .then(
-            Commands.argument(PLAYER, ArgumentTypes.player())
+            Commands.argument(PLAYER, StringArgumentType.word())
+                .suggests(
+                    (context, builder) -> {
+                      var prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
+                      for (var player : server.getOnlinePlayers()) {
+                        if (player.getName().toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                          builder.suggest(player.getName());
+                        }
+                      }
+                      return builder.buildFuture();
+                    })
                 .then(
                     Commands.argument(MESSAGE, StringArgumentType.greedyString())
                         .executes(
-                            context ->
-                                send(
-                                    sender(context),
-                                    recipient(context),
-                                    StringArgumentType.getString(context, MESSAGE)))))
+                            context -> {
+                              var sender = sender(context);
+                              var name = StringArgumentType.getString(context, PLAYER);
+                              var recipient = PlayerHandles.online(server, name).orElse(null);
+                              if (recipient == null) {
+                                sender.sendMessage(Feedback.error(name + " is not online."));
+                                return Command.SINGLE_SUCCESS;
+                              }
+                              return send(
+                                  sender,
+                                  recipient,
+                                  StringArgumentType.getString(context, MESSAGE));
+                            })))
         .build();
   }
 
@@ -113,13 +130,5 @@ public final class PrivateCommands {
       return player;
     }
     throw new IllegalStateException("private messages are registered for players only");
-  }
-
-  private static Player recipient(CommandContext<CommandSourceStack> context)
-      throws CommandSyntaxException {
-    return context
-        .getArgument(PLAYER, PlayerSelectorArgumentResolver.class)
-        .resolve(context.getSource())
-        .getFirst();
   }
 }

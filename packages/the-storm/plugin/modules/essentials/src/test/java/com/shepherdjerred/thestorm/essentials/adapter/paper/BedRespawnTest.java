@@ -88,7 +88,8 @@ final class BedRespawnTest {
                     back,
                     sealed,
                     nowhere(),
-                    new Position(world.getName(), 100, 200, 100, 0, 0)),
+                    new Position(world.getName(), 100, 200, 100, 0, 0),
+                    new com.shepherdjerred.thestorm.core.players.VisitPasses()),
                 Duration.ofSeconds(3)),
             new TeleportListener.Places(
                 back,

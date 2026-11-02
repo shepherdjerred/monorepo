@@ -107,11 +107,14 @@ final class SurvivalCommands {
                                                                 p,
                                                                 r -> {
                                                                   var target =
-                                                                      p.getServer()
-                                                                          .getPlayerExact(
+                                                                      com.shepherdjerred.thestorm
+                                                                          .core.players
+                                                                          .PlayerHandles.online(
+                                                                              p.getServer(),
                                                                               StringArgumentType
                                                                                   .getString(
-                                                                                      c, "player"));
+                                                                                      c, "player"))
+                                                                          .orElse(null);
                                                                   if (target == null) {
                                                                     Texts.error(
                                                                         p,

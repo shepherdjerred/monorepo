@@ -10,7 +10,7 @@ import java.util.UUID;
  * A player town or camp.
  *
  * @param id stable id
- * @param name unique (ignoring case) display name; a camp's name is reserved and not shown
+ * @param name unique (ignoring case) display name; a camp uses its founder's account name
  * @param createdAt when it was founded
  * @param members every member and their role; exactly one {@link TownRole#OWNER}
  * @param governorLevel the owner's Governor level when last seen online (0 to {@link
@@ -71,11 +71,11 @@ public record Town(
         false);
   }
 
-  /** A new camp owned by {@code founder}, active as of {@code createdAt}. */
-  public static Town camp(UUID id, Instant createdAt, UUID founder) {
+  /** A new camp named {@code name}, owned by {@code founder}, active as of {@code createdAt}. */
+  public static Town camp(UUID id, String name, Instant createdAt, UUID founder) {
     return new Town(
         id,
-        TownNames.campName(id),
+        name,
         createdAt,
         Map.of(founder, TownRole.OWNER),
         0,

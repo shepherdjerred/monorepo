@@ -251,7 +251,7 @@ final class CampLife implements Listener {
   }
 
   private void settle(Player player, ChunkPos chunk, org.bukkit.Location where) {
-    var founded = towns.foundCamp(player.getUniqueId());
+    var founded = towns.foundCamp(player.getUniqueId(), player.getName());
     switch (founded) {
       case Result.Err<Change<Town>, List<TownProblem>>(var problems) -> {
         sites.remove(player.getUniqueId());

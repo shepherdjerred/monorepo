@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.town.Founding;
 import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownNames;
 import com.shepherdjerred.thestorm.towns.domain.town.TownProblem;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRules;
 import java.time.Instant;
@@ -51,8 +52,11 @@ public final class TownService {
     return milestones;
   }
 
-  /** Founds a camp owned by {@code founder}. A camp is not announced. */
-  public Result<Change<Town>, List<TownProblem>> foundCamp(UUID founder) {
+  /**
+   * Founds a camp owned by {@code founder}, stored under {@code accountName}. A camp is not
+   * announced.
+   */
+  public Result<Change<Town>, List<TownProblem>> foundCamp(UUID founder, String accountName) {
     if (settling.isPlayerBusy(founder)) {
       return Result.err(List.of(new TownProblem.Busy()));
     }
@@ -64,8 +68,14 @@ public final class TownService {
                   ? new TownProblem.AlreadyInCamp()
                   : new TownProblem.AlreadyInTown(existing.get().name())));
     }
+    var name = TownNames.friendly(accountName, candidate -> state().named(candidate).isPresent());
+    if (name.isEmpty()) {
+      return Result.err(List.of(new TownProblem.InvalidName(accountName)));
+    }
     var clocks = settling.clocks();
-    var town = Town.camp(TownRules.newId(clocks.random()), clocks.time().instant(), founder);
+    var town =
+        Town.camp(
+            TownRules.newId(clocks.random()), name.orElseThrow(), clocks.time().instant(), founder);
     state().addTown(town);
     return Result.ok(
         settling.persist(

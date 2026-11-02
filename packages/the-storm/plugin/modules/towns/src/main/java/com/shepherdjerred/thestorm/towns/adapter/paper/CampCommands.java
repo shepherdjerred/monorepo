@@ -179,8 +179,8 @@ final class CampCommands {
 
   private void help(Player player) {
     String[] lines = {
-      "A camp is the usual first home. Anyone can make one. It has no public name and costs"
-          + " nothing. A town is the later, public step.",
+      "A camp is the usual first home. Anyone can make one. It is named for you and costs nothing."
+          + " A town is the later, public step.",
       "Start building and a camp can appear on its own: a bed, or a chest and a door, claims that"
           + " chunk at once. "
           + policy.settleBlocks()
@@ -221,7 +221,7 @@ final class CampCommands {
   private void create(Player player) {
     runtime.report(
         player,
-        towns.foundCamp(player.getUniqueId()),
+        towns.foundCamp(player.getUniqueId(), player.getName()),
         town ->
             Notices.success(
                 "Created your camp. Stand where you want to build and run /claim. /camp help"
@@ -254,36 +254,22 @@ final class CampCommands {
       player.sendMessage(Notices.error("You have no camp invitation."));
       return;
     }
-    var owners = camps.stream().map(Town::owner).toList();
-    var _ =
-        names
-            .namesOf(owners)
-            .whenCompleteAsync(
-                (found, failure) -> {
-                  if (failure != null || found == null) {
-                    player.sendMessage(Notices.error("Could not look up that invite; try again."));
-                    return;
-                  }
-                  var match =
-                      camps.stream()
-                          .filter(
-                              camp ->
-                                  ownerName.equalsIgnoreCase(found.getOrDefault(camp.owner(), "")))
-                          .findFirst();
-                  if (match.isEmpty()) {
-                    player.sendMessage(
-                        Notices.error(
-                            "No camp invitation from "
-                                + ownerName
-                                + ". Join with /camp join <owner>."));
-                    return;
-                  }
-                  runtime.report(
-                      player,
-                      members.accept(player.getUniqueId(), match.get().name()),
-                      town -> Notices.success("Joined the camp. /claim takes a chunk for it."));
-                },
-                runtime.scheduler().mainThread());
+    names.resolve(
+        player,
+        ownerName,
+        owner -> {
+          var match = camps.stream().filter(camp -> camp.owner().equals(owner.id())).findFirst();
+          if (match.isEmpty()) {
+            player.sendMessage(
+                Notices.error(
+                    "No camp invitation from " + ownerName + ". Join with /camp join <owner>."));
+            return;
+          }
+          runtime.report(
+              player,
+              members.accept(player.getUniqueId(), match.get().name()),
+              town -> Notices.success("Joined the camp. /claim takes a chunk for it."));
+        });
   }
 
   private void leave(Player player) {

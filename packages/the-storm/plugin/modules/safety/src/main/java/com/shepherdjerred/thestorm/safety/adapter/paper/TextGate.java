@@ -87,7 +87,9 @@ public final class TextGate implements Listener {
     if (replay.remove(player.getUniqueId())) return;
     var raw = event.getMessage();
     var content = CommandContent.parse(raw);
+    var shown = content.secret() ? content.text() : raw;
     if (event.isCancelled()) {
+      logCommand(player, shown, "cancelled");
       admission.observe(
           admission.submission(
               player, new ContentAdmission.Draft("command", "server", raw, "", "")),
@@ -95,6 +97,7 @@ public final class TextGate implements Listener {
       return;
     }
     if (!content.screen()) {
+      logCommand(player, shown, "attempt");
       var submission =
           admission.submission(
               player,
@@ -125,18 +128,32 @@ public final class TextGate implements Listener {
         player,
         submission,
         () -> {
-          if (!safety.audience(player.getUniqueId(), routed).equals(submission.audience()))
+          if (!safety.audience(player.getUniqueId(), routed).equals(submission.audience())) {
+            logCommand(player, shown, "stale-audience");
             return "stale-audience";
+          }
           replay.add(player.getUniqueId());
           try {
             var approved = new PlayerCommandPreprocessEvent(player, routed);
             context.plugin().getServer().getPluginManager().callEvent(approved);
-            if (approved.isCancelled()) return "denied-by-command-listener";
-            return dispatch(player, approved.getMessage().substring(1));
+            if (approved.isCancelled()) {
+              logCommand(player, shown, "denied-by-command-listener");
+              return "denied-by-command-listener";
+            }
+            var outcome = dispatch(player, approved.getMessage().substring(1));
+            logCommand(player, shown, outcome);
+            return outcome;
           } finally {
             replay.remove(player.getUniqueId());
           }
         });
+  }
+
+  private void logCommand(Player player, String text, String outcome) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(player)) return;
+    var at = player.getLocation();
+    if (at.getWorld() == null) return;
+    context.logger().info("{}", PlayLog.command(player.getName(), at, text, outcome));
   }
 
   /**

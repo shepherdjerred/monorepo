@@ -22,6 +22,7 @@ public final class SafetyModule implements StormModule {
   private @Nullable HttpContentClassifier classifier;
   private @Nullable GrimHooks grim;
   private com.shepherdjerred.thestorm.safety.app.@Nullable ActivityWrites activity;
+  private com.shepherdjerred.thestorm.safety.adapter.paper.@Nullable PresenceLog presence;
 
   @Override
   public String id() {
@@ -109,6 +110,7 @@ public final class SafetyModule implements StormModule {
             failure -> context.logger().error("Activity evidence batch failed", failure));
     activity = writes;
     manager.registerEvents(new ActivityJournal(context, service, writes), context.plugin());
+    presence = new com.shepherdjerred.thestorm.safety.adapter.paper.PresenceLog(context);
     var existing =
         new com.shepherdjerred.thestorm.safety.adapter.paper.ExistingContentJournal(
             context, service);
@@ -123,6 +125,8 @@ public final class SafetyModule implements StormModule {
 
   @Override
   public void disable() {
+    var positions = presence;
+    if (positions != null) positions.close();
     var writes = activity;
     if (writes != null) writes.close();
     var hooks = grim;
