@@ -278,7 +278,9 @@ it names the collected cache whose readers hold the collector's lock. None of
 these caches has a collector: Cargo, Go and sccache expire or bound
 their own entries, and the homelab's per-claim usage alert covers the rest.
 The source-cache clone copies Git objects with the filesystem's clone facility
-(`cp --reflink=auto`), which ZFS turns into a block clone within the pool.
+(`cp -f --reflink=auto`), which ZFS turns into a block clone within the pool.
+A golden clone already holds read-only Git objects, so `-f` replaces any such
+destination file instead of failing on it.
 
 ## OpenTofu PR checks
 
