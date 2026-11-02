@@ -1,3 +1,4 @@
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { protectArgoTokenDefault } from "./argocd-options.ts";
@@ -295,24 +296,15 @@ function resolveExecutable(invocation: PassthroughInvocation): string | null {
   return lookupExecutable(invocation.executable, invocation.env["PATH"]);
 }
 
-function isolatedConfigHome(): string {
-  const directory = path.join(
-    tmpdir(),
-    `toolkit-argocd-help-${crypto.randomUUID()}`,
-  );
-  const created = Bun.spawnSync(["mkdir", directory], {
-    stdout: "ignore",
-    stderr: "pipe",
-  });
-  if (created.exitCode !== 0) {
-    throw new Error(
-      `could not isolate ArgoCD help config: ${created.stderr.toString()}`,
-    );
-  }
-  return directory;
+/**
+ * Created in-process: the forwarded PATH belongs to the caller and need not
+ * contain coreutils.
+ */
+function isolatedConfigHome(): Promise<string> {
+  return mkdtemp(path.join(tmpdir(), "toolkit-argocd-help-"));
 }
 
-function nativeEnvironment(invocation: PassthroughInvocation) {
+async function nativeEnvironment(invocation: PassthroughInvocation) {
   const env = { ...invocation.env };
   if (invocation.executable !== "argocd") return env;
   const options = env["ARGOCD_OPTS"] ?? "";
@@ -325,14 +317,14 @@ function nativeEnvironment(invocation: PassthroughInvocation) {
   // follows XDG_CONFIG_HOME, and the legacy path is $HOME/.argocd. An empty
   // home hides all three. Operational commands keep the real home and token.
   if (isArgoHelpCommand(invocation.args)) {
-    const isolated = isolatedConfigHome();
+    const isolated = await isolatedConfigHome();
     env["HOME"] = isolated;
     env["XDG_CONFIG_HOME"] = isolated;
   }
   return env;
 }
 
-export function runPassthrough(
+export async function runPassthrough(
   invocation: PassthroughInvocation,
 ): Promise<number> {
   const executable = resolveExecutable(invocation);
@@ -340,7 +332,7 @@ export function runPassthrough(
     console.error(
       `toolkit: required executable not found: ${invocation.executable}`,
     );
-    return Promise.resolve(127);
+    return 127;
   }
 
   // Windows has no execve; inherited console handles deliver console signals
@@ -349,17 +341,16 @@ export function runPassthrough(
     return spawnPassthroughInvocation(invocation);
   }
 
-  return process.execve === undefined
-    ? Promise.reject(
-        new Error(
-          "toolkit: process replacement is unavailable on this platform",
-        ),
-      )
-    : process.execve(
-        executable,
-        [invocation.executable, ...invocation.args],
-        nativeEnvironment(invocation),
-      );
+  if (process.execve === undefined) {
+    throw new Error(
+      "toolkit: process replacement is unavailable on this platform",
+    );
+  }
+  return process.execve(
+    executable,
+    [invocation.executable, ...invocation.args],
+    await nativeEnvironment(invocation),
+  );
 }
 
 /**
@@ -379,7 +370,7 @@ export async function spawnPassthroughInvocation(
     );
   }
   const child = Bun.spawn([executable, ...invocation.args], {
-    env: nativeEnvironment(invocation),
+    env: await nativeEnvironment(invocation),
     stdio: ["inherit", "inherit", "inherit"],
   });
   return child.exited;

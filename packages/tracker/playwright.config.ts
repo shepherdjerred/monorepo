@@ -37,7 +37,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "bun e2e/server.ts",
+    command: `bun e2e/server.ts ${String(port)}`,
     url: `${baseURL}/readyz`,
     timeout: 60_000,
     // The selected port is free or already belongs to this checkout.
