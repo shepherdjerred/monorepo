@@ -19,6 +19,9 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
  */
 export const BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID = "q3t3h5dkrqwtbllgybca7pjvke";
 
+/** The S3 sink's client name, which the filer labels its subscriber metrics with. */
+export const SEAWEEDFS_BACKUP_CLIENT = "backup_s3";
+
 /**
  * Buckets `filer.backup` does not copy, with why each can be lost. Every other
  * bucket, including one created later, is backed up.
@@ -75,10 +78,10 @@ uploader_concurrency = 4
  * a restart resumes where it stopped. One replica: two would race on that
  * checkpoint.
  *
- * `-initialSnapshot` seeds Backblaze by walking the live tree before
- * subscribing; replaying the metadata log from its start would miss objects
- * older than the log. It re-walks on every start, so it is removed once the
- * first walk logs `initialSnapshot done`.
+ * Backblaze was seeded once with `-initialSnapshot`, which walks the live tree
+ * before subscribing and saves the walk's start as the checkpoint. It is not
+ * set here: it re-walks on every start, and any failed upload restarts the
+ * walk. To re-seed an emptied bucket, run it once by hand.
  */
 export function createSeaweedfsBackup(chart: Chart): Deployment {
   const credentials = new OnePasswordItem(
@@ -134,7 +137,6 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
       "-filerPath=/buckets",
       `-filerExcludePaths=${excludedPaths.join(",")}`,
       "-doDeleteFiles",
-      "-initialSnapshot",
     ],
     envVariables: {
       WEED_SINK_S3_AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({

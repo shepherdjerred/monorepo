@@ -103,6 +103,8 @@ describe("SeaweedFS backup to Backblaze", () => {
     expect(container?.image).toMatch(/^chrislusf\/seaweedfs:/u);
     expect(container?.args).toContain("-filerPath=/buckets");
     expect(container?.args).toContain("-doDeleteFiles");
+    // A start resumes from the filer's checkpoint; a snapshot would re-walk.
+    expect(container?.args).not.toContain("-initialSnapshot");
     const excluded = container?.args
       .find((arg) => arg.startsWith("-filerExcludePaths="))
       ?.replace("-filerExcludePaths=", "")
