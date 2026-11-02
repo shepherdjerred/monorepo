@@ -16,7 +16,7 @@ import path from "node:path";
 import { z } from "zod";
 import { parse } from "yaml";
 import { git } from "#src/checkout/git.ts";
-import { checkoutSource } from "#src/checkout/snapshot.ts";
+import { checkoutSource, cloneTree } from "#src/checkout/snapshot.ts";
 import {
   clearWorkspace,
   GOLDEN_MARKER,
@@ -502,6 +502,24 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
         .some((volume) => volume.includes("source-")),
     ).toBe(false);
   }
+});
+
+test("cloning over read-only destination files replaces them", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ci-clone-tree-test-"));
+  roots.push(root);
+  const source = join(root, "source");
+  const destination = join(root, "destination");
+  await Bun.write(join(source, "pack", "pack-a.pack"), "from cache\n");
+  await Bun.write(join(destination, "pack", "pack-a.pack"), "from golden\n");
+  await Bun.write(join(destination, "pack", "pack-b.pack"), "kept\n");
+  await chmod(join(destination, "pack", "pack-a.pack"), 0o444);
+  await cloneTree(source, destination);
+  expect(await Bun.file(join(destination, "pack", "pack-a.pack")).text()).toBe(
+    "from cache\n",
+  );
+  expect(await Bun.file(join(destination, "pack", "pack-b.pack")).text()).toBe(
+    "kept\n",
+  );
 });
 
 /** A workspace as the golden publisher leaves it, cloned as ZFS would. */

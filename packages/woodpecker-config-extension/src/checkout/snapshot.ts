@@ -44,6 +44,8 @@ export async function objectBytes(directory: string): Promise<number> {
  * ZFS pool, where `copy_file_range` turns the object store into a block clone
  * instead of a second written copy. GNU cp asks for that with --reflink=auto;
  * BSD cp (developer machines) uses -c for the same thing on APFS.
+ * A golden clone already holds Git objects, which Git writes read-only; -f
+ * makes cp unlink such a destination and retry instead of failing with EACCES.
  */
 export async function cloneTree(
   source: string,
@@ -51,10 +53,10 @@ export async function cloneTree(
 ): Promise<void> {
   await mkdir(destination, { recursive: true });
   const cloneFlag = process.platform === "darwin" ? "-c" : "--reflink=auto";
-  const copy = Bun.spawn(["cp", "-a", cloneFlag, `${source}/.`, destination], {
-    stdout: "ignore",
-    stderr: "pipe",
-  });
+  const copy = Bun.spawn(
+    ["cp", "-a", "-f", cloneFlag, `${source}/.`, destination],
+    { stdout: "ignore", stderr: "pipe" },
+  );
   const code = await copy.exited;
   if (code !== 0) {
     throw new Error(
