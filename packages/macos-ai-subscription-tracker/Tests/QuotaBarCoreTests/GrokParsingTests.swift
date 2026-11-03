@@ -26,6 +26,32 @@ final class GrokParsingTests: XCTestCase {
     )
   }
 
+  func testGrokDropsProductThatRepeatsTheSharedWindow() throws {
+    let credits = try GrokProvider.parseCredits(
+      data: Data(
+        #"""
+        {
+          "config": {
+            "creditUsagePercent": 10,
+            "currentPeriod": {"type": "weekly", "end": "2026-08-16T00:00:00Z"},
+            "productUsage": {
+              "grokbuild": {"creditUsagePercent": 10},
+              "chat": {"creditUsagePercent": 10, "resetAt": "2026-08-20T00:00:00Z"}
+            },
+            "extraCredits": {"limit": 50, "used": 5}
+          }
+        }
+        """#.utf8
+      ),
+      now: now
+    )
+    XCTAssertEqual(
+      credits.map(\.id),
+      ["grok-shared-credits", "grok-product-chat", "grok-extra-credits"]
+    )
+    XCTAssertEqual(credits.map(\.label), ["Weekly", "Chat", "Extra credits"])
+  }
+
   func testGrokProductResetAtWinsOverSharedPeriodEnd() throws {
     let credits = try GrokProvider.parseCredits(
       data: Data(
@@ -110,10 +136,9 @@ final class GrokParsingTests: XCTestCase {
       []
     )
     let credits = try GrokProvider.parseCredits(data: fixture("grok-credits-unified"), now: now)
-    XCTAssertEqual(credits.map(\.id), ["grok-shared-credits", "grok-product-chat"])
-    XCTAssertEqual(credits.map(\.kind), [.weekly, .modelScoped(model: "Chat")])
-    XCTAssertEqual(credits.map(\.remainingPercent), [91, 91])
-    XCTAssertEqual(Set(credits.compactMap(\.resetAt)).count, 1)
+    XCTAssertEqual(credits.map(\.id), ["grok-shared-credits"])
+    XCTAssertEqual(credits.map(\.kind), [.weekly])
+    XCTAssertEqual(credits.map(\.remainingPercent), [91])
     XCTAssertNotNil(credits[0].resetAt)
     let snapshot = try GrokProvider.parse(
       billing: .success(fixture("grok-billing-zero-limit")),
@@ -121,7 +146,7 @@ final class GrokParsingTests: XCTestCase {
       accountLabel: "fixture@example.com",
       now: now
     )
-    XCTAssertEqual(snapshot.windows.map(\.id), ["grok-shared-credits", "grok-product-chat"])
+    XCTAssertEqual(snapshot.windows.map(\.id), ["grok-shared-credits"])
     XCTAssertEqual(snapshot.notes, [])
   }
 

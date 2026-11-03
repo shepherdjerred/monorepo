@@ -3,6 +3,20 @@ import XCTest
 
 @testable import QuotaBarCore
 
+func fixtureText(_ name: String, ext: String) -> String {
+  guard let url = Bundle.module.url(forResource: name, withExtension: ext),
+    let text = try? String(contentsOf: url, encoding: .utf8)
+  else {
+    preconditionFailure("Missing fixture \(name)")
+  }
+  return text
+}
+
+func fixtureLines(_ name: String, ext: String) -> [String] {
+  fixtureText(name, ext: ext).split(separator: "\n", omittingEmptySubsequences: false).map(
+    String.init)
+}
+
 func fixture(_ name: String) -> Data {
   guard let url = Bundle.module.url(forResource: name, withExtension: "json") else {
     preconditionFailure("Missing fixture \(name)")

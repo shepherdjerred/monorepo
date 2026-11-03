@@ -49,10 +49,30 @@ public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiabl
 public struct APIPlatformSnapshot: Codable, Equatable, Sendable {
   public let platform: APIPlatformID
   public let workspaceNames: [String]
-  public let creditsRemaining: Decimal?
   public let monthlySpend: Decimal
   public let projectedSpend: Decimal
   public let sourceTimestamp: Date
+  public let credits: APIPlatformCredits
+
+  public var creditsRemaining: Decimal? { credits.remaining }
+  public var creditGrants: [APICreditGrant] { credits.grants }
+  public var creditGrantsUnavailableReason: String? { credits.unavailableReason }
+
+  public init(
+    platform: APIPlatformID,
+    workspaceNames: [String],
+    monthlySpend: Decimal,
+    projectedSpend: Decimal,
+    sourceTimestamp: Date,
+    credits: APIPlatformCredits
+  ) {
+    self.platform = platform
+    self.workspaceNames = workspaceNames
+    self.monthlySpend = monthlySpend
+    self.projectedSpend = projectedSpend
+    self.sourceTimestamp = sourceTimestamp
+    self.credits = credits
+  }
 
   public init(
     platform: APIPlatformID,
@@ -62,12 +82,52 @@ public struct APIPlatformSnapshot: Codable, Equatable, Sendable {
     projectedSpend: Decimal,
     sourceTimestamp: Date
   ) {
-    self.platform = platform
-    self.workspaceNames = workspaceNames
-    self.creditsRemaining = creditsRemaining
-    self.monthlySpend = monthlySpend
-    self.projectedSpend = projectedSpend
-    self.sourceTimestamp = sourceTimestamp
+    self.init(
+      platform: platform,
+      workspaceNames: workspaceNames,
+      monthlySpend: monthlySpend,
+      projectedSpend: projectedSpend,
+      sourceTimestamp: sourceTimestamp,
+      credits: APIPlatformCredits(remaining: creditsRemaining)
+    )
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    platform = try container.decode(APIPlatformID.self, forKey: .platform)
+    workspaceNames = try container.decode([String].self, forKey: .workspaceNames)
+    monthlySpend = try container.decode(Decimal.self, forKey: .monthlySpend)
+    projectedSpend = try container.decode(Decimal.self, forKey: .projectedSpend)
+    sourceTimestamp = try container.decode(Date.self, forKey: .sourceTimestamp)
+    credits = APIPlatformCredits(
+      remaining: try container.decodeIfPresent(Decimal.self, forKey: .creditsRemaining),
+      grants: try container.decodeIfPresent([APICreditGrant].self, forKey: .creditGrants) ?? [],
+      unavailableReason: try container.decodeIfPresent(
+        String.self, forKey: .creditGrantsUnavailableReason)
+    )
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(platform, forKey: .platform)
+    try container.encode(workspaceNames, forKey: .workspaceNames)
+    try container.encodeIfPresent(credits.remaining, forKey: .creditsRemaining)
+    try container.encode(monthlySpend, forKey: .monthlySpend)
+    try container.encode(projectedSpend, forKey: .projectedSpend)
+    try container.encode(sourceTimestamp, forKey: .sourceTimestamp)
+    try container.encode(credits.grants, forKey: .creditGrants)
+    try container.encodeIfPresent(credits.unavailableReason, forKey: .creditGrantsUnavailableReason)
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case platform
+    case workspaceNames
+    case creditsRemaining
+    case monthlySpend
+    case projectedSpend
+    case sourceTimestamp
+    case creditGrants
+    case creditGrantsUnavailableReason
   }
 }
 

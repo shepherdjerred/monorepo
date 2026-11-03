@@ -173,9 +173,9 @@ final class DomainTests: XCTestCase {
     XCTAssertFalse(ProviderID.antigravity.supportsManualCredentialOverride)
     XCTAssertFalse(ProviderID.cursor.supportsManualCredentialOverride)
     XCTAssertFalse(ProviderID.muse.supportsManualCredentialOverride)
+    XCTAssertTrue(ProviderID.claudeCode.tracksBankedResets)
     XCTAssertTrue(ProviderID.codex.tracksBankedResets)
     XCTAssertTrue(ProviderID.grok.tracksBankedResets)
-    XCTAssertFalse(ProviderID.claudeCode.tracksBankedResets)
     XCTAssertFalse(ProviderID.muse.tracksBankedResets)
     XCTAssertEqual(ProviderID.muse.displayName, "Meta Muse")
     for provider in ProviderID.allCases {

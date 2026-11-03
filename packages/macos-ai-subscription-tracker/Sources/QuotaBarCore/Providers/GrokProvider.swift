@@ -174,6 +174,7 @@ public struct GrokProvider: UsageProvider {
         )
       )
     }
+    windows = deduplicatedProductWindows(windows)
     if let extra = response.config.extraCredits {
       windows.append(
         try UsageWindow.validated(
@@ -188,6 +189,22 @@ public struct GrokProvider: UsageProvider {
     }
     guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.grok) }
     return windows
+  }
+
+  private static func deduplicatedProductWindows(_ windows: [UsageWindow]) -> [UsageWindow] {
+    guard let shared = windows.first(where: { $0.id == "grok-shared-credits" }) else {
+      return windows
+    }
+    return windows.filter { window in
+      guard window.id.hasPrefix("grok-product-"), window.resetAt == shared.resetAt else {
+        return true
+      }
+      switch (shared.usedPercent, window.usedPercent) {
+      case (nil, nil): return false
+      case let (lhs?, rhs?): return abs(lhs - rhs) > 0.01
+      default: return true
+      }
+    }
   }
 
   private static func sharedCreditWindows(
@@ -360,11 +377,7 @@ private enum GrokPeriodKind: String, Decodable {
   case weekly
   case usagePeriodWeekly = "USAGE_PERIOD_TYPE_WEEKLY"
 
-  var isWeekly: Bool {
-    switch self {
-    case .weekly, .usagePeriodWeekly: true
-    }
-  }
+  var isWeekly: Bool { self == .weekly || self == .usagePeriodWeekly }
 }
 
 private struct GrokProductUsageMap: Decodable {

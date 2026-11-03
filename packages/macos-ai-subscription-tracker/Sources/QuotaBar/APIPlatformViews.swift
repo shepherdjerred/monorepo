@@ -64,6 +64,16 @@ struct APIPlatformSummaryView: View {
       }
       .opacity(staleReason == nil ? 1 : 0.62)
 
+      if let reason = creditNotice(snapshot) {
+        Text(reason)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      ForEach(snapshot.creditBalanceRows(at: date)) { row in
+        creditRow(row)
+      }
+
       if !snapshot.workspaceNames.isEmpty {
         Text(workspaceDetail(snapshot.workspaceNames))
           .font(.caption2)
@@ -89,6 +99,27 @@ struct APIPlatformSummaryView: View {
         .foregroundStyle(.tertiary)
         .fixedSize(horizontal: false, vertical: true)
     }
+  }
+
+  private func creditNotice(_ snapshot: APIPlatformSnapshot) -> String? {
+    if let reason = snapshot.creditGrantsUnavailableReason { return reason }
+    guard snapshot.creditsRemaining == nil, snapshot.creditGrants.isEmpty else { return nil }
+    return APICreditGrants.unavailableMessage
+  }
+
+  private func creditRow(_ row: APICreditBalanceRow) -> some View {
+    HStack(spacing: 6) {
+      Text(row.label)
+      Spacer()
+      Text(currency(row.remainingUSD))
+        .monospacedDigit()
+      if let expiry = row.soonestExpiry {
+        Text(expiry.formatted(date: .abbreviated, time: .omitted))
+          .foregroundStyle(.secondary)
+      }
+    }
+    .font(.caption)
+    .help(row.helpText)
   }
 
   private func metric(_ label: String, value: Decimal) -> some View {

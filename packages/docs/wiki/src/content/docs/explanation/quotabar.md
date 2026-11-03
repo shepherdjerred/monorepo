@@ -30,10 +30,12 @@ flowchart LR
 
 ## Boundaries
 
-The subscription side of the app tracks quota only. It does not show provider
-API rate cards, notifications, or a full usage dashboard. Its separate API view
-reports configured OpenAI and Anthropic usage, while local quota
-samples power the subscription History graph.
+The subscription side tracks quota. Claude Code and Codex also show today's
+tokens and an API list-price estimate from local CLI logs. That caption is a
+separate ledger from the quota percentage and from monthly API spend. Brim
+keeps it out of the snapshot cache, so a stale quota can still show today's
+logs. The app does not show provider API rate cards, notifications, or a full
+usage dashboard. Local quota samples still power the History graph.
 The popover includes a personal subscription-spend reminder: $200/month each
 for Claude Code and Codex, $20/month each for Google AI Pro and Cursor Pro,
 $30/month for Grok, $40/month for Kimi Code, and $15/month for Meta Muse
@@ -43,8 +45,8 @@ The reminder values live in the
 [subscription plan model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift).
 
 The subscription view surfaces the tightest actionable quota first and sorts
-provider sections by current remaining usage. Quota windows and Codex/Grok reset
-expirations use compact rows; healthy values stay neutral while orange and red
+provider sections by current remaining usage. Quota windows and Claude, Codex,
+and Grok reset expirations use compact rows; healthy values stay neutral while orange and red
 are reserved for pressure. Policy-only Fable data, stale snapshots, unknown
 percentages, and provider errors remain explicit without invented progress.
 These choices are derived by the
@@ -57,10 +59,27 @@ It reports billed API spend, not remaining subscription windows.
 OpenAI and Anthropic each use a privileged admin key.
 Brim uses those keys only for read-only billing requests.
 Those keys never replace Claude, Codex, or ChatGPT subscription sign-ins.
+Purchased credits and subscription grants are a third wallet.
+Brim shows them only when the Admin API returns a remaining amount and the
+expiry on that payload. It does not invent an expiration or scrape the billing
+page. Those Admin APIs currently return spend, not credit balances, so the
+card says the balances were not returned while monthly spend still appears.
+Prices for the subscription caption come from a checked-in
+[models.dev](https://models.dev) snapshot, so the menu does not shell out to
+another CLI or price an unknown model at zero. The menu renders that caption
+from the
+[menu-bar view](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/MenuBarView.swift),
+and the credit rows live beside the spend metrics in the
+[API platform model](https://github.com/shepherdjerred/monorepo/blob/0f2406136198b98bae3d79d2be1fe9254cf55101/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatform.swift).
 
 Claude and Codex use private authenticated subscription usage surfaces. Claude
-preserves additive model-scoped windows when the account returns them; Fable is
-shown as a policy-only row when no independent counter is exposed. Codex labels
+preserves additive model-scoped windows when the account returns them and drops
+codename meters such as Nimbus Quill and Iguana Necktie, which are not the
+session or weekly allowance. Fable is shown as a policy-only row when no
+independent counter is exposed. The same usage request asks for saved
+usage-limit resets. Brim shows each unused reset's expiration and never
+redeems one. A missing or ineligible inventory stays an explicit unavailable
+reset state rather than a displayed zero. Codex labels
 windows from returned duration and reset metadata, so a missing five-hour
 window is not invented. It also reads the reset-credit surface read-only and
 shows each available banked reset with its expiration; Brim never redeems a
@@ -108,7 +127,10 @@ Grok and xAI tokens. It then requests Grok's identity, monthly billing, and
 credit surfaces, plus remaining unused reset tokens. SuperGrok unified-credit
 accounts have no included monthly dollar limit; Brim shows the weekly credit
 window instead of inventing one.
-Product and extra-credit rows inherit that same weekly reset.
+Product rows inherit that weekly reset. A product row that repeats the shared
+window's percentage and reset is omitted, because it is the same meter. A
+product with its own percentage or reset stays, and extra credits stay even
+when the percentage matches.
 Banked extra resets are a separate list from that weekly countdown. Brim
 shows remaining unused packs with their expirations and never redeems one.
 Those responses are a private contract: malformed or changed
@@ -124,8 +146,12 @@ Platform API keys. It reads its local OAuth credential directory, including a
 relocated `KIMI_CODE_HOME`, and may also read typed OAuth entries owned by
 OpenCode. Brim never refreshes or rewrites OpenCode's credential chain; expired
 credentials must be refreshed through OpenCode. Kimi responses are a private
-contract: malformed or changed responses become unavailable or stale states
-and are covered by local fixtures.
+contract. Brim shows every quota window that payload names: each `limits`
+duration and each `usages` pool, including five-hour, monthly total, and
+monthly code when those keys are present. A daily or weekly row appears only
+when the payload includes that duration. Brim does not invent a window the
+account does not return. Malformed or changed responses become unavailable or
+stale states and are covered by local fixtures.
 Those boundaries are implemented by the
 [Kimi adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/KimiProvider.swift)
 and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).

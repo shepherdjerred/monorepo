@@ -74,6 +74,15 @@ for (const asset of [
   await access(join(resourceDirectory, asset));
 }
 await access(join(resourceDirectory, "NOTICE.md"));
+await access(
+  join(
+    resources,
+    "QuotaBar_QuotaBarCore.bundle",
+    "Contents",
+    "Resources",
+    "model-prices.json",
+  ),
+);
 console.log(`Verified ${appPath}`);
 
 function assertPlistValue(key: string, expected: string) {

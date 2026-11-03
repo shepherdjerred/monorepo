@@ -27,6 +27,8 @@ final class OpenAIAnthropicAPITests: XCTestCase {
 
     XCTAssertEqual(snapshot.platform, .openAI)
     XCTAssertNil(snapshot.creditsRemaining)
+    XCTAssertTrue(snapshot.creditGrants.isEmpty)
+    XCTAssertEqual(snapshot.creditGrantsUnavailableReason, APICreditGrants.unavailableMessage)
     XCTAssertEqual(snapshot.monthlySpend, decimal("12.5"))
     XCTAssertEqual(snapshot.projectedSpend, decimal("12.5") / Decimal(7) * Decimal(30))
     let requests = await transport.requests
@@ -142,6 +144,8 @@ final class OpenAIAnthropicAPITests: XCTestCase {
 
     XCTAssertEqual(snapshot.platform, .anthropic)
     XCTAssertNil(snapshot.creditsRemaining)
+    XCTAssertTrue(snapshot.creditGrants.isEmpty)
+    XCTAssertEqual(snapshot.creditGrantsUnavailableReason, APICreditGrants.unavailableMessage)
     XCTAssertEqual(snapshot.monthlySpend, decimal("8.5"))
     XCTAssertEqual(snapshot.projectedSpend, decimal("8.5") / Decimal(7) * Decimal(30))
     let requests = await transport.requests

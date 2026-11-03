@@ -53,8 +53,18 @@ final class UsageHistoryTests: XCTestCase {
       resetAt: nil,
       recordedAt: date("2026-08-31T11:00:00Z")
     )
+    let claudeIguana = try UsageHistorySample(
+      provider: .claudeCode,
+      windowID: "provider-iguana-necktie",
+      label: "Provider quota · Iguana Necktie",
+      kind: .providerDefined,
+      usedPercent: 100,
+      resetAt: nil,
+      recordedAt: date("2026-08-31T11:00:00Z")
+    )
 
-    let migrated = UsageHistory.compact([oldCodex, currentCodex, claudeNimbus], at: now)
+    let migrated = UsageHistory.compact(
+      [oldCodex, currentCodex, claudeNimbus, claudeIguana], at: now)
 
     XCTAssertEqual(migrated.count, 2)
     XCTAssertEqual(Set(migrated.map(\.windowID)), ["weekly"])

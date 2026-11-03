@@ -17,6 +17,11 @@ is a reminder, not provider billing data.
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
 critical remaining usage. Cached values remain visible but dimmed and stale.
+Claude Code and Codex also show today's token total and an API list-price
+estimate read from their local CLI logs. That caption is separate from the
+quota percentage, the monthly admin invoice, and the API credit balance. A
+missing log directory omits it. An unknown model still counts toward the token
+total and drops the dollar amount for that day.
 The `API & routers` segment reports OpenAI and Anthropic organization API spend
 for the current local month.
 
@@ -182,7 +187,9 @@ Grok reads grok CLI `auth.json` (default `~/.grok`, or `GROK_HOME`), or an
 optional Keychain override. It does not read OpenCode Grok or xAI tokens.
 It requests Grok's identity, monthly billing, and credit surfaces, plus the
 remaining-reset RPC read-only. It displays subscription usage and credits, not
-xAI developer API rate limits. Banked extra resets are shown individually with
+xAI developer API rate limits. A product row that repeats the shared credit
+window's percentage and reset is omitted. Extra credits stay even when the
+percentage matches. Banked extra resets are shown individually with
 their expiration dates; Brim never redeems or consumes them. This is a
 private provider contract: schema drift and authentication failures remain
 explicit, and Brim never substitutes zero usage. Brim never refreshes or
@@ -190,13 +197,21 @@ rewrites grok CLI credentials; `grok login` remains the owner of that session.
 
 Kimi Code reads its local OAuth credential directory, including a relocated
 `KIMI_CODE_HOME`, and can also read typed OpenCode OAuth entries. It displays
-the coding subscription surface, not a Kimi Open Platform API key. This is a
+every quota window the coding usage payload returns. That includes the rolling
+`limits` array and the named `usages` pools, so a five-hour, daily, weekly, or
+monthly window appears when the account returns it. Brim does not invent a
+window the payload omits. An unscoped top-level `usage` object is labeled
+Subscription because the payload does not name its period. This is a
 private provider contract: schema drift and authentication failures remain
 explicit, and Brim never substitutes zero usage.
 
-Codex also reads the authenticated reset-credit surface read-only. Available
-banked resets are shown individually with their expiration dates; Brim does
-not redeem or consume them.
+Claude's usage request also asks for saved usage-limit resets. Each unused
+reset is shown with its expiration. Brim never redeems one. A missing or
+ineligible inventory is an explicit unavailable reset state, not zero resets.
+Codename meters such as Iguana Necktie are not shown. Codex also reads the
+authenticated reset-credit surface read-only. Available banked resets are
+shown individually with their expiration dates; Brim does not redeem or
+consume them.
 
 ### API platform reporting
 
@@ -209,6 +224,13 @@ key only for read-only billing requests:
 - Anthropic Admin API key: organization Cost Report spend for the current
   local calendar month. This is not Claude Pro or Claude Code subscription
   usage.
+
+Purchased and granted credit balances appear only when that Admin API returns
+them. Each row uses the expiry on the payload. Brim does not invent a one-year
+or billing-cycle date, and a missing or empty grant list is not shown as $0.
+The current OpenAI and Anthropic Admin APIs return monthly spend and do not
+return those balances, so each card says the balances were not returned.
+Monthly spend and the projected month-end pace still publish.
 
 Brim only performs read-only requests. It does not create, update, disable, or
 delete provider keys. Each platform projects month-end spend from the current
@@ -236,8 +258,8 @@ bunx turbo run lint:swift --filter=@shepherdjerred/quotabar
 Provider fixtures are shape-preserving samples with synthetic account values.
 Passing fixtures proves decoder behavior, not current production correctness.
 Release acceptance still compares all displayed windows, percentages, reset
-times, and Codex/Grok banked reset expirations with each provider's own Usage
-screen.
+times, and Claude/Codex/Grok banked reset expirations with each provider's own
+Usage screen.
 
 The frozen `sandbox/archive/glance` app is reference material only; this app is
 implemented as a separate package so the archived tree remains unchanged.

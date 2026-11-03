@@ -40,10 +40,14 @@ await cp(
   join(contents, "Info.plist"),
 );
 await cp(join(binPath, "QuotaBar"), join(macOS, "QuotaBar"));
-const packagedResourceBundle = join(resources, "QuotaBar_QuotaBar.bundle");
-await cp(join(binPath, "QuotaBar_QuotaBar.bundle"), packagedResourceBundle, {
-  recursive: true,
-});
+for (const bundleName of [
+  "QuotaBar_QuotaBar.bundle",
+  "QuotaBar_QuotaBarCore.bundle",
+]) {
+  await cp(join(binPath, bundleName), join(resources, bundleName), {
+    recursive: true,
+  });
+}
 
 const developerDirectory = runCapture(["xcode-select", "-p"]);
 const iconComposerTool = join(

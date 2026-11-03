@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "type": "purchased",
+      "remaining": 12.5,
+      "currency": "usd",
+      "expires_at": "2027-01-01T00:00:00Z"
+    },
+    {
+      "type": "granted",
+      "remaining": 3,
+      "currency": "USD",
+      "expires_at": "2026-11-15T00:00:00Z"
+    },
+    {
+      "type": "prepaid",
+      "remaining": 1,
+      "currency": "usd",
+      "expires_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "type": "credit",
+      "remaining": 2,
+      "currency": "usd"
+    }
+  ]
+}

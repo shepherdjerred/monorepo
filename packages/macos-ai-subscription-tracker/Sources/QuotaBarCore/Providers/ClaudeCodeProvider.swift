@@ -14,7 +14,13 @@ public struct ClaudeCodeProvider: UsageProvider {
     let data = try await client.get(
       provider: id,
       url: endpoint,
-      headers: ["anthropic-beta": "oauth-2025-04-20"]
+      headers: [
+        "anthropic-beta": "oauth-2025-04-20",
+        // Saved reset grants stay empty unless this request identifies as the Claude CLI.
+        // A generic user agent is answered eligible:false, ineligible_reason:"surface".
+        "User-Agent": "claude-cli/2.1.280 (external, cli)",
+        "x-app": "cli",
+      ]
     )
     return try Self.parse(data: data)
   }
@@ -70,12 +76,37 @@ public struct ClaudeCodeProvider: UsageProvider {
       fableReturned
       ? []
       : ["Fable 5 may use up to 50% of the weekly allowance; no separate counter was returned."]
+    let resets = Self.resetInventory(from: data, now: now)
     return UsageSnapshot(
       provider: .claudeCode,
       windows: windowsByID.values.sorted { $0.label < $1.label },
+      resets: resets.resets,
+      resetErrorMessage: resets.errorMessage,
       notes: notes,
       sourceTimestamp: now
     )
+  }
+
+  /// Reads `cedar_ember` from the same usage body. A missing or rejected inventory does not
+  /// fail the quota windows; it becomes an explicit reset error instead of a fake empty list.
+  private static func resetInventory(from data: Data, now: Date) -> ClaudeResetInventory {
+    let envelope: ClaudeResetEnvelope
+    do {
+      envelope = try JSONDecoder().decode(ClaudeResetEnvelope.self, from: data)
+    } catch {
+      return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.malformed)
+    }
+    switch envelope.state {
+    case .missing, .null:
+      return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.missing)
+    case .malformed:
+      return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.malformed)
+    case let .parsed(block):
+      guard block.eligible else {
+        return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.ineligible)
+      }
+      return ClaudeResetInventory(resets: block.resets(at: now), errorMessage: nil)
+    }
   }
 
   private static func descriptor(for key: String) -> WindowDescriptor {
@@ -166,8 +197,12 @@ private struct ClaudeUsageResponse: Decodable {
     // per-model figures through `seven_day_<model>` and `limits`. `weekly_scoped_shares` is the
     // same kind of sibling: an array of each scoped limit's share of the weekly allowance,
     // keyed by `limit_index`, with the per-model figures again carried by `limits`.
+    // `iguana_necktie` is a codename dollar meter, not a session or weekly allowance.
+    // `cedar_ember` is the saved usage-limit reset inventory and is parsed on its own.
     let metadataKeys = Set([
+      "cedar_ember",
       "extra_usage",
+      "iguana_necktie",
       "limits",
       "member_dashboard_available",
       "nimbus_quill",
@@ -260,5 +295,90 @@ private struct ClaudeModel: Decodable {
 
   enum CodingKeys: String, CodingKey {
     case displayName = "display_name"
+  }
+}
+
+private enum ClaudeResetMessage {
+  static let missing = "Saved usage-limit resets were not returned."
+  static let ineligible = "Saved usage-limit resets are not available for this account."
+  static let malformed = "Saved usage-limit resets could not be read."
+}
+
+private struct ClaudeResetInventory {
+  let resets: [Reset]
+  let errorMessage: String?
+}
+
+private struct ClaudeResetEnvelope: Decodable {
+  enum State {
+    case missing
+    case null
+    case malformed
+    case parsed(ClaudeResetBlock)
+  }
+
+  let state: State
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let key = CodingKeys.cedarEmber
+    guard container.contains(key) else {
+      self.state = .missing
+      return
+    }
+    if try container.decodeNil(forKey: key) {
+      self.state = .null
+      return
+    }
+    do {
+      self.state = .parsed(try container.decode(ClaudeResetBlock.self, forKey: key))
+    } catch {
+      self.state = .malformed
+    }
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case cedarEmber = "cedar_ember"
+  }
+}
+
+private struct ClaudeResetBlock: Decodable {
+  let eligible: Bool
+  let grants: [ClaudeResetGrant]
+
+  func resets(at now: Date) -> [Reset] {
+    var resets: [Reset] = []
+    for grant in grants where !grant.paused && grant.endsAt > now {
+      for _ in 0..<grant.resetsLeft {
+        resets.append(Reset(exp: grant.endsAt))
+      }
+    }
+    return resets.sorted { $0.exp < $1.exp }
+  }
+}
+
+private struct ClaudeResetGrant: Decodable {
+  let resetsLeft: Int
+  let endsAt: Date
+  let paused: Bool
+
+  enum CodingKeys: String, CodingKey {
+    case resetsLeft = "resets_left"
+    case endsAt = "ends_at"
+    case paused
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let resetsLeft = try container.decode(Int.self, forKey: .resetsLeft)
+    // One grant can carry several unused resets. Reject a corrupt count instead of
+    // expanding it into an unbounded badge list. Grant ids and labels are never stored.
+    guard (0...32).contains(resetsLeft) else { throw QuotaValidationError.invalidPairedFields }
+    guard let endsAt = try ProviderDecoder.date(in: container, forKey: .endsAt) else {
+      throw QuotaValidationError.invalidDate
+    }
+    self.resetsLeft = resetsLeft
+    self.endsAt = endsAt
+    self.paused = try container.decodeIfPresent(Bool.self, forKey: .paused) ?? false
   }
 }

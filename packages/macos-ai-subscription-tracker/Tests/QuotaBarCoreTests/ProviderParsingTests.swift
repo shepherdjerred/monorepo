@@ -13,6 +13,11 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertNotNil(snapshot.windows.first(where: { $0.id == "weekly-fable" }))
     XCTAssertNil(snapshot.windows.first(where: { $0.id == "provider-nimbus-quill" }))
     XCTAssertTrue(snapshot.notes.isEmpty)
+    XCTAssertTrue(snapshot.resets.isEmpty)
+    XCTAssertEqual(
+      snapshot.resetErrorMessage,
+      "Saved usage-limit resets were not returned."
+    )
   }
 
   func testClaudeSevenDayBreakdownIsMetadataNotAWindow() throws {
@@ -38,7 +43,8 @@ final class ProviderParsingTests: XCTestCase {
 
     XCTAssertEqual(
       snapshot.windows.map(\.id).sorted(),
-      ["five-hour", "provider-iguana-necktie", "weekly", "weekly-fable"])
+      ["five-hour", "weekly", "weekly-fable"])
+    XCTAssertNil(snapshot.windows.first(where: { $0.id.contains("iguana") }))
     XCTAssertNil(snapshot.windows.first(where: { $0.id.contains("shares") }))
     XCTAssertEqual(
       snapshot.windows.first(where: { $0.id == "weekly-fable" })?.usedPercent, 96)
@@ -237,7 +243,7 @@ final class ProviderParsingTests: XCTestCase {
   func testKimiAbsoluteValuesBecomePercentages() throws {
     let snapshot = try KimiProvider.parse(data: fixture("kimi-success"), now: now)
     XCTAssertEqual(snapshot.windows.map(\.remainingPercent), [75, 80, 60, 25])
-    XCTAssertEqual(snapshot.windows.map(\.label), ["Shared usage", "5-hour", "Weekly", "Monthly"])
+    XCTAssertEqual(snapshot.windows.map(\.label), ["Subscription", "5-hour", "Weekly", "Monthly"])
   }
 
   func testKimiWrapperAndValidation() throws {

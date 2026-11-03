@@ -128,7 +128,7 @@ final class ModelTests: XCTestCase {
       settings: settings,
       store: MemorySnapshotStore(),
       historyStore: MemoryHistoryStore(),
-      providerTimeout: .seconds(1)
+      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
     )
     XCTAssertEqual(model.overallStatus, .unavailable)
 
@@ -213,7 +213,7 @@ final class ModelTests: XCTestCase {
       settings: settings,
       store: MemorySnapshotStore(),
       historyStore: MemoryHistoryStore(),
-      providerTimeout: .seconds(1)
+      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
     )
 
     model.setProvider(.codex, enabled: true)
@@ -244,7 +244,7 @@ final class ModelTests: XCTestCase {
       settings: settings,
       store: MemorySnapshotStore(),
       historyStore: MemoryHistoryStore(),
-      providerTimeout: .seconds(1)
+      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
     )
     let initialRefresh = Task { await model.refresh() }
     await waitUntil { await codex.fetchCount == 1 }
@@ -340,47 +340,52 @@ final class ModelTests: XCTestCase {
     }
     XCTAssertNil(store.savedSnapshots[.codex])
   }
+}
 
-  private func makeModel(
-    providers: [any UsageProvider],
-    store: MemorySnapshotStore = MemorySnapshotStore(),
-    historyStore: MemoryHistoryStore = MemoryHistoryStore(),
-    timeout: Duration = .seconds(1),
-    minimumInterval: TimeInterval = 60
-  ) -> QuotaBarModel {
-    let settings = AppSettings(
-      store: MemoryModelSettingsStore(
-        enabled: Set(providers.map(\.id)),
-        showsLegacy: !Set(providers.map(\.id)).isDisjoint(with: ProviderID.legacy)
-      ),
-      minimumPollingInterval: minimumInterval
-    )
-    return QuotaBarModel(
-      providers: providers,
-      settings: settings,
-      store: store,
-      historyStore: historyStore,
-      providerTimeout: timeout
-    )
+@MainActor
+private func makeModel(
+  providers: [any UsageProvider],
+  store: MemorySnapshotStore = MemorySnapshotStore(),
+  historyStore: MemoryHistoryStore = MemoryHistoryStore(),
+  timeout: Duration = .seconds(1),
+  minimumInterval: TimeInterval = 60,
+  localUsageScan: @escaping @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage] = { _, _ in
+    [:]
   }
+) -> QuotaBarModel {
+  let settings = AppSettings(
+    store: MemoryModelSettingsStore(
+      enabled: Set(providers.map(\.id)),
+      showsLegacy: !Set(providers.map(\.id)).isDisjoint(with: ProviderID.legacy)
+    ),
+    minimumPollingInterval: minimumInterval
+  )
+  return QuotaBarModel(
+    providers: providers,
+    settings: settings,
+    store: store,
+    historyStore: historyStore,
+    refresh: QuotaBarRefresh(timeout: timeout, localUsageScan: localUsageScan)
+  )
+}
 
-  private func snapshot(provider: ProviderID, remaining: Double) -> UsageSnapshot {
-    UsageSnapshot(
-      provider: provider,
-      windows: [window(remaining: remaining)],
-      sourceTimestamp: .now
-    )
-  }
+private func snapshot(provider: ProviderID, remaining: Double) -> UsageSnapshot {
+  UsageSnapshot(
+    provider: provider,
+    windows: [window(remaining: remaining)],
+    sourceTimestamp: .now
+  )
+}
 
-  private func waitUntil(
-    timeout: Duration = .seconds(1),
-    condition: () async -> Bool
-  ) async {
-    let clock = ContinuousClock()
-    let deadline = clock.now.advanced(by: timeout)
-    while !(await condition()), clock.now < deadline {
-      try? await Task.sleep(for: .milliseconds(5))
-    }
+@MainActor
+private func waitUntil(
+  timeout: Duration = .seconds(1),
+  condition: () async -> Bool
+) async {
+  let clock = ContinuousClock()
+  let deadline = clock.now.advanced(by: timeout)
+  while !(await condition()), clock.now < deadline {
+    try? await Task.sleep(for: .milliseconds(5))
   }
 }
 
@@ -400,7 +405,7 @@ final class StalePublishingTests: XCTestCase {
         store: MemoryModelSettingsStore(enabled: [.codex]), minimumPollingInterval: 60),
       store: store,
       historyStore: MemoryHistoryStore(),
-      providerTimeout: .seconds(1)
+      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
     )
 
     await model.refresh()
@@ -423,7 +428,7 @@ private struct ValidationFailureProvider: UsageProvider {
   }
 }
 
-private final class MemorySnapshotStore: SnapshotPersisting, @unchecked Sendable {
+final class MemorySnapshotStore: SnapshotPersisting, @unchecked Sendable {
   private let lock = NSLock()
   private let loaded: [ProviderID: UsageSnapshot]
   private let loadError: QuotaError?
@@ -455,7 +460,7 @@ private final class MemorySnapshotStore: SnapshotPersisting, @unchecked Sendable
   }
 }
 
-private final class MemoryModelSettingsStore: SettingsPersisting, Sendable {
+final class MemoryModelSettingsStore: SettingsPersisting, Sendable {
   let enabled: Set<ProviderID>
   let showsLegacy: Bool
 

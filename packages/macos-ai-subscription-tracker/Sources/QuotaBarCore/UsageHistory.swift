@@ -67,12 +67,13 @@ public struct UsageHistorySample: Identifiable, Equatable, Codable, Sendable {
   }
 
   fileprivate var migratedForCurrentSchema: UsageHistorySample? {
-    let removedClaudeNimbusWindowIDs = Set([
+    let removedClaudeWindowIDs = Set([
+      "provider-iguana-necktie",
       "provider-nimbus-quill",
       "weekly-nimbus-quil",
       "weekly-nimbus-quill",
     ])
-    if provider == .claudeCode, removedClaudeNimbusWindowIDs.contains(windowID) {
+    if provider == .claudeCode, removedClaudeWindowIDs.contains(windowID) {
       return nil
     }
     guard provider == .codex, windowID == "codex-primary-window" else { return self }

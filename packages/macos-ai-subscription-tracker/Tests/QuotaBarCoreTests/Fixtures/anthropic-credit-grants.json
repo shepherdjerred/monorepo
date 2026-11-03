@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "grant_type": "purchase",
+      "remaining_amount": { "value": "10.00", "currency": "usd" },
+      "expires_at": "2027-06-01T00:00:00Z"
+    },
+    {
+      "grant_type": "subscription",
+      "remaining_amount": { "value": 4.5, "currency": "usd" },
+      "expires_at": "2026-11-30T00:00:00Z"
+    }
+  ]
+}
