@@ -11,7 +11,6 @@ import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
-import { getR2StorageRuleGroups } from "./rules/storage/r2-storage.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getSeaweedfsRuleGroups } from "./rules/storage/seaweedfs.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
@@ -217,18 +216,6 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getFliptRuleGroups(),
-    },
-  });
-
-  // Create R2 storage rules
-  new PrometheusRule(chart, "prometheus-r2-storage-rules", {
-    metadata: {
-      name: "prometheus-r2-storage-rules",
-      namespace: "prometheus",
-      labels: { release: "prometheus" },
-    },
-    spec: {
-      groups: getR2StorageRuleGroups(),
     },
   });
 

@@ -1,12 +1,11 @@
-# Unused. The Glitter Discord corpus is written to SeaweedFS only. This bucket
-# is leftover and is not a live mirror.
-resource "cloudflare_r2_bucket" "glitter_discord_corpus" {
-  account_id = var.cloudflare_account_id
-  name       = "glitter-discord-corpus"
-  location   = "WNAM"
+# The Glitter Discord corpus is written to SeaweedFS only; this R2 bucket was
+# an unused leftover. Stop managing it without destroying it; an operator
+# deletes the empty bucket out-of-band.
+removed {
+  from = cloudflare_r2_bucket.glitter_discord_corpus
 
   lifecycle {
-    prevent_destroy = true
+    destroy = false
   }
 }
 

@@ -484,7 +484,6 @@ describe("CI reporting manifest", () => {
           "scripts/helm/helm-set-version.test.ts",
           "scripts/helm/lint-helm.test.ts",
           "scripts/migration-smoke.test.ts",
-          "scripts/velero-backups.test.ts",
           "scripts/zfs-nvme-lz4.test.ts",
           "scripts/argocd/argocd-apply-safety.test.ts",
           "scripts/argocd/argocd-rendered-targets.test.ts",

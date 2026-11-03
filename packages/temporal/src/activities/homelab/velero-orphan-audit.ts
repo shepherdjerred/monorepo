@@ -23,10 +23,6 @@ import { kubectlExecInPod } from "#shared/infra/kubectl-exec.ts";
 // The audit detects ZFS snapshots on PVC datasets whose name does not match
 // any live `velero.io/v1/Backup` CR. Such snapshots are orphans from a prior
 // Velero deployment whose deletion path failed to run during teardown.
-//
-// R2 detection lives in the sibling velero-r2-orphan-audit workflow, which
-// carries its own read-only R2 credential. This activity stays local-only so
-// a missing R2 credential can never break local orphan detection.
 
 const NAMESPACE_OPENEBS = "openebs";
 const ZFS_NODE_LABEL = "role=openebs-zfs,app=openebs-zfs-node";
@@ -38,9 +34,8 @@ const ZFS_API_GROUP = "zfs.openebs.io";
 const ZFS_API_VERSION = "v1";
 const ZFS_BACKUP_PLURAL = "zfsbackups";
 // A ZFSBackup CR counts as orphan only when its parent Velero Backup is gone
-// AND the CR is older than this fence. The fence mirrors the R2 cleanup
-// tool's 24h fence and protects in-flight backups whose Backup CR may lag
-// the per-volume ZFSBackup objects.
+// AND the CR is older than this fence. The 24h fence protects in-flight
+// backups whose Backup CR may lag the per-volume ZFSBackup objects.
 const ORPHAN_BACKUP_CR_FENCE_MS = 24 * 60 * 60 * 1000;
 
 export type VeleroOrphanDataset = {
@@ -193,7 +188,7 @@ const BackupListSchema = z.object({
     .optional(),
 });
 
-export async function listLiveVeleroBackups(): Promise<string[]> {
+async function listLiveVeleroBackups(): Promise<string[]> {
   const api = loadCustomObjectsApi();
   const response: unknown = await api.listNamespacedCustomObject({
     group: VELERO_API_GROUP,

@@ -620,6 +620,11 @@ describe("temporal homelab audit tooling access boundaries", () => {
       resources: ["connectors", "proxygroups", "proxyclasses"],
       verbs: ["get", "list", "watch"],
     });
+    expect(rules).toContainEqual({
+      apiGroups: ["velero.io"],
+      resources: ["backups", "schedules", "backupstoragelocations", "restores"],
+      verbs: ["get", "list", "watch"],
+    });
   });
 
   it("keeps the agent worker out of every pod-exec RoleBinding", async () => {

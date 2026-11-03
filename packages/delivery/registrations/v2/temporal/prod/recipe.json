@@ -1,5 +1,5 @@
 {
-  "id": "temporal/2",
+  "id": "temporal/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -21,16 +21,8 @@
         "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
         "chart": "temporal"
       },
-      "syncOptions": ["CreateNamespace=true", "RespectIgnoreDifferences=true"],
-      "ignoreDifferences": [
-        {
-          "group": "",
-          "kind": "ConfigMap",
-          "name": "velero-r2-orphan-audit-state",
-          "namespace": "temporal",
-          "jsonPointers": ["/data/audit.json"]
-        }
-      ],
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
       "revisionHistoryLimit": 5,
       "lifecycle": "retain"
     },

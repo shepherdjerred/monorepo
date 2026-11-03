@@ -56,10 +56,7 @@ import {
   type ScheduleReconciliationMode,
 } from "./shared/schedule-reconciliation.ts";
 import { createQueueWorker } from "./worker-factory.ts";
-import {
-  restoreGlitterCorpusMetricsAfterWorkerStart,
-  restoreVeleroR2MetricsAfterWorkerStart,
-} from "./observability/restore-startup-metrics.ts";
+import { restoreGlitterCorpusMetricsAfterWorkerStart } from "./observability/restore-startup-metrics.ts";
 import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
@@ -444,9 +441,6 @@ async function main(): Promise<void> {
   const workerRuns = workers.map((roleWorker) => roleWorker.run());
   if (roleContract.restoresGlitterCorpusMetrics) {
     void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
-  }
-  if (roleContract.restoresVeleroR2AuditMetrics) {
-    void restoreVeleroR2MetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {
     await controlLifecycle;

@@ -96,10 +96,6 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/birmel/tests/database/migrations.test.ts|packages/homelab/src/cdk8s/scripts/r2-orphan-cleanup.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/birmel/tests/flow/turn-flow.test.ts|packages/birmel/tests/flow/turn-flow.test.ts": {
       "clones": 1,
       "tokens": 72
@@ -295,10 +291,6 @@
     "packages/discord-video-stream/test/voice-audio.test.ts|packages/discord-video-stream/test/voice-audio.test.ts": {
       "clones": 1,
       "tokens": 71
-    },
-    "packages/dotfiles/bin/git_cleanup_core.ts|packages/homelab/scripts/migration-core.ts": {
-      "clones": 1,
-      "tokens": 155
     },
     "packages/eslint-config/src/rules/no-redundant-zod-parse.ts|packages/eslint-config/src/rules/zod-schema-naming.ts": {
       "clones": 1,

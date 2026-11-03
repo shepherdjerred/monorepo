@@ -204,29 +204,6 @@
       "vault_item_id": "sc5kj6xthlxmdn7k4mesdr2mju",
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
-    "r2-exporter": {
-      "managed": false,
-      "supersedes_id": "ce9ab72576cbff081c3f774c49afa922",
-      "name": "R2 Exporter 2026-08",
-      "policies": [
-        {
-          "effect": "allow",
-          "permission_groups": [
-            {
-              "id": "b4992e1108244f5d8bfbd5744320c2e1",
-              "name": "Workers R2 Storage Read"
-            }
-          ],
-          "resources": {
-            "com.cloudflare.api.account.48948ed6cd40d73e34d27f0cc10e595f": "*"
-          }
-        }
-      ],
-      "expires_on": "2027-08-29T23:59:59Z",
-      "status": "active",
-      "vault_item_id": "faryqlpsnrqupkirkwrejct3iy",
-      "vault_field": "CLOUDFLARE_API_TOKEN"
-    },
     "ddns": {
       "managed": false,
       "supersedes_id": "86e250662681397b4d12a0ab1e8fd266",

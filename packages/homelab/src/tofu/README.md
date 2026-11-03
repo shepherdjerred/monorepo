@@ -163,8 +163,8 @@ these declarations while the archives exist so ordinary stack applies preserve
 their storage and access policy. `jerred-archives` stays on R2. Velero's
 scheduled backups are the only backup. They are written to the Backblaze
 `sjerred-velero` bucket, which the `backblaze` stack declares. The R2 `homelab`
-bucket keeps the backups taken before that move, until a restore from
-Backblaze has been done.
+bucket that held backups taken before that move is no longer managed and is
+retired out-of-band, as is the unused `glitter-discord-corpus` bucket.
 
 Each domain's `.tf` file owns its existing zone and application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
@@ -229,10 +229,10 @@ with its existing 1Password rotation unit; an operator writes and proves that
 handoff before revoking the superseded token.
 
 The committed registry describes a distinct replacement for Woodpecker, the
-Temporal audit worker, local `cf` tooling, cloudflare-operator, the R2 exporter,
-and DDNS. Each entry records the active token ID it supersedes, readable
-permission names plus their stable Cloudflare IDs, exact account or zone
-resources, and the existing 1Password field or JSON path. The Woodpecker and
+Temporal audit worker, local `cf` tooling, cloudflare-operator, and DDNS. Each
+entry records the active token ID it supersedes, readable permission names plus
+their stable Cloudflare IDs, exact account or zone resources, and the existing
+1Password field or JSON path. The Woodpecker and
 Temporal entries deliberately split their currently shared credential. The
 bootstrap identity must have API Tokens Read and Write; ordinary consumer
 tokens do not receive token-administration permissions.

@@ -122,6 +122,9 @@ export const DELETED_SCHEDULE_IDS = [
   "seaweedfs-backup-retention-gc-weekly",
   "storm-forum-beta-backup",
   "storm-forum-prod-backup",
+  // Velero moved to Backblaze and the R2 `homelab` bucket was retired, so the
+  // R2 orphan-prefix audit has nothing left to inspect.
+  "velero-r2-orphan-audit",
 ] as const;
 
 /**
@@ -176,6 +179,8 @@ const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
     namespace: "prod",
   },
   { workflowType: "backupStormForumWorkflow", namespace: "prod" },
+  // Drain the retired R2 orphan-prefix audit.
+  { workflowType: "runVeleroR2OrphanAuditWorkflow", namespace: "prod" },
 ] as const;
 
 export async function terminateRetiredWorkflowExecutions(

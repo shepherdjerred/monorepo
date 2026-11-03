@@ -339,33 +339,13 @@
     },
     {
       "source": "packages/homelab/scripts/velero/cleanup-r2-bucket.sh",
-      "disposition": "port",
-      "reason": "Destructive backup maintenance needs typed planning and confirmations",
-      "replacement": "packages/homelab/scripts/velero-backups.ts",
-      "owner": {
-        "packageJson": "packages/homelab/package.json",
-        "tsconfig": "packages/homelab/tsconfig.scripts.json",
-        "eslintConfig": "packages/homelab/eslint.config.ts"
-      },
-      "tests": [
-        "packages/homelab/scripts/velero-backups.test.ts",
-        "packages/homelab/scripts/migration-smoke.test.ts"
-      ]
+      "disposition": "delete",
+      "reason": "Retired with the R2 homelab bucket: it maintained Velero backups there, and Velero now writes to Backblaze."
     },
     {
       "source": "packages/homelab/scripts/velero/delete-all-backups.sh",
-      "disposition": "port",
-      "reason": "Destructive backup maintenance needs typed planning and confirmations",
-      "replacement": "packages/homelab/scripts/velero-backups.ts",
-      "owner": {
-        "packageJson": "packages/homelab/package.json",
-        "tsconfig": "packages/homelab/tsconfig.scripts.json",
-        "eslintConfig": "packages/homelab/eslint.config.ts"
-      },
-      "tests": [
-        "packages/homelab/scripts/velero-backups.test.ts",
-        "packages/homelab/scripts/migration-smoke.test.ts"
-      ]
+      "disposition": "delete",
+      "reason": "Retired with the R2 homelab bucket: it maintained Velero backups there, and Velero now writes to Backblaze."
     },
     {
       "source": "packages/homelab/src/cdk8s/src/misc/minecraft/minecraft-config-drift-check.sh",

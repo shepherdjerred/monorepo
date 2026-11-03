@@ -62,7 +62,7 @@ Talos OS or Kubernetes control plane. Use the existing upgrade procedure in
 in the PR. If live execution is blocked, keep the pin change unmerged and
 record the blocker.
 
-Storage deletion, R2 orphan cleanup, state surgery, and resource replacement
+Storage deletion, backup-data cleanup, state surgery, and resource replacement
 are destructive. Produce and review the exact candidate set first, then use the
 existing revalidation workflow. A successful backup is not restore proof.
 The one automated exception is the Velero plugin's expiry sweep

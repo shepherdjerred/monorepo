@@ -157,14 +157,11 @@ work.
 
 Live maintenance that acts directly on running systems with no PR in the loop.
 
-The backup workflows are **detection-only**. `velero-orphan-audit` flags PVC
-snapshots with no matching live backup. The
-[`velero-r2-orphan-audit`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/velero-r2-orphan-audit.ts)
-flags unreferenced data in the R2 `homelab` bucket older than its safety fence.
-It does not establish that the data is safe to delete. That bucket holds only
-backups taken before
-[Velero moved to Backblaze](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/storage/velero.ts).
-Both audits emit gauges, a JSON summary, and a pointer to the
+The backup workflow is **detection-only**.
+[`velero-orphan-audit`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/velero-orphan-audit.ts)
+flags PVC snapshots and ZFSBackup CRs with no matching live backup. It does not
+establish that they are safe to delete. It emits gauges, a JSON summary, and a
+pointer to the
 [remediation runbook](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/runbooks/velero-orphan-snapshot-remediation.md).
 
 Pruning off-site backup data was declined in 2026-06-06 and reversed in
@@ -178,8 +175,7 @@ backups. It keeps every backup Velero, its storage metadata, or a ZFSBackup
 still names, plus anything under a day old. It also keeps every stream those
 backups descend from, following ZFS stream GUIDs as a restore does. If an
 ancestry cannot be proven complete, it deletes nothing and fails the
-deletion. The audits stay read-only and independent, so they check the sweep
-rather than share its logic.
+deletion. The audit stays read-only and shares none of the sweep's logic.
 
 `ci-workspace-reaper` deletes CI state Woodpecker failed to clean up: terminal
 `wp-` step and service pods and `ci-workspace` claims older than any workflow
