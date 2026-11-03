@@ -81,11 +81,15 @@ struct ProviderSectionView: View {
   let overview: ProviderOverview
   let date: Date
   let history: [UsageHistorySample]
+  var localUsage: LocalDailyUsage?
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
       header
       content
+      if let localUsage {
+        LocalUsageCaption(usage: localUsage)
+      }
     }
     .padding(.vertical, 8)
     .opacity(overview.dimsContent ? 0.58 : 1)
@@ -182,6 +186,30 @@ struct ProviderSectionView: View {
       .help(help)
       .accessibilityLabel(text)
       .accessibilityHint(help)
+  }
+}
+
+private struct LocalUsageCaption: View {
+  let usage: LocalDailyUsage
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 2) {
+      if let caption = usage.caption {
+        Text(caption)
+          .help(usage.helpText)
+      }
+      if usage.unreadable {
+        Text(LocalDailyUsage.unreadableMessage)
+          .help(LocalDailyUsage.unreadableMessage)
+      }
+      if usage.pricingUnavailable {
+        Text(LocalDailyUsage.pricingUnavailableMessage)
+          .help(LocalDailyUsage.pricingUnavailableMessage)
+      }
+    }
+    .font(.caption2)
+    .foregroundStyle(.secondary)
+    .monospacedDigit()
   }
 }
 

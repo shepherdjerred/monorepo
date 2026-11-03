@@ -46,6 +46,22 @@ final class APIPlatformModelTests: XCTestCase {
     XCTAssertEqual(try store.load(), [:])
   }
 
+  func testAPIPlatformCacheLoadsSnapshotsWrittenBeforeCreditFields() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let url = root.appendingPathComponent("api-platform-snapshot.json")
+    let store = JSONAPIPlatformSnapshotStore(url: url)
+    let snapshot = openAISnapshot()
+    try store.save([.openAI: snapshot])
+    let saved = try XCTUnwrap(String(data: Data(contentsOf: url), encoding: .utf8))
+    XCTAssertTrue(saved.contains("\"creditGrants\":[]"))
+    let legacy = saved.replacingOccurrences(of: ",\"creditGrants\":[]", with: "")
+    try Data(legacy.utf8).write(to: url)
+
+    XCTAssertEqual(try store.load(), [.openAI: snapshot])
+    XCTAssertNil(try store.load()[.openAI]?.creditGrantsUnavailableReason)
+  }
+
   func testAPIPlatformCacheDropsRetiredOpenRouterSnapshots() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }

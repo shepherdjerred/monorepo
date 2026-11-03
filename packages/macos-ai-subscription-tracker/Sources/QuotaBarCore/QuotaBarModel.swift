@@ -11,6 +11,24 @@ private struct ActiveRefresh {
   let task: Task<Void, Never>
 }
 
+public struct QuotaBarRefresh: Sendable {
+  public var timeout: Duration
+  public var localUsageScan: @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage]
+
+  public init(
+    timeout: Duration = .seconds(25),
+    localUsageScan: @escaping @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage] =
+      QuotaBarRefresh.scan
+  ) {
+    self.timeout = timeout
+    self.localUsageScan = localUsageScan
+  }
+
+  public static func scan(_ date: Date, _ zone: TimeZone) -> [ProviderID: LocalDailyUsage] {
+    LocalUsageScanner.scan(now: date, timeZone: zone)
+  }
+}
+
 @MainActor @Observable
 public final class QuotaBarModel {
   public private(set) var providers: [any UsageProvider]
@@ -20,11 +38,13 @@ public final class QuotaBarModel {
   public private(set) var cacheErrorMessage: String?
   public private(set) var history: [UsageHistorySample] = []
   public private(set) var historyErrorMessage: String?
+  public private(set) var localDailyUsage: [ProviderID: LocalDailyUsage] = [:]
 
   private let store: any SnapshotPersisting
   private let historyStore: any UsageHistoryPersisting
   private let providerFactory: ((Set<ProviderID>) throws -> [any UsageProvider])?
   private let providerTimeout: Duration
+  private let localUsageScan: @Sendable (Date, TimeZone) -> [ProviderID: LocalDailyUsage]
   private var lastSuccessful: [ProviderID: UsageSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
   private var activeRefresh: ActiveRefresh?
@@ -37,14 +57,15 @@ public final class QuotaBarModel {
     store: any SnapshotPersisting,
     historyStore: any UsageHistoryPersisting,
     providerFactory: ((Set<ProviderID>) throws -> [any UsageProvider])? = nil,
-    providerTimeout: Duration = .seconds(25)
+    refresh: QuotaBarRefresh = QuotaBarRefresh()
   ) {
     self.providers = providers
     self.settings = settings
     self.store = store
     self.historyStore = historyStore
     self.providerFactory = providerFactory
-    self.providerTimeout = providerTimeout
+    providerTimeout = refresh.timeout
+    localUsageScan = refresh.localUsageScan
     do {
       lastSuccessful = try store.load().mapValues(Self.migrateCachedSnapshot)
       for (provider, snapshot) in lastSuccessful {
@@ -81,6 +102,7 @@ public final class QuotaBarModel {
   private static func migrateCachedSnapshot(_ snapshot: UsageSnapshot) -> UsageSnapshot {
     guard snapshot.provider == .claudeCode else { return snapshot }
     let removedWindowIDs = Set([
+      "provider-iguana-necktie",
       "provider-nimbus-quill",
       "weekly-nimbus-quil",
       "weekly-nimbus-quill",
@@ -201,6 +223,11 @@ public final class QuotaBarModel {
     for provider in enabled {
       providerRefreshAttempts[provider.id, default: 0] += 1
     }
+    let scan = localUsageScan
+    let timeZone = TimeZone.current
+    let usageTask = Task.detached(priority: .utility) {
+      scan(Date(), timeZone)
+    }
     await withTaskGroup(of: ProviderFetchResult.self) { group in
       for provider in enabled {
         group.addTask { [providerTimeout] in
@@ -211,8 +238,9 @@ public final class QuotaBarModel {
         apply(result)
       }
     }
+    localDailyUsage = await usageTask.value
     // Persist even when every fetch failed: failure rounds are exactly when
-    // the on-disk freshness markers change.
+    // the on-disk freshness markers change. Local daily totals stay in memory.
     persistLastSuccessful()
   }
 

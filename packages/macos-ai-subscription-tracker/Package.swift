@@ -21,6 +21,7 @@ let package = Package(
     .target(
       name: "QuotaBarCore",
       path: "Sources/QuotaBarCore",
+      resources: [.process("Resources")],
       swiftSettings: strictSwiftSettings,
     ),
     .executableTarget(

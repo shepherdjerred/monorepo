@@ -50,10 +50,10 @@ public struct OpenAIAPIClient: Sendable {
     return APIPlatformSnapshot(
       platform: id,
       workspaceNames: [],
-      creditsRemaining: nil,
       monthlySpend: monthlySpend,
       projectedSpend: projectedSpend,
-      sourceTimestamp: now
+      sourceTimestamp: now,
+      credits: APIPlatformCredits(unavailableReason: APICreditGrants.unavailableMessage)
     )
   }
 

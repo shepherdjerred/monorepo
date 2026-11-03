@@ -59,7 +59,10 @@ public struct ProviderEndpoints: Sendable {
       return url
     }
     return try ProviderEndpoints(
-      claudeUsage: url("https://api.anthropic.com/api/oauth/usage", provider: .claudeCode),
+      claudeUsage: url(
+        "https://api.anthropic.com/api/oauth/usage?cedar_ember=1",
+        provider: .claudeCode
+      ),
       codexUsage: url("https://chatgpt.com/backend-api/wham/usage", provider: .codex),
       codexResets: url(
         "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",

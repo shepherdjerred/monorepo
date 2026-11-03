@@ -310,6 +310,12 @@ final class NetworkingTests: XCTestCase {
     XCTAssertEqual(kimi.provider, .kimi)
     let requests = await transport.requests
     XCTAssertEqual(requests.first?.headers["anthropic-beta"], "oauth-2025-04-20")
+    XCTAssertEqual(
+      requests.first?.headers["User-Agent"],
+      "claude-cli/2.1.280 (external, cli)"
+    )
+    XCTAssertEqual(requests.first?.headers["x-app"], "cli")
+    XCTAssertTrue(requests.first?.url.absoluteString.contains("cedar_ember=1") == true)
     XCTAssertTrue(requests.contains { $0.headers["User-Agent"] == "QuotaBar/1.0" })
   }
 

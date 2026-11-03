@@ -51,8 +51,8 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
 
   public var tracksBankedResets: Bool {
     switch self {
-    case .codex, .grok: true
-    case .claudeCode, .antigravity, .cursor, .kimi, .muse: false
+    case .claudeCode, .codex, .grok: true
+    case .antigravity, .cursor, .kimi, .muse: false
     }
   }
 }
@@ -115,7 +115,7 @@ public struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
   public var compactDisplayLabel: String {
     switch kind {
     case .rolling:
-      return label == "5-hour" ? label : "Rolling"
+      return label.count <= 18 ? label : "Rolling"
     case .weekly:
       return label.count <= 18 ? label : "Weekly"
     case .monthly:

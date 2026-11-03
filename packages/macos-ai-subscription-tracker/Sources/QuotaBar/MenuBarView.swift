@@ -190,7 +190,12 @@ struct MenuBarView: View {
           StatusMessage(symbol: "exclamationmark.triangle", text: startupError)
         }
         ForEach(overview.providers) { provider in
-          ProviderSectionView(overview: provider, date: date, history: model.history)
+          ProviderSectionView(
+            overview: provider,
+            date: date,
+            history: model.history,
+            localUsage: model.localDailyUsage[provider.provider]
+          )
           if provider.id != overview.providers.last?.id {
             Divider().padding(.leading, 25)
           }

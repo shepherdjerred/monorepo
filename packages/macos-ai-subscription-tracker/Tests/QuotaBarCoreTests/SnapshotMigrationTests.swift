@@ -21,9 +21,17 @@ import XCTest
       resetAt: nil,
       sourceTimestamp: .now
     )
+    let iguana = try UsageWindow.validated(
+      id: "provider-iguana-necktie",
+      label: "Provider quota · Iguana Necktie",
+      kind: .providerDefined,
+      usedPercent: 100,
+      resetAt: nil,
+      sourceTimestamp: .now
+    )
     let cached = UsageSnapshot(
       provider: .claudeCode,
-      windows: [weekly, nimbus],
+      windows: [weekly, nimbus, iguana],
       sourceTimestamp: .now
     )
     let provider = FakeProvider(id: .claudeCode, results: [])
@@ -36,7 +44,7 @@ import XCTest
       settings: settings,
       store: SnapshotMigrationStore(loaded: [.claudeCode: cached]),
       historyStore: MemoryHistoryStore(),
-      providerTimeout: .seconds(1)
+      refresh: QuotaBarRefresh(timeout: .seconds(1), localUsageScan: { _, _ in [:] })
     )
 
     guard case let .available(value) = model.state(for: .claudeCode) else {
