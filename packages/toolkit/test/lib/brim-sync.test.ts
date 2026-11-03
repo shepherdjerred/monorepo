@@ -1,15 +1,13 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
   appendFile,
   mkdir,
-  mkdtemp,
   readFile,
   rm,
   stat,
   utimes,
   writeFile,
 } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { generateX25519Identity, identityToRecipient } from "age-encryption";
 import { z } from "zod";
@@ -33,22 +31,9 @@ import {
 import { pullArchive } from "#lib/brim/sync/pull.ts";
 import { pushArchive, type PushOptions } from "#lib/brim/sync/push.ts";
 import { scanSourceFiles, syncRoots } from "#lib/brim/sync/scan.ts";
+import { useTempDirectories } from "#test/support/temp-directories.ts";
 
-const directories: string[] = [];
-
-afterEach(async () => {
-  await Promise.all(
-    directories
-      .splice(0)
-      .map((directory) => rm(directory, { recursive: true, force: true })),
-  );
-});
-
-async function tempHome(): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "brim-sync-"));
-  directories.push(directory);
-  return directory;
-}
+const tempHome = useTempDirectories("brim-sync-");
 
 type Machine = {
   readonly home: string;
