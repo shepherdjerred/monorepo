@@ -47,7 +47,11 @@ If these checks cannot be completed, stop at the read-only inventory.
 
 The plugin deletes expired object-store data itself (see its README). This
 runbook covers only the local snapshots and ZFSBackup CRs that sweep leaves
-behind.
+behind. One exception: when `DeleteSnapshot` fails partway, Velero still
+removes the backup's metadata and does not call the plugin again, so the
+family's leftover streams wait for its next deletion. If the family will see
+none (a retired schedule or volume), list its prefix in the Backblaze
+`sjerred-velero` bucket before closing the incident.
 
 ## Step 1: Verify the orphan finding
 
