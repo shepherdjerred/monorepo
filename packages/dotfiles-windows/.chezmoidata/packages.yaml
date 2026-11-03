@@ -101,5 +101,5 @@ packages:
       note: Microsoft Store via the Xbox app; winget only has the legacy Win32 launcher
     - name: Riot Vanguard
       note: Installed by the Riot Client
-    - name: Scout Client, Glitter Boys, TaskNotes
+    - name: Scout Client, Glitter Boys, TaskNotes, brim.exe
       note: First-party builds from this monorepo

@@ -46,6 +46,7 @@ let paths: HistoryPaths = {
   antigravityRoots: [],
   grokHome: "",
   codexSessionsDir: "",
+  brimSyncMirrorIndex: "",
 };
 let codexThreadDb = "";
 let codexSessionsDir = "";

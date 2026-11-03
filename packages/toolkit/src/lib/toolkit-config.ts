@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
+import { BRIM_SYNC_RECIPIENT } from "#lib/brim/sync/recipient.ts";
 import { createObservabilityHooks } from "@shepherdjerred/config/observability.ts";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
 import { createFileSource } from "@shepherdjerred/config/sources/file.ts";
@@ -48,6 +49,46 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     schema: z.url({ protocol: /^https?$/ }),
     sources: ["env", "file", "default"],
     default: "https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics",
+  },
+  /**
+   * This machine's id in the Brim sync archive. Unset derives it from the
+   * hostname; set it when a hostname is shared or likely to change.
+   */
+  brimSyncMachineId: {
+    schema: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]{0,62}$/)
+      .nullable(),
+    sources: ["env", "file", "default"],
+    default: null,
+  },
+  /** SeaweedFS bucket that holds the encrypted transcript archive. */
+  brimSyncBucket: {
+    schema: z.string().min(3).max(63),
+    sources: ["env", "file", "default"],
+    default: "brim-sessions",
+  },
+  /** AWS profile with the bucket's endpoint and scoped key. */
+  brimSyncProfile: {
+    schema: z.string().min(1),
+    sources: ["env", "file", "default"],
+    default: "brim-sync",
+  },
+  /**
+   * The age X25519 public key every archive object is encrypted to. It is not
+   * a secret; the matching identity is the `BRIM_SYNC_AGE_IDENTITY`
+   * credential, needed only to pull.
+   */
+  brimSyncRecipient: {
+    schema: z.string().regex(/^age1[0-9a-z]{58}$/),
+    sources: ["env", "file", "default"],
+    default: BRIM_SYNC_RECIPIENT,
+  },
+  /** How many days of other machines' sessions `brim sync pull` mirrors. */
+  brimSyncPullSinceDays: {
+    schema: z.coerce.number().int().positive(),
+    sources: ["env", "file", "default"],
+    default: 30,
   },
   /** Base URL of the ops dashboard that serves the ops snapshot. */
   opsDashboardUrl: {

@@ -223,6 +223,64 @@ Default appearance into `Brim.icns` with Icon Composer's `ictool` for older
 macOS compatibility. The menu-bar status glyphs remain separate template
 assets because they communicate live quota state rather than app identity.
 
+## Cross-machine sync
+
+Brim sync is a push-only, encrypted archive. Each machine's Claude Code and
+Codex transcripts go to one SeaweedFS bucket, and each Mac mirrors the others
+read-only. The two Macs and the Windows PC can then search each other's sessions
+and count today's usage together. Native CLIs never see the mirror, so it is not
+a way to resume a session elsewhere. That would need project paths rewritten
+between `/Users/…` and `C:\Users\…`, plus conflict handling inside stores the
+CLIs own.
+
+```mermaid
+flowchart LR
+  accTitle: Brim sync data flow
+  accDescr: Each machine pushes encrypted transcript segments and a manifest to the SeaweedFS bucket. Macs pull other machines into a read-only mirror that toolkit history and Brim read.
+
+  W[Windows PC: brim.exe sync push] --> B[(brim-sessions bucket)]
+  M1[Mac: brim sync run] <--> B
+  M2[Mac: brim sync run] <--> B
+  M1 --> X[~/.toolkit/brim-sync/mirror]
+  X --> H[toolkit history mirror sources]
+  X --> U[Brim All machines caption]
+```
+
+The engine lives in toolkit's standalone `brim` binary, not in the Swift app.
+Brim only runs on macOS, while Bun compiles the same code for Windows. Brim
+reads the mirror's [index contract](packages/toolkit/schemas/brim-sync-mirror-index.schema.json)
+from disk and never holds S3 credentials. The
+[push engine](packages/toolkit/src/lib/brim/sync/push.ts) relies on transcripts
+only growing. Each run uploads just the new complete lines as one segment. A
+file that shrinks or whose tail changes starts a new generation instead of
+being patched. This keeps tens of gigabytes of Codex rollouts from being
+re-uploaded every five minutes.
+
+Each machine writes only its own prefix, and its manifest is the commit point.
+Segments upload first and become visible only when a manifest names them.
+Concurrent writers never conflict, and a crash resumes from the last commit. A
+transcript deleted locally keeps its archive entry, because the archive is the
+backup.
+
+Every object is age-encrypted on the client. Object keys are hashes, so even
+project names stay private. This matters because SeaweedFS copies the bucket
+off-site, and transcripts routinely contain tool output and secrets. Pushing
+needs only the public recipient. The Windows PC, which only pushes, never holds
+the decryption identity. Pulling resolves it from 1Password through the
+toolkit credential broker.
+
+Scheduling is one-shot. launchd and a Windows Scheduled Task re-run the command
+every five minutes, and a pid lock lets a run skip while a long backfill
+continues. There is no resident daemon to crash or leak.
+
+The mirror is an input to the index, not to the metrics push. `toolkit history`
+indexes it as separate `claude-mirror` and `codex-mirror` sources, labelled by
+machine. Their tokens are excluded from the usage-export ledger, because each
+machine already exports its own. Codex mirror documents come from the rollout
+JSONL itself: Codex keeps message text in a local database that is not synced.
+Brim's `All machines` caption counts mirrored logs for this Mac's calendar day
+with the same parsers as the local caption.
+
 ## Release boundary
 
 The root Linux verification graph runs strict SwiftLint. Native build, test,
@@ -245,6 +303,8 @@ and [Xcode project specification](https://github.com/shepherdjerred/monorepo/blo
 
 ## Related
 
+- [Sync agent history across machines](/how-to/sync-agent-history-across-machines/)
+  — connect a machine to the archive
 - [Operations overview](/explanation/homelab/operations-overview/) — where
   pushed quota and usage metrics are shown
 - [Monorepo source](https://github.com/shepherdjerred/monorepo) —

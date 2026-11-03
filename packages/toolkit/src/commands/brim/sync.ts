@@ -1,0 +1,314 @@
+import { parseArgs } from "node:util";
+import { createSealer } from "#lib/brim/sync/crypto.ts";
+import {
+  assertDarwin,
+  installLaunchAgentJob,
+  launchAgentJobStatus,
+  selfArgv,
+  uninstallLaunchAgentJob,
+  type LaunchAgentSpec,
+} from "#lib/launchd.ts";
+import { SyncSetupError } from "#lib/brim/sync/errors.ts";
+import { acquireSyncLock } from "#lib/brim/sync/lock.ts";
+import { readLocalManifest } from "#lib/brim/sync/manifest.ts";
+import { readMirrorIndex } from "#lib/brim/sync/mirror-index.ts";
+import { createS3ObjectStore } from "#lib/brim/sync/object-store.ts";
+import {
+  defaultBrimSyncPaths,
+  type BrimSyncPaths,
+} from "#lib/brim/sync/paths.ts";
+import { pullArchive, type PullReport } from "#lib/brim/sync/pull.ts";
+import { pushArchive, type PushReport } from "#lib/brim/sync/push.ts";
+import { syncRoots } from "#lib/brim/sync/scan.ts";
+import {
+  lazyOpener,
+  loadBrimSyncSettings,
+  type BrimSyncSettings,
+} from "#lib/brim/sync/settings.ts";
+
+export const SYNC_USAGE = `
+brim sync — encrypted cross-machine archive of Claude Code and Codex transcripts
+
+  brim sync push [--json]          Archive new transcript lines to S3
+  brim sync pull [--all] [--json]  Mirror other machines' recent sessions
+  brim sync run [--json]           push, then pull (the macOS LaunchAgent)
+  brim sync status [--json]        Local archive, mirror and agent state
+  brim sync install | uninstall    Manage the 5-minute macOS LaunchAgent
+
+push uploads every transcript, whatever its age; the archive never expires.
+pull mirrors the last brim.sync.pull.since.days days (default 30) into
+~/.toolkit/brim-sync/mirror/ for toolkit history and Brim; --all mirrors
+everything. On Windows a Scheduled Task runs push; see the dotfiles-windows
+source.
+`;
+
+const LAUNCH_AGENT_LABEL = "com.jerred.brim-sync";
+const INTERVAL_SECONDS = 300;
+
+function launchAgent(
+  paths: BrimSyncPaths,
+  invocationPrefix: readonly string[],
+): LaunchAgentSpec {
+  return {
+    label: LAUNCH_AGENT_LABEL,
+    plistPath: paths.launchAgent,
+    programArguments: selfArgv([...invocationPrefix, "sync", "run"]),
+    logsDir: paths.logsDir,
+    keepAlive: false,
+    startIntervalSeconds: INTERVAL_SECONDS,
+  };
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${String(bytes)} B`;
+  const units = ["KiB", "MiB", "GiB", "TiB"];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(1)} ${units[unit] ?? "TiB"}`;
+}
+
+function store(settings: BrimSyncSettings) {
+  return createS3ObjectStore({
+    bucket: settings.bucket,
+    profile: settings.profile,
+  });
+}
+
+async function runPush(
+  settings: BrimSyncSettings,
+  paths: BrimSyncPaths,
+): Promise<PushReport> {
+  return pushArchive({
+    store: store(settings),
+    seal: createSealer(settings.recipient),
+    open: lazyOpener(),
+    paths,
+    machineId: settings.machineId,
+    displayName: settings.displayName,
+    platform: settings.platform,
+    roots: syncRoots(Bun.env, paths.home),
+    log: (line) => {
+      console.log(line);
+    },
+  });
+}
+
+async function runPull(
+  settings: BrimSyncSettings,
+  paths: BrimSyncPaths,
+  all: boolean,
+): Promise<PullReport> {
+  return pullArchive({
+    store: store(settings),
+    open: lazyOpener(),
+    paths,
+    machineId: settings.machineId,
+    sinceDays: all ? null : settings.pullSinceDays,
+    log: (line) => {
+      console.log(line);
+    },
+  });
+}
+
+function printPush(report: PushReport): void {
+  console.log(
+    `push: ${String(report.files)} files archived; ${String(report.changedFiles)} changed, ${String(report.rewrittenFiles)} rewritten, ${String(report.newlyDeletedFiles)} newly deleted locally; ${String(report.uploadedSegments)} segments (${formatBytes(report.uploadedBytes)}) in ${String(report.commits)} commits`,
+  );
+  for (const error of report.errors) {
+    console.error(`push: ${error.relPath}: ${error.message}`);
+  }
+}
+
+function printPull(report: PullReport): void {
+  for (const machine of report.machines) {
+    console.log(
+      `pull: ${machine.machineId}: ${String(machine.mirroredFiles)} files mirrored, ${formatBytes(machine.downloadedBytes)} downloaded, ${String(machine.rebuiltFiles)} rebuilt, ${String(machine.prunedFiles)} pruned`,
+    );
+  }
+  for (const error of report.errors) {
+    console.error(`pull: ${error.machineId}: ${error.message}`);
+  }
+}
+
+async function printStatus(
+  settings: BrimSyncSettings,
+  paths: BrimSyncPaths,
+  agentSpec: LaunchAgentSpec,
+  json: boolean,
+): Promise<void> {
+  const manifest = await readLocalManifest(paths.manifest);
+  const index = await readMirrorIndex(paths.mirrorIndex);
+  const agent = await launchAgentJobStatus(agentSpec);
+  const archive =
+    manifest === null
+      ? null
+      : {
+          updatedAt: manifest.updatedAt,
+          files: manifest.files.length,
+          deletedLocally: manifest.files.filter(
+            (entry) => entry.deletedAt !== null,
+          ).length,
+          archivedBytes: manifest.files.reduce(
+            (total, entry) => total + entry.size,
+            0,
+          ),
+        };
+  const status = {
+    machineId: settings.machineId,
+    bucket: settings.bucket,
+    profile: settings.profile,
+    recipient: settings.recipient,
+    archive,
+    mirror:
+      index?.machines.map((machine) => ({
+        machineId: machine.machineId,
+        displayName: machine.displayName,
+        platform: machine.platform,
+        manifestUpdatedAt: machine.manifestUpdatedAt,
+        pulledAt: machine.pulledAt,
+      })) ?? [],
+    launchAgent: process.platform === "darwin" ? agent : null,
+  };
+  if (json) {
+    console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+  console.log(
+    `Machine: ${status.machineId} (bucket ${status.bucket}, profile ${status.profile})`,
+  );
+  console.log(`Recipient: ${status.recipient}`);
+  console.log(
+    archive === null
+      ? "Archive: nothing pushed from this machine yet"
+      : `Archive: ${String(archive.files)} files (${String(archive.deletedLocally)} deleted locally), ${formatBytes(archive.archivedBytes)}, committed ${archive.updatedAt}`,
+  );
+  if (status.mirror.length === 0) console.log("Mirror: no machines pulled");
+  for (const machine of status.mirror) {
+    console.log(
+      `Mirror: ${machine.machineId} (${machine.platform}) pulled ${machine.pulledAt}, remote committed ${machine.manifestUpdatedAt}`,
+    );
+  }
+  if (status.launchAgent !== null) {
+    console.log(
+      `LaunchAgent: ${status.launchAgent.installed ? "installed" : "not installed"} (${status.launchAgent.loaded ? "loaded" : "not loaded"})`,
+    );
+  }
+}
+
+async function withLock(
+  paths: BrimSyncPaths,
+  work: () => Promise<boolean>,
+): Promise<number> {
+  const lock = await acquireSyncLock(paths.lock);
+  if (lock === null) {
+    console.log("brim sync: another sync is running; skipping this run.");
+    return 0;
+  }
+  try {
+    return (await work()) ? 0 : 1;
+  } finally {
+    await lock.release();
+  }
+}
+
+/**
+ * `invocationPrefix` is how the current binary reaches `sync`: `[]` for the
+ * standalone `brim`, `["brim"]` for `toolkit brim`. The LaunchAgent re-runs
+ * the same binary with it.
+ */
+export async function handleSyncCommand(
+  args: string[],
+  invocationPrefix: readonly string[] = [],
+): Promise<number> {
+  try {
+    return await dispatch(args, invocationPrefix);
+  } catch (error: unknown) {
+    if (error instanceof SyncSetupError) {
+      console.error(`brim sync: ${error.message}`);
+      return 1;
+    }
+    throw error;
+  }
+}
+
+async function dispatch(
+  args: string[],
+  invocationPrefix: readonly string[],
+): Promise<number> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      all: { type: "boolean", default: false },
+      json: { type: "boolean", default: false },
+      help: { type: "boolean", default: false },
+    },
+  });
+  const [action, ...extra] = parsed.positionals;
+  if (parsed.values.help) {
+    console.log(SYNC_USAGE);
+    return 0;
+  }
+  if (action === undefined) {
+    console.log(SYNC_USAGE);
+    return 1;
+  }
+  if (extra.length > 0) {
+    console.error(`brim sync: unexpected arguments: ${extra.join(" ")}`);
+    return 1;
+  }
+  const paths = defaultBrimSyncPaths();
+  const settings = await loadBrimSyncSettings();
+  const { json, all } = parsed.values;
+  const agentSpec = launchAgent(paths, invocationPrefix);
+  switch (action) {
+    case "push":
+      return withLock(paths, async () => {
+        const report = await runPush(settings, paths);
+        if (json) console.log(JSON.stringify(report, null, 2));
+        else printPush(report);
+        return report.errors.length === 0;
+      });
+    case "pull":
+      return withLock(paths, async () => {
+        const report = await runPull(settings, paths, all);
+        if (json) console.log(JSON.stringify(report, null, 2));
+        else printPull(report);
+        return report.errors.length === 0;
+      });
+    case "run":
+      return withLock(paths, async () => {
+        const push = await runPush(settings, paths);
+        const pull = await runPull(settings, paths, false);
+        if (json) console.log(JSON.stringify({ push, pull }, null, 2));
+        else {
+          printPush(push);
+          printPull(pull);
+        }
+        return push.errors.length === 0 && pull.errors.length === 0;
+      });
+    case "status":
+      await printStatus(settings, paths, agentSpec, json);
+      return 0;
+    case "install":
+      assertDarwin("brim sync install");
+      await installLaunchAgentJob(agentSpec);
+      console.log(
+        `Brim sync LaunchAgent installed: ${paths.launchAgent} (every ${String(INTERVAL_SECONDS / 60)} minutes)`,
+      );
+      return 0;
+    case "uninstall":
+      assertDarwin("brim sync uninstall");
+      await uninstallLaunchAgentJob(agentSpec);
+      console.log(`Brim sync LaunchAgent removed: ${paths.launchAgent}`);
+      return 0;
+    default:
+      console.error(`brim sync: unknown action "${action}"`);
+      console.log(SYNC_USAGE);
+      return 1;
+  }
+}

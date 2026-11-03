@@ -20,9 +20,23 @@ struct UsageTurn: Equatable, Sendable {
   }
 }
 
+/// Today's usage on one other machine, read from its `brim sync` mirror.
+public struct MachineDailyUsage: Equatable, Sendable {
+  public let machineName: String
+  public let totalTokens: Int
+  public let estimatedCostUSD: Decimal?
+
+  public init(machineName: String, totalTokens: Int, estimatedCostUSD: Decimal?) {
+    self.machineName = machineName
+    self.totalTokens = totalTokens
+    self.estimatedCostUSD = estimatedCostUSD
+  }
+}
+
 public struct LocalDailyUsage: Equatable, Sendable {
   public static let unreadableMessage = "Some local usage could not be read."
   public static let pricingUnavailableMessage = "API prices could not be loaded."
+  public static let otherMachinesUnreadableMessage = "Other machines' usage could not be read."
 
   public let provider: ProviderID
   public let totalTokens: Int
@@ -30,6 +44,9 @@ public struct LocalDailyUsage: Equatable, Sendable {
   public let unpricedModels: [String]
   public let unreadable: Bool
   public let pricingUnavailable: Bool
+  /// Other machines with usage today, from the `brim sync` mirror.
+  public let otherMachines: [MachineDailyUsage]
+  public let otherMachinesUnreadable: Bool
 
   public init(
     provider: ProviderID,
@@ -37,7 +54,9 @@ public struct LocalDailyUsage: Equatable, Sendable {
     estimatedCostUSD: Decimal?,
     unpricedModels: [String],
     unreadable: Bool,
-    pricingUnavailable: Bool
+    pricingUnavailable: Bool,
+    otherMachines: [MachineDailyUsage] = [],
+    otherMachinesUnreadable: Bool = false
   ) {
     self.provider = provider
     self.totalTokens = totalTokens
@@ -45,14 +64,49 @@ public struct LocalDailyUsage: Equatable, Sendable {
     self.unpricedModels = unpricedModels
     self.unreadable = unreadable
     self.pricingUnavailable = pricingUnavailable
+    self.otherMachines = otherMachines
+    self.otherMachinesUnreadable = otherMachinesUnreadable
+  }
+
+  /// No usage on this Mac today; a base for other machines' totals.
+  static func empty(_ provider: ProviderID) -> Self {
+    Self(
+      provider: provider,
+      totalTokens: 0,
+      estimatedCostUSD: .zero,
+      unpricedModels: [],
+      unreadable: false,
+      pricingUnavailable: false
+    )
+  }
+
+  func withOtherMachines(_ machines: [MachineDailyUsage], unreadable: Bool) -> Self {
+    Self(
+      provider: provider,
+      totalTokens: totalTokens,
+      estimatedCostUSD: estimatedCostUSD,
+      unpricedModels: unpricedModels,
+      unreadable: self.unreadable,
+      pricingUnavailable: pricingUnavailable,
+      otherMachines: machines,
+      otherMachinesUnreadable: unreadable
+    )
   }
 
   public var caption: String? {
     guard totalTokens > 0 else { return nil }
-    let tokens = Self.tokenText(totalTokens)
-    guard let estimatedCostUSD else { return "Today: \(tokens) tok" }
-    let amount = estimatedCostUSD.formatted(Self.usd.locale(Locale(identifier: "en_US")))
-    return "Today: \(tokens) tok · ~\(amount) API"
+    return "Today: " + Self.amountText(tokens: totalTokens, cost: estimatedCostUSD)
+  }
+
+  /// This Mac plus every mirrored machine; `nil` until another one has usage.
+  public var allMachinesCaption: String? {
+    guard otherMachines.contains(where: { $0.totalTokens > 0 }) else { return nil }
+    let tokens = totalTokens + otherMachines.reduce(0) { $0 + $1.totalTokens }
+    var cost = totalTokens > 0 ? estimatedCostUSD : Decimal.zero
+    for machine in otherMachines {
+      cost = cost.flatMap { total in machine.estimatedCostUSD.map { total + $0 } }
+    }
+    return "All machines: " + Self.amountText(tokens: tokens, cost: cost)
   }
 
   public var helpText: String {
@@ -63,6 +117,20 @@ public struct LocalDailyUsage: Equatable, Sendable {
       text += " No list price is checked in for \(unpricedModels.joined(separator: ", "))."
     }
     return text
+  }
+
+  public var allMachinesHelpText: String {
+    let parts = otherMachines.map {
+      "\($0.machineName): " + Self.amountText(tokens: $0.totalTokens, cost: $0.estimatedCostUSD)
+    }
+    return "This Mac plus other machines' logs pulled by brim sync, counted for this Mac's "
+      + "calendar day. " + parts.joined(separator: "; ") + "."
+  }
+
+  private static func amountText(tokens: Int, cost: Decimal?) -> String {
+    let text = tokenText(tokens)
+    guard let cost else { return "\(text) tok" }
+    return "\(text) tok · ~\(cost.formatted(usd.locale(Locale(identifier: "en_US")))) API"
   }
 
   public static func tokenText(_ tokens: Int) -> String {

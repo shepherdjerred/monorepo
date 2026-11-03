@@ -1,10 +1,16 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { createAntigravitySource } from "./sources/antigravity.ts";
+import { createCodexRolloutSource } from "./sources/codex-rollout.ts";
 import { createCodexSource } from "./sources/codex-scan.ts";
 import { createConductorSource } from "./sources/conductor.ts";
 import { createCursorSource } from "./sources/cursor.ts";
 import { createGrokSource } from "./sources/grok.ts";
+import {
+  claudeMirrorPaths,
+  codexMirrorPaths,
+  createMirrorSource,
+} from "./sources/mirror.ts";
 import {
   historyMessageRole,
   INDEXED_MESSAGE_PARSE_LIMIT,
@@ -345,5 +351,17 @@ export function createHistorySources(): readonly HistorySource[] {
     ...createOpenCodeSources(),
     createAntigravitySource(),
     createGrokSource(),
+    createMirrorSource({
+      name: "claude-mirror",
+      label: "Claude Code",
+      createBase: createClaudeSource,
+      roots: claudeMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "codex-mirror",
+      label: "Codex",
+      createBase: createCodexRolloutSource,
+      roots: codexMirrorPaths,
+    }),
   ];
 }

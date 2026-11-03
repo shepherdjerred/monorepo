@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-02T18:00:00.000Z",
+  "machines": [
+    {
+      "machineId": "jerred-pc",
+      "displayName": "JERRED-PC",
+      "platform": "win32",
+      "manifestUpdatedAt": "2026-11-02T17:55:00.000Z",
+      "pulledAt": "2026-11-02T18:00:00.000Z",
+      "sinceDays": 30,
+      "rootDir": "/Users/tester/.toolkit/brim-sync/mirror/jerred-pc",
+      "claudeProjectsDirs": [
+        "/Users/tester/.toolkit/brim-sync/mirror/jerred-pc/claude/projects"
+      ],
+      "codexSessionsDirs": [
+        "/Users/tester/.toolkit/brim-sync/mirror/jerred-pc/codex/sessions"
+      ],
+      "codexArchivedSessionsDirs": [],
+      "codexHistoryFiles": [
+        "/Users/tester/.toolkit/brim-sync/mirror/jerred-pc/codex/history.jsonl"
+      ]
+    },
+    {
+      "machineId": "studio",
+      "displayName": "Studio.local",
+      "platform": "darwin",
+      "manifestUpdatedAt": "2026-11-02T17:58:00.000Z",
+      "pulledAt": "2026-11-02T18:00:00.000Z",
+      "sinceDays": null,
+      "rootDir": "/Users/tester/.toolkit/brim-sync/mirror/studio",
+      "claudeProjectsDirs": [
+        "/Users/tester/.toolkit/brim-sync/mirror/studio/claude/projects"
+      ],
+      "codexSessionsDirs": [],
+      "codexArchivedSessionsDirs": [],
+      "codexHistoryFiles": []
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# Scoped SeaweedFS key for `brim.exe sync push` (bucket brim-sessions only).
+[profile brim-sync]
+endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
+region = us-east-1

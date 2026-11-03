@@ -32,6 +32,7 @@ import { writeConductorFixture } from "./history-fixtures/conductor.ts";
 import { writeCursorFixture } from "./history-fixtures/cursor.ts";
 import { writeDatabase } from "./history-fixtures/database.ts";
 import { writeGrokFixture } from "./history-fixtures/grok.ts";
+import { writeMirrorFixture } from "./history-fixtures/mirror.ts";
 import { writeOpencodeFixture } from "./history-fixtures/opencode.ts";
 
 let fixtureRoot = "";
@@ -181,6 +182,9 @@ beforeAll(async () => {
   const opencodeDb = await writeOpencodeFixture(opencodeDir);
   await writeGrokFixture(grokHome);
   await writeAntigravityFixture(antigravityRoot);
+  const brimSyncMirrorIndex = await writeMirrorFixture(
+    path.join(fixtureRoot, "brim-sync-mirror"),
+  );
 
   paths = {
     home: fixtureRoot,
@@ -196,6 +200,7 @@ beforeAll(async () => {
     antigravityRoots: [antigravityRoot],
     grokHome,
     codexSessionsDir,
+    brimSyncMirrorIndex,
   };
 });
 

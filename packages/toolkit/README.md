@@ -792,6 +792,49 @@ pruned. Deleting the ledger restarts the counters from zero. A missing Brim
 cache skips quota metrics; a corrupt one is logged as a refresh failure in the
 daemon log each scan until Brim rewrites it.
 
+##### Mirrored machines
+
+`brim sync pull` mirrors other machines' Claude Code and Codex transcripts into
+`~/.toolkit/brim-sync/mirror/`. The index scans them as the `claude-mirror` and
+`codex-mirror` sources: source ids gain a `<machine>/` prefix and the agent
+names the machine, so `toolkit history search --source claude-mirror` finds
+them. Codex mirror documents are built from the rollout JSONL itself, because
+the Codex message database stays on its own machine. `history usage` includes
+mirrored tokens per source, but they never enter the usage-export ledger: the
+machine that spent them already exports them.
+
+#### Brim sync
+
+The standalone `brim` binary (also `toolkit brim sync`) keeps an encrypted,
+permanent archive of every machine's Claude Code and Codex transcripts in the
+SeaweedFS `brim-sessions` bucket:
+
+```bash
+brim sync push            # archive new complete lines from this machine
+brim sync pull [--all]    # mirror other machines (default: last 30 days)
+brim sync run             # push, then pull — what the LaunchAgent runs
+brim sync status [--json]
+brim sync install         # macOS LaunchAgent, every 5 minutes
+```
+
+Push scans `~/.claude/projects` (or `CLAUDE_CONFIG_DIR`), Codex `sessions`,
+`archived_sessions` and `history.jsonl` (or `CODEX_HOME`). Transcripts only
+grow, so each run uploads just the new complete lines as one segment; a file
+that shrinks or whose tail changed starts a new generation. Each segment and
+the per-machine manifest are zstd-compressed and age-encrypted to
+`brimSyncRecipient`; object keys are opaque hashes. The manifest is the commit
+point and is written last, so a crash resumes from the last commit. A file
+deleted locally stays in the archive. Push needs only the public recipient;
+pull, and adopting the remote manifest when `~/.toolkit/brim-sync/manifest.json`
+is lost, need the `BRIM_SYNC_AGE_IDENTITY` credential. A pid lock makes an
+overlapping run exit 0. On Windows only `brim.exe` is built (`bun run
+install:local`), and a Scheduled Task from `packages/dotfiles-windows` runs
+`sync push`.
+
+Pull writes `~/.toolkit/brim-sync/mirror/index.json`, whose contract is
+[`schemas/brim-sync-mirror-index.schema.json`](schemas/brim-sync-mirror-index.schema.json).
+Brim reads it to add other machines to its daily usage caption.
+
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 
 ## Credentials
@@ -835,6 +878,7 @@ header values and root paths containing the same text are preserved.
 | --------------------------------------------------------------------------------------------- | ------------------------- |
 | `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
 | `bugsink`, `discord`                                                                          | macOS Keychain            |
+| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                   | 1Password service account |
 
 The registry in `src/lib/credentials.ts` owns the variable names and secret
 locators. Backend failures are errors; a missing Keychain secret does not
@@ -886,6 +930,11 @@ value or unparseable file is an error, not a fallback.
 | `HISTORY_METRICS_PUSH_ENABLED` / `history.metrics.push.enabled`   | `false`                                               |
 | `HISTORY_METRICS_PUSH_ENDPOINT` / `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
 | `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://ops.tailnet-1a49.ts.net`                     |
+| `BRIM_SYNC_MACHINE_ID` / `brim.sync.machine.id`                   | normalized hostname                                   |
+| `BRIM_SYNC_BUCKET` / `brim.sync.bucket`                           | `brim-sessions`                                       |
+| `BRIM_SYNC_PROFILE` / `brim.sync.profile`                         | `brim-sync` (AWS profile)                             |
+| `BRIM_SYNC_RECIPIENT` / `brim.sync.recipient`                     | the archive's age public key                          |
+| `BRIM_SYNC_PULL_SINCE_DAYS` / `brim.sync.pull.since.days`         | `30`                                                  |
 
 The history daemon runs under launchd without your shell environment, so set
 its keys in the TOML file. It reads them once at start.

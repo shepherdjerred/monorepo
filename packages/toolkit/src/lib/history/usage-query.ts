@@ -168,6 +168,11 @@ const FingerprintRowSchema = z.object({
   models: z.number(),
 });
 
+/**
+ * Usage documents eligible for the metrics export. Mirrored sessions from
+ * other machines are excluded: their tokens are exported by the machine that
+ * spent them, so counting them here would double them in Grafana.
+ */
 export function queryUsageFingerprints(
   database: Database,
 ): UsageDocumentFingerprint[] {
@@ -186,6 +191,7 @@ export function queryUsageFingerprints(
               count(DISTINCT u.model) AS models
          FROM usage_events u
          JOIN documents d ON d.id = u.document_id
+        WHERE d.source NOT IN ('claude-mirror', 'codex-mirror')
         GROUP BY d.id
         ORDER BY d.id`,
     )

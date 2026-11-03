@@ -47,7 +47,7 @@ async function loadRuns(
   numbers: readonly number[],
   profile: string,
 ): Promise<VerifyRun[]> {
-  const client = createS3Client(profile);
+  const client = await createS3Client(profile);
   const cacheDirectory = analyzeCacheDirectory();
   const runs: VerifyRun[] = [];
   for (let index = 0; index < numbers.length; index += DOWNLOAD_CONCURRENCY) {
