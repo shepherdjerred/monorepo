@@ -19,18 +19,9 @@ export function createTemporalApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "temporal",
       },
-      ignoreDifferences: [
-        {
-          group: "",
-          kind: "ConfigMap",
-          name: "velero-r2-orphan-audit-state",
-          namespace: "temporal",
-          jsonPointers: ["/data/audit.json"],
-        },
-      ],
       syncPolicy: {
         automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true", "RespectIgnoreDifferences=true"],
+        syncOptions: ["CreateNamespace=true"],
       },
     },
   });

@@ -4,7 +4,6 @@ import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
 import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-snapshots.ts";
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
-import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 import { createLokiAlertRules } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/loki.ts";
@@ -21,7 +20,6 @@ export async function createPrometheusExporters(chart: Chart): Promise<void> {
   await createNvmeMetricsMonitoring(chart);
   await createZfsSnapshotsMonitoring(chart);
   await createZfsZpoolMonitoring(chart);
-  await createR2ExporterMonitoring(chart);
   createKubernetesEventExporter(chart);
 }
 

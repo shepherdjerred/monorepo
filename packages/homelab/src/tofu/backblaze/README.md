@@ -11,8 +11,8 @@ State and plans are encrypted with `TOFU_STATE_ENCRYPTION_PASSPHRASE`.
 
 Velero writes its backups and ZFS streams to `sjerred-velero` with the
 `backblaze-velero` item. That item's `cloud` field is the AWS credentials file
-Velero mounts. Backups taken before the move stay in the R2 `homelab` bucket
-and were not copied.
+Velero mounts. Backups taken before the move were not copied; the R2 `homelab`
+bucket that held them is retired.
 
 The `seaweedfs-backup` Deployment (`weed filer.backup`) copies SeaweedFS
 objects to `seaweedfs-backups` with the `backblaze-seaweedfs-backups` item.

@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import { App, Chart } from "cdk8s";
 import { z } from "zod";
 import { createNvmeMetricsMonitoring } from "./nvme-metrics.ts";
-import { createR2ExporterMonitoring } from "./r2-exporter.ts";
 import { createSmartctlMonitoring } from "./smartctl.ts";
 import { createZfsSnapshotsMonitoring } from "./zfs-snapshots.ts";
 import { createZfsZpoolMonitoring } from "./zfs-zpool.ts";
@@ -23,7 +22,6 @@ const collectors = [
   ["nvme-metrics", createNvmeMetricsMonitoring, "scripts/nvme_metrics.py"],
   ["zfs-snapshots", createZfsSnapshotsMonitoring, "scripts/zfs_snapshots.py"],
   ["zfs-zpool", createZfsZpoolMonitoring, "scripts/zfs_zpool.sh"],
-  ["r2-exporter", createR2ExporterMonitoring, "scripts/r2_exporter.py"],
 ] as const;
 
 describe("script collectors", () => {

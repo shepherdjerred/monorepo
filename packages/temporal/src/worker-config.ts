@@ -248,7 +248,6 @@ export type WorkerRoleContract = {
   validatesScheduleEnvironmentLocally: boolean;
   runsEventBridge: boolean;
   restoresGlitterCorpusMetrics: boolean;
-  restoresVeleroR2AuditMetrics: boolean;
 };
 
 export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
@@ -261,6 +260,5 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
     runsEventBridge: role === "all" || role === "home",
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",
-    restoresVeleroR2AuditMetrics: role === "all" || role === "infra",
   };
 }

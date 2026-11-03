@@ -3014,7 +3014,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "temporal/2",
+      "recipeRevisionId": "temporal/3",
       "configurationRevisionId": "temporal/1"
     },
     {
@@ -3239,7 +3239,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "tofu-cloudflare-tokens/prod/1",
-      "configurationRevisionId": "tofu-cloudflare-tokens/prod/1"
+      "configurationRevisionId": "tofu-cloudflare-tokens/prod/2"
     },
     {
       "id": "tofu-discord/prod",
@@ -3845,11 +3845,6 @@
     {
       "dependent": "cluster-admission/prod",
       "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "cluster-observability/prod",
-      "prerequisite": "1password/prod",
       "rule": "any-accepted"
     },
     {

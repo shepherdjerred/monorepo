@@ -570,10 +570,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
-  // Awaits a single runVeleroR2OrphanAudit activity (Backup CR + two R2
-  // prefix listings). No workflow-level sleeps; the activity carries its own
-  // startToCloseTimeout + retry budget.
-  "runVeleroR2OrphanAuditWorkflow",
   // Bounded inventory and log-retention Activities; no Workflow-level sleeps.
   "runWoodpeckerLogRetention",
   // One bounded signalWithStart Activity; durable coordination is separate.
@@ -800,6 +796,7 @@ test("terminates workflows for schedules being removed", async () => {
     'WorkflowType = "runSeaweedFsBackupWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runSeaweedFsBackupRetentionAndGcWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "backupStormForumWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runVeleroR2OrphanAuditWorkflow" AND ExecutionStatus = "Running"',
   ]);
 });
 

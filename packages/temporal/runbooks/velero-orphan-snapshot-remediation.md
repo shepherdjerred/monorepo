@@ -1,8 +1,8 @@
 # Velero Orphan-Snapshot Remediation Runbook
 
-Procedure for manually pruning orphan ZFS snapshots and R2 objects detected by
-the `velero-orphan-audit` Temporal workflow. The operation stays manual because
-backup CR absence alone is not sufficient proof that remote backup data is safe
+Procedure for manually pruning orphan ZFS snapshots and ZFSBackup CRs detected
+by the `velero-orphan-audit` Temporal workflow. The operation stays manual
+because backup CR absence alone is not sufficient proof that a snapshot is safe
 to delete.
 
 ## When to use this runbook
@@ -13,15 +13,14 @@ dashboard ledger and the operator email.
 - The alert dashboard records `VeleroOrphanLocalSnapshots` (orphan ZFS snapshots present > 24h)
 - The alert dashboard records `VeleroOrphanLocalBytesExcessive` (orphan ZFS snapshot bytes over threshold)
 - The alert dashboard records `ZFSDatasetSnapshotCountExcessive` (any PVC dataset > ~26 snapshots — backstop alert)
-- The independent `velero-r2-orphan-audit` detects unreferenced R2 prefixes
 - A PVC reads `100%` full unexpectedly and `zfs list` shows large `USED` vs small `REFER` (snapshot bloat — same root cause)
 - Velero was just re-deployed (helm uninstall + reinstall, ArgoCD app re-creation, etc.)
 
 Moving Velero to the Backblaze `sjerred-velero` bucket orphaned every earlier
 backup on purpose. Velero removed their Backup CRs because the new location
 holds no metadata for them. Their ZFSBackup CRs and local snapshots remained.
-The objects themselves stay in the R2 `homelab` bucket. Prune those snapshots
-only after every schedule-and-volume family has a completed full in
+The R2 `homelab` bucket that held their objects is retired. Prune those
+snapshots only after every schedule-and-volume family has a completed full in
 `sjerred-velero`; a full under one schedule does not cover another.
 
 ## Prerequisites
@@ -29,20 +28,7 @@ only after every schedule-and-volume family has a completed full in
 ```bash
 kubectl version          # must reach the cluster
 velero backup get        # must list current Backup CRs
-aws --version            # local CLI present
 ```
-
-The R2 commands use the repository's standard operator environment names. Load
-them from 1Password without writing credentials to disk:
-
-```bash
-export CLOUDFLARE_R2_ACCESS_KEY_ID="op://..."
-export CLOUDFLARE_R2_SECRET_ACCESS_KEY="op://..."
-export CLOUDFLARE_R2_ENDPOINT="op://..."
-```
-
-Run `op run` through `scripts/onepassword/with-service-account.sh` from the
-repository root. Do not resolve references into an env file.
 
 ## Restore-chain safety gate
 
@@ -59,14 +45,9 @@ parent from the latest completed ZFSBackup. Rehearse a retained restore on
 isolated storage and verify its data. A Completed Backup is not restore proof.
 If these checks cannot be completed, stop at the read-only inventory.
 
-The version 5 R2 manifest protects live Backups, backup metadata, ZFSBackup
-snapshot references, held names, and the actual stream ancestry of all of
-them. Unknown object layouts fail closed. Earlier manifest versions are
-rejected; regenerate inspection before applying anything.
-
-The plugin normally deletes expired R2 data itself (see its README). This
-manual path is for what that sweep cannot reach: families with no further
-deletions, unscheduled leftovers, and data whose sweep failed.
+The plugin deletes expired object-store data itself (see its README). This
+runbook covers only the local snapshots and ZFSBackup CRs that sweep leaves
+behind.
 
 ## Step 1: Verify the orphan finding
 
@@ -74,12 +55,6 @@ The audit workflow surfaces local ZFS-snapshot orphan counts via these Prometheu
 
 - `velero_orphan_local_snapshots_total{dataset="..."}`
 - `velero_orphan_local_bytes_total{dataset="..."}`
-
-The separate R2 audit exports `velero_orphan_r2_prefixes_total` and
-`velero_orphan_r2_bytes_total`. These measure unreferenced data, including
-history that retained restores may need. They do not authorize deletion.
-Check `velero_r2_orphan_audit_observed_timestamp_seconds` for freshness;
-restoring the stored observation after a worker restart preserves its age.
 
 Confirm with `toolkit prom query` and cross-check independently before destroying anything.
 
@@ -129,29 +104,6 @@ Output groups orphans by dataset. Save it to a file (`/tmp/orphans-local.txt`) a
 > snapshots. Parent absence alone is insufficient: check retained restore and next-backup dependencies. If orphans span **many
 > different suffixes/dates**, suspect the **re-deploy mode** (Backup CRs removed while the controller
 > was absent); double-check you're not mid-re-deploy before pruning.
-
-### R2 orphan prefixes
-
-Generate a reviewed manifest with the operator-only cleanup tool:
-
-```bash
-scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect \
-  --manifest /tmp/r2-orphans.json \
-  --hold-backup 6hourly-backup-20260728001550
-```
-
-The manifest protects live `Backup` CR names, backup metadata under
-`torvalds/backups/backups/`, ZFSBackup references, and preceding restore history.
-It only proposes per-backup prefixes under
-`zfspv-incr/backups/` whose newest object is more than 24 hours old. Review
-every candidate, byte count, object count, and newest timestamp before
-continuing. `--hold-backup` may be repeated; held prefixes are recorded in the
-manifest, shown as protected, and excluded from bulk deletion. The hold must
-exist in the R2 listing or inspection fails closed.
-
-For a separately reviewed single-prefix cleanup, use `--only-backup` on both
-`inspect` and `apply`. It requires that the selected prefix exists, is older
-than the 24-hour fence, and is not protected by any of those dependencies.
 
 ## Step 3: Sanity-check before destroying
 
@@ -210,56 +162,7 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 - Snapshot already gone (raced with a concurrent backup) — safe to skip
 - Snapshot is the most-recent on its chain and the plugin is mid-incremental — re-check after a few minutes
 
-## Step 5: Prune R2 orphans
-
-Apply exactly the reviewed manifest:
-
-```bash
-scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- apply \
-  --manifest /tmp/r2-orphans.json \
-  --hold-backup 6hourly-backup-20260728001550 \
-  --apply
-```
-
-The command re-lists live Backup CRs, ZFSBackup references, backup metadata, and every ZFS backup
-object before deleting anything and again before each prefix. Any drift from
-the reviewed manifest aborts the operation. Non-interactive use additionally
-requires `--yes`. After deletion it verifies that no object remains under any
-approved prefix. The hold list must exactly match the inspection command.
-
-When a held R2 prefix is intentionally paired with a local orphan snapshot,
-complete the bulk cleanup first, then create and apply a single-prefix
-manifest:
-
-```bash
-scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect \
-  --manifest /tmp/r2-held.json \
-  --only-backup 6hourly-backup-20260728001550
-scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- apply \
-  --manifest /tmp/r2-held.json \
-  --only-backup 6hourly-backup-20260728001550 \
-  --apply \
-  --yes
-```
-
-Only after the guarded R2 command succeeds, destroy the exact local snapshot
-that was reviewed with it. Do not delete the dataset, PV, or PVC:
-
-```bash
-NODE_POD=$(kubectl -n openebs get pod \
-  -l role=openebs-zfs,app=openebs-zfs-node \
-  --field-selector spec.nodeName=torvalds \
-  -o jsonpath='{.items[0].metadata.name}')
-kubectl -n openebs exec -i "$NODE_POD" \
-  -c openebs-zfs-plugin -- \
-  zfs destroy \
-  'zfspv-pool-nvme/pvc-22eaf2de-13ce-402a-ac35-cdaf006cb438@6hourly-backup-20260728001550'
-```
-
-If R2 deletion fails, do not destroy the local snapshot. If the local destroy
-fails after R2 deletion, preserve the dataset and report the exact residual.
-
-## Step 6: Verify post-prune state
+## Step 5: Verify post-prune state
 
 ```bash
 # Local: each dataset's snapshot count should now match its live Backup count
@@ -275,14 +178,9 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
   done
   echo "done"
 ' -- "$LIVE"
-
-# R2: verify reviewed deletions are absent and protected histories remain
-scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
 ```
 
-Confirm that the reviewed deletions are absent and protected histories remain.
-The audit can still report unreferenced history that must be retained. The
-next workflow run updates the inventory:
+The next workflow run updates the inventory:
 
 ```bash
 toolkit temporal schedule trigger --schedule-id velero-orphan-audit
@@ -301,7 +199,6 @@ The alerts auto-resolve in Alertmanager and the alert dashboard once the metrics
 - **Don't run this immediately after a Velero re-deploy.** Wait at least 5 minutes for `BackupSyncController` to recreate Backup CRs from the storage location's metadata. Otherwise you'll see the entire backup set as "orphan" and might delete recoverable state. The workflow's 24h `for:` window naturally guards against this; if you're running manually, mind the timing.
 - **Don't strip `metadata.finalizers` from Backup CRs to "fix" stuck deletions.** That's exactly how the original orphan event happened. If a Backup CR is stuck, debug the plugin instead.
 - **Don't `zfs destroy -R`.** Recursive destroy would also delete child datasets and clones. Always destroy individual snapshots only.
-- **Don't bypass the guarded R2 tool with an ad-hoc `aws s3 rm`.** The reviewed manifest, metadata union, age fence, and apply-time revalidation are the safety boundary.
 - **Don't bypass Step 3.** A bug in the audit workflow could mark live state as orphan. The "verify before destroy" step exists to catch that.
 
 ## Re-deploying Velero correctly
@@ -344,8 +241,7 @@ Deleting a CR is the same path Velero TTL expiry takes (the plugin deletes
 only the CR): the zfs-localpv controller then `zfs destroy`s the matching
 local snapshot and drops the finalizer. Already-absent snapshots and deleted
 volumes succeed silently, so this also reaps any corresponding local orphan
-snapshots. R2 data is untouched — handle it via Step 5 if the R2 inspection
-flags the same backups. This path does not establish safety: deleting old CRs
+snapshots. This path does not establish safety: deleting old CRs
 can change the plugin's full/incremental grouping for future backups.
 
 ### Procedure

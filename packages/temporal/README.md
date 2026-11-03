@@ -916,14 +916,6 @@ Ops digest Activity results retain the dashboard's `periodKey`, `status`
 inbox delivery. Histories recorded by older workers contain only `kind` and
 remain replay-compatible; no additional Workflow command is introduced.
 
-The infra worker persists each successful R2 orphan observation in the
-`temporal/velero-r2-orphan-audit-state` ConfigMap before publishing
-its gauges. Startup restores the original observation time and values; other
-roles publish no initialized zero inventory. Conditional writes prevent an
-older concurrent scan from replacing a newer observation. The R2 audit
-credential remains read-only. Missing state or an observation older than
-36 hours is unknown and raises the audit freshness alert.
-
 The reports worker resolves `temporal-email-recipient` and
 `temporal-email-sender` through typed configuration for each delivery activity.
 Defaults preserve the existing homelab routing during a flag-provider outage.

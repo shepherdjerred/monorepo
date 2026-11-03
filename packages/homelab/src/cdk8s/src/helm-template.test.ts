@@ -558,15 +558,6 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
   );
 
   it(
-    "apps chart: R2 exporter Python has correct f-string braces after Helm",
-    async () => {
-      const result = await helmTemplateChart("apps");
-      expect(result.stdout).toContain('{cache["storage_bytes"]}');
-    },
-    HELM_TEMPLATE_TIMEOUT_MS,
-  );
-
-  it(
     "apps chart: Alerts receiver stays authenticated after Helm",
     async () => {
       const result = await helmTemplateChart("apps");

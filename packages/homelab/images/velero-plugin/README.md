@@ -34,8 +34,8 @@ Full rotation uses the previous stream's ancestry depth. It never counts live
 ZFSBackup CRs, whose TTL can remove the records needed by count-based rotation.
 The new per-cadence snapshot locations define their incremental counts. The
 legacy `zfspv-incr` location keeps its incremental count but now points at the
-Backblaze bucket like every other location. Restoring a stream written before
-that move needs a snapshot location configured for the R2 `homelab` bucket.
+Backblaze bucket like every other location. Streams written before that move
+were in the retired R2 `homelab` bucket and are not restorable.
 
 The previous backup comes from live ZFSBackup CRs, which survive a move of the
 snapshot locations to another bucket. When the schedule+volume family has no
@@ -99,4 +99,4 @@ lineage and expiry-sweep tests in Linux. Pull-request CI does not build this
 image; main's image step is the first CI run of these tests, so build it
 locally before review. A passing build does not prove recovery: complete an
 isolated native restore and check the restored application's integrity before
-retiring old recovery points or approving an R2 cleanup manifest.
+retiring old recovery points or approving a manual cleanup.

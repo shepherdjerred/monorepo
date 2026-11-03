@@ -128,7 +128,6 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["prometheus", "service-probes"],
   ["prometheus", "alert-dashboard"],
   ["prometheus", "flipt"],
-  ["prometheus", "r2-storage"],
   ["bugsink", "bugsink"],
   ["seaweedfs", "seaweedfs"],
   ["postal", "postal"],
@@ -177,7 +176,6 @@ const CLUSTER_OBSERVABILITY_INVENTORY = [
   "monitoring.coreos.com/v1/PodMonitor/woodpecker/woodpecker-server",
   "monitoring.coreos.com/v1/ServiceMonitor/buildkitd/buildkitd-service-monitor",
   "monitoring.coreos.com/v1/ServiceMonitor/kueue-system/kueue-controller-manager-metrics",
-  "monitoring.coreos.com/v1/ServiceMonitor/prometheus/r2-exporter",
   ...prometheusRules.map(
     ([namespace, name]) =>
       `monitoring.coreos.com/v1/PrometheusRule/${namespace}/prometheus-${name}-rules`,
@@ -187,10 +185,6 @@ const CLUSTER_OBSERVABILITY_INVENTORY = [
     `v1/ConfigMap/prometheus/${exporter === "smartctl" ? "smartmon" : exporter}-script`,
     `apps/v1/DaemonSet/prometheus/${exporter}-collector`,
   ]),
-  "onepassword.com/v1/OnePasswordItem/prometheus/r2-exporter-cloudflare",
-  "v1/ConfigMap/prometheus/r2-exporter-script",
-  "apps/v1/Deployment/prometheus/r2-exporter",
-  "v1/Service/prometheus/r2-exporter",
   "v1/ServiceAccount/prometheus/kubernetes-event-exporter",
   "rbac.authorization.k8s.io/v1/ClusterRole/argocd/kubernetes-event-exporter",
   "rbac.authorization.k8s.io/v1/ClusterRoleBinding/argocd/kubernetes-event-exporter",

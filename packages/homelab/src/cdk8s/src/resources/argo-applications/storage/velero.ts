@@ -22,7 +22,7 @@ export const BACKBLAZE_VELERO_ITEM_ID = "i3upt4mhwczcau7ojyxfpw2s6e";
  * Where Velero writes backup metadata and the openebs plugin writes ZFS
  * streams. Every storage and snapshot location must name the same bucket and
  * endpoint: the plugin's expiry sweep refuses to run otherwise. Backups taken
- * before the move to Backblaze stay in the R2 `homelab` bucket.
+ * before the move to Backblaze were not copied.
  */
 export const VELERO_OBJECT_STORE = {
   bucket: "sjerred-velero",
