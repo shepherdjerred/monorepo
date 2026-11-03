@@ -19,6 +19,5 @@ We're rebuilding from a quiet starting point and looking for our first regular p
 - Java: `ts-mc.net`
 - Bedrock address: `mc.ts-mc.net:30004`
 
-Check the website for supported versions and current status.
-
-[Website](https://ts-mc.net/) | [Player guide](https://docs.ts-mc.net/) | [Rules](https://docs.ts-mc.net/norms/) | [Discord](https://discord.gg/TvTCcWnYUT)
+Check the website for supported versions, player guides, rules, and current status:
+[The Storm](https://public.ts-mc.net/the-storm/)
