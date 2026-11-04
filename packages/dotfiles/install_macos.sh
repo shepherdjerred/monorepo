@@ -63,6 +63,19 @@ discover_berkeley_mono_source_dir() {
 
 log_info "Starting macOS dotfiles install"
 
+# "workstation" is the full desktop; "agent-host" is a headless machine for
+# coding agents. chezmoi records the profile at init (.chezmoi.toml.tmpl), and
+# the profile filters the Brewfile and desktop-only targets.
+export DOTFILES_PROFILE="${DOTFILES_PROFILE:-workstation}"
+case "${DOTFILES_PROFILE}" in
+    workstation | agent-host) ;;
+    *)
+        log_error "Unknown DOTFILES_PROFILE: ${DOTFILES_PROFILE} (expected workstation or agent-host)"
+        exit 1
+        ;;
+esac
+log_info "Machine profile: ${DOTFILES_PROFILE}"
+
 # Install Xcode Command Line Tools if not present
 if ! xcode-select -p &>/dev/null; then
     log_info "Installing Xcode Command Line Tools"
@@ -145,8 +158,14 @@ if command -v brew &>/dev/null; then
         log_success "woodpecker-cli installed"
     fi
 
+    # Record the profile without applying, then install the profile's rendered
+    # Brewfile so setup hooks still run after their prerequisites exist.
     log_info "Installing Brewfile packages"
-    retry 3 5 brew bundle --file="${DOTFILES_SOURCE_DIR}/.Brewfile_darwin"
+    chezmoi init --source "${DOTFILES_SOURCE_DIR}"
+    rendered_brewfile="$(mktemp)"
+    chezmoi execute-template <"${DOTFILES_SOURCE_DIR}/dot_Brewfile.tmpl" >"${rendered_brewfile}"
+    retry 3 5 brew bundle --file="${rendered_brewfile}"
+    rm -f "${rendered_brewfile}"
     log_success "Brewfile packages installed"
 
     log_info "Applying dotfiles after package prerequisites are installed"
@@ -154,26 +173,40 @@ if command -v brew &>/dev/null; then
         log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
     fi
 
-    log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
-    sudo-touchid --with-reattach
-    log_success "Touch ID for sudo enabled"
-
     log_info "Installing persistent launchd file limits"
     sudo /bin/bash "${DOTFILES_SOURCE_DIR}/macos-file-limits/install.sh"
     log_success "Launchd file limits installed; a fresh login is required for existing apps"
 
-    log_info "Patching and installing Berkeley Mono"
-    berkeley_mono_source_dir="$(discover_berkeley_mono_source_dir)"
-    berkeley_mono_patcher="$(dirname "${DOTFILES_SOURCE_DIR}")/fonts/patch-berkeley-mono.py"
-    if [ ! -f "${berkeley_mono_patcher}" ]; then
-        log_error "Berkeley Mono patcher is missing: ${berkeley_mono_patcher}"
-        exit 1
+    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
+        # Agent hosts are reached over Tailscale SSH, which only the
+        # open-source tailscaled supports. Install the daemon once: rerunning
+        # install-system-daemon restarts it and would drop this very session
+        # when the installer runs over Tailscale SSH.
+        if ! launchctl print system/com.tailscale.tailscaled &>/dev/null; then
+            log_info "Installing tailscaled as a system daemon"
+            sudo tailscaled install-system-daemon
+            log_success "tailscaled installed; run: sudo tailscale up --ssh --hostname=<name>"
+        else
+            log_info "tailscaled system daemon already installed"
+        fi
+    else
+        log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
+        sudo-touchid --with-reattach
+        log_success "Touch ID for sudo enabled"
+
+        log_info "Patching and installing Berkeley Mono"
+        berkeley_mono_source_dir="$(discover_berkeley_mono_source_dir)"
+        berkeley_mono_patcher="$(dirname "${DOTFILES_SOURCE_DIR}")/fonts/patch-berkeley-mono.py"
+        if [ ! -f "${berkeley_mono_patcher}" ]; then
+            log_error "Berkeley Mono patcher is missing: ${berkeley_mono_patcher}"
+            exit 1
+        fi
+        uv run "${berkeley_mono_patcher}" \
+            "${berkeley_mono_source_dir}" \
+            "${HOME}/.cache/berkeley-mono/patched" \
+            --install
+        log_success "Berkeley Mono patched and installed"
     fi
-    uv run "${berkeley_mono_patcher}" \
-        "${berkeley_mono_source_dir}" \
-        "${HOME}/.cache/berkeley-mono/patched" \
-        --install
-    log_success "Berkeley Mono patched and installed"
 
     # Apply macOS app defaults (run_onchange won't re-trigger since hashes unchanged)
     if command -v macos-defaults &>/dev/null && [ -d "$HOME/.config/macos-defaults" ]; then
@@ -248,7 +281,10 @@ if command -v atuin &>/dev/null; then
     ATUIN_LOGGED_IN=$?
     set -e
 
-    if [ "$ATUIN_LOGGED_IN" -ne 0 ]; then
+    # Agent hosts keep history local so agents cannot search other devices'.
+    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
+        log_info "Agent host: leaving Atuin local-only (no login or sync)"
+    elif [ "$ATUIN_LOGGED_IN" -ne 0 ]; then
         atuin login -u sjerred || true
         set +e
         atuin status &>/dev/null
@@ -256,7 +292,7 @@ if command -v atuin &>/dev/null; then
         set -e
     fi
 
-    if [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
+    if [ "${DOTFILES_PROFILE}" != "agent-host" ] && [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
         atuin sync || true
     fi
     log_success "Atuin configured"

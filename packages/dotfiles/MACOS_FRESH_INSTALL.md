@@ -9,6 +9,39 @@ The recovery model is intentionally service-based: dotfiles restore machine
 configuration, while Syncthing, Obsidian Sync, iCloud, and application-specific
 cloud services restore user data. A full-machine backup is not required.
 
+## Agent hosts
+
+An agent host is a headless Mac for coding agents, driven from another machine
+through Herdr over Tailscale SSH. Install it with
+`DOTFILES_PROFILE=agent-host bash install_macos.sh`. The profile keeps every
+formula and toolchain but only the casks in `.chezmoidata/agent-host.yaml`, and
+skips Touch ID, Berkeley Mono, desktop app configuration, and Atuin sync.
+
+The GUI Tailscale build cannot run the Tailscale SSH server, so agent hosts use
+the brew `tailscale` formula with `tailscaled` installed as a system daemon.
+That command copies the binary to `/usr/local/bin`, so after
+`brew upgrade tailscale` rerun `sudo tailscaled install-system-daemon` from a
+local session; it restarts the daemon and drops Tailscale SSH sessions.
+
+At the console (or KVM) once:
+
+1. Enable FileVault. Each reboot then needs a console unlock, which also logs
+   in the user so Herdr core starts.
+2. Run `sudo pmset -a sleep 0 disksleep 0 autorestart 1 womp 1`.
+3. Run `sudo tailscale up --ssh --hostname=<name>` and approve the login. Keep
+   macOS Remote Login off; Tailscale SSH serves port 22 on the tailnet. The
+   tailnet policy should `accept` rather than `check` your own devices so Herdr
+   sessions do not require periodic browser re-authentication.
+4. Enroll the 1Password service account with
+   `swift scripts/onepassword/enroll-service-account.swift` and choose
+   **Always Allow** when Keychain asks, so headless reads never wait on a
+   dialog. Do not sign in to the 1Password desktop app on an agent host.
+5. Sign in to `gh` twice: as yourself, and with
+   `GH_CONFIG_DIR=~/.config/gh-agent` for agent sessions.
+
+From then on, `ssh <name>` and Herdr's `hc machine add <name>` reach the host
+without the console.
+
 ## Before erasing the Mac
 
 - Identify the authoritative sync service for every important data set and

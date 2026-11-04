@@ -1,0 +1,22 @@
+# Package selection for the headless "agent-host" profile (see
+# .chezmoi.toml.tmpl). `.Brewfile_darwin` stays the generated dump of the full
+# workstation; dot_Brewfile.tmpl filters it for agent hosts instead of keeping a
+# second hand-maintained list. Every tap, formula, go, uv, and npm entry is kept.
+# Only these casks survive, and VS Code extensions are dropped.
+agentHost:
+  casks:
+    - 1password-cli
+    - anthropics/tap/ant
+    - claude-code@latest
+    - codex
+    - gcloud-cli
+    # Provides the xterm-ghostty terminfo for sessions opened from Ghostty.
+    - ghostty
+    # PinchTab drives Chrome for agent browser verification.
+    - google-chrome
+    - orbstack
+  # The GUI Tailscale build cannot run the Tailscale SSH server, so agent hosts
+  # use the open-source tailscaled installed as a system daemon instead of the
+  # tailscale-app cask.
+  brews:
+    - tailscale

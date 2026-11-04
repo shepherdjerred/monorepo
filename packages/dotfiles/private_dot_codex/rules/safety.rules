@@ -117,3 +117,9 @@ prefix_rule(
     decision = "forbidden",
     justification = "Do not remove cron jobs.",
 )
+
+prefix_rule(
+    pattern = ["security", ["find-generic-password", "find-internet-password", "dump-keychain", "export"]],
+    decision = "forbidden",
+    justification = "Do not read Keychain secrets directly; toolkit and scripts/onepassword/with-service-account.sh resolve credentials without exposing them.",
+)

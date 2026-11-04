@@ -1,5 +1,22 @@
 {{- if eq .chezmoi.os "darwin" -}}
-{{-   include ".Brewfile_darwin" -}}
+{{-   if eq .profile "agent-host" -}}
+{{-     range (include ".Brewfile_darwin" | splitList "\n") -}}
+{{-       if or (hasPrefix "#" .) (hasPrefix "vscode " .) (eq . "") -}}
+{{-       else if hasPrefix "cask " . -}}
+{{-         $cask := regexReplaceAll "^cask \"([^\"]+)\".*$" . "${1}" -}}
+{{-         if has $cask $.agentHost.casks }}
+{{ . }}
+{{-         end -}}
+{{-       else }}
+{{ . }}
+{{-       end -}}
+{{-     end -}}
+{{-     range .agentHost.brews }}
+brew {{ . | quote }}
+{{-     end }}
+{{ else -}}
+{{-     include ".Brewfile_darwin" -}}
+{{-   end -}}
 {{- else if eq .chezmoi.os "linux" -}}
 {{-   include ".Brewfile_linux" -}}
 {{- end -}}
