@@ -1,10 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# Detect macOS appearance via AppleScript (avoids `defaults read` writing to
-# stderr when AppleInterfaceStyle is unset in Light mode).
-DARK=$(osascript -e 'tell application "System Events" to tell appearance preferences to return dark mode')
-if [[ "$DARK" == "true" ]]; then
+# Detect macOS appearance from the global AppleInterfaceStyle default, which
+# is "Dark" in dark mode (including Auto) and absent in light mode. Reading the
+# whole domain never fails, unlike reading the possibly absent key. Asking
+# System Events through AppleScript instead needs an Automation grant per
+# calling process, which times out unanswered on a headless host.
+global_defaults="$(defaults read -g)"
+if [[ "$global_defaults" == *'AppleInterfaceStyle = Dark;'* ]]; then
     M=mocha
     THEME_MODE=dark
 else

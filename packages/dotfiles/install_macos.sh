@@ -161,6 +161,17 @@ if command -v brew &>/dev/null; then
     chezmoi execute-template <"${DOTFILES_SOURCE_DIR}/dot_Brewfile.tmpl" >"${rendered_brewfile}"
     retry 3 5 brew bundle --file="${rendered_brewfile}"
     rm -f "${rendered_brewfile}"
+    # npm 11 skips install scripts for packages not in allow-scripts, which
+    # leaves these global CLIs without the binaries their scripts download
+    # (nvim-treesitter then cannot build parsers). `npm config set` merges into
+    # ~/.npmrc instead of replacing it. Run from $HOME: inside a workspace (such
+    # as the monorepo) `npm config` fails with ENOWORKSPACES.
+    npm_script_packages=(tree-sitter-cli @posthog/cli)
+    (
+        cd "${HOME}"
+        npm config set allow-scripts="$(IFS=,; echo "${npm_script_packages[*]}")" --location=user
+        npm rebuild -g "${npm_script_packages[@]}"
+    )
     log_success "Brewfile packages installed"
 
     log_info "Applying dotfiles after package prerequisites are installed"
