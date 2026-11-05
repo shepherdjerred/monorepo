@@ -318,8 +318,16 @@ fi
 if command -v orbctl &>/dev/null; then
     log_info "Starting OrbStack and enabling launch at login"
     orbctl config set app.start_at_login true
+    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
+        # The admin setup links the CLI into /usr/local/bin through a GUI admin
+        # prompt that no one answers on a headless host, which also stalls the
+        # per-user ~/.orbstack/bin and shell integration fish sources.
+        orbctl config set setup.use_admin false
+    fi
     orbctl start
-    if ! command -v docker &>/dev/null; then
+    # The shells source ~/.orbstack/shell/init2.*, which puts ~/.orbstack/bin
+    # on PATH; this installer's own PATH never has it.
+    if [ ! -x "${HOME}/.orbstack/bin/docker" ]; then
         log_warn "OrbStack is running but Docker CLI setup is incomplete; finish setup in the OrbStack app"
         open -a OrbStack
     fi
