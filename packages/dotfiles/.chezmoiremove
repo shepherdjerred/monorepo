@@ -11,5 +11,8 @@
 .gemini/config/hooks.json
 .gemini/config/hooks/herdr-agent-state.sh
 .claude/hooks/herdr-agent-state.sh
-.config/opencode/herdr-tui-session.js
+.config/opencode
+.local/share/opencode
+.codex/hooks.json
+.local/bin/plannotator
 .agents/skills/oai-solution-reviewer

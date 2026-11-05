@@ -76,23 +76,19 @@ the static desktop TTF files, not OTF, WOFF2, or variable fonts.
 2. Re-run `chezmoi apply` so secret-backed templates can render.
 3. Install full Xcode manually. The bootstrap installs only Xcode Command Line
    Tools.
-4. The Chezmoi OpenCode bootstrap clones and builds the pinned
-   `opencode-kimi-full` and `opencode-quota` checkouts under `~/git`, then
-   re-renders their plugin entries. It intentionally does not authenticate
-   providers or store OAuth credentials.
-5. Sign in to OpenAI, xAI, and Kimi from OpenCode, and run `claude auth login`
-   if Claude Code usage should appear in the quota panel.
-6. Sign in to GitHub CLI, Tailscale, Atuin, browsers, editors, and licensed apps
+4. Run `claude auth login` if Claude Code usage should appear in the quota
+   panel.
+5. Sign in to GitHub CLI, Tailscale, Atuin, browsers, editors, and licensed apps
    as needed.
-7. Approve the Fastmail Contacts profile in **System Settings > General >
+6. Approve the Fastmail Contacts profile in **System Settings > General >
    Device Management**, then enter a dedicated Fastmail Contacts app password
    when macOS requests it.
-8. Run `sudo touch /private/var/tmp/.metadata_never_index`. Every other
+7. Run `sudo touch /private/var/tmp/.metadata_never_index`. Every other
    Spotlight exclusion is placed automatically on each `chezmoi apply` from
    `.chezmoidata/spotlight.yaml`, but this one is root-owned, so the apply
    script skips it rather than blocking on a password prompt and prints a
    reminder until it exists.
-9. Complete the privacy checklist below, then test each affected feature.
+8. Complete the privacy checklist below, then test each affected feature.
 
 Syncthing and OrbStack are launched automatically and configured to start at
 login. Syncthing still requires explicit authorization from another device and

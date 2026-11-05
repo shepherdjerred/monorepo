@@ -110,8 +110,6 @@ brew "neovim"
 brew "openblas"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# AI coding agent, built for the terminal
-brew "opencode"
 # Drop-in replacement for Terraform. Infrastructure as Code Tool
 brew "opentofu"
 # Feature-rich terminal-based text viewer

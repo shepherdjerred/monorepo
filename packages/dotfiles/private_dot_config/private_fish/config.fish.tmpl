@@ -28,7 +28,6 @@ abbr top "sudo btop"
 abbr btop "sudo btop"
 abbr less ov
 abbr ping gping
-abbr oc opencode
 abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --allow-dangerously-skip-permissions"
 abbr finder "open -a Finder"
 abbr gs git-spice
@@ -105,10 +104,9 @@ if status is-interactive
   {{ end -}}
   # Keep provider API keys available to ordinary tools, but coding-agent
   # wrappers explicitly remove direct API credentials. Claude and Codex
-  # therefore use their subscription/auth-file flows; OpenCode uses its
-  # configured provider. Claude Code and Codex get the agent git/GitHub
-  # identity from their own configs; the other agents get it from
-  # __agent_exec. These wrappers are intentionally interactive-only;
+  # therefore use their subscription/auth-file flows. Claude Code and Codex
+  # get the agent git/GitHub identity from their own configs; the other agents
+  # get it from __agent_exec. These wrappers are intentionally interactive-only;
   # launches that bypass fish (Raycast, scripts) must scrub their environment
   # explicitly.
   function codex --wraps codex -d "Run Codex without direct provider API keys"
@@ -145,9 +143,6 @@ if status is-interactive
           GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
           GH_CONFIG_DIR="$HOME/.config/gh-agent" \
           (command -s $argv[1]) $argv[2..-1]
-  end
-  function opencode --wraps opencode
-      __agent_exec opencode --auto $argv
   end
   function agy --wraps agy
       __agent_exec agy --dangerously-skip-permissions $argv
