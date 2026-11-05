@@ -444,7 +444,7 @@ describe("brim sync scanning and paths", () => {
 });
 
 describe("brim sync mirror index contract", () => {
-  const schemaDir = path.join(import.meta.dirname, "../../schemas");
+  const schemaDir = path.join(import.meta.dirname, "../../../schemas");
 
   test("the checked-in JSON Schema matches the zod schema", async () => {
     const checkedIn: unknown = JSON.parse(
