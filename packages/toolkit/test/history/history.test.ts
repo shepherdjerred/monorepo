@@ -33,7 +33,6 @@ import { writeCursorFixture } from "./history-fixtures/cursor.ts";
 import { writeDatabase } from "./history-fixtures/database.ts";
 import { writeGrokFixture } from "./history-fixtures/grok.ts";
 import { writeMirrorFixture } from "./history-fixtures/mirror.ts";
-import { writeOpencodeFixture } from "./history-fixtures/opencode.ts";
 
 let fixtureRoot = "";
 let paths: HistoryPaths;
@@ -161,7 +160,6 @@ beforeAll(async () => {
   const codexDir = path.join(fixtureRoot, "codex");
   const codexSessionsDir = path.join(fixtureRoot, "codex-sessions");
   const cursorDir = path.join(fixtureRoot, "Cursor data with spaces");
-  const opencodeDir = path.join(fixtureRoot, "opencode");
   const grokHome = path.join(fixtureRoot, "grok");
   const antigravityRoot = path.join(fixtureRoot, "antigravity");
   await Promise.all([
@@ -170,7 +168,6 @@ beforeAll(async () => {
     mkdir(codexDir, { recursive: true }),
     mkdir(codexSessionsDir, { recursive: true }),
     mkdir(cursorDir, { recursive: true }),
-    mkdir(opencodeDir, { recursive: true }),
   ]);
 
   const conductorDb = writeConductorFixture(conductorDir);
@@ -179,7 +176,6 @@ beforeAll(async () => {
   await writeCodexSessionUsageFixture(codexSessionsDir);
   await writeCodexRolloutFormatFixtures(codexSessionsDir);
   const cursorDb = writeCursorFixture(cursorDir);
-  const opencodeDb = await writeOpencodeFixture(opencodeDir);
   await writeGrokFixture(grokHome);
   await writeAntigravityFixture(antigravityRoot);
   const brimSyncMirrorIndex = await writeMirrorFixture(
@@ -189,14 +185,11 @@ beforeAll(async () => {
   paths = {
     home: fixtureRoot,
     conductorDb,
-    conductorOpenCodeDb: opencodeDb,
     claudeProjects: path.join(fixtureRoot, "claude/projects"),
     codexDir,
     codexCatalogDb: codexCatalog,
     codexHistoryJsonl: codexHistory,
     cursorConversationDb: cursorDb,
-    standaloneOpenCodeDb: opencodeDb,
-    standaloneOpenCodeAuth: path.join(opencodeDir, "auth.json"),
     antigravityRoots: [antigravityRoot],
     grokHome,
     codexSessionsDir,
@@ -211,7 +204,7 @@ afterAll(async () => {
 });
 
 describe("history source adapters", () => {
-  test("reads every supported source without reading auth.json", async () => {
+  test("reads every supported source", async () => {
     const results = await Promise.all(
       createHistorySources().map((source) => source.scan(paths)),
     );
@@ -219,15 +212,6 @@ describe("history source adapters", () => {
     expect(
       results.flatMap((result) => result.documents).length,
     ).toBeGreaterThanOrEqual(7);
-    expect(
-      results
-        .flatMap((result) => result.documents)
-        .some((document) =>
-          `${document.dialogueText}\n${document.toolOutputText}`.includes(
-            "must-not-be-indexed",
-          ),
-        ),
-    ).toBe(false);
   });
 
   test("classifies dialogue and tool text while omitting private control records", async () => {
@@ -243,9 +227,6 @@ describe("history source adapters", () => {
       (document) =>
         document.source === "codex" && document.path.includes("thread_history"),
     );
-    const opencode = documents.find(
-      (document) => document.source === "opencode-conductor",
-    );
     expect(conductor?.dialogueText).toContain("Substantive ingress dialogue");
     expect(conductor?.toolOutputText).toContain("kubectl get ingress");
     expect(conductor?.dialogueText).not.toContain("omit-conductor");
@@ -255,14 +236,6 @@ describe("history source adapters", () => {
     expect(codex?.dialogueText).toContain("Repair Woodpecker pipeline");
     expect(codex?.toolOutputText).toContain("toolkit woodpecker pipeline view");
     expect(codex?.dialogueText).not.toContain("omit-codex-reasoning");
-    expect(opencode?.dialogueText).toContain("Improve launchd ingestion");
-    expect(
-      opencode?.dialogueText.indexOf("Improve launchd ingestion"),
-    ).toBeLessThan(
-      opencode?.dialogueText.indexOf("Later direct message") ?? -1,
-    );
-    expect(opencode?.toolOutputText).toContain("launchctl print fixture");
-    expect(opencode?.dialogueText).not.toContain("omit-opencode-reasoning");
     const codexThreadCopies = documents.filter(
       (document) => document.source === "codex" && document.runtimeId === "t1",
     );
@@ -880,11 +853,6 @@ describe("history source adapter reads", () => {
       expect(selected.error).toBeNull();
       expect(selected.missingSourceIds).toEqual([]);
       expect([...selected.messages.keys()]).toEqual([document.sourceId]);
-      expect(
-        [...selected.messages.values()]
-          .flat()
-          .some((message) => message.text.includes("must-not-be-indexed")),
-      ).toBe(false);
       if (source.name === "cursor") {
         expect(selected.messages.get(document.sourceId)?.[0]?.role).toBe(
           "unknown",
@@ -1016,6 +984,28 @@ describe("history index schema", () => {
       .all();
     rebuilt.close();
     expect(tables).toContainEqual({ name: "usage_events" });
+  });
+
+  test("rebuilds a v3 index holding rows from a removed source", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "removed-source-v3-home"),
+    );
+    const current = await HistoryIndex.open(runtimePaths);
+    current.close();
+    const stale = new Database(runtimePaths.indexDb);
+    stale.run(
+      "INSERT INTO source_state (source, available, indexed_documents, fingerprint) VALUES ('opencode-standalone', 0, 0, '')",
+    );
+    stale.run("PRAGMA user_version = 3");
+    stale.close();
+
+    await expect(HistoryIndex.open(runtimePaths, true)).rejects.toThrow(
+      /restart the daemon/,
+    );
+
+    const index = await HistoryIndex.open(runtimePaths);
+    expect(index.statuses(new Map())).toEqual([]);
+    index.close();
   });
 });
 

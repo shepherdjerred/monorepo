@@ -49,7 +49,6 @@ function isGuidancePath(
     cursorRule ||
     entryPath.startsWith(".claude/skills/") ||
     entryPath.startsWith(".cursor/skills/") ||
-    entryPath.startsWith(".opencode/skills/") ||
     extraTrackedPaths.has(entryPath)
   );
 }
@@ -244,9 +243,9 @@ export const gitPath = path.posix;
 
 export const CLIENT_SKILL_DIRECTORIES = new Set(
   [
-    ".claude .codex .cursor .opencode .gemini",
-    "dot_claude dot_codex dot_cursor dot_opencode",
-    "private_dot_claude private_dot_codex private_dot_cursor private_dot_opencode",
+    ".claude .codex .cursor .gemini",
+    "dot_claude dot_codex dot_cursor",
+    "private_dot_claude private_dot_codex private_dot_cursor",
   ].flatMap((group) => group.split(" ")),
 );
 

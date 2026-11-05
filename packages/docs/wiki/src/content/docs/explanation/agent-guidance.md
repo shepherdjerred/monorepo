@@ -67,8 +67,7 @@ Cursor uses its
 and Antigravity uses its
 [Gemini adapters](https://github.com/shepherdjerred/monorepo/tree/a5af0efd7258d402c269bc99e6a597dd732edbd2/packages/dotfiles/dot_gemini).
 The [guidance guard](https://github.com/shepherdjerred/monorepo/blob/a5af0efd7258d402c269bc99e6a597dd732edbd2/scripts/check-agent-guidance.ts)
-rejects duplicate client copies. OpenCode relies on native discovery, so it has
-no second prose copy.
+rejects duplicate client copies.
 
 An adapter contains no independent policy. Its only job is to lead a client to
 the canonical source. Deleting duplicated prose removes the possibility that

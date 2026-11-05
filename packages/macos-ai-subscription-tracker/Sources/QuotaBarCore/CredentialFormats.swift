@@ -105,39 +105,6 @@ struct KimiOAuth: Decodable {
   }
 }
 
-struct OpenCodeAuthFile: Decodable {
-  let kimiForCodingOAuth: OpenCodeOAuthCredential?
-  let kimi: OpenCodeOAuthCredential?
-
-  enum CodingKeys: String, CodingKey {
-    case kimiForCodingOAuth = "kimi-for-coding-oauth"
-    case kimi
-  }
-
-  func credentials(for provider: ProviderID) -> [TokenValue] {
-    switch provider {
-    case .kimi: [kimiForCodingOAuth, kimi].compactMap { $0?.value }
-    case .claudeCode, .codex, .antigravity, .cursor, .grok, .muse: []
-    }
-  }
-
-  static func labels(for provider: ProviderID) -> Set<String> {
-    switch provider {
-    case .kimi: ["kimi-for-coding-oauth", "kimi"]
-    case .claudeCode, .codex, .antigravity, .cursor, .grok, .muse: []
-    }
-  }
-}
-
-struct OpenCodeOAuthCredential: Decodable {
-  let access: String
-  let expires: Double?
-
-  var value: TokenValue {
-    TokenValue(accessToken: access, expiresAt: normalizedDate(expires))
-  }
-}
-
 struct GrokCLIAuthFile: Decodable {
   let sessions: [String: GrokCLISession]
 
@@ -217,11 +184,6 @@ struct GrokCLISession: Decodable {
     guard let raw, !raw.isEmpty else { return nil }
     return raw
   }
-}
-
-struct CredentialRow: Decodable {
-  let label: String
-  let value: String
 }
 
 private func normalizedDate(_ value: Double?) -> Date? {

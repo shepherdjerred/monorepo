@@ -33,7 +33,6 @@ describe("tracker actor attribution", () => {
     ["CODEX_THREAD_ID", "codex"],
     ["CLAUDE_CODE_SESSION_ID", "claude-code"],
     ["CURSOR_CONVERSATION_ID", "cursor"],
-    ["OPENCODE_SESSION_ID", "opencode"],
     ["GROK_SESSION_ID", "grok"],
   ])(
     "native %s stays stable on resume and differs across sessions",

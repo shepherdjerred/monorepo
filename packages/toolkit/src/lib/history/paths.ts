@@ -4,14 +4,11 @@ import path from "node:path";
 export type HistoryPaths = {
   readonly home: string;
   readonly conductorDb: string;
-  readonly conductorOpenCodeDb: string;
   readonly claudeProjects: string;
   readonly codexDir: string;
   readonly codexCatalogDb: string;
   readonly codexHistoryJsonl: string;
   readonly cursorConversationDb: string;
-  readonly standaloneOpenCodeDb: string;
-  readonly standaloneOpenCodeAuth: string;
   readonly antigravityRoots: readonly string[];
   readonly grokHome: string;
   readonly codexSessionsDir: string;
@@ -36,10 +33,6 @@ export function defaultHistoryPaths(home = os.homedir()): HistoryPaths {
       home,
       "Library/Application Support/com.conductor.app/conductor.db",
     ),
-    conductorOpenCodeDb: path.join(
-      home,
-      "Library/Application Support/com.conductor.app/opencode/opencode.db",
-    ),
     claudeProjects: path.join(home, ".claude/projects"),
     codexDir: path.join(home, ".codex"),
     codexCatalogDb: path.join(home, ".codex/sqlite/codex-dev.db"),
@@ -48,8 +41,6 @@ export function defaultHistoryPaths(home = os.homedir()): HistoryPaths {
       home,
       "Library/Application Support/Cursor/User/globalStorage/conversation-search.db",
     ),
-    standaloneOpenCodeDb: path.join(home, ".local/share/opencode/opencode.db"),
-    standaloneOpenCodeAuth: path.join(home, ".local/share/opencode/auth.json"),
     antigravityRoots: [
       ".gemini/antigravity",
       ".gemini/antigravity-cli",

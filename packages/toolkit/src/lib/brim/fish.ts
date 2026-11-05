@@ -7,8 +7,8 @@
  * `fish -i -c 'claude ...'` would silently run the bare `claude` binary,
  * dropping the `--allow-dangerously-skip-permissions` flag and the `env -u`
  * credential scrubbing. Instead the expansion is resolved at runtime and
- * spliced into the program, while functions (`codex`, `opencode`, `agy`,
- * `grok`, `muse`, defined under `if status is-interactive`) are invoked by
+ * spliced into the program, while functions (`codex`, `agy`, `grok`,
+ * `muse`, defined under `if status is-interactive`) are invoked by
  * name. Only the fish *word* per provider is hardcoded here;
  * expansions are resolved at runtime, so editing
  * `~/.config/fish/config.fish` needs no CLI change.

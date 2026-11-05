@@ -192,56 +192,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private func readCurrentKimiCredential(
     excluding excludedTokens: Set<String>
   ) throws -> ProviderCredential? {
-    guard let localCredential = try readKimi(excluding: excludedTokens) else {
-      return try readOpenCode(provider: .kimi, excluding: excludedTokens)
-    }
-    do {
-      return try localCredential.requireCurrent(for: .kimi)
-    } catch QuotaError.credentialsExpired {
-      guard
-        let openCodeCredential = try readOpenCode(provider: .kimi, excluding: excludedTokens)
-      else {
-        throw QuotaError.credentialsExpired(.kimi)
-      }
-      return openCodeCredential
-    }
-  }
-
-  private func readOpenCode(
-    provider: ProviderID,
-    excluding excludedTokens: Set<String>
-  ) throws -> ProviderCredential? {
-    var expiredCredential: ProviderCredential?
-    for path in openCodeAuthPaths where fileManager.fileExists(atPath: path.path) {
-      guard let file = try decodeFile(OpenCodeAuthFile.self, at: path, provider: provider) else {
-        continue
-      }
-      for value in file.credentials(for: provider) {
-        let credential = try makeCredential(value, source: path.path)
-        guard !excludedTokens.contains(credential.accessToken) else { continue }
-        do {
-          return try credential.requireCurrent(for: provider)
-        } catch QuotaError.credentialsExpired {
-          expiredCredential = credential
-        }
-      }
-    }
-    let labels = OpenCodeAuthFile.labels(for: provider)
-    for database in openCodeDatabasePaths where fileManager.fileExists(atPath: database.path) {
-      let rows = try readOpenCodeRows(database: database)
-      for row in rows where labels.contains(row.label.lowercased()) {
-        let value = try decode(
-          OpenCodeOAuthCredential.self, from: Data(row.value.utf8), provider: provider)
-        let credential = try makeCredential(value.value, source: database.path)
-        guard !excludedTokens.contains(credential.accessToken) else { continue }
-        do {
-          return try credential.requireCurrent(for: provider)
-        } catch QuotaError.credentialsExpired {
-          expiredCredential = credential
-        }
-      }
-    }
-    return expiredCredential
+    try readKimi(excluding: excludedTokens)?.requireCurrent(for: .kimi)
   }
 
   private func excludedTokens(
@@ -261,21 +212,6 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       rejectedTokens[provider] = rejected
       return rejected
     }
-  }
-
-  private var openCodeAuthPaths: [URL] {
-    [
-      homeDirectory.appendingPathComponent(".local/share/opencode/auth.json"),
-      homeDirectory.appendingPathComponent(".config/opencode/auth.json"),
-      homeDirectory.appendingPathComponent("Library/Application Support/opencode/auth.json"),
-    ]
-  }
-
-  private var openCodeDatabasePaths: [URL] {
-    [
-      homeDirectory.appendingPathComponent(".local/share/opencode/opencode.db"),
-      homeDirectory.appendingPathComponent("Library/Application Support/opencode/opencode.db"),
-    ]
   }
 
   private var resolvedCursorStateDatabase: URL {
@@ -351,47 +287,6 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       expiresAt: value.expiresAt,
       source: source
     )
-  }
-
-  private func readOpenCodeRows(database: URL) throws -> [CredentialRow] {
-    var connection: OpaquePointer?
-    guard
-      sqlite3_open_v2(database.path, &connection, SQLITE_OPEN_READONLY, nil) == SQLITE_OK,
-      let connection
-    else {
-      if let connection { sqlite3_close(connection) }
-      throw QuotaError.commandFailed("SQLite")
-    }
-    defer { sqlite3_close(connection) }
-    guard sqlite3_busy_timeout(connection, 1_000) == SQLITE_OK else {
-      throw QuotaError.commandFailed("SQLite")
-    }
-
-    let query = "SELECT label, value FROM credential WHERE active IS NULL OR active != 0;"
-    var statement: OpaquePointer?
-    guard sqlite3_prepare_v2(connection, query, -1, &statement, nil) == SQLITE_OK,
-      let statement
-    else {
-      if let statement { sqlite3_finalize(statement) }
-      throw QuotaError.commandFailed("SQLite")
-    }
-    defer { sqlite3_finalize(statement) }
-
-    var rows: [CredentialRow] = []
-    while true {
-      switch sqlite3_step(statement) {
-      case SQLITE_ROW:
-        rows.append(
-          CredentialRow(
-            label: try sqliteString(statement: statement, column: 0),
-            value: try sqliteString(statement: statement, column: 1)
-          ))
-      case SQLITE_DONE:
-        return rows
-      default:
-        throw QuotaError.commandFailed("SQLite")
-      }
-    }
   }
 
   private func sqliteString(statement: OpaquePointer, column: Int32) throws -> String {

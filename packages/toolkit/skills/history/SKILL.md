@@ -1,6 +1,6 @@
 ---
 name: history
-description: Search local Conductor, Claude Code, Codex, Cursor, and OpenCode work history with toolkit.
+description: Search local Conductor, Claude Code, Codex, Cursor, Antigravity, and Grok work history with toolkit.
 ---
 
 # Local agent history
@@ -39,7 +39,7 @@ toolkit history daemon status --json
 ```
 
 Supported sources are `conductor`, `claude`, `codex`, `cursor`,
-`opencode-conductor`, and `opencode-standalone`. Search uses BM25 relevance;
+`antigravity`, and `grok`. Search uses BM25 relevance;
 recency only breaks ties. Unquoted terms are AND-prefix matches. To request an
 exact phrase, preserve literal quotes in the query, for example
 `toolkit history search '"Match Reports"'`.
@@ -75,7 +75,5 @@ deployed, reachable, or running state from a transcript.
   are user-private.
 - Source SQLite databases and JSONL files are read-only. Schema changes are
   reported per source through `history sources`; they are not silently ignored.
-- Standalone OpenCode `~/.local/share/opencode/auth.json` is credentials and is
-  never read, printed, copied, indexed, or committed.
 - Do not place transcript contents, index databases, daemon state, LaunchAgent
   files, or credentials in the repository or `.context/`.
