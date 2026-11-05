@@ -63,6 +63,12 @@ discover_berkeley_mono_source_dir() {
 
 log_info "Starting macOS dotfiles install"
 
+# The machine profile ("workstation" or "agent-host") is owned by chezmoi:
+# .chezmoi.toml.tmpl records DOTFILES_PROFILE at the first init, validates it,
+# and keeps the recorded value when a later run leaves the variable unset.
+# DOTFILES_PROFILE is resolved from chezmoi after init below.
+DOTFILES_PROFILE="${DOTFILES_PROFILE:-}"
+
 # Install Xcode Command Line Tools if not present
 if ! xcode-select -p &>/dev/null; then
     log_info "Installing Xcode Command Line Tools"
@@ -145,8 +151,27 @@ if command -v brew &>/dev/null; then
         log_success "woodpecker-cli installed"
     fi
 
+    # Record the profile without applying, then install the profile's rendered
+    # Brewfile so setup hooks still run after their prerequisites exist.
     log_info "Installing Brewfile packages"
-    retry 3 5 brew bundle --file="${DOTFILES_SOURCE_DIR}/.Brewfile_darwin"
+    chezmoi init --source "${DOTFILES_SOURCE_DIR}"
+    DOTFILES_PROFILE="$(chezmoi execute-template '{{ .profile }}')"
+    log_info "Machine profile: ${DOTFILES_PROFILE}"
+    rendered_brewfile="$(mktemp)"
+    chezmoi execute-template <"${DOTFILES_SOURCE_DIR}/dot_Brewfile.tmpl" >"${rendered_brewfile}"
+    retry 3 5 brew bundle --file="${rendered_brewfile}"
+    rm -f "${rendered_brewfile}"
+    # npm 11 skips install scripts for packages not in allow-scripts, which
+    # leaves these global CLIs without the binaries their scripts download
+    # (nvim-treesitter then cannot build parsers). `npm config set` merges into
+    # ~/.npmrc instead of replacing it. Run from $HOME: inside a workspace (such
+    # as the monorepo) `npm config` fails with ENOWORKSPACES.
+    npm_script_packages=(tree-sitter-cli @posthog/cli)
+    (
+        cd "${HOME}"
+        npm config set allow-scripts="$(IFS=,; echo "${npm_script_packages[*]}")" --location=user
+        npm rebuild -g "${npm_script_packages[@]}"
+    )
     log_success "Brewfile packages installed"
 
     log_info "Applying dotfiles after package prerequisites are installed"
@@ -154,26 +179,40 @@ if command -v brew &>/dev/null; then
         log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
     fi
 
-    log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
-    sudo-touchid --with-reattach
-    log_success "Touch ID for sudo enabled"
-
     log_info "Installing persistent launchd file limits"
     sudo /bin/bash "${DOTFILES_SOURCE_DIR}/macos-file-limits/install.sh"
     log_success "Launchd file limits installed; a fresh login is required for existing apps"
 
-    log_info "Patching and installing Berkeley Mono"
-    berkeley_mono_source_dir="$(discover_berkeley_mono_source_dir)"
-    berkeley_mono_patcher="$(dirname "${DOTFILES_SOURCE_DIR}")/fonts/patch-berkeley-mono.py"
-    if [ ! -f "${berkeley_mono_patcher}" ]; then
-        log_error "Berkeley Mono patcher is missing: ${berkeley_mono_patcher}"
-        exit 1
+    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
+        # Agent hosts are reached over Tailscale SSH, which only the
+        # open-source tailscaled supports. Install the daemon once: rerunning
+        # install-system-daemon restarts it and would drop this very session
+        # when the installer runs over Tailscale SSH.
+        if ! launchctl print system/com.tailscale.tailscaled &>/dev/null; then
+            log_info "Installing tailscaled as a system daemon"
+            sudo tailscaled install-system-daemon
+            log_success "tailscaled installed; run: sudo tailscale up --ssh --hostname=<name>"
+        else
+            log_info "tailscaled system daemon already installed"
+        fi
+    else
+        log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
+        sudo-touchid --with-reattach
+        log_success "Touch ID for sudo enabled"
+
+        log_info "Patching and installing Berkeley Mono"
+        berkeley_mono_source_dir="$(discover_berkeley_mono_source_dir)"
+        berkeley_mono_patcher="$(dirname "${DOTFILES_SOURCE_DIR}")/fonts/patch-berkeley-mono.py"
+        if [ ! -f "${berkeley_mono_patcher}" ]; then
+            log_error "Berkeley Mono patcher is missing: ${berkeley_mono_patcher}"
+            exit 1
+        fi
+        uv run "${berkeley_mono_patcher}" \
+            "${berkeley_mono_source_dir}" \
+            "${HOME}/.cache/berkeley-mono/patched" \
+            --install
+        log_success "Berkeley Mono patched and installed"
     fi
-    uv run "${berkeley_mono_patcher}" \
-        "${berkeley_mono_source_dir}" \
-        "${HOME}/.cache/berkeley-mono/patched" \
-        --install
-    log_success "Berkeley Mono patched and installed"
 
     # Apply macOS app defaults (run_onchange won't re-trigger since hashes unchanged)
     if command -v macos-defaults &>/dev/null && [ -d "$HOME/.config/macos-defaults" ]; then
@@ -248,7 +287,10 @@ if command -v atuin &>/dev/null; then
     ATUIN_LOGGED_IN=$?
     set -e
 
-    if [ "$ATUIN_LOGGED_IN" -ne 0 ]; then
+    # Agent hosts keep history local so agents cannot search other devices'.
+    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
+        log_info "Agent host: leaving Atuin local-only (no login or sync)"
+    elif [ "$ATUIN_LOGGED_IN" -ne 0 ]; then
         atuin login -u sjerred || true
         set +e
         atuin status &>/dev/null
@@ -256,7 +298,7 @@ if command -v atuin &>/dev/null; then
         set -e
     fi
 
-    if [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
+    if [ "${DOTFILES_PROFILE}" != "agent-host" ] && [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
         atuin sync || true
     fi
     log_success "Atuin configured"
@@ -276,8 +318,16 @@ fi
 if command -v orbctl &>/dev/null; then
     log_info "Starting OrbStack and enabling launch at login"
     orbctl config set app.start_at_login true
+    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
+        # The admin setup links the CLI into /usr/local/bin through a GUI admin
+        # prompt that no one answers on a headless host, which also stalls the
+        # per-user ~/.orbstack/bin and shell integration fish sources.
+        orbctl config set setup.use_admin false
+    fi
     orbctl start
-    if ! command -v docker &>/dev/null; then
+    # The shells source ~/.orbstack/shell/init2.*, which puts ~/.orbstack/bin
+    # on PATH; this installer's own PATH never has it.
+    if [ ! -x "${HOME}/.orbstack/bin/docker" ]; then
         log_warn "OrbStack is running but Docker CLI setup is incomplete; finish setup in the OrbStack app"
         open -a OrbStack
     fi

@@ -17,9 +17,18 @@
 # column UI, aliases, and sort-order overrides. Note git cannot UNSET a key
 # via env-based config (GIT_CONFIG_KEY_n/GIT_CONFIG_VALUE_n), which is why
 # this file exists: an empty diff.external is an error, not an unset.
+#
+# Agent hosts do not use derrej yet: their agents commit as Jerred, and
+# ~/.config/gh-agent is logged in as Jerred. Restoring derrej there is this
+# identity plus a gh-agent re-login.
 [user]
+{{- if eq .profile "agent-host" }}
+	name = Jerred Shepherd
+	email = github@sjer.red
+{{- else }}
 	name = Derrej Drehpehs
 	email = derrej@sjer.red
+{{- end }}
 
 [core]
 	pager = cat

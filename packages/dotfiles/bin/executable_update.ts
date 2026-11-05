@@ -66,7 +66,28 @@ async function updateBrew(runCommand: RunCommand): Promise<void> {
   await runCommand({ executable: "brew", args: ["upgrade"] });
 }
 
-export async function main(runCommand: RunCommand = run): Promise<void> {
+export type ReadProfile = () => Promise<string>;
+
+// The machine profile chezmoi recorded at init (.chezmoi.toml.tmpl).
+export async function chezmoiProfile(): Promise<string> {
+  const proc = Bun.spawn(["chezmoi", "execute-template", "{{ .profile }}"], {
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  const [stdout, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    proc.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(`[chezmoi execute-template] exited with code ${exitCode.toString()}`);
+  }
+  return stdout.trim();
+}
+
+export async function main(
+  runCommand: RunCommand = run,
+  readProfile: ReadProfile = chezmoiProfile,
+): Promise<void> {
   // Run sequential commands first
   for (const cmd of sequentialCommands) {
     await runCommand(cmd);
@@ -78,7 +99,9 @@ export async function main(runCommand: RunCommand = run): Promise<void> {
     updateBrew(runCommand),
   ]);
 
-  // Export current brew state
+  // Export current brew state. .Brewfile_darwin is the workstation dump; an
+  // agent host installs a filtered subset, so write_brewfile.sh refuses there.
+  if ((await readProfile()) === "agent-host") return;
   const home = Bun.env["HOME"];
   if (home === undefined) throw new Error("HOME is required");
   await runCommand({

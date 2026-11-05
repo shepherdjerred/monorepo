@@ -1,5 +1,33 @@
+{{- /* .Brewfile_darwin is a `brew bundle dump`, and two kinds of dumped
+       entries cannot be installed from it, so every profile drops them:
+       - `uv "docling…"`: run_once_after_install-docling.sh installs Docling
+         with a pinned Python; uv's default Python can lack binary wheels.
+       - `go "cmd/…"`: the dump records Go's own standard-library tools, which
+         `go install` rejects; they ship with the go formula. Agent hosts
+       keep every non-cask entry, only the allowlisted casks, and no VS Code
+       extensions or comments. */ -}}
 {{- if eq .chezmoi.os "darwin" -}}
-{{-   include ".Brewfile_darwin" -}}
+{{-   $lines := list -}}
+{{-   range (include ".Brewfile_darwin" | splitList "\n") -}}
+{{-     if or (hasPrefix "uv \"docling" .) (hasPrefix "go \"cmd/" .) -}}
+{{-     else if ne $.profile "agent-host" -}}
+{{-       $lines = append $lines . -}}
+{{-     else if or (hasPrefix "#" .) (hasPrefix "vscode " .) (eq . "") -}}
+{{-     else if hasPrefix "cask " . -}}
+{{-       if has (regexReplaceAll "^cask \"([^\"]+)\".*$" . "${1}") $.agentHost.casks -}}
+{{-         $lines = append $lines . -}}
+{{-       end -}}
+{{-     else -}}
+{{-       $lines = append $lines . -}}
+{{-     end -}}
+{{-   end -}}
+{{-   if eq .profile "agent-host" -}}
+{{-     range .agentHost.brews -}}
+{{-       $lines = append $lines (printf "brew %q" .) -}}
+{{-     end -}}
+{{-     $lines = append $lines "" -}}
+{{-   end -}}
+{{-   join "\n" $lines -}}
 {{- else if eq .chezmoi.os "linux" -}}
 {{-   include ".Brewfile_linux" -}}
 {{- end -}}
