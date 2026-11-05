@@ -1,6 +1,8 @@
 {
   "hooks": {
-{{- if eq .chezmoi.os "darwin" }}
+{{- /* Plannotator's review UI has no viewer on a headless agent host, and the
+       hook waits up to 96 hours for one, so agent hosts skip it. */ -}}
+{{- if and (eq .chezmoi.os "darwin") (ne .profile "agent-host") }}
     "Stop": [
       {
         "hooks": [

@@ -74,4 +74,12 @@ Library/Application Support/Cursor
 Library/Application Support/Sublime Text
 install-sublime-package-control.sh
 set-default-apps.sh
+# Agent hosts keep no rendered secrets on disk; commands resolve credentials
+# at call time through toolkit or scripts/onepassword/with-service-account.sh.
+.aws/credentials
+.config/argocd/config
+.config/turbo-cache
+.kube/config
+.talos/config
+configure-gcx.sh
 {{- end }}
