@@ -1,22 +1,31 @@
+{{- /* .Brewfile_darwin is a `brew bundle dump`. Docling is installed by
+       run_once_after_install-docling.sh with a pinned Python; the dumped
+       `uv "docling…"` entry would install it with uv's default Python, which
+       can lack binary wheels, so it is dropped on every profile. Agent hosts
+       keep every non-cask entry, only the allowlisted casks, and no VS Code
+       extensions or comments. */ -}}
 {{- if eq .chezmoi.os "darwin" -}}
-{{-   if eq .profile "agent-host" -}}
-{{-     range (include ".Brewfile_darwin" | splitList "\n") -}}
-{{-       if or (hasPrefix "#" .) (hasPrefix "vscode " .) (eq . "") -}}
-{{-       else if hasPrefix "cask " . -}}
-{{-         $cask := regexReplaceAll "^cask \"([^\"]+)\".*$" . "${1}" -}}
-{{-         if has $cask $.agentHost.casks }}
-{{ . }}
-{{-         end -}}
-{{-       else }}
-{{ . }}
+{{-   $lines := list -}}
+{{-   range (include ".Brewfile_darwin" | splitList "\n") -}}
+{{-     if hasPrefix "uv \"docling" . -}}
+{{-     else if ne $.profile "agent-host" -}}
+{{-       $lines = append $lines . -}}
+{{-     else if or (hasPrefix "#" .) (hasPrefix "vscode " .) (eq . "") -}}
+{{-     else if hasPrefix "cask " . -}}
+{{-       if has (regexReplaceAll "^cask \"([^\"]+)\".*$" . "${1}") $.agentHost.casks -}}
+{{-         $lines = append $lines . -}}
 {{-       end -}}
+{{-     else -}}
+{{-       $lines = append $lines . -}}
 {{-     end -}}
-{{-     range .agentHost.brews }}
-brew {{ . | quote }}
-{{-     end }}
-{{ else -}}
-{{-     include ".Brewfile_darwin" -}}
 {{-   end -}}
+{{-   if eq .profile "agent-host" -}}
+{{-     range .agentHost.brews -}}
+{{-       $lines = append $lines (printf "brew %q" .) -}}
+{{-     end -}}
+{{-     $lines = append $lines "" -}}
+{{-   end -}}
+{{-   join "\n" $lines -}}
 {{- else if eq .chezmoi.os "linux" -}}
 {{-   include ".Brewfile_linux" -}}
 {{- end -}}

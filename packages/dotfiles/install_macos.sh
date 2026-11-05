@@ -63,18 +63,11 @@ discover_berkeley_mono_source_dir() {
 
 log_info "Starting macOS dotfiles install"
 
-# "workstation" is the full desktop; "agent-host" is a headless machine for
-# coding agents. chezmoi records the profile at init (.chezmoi.toml.tmpl), and
-# the profile filters the Brewfile and desktop-only targets.
-export DOTFILES_PROFILE="${DOTFILES_PROFILE:-workstation}"
-case "${DOTFILES_PROFILE}" in
-    workstation | agent-host) ;;
-    *)
-        log_error "Unknown DOTFILES_PROFILE: ${DOTFILES_PROFILE} (expected workstation or agent-host)"
-        exit 1
-        ;;
-esac
-log_info "Machine profile: ${DOTFILES_PROFILE}"
+# The machine profile ("workstation" or "agent-host") is owned by chezmoi:
+# .chezmoi.toml.tmpl records DOTFILES_PROFILE at the first init, validates it,
+# and keeps the recorded value when a later run leaves the variable unset.
+# DOTFILES_PROFILE is resolved from chezmoi after init below.
+DOTFILES_PROFILE="${DOTFILES_PROFILE:-}"
 
 # Install Xcode Command Line Tools if not present
 if ! xcode-select -p &>/dev/null; then
@@ -162,6 +155,8 @@ if command -v brew &>/dev/null; then
     # Brewfile so setup hooks still run after their prerequisites exist.
     log_info "Installing Brewfile packages"
     chezmoi init --source "${DOTFILES_SOURCE_DIR}"
+    DOTFILES_PROFILE="$(chezmoi execute-template '{{ .profile }}')"
+    log_info "Machine profile: ${DOTFILES_PROFILE}"
     rendered_brewfile="$(mktemp)"
     chezmoi execute-template <"${DOTFILES_SOURCE_DIR}/dot_Brewfile.tmpl" >"${rendered_brewfile}"
     retry 3 5 brew bundle --file="${rendered_brewfile}"
