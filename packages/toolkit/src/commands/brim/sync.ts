@@ -20,6 +20,10 @@ import {
 } from "#lib/brim/sync/paths.ts";
 import { pullArchive, type PullReport } from "#lib/brim/sync/pull.ts";
 import { pushArchive, type PushReport } from "#lib/brim/sync/push.ts";
+import {
+  redactSources,
+  type RedactReport,
+} from "#lib/brim/sync/redact-files.ts";
 import { syncRoots } from "#lib/brim/sync/scan.ts";
 import {
   brokeredS3Credentials,
@@ -35,6 +39,9 @@ brim sync — encrypted cross-machine archive of Claude Code and Codex transcrip
   brim sync pull [--all] [--json]  Mirror other machines' recent sessions
   brim sync run [--json]           push, then pull (the macOS LaunchAgent)
   brim sync status [--json]        Local archive, mirror and agent state
+  brim sync redact [--dry-run] [--json]
+                                   Overwrite leaked credentials in this machine's
+                                   transcripts and re-archive the affected files
   brim sync install | uninstall    Manage the 5-minute macOS LaunchAgent
 
 push uploads every transcript, whatever its age; the archive never expires.
@@ -42,6 +49,11 @@ pull mirrors the last brim.sync.pull.since.days days (default 30) into
 ~/.toolkit/brim-sync/mirror/ for toolkit history and Brim; --all mirrors
 everything. On Windows a Scheduled Task runs push; see the dotfiles-windows
 source.
+
+Push overwrites credentials (Anthropic, OpenAI and Linear keys, JWTs) with a
+same-length REDACTED-<kind> marker before upload. redact does the same to the
+local files in place, then retires their archive generations; run push next
+to replace them in S3. Values are never printed.
 `;
 
 const LAUNCH_AGENT_LABEL = "com.jerred.brim-sync";
@@ -121,9 +133,45 @@ async function runPull(
   });
 }
 
+function formatCounts(counts: Partial<Record<string, number>>): string {
+  return Object.entries(counts)
+    .map(([kind, count]) => `${kind} ${String(count)}`)
+    .join(", ");
+}
+
+function printRedact(report: RedactReport): void {
+  const verb = report.dryRun ? "would redact" : "redacted";
+  for (const file of report.files) {
+    const skipped =
+      file.skipped === 0
+        ? ""
+        : ` (${String(file.skipped)} changed during redaction; rerun)`;
+    console.log(
+      `redact: ${file.tool}:${file.relPath}: ${formatCounts(file.counts)}${skipped}`,
+    );
+  }
+  const total = Object.values(report.totals).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  console.log(
+    `redact: scanned ${String(report.scannedFiles)} files; ${verb} ${String(total)} secrets in ${String(report.files.length)} files${total === 0 ? "" : ` (${formatCounts(report.totals)})`}`,
+  );
+  if (!report.dryRun && report.regenerated > 0) {
+    console.log(
+      `redact: retired ${String(report.regenerated)} archive generations; run \`brim sync push\` to replace them in S3.`,
+    );
+  }
+  if (report.archivedOnly > 0) {
+    console.log(
+      `redact: ${String(report.archivedOnly)} archived files no longer exist locally and were not scanned.`,
+    );
+  }
+}
+
 function printPush(report: PushReport): void {
   console.log(
-    `push: ${String(report.files)} files archived; ${String(report.changedFiles)} changed, ${String(report.rewrittenFiles)} rewritten, ${String(report.newlyDeletedFiles)} newly deleted locally; ${String(report.uploadedSegments)} segments (${formatBytes(report.uploadedBytes)}) in ${String(report.commits)} commits`,
+    `push: ${String(report.files)} files archived; ${String(report.changedFiles)} changed, ${String(report.rewrittenFiles)} rewritten, ${String(report.newlyDeletedFiles)} newly deleted locally; ${String(report.uploadedSegments)} segments (${formatBytes(report.uploadedBytes)}) in ${String(report.commits)} commits${report.redactedSecrets === 0 ? "" : `; ${String(report.redactedSecrets)} secrets redacted before upload`}`,
   );
   for (const error of report.errors) {
     console.error(`push: ${error.relPath}: ${error.message}`);
@@ -252,6 +300,7 @@ async function dispatch(
     allowPositionals: true,
     options: {
       all: { type: "boolean", default: false },
+      "dry-run": { type: "boolean", default: false },
       json: { type: "boolean", default: false },
       help: { type: "boolean", default: false },
     },
@@ -298,6 +347,17 @@ async function dispatch(
           printPull(pull);
         }
         return push.errors.length === 0 && pull.errors.length === 0;
+      });
+    case "redact":
+      return withLock(paths, async () => {
+        const report = await redactSources({
+          roots: syncRoots(Bun.env, paths.home),
+          paths,
+          dryRun: parsed.values["dry-run"],
+        });
+        if (json) console.log(JSON.stringify(report, null, 2));
+        else printRedact(report);
+        return report.files.every((file) => file.skipped === 0);
       });
     case "status":
       await printStatus(settings, paths, agentSpec, json);

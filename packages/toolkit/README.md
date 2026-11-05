@@ -813,6 +813,7 @@ brim sync push            # archive new complete lines from this machine
 brim sync pull [--all]    # mirror other machines (default: last 30 days)
 brim sync run             # push, then pull — what the LaunchAgent runs
 brim sync status [--json]
+brim sync redact [--dry-run]  # purge leaked credentials, then push
 brim sync install         # macOS LaunchAgent, every 5 minutes
 ```
 
@@ -833,6 +834,19 @@ profile still supplies the endpoint. A pid lock makes an
 overlapping run exit 0. On Windows only `brim.exe` is built (`bun run
 install:local`), and a Scheduled Task from `packages/dotfiles-windows` runs
 `sync push`.
+
+Push also overwrites leaked credentials in each segment before upload:
+Anthropic, OpenAI project and Linear keys, and JWTs whose header and payload
+decode to JSON. Each match must be standalone (not inside a longer base64
+token) and is replaced with a same-length `REDACTED-<kind>` marker, so
+archive offsets stay equal to source offsets. `brim sync redact [--dry-run]`
+does the same to this machine's transcripts in place: it re-reads each match
+before overwriting it, keeps file size and inode, and restores the mtime, so a
+CLI still appending is unaffected. It then retires the affected archive
+generations; the next `brim sync push` re-uploads those files and deletes the
+old segments, and every mirror rebuilds them on its next pull. Values are never
+printed. Push detects appends and truncation but not an edit deep inside a file,
+which is why `redact` retires generations explicitly.
 
 Pull writes `~/.toolkit/brim-sync/mirror/index.json`, whose contract is
 [`schemas/brim-sync-mirror-index.schema.json`](schemas/brim-sync-mirror-index.schema.json).

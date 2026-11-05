@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
   appendFile,
-  mkdir,
   readFile,
   rm,
   stat,
@@ -9,9 +8,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { generateX25519Identity, identityToRecipient } from "age-encryption";
 import { z } from "zod";
-import { createOpener, createSealer } from "#lib/brim/sync/crypto.ts";
 import { acquireSyncLock } from "#lib/brim/sync/lock.ts";
 import {
   manifestKey,
@@ -23,75 +20,21 @@ import {
   readMirrorIndex,
 } from "#lib/brim/sync/mirror-index.ts";
 import { createMemoryObjectStore } from "#lib/brim/sync/object-store.ts";
-import {
-  defaultBrimSyncPaths,
-  fromArchivePath,
-  type BrimSyncPaths,
-} from "#lib/brim/sync/paths.ts";
+import { fromArchivePath } from "#lib/brim/sync/paths.ts";
 import { pullArchive } from "#lib/brim/sync/pull.ts";
-import { pushArchive, type PushOptions } from "#lib/brim/sync/push.ts";
+import { pushArchive } from "#lib/brim/sync/push.ts";
 import { scanSourceFiles, syncRoots } from "#lib/brim/sync/scan.ts";
 import { brokeredS3Credentials } from "#lib/brim/sync/settings.ts";
-import { useTempDirectories } from "#test/support/temp-directories.ts";
-
-const tempHome = useTempDirectories("brim-sync-");
-
-type Machine = {
-  readonly home: string;
-  readonly paths: BrimSyncPaths;
-  readonly machineId: string;
-};
-
-async function machine(machineId: string): Promise<Machine> {
-  const home = await tempHome();
-  return { home, paths: defaultBrimSyncPaths(home), machineId };
-}
-
-async function write(
-  home: string,
-  relative: string,
-  contents: string,
-): Promise<string> {
-  const file = path.join(home, relative);
-  await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(file, contents);
-  return file;
-}
-
-const CLAUDE_SESSION = ".claude/projects/-Users-me-repo/session-a.jsonl";
-const CODEX_SESSION = ".codex/sessions/2026/11/02/rollout-1.jsonl";
-
-async function keys() {
-  const identity = await generateX25519Identity();
-  const recipient = await identityToRecipient(identity);
-  return {
-    seal: createSealer(recipient),
-    open: createOpener(identity),
-  };
-}
-
-function pushOptions(
-  source: Machine,
-  store: ReturnType<typeof createMemoryObjectStore>,
-  crypto: Awaited<ReturnType<typeof keys>>,
-  overrides: Partial<PushOptions> = {},
-): PushOptions {
-  return {
-    store,
-    seal: crypto.seal,
-    open: crypto.open,
-    paths: source.paths,
-    machineId: source.machineId,
-    displayName: `${source.machineId}.local`,
-    platform: "darwin",
-    roots: syncRoots({}, source.home),
-    ...overrides,
-  };
-}
-
-function mirrored(target: Machine, from: string, relative: string): string {
-  return path.join(target.paths.mirrorDir, from, relative);
-}
+import {
+  CLAUDE_SESSION,
+  CODEX_SESSION,
+  keys,
+  machine,
+  mirrored,
+  pushOptions,
+  tempHome,
+  write,
+} from "#test/support/brim-sync.ts";
 
 describe("brim sync push and pull", () => {
   test("round-trips transcripts byte for byte behind opaque, encrypted keys", async () => {

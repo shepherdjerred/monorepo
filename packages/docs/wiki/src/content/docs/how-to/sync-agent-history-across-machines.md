@@ -106,6 +106,48 @@ toolkit history search --source codex-mirror "<a phrase from a PC session>"
 an `All machines` line under Claude Code and Codex once another machine has
 usage today.
 
+## Purge a leaked credential
+
+Push already overwrites credentials before upload, but transcripts archived
+earlier, the local files, and the history index keep them until purged. Purge
+every copy in this order, or a pull restores what you removed.
+
+1. Stop the scheduled runs on every Mac, so none races the purge.
+
+   ```bash
+   launchctl bootout gui/$(id -u)/com.jerred.brim-sync
+   ```
+
+2. On each machine, preview and then overwrite the matches in its own
+   transcripts. The second command also retires the affected archive
+   generations.
+
+   ```bash
+   brim sync redact --dry-run
+   brim sync redact
+   ```
+
+3. Push from the same machine. It re-uploads the redacted files and deletes the
+   old segments from the bucket.
+
+   ```bash
+   brim sync push
+   ```
+
+4. On every Mac, pull, then rebuild the history index, which also stores tool
+   output.
+
+   ```bash
+   brim sync pull
+   toolkit history daemon reindex
+   ```
+
+5. Reinstall the agents with `brim sync install`.
+
+The off-site Backblaze copy keeps replaced objects for 30 days. Those copies
+were age-encrypted and expire on their own. A credential that reached a model
+provider in a session is still only made harmless by rotating it.
+
 ## When something fails
 
 | Symptom                                                 | Fix                                                                                     |
