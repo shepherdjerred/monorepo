@@ -19,7 +19,17 @@ export type LaunchAgentSpec = {
   readonly keepAlive: boolean;
   /** Re-run a one-shot program every N seconds. */
   readonly startIntervalSeconds?: number;
+  /**
+   * Environment for the job. launchd starts jobs with a minimal `PATH`
+   * (`/usr/bin:/bin:/usr/sbin:/sbin`), so a job that spawns Homebrew tools
+   * such as `op` must say where they live.
+   */
+  readonly environment?: Readonly<Record<string, string>>;
 };
+
+/** `PATH` for jobs that spawn Homebrew-installed tools. */
+export const HOMEBREW_JOB_PATH =
+  "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
 
 function xmlEscape(value: string): string {
   return value
@@ -62,6 +72,16 @@ export function renderLaunchAgentPlist(spec: LaunchAgentSpec): string {
     spec.startIntervalSeconds === undefined
       ? ""
       : `  <key>StartInterval</key>\n  <integer>${String(spec.startIntervalSeconds)}</integer>\n`;
+  const entries = Object.entries(spec.environment ?? {});
+  const environment =
+    entries.length === 0
+      ? ""
+      : `  <key>EnvironmentVariables</key>\n  <dict>\n${entries
+          .map(
+            ([key, value]) =>
+              `    <key>${xmlEscape(key)}</key>\n    <string>${xmlEscape(value)}</string>\n`,
+          )
+          .join("")}  </dict>\n`;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -74,7 +94,7 @@ ${programArguments}
   </array>
   <key>RunAtLoad</key>
   <true/>
-${keepAlive}${interval}  <key>ProcessType</key>
+${keepAlive}${interval}${environment}  <key>ProcessType</key>
   <string>Background</string>
   <key>StandardOutPath</key>
   <string>${xmlEscape(logs.stdout)}</string>

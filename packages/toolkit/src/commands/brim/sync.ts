@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import { createSealer } from "#lib/brim/sync/crypto.ts";
 import {
+  HOMEBREW_JOB_PATH,
   assertDarwin,
   installLaunchAgentJob,
   launchAgentJobStatus,
@@ -46,7 +47,7 @@ source.
 const LAUNCH_AGENT_LABEL = "com.jerred.brim-sync";
 const INTERVAL_SECONDS = 300;
 
-function launchAgent(
+export function syncLaunchAgent(
   paths: BrimSyncPaths,
   invocationPrefix: readonly string[],
 ): LaunchAgentSpec {
@@ -57,6 +58,9 @@ function launchAgent(
     logsDir: paths.logsDir,
     keepAlive: false,
     startIntervalSeconds: INTERVAL_SECONDS,
+    // The credential broker spawns `op` for the age identity and, in broker
+    // mode, the S3 keys.
+    environment: { PATH: HOMEBREW_JOB_PATH },
   };
 }
 
@@ -268,7 +272,7 @@ async function dispatch(
   const paths = defaultBrimSyncPaths();
   const settings = await loadBrimSyncSettings();
   const { json, all } = parsed.values;
-  const agentSpec = launchAgent(paths, invocationPrefix);
+  const agentSpec = syncLaunchAgent(paths, invocationPrefix);
   switch (action) {
     case "push":
       return withLock(paths, async () => {
