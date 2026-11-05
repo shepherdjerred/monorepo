@@ -1,5 +1,6 @@
 import os from "node:os";
 import { z } from "zod";
+import { BRIM_SYNC_CREDENTIALS } from "#lib/brim/sync/credential-specs.ts";
 import { defaultToolkitConfigPath } from "#lib/toolkit-config.ts";
 
 /**
@@ -154,14 +155,7 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       service: "monorepo-workstation-bugsink-token",
     },
   },
-  BRIM_SYNC_AGE_IDENTITY: {
-    description:
-      "age identity that decrypts the Brim sync archive (pull and state adoption only)",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/7v35e444tdyqnmfwwjz45kivz4/credential`,
-    },
-  },
+  ...BRIM_SYNC_CREDENTIALS,
   WOODPECKER_TOKEN: {
     description: "Woodpecker CI API token",
     source: {

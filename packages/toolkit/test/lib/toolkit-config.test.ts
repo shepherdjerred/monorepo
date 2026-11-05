@@ -120,6 +120,22 @@ describe("toolkit config", () => {
     await expect(config.value("brimSyncRecipient")).resolves.toMatch(/^age1/);
     await expect(config.value("brimSyncMachineId")).resolves.toBeNull();
     await expect(config.value("brimSyncPullSinceDays")).resolves.toBe(30);
+    await expect(config.value("brimSyncS3Credentials")).resolves.toBe(
+      "profile",
+    );
+  });
+
+  test("an agent host opts into brokered brim sync keys", async () => {
+    const config = await loadToolkitConfig({
+      environment: {},
+      configPath: await configFile('[brim.sync.s3]\ncredentials = "broker"\n'),
+    });
+    await expect(config.value("brimSyncS3Credentials")).resolves.toBe("broker");
+    const invalid = await loadToolkitConfig({
+      environment: { BRIM_SYNC_S3_CREDENTIALS: "file" },
+      configPath: await configFile(null),
+    });
+    await expect(invalid.get("brimSyncS3Credentials")).rejects.toThrow();
   });
 
   test("lives under ~/.toolkit", () => {

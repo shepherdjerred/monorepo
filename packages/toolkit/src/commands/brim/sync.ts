@@ -21,6 +21,7 @@ import { pullArchive, type PullReport } from "#lib/brim/sync/pull.ts";
 import { pushArchive, type PushReport } from "#lib/brim/sync/push.ts";
 import { syncRoots } from "#lib/brim/sync/scan.ts";
 import {
+  brokeredS3Credentials,
   lazyOpener,
   loadBrimSyncSettings,
   type BrimSyncSettings,
@@ -71,10 +72,12 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(1)} ${units[unit] ?? "TiB"}`;
 }
 
-function store(settings: BrimSyncSettings) {
+async function store(settings: BrimSyncSettings) {
+  const credentials = await brokeredS3Credentials(settings);
   return createS3ObjectStore({
     bucket: settings.bucket,
     profile: settings.profile,
+    ...(credentials === undefined ? {} : { credentials }),
   });
 }
 
@@ -83,7 +86,7 @@ async function runPush(
   paths: BrimSyncPaths,
 ): Promise<PushReport> {
   return pushArchive({
-    store: store(settings),
+    store: await store(settings),
     seal: createSealer(settings.recipient),
     open: lazyOpener(),
     paths,
@@ -103,7 +106,7 @@ async function runPull(
   all: boolean,
 ): Promise<PullReport> {
   return pullArchive({
-    store: store(settings),
+    store: await store(settings),
     open: lazyOpener(),
     paths,
     machineId: settings.machineId,
@@ -161,6 +164,7 @@ async function printStatus(
     machineId: settings.machineId,
     bucket: settings.bucket,
     profile: settings.profile,
+    s3Credentials: settings.s3Credentials,
     recipient: settings.recipient,
     archive,
     mirror:
@@ -178,7 +182,7 @@ async function printStatus(
     return;
   }
   console.log(
-    `Machine: ${status.machineId} (bucket ${status.bucket}, profile ${status.profile})`,
+    `Machine: ${status.machineId} (bucket ${status.bucket}, profile ${status.profile}, keys from ${status.s3Credentials})`,
   );
   console.log(`Recipient: ${status.recipient}`);
   console.log(

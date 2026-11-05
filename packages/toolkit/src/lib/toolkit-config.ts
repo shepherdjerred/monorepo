@@ -84,6 +84,17 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: BRIM_SYNC_RECIPIENT,
   },
+  /**
+   * Where `brim sync` gets its S3 keys. `profile` reads them from the AWS
+   * profile's credentials file. `broker` resolves them at call time through
+   * the toolkit credential broker, for agent hosts that keep no secrets on
+   * disk; the profile still supplies the endpoint and region.
+   */
+  brimSyncS3Credentials: {
+    schema: z.enum(["profile", "broker"]),
+    sources: ["env", "file", "default"],
+    default: "profile",
+  },
   /** How many days of other machines' sessions `brim sync pull` mirrors. */
   brimSyncPullSinceDays: {
     schema: z.coerce.number().int().positive(),

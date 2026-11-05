@@ -826,7 +826,11 @@ the per-machine manifest are zstd-compressed and age-encrypted to
 point and is written last, so a crash resumes from the last commit. A file
 deleted locally stays in the archive. Push needs only the public recipient;
 pull, and adopting the remote manifest when `~/.toolkit/brim-sync/manifest.json`
-is lost, need the `BRIM_SYNC_AGE_IDENTITY` credential. A pid lock makes an
+is lost, need the `BRIM_SYNC_AGE_IDENTITY` credential. The S3 keys come from
+the AWS profile's credentials file by default; with
+`brim.sync.s3.credentials = "broker"` they resolve at call time through the
+credential broker instead, so an agent host keeps no key file while the
+profile still supplies the endpoint. A pid lock makes an
 overlapping run exit 0. On Windows only `brim.exe` is built (`bun run
 install:local`), and a Scheduled Task from `packages/dotfiles-windows` runs
 `sync push`.
@@ -879,6 +883,7 @@ header values and root paths containing the same text are preserved.
 | `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
 | `bugsink`, `discord`                                                                          | macOS Keychain            |
 | `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                   | 1Password service account |
+| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)   | 1Password service account |
 
 The registry in `src/lib/credentials.ts` owns the variable names and secret
 locators. Backend failures are errors; a missing Keychain secret does not
@@ -933,6 +938,7 @@ value or unparseable file is an error, not a fallback.
 | `BRIM_SYNC_MACHINE_ID` / `brim.sync.machine.id`                   | normalized hostname                                   |
 | `BRIM_SYNC_BUCKET` / `brim.sync.bucket`                           | `brim-sessions`                                       |
 | `BRIM_SYNC_PROFILE` / `brim.sync.profile`                         | `brim-sync` (AWS profile)                             |
+| `BRIM_SYNC_S3_CREDENTIALS` / `brim.sync.s3.credentials`           | `profile` (`broker` on agent hosts)                   |
 | `BRIM_SYNC_RECIPIENT` / `brim.sync.recipient`                     | the archive's age public key                          |
 | `BRIM_SYNC_PULL_SINCE_DAYS` / `brim.sync.pull.since.days`         | `30`                                                  |
 

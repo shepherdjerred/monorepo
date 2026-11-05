@@ -44,19 +44,31 @@ export async function profileEndpointUrl(
   return undefined;
 }
 
+export type S3StaticCredentials = {
+  readonly accessKeyId: string;
+  readonly secretAccessKey: string;
+};
+
 /**
  * Construct an S3 client for the given AWS profile. When `profile` is omitted
  * the SDK falls back to its standard resolution (`AWS_PROFILE` or `default`).
+ * Explicit `credentials` replace the profile's keys while the profile still
+ * supplies the endpoint and region, for machines that keep no key file.
  */
-export async function createS3Client(profile?: string): Promise<S3Client> {
+export async function createS3Client(
+  profile?: string,
+  credentials?: S3StaticCredentials,
+): Promise<S3Client> {
+  const auth = credentials === undefined ? {} : { credentials };
   if (profile == null || profile.length === 0) {
-    return new S3Client({ forcePathStyle: true });
+    return new S3Client({ forcePathStyle: true, ...auth });
   }
   const endpoint = await profileEndpointUrl(profile);
   return new S3Client({
     forcePathStyle: true, // SeaweedFS requires path-style addressing
     profile,
     ...(endpoint === undefined ? {} : { endpoint }),
+    ...auth,
   });
 }
 
