@@ -5,7 +5,7 @@ import {
   NoSuchKey,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
-import { createS3Client } from "#lib/s3/client.ts";
+import { createS3Client, type S3StaticCredentials } from "#lib/s3/client.ts";
 
 /**
  * The few object operations `brim sync` needs. Keys are opaque strings; the
@@ -24,14 +24,16 @@ export type ObjectStore = {
 
 export type S3ObjectStoreOptions = {
   readonly bucket: string;
-  /** AWS profile carrying the endpoint and the scoped key. */
+  /** AWS profile carrying the endpoint (and, by default, the scoped key). */
   readonly profile: string;
+  /** Keys resolved by the credential broker instead of the profile's file. */
+  readonly credentials?: S3StaticCredentials;
 };
 
 export function createS3ObjectStore(
   options: S3ObjectStoreOptions,
 ): ObjectStore {
-  const clientPromise = createS3Client(options.profile);
+  const clientPromise = createS3Client(options.profile, options.credentials);
   const Bucket = options.bucket;
 
   async function list(

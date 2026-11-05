@@ -30,7 +30,8 @@ aws --profile brim-sync s3 ls s3://brim-sessions/
 
 ## Connect a Mac
 
-1. Render the `brim-sync` AWS profile from the dotfiles source.
+1. Render the `brim-sync` AWS profile from the dotfiles source. On an agent
+   host, render only `~/.aws/config` (see below).
 
    ```bash
    chezmoi diff ~/.aws/config ~/.aws/credentials
@@ -66,6 +67,15 @@ aws --profile brim-sync s3 ls s3://brim-sessions/
 
 Set `brim.sync.machine.id` in `~/.toolkit/config.toml` first if two machines
 share a hostname. The id names the machine's prefix in the bucket for good.
+
+An agent-host Mac keeps no rendered secrets, so its dotfiles skip
+`~/.aws/credentials`. Skip the credentials target in step 1 and have `brim`
+resolve the scoped key through the 1Password service account instead:
+
+```toml
+[brim.sync.s3]
+credentials = "broker"
+```
 
 ## Connect the Windows PC
 

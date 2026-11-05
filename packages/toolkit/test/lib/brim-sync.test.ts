@@ -31,6 +31,7 @@ import {
 import { pullArchive } from "#lib/brim/sync/pull.ts";
 import { pushArchive, type PushOptions } from "#lib/brim/sync/push.ts";
 import { scanSourceFiles, syncRoots } from "#lib/brim/sync/scan.ts";
+import { brokeredS3Credentials } from "#lib/brim/sync/settings.ts";
 import { useTempDirectories } from "#test/support/temp-directories.ts";
 
 const tempHome = useTempDirectories("brim-sync-");
@@ -467,5 +468,43 @@ describe("brim sync mirror index contract", () => {
       "jerred-pc",
       "studio",
     ]);
+  });
+});
+
+describe("brim sync S3 credentials", () => {
+  const settings = {
+    machineId: "studio",
+    displayName: "studio",
+    platform: "darwin",
+    bucket: "brim-sessions",
+    profile: "brim-sync",
+    recipient: "unused",
+    pullSinceDays: 30,
+  };
+
+  test("profile mode leaves the keys to the AWS profile", async () => {
+    await expect(
+      brokeredS3Credentials({ ...settings, s3Credentials: "profile" }),
+    ).resolves.toBeUndefined();
+  });
+
+  test("broker mode resolves the registered keys in-process", async () => {
+    const previous = {
+      id: Bun.env["BRIM_SYNC_S3_ACCESS_KEY_ID"],
+      secret: Bun.env["BRIM_SYNC_S3_SECRET_ACCESS_KEY"],
+    };
+    Bun.env["BRIM_SYNC_S3_ACCESS_KEY_ID"] = "ambient-id";
+    Bun.env["BRIM_SYNC_S3_SECRET_ACCESS_KEY"] = "ambient-secret";
+    try {
+      await expect(
+        brokeredS3Credentials({ ...settings, s3Credentials: "broker" }),
+      ).resolves.toEqual({
+        accessKeyId: "ambient-id",
+        secretAccessKey: "ambient-secret",
+      });
+    } finally {
+      Bun.env["BRIM_SYNC_S3_ACCESS_KEY_ID"] = previous.id;
+      Bun.env["BRIM_SYNC_S3_SECRET_ACCESS_KEY"] = previous.secret;
+    }
   });
 });
