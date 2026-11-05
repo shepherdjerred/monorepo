@@ -77,8 +77,6 @@ project `AGENTS.md` or skill.
 - `~/.agents/skills` is the personal skill library; Claude and Antigravity use
   symlink adapters to that directory.
 - Cursor has a minimal user rule that points to the same source.
-- OpenCode uses native `AGENTS.md` and Claude-compatible discovery; do not add a
-  prose copy.
 
 Skill entrypoints should route, not serve as handbooks; use references or
 durable documentation for conditional detail.
