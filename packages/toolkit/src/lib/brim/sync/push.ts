@@ -1,7 +1,9 @@
 import { sha256Hex, type Opener, type Sealer } from "./crypto.ts";
 import { SyncSetupError } from "./errors.ts";
+import { redactBytes } from "./redact.ts";
 import {
   emptyManifest,
+  emptyManifestFileState,
   fileKeyFor,
   generationPrefix,
   manifestJson,
@@ -44,6 +46,8 @@ export type PushReport = {
   readonly newlyDeletedFiles: number;
   readonly uploadedSegments: number;
   readonly uploadedBytes: number;
+  /** Secrets overwritten in uploaded segments; the source is untouched. */
+  readonly redactedSecrets: number;
   readonly commits: number;
   readonly errors: readonly { relPath: string; message: string }[];
 };
@@ -122,6 +126,7 @@ type PushRun = {
   commits: number;
   uploadedSegments: number;
   uploadedBytes: number;
+  redactedSecrets: number;
 };
 
 async function commit(run: PushRun): Promise<void> {
@@ -161,16 +166,18 @@ function freshEntry(source: SourceFile, gen: number): ManifestFile {
     tool: source.tool,
     relPath: source.relPath,
     fileKey: fileKeyFor(source.tool, source.relPath),
-    gen,
-    size: 0,
     mtimeMs: source.mtimeMs,
-    tailSha256: sha256Hex(new Uint8Array()),
     deletedAt: null,
-    segments: [],
+    ...emptyManifestFileState(gen),
   };
 }
 
-/** True when the archived bytes are no longer a prefix of the source. */
+/**
+ * True when the source shrank or the 4 KB before the archived offset changed.
+ * This catches truncation and rewrites near the end, not an edit deep inside
+ * a file that has since grown; `brim sync redact` retires such files
+ * explicitly instead of relying on this check.
+ */
 async function wasRewritten(
   entry: ManifestFile,
   source: SourceFile,
@@ -200,15 +207,19 @@ async function uploadNewLines(
     }
     const segment = chunk.subarray(0, lastNewline + 1);
     const offset = entry.size;
+    // Same-length redaction keeps archive offsets equal to source offsets;
+    // the segment checksum covers the bytes actually archived.
+    const redacted = redactBytes(segment);
     await run.options.store.put(
       segmentKey(run.options.machineId, entry.fileKey, entry.gen, offset),
-      await run.options.seal(segment),
+      await run.options.seal(redacted.bytes),
     );
     entry.segments.push({
       offset,
       length: segment.length,
-      sha256: sha256Hex(segment),
+      sha256: sha256Hex(redacted.bytes),
     });
+    run.redactedSecrets += redacted.matches.length;
     entry.size += segment.length;
     entry.mtimeMs = source.mtimeMs;
     entry.tailSha256 = await tailHash(source.absolutePath, entry.size);
@@ -301,6 +312,7 @@ export async function pushArchive(options: PushOptions): Promise<PushReport> {
     commits: 0,
     uploadedSegments: 0,
     uploadedBytes: 0,
+    redactedSecrets: 0,
   };
   const sources = await scanSourceFiles(options.roots);
   const entries = new Map(
@@ -340,6 +352,7 @@ export async function pushArchive(options: PushOptions): Promise<PushReport> {
     newlyDeletedFiles,
     uploadedSegments: run.uploadedSegments,
     uploadedBytes: run.uploadedBytes,
+    redactedSecrets: run.redactedSecrets,
     commits: run.commits,
     errors,
   };

@@ -108,6 +108,18 @@ export function segmentKey(
   return `${generationPrefix(machineId, fileKey, gen)}${String(offset).padStart(16, "0")}.zst.age`;
 }
 
+/** The archive state of a file generation that holds no bytes yet. */
+export function emptyManifestFileState(
+  gen: number,
+): Pick<ManifestFile, "gen" | "size" | "tailSha256" | "segments"> {
+  return {
+    gen,
+    size: 0,
+    tailSha256: sha256Hex(new Uint8Array()),
+    segments: [],
+  };
+}
+
 export function emptyManifest(input: {
   machineId: string;
   displayName: string;
