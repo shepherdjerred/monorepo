@@ -18,7 +18,6 @@ import {
   openingPrompt,
   parseConversationEnvelope,
 } from "./query/messages.ts";
-import { createOpenCodeSources } from "./sources/opencode.ts";
 import type { HistoryPaths } from "./paths.ts";
 import {
   createStagedScanner,
@@ -348,7 +347,6 @@ export function createHistorySources(): readonly HistorySource[] {
     createClaudeSource(),
     createCodexSource(),
     createCursorSource(),
-    ...createOpenCodeSources(),
     createAntigravitySource(),
     createGrokSource(),
     createMirrorSource({

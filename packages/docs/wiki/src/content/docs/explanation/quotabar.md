@@ -122,8 +122,7 @@ out of scope; the two subscription pools are described in Cursor's
 [usage-limit guide](https://prod.cursor.com/help/models-and-usage/usage-limits).
 
 Grok means the SuperGrok subscription, not xAI developer API rate limits. Brim
-reads grok CLI `auth.json` or an optional Keychain override. It ignores OpenCode
-Grok and xAI tokens. It then requests Grok's identity, monthly billing, and
+reads grok CLI `auth.json` or an optional Keychain override. It then requests Grok's identity, monthly billing, and
 credit surfaces, plus remaining unused reset tokens. SuperGrok unified-credit
 accounts have no included monthly dollar limit; Brim shows the weekly credit
 window instead of inventing one.
@@ -143,9 +142,9 @@ and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob
 
 Kimi Code is a first-class subscription, kept separate from Moonshot Open
 Platform API keys. It reads its local OAuth credential directory, including a
-relocated `KIMI_CODE_HOME`, and may also read typed OAuth entries owned by
-OpenCode. Brim never refreshes or rewrites OpenCode's credential chain; expired
-credentials must be refreshed through OpenCode. Kimi responses are a private
+relocated `KIMI_CODE_HOME`. Brim never refreshes or rewrites Kimi Code's
+credentials; expired credentials must be renewed by signing in again through
+Kimi Code. Kimi responses are a private
 contract. Brim shows every quota window that payload names: each `limits`
 duration and each `usages` pool, including five-hour, monthly total, and
 monthly code when those keys are present. A daily or weekly row appears only

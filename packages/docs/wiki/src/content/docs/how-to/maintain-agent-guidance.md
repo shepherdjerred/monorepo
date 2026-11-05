@@ -68,7 +68,6 @@ Use symlinks or a short pointer only.
 - Global Claude and Codex instruction paths point to `~/AGENTS.md`.
 - Antigravity's instruction and skill paths point to the same global sources.
 - Cursor's user rule tells it to read the canonical files.
-- OpenCode uses its native `AGENTS.md` and Claude-compatible discovery.
 
 Never add repository `.cursor/rules` or a copied client skill tree.
 
@@ -94,7 +93,7 @@ Open a new session in the home directory, repository root, and a package with
 local guidance. Ask the agent which instructions and skills apply before giving
 it a representative task.
 
-Repeat this in Codex, Claude, Cursor, OpenCode, and Antigravity. Then test one
+Repeat this in Codex, Claude, Cursor, and Antigravity. Then test one
 Codex session through each wrapper in use. Existing sessions may retain old
 context, so they are not valid discovery tests.
 

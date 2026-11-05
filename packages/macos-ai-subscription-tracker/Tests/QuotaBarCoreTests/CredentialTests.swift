@@ -1,5 +1,4 @@
 import Foundation
-import SQLite3
 import XCTest
 
 @testable import QuotaBarCore
@@ -92,38 +91,21 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(try store.credential(for: .kimi, rejecting: nil).accessToken, "current")
   }
 
-  func testKimiLocalCredentialTakesPrecedenceOverOpenCode() throws {
-    let root = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: root) }
-    try write(
-      #"{"access_token":"kimi-local-token","expires_at":9999999999999}"#,
-      to: root.appendingPathComponent(".kimi-code/credentials/account.json")
-    )
-    try write(
-      #"{"kimi-for-coding-oauth":{"access":"opencode-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
-    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-    let credential = try store.credential(for: .kimi, rejecting: nil)
-    XCTAssertEqual(credential.accessToken, "kimi-local-token")
-  }
-
-  func testExpiredKimiLocalCredentialFallsBackToOpenCode() throws {
+  func testExpiredKimiLocalCredentialReportsExpiry() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     try write(
       #"{"access_token":"expired-local-token","expires_at":1}"#,
       to: root.appendingPathComponent(".kimi-code/credentials/account.json")
     )
-    try write(
-      #"{"kimi-for-coding-oauth":{"access":"fresh-opencode-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
-    let credential = try store.credential(for: .kimi, rejecting: nil)
-
-    XCTAssertEqual(credential.accessToken, "fresh-opencode-token")
+    do {
+      _ = try store.credential(for: .kimi, rejecting: nil)
+      XCTFail("Expected an expired Kimi credential")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .credentialsExpired(.kimi))
+    }
   }
 
   func testExpiredKimiFileDoesNotMaskLaterCurrentFile() throws {
@@ -152,8 +134,8 @@ final class CredentialTests: XCTestCase {
       to: root.appendingPathComponent(".kimi-code/credentials/account-a.json")
     )
     try write(
-      #"{"kimi-for-coding-oauth":{"access":"fallback-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+      #"{"access_token":"fallback-token","expires_at":9999999999999}"#,
+      to: root.appendingPathComponent(".kimi-code/credentials/account-b.json")
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
@@ -248,85 +230,6 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(requests.map(\.bearerToken), ["rejected-token", "accepted-token"])
   }
 
-  func testOpenCodeDatabaseCredentialDiscovery() throws {
-    let root = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: root) }
-    let database = root.appendingPathComponent(".local/share/opencode/opencode.db")
-    try createOpenCodeDatabase(
-      at: database,
-      label: "kimi-for-coding-oauth",
-      value: #"{"access":"database-token","expires":9999999999999}"#
-    )
-    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-
-    let credential = try store.credential(for: .kimi, rejecting: nil)
-
-    XCTAssertEqual(credential.accessToken, "database-token")
-  }
-
-  func testOpenCodeKimiFileRemainsUnchanged() throws {
-    let root = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: root) }
-    let authURL = root.appendingPathComponent(".local/share/opencode/auth.json")
-    let kimiEntry =
-      #"{"kimi-for-coding-oauth":{"access":"kimi-token","refresh":"never-write","expires":9999999999999},"#
-    let ignoredGrokEntry = #""xai":{"access":"ignored","expires":9999999999999}}"#
-    let original = Data((kimiEntry + ignoredGrokEntry).utf8)
-    try FileManager.default.createDirectory(
-      at: authURL.deletingLastPathComponent(),
-      withIntermediateDirectories: true
-    )
-    try original.write(to: authURL)
-    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-    let kimi = try store.credential(for: .kimi, rejecting: nil)
-    XCTAssertEqual(kimi.accessToken, "kimi-token")
-    do {
-      _ = try store.credential(for: .grok, rejecting: nil)
-      XCTFail("Expected Grok to ignore OpenCode tokens")
-    } catch {
-      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.grok))
-    }
-    XCTAssertEqual(try Data(contentsOf: authURL), original)
-  }
-
-  func testExpiredOpenCodeCandidateDoesNotMaskLaterCurrentCredential() throws {
-    let root = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: root) }
-    try write(
-      #"{"kimi-for-coding-oauth":{"access":"expired-first-token","expires":1}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
-    try write(
-      #"{"kimi":{"access":"current-later-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".config/opencode/auth.json")
-    )
-    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-
-    let credential = try store.credential(for: .kimi, rejecting: nil)
-
-    XCTAssertEqual(credential.accessToken, "current-later-token")
-  }
-
-  func testExpiredOpenCodeDatabaseDoesNotMaskLaterCurrentDatabase() throws {
-    let root = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: root) }
-    try createOpenCodeDatabase(
-      at: root.appendingPathComponent(".local/share/opencode/opencode.db"),
-      label: "kimi-for-coding-oauth",
-      value: #"{"access":"expired-database-token","expires":1}"#
-    )
-    try createOpenCodeDatabase(
-      at: root.appendingPathComponent("Library/Application Support/opencode/opencode.db"),
-      label: "kimi",
-      value: #"{"access":"current-database-token","expires":9999999999999}"#
-    )
-    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-
-    let credential = try store.credential(for: .kimi, rejecting: nil)
-
-    XCTAssertEqual(credential.accessToken, "current-database-token")
-  }
-
   func testMalformedStoreFailsWithoutSearchingArbitraryFields() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
@@ -353,32 +256,6 @@ final class CredentialTests: XCTestCase {
     )
     try Data(value.utf8).write(to: url)
   }
-
-  private func createOpenCodeDatabase(at url: URL, label: String, value: String) throws {
-    try FileManager.default.createDirectory(
-      at: url.deletingLastPathComponent(),
-      withIntermediateDirectories: true
-    )
-    var connection: OpaquePointer?
-    guard sqlite3_open(url.path, &connection) == SQLITE_OK, let connection else {
-      if let connection { sqlite3_close(connection) }
-      throw QuotaError.commandFailed("SQLite test fixture")
-    }
-    defer { sqlite3_close(connection) }
-    let create = "CREATE TABLE credential (label TEXT, value TEXT, active INTEGER);"
-    guard sqlite3_exec(connection, create, nil, nil, nil) == SQLITE_OK else {
-      throw QuotaError.commandFailed("SQLite test fixture")
-    }
-    let escapedLabel = label.replacingOccurrences(of: "'", with: "''")
-    let escapedValue = value.replacingOccurrences(of: "'", with: "''")
-    let insert =
-      "INSERT INTO credential (label, value, active) VALUES "
-      + "('\(escapedLabel)', '\(escapedValue)', 1);"
-    guard sqlite3_exec(connection, insert, nil, nil, nil) == SQLITE_OK else {
-      throw QuotaError.commandFailed("SQLite test fixture")
-    }
-  }
-
 }
 
 func XCTAssertThrowsErrorAsync<Value>(

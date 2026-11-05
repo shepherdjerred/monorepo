@@ -65,7 +65,7 @@ function addUsageTotals(
  * recent turn falls in. `SUM(cost_usd)` skips NULLs, so a source with some
  * unpriced events still reports a (partial, `costComplete: false`)
  * lower-bound total rather than nothing. Sources with no usage tracking
- * (Conductor, Cursor, OpenCode) contribute no rows and so don't appear here.
+ * (Conductor, Cursor) contribute no rows and so don't appear here.
  */
 export function queryUsage(
   database: Database,

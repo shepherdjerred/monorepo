@@ -38,7 +38,7 @@ import SwiftUI
         PreviewData.snapshot(.codex, remaining: 50)
           .markedStale(reason: "Provider rate-limited the latest refresh.")
       ),
-      .kimi: .unauthenticated(message: "Refresh Kimi through OpenCode."),
+      .kimi: .unauthenticated(message: "Sign in again through Kimi Code."),
       .grok: .disabled,
     ])
   )

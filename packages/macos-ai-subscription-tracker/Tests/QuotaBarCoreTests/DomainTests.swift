@@ -194,10 +194,9 @@ final class DomainTests: XCTestCase {
     XCTAssertTrue(QuotaError.credentialsExpired(.grok).isAuthenticationError)
     XCTAssertTrue(QuotaError.unauthorized(.codex).isAuthenticationError)
     XCTAssertFalse(QuotaError.rateLimited(.codex).isAuthenticationError)
-    XCTAssertTrue(QuotaError.credentialsExpired(.kimi).localizedDescription.contains("OpenCode"))
+    XCTAssertTrue(QuotaError.credentialsExpired(.kimi).localizedDescription.contains("Kimi Code"))
     XCTAssertTrue(QuotaError.credentialsExpired(.grok).localizedDescription.contains("grok login"))
     XCTAssertTrue(QuotaError.unauthorized(.grok).localizedDescription.contains("grok"))
-    XCTAssertFalse(QuotaError.unauthorized(.grok).localizedDescription.contains("OpenCode"))
     XCTAssertFalse(QuotaError.network(.grok).localizedDescription.isEmpty)
   }
 

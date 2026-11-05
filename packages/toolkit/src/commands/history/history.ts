@@ -52,7 +52,7 @@ Manage background ingestion:
   toolkit history daemon install
   toolkit history daemon start|stop|uninstall|status|reindex
 
-Sources: conductor, claude, codex, cursor, opencode-conductor, opencode-standalone, antigravity, grok
+Sources: conductor, claude, codex, cursor, antigravity, grok
 `;
 function parseSource(value: string | undefined): HistorySourceName | null {
   if (value === undefined) {

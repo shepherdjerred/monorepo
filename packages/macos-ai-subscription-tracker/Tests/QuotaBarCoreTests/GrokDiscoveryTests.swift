@@ -4,53 +4,41 @@ import XCTest
 @testable import QuotaBarCore
 
 final class GrokDiscoveryTests: XCTestCase {
-  func testGrokCLICredentialIsUsedWhenOpenCodeAlsoHasAToken() throws {
+  func testGrokCLICredentialIsUsed() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     try write(
       grokCLIAuth(token: "grok-cli-token", expiresAt: "2099-01-01T00:00:00Z"),
       to: root.appendingPathComponent(".grok/auth.json")
     )
-    try write(
-      #"{"xai":{"access":"opencode-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     let credential = try store.credential(for: .grok, rejecting: nil)
     XCTAssertEqual(credential.accessToken, "grok-cli-token")
   }
 
-  func testOpenCodeGrokTokenIsIgnoredWhenGrokCLIIsMissing() throws {
+  func testMissingGrokCLIReportsMissingCredentials() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
-    try write(
-      #"{"xai":{"access":"opencode-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     do {
       _ = try store.credential(for: .grok, rejecting: nil)
-      XCTFail("Expected missing credentials when only OpenCode Grok tokens exist")
+      XCTFail("Expected missing credentials without a grok CLI sign-in")
     } catch {
       XCTAssertEqual(error as? QuotaError, .credentialsMissing(.grok))
     }
   }
 
-  func testExpiredGrokCLICredentialDoesNotFallBackToOpenCode() throws {
+  func testExpiredGrokCLICredentialReportsExpiry() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     try write(
       grokCLIAuth(token: "expired-cli-token", expiresAt: "1970-01-01T00:00:01Z"),
       to: root.appendingPathComponent(".grok/auth.json")
     )
-    try write(
-      #"{"xai":{"access":"fresh-opencode-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     do {
       _ = try store.credential(for: .grok, rejecting: nil)
-      XCTFail("Expected expiry from grok CLI, not an OpenCode fallback")
+      XCTFail("Expected expiry from grok CLI")
     } catch {
       XCTAssertEqual(error as? QuotaError, .credentialsExpired(.grok))
       XCTAssertTrue(error.localizedDescription.contains("grok login"))
@@ -127,23 +115,19 @@ final class GrokDiscoveryTests: XCTestCase {
     }
   }
 
-  func testRejectedGrokCLICredentialDoesNotFallBackToOpenCode() throws {
+  func testRejectedOnlyGrokCLICredentialReportsMissing() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     try write(
       grokCLIAuth(token: "cli-token", expiresAt: "2099-01-01T00:00:00Z"),
       to: root.appendingPathComponent(".grok/auth.json")
     )
-    try write(
-      #"{"xai":{"access":"opencode-token","expires":9999999999999}}"#,
-      to: root.appendingPathComponent(".local/share/opencode/auth.json")
-    )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     let first = try store.credential(for: .grok, rejecting: nil)
     XCTAssertEqual(first.accessToken, "cli-token")
     do {
       _ = try store.credential(for: .grok, rejecting: first)
-      XCTFail("Expected missing credentials rather than an OpenCode fallback")
+      XCTFail("Expected missing credentials after rejecting the only session")
     } catch {
       XCTAssertEqual(error as? QuotaError, .credentialsMissing(.grok))
     }

@@ -131,12 +131,10 @@ times, and timestamps) for up to 30 days so it can render the History graph.
 
 Claude and Codex use their typed local credential formats. Grok reads grok CLI
 `auth.json` (including a relocated `GROK_HOME`) plus an optional Keychain
-override. It does not read OpenCode Grok or xAI tokens. Kimi Code reads its
-`KIMI_CODE_HOME` credential directory (default `~/.kimi-code`) and can also
-read typed OAuth entries from OpenCode. OpenCode remains the sole owner and
-writer of those Kimi OAuth token chains: Brim never rotates, refreshes, or
-rewrites OpenCode files or its credential database. An expired or rejected
-Kimi token instructs the user to refresh it through OpenCode. An expired or
+override. Kimi Code reads its `KIMI_CODE_HOME` credential directory (default
+`~/.kimi-code`); Brim never rotates, refreshes, or rewrites those files. An
+expired or rejected Kimi token instructs the user to sign in again through
+Kimi Code. An expired or
 rejected Grok token instructs the user to sign in again with `grok login`.
 
 Claude credentials are read through `/usr/bin/security` rather than the Security
@@ -187,7 +185,7 @@ reporting are outside this integration. Cursor documents the two pools in its
 [usage-limit guide](https://prod.cursor.com/help/models-and-usage/usage-limits).
 
 Grok reads grok CLI `auth.json` (default `~/.grok`, or `GROK_HOME`), or an
-optional Keychain override. It does not read OpenCode Grok or xAI tokens.
+optional Keychain override.
 It requests Grok's identity, monthly billing, and credit surfaces, plus the
 remaining-reset RPC read-only. It displays subscription usage and credits, not
 xAI developer API rate limits. A product row that repeats the shared credit
@@ -199,7 +197,7 @@ explicit, and Brim never substitutes zero usage. Brim never refreshes or
 rewrites grok CLI credentials; `grok login` remains the owner of that session.
 
 Kimi Code reads its local OAuth credential directory, including a relocated
-`KIMI_CODE_HOME`, and can also read typed OpenCode OAuth entries. It displays
+`KIMI_CODE_HOME`. It displays
 every quota window the coding usage payload returns. That includes the rolling
 `limits` array and the named `usages` pools, so a five-hour, daily, weekly, or
 monthly window appears when the account returns it. Brim does not invent a

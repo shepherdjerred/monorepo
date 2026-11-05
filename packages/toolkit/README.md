@@ -274,8 +274,8 @@ optional metadata. Arbitrary environment variables are never recorded.
 
 Codex uses `CODEX_THREAD_ID` directly. Grok uses `GROK_SESSION_ID` directly;
 `GROK_AGENT` still fails closed when that session id is missing. The dotfiles
-install a Claude SessionStart hook through `CLAUDE_ENV_FILE`, a Cursor Shell
-`preToolUse` hook through `updated_input`, and an OpenCode `shell.env` plugin.
+install a Claude SessionStart hook through `CLAUDE_ENV_FILE` and a Cursor Shell
+`preToolUse` hook through `updated_input`.
 They forward the native session ID and select the child harness when another
 harness launched it. An earlier session id wins when several are set, unless
 `TRACKER_ACTOR_HARNESS` names the child.
@@ -681,7 +681,7 @@ canvas result, and verifies it cell by cell. Applies are journaled under
 #### History search
 
 `history` maintains a private local index of Conductor, Claude Code, Codex,
-Cursor, bundled OpenCode, standalone OpenCode, Antigravity, and Grok CLI
+Cursor, Antigravity, and Grok CLI
 conversations. Install the macOS LaunchAgent once; search itself only reads
 the index and never performs live service checks.
 
@@ -728,8 +728,7 @@ socket, and logs are in that private directory. The LaunchAgent is
 `~/Library/LaunchAgents/com.jerred.toolkit-history.plist`. Transcript bodies
 are not copied into ordinary index tables. `show` returns at most eight
 messages and 6,000 characters by default, excluding system, reasoning, and
-compaction records. Standalone OpenCode's
-`~/.local/share/opencode/auth.json` is never read or indexed. Use `deployed`,
+compaction records. Use `deployed`,
 `pr health`, or the relevant live client to verify current status after using
 history for context.
 
@@ -741,7 +740,7 @@ its value here is the token/cost data, not search.
 
 `history usage` reports token counts and an estimated USD cost per source,
 populated for the sources whose local data actually carries usage
-(Claude Code, Codex, Antigravity, Grok — Cursor, Conductor, and OpenCode
+(Claude Code, Codex, Antigravity, Grok — Cursor and Conductor
 don't appear in the report at all today, since their local data doesn't
 reliably carry usage). Cost comes from whichever source is authoritative:
 Grok CLI self-reports its own per-turn cost (`costUsdTicks`), which is used

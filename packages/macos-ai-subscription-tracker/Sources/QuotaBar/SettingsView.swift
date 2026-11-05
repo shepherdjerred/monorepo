@@ -130,7 +130,7 @@ struct SettingsView: View {
   private var credentialSection: some View {
     Section("Credential overrides") {
       Text(
-        "Optional. Stored only in your login Keychain; local CLI and OpenCode credentials remain unchanged. "
+        "Optional. Stored only in your login Keychain; local CLI credentials remain unchanged. "
           + "Google Antigravity, Cursor, and Muse reuse their own local app sign-ins and cannot be overridden."
       )
       .font(.caption)

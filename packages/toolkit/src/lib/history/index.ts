@@ -23,7 +23,7 @@ import {
   type UsageQueryOptions,
 } from "./usage-query.ts";
 
-const INDEX_SCHEMA_VERSION = 3;
+const INDEX_SCHEMA_VERSION = 4;
 
 type HistoryQueryOptions = {
   readonly since: string | null;

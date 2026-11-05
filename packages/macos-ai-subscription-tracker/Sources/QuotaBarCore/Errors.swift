@@ -36,7 +36,7 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
       }
     case let .credentialsExpired(provider):
       if provider == .kimi {
-        "\(provider.displayName) credentials expired. Refresh them through OpenCode."
+        "\(provider.displayName) credentials expired. Sign in again through Kimi Code."
       } else if provider == .grok {
         "Grok credentials expired. Sign in again with grok login."
       } else if provider == .cursor {
@@ -53,7 +53,7 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
     case let .unauthorized(provider):
       if provider == .kimi {
         "\(provider.displayName) rejected the local credential. "
-          + "Refresh it through OpenCode or update the Brim override."
+          + "Sign in again through Kimi Code or update the Brim override."
       } else if provider == .grok {
         "Grok rejected the local credential. Sign in again with grok or update the Brim override."
       } else if provider == .cursor {

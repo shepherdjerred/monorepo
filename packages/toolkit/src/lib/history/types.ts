@@ -6,8 +6,6 @@ export const HISTORY_SOURCE_NAMES = [
   "claude",
   "codex",
   "cursor",
-  "opencode-conductor",
-  "opencode-standalone",
   "antigravity",
   "grok",
   "claude-mirror",
