@@ -198,6 +198,14 @@ private struct LocalUsageCaption: View {
         Text(caption)
           .help(usage.helpText)
       }
+      if let allMachines = usage.allMachinesCaption {
+        Text(allMachines)
+          .help(usage.allMachinesHelpText)
+      }
+      if usage.otherMachinesUnreadable {
+        Text(LocalDailyUsage.otherMachinesUnreadableMessage)
+          .help(LocalDailyUsage.otherMachinesUnreadableMessage)
+      }
       if usage.unreadable {
         Text(LocalDailyUsage.unreadableMessage)
           .help(LocalDailyUsage.unreadableMessage)

@@ -21,7 +21,10 @@ Claude Code and Codex also show today's token total and an API list-price
 estimate read from their local CLI logs. That caption is separate from the
 quota percentage, the monthly admin invoice, and the API credit balance. A
 missing log directory omits it. An unknown model still counts toward the token
-total and drops the dollar amount for that day.
+total and drops the dollar amount for that day. When `brim sync pull` has
+mirrored other machines into `~/.toolkit/brim-sync/mirror/`, a second
+`All machines` line adds their usage for the same calendar day; see
+[Sync agent history across machines](../docs/wiki/src/content/docs/how-to/sync-agent-history-across-machines.md).
 The `API & routers` segment reports OpenAI and Anthropic organization API spend
 for the current local month.
 

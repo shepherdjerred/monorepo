@@ -1,7 +1,5 @@
-import { afterEach, describe, expect, test } from "vitest";
-import { mkdtemp, rm, stat } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
+import { describe, expect, test } from "vitest";
+import { stat } from "node:fs/promises";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import {
@@ -15,22 +13,9 @@ import type {
   HistorySourceResult,
   UsageEventEntry,
 } from "#lib/history/types.ts";
+import { useTempDirectories } from "#test/support/temp-directories.ts";
 
-const directories: string[] = [];
-
-afterEach(async () => {
-  await Promise.all(
-    directories
-      .splice(0)
-      .map((directory) => rm(directory, { recursive: true, force: true })),
-  );
-});
-
-async function tempHome(): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "usage-export-"));
-  directories.push(directory);
-  return directory;
-}
+const tempHome = useTempDirectories("usage-export-");
 
 const SEED = new Date("2026-09-01T00:00:00.000Z");
 const LATER = new Date("2026-09-02T00:00:00.000Z");

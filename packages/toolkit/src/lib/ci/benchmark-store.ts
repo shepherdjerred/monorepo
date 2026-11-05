@@ -94,7 +94,7 @@ export async function inspectBenchmark(
       "Benchmark evidence belongs to the homelab monorepo connection",
     );
   const pipeline = await getPipeline(number, config);
-  const client = createS3Client(options.profile);
+  const client = await createS3Client(options.profile);
   try {
     const raw = await read(client, `${String(number)}/diagnostics-verify.json`);
     const result = benchmarkEvidence(raw, pipeline, options);

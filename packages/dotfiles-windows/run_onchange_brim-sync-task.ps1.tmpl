@@ -1,0 +1,31 @@
+$ErrorActionPreference = 'Stop'
+
+# Registers the task that archives Claude Code and Codex transcripts to the
+# encrypted Brim sync bucket: `brim.exe sync push` at logon and every 5 minutes.
+# Each run is one-shot and idempotent; a run that overlaps a long backfill
+# exits on the sync lock. Build the binary from the monorepo checkout first:
+#   cd ~/Git/monorepo/packages/toolkit; bun run install:local
+$name = 'BrimSyncPush'
+$brim = Join-Path '{{ .chezmoi.homeDir }}' '.local\bin\brim.exe'
+$logDir = Join-Path '{{ .chezmoi.homeDir }}' '.toolkit\brim-sync\logs'
+$log = Join-Path $logDir 'task.log'
+$pwsh = (Get-Command pwsh).Source
+
+if (-not (Test-Path $brim)) {
+    Write-Warning "$brim is not built yet; the $name task fails until it is."
+}
+New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+
+# The log holds only the most recent run.
+$command = "& '$brim' sync push *> '$log'; exit `$LASTEXITCODE"
+$action = New-ScheduledTaskAction -Execute 'conhost.exe' `
+    -Argument "--headless `"$pwsh`" -NoProfile -Command `"$command`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+$trigger.Repetition = (New-ScheduledTaskTrigger -Once -At (Get-Date) `
+    -RepetitionInterval (New-TimeSpan -Minutes 5)).Repetition
+# No time limit: the first run backfills the whole history.
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
+
+Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
+Write-Output "Registered $name ($brim sync push every 5 minutes; last run log: $log)"

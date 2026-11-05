@@ -189,7 +189,7 @@ export async function assetCommand(
     process.exit(1);
   }
 
-  const client = createS3Client(options.profile);
+  const client = await createS3Client(options.profile);
 
   for (const input of inputs) {
     for (const upload of input.uploads) {

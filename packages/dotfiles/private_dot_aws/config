@@ -15,6 +15,10 @@ region = auto
 endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
 region = us-east-1
 
+[profile brim-sync]
+endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
+region = us-east-1
+
 [profile aws]
 login_session = arn:aws:iam::926367030076:root
 region = us-east-1

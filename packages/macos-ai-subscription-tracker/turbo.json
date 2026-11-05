@@ -15,6 +15,10 @@
     },
     "test:macos": {
       "dependsOn": ["build:macos"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/toolkit/schemas/fixtures/brim-sync-mirror-index.json"
+      ],
       "outputs": [".build/**"]
     },
     "bundle:macos": {

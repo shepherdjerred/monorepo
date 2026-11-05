@@ -114,6 +114,9 @@ const EXCLUDED_FILES = [
   // appears here (values resolve at runtime via `op read` / Keychain).
   "packages/toolkit/src/lib/credentials.ts",
   "packages/toolkit/test/lib/credentials.test.ts",
+  // Intentional: the Brim sync archive's age public recipient. A public key
+  // trips the entropy-based no-secrets rule; the file holds only that value.
+  "packages/toolkit/src/lib/brim/sync/recipient.ts",
 ];
 
 type Finding = {

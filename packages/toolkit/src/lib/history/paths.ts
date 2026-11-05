@@ -15,6 +15,8 @@ export type HistoryPaths = {
   readonly antigravityRoots: readonly string[];
   readonly grokHome: string;
   readonly codexSessionsDir: string;
+  /** Index of other machines' transcripts pulled by `brim sync pull`. */
+  readonly brimSyncMirrorIndex: string;
 };
 
 export type HistoryRuntimePaths = {
@@ -57,6 +59,10 @@ export function defaultHistoryPaths(home = os.homedir()): HistoryPaths {
     ].map((root) => path.join(home, root)),
     grokHome: path.join(home, ".grok"),
     codexSessionsDir: path.join(home, ".codex/sessions"),
+    brimSyncMirrorIndex: path.join(
+      home,
+      ".toolkit/brim-sync/mirror/index.json",
+    ),
   };
 }
 

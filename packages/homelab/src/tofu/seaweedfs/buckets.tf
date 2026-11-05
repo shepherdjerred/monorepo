@@ -368,6 +368,19 @@ resource "aws_s3_bucket" "agent_chat_sessions" {
   bucket = "agent-chat-sessions"
 }
 
+# Encrypted Claude Code and Codex transcript archive written by `brim sync push`
+# on each workstation (packages/toolkit/src/lib/brim/sync). Objects are
+# age-encrypted client-side; keys are opaque. No age-based lifecycle: the
+# archive is the permanent backup of every machine's agent history. Access is
+# the scoped `brim-sync` gateway identity only.
+resource "aws_s3_bucket" "brim_sessions" {
+  bucket = "brim-sessions"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "terraform_data" "llm_archive_lifecycle" {
   input = {
     bucket       = aws_s3_bucket.llm_archive.id

@@ -10,6 +10,8 @@ export const HISTORY_SOURCE_NAMES = [
   "opencode-standalone",
   "antigravity",
   "grok",
+  "claude-mirror",
+  "codex-mirror",
 ] as const;
 
 export const HistorySourceNameSchema = z.enum(HISTORY_SOURCE_NAMES);

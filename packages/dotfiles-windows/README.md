@@ -80,3 +80,26 @@ never touches `RiotClientServices`, Vanguard or the game.
 `run_onchange_riot-autoclose-task.ps1.tmpl` registers it as the logon task
 `RiotClientAutoClose`; remove it with
 `Unregister-ScheduledTask RiotClientAutoClose`.
+
+## Brim sync
+
+This PC pushes its Claude Code and Codex transcripts to the encrypted Brim
+sync archive so the Macs can browse them and count today's usage across
+machines. It only pushes: it holds the archive's public age recipient and a
+SeaweedFS key scoped to the `brim-sessions` bucket, never the decryption key.
+
+Build the binary from the checkout, then apply the task and credentials:
+
+```powershell
+cd ~/Git/monorepo/packages/toolkit
+bun run install:local
+chezmoi apply ~/.aws/config ~/.aws/credentials
+```
+
+`run_onchange_brim-sync-task.ps1.tmpl` registers the `BrimSyncPush` task,
+which runs `~/.local/bin/brim.exe sync push` at logon and every 5 minutes.
+`~/.toolkit/brim-sync/logs/task.log` holds the last run's output and
+`brim.exe sync status` summarizes the archive. Rebuild after pulling toolkit
+changes. Remove it with `Unregister-ScheduledTask BrimSyncPush`. The
+[how-to](../docs/wiki/src/content/docs/how-to/sync-agent-history-across-machines.md)
+covers the Macs and first-time setup.

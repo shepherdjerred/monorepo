@@ -76,7 +76,65 @@ enum LocalUsageScanner {
     ) {
       usage[.codex] = codex
     }
-    return usage
+    return withMirroredMachines(usage, home: home, context: context)
+  }
+
+  /// Adds today's usage from machines mirrored by `brim sync pull`. A missing
+  /// index leaves `local` unchanged; an unreadable one is reported, never
+  /// silently dropped.
+  static func withMirroredMachines(
+    _ local: [ProviderID: LocalDailyUsage],
+    home: URL,
+    context: ScanContext
+  ) -> [ProviderID: LocalDailyUsage] {
+    let index: MirrorIndex
+    do {
+      guard let loaded = try MirrorIndex.load(home: home, fileManager: context.fileManager)
+      else { return local }
+      index = loaded
+    } catch {
+      return merge(local, remote: [:], unreadable: [.claudeCode, .codex])
+    }
+    var remote: [ProviderID: [MachineDailyUsage]] = [:]
+    var unreadable: Set<ProviderID> = []
+    for machine in index.machines {
+      for source in MirrorSource.all(for: machine) {
+        guard
+          let usage = providerUsage(
+            provider: source.provider,
+            roots: source.roots,
+            context: context,
+            read: source.read
+          )
+        else { continue }
+        if usage.unreadable { unreadable.insert(source.provider) }
+        guard usage.totalTokens > 0 else { continue }
+        remote[source.provider, default: []].append(
+          MachineDailyUsage(
+            machineName: machine.displayName,
+            totalTokens: usage.totalTokens,
+            estimatedCostUSD: usage.estimatedCostUSD
+          )
+        )
+      }
+    }
+    return merge(local, remote: remote, unreadable: unreadable)
+  }
+
+  private static func merge(
+    _ local: [ProviderID: LocalDailyUsage],
+    remote: [ProviderID: [MachineDailyUsage]],
+    unreadable: Set<ProviderID>
+  ) -> [ProviderID: LocalDailyUsage] {
+    var merged = local
+    for provider in Set(local.keys).union(remote.keys).union(unreadable) {
+      let base = local[provider] ?? .empty(provider)
+      merged[provider] = base.withOtherMachines(
+        remote[provider] ?? [],
+        unreadable: unreadable.contains(provider)
+      )
+    }
+    return merged
   }
 
   private static func resolveCatalog(
@@ -186,7 +244,28 @@ enum LocalUsageScanner {
   }
 }
 
-private struct ScanContext {
+private struct MirrorSource {
+  let provider: ProviderID
+  let roots: [URL]
+  let read: (URL) throws -> [UsageTurn]
+
+  static func all(for machine: MirrorMachine) -> [Self] {
+    [
+      Self(
+        provider: .claudeCode,
+        roots: machine.claudeProjectsDirs.map { URL(fileURLWithPath: $0) },
+        read: ClaudeSessionLog.turns(in:)
+      ),
+      Self(
+        provider: .codex,
+        roots: machine.codexSessionsDirs.map { URL(fileURLWithPath: $0) },
+        read: CodexSessionLog.turns(in:)
+      ),
+    ]
+  }
+}
+
+struct ScanContext {
   let now: Date
   let timeZone: TimeZone
   let fileManager: FileManager

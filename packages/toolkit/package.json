@@ -10,7 +10,8 @@
     "#architecture": "./architecture.config.ts",
     "#build": "./src/build.ts",
     "#lib/*": "./src/lib/*",
-    "#commands/*": "./src/commands/*"
+    "#commands/*": "./src/commands/*",
+    "#test/*": "./test/*"
   },
   "bin": {
     "toolkit": "./src/index.ts",
@@ -50,6 +51,7 @@
     "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/unix-socket-daemon": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
+    "age-encryption": "0.3.1",
     "asciinema-player": "^3.15.1",
     "debug": "^4.4.3",
     "discord.js": "^14",

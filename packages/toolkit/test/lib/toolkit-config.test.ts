@@ -97,6 +97,31 @@ describe("toolkit config", () => {
     ).rejects.toThrow(/failed to parse/);
   });
 
+  test("brim sync settings resolve from the [brim.sync] table", async () => {
+    const recipient = `age1${"q".repeat(58)}`;
+    const config = await loadToolkitConfig({
+      environment: { BRIM_SYNC_PULL_SINCE_DAYS: "7" },
+      configPath: await configFile(
+        `[brim.sync]\nrecipient = "${recipient}"\n[brim.sync.machine]\nid = "studio"\n`,
+      ),
+    });
+    await expect(config.value("brimSyncRecipient")).resolves.toBe(recipient);
+    await expect(config.value("brimSyncMachineId")).resolves.toBe("studio");
+    await expect(config.value("brimSyncPullSinceDays")).resolves.toBe(7);
+    await expect(config.value("brimSyncBucket")).resolves.toBe("brim-sessions");
+    await expect(config.value("brimSyncProfile")).resolves.toBe("brim-sync");
+  });
+
+  test("brim sync settings default to the archive recipient and a 30-day pull", async () => {
+    const config = await loadToolkitConfig({
+      environment: {},
+      configPath: await configFile(null),
+    });
+    await expect(config.value("brimSyncRecipient")).resolves.toMatch(/^age1/);
+    await expect(config.value("brimSyncMachineId")).resolves.toBeNull();
+    await expect(config.value("brimSyncPullSinceDays")).resolves.toBe(30);
+  });
+
   test("lives under ~/.toolkit", () => {
     expect(defaultToolkitConfigPath("/home/test")).toBe(
       "/home/test/.toolkit/config.toml",
