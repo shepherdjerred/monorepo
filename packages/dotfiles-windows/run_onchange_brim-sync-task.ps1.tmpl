@@ -20,9 +20,15 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $command = "& '$brim' sync push *> '$log'; exit `$LASTEXITCODE"
 $action = New-ScheduledTaskAction -Execute 'conhost.exe' `
     -Argument "--headless `"$pwsh`" -NoProfile -Command `"$command`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
-$trigger.Repetition = (New-ScheduledTaskTrigger -Once -At (Get-Date) `
-    -RepetitionInterval (New-TimeSpan -Minutes 5)).Repetition
+# A repetition on a logon trigger only starts at the next logon, so the
+# registering session would never repeat. The Once trigger starts the 5-minute
+# repetition now and keeps it running; the logon trigger restarts it after a
+# reboot.
+$every = New-TimeSpan -Minutes 5
+$atLogon = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+$atLogon.Repetition = (New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval $every).Repetition
+$fromNow = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval $every
+$trigger = @($atLogon, $fromNow)
 # No time limit: the first run backfills the whole history.
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
     -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
