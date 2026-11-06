@@ -54,7 +54,12 @@ public final class ShopsModule implements StormModule {
         .services()
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
         .register(
-            id(), player -> reset.reset(player).thenRun(() -> installed.forget().accept(player)));
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenRunAsync(
+                        () -> installed.forget().accept(player), context.scheduler().mainThread()));
     this.drain = installed.drain();
     this.logger = context.logger();
     var _ =

@@ -22,8 +22,28 @@ final class PlayerResetRegistryTest {
     registry.stateless("two");
     registry.complete(Set.of("one", "two"));
 
-    assertThat(registry.reset(PLAYER)).succeedsWithin(java.time.Duration.ofSeconds(1));
+    assertThat(registry.reset(PLAYER, Runnable::run)).succeedsWithin(java.time.Duration.ofSeconds(1));
     assertThat(calls).containsExactly("core", "one");
+  }
+
+  @Test
+  void resumesEachHandlerOnTheMainThreadAfterAnAsyncCompletion() throws Exception {
+    try (var main = java.util.concurrent.Executors.newSingleThreadExecutor()) {
+      var mainThread = main.submit(Thread::currentThread).get();
+      var registry = new PlayerResetRegistry();
+      var invokedOn = new java.util.concurrent.atomic.AtomicReference<Thread>();
+      registry.register("core", player -> CompletableFuture.runAsync(() -> {}));
+      registry.register(
+          "one",
+          player -> {
+            invokedOn.set(Thread.currentThread());
+            return CompletableFuture.completedFuture(null);
+          });
+      registry.complete(Set.of("one"));
+
+      assertThat(registry.reset(PLAYER, main)).succeedsWithin(java.time.Duration.ofSeconds(1));
+      assertThat(invokedOn).hasValue(mainThread);
+    }
   }
 
   @Test
@@ -52,7 +72,7 @@ final class PlayerResetRegistryTest {
   void cannotResetBeforeTheInventoryIsComplete() {
     var registry = new PlayerResetRegistry();
 
-    assertThatThrownBy(() -> registry.reset(PLAYER))
+    assertThatThrownBy(() -> registry.reset(PLAYER, Runnable::run))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("not complete");
   }

@@ -20,6 +20,8 @@ public final class PlayerResetService {
   private final ResetOperations operations;
   private final Timing timing;
   private final Map<UUID, CompletableFuture<Void>> running = new HashMap<>();
+  private final Set<UUID> pending = java.util.concurrent.ConcurrentHashMap.newKeySet();
+  private volatile boolean ready;
 
   public PlayerResetService(
       ResetStore store, PlayerResetRegistry modules, ResetOperations operations, Timing timing) {
@@ -31,6 +33,7 @@ public final class PlayerResetService {
 
   /** Starts a reset, or returns the reset already running for this player. Main thread only. */
   public CompletableFuture<Void> reset(UUID player) {
+    pending.add(player);
     var existing = running.get(player);
     if (existing != null) {
       return existing;
@@ -39,7 +42,9 @@ public final class PlayerResetService {
         store
             .begin(player, timing.time().instant())
             .thenRunAsync(() -> operations.kick(player), timing.scheduler().mainThread())
-            .thenComposeAsync(ignored -> modules.reset(player), timing.scheduler().mainThread())
+            .thenComposeAsync(
+                ignored -> modules.reset(player, timing.scheduler().mainThread()),
+                timing.scheduler().mainThread())
             .thenRunAsync(
                 () -> timing.log().accept("Module state reset for " + player),
                 timing.scheduler().mainThread())
@@ -52,7 +57,8 @@ public final class PlayerResetService {
             .thenRunAsync(
                 () -> timing.log().accept("Permissions reset complete for " + player),
                 timing.scheduler().mainThread())
-            .thenCompose(ignored -> store.finish(player));
+            .thenCompose(ignored -> store.finish(player))
+            .thenRun(() -> pending.remove(player));
     running.put(player, result);
     var _ =
         result.whenCompleteAsync(
@@ -60,14 +66,21 @@ public final class PlayerResetService {
     return result;
   }
 
+  /** Synchronous login admission; an unloaded or failed cache fails closed for everyone. */
+  public boolean isPending(UUID player) {
+    return !ready || pending.contains(player);
+  }
+
   /** Resumes every durable incomplete reset. Call on the main thread after modules are ready. */
   public CompletableFuture<Void> resume() {
     return store
         .pending()
         .thenComposeAsync(
-            pending -> {
+            durable -> {
+              pending.addAll(durable);
+              ready = true;
               var result = CompletableFuture.<Void>completedFuture(null);
-              for (var player : pending) {
+              for (var player : durable) {
                 result = result.thenCompose(ignored -> reset(player));
               }
               return result;

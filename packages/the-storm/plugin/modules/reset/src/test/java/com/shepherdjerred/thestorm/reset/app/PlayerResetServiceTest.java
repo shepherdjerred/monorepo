@@ -61,13 +61,16 @@ final class PlayerResetServiceTest {
             new PlayerResetService.Timing(
                 new DirectScheduler(), InstantSource.system(), message -> {}));
 
+    assertThat(service.resume()).succeedsWithin(Duration.ofSeconds(1));
     assertThat(service.reset(PLAYER)).failsWithin(Duration.ofSeconds(1));
     assertThat(store.pending).containsExactly(PLAYER);
     assertThat(store.finished).isEmpty();
+    assertThat(service.isPending(PLAYER)).isTrue();
 
     operations.failVanilla = false;
     assertThat(service.reset(PLAYER)).succeedsWithin(Duration.ofSeconds(1));
     assertThat(store.pending).isEmpty();
+    assertThat(service.isPending(PLAYER)).isFalse();
   }
 
   @Test

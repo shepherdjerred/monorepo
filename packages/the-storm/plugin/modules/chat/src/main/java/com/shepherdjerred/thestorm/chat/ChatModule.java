@@ -58,11 +58,12 @@ public final class ChatModule implements StormModule {
             player ->
                 reset
                     .reset(player)
-                    .thenRun(
+                    .thenRunAsync(
                         () -> {
                           service.forget(player);
                           identities.forget(player);
-                        }));
+                        },
+                        context.scheduler().mainThread()));
     context
         .services()
         .provide(com.shepherdjerred.thestorm.chat.app.IdentityService.class, identities);

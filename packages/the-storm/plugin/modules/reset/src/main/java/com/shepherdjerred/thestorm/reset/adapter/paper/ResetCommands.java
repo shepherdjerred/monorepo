@@ -31,6 +31,7 @@ public final class ResetCommands {
   private final PlayerDirectory players;
   private final ExpansionSettings settings;
   private final Map<String, Pending> pending = new HashMap<>();
+  private final Map<String, UUID> retryTargets = new HashMap<>();
   private final Permission permission =
       new Permission(PERMISSION, "Reset a player to first-join state", PermissionDefault.FALSE);
 
@@ -60,6 +61,7 @@ public final class ResetCommands {
 
   public void stop() {
     pending.clear();
+    retryTargets.clear();
     context.plugin().getServer().getPluginManager().removePermission(permission);
   }
 
@@ -79,11 +81,19 @@ public final class ResetCommands {
                     actor.sendMessage(Component.text("Could not resolve that player."));
                     return;
                   }
+                  var targetKey = input.toLowerCase(java.util.Locale.ROOT);
                   if (found.isEmpty()) {
-                    actor.sendMessage(Component.text("That player has not joined before."));
+                    var retry = retryTargets.get(targetKey);
+                    if (retry == null) {
+                      actor.sendMessage(Component.text("That player has not joined before."));
+                      return;
+                    }
+                    confirm(actor, input, retry);
                     return;
                   }
-                  confirm(actor, input, found.orElseThrow().uuid());
+                  var target = found.orElseThrow().uuid();
+                  retryTargets.put(targetKey, target);
+                  confirm(actor, input, target);
                 },
                 context.scheduler().mainThread());
     return 1;
@@ -123,6 +133,7 @@ public final class ResetCommands {
                         Component.text(
                             "Reset failed; the player remains blocked. Retry the command."));
                   } else {
+                    retryTargets.remove(input.toLowerCase(java.util.Locale.ROOT), target);
                     actor.sendMessage(Component.text("Reset complete for " + input + "."));
                   }
                 },

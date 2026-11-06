@@ -90,12 +90,13 @@ public final class EssentialsModule implements StormModule {
             player ->
                 reset
                     .reset(player)
-                    .thenRun(
+                    .thenRunAsync(
                         () -> {
                           moderation.forget(player);
                           players.forget(player);
                           staff.forget(player.toString());
-                        }));
+                        },
+                        context.scheduler().mainThread()));
     context
         .services()
         .provide(

@@ -116,7 +116,12 @@ public final class QuestsModule implements StormModule {
             ink);
     services
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
-        .register(id(), player -> store.reset(player).thenRun(() -> service.forget(player)));
+        .register(
+            id(),
+            player ->
+                store
+                    .reset(player)
+                    .thenRunAsync(() -> service.forget(player), context.scheduler().mainThread()));
     services
         .find(DiscordRelay.class)
         .map(relay -> new QuestDiscordPosts(relay, context.plugin().getServer(), context.logger()))

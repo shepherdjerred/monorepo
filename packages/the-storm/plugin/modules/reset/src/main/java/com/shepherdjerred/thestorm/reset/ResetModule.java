@@ -43,7 +43,7 @@ public final class ResetModule implements StormModule {
                 context.scheduler(),
                 context.time(),
                 message -> context.logger().info("{}", message)));
-    paper = ResetPaper.start(context, store, resets);
+    paper = ResetPaper.start(context, resets);
     context
         .scheduler()
         .runOnMainThread(

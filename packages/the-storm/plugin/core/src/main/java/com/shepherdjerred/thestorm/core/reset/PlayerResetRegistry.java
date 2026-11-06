@@ -55,19 +55,20 @@ public final class PlayerResetRegistry {
     complete = true;
   }
 
-  /** Runs every state-owning module's cleanup in enable order. */
-  public CompletableFuture<Void> reset(UUID player) {
+  /** Runs every state-owning module's cleanup in enable order on the main thread. */
+  public CompletableFuture<Void> reset(UUID player, java.util.concurrent.Executor mainThread) {
     if (!complete) {
       throw new IllegalStateException("Player reset registry is not complete");
     }
     var result = CompletableFuture.<Void>completedFuture(null);
     for (var handler : handlers.entrySet()) {
       result =
-          result.thenCompose(
+          result.thenComposeAsync(
               ignored -> {
                 diagnostics.accept("Resetting module " + handler.getKey());
                 return handler.getValue().reset(player);
-              });
+              },
+              mainThread);
     }
     return result;
   }

@@ -40,7 +40,12 @@ public final class QolModule implements StormModule {
     context
         .services()
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
-        .register(id(), player -> reset.reset(player).thenRun(() -> graves.reset(player)));
+        .register(
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenRunAsync(() -> graves.reset(player), context.scheduler().mainThread()));
     var app =
         new QolPaper.App(
             new JooqGraveStore(context.database()),
