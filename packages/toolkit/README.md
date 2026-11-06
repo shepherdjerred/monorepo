@@ -589,10 +589,15 @@ PinchTab credentials or config.
   `discord daemon start --password-login` uses parent-injected
   `DISCORD_USER_EMAIL` and `DISCORD_USER_PASSWORD` for a user-only session,
   ignores the default bot/user tokens, and never reads desktop 1Password.
+  `discord daemon start --user-only` resolves only the registered user token
+  and leaves the bot token unloaded. These login modes are mutually exclusive.
   Credentials are exchanged in memory and removed from the daemon environment;
   interactive verification fails explicitly. The daemon child never inherits
-  `OP_SERVICE_ACCOUNT_TOKEN`. `/channel?channelId=...` provides native user
+  vault and inference credentials. `/channel?channelId=...` provides native user
   guild/channel permissions for scoped preview adapters.
+  `/commands?channelId=...` reads the guild application-command index without
+  invoking commands, including native default permission bits and per-user
+  application/command permission metadata; failed lookups propagate as errors.
 - `toolkit mc ...` drives disposable Minecraft sandboxes through the
   mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
 - `toolkit promotion <status|preview|run|pause|resume|reconcile> [TARGET] [--json] [--dry-run]`

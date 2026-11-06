@@ -96,6 +96,11 @@ export type RunCodexAgentTurnInput = AgentTurnCommonInput & {
   readonly skipGitRepoCheck?: boolean;
   /** Optional executable wrapper used to launch the CLI under a provider uid. */
   readonly codexPathOverride?: string;
+  /** Native API-key tool sandbox; denied file reads and exact IPC grants. */
+  readonly scopedPermissions?: {
+    readonly denyReadPaths: readonly string[];
+    readonly unixSockets: readonly string[];
+  };
   /** Return a diagnostic to reject a provider event, or undefined to allow it. */
   readonly eventViolation?: (event: ThreadEvent) => string | undefined;
 };

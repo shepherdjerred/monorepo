@@ -1,7 +1,12 @@
 /** Capture only Turnstile challenge arguments and keep the callback inside the page. */
+const cloudflareTitle =
+  "just a moment|checking your browser|attention required|performing security verification";
+export const cloudflareInterstitial = `Boolean(window._cf_chl_opt && /${cloudflareTitle}/i.test(document.title) && !document.querySelector('textarea,input[type="password"],[contenteditable="true"],form:not(#challenge-form)'))`;
+export const cloudflareChallengeActive = `/${cloudflareTitle}/i.test(document.title)`;
+
 export const installChallengeCapture = `(() => {
   if (window.__stormCaptchaCapture) return true;
-  const state = {challenge:null,callback:null};
+  const state = {challenge:null,callback:null,documentId:crypto.randomUUID()};
   Object.defineProperty(window,'__stormCaptchaCapture',{value:state,configurable:true});
   const wrap = api => {
     if (!api || typeof api.render !== 'function' || api.render.__stormWrapped) return api;
@@ -34,7 +39,7 @@ export const readChallenge = `(() => {
 export function applyCloudflareChallenge(token: string): string {
   return `(() => {
     const state=window.__stormCaptchaCapture;
-    if (!state?.challenge?.chlPageData || typeof state.callback !== 'function' || !window._cf_chl_opt || !/just a moment|checking your browser|attention required/i.test(document.title) || document.querySelector('textarea,input[type="password"],[contenteditable="true"]'))
+    if (!state?.challenge?.chlPageData || typeof state.callback !== 'function' || !window._cf_chl_opt || !/${cloudflareTitle}/i.test(document.title) || document.querySelector('textarea,input[type="password"],[contenteditable="true"]'))
       throw new Error('Captured Cloudflare challenge callback is unavailable');
     const callback=state.callback;
     state.callback=null;

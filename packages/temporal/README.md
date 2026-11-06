@@ -1010,8 +1010,23 @@ The small connection helper scopes operations to the target's persistent profile
 Credential placeholders let the agent choose username, optional saved email, and password inputs while the
 parent supplies their values privately. A disabled sign-in control can be
 inspected and corrected; an actual or ambiguous sign-in submission is not retried.
+Google's separate identifier and password stages each permit one observed Next
+submission after the corresponding private credential is filled. This permission
+is restricted to `accounts.google.com`; ordinary form continuations stay blocked.
 The additional `captcha.ts` helper solves supported response-field reCAPTCHA v2
 and Turnstile widgets without submitting the page.
+Paid results are cached privately for the current widget and browser document.
+Repeated calls return the same task and `reused:true` without another charge.
+If applying a solved response times out, the next call retries application of
+that cached result. An ambiguous provider failure is retained instead of
+silently buying another task. A new document or changed widget gets a distinct
+cache entry and remains subject to the occurrence and monthly budgets.
+The agent must report an unresolved required CAPTCHA as blocked.
+`bun browser.ts solve-cloudflare` invokes PinchTab's named native solver after a
+scanned snapshot of a Cloudflare interstitial. It rejects ordinary login and
+publication forms, allows one attempt per page and two pages per run, and checks
+that the challenge title has cleared. A paused handoff is a blocker, not a retry.
+The agent must inspect the resulting page to establish actual access.
 
 `runStormPromotion({ targetId, mode })` accepts `run`, `preview`, or `reconcile`.
 The stable Workflow ID is `storm-promotion/<targetId>`.
@@ -1032,6 +1047,20 @@ private temporary paths for the structured results and browser diagnostics.
 The agent inspects the assigned execution path rather than conducting an
 eligibility review. The references file
 contains only 1Password locators; credentials are injected in memory.
+Add `--mailmate` to a local BuiltByBit preview to enable private email-code fill.
+It requires `python3`, `rg`, and the locally synced MailMate message directory.
+The parent accepts only a provider confirmation email addressed to the stored
+account and dated after the current run began. Codes stay in parent memory,
+expire with the verification context, and permit one observed confirmation.
+The fill tool accepts only the BuiltByBit account on its `/login/two-step` page.
+The Codex task uses a native permission profile that denies direct reads of
+the MailMate directory, including through symlinks; the parent code reader
+retains access. Its Unix socket remains reachable from the task workspace.
+This does not restrict ordinary network access. No mailbox access is enabled
+for deployed workers. Check the parser with
+`python3 packages/temporal/scripts/promotion/mailmate-code.test.py` and the
+native macOS boundary with
+`bun packages/temporal/scripts/promotion/verify-code-gate.ts` (synthetic mail only).
 Use `--all` instead of target IDs to inspect every assigned target; pending
 placements have no execution task and are excluded. `inspect` assignments are
 preview-only and can check existing account access without inventing news. An optional
@@ -1039,6 +1068,12 @@ preview-only and can check existing account access without inventing news. An op
 inspection without changing production targets or schedules. Duplicate IDs fail.
 `--profile <existing-profile>` can inspect an existing signed-in browser profile
 in preview only; it does not prove that the deployed per-account profile is ready.
+The transport clicks native navigation links after validating their destination;
+this preserves account menus and client-side routing. Effect URLs and effect
+links remain guarded. On a headed profile, cleanup keeps its last tab on the
+assigned landing page so closing the last window cannot strand the instance.
+Other tabs are preserved; headless task tabs are closed normally. Cleanup checks
+that a closed task tab has disappeared before returning.
 
 Credential enrollment also uses the service account exclusively. Run
 `scripts/promotion/enroll-logins.ts --bindings <bindings.json> --apply` through
@@ -1059,10 +1094,20 @@ Local Discord previews use an isolated toolkit userbot daemon, selected by
 the actual user identity, guild/channel and permissions before exposing reads.
 The model receives `discord.ts` and `DISCORD.md`; its message or slash-command
 tool records one proposed payload without calling Discord's publication APIs.
+Slash assignments additionally pin `discord.slash` with `botId`, `command`
+and `args`. The bridge reads the guild's native application-command index and
+checks application-command permission before preparing the exact assigned
+payload. Missing commands or permissions fail rather than producing a preview.
+It also checks native default permission bits and application/command overrides.
+Commands without required bits or overrides can be prepared by an ordinary
+member. Configured custom overrides currently fail closed for explicit resolution.
+This verifies Discord's reported requirements, not the bot's response to an
+interaction; no interaction is sent during preview.
 Mixed bot/user daemons and account/destination mismatches fail. Discord live
 execution is disabled; production Discord placements remain manually maintained.
-Use `--inventory packages/the-storm/promotion/preview-targets.json --all` to
-include the saved Discord channel assignments in a local preview.
+Use `--inventory packages/the-storm/promotion/preview-targets.json` with explicit
+Discord target IDs for a Discord-only local preview. `--all` also includes the
+default browser targets.
 Start that daemon with `scripts/promotion/start-discord.ts` through the same
 service-account `op run` injection and `env -u OP_SERVICE_ACCOUNT_TOKEN` boundary.
 It uses the login-map account `discord`, verifies `the.storm.mc` in the isolated
@@ -1116,6 +1161,8 @@ Discord status/read operations supply equivalent references. Stored results
 retain the URL/quote format. Failed runs retain the rejected draft, captured
 observations and redacted tool trace under private `diagnostics/` keys, including
 local preview artifacts. Historical notes cannot stand in for captured evidence.
+Local previews also retain redacted frozen observations for structured blocked
+results, so an authentication error can be inspected beyond its generic heading.
 
 Preview blocks promotion clicks, form edits, Enter submissions, action URLs and
 receipt settlement outside the prompt. Budgeted CAPTCHA solving is available;
@@ -1124,8 +1171,10 @@ and unsettled charges. A staged response token need not change the visible
 checkbox; site acceptance remains unverified until an authorized submission.
 Ordinary form callbacks never run automatically. Captured Cloudflare
 interstitial callbacks may complete security navigation. Managed challenges that
-render before capture installation still require a browser page-init capability;
-current-document evaluation alone does not guarantee managed-challenge coverage.
+the native Cloudflare solver cannot clear still require complete captured
+parameters for the paid solver. Capturing them before render requires a browser
+page-init capability; current-document evaluation alone does not guarantee that
+paid managed-challenge path.
 Preview permits
 navigation, screenshots, scrolling, native read-only search inputs and one
 stored-credential sign-in. Message composers remain blocked.

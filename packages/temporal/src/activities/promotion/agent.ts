@@ -1,5 +1,5 @@
 import { chmod, chown, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { tmpdir, homedir } from "node:os";
 import path from "node:path";
 import { Context } from "@temporalio/activity";
 import { z } from "zod/v4";
@@ -22,6 +22,7 @@ import { promotionContent, promotionMaintenanceContext } from "./manifest.ts";
 import { promotionPrompt } from "./prompt.ts";
 import { promotionTaskFiles } from "./task-files.ts";
 import { PromotionLoginsSchema, PromotionToolSchema } from "./tools.ts";
+import type { PromotionEmailCodeReader } from "./access/credential-input.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import type { PromotionStore } from "./store.ts";
 import { promotionSecretTokens } from "./redaction.ts";
@@ -73,7 +74,10 @@ export async function runPromotionAgent(input: {
   mode: PromotionRunInput["mode"];
   store: PromotionStore;
   browserProfile?: string;
+  readEmailCode?: PromotionEmailCodeReader;
 }) {
+  if (input.readEmailCode !== undefined && input.mode !== "preview")
+    throw new Error("Local email-code access is allowed only in preview");
   if (input.browserProfile !== undefined && input.mode !== "preview")
     throw new Error("A browser profile override is allowed only in preview");
   assertAssignment(input.target, input.mode);
@@ -197,9 +201,15 @@ export async function runPromotionAgent(input: {
       auth: { kind: "openai-api-key", apiKey: required("OPENAI_API_KEY") },
       signal,
       sandboxPolicy: {
-        sandboxMode: "danger-full-access",
+        sandboxMode: "workspace-write",
         networkAccessEnabled: true,
         webSearchMode: "disabled",
+      },
+      scopedPermissions: {
+        denyReadPaths: [
+          path.join(homedir(), "Library/Application Support/MailMate"),
+        ],
+        unixSockets: [socket],
       },
       outputSchema: z.toJSONSchema(
         input.mode === "preview"
@@ -242,6 +252,14 @@ export async function runPromotionAgent(input: {
       result,
       usage: outcome.usage,
       browserTrace,
+      ...(input.mode === "preview"
+        ? {
+            observations: redactAgentTaskPayloadStrings(
+              transport.journal.observations,
+              (text) => redactSecrets(text, redact),
+            ),
+          }
+        : {}),
       ...transport.audit(),
     };
   } catch (error: unknown) {

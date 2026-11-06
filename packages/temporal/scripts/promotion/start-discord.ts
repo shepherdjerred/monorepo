@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod/v4";
 import { stat } from "node:fs/promises";
 import { PromotionLoginsSchema } from "#activities/promotion/tools.ts";
+import { redactSecrets } from "#shared/redact.ts";
 
 if (Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] !== undefined)
   throw new Error(
@@ -74,7 +75,7 @@ async function toolkit(operation: string, passwordLogin = false) {
   ]);
   if (results[2] !== 0)
     throw new Error(
-      `Outreach Discord ${operation} failed; inspect its redacted daemon log`,
+      `Outreach Discord ${operation} failed: ${redactSecrets(results[1].slice(-4000), [Bun.env["DISCORD_USER_EMAIL"], Bun.env["DISCORD_USER_PASSWORD"]])}`,
     );
 }
 const existing = await stat(socket).catch((error: unknown) => {

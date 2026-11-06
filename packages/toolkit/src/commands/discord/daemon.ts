@@ -12,6 +12,7 @@ import {
   StatusResponseSchema,
 } from "#lib/discord/ipc.ts";
 import { renderStatus } from "#lib/discord/render.ts";
+import { discordDaemonEnvironment } from "#lib/discord/auth.ts";
 import {
   daemonRunning,
   pathExists,
@@ -38,17 +39,27 @@ function daemonLogPath(): string {
 // When running from source, process.execPath is the bun binary and Bun.main is
 // the entry script; in the compiled binary, process.execPath IS the toolkit
 // binary and re-invoking it directly is correct.
-function serveArgv(passwordLogin: boolean): string[] {
+function serveArgv(passwordLogin: boolean, userOnly: boolean): string[] {
   const isCompiled = !path.basename(process.execPath).startsWith("bun");
   const argv = isCompiled
     ? [process.execPath, "discord", "serve"]
     : [process.execPath, "run", Bun.main, "discord", "serve"];
-  return passwordLogin ? [...argv, "--password-login"] : argv;
+  return [
+    ...argv,
+    ...(passwordLogin ? ["--password-login"] : []),
+    ...(userOnly ? ["--user-only"] : []),
+  ];
 }
 
-function assertDaemonCredentials(passwordLogin: boolean): void {
-  const botToken = passwordLogin ? undefined : Bun.env["DISCORD_BOT_TOKEN"];
+function assertDaemonCredentials(
+  passwordLogin: boolean,
+  userOnly: boolean,
+): void {
+  const botToken =
+    passwordLogin || userOnly ? undefined : Bun.env["DISCORD_BOT_TOKEN"];
   const userToken = passwordLogin ? undefined : Bun.env["DISCORD_USER_TOKEN"];
+  if (userOnly && (userToken === undefined || userToken === ""))
+    throw new Error("User-only Discord daemon requires DISCORD_USER_TOKEN");
   if (
     passwordLogin &&
     ((Bun.env["DISCORD_USER_EMAIL"] ?? "") === "" ||
@@ -72,6 +83,7 @@ function assertDaemonCredentials(passwordLogin: boolean): void {
 export async function daemonStartCommand(options: {
   ttlSeconds: number;
   passwordLogin?: boolean;
+  userOnly?: boolean;
 }): Promise<void> {
   const existing = await readState();
   if (existing !== null && (await daemonRunning(existing.pid, DAEMON_MARKER))) {
@@ -81,26 +93,20 @@ export async function daemonStartCommand(options: {
     process.exit(1);
   }
   const passwordLogin = options.passwordLogin === true;
-  assertDaemonCredentials(passwordLogin);
+  const userOnly = options.userOnly === true;
+  const env = discordDaemonEnvironment(Bun.env, { passwordLogin, userOnly });
+  env["TOOLKIT_DISCORD_TTL_SECONDS"] = String(options.ttlSeconds);
+  assertDaemonCredentials(passwordLogin, userOnly);
 
   await mkdir(LOGS_DIR, { recursive: true });
   await rm(SOCKET_PATH, { force: true });
   await rm(STATE_PATH, { force: true });
 
-  const [command, ...args] = serveArgv(passwordLogin);
+  const [command, ...args] = serveArgv(passwordLogin, userOnly);
   if (command === undefined) {
     throw new Error("could not determine daemon command");
   }
   // Detached + stdio ignore: the daemon writes its own logs to LOGS_DIR.
-  const env: Record<string, string | undefined> = {
-    ...Bun.env,
-    TOOLKIT_DISCORD_TTL_SECONDS: String(options.ttlSeconds),
-  };
-  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
-  if (passwordLogin) {
-    delete env["DISCORD_BOT_TOKEN"];
-    delete env["DISCORD_USER_TOKEN"];
-  }
   const child = spawn(command, args, {
     detached: true,
     stdio: "ignore",

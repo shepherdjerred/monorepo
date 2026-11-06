@@ -87,18 +87,6 @@
       "notes": "One-hyphen domain. Native dashboard bump; free account minimum six hours."
     },
     {
-      "id": "minecraftlist",
-      "name": "Minecraftlist.org",
-      "url": "https://minecraftlist.org/server/34270",
-      "rulesUrl": "https://minecraftlist.org/",
-      "account": "minecraftlist",
-      "hosts": ["minecraftlist.org"],
-      "action": "bump",
-      "content": "directory",
-      "minimumIntervalSeconds": 0,
-      "notes": "Use the existing listing's native bump control. Handle its CAPTCHA and report the actual site response; preserve listing content."
-    },
-    {
       "id": "minecraftserver-buzz",
       "name": "MinecraftServer.Buzz",
       "url": "https://minecraftserver.buzz/servers/the-storm",
@@ -155,8 +143,8 @@
       "hosts": ["old.reddit.com"],
       "action": "repost",
       "content": "reddit-minecraftserver",
-      "minimumIntervalSeconds": 0,
-      "notes": "Use u/the_storm_mc and the approved copy. Prior attempts were filtered; report the actual submission outcome without claiming public visibility from an owner-only view."
+      "minimumIntervalSeconds": 86400,
+      "notes": "Use u/the_storm_mc and the approved copy. The caller owns the subreddit-specific 24-hour cadence, including filtered attempts; no account-wide daily lock applies. Report the actual submission outcome without claiming public visibility from an owner-only view."
     },
     {
       "id": "reddit-minecraftserverfinder",

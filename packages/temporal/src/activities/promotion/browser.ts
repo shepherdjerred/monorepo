@@ -9,6 +9,8 @@ import {
   installChallengeCapture,
   readChallenge,
   applyCloudflareChallenge,
+  cloudflareInterstitial,
+  cloudflareChallengeActive,
 } from "./access/challenge-scripts.ts";
 import type { PromotionChallenge } from "./solver.ts";
 
@@ -31,6 +33,12 @@ const SnapshotSchema = z.object({
   idpiWarning: z.string().optional(),
 });
 const ProfileSchema = z.object({ name: z.string() });
+const CloudflareResultSchema = z.object({
+  solver: z.literal("cloudflare"),
+  solved: z.boolean(),
+  attempts: z.number().int().nonnegative(),
+  handoff: z.literal("paused_handoff").optional(),
+});
 const ProfilesSchema = z.union([
   z.array(ProfileSchema),
   z.object({ profiles: z.array(ProfileSchema) }),
@@ -38,6 +46,8 @@ const ProfilesSchema = z.union([
 const InstanceSchema = z.object({
   id: z.string(),
   profileName: z.string().optional(),
+  mode: z.enum(["headed", "headless"]).optional(),
+  headless: z.boolean().optional(),
 });
 const InstancesSchema = z.union([
   z.array(InstanceSchema),
@@ -63,7 +73,10 @@ export class PromotionBrowser {
   private readonly signal: AbortSignal;
   private tabId: string | undefined;
   private readonly profile: string | undefined;
+  private instanceId: string | undefined;
+  private preserveLastTab = false;
   private challengeState: PromotionChallenge | undefined;
+  private readonly cloudflarePages = new Set<string>();
   private lastSnapshot:
     { url: string; scope: SnapshotScope | undefined } | undefined;
   private readonly controls = new Map<
@@ -88,6 +101,7 @@ export class PromotionBrowser {
     suffix: string,
     body?: unknown,
     signal = this.signal,
+    timeoutMs = 30_000,
   ): Promise<Response> {
     const response = await fetch(`${this.baseUrl}${suffix}`, {
       method: body === undefined ? "GET" : "POST",
@@ -96,7 +110,7 @@ export class PromotionBrowser {
         "content-type": "application/json",
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      signal: AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
+      signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]),
     });
     if (!response.ok) {
       const detail = await response.text();
@@ -130,6 +144,8 @@ export class PromotionBrowser {
     const response = InstancesSchema.parse(await this.json("/instances"));
     const instances = Array.isArray(response) ? response : response.instances;
     const existing = instances.find((item) => item.profileName === profile);
+    this.preserveLastTab =
+      existing?.mode === "headed" || existing?.headless === false;
     let instanceId = existing?.id;
     if (instanceId === undefined) {
       const started = IdentifierSchema.parse(
@@ -141,6 +157,7 @@ export class PromotionBrowser {
     }
     if (instanceId === undefined)
       throw new Error("Browser profile start omitted instance ID");
+    this.instanceId = instanceId;
     const deadline = Date.now() + 15_000;
     for (;;) {
       try {
@@ -240,8 +257,19 @@ export class PromotionBrowser {
   async action(body: Record<string, unknown>): Promise<unknown> {
     const before = await this.currentUrl();
     const result = await this.json(`${this.tab()}/action`, body);
-    if ((await this.currentUrl()) !== before) this.controls.clear();
+    if ((await this.currentUrl()) !== before) {
+      this.controls.clear();
+      await this.evaluate(installChallengeCapture);
+    }
     return result;
+  }
+
+  async followLink(
+    body: Record<string, unknown>,
+    address: string,
+  ): Promise<unknown> {
+    assertPromotionUrl(this.target, address);
+    return await this.action(body);
   }
 
   async attribute(selector: string, name: string): Promise<string | null> {
@@ -266,6 +294,7 @@ export class PromotionBrowser {
   }
 
   async challenge(): Promise<PromotionChallenge> {
+    await this.evaluate(installChallengeCapture);
     const websiteURL = await this.currentUrl();
     const widget = z
       .object({
@@ -279,6 +308,54 @@ export class PromotionBrowser {
     const challenge = { ...widget, websiteURL };
     this.challengeState = challenge;
     return challenge;
+  }
+
+  async challengeContext() {
+    const challenge = await this.challenge();
+    const documentId = z
+      .string()
+      .min(1)
+      .parse(await this.evaluate("window.__stormCaptchaCapture.documentId"));
+    return { challenge, documentId };
+  }
+
+  async solveCloudflare() {
+    const before = await this.currentUrl();
+    if (this.lastSnapshot?.url !== before)
+      throw new Error("Take a scanned snapshot of this challenge page first");
+    if (!z.boolean().parse(await this.evaluate(cloudflareInterstitial)))
+      throw new Error(
+        "Native solver requires a Cloudflare interstitial without a publication or login form",
+      );
+    if (this.cloudflarePages.has(before) || this.cloudflarePages.size >= 2)
+      throw new Error(
+        "Native Cloudflare attempt already used for this page or run",
+      );
+    this.cloudflarePages.add(before);
+    this.controls.clear();
+    this.lastSnapshot = undefined;
+    this.challengeState = undefined;
+    const response = await this.request(
+      `${this.tab()}/solve/cloudflare`,
+      { maxAttempts: 1, timeout: 60_000 },
+      this.signal,
+      70_000,
+    );
+    const result = CloudflareResultSchema.parse(await response.json());
+    const handoff = result.handoff === "paused_handoff";
+    const after = handoff ? before : await this.currentUrl();
+    const solved =
+      !handoff &&
+      result.solved &&
+      !z.boolean().parse(await this.evaluate(cloudflareChallengeActive));
+    return {
+      solver: result.solver,
+      solved,
+      attempts: result.attempts,
+      handoff,
+      url: promotionPublicUrl(after),
+      formSubmitted: false,
+    };
   }
 
   async applyChallenge(token: string): Promise<void> {
@@ -350,12 +427,42 @@ export class PromotionBrowser {
     return await this.snapshot(scope);
   }
 
+  private async instanceTabs(signal: AbortSignal) {
+    if (this.instanceId === undefined)
+      throw new Error("Owned browser instance is missing");
+    const response = await this.request(
+      `/instances/${encodeURIComponent(this.instanceId)}/tabs`,
+      undefined,
+      signal,
+    );
+    return z.array(IdentifierSchema).parse(await response.json());
+  }
+
   async close(): Promise<void> {
-    if (this.tabId !== undefined)
-      await this.request(
-        `${this.tab()}/close`,
-        {},
-        AbortSignal.timeout(10_000),
-      );
+    if (this.tabId === undefined) return;
+    const cleanupSignal = AbortSignal.timeout(10_000);
+    if (this.preserveLastTab && this.instanceId !== undefined) {
+      const tabs = await this.instanceTabs(cleanupSignal);
+      if (tabs.length === 1 && (tabs[0]?.id ?? tabs[0]?.tabId) === this.tabId) {
+        // Closing the last headed window leaves Chrome unable to create a
+        // later tab. Keep one clean landing page, not a verification form.
+        await this.request(
+          `${this.tab()}/navigate`,
+          { url: this.target.url },
+          cleanupSignal,
+        );
+        return;
+      }
+    }
+    await this.request(`${this.tab()}/close`, {}, cleanupSignal);
+    const deadline = Date.now() + 5000;
+    for (;;) {
+      const remainingTabs = await this.instanceTabs(cleanupSignal);
+      if (!remainingTabs.some((tab) => (tab.id ?? tab.tabId) === this.tabId))
+        return;
+      if (Date.now() >= deadline)
+        throw new Error("Owned task tab did not finish closing");
+      await Bun.sleep(50);
+    }
   }
 }

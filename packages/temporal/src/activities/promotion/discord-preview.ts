@@ -1,6 +1,11 @@
 import { z } from "zod/v4";
 import type { PromotionTarget } from "#shared/promotion.ts";
 import type { PromotionTaskJournal } from "./task.ts";
+import {
+  DiscordIndexPermissionsSchema,
+  DiscordCommandPermissionFields,
+  discordCommandPermission,
+} from "./access/discord-permissions.ts";
 
 export const PromotionDiscordToolSchema = z.discriminatedUnion("endpoint", [
   z.strictObject({ endpoint: z.literal("discord-status") }),
@@ -34,7 +39,32 @@ const Channel = z.object({
   type: z.string(),
   canView: z.boolean(),
   canSend: z.boolean(),
+  canUseApplicationCommands: z.boolean(),
+  canManageServer: z.boolean(),
+  administrator: z.boolean(),
+  memberPermissions: z.string().regex(/^\d+$/),
   slowmodeSeconds: z.number().nullable(),
+});
+const Commands = z.object({
+  channelId: z.string(),
+  guildId: z.string(),
+  applications: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      permissions: DiscordIndexPermissionsSchema.optional(),
+    }),
+  ),
+  application_commands: z.array(
+    z.object({
+      id: z.string(),
+      application_id: z.string(),
+      name: z.string(),
+      description: z.string(),
+      type: z.number().int(),
+      ...DiscordCommandPermissionFields,
+    }),
+  ),
 });
 const Messages = z.object({
   messages: z.array(
@@ -139,10 +169,45 @@ export class PromotionDiscordPreview {
       throw new Error(
         "Assigned Discord channel is not visible to the outreach account",
       );
+    const applicationCommand = await this.inspectCommand(channel);
     const evidence = this.observe(
-      `Account: ${expected.username}\nGuild: ${channel.guildId}\nChannel: ${channel.name}\nChannel ID: ${channel.id}\nCan send: ${String(channel.canSend)}`,
+      `Account: ${expected.username}\nGuild: ${channel.guildId}\nChannel: ${channel.name}\nChannel ID: ${channel.id}\nCan send: ${String(channel.canSend)}${applicationCommand === null ? "" : `\nApplication: ${applicationCommand.application}\nCommand: /${applicationCommand.name}\nCommand ID: ${applicationCommand.id}\nCan use application commands: true\nCommand permission: ${applicationCommand.permission.reason}\nManage Server: ${String(channel.canManageServer)}\nBot invocation: not performed`}`,
     );
-    return { identity: identities.user, channel, evidence };
+    return { identity: identities.user, channel, applicationCommand, evidence };
+  }
+
+  private async inspectCommand(channel: z.infer<typeof Channel>) {
+    const assigned = this.assignment.slash;
+    if (assigned === undefined) return null;
+    if (!channel.canUseApplicationCommands)
+      throw new Error("Assigned channel does not permit application commands");
+    const index = Commands.parse(
+      await this.request(`/commands?channelId=${channel.id}`),
+    );
+    if (index.channelId !== channel.id || index.guildId !== channel.guildId)
+      throw new Error("Command metadata is outside the assigned guild/channel");
+    const application = index.applications.find(
+      (app) => app.id === assigned.botId,
+    );
+    const command = index.application_commands.find(
+      (entry) =>
+        entry.application_id === assigned.botId &&
+        entry.name === assigned.command &&
+        entry.type === 1,
+    );
+    if (application === undefined || command === undefined)
+      throw new Error(
+        "Assigned bot slash command is not available in this guild",
+      );
+    const permission = discordCommandPermission({
+      administrator: channel.administrator,
+      memberPermissions: channel.memberPermissions,
+      required: command.default_member_permissions,
+      application: application.permissions,
+      command: command.permissions,
+    });
+    if (!permission.allowed) throw new Error(permission.reason);
+    return { ...command, application: application.name, permission };
   }
 
   async handle(raw: unknown): Promise<unknown> {
@@ -172,7 +237,19 @@ export class PromotionDiscordPreview {
       );
       return { untrustedDiscordContent: result, evidence };
     }
-    if (!context.channel.canSend)
+    if (tool.endpoint === "discord-slash") {
+      const assigned = this.assignment.slash;
+      if (
+        tool.body.botId !== assigned?.botId ||
+        tool.body.command !== assigned.command ||
+        JSON.stringify(tool.body.args) !== JSON.stringify(assigned.args)
+      )
+        throw new Error(
+          "Slash payload does not match the caller-assigned command",
+        );
+    } else if (this.assignment.slash !== undefined) {
+      throw new Error("This assignment requires the pinned slash command");
+    } else if (!context.channel.canSend)
       throw new Error("Assigned Discord channel is read-only for this account");
     if (this.preparedActions.length > 0)
       throw new Error("One prepared Discord action per assignment");

@@ -38,6 +38,13 @@ export const PromotionTargetSchema = z.strictObject({
       guildId: z.string().regex(/^\d+$/),
       channelId: z.string().regex(/^\d+$/),
       username: z.string().min(1),
+      slash: z
+        .strictObject({
+          botId: z.string().regex(/^\d+$/),
+          command: z.string().regex(/^[a-z0-9_-]+$/),
+          args: z.array(z.string()).max(20),
+        })
+        .optional(),
     })
     .optional(),
 });

@@ -10,7 +10,11 @@ import { solvePromotionChallenge } from "./solver.ts";
 import {
   promotionCredentialValue,
   assertPromotionCredentialInput,
+  assertPromotionEmailCodePage,
+  type PromotionEmailCodeReader,
 } from "./access/credential-input.ts";
+import { PromotionAuthentication } from "./access/authentication.ts";
+import { PromotionCaptchaSession } from "./access/captcha-session.ts";
 
 const ActionSchema = z
   .strictObject({
@@ -35,7 +39,9 @@ const ActionSchema = z
     scrollX: z.number().optional(),
     waitNav: z.boolean().optional(),
     submit: z.boolean().optional(),
-    credential: z.enum(["username", "email", "password", "otp"]).optional(),
+    credential: z
+      .enum(["username", "email", "password", "otp", "email-code"])
+      .optional(),
   })
   .refine(
     (value) => value.ref === undefined || value.selector === undefined,
@@ -81,6 +87,7 @@ export const PromotionToolSchema = z.discriminatedUnion("endpoint", [
     }),
   }),
   z.strictObject({ endpoint: z.literal("solve-captcha") }),
+  z.strictObject({ endpoint: z.literal("solve-cloudflare") }),
 ]);
 export const PromotionLoginsSchema = z.record(
   z.string(),
@@ -93,33 +100,14 @@ export const PromotionLoginsSchema = z.record(
   }),
 );
 
-function isSignInControl(node: {
-  role: string;
-  name?: string | undefined;
-}): boolean {
-  return (
-    node.role === "button" &&
-    /\b(?:log|sign)\s*in\b/i.test(node.name ?? "") &&
-    !/\b(?:bump|vote|publish|post|reply|submit|send|comment|purchase|delete|remove|save|accept|join)\b/i.test(
-      node.name ?? "",
-    )
-  );
-}
-
 function assertLoginHost(hosts: string[] | undefined, page: string): void {
   if (hosts !== undefined && !hosts.includes(new URL(page).hostname))
     throw new Error("Stored credentials are not assigned to this login host");
 }
 
-function isVerificationControl(node: {
-  role: string;
-  name?: string | undefined;
-}): boolean {
-  return (
-    node.role === "button" &&
-    /^(?:verify|confirm|continue)(?:\s+(?:code|verification|account))?$/i.test(
-      node.name ?? "",
-    )
+function navigationMutation(address: URL): boolean {
+  return /\b(?:bump|vote|delete|remove|logout|send|confirm)\b/i.test(
+    decodeURIComponent(`${address.pathname} ${address.search}`),
   );
 }
 
@@ -140,13 +128,13 @@ export function createPromotionToolHandler(input: {
   signal: AbortSignal;
   heartbeat: () => void;
   registerSecret?: (value: string) => void;
+  readEmailCode?: PromotionEmailCodeReader;
 }) {
+  const startedAt = Date.now();
   let queue: Promise<unknown> = Promise.resolve();
-  let toolCalls = 0,
-    loginSubmitted = false;
-  let loginPage: string | undefined;
-  let otpPage: string | undefined;
-  let otpSubmitted = false;
+  let toolCalls = 0;
+  const authentication = new PromotionAuthentication(input.browser);
+  const captcha = new PromotionCaptchaSession();
 
   async function credentialAction(body: z.infer<typeof ActionSchema>) {
     if (input.reconciliation) throw new Error("Reconciliation never signs in");
@@ -161,50 +149,44 @@ export function createPromotionToolHandler(input: {
       throw new Error(
         "Credentials require a native fill/type reference without literal text",
       );
-    if (otpPage !== undefined && body.credential === "otp")
-      throw new Error("Second-factor code already filled for this run");
-    if (loginSubmitted && body.credential !== "otp")
-      throw new Error(
-        "Login already submitted; inspect the result instead of retrying",
-      );
+    authentication.assertCredential(body.credential);
     const login = input.logins[input.account];
     if (login === undefined)
       throw new Error("Stored login is unavailable for this account");
     const page = await input.browser.currentUrl();
     assertLoginHost(login.hosts, page);
-    const value = promotionCredentialValue(login, body.credential);
     const node = await input.browser.accessibleControl(body.ref);
     const type = await input.browser.attribute(body.ref, "type");
     assertPromotionCredentialInput(node, type, body.credential);
+    const value =
+      body.credential === "email-code"
+        ? await emailCode(login, page)
+        : promotionCredentialValue(login, body.credential);
     const { credential, ...nativeAction } = body;
     input.registerSecret?.(value);
     if (body.kind === "type")
       await input.browser.action({ kind: "fill", ref: body.ref, text: "" });
     await input.browser.action({ ...nativeAction, text: value });
-    if (credential === "password") loginPage = page;
-    if (credential === "otp") otpPage = page;
+    authentication.record(credential, page);
     return { filled: true };
   }
 
-  async function submitLogin(body: z.infer<typeof ActionSchema>) {
-    const page = await input.browser.currentUrl();
-    const secondFactor = otpPage === page;
-    if ((secondFactor && otpSubmitted) || (!secondFactor && loginSubmitted))
-      throw new Error(
-        "Login already submitted; inspect the result instead of retrying",
-      );
-    if (!secondFactor && loginPage !== page)
-      throw new Error("Fill the stored password on this page before login");
-    if (
-      body.ref !== undefined &&
-      (await input.browser.attribute(body.ref, "disabled")) !== null
-    )
-      throw new Error(
-        "Login control is disabled; inspect the form before submitting",
-      );
-    loginSubmitted = true;
-    if (secondFactor) otpSubmitted = true;
-    return await input.browser.action(body);
+  async function emailCode(
+    login: z.infer<typeof PromotionLoginsSchema>[string],
+    page: string,
+  ): Promise<string> {
+    assertPromotionEmailCodePage(input.account, page);
+    if (input.readEmailCode === undefined)
+      throw new Error("Private email-code access is not enabled for this run");
+    const recipient = login.email ?? login.username;
+    if (!z.email().safeParse(recipient).success)
+      throw new Error("Stored account email is required for verification mail");
+    return await input.readEmailCode({
+      account: input.account,
+      recipient,
+      after: startedAt,
+      signal: input.signal,
+    });
   }
 
   async function action(body: z.infer<typeof ActionSchema>) {
@@ -238,16 +220,33 @@ export function createPromotionToolHandler(input: {
     if (node.role === "link") {
       const href = await input.browser.attribute(body.ref, "href");
       if (href === null) throw new Error("Navigation link has no URL");
-      return {
-        handled: true,
-        result: await navigate(
-          new URL(href, await input.browser.currentUrl()).href,
-        ),
-      };
+      const before = await input.browser.currentUrl();
+      const address = new URL(href, before);
+      const mutation =
+        navigationMutation(address) ||
+        /\b(?:bump|vote|delete|remove|save|logout|log out|sign out|purchase|join|accept)\b/i.test(
+          node.name ?? "",
+        ) ||
+        ((href === "" || href.startsWith("#")) &&
+          /\b(?:publish|post|reply|send|submit|comment)\b/i.test(
+            node.name ?? "",
+          ));
+      if (mutation) await input.journal.beforeMutation();
+      try {
+        const result = await input.browser.followLink(body, address.href);
+        if ((await input.browser.currentUrl()) !== before)
+          authentication.navigated();
+        return { handled: true, result };
+      } catch (error: unknown) {
+        if (mutation) input.journal.mutationFailed();
+        throw error;
+      }
     }
-    const verify = otpPage !== undefined && isVerificationControl(node);
-    return verify || isSignInControl(node)
-      ? { handled: true, result: await submitLogin(body) }
+    return authentication.allowsControl(node, await input.browser.currentUrl())
+      ? {
+          handled: true,
+          result: await authentication.submit({ ...body, ref: body.ref }),
+        }
       : { handled: false };
   }
 
@@ -310,12 +309,9 @@ export function createPromotionToolHandler(input: {
 
   async function navigate(url: string) {
     const address = new URL(url);
-    const mutation =
-      /\b(?:bump|vote|delete|remove|logout|send|confirm)\b/i.test(
-        decodeURIComponent(`${address.pathname} ${address.search}`),
-      );
+    const mutation = navigationMutation(address);
     if (mutation) await input.journal.beforeMutation();
-    loginPage = undefined;
+    authentication.navigated();
     try {
       return await input.browser.open(url);
     } catch (error: unknown) {
@@ -359,24 +355,29 @@ export function createPromotionToolHandler(input: {
       case "solve-captcha": {
         if (input.reconciliation)
           throw new Error("Read-only mode cannot create paid CAPTCHA tasks");
-        const solved = await solvePromotionChallenge({
-          store: input.store,
-          occurrenceId: input.occurrenceId,
-          challenge: await input.browser.challenge(),
-          apiKey: input.solverKey,
-          allowanceMicrousd: input.solverAllowanceMicrousd,
-          signal: input.signal,
-          heartbeat: input.heartbeat,
-          registerSecret: input.registerSecret,
+        const context = await input.browser.challengeContext();
+        return await captcha.solve({
+          ...context,
           apply: (token) => input.browser.applyChallenge(token),
+          acquire: (onSolved) =>
+            solvePromotionChallenge({
+              store: input.store,
+              occurrenceId: input.occurrenceId,
+              challenge: context.challenge,
+              apiKey: input.solverKey,
+              allowanceMicrousd: input.solverAllowanceMicrousd,
+              signal: input.signal,
+              heartbeat: input.heartbeat,
+              registerSecret: input.registerSecret,
+              apply: (token) => input.browser.applyChallenge(token),
+              onSolved,
+            }),
         });
-        return {
-          ...solved,
-          responseStaged: true,
-          formSubmitted: false,
-          siteAccepted: false,
-        };
       }
+      case "solve-cloudflare":
+        if (input.reconciliation)
+          throw new Error("Reconciliation cannot solve access challenges");
+        return await input.browser.solveCloudflare();
     }
   }
   return async (raw: unknown): Promise<unknown> => {

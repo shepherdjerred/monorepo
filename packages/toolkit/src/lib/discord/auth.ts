@@ -1,5 +1,39 @@
 import { z } from "zod";
 
+export function discordDaemonEnvironment(
+  source: Readonly<Record<string, string | undefined>>,
+  mode: { passwordLogin: boolean; userOnly: boolean },
+): Record<string, string> {
+  if (mode.passwordLogin && mode.userOnly)
+    throw new Error("Choose --password-login or --user-only, not both");
+  const keys = [
+    "PATH",
+    "HOME",
+    "TMPDIR",
+    "LANG",
+    "USER",
+    "LOGNAME",
+    "SHELL",
+    "TERM",
+    "TZ",
+    "NODE_EXTRA_CA_CERTS",
+    "SSL_CERT_FILE",
+    "TOOLKIT_DISCORD_DIR",
+    "TOOLKIT_DISCORD_TTL_SECONDS",
+  ];
+  if (mode.passwordLogin)
+    keys.push("DISCORD_USER_EMAIL", "DISCORD_USER_PASSWORD");
+  else {
+    keys.push("DISCORD_USER_TOKEN");
+    if (!mode.userOnly) keys.push("DISCORD_BOT_TOKEN");
+  }
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      source[key] === undefined ? [] : [[key, source[key]]],
+    ),
+  );
+}
+
 /** Password-manager credentials are exchanged in memory; challenges need operator action. */
 export async function discordPasswordToken(
   email: string,

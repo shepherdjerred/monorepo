@@ -20,6 +20,7 @@ import {
 } from "#shared/promotion.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { promotionDiagnosticKey } from "#activities/promotion/diagnostic.ts";
+import { mailmateEmailCodeReader } from "./mailmate-code.ts";
 
 function print(text: string): void {
   process.stdout.write(`${text}\n`);
@@ -31,6 +32,7 @@ const { values, positionals } = parseArgs({
     all: { type: "boolean" },
     inventory: { type: "string" },
     profile: { type: "string" },
+    mailmate: { type: "boolean", default: false },
   },
   allowPositionals: true,
 });
@@ -91,7 +93,18 @@ delete Bun.env["AGENT_PROVIDER_UID"];
 const logins = PromotionLoginsSchema.parse(
   JSON.parse(z.string().min(1).parse(Bun.env["STORM_PROMOTION_LOGINS"])),
 );
-const tokens = promotionSecretTokens(logins);
+const tokens = [...promotionSecretTokens(logins)];
+const privateEmailCodeReader = values.mailmate
+  ? mailmateEmailCodeReader()
+  : undefined;
+const readEmailCode: typeof privateEmailCodeReader =
+  privateEmailCodeReader === undefined
+    ? undefined
+    : async (request) => {
+        const code = await privateEmailCodeReader(request);
+        tokens.push(code);
+        return code;
+      };
 const output = await mkdtemp(path.join(tmpdir(), "storm-promotion-preview-"));
 await chmod(output, 0o700);
 const results: unknown[] = [];
@@ -141,6 +154,7 @@ for (const target of targets) {
         mode: "preview",
         store,
         ...(profile === undefined ? {} : { browserProfile: profile }),
+        ...(readEmailCode === undefined ? {} : { readEmailCode }),
       }),
     );
   } catch (error: unknown) {

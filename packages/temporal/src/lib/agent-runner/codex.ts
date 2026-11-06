@@ -33,11 +33,13 @@ import {
   restoreProviderWorkspace,
 } from "./provider-workspace.ts";
 import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.ts";
-import {
-  isProviderCredentialKey,
-  PROVIDER_CREDENTIAL_ENV_VARS,
-} from "#shared/agent/provider-credentials.ts";
+import { isProviderCredentialKey } from "#shared/agent/provider-credentials.ts";
 import { codexLauncherPath, providerPathOverride } from "./codex-launcher.ts";
+import { codexScopedPermissions } from "./codex-permissions/policy.ts";
+import {
+  codexToolOptions,
+  CODEX_TOOL_ENVIRONMENT_CONFIG,
+} from "./codex-permissions/options.ts";
 
 const CODEX_TOOL_ITEM_TYPES = new Set([
   "command_execution",
@@ -45,16 +47,6 @@ const CODEX_TOOL_ITEM_TYPES = new Set([
   "mcp_tool_call",
   "web_search",
 ]);
-
-const CODEX_TOOL_ENVIRONMENT_CONFIG = {
-  allow_login_shell: false,
-  shell_environment_policy: {
-    inherit: "all",
-    ignore_default_excludes: false,
-    exclude: [...PROVIDER_CREDENTIAL_ENV_VARS],
-    experimental_use_profile: false,
-  },
-};
 
 type PreparedCodex = {
   options: CodexOptions;
@@ -92,6 +84,7 @@ async function rollbackCodexSubscriptionPreparation(input: {
 async function prepareCodex(
   input: RunCodexAgentTurnInput,
 ): Promise<PreparedCodex> {
+  const scoped = codexScopedPermissions(input);
   const providerUid = providerSubprocessUid();
   await prepareProviderWorkspace(input.cwd, providerUid);
   const childEnvironment = Object.fromEntries(
@@ -115,8 +108,7 @@ async function prepareCodex(
       const providerPath = await providerPathOverride(input);
       return {
         options: {
-          ...codexConfig.codexOptions,
-          config: CODEX_TOOL_ENVIRONMENT_CONFIG,
+          ...codexToolOptions(codexConfig.codexOptions, scoped),
           ...providerPath.pathOverride,
         },
         model: codexConfig.routeModelId,
@@ -168,8 +160,10 @@ async function prepareCodex(
   }
   return {
     options: {
-      env: { ...childEnvironment, HOME: codexHome },
-      config: CODEX_TOOL_ENVIRONMENT_CONFIG,
+      ...codexToolOptions(
+        { env: { ...childEnvironment, HOME: codexHome } },
+        undefined,
+      ),
       ...providerPath.pathOverride,
     },
     model: input.model,
@@ -401,8 +395,12 @@ export async function runCodexAgentTurn(
       approvalPolicy: "never",
       model: prepared.model,
       modelReasoningEffort: "high",
-      networkAccessEnabled: sandboxPolicy.networkAccessEnabled,
-      sandboxMode: sandboxPolicy.sandboxMode,
+      ...(input.scopedPermissions === undefined
+        ? {
+            networkAccessEnabled: sandboxPolicy.networkAccessEnabled,
+            sandboxMode: sandboxPolicy.sandboxMode,
+          }
+        : {}),
       webSearchMode: sandboxPolicy.webSearchMode,
       workingDirectory: input.cwd,
       skipGitRepoCheck: input.skipGitRepoCheck ?? false,

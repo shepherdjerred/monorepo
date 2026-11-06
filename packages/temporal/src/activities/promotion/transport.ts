@@ -13,6 +13,7 @@ import {
   type PromotionLoginsSchema,
 } from "./tools.ts";
 import type { PromotionTaskResult } from "./task-contract.ts";
+import type { PromotionEmailCodeReader } from "./access/credential-input.ts";
 
 export function promotionRequiredEnv(name: string): string {
   const value = Bun.env[name];
@@ -35,6 +36,7 @@ export function promotionTransport(input: {
   enabled: () => Promise<boolean>;
   heartbeat: () => void;
   registerSecret?: (value: string) => void;
+  readEmailCode?: PromotionEmailCodeReader;
 }) {
   const browser =
     input.target.discord === undefined

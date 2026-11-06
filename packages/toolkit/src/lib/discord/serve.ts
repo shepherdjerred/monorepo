@@ -5,7 +5,10 @@ import {
 } from "@shepherdjerred/unix-socket-daemon";
 import { Client as BotClient, Events, GatewayIntentBits } from "discord.js";
 import { Client as UserClient } from "discord.js-selfbot-v13";
-import { discordPasswordToken } from "#lib/discord/auth.ts";
+import {
+  discordPasswordToken,
+  discordDaemonEnvironment,
+} from "#lib/discord/auth.ts";
 import {
   type DaemonContext,
   identities,
@@ -99,10 +102,16 @@ async function loginUserWithPassword(): Promise<UserClient> {
 }
 
 export async function runDiscordDaemon(
-  options: { passwordLogin?: boolean } = {},
+  options: { passwordLogin?: boolean; userOnly?: boolean } = {},
 ): Promise<void> {
-  const botToken = Bun.env["DISCORD_BOT_TOKEN"];
-  const userToken = Bun.env["DISCORD_USER_TOKEN"];
+  const credentials = discordDaemonEnvironment(Bun.env, {
+    passwordLogin: options.passwordLogin === true,
+    userOnly: options.userOnly === true,
+  });
+  const botToken = credentials["DISCORD_BOT_TOKEN"];
+  const userToken = credentials["DISCORD_USER_TOKEN"];
+  delete Bun.env["DISCORD_BOT_TOKEN"];
+  delete Bun.env["DISCORD_USER_TOKEN"];
   const hasBot = botToken != null && botToken.length > 0;
   const hasUser = userToken != null && userToken.length > 0;
   if (!hasBot && !hasUser && options.passwordLogin !== true) {

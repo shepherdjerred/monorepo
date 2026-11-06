@@ -16,6 +16,9 @@ function harness(
     mixed?: boolean;
     guildId?: string;
     canSend?: boolean;
+    slash?: boolean;
+    commandMissing?: boolean;
+    canUseApplicationCommands?: boolean;
   } = {},
 ) {
   const target = {
@@ -29,6 +32,9 @@ function harness(
       guildId: "877714016351453184",
       channelId: "1054901030644617327",
       username: "the.storm.mc",
+      ...(options.slash === true
+        ? { slash: { botId: "123", command: "bump", args: [] } }
+        : {}),
     },
   };
   const requests: { path: string; body: unknown }[] = [];
@@ -61,7 +67,29 @@ function harness(
           type: "GUILD_TEXT",
           canView: true,
           canSend: options.canSend ?? true,
+          canUseApplicationCommands: options.canUseApplicationCommands ?? true,
+          canManageServer: false,
+          administrator: false,
+          memberPermissions: "0",
           slowmodeSeconds: 60,
+        });
+      if (url.pathname === "/commands")
+        return Response.json({
+          channelId: target.discord.channelId,
+          guildId: target.discord.guildId,
+          applications: [{ id: "123", name: "DISBOARD" }],
+          application_commands:
+            options.commandMissing === true
+              ? []
+              : [
+                  {
+                    id: "456",
+                    application_id: "123",
+                    name: "bump",
+                    description: "Bump server",
+                    type: 1,
+                  },
+                ],
         });
       if (url.pathname === "/read")
         return Response.json({
@@ -139,7 +167,7 @@ describe("scoped Discord dry runs", () => {
     ).rejects.toThrow("One prepared");
   });
   it("records slash arguments without calling slash", async () => {
-    const test = harness();
+    const test = harness({ slash: true });
     await test.client.handle({
       endpoint: "discord-slash",
       body: { botId: "123", command: "bump", args: [] },
@@ -153,6 +181,32 @@ describe("scoped Discord dry runs", () => {
     expect(test.requests.every((request) => request.path !== "/slash")).toBe(
       true,
     );
+  });
+  it.each([{ commandMissing: true }, { canUseApplicationCommands: false }])(
+    "refuses unavailable commands before recording a preview: %j",
+    async (options) => {
+      const test = harness({ slash: true, ...options });
+      await expect(
+        test.client.handle({ endpoint: "discord-status" }),
+      ).rejects.toThrow(/not available|does not permit/);
+      expect(test.client.preparedActions).toEqual([]);
+    },
+  );
+  it("refuses unassigned slash payloads and message substitutions", async () => {
+    const test = harness({ slash: true });
+    await expect(
+      test.client.handle({
+        endpoint: "discord-slash",
+        body: { botId: "999", command: "bump", args: [] },
+      }),
+    ).rejects.toThrow("caller-assigned");
+    await expect(
+      test.client.handle({
+        endpoint: "discord-send",
+        body: { content: "Replacement" },
+      }),
+    ).rejects.toThrow("requires the pinned");
+    expect(test.client.preparedActions).toEqual([]);
   });
   it.each([{ username: "derrej_" }, { mixed: true }])(
     "refuses the wrong or mixed identity before accessing a channel: %j",

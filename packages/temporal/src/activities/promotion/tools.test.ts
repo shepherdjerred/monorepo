@@ -358,10 +358,13 @@ describe("preview access CAPTCHA solving", () => {
       );
     try {
       const test = await harness();
-      vi.spyOn(test.browser, "challenge").mockResolvedValue({
-        type: "TurnstileTaskProxyless",
-        websiteURL: test.target.url,
-        websiteKey: "fixture-key",
+      vi.spyOn(test.browser, "challengeContext").mockResolvedValue({
+        documentId: "fixture-document",
+        challenge: {
+          type: "TurnstileTaskProxyless",
+          websiteURL: test.target.url,
+          websiteKey: "fixture-key",
+        },
       });
       const apply = vi
         .spyOn(test.browser, "applyChallenge")

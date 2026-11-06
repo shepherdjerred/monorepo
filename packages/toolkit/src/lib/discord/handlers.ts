@@ -11,6 +11,7 @@ import {
 import { createUserMessageUpdateWatcher } from "#lib/discord/deferred-reply.ts";
 import { DaemonError } from "#lib/discord/error.ts";
 import { userChannelInfo } from "#lib/discord/channel.ts";
+import { userApplicationCommands } from "#lib/discord/application-commands.ts";
 import {
   ReadRequestSchema,
   SendRequestSchema,
@@ -469,6 +470,12 @@ async function dispatch(
       if (channelId === null || channelId === "")
         throw new DaemonError("channelId is required");
       return userChannelInfo(ctx.user, channelId);
+    }
+    case "/commands": {
+      const channelId = url.searchParams.get("channelId");
+      if (channelId === null || channelId === "")
+        throw new DaemonError("channelId is required");
+      return userApplicationCommands(ctx.user, channelId);
     }
     default:
       throw new DaemonError(`Unknown path ${url.pathname}`, 404);

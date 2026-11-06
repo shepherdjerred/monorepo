@@ -5,15 +5,27 @@ import { createPromotionToolHandler } from "./tools.ts";
 import { promotionTarget } from "./manifest.ts";
 import { memoryPromotionStore } from "./test-support.ts";
 import { updatePromotionState } from "./store.ts";
+import type { PromotionEmailCodeReader } from "./access/credential-input.ts";
 
 export async function harness(
   preview = true,
   reconciliation = false,
   maxToolCalls = 80,
-  login?: { hosts?: string[]; otp?: string },
+  login?: {
+    hosts?: string[];
+    otp?: string;
+    readEmailCode?: PromotionEmailCodeReader;
+    account?: string;
+  },
 ) {
+  const {
+    readEmailCode,
+    account: accountOverride,
+    ...storedLogin
+  } = login ?? {};
   const target = promotionTarget("pmc"),
     store = memoryPromotionStore();
+  const account = accountOverride ?? target.account;
   await updatePromotionState(store, target.id, (state) => ({
     ...state,
     lock: { occurrenceId: "fixture", acquiredAt: new Date().toISOString() },
@@ -65,23 +77,24 @@ export async function harness(
     journal,
     store,
     targetId: target.id,
-    account: target.account,
+    account,
     occurrenceId: "fixture",
     preview,
     reconciliation,
     maxToolCalls,
     logins: {
-      [target.account]: {
+      [account]: {
         username: "fixture-user",
         email: "fixture@example.invalid",
         password: "fixture-password",
-        ...login,
+        ...storedLogin,
       },
     },
     solverKey: "fixture-solver",
     solverAllowanceMicrousd: 1_000_000,
     signal: new AbortController().signal,
     heartbeat: vi.fn(),
+    ...(readEmailCode === undefined ? {} : { readEmailCode }),
   });
   return {
     handle,

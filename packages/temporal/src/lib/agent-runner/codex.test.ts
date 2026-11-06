@@ -220,6 +220,58 @@ describe("runCodexAgentTurn failure classification", () => {
 });
 
 describe("runCodexAgentTurn preparation", () => {
+  test("keeps the native scoped permission profile from being overridden by legacy thread flags", async () => {
+    mocks.createCodexConfig.mockReturnValue({
+      codexOptions: { configOverrides: ['model_provider="fixture"'] },
+      routeModelId: "gpt-5.4",
+    });
+    mocks.startThread.mockReturnValue({
+      runStreamed: () => Promise.resolve({ events: streamedEvents() }),
+    });
+    await withLifecycleDirectory(
+      "codex-scoped-profile",
+      async ({ codexHome }) => {
+        await runCodexAgentTurn({
+          service: "temporal",
+          callSite: "agent-chat",
+          prompt: "inspect",
+          model: "gpt-5.4",
+          maxTurns: 4,
+          turnBudgetKind: "turns",
+          cwd: "/work/session",
+          auth: { kind: "openai-api-key", apiKey: "fixture" },
+          env: { CODEX_HOME: codexHome },
+          signal: new AbortController().signal,
+          sandboxPolicy: {
+            sandboxMode: "workspace-write",
+            networkAccessEnabled: true,
+            webSearchMode: "disabled",
+          },
+          scopedPermissions: {
+            denyReadPaths: ["/private/MailMate"],
+            unixSockets: ["/private/task.sock"],
+          },
+          beforeEvent: () => Promise.resolve(true),
+          onEvent: vi.fn(),
+        });
+      },
+    );
+    expect(mocks.constructor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({ default_permissions: "agent-task" }),
+        configOverrides: expect.arrayContaining([
+          'model_provider="fixture"',
+          'permissions.agent-task.filesystem={"/private/MailMate"="deny"}',
+        ]),
+      }),
+    );
+    const thread = z
+      .record(z.string(), z.unknown())
+      .parse(mocks.startThread.mock.calls[0]?.[0]);
+    expect(thread).not.toHaveProperty("sandboxMode");
+    expect(thread).not.toHaveProperty("networkAccessEnabled");
+    expect(thread).toHaveProperty("webSearchMode", "disabled");
+  });
   test("uses a persistent API-key home for an initial session", async () => {
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
     let expectedCodexHome = "";
