@@ -180,6 +180,7 @@ async function startSandboxClient(
     name: start.name,
     target: record.id,
     game: record.endpoints.game,
+    ...(record.sourceDirectory === undefined ? {} : {sourceDirectory: record.sourceDirectory}),
   });
   // Ops and game mode go through the bridge console, as for actors.
   const target = await ctx.target(record.id);

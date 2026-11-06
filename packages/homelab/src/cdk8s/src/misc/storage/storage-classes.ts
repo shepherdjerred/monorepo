@@ -38,8 +38,20 @@ export const NVME_STORAGE_CLASS_LZ4 = "zfs-ssd-lz4";
  *   putting a workspace on the production node's pool.
  */
 export const CI_WORKSPACE_STORAGE_CLASS = "ci-workspace";
+export const MC_CAPTURE_STORAGE_CLASS = "mc-capture-fixture";
 
 export function createStorageClasses(chart: Chart) {
+  new KubeStorageClass(chart, "mc-capture-fixture", {
+    metadata: { name: MC_CAPTURE_STORAGE_CLASS },
+    provisioner: "zfs.csi.openebs.io",
+    allowVolumeExpansion: false,
+    reclaimPolicy: "Delete",
+    parameters: {
+      fstype: "zfs", poolname: "zfspv-pool-nvme", compression: "lz4",
+      dedup: "off", recordsize: "128k", shared: "yes",
+    },
+    volumeBindingMode: "WaitForFirstConsumer",
+  });
   new KubeStorageClass(chart, "host-zfs-ssd", {
     metadata: { name: NVME_STORAGE_CLASS },
     provisioner: "zfs.csi.openebs.io",
