@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "corpusVersion": 2,
+  "corpusSha256": "aab81ab6e31680455e4e08143078f1307b49596f94c627a75d401056920135a5",
+  "promptSha256": "9a76e7e0732d59c20129c484e571d6d0cedbf255b43389c6f9140c479abe5c53",
+  "model": "gpt-5.6-luna",
+  "generatedAt": "2026-10-22T02:56:29.289Z",
+  "passed": false,
+  "cases": [
+    {
+      "id": "competition-most-kills",
+      "question": "Create a competition for most kills across 10 games",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": true,
+      "answer": "Scout competitions can’t score kills or be limited to exactly 10 games. They support most wins, most games played, highest win rate, highest rank, and most rank climb. I can answer a 10-game kills question here or prepare a supported competition once you choose its server, scoring rule, and date window; nothing has been created.",
+      "issues": []
+    },
+    {
+      "id": "competition-most-losses",
+      "question": "can you make a competition for the most losses on aram mayhem",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": true,
+      "answer": "I can’t make that competition: Scout never receives results for the exact **ARAM Mayhem** queue, and competitions can’t score **most losses** anyway. Scout can rank losses in a report for supported queues, but not for ARAM Mayhem; a server admin can enable competitions, but that would not change either limitation.",
+      "issues": []
+    },
+    {
+      "id": "competition-losses-offers-report",
+      "question": "i want a leaderboard of who loses the most. help me set it up",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": true,
+      "answer": "A Scout competition can’t score “most losses,” but a scheduled Scout report can rank players by losses. To set it up, tell me the server, Discord channel, report title, and time window (for example, the last 30 days or a specific date range). Nothing has been created yet.",
+      "issues": []
+    },
+    {
+      "id": "aram-mayhem-results",
+      "question": "show me every aram mayhem match and who won",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": false,
+      "answer": "ARAM Mayhem results are not available in Scout: Riot never sends Scout who won or the post-game stats for that exact queue, so I can’t list its matches or winners. This is not a date-range limitation.",
+      "issues": [
+        "Said none of: pre-match / prematch / no results / no finished / no post-match / no post match / cannot be scored / never receives / never learns / does not publish / does not provide / does not send / not the final results / not the results / only sees games start / only sees the games start"
+      ]
+    },
+    {
+      "id": "competition-creation-disabled",
+      "question": "set up a most wins competition for my server",
+      "creationEnabled": false,
+      "attempts": 1,
+      "passed": true,
+      "answer": "Creating a competition isn’t enabled here, so I can’t set up a “Most Wins” competition from Explore. A server admin can create it in the Scout web app; for help, contact [Scout support](https://discord.gg/qmRewyHXFE).",
+      "issues": []
+    },
+    {
+      "id": "feature-request-goes-to-support",
+      "question": "can you add a most deaths competition type? that would be way funnier",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": true,
+      "answer": "That would be hilarious, but **most deaths isn’t a supported Scout competition scoring type**. Scout competitions currently support most games, most wins, most wins on a champion, highest win rate, highest rank, and most rank climb—not deaths. I also can’t add a new competition type from Explore; please send it as a feature request in the [Scout support Discord](https://discord.gg/qmRewyHXFE). I can still rank players by deaths in a report or answer it directly here.",
+      "issues": []
+    },
+    {
+      "id": "unanswerable-question-goes-to-support",
+      "question": "why did scout stop posting my match reports last week?",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": true,
+      "answer": "I can’t inspect Scout’s Discord posting or delivery logs from here, so I can’t determine why the reports stopped last week. Please check that the report is still scheduled and its channel is still available to Scout; if those look right, contact Scout support at https://discord.gg/qmRewyHXFE so an admin can check the delivery failure.",
+      "issues": []
+    },
+    {
+      "id": "auto-review-is-a-player-feed",
+      "question": "auto game review after every game",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": false,
+      "answer": "I can’t enable or implement an automatic review after every game from Explore. I can review a completed match on request with evidence-backed turning points, strengths, and next steps; feature requests can be sent to Scout support: https://discord.gg/qmRewyHXFE",
+      "issues": [
+        "Said none of: feed / subscription / subscribe"
+      ]
+    },
+    {
+      "id": "notification-text-not-customizable",
+      "question": "how can i rewrite what the bot say when someone started a game",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": false,
+      "answer": "A clearer version would be: “How can I change what the bot says when someone starts a game?”",
+      "issues": [
+        "Said none of: any refusal wording",
+        "Said none of: message / text / notification / wording"
+      ]
+    },
+    {
+      "id": "one-off-post-not-supported",
+      "question": "post this in server channel",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": false,
+      "answer": "I can’t post directly to a server channel from here. Send me the message you want posted, and I’ll format it for Discord.",
+      "issues": [
+        "Said none of: report / schedule / scheduled"
+      ]
+    },
+    {
+      "id": "reports-live-on-the-reports-page",
+      "question": "where can i see and turn off my reports?",
+      "creationEnabled": true,
+      "attempts": 1,
+      "passed": false,
+      "answer": "Open Scout’s **Explore** page and go to **Reports**. Select the report you want to stop, then use its **⋯ menu** or **Edit** controls to turn off its schedule. This disables future posts; it doesn’t delete past reports.",
+      "issues": [
+        "Said none of: reports page / reports tab / /reports"
+      ]
+    }
+  ]
+}
