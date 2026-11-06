@@ -18,9 +18,10 @@ Load the repository `feature-flags` skill for rollout procedure.
   consumers require an intentional homelab NetworkPolicy change. Management
   writes require the existing 1Password-backed operator credential; never
   place that credential in runtime consumer configuration.
-- A new behavior flag defaults off, is enabled in beta, ramps deliberately, and
-  is removed after rollout. Defaults continue to represent safe production
-  behavior during a Flipt outage.
+- New features default on in production and beta, with code defaults and Flipt
+  declarations aligned. A temporary default-off exception requires a concrete
+  blocker and tracked follow-up with enablement criteria. Follow the
+  `feature-flags` skill through live enablement and behavior verification.
 
 Tests must cover absence, explicit false/zero, malformed values, evaluation
 errors, targeting, change observation, and shutdown.

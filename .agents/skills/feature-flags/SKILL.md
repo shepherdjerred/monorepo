@@ -21,11 +21,18 @@ Before adding a key:
 2. Classify credentials/bootstrap versus behavior.
 3. Define a Zod schema, safe production-compatible default, allowed sources,
    sensitivity, and targeting.
-4. Add the Flipt declaration and beta targeting for a new feature. Default it
-   off, ramp it, then remove the flag after rollout. Missing declared keys are
-   created in live Flipt automatically; do not overwrite existing targeting.
+4. New features default on in production and beta. Keep the code default and
+   Flipt declarations aligned, including environment overrides. Use flags to
+   disable a feature when needed. A temporary default-off exception requires a
+   concrete blocker and tracked follow-up with enablement criteria. Missing
+   declared keys are created in live Flipt automatically; existing targeting
+   needs an explicit rollout change.
 5. Test absence, explicit false/zero, invalid values, source failures, and
    provenance.
+
+Delivery includes verifying the feature is enabled in the intended live
+environment and exercising its user-visible behavior. A merge behind a disabled
+flag is incomplete unless the default-off exception is recorded.
 
 Do not make `@shepherdjerred/config` depend on the Flipt client; the flags
 package injects the source. Never label metrics by unbounded targeting keys or
