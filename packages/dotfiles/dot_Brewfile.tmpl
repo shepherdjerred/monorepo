@@ -22,9 +22,6 @@
 {{-     end -}}
 {{-   end -}}
 {{-   if eq .profile "agent-host" -}}
-{{-     range .agentHost.brews -}}
-{{-       $lines = append $lines (printf "brew %q" .) -}}
-{{-     end -}}
 {{-     $lines = append $lines "" -}}
 {{-   end -}}
 {{-   join "\n" $lines -}}

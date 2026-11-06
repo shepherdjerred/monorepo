@@ -9,9 +9,6 @@ AppData_*
 
 {{- if ne .chezmoi.os "darwin" }}
 Library/
-# The tailscale CLI ships inside the macOS app bundle, so the wrapper that
-# execs it is meaningless off darwin.
-.local/bin/tailscale
 {{- end }}
 
 scripts
@@ -63,9 +60,7 @@ Library/Application Support/eza/theme.yml
 
 {{- if eq .profile "agent-host" }}
 # Headless agent hosts install only the casks in .chezmoidata/agent-host.yaml,
-# so configuration for absent desktop apps stays out. The tailscale wrapper
-# execs the GUI app bundle, which agent hosts replace with the brew tailscaled.
-.local/bin/tailscale
+# so configuration for absent desktop apps stays out.
 .config/contact-profiles
 install-fastmail-contacts.sh
 .config/zed

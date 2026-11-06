@@ -9,6 +9,28 @@ The recovery model is intentionally service-based: dotfiles restore machine
 configuration, while Syncthing, Obsidian Sync, iCloud, and application-specific
 cloud services restore user data. A full-machine backup is not required.
 
+## Tailscale SSH
+
+Every Mac is reached through Herdr over Tailscale SSH. The GUI Tailscale app
+cannot run the Tailscale SSH server, so every profile uses the brew `tailscale`
+formula with `tailscaled` installed as a system daemon; the installer runs
+`sudo tailscaled install-system-daemon` when the daemon is absent. That command
+copies the binary to `/usr/local/bin`, so after `brew upgrade tailscale` rerun
+it from a local session; it restarts the daemon and drops Tailscale SSH
+sessions.
+
+At the console once, run `sudo tailscale up --ssh --hostname=<name>` and
+approve the login. Keep macOS Remote Login off; Tailscale SSH serves port 22 on
+the tailnet. The tailnet policy should `accept` rather than `check` your own
+devices so Herdr sessions do not require periodic browser re-authentication.
+From then on, `ssh <name>` and Herdr's `hc machine add <name>` reach the Mac.
+
+Windows cannot run the Tailscale SSH server, so the Windows desktop keeps
+OpenSSH Server and is addressed by its MagicDNS name. An agent host reaches it
+with a dedicated `~/.ssh/herdr-desktop` key generated on that host; its public
+half sits in the desktop's `administrators_authorized_keys` behind a `from=`
+restriction to the host's tailnet address.
+
 ## Agent hosts
 
 An agent host is a headless Mac for coding agents, driven from another machine
@@ -17,21 +39,12 @@ through Herdr over Tailscale SSH. Install it with
 formula and toolchain but only the casks in `.chezmoidata/agent-host.yaml`, and
 skips Touch ID, Berkeley Mono, desktop app configuration, and Atuin sync.
 
-The GUI Tailscale build cannot run the Tailscale SSH server, so agent hosts use
-the brew `tailscale` formula with `tailscaled` installed as a system daemon.
-That command copies the binary to `/usr/local/bin`, so after
-`brew upgrade tailscale` rerun `sudo tailscaled install-system-daemon` from a
-local session; it restarts the daemon and drops Tailscale SSH sessions.
-
 At the console (or KVM) once:
 
 1. Enable FileVault. Each reboot then needs a console unlock, which also logs
    in the user so Herdr core starts.
 2. Run `sudo pmset -a sleep 0 disksleep 0 autorestart 1 womp 1`.
-3. Run `sudo tailscale up --ssh --hostname=<name>` and approve the login. Keep
-   macOS Remote Login off; Tailscale SSH serves port 22 on the tailnet. The
-   tailnet policy should `accept` rather than `check` your own devices so Herdr
-   sessions do not require periodic browser re-authentication.
+3. Bring up Tailscale SSH as described in [Tailscale SSH](#tailscale-ssh).
 4. Enroll the 1Password service account with
    `swift scripts/onepassword/enroll-service-account.swift` and choose
    **Always Allow** when Keychain asks, so headless reads never wait on a
@@ -78,17 +91,18 @@ the static desktop TTF files, not OTF, WOFF2, or variable fonts.
    Tools.
 4. Run `claude auth login` if Claude Code usage should appear in the quota
    panel.
-5. Sign in to GitHub CLI, Tailscale, Atuin, browsers, editors, and licensed apps
-   as needed.
-6. Approve the Fastmail Contacts profile in **System Settings > General >
+5. Bring up Tailscale SSH as described in [Tailscale SSH](#tailscale-ssh).
+6. Sign in to GitHub CLI, Atuin, browsers, editors, and licensed apps as
+   needed.
+7. Approve the Fastmail Contacts profile in **System Settings > General >
    Device Management**, then enter a dedicated Fastmail Contacts app password
    when macOS requests it.
-7. Run `sudo touch /private/var/tmp/.metadata_never_index`. Every other
+8. Run `sudo touch /private/var/tmp/.metadata_never_index`. Every other
    Spotlight exclusion is placed automatically on each `chezmoi apply` from
    `.chezmoidata/spotlight.yaml`, but this one is root-owned, so the apply
    script skips it rather than blocking on a password prompt and prints a
    reminder until it exists.
-8. Complete the privacy checklist below, then test each affected feature.
+9. Complete the privacy checklist below, then test each affected feature.
 
 Syncthing and OrbStack are launched automatically and configured to start at
 login. Syncthing still requires explicit authorization from another device and
@@ -136,7 +150,7 @@ Grant only permissions needed for features you actually use.
 | Bluetooth                          | BetterMouse; Discord only when using a Bluetooth device through the app                                    | Confirm the intended device works without approving unrelated apps                                       |
 | Automation & personal data         | ChatGPT only for each intentionally used app-control, Calendar, Reminders, Desktop, or location feature    | Run the specific requested action; leave every unused category denied                                    |
 | Files & Folders / Full Disk Access | Syncthing only for selected protected folders; terminal or agent tools only for a deliberate workflow need | Confirm each intended protected folder is readable; do not grant broad access preemptively               |
-| VPN, Local Network & Downloads     | Approve Tailscale; allow Local Network and Downloads only when direct connections or Taildrop need them    | Reach one intended tailnet resource and test Taildrop only if it will be used                            |
+| VPN, Local Network & Downloads     | Allow Local Network and Downloads only for an app that requests them for a feature in use                  | Reach one intended tailnet resource and test Taildrop only if it will be used                            |
 | Browser extensions                 | Enable the 1Password extension and any intentionally retained Safari extensions                            | Confirm password fill works and each retained extension appears enabled                                  |
 | Notifications                      | Choose per app after first launch                                                                          | Trigger one useful notification from each app whose notifications should remain enabled                  |
 
@@ -164,11 +178,10 @@ decisions as part of routine setup.
   `POSTHOG_CLI_API_KEY`.
 - `psql --version` resolves through the keg-only `libpq` on PATH, in both fish
   and `bash -lc`.
-- `tailscale version` succeeds through `~/.local/bin/tailscale`, and the brew
-  `tailscale` formula is **not** installed (the cask supplies the daemon). That
-  path is an `exec` wrapper rather than a symlink — the bundled binary resolves
-  its bundle identity from its invocation path and crashes when reached through
-  one — so `readlink` on it is empty and running it is the real check.
+- `tailscale version` succeeds, `launchctl print system/com.tailscale.tailscaled`
+  shows the daemon running, `tailscale debug prefs` reports `"RunSSH": true`,
+  and the `tailscale-app` cask is **not** installed. Another tailnet device
+  reaches this Mac with `ssh <name> hostname`.
 - `cf --version` matches the pin in `~/.local/bin/cf`, and
   `env | grep -c '^CLOUDFLARE_API_TOKEN='` returns `0` so a bare `tofu apply`
   still fails closed without `op run`.

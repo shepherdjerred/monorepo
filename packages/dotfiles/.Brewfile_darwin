@@ -136,6 +136,8 @@ brew "sevenzip"
 brew "starship"
 # Tool to enforce Swift style and conventions
 brew "swiftlint"
+# Easiest, most secure way to use WireGuard and 2FA
+brew "tailscale"
 # Command-line interface for running and interacting with Temporal Server and UI
 brew "temporal"
 # CLI tool that moves files or folder to the trash
@@ -264,8 +266,6 @@ cask "swish"
 cask "syncthing-app"
 # Quicklook extension for source files
 cask "syntax-highlight"
-# Mesh VPN based on WireGuard
-cask "tailscale-app"
 # LaTeX editor
 cask "texifier"
 # Virtual machines UI using QEMU

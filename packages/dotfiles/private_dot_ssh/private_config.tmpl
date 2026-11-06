@@ -1,0 +1,20 @@
+Include ~/.orbstack/ssh/config
+{{- if eq .profile "agent-host" }}
+
+# Windows cannot run the Tailscale SSH server, so Herdr reaches the desktop
+# through its OpenSSH Server with a key that exists only on this host. The
+# desktop accepts the key only from this host's tailnet address.
+Host desktop
+  HostName desktop.tailnet-1a49.ts.net
+  User Jerred
+  IdentityFile ~/.ssh/herdr-desktop
+  IdentitiesOnly yes
+  IdentityAgent none
+  UserKnownHostsFile ~/.ssh/herdr-desktop-known_hosts
+  StrictHostKeyChecking yes
+  ServerAliveInterval 30
+  ServerAliveCountMax 3
+{{- end }}
+
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

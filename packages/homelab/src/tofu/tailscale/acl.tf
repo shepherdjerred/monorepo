@@ -120,9 +120,11 @@ resource "tailscale_acl" "homelab" {
 
     # Tailscale SSH:
     #   1. Admins -> tagged servers (e.g. future tag:server nodes).
-    #   2. Preserve the tailnet default: any member may Tailscale-SSH into their
-    #      OWN devices (autogroup:self) in check mode. The owner SSHes into personal
-    #      devices (Steam Deck, MacBook) this way — dropping it would break that.
+    #   2. Any member may Tailscale-SSH into their OWN devices (autogroup:self) as
+    #      a non-root user. The owner's Macs (MacBook, the karpathy agent host)
+    #      form a Herdr machine mesh over these long-lived sessions, so this is
+    #      `accept`: check mode's periodic browser re-authentication would stall
+    #      every reconnect between them. Root stays off this path.
     #      (Windows has no Tailscale SSH server, so it uses regular sshd, already
     #      covered by the autogroup:admin -> *:* acl above.)
     ssh = [
@@ -133,10 +135,10 @@ resource "tailscale_acl" "homelab" {
         users  = ["autogroup:nonroot", "root"]
       },
       {
-        action = "check"
+        action = "accept"
         src    = ["autogroup:members"]
         dst    = ["autogroup:self"]
-        users  = ["autogroup:nonroot", "root"]
+        users  = ["autogroup:nonroot"]
       },
     ]
 
