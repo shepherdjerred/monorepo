@@ -183,19 +183,19 @@ if command -v brew &>/dev/null; then
     sudo /bin/bash "${DOTFILES_SOURCE_DIR}/macos-file-limits/install.sh"
     log_success "Launchd file limits installed; a fresh login is required for existing apps"
 
-    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
-        # Agent hosts are reached over Tailscale SSH, which only the
-        # open-source tailscaled supports. Install the daemon once: rerunning
-        # install-system-daemon restarts it and would drop this very session
-        # when the installer runs over Tailscale SSH.
-        if ! launchctl print system/com.tailscale.tailscaled &>/dev/null; then
-            log_info "Installing tailscaled as a system daemon"
-            sudo tailscaled install-system-daemon
-            log_success "tailscaled installed; run: sudo tailscale up --ssh --hostname=<name>"
-        else
-            log_info "tailscaled system daemon already installed"
-        fi
+    # Every Mac is reached over Tailscale SSH, which only the open-source
+    # tailscaled supports. Install the daemon once: rerunning
+    # install-system-daemon restarts it and would drop this very session when
+    # the installer runs over Tailscale SSH.
+    if ! launchctl print system/com.tailscale.tailscaled &>/dev/null; then
+        log_info "Installing tailscaled as a system daemon"
+        sudo tailscaled install-system-daemon
+        log_success "tailscaled installed; run: sudo tailscale up --ssh --hostname=<name>"
     else
+        log_info "tailscaled system daemon already installed"
+    fi
+
+    if [ "${DOTFILES_PROFILE}" != "agent-host" ]; then
         log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
         sudo-touchid --with-reattach
         log_success "Touch ID for sudo enabled"

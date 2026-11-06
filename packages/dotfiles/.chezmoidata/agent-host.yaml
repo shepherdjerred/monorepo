@@ -16,8 +16,3 @@ agentHost:
     # (run_once_after_install-pinchtab-daemon.sh).
     - google-chrome@canary
     - orbstack
-  # The GUI Tailscale build cannot run the Tailscale SSH server, so agent hosts
-  # use the open-source tailscaled installed as a system daemon instead of the
-  # tailscale-app cask.
-  brews:
-    - tailscale
