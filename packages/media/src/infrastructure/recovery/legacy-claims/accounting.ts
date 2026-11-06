@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
@@ -33,6 +34,7 @@ export function claimIdentityHash(claim: unknown) {
 export async function accountedRecoveryClaims(
   db: Prisma.TransactionClient,
   mediaIds: string[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -47,6 +49,7 @@ export async function accountedRecoveryClaims(
     orderBy: { id: "asc" },
     take: 1001,
   });
+  budget?.consume(receipts.length);
   if (receipts.length > 1000)
     throw claimConflict(
       "Legacy claim receipt history exceeds bounded reconciliation",

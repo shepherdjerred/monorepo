@@ -225,7 +225,8 @@ export async function findMovieSubtitlesV4(
   execution.assertActive();
   const context = { ...initial, plexBindingExecution: () => execution };
   const input = MovieSubtitleOperationV4Schema.parse(raw);
-  const budget = new PublicationAuthorityReadBudget();
+  const budget =
+    context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
   if (!(await context.gates.acquisition()))
     return blocked("acquisition_disabled");
   const work = await authorizedWork(context, input, budget);

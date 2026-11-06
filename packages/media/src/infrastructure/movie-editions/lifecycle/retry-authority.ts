@@ -20,11 +20,20 @@ export async function movieRetryAuthorityV4(
   tx: Prisma.TransactionClient,
   input: {
     scope: MovieEditionScope;
-    source: Awaited<ReturnType<typeof readMovieRetrySourceV4>>;
+    source: Pick<
+      Awaited<ReturnType<typeof readMovieRetrySourceV4>>,
+      | "attempt"
+      | "operation"
+      | "recorded"
+      | "generation"
+      | "profile"
+      | "birthHash"
+    >;
     access: MovieChoiceAccess;
     actorId?: string;
     invocation?: MovieManagementInvocation;
     budget: PublicationAuthorityReadBudget;
+    purpose?: "completed_ack";
   },
 ) {
   const { source, scope, budget } = input;
@@ -45,8 +54,7 @@ export async function movieRetryAuthorityV4(
     target.intentionallyRemovedAt !== null ||
     target.generation !== source.generation ||
     target.automationEpoch !== source.attempt.recoveryEpoch ||
-    reservation?.attemptId !== source.attempt.id ||
-    reservation.generation !== source.generation ||
+    !retryReservationMatches(reservation, source, input.purpose) ||
     identityHash(current.profile) !==
       identityHash(source.recorded.assessment.profile) ||
     current.canonicalHash !== source.recorded.assessment.canonicalHash
@@ -95,6 +103,17 @@ export async function movieRetryAuthorityV4(
       409,
     );
   return retryConsent(tx, input);
+}
+
+function retryReservationMatches(
+  reservation: { attemptId: string; generation: number } | null,
+  source: Parameters<typeof movieRetryAuthorityV4>[1]["source"],
+  purpose: "completed_ack" | undefined,
+) {
+  return purpose === "completed_ack"
+    ? reservation === null && source.attempt.state === "completed"
+    : reservation?.attemptId === source.attempt.id &&
+        reservation.generation === source.generation;
 }
 
 async function retryConsent(

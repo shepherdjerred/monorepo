@@ -19,6 +19,7 @@ import {
 } from "#shared/movie-editions/registry.ts";
 
 export type AcquisitionAccess = {
+  seriesPackPublicationAttemptId?: string | undefined;
   libraryManagement?: LibraryManagementInvocation | undefined;
   serverMachineId?: string | undefined;
   movieAccess?: MovieChoiceAccess | undefined;

@@ -1,5 +1,7 @@
 import { FileOperations } from "#filesystem/operations.ts";
 import type { PreparedImport } from "#filesystem/operations/staging.ts";
+import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
+import type { FileOperationManifest } from "#filesystem/operations-types.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { assertAcquisition } from "#automation/files/guards.ts";
@@ -15,6 +17,21 @@ import {
   type PublicationContext,
 } from "#automation/publication-proof/invocation.ts";
 
+/** The explicit pack protocol settles its real batch in the existing effect transaction. */
+export type SeriesPackStagingSettlementV1 = {
+  assertCurrent: (
+    tx: Transaction,
+    attempt: AcquisitionAttempt,
+  ) => Promise<void>;
+  settle: (
+    tx: Transaction,
+    staged: readonly {
+      entry: FilePlanEntry;
+      manifest: FileOperationManifest;
+    }[],
+  ) => Promise<void>;
+};
+
 export async function stageAuthorizedPlan(
   context: PublicationContext,
   input: {
@@ -22,6 +39,7 @@ export async function stageAuthorizedPlan(
     mediaIds: string[];
     plan: FilePlanEntry[];
     movieAccess: MovieChoiceAccess | undefined;
+    seriesPackBatch?: SeriesPackStagingSettlementV1;
   },
 ) {
   const authorize = async (tx: Transaction) => {
@@ -37,6 +55,7 @@ export async function stageAuthorizedPlan(
       where: { id: input.attemptId },
     });
     await assertPlanEdition(tx, current, input.plan);
+    await input.seriesPackBatch?.assertCurrent(tx, current);
     const guards = new Map<"movies" | "tv", () => void>();
     for (const libraryKind of new Set(
       input.plan.map((entry) => entry.libraryKind),
@@ -93,8 +112,9 @@ export async function stageAuthorizedPlan(
   await context.db.$transaction(
     async (tx) => {
       assertAuthority = await authorize(tx);
+      const staged = [];
       for (const { entry, operations, prepared } of preparations) {
-        await operations.commitPreparedImport(prepared, {
+        const manifest = await operations.commitPreparedImport(prepared, {
           authorize: () => {
             assertAuthority(entry.libraryKind);
             return Promise.resolve();
@@ -105,7 +125,10 @@ export async function stageAuthorizedPlan(
           },
         });
         assertAuthority(entry.libraryKind);
+        if (input.seriesPackBatch !== undefined)
+          staged.push({ entry, manifest });
       }
+      await input.seriesPackBatch?.settle(tx, staged);
     },
     { timeout: 30_000 },
   );

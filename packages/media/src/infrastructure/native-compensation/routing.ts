@@ -1,33 +1,22 @@
+import type { SeriesPackNativeCommandInvocationV1 } from "./series-pack/command-invocation.ts";
+import { isSeriesPackNativeDescriptorV2 } from "./series-pack/physical.ts";
+import { queueSeriesPackNativePublicationV1 } from "./series-pack/publication/queue.ts";
+import { NativeCompensationProtection } from "./protection.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { queueCompensatedPublication } from "./publication.ts";
 import { MediaError } from "#application/errors.ts";
-import { snapshotHash } from "#migration/profile-import.ts";
 import { z } from "zod";
+import {
+  compensationGroupMedia as readCompensationGroupMedia,
+  assertCompensationGroupUnchanged as assertReadCompensationGroupUnchanged,
+} from "./group.ts";
 
-/** Resolve before any primary-only media lock. This grants no effect or new demand. */
 export async function compensationGroupMedia(
   tx: Prisma.TransactionClient,
   mediaIds: readonly string[],
 ): Promise<string[]> {
-  let ids = [...new Set(mediaIds)].sort();
-  for (let depth = 0; depth < 100; depth++) {
-    const rows = await tx.nativePublicationCompensationContinuation.findMany({
-      where: {
-        fenceRelease: { equals: Prisma.DbNull },
-        mediaIds: { hasSome: ids },
-      },
-      select: { mediaIds: true },
-      take: 101,
-    });
-    if (rows.length > 100)
-      throw new Error("Compensation group history exceeds bound");
-    const expanded = [
-      ...new Set([...ids, ...rows.flatMap((row) => row.mediaIds)]),
-    ].sort();
-    if (expanded.length === ids.length) return ids;
-    ids = expanded;
-  }
-  throw new Error("Compensation group closure exceeds bound");
+  return readCompensationGroupMedia(tx, mediaIds);
 }
 
 export async function assertCompensationGroupUnchanged(
@@ -35,15 +24,7 @@ export async function assertCompensationGroupUnchanged(
   original: readonly string[],
   locked: readonly string[],
 ): Promise<void> {
-  if (
-    snapshotHash(await compensationGroupMedia(tx, original)) !==
-    snapshotHash([...locked].sort())
-  )
-    throw new MediaError(
-      "compensation_group_changed",
-      "The shared recovery group changed; refresh before retrying",
-      409,
-    );
+  await assertReadCompensationGroupUnchanged(tx, original, locked);
 }
 
 export async function pendingCompensationGroups(
@@ -74,6 +55,7 @@ export async function pendingCompensationGroups(
 export async function queueHouseholdCompensations(
   tx: Prisma.TransactionClient,
   input: { mediaIds: readonly string[]; triggerKey: string },
+  invocation?: SeriesPackNativeCommandInvocationV1,
 ): Promise<void> {
   const groups = await pendingCompensationGroups(tx, input.mediaIds);
   for (const row of groups) {
@@ -81,6 +63,25 @@ export async function queueHouseholdCompensations(
       throw new Error(
         "Household compensation release omitted shared group leaves",
       );
+    if (isSeriesPackNativeDescriptorV2(row.descriptor)) {
+      if (invocation === undefined)
+        throw new NativeCompensationProtection(
+          "series_pack_household_original_budget_required",
+        );
+      invocation.budget.consume(1);
+      await bindPlexTransactionDeadline(tx, invocation.freshness);
+      await queueSeriesPackNativePublicationV1(
+        tx,
+        {
+          continuationId: row.id,
+          triggerKey: input.triggerKey,
+          observed: invocation.observed,
+          freshness: invocation.freshness,
+        },
+        invocation.budget,
+      );
+      continue;
+    }
     await queueCompensatedPublication(tx, {
       continuationId: row.id,
       triggerKey: input.triggerKey,
@@ -120,10 +121,12 @@ export async function routeCompensationDemand(
     );
   const group = groups[0];
   if (group === undefined) throw new Error("Compensation group disappeared");
-  const queued = await queueCompensatedPublication(tx, {
-    continuationId: group.id,
-    triggerKey: input.key,
-  });
+  const queued = isSeriesPackNativeDescriptorV2(group.descriptor)
+    ? null
+    : await queueCompensatedPublication(tx, {
+        continuationId: group.id,
+        triggerKey: input.key,
+      });
   if (queued !== null) return queued;
   const existing = await tx.operation.findUnique({
     where: { idempotencyKey: input.key },

@@ -8,6 +8,7 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   createAcquiredMovieUpgradeFixture,
   installMovieFixtureCaptions,
@@ -65,6 +66,13 @@ export async function createMovieCleanupFixture(
         testPublicationExecution(),
       ),
     ).toEqual({ status: "staged" });
+    expect(
+      await f.fileMovie.prepareMoviePublicationV4(
+        input,
+        testPublicationExecution(),
+        new PublicationAuthorityReadBudget(),
+      ),
+    ).toEqual({ status: "prepared" });
     expect(
       await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
     ).toEqual({ status: "published" });

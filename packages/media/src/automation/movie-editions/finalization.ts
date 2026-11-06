@@ -21,16 +21,19 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { queueMovieSubtitleTargetsV4 } from "./subtitles/queue.ts";
 import { queueMoviePublicationNoticesV4 } from "./notifications/producer.ts";
 import { queueReadyMovieCaptionNoticesV4 } from "./notifications/captions.ts";
+import { movieFinalizationFreshnessV4 } from "#infrastructure/movie-editions/lifecycle/retry-finalization.ts";
 
 /** Logical completion uses the real immutable Plex publication, never a fabricated acquisition parent. */
 export async function finalizeMovieAcquisitionV4(
   context: MediaAutomationContext,
   raw: MovieAttemptOperationV4,
   execution: PlexBindingExecution,
+  retry?: true,
 ): Promise<void> {
   execution.assertActive();
   const input = MovieAttemptOperationV4Schema.parse(raw);
-  const budget = new PublicationAuthorityReadBudget();
+  const budget =
+    context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
   const original = await readMoviePlexReceiptV2(context.db, input, budget);
   if (original === null) throw new PlexBindingProtection("missing_binding");
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
@@ -72,10 +75,15 @@ export async function finalizeMovieAcquisitionV4(
     const lease = await tx.legacyWriterLease.findUniqueOrThrow({
       where: { id: "singleton" },
     });
-    const freshness = plexBindingFreshness({
-      observed: execution.observed,
-      expiresAtMs: Math.min(invocation.expiresAtMs, lease.expiresAt.getTime()),
-      guards: [invocation],
+    const freshness = await movieFinalizationFreshnessV4(tx, {
+      attempt: current,
+      target,
+      scope: input.scope,
+      access,
+      invocation: { execution, budget },
+      original: invocation,
+      writerExpiresAtMs: lease.expiresAt.getTime(),
+      retry,
     });
     await bindPlexTransactionDeadline(tx, freshness);
     const group = publication.expected.newGroups[0];

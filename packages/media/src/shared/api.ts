@@ -6,7 +6,7 @@ import {
 } from "./subtitle-policy.ts";
 import { OwnerHealthReasonSchema } from "./notification-authority.ts";
 import { ResolvedProfileSchema } from "#domain/resolved-contract.ts";
-import { ResolvedEvidenceSchema } from "#domain/resolved-evidence.ts";
+import { ResolvedEvidenceProtocolSchema } from "#domain/resolved-evidence.ts";
 import {
   MediaItemSchema,
   RequestSchema,
@@ -242,7 +242,7 @@ export const PublicReleaseAttributesSchema = z.object({
   audioLanguages: z.array(z.string()),
   sizeBytes: z.number().int().nonnegative(),
   scoreTags: z.array(z.string()),
-  resolvedEvidence: ResolvedEvidenceSchema.optional(),
+  resolvedEvidence: ResolvedEvidenceProtocolSchema.optional(),
 });
 export const PublicReleaseEvaluationSchema = z.object({
   accepted: z.boolean(),

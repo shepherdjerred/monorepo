@@ -1,5 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
+import { MediaError } from "#application/errors.ts";
 import type {
   CancelMovieRequestV3,
   RevokeMovieEditionChoiceV3,
@@ -9,14 +10,25 @@ import { movieChoiceSubject, type MovieProtectionAccess } from "./access.ts";
 import { lockMovieCommand, movieCommandConflict } from "./locks.ts";
 import { releaseCancelledMovieReservationV4 } from "./lifecycle/cancellation.ts";
 import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
+import { invalidateMovieRetentionV4 } from "./lifecycle/invalidate.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function removeMovieChoice(
   tx: Prisma.TransactionClient,
   actor: MediaActor,
-  input: CancelMovieRequestV3 | RevokeMovieEditionChoiceV3,
-  access: MovieProtectionAccess,
+  input:
+    | Omit<CancelMovieRequestV3, "schemaVersion">
+    | Omit<RevokeMovieEditionChoiceV3, "schemaVersion">,
+  access: MovieProtectionAccess & {
+    protocol?: 4;
+    budget?: PublicationAuthorityReadBudget;
+  },
 ) {
-  const { target } = await lockMovieCommand(tx, input.scope);
+  const { target } = await lockMovieCommand(
+    tx,
+    input.scope,
+    access.protocol === 4 ? { personalProtection: true } : undefined,
+  );
   const request = await tx.mediaRequest.findUniqueOrThrow({
     where: { id: input.requestId },
   });
@@ -31,6 +43,15 @@ export async function removeMovieChoice(
     request.excluded
   )
     throw movieCommandConflict();
+  if (
+    target.editionRootId === null &&
+    (actor.id !== request.userId || request.movieEditionChoiceId !== null)
+  )
+    throw new MediaError(
+      "lineage_unresolved",
+      "Unclassified history permits only cancellation of your own legacy request",
+      409,
+    );
   const current = await movieChoiceSubject(tx, {
     actorId: actor.id,
     subjectUserId: request.userId,
@@ -66,12 +87,18 @@ export async function removeMovieChoice(
       ...(remaining === 0 ? { monitoring: target.libraryMonitoring } : {}),
     },
   });
-  await releaseCancelledMovieReservationV4(tx, input.scope, request.id);
+  await releaseCancelledMovieReservationV4(
+    tx,
+    input.scope,
+    request.id,
+    access.budget,
+  );
   await tx.mediaItem.update({
     where: { id: request.mediaId },
     data: { version: { increment: 1 } },
   });
-  if (request.edition === "default")
+  if (access.protocol === 4) await invalidateMovieRetentionV4(tx, input.scope);
+  else if (request.edition === "default")
     await invalidateRetention(tx, request.mediaId);
   await tx.applicationEvent.create({
     data: {

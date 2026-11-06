@@ -5,7 +5,7 @@ import type {
 } from "#shared/native-recovery/compensation-runtime.ts";
 import { compensationAwait } from "#migration/native-compensation/execution.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import type { CompensationPublicationPhase } from "#infrastructure/native-compensation/publication/phase.ts";
+import type { CompensationPublicationPhase } from "#infrastructure/native-compensation/series-pack/publication/adapter.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 
 export type CompensationPublicationPort = {

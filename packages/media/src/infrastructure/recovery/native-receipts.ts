@@ -1,3 +1,6 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { seriesPackNativeHouseholdReceiptsV1 } from "#infrastructure/native-compensation/series-pack/household.ts";
+import { NativeCompensationProtection } from "#infrastructure/native-compensation/protection.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
@@ -31,6 +34,8 @@ type Asset = {
 export async function currentNativeReceipts(
   tx: Prisma.TransactionClient,
   input: { assets: Asset[]; epoch: number },
+  budget?: PublicationAuthorityReadBudget,
+  onSeriesPackNative?: () => void,
 ) {
   if (input.assets.length === 0) return [];
   const rows = await tx.nativeRecoveryReceipt.findMany({
@@ -114,18 +119,43 @@ export async function currentNativeReceipts(
     if (assetIds.length > 0)
       result.push({ id: row.id, planHash: row.planHash, assetIds });
   }
-  const compensation = await findCurrentCompensationReceipts(tx, {
-    assetIds: input.assets
-      .filter(
-        (asset) =>
-          asset.state === "published" &&
-          asset.owned &&
-          asset.ownershipEpoch === input.epoch,
-      )
-      .map((asset) => asset.id),
-    recoveryEpoch: input.epoch,
-  });
-  for (const reference of compensation) {
+  const nativeCompensation = await seriesPackNativeHouseholdReceiptsV1(
+    tx,
+    {
+      assetIds: input.assets
+        .filter(
+          (asset) =>
+            asset.state === "published" &&
+            asset.owned &&
+            asset.ownershipEpoch === input.epoch,
+        )
+        .map((asset) => asset.id),
+      epoch: input.epoch,
+    },
+    budget,
+  );
+  assertSeparatedNativeFamily(
+    nativeCompensation.length,
+    rows.length,
+    onSeriesPackNative,
+  );
+  const compensation = await findCurrentCompensationReceipts(
+    tx,
+    {
+      assetIds: input.assets
+        .filter(
+          (asset) =>
+            asset.state === "published" &&
+            asset.owned &&
+            asset.ownershipEpoch === input.epoch,
+        )
+        .map((asset) => asset.id),
+      recoveryEpoch: input.epoch,
+      excludeSeriesPackNative: true,
+    },
+    nativeCompensation.length === 0 ? undefined : budget,
+  );
+  for (const reference of [...compensation, ...nativeCompensation]) {
     const existing = result.find((item) => item.id === reference.receiptId);
     if (existing === undefined)
       result.push({
@@ -140,4 +170,18 @@ export async function currentNativeReceipts(
     }
   }
   return result;
+}
+
+function assertSeparatedNativeFamily(
+  nativeCount: number,
+  historicalCount: number,
+  onSeriesPackNative: (() => void) | undefined,
+) {
+  if (nativeCount > 0) {
+    if (historicalCount > 0)
+      throw new NativeCompensationProtection(
+        "series_pack_mixed_native_household_requires_separate_review",
+      );
+    onSeriesPackNative?.();
+  }
 }

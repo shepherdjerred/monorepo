@@ -14,6 +14,7 @@ const input = {
   attemptId: "00000000-0000-4000-8000-000000000002",
   mediaId: "00000000-0000-4000-8000-000000000003",
   generation: 1,
+  batchIndex: 0,
 };
 const networkMethods = [
   "reconcileMediaIntent",
@@ -24,6 +25,16 @@ const fileMethods = [
   "inspectAndStageMedia",
   "promoteMediaFiles",
   "cleanupSupersededMediaFile",
+  "prepareSeriesPackPublication",
+  "stageSeriesPackMembersV1",
+  "sealSeriesPackStagingV1",
+  "prepareSeriesPackMembersPublicationV1",
+  "sealSeriesPackPublicationIntentV1",
+  "publishSeriesPackMembersV1",
+  "sealSeriesPackPublicationOutcomeV1",
+  "compensateSeriesPackMembersV1",
+  "sealSeriesPackCompensationV1",
+  "rollbackPublishedSeriesPackV1",
 ] as const;
 type FileExecution = Parameters<
   Awaited<
@@ -74,6 +85,86 @@ function networkRuntime(check: (execution: PlexBindingExecution) => void) {
 function fileRuntime(check: (execution: FileExecution) => void) {
   return {
     acquisition: {
+      rollbackPublishedSeriesPackV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "rolled_back" as const });
+      },
+      prepareSeriesPackMembersPublicationV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "prepared" as const,
+          receiptId: input.operationId,
+          nextBatchIndex: null,
+        });
+      },
+      sealSeriesPackPublicationIntentV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "prepared" as const });
+      },
+      publishSeriesPackMembersV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "published" as const,
+          receiptId: input.operationId,
+          nextBatchIndex: null,
+        });
+      },
+      sealSeriesPackPublicationOutcomeV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "published" as const });
+      },
+      compensateSeriesPackMembersV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "compensated" as const,
+          receiptId: input.operationId,
+          nextBatchIndex: null,
+        });
+      },
+      sealSeriesPackCompensationV1: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "compensated" as const });
+      },
+      stageSeriesPackMembersV1: (_input: unknown, execution: FileExecution) => {
+        check(execution);
+        return Promise.resolve({
+          status: "staged" as const,
+          receiptId: input.operationId,
+          nextBatchIndex: null,
+        });
+      },
+      sealSeriesPackStagingV1: (_input: unknown, execution: FileExecution) => {
+        check(execution);
+        return Promise.resolve({ status: "staged" as const });
+      },
+      prepareSeriesPackPublication: (
+        _input: unknown,
+        execution: FileExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "prepared" as const });
+      },
       cleanupSupersededMediaFile: (
         _input: unknown,
         execution: FileExecution,

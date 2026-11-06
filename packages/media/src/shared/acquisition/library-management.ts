@@ -3,6 +3,7 @@ import {
   AcquisitionIdentitySnapshotSchema,
   CanonicalIdentitySchema,
 } from "./identity.ts";
+import { SeriesPackSourceV1Schema } from "./series-pack-v1.ts";
 
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const Targets = z
@@ -123,9 +124,22 @@ export const ManagedSeriesAcquisitionIdentitySchema = z
     "Library acquisition must retain its exact series and managed coverage",
   );
 
+/** Only a separately retained source interpretation changes TV pack coverage. Original schemas stay literal. */
+export const SeriesPackPersonalIdentityV1Schema =
+  AcquisitionIdentitySnapshotSchema.extend({
+    source: SeriesPackSourceV1Schema,
+    canonical: CanonicalIdentitySchema.options[1],
+  });
+export const SeriesPackManagedIdentityV1Schema =
+  ManagedSeriesAcquisitionIdentitySchema.safeExtend({
+    source: SeriesPackSourceV1Schema,
+  });
+
 export const DefaultAcquisitionIdentitySchema = z.union([
   AcquisitionIdentitySnapshotSchema,
   ManagedSeriesAcquisitionIdentitySchema,
+  SeriesPackPersonalIdentityV1Schema,
+  SeriesPackManagedIdentityV1Schema,
 ]);
 export type DefaultAcquisitionIdentity = z.infer<
   typeof DefaultAcquisitionIdentitySchema
@@ -138,4 +152,10 @@ export function managedSeriesIdentity(raw: unknown) {
   if (raw === null) return null;
   const identity = DefaultAcquisitionIdentitySchema.parse(raw);
   return identity.schemaVersion === 4 ? identity : null;
+}
+
+export function seriesPackIdentityV1(raw: unknown) {
+  if (raw === null) return null;
+  const identity = DefaultAcquisitionIdentitySchema.parse(raw);
+  return "seriesPackV1" in identity.source ? identity : null;
 }

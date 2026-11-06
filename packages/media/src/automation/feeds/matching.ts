@@ -3,7 +3,11 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable, queueOperation } from "#automation/store.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
-import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import {
+  lockDefaultScopes,
+  lockCanonicalMedia,
+  lockExistingDefaultTargets,
+} from "#infrastructure/editions/locks.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import {
   lockEffectiveRequests,
@@ -27,6 +31,11 @@ import { readFeedSourceV1 } from "./source.ts";
 import { selectFeedCandidateV1, type FeedMatchTarget } from "./selection.ts";
 import { feedTargetMayMatch } from "./prefilter.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
+import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
+import { MediaError } from "#application/errors.ts";
+import { queueManagedFeedMatchV1 } from "./managed-commit.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 type Cursor = MatchFeedSourceV1["cursor"];
 type Selected = Awaited<ReturnType<typeof selectFeedCandidateV1>>;
@@ -36,10 +45,12 @@ const position = (value: NonNullable<Cursor>) =>
 async function matchCommand(
   tx: Prisma.TransactionClient,
   input: MatchFeedSourceV1,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
+  budget?.consume(1);
   const command = z
     .object({
       ...MatchFeedSourceV1Schema.shape,
@@ -72,16 +83,23 @@ async function matchCommand(
 
 /** One Activity examines at most 25 target scopes; each outbox decision advances its cursor atomically. */
 export async function matchProviderFeedSourceV1(
-  context: MediaAutomationContext,
+  initialContext: MediaAutomationContext,
   raw: MatchFeedSourceV1,
 ) {
+  const context = movieManagementContext(initialContext);
+  context.movieManagement.execution.assertActive();
   const input = MatchFeedSourceV1Schema.parse(raw);
   const source = await readFeedSourceV1(
     context.db,
     context.cipher,
     input.sourceId,
   );
-  const initial = await matchCommand(context.db, input);
+  context.movieManagement.budget.consume(1);
+  const initial = await matchCommand(
+    context.db,
+    input,
+    context.movieManagement.budget,
+  );
   if (initial.progress.completed)
     return { status: "processed" as const, processed: 0, nextCursor: null };
   const cursor = initial.progress.cursor;
@@ -162,13 +180,19 @@ export async function matchProviderFeedSourceV1(
 
 /** Rejected metadata advances in one batch; it acquires no request, runtime or physical authority. */
 async function advanceCursor(
-  context: Pick<MediaAutomationContext, "db">,
+  context: Pick<MediaAutomationContext, "db" | "movieManagement">,
   input: MatchFeedSourceV1,
   next: { cursor: Cursor; completed: boolean },
 ) {
   return serializable(context.db, async (tx) => {
+    if (context.movieManagement !== undefined)
+      await bindPlexTransactionDeadline(tx, context.movieManagement.execution);
     await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${input.operationId} FOR UPDATE`;
-    const { progress } = await matchCommand(tx, input);
+    const { progress } = await matchCommand(
+      tx,
+      input,
+      context.movieManagement?.budget,
+    );
     if (progress.completed) return { cursor: progress.cursor, completed: true };
     const cursor =
       progress.cursor !== null &&
@@ -178,6 +202,7 @@ async function advanceCursor(
         : next.cursor;
     const completed = next.completed;
     await writeProgress(tx, input, cursor, completed);
+    context.movieManagement?.execution.assertActive();
     return { cursor, completed };
   });
 }
@@ -191,7 +216,7 @@ async function scopedSelection(
   try {
     return await selectFeedCandidateV1(context, target, source);
   } catch (error) {
-    if (error instanceof MovieChoiceProtection) return null;
+    if (feedSelectionProtected(error)) return null;
     throw error;
   }
 }
@@ -207,19 +232,7 @@ async function commitMatchedTarget(
 ) {
   return serializable(context.db, async (tx) => {
     const { target, selected } = input;
-    if (target.media.kind === "movie")
-      await lockMovieCommand(
-        tx,
-        MovieEditionScopeSchema.parse({
-          mediaId: target.mediaId,
-          rootMediaId: target.editionRootId,
-          edition: target.edition,
-        }),
-      );
-    else
-      await lockDefaultScopes(tx, [defaultScope(target.mediaId)], {
-        createMissing: false,
-      });
+    await lockFeedTarget(tx, target, selected);
     await lockEffectiveRequests(tx, [target.mediaId]);
     if (!(await lockRuntimeAuthority(tx, target.automationEpoch))) return false;
     await tx.$queryRaw`SELECT id FROM "MediaProvider" WHERE id=${input.providerId} FOR SHARE`;
@@ -228,7 +241,11 @@ async function commitMatchedTarget(
     });
     if (!provider.enabled) return false;
     await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${input.input.operationId} FOR UPDATE`;
-    const command = await matchCommand(tx, input.input);
+    const command = await matchCommand(
+      tx,
+      input.input,
+      context.movieManagement?.budget,
+    );
     const cursor = { mediaId: target.mediaId, edition: target.edition };
     if (
       command.progress.completed ||
@@ -251,9 +268,9 @@ async function commitMatchedTarget(
       current.editionRootId === target.editionRootId
     ) {
       try {
-        await queueSelectedMatch(tx, { input, current, selected });
+        await queueSelectedMatch(tx, context, { input, current, selected });
       } catch (error) {
-        if (!(error instanceof MovieChoiceProtection)) throw error;
+        if (!feedSelectionProtected(error)) throw error;
       }
     }
     await writeProgress(tx, input.input, cursor, false);
@@ -262,8 +279,43 @@ async function commitMatchedTarget(
   });
 }
 
+function feedSelectionProtected(error: unknown) {
+  return (
+    error instanceof MovieChoiceProtection ||
+    (error instanceof MediaError &&
+      error.code === "library_management_unconfirmed")
+  );
+}
+
+async function lockFeedTarget(
+  tx: Prisma.TransactionClient,
+  target: FeedMatchTarget,
+  selected: Selected,
+) {
+  if (target.media.kind === "movie")
+    await lockMovieCommand(
+      tx,
+      MovieEditionScopeSchema.parse({
+        mediaId: target.mediaId,
+        rootMediaId: target.editionRootId,
+        edition: target.edition,
+      }),
+    );
+  else if (selected?.protocol === "library-episode") {
+    await lockCanonicalMedia(tx, [target.mediaId]);
+    await lockExistingDefaultTargets(tx, [
+      selected.management.seriesId,
+      target.mediaId,
+    ]);
+  } else
+    await lockDefaultScopes(tx, [defaultScope(target.mediaId)], {
+      createMissing: false,
+    });
+}
+
 async function queueSelectedMatch(
   tx: Prisma.TransactionClient,
+  context: MediaAutomationContext,
   input: {
     input: {
       input: MatchFeedSourceV1;
@@ -272,7 +324,12 @@ async function queueSelectedMatch(
     };
     current: Pick<
       FeedMatchTarget,
-      "mediaId" | "edition" | "editionRootId" | "generation" | "profileId"
+      | "mediaId"
+      | "edition"
+      | "editionRootId"
+      | "generation"
+      | "profileId"
+      | "automationEpoch"
     >;
     selected: NonNullable<Selected>;
   },
@@ -284,12 +341,18 @@ async function queueSelectedMatch(
     edition: current.edition,
   };
   const key = `feed-acquire-v1:${input.input.input.sourceId}:${current.mediaId}:${current.edition}:${String(current.generation)}`;
+  if (
+    selected.protocol === "library-movie-v4" ||
+    selected.protocol === "library-episode"
+  )
+    return queueManagedFeedMatchV1(tx, context, { key, current, selected });
   if (selected.protocol === "movie-v4") {
     const movieScope = MovieEditionScopeSchema.parse(scope);
     const sponsor = await requireMovieSponsorV4(
       tx,
       movieScope,
       selected.access,
+      context.movieManagement?.budget,
     );
     await assertCurrentMovieAssessment(
       tx,

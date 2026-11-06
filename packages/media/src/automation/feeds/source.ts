@@ -7,6 +7,7 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { FeedSourceV1Schema } from "#shared/feeds/contract.ts";
 import { queueOperation } from "#automation/store.ts";
+import { parseSeriesSeasonSetV1 } from "#domain/acquisition-identity/series-season-set.ts";
 
 /** Immutable observations are separate from a target-specific release interpretation or acquisition. */
 export async function retainFeedSourceV1(
@@ -36,6 +37,15 @@ export async function retainFeedSourceV1(
     stored.providerReleaseId !== source.providerReleaseId
   )
     throw new Error("Provider feed source identity changed");
+  if (parseSeriesSeasonSetV1(source.title).status === "resolved") {
+    await queueOperation(tx, {
+      key: `match-series-pack-feed-source-v1:${event.id}`,
+      kind: "match_series_pack_feed_source_v1",
+      targetId: event.id,
+      payload: { schemaVersion: 1, sourceId: event.id, cursor: null },
+    });
+    return { id: event.id, identityHash: fingerprint };
+  }
   await queueOperation(tx, {
     key: `match-feed-source-v1:${event.id}`,
     kind: "match_provider_feed_source_v1",

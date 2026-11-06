@@ -21,12 +21,21 @@ export async function createManagedSeriesFixture(
     original: Uint8Array;
     upgrade: Uint8Array;
     monitorSeries?: { includeSpecials: boolean };
+    episodeCount?: number;
+    title?: string;
+    householdCaptions?: boolean;
   },
 ) {
   const f = await libraryTvBindingFixture(db, directoryCreated, {
     bytes: bytes.original,
     qualitySourceId: "5",
-    title: `Synthetic Anime ${crypto.randomUUID()}`,
+    title: bytes.title ?? `Synthetic Anime ${crypto.randomUUID()}`,
+    ...(bytes.householdCaptions === undefined
+      ? {}
+      : { householdCaptions: bytes.householdCaptions }),
+    ...(bytes.episodeCount === undefined
+      ? {}
+      : { episodeCount: bytes.episodeCount }),
     ...(bytes.monitorSeries === undefined
       ? {}
       : { monitorSeries: bytes.monitorSeries }),
@@ -48,7 +57,7 @@ export async function createManagedSeriesFixture(
     LibraryPlexBindingInputV1Schema.parse(binding.payload),
     testPlexBindingExecution(),
   );
-  if (bound.status !== "verified" || bound.bindingCount !== 2)
+  if (bound.status !== "verified" || bound.bindingCount !== f.episodes.length)
     throw new Error("Actual library TV binding failed");
   const wire = managedSeriesWire(db, {
     seriesId: f.series.id,
@@ -58,6 +67,9 @@ export async function createManagedSeriesFixture(
     bytes: bytes.upgrade,
     items: f.wire.items,
     show: f.wire.show,
+    ...(bytes.episodeCount === undefined
+      ? {}
+      : { episodeSpan: { season: 1, first: 1, last: bytes.episodeCount } }),
   });
   const context = { ...f.context, ...wire };
   const files = f.files;

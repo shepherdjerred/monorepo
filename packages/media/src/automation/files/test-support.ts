@@ -20,6 +20,7 @@ import type { MediaUser } from "#generated/prisma/client.ts";
 import { fileMovieAccess } from "#automation/editions/access.ts";
 import { fixtureAcquisitionScope } from "./fixtures/acquisition.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
+import { fixtureStorageAuthority } from "./fixtures/storage.ts";
 
 async function chooseFixtureMovie(
   db: Database,
@@ -37,6 +38,7 @@ async function chooseFixtureMovie(
 export async function fileFixture(
   db: Database,
   episode?: { seriesId: string; title?: string },
+  options: { plexAccountId?: string; initialHandoffStorage?: boolean } = {},
 ) {
   await grantTestLease(db);
   const directory = await realpath(
@@ -45,30 +47,17 @@ export async function fileFixture(
   const roots = {
     downloads: nodePath.join(directory, "downloads"),
     library: nodePath.join(directory, "library"),
-    control: nodePath.join(directory, "control"),
+    control:
+      options.initialHandoffStorage === true
+        ? nodePath.join(directory, "library/.media-control")
+        : nodePath.join(directory, "control"),
   };
   for (const root of Object.values(roots)) await mkdir(root);
-  // Explicit synthetic fixture evidence; no live mount or Kubernetes attestation.
-  for (const kind of ["movies", "tv"]) {
-    const observedAt = new Date();
-    const evidence = {
-      recoveryEpoch: 0,
-      pvcUid: `synthetic-${kind}`,
-      volumeName: `synthetic-${kind}`,
-      volumePath: roots.library,
-      workerPodUid: "synthetic-files-worker",
-      evidence: { source: "synthetic-file-fixture" },
-      observedAt,
-      expiresAt: new Date(observedAt.getTime() + 120_000),
-      revokedAt: null,
-    };
-    await db.mediaStorageAuthority.upsert({
-      where: { rootPath: `/data/${kind}` },
-      create: { rootPath: `/data/${kind}`, ...evidence },
-      // Native fixtures may already have an exact reviewed mount receipt. Preserve it.
-      update: {},
-    });
-  }
+  await fixtureStorageAuthority(
+    db,
+    roots.library,
+    options.initialHandoffStorage,
+  );
   let clock = new Date();
   const context: FileContext = {
     db,
@@ -167,7 +156,7 @@ export async function fileFixture(
   });
   const user = await db.mediaUser.create({
     data: {
-      plexAccountId: crypto.randomUUID(),
+      plexAccountId: options.plexAccountId ?? crypto.randomUUID(),
       displayName: "Test requester",
       role: "member",
     },

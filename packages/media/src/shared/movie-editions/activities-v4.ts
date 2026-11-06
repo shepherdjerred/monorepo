@@ -13,7 +13,6 @@ import type {
 } from "#shared/plex-events/contract.ts";
 import type { MovieRetentionResultV4 } from "./retention-v4.ts";
 import type { MovieRemovalCompletionV4 } from "./removal-v4.ts";
-
 export type MovieWatchActivitiesV4 = {
   observeMoviePlexHintV4: (
     input: ObserveMoviePlexHintV4,
@@ -22,6 +21,14 @@ export type MovieWatchActivitiesV4 = {
 
 /** Scoped IDs only; private releases, file plans and credentials stay in Activities. */
 export type MovieNetworkActivitiesV4 = {
+  publishMovieWithRollbackV4: (input: MovieAttemptOperationV4) => Promise<{
+    status: "available" | "waiting" | "blocked" | "obsolete";
+    reason: string | null;
+  }>;
+  verifyRolledBackMoviePlexV4: (input: MovieAttemptOperationV4) => Promise<{
+    status: "available" | "waiting" | "blocked" | "obsolete";
+    reason: string | null;
+  }>;
   completeMovieRemovalV4: (input: MovieRemovalCompletionV4) => Promise<{
     status: "completed" | "obsolete";
     reason: string | null;
@@ -59,6 +66,18 @@ export type MovieNetworkActivitiesV4 = {
   finalizeMovieAcquisitionV4: (input: MovieAttemptOperationV4) => Promise<void>;
 };
 export type MovieFileActivitiesV4 = {
+  prepareMovieRollbackV4: (input: MovieAttemptOperationV4) => Promise<{
+    status: "prepared" | "blocked";
+    reason: string | null;
+  }>;
+  rollbackMoviePublicationV4: (input: MovieAttemptOperationV4) => Promise<{
+    status: "physically_rolled_back" | "blocked";
+    reason: string | null;
+  }>;
+  prepareMoviePublicationV4: (input: MovieAttemptOperationV4) => Promise<{
+    status: "prepared" | "blocked";
+    reason?: string;
+  }>;
   restoreMovieFilesV4: (input: MovieOperationV4) => Promise<{
     status: "restored" | "protected";
     reason?: string;

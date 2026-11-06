@@ -17,6 +17,7 @@ import { MediaPage } from "./media.tsx";
 import { NotificationCallback } from "./preferences.tsx";
 import { MigrationPage } from "./migration.tsx";
 import { RecoveryPage } from "./recovery/page.tsx";
+import { MovieHistoryPageV3 } from "./movie-history/page.tsx";
 import { NativeRecoveryPage } from "./native-recovery/page.tsx";
 import { SubtitleReplacementPage } from "./subtitle-replacement/page.tsx";
 
@@ -170,6 +171,10 @@ function Shell({ user }: { user: MediaUser }) {
             }
           />
           <Route path="/recovery" element={<RecoveryPage user={user} />} />
+          <Route
+            path="/recovery/movies/:id"
+            element={<MovieHistoryPageV3 user={user} />}
+          />
           <Route path="/recovery/:id" element={<RecoveryPage user={user} />} />
           <Route
             path="/admin/migration"

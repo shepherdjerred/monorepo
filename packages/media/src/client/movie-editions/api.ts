@@ -96,5 +96,6 @@ export async function invalidateMovieRequests(mediaId?: string) {
       queryKey: mediaId === undefined ? ["media"] : ["media", mediaId],
     }),
     queryClient.invalidateQueries({ queryKey: ["target"] }),
+    queryClient.invalidateQueries({ queryKey: ["movie-target"] }),
   ]);
 }

@@ -19,6 +19,10 @@ import type { PublicationParticipant } from "#shared/publication-proof/intent.ts
 import path from "node:path";
 import type { PublicationContext } from "./invocation.ts";
 import { publicationSubtitleEvidence } from "./subtitle-lineage.ts";
+import {
+  readLockedPublicationSnapshot,
+  type LockedPublicationSnapshots,
+} from "#infrastructure/publication-proof/queried-snapshots.ts";
 
 /** Called under complete DB and real path locks before any forward publication primitive. */
 export async function capturePublicationIntent(
@@ -30,6 +34,7 @@ export async function capturePublicationIntent(
     transitionId: string;
     rawFilePlanHash: string;
   },
+  snapshots?: LockedPublicationSnapshots,
 ) {
   if (
     snapshotHash(nativeJson(input.attempt.filePlan)) !== input.rawFilePlanHash
@@ -37,7 +42,7 @@ export async function capturePublicationIntent(
     throw new FileGuardError("publication_plan_changed");
   const entries = [];
   for (const entry of input.plan)
-    entries.push(await captureEntry(tx, input.context, entry));
+    entries.push(await captureEntry(tx, input.context, entry, snapshots));
   return PublicationIntentSchema.parse({
     schemaVersion: 1,
     transitionId: input.transitionId,
@@ -51,20 +56,28 @@ export async function capturePublicationIntent(
   });
 }
 
-async function captureEntry(
+export async function captureEntry(
   tx: Transaction,
   context: PublicationContext,
   entry: FilePlanEntry,
+  snapshots?: LockedPublicationSnapshots,
 ) {
   const roots = context.roots[entry.libraryKind];
   const predecessor =
     entry.previousAssetId === null
       ? null
-      : await snapshotPublicationAsset(
-          tx,
-          entry.previousAssetId,
-          context.libraryManagement?.budget,
-        );
+      : snapshots === undefined
+        ? await snapshotPublicationAsset(
+            tx,
+            entry.previousAssetId,
+            context.libraryManagement?.budget,
+          )
+        : await readLockedPublicationSnapshot(
+            tx,
+            entry.previousAssetId,
+            context.libraryManagement?.budget,
+            snapshots,
+          );
   const participants = await observePublicationParticipants(context, entry);
   assertInitialParticipants(entry, participants);
   for (const id of [

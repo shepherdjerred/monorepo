@@ -178,7 +178,10 @@ async function readMovieNoticeAuthorityV4(
   if (identityHash(binding.association.group) !== identityHash(source.group))
     throw new PlexBindingProtection("binding_changed");
   let freshness = choice.freshness;
-  if (payload.kind === "movie_subtitles") {
+  if (
+    payload.kind === "movie_subtitles" ||
+    payload.kind === "movie_subtitle_replacement"
+  ) {
     const work = await currentMovieSubtitleWorkV4(
       tx,
       {

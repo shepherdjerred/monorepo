@@ -54,6 +54,9 @@ export async function queueCurrentRetention(
       kind: "retain_media",
       targetId: authority.media.id,
       payload: { mediaId: authority.media.id, generation: intent.generation },
+      ...(authority.nativeCompensationProtocol === "series_pack_publication_v3"
+        ? { budget: authority.scope.budget }
+        : {}),
     }),
   );
 }

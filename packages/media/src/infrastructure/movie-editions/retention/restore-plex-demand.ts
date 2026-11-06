@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { Prisma, MediaIntent } from "#generated/prisma/client.ts";
+import type {
+  Prisma,
+  MediaIntent,
+  Operation,
+} from "#generated/prisma/client.ts";
 import type { MovieRestoreReceiptV1 } from "#shared/movie-editions/restore-v1.ts";
 import { readMovieChoice } from "#infrastructure/movie-editions/authority.ts";
 import {
@@ -10,17 +14,27 @@ import type { MovieManagementInvocation } from "#infrastructure/movie-editions/m
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { readLibraryHandoffReceipt } from "#infrastructure/handoff/library-receipt.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
+import { captureExplicitOwnerMovieRestoreV1 } from "./owner-restore.ts";
 
 /** Fresh serving consent is independent of the completed physical restore's original invocation. */
 export async function captureMovieRestorePlexDemand(
   tx: Prisma.TransactionClient,
   input: {
     receipt: MovieRestoreReceiptV1;
+    operation?: Operation;
     target: MediaIntent;
     access: MovieChoiceAccess;
   },
   invocation: MovieManagementInvocation,
 ) {
+  if (input.operation !== undefined) {
+    const owner = await captureExplicitOwnerMovieRestoreV1(
+      tx,
+      { ...input, operation: input.operation, command: input.receipt.input },
+      invocation,
+    );
+    if (owner !== null) return owner;
+  }
   const scope = input.receipt.scope;
   await lockMovieChoiceIdentities(tx, { mediaIds: [scope.mediaId] });
   const requests = await tx.mediaRequest.findMany({

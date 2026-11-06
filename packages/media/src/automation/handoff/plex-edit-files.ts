@@ -1,4 +1,8 @@
 import path from "node:path";
+import {
+  storedFilePath,
+  workerFilePath,
+} from "#automation/files/paths/locations.ts";
 import { z } from "zod";
 import type { PublicationExecution } from "#automation/publication-proof/invocation.ts";
 import { publicationInvocation } from "#automation/publication-proof/invocation.ts";
@@ -78,14 +82,14 @@ export async function prepareLibraryPlexEditFileV3(
       if (
         network.evidence.mounts.bindings.filter(
           (binding) =>
-            binding.canonical.root === roots.library &&
+            binding.canonical.root ===
+              storedFilePath(context.files, "movies", "library", "") &&
             binding.canonical.podUid === context.workerPodUid,
         ).length !== 1
       )
         throw new Error("Plex edition file proof executing storage changed");
-      const verified = await prepared.content.verifiedFile(
-        current.canonicalPath,
-      );
+      const target = workerFilePath(context.files, current.canonicalPath);
+      const verified = await prepared.content.verifiedFile(target);
       const capturedAt = new Date();
       const expiresAt = new Date(
         Math.min(
@@ -120,7 +124,7 @@ export async function prepareLibraryPlexEditFileV3(
       return files.withFileIdentity(
         {
           ...verified,
-          libraryPath: path.relative(roots.library, current.canonicalPath),
+          libraryPath: path.relative(roots.library, target),
         },
         async () => {
           execution.assertActive();

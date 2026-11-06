@@ -13,9 +13,9 @@ import { assessRetainedMovieRelease } from "./release-assessment.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { resumeMovieAttempt } from "./retry/resume.ts";
 import {
-  readMovieRetryCaptureV1,
-  reconcileMovieRetryV4,
-} from "./retry/recovery.ts";
+  readMovieRetryDispatchV4,
+  dispatchMovieRetryV4,
+} from "./retry/dispatch.ts";
 import { movieManagementContext } from "./management-context.ts";
 
 /** One coordinator retains its own scope and attempt; another cut cannot sponsor a resume. */
@@ -36,13 +36,13 @@ export async function reconcileMovieIntentV4(
       releaseId: z.uuid().optional(),
     })
     .parse(record.payload);
-  const retry = readMovieRetryCaptureV1(record.payload);
+  const retry = readMovieRetryDispatchV4(record, input);
   if (retry !== null) {
     context.movieManagement.budget.consume(1);
-    return reconcileMovieRetryV4(context, {
+    return dispatchMovieRetryV4(context, {
       command: input,
       operation: record,
-      capture: retry,
+      selected: retry,
     });
   }
   const coordinator = await assertMovieAcquisitionOperationV4(

@@ -11,6 +11,7 @@ import {
   assertReplacementOperation,
 } from "./authority.ts";
 import { observeReplacement } from "./files.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
 
 export async function prepareReplacement(
   context: FileContext,
@@ -24,7 +25,7 @@ export async function prepareReplacement(
     if (row.review !== null) return row;
     if (row.state !== "preparing")
       throw new FileGuardError("subtitle_replacement_state_changed");
-    await assertReplacementSnapshot(tx, row.id);
+    await assertReplacementSnapshot(tx, row.id, {}, context);
     return row;
   });
   if (initial.review !== null) return { state: "ready" };
@@ -34,7 +35,7 @@ export async function prepareReplacement(
     await assertReplacementOperation(tx, input, [
       "prepare_subtitle_replacement",
     ]);
-    await assertReplacementSnapshot(tx, row.id);
+    await assertReplacementSnapshot(tx, row.id, {}, context);
     if (row.review !== null) return;
     if (row.state !== "preparing")
       throw new FileGuardError("subtitle_replacement_state_changed");
@@ -45,7 +46,12 @@ export async function prepareReplacement(
         replacementId: row.id,
         observation: prepared.observation,
         observationHash: snapshotHash(prepared.observation),
-        expiresAt: new Date(now(context).getTime() + 15 * 60_000),
+        expiresAt: new Date(
+          (replacementSnapshot(row.snapshot).schemaVersion === 2
+            ? Date.now()
+            : now(context).getTime()) +
+            15 * 60_000,
+        ),
       },
     });
     await tx.subtitleReplacement.update({

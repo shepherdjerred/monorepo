@@ -1,5 +1,8 @@
 import type { PublicationContext } from "#automation/publication-proof/invocation.ts";
-import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
+import {
+  managedSeriesIdentity,
+  seriesPackIdentityV1,
+} from "#shared/acquisition/library-management.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { publicationDeadline } from "#automation/publication-proof/invocation.ts";
 
@@ -9,7 +12,11 @@ export async function libraryFileInvocation(
   rawIdentity: unknown,
   budget: PublicationAuthorityReadBudget,
 ) {
-  if (managedSeriesIdentity(rawIdentity) === null) return context;
+  if (
+    managedSeriesIdentity(rawIdentity) === null &&
+    seriesPackIdentityV1(rawIdentity) === null
+  )
+    return context;
   const freshness = publicationDeadline(
     context.execution,
     context.execution.expiresAtMs,

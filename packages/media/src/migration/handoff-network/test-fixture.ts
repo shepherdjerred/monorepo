@@ -15,6 +15,13 @@ export async function networkFixture(
   db: Database,
   cipher: CredentialCipher,
   serverMachineId = "server",
+  options: {
+    movieMetadata?: {
+      year: number;
+      runtimeMinutes: number;
+      originalLanguage: string;
+    };
+  } = {},
 ) {
   await db.mediaRuntimeState.update({
     where: { id: "singleton" },
@@ -56,6 +63,7 @@ export async function networkFixture(
       title: "Synthetic Film",
       tmdbId: Math.floor(Math.random() * 1_000_000_000),
       externalIds: {},
+      ...options.movieMetadata,
     },
   });
   const captureIds = [crypto.randomUUID(), crypto.randomUUID()];

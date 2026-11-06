@@ -88,7 +88,12 @@ export async function assertAcquisition(
   const epoch = z
     .object({ recoveryEpoch: z.number().int() })
     .parse(attempt).recoveryEpoch;
-  await assertPublicationUnfenced(tx, attempt.mediaIds);
+  await assertPublicationUnfenced(
+    tx,
+    attempt.mediaIds,
+    [],
+    authority.seriesPackPublicationAttemptId,
+  );
   if (
     attempt.edition !== "default" ||
     attempt.reservations.some((row) => row.edition !== "default")

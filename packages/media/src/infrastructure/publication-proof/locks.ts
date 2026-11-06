@@ -7,6 +7,7 @@ export async function lockPublicationRows(
   tx: Prisma.TransactionClient,
   intent: {
     attemptId: string;
+    seriesPackPublicationAttemptId?: string;
     mediaIds: readonly string[];
     entries: readonly {
       entry: { assetId: string; previousAssetId: string | null };
@@ -24,6 +25,11 @@ export async function lockPublicationRows(
   await assertNoPublicationCompensationFence(tx, {
     mediaIds: intent.mediaIds,
     assetIds: assets,
+    ...(intent.seriesPackPublicationAttemptId === undefined
+      ? {}
+      : {
+          seriesPackPublicationAttemptId: intent.seriesPackPublicationAttemptId,
+        }),
   });
   await tx.$queryRaw(
     Prisma.sql`SELECT id FROM "UpgradeCleanup" WHERE "assetId" IN (${Prisma.join(assets)}) OR "successorAssetId" IN (${Prisma.join(assets)}) ORDER BY id FOR UPDATE`,

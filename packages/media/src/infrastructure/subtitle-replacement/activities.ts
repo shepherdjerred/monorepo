@@ -1,8 +1,8 @@
 import type { Database } from "#infrastructure/database.ts";
 import type { SubtitleReplacementNetworkActivities } from "#shared/subtitle-replacement.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
-import { SubtitleReplacementSnapshotSchema } from "#shared/subtitle-replacement.ts";
 import { lockSubtitleReplacementScope } from "./locks.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
 
 export function createSubtitleReplacementNetworkActivities(
   db: Database,
@@ -13,11 +13,12 @@ export function createSubtitleReplacementNetworkActivities(
         const initial = await tx.subtitleReplacement.findUniqueOrThrow({
           where: { id: input.replacementId },
         });
-        const scope = SubtitleReplacementSnapshotSchema.parse(initial.snapshot);
+        const scope = replacementSnapshot(initial.snapshot);
         await lockSubtitleReplacementScope(tx, {
           assetId: initial.assetId,
           mediaIds: scope.asset.coverage.map((item) => item.mediaId),
           replacementId: initial.id,
+          ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
         });
         const row = await tx.subtitleReplacement.findUniqueOrThrow({
           where: { id: initial.id },
@@ -70,11 +71,18 @@ export function createSubtitleReplacementNetworkActivities(
           throw new Error(
             "Subtitle cleanup requires a settled receipt and explicit retention deadline",
           );
+        const snapshot = replacementSnapshot(row.snapshot);
         await queueOperation(tx, {
           key: `subtitle-replacement-cleanup:${replacementId}`,
           kind: "cleanup_subtitle_replacement",
           targetId: replacementId,
-          payload: { replacementId, recoveryEpoch: row.recoveryEpoch },
+          payload: {
+            replacementId,
+            recoveryEpoch: row.recoveryEpoch,
+            ...(snapshot.schemaVersion === 2
+              ? { movieScope: snapshot.scope }
+              : {}),
+          },
         });
       });
     },

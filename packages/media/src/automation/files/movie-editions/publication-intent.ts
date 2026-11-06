@@ -17,6 +17,7 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { durablePublicationJournal } from "#filesystem/publication-proof/journal.ts";
 import { safePath, exists } from "#filesystem/operations-io.ts";
+import { holdCapturedMovieRollbackPredecessorV1 } from "#infrastructure/movie-editions/publication/held-rollback-predecessor.ts";
 
 const hash = (value: unknown) => snapshotHash(nativeJson(value));
 
@@ -100,7 +101,7 @@ export async function captureMoviePublicationV2(
       prepared,
     );
   }
-  return MoviePublicationIntentV2Schema.parse({
+  const intent = MoviePublicationIntentV2Schema.parse({
     schemaVersion: 2,
     scope: plan.scope,
     transitionId: input.transitionId,
@@ -122,4 +123,8 @@ export async function captureMoviePublicationV2(
       },
     ],
   });
+  return {
+    intent,
+    heldRollback: holdCapturedMovieRollbackPredecessorV1(tx, intent, budget),
+  };
 }

@@ -45,7 +45,7 @@ it("keeps named pending and exact fulfilled requests distinct", () => {
     />,
   );
   expect(html).toContain("Theatrical cut");
-  expect(html).toContain("Named-edition downloads are not available yet");
+  expect(html).toContain("Waiting for the requested edition");
   expect(html).toContain("Unmarked release — no named cut asserted");
   expect(html).toContain("Selected edition fulfilled");
 });

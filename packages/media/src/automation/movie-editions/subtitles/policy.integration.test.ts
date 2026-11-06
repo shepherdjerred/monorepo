@@ -21,6 +21,8 @@ import { fromOpenSubtitles } from "#automation/subtitle-sources.ts";
 import type { FetchTransport } from "#integrations/http.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
+import { createMovieNetworkFacetV4 } from "#automation/movie-editions/activities.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -123,6 +125,64 @@ const forcedTarget = {
   audio: "any" as const,
 };
 
+test("caption inventory admits one hundred records and protects overflowing history before provider or queue effects", async () => {
+  const f = await fixture();
+  await f.queue();
+  const inputs = await f.inputs();
+  const target = inputs[0];
+  if (target === undefined)
+    throw new Error("Actual scoped caption work missing");
+  const baseline = await f.db.subtitleAsset.count({
+    where: { assetId: f.assetId },
+  });
+  expect(baseline).toBeLessThan(100);
+  // Rejected candidates deliberately have no ownership or receipt. They must
+  // still count in the operational inventory rather than disappearing from it.
+  const rejected = {
+    assetId: f.assetId,
+    providerId: "synthetic-rejected-candidates",
+    language: "en",
+    state: "rejected",
+    qualityStatus: "rejected",
+    provenance: { fixture: "untrusted rejected operational inventory" },
+    matchingEvidence: {},
+  };
+  await f.db.subtitleAsset.createMany({
+    data: Array.from({ length: 100 - baseline }, () => rejected),
+  });
+  const bounded = await f.work();
+  expect(bounded.asset.subtitles).toHaveLength(100);
+  expect(bounded.protectedReasons).toEqual([]);
+  await f.db.subtitleAsset.createMany({
+    data: Array.from({ length: 20 }, () => rejected),
+  });
+  const overflow = await f.work();
+  expect(overflow.asset.subtitles).toHaveLength(101);
+  expect(overflow.protectedReasons).toContain(
+    "subtitle_inventory_requires_bounded_reconciliation",
+  );
+  expect(subtitleTargetsReady(overflow, 0)).toBe(false);
+  const before = await f.db.operation.count({
+    where: { kind: "acquire_movie_subtitles_v4", targetId: f.assetId },
+  });
+  expect(await f.queue()).toBe(0);
+  const p = await provider(f);
+  expect(
+    await findMovieSubtitlesV4(f.context, target, p.sources),
+  ).toMatchObject({ status: "obsolete", reason: "subtitle_target_changed" });
+  expect(p.calls).toHaveLength(0);
+  expect(
+    await f.db.operation.count({
+      where: { kind: "acquire_movie_subtitles_v4", targetId: f.assetId },
+    }),
+  ).toBe(before);
+  expect(
+    await f.db.subtitleAsset.count({
+      where: { assetId: f.assetId, providerId: "opensubtitles" },
+    }),
+  ).toBe(0);
+});
+
 async function provider(
   f: Awaited<ReturnType<typeof fixture>>,
   input: {
@@ -218,6 +278,58 @@ async function provider(
     },
   };
 }
+
+test("the scoped Network finder preserves the caller's spent allowance before provider discovery", async () => {
+  const f = await fixture();
+  await policy(f, { targets: [forcedTarget] });
+  await f.queue();
+  const inputs = await f.inputs();
+  const target = inputs.find((input) => input.forced === true);
+  if (target === undefined)
+    throw new Error("Actual required forced caption operation missing");
+  const external = await provider(f);
+  const before = {
+    subtitles: await f.db.subtitleAsset.findMany({
+      where: { assetId: f.assetId },
+      orderBy: { id: "asc" },
+    }),
+    operation: await f.db.operation.findUniqueOrThrow({
+      where: { id: target.operationId },
+    }),
+    leases: await f.db.providerLease.findMany({
+      orderBy: { providerId: "asc" },
+    }),
+  };
+  const execution = testPlexBindingExecution();
+  const budget = new PublicationAuthorityReadBudget();
+  budget.consume(99);
+  expect(
+    await createMovieNetworkFacetV4(
+      { ...f.context, movieManagement: { execution, budget } },
+      external.sources,
+    ).findMovieSubtitlesV4(target, execution),
+  ).toEqual({
+    status: "blocked",
+    subtitleId: null,
+    reason: "archive_transition_reconciliation_required",
+  });
+  expect(() => budget.consume(1)).toThrow("100 total queried records");
+  expect(external.calls).toEqual([]);
+  expect(
+    await f.db.subtitleAsset.findMany({
+      where: { assetId: f.assetId },
+      orderBy: { id: "asc" },
+    }),
+  ).toEqual(before.subtitles);
+  expect(
+    await f.db.operation.findUniqueOrThrow({
+      where: { id: target.operationId },
+    }),
+  ).toEqual(before.operation);
+  expect(
+    await f.db.providerLease.findMany({ orderBy: { providerId: "asc" } }),
+  ).toEqual(before.leases);
+});
 
 test("named editions inherit the movie policy until an explicit override, including an empty override", async () => {
   const f = await fixture();

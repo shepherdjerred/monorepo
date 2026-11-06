@@ -5,6 +5,7 @@ import {
   type MoviePublicationNoticeV4,
   type MovieRestorationNoticeV4,
   type MovieNoticeV4,
+  type MovieReplacementCaptionNoticeV4,
 } from "#shared/movie-editions/notifications-v4.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
@@ -16,7 +17,8 @@ import { queueDelivery } from "#automation/notifications/events.ts";
 type Draft =
   | Omit<MoviePublicationNoticeV4, "request" | "generation">
   | Omit<MovieRestorationNoticeV4, "request" | "generation">
-  | Omit<MovieCaptionNoticeV4, "request" | "generation">;
+  | Omit<MovieCaptionNoticeV4, "request" | "generation">
+  | Omit<MovieReplacementCaptionNoticeV4, "request" | "generation">;
 
 /** Classification and household policy do not create personal notification consent. */
 export async function queueMovieNoticesV4(
@@ -108,6 +110,18 @@ export async function queueMovieNoticesV4(
 
 /** A readiness cohort keeps its first real caption receipt when another accepted caption arrives. */
 function noticeSelection(payload: MovieNoticeV4) {
+  if (payload.kind === "movie_subtitle_replacement") {
+    const { captionHash: _hash, source, kind: _kind, ...notice } = payload;
+    return {
+      ...notice,
+      kind: "movie_subtitles",
+      source: {
+        schemaVersion: 4,
+        scope: source.scope,
+        assetId: source.assetId,
+      },
+    };
+  }
   if (payload.kind !== "movie_subtitles") return payload;
   const {
     captionHash: _hash,

@@ -6,7 +6,7 @@ export type PublicationIOIntent = Omit<
   PublicationIntent,
   "schemaVersion" | "entries"
 > & {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   entries: (Pick<
     PublicationEntryIntent,
     "entryHash" | "participants" | "journals" | "subtitleEvidence"

@@ -5,6 +5,8 @@ import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { MediaError } from "#application/errors.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 
 /** Media row locks serialize this read with creation/release of a reservation. */
 export async function assertNoSubtitleReplacement(
@@ -29,9 +31,19 @@ export async function lockSubtitleReplacementScope(
     assetId: string;
     mediaIds: readonly string[];
     replacementId?: string;
+    movieScope?: MovieEditionScope;
   },
 ) {
-  await lockDefaultMedia(tx, [...input.mediaIds]);
+  if (input.movieScope === undefined)
+    await lockDefaultMedia(tx, [...input.mediaIds]);
+  else {
+    if (
+      input.mediaIds.length !== 1 ||
+      input.mediaIds[0] !== input.movieScope.mediaId
+    )
+      throw new FileGuardError("movie_subtitle_scope_changed");
+    await lockMovieCommand(tx, input.movieScope);
+  }
   await assertNoPublicationCompensationFence(tx, {
     mediaIds: input.mediaIds,
     assetIds: [input.assetId],

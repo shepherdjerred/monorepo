@@ -16,7 +16,12 @@ export function assertScopedMovieActivityBudgets(
 ) {
   let scheduled = 0;
   const fileMethods = new Set([
+    "prepareRequestedMovieRollbackV1",
+    "rollbackRequestedMoviePublicationV1",
+    "prepareMovieRollbackV4",
+    "rollbackMoviePublicationV4",
     "inspectAndStageMovieV4",
+    "prepareMoviePublicationV4",
     "promoteMovieFilesV4",
     "installMovieSubtitlesV4",
   ]);

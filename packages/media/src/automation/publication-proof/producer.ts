@@ -34,12 +34,19 @@ import type {
   PublicationEffectRef,
   PublicationJournal,
 } from "#shared/publication-proof/effects.ts";
+import { lockPublicationSnapshots } from "#infrastructure/publication-proof/locked-snapshots.ts";
+import {
+  readLockedPublicationSnapshot,
+  type LockedPublicationSnapshots,
+} from "#infrastructure/publication-proof/queried-snapshots.ts";
 
 export type PublicationProducer = {
   context: PublicationContext;
   attempt: AcquisitionAttempt;
   plan: readonly FilePlanEntry[];
   rawFilePlanHash: string;
+  /** Explicit preparation phase; absence retains the original two-transaction invocation. */
+  phase?: "prepare" | "publish";
   authorizePlan: (
     tx: Transaction,
     current: AcquisitionAttempt,
@@ -78,6 +85,7 @@ export type PublicationProtocol<
   Parent extends PublicationIOIntentRef,
 > = {
   lockScope: (tx: Transaction, mediaIds: string[]) => Promise<void>;
+  lockRows?: (tx: Transaction) => Promise<void>;
   load: (tx: Transaction, attemptId: string) => Promise<Parent | null>;
   capture: (
     tx: Transaction,
@@ -96,8 +104,39 @@ export type PublicationProtocol<
 export async function producePublication(
   input: PublicationProducer,
 ): Promise<void> {
+  const snapshots = new WeakMap<Transaction, LockedPublicationSnapshots>();
+  const budget = input.context.libraryManagement?.budget;
+  if (budget === undefined && input.phase !== undefined)
+    throw new Error("Split publication requires its original allowance");
+  const reader = (tx: Transaction) => {
+    if (input.phase === undefined) return;
+    const current = snapshots.get(tx);
+    if (current === undefined)
+      throw new Error("Publication has no transaction-held snapshot reader");
+    return current;
+  };
   await producePublicationWithProtocol(input, {
     lockScope: lockAcquisitionMedia,
+    ...(input.phase === undefined
+      ? {}
+      : {
+          lockRows: async (tx: Transaction) => {
+            if (budget === undefined)
+              throw new Error("Publication allowance missing");
+            snapshots.set(
+              tx,
+              await lockPublicationSnapshots(
+                tx,
+                {
+                  attemptId: input.attempt.id,
+                  mediaIds: input.attempt.mediaIds,
+                  entries: input.plan.map((entry) => ({ entry })),
+                },
+                budget,
+              ),
+            );
+          },
+        }),
     load: (tx, attemptId) =>
       loadPublicationIntent(
         tx,
@@ -105,28 +144,37 @@ export async function producePublication(
         input.context.libraryManagement?.budget,
       ),
     capture: async (tx, attempt, transitionId) => {
-      const captured = await capturePublicationIntent(tx, {
-        context: input.context,
-        attempt,
-        plan: input.plan,
-        transitionId,
-        rawFilePlanHash: input.rawFilePlanHash,
-      });
+      const captured = await capturePublicationIntent(
+        tx,
+        {
+          context: input.context,
+          attempt,
+          plan: input.plan,
+          transitionId,
+          rawFilePlanHash: input.rawFilePlanHash,
+        },
+        reader(tx),
+      );
       assertPublicationActive(input.context);
       const result = await createPublicationIntent(
         tx,
         captured,
         input.context.libraryManagement?.budget,
+        reader(tx),
       );
       assertPublicationActive(input.context);
       return result;
     },
-    snapshot: (tx, assetId) =>
-      snapshotPublicationAsset(
-        tx,
-        assetId,
-        input.context.libraryManagement?.budget,
-      ),
+    snapshot: (tx, assetId) => {
+      const current = reader(tx);
+      return current === undefined
+        ? snapshotPublicationAsset(
+            tx,
+            assetId,
+            input.context.libraryManagement?.budget,
+          )
+        : readLockedPublicationSnapshot(tx, assetId, budget, current);
+    },
     complete: async (tx, parent, outcome) => {
       await commitPublicationOutcome(
         tx,
@@ -135,6 +183,7 @@ export async function producePublication(
           outcome: { schemaVersion: 1, ...outcome },
         },
         input.context.libraryManagement?.budget,
+        reader(tx),
       );
     },
   });
@@ -151,50 +200,72 @@ export async function producePublicationWithProtocol<
   const { context, attempt, plan } = input;
   assertPublicationActive(context);
   const existing = await protocol.load(context.db, attempt.id);
+  if (existing === null && input.phase === "publish")
+    throw new FileGuardError("publication_preparation_required");
+  if (
+    existing !== null &&
+    input.phase !== undefined &&
+    existing.intent.filePlanHash !== input.rawFilePlanHash
+  )
+    throw new FileGuardError("publication_intent_changed");
   const transitionId = existing?.transitionId ?? crypto.randomUUID();
   const stores = await preparePublicationStores(context, {
     transitionId,
     plan,
   });
-  const intent = await context.db.$transaction(
-    async (tx) => {
-      const { current, assertAuthority } = await lockProducer(
-        tx,
-        input,
-        protocol.lockScope,
-      );
-      const persisted = await protocol.load(tx, attempt.id);
-      if (persisted !== null) {
-        if (
-          persisted.transitionId !== transitionId ||
-          persisted.intent.filePlanHash !== input.rawFilePlanHash
-        )
-          throw new FileGuardError("publication_intent_changed");
-        return persisted;
-      }
-      if (stores.some((item) => item.observed.records.length > 0))
-        throw new FileGuardError("publication_effect_without_intent");
-      const operations = stores.map(({ kind }) => ({
-        kind,
-        files: new FileOperations(context.roots[kind], {
-          ...(context.contentProof === undefined
-            ? {}
-            : { contentProof: context.contentProof }),
-          authorize: () => Promise.resolve(),
-          ...(context.verifyPlexExclusion === undefined
-            ? {}
-            : { verifyPlexExclusion: context.verifyPlexExclusion }),
-        }),
-      }));
-      return await withPublicationPaths(context, plan, operations, async () => {
-        const result = await protocol.capture(tx, current, transitionId);
-        assertAuthority();
-        return result;
-      });
-    },
-    { timeout: 30_000, maxWait: 30_000 },
-  );
+  const intent =
+    existing !== null && input.phase === "publish"
+      ? existing
+      : await context.db.$transaction(
+          async (tx) => {
+            const { current, assertAuthority } = await lockProducer(
+              tx,
+              input,
+              protocol.lockScope,
+              protocol.lockRows,
+            );
+            const persisted = await protocol.load(tx, attempt.id);
+            if (persisted !== null) {
+              if (
+                persisted.transitionId !== transitionId ||
+                persisted.intent.filePlanHash !== input.rawFilePlanHash
+              )
+                throw new FileGuardError("publication_intent_changed");
+              return persisted;
+            }
+            if (stores.some((item) => item.observed.records.length > 0))
+              throw new FileGuardError("publication_effect_without_intent");
+            const operations = stores.map(({ kind }) => ({
+              kind,
+              files: new FileOperations(context.roots[kind], {
+                ...(context.contentProof === undefined
+                  ? {}
+                  : { contentProof: context.contentProof }),
+                authorize: () => Promise.resolve(),
+                ...(context.verifyPlexExclusion === undefined
+                  ? {}
+                  : { verifyPlexExclusion: context.verifyPlexExclusion }),
+              }),
+            }));
+            return await withPublicationPaths(
+              context,
+              plan,
+              operations,
+              async () => {
+                const result = await protocol.capture(
+                  tx,
+                  current,
+                  transitionId,
+                );
+                assertAuthority();
+                return result;
+              },
+            );
+          },
+          { timeout: 30_000, maxWait: 30_000 },
+        );
   await context.checkpoint("publication-intent-committed");
+  if (input.phase === "prepare") return;
   const recording = publicationRecording(context, intent, stores);
   await context.db.$transaction(
     async (tx) => {
@@ -202,6 +273,7 @@ export async function producePublicationWithProtocol<
         tx,
         input,
         protocol.lockScope,
+        protocol.lockRows,
       );
       for (const store of stores) {
         const physicalAuthority = await publicationAuthorityGuard(tx, context, {
@@ -292,6 +364,7 @@ async function lockProducer(
   tx: Transaction,
   input: PublicationProducer,
   lockScope: PublicationProtocol<unknown, PublicationIOIntentRef>["lockScope"],
+  lockRows: PublicationProtocol<unknown, PublicationIOIntentRef>["lockRows"],
 ) {
   assertPublicationActive(input.context);
   await lockScope(tx, input.attempt.mediaIds);
@@ -305,11 +378,13 @@ async function lockProducer(
   const assertAuthority = await input.authorizePlan(tx, current);
   for (const entry of input.plan)
     await input.authorizeEntry(tx, current, entry);
-  await lockPublicationRows(tx, {
-    attemptId: input.attempt.id,
-    mediaIds: input.attempt.mediaIds,
-    entries: input.plan.map((entry) => ({ entry })),
-  });
+  if (lockRows === undefined)
+    await lockPublicationRows(tx, {
+      attemptId: input.attempt.id,
+      mediaIds: input.attempt.mediaIds,
+      entries: input.plan.map((entry) => ({ entry })),
+    });
+  else await lockRows(tx);
   await input.authorizeLockedPlan?.(tx, current);
   assertPublicationActive(input.context);
   assertAuthority();

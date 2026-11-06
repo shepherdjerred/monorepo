@@ -3,14 +3,15 @@ import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { NativeSubtitleSnapshot } from "#shared/native-subtitles.ts";
 import type { NativeTerminalDescriptor } from "#shared/native-recovery/terminal.ts";
-import type { terminalRebindingChain } from "#infrastructure/native-recovery/terminal-rebinding.ts";
+import type { InstalledSubtitleInput } from "./installed-subtitle-types.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { installedMovieSubtitleOperationV4 } from "#infrastructure/movie-editions/subtitle-installation.ts";
+import { movieReplacementInstallationLineageV2 } from "#infrastructure/movie-editions/subtitle-replacement/installation-lineage.ts";
 
-type Chain = Awaited<ReturnType<typeof terminalRebindingChain>>;
+type Chain = InstalledSubtitleInput["chain"];
 const Evidence = z.object({
   assetVersion: z.int().nonnegative(),
   assetChecksum: z.string(),
@@ -23,21 +24,25 @@ const Evidence = z.object({
 /** Additional captions need their own exact app installation, not membership inferred from a path. */
 export async function settledInstalledSubtitle(
   tx: Prisma.TransactionClient,
-  input: {
-    subtitle: NativeSubtitleSnapshot;
-    chain: Chain;
-    video: {
-      path: string;
-      checksum: string;
-      mediaIds: string[];
-      libraryKind: "movies" | "tv";
-    };
-    videoBindings: { version: number; epoch: number }[];
-    movieScope?: MovieEditionScope;
-  },
+  input: InstalledSubtitleInput,
   budget?: PublicationAuthorityReadBudget,
 ) {
   const original = installationSnapshot(input.subtitle, input.chain);
+  if (
+    z
+      .object({ movieReplacementV2: z.unknown() })
+      .safeParse(original.matchingEvidence).success
+  ) {
+    if (budget === undefined || input.movieScope === undefined)
+      throw new Error(
+        "Movie replacement installation needs its exact scope and original allowance",
+      );
+    return movieReplacementInstallationLineageV2(
+      tx,
+      { original, current: input },
+      budget,
+    );
+  }
   const evidence = Evidence.parse(original.matchingEvidence);
   const provenance = z
     .object({

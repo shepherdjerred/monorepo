@@ -7,8 +7,12 @@ import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import { readMovieRetrySourceV4, captureMovieRetryV1 } from "./retry-source.ts";
+import type { readMovieRetrySourceV4 } from "./retry-source.ts";
 import { movieRetryAuthorityV4 } from "./retry-authority.ts";
+import {
+  selectMovieRetryV4,
+  movieRetrySelectionDetails,
+} from "./retry-selection.ts";
 
 type Enqueue = (
   tx: Prisma.TransactionClient,
@@ -50,25 +54,12 @@ export async function queueRequestedMovieRetryV4(
   await assertNoPublicationCompensationFence(tx, {
     mediaIds: [command.scope.mediaId],
   });
-  const reservation = await tx.acquisitionReservation.findUnique({
-    where: {
-      mediaId_edition: {
-        mediaId: command.scope.mediaId,
-        edition: command.scope.edition,
-      },
-    },
-  });
-  if (reservation === null)
-    throw new MediaError(
-      "movie_retry_attempt_required",
-      "Movie retry requires its current recorded acquisition",
-      409,
-    );
-  const source = await readMovieRetrySourceV4(
+  const selected = await selectMovieRetryV4(
     tx,
-    { attemptId: reservation.attemptId, scope: command.scope },
+    { scope: command.scope, mode: "manual", access: input.access },
     budget,
   );
+  const source = selected.source;
   if (!(await lockRuntimeAuthority(tx, source.attempt.recoveryEpoch)))
     throw new MediaError(
       "intent_ownership_unconfirmed",
@@ -81,6 +72,9 @@ export async function queueRequestedMovieRetryV4(
     access: input.access,
     actorId: input.actor.id,
     budget,
+    ...(source.attempt.state === "completed"
+      ? { purpose: "completed_ack" as const }
+      : {}),
   });
   await assertNoPendingMovieRetryV4(tx, source, budget);
   const operationId = await enqueue(tx, {
@@ -89,7 +83,7 @@ export async function queueRequestedMovieRetryV4(
     details: {
       schemaVersion: 4,
       scope: command.scope,
-      movieRetryV1: captureMovieRetryV1(source, "manual"),
+      ...movieRetrySelectionDetails(selected),
     },
   });
   freshness.assertActive();
@@ -102,25 +96,48 @@ export async function queueRequestedMovieRetryV4(
 
 export async function assertNoPendingMovieRetryV4(
   tx: Prisma.TransactionClient,
-  source: Awaited<ReturnType<typeof readMovieRetrySourceV4>>,
+  source: Pick<
+    Awaited<ReturnType<typeof readMovieRetrySourceV4>>,
+    "attempt" | "operation"
+  >,
   budget: PublicationAuthorityReadBudget,
 ) {
   const pending = await tx.operation.findMany({
     where: {
       kind: "reconcile_movie_edition_v4",
       status: { in: ["queued", "running"] },
-      AND: [
+      OR: [
+        ...["movieRetryV1", "movieRetryV2"].map((marker) => ({
+          AND: [
+            {
+              payload: {
+                path: [marker, "attemptId"],
+                equals: source.attempt.id,
+              },
+            },
+            {
+              payload: {
+                path: [marker, "previousCoordinatorOperationId"],
+                equals: source.operation.id,
+              },
+            },
+          ],
+        })),
         {
-          payload: {
-            path: ["movieRetryV1", "attemptId"],
-            equals: source.attempt.id,
-          },
-        },
-        {
-          payload: {
-            path: ["movieRetryV1", "previousCoordinatorOperationId"],
-            equals: source.operation.id,
-          },
+          AND: [
+            {
+              payload: {
+                path: ["movieRetryPlexAckV1", "originalInput", "attemptId"],
+                equals: source.attempt.id,
+              },
+            },
+            {
+              payload: {
+                path: ["movieRetryPlexAckV1", "originalInput", "operationId"],
+                equals: source.operation.id,
+              },
+            },
+          ],
         },
       ],
     },

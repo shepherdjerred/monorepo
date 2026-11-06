@@ -32,11 +32,8 @@ import {
   stableNativeFiles,
   stableNativeNetwork,
 } from "./plan.ts";
-import {
-  nativeApprovingActor,
-  installNativeAuthority,
-  assertNativeEvidenceFresh,
-} from "./authority.ts";
+import { nativeApprovingActor, installNativeAuthority } from "./authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import {
   nativeLocalPath,
   type NativeFileContext,

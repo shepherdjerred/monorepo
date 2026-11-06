@@ -2,13 +2,18 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
-import { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
+import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
+import {
+  NativeRecoveryDetailProtocolSchema,
+  type SeriesPackNativeDetailV1,
+} from "#shared/native-recovery/series-pack/detail.ts";
 import { readApi } from "#client/api.ts";
 import { useNativeReviewApproval } from "./approval.ts";
 import { NativeReviewStatus } from "./review-status.tsx";
 import { QuarantineContinuations } from "./continuations.tsx";
 import { NativeArchiveReview } from "./archive/review.tsx";
 import { NativeCompensationReview } from "./compensation/review.tsx";
+import { SeriesPackNativeReview } from "./series-pack/review.tsx";
 import {
   nativeReviewIdentity,
   nativeReviewAcknowledged,
@@ -32,8 +37,16 @@ export function NativeRecoveryReview({
   const result = useQuery({
     queryKey: ["native-recovery-detail", id],
     queryFn: () =>
-      readApi(`/admin/native-recovery/${id}`, NativeLifecycleDetailSchema),
-    refetchInterval: (query) => reviewInterval(query.state.data),
+      readApi(
+        `/admin/native-recovery/${id}`,
+        NativeRecoveryDetailProtocolSchema,
+      ),
+    refetchInterval: (query) => {
+      const review = query.state.data;
+      return review !== undefined && "protocol" in review
+        ? seriesPackReviewInterval(review)
+        : reviewInterval(review);
+    },
   });
   const acknowledged = nativeReviewAcknowledged(acknowledgement, result.data);
   const setAcknowledged = (checked: boolean) => {
@@ -48,13 +61,25 @@ export function NativeRecoveryReview({
     },
   });
   const review = result.data;
-  const compensationScope = compensationSelection(review);
-  if (compensationScope !== null && review !== undefined)
+  if (review !== undefined && "protocol" in review)
+    return (
+      <SeriesPackNativeReview
+        user={user}
+        review={review}
+        acknowledgement={acknowledgement}
+        onAcknowledge={setAcknowledged}
+        onRefresh={() => result.refetch()}
+        refreshing={result.isFetching}
+        error={result.error}
+      />
+    );
+  const compensation = compensationSelection(review);
+  if (compensation !== null)
     return (
       <NativeCompensationReview
         user={user}
-        review={review}
-        scope={compensationScope}
+        review={compensation.review}
+        scope={compensation.scope}
         acknowledged={acknowledged}
         onAcknowledge={setAcknowledged}
         onApply={() => {
@@ -272,13 +297,26 @@ function reviewSubtitlePolicies(
     : [];
 }
 
+function seriesPackReviewInterval(review: SeriesPackNativeDetailV1) {
+  return ["preparing", "applying"].includes(review.state) ||
+    review.compensationContinuations.some(
+      (item) =>
+        item.state === "pending" ||
+        item.state === "compensating" ||
+        item.publicationState === "publishing",
+    )
+    ? 5000
+    : false;
+}
+
 function compensationSelection(
   review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
 ) {
-  const scope = review?.scope;
-  return scope?.schemaVersion === 2 &&
+  if (review === undefined) return null;
+  const scope = review.scope;
+  return scope.schemaVersion === 2 &&
     scope.lifecycleKind === "publication_compensation"
-    ? scope
+    ? { scope, review }
     : null;
 }
 

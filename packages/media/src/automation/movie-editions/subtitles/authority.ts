@@ -33,7 +33,7 @@ export async function currentMovieSubtitleWorkV4(
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: assetId },
     include: {
-      subtitles: true,
+      subtitles: { orderBy: { id: "asc" }, take: 101 },
       coverage: { where: { current: true }, take: 2, include: { media: true } },
     },
   });
@@ -62,6 +62,8 @@ export async function currentMovieSubtitleWorkV4(
   );
   targets.push(...requirements.targets);
   const reasons = [...requirements.reasons];
+  if (asset.subtitles.length > 100)
+    reasons.push("subtitle_inventory_requires_bounded_reconciliation");
   if (
     !asset.owned ||
     asset.ownershipEpoch !== epoch ||

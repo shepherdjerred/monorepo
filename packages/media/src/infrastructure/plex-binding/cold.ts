@@ -26,7 +26,7 @@ import { compensationRecord } from "#infrastructure/native-compensation/records.
 import {
   assertCompensationPublicationPhase,
   type CompensationPublicationPhase,
-} from "#infrastructure/native-compensation/publication/phase.ts";
+} from "#infrastructure/native-compensation/series-pack/publication/adapter.ts";
 
 /** Trusted inventory capture, with no request creation, sponsor selection, or download consent. */
 export async function captureExistingPlexBindingExpected(

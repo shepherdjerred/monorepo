@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { MediaError } from "#application/errors.ts";
@@ -98,10 +99,12 @@ export async function requesterEvidence(
   db: Prisma.TransactionClient,
   captureId: string,
   requesterSourceId: string,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const capture = await db.migrationCapture.findUnique({
     where: { id: captureId },
   });
+  budget?.consume(capture === null ? 0 : 1);
   if (capture === null)
     throw claimConflict("The exact source capture is unavailable");
   const records = await db.migrationRecord.findMany({
@@ -113,6 +116,7 @@ export async function requesterEvidence(
     orderBy: { provenanceKey: "asc" },
     take: 1001,
   });
+  budget?.consume(records.length);
   if (records.length > 1000)
     throw claimConflict(
       "Capture requester evidence exceeds the supported 1000-record bound",

@@ -24,6 +24,11 @@ import { assertMoviePublicationTimesV2 } from "./timestamps.ts";
 import { loadMoviePublicationV2, assertOutcomeBinding } from "./records.ts";
 import { findMovieLibraryReferenceV2 } from "#infrastructure/movie-editions/library-proof.ts";
 import { findMovieRestoreReferenceV1 } from "./restore-reference.ts";
+import { findMovieRollbackReferenceV1 } from "#infrastructure/movie-editions/rollback/reference.ts";
+import {
+  assertHeldMovieRollbackPredecessorV1,
+  type HeldMovieRollbackPredecessorV1,
+} from "./held-rollback-predecessor.ts";
 
 const hash = (value: unknown) => snapshotHash(nativeJson(value));
 
@@ -69,7 +74,9 @@ export async function findMoviePublicationReferenceV2(
   budget.consume(rows.length);
   if (rows.length === 0) {
     const restored = await findMovieRestoreReferenceV1(tx, input, budget);
-    return restored ?? findMovieLibraryReferenceV2(tx, input, budget);
+    if (restored !== null) return restored;
+    const rolledBack = await findMovieRollbackReferenceV1(tx, input, budget);
+    return rolledBack ?? findMovieLibraryReferenceV2(tx, input, budget);
   }
   if (rows.length !== 1)
     throw new Error("Movie publication predecessor authority is ambiguous");
@@ -147,8 +154,11 @@ export async function createMoviePublicationV2(
   tx: Prisma.TransactionClient,
   input: MoviePublicationIntentV2,
   budget: PublicationAuthorityReadBudget,
+  heldRollback?: HeldMovieRollbackPredecessorV1,
 ) {
   const intent = MoviePublicationIntentV2Schema.parse(input);
+  if (heldRollback !== undefined)
+    assertHeldMovieRollbackPredecessorV1(tx, { intent, budget }, heldRollback);
   const previous = await loadMoviePublicationV2(tx, intent.attemptId, budget);
   if (previous !== null) {
     if (previous.reference.intentHash !== hash(intent))
@@ -174,7 +184,7 @@ export async function createMoviePublicationV2(
     throw new Error(
       "Movie publication intent differs from its original attempt and file plan",
     );
-  await assertInitialEntry(tx, intent, budget);
+  await assertInitialEntry(tx, intent, budget, heldRollback);
   const intentHash = hash(intent);
   await tx.mediaPublicationTransition.create({
     data: {
@@ -193,6 +203,7 @@ async function assertInitialEntry(
   tx: Prisma.TransactionClient,
   intent: MoviePublicationIntentV2,
   budget: PublicationAuthorityReadBudget,
+  heldRollback?: HeldMovieRollbackPredecessorV1,
 ) {
   const item = intent.entries[0];
   const entry = item.entry;
@@ -201,34 +212,7 @@ async function assertInitialEntry(
       throw new Error(
         "Initial movie publication cannot borrow predecessor authority",
       );
-  } else {
-    if (
-      item.predecessor?.id !== entry.previousAssetId ||
-      item.predecessor.version !== entry.previousVersion ||
-      item.predecessor.checksum !== entry.previousChecksum ||
-      item.originalGrant === null ||
-      hash(
-        await snapshotMoviePublicationAssetV2(
-          tx,
-          intent.scope,
-          entry.previousAssetId,
-          budget,
-        ),
-      ) !== hash(item.predecessor)
-    )
-      throw new Error(
-        "Movie publication predecessor scope, snapshot or grant changed",
-      );
-    const actualGrant = await findMoviePublicationReferenceV2(
-      tx,
-      { scope: intent.scope, asset: item.predecessor },
-      budget,
-    );
-    if (hash(actualGrant) !== hash(item.originalGrant))
-      throw new Error(
-        "Movie publication predecessor grant is not its actual completed authority",
-      );
-  }
+  } else await assertInitialPredecessor(tx, intent, budget, heldRollback);
   const existing = await tx.libraryAsset.findUnique({
     where: { id: entry.assetId },
   });
@@ -244,6 +228,48 @@ async function assertInitialEntry(
   )
     throw new Error(
       "Movie publication participant lies outside the exact entry",
+    );
+}
+
+async function assertInitialPredecessor(
+  tx: Prisma.TransactionClient,
+  intent: MoviePublicationIntentV2,
+  budget: PublicationAuthorityReadBudget,
+  heldRollback?: HeldMovieRollbackPredecessorV1,
+) {
+  const item = intent.entries[0],
+    entry = item.entry;
+  if (
+    item.predecessor?.id !== entry.previousAssetId ||
+    item.predecessor.version !== entry.previousVersion ||
+    item.predecessor.checksum !== entry.previousChecksum ||
+    item.originalGrant === null
+  )
+    throw new Error(
+      "Movie publication predecessor scope, snapshot or grant changed",
+    );
+  if (heldRollback !== undefined) return;
+  if (
+    hash(
+      await snapshotMoviePublicationAssetV2(
+        tx,
+        intent.scope,
+        item.predecessor.id,
+        budget,
+      ),
+    ) !== hash(item.predecessor)
+  )
+    throw new Error(
+      "Movie publication predecessor scope, snapshot or grant changed",
+    );
+  const actualGrant = await findMoviePublicationReferenceV2(
+    tx,
+    { scope: intent.scope, asset: item.predecessor },
+    budget,
+  );
+  if (hash(actualGrant) !== hash(item.originalGrant))
+    throw new Error(
+      "Movie publication predecessor grant is not its actual completed authority",
     );
 }
 

@@ -4,10 +4,7 @@ import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { assertRuntime } from "#automation/files/guards.ts";
 import { FileGuardError } from "#automation/files/types.ts";
-import {
-  SubtitleReplacementSnapshotSchema,
-  type SubtitleReplacementInput,
-} from "#shared/subtitle-replacement.ts";
+import { type SubtitleReplacementInput } from "#shared/subtitle-replacement.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   assertReplacementOwner,
@@ -17,6 +14,11 @@ import {
   captureReplacementSnapshot,
   replacementSubtitleSnapshot,
 } from "./snapshot.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
+import { assertMovieReplacementSnapshotV2 } from "#automation/movie-editions/subtitle-replacement/authority.ts";
+import type { FileContext } from "#automation/files/types.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import type { HeldMovieRollbackCaptionSourceV1 } from "#infrastructure/movie-editions/subtitle-replacement/rollback-source.ts";
 
 export async function lockReplacement(
   tx: Prisma.TransactionClient,
@@ -25,18 +27,19 @@ export async function lockReplacement(
   const initial = await tx.subtitleReplacement.findUniqueOrThrow({
     where: { id: replacementId },
   });
-  const scope = SubtitleReplacementSnapshotSchema.parse(initial.snapshot);
+  const scope = replacementSnapshot(initial.snapshot);
   await lockSubtitleReplacementScope(tx, {
     assetId: initial.assetId,
     mediaIds: scope.asset.coverage.map((item) => item.mediaId),
     replacementId,
+    ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
   });
   const row = await tx.subtitleReplacement.findUniqueOrThrow({
     where: { id: replacementId },
     include: { review: true, receipt: true },
   });
   if (
-    snapshotHash(scope) !== row.snapshotHash ||
+    snapshotHash(nativeJson(scope)) !== row.snapshotHash ||
     row.recoveryEpoch !== scope.recoveryEpoch ||
     row.runtimeVersion !== scope.runtimeVersion
   )
@@ -47,12 +50,17 @@ export async function lockReplacement(
 export async function assertReplacementSnapshot(
   tx: Prisma.TransactionClient,
   replacementId: string,
-  options: { allowCompensation?: boolean; actorId?: string } = {},
+  options: {
+    allowCompensation?: boolean;
+    actorId?: string;
+    heldRollbackSource?: HeldMovieRollbackCaptionSourceV1;
+  } = {},
+  context?: FileContext,
 ) {
   const row = await tx.subtitleReplacement.findUniqueOrThrow({
     where: { id: replacementId },
   });
-  const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
+  const scope = replacementSnapshot(row.snapshot);
   await assertPublicationUnfenced(
     tx,
     scope.asset.coverage.map((item) => item.mediaId),
@@ -70,6 +78,16 @@ export async function assertReplacementSnapshot(
   });
   if (!row.reservationActive || runtime.version !== scope.runtimeVersion)
     throw new FileGuardError("subtitle_replacement_authority_changed");
+  if (scope.schemaVersion === 2) {
+    if (context === undefined)
+      throw new Error("Movie caption replacement has no invocation authority");
+    return assertMovieReplacementSnapshotV2(tx, row, context, {
+      compensation: options.allowCompensation === true,
+      ...(options.heldRollbackSource === undefined
+        ? {}
+        : { heldRollbackSource: options.heldRollbackSource }),
+    });
+  }
   if (options.allowCompensation !== true) {
     const current = await captureReplacementSnapshot(tx, {
       assetId: row.assetId,

@@ -6,7 +6,7 @@ import {
   assertPublicationActive,
   type PublicationContext,
 } from "#automation/publication-proof/invocation.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import type { NativeCompensationNetworkEvidence } from "#shared/native-recovery/compensation.ts";
 
 export type CompensationFileContext = NativeFileContext & {

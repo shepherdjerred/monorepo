@@ -20,9 +20,13 @@ export function effectiveCandidate(
     coverage.some((id) => !allowed.includes(id))
   )
     throw new Error("Identity proof has invalid canonical coverage");
-  const evidence = candidate.resolvedEvidence;
+  const derived =
+    "seriesPackV1" in verifiedIdentity.source
+      ? { ...candidate, ...verifiedIdentity.source.seriesPackV1.attributes }
+      : candidate;
+  const evidence = derived.resolvedEvidence;
   return {
-    ...candidate,
+    ...derived,
     mediaIds: [...coverage],
     identityConfidence: "exact",
     ...(evidence === undefined

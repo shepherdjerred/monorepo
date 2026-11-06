@@ -6,11 +6,13 @@ import { CAPACITY_ROOTS } from "#shared/capacity/contract.ts";
 import type { PlexPhysicalGroup } from "#shared/plex-binding/contract.ts";
 import type { PlexPublicationParent } from "#shared/plex-binding/expected.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import { loadPublicationIntent } from "#infrastructure/publication-proof/store.ts";
+import { loadHistoricalPublicationIntent } from "#infrastructure/publication-proof/store.ts";
 import { assertRecordedPublicationGrant } from "#infrastructure/publication-proof/authority.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { PublicationAssetSnapshot } from "#shared/publication-proof/intent.ts";
+import type { PublicationEntryIntent } from "#shared/publication-proof/intent.ts";
 import { PlexBindingProtection } from "./errors.ts";
+import { seriesPackLibraryRollbackOriginsV1 } from "#infrastructure/acquisition-identity/series-pack/publication/rollback-origin.ts";
 
 export const PlexRollbackReceiptSchema = z.object({
   rollbackReceipt: z.object({
@@ -157,41 +159,116 @@ export async function assertPlexRollbackParent(
     ),
   );
   if (groups.length === 0) throw new PlexBindingProtection("ownership_changed");
-  const original = await loadPublicationIntent(tx, attempt.id, budget);
+  const original = await loadHistoricalPublicationIntent(
+    tx,
+    attempt.id,
+    budget,
+  );
   const ordinary = [];
+  const library = await libraryOrigins(
+    tx,
+    {
+      original,
+      identity: attempt.identityEvidence,
+      epoch: attempt.recoveryEpoch,
+    },
+    budget,
+  );
   for (const group of groups) {
     const entry = plan.find((value) => value.previousAssetId === group.assetId);
     if (
       entry === undefined ||
       identityHash([...entry.mediaIds].sort()) !==
-        identityHash(group.coverage.map((scope) => scope.mediaId)) ||
-      path.posix.join(CAPACITY_ROOTS[entry.libraryKind], entry.libraryPath) !==
-        group.canonicalPath
+        identityHash(group.coverage.map((scope) => scope.mediaId))
     )
       throw new PlexBindingProtection("scope_changed");
     const recorded = original?.intent.entries.find(
       (value) => value.entry.operationId === entry.operationId,
     );
-    if (original !== null && recorded === undefined)
-      throw new Error("Plex rollback intent omitted its entry");
-    if (recorded?.originalGrant == null) ordinary.push(group);
-    else {
-      const predecessor = recorded.predecessor;
-      if (predecessor === null)
-        throw new Error("Plex rollback recorded native predecessor changed");
-      assertRollbackPredecessor(predecessor, group, entry.previousVersion);
-      await assertRecordedPublicationGrant(
-        tx,
-        {
-          reference: recorded.originalGrant,
-          snapshot: predecessor,
-          libraryKind: entry.libraryKind,
-        },
-        budget,
-      );
+    assertRecordedEntry(original, recorded);
+    // Only a genuine v3 initial-library origin can retain its captured root.
+    // Its complete immutable predecessor and current restored group are checked
+    // before bypassing the historical acquisition CAPACITY path assertion.
+    if (
+      recorded?.originalGrant == null &&
+      hasLibraryOrigin(library, group, recorded)
+    )
+      continue;
+    if (
+      path.posix.join(CAPACITY_ROOTS[entry.libraryKind], entry.libraryPath) !==
+      group.canonicalPath
+    )
+      throw new PlexBindingProtection("scope_changed");
+    if (recorded?.originalGrant == null) {
+      ordinary.push(group);
+    } else {
+      await assertNativeRollbackOrigin(tx, { recorded, group, entry }, budget);
     }
   }
   return { groups, ordinary };
+}
+
+async function libraryOrigins(
+  tx: Prisma.TransactionClient,
+  input: {
+    original: Awaited<ReturnType<typeof loadHistoricalPublicationIntent>>;
+    identity: unknown;
+    epoch: number;
+  },
+  budget: PublicationAuthorityReadBudget,
+) {
+  return input.original?.intent.schemaVersion === 3
+    ? seriesPackLibraryRollbackOriginsV1(
+        tx,
+        { identity: input.identity, epoch: input.epoch },
+        budget,
+      )
+    : null;
+}
+
+function hasLibraryOrigin(
+  library: Awaited<ReturnType<typeof seriesPackLibraryRollbackOriginsV1>>,
+  group: PlexPhysicalGroup,
+  recorded: PublicationEntryIntent | undefined,
+) {
+  return (
+    library !== null &&
+    recorded !== undefined &&
+    library(group, recorded.predecessor)
+  );
+}
+
+function assertRecordedEntry(
+  original: Awaited<ReturnType<typeof loadHistoricalPublicationIntent>>,
+  recorded: PublicationEntryIntent | undefined,
+) {
+  if (original !== null && recorded === undefined)
+    throw new Error("Plex rollback intent omitted its entry");
+}
+
+async function assertNativeRollbackOrigin(
+  tx: Prisma.TransactionClient,
+  input: {
+    recorded: PublicationEntryIntent;
+    group: PlexPhysicalGroup;
+    entry: z.infer<typeof FilePlanEntrySchema>;
+  },
+  budget: PublicationAuthorityReadBudget,
+) {
+  const { recorded, group, entry } = input;
+  const predecessor = recorded.predecessor;
+  if (predecessor === null || recorded.originalGrant === null)
+    throw new Error("Plex rollback recorded native predecessor changed");
+  assertRollbackPredecessor(predecessor, group, entry.previousVersion);
+  await assertRecordedPublicationGrant(
+    tx,
+    {
+      reference: recorded.originalGrant,
+      snapshot: predecessor,
+      libraryKind: entry.libraryKind,
+    },
+    budget,
+  );
 }
 
 function assertRollbackPredecessor(

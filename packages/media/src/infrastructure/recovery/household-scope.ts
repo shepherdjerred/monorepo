@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
@@ -12,6 +13,7 @@ export async function buildHouseholdScope(
   db: Prisma.TransactionClient,
   legacy: z.infer<typeof LegacyRecoveryScopeSchema>,
   machineId: string,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const ids = legacy.media.map((item) => item.id);
   const users = await db.mediaUser.findMany({
@@ -25,10 +27,15 @@ export async function buildHouseholdScope(
     where: { id: { in: legacy.handoffReceipts.map((item) => item.id) } },
     select: { planId: true },
   });
-  const claims = await buildRecoveryClaims(db, {
-    planIds: receipts.map((item) => item.planId),
-    mediaIds: ids,
-  });
+  budget?.consume(receipts.length);
+  const claims = await buildRecoveryClaims(
+    db,
+    {
+      planIds: receipts.map((item) => item.planId),
+      mediaIds: ids,
+    },
+    budget,
+  );
   const media = await db.mediaItem.findMany({
     where: { id: { in: ids } },
     include: { parent: { include: { parent: true } } },

@@ -5,6 +5,7 @@ import {
   ownedSubtitleSidecars,
 } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
+import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import {
@@ -26,6 +27,18 @@ export async function rollbackPromotion(
   initialContext: FileContext,
   attemptId: string,
   operationId: string,
+  seriesPack?: {
+    authorize: (
+      tx: Transaction,
+      attempt: AcquisitionAttempt,
+    ) => Promise<() => void>;
+    restoredPaths: (entry: FilePlanEntry) => {
+      video: string;
+      sidecars: ReadonlyMap<string, string>;
+      previousVersion: number;
+      successorVersion: number;
+    };
+  },
 ): Promise<void> {
   const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
@@ -45,6 +58,7 @@ export async function rollbackPromotion(
         where: { id: attemptId },
       });
       if (current.state === "rolled_back") return;
+      const assertSeriesPackActive = await seriesPack?.authorize(tx, current);
       for (const entry of plan) {
         await assertDefaultPhysicalAsset(tx, entry.assetId);
         if (entry.previousAssetId !== null)
@@ -60,12 +74,14 @@ export async function rollbackPromotion(
           continue;
         }
         const previousAssetId = entry.previousAssetId;
+        const restoredPaths = seriesPack?.restoredPaths(entry);
         const previousChecksum = entry.previousChecksum;
         if (previousChecksum === null || entry.previousVersion === null)
           throw new FileGuardError("no_previous_version");
         const rollbackOperationId = `${operationId}-rollback-${entry.assetId}`;
         const roots = context.roots[entry.libraryKind];
         const authorize = async () => {
+          assertSeriesPackActive?.();
           await context.checkpoint("rollback-authorization");
           await assertPublicationUnfenced(tx, entry.mediaIds, [
             entry.assetId,
@@ -106,6 +122,12 @@ export async function rollbackPromotion(
               },
             },
           });
+          if (
+            restoredPaths !== undefined &&
+            (asset.version !== restoredPaths.successorVersion ||
+              previous.version !== restoredPaths.previousVersion)
+          )
+            throw new FileGuardError("rollback_asset_changed");
           const sidecars = ownedSubtitleSidecars(previous);
           if (
             sidecars.length !== entry.previousSidecars.length ||
@@ -158,12 +180,18 @@ export async function rollbackPromotion(
           await tx.subtitleAsset.update({
             where: { id: sidecar.subtitleId },
             data: {
-              path: storedFilePath(
-                context,
-                entry.libraryKind,
-                "library",
-                sidecar.libraryPath,
-              ),
+              path:
+                restoredPaths === undefined
+                  ? storedFilePath(
+                      context,
+                      entry.libraryKind,
+                      "library",
+                      sidecar.libraryPath,
+                    )
+                  : z
+                      .string()
+                      .min(1)
+                      .parse(restoredPaths.sidecars.get(sidecar.subtitleId)),
             },
           });
         }
@@ -187,12 +215,15 @@ export async function rollbackPromotion(
         await tx.libraryAsset.update({
           where: { id: previousAssetId },
           data: {
-            path: storedFilePath(
-              context,
-              entry.libraryKind,
-              "library",
-              entry.libraryPath,
-            ),
+            path:
+              restoredPaths === undefined
+                ? storedFilePath(
+                    context,
+                    entry.libraryKind,
+                    "library",
+                    entry.libraryPath,
+                  )
+                : restoredPaths.video,
             state: "published",
             supersededByAssetId: null,
             rollbackExpiresAt: null,

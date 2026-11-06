@@ -1,12 +1,19 @@
 import type { FilePlanEntry } from "#automation/files/types.ts";
 import { FileOperations } from "#filesystem/operations.ts";
-import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import {
+  FileOperationConflict,
+  IdSchema,
+} from "#filesystem/operations-types.ts";
 import { publicationRecordStore } from "#filesystem/publication-proof/store.ts";
 import { inspectPublicationRecords } from "#filesystem/publication-proof/records.ts";
 import { assertPublicationJournalIdentity } from "#filesystem/publication-proof/journal.ts";
 import type { VerifiedFileProof } from "#filesystem/verification.ts";
 import type { PublicationIOIntentRef } from "#shared/publication-proof/io.ts";
-import type { PublicationEffect } from "#shared/publication-proof/effects.ts";
+import type {
+  PublicationEffect,
+  LockedPublicationEvent,
+} from "#shared/publication-proof/effects.ts";
+import { MovieRollbackCaptionIORefV1Schema } from "#shared/movie-editions/rollback/caption-io.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import {
@@ -170,6 +177,45 @@ export type PublicationStores = Awaited<
   ReturnType<typeof preparePublicationStores>
 >;
 
+export type MovieRollbackCaptionRecording = {
+  kind: "movie_rollback_captions_v1";
+  entryOperationId: string;
+  operationIds: readonly string[];
+  acknowledge: (event: LockedPublicationEvent) => Promise<void>;
+};
+
+function assertMovieRollbackCaptionOperations(
+  intent: PublicationIOIntentRef,
+  captions: MovieRollbackCaptionRecording,
+) {
+  MovieRollbackCaptionIORefV1Schema.shape.kind.parse(captions.kind);
+  const forbidden = new Set(
+    intent.intent.entries.flatMap(({ entry }) => [
+      entry.operationId,
+      `recover-${entry.assetId}`,
+      ...entry.previousSidecars.flatMap((sidecar) => [
+        sidecar.operationId,
+        `recover-${sidecar.quarantineId}`,
+      ]),
+    ]),
+  );
+  const declared = captions.operationIds.map((id) => IdSchema.parse(id));
+  if (
+    declared.length === 0 ||
+    declared.length > 64 ||
+    new Set(declared).size !== declared.length ||
+    !intent.intent.entries.some(
+      ({ entry }) =>
+        entry.libraryKind === "movies" &&
+        entry.operationId === captions.entryOperationId,
+    ) ||
+    declared.some((id) => forbidden.has(id))
+  )
+    throw new FileOperationConflict(
+      "Rollback caption operations overlap or leave their actual original movie entry",
+    );
+}
+
 /** Process-local recorder composition; serialized records alone never instantiate filesystem authority. */
 export function publicationRecording(
   context: PublicationContext,
@@ -178,6 +224,7 @@ export function publicationRecording(
   options: {
     inverse?: { continuationId: string | null };
     acknowledged?: readonly PublicationEffect[];
+    movieRollbackCaptions?: MovieRollbackCaptionRecording;
   } = {},
 ) {
   const proof = context.contentProof;
@@ -200,6 +247,9 @@ export function publicationRecording(
     [...(options.acknowledged ?? []), ...records.map(({ record }) => record)],
     options.inverse,
   );
+  const captions = options.movieRollbackCaptions;
+  if (captions !== undefined)
+    assertMovieRollbackCaptionOperations(intent, captions);
   const assertCurrent = async () => {
     assertPublicationActive(context);
     await assertRecordedSubtitleDependencies(context, proof, intent.intent);
@@ -250,7 +300,7 @@ export function publicationRecording(
           ? {}
           : { verifyPlexExclusion: context.verifyPlexExclusion }),
         authorize: async (manifest) => {
-          const entry = intent.intent.entries.find(
+          const originalEntry = intent.intent.entries.find(
             ({ entry: candidate }) =>
               candidate.operationId === manifest.operationId ||
               `recover-${candidate.assetId}` === manifest.operationId ||
@@ -260,6 +310,16 @@ export function publicationRecording(
                   `recover-${sidecar.quarantineId}` === manifest.operationId,
               ),
           )?.entry;
+          const entry =
+            originalEntry ??
+            (captions !== undefined &&
+            item.kind === "movies" &&
+            captions.operationIds.includes(manifest.operationId)
+              ? intent.intent.entries.find(
+                  ({ entry: candidate }) =>
+                    candidate.operationId === captions.entryOperationId,
+                )?.entry
+              : undefined);
           if (entry === undefined)
             throw new FileOperationConflict(
               "Publication operation is outside its exact plan",
@@ -270,6 +330,14 @@ export function publicationRecording(
         effectRecorder: {
           assertActive: item.assertActive,
           acknowledge: async (event) => {
+            if (
+              captions !== undefined &&
+              item.kind === "movies" &&
+              captions.operationIds.includes(event.operationId)
+            ) {
+              await captions.acknowledge(event);
+              return;
+            }
             const record = state.record(event);
             if (record.libraryKind !== item.kind)
               throw new FileOperationConflict(

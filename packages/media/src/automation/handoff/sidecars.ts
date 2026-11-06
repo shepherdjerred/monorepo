@@ -1,9 +1,13 @@
 import path from "node:path";
 import { opendir } from "node:fs/promises";
+import type { MediaPathMapping } from "#filesystem/media-paths.ts";
 
 /** Discovery is protective only. It never converts unknown subtitle files into owned assets. */
-export async function unmanagedSidecars(video: string) {
-  const directory = path.dirname(video);
+export async function unmanagedSidecars(
+  video: string,
+  mapping?: MediaPathMapping,
+) {
+  const directory = path.dirname(mapping?.local(video) ?? video);
   const basename = path.basename(video, path.extname(video)).toLowerCase();
   const result: {
     canonicalPath: string;
@@ -25,7 +29,7 @@ export async function unmanagedSidecars(video: string) {
     if (result.length >= 100)
       throw new Error("Handoff sidecar count exceeds bound");
     result.push({
-      canonicalPath: path.join(directory, entry.name),
+      canonicalPath: path.join(path.dirname(video), entry.name),
       reason: "subtitle_ownership_unconfirmed",
     });
   }

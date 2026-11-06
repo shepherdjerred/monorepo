@@ -11,7 +11,7 @@ import {
   assertNativeQuarantineSnapshot,
 } from "#infrastructure/native-quarantine/guards.ts";
 import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
 import type { PreparedNativeQuarantine } from "./files.ts";
 import { withQuarantineLocks } from "./physical.ts";

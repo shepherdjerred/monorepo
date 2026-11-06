@@ -142,6 +142,7 @@ export async function safePath(
   root: string,
   path: string,
   createParents: boolean,
+  beforeEffect?: () => void,
 ): Promise<string> {
   if (
     path.length === 0 ||
@@ -171,6 +172,7 @@ export async function safePath(
       path: current,
       parent: index < parts.length - 1,
       createParents,
+      ...(beforeEffect === undefined ? {} : { beforeEffect }),
     });
   }
   return target;
@@ -180,12 +182,14 @@ async function checkPathComponent(input: {
   path: string;
   parent: boolean;
   createParents: boolean;
+  beforeEffect?: () => void;
 }): Promise<void> {
   if (!(await exists(input.path))) {
     if (!input.parent) return;
     if (!input.createParents)
       throw new FileOperationConflict("Media source parent missing");
     try {
+      input.beforeEffect?.();
       await mkdir(input.path);
     } catch (error) {
       if (!hasCode(error, "EEXIST")) throw error;

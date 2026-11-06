@@ -15,10 +15,8 @@ import {
 } from "#filesystem/operations-io.ts";
 import { ManifestSchema } from "#filesystem/operations-types.ts";
 import type { SubtitleReplacement } from "#generated/prisma/client.ts";
-import {
-  SubtitleReplacementSnapshotSchema,
-  SubtitleReplacementObservationSchema,
-} from "#shared/subtitle-replacement.ts";
+import { SubtitleReplacementObservationSchema } from "#shared/subtitle-replacement.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { unmanagedSidecars } from "#automation/handoff/sidecars.ts";
 import {
@@ -28,12 +26,13 @@ import {
 } from "#automation/files/types.ts";
 import { fileOperations } from "#automation/files/file-operations.ts";
 import { replacementCandidateBytes } from "./candidate.ts";
+import { movieReplacementFreshness } from "#automation/movie-editions/subtitle-replacement/authority.ts";
 
 export function replacementPaths(
   context: FileContext,
   row: SubtitleReplacement,
 ) {
-  const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
+  const scope = replacementSnapshot(row.snapshot);
   const roots = context.roots[scope.libraryKind];
   const format = z
     .enum(["srt", "ass", "ssa", "vtt"])
@@ -129,7 +128,10 @@ export async function observeReplacement(
     observation: SubtitleReplacementObservationSchema.parse({
       schemaVersion: 1,
       snapshotHash: row.snapshotHash,
-      capturedAt: now(context).toISOString(),
+      capturedAt: (paths.scope.schemaVersion === 2
+        ? new Date()
+        : now(context)
+      ).toISOString(),
       video: {
         checksum: video.sha256,
         sizeBytes: video.sizeBytes,
@@ -150,16 +152,24 @@ export async function stageReplacement(
   row: SubtitleReplacement,
 ) {
   const paths = replacementPaths(context, row);
+  const freshness =
+    paths.scope.schemaVersion === 2
+      ? movieReplacementFreshness(context)
+      : undefined;
+  freshness?.assertActive();
   await context.verifyStorageAuthority(paths.roots);
+  freshness?.assertActive();
   await verifyControlExclusion(paths.roots, context.verifyPlexExclusion);
   const candidate = await context.db.subtitleAsset.findUniqueOrThrow({
     where: { id: row.candidateSubtitleId },
   });
   const { bytes } = replacementCandidateBytes(candidate);
+  freshness?.assertActive();
   const source = await safePath(
     paths.roots.control,
     paths.sourceRelative,
     true,
+    freshness?.assertActive,
   );
   if (
     row.executionEvidence === null &&
@@ -171,6 +181,7 @@ export async function stageReplacement(
       "subtitle_replacement_artifact_ownership_unconfirmed",
     );
   try {
+    freshness?.assertActive();
     await writeFile(source, bytes, { flag: "wx", mode: 0o600 });
   } catch (error) {
     if (!z.object({ code: z.literal("EEXIST") }).safeParse(error).success)
@@ -183,12 +194,13 @@ export async function stageReplacement(
     )
       throw new FileGuardError("subtitle_replacement_source_collision");
   }
-  await syncFile(source);
-  await syncDirectory(path.dirname(source));
+  await syncFile(source, freshness?.assertActive);
+  await syncDirectory(path.dirname(source), freshness?.assertActive);
   await fileOperations(
     context,
     { ...paths.roots, downloads: paths.roots.control },
     () => Promise.reject(new Error("Replacement staging cannot publish")),
+    freshness?.assertActive,
   ).importFile({ ...paths.descriptor, stopAfterStaging: true });
 }
 

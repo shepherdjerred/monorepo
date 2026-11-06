@@ -15,12 +15,17 @@ import {
 import { lockMovieCommand, movieCommandConflict } from "./locks.ts";
 import { matchesMovieDefinition, movieDefinitionRef } from "./definition.ts";
 import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
+import { invalidateMovieRetentionV4 } from "./lifecycle/invalidate.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function chooseMovieEdition(
   tx: Prisma.TransactionClient,
   actor: MediaActor,
   input: Omit<MovieRequestV3, "schemaVersion">,
-  access: MovieChoiceAccess,
+  access: MovieChoiceAccess & {
+    protocol?: 4;
+    budget?: PublicationAuthorityReadBudget;
+  },
 ) {
   const scope = {
     rootMediaId: input.mediaId,
@@ -32,6 +37,7 @@ export async function chooseMovieEdition(
   const stored = await tx.mediaEditionDefinition.findUnique({
     where: { rootMediaId_key: { rootMediaId: media.id, key: scope.edition } },
   });
+  chargeExistingDefinition(access.budget, stored);
   const prior = await tx.mediaRequest.findUnique({
     where: {
       userId_mediaId_edition: {
@@ -136,7 +142,9 @@ export async function chooseMovieEdition(
     where: { id: media.id },
     data: { version: { increment: 1 } },
   });
-  if (scope.edition === "default") {
+  if (access.protocol === 4) {
+    await invalidateMovieRetentionV4(tx, scope);
+  } else if (scope.edition === "default") {
     await invalidateRetention(tx, media.id);
     await queueMediaSubtitleTargets(tx, media.id);
   }
@@ -162,6 +170,13 @@ export async function chooseMovieEdition(
     media: updated,
     freshness: subject.freshness,
   };
+}
+
+function chargeExistingDefinition(
+  budget: PublicationAuthorityReadBudget | undefined,
+  definition: object | null,
+) {
+  if (definition !== null) budget?.consume(1);
 }
 
 function assertChoiceCas(

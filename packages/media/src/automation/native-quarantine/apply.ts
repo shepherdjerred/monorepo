@@ -20,9 +20,9 @@ import {
 } from "#infrastructure/native-quarantine/guards.ts";
 import {
   installNativeAuthority,
-  assertNativeEvidenceFresh,
   nativeApprovingActor,
 } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import { appendNativeSubtitlePolicies } from "#automation/native-subtitles/policies.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
 import type { PreparedNativeQuarantine } from "./files.ts";

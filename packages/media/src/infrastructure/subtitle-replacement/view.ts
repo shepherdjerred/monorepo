@@ -1,17 +1,16 @@
 import path from "node:path";
 import type { Prisma } from "#generated/prisma/client.ts";
-import {
-  SubtitleReplacementSnapshotSchema,
-  SubtitleReplacementDetailSchema,
-} from "#shared/subtitle-replacement.ts";
+import { SubtitleReplacementDetailSchema } from "#shared/subtitle-replacement.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
 
 export function replacementDetail(
   row: Prisma.SubtitleReplacementGetPayload<{
     include: { review: true; receipt: true };
   }>,
 ) {
-  const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
+  const scope = replacementSnapshot(row.snapshot);
   return SubtitleReplacementDetailSchema.parse({
+    ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
     id: row.id,
     version: row.version,
     state: row.state,

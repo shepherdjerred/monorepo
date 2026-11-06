@@ -12,7 +12,27 @@ import { createCatalogCoverageWorkerActivities } from "./media/catalog-coverage.
 import { createPlexPublicationActivities } from "./media/plex-publication.ts";
 import { createPlexWatchActivities } from "./media/plex-watch.ts";
 import { createMovieWatchWorkerActivitiesV4 } from "./media/movie-watch.ts";
+import { createSeriesPackFeedWorkerActivities } from "./media/series-pack-feed.ts";
+import {
+  createSeriesPackNativeCompensationFileAdapterV1,
+  createSeriesPackNativeCompensationNetworkAdapterV1,
+} from "./media/series-pack/native-compensation.ts";
+import type {
+  SeriesPackNativeFileActivitiesV1,
+  SeriesPackNativeNetworkActivitiesV1,
+} from "@shepherdjerred/media/native-series-pack-compensation";
+import { createSeedingWorkerActivities } from "./media/seeding.ts";
+import { createProviderFeedWorkerActivitiesV1 } from "./media/provider-feed.ts";
+import {
+  createRequestedMovieRollbackFileWorkerActivitiesV1,
+  createRequestedMovieRollbackNetworkWorkerActivitiesV1,
+} from "./media/movie-editions/manual-rollback.ts";
+import type {
+  RequestedMovieRollbackFileActivitiesV1,
+  RequestedMovieRollbackNetworkActivitiesV1,
+} from "@shepherdjerred/media/movie-rollback";
 import { mediaCall } from "./media/call.ts";
+import { callMovieSubtitleReplacementV2 } from "./media/movie-editions/subtitle-replacement.ts";
 import {
   createAcquisitionNetworkWorkerActivities,
   createAcquisitionFileWorkerActivities,
@@ -61,6 +81,8 @@ import {
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
+  SeriesPackNativeNetworkActivitiesV1 &
+  RequestedMovieRollbackNetworkActivitiesV1 &
   MovieWatchActivitiesV4 &
   MovieNetworkActivitiesV4 &
   LibraryPlexBindingActivities &
@@ -71,8 +93,10 @@ type NetworkActivities = MediaNetworkActivities &
   NativeQuarantineNetworkActivities;
 type CoreNetworkActivities = Omit<
   NetworkActivities,
+  | keyof SeriesPackNativeNetworkActivitiesV1
   | keyof PlexBindingActivities
   | keyof MovieNetworkActivitiesV4
+  | keyof RequestedMovieRollbackNetworkActivitiesV1
   | keyof MovieWatchActivitiesV4
   | keyof LibraryPlexBindingActivities
   | keyof LibraryHandoffNetworkActivities
@@ -89,8 +113,12 @@ type CoreNetworkActivities = Omit<
   | "reconcileMediaIntent"
   | "submitMediaTorrent"
   | "observeMediaAcquisition"
+  | "matchSeriesPackFeedSource"
+  | "matchProviderFeedSource"
 >;
 type FileActivities = MediaFileActivities &
+  SeriesPackNativeFileActivitiesV1 &
+  RequestedMovieRollbackFileActivitiesV1 &
   MovieFileActivitiesV4 &
   LibraryHandoffFileActivities &
   MediaHandoffFileActivities &
@@ -99,10 +127,22 @@ type FileActivities = MediaFileActivities &
   NativeQuarantineFileActivities;
 type CoreFileActivities = Omit<
   FileActivities,
+  | keyof SeriesPackNativeFileActivitiesV1
   | keyof LibraryHandoffFileActivities
   | keyof MovieFileActivitiesV4
+  | keyof RequestedMovieRollbackFileActivitiesV1
   | "inspectAndStageMedia"
   | "promoteMediaFiles"
+  | "prepareSeriesPackPublication"
+  | "stageSeriesPackMembersV1"
+  | "sealSeriesPackStagingV1"
+  | "prepareSeriesPackMembersPublicationV1"
+  | "sealSeriesPackPublicationIntentV1"
+  | "publishSeriesPackMembersV1"
+  | "sealSeriesPackPublicationOutcomeV1"
+  | "compensateSeriesPackMembersV1"
+  | "sealSeriesPackCompensationV1"
+  | "rollbackPublishedSeriesPackV1"
   | "cleanupSupersededMediaFile"
 >;
 export async function getMediaNetworkRuntime() {
@@ -170,7 +210,11 @@ function assertNotCancelled(): void {
 export const mediaNetworkWorkerActivities: NetworkActivities = {
   ...createAcquisitionNetworkWorkerActivities(getMediaNetworkRuntime),
   ...createMovieWatchWorkerActivitiesV4(getMediaNetworkRuntime),
+  ...createProviderFeedWorkerActivitiesV1(getMediaNetworkRuntime),
   ...createMovieNetworkWorkerActivitiesV4(getMediaNetworkRuntime),
+  ...createRequestedMovieRollbackNetworkWorkerActivitiesV1(
+    getMediaNetworkRuntime,
+  ),
   ...createLibraryPlexBindingNetworkActivities(getMediaNetworkRuntime),
   ...createLibraryHandoffNetworkActivities(getMediaNetworkRuntime),
   observeMediaUpgradeCleanup: createPlexCleanupActivities(
@@ -210,8 +254,8 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.expandMediaRequest(input)),
   dispatchMediaOutbox: () =>
     withNetwork((activities) => activities.dispatchMediaOutbox()),
-  matchProviderFeedSource: (input) =>
-    withNetwork((activities) => activities.matchProviderFeedSource(input)),
+  ...createSeriesPackFeedWorkerActivities(getMediaNetworkRuntime),
+  ...createSeriesPackNativeCompensationNetworkAdapterV1(getMediaNetworkRuntime),
   sweepMediaWork: (input) =>
     createPlexWatchActivities(getMediaNetworkRuntime).sweepMediaWork(input),
   publishMediaToPlex: (input) =>
@@ -232,10 +276,7 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     ).finalizeMediaAcquisition(input),
   findMediaSubtitles: (input) =>
     withNetwork((activities) => activities.findMediaSubtitles(input)),
-  evaluateMediaSeeding: (input) =>
-    withNetwork((activities) => activities.evaluateMediaSeeding(input)),
-  removeMediaTorrent: (input) =>
-    withNetwork((activities) => activities.removeMediaTorrent(input)),
+  ...createSeedingWorkerActivities(getMediaNetworkRuntime),
   evaluateMediaRetention: (input) =>
     createPlexWatchActivities(getMediaNetworkRuntime).evaluateMediaRetention(
       input,
@@ -249,16 +290,44 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
 };
 export const mediaFileWorkerActivities: FileActivities = {
   ...createAcquisitionFileWorkerActivities(getMediaFileRuntime),
+  ...createSeriesPackNativeCompensationFileAdapterV1(getMediaFileRuntime),
   ...createMovieFileWorkerActivitiesV4(getMediaFileRuntime),
+  ...createRequestedMovieRollbackFileWorkerActivitiesV1(getMediaFileRuntime),
   ...createLibraryHandoffFileActivities(getMediaFileRuntime),
   prepareSubtitleReplacement: (input) =>
-    withFiles((activities) => activities.prepareSubtitleReplacement(input)),
+    input.movieScope === undefined
+      ? withFiles((activities) => activities.prepareSubtitleReplacement(input))
+      : callMovieSubtitleReplacementV2(
+          getMediaFileRuntime,
+          "prepareSubtitleReplacement",
+          input,
+        ),
   applySubtitleReplacement: (input) =>
-    withFiles((activities) => activities.applySubtitleReplacement(input)),
+    input.movieScope === undefined
+      ? withFiles((activities) => activities.applySubtitleReplacement(input))
+      : callMovieSubtitleReplacementV2(
+          getMediaFileRuntime,
+          "applySubtitleReplacement",
+          input,
+        ),
   reconcileSubtitleReplacement: (input) =>
-    withFiles((activities) => activities.reconcileSubtitleReplacement(input)),
+    input.movieScope === undefined
+      ? withFiles((activities) =>
+          activities.reconcileSubtitleReplacement(input),
+        )
+      : callMovieSubtitleReplacementV2(
+          getMediaFileRuntime,
+          "reconcileSubtitleReplacement",
+          input,
+        ),
   cleanupSubtitleReplacement: (input) =>
-    withFiles((activities) => activities.cleanupSubtitleReplacement(input)),
+    input.movieScope === undefined
+      ? withFiles((activities) => activities.cleanupSubtitleReplacement(input))
+      : callMovieSubtitleReplacementV2(
+          getMediaFileRuntime,
+          "cleanupSubtitleReplacement",
+          input,
+        ),
   prepareNativeRecoveryFiles: (input) =>
     withFiles((activities) => activities.prepareNativeRecoveryFiles(input)),
   applyNativeRecoveryFiles: (input) =>

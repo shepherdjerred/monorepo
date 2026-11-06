@@ -173,7 +173,7 @@ export class PrismaPlexAdministration extends MediaCommandBase {
         const mapping = {
           serverMachineId: this.server.serverMachineId,
           serverAccountId: input.serverAccountId,
-          homeUserId: selected.id,
+          homeUserId: selected.restricted ? selected.id : null,
           kind: selected.restricted ? "managed" : "account",
           permittedSectionIds: access.permittedSectionIds,
           permittedMediaKinds: access.permittedMediaKinds,

@@ -11,6 +11,8 @@ import {
   createNativePlanObservers,
 } from "./network/plex-facets.ts";
 import { createNativeFileFacets } from "./network/native-files.ts";
+import { createSeriesPackNativeCompensationFileFacetV1 } from "./native-compensation/series-pack/facet.ts";
+import { createSeriesPackNativeCompensationNetworkFacetV1 } from "#migration/native-compensation/series-pack/facet.ts";
 import { capturePublicationExecution } from "./publication-proof/invocation.ts";
 import { z } from "zod";
 import { createDatabase } from "#infrastructure/database.ts";
@@ -34,6 +36,9 @@ import { createNotificationReceiptReader } from "#integrations/notifications/rec
 import { createMediaWorkflowStarter } from "./temporal-client.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
 import { createMediaNetworkActivities } from "./network/activities.ts";
+import { createSeriesPackFeedFacetV1 } from "./feeds/series-pack/facet.ts";
+import { createSeedingNetworkFacet } from "./seeding/facet.ts";
+import { createProviderFeedNetworkFacetV1 } from "./feeds/facet.ts";
 import {
   requirePlexExclusionProof,
   refreshPlexExclusionProofs,
@@ -51,6 +56,7 @@ import {
 } from "./handoff/plex-edit-facets.ts";
 import { createNativeFileActivities } from "./native-recovery/activities.ts";
 import { createSubtitleReplacementActivities } from "./subtitle-replacement/activities.ts";
+import { createMovieSubtitleReplacementFileFacet } from "./movie-editions/subtitle-replacement/facet.ts";
 import { createSubtitleReplacementNetworkActivities } from "#infrastructure/subtitle-replacement/activities.ts";
 import { createNativePlexObserver } from "#migration/native-plex/review.ts";
 import { observePairedCompensationExecution } from "#migration/native-plex/compensation.ts";
@@ -248,6 +254,7 @@ export async function createMediaFileRuntime(
     activities,
     acquisition: createAcquisitionFileFacet(fileContext),
     movie: createMovieFileFacetV4(fileContext),
+    movieReplacement: createMovieSubtitleReplacementFileFacet(fileContext),
     libraryHandoff: createLibraryHandoffFileFacet({
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
@@ -256,6 +263,12 @@ export async function createMediaFileRuntime(
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
     }),
+    seriesPackNativeCompensation: createSeriesPackNativeCompensationFileFacetV1(
+      {
+        files: fileContext,
+        workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+      },
+    ),
     capacity: {
       sampleMediaCapacity: createCapacityFileProducer({
         db,
@@ -365,9 +378,16 @@ export async function createMediaNetworkRuntime(
   return {
     libraryHandoff: createLibraryHandoffNetworkFacet(nativeContext),
     acquisition: createAcquisitionNetworkFacet(context),
+    seeding: createSeedingNetworkFacet(context),
+    providerFeed: createProviderFeedNetworkFacetV1(context),
+    seriesPackFeed: {
+      matchSeriesPackFeedSource: createSeriesPackFeedFacetV1(context),
+    },
     catalogCoverage: createCatalogCoverageFacet(context),
     movie: createMovieNetworkFacetV4(context),
     nativePlex: createNativePlexFacet(nativeContext, observeNative),
+    seriesPackNativeCompensation:
+      createSeriesPackNativeCompensationNetworkFacetV1(nativeContext),
     ...createPlexRuntimeFacets(context, async () => {
       const flag = await behavior.get("plexEventHintsEnabled");
       return flag.value;

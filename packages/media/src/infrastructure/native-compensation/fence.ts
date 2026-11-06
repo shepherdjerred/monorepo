@@ -4,6 +4,7 @@ import { compensationAncestors } from "./records.ts";
 import { NativeCompensationProtection } from "./protection.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { assertNoPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 
 /** Called only after canonical media/target locks; this is an effect fence, not read authority. */
 export async function assertNoPublicationCompensationFence(
@@ -11,8 +12,10 @@ export async function assertNoPublicationCompensationFence(
   input: {
     mediaIds: readonly string[];
     assetIds?: readonly string[];
+    seriesPackPublicationAttemptId?: string | undefined;
   },
 ): Promise<void> {
+  await assertNoPendingSeriesPackPublicationV1(tx, input);
   if (
     await tx.nativePublicationCompensationContinuation.count({
       where: {

@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
@@ -8,6 +9,7 @@ import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { isRetryableTransaction } from "#infrastructure/locks.ts";
 import { buildRecoveryClaims } from "./projection.ts";
 import { lockLegacyClaimKnowledge } from "./knowledge-fence.ts";
+import { paidAdoptionPlanLocatorsV1 } from "./adoptions.ts";
 
 export const LEGACY_CLAIM_PROTECTION = "legacy_claim_reconciliation_required";
 export class PendingLegacyClaimsError extends Error {
@@ -20,6 +22,7 @@ export class PendingLegacyClaimsError extends Error {
 export async function hasPendingLegacyClaims(
   tx: Prisma.TransactionClient,
   mediaIds: readonly string[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
   if (mediaIds.length === 0)
     throw new Error("Legacy claim protection requires selected media");
@@ -36,6 +39,16 @@ export async function hasPendingLegacyClaims(
       Prisma.sql`SELECT "userId" FROM "PlexIdentityMapping" WHERE "userId" IN (${Prisma.join(users.map((user) => user.id))}) ORDER BY "userId" FOR SHARE`,
     );
   await lockLegacyClaimKnowledge(tx);
+  if (budget !== undefined) {
+    const adoptions = await paidAdoptionPlanLocatorsV1(tx, ids, budget);
+    if (adoptions.exhausted) return true;
+    const knowledge = await buildRecoveryClaims(
+      tx,
+      { planIds: adoptions.planIds, mediaIds: ids },
+      budget,
+    );
+    return knowledge.claims.length > 0 || knowledge.blockers.length > 0;
+  }
   const adoptions = await tx.applicationEvent.findMany({
     where: { mediaId: { in: ids }, kind: "handoff_media_adopted" },
     orderBy: { id: "asc" },
@@ -45,15 +58,20 @@ export async function hasPendingLegacyClaims(
   const planIds = adoptions.map(
     (row) => z.object({ planId: z.uuid() }).parse(row.payload).planId,
   );
-  const knowledge = await buildRecoveryClaims(tx, { planIds, mediaIds: ids });
+  const knowledge = await buildRecoveryClaims(
+    tx,
+    { planIds, mediaIds: ids },
+    budget,
+  );
   return knowledge.claims.length > 0 || knowledge.blockers.length > 0;
 }
 
 export async function assertLegacyClaimsResolved(
   tx: Prisma.TransactionClient,
   mediaIds: readonly string[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  if (await hasPendingLegacyClaims(tx, mediaIds))
+  if (await hasPendingLegacyClaims(tx, mediaIds, budget))
     throw new PendingLegacyClaimsError(mediaIds);
 }
 
@@ -61,6 +79,10 @@ export async function assertLegacyClaimsResolved(
 export async function reopenLegacyClaimProtection(
   db: Database,
   mediaIds: readonly string[],
+  beforeRepair?: (
+    tx: Prisma.TransactionClient,
+    mediaIds: readonly string[],
+  ) => Promise<void>,
 ) {
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
@@ -76,6 +98,7 @@ export async function reopenLegacyClaimProtection(
           );
           await lockEffectiveRequests(tx, ids);
           await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`;
+          await beforeRepair?.(tx, ids);
           if (!(await hasPendingLegacyClaims(tx, ids))) return false;
           await persistLegacyClaimProtection(tx, ids);
           return true;

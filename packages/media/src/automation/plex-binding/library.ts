@@ -1,4 +1,6 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
+import { MediaError } from "#application/errors.ts";
 import { serializable } from "#automation/store.ts";
 import { verifyPlexAssociations } from "#automation/publication/association.ts";
 import { verifyMoviePlexV2 } from "#automation/movie-editions/plex-verification.ts";
@@ -21,6 +23,9 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { bindingAccess } from "./access.ts";
 import { queueReadyMovieCaptionNoticesV4 } from "#automation/movie-editions/notifications/captions.ts";
 import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
+import { readLibraryMovieManagement } from "#infrastructure/movie-editions/management/authority.ts";
+import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
+import { queueMovieSubtitleTargetsV4 } from "#automation/movie-editions/subtitles/queue.ts";
 
 /** SDK observation precedes lazy initialization; immutable ACK precedes current authority and Plex I/O. */
 export async function verifyLibraryPlexBinding(
@@ -104,21 +109,28 @@ export async function verifyLibraryPlexBinding(
       if (kind === "movie") {
         if (server === undefined)
           throw new Error("Library movie serving access missing");
+        const captionInput = {
+          scope: MovieEditionScopeSchema.parse({
+            mediaId: original.request.parent.asset.editionRootId,
+            rootMediaId: original.request.parent.asset.editionRootId,
+            edition: original.request.parent.asset.edition,
+          }),
+          assetId: input.assetId,
+          epoch: input.recoveryEpoch,
+          access: {
+            serverMachineId: server.serverMachineId,
+            movieSectionId: server.sectionId,
+          },
+        };
+        if (captionInput.scope.edition !== "default")
+          await queueNamedLibraryCaptionTargets(
+            tx,
+            { ...captionInput, execution },
+            budget,
+          );
         const notices = await queueReadyMovieCaptionNoticesV4(
           tx,
-          {
-            scope: MovieEditionScopeSchema.parse({
-              mediaId: original.request.parent.asset.editionRootId,
-              rootMediaId: original.request.parent.asset.editionRootId,
-              edition: original.request.parent.asset.edition,
-            }),
-            assetId: input.assetId,
-            epoch: input.recoveryEpoch,
-            access: {
-              serverMachineId: server.serverMachineId,
-              movieSectionId: server.sectionId,
-            },
-          },
+          captionInput,
           budget,
         );
         for (const guard of notices.guards) guard.assertActive();
@@ -143,4 +155,42 @@ export async function verifyLibraryPlexBinding(
       ? { status: "superseded" }
       : { status: "protected", reason: error.reason };
   }
+}
+
+/** Missing named captions require the actual current adoption grant, separately from serving identity. */
+async function queueNamedLibraryCaptionTargets(
+  tx: Prisma.TransactionClient,
+  input: Parameters<typeof queueMovieSubtitleTargetsV4>[1] & {
+    execution: PlexBindingExecution;
+  },
+  budget: PublicationAuthorityReadBudget,
+) {
+  const target = await tx.mediaIntent.findUniqueOrThrow({
+    where: {
+      mediaId_edition: {
+        mediaId: input.scope.mediaId,
+        edition: input.scope.edition,
+      },
+    },
+  });
+  if (!target.monitoring || !target.desiredPresence) return;
+  await lockSubtitlePolicies(tx);
+  let management;
+  try {
+    management = await readLibraryMovieManagement(tx, input, {
+      execution: input.execution,
+      budget,
+    });
+  } catch (error) {
+    if (
+      error instanceof MediaError &&
+      error.code === "library_management_unconfirmed"
+    )
+      return;
+    throw error;
+  }
+  if (management === null)
+    throw new Error("Bound library movie lost its actual adoption grant");
+  await queueMovieSubtitleTargetsV4(tx, input, budget);
+  management.freshness.assertActive();
 }

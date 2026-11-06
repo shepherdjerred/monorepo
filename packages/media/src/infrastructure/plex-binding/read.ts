@@ -26,6 +26,7 @@ import {
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
 import type { PlexCanonicalTarget } from "#shared/plex-binding/canonical.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { hasPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 
 type BindingInput = {
   scope: PlexBindingScope;
@@ -161,6 +162,13 @@ async function assertServingGroup(
     })
   )
     throw new PlexBindingProtection("compensation_fence_active");
+  if (
+    await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: group.coverage.map((row) => row.mediaId),
+      assetIds: [assetId],
+    })
+  )
+    throw new PlexBindingProtection("series_pack_publication_pending");
   const targets = await tx.mediaIntent.findMany({
     where: { OR: group.coverage },
     select: { mediaId: true, edition: true, editionRootId: true },
@@ -196,6 +204,13 @@ export async function readLegacyDefaultPlexDisplay(
 ): Promise<LegacyPlexDisplay> {
   if (!defaultEdition(input.scope))
     return { status: "protected", reason: "missing_binding" };
+  if (
+    await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: [input.scope.mediaId],
+      assetIds: [input.assetId],
+    })
+  )
+    return { status: "protected", reason: "series_pack_publication_pending" };
   try {
     const pointers = await readPlexPointers(tx, [input.scope]);
     const pointer = pointers[0];

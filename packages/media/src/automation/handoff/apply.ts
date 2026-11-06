@@ -1,4 +1,8 @@
 import path from "node:path";
+import {
+  storedFilePath,
+  workerFilePath,
+} from "#automation/files/paths/locations.ts";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import {
@@ -122,8 +126,12 @@ export async function applyPreparedHandoff(
         for (const proof of prepared.journals) await verifyJournalProof(proof);
         for (const file of prepared.evidence.files) {
           if (
-            snapshotHash(await unmanagedSidecars(file.canonicalPath)) !==
-            snapshotHash(file.unmanagedSidecars)
+            snapshotHash(
+              await unmanagedSidecars(
+                file.canonicalPath,
+                context.files.pathMapping,
+              ),
+            ) !== snapshotHash(file.unmanagedSidecars)
           )
             throw new Error("Handoff sidecar inventory changed");
         }
@@ -293,11 +301,13 @@ async function installStorageAuthority(
     Date.parse(network.quiescence.expiresAt) <= Date.now()
   )
     throw new Error("Handoff legacy writers are not proven stopped");
-  for (const roots of [context.files.roots.movies, context.files.roots.tv]) {
+  for (const kind of ["movies", "tv"] as const) {
+    const roots = context.files.roots[kind];
+    const canonicalRoot = storedFilePath(context.files, kind, "library", "");
     await verifyControlExclusion(roots, context.files.verifyPlexExclusion);
     const matching = network.mounts.bindings.filter(
       (item) =>
-        item.canonical.root === roots.library &&
+        item.canonical.root === canonicalRoot &&
         item.canonical.podUid === context.workerPodUid,
     );
     const mount = matching[0]?.canonical;
@@ -308,7 +318,7 @@ async function installStorageAuthority(
     )
       throw new Error("Handoff executing storage binding missing");
     const previous = await tx.mediaStorageAuthority.findUnique({
-      where: { rootPath: roots.library },
+      where: { rootPath: canonicalRoot },
     });
     if (
       previous !== null &&
@@ -332,8 +342,8 @@ async function installStorageAuthority(
       revokedAt: null,
     };
     await tx.mediaStorageAuthority.upsert({
-      where: { rootPath: roots.library },
-      create: { rootPath: roots.library, ...data },
+      where: { rootPath: canonicalRoot },
+      create: { rootPath: canonicalRoot, ...data },
       update: { ...data, version: { increment: 1 } },
     });
   }
@@ -369,7 +379,8 @@ async function withFileIdentities<T>(
   const entry = entries[index];
   if (entry === undefined) return action();
   const roots = context.files.roots[entry.libraryKind];
-  const proof = await prepared.content.verifiedFile(entry.canonicalPath);
+  const target = workerFilePath(context.files, entry.canonicalPath);
+  const proof = await prepared.content.verifiedFile(target);
   const operations = new FileOperations(roots, {
     authorize: () => Promise.reject(new Error("Handoff cannot mutate files")),
     ...(context.files.verifyPlexExclusion === undefined
@@ -379,7 +390,7 @@ async function withFileIdentities<T>(
   return operations.withFileIdentity(
     {
       ...proof,
-      libraryPath: path.relative(roots.library, entry.canonicalPath),
+      libraryPath: path.relative(roots.library, target),
     },
     () => withFileIdentities(context, prepared, index + 1, action),
   );

@@ -3,6 +3,7 @@ import {
   continueAsNew,
   executeChild,
   proxyActivities,
+  patched,
   sleep,
 } from "@temporalio/workflow";
 import type {
@@ -15,6 +16,7 @@ import {
   finishMovieOperationV4 as finish,
   recoverableMovieOperationV4 as recoverable,
 } from "./lifecycle.ts";
+import { rollbackFailedMoviePublicationV4 } from "./rollback.ts";
 
 type Coordinator = Parameters<
   MovieNetworkActivitiesV4["reconcileMovieIntentV4"]
@@ -118,6 +120,15 @@ async function acquire(
 async function awaitDownload(input: Attempt): Promise<MediaWorkflowResult> {
   for (let poll = 0; poll < 100; poll++) {
     const observed = await network.observeMovieAcquisitionV4(input);
+    if (
+      observed.status === "ready" &&
+      observed.reason === "resume_movie_rollback" &&
+      patched("movie-publication-rollback-v1")
+    )
+      return rollbackFailedMoviePublicationV4(
+        input,
+        "movie_plex_publication_rolled_back",
+      );
     if (observed.status === "ready")
       return observed.reason === "resume_committed_publication"
         ? publishPlex(input)
@@ -142,6 +153,14 @@ async function publishFiles(input: Attempt): Promise<MediaWorkflowResult> {
       status: "blocked",
       reason: staged.reason ?? "movie_staging_protected",
     });
+  if (patched("movie-publication-preparation-v1")) {
+    const prepared = await files.prepareMoviePublicationV4(input);
+    if (prepared.status !== "prepared")
+      return finish(input.operationId, {
+        status: "blocked",
+        reason: prepared.reason ?? "movie_publication_preparation_protected",
+      });
+  }
   const published = await files.promoteMovieFilesV4(input);
   if (published.status !== "published")
     return finish(input.operationId, {
@@ -152,19 +171,33 @@ async function publishFiles(input: Attempt): Promise<MediaWorkflowResult> {
 }
 
 async function publishPlex(input: Attempt): Promise<MediaWorkflowResult> {
+  const rollback = patched("movie-publication-rollback-v1");
   for (let poll = 0; poll < 30; poll++) {
-    const published = await network.publishMovieToPlexV4(input);
+    const published = rollback
+      ? await network.publishMovieWithRollbackV4(input)
+      : await network.publishMovieToPlexV4(input);
     if (published.status === "available") {
       await network.finalizeMovieAcquisitionV4(input);
       return finish(input.operationId, { status: "completed" });
     }
-    if (published.status !== "waiting")
+    if (published.status !== "waiting") {
+      if (rollback)
+        return rollbackFailedMoviePublicationV4(
+          input,
+          published.reason ?? "movie_plex_publication_protected",
+        );
       return finish(input.operationId, {
         status: "blocked",
         reason: published.reason ?? "movie_plex_publication_protected",
       });
+    }
     await sleep("1 minute");
   }
+  if (rollback)
+    return rollbackFailedMoviePublicationV4(
+      input,
+      "movie_plex_publication_unverified",
+    );
   return continueAsNew<typeof acquireMovieEditionV4Workflow>({
     ...input,
     submitted: true,

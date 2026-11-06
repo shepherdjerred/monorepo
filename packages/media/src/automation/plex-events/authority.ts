@@ -169,12 +169,16 @@ export async function lockWatchAuthority(
   if (media.kind !== "movie" && media.kind !== "episode") return null;
   const compensation = await watchAwait(
     execution,
-    compensationPlayback(tx, {
-      mediaId: media.id,
-      recoveryEpoch: runtime.recoveryEpoch,
-      serverMachineId: scope.serverMachineId,
-      externalIds: media.externalIds,
-    }),
+    compensationPlayback(
+      tx,
+      {
+        mediaId: media.id,
+        recoveryEpoch: runtime.recoveryEpoch,
+        serverMachineId: scope.serverMachineId,
+        externalIds: media.externalIds,
+      },
+      scope.budget,
+    ),
   );
   if (compensation.state === "protected") return null;
   const requestWhere = watchRequests(edition);
@@ -332,7 +336,17 @@ export async function lockWatchAuthority(
     binding,
     scope,
     hintCurrent,
+    ...nativeCompensationMetadata(compensation),
   };
+}
+
+function nativeCompensationMetadata(
+  compensation: Awaited<ReturnType<typeof compensationPlayback>>,
+) {
+  return compensation.state === "verified" &&
+    compensation.protocol === "series_pack_publication_v3"
+    ? { nativeCompensationProtocol: compensation.protocol }
+    : {};
 }
 
 async function lockWatchTargets(

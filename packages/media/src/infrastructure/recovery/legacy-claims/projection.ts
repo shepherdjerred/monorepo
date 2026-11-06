@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   RecoveryClaimProjectionSchema,
@@ -17,6 +18,7 @@ import { parseStoredClaim, relevantRecordWhere } from "./records.ts";
 export async function buildRecoveryClaims(
   db: Prisma.TransactionClient,
   input: { planIds: string[]; mediaIds: string[] },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const media = await db.mediaItem.findMany({
     where: { id: { in: input.mediaIds } },
@@ -28,13 +30,14 @@ export async function buildRecoveryClaims(
     orderBy: [{ captureId: "asc" }, { provenanceKey: "asc" }],
     take: 1001,
   });
+  chargeClaimRows(budget, records.length * 2);
   if (records.length > 1000)
     return {
       claims: [],
       blockers: ["legacy_claim_history_exceeds_bound"],
       relevantClaims: [],
     };
-  const accounted = await accountedRecoveryClaims(db, input.mediaIds);
+  const accounted = await accountedRecoveryClaims(db, input.mediaIds, budget);
   const claims: RecoveryClaimProjection[] = [];
   const blockers = new Set<string>();
   const relevantClaims: { userId: string; mediaIds: string[] }[] = [];
@@ -61,6 +64,7 @@ export async function buildRecoveryClaims(
       orderBy: { revision: "desc" },
       include: { user: { include: { plexIdentity: true } } },
     });
+    chargeClaimBinding(budget, binding);
     if (binding === null) {
       blockers.add("legacy_claim_requester_unmapped");
       continue;
@@ -73,6 +77,7 @@ export async function buildRecoveryClaims(
       db,
       stored.captureId,
       record.requesterSourceId,
+      budget,
     );
     if (
       binding.captureHash !== stored.capture.manifestHash ||
@@ -92,6 +97,7 @@ export async function buildRecoveryClaims(
       },
       orderBy: { revision: "desc" },
     });
+    chargeClaimRows(budget, 1);
     const claim = RecoveryClaimProjectionSchema.parse({
       captureId: stored.captureId,
       captureHash: stored.capture.manifestHash,
@@ -114,17 +120,35 @@ export async function buildRecoveryClaims(
   // Original applied handoff reports remain authoritative even if an old import
   // did not persist requester records. Never dismiss missing capture evidence.
   if (
-    await unresolvedRecoveryClaims(db, {
-      ...input,
-      evaluatedRecords: records.map((row) => ({
-        captureHash: row.capture.manifestHash,
-        provenanceKey: row.provenanceKey,
-        recordDigest: row.observationHash,
-      })),
-    })
+    await unresolvedRecoveryClaims(
+      db,
+      {
+        ...input,
+        evaluatedRecords: records.map((row) => ({
+          captureHash: row.capture.manifestHash,
+          provenanceKey: row.provenanceKey,
+          recordDigest: row.observationHash,
+        })),
+      },
+      budget,
+    )
   )
     blockers.add("unresolved_migration_household_claim");
   return { claims, blockers: [...blockers].sort(), relevantClaims };
+}
+
+function chargeClaimRows(
+  budget: PublicationAuthorityReadBudget | undefined,
+  count: number,
+) {
+  budget?.consume(count);
+}
+
+function chargeClaimBinding(
+  budget: PublicationAuthorityReadBudget | undefined,
+  binding: { id: string } | null,
+) {
+  chargeClaimRows(budget, binding === null ? 0 : 3);
 }
 
 function appendUnaccounted(

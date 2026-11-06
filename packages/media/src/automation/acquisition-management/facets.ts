@@ -9,6 +9,9 @@ import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { PublicationExecution } from "#automation/publication-proof/invocation.ts";
 import { createAcquisitionActivities } from "#automation/acquisition.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
+import { createSeriesPackPublicationFileFacet } from "#automation/files/series-pack/publication-facet.ts";
+import { createSeriesPackStagingFileFacetV1 } from "#automation/files/series-pack/staging/facet.ts";
+import { createSeriesPackBoundedPublicationFileFacetV1 } from "#automation/files/series-pack/publication/facet.ts";
 
 /** Original SDK capabilities stay process-local and precede cold runtime loading. */
 export function createAcquisitionNetworkFacet(context: MediaAutomationContext) {
@@ -44,6 +47,9 @@ export function createAcquisitionFileFacet(context: FileContext) {
     });
   };
   return {
+    ...createSeriesPackStagingFileFacetV1(context),
+    ...createSeriesPackBoundedPublicationFileFacetV1(context),
+    prepareSeriesPackPublication: createSeriesPackPublicationFileFacet(context),
     cleanupSupersededMediaFile: (
       input: Parameters<MediaFileActivities["cleanupSupersededMediaFile"]>[0],
       execution: PublicationExecution,

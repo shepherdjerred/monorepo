@@ -12,6 +12,7 @@ import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { MovieSubtitleOperationV4Schema } from "#shared/movie-editions/subtitles-v4.ts";
 import type { Database } from "#infrastructure/database.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Actual personal request, transfer, physical publication, Plex receipt and installed captions. */
 export async function createPublishedMovieFixture(
@@ -49,6 +50,13 @@ export async function createPublishedMovieFixture(
         testPublicationExecution(),
       ),
     ).toEqual({ status: "staged" });
+    expect(
+      await f.fileMovie.prepareMoviePublicationV4(
+        input,
+        testPublicationExecution(),
+        new PublicationAuthorityReadBudget(),
+      ),
+    ).toEqual({ status: "prepared" });
     expect(
       await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
     ).toEqual({ status: "published" });

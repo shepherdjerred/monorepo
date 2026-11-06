@@ -20,7 +20,7 @@ import { replacePlexClaims } from "./claims.ts";
 import { PlexBindingProtection } from "./errors.ts";
 import { invalidateRetentionPlexProjections } from "./retention.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import type { CompensationPublicationPhase } from "#infrastructure/native-compensation/publication/phase.ts";
+import type { CompensationPublicationPhase } from "#infrastructure/native-compensation/series-pack/publication/adapter.ts";
 
 /** Same transaction as the caller's publication and its immutable completion receipt. */
 export async function commitVerifiedPlexBindings(

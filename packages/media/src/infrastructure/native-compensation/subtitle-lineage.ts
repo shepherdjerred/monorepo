@@ -11,6 +11,7 @@ import { settledInstalledSubtitle } from "#infrastructure/native-quarantine/inst
 import { publicationPhysicalSnapshot } from "#infrastructure/publication-proof/projection.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { NativeTerminalDescriptor } from "#shared/native-recovery/terminal.ts";
 
 const digest = (value: unknown) => snapshotHash(nativeJson(value));
 type LineageAsset = PublicationAssetSnapshot | MoviePublicationAssetV2;
@@ -95,6 +96,7 @@ export async function compensationSubtitleLineage(
           bindings: item.binding.subtitles,
           snapshots: item.subtitleSnapshots,
         })),
+        ...movieSubtitleScope(current),
       },
       budget,
     );
@@ -139,6 +141,7 @@ export async function compensationSubtitleLineage(
     );
     installations.push(installed.installation);
     history.push(installed.history);
+    appendCaptionArtifacts(installed, { files, journals, artifactIdentities });
   }
   const unchanged = baseline.subtitles.map((subtitle) => ({
     ...subtitle,
@@ -164,6 +167,23 @@ export async function compensationSubtitleLineage(
 
 function movieSubtitleScope(asset: LineageAsset) {
   return "schemaVersion" in asset ? { movieScope: asset.scope } : {};
+}
+
+function appendCaptionArtifacts(
+  installed: Awaited<ReturnType<typeof settledInstalledSubtitle>>,
+  target: {
+    files: NativeTerminalDescriptor["files"];
+    journals: NativeTerminalDescriptor["journals"];
+    artifactIdentities: z.infer<
+      typeof PublicationSubtitleLineageSchema
+    >["artifactIdentities"];
+  },
+) {
+  if ("files" in installed) {
+    target.files.push(...installed.files);
+    target.journals.push(...installed.journals);
+    target.artifactIdentities.push(...installed.artifactIdentities);
+  }
 }
 
 function assertEmbedded(

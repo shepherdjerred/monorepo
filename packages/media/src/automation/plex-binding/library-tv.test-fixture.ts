@@ -17,6 +17,8 @@ export async function libraryTvBindingFixture(
     qualitySourceId?: string;
     title?: string;
     monitorSeries?: { includeSpecials: boolean };
+    episodeCount?: number;
+    householdCaptions?: boolean;
   } = {},
 ) {
   const series = await db.mediaItem.create({
@@ -28,7 +30,12 @@ export async function libraryTvBindingFixture(
     },
   });
   const episodes: MediaItem[] = [];
-  for (const episode of [1, 2])
+  const count = options.episodeCount ?? 2;
+  if (!Number.isSafeInteger(count) || count < 1 || count > 50)
+    throw new Error(
+      "Synthetic season episode count is outside its fixture bound",
+    );
+  for (let episode = 1; episode <= count; episode++)
     episodes.push(
       await db.mediaItem.create({
         data: {
@@ -44,7 +51,7 @@ export async function libraryTvBindingFixture(
   const f = await handoffFixture(db, {
     ...(options.bytes === undefined ? {} : { bytes: options.bytes }),
     sourceKind: "sonarr",
-    fileName: `${series.title}.S01E01-E02.mkv`,
+    fileName: `${series.title}.S01E01-E${String(count).padStart(2, "0")}.mkv`,
     prepareRequest({ request, report }) {
       return PrepareLibraryHandoffV2Schema.parse({
         ...request,
@@ -73,7 +80,9 @@ export async function libraryTvBindingFixture(
       media.sourceRecord.externalIds = { tmdb: Number(series.tmdbId) };
       media.mediaIds = [series.id];
       file.mediaIds = episodes.map((episode) => episode.id);
-      file.sourceRecord.mediaSourceIds = ["episode:1", "episode:2"];
+      file.sourceRecord.mediaSourceIds = episodes.map(
+        (episode) => `episode:${String(episode.episodeNumber)}`,
+      );
       return Promise.resolve();
     },
   });
@@ -134,6 +143,9 @@ export async function libraryTvBindingFixture(
     kind: "tv",
     edition: "default",
     media,
+    ...(options.householdCaptions === undefined
+      ? {}
+      : { householdCaptions: options.householdCaptions }),
     ...(options.monitorSeries === undefined
       ? {}
       : {

@@ -1,7 +1,7 @@
 import type { QualityProfile, ReleaseAttributes } from "#shared/contract.ts";
 import type { ReleaseEvaluation } from "./release-evaluation.ts";
 import {
-  ResolvedEvidenceSchema,
+  ResolvedEvidenceProtocolSchema,
   evidenceMatcher,
 } from "./resolved-evidence.ts";
 import { evaluateResolvedRelease } from "./resolved-quality.ts";
@@ -12,7 +12,7 @@ function evidenceFor(release: ReleaseAttributes, profile: QualityProfile) {
   const evidence =
     release.resolvedEvidence === undefined
       ? null
-      : ResolvedEvidenceSchema.parse(release.resolvedEvidence);
+      : ResolvedEvidenceProtocolSchema.parse(release.resolvedEvidence);
   if (
     evidence === null ||
     evidence.source !== profile.resolved?.source ||

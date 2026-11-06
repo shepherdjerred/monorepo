@@ -86,6 +86,12 @@ export async function purgeMovieFilesV4(
     })
   )
     return;
+  if (
+    z
+      .object({ ownerRemovalV1: z.unknown().optional() })
+      .parse(snapshot.decision.evidence).ownerRemovalV1 !== undefined
+  )
+    throw new FileGuardError("owner_removal_requires_retention_consent");
   const plan = snapshot.manifest.assets;
   const original = retentionPlexFreshness({
     context: invocation,

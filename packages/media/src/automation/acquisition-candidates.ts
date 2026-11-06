@@ -16,8 +16,10 @@ import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { currentMeasuredQuality } from "./acquisition-management/current-quality.ts";
 import { EpisodeNumberingSchema } from "#shared/numbering.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { persistCandidateSnapshot } from "./candidate-evidence.ts";
+import { storeSeriesPackCandidateV1 } from "./acquisition-management/series-pack/candidates.ts";
 import { previewDefaultEdition } from "#infrastructure/editions/acquisition.ts";
 import {
   prepareResolvedEvidence,
@@ -27,6 +29,7 @@ import {
 export async function loadProfile(
   db: MediaAutomationContext["db"],
   mediaId: string,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<QualityProfile | null> {
   const intent = await db.mediaIntent.findUniqueOrThrow({
     where: targetWhere(defaultScope(mediaId)),
@@ -41,6 +44,7 @@ export async function loadProfile(
       },
     },
   });
+  budget?.consume(1);
   return {
     id: snapshot.profileId,
     version: snapshot.version,
@@ -51,6 +55,7 @@ export async function loadProfile(
 export async function currentRelease(
   context: MediaAutomationContext,
   mediaId: string,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<ReleaseAttributes | null> {
   const coverage = await context.db.assetCoverage.findFirst({
     where: { mediaId, edition: "default", current: true },
@@ -86,6 +91,7 @@ export async function currentRelease(
   const release = await context.db.releaseCandidate.findUniqueOrThrow({
     where: { id: properties.releaseId },
   });
+  budget?.consume(1);
   return {
     id: release.id,
     providerId: release.providerId,
@@ -168,7 +174,7 @@ async function storeCandidate(
   },
 ) {
   const id = crypto.randomUUID();
-  const parsed = matchRelease({
+  const literal = {
     id,
     providerId: candidate.providerId,
     title: candidate.title,
@@ -183,7 +189,16 @@ async function storeCandidate(
         )
         .map((reference) => [reference.namespace, reference.value]),
     ),
-  });
+  };
+  if (context.libraryManagement !== undefined) {
+    const derived = await storeSeriesPackCandidateV1(context, {
+      source: candidate,
+      literal,
+      ...policy,
+    });
+    if (derived !== undefined) return derived;
+  }
+  const parsed = matchRelease(literal);
   const attributes = parsed.attributes;
   const references = candidate.references ?? [];
   if (
@@ -276,13 +291,14 @@ export async function assessDefaultFeedCandidate(
   context: MediaAutomationContext,
   mediaId: string,
   source: ProviderCandidate,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const profile = await loadProfile(context.db, mediaId);
+  const profile = await loadProfile(context.db, mediaId, budget);
   if (profile === null) return null;
   const target = await searchTarget(context, mediaId);
   const selected = await storeCandidate(context, source, target, {
     profile,
-    current: await currentRelease(context, mediaId),
+    current: await currentRelease(context, mediaId, budget),
     matchedOnly: true,
   });
   return selected === null

@@ -14,6 +14,7 @@ import {
 import { readCurrentPlexBinding } from "#infrastructure/plex-binding/read.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** A complete fresh session response is independent of durable serving identity. */
 export async function observeSessionPlayback(
@@ -21,6 +22,7 @@ export async function observeSessionPlayback(
   cohort: Pick<BoundMediaCohort, "access"> & {
     original: readonly { association: PlexAssociation }[];
     paths?: readonly string[];
+    budget?: PublicationAuthorityReadBudget;
   },
   execution: PlexBindingExecution,
   freshness: PlexBindingFreshness,
@@ -88,6 +90,7 @@ export async function observeSessionPlayback(
         {
           serverMachineId: server.serverMachineId,
           access: cohort.access,
+          ...(cohort.budget === undefined ? {} : { budget: cohort.budget }),
         },
         freshness,
       ))
@@ -108,7 +111,10 @@ export async function retentionPlayback(
 async function unrelatedSessionIsBound(
   context: MediaAutomationContext,
   session: PlexItem,
-  cohort: Pick<BoundMediaCohort, "access"> & { serverMachineId: string },
+  cohort: Pick<BoundMediaCohort, "access"> & {
+    serverMachineId: string;
+    budget?: PublicationAuthorityReadBudget;
+  },
   freshness: PlexBindingFreshness,
 ): Promise<boolean> {
   // A key without a current owned claim cannot establish that an unrelated canonical path is safe.
@@ -118,8 +124,12 @@ async function unrelatedSessionIsBound(
       ratingKey: session.ratingKey,
     },
     include: { evidence: { select: { assetId: true } } },
-    take: 2,
+    take:
+      cohort.budget === undefined
+        ? 2
+        : Math.min(2, cohort.budget.takeWeighted(2)),
   });
+  cohort.budget?.consume(claims.length * 2);
   freshness.assertActive();
   const claim = claims[0];
   if (claim === undefined || claims.length !== 1) return false;
@@ -127,14 +137,18 @@ async function unrelatedSessionIsBound(
     (value) => value.sectionId === claim.sectionId,
   );
   if (access === undefined) return false;
-  const bound = await readCurrentPlexBinding(context.db, {
-    scope: {
-      mediaId: claim.mediaId,
-      edition: MovieEditionKeySchema.parse(claim.edition),
+  const bound = await readCurrentPlexBinding(
+    context.db,
+    {
+      scope: {
+        mediaId: claim.mediaId,
+        edition: MovieEditionKeySchema.parse(claim.edition),
+      },
+      assetId: claim.evidence.assetId,
+      access,
     },
-    assetId: claim.evidence.assetId,
-    access,
-  });
+    cohort.budget,
+  );
   freshness.assertActive();
   if (bound.status !== "current") return false;
   try {

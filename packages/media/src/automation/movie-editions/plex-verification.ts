@@ -25,7 +25,7 @@ function assertRestoredItem(
   expected: PlexServingExpected,
   association: PlexMovieAssociationV2,
 ) {
-  if (expected.schemaVersion !== 3) return;
+  if (expected.schemaVersion !== 3 && expected.schemaVersion !== 4) return;
   const part = association.item.media[0].parts[0];
   if (
     association.item.ratingKey !== expected.originalItem.ratingKey ||

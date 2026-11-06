@@ -42,21 +42,24 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { assertPlanEdition } from "./editions/acquisition.ts";
 import { libraryFileInvocation } from "#automation/acquisition-management/files.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   assertMeasuredUpgrade,
   storedMeasuredRelease,
 } from "./quality-guard.ts";
+import {
+  publicationReadBudget,
+  seriesPackPublicationPhase,
+  type SeriesPackPublicationOptions,
+} from "./series-pack/protocol.ts";
 
 export async function promote(
   initialContext: FileContext,
   attemptId: string,
+  options?: SeriesPackPublicationOptions,
 ): Promise<void> {
   const execution = initialContext.publicationExecution?.();
   execution?.assertActive();
-  const budget =
-    initialContext.libraryManagement?.budget ??
-    new PublicationAuthorityReadBudget();
+  const budget = publicationReadBudget(initialContext, options);
   if (
     await resumeCommittedPublication({
       context: initialContext,
@@ -81,6 +84,7 @@ export async function promote(
   const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  const phase = seriesPackPublicationPhase(attempt, options);
   const rawFilePlanHash = snapshotHash(nativeJson(attempt.filePlan));
   const movieAccess = await fileMovieAccess(initialContext, attempt.mediaIds);
   const plan = FilePlanSchema.parse(attempt.filePlan);
@@ -102,6 +106,7 @@ export async function promote(
       attempt,
       plan,
       rawFilePlanHash,
+      ...(phase === undefined ? {} : { phase }),
       authorizePlan: async (tx, current) => {
         await context.checkpoint("publication-authorization");
         if (!(await context.enabled.acquisition()))
@@ -172,7 +177,7 @@ export async function promote(
   }
 }
 
-async function assertProfile(
+export async function assertProfile(
   tx: Transaction,
   entry: FilePlanEntry,
 ): Promise<void> {
@@ -198,7 +203,7 @@ async function assertProfile(
   }
 }
 
-async function assertPrevious(
+export async function assertPrevious(
   tx: Transaction,
   entry: FilePlanEntry,
   recoveryEpoch: number,

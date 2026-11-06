@@ -14,6 +14,7 @@ import {
 } from "#shared/publication-proof/subtitle-lineage.ts";
 import { MovieFilePlanEntryV2Schema } from "./file-plan-v2.ts";
 import { MovieEditionScopeSchema, MovieEditionKeySchema } from "./registry.ts";
+import { MovieRollbackReferenceV1Schema } from "./rollback/reference.ts";
 
 /** Movie-only successor format; the historical default-only snapshot remains literal. */
 export const MoviePublicationAssetV2Schema = z
@@ -94,6 +95,7 @@ export const MoviePublicationReferenceV2Schema = z.discriminatedUnion("kind", [
   MovieTransitionReferenceV2Schema,
   MovieLibraryReferenceV2Schema,
   MovieRestoreReferenceV1Schema,
+  MovieRollbackReferenceV1Schema,
 ]);
 export type MovieRestoreReferenceV1 = z.infer<
   typeof MovieRestoreReferenceV1Schema

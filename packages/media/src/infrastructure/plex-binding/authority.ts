@@ -25,7 +25,7 @@ import { compensationRecord } from "#infrastructure/native-compensation/records.
 import {
   assertCompensationPublicationLockScope,
   type CompensationPublicationPhase,
-} from "#infrastructure/native-compensation/publication/phase.ts";
+} from "#infrastructure/native-compensation/series-pack/publication/adapter.ts";
 import { readPlexCanonicalTargets } from "./canonical.ts";
 import {
   readPlexGroupUnion,

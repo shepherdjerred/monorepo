@@ -15,6 +15,10 @@ import {
   type PublicationPath,
 } from "#shared/publication-proof/effects.ts";
 import type { PublicationStep } from "./steps.ts";
+import {
+  MovieRollbackCaptionIORefV1Schema,
+  type MovieRollbackCaptionIORefV1,
+} from "#shared/movie-editions/rollback/caption-io.ts";
 
 const equal = (left: unknown, right: unknown) =>
   snapshotHash(nativeJson(left)) === snapshotHash(nativeJson(right));
@@ -26,17 +30,24 @@ export const effectHash = (effect: PublicationEffect) =>
   createHash("sha256").update(JSON.stringify(effect)).digest("hex");
 
 /** Pure causal validation only. Its data cannot authorize IO without a fresh content capability. */
-export class PublicationEffectState {
+export class PublicationEffectState<
+  Parent extends PublicationIOIntentRef | MovieRollbackCaptionIORefV1 =
+    PublicationIOIntentRef,
+> {
   readonly physical = new Map<string, PhysicalPathState>();
   readonly journals = new Map<string, PublicationJournal>();
   readonly refs: PublicationEffectRef[] = [];
   private previousHash: string | null = null;
   private readonly planned: PublicationStep[];
   constructor(
-    readonly intent: PublicationIOIntentRef,
+    readonly intent: Parent,
     steps: readonly PublicationStep[],
   ) {
     this.planned = [...steps];
+    if ("kind" in intent) {
+      this.initializeRollbackCaptions(intent, steps);
+      return;
+    }
     for (const item of intent.intent.entries) {
       for (const participant of item.participants) {
         const key = physicalKey(participant.libraryKind, participant.physical);
@@ -51,6 +62,36 @@ export class PublicationEffectState {
           journal,
         );
     }
+  }
+
+  private initializeRollbackCaptions(
+    raw: unknown,
+    steps: readonly PublicationStep[],
+  ) {
+    const captions = MovieRollbackCaptionIORefV1Schema.parse(raw);
+    if (
+      steps.some(
+        (step) =>
+          step.libraryKind !== "movies" ||
+          step.assetId !== captions.assetId ||
+          step.subtitleId === null ||
+          step.completionPaths === undefined,
+      )
+    )
+      throw new FileOperationConflict(
+        "Rollback caption mechanics require exact scoped steps and completion paths",
+      );
+    for (const participant of captions.participants) {
+      const key = physicalKey(participant.libraryKind, participant.physical);
+      const previous = this.physical.get(key);
+      if (previous !== undefined && !equal(previous, participant.physical))
+        throw new FileOperationConflict(
+          "Rollback caption baseline contains conflicting actual paths",
+        );
+      this.physical.set(key, participant.physical);
+    }
+    for (const journal of captions.journals)
+      this.journals.set(JSON.stringify(["movies", journal.path]), journal);
   }
 
   get next(): PublicationStep | undefined {
@@ -172,6 +213,10 @@ export class PublicationEffectState {
 
   private completionPaths(step: PublicationStep): PublicationPath[] {
     if (step.completionPaths !== undefined) return [...step.completionPaths];
+    if ("kind" in this.intent)
+      throw new FileOperationConflict(
+        "Rollback caption step omitted its explicit completion paths",
+      );
     const item = this.intent.intent.entries.find(
       ({ entry }) => entry.operationId === step.entryOperationId,
     );

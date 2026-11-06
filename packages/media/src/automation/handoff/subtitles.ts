@@ -1,9 +1,9 @@
-import path from "node:path";
 import { lstat } from "node:fs/promises";
 import type { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
-import { safePath } from "#filesystem/operations-io.ts";
+import type { MediaPathMapping } from "#filesystem/media-paths.ts";
+import { handoffWorkerPath } from "./paths.ts";
 import type { MediaProbe } from "#filesystem/media-tools.ts";
 import type { HandoffScope, HandoffFile } from "#shared/handoff.ts";
 import { HandoffSubtitleEvidenceSchema } from "#shared/subtitle-handoff.ts";
@@ -25,17 +25,15 @@ export async function captureHandoffSubtitles(input: {
     if (subtitle.canonicalPath === null) {
       codecs.set(subtitle.id, embeddedCodec(input.probe, subtitle));
     } else {
-      const roots = input.context.roots[input.file.libraryKind];
-      const relative = path.relative(roots.library, subtitle.canonicalPath);
-      if (
-        (await safePath(roots.library, relative, false)) !==
-        subtitle.canonicalPath
-      )
-        throw new Error("Subtitle canonical root changed");
-      const info = await lstat(subtitle.canonicalPath);
+      const target = await handoffWorkerPath(
+        input.context,
+        input.file.libraryKind,
+        subtitle.canonicalPath,
+      );
+      const info = await lstat(target);
       if (info.size > 8 * 1024 * 1024)
         throw new Error("Subtitle content exceeds inspection bound");
-      await input.content.capture(subtitle.canonicalPath, () =>
+      await input.content.capture(target, () =>
         input.context.checkpoint("handoff-subtitle-hashing"),
       );
       codecs.set(subtitle.id, null);
@@ -79,6 +77,7 @@ export async function subtitleFileEvidence(input: {
   content: ContentProof;
   videoChecksum: string;
   codecs: Map<string, string | null>;
+  mapping?: MediaPathMapping | undefined;
 }) {
   const evidence: z.infer<typeof HandoffSubtitleEvidenceSchema>[] = [];
   for (const selected of input.scope.subtitles.filter(
@@ -87,7 +86,10 @@ export async function subtitleFileEvidence(input: {
     const checksum =
       selected.canonicalPath === null
         ? null
-        : await input.content.digest(selected.canonicalPath);
+        : await input.content.digest(
+            input.mapping?.local(selected.canonicalPath) ??
+              selected.canonicalPath,
+          );
     if (
       selected.canonicalPath !== null &&
       (checksum === null ||
@@ -110,7 +112,10 @@ export async function subtitleFileEvidence(input: {
         identity:
           selected.canonicalPath === null
             ? null
-            : await input.content.reviewIdentity(selected.canonicalPath),
+            : await input.content.reviewIdentity(
+                input.mapping?.local(selected.canonicalPath) ??
+                  selected.canonicalPath,
+              ),
       }),
     );
   }

@@ -3,6 +3,8 @@ import {
   NativeSubtitleSnapshotSchema,
   NativeFileIdentitySchema,
 } from "./native-subtitles.ts";
+import type { MovieEditionScope } from "./movie-editions/registry.ts";
+import { MovieEditionScopeSchema } from "./movie-editions/registry.ts";
 
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const Path = z.string().min(1).max(4096);
@@ -82,6 +84,7 @@ export const SubtitleReplacementStateSchema = z.enum([
   "abandoned",
 ]);
 export const SubtitleReplacementDetailSchema = z.strictObject({
+  movieScope: MovieEditionScopeSchema.optional(),
   id: z.uuid(),
   version: z.int().nonnegative(),
   state: SubtitleReplacementStateSchema,
@@ -110,6 +113,7 @@ export const SubtitleReplacementListSchema = z.strictObject({
 export type SubtitleReplacementInput = {
   replacementId: string;
   operationId: string;
+  movieScope?: MovieEditionScope;
 };
 export type SubtitleReplacementResult = {
   state:
