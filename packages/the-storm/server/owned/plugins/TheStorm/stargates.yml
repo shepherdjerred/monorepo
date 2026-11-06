@@ -24,6 +24,12 @@ serverGates:
           landing: { x: 68, y: 69, z: 66 },
         }
       - {
+          label: "2016",
+          world: map2,
+          kind: WORLD,
+          landing: { x: 0, y: 70, z: 9 },
+        }
+      - {
           label: Skylands,
           world: skylands,
           kind: WORLD,

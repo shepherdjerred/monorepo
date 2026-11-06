@@ -45,6 +45,10 @@ final class ReadyServerShops implements ServerShops {
     return registry.isReady();
   }
 
+  ShopRegistry registry() {
+    return registry;
+  }
+
   private boolean available(Player player) {
     if (registry.isReady()) {
       return true;

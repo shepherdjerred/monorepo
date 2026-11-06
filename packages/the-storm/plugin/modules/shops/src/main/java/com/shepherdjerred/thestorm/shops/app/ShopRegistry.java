@@ -75,6 +75,11 @@ public final class ShopRegistry {
     return lastId + 1;
   }
 
+  /** Reserves an id before work that can yield to another shop creation. */
+  public long reserveId() {
+    return ++lastId;
+  }
+
   public void add(SignShop shop) {
     if (byId.containsKey(shop.id()) || bySign.containsKey(shop.sign())) {
       throw new IllegalStateException("shop " + shop.id() + " or its sign is already registered");
@@ -110,6 +115,11 @@ public final class ShopRegistry {
   /** Why a shop is closed, if it is. */
   public Optional<String> closure(long id) {
     return Optional.ofNullable(closed.get(id));
+  }
+
+  /** Reopens only the closure installed by the caller. */
+  public void reopen(long id, String expectedReason) {
+    closed.remove(id, expectedReason);
   }
 
   /** Every closed shop and why, in the order they were closed. */

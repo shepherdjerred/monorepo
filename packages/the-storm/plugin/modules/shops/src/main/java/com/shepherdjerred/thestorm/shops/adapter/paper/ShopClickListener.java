@@ -62,12 +62,13 @@ final class ShopClickListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   public void onClick(PlayerInteractEvent event) {
-    if (!blocks.registry().isReady()) {
-      return;
-    }
     var click = click(event.getAction());
     var block = event.getClickedBlock();
     if (click.isEmpty() || block == null || event.getHand() != EquipmentSlot.HAND) {
+      return;
+    }
+    if (!blocks.registry().isReady()) {
+      loading(event, blocks, block);
       return;
     }
     var shop = blocks.shopAtSign(block);
@@ -97,6 +98,13 @@ final class ShopClickListener implements Listener {
     }
     event.setCancelled(true);
     trade(player, found, settings.directionOf(click.orElseThrow()), tradingOwn);
+  }
+
+  static void loading(PlayerInteractEvent event, ShopBlocks blocks, Block block) {
+    if (blocks.isPendingShopSign(block)) {
+      event.setCancelled(true);
+      event.getPlayer().sendMessage(Replies.info("Shops are loading. Please try again shortly."));
+    }
   }
 
   /**
@@ -167,7 +175,7 @@ final class ShopClickListener implements Listener {
                 player.getUniqueId(),
                 templates.template(item),
                 ShopBlocks.locationOf(player)),
-            shop.isAdmin() ? Holdings.UNLIMITED : containerHoldings(shop, item),
+            shop.unlimitedStock() ? Holdings.UNLIMITED : containerHoldings(shop, item),
             shop.container()
                 .flatMap(blocks::block)
                 .map(ShopBlocks::containerBlocks)
@@ -205,7 +213,8 @@ final class ShopClickListener implements Listener {
     return switch (shop.owner()) {
       case ShopOwner.Player(_, var name) -> name + "'s shop";
       case ShopOwner.Town(_, var name) -> name + "'s shop";
-      case ShopOwner.Admin() -> "the " + settings.adminShopLabel();
+      case ShopOwner.Admin(var finite) ->
+          finite ? "a shop in staff custody" : "the " + settings.adminShopLabel();
     };
   }
 

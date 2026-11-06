@@ -6,11 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.essentials.adapter.files.HistoricalHomeCatalog;
 import com.shepherdjerred.thestorm.essentials.app.TeleportAttempt;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore.KitClaim;
 import com.shepherdjerred.thestorm.essentials.app.store.PlayerStore.KnownPlayer;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
+import com.shepherdjerred.thestorm.essentials.domain.home.HistoricalHome;
 import com.shepherdjerred.thestorm.essentials.domain.home.Home;
 import com.shepherdjerred.thestorm.essentials.domain.home.HomeError;
 import com.shepherdjerred.thestorm.essentials.domain.home.HomeRules;
@@ -68,9 +70,86 @@ final class JooqStoresTest {
     return new Home(new PlaceName(name), at(x));
   }
 
+  static Position archived(double x) {
+    return new Position("world", x, 64.5, -12.25, 0, 0);
+  }
+
   @Test
   void migratingTwiceIsHarmless() {
     database.migrate("essentials", JooqStoresTest.class.getClassLoader());
+  }
+
+  @Test
+  void restoredHomesUseOrdinaryCommandsAndReceiptsSurviveDeletion() {
+    var importer = new JooqHomeImport(database);
+    var store = new JooqHomeStore(database);
+    var old = new HistoricalHome(ALICE, "2015", new Position("world", 1.5, 70, 2.5, 0, 0));
+    var newer = new HistoricalHome(ALICE, "2016", new Position("map2", 5.5, 70, 6.5, 0, 0));
+    store.set(ALICE, home("base", 9), 3).join();
+    assertThat(importer.importHomes(List.of(old, newer)).join()).isEqualTo(2);
+    assertThat(store.homes(ALICE).join())
+        .containsExactly(
+            home("base", 9),
+            new Home(new PlaceName("home"), newer.position()),
+            new Home(new PlaceName("map1"), old.position()));
+    store.rename(ALICE, new PlaceName("home"), new PlaceName("castle")).join();
+    store.delete(ALICE, new PlaceName("map1")).join();
+    assertThat(new JooqHomeImport(database).importHomes(List.of(old, newer)).join()).isZero();
+    assertThat(store.homes(ALICE).join())
+        .containsExactly(home("base", 9), new Home(new PlaceName("castle"), newer.position()));
+    var changed = new HistoricalHome(ALICE, "2015", archived(100));
+    var bob = new HistoricalHome(BOB, "2016", archived(200));
+    assertThatThrownBy(() -> importer.importHomes(List.of(bob, changed)).join())
+        .hasRootCauseInstanceOf(IllegalStateException.class);
+    assertThat(store.homes(BOB).join()).isEmpty();
+  }
+
+  @Test
+  void restoredHomesPreserveExistingNamesBedsAndDeduplicateDestinations() {
+    var importer = new JooqHomeImport(database);
+    var store = new JooqHomeStore(database);
+    store.set(ALICE, home("home", 9), 3).join();
+    store.set(ALICE, home("map2", 10), 3).join();
+    store.insertBedIfAbsent(ALICE, at(20)).join();
+    var old = new HistoricalHome(ALICE, "2015", archived(20));
+    var newer = new HistoricalHome(ALICE, "2016", archived(30));
+    var town = new HistoricalHome(ALICE, "town", archived(30));
+    assertThat(importer.importHomes(List.of(old, newer, town)).join()).isEqualTo(3);
+    assertThat(store.homes(ALICE).join())
+        .hasSize(4)
+        .contains(
+            home("bed", 20),
+            home("home", 9),
+            home("map2", 10),
+            new Home(new PlaceName("map2-2"), archived(30)));
+  }
+
+  @Test
+  void bedImportPreservesNativeRespawnsAndNeverRecreatesDeletedBeds() {
+    var importer = new JooqHomeImport(database);
+    var store = new JooqHomeStore(database);
+    var old = new HistoricalHome(ALICE, "2015", archived(20));
+    var newer = new HistoricalHome(ALICE, "2016", archived(30));
+    var nativeBed = new HistoricalHome(BOB, "2015", archived(40));
+    var sources = List.of(old, newer, nativeBed);
+    assertThat(importer.importBeds(sources, java.util.Set.of(BOB)).join()).isEqualTo(1);
+    assertThat(store.homes(ALICE).join()).containsExactly(new Home(HomeRules.BED, archived(30)));
+    assertThat(store.homes(BOB).join()).isEmpty();
+    store.delete(ALICE, HomeRules.BED).join();
+    assertThat(importer.importBeds(sources, java.util.Set.of()).join()).isZero();
+    assertThat(store.homes(ALICE).join()).isEmpty();
+    assertThat(store.homes(BOB).join()).isEmpty();
+  }
+
+  @Test
+  void publishedHomeCatalogImportsOnce() {
+    var importer = new JooqHomeImport(database);
+    var catalog = HistoricalHomeCatalog.load();
+    assertThat(importer.importHomes(catalog).join()).isEqualTo(530);
+    assertThat(importer.importHomes(catalog).join()).isZero();
+    var example = catalog.getFirst();
+    assertThat(new JooqHomeStore(database).homes(example.player()).join())
+        .anyMatch(home -> home.position().equals(example.position()));
   }
 
   @Test
@@ -123,6 +202,18 @@ final class JooqStoresTest {
     assertThat(homes.bedOwners().join()).containsExactly(ALICE);
     assertThat(homes.homes(ALICE).join())
         .containsExactly(new Home(HomeRules.BED, imported), home("farm", 2));
+  }
+
+  @Test
+  void cancellingAnImportedBedPreservesANewerBed() {
+    var homes = new JooqHomeStore(database);
+    var imported = at(10);
+    var newer = at(20);
+    assertThat(homes.insertBedIfAbsent(ALICE, imported).join()).isTrue();
+    homes.set(ALICE, new Home(HomeRules.BED, newer), 1).join();
+    assertThat(homes.deleteBedIfMatches(ALICE, imported).join()).isFalse();
+    assertThat(homes.homes(ALICE).join()).containsExactly(new Home(HomeRules.BED, newer));
+    assertThat(homes.deleteBedIfMatches(ALICE, newer).join()).isTrue();
   }
 
   @Test

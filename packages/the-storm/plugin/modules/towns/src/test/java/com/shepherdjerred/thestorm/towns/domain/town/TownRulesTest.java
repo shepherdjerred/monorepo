@@ -68,6 +68,7 @@ final class TownRulesTest {
                     0,
                     TownKind.TOWN,
                     Optional.empty(),
+                    false,
                     false))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
@@ -80,6 +81,7 @@ final class TownRulesTest {
                     0,
                     TownKind.TOWN,
                     Optional.empty(),
+                    false,
                     false))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(Fixtures.townA().owner()).isEqualTo(OWNER);

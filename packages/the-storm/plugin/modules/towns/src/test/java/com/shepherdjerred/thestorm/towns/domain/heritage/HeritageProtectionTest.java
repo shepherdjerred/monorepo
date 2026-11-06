@@ -381,6 +381,10 @@ final class HeritageProtectionTest {
     assertThat(falls.members()).isZero();
     assertThat(falls.claims()).isZero();
     assertThat(falls.protectedChunks()).isPositive();
+    assertThat(falls.boundaries()).contains("2015 archive");
+    assertThat(directory.info("Map 2 Spawn").orElseThrow().boundaries())
+        .contains("January 2016 archive survey")
+        .doesNotContain("2015 archive");
   }
 
   @Test
@@ -403,9 +407,11 @@ final class HeritageProtectionTest {
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
     assertThat(directory.page(1, 25).total()).isEqualTo(294);
     state.replaceTown(town.renamed("NewIdentity"));
-    assertThat(directory.info("NewIdentity").orElseThrow().name()).isEqualTo(site.name());
+    assertThat(directory.info("NewIdentity").orElseThrow().name()).isEqualTo("NewIdentity");
+    assertThat(directory.info(site.name()).orElseThrow().name()).isEqualTo("NewIdentity");
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
     assertThat(directory.page(1, 25).total()).isEqualTo(294);
+    assertThat(directory.matchingNames("NewId")).containsExactly("NewIdentity");
     state.removeTown(town.id());
     assertThat(directory.info(site.name()).orElseThrow().members()).isZero();
     assertThat(state.heritageNameReserved(site.activeTownName(), java.util.Optional.empty()))
@@ -413,5 +419,28 @@ final class HeritageProtectionTest {
     var chunk = site.protectedChunks().iterator().next();
     assertThat(state.landAt(site.world(), chunk.x() * 16, 69, chunk.z() * 16))
         .isInstanceOf(Land.HeritageLand.class);
+  }
+
+  @Test
+  void aModernTownWithAnArchiveNameRemainsReachableByItsName() throws Exception {
+    var state = state();
+    var site =
+        catalog().sites().stream()
+            .filter(value -> value.activeTownName().equals("Frost_Falls"))
+            .findFirst()
+            .orElseThrow();
+    var modern =
+        com.shepherdjerred.thestorm.towns.domain.town.Town.found(
+            java.util.UUID.randomUUID(),
+            site.activeTownName(),
+            java.time.Instant.EPOCH,
+            java.util.UUID.randomUUID());
+    state.addTown(modern);
+    var directory = new TownListings(state);
+    var result = directory.info("Frost_Falls").orElseThrow();
+    assertThat(result.name()).isEqualTo("Frost_Falls");
+    assertThat(result.members()).isEqualTo(1);
+    assertThat(result.custody()).isEqualTo("Player town");
+    assertThat(directory.info("Frost Falls").orElseThrow().protectedChunks()).isPositive();
   }
 }

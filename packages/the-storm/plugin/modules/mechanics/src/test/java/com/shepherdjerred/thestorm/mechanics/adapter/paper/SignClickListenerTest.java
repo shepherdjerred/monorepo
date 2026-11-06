@@ -1,13 +1,21 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.shepherdjerred.thestorm.core.protection.Protection;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -17,6 +25,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,5 +121,76 @@ final class SignClickListenerTest {
 
     assertThat(event.useInteractedBlock()).isNotEqualTo(Event.Result.DENY);
     assertThat(messages()).isEmpty();
+  }
+
+  @Test
+  void aSurveyedHistoricalLiftBindsToItsProvenOwner() {
+    world.loadChunk(10, -8);
+    var bottom = world.getBlockAt(160, 68, -122);
+    bottom.setType(Material.OAK_SIGN);
+    var sign = (Sign) bottom.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift Up]"));
+    sign.update();
+    player.teleport(new Location(world, 161.5, 68, -121.5));
+
+    rightClick(bottom);
+
+    assertThat(messages()).anySatisfy(message -> assertThat(message).contains("No lift sign"));
+    var plugin = Objects.requireNonNull(server.getPluginManager().getPlugin("TheStorm"));
+    assertThat(
+            ((Sign) bottom.getState())
+                .getPersistentDataContainer()
+                .get(new NamespacedKey(plugin, "mechanic_owner"), PersistentDataType.STRING))
+        .isEqualTo("af1c824a-8ff5-4912-9470-b32c07ffd1f8");
+  }
+
+  @Test
+  void aChangedHistoricalSignIsNotClaimed() {
+    var block = world.getBlockAt(160, 68, -122);
+    block.setType(Material.OAK_SIGN);
+    var sign = (Sign) block.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift Up]"));
+    sign.getSide(Side.FRONT).line(3, Component.text("changed"));
+    sign.update();
+
+    rightClick(block);
+
+    assertThat(messages()).anySatisfy(message -> assertThat(message).contains("isn't set up"));
+    var plugin = Objects.requireNonNull(server.getPluginManager().getPlugin("TheStorm"));
+    assertThat(
+            ((Sign) block.getState())
+                .getPersistentDataContainer()
+                .has(new NamespacedKey(plugin, "mechanic_owner")))
+        .isFalse();
+  }
+
+  @Test
+  void aServerLiftBindsOnlyWhenItsSpawnLandStillQualifies() {
+    var block = world.getBlockAt(74, 67, -158);
+    block.setType(Material.OAK_SIGN);
+    var sign = (Sign) block.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift]"));
+    sign.update();
+    var plugin = Objects.requireNonNull(server.getPluginManager().getPlugin("TheStorm"));
+    var protection = mock(Protection.class);
+    var signs = new Signs(plugin);
+    var lifts =
+        new HistoricalLifts(
+            CompletableFuture.completedFuture(HistoricalLifts.load()), signs, protection);
+
+    lifts.bind(block);
+    assertThat(signs.owner((Sign) block.getState())).isEmpty();
+    // A changed original sign is not claimed even on approved land.
+    when(protection.mayBindServerHistoricalLift(any())).thenReturn(true);
+    sign = (Sign) block.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift Down]"));
+    sign.update();
+    lifts.bind(block);
+    assertThat(signs.owner((Sign) block.getState())).isEmpty();
+    sign = (Sign) block.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift]"));
+    sign.update();
+    lifts.bind(block);
+    assertThat(signs.owner((Sign) block.getState())).contains(Protection.SERVER_HISTORICAL_LIFT);
   }
 }

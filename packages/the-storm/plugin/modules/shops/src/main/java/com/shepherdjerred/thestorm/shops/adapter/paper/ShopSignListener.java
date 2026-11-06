@@ -396,7 +396,7 @@ final class ShopSignListener implements Listener {
   private int levelFor(Player creator, ShopOwner owner) {
     var yours = ShopsPermissions.shopkeeperLevel(creator);
     return switch (owner) {
-      case ShopOwner.Admin() -> 0;
+      case ShopOwner.Admin(_) -> 0;
       case ShopOwner.Town(_, _) -> yours;
       case ShopOwner.Player(var id, _) -> {
         var online = online(creator, id);

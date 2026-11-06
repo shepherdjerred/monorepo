@@ -25,7 +25,7 @@ public final class ShopArchive {
   public static byte[] encode(List<SignShop> shops) {
     var bytes = new ByteArrayOutputStream();
     try (var out = new DataOutputStream(bytes)) {
-      out.writeInt(2);
+      out.writeInt(3);
       out.writeInt(shops.size());
       for (var shop : shops) {
         out.writeLong(shop.id());
@@ -45,8 +45,8 @@ public final class ShopArchive {
             out.writeUTF(id.toString());
             out.writeUTF(name);
           }
-          case ShopOwner.Admin() -> {
-            out.writeUTF("admin");
+          case ShopOwner.Admin(var finite) -> {
+            out.writeUTF(finite ? "admin-stocked" : "admin");
             out.writeUTF("");
             out.writeUTF("admin");
           }
@@ -74,7 +74,7 @@ public final class ShopArchive {
   public static List<SignShop> decode(byte[] bytes) {
     try (var in = new DataInputStream(new ByteArrayInputStream(bytes))) {
       var version = in.readInt();
-      if (version != 1 && version != 2) {
+      if (version != 1 && version != 2 && version != 3) {
         throw new IllegalStateException("unknown shop definition archive version");
       }
       var count = in.readInt();
@@ -114,6 +114,7 @@ public final class ShopArchive {
           case "player" -> new ShopOwner.Player(UUID.fromString(ownerId), name);
           case "town" -> new ShopOwner.Town(UUID.fromString(ownerId), name);
           case "admin" -> new ShopOwner.Admin();
+          case "admin-stocked" -> new ShopOwner.Admin(true);
           default -> throw new IllegalStateException("unknown archived shop owner " + kind);
         };
     return finish(in, new Archived(id, sign, container, owner));

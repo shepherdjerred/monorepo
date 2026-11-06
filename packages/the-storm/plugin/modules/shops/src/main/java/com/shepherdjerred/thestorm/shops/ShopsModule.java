@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shops;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.shops.adapter.content.CatalogDirectory;
+import com.shepherdjerred.thestorm.shops.adapter.content.HistoricalShopCatalog;
 import com.shepherdjerred.thestorm.shops.adapter.db.JooqShopStore;
 import com.shepherdjerred.thestorm.shops.adapter.paper.ShopsPaper;
 import com.shepherdjerred.thestorm.shops.app.ServerShops;
@@ -12,6 +13,7 @@ import com.shepherdjerred.thestorm.shops.domain.config.ShopsConfig;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jspecify.annotations.Nullable;
 
@@ -30,7 +32,12 @@ public final class ShopsModule implements StormModule {
   private @Nullable ShutdownDrain drain;
   private @Nullable ComponentLogger logger;
 
-  private record Loaded(List<SignShop> shops, long lastId) {}
+  private record Loaded(
+      List<SignShop> shops,
+      long lastId,
+      List<Long> pending,
+      java.util.Map<String, Long> completed,
+      List<HistoricalShopCatalog.Entry> historical) {}
 
   @Override
   public String id() {
@@ -57,10 +64,21 @@ public final class ShopsModule implements StormModule {
             id(), player -> reset.reset(player).thenRun(() -> installed.forget().accept(player)));
     this.drain = installed.drain();
     this.logger = context.logger();
+    var shops = store.loadShops();
+    var lastId = store.lastShopId();
+    var pending = store.pendingHistoricalShops();
+    var completed = store.completedHistoricalShops();
+    var historical = context.compute().submit(HistoricalShopCatalog::load);
     var _ =
-        store
-            .loadShops()
-            .thenCombine(store.lastShopId(), Loaded::new)
+        CompletableFuture.allOf(shops, lastId, pending, completed, historical)
+            .thenApply(
+                ignored ->
+                    new Loaded(
+                        shops.join(),
+                        lastId.join(),
+                        pending.join(),
+                        completed.join(),
+                        historical.join()))
             .whenCompleteAsync(
                 (loaded, failure) -> {
                   if (!context.plugin().isEnabled()) {
@@ -74,10 +92,30 @@ public final class ShopsModule implements StormModule {
                   }
                   try {
                     registry.initialize(loaded.shops(), loaded.lastId());
+                    closeInterrupted(context, registry, loaded.pending());
                     // A catalog edit or stale sign can close an admin shop. Do this before trading.
                     installed.reconcile().run();
-                    registry.publishReady();
-                    context.logger().info("Loaded {} shops", loaded.shops().size());
+                    var restoration =
+                        ShopsPaper.restoreHistorical(
+                            context,
+                            config,
+                            new ShopsPaper.HistoricalState(
+                                registry,
+                                store,
+                                loaded.historical(),
+                                loaded.completed(),
+                                catalogs));
+                    var _ =
+                        restoration
+                            .completion()
+                            .whenCompleteAsync(
+                                (ignored, restoreFailure) ->
+                                    finishRestoration(
+                                        context,
+                                        registry,
+                                        restoreFailure,
+                                        restoration.retryChangedContainers()),
+                                context.scheduler().mainThread());
                   } catch (RuntimeException error) {
                     context
                         .logger()
@@ -85,6 +123,30 @@ public final class ShopsModule implements StormModule {
                   }
                 },
                 context.scheduler().mainThread());
+  }
+
+  private static void closeInterrupted(
+      ModuleContext context, ShopRegistry registry, List<Long> ids) {
+    for (var id : ids) {
+      if (registry.byId(id).isPresent()) {
+        registry.close(id, "historical import needs staff reconciliation");
+        context
+            .logger()
+            .error("Historical shop {} has an interrupted import; it remains closed", id);
+      }
+    }
+  }
+
+  private static void finishRestoration(
+      ModuleContext context, ShopRegistry registry, @Nullable Throwable failure, Runnable retry) {
+    if (!context.plugin().isEnabled()) return;
+    if (failure != null) {
+      context.logger().error("Shops remain guarded: historical restoration failed", failure);
+      return;
+    }
+    registry.publishReady();
+    retry.run();
+    context.logger().info("Loaded {} shops", registry.all().size());
   }
 
   @Override

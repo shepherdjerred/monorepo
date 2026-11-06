@@ -66,6 +66,10 @@ final class Signs {
         .map(UUID::fromString);
   }
 
+  boolean hasOwnerData(Sign sign) {
+    return sign.getPersistentDataContainer().has(owner);
+  }
+
   /** Records {@code player} as the creator. Call {@link Sign#update()} afterwards. */
   void setOwner(Sign sign, UUID player) {
     sign.getPersistentDataContainer().set(owner, PersistentDataType.STRING, player.toString());

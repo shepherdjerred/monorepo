@@ -241,7 +241,7 @@ final class ShopCommand {
         switch (shop.owner()) {
           case ShopOwner.Player(_, var name) -> name;
           case ShopOwner.Town(_, var name) -> name;
-          case ShopOwner.Admin() -> adminShopLabel;
+          case ShopOwner.Admin(_) -> adminShopLabel;
         };
     var item =
         shop.item()

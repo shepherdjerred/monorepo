@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -173,6 +174,15 @@ public final class ShopBlocks {
     return shop.filter(found -> id != null && found.id() == id);
   }
 
+  /** Recognizes saved shops and legacy buy/sell signs before the registry is ready. */
+  boolean isPendingShopSign(Block block) {
+    if (!(block.getState(false) instanceof Sign sign)) return false;
+    if (sign.getPersistentDataContainer().has(shopIdKey, PersistentDataType.LONG)) return true;
+    var first =
+        PlainTextComponentSerializer.plainText().serialize(sign.getSide(Side.FRONT).line(0));
+    return first.equalsIgnoreCase("[buy]") || first.equalsIgnoreCase("[sell]");
+  }
+
   /**
    * Stamps a sign with its shop's id and item fingerprint.
    *
@@ -182,16 +192,17 @@ public final class ShopBlocks {
     if (!(block.getState(false) instanceof Sign)) {
       return false;
     }
-    write(block, shop, Optional.empty());
-    return true;
+    return write(block, shop, Optional.empty());
   }
 
   /** Rewrites a shop sign's lines and stamps it. */
   public void rewrite(Block block, SignShop shop, SignLines lines) {
-    write(block, shop, Optional.of(lines));
+    if (!write(block, shop, Optional.of(lines))) {
+      throw new IllegalStateException("could not update shop sign " + shop.id());
+    }
   }
 
-  private void write(Block block, SignShop shop, Optional<SignLines> lines) {
+  private boolean write(Block block, SignShop shop, Optional<SignLines> lines) {
     if (!(block.getState() instanceof Sign sign)) {
       throw new IllegalStateException("shop " + shop.id() + " has no sign at " + pos(block));
     }
@@ -208,7 +219,7 @@ public final class ShopBlocks {
         .ifPresentOrElse(
             item -> data.set(itemKey, PersistentDataType.STRING, item.template()),
             () -> data.remove(itemKey));
-    sign.update();
+    return sign.update();
   }
 
   /** The live inventory of a container block, or empty if it is no longer a container. */

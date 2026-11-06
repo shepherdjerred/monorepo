@@ -86,6 +86,75 @@ final class PaperProtection implements Protection {
     return decision(verdict);
   }
 
+  @Override
+  public Decision checkLift(UUID player, UUID owner, Location location) {
+    var ordinary = check(player, ProtectedAction.INTERACT, location);
+    if (ordinary.isAllowed()) return ordinary;
+    var land = guard.land(location);
+    if (owner.equals(Protection.SERVER_HISTORICAL_LIFT) && serverHistoricalLiftLand(land)) {
+      return Decision.allowed();
+    }
+    if (publicShopLift(land, owner) && check(owner, ProtectedAction.BUILD, location).isAllowed()) {
+      return Decision.allowed();
+    }
+    return ordinary;
+  }
+
+  @Override
+  public boolean mayBindServerHistoricalLift(Location location) {
+    requireMainThread();
+    return serverHistoricalLiftLand(guard.land(location));
+  }
+
+  @Override
+  public boolean mayOperateServerHistoricalCircuit(Location location) {
+    requireMainThread();
+    return serverSpawnLift(guard.land(location));
+  }
+
+  @Override
+  public boolean mayRestoreHistoricalShop(Location location) {
+    requireMainThread();
+    if (guard.isSealed(Guard.world(location))) return false;
+    var land = guard.land(location).underlyingLand();
+    return !(land instanceof Land.WorkLand)
+        && (!(land instanceof Land.ParcelLand(var parcel))
+            || parcel.phase()
+                == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE);
+  }
+
+  static boolean serverSpawnLift(Land land) {
+    return land instanceof Land.HeritageLand(var site, _, var underlying)
+        && site.kind() == com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Kind.SERVER
+        && site.id().equals("spawn")
+        && (underlying instanceof Land.Wilderness
+            || (underlying instanceof Land.RegionLand(var region) && region.id().equals("spawn"))
+            || (underlying instanceof Land.ParcelLand(var parcel)
+                && parcel.definition().kind()
+                    == com.shepherdjerred.thestorm.towns.domain.parcel.ParcelKind.PERMANENT_SHOP
+                && parcel.phase()
+                    == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE
+                && parcel.owners().isEmpty()));
+  }
+
+  /** Catalogued lifts may also be restored on unclaimed or staff-held historical land. */
+  static boolean serverHistoricalLiftLand(Land land) {
+    if (serverSpawnLift(land) || land instanceof Land.Wilderness) return true;
+    return land instanceof Land.HeritageLand(var site, var editors, var underlying)
+        && site.editors().isEmpty()
+        && editors.isEmpty()
+        && underlying instanceof Land.Wilderness;
+  }
+
+  static boolean publicShopLift(Land land, UUID owner) {
+    return land instanceof Land.HeritageLand(_, _, Land.ParcelLand(var parcel))
+        && parcel.definition().kind()
+            == com.shepherdjerred.thestorm.towns.domain.parcel.ParcelKind.PERMANENT_SHOP
+        && parcel.phase()
+            == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE
+        && parcel.owners().contains(owner);
+  }
+
   /**
    * Players: both players' own PvP must be on, and PvP must be on where the attacker stands and
    * where the victim stands. The port is not told who the victim is, so every player standing at

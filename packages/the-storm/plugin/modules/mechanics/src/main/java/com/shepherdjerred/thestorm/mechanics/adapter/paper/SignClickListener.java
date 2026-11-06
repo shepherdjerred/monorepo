@@ -25,6 +25,7 @@ final class SignClickListener implements Listener {
   private final Kit kit;
   private final SignCopier copier;
   private final Handlers handlers;
+  private final HistoricalLifts historicalLifts;
 
   /** The per-mechanism handlers a click dispatches to. */
   record Handlers(
@@ -33,10 +34,12 @@ final class SignClickListener implements Listener {
       CookingPots cookingPots,
       LightSwitches lightSwitches) {}
 
-  SignClickListener(Kit kit, SignCopier copier, Handlers handlers) {
+  SignClickListener(
+      Kit kit, SignCopier copier, Handlers handlers, HistoricalLifts historicalLifts) {
     this.kit = kit;
     this.copier = copier;
     this.handlers = handlers;
+    this.historicalLifts = historicalLifts;
   }
 
   @EventHandler(priority = EventPriority.HIGH)
@@ -81,13 +84,22 @@ final class SignClickListener implements Listener {
     if (mechanism == Mechanism.HIDDEN_SWITCH || mechanism.isPiston()) {
       return;
     }
-    var owner = kit.admit(player, feature, sign);
+    if (mechanism.isLift()
+        && kit.signs().owner(sign).isEmpty()
+        && kit.gatekeeper().mayUse(feature, player::hasPermission).isEmpty()) {
+      historicalLifts.bind(block);
+    }
+    var currentSign = block.getState(false) instanceof Sign current ? current : sign;
+    var owner = kit.admit(player, feature, currentSign);
     if (owner.isEmpty()) {
       return;
     }
     var grid = new PaperGrid(block.getWorld());
     var pos = PaperGrid.pos(block);
-    var entry = kit.guard().check(player.getUniqueId(), ProtectedAction.INTERACT, grid, pos);
+    var entry =
+        mechanism.isLift()
+            ? kit.guard().checkLift(player.getUniqueId(), owner.orElseThrow(), grid, pos)
+            : kit.guard().check(player.getUniqueId(), ProtectedAction.INTERACT, grid, pos);
     if (entry instanceof Decision.Denied(var reason)) {
       Replies.error(player, feature, reason);
       return;

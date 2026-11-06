@@ -54,6 +54,17 @@ const ownedConfigDir = path.join(
   "TheStorm",
 );
 
+function historicalShopEnvironment(): Record<string, string> {
+  const mode = Bun.env["STORM_E2E_HISTORICAL_SHOPS"];
+  return mode === undefined ? {} : { STORM_E2E_HISTORICAL_SHOPS: mode };
+}
+
+function historicalTownEnvironment(): Record<string, string> {
+  return Bun.env["STORM_E2E_HISTORICAL_TOWNS"] === "1"
+    ? { STORM_E2E_HISTORICAL_TOWNS: "1" }
+    : {};
+}
+
 async function arenaAdmission(server: ServerInfo): Promise<void> {
   // An idle runner can report "open" before asynchronous map validation finishes.
   for (let attempt = 0; attempt < 120; attempt++) {
@@ -131,6 +142,8 @@ export default async function setup(project: TestProject) {
     ownedConfigDir,
     env: {
       ...bootstrap,
+      ...historicalShopEnvironment(),
+      ...historicalTownEnvironment(),
       // The managed-flag gates (rwf join here; crier and merchant in the full
       // suite) evaluate against the fake brain's Flipt double.
       FLIPT_URL: brainBaseUrl,

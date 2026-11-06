@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.shops.adapter.content.HistoricalShopCatalog;
+import com.shepherdjerred.thestorm.shops.adapter.db.JooqShopStore;
 import com.shepherdjerred.thestorm.shops.app.Background;
 import com.shepherdjerred.thestorm.shops.app.CatalogTrades;
 import com.shepherdjerred.thestorm.shops.app.ChestShops;
@@ -33,6 +35,46 @@ import org.bukkit.plugin.IllegalPluginAccessException;
 public final class ShopsPaper {
 
   private ShopsPaper() {}
+
+  public record HistoricalState(
+      ShopRegistry registry,
+      JooqShopStore store,
+      List<HistoricalShopCatalog.Entry> entries,
+      java.util.Map<String, Long> completed,
+      List<Catalog> catalogs) {}
+
+  /** Restores reviewed historical shops before publishing the registry as ready. */
+  public record HistoricalRestoration(
+      java.util.concurrent.CompletableFuture<Void> completion, Runnable retryChangedContainers) {}
+
+  public static HistoricalRestoration restoreHistorical(
+      ModuleContext context, ShopsConfig config, HistoricalState state) {
+    var plugin = context.plugin();
+    var blocks =
+        new ShopBlocks(plugin, state.registry(), containers(config.chestShops().containers()));
+    var importer =
+        new HistoricalShops(
+            new HistoricalShops.Services(
+                plugin,
+                state.registry(),
+                blocks,
+                state.store(),
+                context.services().require(Protection.class),
+                new ServerOffers(state.catalogs(), state.registry())),
+            new HistoricalShops.ImportRuntime(
+                context.scheduler().mainThread(),
+                context.time(),
+                context.logger(),
+                (world, x, z) -> world.getChunkAtAsync(x, z),
+                state.completed()));
+    plugin.getServer().getPluginManager().registerEvents(importer, plugin);
+    return new HistoricalRestoration(
+        importer.restore(
+            state.entries().stream()
+                .filter(entry -> !config.chestShops().shopsDisabledIn(entry.world()))
+                .toList()),
+        importer::retryChangedContainers);
+  }
 
   /**
    * The container materials a config names, each checked against the running game.

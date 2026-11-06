@@ -4795,7 +4795,7 @@
         "id": "heritage-006",
         "name": "Hibernia",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Hibernia",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -5133,7 +5133,7 @@
         "id": "heritage-008",
         "name": "Savoy",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Savoy",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -6132,7 +6132,7 @@
         "id": "heritage-011",
         "name": "Valenheir",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Valenheir",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -6366,7 +6366,7 @@
         "id": "heritage-012",
         "name": "Asterism",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Asterism",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -7708,7 +7708,7 @@
         "id": "heritage-017",
         "name": "Aincrad",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Aincrad",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -8348,7 +8348,7 @@
         "id": "heritage-021",
         "name": "Aegis",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Aegis",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -8530,7 +8530,7 @@
         "id": "heritage-022",
         "name": "Shrute Farms",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Shrute_Farms",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -9137,7 +9137,7 @@
         "id": "heritage-024",
         "name": "Keystone",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Keystone",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -10284,7 +10284,7 @@
         "id": "heritage-034",
         "name": "Rostov",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Rostov",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -10452,7 +10452,7 @@
         "id": "heritage-035",
         "name": "Hatchnation",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Hatchnation",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -12361,7 +12361,7 @@
         "id": "heritage-061",
         "name": "Silk Town",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Silk_Town",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -12442,7 +12442,7 @@
         "id": "heritage-063",
         "name": "Glacies",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Glacies",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -13399,7 +13399,7 @@
         "id": "heritage-080",
         "name": "Phoebe Keep",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Phoebe_Keep",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks":
@@ -14512,7 +14512,7 @@
         "id": "black-water-citadel",
         "name": "Black Water Citadel",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Black_Water_Citadel",
         "world": "world",
         "profile": "SAFE",
         "protectedChunks": [],
@@ -24320,7 +24320,7 @@
         "id": "map2-danksville",
         "name": "Danksville",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "Danksville",
         "world": "map2",
         "profile": "SAFE",
         "protectedChunks":
@@ -26033,7 +26033,7 @@
         "id": "map2-streamtown",
         "name": "StreamTown",
         "kind": "HERITAGE",
-        "activeTownName": "",
+        "activeTownName": "StreamTown",
         "world": "map2",
         "profile": "SAFE",
         "protectedChunks":

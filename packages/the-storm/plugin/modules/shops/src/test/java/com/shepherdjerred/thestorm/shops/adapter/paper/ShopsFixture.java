@@ -56,7 +56,8 @@ abstract class ShopsFixture {
         MockBukkit.loadWith(
             ShopsTestPlugin.class,
             new PluginDescriptionFile("TheStorm", "test", ShopsTestPlugin.class.getName()));
-    world = server.addSimpleWorld("world");
+    // Ordinary shop tests do not operate on the production historical catalog.
+    world = server.addSimpleWorld("shop-test-world");
     for (var attempt = 0; attempt < 400 && !plugin.shopsReady(); attempt++) {
       server.getScheduler().performOneTick();
       Thread.sleep(5);

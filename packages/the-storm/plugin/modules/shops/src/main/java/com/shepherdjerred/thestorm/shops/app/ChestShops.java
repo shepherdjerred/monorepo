@@ -211,7 +211,7 @@ public final class ChestShops {
             switch (owner) {
               case ShopOwner.Player(var id, _) -> registry.ownedBy(id);
               case ShopOwner.Town(var id, _) -> registry.ownedBy(id);
-              case ShopOwner.Admin() -> 0;
+              case ShopOwner.Admin(_) -> 0;
             },
             containerState(owner, request.where()));
     var problems = rules.check(attempt);
@@ -220,7 +220,7 @@ public final class ChestShops {
     }
     var shop =
         new SignShop(
-            registry.nextId(),
+            registry.reserveId(),
             request.where().sign(),
             request.where().container(),
             owner,
@@ -262,7 +262,7 @@ public final class ChestShops {
                     switch (owner) {
                       case ShopOwner.Player(var id, _) -> registry.ownsAllOn(id, block);
                       case ShopOwner.Town(var id, _) -> registry.ownsAllOn(id, block);
-                      case ShopOwner.Admin() ->
+                      case ShopOwner.Admin(_) ->
                           registry.tradingFrom(block).stream().allMatch(SignShop::isAdmin);
                     });
     return mine ? CreationAttempt.Container.FREE : CreationAttempt.Container.TAKEN;
@@ -487,7 +487,7 @@ public final class ChestShops {
         switch (shop.owner()) {
           case ShopOwner.Player(var owner, _) -> new TradeSite.Chest(shop.id(), owner);
           case ShopOwner.Town(var town, _) -> new TradeSite.Chest(shop.id(), town);
-          case ShopOwner.Admin() -> new TradeSite.Admin(shop.id());
+          case ShopOwner.Admin(_) -> new TradeSite.Admin(shop.id());
         };
     var trade =
         new TradeRecord(
@@ -502,7 +502,7 @@ public final class ChestShops {
     var told =
         switch (shop.owner()) {
           case ShopOwner.Player(var id, _) -> effects.tellOwnerIfOnline(id, trade);
-          case ShopOwner.Town(_, _), ShopOwner.Admin() -> true;
+          case ShopOwner.Town(_, _), ShopOwner.Admin(_) -> true;
         };
     Background.logFailure(
         store.recordTrade(trade, told), logger, "log a trade at shop " + shop.id());
@@ -512,7 +512,7 @@ public final class ChestShops {
     return switch (owner) {
       case ShopOwner.Player(var id, _) -> new AccountId.Player(id);
       case ShopOwner.Town(var id, _) -> new AccountId.Town(id);
-      case ShopOwner.Admin() -> new AccountId.Server();
+      case ShopOwner.Admin(_) -> new AccountId.Server();
     };
   }
 }

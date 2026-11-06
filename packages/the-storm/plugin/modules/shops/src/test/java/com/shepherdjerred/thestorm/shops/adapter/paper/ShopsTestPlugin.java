@@ -55,6 +55,12 @@ public class ShopsTestPlugin extends JavaPlugin {
   static final class TestProtection implements Protection {
     final Set<ProtectedAction> denied = new HashSet<>();
     boolean sameLand = true;
+    boolean restorationAllowed = true;
+
+    @Override
+    public boolean mayRestoreHistoricalShop(Location location) {
+      return restorationAllowed;
+    }
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {

@@ -262,7 +262,7 @@ final class ShopGuardListener implements Listener {
                 switch (shop.owner()) {
                   case ShopOwner.Player(_, var name) -> name;
                   case ShopOwner.Town(_, var name) -> name;
-                  case ShopOwner.Admin() -> "the server";
+                  case ShopOwner.Admin(_) -> "the server";
                 })
         .distinct()
         .reduce((a, b) -> a + " and " + b)

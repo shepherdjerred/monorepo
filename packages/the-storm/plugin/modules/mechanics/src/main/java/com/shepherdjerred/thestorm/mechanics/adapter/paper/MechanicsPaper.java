@@ -34,12 +34,22 @@ public final class MechanicsPaper {
         new SignClickListener.Handlers(
             new Elevators(kit), structures, new CookingPots(kit), new LightSwitches(kit));
     var creation = new SignCreation(gatekeeper, CreationRules.standard(config));
+    var liftCatalog = context.compute().submit(HistoricalLifts::load);
+    var _ =
+        liftCatalog.whenComplete(
+            (ignored, error) -> {
+              if (error != null)
+                context.logger().error("Historical lifts could not be loaded", error);
+            });
+    var historicalLifts = new HistoricalLifts(liftCatalog, signs, protection);
     var events = plugin.getServer().getPluginManager();
     events.registerEvents(new SignWriteListener(creation, kit, protection, structures), plugin);
-    events.registerEvents(new SignClickListener(kit, copier, handlers), plugin);
+    events.registerEvents(new SignClickListener(kit, copier, handlers, historicalLifts), plugin);
     events.registerEvents(copier, plugin);
     events.registerEvents(new HiddenSwitchListener(kit), plugin);
     events.registerEvents(new RedstoneListener(kit, structures), plugin);
+    events.registerEvents(new HistoricalSpawnAnd(kit, protection), plugin);
+    new HistoricalClocks(kit, protection, plugin.getServer()).start();
     events.registerEvents(new PistonListener(kit), plugin);
     events.registerEvents(new DropListener(kit), plugin);
     events.registerEvents(new PaintingListener(kit), plugin);

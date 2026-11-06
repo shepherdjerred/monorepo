@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqBackStore;
+import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeImport;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqKitClaimStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqModerationLogStore;
@@ -13,6 +14,7 @@ import com.shepherdjerred.thestorm.essentials.adapter.db.JooqPlayerStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqTeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqTeleportUsageStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqWarpStore;
+import com.shepherdjerred.thestorm.essentials.adapter.files.HistoricalHomeCatalog;
 import com.shepherdjerred.thestorm.essentials.adapter.files.SavedRespawn;
 import com.shepherdjerred.thestorm.essentials.adapter.paper.EssentialsPaper;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
@@ -117,9 +119,32 @@ public final class EssentialsModule implements StormModule {
             wallets,
             context.time());
     logLoad(context, payments.loaded(), "pending teleport charges");
+    var historical = new JooqHomeImport(database);
+    var savedRespawns = SavedRespawn.load(levelDirectory.apply(context), context.compute());
+    var historicalReady =
+        context
+            .compute()
+            .submit(HistoricalHomeCatalog::load)
+            .thenCompose(
+                homes ->
+                    savedRespawns.thenCompose(
+                        scan -> {
+                          if (!scan.problems().isEmpty())
+                            throw new IllegalStateException(
+                                "Cannot restore homes with unreadable player respawns");
+                          var nativeOwners =
+                              scan.found().stream()
+                                  .map(SavedRespawn.Found::player)
+                                  .collect(java.util.stream.Collectors.toUnmodifiableSet());
+                          return historical
+                              .importHomes(homes)
+                              .thenCompose(ignored -> historical.importBeds(homes, nativeOwners));
+                        }))
+            .thenAccept(count -> {});
+    logLoad(context, historicalReady, "historical homes");
     var stores =
         new EssentialsPaper.Stores(
-            new JooqHomeStore(database),
+            new JooqHomeStore(database, historicalReady),
             new JooqBackStore(database),
             new JooqKitClaimStore(database));
     var homeSignals = new HomeSignals();
@@ -139,7 +164,7 @@ public final class EssentialsModule implements StormModule {
                 stores,
                 protection,
                 sealed,
-                SavedRespawn.load(levelDirectory.apply(context), context.compute())),
+                savedRespawns),
             homeSignals);
   }
 

@@ -14,9 +14,11 @@ import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWN
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.towns.app.HeritageTownImport;
 import com.shepherdjerred.thestorm.towns.app.TownPayout;
 import com.shepherdjerred.thestorm.towns.app.TownsSnapshot;
 import com.shepherdjerred.thestorm.towns.app.TownsStore;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
@@ -61,6 +63,46 @@ public final class JooqTownsStore implements TownsStore {
     return database.write(JooqTownsStore::load);
   }
 
+  /** Imports catalogued towns and their receipts atomically, without replacing player data. */
+  public CompletableFuture<HeritageTownImport.Plan> importHeritage(
+      List<HeritageSite> sites, Instant now) {
+    return database.write(
+        dsl -> {
+          var existing = load(dsl).towns();
+          var completed = new HashSet<UUID>();
+          for (var row : dsl.fetch("select town_id from towns_heritage_import")) {
+            completed.add(UUID.fromString(row.get(0, String.class)));
+          }
+          // Existing historical identities may have been imported by an earlier restoration.
+          for (var site : sites) {
+            var id = site.activeTownId();
+            if (id.isPresent()
+                && existing.stream().anyMatch(town -> town.id().equals(id.orElseThrow()))
+                && completed.add(id.orElseThrow())) {
+              dsl.execute(
+                  "insert into towns_heritage_import (town_id) values (?)",
+                  id.orElseThrow().toString());
+            }
+          }
+          var plan = HeritageTownImport.plan(sites, existing, completed, now);
+          for (var town : plan.towns()) {
+            dsl.insertInto(TOWNS_TOWN)
+                .set(TOWNS_TOWN.ID, town.id().toString())
+                .set(TOWNS_TOWN.NAME, town.name())
+                .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
+                .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
+                .set(TOWNS_TOWN.KIND, town.kind().name())
+                .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
+                .set(TOWNS_TOWN.EXPIRY_WARNED, 0)
+                .execute();
+            insertMembers(dsl, town);
+            dsl.execute(
+                "insert into towns_heritage_import (town_id) values (?)", town.id().toString());
+          }
+          return plan;
+        });
+  }
+
   private static TownsSnapshot load(DSLContext dsl) {
     var members = new HashMap<UUID, Map<UUID, TownRole>>();
     for (var row : dsl.selectFrom(TOWNS_MEMBER).fetch()) {
@@ -83,7 +125,8 @@ public final class JooqTownsStore implements TownsStore {
                       row.getGovernorLevel(),
                       TownKind.valueOf(row.getKind()),
                       active == null ? Optional.empty() : Optional.of(Instant.ofEpochMilli(active)),
-                      row.getExpiryWarned() != 0);
+                      row.getExpiryWarned() != 0,
+                      row.getHistoricalCustody() != 0);
                 });
     var flags = new HashMap<ChunkPos, Set<ClaimFlag>>();
     for (var row : dsl.selectFrom(TOWNS_CLAIM_FLAG).fetch()) {
@@ -128,6 +171,7 @@ public final class JooqTownsStore implements TownsStore {
               .set(TOWNS_TOWN.CREATED_AT, town.createdAt().toEpochMilli())
               .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
               .set(TOWNS_TOWN.KIND, town.kind().name())
+              .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
               .set(
                   TOWNS_TOWN.LAST_ACTIVE_AT,
                   town.lastActive().map(Instant::toEpochMilli).orElse(null))
@@ -227,6 +271,7 @@ public final class JooqTownsStore implements TownsStore {
             .set(TOWNS_TOWN.NAME, town.name())
             .set(TOWNS_TOWN.GOVERNOR_LEVEL, town.governorLevel())
             .set(TOWNS_TOWN.KIND, town.kind().name())
+            .set(TOWNS_TOWN.HISTORICAL_CUSTODY, town.historicalCustody() ? 1 : 0)
             .set(
                 TOWNS_TOWN.LAST_ACTIVE_AT,
                 town.lastActive().map(Instant::toEpochMilli).orElse(null))

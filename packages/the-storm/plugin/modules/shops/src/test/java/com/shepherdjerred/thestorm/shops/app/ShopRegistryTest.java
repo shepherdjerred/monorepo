@@ -63,6 +63,14 @@ final class ShopRegistryTest {
   }
 
   @Test
+  void reservationsPreventConcurrentCreatorsFromChoosingTheSameId() {
+    var registry = new ShopRegistry(List.of(shop(7, ALICE, 1)), 0);
+    assertThat(registry.reserveId()).isEqualTo(8);
+    assertThat(registry.reserveId()).isEqualTo(9);
+    assertThat(registry.nextId()).isEqualTo(10);
+  }
+
+  @Test
   void removingAnUnknownShopDoesNothing() {
     var registry = new ShopRegistry(List.of(shop(1, ALICE, 1)), 0);
 

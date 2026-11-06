@@ -377,9 +377,21 @@ fire, explosions, mob block changes and cross-boundary mechanisms are denied.
 `/town list [page]` and `/town info <name>` expose the shared public directory,
 including staff-held sites with their actual member and claim counts.
 
-The catalog does not restore terrain or import town membership. Those are
-offline restoration operations that require their own backup and migration
-receipts before activation.
+The catalog does not restore terrain or historical town membership. On startup,
+the towns module imports each site's declared stable town identity. PLAYER sites
+receive their evidenced owner. Other named town candidates are created in
+historical staff custody, with no player mayor or members. Their directory entry
+states that the mayor is unassigned. A later evidenced mayor can be assigned
+without changing the town's identity. Existing towns and
+memberships are never replaced. Conflicts are logged for staff review and retried
+at the next startup. Durable import receipts prevent a previously imported town
+from being recreated after it is disbanded. The import does not create claims or
+infer residents; terrain and locks require separate restoration operations.
+
+For the five identified town owners whose saved beds are outside their town,
+`/home town` travels to a surveyed point in the preserved town using
+the ordinary home teleport's pricing, protection and safe-landing checks. It is
+a travel destination, not a restored bed or a reconstructed claim.
 
 ## Local checks
 

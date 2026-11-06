@@ -125,6 +125,57 @@ final class JooqShopStoreTest {
   }
 
   @Test
+  void historicalReceiptsSurviveRemovalAndProtectModernShops() throws Exception {
+    var historic = chestShop(1, 0);
+    assertThat(store.importHistorical("2015:shop-1", historic).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.IMPORTED);
+    assertThat(store.pendingHistoricalShops().get()).containsExactly(1L);
+    assertThat(store.completeHistorical("2015:shop-1", 2).get()).isZero();
+    assertThat(store.completeHistorical("2015:shop-1", 1).get()).isEqualTo(1);
+    assertThat(store.pendingHistoricalShops().get()).isEmpty();
+    assertThat(store.importHistorical("2015:shop-1", historic).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.ALREADY_IMPORTED);
+    store.deleteShop(1).get();
+    assertThat(store.importHistorical("2015:shop-1", historic).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.ALREADY_IMPORTED);
+    assertThat(store.importHistorical("different-source", chestShop(2, 0)).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.CONFLICT);
+    assertThat(store.loadShops().get()).isEmpty();
+
+    store.saveShop(chestShop(3, 4)).get();
+    assertThat(store.importHistorical("2016:shop-2", chestShop(4, 4)).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.CONFLICT);
+    assertThat(store.loadShops().get()).containsExactly(chestShop(3, 4));
+    assertThatThrownBy(() -> store.importHistorical("2015:shop-1", chestShop(5, 9)).get())
+        .isInstanceOf(ExecutionException.class);
+  }
+
+  @Test
+  void interruptedHistoricalImportRemainsPendingAfterDatabaseReopen() throws Exception {
+    var shop = chestShop(1, 0);
+    assertThat(store.importHistorical("2015:interrupted", shop).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.IMPORTED);
+    database.close();
+    database = StormDatabase.open(directory.resolve("t.db"));
+    store = new JooqShopStore(database);
+
+    assertThat(store.loadShops().get()).containsExactly(shop);
+    assertThat(store.pendingHistoricalShops().get()).containsExactly(1L);
+    assertThat(store.importHistorical("2015:interrupted", shop).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.ALREADY_IMPORTED);
+    assertThat(store.pendingHistoricalShops().get()).containsExactly(1L);
+  }
+
+  @Test
+  void aFailedHistoricalInsertDoesNotLeaveAReceipt() throws Exception {
+    store.saveShop(chestShop(1, 1)).get();
+    assertThatThrownBy(() -> store.importHistorical("2015:shop-2", chestShop(1, 2)).get())
+        .isInstanceOf(ExecutionException.class);
+    assertThat(store.importHistorical("2015:shop-2", chestShop(2, 2)).get())
+        .isEqualTo(JooqShopStore.HistoricalImport.IMPORTED);
+  }
+
+  @Test
   void unnotifiedTradesRemainPendingUntilTheirExactRowsAreAcknowledged() throws Exception {
     var site = new TradeSite.Chest(1, ALICE);
     var first = trade(site, BOB, Direction.BUY, NOW);

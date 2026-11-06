@@ -10,9 +10,13 @@ import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
+import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeImport;
+import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqModerationLogStore;
+import com.shepherdjerred.thestorm.essentials.domain.home.HistoricalHome;
 import com.shepherdjerred.thestorm.essentials.domain.moderation.AuditEntry;
 import com.shepherdjerred.thestorm.essentials.domain.moderation.ModerationAction;
+import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import com.shepherdjerred.thestorm.essentials.testing.FakeWallets;
 import com.shepherdjerred.thestorm.essentials.testing.PaperHarness;
 import io.papermc.paper.connection.PlayerConnection;
@@ -62,6 +66,22 @@ final class EssentialsPaperTest {
               throw new UnsupportedOperationException(
                   "The admission fixture does not use " + method.getName());
             }));
+  }
+
+  @Test
+  void importedLocationsUseNormalHomeCommands() {
+    harness = PaperHarness.start(directory, new FakeWallets());
+    var player = harness.server.addPlayer("Returner");
+    player.setOp(true);
+    var old = new Position("world", 2.5, 5, 2.5, 0, 0);
+    new JooqHomeImport(harness.database)
+        .importHomes(List.of(new HistoricalHome(player.getUniqueId(), "2015", old)))
+        .join();
+    player.performCommand("homes");
+    harness.awaitMessage(player, "home");
+    player.performCommand("delhome home");
+    harness.until(
+        () -> new JooqHomeStore(harness.database).homes(player.getUniqueId()).join().isEmpty());
   }
 
   @Test

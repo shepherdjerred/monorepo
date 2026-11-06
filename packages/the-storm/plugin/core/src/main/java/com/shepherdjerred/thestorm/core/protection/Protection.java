@@ -9,7 +9,30 @@ import org.bukkit.Location;
  */
 public interface Protection {
 
+  /** Reserved identity for catalogued server-owned historical lifts. */
+  UUID SERVER_HISTORICAL_LIFT = new UUID(0, 0);
+
   Decision check(UUID player, ProtectedAction action, Location location);
+
+  /** Checks a bound lift sign. Implementations may allow public lifts in public shop parcels. */
+  default Decision checkLift(UUID player, UUID owner, Location location) {
+    return check(player, ProtectedAction.INTERACT, location);
+  }
+
+  /** Whether a reviewed historical server lift may be bound at this location. */
+  default boolean mayBindServerHistoricalLift(Location location) {
+    return false;
+  }
+
+  /** Whether a specifically surveyed server-owned historical circuit may operate here. */
+  default boolean mayOperateServerHistoricalCircuit(Location location) {
+    return false;
+  }
+
+  /** Trusted, exact-catalog shop restoration only; does not grant any player access. */
+  default boolean mayRestoreHistoricalShop(Location location) {
+    return false;
+  }
 
   /**
    * Decides whether {@code attacker}, standing at {@code attackerAt}, may harm a creature at {@code

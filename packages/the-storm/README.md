@@ -1219,6 +1219,25 @@ allows the player still redirects that respawn. On startup, each player's saved
 respawn is copied into that home when they do not already have one, including
 when the bed block is already gone.
 
+Recovered destinations are ordinary editable homes, listed with `/homes`.
+The newest recorded main-world destination is imported as `home`; distinct older
+destinations use `map1` or `map2`, and surveyed owner destinations use `town`.
+Existing names and vanilla respawns are preserved. Name collisions use the map
+name and, if needed, a numeric suffix. Identical locations are imported once.
+After saved vanilla respawns have been read successfully, the newest archived
+respawn also supplies the reserved `bed` home for players whose native respawn
+is missing. Existing bed homes remain authoritative. Town destinations never
+become beds. The normal bed listener restores that saved respawn on joining.
+Players can rename or delete these homes normally; durable import receipts stop
+a deleted destination from returning after restart. Later edits and travel use
+the ordinary home limit, pricing, cooldowns, protection and safe-landing checks.
+
+Returning players receive ordinary home, town and RTP guidance when first seen
+by Essentials. Their current position is retained. The bundled catalog only uses
+explicit original `SpawnWorld=world` records, mapped to 2015 `world` or 2016
+`map2`; unknown worlds are not inferred. Changed source evidence fails the
+import rather than overwriting it.
+
 Essentials publishes `TeleportTravel`: one reservation, warmup, guard,
 payment, refund, and delivery-confirmation flow. The starter compass uses a
 complimentary path that skips the quote, the charge, the warmup, and the RTP
@@ -1348,6 +1367,53 @@ transfer. Catalog names remain available to NPC validation, but catalog menus
 and `/shop` report that shops are loading. A failed read leaves the guard active
 and logs the startup failure; a successful read publishes the registry only
 after stale admin shops have been closed.
+
+Reviewed historical shop signs are imported only when their recorded text,
+container and owner's land permissions still match. Their existing goods are
+preserved; the stock target and a one-time marker are applied together to the
+container. A durable receipt prevents a removed shop from being recreated.
+An interrupted world write leaves that shop closed for staff reconciliation;
+a completed receipt whose original sign stamp or container stock marker is
+missing also closes the shop for staff reconciliation on startup. This catches
+world chunks that did not retain an import after the receipt was committed.
+A full chest is left unchanged and retried when someone closes it after making
+space, or at the next server startup. A listing skipped for a missing container
+is retried when that container is placed or closed. A player-placed chest is
+automatically locked to its placer; the historical owner must be allowed to open
+it before import. The placer can use `/unlock` on the chest and close it to
+trigger another check. Claimed-land permissions still apply.
+Detern's 2016 listings retain their original sign text and stated quantities;
+the two mushroom listings have no stated quantity and sell one item each.
+
+Historical shops in staff custody can explicitly use finite container stock
+while trading through the server account. They show "Staff custody" and become
+out of stock when their chest empties. Ordinary admin shops retain unlimited
+stock, including pre-existing admin signs attached to chests.
+
+## Historical lifts
+
+The mechanics module recognizes 70 surveyed lift signs across both survival
+worlds, listed in `historical-lifts.csv`. On first use, an unchanged sign
+is bound to its recorded restoration authority only if that owner may still build there. A
+visitor may use a bound lift in an active, owner-verified preserved shop;
+other land protections and the lift's destination safety and teleport checks
+still apply. Staff-custody signs may also bind in unclaimed wilderness and
+unassigned preserved sites. They stop receiving this exception if the land
+becomes owned or a parcel reset is in progress. Recorded labels remain intact.
+Unlisted or changed signs retain the ordinary setup requirement.
+
+The surveyed spawn `MC3002` AND gate at `world 71,57,-35` drives its existing
+output lever when both connected redstone inputs are powered. The adjacent
+`MC1421` clock at `world 71,57,-39` drives one of those inputs. It uses the
+old CraftBook default of one clock step per two server ticks; the old server's
+configured rate is unknown. The clock pauses while its input is powered and
+does not load its chunk. Two surveyed Lysergia clocks at `world 1237,66,-788`
+and `world 1244,65,-788` use the same timing and run only while their recorded
+owner may build at every circuit block. These mechanisms run only while their
+surveyed signs, wiring, supports and outputs match; the spawn circuits must
+also remain in staff-controlled spawn land. The surveyed `MC1253` at
+`world -45,67,-9` remains inactive because its `redstone` show file is missing.
+Other historical ICs are not enabled by this restoration.
 
 ## Red Warfare Search and Destroy (rwf)
 

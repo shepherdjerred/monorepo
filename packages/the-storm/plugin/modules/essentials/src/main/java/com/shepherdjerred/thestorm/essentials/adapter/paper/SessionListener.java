@@ -69,6 +69,12 @@ final class SessionListener implements Listener {
             playedBefore ? Optional.empty() : Optional.of(arrival.kits().settings().starter())),
         "recording a join",
         first -> {
+          if (first && playedBefore && player.isOnline()) {
+            Say.info(
+                player,
+                Say.HOMES,
+                "Welcome back! Use /homes to find your homes, /home to return, /town to check your town, or /rtp to explore somewhere new.");
+          }
           if (first && !playedBefore && player.isOnline()) {
             welcome(player);
           }
