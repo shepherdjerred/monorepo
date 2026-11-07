@@ -113,7 +113,7 @@ if status is-interactive
        agent-bin wrappers that strip them, so agent hosts skip them too. */ -}}
   {{ if $renderSecrets -}}
   set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
-  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/m2xw5xzzb7ftfg3pgudagdfvje/ANTHROPIC_API_KEY" }}'
+  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
   {{ end -}}
   # Provider API keys stay available to ordinary tools; the coding-agent
   # wrappers in ~/.local/share/agent-bin remove them so agents always use their
