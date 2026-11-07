@@ -200,6 +200,7 @@ gives each model route's scope and toolkit command.
 | Monitor state of the accepted deployment                        | `GET /environments/:id/monitor`                                       |
 | Open or inspect a recovery intent                               | `POST /deployments/:id/recovery-intents`, `GET /recovery-intents/:id` |
 | Settle an `argo` recovery intent by readback                    | `POST /recovery-intents/:id/settle`                                   |
+| Close a pending intent whose deployment ended without it        | `POST /recovery-intents/:id/abandon`                                  |
 | Request native site/Forum recovery under the retained lock      | `POST /deployments/:id/content-recovery`                              |
 | Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                           |
 | Attest an operator-run stage                                    | `POST /deployments/:id/attestations`                                  |
@@ -489,7 +490,11 @@ environment ownership annotation, the finished operation and settled Jobs. It
 rechecks the intent's binding generation and refuses an intent already
 settled. Every other kind is refused there and settled by its own reader.
 Settlement records what it found and releases ownership without accepting the
-failed deployment or moving the accepted selection. Intent creation and
+failed deployment or moving the accepted selection. `POST /recovery-intents/:id/abandon`
+(admin) closes a pending intent of any kind as `failed` when its deployment is
+terminal and no longer recovery-required. It releases nothing, and it refuses
+an intent with an unrestored producer barrier or a dispatched recovery
+Workflow. Intent creation and
 settlement work while writes are paused and while Temporal or ArgoCD's API is
 unavailable; no route releases a recovery-required deployment's lock without
 an intent.
@@ -838,6 +843,7 @@ The activated homelab service includes a matching ServiceMonitor and the
 | `delivery_outbox_oldest_seconds`                                                                               | `DeliveryDispatchDelayed`        | a submission awaits Temporal acknowledgement over 10 minutes                                                                    |
 | `delivery_recovery_required_deployments{environment,service_id,self_hosted}`                                   | `DeliveryRecoveryRequired`       | a recovery-required deployment holds the dispatch barrier for 5 minutes, one alert per target                                   |
 | `delivery_queued_oldest_seconds{environment}`                                                                  | `DeliveryQueueStalled`           | an environment has waited over 3 hours to dispatch, for 10 minutes                                                              |
+| `delivery_independent_recoveries_pending`                                                                      | `DeliveryRecoveryIntentsPending` | a recovery intent or journaled producer restoration stays pending for 1 hour                                                    |
 | `delivery_platform_lock_held_seconds{environment,service_id,holder_status,recovery_required,producer_barrier}` | `DeliveryPlatformLockStranded`   | a holder that is not running, not recovery-required and holds no content producer barrier keeps the platform lock for 5 minutes |
 | `delivery_stale_ownership_released_total{kind}`                                                                | `DeliveryStaleOwnershipReleased` | the dispatch sweep released a lock or active pointer from a settled deployment in the last hour                                 |
 

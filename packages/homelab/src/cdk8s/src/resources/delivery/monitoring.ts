@@ -85,7 +85,28 @@ export function deliveryAlertRules(transition: boolean) {
           "{{ $labels.environment }} requires recovery and holds the Delivery dispatch barrier",
         ),
         message: escapePrometheusTemplate(
-          'A deployment of {{ $labels.environment }} (service {{ $labels.service_id }}) ended recovery-required and keeps its locks. {{ if eq $labels.self_hosted "true" }}It is self-hosted, so it holds the global dispatch barrier (D8): every claim answers BUSY, and queued deployments stay queued until a newer set revision supersedes them.{{ else }}The dispatch barrier (D8) waits for it to settle, so no self-hosted deployment (delivery, delivery-control-plane, temporal, argocd) can start.{{ end }} Find its ID with `toolkit deploy status --json` (recoveryRequired). For an argo deployment, open an intent with `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason <why> --machine`, then settle it with the same `--request-id` and `--operation-id <ARGO_OPERATION_UUID>`. For a worker deployment use `toolkit deploy workers recover <DEPLOYMENT_ID> --machine --expected-generation <N> --reason <why>`. Never delete the lock row.',
+          'A deployment of {{ $labels.environment }} (service {{ $labels.service_id }}) ended recovery-required and keeps its locks. {{ if eq $labels.self_hosted "true" }}It is self-hosted, so it holds the global dispatch barrier (D8): every claim answers BUSY, and queued deployments stay queued until a newer set revision supersedes them.{{ else }}The dispatch barrier (D8) waits for it to settle, so no self-hosted deployment (delivery, delivery-control-plane, temporal, argocd) can start.{{ end }} Find its ID with `toolkit deploy status --json` (recoveryRequired). For an argo deployment, open an intent with `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason <why> --machine`, then settle it with the same `--request-id` and `--operation-id <ARGO_OPERATION_UUID>`. For a worker deployment use `toolkit deploy workers recover <DEPLOYMENT_ID> --machine --expected-generation <N> --reason <why>`; for a static site or Forum, `toolkit deploy sites recover` or `toolkit deploy forum recover` with the same arguments. Never delete the lock row.',
+        ),
+        runbook_url: STALLED_DISPATCH_RUNBOOK,
+      },
+    },
+    {
+      // A recovery intent settles within minutes of its reader running; one
+      // still pending an hour later has no reader coming. It blocks
+      // control-plane upgrades, new content barriers and the ownership
+      // handover even when no deployment is recovery-required any more.
+      alert: "DeliveryRecoveryIntentsPending",
+      expr: expr(
+        `max(delivery_independent_recoveries_pending{${DELIVERY_TARGET}}) > 0`,
+      ),
+      for: "1h",
+      labels: { severity: "warning" },
+      annotations: {
+        summary: escapePrometheusTemplate(
+          "{{ $value }} Delivery recovery intent(s) have been pending for over an hour",
+        ),
+        message: escapePrometheusTemplate(
+          "Independent recovery intents or journaled producer restorations have stayed pending for more than an hour. While any is pending, control-plane upgrades and the ownership handover answer BUSY and no new content producer barrier can be taken. List them with `toolkit deploy status --json` and `toolkit deploy recovery <INTENT_ID>`. Settle an intent whose deployment is still recovery-required with its own reader. Close one whose deployment already ended without needing it with `toolkit deploy recovery <INTENT_ID> --abandon --reason <why> --machine`.",
         ),
         runbook_url: STALLED_DISPATCH_RUNBOOK,
       },
