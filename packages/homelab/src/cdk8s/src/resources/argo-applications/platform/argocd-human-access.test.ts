@@ -5,6 +5,7 @@ import path from "node:path";
 import { stringify } from "yaml";
 import {
   HUMAN_ARGOCD_ACCOUNT,
+  HOMELAB_AUDIT_ARGOCD_ACCOUNT,
   WORKSTATION_ARGOCD_ACCOUNT,
   humanArgoCdPolicyRows,
   humanArgoCdReadOnly,
@@ -80,14 +81,21 @@ describe("human ArgoCD access", () => {
       [`accounts.${HUMAN_ARGOCD_ACCOUNT}.enabled`]: true,
       [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}`]: "apiKey",
       [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}.enabled`]: true,
+      [`accounts.${HOMELAB_AUDIT_ARGOCD_ACCOUNT}`]: "apiKey",
+      [`accounts.${HOMELAB_AUDIT_ARGOCD_ACCOUNT}.enabled`]: true,
     });
     expect(humanArgoCdPolicyRows(true)).toEqual([
       `g, ${HUMAN_ARGOCD_ACCOUNT}, role:readonly`,
       `g, ${WORKSTATION_ARGOCD_ACCOUNT}, role:readonly`,
+      `g, ${HOMELAB_AUDIT_ARGOCD_ACCOUNT}, role:readonly`,
     ]);
   });
 
-  const accounts = [HUMAN_ARGOCD_ACCOUNT, WORKSTATION_ARGOCD_ACCOUNT];
+  const accounts = [
+    HUMAN_ARGOCD_ACCOUNT,
+    WORKSTATION_ARGOCD_ACCOUNT,
+    HOMELAB_AUDIT_ARGOCD_ACCOUNT,
+  ];
   const objects = ["cluster/arcade", "workloads/birmel", "default/apps"];
 
   test.each(

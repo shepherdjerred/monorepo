@@ -374,10 +374,11 @@ Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality p
 ### ArgoCD
 
 Mints the `delivery`, `delivery-platform`, read-only `delivery-observer`,
-`operator-run`, and read-only `workstation` ArgoCD account tokens and writes
-each to its own 1Password item. Agent workstations read the `workstation`
-token from `argocd-workstation-token` through toolkit; the account has API
-access only and ArgoCD's built-in `role:readonly`.
+`operator-run`, read-only `workstation`, and read-only `homelab-audit` ArgoCD
+account tokens and writes each to its own 1Password item. Agent workstations
+read the `workstation` token from `argocd-workstation-token` through toolkit;
+the Temporal homelab audit reads `argocd-homelab-audit-token`. Both accounts
+have API access only and ArgoCD's built-in `role:readonly`.
 ArgoCD's chart owns the account registrations and RBAC;
 reconcile that chart before applying a newly registered account's token.
 The stack authenticates as the `tofu-argocd` account, which may only read and

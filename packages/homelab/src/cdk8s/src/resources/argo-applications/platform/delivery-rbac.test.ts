@@ -7,6 +7,7 @@ import { stringify } from "yaml";
 import { z } from "zod";
 import { createArgoCdApp } from "./argocd.ts";
 import {
+  HOMELAB_AUDIT_ARGOCD_ACCOUNT,
   WORKSTATION_ARGOCD_ACCOUNT,
   humanArgoCdPolicyRows,
 } from "./argocd-human-access.ts";
@@ -580,6 +581,7 @@ test("the argocd stack's account issues only the tokens the stack mints", async 
       "delivery-observer",
       "delivery-platform",
       WORKSTATION_ARGOCD_ACCOUNT,
+      HOMELAB_AUDIT_ARGOCD_ACCOUNT,
     ]) {
       // The native evaluator knows only create and update for accounts, but
       // the server checks `get` on GetAccount, so that row is asserted as text.
