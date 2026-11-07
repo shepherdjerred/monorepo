@@ -2,6 +2,7 @@ import {
   ActivityFailure,
   ApplicationFailure,
   CancellationScope,
+  continueAsNew,
   isCancellation,
   patched,
   proxyActivities,
@@ -11,6 +12,10 @@ import type { DeliveryActivities } from "#activities/delivery/index.ts";
 import type { PlatformDeliveryActivities } from "#activities/delivery/platform/index.ts";
 import { DELIVERY_EXECUTOR_REPLACED } from "#shared/delivery-executor.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import {
+  DELIVERY_WAIT_ROLLOVER_PATCH,
+  admissionRolloverDue,
+} from "./delivery/admission.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
@@ -310,8 +315,11 @@ export async function deliveryDeploymentWorkflow(input: {
 }): Promise<void> {
   let claimed = false;
   try {
+    const rolls = patched(DELIVERY_WAIT_ROLLOVER_PATCH);
     let ready = await metadata.prepareDelivery(input.deploymentId);
-    while (ready.status === "waiting") {
+    for (let waits = 0; ready.status === "waiting"; waits++) {
+      if (rolls && admissionRolloverDue(waits))
+        await continueAsNew<typeof deliveryDeploymentWorkflow>(input);
       await sleep("30 seconds");
       ready = await metadata.prepareDelivery(input.deploymentId);
     }
