@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.12.0...webring-v1.12.1) (2026-11-01)
+
+No public API changes.
+
+- RSS preview truncation now preserves complete emoji, flags, and ZWJ sequences by cutting at grapheme boundaries ([32409d1](https://github.com/shepherdjerred/monorepo/commit/32409d12c6eccb6bc044ebf91c1612243110f4da))
+
 ## [1.12.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.11.0...webring-v1.12.0) (2026-10-09)
 
 Safer feed previews and a small runtime dependency update.
