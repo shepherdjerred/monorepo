@@ -1,4 +1,4 @@
-import type { Chart } from "cdk8s";
+import { ApiObject, JsonPatch, type Chart } from "cdk8s";
 import type { Service } from "cdk8s-plus-31";
 import { Job } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -77,6 +77,14 @@ export function createTemporalNamespaceInitJob(
       },
       ...temporalUtilityContainerDefaults(),
     }),
+  );
+
+  // The API server stores a Job without `hostNetwork: false`, so declaring
+  // it makes the stored hook differ from the chart in the immutable pod
+  // template. Executors before the hook-aware apply-safety check refused
+  // every temporal release over that difference (2026-11-07).
+  ApiObject.of(job).addJsonPatch(
+    JsonPatch.remove("/spec/template/spec/hostNetwork"),
   );
 
   return job;

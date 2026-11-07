@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { targetIsRecreatedHook } from "./argocd-hooks.ts";
 import { destructiveChangeFindings } from "./argocd-destructive-changes.ts";
 import { JsonObjectSchema, valueAt } from "./argocd-json-path.ts";
 
@@ -585,7 +586,9 @@ export function analyzeApplySafety(
     if (live === null || target === null) {
       continue;
     }
-    const forceReplace = targetRequestsForceReplace(target);
+    // Both bypass the update path, so only update-path checks are skipped.
+    const forceReplace =
+      targetRequestsForceReplace(target) || targetIsRecreatedHook(target);
     if (!forceReplace) {
       for (const field of immutableFields(resource.kind)) {
         if (declaredTargetChanged(live, target, field)) {
