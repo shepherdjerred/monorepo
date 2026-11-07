@@ -163,9 +163,12 @@ export function createApp(options: Options) {
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
-        // Recovery opens and settles while writes are paused (I4).
+        // Recovery opens, settles and closes while writes are paused (I4);
+        // the ownership handover needs both paused writes and no pending one.
         /^\/api\/v1\/deployments\/[^/]+\/recovery-intents$/.test(c.req.path) ||
-        /^\/api\/v1\/recovery-intents\/[^/]+\/settle$/.test(c.req.path) ||
+        /^\/api\/v1\/recovery-intents\/[^/]+\/(?:settle|abandon)$/.test(
+          c.req.path,
+        ) ||
         /\/worker-recovery(?:\/|$)/.test(c.req.path) ||
         /\/minecraft-recovery(?:\/|$)/.test(c.req.path) ||
         (/\/content-recovery(?:\/|$)/.test(c.req.path) &&

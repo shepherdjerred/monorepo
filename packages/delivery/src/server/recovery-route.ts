@@ -46,6 +46,16 @@ export function registerRecoveryRoute(
       ),
     );
   });
+  /** `GET /recovery-intents?status=pending` (read): what still awaits settlement. */
+  app.get("/api/v1/recovery-intents", async (c) => {
+    requireScope(c.get("principal"), "read");
+    if (c.req.query("status") !== "pending")
+      throw new DeliveryError(
+        "INVALID",
+        "Recovery intents are listed by status=pending only",
+      );
+    return c.json({ intents: await delivery.pendingRecoveryIntents() });
+  });
   /**
    * `POST /recovery-intents/:id/abandon` (admin): closes a pending intent
    * whose deployment already ended without needing it. It releases nothing.

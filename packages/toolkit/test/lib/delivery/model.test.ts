@@ -107,6 +107,10 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     ["recovery", ["argo/r1"], ["--abandon", "--reason", "Stale"], "--machine"],
     ["recovery", ["argo/r1"], ["--abandon", "--machine"], "--reason"],
     ["monitor", [fixtures.PROD], ["--abandon"], "--abandon"],
+    ["monitor", [fixtures.PROD], ["--pending"], "--pending"],
+    ["recovery", ["argo/r1"], ["--pending"], "deploy recovery --pending"],
+    ["recovery", [], [], "deploy recovery --pending"],
+    ["recovery", [], ["--pending", "--abandon"], "--pending lists"],
     ["rollback", [fixtures.PROD], [], "Invalid operands"],
     ["monitor", [], [], "Invalid operands"],
   ])("deploy %s %j %j", (command, positionals, args, message) => {
@@ -396,6 +400,20 @@ describe("start, promote and recovery reads", () => {
         path: `/recovery-intents/${encodeURIComponent(intent.id)}/abandon`,
         body: { reason: "Its deployment ended without needing recovery" },
       },
+    ]);
+  });
+
+  test("recovery --pending lists every pending intent without a target", async () => {
+    const intents = { intents: [fixtures.recoveryIntents.failed] };
+    const { client, sent } = delivery({
+      "GET /recovery-intents": intents,
+    });
+    expect(await run(client, "recovery", ["--pending"])).toEqual({
+      result: intents,
+      exitCode: 0,
+    });
+    expect(sent.map((request) => `${request.method} ${request.path}`)).toEqual([
+      "GET /recovery-intents",
     ]);
   });
 

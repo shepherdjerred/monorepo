@@ -365,10 +365,10 @@ An intent stays pending when its deployment stopped needing recovery another
 way. It still blocks control-plane upgrades, new content barriers and the
 ownership handover, and fires `DeliveryRecoveryIntentsPending` after an hour.
 
-1. Read the intent and its deployment:
+1. List the pending intents, then read the deployment each one names:
 
    ```bash
-   toolkit deploy recovery INTENT_ID --json
+   toolkit deploy recovery --pending --json
    toolkit deploy status DEPLOYMENT_ID --json
    ```
 
@@ -382,7 +382,7 @@ ownership handover, and fires `DeliveryRecoveryIntentsPending` after an hour.
    ```
 
    The intent ends `failed`. Nothing is released, and the deployment is not
-   changed. The
+   changed. This works while writes are paused. The
    [server refuses](packages/delivery/src/infrastructure/execution/recovery-abandon.ts)
    while a producer barrier is unrestored or a recovery Workflow owns the
    intent.

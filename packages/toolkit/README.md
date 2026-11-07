@@ -189,6 +189,7 @@ toolkit deploy approve-plan <DEPLOYMENT_ID> --reason "Reviewed the saved plan's 
 toolkit deploy reject-plan <DEPLOYMENT_ID> --reason "Why the saved plan must not apply"
 toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason "Inspect the target and settle ownership" [--step <STEP>] [--operation-id <ARGO_OPERATION_UUID>] --machine
 toolkit deploy recovery <INTENT_ID>
+toolkit deploy recovery --pending
 toolkit deploy recovery <INTENT_ID> --abandon --reason "Why nothing needs this intent" --machine
 ```
 
@@ -222,7 +223,7 @@ exits 1 when the server refuses any entry. `recover` creates the one recovery in
 `recovery-required` deployment, bound to the expected binding generation and,
 for a compound target, the named sub-step. With `--operation-id`, it then
 settles an ordinary Argo intent by independent readback of that exact
-inspected operation. `recovery` reads an intent and its inspection evidence. With `--abandon`, it closes a pending intent whose deployment already ended without needing recovery; the server refuses while the deployment is still recovery-required, a producer barrier is unrestored, or a recovery Workflow owns the intent, and abandoning releases nothing.
+inspected operation. `recovery` reads an intent and its inspection evidence. `recovery --pending` lists every pending intent, oldest first. With `--abandon`, it closes a pending intent whose deployment already ended without needing recovery; the server refuses while the deployment is still recovery-required, a producer barrier is unrestored, or a recovery Workflow owns the intent, and abandoning releases nothing.
 `approve-plan` and `reject-plan` record the one decision on the exact saved
 plan a model `tofu` recipe's approve step waits on: each reads the digest from
 the deployment's saved plan and requires a human identity. A rejection

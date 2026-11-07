@@ -7,6 +7,7 @@ import {
   requestOnProd,
 } from "#testing/model-fixture.ts";
 import { deliveryMetrics } from "#server/metrics.ts";
+import { createApp } from "#server/app.ts";
 
 const context = useDeliveryFixture({ registration: arcadeRegistration });
 const reason = "The deployment ended without needing this recovery";
@@ -142,4 +143,74 @@ test("only an administrator abandons an intent", async () => {
       where: { id: intentId },
     }),
   ).toMatchObject({ status: "pending" });
+});
+
+const adminToken = "fixture-admin-credential-32-characters";
+
+/** The real API with writes paused, as the ownership handover runs it. */
+function pausedApi() {
+  return createApp({
+    delivery: context.delivery,
+    ciOrigin: "https://woodpecker.sjer.red",
+    ciRepositoryId: 1,
+    qualifyBuild: async () => "verified",
+    peerAddress: () => "127.0.0.1",
+    config: {
+      publicOrigin: "http://delivery.test",
+      machineCredentials: [
+        {
+          token: adminToken,
+          principal: {
+            id: "fixture-admin",
+            kind: "machine",
+            scopes: ["read", "admin"],
+          },
+        },
+      ],
+      writesEnabled: async () => false,
+      enabledEnvironments: async () => [],
+      operatorLogins: async () => [],
+      trustedProxyAddresses: async () => [],
+    },
+  });
+}
+
+test("an administrator lists and closes a stale intent while writes are paused", async () => {
+  const { deploymentId, intentId } = await pendingIntent();
+  await resolvedElsewhere(deploymentId);
+  const api = pausedApi();
+  const headers = {
+    Authorization: `Bearer ${adminToken}`,
+    "Content-Type": "application/json",
+  };
+
+  const pending = await api.request("/api/v1/recovery-intents?status=pending", {
+    headers,
+  });
+  expect(pending.status).toBe(200);
+  expect(await pending.json()).toMatchObject({
+    intents: [{ id: intentId, outcome: "pending" }],
+  });
+
+  const closed = await api.request(
+    `/api/v1/recovery-intents/${encodeURIComponent(intentId)}/abandon`,
+    { method: "POST", headers, body: JSON.stringify({ reason }) },
+  );
+  expect(closed.status).toBe(200);
+  expect(await closed.json()).toMatchObject({
+    id: intentId,
+    outcome: "failed",
+  });
+
+  const after = await api.request("/api/v1/recovery-intents?status=pending", {
+    headers,
+  });
+  expect(await after.json()).toEqual({ intents: [] });
+});
+
+test("the intent list names its one supported filter", async () => {
+  const response = await pausedApi().request("/api/v1/recovery-intents", {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  expect(response.status).toBe(400);
 });

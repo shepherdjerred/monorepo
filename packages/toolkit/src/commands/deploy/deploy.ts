@@ -71,6 +71,7 @@ cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
 recover <DEPLOYMENT_ID> --expected-generation <N> --reason <TEXT> [--step <S>] [--operation-id <ID>] --machine  Open a recovery intent; --operation-id settles an ordinary Argo operation by readback
 recovery <INTENT_ID>                   Inspect a recovery intent and its evidence
+recovery --pending                     List every pending recovery intent, oldest first
 recovery <INTENT_ID> --abandon --reason <TEXT> --machine  Close a pending intent whose deployment ended without needing it
 
 Options:
@@ -82,6 +83,7 @@ Options:
   --expected-worker-generation <N>     Require an exact worker generation for retirement
   --reason <TEXT>                      Approval, rejection, or recovery reason
   --abandon                            recovery: close a stale pending intent (admin)
+  --pending                            recovery: list pending intents instead of reading one
   --override                           start: ask for an override approval of a non-eligible deploy;
                                        approve/reject: decide that override approval
   --step <NAME>                        Sub-step a recovery intent names
@@ -140,7 +142,8 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   attest: 1,
   "approve-plan": 1,
   "reject-plan": 1,
-  recovery: 1,
+  // One intent, or none with --pending.
+  recovery: [0, 1],
   status: [0, 1],
   wait: 1,
   approve: 1,

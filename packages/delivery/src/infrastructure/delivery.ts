@@ -35,7 +35,10 @@ import {
   renewLease,
 } from "#infrastructure/execution/ownership.ts";
 import { settleArgoIntent } from "#infrastructure/execution/argo-settlement.ts";
-import { abandonRecoveryIntent } from "#infrastructure/execution/recovery-abandon.ts";
+import {
+  abandonRecoveryIntent,
+  pendingRecoveryIntents,
+} from "#infrastructure/execution/recovery-abandon.ts";
 import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
 import { retireService } from "#infrastructure/catalog/state.ts";
 import {
@@ -195,6 +198,7 @@ export class Delivery {
   finish = finish;
   settleArgoIntent = settleArgoIntent;
   abandonRecoveryIntent = abandonRecoveryIntent;
+  pendingRecoveryIntents = pendingRecoveryIntents;
   pending = pending;
   monitor = monitor;
   orphan = orphan;

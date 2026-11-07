@@ -84,3 +84,12 @@ export async function abandonRecoveryIntent(
     return recoveryIntentView(updated);
   });
 }
+
+/** Every pending recovery intent, oldest first, for an operator to settle or close. */
+export async function pendingRecoveryIntents(this: Delivery) {
+  const rows = await this.database.recoveryIntent.findMany({
+    where: { status: "pending" },
+    orderBy: { createdAt: "asc" },
+  });
+  return rows.map((row) => recoveryIntentView(row));
+}

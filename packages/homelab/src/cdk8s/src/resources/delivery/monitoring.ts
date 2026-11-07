@@ -106,7 +106,7 @@ export function deliveryAlertRules(transition: boolean) {
           "{{ $value }} Delivery recovery intent(s) have been pending for over an hour",
         ),
         message: escapePrometheusTemplate(
-          "Independent recovery intents or journaled producer restorations have stayed pending for more than an hour. While any is pending, control-plane upgrades and the ownership handover answer BUSY and no new content producer barrier can be taken. List them with `toolkit deploy status --json` and `toolkit deploy recovery <INTENT_ID>`. Settle an intent whose deployment is still recovery-required with its own reader. Close one whose deployment already ended without needing it with `toolkit deploy recovery <INTENT_ID> --abandon --reason <why> --machine`.",
+          "Independent recovery intents or journaled producer restorations have stayed pending for more than an hour. While any is pending, control-plane upgrades and the ownership handover answer BUSY and no new content producer barrier can be taken. List them, oldest first, with `toolkit deploy recovery --pending --json`; each names its deploymentId, which `toolkit deploy status <DEPLOYMENT_ID> --json` shows. Settle an intent whose deployment is still recovery-required with its own reader. Close one whose deployment already ended without needing it with `toolkit deploy recovery <INTENT_ID> --abandon --reason <why> --machine`.",
         ),
         runbook_url: STALLED_DISPATCH_RUNBOOK,
       },

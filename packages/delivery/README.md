@@ -200,6 +200,7 @@ gives each model route's scope and toolkit command.
 | Monitor state of the accepted deployment                        | `GET /environments/:id/monitor`                                       |
 | Open or inspect a recovery intent                               | `POST /deployments/:id/recovery-intents`, `GET /recovery-intents/:id` |
 | Settle an `argo` recovery intent by readback                    | `POST /recovery-intents/:id/settle`                                   |
+| List pending recovery intents, oldest first                     | `GET /recovery-intents?status=pending`                                |
 | Close a pending intent whose deployment ended without it        | `POST /recovery-intents/:id/abandon`                                  |
 | Request native site/Forum recovery under the retained lock      | `POST /deployments/:id/content-recovery`                              |
 | Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                           |
@@ -492,7 +493,8 @@ settled. Every other kind is refused there and settled by its own reader.
 Settlement records what it found and releases ownership without accepting the
 failed deployment or moving the accepted selection. `POST /recovery-intents/:id/abandon`
 (admin) closes a pending intent of any kind as `failed` when its deployment is
-terminal and no longer recovery-required. It releases nothing, and it refuses
+terminal and no longer recovery-required, also while writes are paused. It
+releases nothing, and it refuses
 an intent with an unrestored producer barrier or a dispatched recovery
 Workflow. Intent creation and
 settlement work while writes are paused and while Temporal or ArgoCD's API is
