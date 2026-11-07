@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { spawnCapture } from "#lib/spawn-capture.ts";
 
 export type MergeCheckResult = {
   readonly hasConflicts: boolean;
@@ -27,18 +28,7 @@ async function runGit(
   args: readonly string[],
   cwd: string,
 ): Promise<GitResult> {
-  const child = Bun.spawn(["git", ...args], {
-    cwd,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  return { exitCode, stdout, stderr };
+  return spawnCapture(["git", ...args], { cwd });
 }
 
 function assertGitSuccess(result: GitResult, description: string): void {

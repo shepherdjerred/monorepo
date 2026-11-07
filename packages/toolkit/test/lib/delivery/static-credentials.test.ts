@@ -1,11 +1,8 @@
+import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
 import { expect, test, vi } from "vitest";
 import os from "node:os";
 import path from "node:path";
-import {
-  CREDENTIAL_REGISTRY,
-  resolveCredentials,
-  type CredentialRun,
-} from "#lib/credentials.ts";
+import { resolveCredentials, type CredentialRun } from "#lib/credentials.ts";
 
 test("manual static recovery brokers the exact activator and six-zone purge items, refusing an empty purge field despite a broad ambient token", async () => {
   const vault = "op://v64ocnykdqju4ui6j6pua56xw4";

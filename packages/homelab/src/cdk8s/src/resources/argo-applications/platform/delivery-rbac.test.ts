@@ -6,7 +6,10 @@ import path from "node:path";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { createArgoCdApp } from "./argocd.ts";
-import { humanArgoCdPolicyRows } from "./argocd-human-access.ts";
+import {
+  WORKSTATION_ARGOCD_ACCOUNT,
+  humanArgoCdPolicyRows,
+} from "./argocd-human-access.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import {
   argoRbacAllows,
@@ -67,6 +70,8 @@ beforeAll(async () => {
     .parse(application);
   const { rbac, cm } = config.spec.source.helm.valuesObject.configs;
   expect(cm["accounts.woodpecker.enabled"]).toBe(false);
+  expect(cm[`accounts.${WORKSTATION_ARGOCD_ACCOUNT}`]).toBe("apiKey");
+  expect(cm[`accounts.${WORKSTATION_ARGOCD_ACCOUNT}.enabled`]).toBe(true);
   expect(cm["server.rbac.disableApplicationFineGrainedRBACInheritance"]).toBe(
     true,
   );
@@ -574,6 +579,7 @@ test("the argocd stack's account issues only the tokens the stack mints", async 
       "delivery",
       "delivery-observer",
       "delivery-platform",
+      WORKSTATION_ARGOCD_ACCOUNT,
     ]) {
       // The native evaluator knows only create and update for accounts, but
       // the server checks `get` on GetAccount, so that row is asserted as text.

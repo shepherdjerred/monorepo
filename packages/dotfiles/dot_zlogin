@@ -1,0 +1,6 @@
+# ~/.zlogin — sourced last by login zsh, after /etc/zprofile's path_helper and
+# ~/.zprofile's brew shellenv have prepended system and Homebrew paths. Agent
+# hosts need their toolkit credential shims to stay first (see ~/.zshenv).
+_toolkit_shims="$HOME/.local/share/toolkit/shims"
+[[ -d "$_toolkit_shims" ]] && path=("$_toolkit_shims" ${path:#$_toolkit_shims})
+unset _toolkit_shims

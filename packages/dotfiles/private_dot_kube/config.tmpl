@@ -1,7 +1,17 @@
+{{- /* The context name admin@torvalds is load-bearing: repository tooling
+       selects it by name. Agent hosts hold no client certificate or key;
+       kubectl asks toolkit for a credential on every call. They read only the
+       public cluster CA, through the Keychain-backed 1Password service account
+       because agent hosts have no 1Password desktop app for onepasswordRead. */ -}}
+{{- $caRef := "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/certificate-authority-data" -}}
 apiVersion: v1
 clusters:
 - cluster:
-    certificate-authority-data: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/certificate-authority-data" }}
+{{- if eq .profile "agent-host" }}
+    certificate-authority-data: {{ output (joinPath .chezmoi.sourceDir "../../scripts/onepassword/with-service-account.sh") "op" "read" $caRef | trim }}
+{{- else }}
+    certificate-authority-data: {{ onepasswordRead $caRef }}
+{{- end }}
     server: https://torvalds.tailnet-1a49.ts.net:6443
   name: torvalds
 contexts:
@@ -16,5 +26,16 @@ preferences: {}
 users:
 - name: admin@torvalds
   user:
+{{- if eq .profile "agent-host" }}
+    exec:
+      apiVersion: client.authentication.k8s.io/v1
+      command: {{ joinPath .chezmoi.homeDir ".local/bin/toolkit" }}
+      args:
+      - kube
+      - credential
+      interactiveMode: Never
+      provideClusterInfo: false
+{{- else }}
     client-certificate-data: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/client-certificate-data" }}
     client-key-data: {{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/client-key-data" }}
+{{- end }}

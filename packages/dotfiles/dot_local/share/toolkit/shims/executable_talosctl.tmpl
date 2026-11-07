@@ -1,0 +1,3 @@
+#!/bin/sh
+# Agent-host credential broker shim: toolkit resolves credentials and runs the real talosctl.
+exec {{ joinPath .chezmoi.homeDir ".local/bin/toolkit" }} talosctl "$@"

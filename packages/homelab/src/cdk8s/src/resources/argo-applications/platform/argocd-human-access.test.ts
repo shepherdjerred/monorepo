@@ -5,6 +5,7 @@ import path from "node:path";
 import { stringify } from "yaml";
 import {
   HUMAN_ARGOCD_ACCOUNT,
+  WORKSTATION_ARGOCD_ACCOUNT,
   humanArgoCdPolicyRows,
   humanArgoCdReadOnly,
   humanArgoCdSettings,
@@ -43,9 +44,13 @@ afterAll(async () => {
 });
 
 /** Evaluate with ArgoCD's built-in policy, which defines `role:readonly`. */
-async function humanMay(action: string, object: string): Promise<boolean> {
+async function accountMay(
+  subject: string,
+  action: string,
+  object: string,
+): Promise<boolean> {
   return argoRbacAllows({
-    subject: HUMAN_ARGOCD_ACCOUNT,
+    subject,
     action,
     resource: "applications",
     object,
@@ -68,29 +73,38 @@ describe("human ArgoCD access", () => {
     expect(humanArgoCdPolicyRows(false)).toEqual([]);
   });
 
-  test("disables admin and gives people one read-only login", () => {
+  test("disables admin and gives people one read-only login and one read-only workstation API account", () => {
     expect(humanArgoCdSettings(true)).toEqual({
       "admin.enabled": false,
       [`accounts.${HUMAN_ARGOCD_ACCOUNT}`]: "login",
       [`accounts.${HUMAN_ARGOCD_ACCOUNT}.enabled`]: true,
+      [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}`]: "apiKey",
+      [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}.enabled`]: true,
     });
+    expect(humanArgoCdPolicyRows(true)).toEqual([
+      `g, ${HUMAN_ARGOCD_ACCOUNT}, role:readonly`,
+      `g, ${WORKSTATION_ARGOCD_ACCOUNT}, role:readonly`,
+    ]);
   });
 
-  test.each(["cluster/arcade", "workloads/birmel", "default/apps"])(
-    "the human login reads %s",
-    async (object) => {
-      expect(await humanMay("get", object)).toBe(true);
-    },
-  );
+  const accounts = [HUMAN_ARGOCD_ACCOUNT, WORKSTATION_ARGOCD_ACCOUNT];
+  const objects = ["cluster/arcade", "workloads/birmel", "default/apps"];
 
   test.each(
-    ["create", "update", "delete", "sync", "override"].flatMap((action) =>
-      ["cluster/arcade", "workloads/birmel", "default/apps"].map((object) => ({
-        action,
-        object,
-      })),
+    accounts.flatMap((account) =>
+      objects.map((object) => ({ account, object })),
     ),
-  )("the human login cannot $action $object", async ({ action, object }) => {
-    expect(await humanMay(action, object)).toBe(false);
+  )("$account reads $object", async ({ account, object }) => {
+    expect(await accountMay(account, "get", object)).toBe(true);
+  });
+
+  test.each(
+    accounts.flatMap((account) =>
+      ["create", "update", "delete", "sync", "override"].flatMap((action) =>
+        objects.map((object) => ({ account, action, object })),
+      ),
+    ),
+  )("$account cannot $action $object", async ({ account, action, object }) => {
+    expect(await accountMay(account, action, object)).toBe(false);
   });
 });

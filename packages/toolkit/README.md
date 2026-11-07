@@ -299,14 +299,33 @@ values override the monorepo defaults.
 | `woodpecker` | `woodpecker-cli` | Woodpecker CI; server and token from the environment |
 | `git-spice`  | `git-spice`      | Current checkout                                     |
 | `posthog`    | `posthog-cli`    | Project `549883`                                     |
-| `grafana`    | `gcx`            | Context `homelab`                                    |
-| `prom`       | `gcx metrics`    | Context `homelab`                                    |
-| `loki`       | `gcx logs`       | Context `homelab`                                    |
-| `tempo`      | `gcx traces`     | Context `homelab`                                    |
+| `grafana`    | `gcx`            | Homelab Grafana, brokered token                      |
+| `prom`       | `gcx metrics`    | Homelab Grafana, brokered token                      |
+| `loki`       | `gcx logs`       | Homelab Grafana, brokered token                      |
+| `tempo`      | `gcx traces`     | Homelab Grafana, brokered token                      |
 | `temporal`   | `temporal`       | `--profile homelab`                                  |
 | `argocd`     | `argocd`         | Homelab server and `--grpc-web`                      |
 | `cf`         | `cf`             | Native configured context                            |
 | `tailscale`  | `tailscale`      | Native local daemon                                  |
+| `talosctl`   | `talosctl`       | Homelab `os:admin` talosconfig on `/dev/fd/3`        |
+
+The gcx commands set gcx's own server, org, and token runtime overrides (the
+token from the brokered `GRAFANA_API_KEY`), so no context or token is written
+to gcx's config. An explicit `--context` keeps
+that context's server.
+
+`talosctl` has no credential plugin. Toolkit builds the talosconfig from the
+brokered `TALOS_CA`, `TALOS_CRT`, and `TALOS_KEY` and hands it over an
+anonymous pipe; nothing is written to disk. It refuses `config`, `kubeconfig`,
+`gen`, and `cluster`, which write talosconfigs, kubeconfigs, or secrets. An
+explicit `--talosconfig` or `TALOSCONFIG` runs talosctl unchanged without
+brokered credentials. `--help` and `version --client` need no credentials.
+
+Toolkit looks up native binaries on `PATH` minus relative entries,
+`node_modules` bin directories, and the shim directory
+`~/.local/share/toolkit/shims`, so a dependency's same-named binary never
+receives brokered credentials and a shim never calls toolkit again. No
+passthrough child inherits `OP_SERVICE_ACCOUNT_TOKEN`.
 
 Everything after the selected platform command is preserved, including
 `--help`, `--version`, and the `--` argument boundary. The child inherits the
@@ -325,7 +344,35 @@ toolkit grafana alert rules list
 ```
 
 Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
-`promtool`, and `logcli` stays directly invoked.
+`promtool`, and `logcli` stays directly invoked. On a workstation, `kubectl`
+and `aws` get credentials through the helpers below rather than a passthrough.
+
+### Credential helpers
+
+These commands broker credentials for tools that have their own credential
+hook, so the tool's config file holds only endpoints and the helper command.
+
+```bash
+toolkit kube credential               # kubectl exec plugin (admin@torvalds)
+toolkit aws credential <PROFILE>      # AWS credential_process
+toolkit run --env NAME[,NAME] -- CMD  # one command with named credentials
+toolkit credentials flush [NAME...]   # drop cached 1Password reads
+```
+
+- `kube credential` prints a `client.authentication.k8s.io/v1`
+  `ExecCredential` with the homelab admin client certificate, valid for one
+  hour. It runs only when client-go sets `KUBERNETES_EXEC_INFO`, so it cannot
+  print the key into a terminal or transcript by hand.
+- `aws credential` serves the `seaweedfs`, `brim-sync`, `b2-velero`,
+  `b2-postgres-wal`, and `b2-seaweedfs-backups` profiles. It refuses a
+  terminal on stdout. The Backblaze keys are bucket-scoped, so list a bucket
+  (`aws --profile b2-velero s3 ls s3://sjerred-velero/`), not all buckets.
+- `run` resolves the named registry credentials (or `[credentials]`
+  overrides) and starts the command with them in its environment only. It
+  replaces `with-service-account.sh op run`, whose child also inherits the
+  service-account token. Signals are forwarded and the exit status mirrored.
+- `credentials flush` removes cached reads after a rotation. Without names it
+  flushes every registered credential.
 
 ## Monorepo workflows
 
@@ -508,7 +555,8 @@ registered credential broker, preserving environment and credential-locator
 config overrides. The broker uses `OP_SERVICE_ACCOUNT_TOKEN` or the enrolled
 macOS Keychain credential for 1Password authentication. Custom `WOODPECKER_URL` or
 `WOODPECKER_REPO_ID` connections require an explicit token. Load telemetry
-uses the configured `kubectl` context and `gcx --context homelab`.
+uses the configured `kubectl` context and the same Grafana server and
+brokered token as `toolkit prom`.
 
 ### PR health, reviews, and media
 
@@ -891,15 +939,16 @@ the unsafe setting without printing its value, including for help commands.
 Option names are checked after ArgoCD-compatible quote and escape parsing;
 header values and root paths containing the same text are preserved.
 
-| Commands                                                                                      | Registered backend        |
-| --------------------------------------------------------------------------------------------- | ------------------------- |
-| `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
-| `bugsink`, `discord`                                                                          | macOS Keychain            |
-| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                   | 1Password service account |
-| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)   | 1Password service account |
+| Commands                                                                                                 | Registered backend        |
+| -------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account |
+| `talosctl`, `kube credential`, `aws credential`, `run`                                                   | 1Password service account |
+| `discord`                                                                                                | macOS Keychain            |
+| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                              | 1Password service account |
+| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)              | 1Password service account |
 
-The registry in `src/lib/credentials.ts` owns the variable names and secret
-locators. Backend failures are errors; a missing Keychain secret does not
+The registry in `src/lib/credential-registry.ts` owns the variable names and
+secret locators; `src/lib/credentials.ts` resolves them. Backend failures are errors; a missing Keychain secret does not
 automatically fall through to 1Password. A config override selects a different
 backend explicitly. Toolkit logs credential names and backends, never values.
 The native Temporal CLI performs authentication, while toolkit supplies its
@@ -909,7 +958,23 @@ when the effective address is the exact in-cluster service; an explicit
 
 For the 1Password backend, `OP_SERVICE_ACCOUNT_TOKEN` wins. Otherwise, on
 macOS, toolkit reads the enrolled service account from Keychain and invokes
-`op` with that token. If the command reports missing enrollment, use the
+`op` with that token. The token is passed only to that `op` child; toolkit
+never exports it into its own environment, so no other child inherits it.
+
+The installed binary caches each service-account read in the login Keychain
+(service `toolkit-credential-cache`, one item per `op://` reference keyed by
+its SHA-256) for `credentialCacheTtlSeconds` (default one hour; `0`
+disables). The whole 1Password account shares a daily read budget, and an
+agent may call kubectl or talosctl hundreds of times an hour; the cache keeps
+that to roughly one read per credential per hour. Cache hits are silent.
+After rotating a secret, run `toolkit credentials flush [NAME...]`.
+
+Keychain items trust the binary that created them by its code signature, so
+only the installed toolkit uses the cache, and `install:local` signs it with
+the single "Developer ID Application" identity in the login Keychain
+(identifier `red.sjer.toolkit`) and fails without one. An ad-hoc signature
+changes on every build and would stall unattended agents on an access
+prompt. Builds run through `bun` or from `dist/` never use the cache. If the command reports missing enrollment, use the
 repository's existing setup from its root:
 
 ```bash
@@ -923,8 +988,8 @@ can also call `resolveCredentials` from `@shepherdjerred/toolkit/lib/credentials
 before spawning subprocesses, as the Temporal Worker Deployment rollout does.
 
 Outside macOS, supply `OP_SERVICE_ACCOUNT_TOKEN` through the existing secret
-manager integration. For Bugsink and Discord, a missing credential error names
-the exact workstation-secret enrollment command. Never paste tokens into chat,
+manager integration. For Discord, a missing credential error names the exact
+workstation-secret enrollment command. Never paste tokens into chat,
 CLI arguments, or the toolkit config file; the config stores locators only.
 
 `ci` uses the registered `WOODPECKER_TOKEN` credential for the default
@@ -954,6 +1019,7 @@ value or unparseable file is an error, not a fallback.
 | `BRIM_SYNC_S3_CREDENTIALS` / `brim.sync.s3.credentials`           | `profile` (`broker` on agent hosts)                   |
 | `BRIM_SYNC_RECIPIENT` / `brim.sync.recipient`                     | the archive's age public key                          |
 | `BRIM_SYNC_PULL_SINCE_DAYS` / `brim.sync.pull.since.days`         | `30`                                                  |
+| `CREDENTIAL_CACHE_TTL_SECONDS` / `credential.cache.ttl.seconds`   | `3600` (`0` disables the Keychain read cache)         |
 
 The history daemon runs under launchd without your shell environment, so set
 its keys in the TOML file. It reads them once at start.

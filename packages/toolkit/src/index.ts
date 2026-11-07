@@ -28,14 +28,21 @@ Platform commands (native CLI passthroughs):
   woodpecker  Woodpecker CI CLI
   git-spice   Stacked branch and PR workflow
   posthog     PostHog CLI (project 549883)
-  grafana     GCX (--context homelab)
-  prom        GCX metrics (--context homelab)
-  loki        GCX logs (--context homelab)
-  tempo       GCX traces (--context homelab)
+  grafana     GCX (homelab Grafana, brokered token)
+  prom        GCX metrics (homelab Grafana)
+  loki        GCX logs (homelab Grafana)
+  tempo       GCX traces (homelab Grafana)
   temporal    Temporal CLI (--profile homelab)
   argocd      Argo CD CLI (homelab server, --grpc-web)
   cf          Cloudflare CLI
   tailscale   Tailscale CLI
+  talosctl    Talos CLI (homelab os:admin talosconfig over a pipe)
+
+Credential helpers (no secrets on disk):
+  kube credential              kubectl exec plugin for the homelab admin user
+  aws credential <PROFILE>     AWS credential_process for S3-compatible profiles
+  run --env NAME[,NAME] -- CMD Run CMD with the named credentials in its env
+  credentials flush [NAME...]  Drop cached 1Password reads after a rotation
 
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
@@ -157,6 +164,48 @@ async function resolveCommandCredentials(
   }
 }
 
+/** Commands that resolve their own credentials and never export them. */
+async function runBrokeredCommand(
+  command: string,
+  args: readonly string[],
+): Promise<number | null> {
+  switch (command) {
+    case "talosctl": {
+      const { runTalosctl } = await import("./commands/brokered/talosctl.ts");
+      return runTalosctl(args);
+    }
+    case "kube": {
+      if (args[0] !== "credential") {
+        console.error("Usage: toolkit kube credential");
+        return 2;
+      }
+      const { runKubeCredential } =
+        await import("./commands/brokered/kube-credential.ts");
+      return runKubeCredential(args.slice(1));
+    }
+    case "aws": {
+      if (args[0] !== "credential") {
+        console.error("Usage: toolkit aws credential <PROFILE>");
+        return 2;
+      }
+      const { runAwsCredential } =
+        await import("./commands/brokered/aws-credential.ts");
+      return runAwsCredential(args.slice(1));
+    }
+    case "run": {
+      const { runWithCredentials } = await import("./commands/brokered/run.ts");
+      return runWithCredentials(args);
+    }
+    case "credentials": {
+      const { runCredentialsCommand } =
+        await import("./commands/brokered/credentials.ts");
+      return runCredentialsCommand(args);
+    }
+    default:
+      return null;
+  }
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -174,6 +223,11 @@ async function main(): Promise<void> {
   if (command === "--version" || command === "version") {
     console.log(`toolkit ${TOOLKIT_VERSION}`);
     return;
+  }
+
+  const brokeredExit = await runBrokeredCommand(command, args.slice(1));
+  if (brokeredExit !== null) {
+    process.exit(brokeredExit);
   }
 
   if (!isCredentialFreePassthrough(command, args.slice(1))) {

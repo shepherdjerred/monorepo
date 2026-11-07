@@ -18,6 +18,10 @@ export const SECRET_KINDS = [
   "openai-key",
   "linear-key",
   "jwt",
+  "onepassword-service-account",
+  "github-token",
+  "private-key",
+  "private-key-base64",
 ] as const;
 export type SecretKind = (typeof SECRET_KINDS)[number];
 
@@ -41,6 +45,23 @@ const PATTERNS: readonly { kind: SecretKind; pattern: RegExp }[] = [
     kind: "jwt",
     pattern: /eyJ[\w-]+\.eyJ[\w-]+\.[\w-]+/g,
   },
+  // 1Password service-account tokens: `ops_` plus one base64 JSON segment.
+  { kind: "onepassword-service-account", pattern: /ops_eyJ[\w+/=-]{100,}/g },
+  {
+    kind: "github-token",
+    pattern: /(?:gh[pousr]_[A-Za-z0-9]{36,255}|github_pat_\w{22,255})/g,
+  },
+  // PEM private keys, raw or with JSON-escaped newlines (`\n`).
+  {
+    kind: "private-key",
+    pattern:
+      /-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----[\s\S]{16,16384}?-----END (?:[A-Z0-9]+ )*PRIVATE KEY-----/g,
+  },
+  // base64 of `-----BEGIN …`, the kubeconfig/talosconfig form; confirmed below.
+  {
+    kind: "private-key-base64",
+    pattern: /LS0tLS1CRUdJTi[A-Za-z0-9+/]{20,}={0,2}/g,
+  },
 ];
 
 function standalone(text: string, start: number, end: number): boolean {
@@ -58,6 +79,12 @@ function decodesToObject(segment: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** True when a base64 PEM blob decodes to a private key, not a certificate. */
+function isBase64PrivateKey(token: string): boolean {
+  const decoded = Buffer.from(token, "base64").toString("latin1");
+  return /-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----/.test(decoded);
 }
 
 function isJwt(token: string): boolean {
@@ -85,8 +112,13 @@ export function findSecrets(bytes: Uint8Array): SecretMatch[] {
     for (const match of text.matchAll(pattern)) {
       const start = match.index;
       const end = start + match[0].length;
-      if (!standalone(text, start, end)) continue;
+      // PEM armor is self-delimiting; in JSON it follows an escaped `\n`,
+      // whose `n` would otherwise fail the standalone check.
+      if (kind !== "private-key" && !standalone(text, start, end)) continue;
       if (kind === "jwt" && !isJwt(match[0])) continue;
+      if (kind === "private-key-base64" && !isBase64PrivateKey(match[0])) {
+        continue;
+      }
       matches.push({ offset: start, length: match[0].length, kind });
     }
   }

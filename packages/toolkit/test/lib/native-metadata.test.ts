@@ -83,21 +83,18 @@ describe("native metadata credential boundary", () => {
     [["woodpecker", "--version"], ["--version"]],
     [["woodpecker", "--help"], ["--help"]],
     [["woodpecker", "-h"], ["-h"]],
-    [
-      ["grafana", "--version"],
-      ["--context", "homelab", "--version"],
-    ],
+    [["grafana", "--version"], ["--version"]],
     [
       ["prom", "--help"],
-      ["--context", "homelab", "metrics", "--help"],
+      ["metrics", "--help"],
     ],
     [
       ["loki", "--help"],
-      ["--context", "homelab", "logs", "--help"],
+      ["logs", "--help"],
     ],
     [
       ["tempo", "--help"],
-      ["--context", "homelab", "traces", "--help"],
+      ["traces", "--help"],
     ],
     [
       ["argocd", "version", "--client"],

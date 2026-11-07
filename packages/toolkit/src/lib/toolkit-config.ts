@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
 import { BRIM_SYNC_RECIPIENT } from "#lib/brim/sync/recipient.ts";
+import { DEFAULT_CACHE_TTL_SECONDS } from "#lib/credential-cache.ts";
 import { createObservabilityHooks } from "@shepherdjerred/config/observability.ts";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
 import { createFileSource } from "@shepherdjerred/config/sources/file.ts";
@@ -100,6 +101,15 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     schema: z.coerce.number().int().positive(),
     sources: ["env", "file", "default"],
     default: 30,
+  },
+  /**
+   * How long the installed toolkit binary serves a 1Password service-account
+   * read from its Keychain cache before reading again. Zero disables it.
+   */
+  credentialCacheTtlSeconds: {
+    schema: z.coerce.number().int().nonnegative(),
+    sources: ["env", "file", "default"],
+    default: DEFAULT_CACHE_TTL_SECONDS,
   },
   /** Base URL of the ops dashboard that serves the ops snapshot. */
   opsDashboardUrl: {

@@ -3,11 +3,11 @@ import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
-  CREDENTIAL_REGISTRY,
   requiredCredentialsFor,
   resolveCredentials,
 } from "#lib/credentials.ts";
 import type { CredentialRun } from "#lib/credentials.ts";
+import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
 
 type RunFn = CredentialRun;
 
@@ -205,17 +205,17 @@ describe("credential resolver backends", () => {
       const calls: string[][] = [];
       const run = stubRun((argv) => {
         expect(argv[0]).toBe("security");
-        expect(argv).toContain("monorepo-workstation-bugsink-token");
-        return { exit: 0, stdout: "  test-bugsink-secret\n", stderr: "" };
+        expect(argv).toContain("monorepo-workstation-discord-bot-token");
+        return { exit: 0, stdout: "  test-discord-secret\n", stderr: "" };
       }, calls);
-      await resolveCredentials(["BUGSINK_TOKEN"], {
+      await resolveCredentials(["DISCORD_BOT_TOKEN"], {
         run,
         configPath: `${missing}.absent`,
       });
-      expect(Bun.env["BUGSINK_TOKEN"]).toBe("test-bugsink-secret");
+      expect(Bun.env["DISCORD_BOT_TOKEN"]).toBe("test-discord-secret");
       expect(calls).toHaveLength(1);
-      expect(stderrLines).toContain("toolkit: BUGSINK_TOKEN via keychain");
-      expect(stderrLines.join("\n")).not.toContain("test-bugsink-secret");
+      expect(stderrLines).toContain("toolkit: DISCORD_BOT_TOKEN via keychain");
+      expect(stderrLines.join("\n")).not.toContain("test-discord-secret");
     });
   });
 
@@ -228,8 +228,9 @@ describe("credential resolver backends", () => {
         expect(argv).toEqual([
           "op",
           "read",
-          // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-          "op://v64ocnykdqju4ui6j6pua56xw4/yikdwue26c7gdbk5ftbvaclkli/ARGOCD_AUTH_TOKEN",
+          CREDENTIAL_REGISTRY["ARGOCD_AUTH_TOKEN"]?.source.kind === "op"
+            ? CREDENTIAL_REGISTRY["ARGOCD_AUTH_TOKEN"].source.ref
+            : "",
         ]);
         return { exit: 0, stdout: "test-argocd-secret\n", stderr: "" };
       }, calls);

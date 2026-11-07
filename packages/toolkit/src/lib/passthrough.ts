@@ -1,5 +1,5 @@
 import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import os, { tmpdir } from "node:os";
 import path from "node:path";
 import { protectArgoTokenDefault } from "./argocd-options.ts";
 import { isArgoHelpCommand } from "./argocd-metadata.ts";
@@ -32,11 +32,20 @@ type DefaultEnvironment = {
   readonly overrideFlags?: readonly string[] | undefined;
 };
 
+/** Expose a brokered credential to the vendor CLI under its own spelling. */
+type CredentialEnvironment = {
+  /** The variable the vendor binary reads. */
+  readonly name: string;
+  /** The registered credential that supplies it. */
+  readonly from: string;
+};
+
 export type PassthroughSpec = {
   readonly executable: string;
   readonly prefixArgs?: readonly string[] | undefined;
   readonly defaultArgs?: readonly DefaultArgument[] | undefined;
   readonly defaultEnvironment?: readonly DefaultEnvironment[] | undefined;
+  readonly credentialEnvironment?: readonly CredentialEnvironment[] | undefined;
 };
 
 export type PassthroughInvocation = {
@@ -45,10 +54,32 @@ export type PassthroughInvocation = {
   readonly env: Record<string, string | undefined>;
 };
 
-const HOMELAB_GCX_DEFAULT: DefaultArgument = {
-  args: ["--context", "homelab"],
-  overrideFlags: ["--context"],
-};
+/**
+ * gcx reads its server and token from these runtime overrides, so no context
+ * or token is ever written to its config file or Keychain entry. An explicit
+ * `--context` or ambient value still wins.
+ */
+const HOMELAB_GCX_ENVIRONMENT: readonly DefaultEnvironment[] = [
+  {
+    name: "GRAFANA_SERVER",
+    value: "https://grafana.tailnet-1a49.ts.net",
+    overrideFlags: ["--context"],
+  },
+  { name: "GRAFANA_ORG_ID", value: "1", overrideFlags: ["--context"] },
+];
+
+const HOMELAB_GCX_CREDENTIALS: readonly CredentialEnvironment[] = [
+  { name: "GRAFANA_TOKEN", from: "GRAFANA_API_KEY" },
+];
+
+function gcxSpec(prefixArgs?: readonly string[]): PassthroughSpec {
+  return {
+    executable: "gcx",
+    prefixArgs,
+    defaultEnvironment: HOMELAB_GCX_ENVIRONMENT,
+    credentialEnvironment: HOMELAB_GCX_CREDENTIALS,
+  };
+}
 
 export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
   new Map([
@@ -95,31 +126,10 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
         ],
       },
     ],
-    ["grafana", { executable: "gcx", defaultArgs: [HOMELAB_GCX_DEFAULT] }],
-    [
-      "prom",
-      {
-        executable: "gcx",
-        prefixArgs: ["metrics"],
-        defaultArgs: [HOMELAB_GCX_DEFAULT],
-      },
-    ],
-    [
-      "loki",
-      {
-        executable: "gcx",
-        prefixArgs: ["logs"],
-        defaultArgs: [HOMELAB_GCX_DEFAULT],
-      },
-    ],
-    [
-      "tempo",
-      {
-        executable: "gcx",
-        prefixArgs: ["traces"],
-        defaultArgs: [HOMELAB_GCX_DEFAULT],
-      },
-    ],
+    ["grafana", gcxSpec()],
+    ["prom", gcxSpec(["metrics"])],
+    ["loki", gcxSpec(["logs"])],
+    ["tempo", gcxSpec(["traces"])],
     [
       "temporal",
       {
@@ -261,6 +271,9 @@ export function buildPassthroughInvocation(
       : entry.args;
   });
   const env = { ...environment };
+  // The 1Password service-account token unlocks every brokered credential;
+  // no vendor CLI needs it, so no passthrough child inherits it.
+  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
   // ArgoCD prints this environment default in native help. Client-only
   // metadata must not inherit a token even when the caller already has one.
   if (command === "argocd" && isCredentialFreePassthrough(command, args)) {
@@ -273,6 +286,12 @@ export function buildPassthroughInvocation(
       env[entry.name] = entry.value;
     }
   }
+  for (const entry of spec.credentialEnvironment ?? []) {
+    const value = env[entry.from];
+    if (value !== undefined && !hasEnvironmentValue(env, entry.name)) {
+      env[entry.name] = value;
+    }
+  }
 
   return {
     executable: spec.executable,
@@ -281,15 +300,40 @@ export function buildPassthroughInvocation(
   };
 }
 
-function lookupExecutable(
+/** Where chezmoi installs the plain-name shims that call back into toolkit. */
+export function shimDirectory(home: string = os.homedir()): string {
+  return path.join(home, ".local", "share", "toolkit", "shims");
+}
+
+/**
+ * The PATH toolkit searches for a real vendor binary. It drops the shim
+ * directory (a shim would call toolkit again), relative entries, and
+ * `node_modules` bin directories that `bun run` and turbo prepend: a
+ * dependency's same-named bin must never receive brokered credentials.
+ */
+export function trustedSearchPath(
+  pathValue: string,
+  home: string = os.homedir(),
+): string {
+  const shims = shimDirectory(home);
+  return pathValue
+    .split(path.delimiter)
+    .filter(
+      (entry) =>
+        path.isAbsolute(entry) &&
+        path.resolve(entry) !== shims &&
+        !entry.split(path.sep).includes("node_modules"),
+    )
+    .join(path.delimiter);
+}
+
+export function lookupExecutable(
   executable: string,
   pathValue: string | undefined,
 ): string | null {
-  const options =
-    pathValue === undefined
-      ? { cwd: process.cwd() }
-      : { cwd: process.cwd(), PATH: pathValue };
-  return Bun.which(executable, options);
+  const searchPath = trustedSearchPath(pathValue ?? Bun.env["PATH"] ?? "");
+  // An empty cwd keeps Bun.which from resolving relative to the caller.
+  return Bun.which(executable, { cwd: "/", PATH: searchPath });
 }
 
 function resolveExecutable(invocation: PassthroughInvocation): string | null {

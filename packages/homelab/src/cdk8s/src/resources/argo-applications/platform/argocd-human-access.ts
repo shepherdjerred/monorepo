@@ -17,6 +17,13 @@ export function humanArgoCdReadOnly(): boolean {
 /** The local login account people use once ArgoCD is read-only for them. */
 export const HUMAN_ARGOCD_ACCOUNT = "operator";
 
+/**
+ * The API-only account agent workstations use through toolkit. It cannot log
+ * in and holds the same read-only role as the human login. The `argocd`
+ * OpenTofu stack mints its token into an item workstations read.
+ */
+export const WORKSTATION_ARGOCD_ACCOUNT = "workstation";
+
 /** `argocd-cm` settings for human access; nothing changes while it is off. */
 export function humanArgoCdSettings(
   readOnly: boolean = humanArgoCdReadOnly(),
@@ -26,6 +33,8 @@ export function humanArgoCdSettings(
         "admin.enabled": false,
         [`accounts.${HUMAN_ARGOCD_ACCOUNT}`]: "login",
         [`accounts.${HUMAN_ARGOCD_ACCOUNT}.enabled`]: true,
+        [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}`]: "apiKey",
+        [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}.enabled`]: true,
       }
     : {};
 }
@@ -34,5 +43,10 @@ export function humanArgoCdSettings(
 export function humanArgoCdPolicyRows(
   readOnly: boolean = humanArgoCdReadOnly(),
 ): string[] {
-  return readOnly ? [`g, ${HUMAN_ARGOCD_ACCOUNT}, role:readonly`] : [];
+  return readOnly
+    ? [
+        `g, ${HUMAN_ARGOCD_ACCOUNT}, role:readonly`,
+        `g, ${WORKSTATION_ARGOCD_ACCOUNT}, role:readonly`,
+      ]
+    : [];
 }

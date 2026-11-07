@@ -4,9 +4,11 @@ import type { z } from "zod";
 export async function capture(
   args: readonly string[],
   signal?: AbortSignal,
+  env?: Readonly<Record<string, string | undefined>>,
 ): Promise<string> {
   signal?.throwIfAborted();
   const child = Bun.spawn([...args], {
+    ...(env === undefined ? {} : { env: { ...env } }),
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
@@ -36,8 +38,9 @@ export async function captureJson<T>(
   args: readonly string[],
   schema: z.ZodType<T>,
   signal?: AbortSignal,
+  env?: Readonly<Record<string, string | undefined>>,
 ): Promise<T> {
-  return schema.parse(JSON.parse(await capture(args, signal)));
+  return schema.parse(JSON.parse(await capture(args, signal, env)));
 }
 
 export async function githubToken(): Promise<string> {

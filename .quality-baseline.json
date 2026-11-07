@@ -9,8 +9,8 @@
     "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts": 1,
     "packages/loaded/src/index.ts": 1,
     "packages/toolkit/src/lib/brim/sync/recipient.ts": 1,
-    "packages/toolkit/src/lib/credentials.ts": 3,
-    "packages/toolkit/test/lib/credentials.test.ts": 2
+    "packages/toolkit/test/lib/credentials.test.ts": 1,
+    "packages/toolkit/src/lib/spawn-forwarding.ts": 1
   },
   "ts-suppressions": {
     "packages/home-assistant/test/typed-client.test-d.ts": 7
