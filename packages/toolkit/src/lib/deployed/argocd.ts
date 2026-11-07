@@ -14,6 +14,7 @@ import {
   buildPassthroughInvocation,
   lookupExecutable,
 } from "#lib/passthrough.ts";
+import { spawnCapture } from "#lib/spawn-capture.ts";
 import { ArgoAppSchema } from "./schemas.ts";
 import type { ArgoStatus } from "./types.ts";
 
@@ -50,18 +51,9 @@ async function runArgoAppGet(
   if (invocation === null || executable === null) {
     return { exitCode: 127, stdout: "", stderr: "argocd CLI not found" };
   }
-  const child = Bun.spawn([executable, ...invocation.args], {
+  return spawnCapture([executable, ...invocation.args], {
     env: invocation.env,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
   });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  return { exitCode, stdout, stderr };
 }
 
 export async function getArgoApp(app: string): Promise<ArgoResult> {

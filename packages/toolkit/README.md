@@ -942,7 +942,7 @@ header values and root paths containing the same text are preserved.
 | Commands                                                                                                 | Registered backend        |
 | -------------------------------------------------------------------------------------------------------- | ------------------------- |
 | `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account |
-| `talosctl`, `kube credential`, `aws credential`, `run` (`ANTHROPIC_API_KEY` and others)                  | 1Password service account |
+| `talosctl`, `kube credential`, `aws credential`, `run`                                                   | 1Password service account |
 | `discord`                                                                                                | macOS Keychain            |
 | `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                              | 1Password service account |
 | `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)              | 1Password service account |

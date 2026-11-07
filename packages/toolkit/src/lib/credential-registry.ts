@@ -23,7 +23,6 @@ const SEAWEEDFS_S3_ITEM_ID = "vet52jaeh75chsalu6lulugium";
 const BACKBLAZE_VELERO_ITEM_ID = "i3upt4mhwczcau7ojyxfpw2s6e";
 const BACKBLAZE_POSTGRES_WAL_ITEM_ID = "ydap5smx2eirpq73oklmhkzxfm";
 const BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID = "q3t3h5dkrqwtbllgybca7pjvke";
-const ANTHROPIC_ITEM = "m2xw5xzzb7ftfg3pgudagdfvje";
 const BUGSINK_ITEM = "jeuqmwh3r4nwu2ivo4pa3gr7om";
 const WOODPECKER_ITEM = "covttsojandjk7fx62a3dbk7em";
 const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
@@ -250,13 +249,6 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "op",
       ref: `${HOMELAB_VAULT_REF}/${BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID}/B2_SECRET_ACCESS_KEY`,
-    },
-  },
-  ANTHROPIC_API_KEY: {
-    description: "Anthropic API key for local scripts (toolkit run --env)",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${ANTHROPIC_ITEM}/ANTHROPIC_API_KEY`,
     },
   },
   ...BRIM_SYNC_CREDENTIALS,

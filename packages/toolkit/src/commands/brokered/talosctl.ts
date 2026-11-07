@@ -112,6 +112,14 @@ export async function runTalosctl(
   args: readonly string[],
   deps?: CredentialDeps,
 ): Promise<number> {
+  // Linux exposes a spawned pipe that Bun creates as a socket, which
+  // /dev/fd/3 cannot reopen by path; the handoff relies on macOS dup semantics.
+  if (process.platform !== "darwin") {
+    console.error(
+      "toolkit: `toolkit talosctl` hands the talosconfig over /dev/fd/3 and requires macOS; elsewhere pass --talosconfig explicitly.",
+    );
+    return 2;
+  }
   const executable = lookupExecutable("talosctl", Bun.env["PATH"]);
   if (executable === null) {
     console.error("toolkit: required executable not found: talosctl");

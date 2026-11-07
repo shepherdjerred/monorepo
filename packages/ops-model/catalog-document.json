@@ -3167,7 +3167,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/6"
+      "configurationRevisionId": "argocd/prod/7"
     },
     {
       "id": "chartmuseum/prod",

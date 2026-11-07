@@ -412,13 +412,29 @@ describe("spawnForwardingSignals", () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), "toolkit-fd3-"));
     directories.push(directory);
     const out = path.join(directory, "out");
+    // Read the descriptor directly: Linux cannot reopen a socket-backed
+    // /dev/fd path, so the by-path form is exercised only on macOS below.
     const code = await spawnForwardingSignals(
-      ["/bin/sh", "-c", `cat /dev/fd/3 > ${out}; exit 7`],
+      ["/bin/sh", "-c", `cat <&3 > ${out}; exit 7`],
       { env: { PATH: "/usr/bin:/bin" }, extraFiles: ["piped-payload"] },
     );
     expect(code).toBe(7);
     expect(await Bun.file(out).text()).toBe("piped-payload");
   });
+
+  test.runIf(process.platform === "darwin")(
+    "the payload is readable as /dev/fd/3 on macOS",
+    async () => {
+      const directory = await mkdtemp(path.join(os.tmpdir(), "toolkit-fd3-"));
+      directories.push(directory);
+      const out = path.join(directory, "out");
+      await spawnForwardingSignals(
+        ["/bin/sh", "-c", `cat /dev/fd/3 > ${out}`],
+        { env: { PATH: "/usr/bin:/bin" }, extraFiles: ["by-path"] },
+      );
+      expect(await Bun.file(out).text()).toBe("by-path");
+    },
+  );
 
   test("reports death by signal as 128+N", () => {
     expect(signalExitCode("SIGTERM")).toBe(128 + 15);

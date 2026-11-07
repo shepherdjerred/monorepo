@@ -1108,10 +1108,6 @@
       "clones": 1,
       "tokens": 77
     },
-    "packages/toolkit/src/lib/git/conflicts.ts|packages/toolkit/test/lib/git-conflicts.test.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
     "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
       "tokens": 84
