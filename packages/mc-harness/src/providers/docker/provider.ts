@@ -205,12 +205,13 @@ export class DockerSandboxProvider implements SandboxProvider {
         : await copyRealMap(request.mapDirectory, path.join(dir, "world"));
     const profile = resolveProfile(request, secrets, mapSource);
     // Validate build outputs before creating a container.
-    await requireStagedSources(this.options.repoRoot, profile.staged);
+    const sourceDirectory = request.sourceDirectory ?? this.options.repoRoot;
+    await requireStagedSources(sourceDirectory, profile.staged);
     progress("staging plugins");
     const { pluginsDir, seedFiles } = await stageSandboxFiles({
       dir,
       cacheDir: this.cacheDir,
-      repoRoot: this.options.repoRoot,
+      repoRoot: sourceDirectory,
       profile,
     });
     if (profile.seedData) {
@@ -319,6 +320,9 @@ export class DockerSandboxProvider implements SandboxProvider {
         provider: "docker",
         profile: request.profile,
         world: request.world,
+        ...(request.sourceDirectory === undefined
+          ? {}
+          : { sourceDirectory: request.sourceDirectory }),
         ...(mapSource === undefined ? {} : { mapSource }),
         ...(request.rollout === undefined ? {} : { rollout: request.rollout }),
         ...(request.captureFeatures === undefined
@@ -425,6 +429,8 @@ export class DockerSandboxProvider implements SandboxProvider {
       "-a",
       "--filter",
       `label=${LABELS.sandbox}`,
+      "--filter",
+      `label=${LABELS.owner}=${this.owner}`,
       "--format",
       SANDBOX_ROW_FORMAT,
     ]);

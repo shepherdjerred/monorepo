@@ -47,8 +47,24 @@ export const CI_WORKSPACE_STORAGE_CLASS = "ci-workspace";
  * 32G rounds up to 30Gi and no clone could be made from it.
  */
 export const CI_WORKSPACE_VOLUME_SIZE = "32Gi";
+export const MC_CAPTURE_STORAGE_CLASS = "mc-capture-fixture";
 
 export function createStorageClasses(chart: Chart) {
+  new KubeStorageClass(chart, "mc-capture-fixture", {
+    metadata: { name: MC_CAPTURE_STORAGE_CLASS },
+    provisioner: "zfs.csi.openebs.io",
+    allowVolumeExpansion: false,
+    reclaimPolicy: "Delete",
+    parameters: {
+      fstype: "zfs",
+      poolname: "zfspv-pool-nvme",
+      compression: "lz4",
+      dedup: "off",
+      recordsize: "128k",
+      shared: "yes",
+    },
+    volumeBindingMode: "WaitForFirstConsumer",
+  });
   new KubeStorageClass(chart, "host-zfs-ssd", {
     metadata: { name: NVME_STORAGE_CLASS },
     provisioner: "zfs.csi.openebs.io",

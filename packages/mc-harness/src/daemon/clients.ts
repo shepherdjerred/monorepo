@@ -143,6 +143,7 @@ export class ClientManager {
     name: string;
     target: string;
     game: { host: string; port: number };
+    sourceDirectory?: string;
   }): Promise<ClientSummary> {
     const { name, target, game } = request;
     const existing = this.sessions.get(name);
@@ -168,7 +169,7 @@ export class ClientManager {
     }
     this.starting.add(name);
     try {
-      return await this.launch(name, target, game);
+      return await this.launch(name, target, game, request.sourceDirectory);
     } finally {
       this.starting.delete(name);
     }
@@ -277,6 +278,7 @@ export class ClientManager {
     name: string,
     target: string,
     game: { host: string; port: number },
+    sourceDirectory = this.options.repoRoot,
   ): Promise<ClientSummary> {
     const startedAt = new Date();
     // Socket paths are capped near 104 bytes on macOS, so the socket and
@@ -309,7 +311,7 @@ export class ClientManager {
     let child: Awaited<ReturnType<ClientLauncher>>;
     try {
       child = await launcher({
-        repoRoot: this.options.repoRoot,
+        repoRoot: sourceDirectory,
         bootstrapPath,
         bootstrap,
         gameDir,

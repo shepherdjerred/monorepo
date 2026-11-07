@@ -10,6 +10,8 @@
     }
   },
   "include": [
+    "scripts/minecraft/capture-resources.ts",
+    "scripts/minecraft/capture-resources.test.ts",
     "src/application-release-contract.ts",
     "src/domain-registry.ts",
     "src/delivery-storage.ts",

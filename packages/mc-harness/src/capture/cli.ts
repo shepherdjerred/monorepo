@@ -307,6 +307,10 @@ async function observeScene(
 }
 
 async function main(): Promise<void> {
+  if (Bun.argv[2] === "suite") {
+    const { suiteMain } = await import("./suite/cli.ts");
+    return suiteMain(Bun.argv.slice(3));
+  }
   const parsed = parseArgs({
     args: Bun.argv.slice(2),
     allowPositionals: true,

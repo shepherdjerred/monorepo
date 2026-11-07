@@ -83,6 +83,9 @@ export function toSummary(record: SandboxRecord): SandboxSummary {
     provider: record.provider,
     profile: record.profile,
     world: record.world,
+    ...(record.sourceDirectory === undefined
+      ? {}
+      : { sourceDirectory: record.sourceDirectory }),
     ...(record.mapSource === undefined ? {} : { mapSource: record.mapSource }),
     ...(record.rollout === undefined ? {} : { rollout: record.rollout }),
     ...(record.captureFeatures === undefined

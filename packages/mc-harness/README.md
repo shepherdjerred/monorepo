@@ -226,6 +226,79 @@ fresh raycast. Sneaking interactions wait for the player's crouching pose.
 
 ## Documentation capture
 
+### Reproducible suites
+
+The checked-in [TSMC suite](../the-storm/tools/captures/suite.ts) composes typed
+gameplay scenes with separately editable presentation files. Enumerate the
+authored outputs before choosing a full run or a narrow selection:
+
+```bash
+toolkit mc capture suite list tsmc
+toolkit mc capture suite check tsmc --shot cooking-pot
+toolkit mc capture suite run tsmc --runtime worktree --scenario cooking
+toolkit mc capture suite run tsmc --runtime saved:<run-id> --shot cooking-pot
+toolkit mc capture suite replay <run-id>
+toolkit mc capture suite render <run-id> --shot cooking-pot
+```
+
+`run` always flushes saved live terrain, takes a CSI snapshot, and reads a
+read-only disposable clone. It crops native region, entity and POI records to
+the suite's padded patches. Every required terrain column must already exist;
+missing terrain, corrupt NBT and mismatched chunk coordinates fail the export.
+Native world settings and datapacks accompany the crop. Player files, plugin
+databases, session locks and credentials stay outside the fixture.
+
+Prerequisites are an awake live server, a token-enabled interactive harness for
+the guarded save command, operator Kubernetes access, Docker, Java/Gradle,
+the native client prerequisites below, `gitleaks`, and the authenticated
+`seaweedfs` AWS CLI profile. The homelab release must provision the private
+`the-storm-capture-fixtures` bucket and `mc-capture-fixture` StorageClass first.
+The source claim is fixed to `minecraft-tsmc/datadir-minecraft-tsmc-0`.
+
+Each run starts an isolated daemon from its selected source checkout, then
+owns a disposable real-map server and genuine local clients. The camera is
+`XiguaJerred`; scenario-declared helpers use distinct local identities. Its
+`TOOLKIT_MC_DIRECTORY` bootstrap gives the worker a private socket, state,
+cache and Docker ownership scope. Interactive daemons and their sandboxes
+remain independently owned.
+
+`worktree` builds and retains the current server, bridge and client artifacts,
+Git revision, source patch, untracked source, and pinned Paper/plugin jars.
+Source inputs pass secret scanning before retention. Saved runtime restoration
+uses a detached checkout; the original Git revision must remain available in
+the local repository. The pinned container image, Bun packages, Gradle and
+client/Mojang dependencies still require their registries or local caches.
+
+Live boolean rollout decisions are recorded once per request identity through
+a local reader. Replay restores those decisions and refuses unrecorded ones.
+It reuses the saved terrain and runtime without another production export.
+`render` uses retained raw frames with the current presentation metadata and
+starts neither Minecraft nor a rollout reader. Video annotations can anchor to
+recorded step names with `atStep` and relative `startMs`/`endMs` offsets.
+
+Raw captures, terrain, source inputs and run indexes live as SHA-256 addressed
+objects in the private bucket. Uploads and downloads verify their bytes; run
+indexes publish only after every selected scenario succeeds and its inputs
+are retained. Successful publication replaces the stable `public/media/<name>`
+assets and generated docs figures. Previous assets remain in the private run
+directory for recovery. Review the rendered results and repository diff before
+committing. A filtered shot still executes the scenario's complete gameplay.
+
+Exceptions clean up owned clients, the local server, the export pod, clone PVC
+and snapshot. Hard interruption leaves an export receipt under
+`~/.toolkit/mc/suite-exports/`; recover that exact receipt with:
+
+```bash
+toolkit mc capture suite recover-export <export-id>
+```
+
+Recovery verifies the receipt, resource label and Kubernetes UID before each
+deletion. Inspect an interrupted worker with its private
+`TOOLKIT_MC_DIRECTORY` and use the normal daemon shutdown command in that
+namespace. Never use a global sandbox shutdown to clean up a suite.
+
+### Individual scenes and live captures
+
 Scenes default-export `defineCaptureScene` from `capture/define.ts`. Examples
 live in `packages/the-storm/tools/captures/scenes/`: inventory, cooking pot,
 bank, owner shop test, elevator, moving bridge, and private Stargates. Setup

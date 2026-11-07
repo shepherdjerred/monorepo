@@ -72,14 +72,16 @@ const RolloutBootstrapSchema = z.strictObject({
     if (!URL.canParse(value)) return false;
     const url = new URL(value);
     return (
-      url.protocol === "https:" &&
+      (url.protocol === "https:" ||
+        (url.protocol === "http:" &&
+          url.hostname === "host.docker.internal")) &&
       url.username === "" &&
       url.password === "" &&
       url.pathname === "/" &&
       url.search === "" &&
       url.hash === ""
     );
-  }, "Rollout bootstrap requires an uncredentialed HTTPS endpoint"),
+  }, "Rollout bootstrap requires HTTPS or an isolated host reader"),
   environment: z.enum(["prod", "beta"]),
 });
 
@@ -87,6 +89,7 @@ const SandboxCreateInputSchema = z.strictObject({
   profile: ProfileSchema,
   world: WorldKindSchema,
   mapDirectory: z.string().min(1).optional(),
+  sourceDirectory: z.string().regex(/^\//u).optional(),
   rollout: RolloutBootstrapSchema.optional(),
   captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
   mapSpawn: z
@@ -117,6 +120,7 @@ function invalidMapRequest(
   input: z.infer<typeof SandboxCreateInputSchema>,
 ): boolean {
   return (
+    (input.sourceDirectory !== undefined && input.world !== "real-map") ||
     (input.world === "real-map") !== (input.mapDirectory !== undefined) ||
     (input.world === "real-map") !== (input.mapSpawn !== undefined) ||
     (input.world === "real-map" &&
@@ -186,6 +190,7 @@ export const SandboxSummarySchema = z.strictObject({
   provider: ProviderKindSchema,
   profile: ProfileSchema,
   world: WorldKindSchema,
+  sourceDirectory: z.string().optional(),
   mapSource: MapSourceSchema.optional(),
   rollout: RolloutBootstrapSchema.optional(),
   captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
