@@ -7,6 +7,9 @@ agentHost:
   casks:
     - 1password-cli
     - anthropics/tap/ant
+    # Coding-agent CLIs that Brim and the Herdr worktree dialog start there
+    # (Kimi is the kimi-code formula, which agent hosts keep with every formula).
+    - antigravity-cli
     - claude-code@latest
     - codex
     - gcloud-cli
@@ -15,4 +18,6 @@ agentHost:
     # PinchTab drives Canary as its dedicated automation browser
     # (run_once_after_install-pinchtab-daemon.sh).
     - google-chrome@canary
+    - grok-build
+    - muse-code
     - orbstack
