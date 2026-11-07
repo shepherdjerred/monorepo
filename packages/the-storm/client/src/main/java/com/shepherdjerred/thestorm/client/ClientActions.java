@@ -464,13 +464,15 @@ final class ClientActions {
     return "Command sent";
   }
 
-  private static Object interact(Minecraft client, Protocol.Request request) {
-    Protocol.keys(request.arguments(), Set.of());
+  private Object interact(Minecraft client, Protocol.Request request) {
+    var recovery = !request.arguments().isEmpty();
+    if (!recovery) Protocol.keys(request.arguments(), Set.of());
     if (client.gui.screen() != null)
       throw new IllegalStateException("Close the screen to interact");
     var player = java.util.Objects.requireNonNull(client.player);
     var mode = java.util.Objects.requireNonNull(client.gameMode);
     var hit = client.hitResult;
+    if (recovery) RecoveryTarget.verify(client, request, inputs.buttons());
     if (request.action().equals("attack")) {
       if (hit instanceof EntityHitResult entity) mode.attack(player, entity.getEntity());
       else if (hit instanceof BlockHitResult block

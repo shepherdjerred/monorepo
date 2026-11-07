@@ -68,7 +68,12 @@ export async function createDriver(directory: string, run: CaptureRun) {
       z.strictObject({ result: z.unknown() }),
       "POST",
       `${clientRoute}/bounded`,
-      { box: run.box, action, arguments: args },
+      {
+        box: run.box,
+        action,
+        arguments: args,
+        ...(cleaning ? { recovery: run.id } : {}),
+      },
     );
   let cleaning = false;
   const waitFor: CaptureContext["waitFor"] = async (

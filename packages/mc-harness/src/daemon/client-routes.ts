@@ -22,6 +22,11 @@ import { body, DaemonError, reply } from "./http.ts";
 import { guarded } from "./live-routes.ts";
 import { CaptureBoundedActionSchema } from "#protocol/capture.ts";
 import { isLocalPaintingUse } from "./painting-target.ts";
+import path from "node:path";
+import { z } from "zod";
+import { MC_DIR } from "#protocol/paths.ts";
+import { RunSchema } from "#src/capture/model.ts";
+import { recoveryInteraction } from "./capture-recovery.ts";
 
 /** The slice of the daemon context the client routes use. */
 type ClientRouteContext = {
@@ -65,11 +70,29 @@ async function boundedAction(
   if (!state.connected) throw new DaemonError("Client is disconnected", 409);
   // A crosshair does not bound placement, physics, plugin effects or held input.
   // Stateful interactions belong to the disposable real-map capture server.
-  if (summary.target === "live")
+  if (summary.target === "live" && operation.recovery === undefined)
     throw new DaemonError(
       "Stateful capture interactions require a disposable real-map sandbox",
       409,
     );
+  const arguments_ =
+    summary.target === "live"
+      ? recoveryInteraction(
+          RunSchema.parse(
+            await Bun.file(
+              path.join(
+                MC_DIR,
+                "captures",
+                z.string().parse(operation.recovery),
+                "run.json",
+              ),
+            ).json(),
+          ),
+          client,
+          operation,
+          state,
+        )
+      : operation.arguments;
   const target = await ctx.target(summary.target);
   const { worlds } = await target.bridge.info();
   const world = worlds.find((entry) => entry.name === operation.box.world);
@@ -111,8 +134,33 @@ async function boundedAction(
     )
   )
     throw new DaemonError("Aim at the declared fixture", 409);
-  const act = () =>
-    ctx.clients.request(client, operation.action, operation.arguments);
+  const act = () => ctx.clients.request(client, operation.action, arguments_);
+  if (summary.target === "live") {
+    if (ctx.live === undefined)
+      throw new DaemonError("Live service unavailable", 503);
+    const { players } = await target.bridge.players();
+    const participant = players.find(
+      (player) => player.name === client && player.uuid === state["uuid"],
+    );
+    if (participant === undefined)
+      throw new DaemonError(
+        "Live player identity differs from the controlled client",
+        409,
+      );
+    const result = await guarded(
+      { target, request, ctx: { live: ctx.live, clients: ctx.clients } },
+      () =>
+        Promise.resolve({
+          kind: "client-act",
+          name: client,
+          uuid: participant.uuid,
+          action: operation.action,
+          box: operation.box,
+        }),
+      act,
+    );
+    return Response.json({ result });
+  }
   return Response.json({ result: await act() });
 }
 

@@ -316,6 +316,10 @@ Stateful scenes and bounded client interactions require a disposable real-map
 sandbox. Crosshair bounds cannot contain every placement, physics effect or
 held interaction on a live server. Live sessions support read-only observations;
 existing interrupted live scenes retain their recovery path.
+Recovery interactions must match a saved cleanup entry, fixture bounds and
+standing position. They permit only a short sneak hold or one sign punch;
+the native client rechecks the exact sign and world before swinging. These
+operations still use the live journal, snapshot and player-proximity guards.
 
 ```bash
 toolkit mc capture doctor --target live --account XiguaJerred

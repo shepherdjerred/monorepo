@@ -55,6 +55,10 @@ export const PlayerRestoreSchema = z.strictObject({
   expectedInventory: z.string().max(1_048_576),
 });
 export const CaptureBoundedActionSchema = z.strictObject({
+  recovery: z
+    .string()
+    .regex(/^capture-[a-f0-9-]{36}$/u)
+    .optional(),
   box: BoxSchema,
   action: z.enum([
     "use",

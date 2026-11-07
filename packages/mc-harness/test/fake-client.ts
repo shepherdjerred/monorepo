@@ -138,7 +138,7 @@ function serve(fake: FakeClient, spec: LaunchSpec, quit: () => void): Server {
   return server;
 }
 
-function connectedState(yaw: number, pitch: number) {
+export function connectedState(yaw: number, pitch: number) {
   return {
     connected: true,
     position: [0.5, -60, 0.5],
