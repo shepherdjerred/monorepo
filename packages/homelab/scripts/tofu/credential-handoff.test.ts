@@ -268,45 +268,49 @@ describe("label-only platform handoffs", () => {
 
 describe("credential preparation", () => {
   test.each([
+    "packages/homelab/src/delivery-platform-grants.ts",
     "packages/homelab/package.json",
     "packages/homelab/src/cdk8s/package.json",
     "packages/homelab/tsconfig.scripts.json",
     "tsconfig.base.json",
     "bunfig.toml",
     "bun.lock",
-  ])("verify rejects a dirty module-resolution input: %s", async (file) => {
-    const fixture = await mkdtemp(path.join(tmpdir(), "handoff-source-"));
-    const read = async (command: string[]) => {
-      const child = Bun.spawn(command, {
-        cwd: fixture,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, , code] = await Promise.all([
-        new Response(child.stdout).text(),
-        new Response(child.stderr).text(),
-        child.exited,
-      ]);
-      expect(code).toBe(0);
-      return stdout;
-    };
-    try {
-      await read(["git", "init", "--quiet"]);
-      await assertCleanHandoffSource(read);
-      const fixturePath = path.join(fixture, file);
-      await mkdir(path.dirname(fixturePath), { recursive: true });
-      await writeFile(fixturePath, "synthetic module-resolution input\n");
-      await expect(assertCleanHandoffSource(read)).rejects.toThrow(
-        "Verify requires clean owning source",
-      );
-      await read(["git", "add", "--", file]);
-      await expect(assertCleanHandoffSource(read)).rejects.toThrow(
-        "Verify requires clean owning source",
-      );
-    } finally {
-      await rm(fixture, { recursive: true, force: true });
-    }
-  });
+  ])(
+    "handoff rejects dirty owning source or resolution input: %s",
+    async (file) => {
+      const fixture = await mkdtemp(path.join(tmpdir(), "handoff-source-"));
+      const read = async (command: string[]) => {
+        const child = Bun.spawn(command, {
+          cwd: fixture,
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        const [stdout, , code] = await Promise.all([
+          new Response(child.stdout).text(),
+          new Response(child.stderr).text(),
+          child.exited,
+        ]);
+        expect(code).toBe(0);
+        return stdout;
+      };
+      try {
+        await read(["git", "init", "--quiet"]);
+        await assertCleanHandoffSource(read);
+        const fixturePath = path.join(fixture, file);
+        await mkdir(path.dirname(fixturePath), { recursive: true });
+        await writeFile(fixturePath, "synthetic module-resolution input\n");
+        await expect(assertCleanHandoffSource(read)).rejects.toThrow(
+          "Verify requires clean owning source",
+        );
+        await read(["git", "add", "--", file]);
+        await expect(assertCleanHandoffSource(read)).rejects.toThrow(
+          "Verify requires clean owning source",
+        );
+      } finally {
+        await rm(fixture, { recursive: true, force: true });
+      }
+    },
+  );
   test("failed private subprocess output stays out of errors", async () => {
     await expect(
       capturedRead(
@@ -337,7 +341,9 @@ describe("credential preparation", () => {
       child.exited,
     ]);
     expect(exitCode).not.toBe(0);
-    expect(stdout + stderr).toContain("only validate is enabled");
+    expect(stdout + stderr).toContain(
+      "general application-secret live actions are disabled",
+    );
     expect(stdout + stderr).not.toContain("Missing credential");
   });
   test("committed language-neutral schema matches the runtime validator", () => {

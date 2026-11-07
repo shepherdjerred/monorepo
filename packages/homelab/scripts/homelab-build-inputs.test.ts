@@ -9,12 +9,13 @@ const nestedWorkspace = "src/cdk8s/";
 
 /**
  * homelab's transit build task hashes only scripts/** and top-level src
- * modules (turbo.json). Its dependents inherit that hash through ^build, so a
- * module they load from anywhere else would leave their cache keys stale.
+ * modules plus the Discord credential contract (turbo.json). Its dependents
+ * inherit that hash through ^build, so any additional input needs coverage.
  */
 function insideBuildInputs(relativePath: string): boolean {
   return (
     relativePath.startsWith("scripts/") ||
+    relativePath === "src/tofu/discord/desired-state.json" ||
     (relativePath.startsWith("src/") &&
       !relativePath.slice("src/".length).includes("/"))
   );

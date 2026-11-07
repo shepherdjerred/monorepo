@@ -332,6 +332,7 @@ export async function assertCleanHandoffSource(
       "packages/homelab/src/cdk8s/package.json",
       "packages/homelab/src/cdk8s/tsconfig.json",
       "scripts/onepassword",
+      "packages/homelab/src/delivery-platform-grants.ts",
       "packages/homelab/src/tofu",
       "packages/homelab/scripts/tofu",
       "packages/homelab/scripts/platform-desired-state.ts",
