@@ -107,6 +107,16 @@ const connection = {
 
 export async function inspectDeliveryWorkerImages(id: string): Promise<void> {
   const detail = await load(id);
+  // Read the control plane before the Job records its running stage: a read
+  // that fails here leaves no stage behind, so it is never mistaken for an
+  // unsettled native effect.
+  const central =
+    detail.deployment.workerSnapshot?.target === "central"
+      ? await Promise.all([
+          workerApplicationResources("temporal", "Deployment", argoRequest),
+          workerApplicationResources("temporal", "StatefulSet", argoRequest),
+        ])
+      : undefined;
   const job = await workerJob(
     detail,
     "worker-image-provenance",
@@ -120,13 +130,9 @@ export async function inspectDeliveryWorkerImages(id: string): Promise<void> {
     })
     .strict()
     .parse(job.result);
-  if (detail.deployment.workerSnapshot?.target === "central") {
-    const resources = await Promise.all([
-      workerApplicationResources("temporal", "Deployment", argoRequest),
-      workerApplicationResources("temporal", "StatefulSet", argoRequest),
-    ]);
+  if (central !== undefined) {
     requireIsolatedControlPlane(proof.controlPlaneTemplates);
-    requireIsolatedControlPlane(controlPlaneTemplates(resources.flat()));
+    requireIsolatedControlPlane(controlPlaneTemplates(central.flat()));
   }
   await deliveryRequest(
     `deployments/${encodeURIComponent(id)}/stages`,
