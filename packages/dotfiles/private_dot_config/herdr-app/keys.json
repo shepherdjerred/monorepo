@@ -57,7 +57,9 @@
     "ctrl-7": "space.select:7",
     "ctrl-8": "space.select:8",
     "ctrl-9": "space.select:9",
-    "cmd-shift-x": "my-agents.toggle-exhausted"
+    "cmd-shift-x": "my-agents.toggle-exhausted",
+    "cmd-ctrl-left": "my-tabs.back",
+    "cmd-ctrl-right": "my-tabs.forward"
   },
   "terminal": {
     "cmd-c": "terminal.copy",
