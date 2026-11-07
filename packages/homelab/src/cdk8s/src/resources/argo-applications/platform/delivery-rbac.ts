@@ -5,6 +5,7 @@ import {
   applicationReleasePolicy,
 } from "homelab/src/delivery-target-policy.ts";
 import { applicationProject } from "./projects.ts";
+import { WORKSTATION_ARGOCD_ACCOUNT } from "./argocd-human-access.ts";
 import { transitionRendering } from "homelab/src/cdk8s/src/release-configuration.ts";
 import { BASELINE_CHART_APPLICATIONS } from "homelab/src/cdk8s/src/resources/cluster-baseline/charts.ts";
 import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/names.ts";
@@ -172,6 +173,7 @@ function tofuArgocdRows(transition: boolean): string[] {
     "delivery",
     "delivery-observer",
     "delivery-platform",
+    WORKSTATION_ARGOCD_ACCOUNT,
     ...(transition ? [OPERATOR_RUN_ACCOUNT] : []),
   ];
   return accounts.flatMap((account) =>

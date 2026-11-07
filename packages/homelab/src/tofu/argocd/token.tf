@@ -103,3 +103,31 @@ output "operator_run_onepassword_item_id" {
   description = "1Password item UUID for the operator tool's ArgoCD token for operator-run Applications"
   value       = onepassword_item.argocd_operator_run_token.uuid
 }
+
+# The read-only API account agent workstations use through toolkit. The
+# ArgoCD chart registers it with `role:readonly` and no login; apply that
+# registration before creating this token. Workstations read the item; nothing
+# in the cluster mounts it.
+resource "argocd_account_token" "workstation" {
+  account = "workstation"
+}
+
+resource "onepassword_item" "argocd_workstation_token" {
+  vault = "v64ocnykdqju4ui6j6pua56xw4"
+  title = "argocd-workstation-token"
+
+  section {
+    label = "tokens"
+
+    field {
+      label = "ARGOCD_AUTH_TOKEN"
+      value = argocd_account_token.workstation.jwt
+      type  = "CONCEALED"
+    }
+  }
+}
+
+output "workstation_onepassword_item_id" {
+  description = "1Password item UUID for the read-only workstation ArgoCD token toolkit uses"
+  value       = onepassword_item.argocd_workstation_token.uuid
+}
