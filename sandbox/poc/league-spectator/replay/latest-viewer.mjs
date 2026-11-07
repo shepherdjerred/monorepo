@@ -60,6 +60,7 @@ import {
 } from "./latest-effect-contexts.mjs";
 import { createLatestEffectResolvers } from "./latest-effect-resolvers.mjs";
 import { createLatestReplayState } from "./latest-replay-state.mjs";
+import { LatestViewerReplayLoad } from "./latest-viewer-replay-load.mjs";
 import { createLatestItemAssets } from "./latest-item-assets.mjs";
 import {
   createLatestCorpsePolicy,
@@ -106,6 +107,7 @@ renderer.debug.onShaderError = (gl, program, vertex, fragment) => {
 const camera = new THREE.PerspectiveCamera(42, 1, 5, 60000),
   controls = new OrbitControls(camera, $("scene"));
 const preparedEffects = new LatestPreparedEffectPlayback();
+const replayLoad = new LatestViewerReplayLoad();
 let preparingEffectPreview = false,
   effectPreviewJob = 0,
   preparedPlaybackClock = null,
@@ -180,10 +182,16 @@ const heroes = [],
   loader = new GLTFLoader(),
   textureLoader = new THREE.TextureLoader();
 const itemImages = new Map();
-async function loadInspectionItems() {
-  itemAssets = await createLatestItemAssets(
-    report,
-    await get("/assets/latest-items/package.json", true),
+async function loadInspectionItems(load) {
+  itemAssets = await replayLoad.wait(
+    load,
+    createLatestItemAssets(
+      report,
+      await replayLoad.wait(
+        load,
+        get("/assets/latest-items/package.json", true),
+      ),
+    ),
   );
   const ids = new Set(
     report.inventoryEvents.flatMap((e) =>
@@ -198,13 +206,18 @@ async function loadInspectionItems() {
   );
   await Promise.all(
     [...assets.values()].map(async (asset) => {
-      const bytes = await get(`/assets/latest-items/${asset.icon}`, true);
-      if ((await sha256(bytes)) !== asset.iconSha256)
-        throw Error("Installed item icon changed");
-      itemImages.set(
-        asset.iconSha256,
-        await createImageBitmap(new Blob([bytes], { type: "image/png" })),
+      const bytes = await replayLoad.wait(
+        load,
+        get(`/assets/latest-items/${asset.icon}`, true),
       );
+      if ((await replayLoad.wait(load, sha256(bytes))) !== asset.iconSha256)
+        throw Error("Installed item icon changed");
+      const image = await createImageBitmap(
+        new Blob([bytes], { type: "image/png" }),
+      );
+      if (!replayLoad.isCurrent(load)) image.close();
+      replayLoad.assertCurrent(load);
+      itemImages.set(asset.iconSha256, image);
     }),
   );
 }
@@ -219,7 +232,9 @@ const fmt = (t) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 function updateInspection() {
   const canvas = $("unit-panel"),
-    model = inspection?.sample(presentedTime) ?? null,
+    model = replayLoad.loading
+      ? null
+      : (inspection?.sample(presentedTime) ?? null),
     more = $("unit-more-stats");
   canvas.hidden = model === null;
   more.hidden = model?.combatStatsStatus !== "observed";
@@ -258,6 +273,7 @@ $("unit-panel").addEventListener("pointermove", (event) => {
   canvas.title = region?.label ?? "";
 });
 function selectEntity(entityId) {
+  if (replayLoad.loading) return;
   if (!inspection) throw Error("Replay inspection is not ready");
   if (entityId === null) inspection.clear();
   else inspection.select(entityId);
@@ -277,6 +293,7 @@ $("scene").addEventListener("pointerup", (e) => {
   const start = selectionPointer;
   selectionPointer = null;
   if (
+    replayLoad.loading ||
     !inspection ||
     !start ||
     start.id !== e.pointerId ||
@@ -334,6 +351,7 @@ async function selectedStaticRoot() {
   });
 }
 function fail(error) {
+  replayLoad.invalidate();
   if (vfxRenderer === directEffectSession?.renderer) vfxRenderer = null;
   directReplyLoop?.close();
   directReplyLoop = null;
@@ -804,11 +822,14 @@ async function loadAnimatedActor(asset, events) {
     submeshNodes,
   };
 }
-async function loadWorldObjects() {
+async function loadWorldObjects(load) {
   const catalog = worldCatalog,
     bindings = bindLatestBuildings(report, manifest, catalog);
   for (const binding of bindings) {
-    const gltf = await loader.loadAsync(`${root}/${binding.asset.model}`),
+    const gltf = await replayLoad.wait(
+        load,
+        loader.loadAsync(`${root}/${binding.asset.model}`),
+      ),
       group = new THREE.Group();
     gltf.scene.scale.setScalar(binding.asset.scale);
     const unsupportedCount = applySkinPresentation(gltf.scene, binding.asset);
@@ -834,7 +855,10 @@ async function loadWorldObjects() {
     minionBindings,
   );
   for (const binding of minionBindings.minions) {
-    const spellCatalog = await get(`${root}/${binding.asset.spellCatalog}`),
+    const spellCatalog = await replayLoad.wait(
+        load,
+        get(`${root}/${binding.asset.spellCatalog}`),
+      ),
       subject = {
         character: binding.asset.character,
         entityId: binding.event.entityId,
@@ -851,7 +875,10 @@ async function loadWorldObjects() {
           sourceKind: "animation-name",
         })),
       ].sort((a, b) => a.time - b.time || a.sequence - b.sequence),
-      actor = await loadAnimatedActor(binding.asset, events);
+      actor = await replayLoad.wait(
+        load,
+        loadAnimatedActor(binding.asset, events),
+      );
     const entity = report.worldEntities.find(
       (e) => e.entityId === binding.event.entityId,
     );
@@ -892,6 +919,7 @@ async function loadWorldObjects() {
     );
   $("minion-attack-jump").disabled = !attackJumps.length;
   $("minion-attack-jump").onclick = () => {
+    if (replayLoad.loading) return;
     const jump = attackJumps[0];
     if (!jump) return;
     playing = false;
@@ -909,13 +937,17 @@ async function loadWorldObjects() {
   };
   $("minion-jump").disabled = minions.length === 0;
   $("minion-jump").onclick = () => {
-    if (!minions.length) return;
+    if (replayLoad.loading || !minions.length) return;
+    const destinationTime = Math.min(
+        report.endTime,
+        minions[0].event.time + 16,
+      ),
+      point = sampleMinionPresentation(minions[0], destinationTime);
     playing = false;
     $("play").textContent = "Play";
-    time = Math.min(report.endTime, minions[0].event.time + 16);
+    time = destinationTime;
     renderTime();
     follow = null;
-    const point = minions[0].group.position;
     selectEntity(minions[0].event.entityId);
     controls.target.set(point.x, point.y, -point.z);
     camera.position.copy(controls.target).add(new THREE.Vector3(0, 1800, 1400));
@@ -925,6 +957,7 @@ async function loadWorldObjects() {
   };
   $("world-jump").disabled = buildings.length === 0;
   $("world-jump").onclick = () => {
+    if (replayLoad.loading) return;
     const entry =
       buildings.find((b) => /\/HA_Outer$/.test(b.object.characterRecord)) ??
       buildings[0];
@@ -942,7 +975,7 @@ async function loadWorldObjects() {
       `Recorded tower · ${entry.event.entityId.toString(16)} · skin ${entry.asset.skinId} · bind pose`;
   };
 }
-async function loadHeroes() {
+async function loadHeroes(load) {
   const requested = report.heroes.map((h) => {
     const key = `${h.champion.toLowerCase()}/${h.skinId}`,
       asset = manifest.champions[key];
@@ -951,7 +984,10 @@ async function loadHeroes() {
   });
   const roster = document.createDocumentFragment();
   for (const { hero, asset } of requested) {
-    const spellCatalog = await get(`${root}/${asset.spellCatalog}`);
+    const spellCatalog = await replayLoad.wait(
+      load,
+      get(`${root}/${asset.spellCatalog}`),
+    );
     const subject = {
         character: hero.champion,
         entityId: hero.entityId,
@@ -966,7 +1002,7 @@ async function loadHeroes() {
       })),
       ...combat.actions,
     ].sort((a, b) => a.time - b.time || a.sequence - b.sequence);
-    const actor = await loadAnimatedActor(asset, events);
+    const actor = await replayLoad.wait(load, loadAnimatedActor(asset, events));
     const plate = championPlate();
     actor.group.add(plate.sprite);
     actor.group.userData.replayEntityId = hero.entityId;
@@ -1001,6 +1037,7 @@ async function loadHeroes() {
   $("roster").replaceChildren(roster);
 }
 function followHero(entry) {
+  if (replayLoad.loading) return;
   directReplyLoop?.invalidate();
   cancelPreparedEffectPreview();
   effectLookahead?.invalidate();
@@ -1108,6 +1145,7 @@ function recordedLayers(entry, moving) {
   );
 }
 async function decode(buffer) {
+  const load = replayLoad.begin();
   if (vfxRenderer === directEffectSession?.renderer) vfxRenderer = null;
   directReplyLoop?.close();
   directReplyLoop = null;
@@ -1174,6 +1212,7 @@ async function decode(buffer) {
   buildings.length = 0;
   minions.length = 0;
   report = null;
+  replayState = null;
   minionCorpses = null;
   inspection = null;
   updateInspection();
@@ -1185,30 +1224,46 @@ async function decode(buffer) {
   $("roster").replaceChildren();
   $("status").textContent = "Decoding the original ROFL in a browser worker…";
   worker?.terminate();
-  worker = new Worker("./structural-check-worker.mjs", { type: "module" });
-  worker.onerror = (e) => fail(Error(e.message));
-  worker.onmessage = async ({ data }) => {
+  const decodeWorker = new Worker("./structural-check-worker.mjs", {
+    type: "module",
+  });
+  worker = decodeWorker;
+  decodeWorker.onerror = (e) => {
+    if (replayLoad.isCurrent(load) && worker === decodeWorker)
+      fail(Error(e.message));
+  };
+  decodeWorker.onmessage = async ({ data }) => {
+    if (!replayLoad.isCurrent(load) || worker !== decodeWorker) return;
     try {
       if (data.type === "error") throw Error(data.error);
       if (data.type !== "reconstruction") return;
-      worker.terminate();
+      decodeWorker.terminate();
       worker = null;
-      report = data.report;
       if (
-        report.build !== manifest.build ||
-        report.protocol !== manifest.protocol
+        data.report.build !== manifest.build ||
+        data.report.protocol !== manifest.protocol
       )
         throw Error("Replay and assets differ");
+      // Publish only after discarding the previous replay's clock. World
+      // sampling remains blocked until the complete resource load finishes.
+      time = Math.min(45, data.report.endTime);
+      presentedTime = time;
+      previous = performance.now();
+      report = data.report;
       const selectedMaterials =
         staticCatalog === null
           ? null
-          : await loadLatestSelectedMaterialRegistry({
-              staticCatalog,
-              load: async (path) =>
-                new Uint8Array(await get(`/assets/${path}`, true)),
-            });
-      effectPipeline = effectResolvers.bindTimeline(
-        await createLatestEffectPipeline({
+          : await replayLoad.wait(
+              load,
+              loadLatestSelectedMaterialRegistry({
+                staticCatalog,
+                load: async (path) =>
+                  new Uint8Array(await get(`/assets/${path}`, true)),
+              }),
+            );
+      const pipeline = await replayLoad.wait(
+        load,
+        createLatestEffectPipeline({
           report,
           effectsManifestBytes: effectManifestBytes,
           quadGpuBytes: selectedMaterials
@@ -1219,8 +1274,8 @@ async function decode(buffer) {
             : await get("/assets/latest-trail-particles/gpu.json", true),
           selectedMaterials,
         }),
-        report,
       );
+      effectPipeline = effectResolvers.bindTimeline(pipeline, report);
       const pipelineSummary = effectPipeline.summary;
       const contextSummary = summarizeEffectContextRequests(
         effectContexts.bindRequests(report),
@@ -1247,15 +1302,18 @@ async function decode(buffer) {
       tracks = movement.tracks;
       const lifecycle = prepareLatestLifecycle(report);
       lifecycleTracks = lifecycle.tracks;
-      viewerPoseAssets = await loadLatestViewerPoseAssets({
-        THREE,
-        profile: viewerProfile,
-        report,
-        scene: manifest,
-        staticCatalog,
-        load: (path) =>
-          get(`/assets/${path}`, true).then((bytes) => new Uint8Array(bytes)),
-      });
+      viewerPoseAssets = await replayLoad.wait(
+        load,
+        loadLatestViewerPoseAssets({
+          THREE,
+          profile: viewerProfile,
+          report,
+          scene: manifest,
+          staticCatalog,
+          load: (path) =>
+            get(`/assets/${path}`, true).then((bytes) => new Uint8Array(bytes)),
+        }),
+      );
       actorWorldPresentation = createLatestWorldPresentation({
         report,
         scene: manifest,
@@ -1268,8 +1326,8 @@ async function decode(buffer) {
       });
       $("status").textContent =
         "Loading decoded champions and equipped skin candidates…";
-      await loadHeroes();
-      await loadInspectionItems();
+      await replayLoad.wait(load, loadHeroes(load));
+      await replayLoad.wait(load, loadInspectionItems(load));
       inspection = createLatestInspection(
         report,
         replayState,
@@ -1278,8 +1336,7 @@ async function decode(buffer) {
       );
       $("status").textContent =
         "Binding decoded buildings to installed map objects…";
-      await loadWorldObjects();
-      time = 45;
+      await replayLoad.wait(load, loadWorldObjects(load));
       $("seek").max = String(report.endTime);
       $("seek").value = String(time);
       $("status").textContent = "Loading recorded combat presentation…";
@@ -1290,7 +1347,7 @@ async function decode(buffer) {
       );
       $("motion-jump").disabled = !motionJump;
       $("motion-jump").onclick = () => {
-        if (!motionJump) return;
+        if (replayLoad.loading || !motionJump) return;
         const entry = heroes.find(
           (entry) => entry.hero.entityId === motionJump.entityId,
         );
@@ -1400,8 +1457,11 @@ async function decode(buffer) {
         staticCatalog,
       };
       $("status").textContent = "Loading shared effect resources…";
-      const liveEffects = await directEffects();
-      const effectDiagnostics = await liveEffects.inspect();
+      const liveEffects = await replayLoad.wait(load, directEffects());
+      const effectDiagnostics = await replayLoad.wait(
+        load,
+        liveEffects.inspect(),
+      );
       vfxRenderer = liveEffects.renderer;
       vfxRenderer.enabled = $("particles").checked;
       const remainingParticleGaps = effectDiagnostics.definitions.flatMap(
@@ -1536,6 +1596,7 @@ async function decode(buffer) {
         renderTime();
         followHero(jump.entry);
       };
+      replayLoad.complete(load);
       $("play").textContent = "Play";
       $("play").disabled = false;
       $("seek").disabled = false;
@@ -1543,7 +1604,7 @@ async function decode(buffer) {
       $("file").disabled = false;
       renderTime();
     } catch (error) {
-      fail(error);
+      if (replayLoad.isCurrent(load)) fail(error);
     }
   };
   const selectionInput =
@@ -1768,7 +1829,7 @@ function sampleMinionPresentation(entry, at) {
   return { life, state, x, y: height(x, z), z };
 }
 function applyFollowAt(at) {
-  if (!follow) return;
+  if (replayLoad.loading || !follow) return;
   const position = sampleViewerFollowPosition(follow, at, {
     sampleHero(entry, time) {
       const { x, y, z } = sampleHeroPresentation(entry, time);
@@ -1790,7 +1851,7 @@ function applyFollowAt(at) {
   applyViewerFollowTranslation(camera, controls, position);
 }
 function applyWorldTime({ updateFollow = true } = {}) {
-  if (!report) return;
+  if (replayLoad.loading || !report) return;
   const startedAt = performance.now();
   if (effectPipeline) {
     const state = effectPipeline.seek(time);
@@ -2103,6 +2164,7 @@ function ensureDirectReplyLoop() {
     now: () => performance.now(),
     nextIntent(now) {
       if (
+        replayLoad.loading ||
         report !== dataset ||
         directEffectSession !== session ||
         !session.renderer.enabled ||
@@ -2138,6 +2200,7 @@ function ensureDirectReplyLoop() {
     accept: (result, intent) => {
       observeDirectCameraIntent();
       return (
+        !replayLoad.loading &&
         report === dataset &&
         directEffectSession === session &&
         session.renderer.enabled &&
@@ -2218,6 +2281,14 @@ async function frame(now) {
     // Worker completion must never reset the match clock.
     const delta = Math.max((now - previous) / 1000, 0);
     previous = now;
+    if (replayLoad.loading) {
+      controls.update();
+      drawScene(camera, "loading replay", {
+        record: false,
+        directEffectRenderer: null,
+      });
+      return;
+    }
     // Capture owns automatic world and camera updates while paused, including
     // OrbitControls' follow/lookAt synchronization before a worker reply.
     if (directCaptureOwnership.blocksOrdinary(playing)) return;

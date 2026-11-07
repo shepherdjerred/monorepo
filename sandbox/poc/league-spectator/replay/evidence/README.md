@@ -20,3 +20,16 @@ The [master fidelity map](../AV-FIDELITY-MAP.md) explains the remaining gates.
 The [research controls](../tools/research/README.md) document capture and diagnostic
 commands. Raw replays, native images, prepared asset packages and browser profiles
 remain local prerequisites and are not part of this evidence directory.
+
+## Replacement replay and minion-wave jump regression
+
+![Minion-wave jump at the destination time](minion-wave-jump.png)
+
+[Browser control results](replay-replacement.json) record the real decoder
+loading 120 seconds, seeking to 110, and replacing it with a 60-second
+reconstruction of the same replay. A diagnostic Worker wrapper selects the
+existing decoder `endTime` input; it does not fabricate decoded events. A model
+request stays held across 30 browser frames while Play and seek remain disabled.
+Clicking a partially loaded champion roster raises no error. After loading,
+minion-wave jumps from 46 and 58 seconds produce identical camera matrices at
+60 seconds. The screenshot shows that destination, not combat coverage or FPS.

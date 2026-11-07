@@ -63,6 +63,7 @@ bun sandbox/poc/league-spectator/replay/tools/research/cdp-v39-final-check.mjs h
 bun sandbox/poc/league-spectator/replay/tools/research/cdp-active-play-interaction.mjs .cache/replay-spike/research/browser-local-interaction
 bun sandbox/poc/league-spectator/replay/tools/research/cdp-record-playback-webm.mjs .cache/replay-spike/research/browser-local-video
 bun sandbox/poc/league-spectator/replay/tools/research/cdp-initialization-gate.mjs http://127.0.0.1:4180 .cache/replay-spike/research/browser-local-initialization
+bun sandbox/poc/league-spectator/replay/tools/research/cdp-replay-replacement.mjs http://127.0.0.1:4180 .cache/replay-spike/research/browser-local-replacement
 ```
 
 The final check reloads/decodes the selected viewer, records world-only and
@@ -73,6 +74,13 @@ readback overhead must remain separate from clean performance measurements.
 The initialization control deliberately holds a static resource request while
 checking disabled Play/seek controls, then releases it and verifies ordinary
 playback. The held request is test instrumentation, not a measured loading time.
+
+The replacement control selects the decoder's existing `endTime` input through
+a diagnostic Worker wrapper: it loads 120 seconds, seeks to 110, then decodes
+60 seconds from the same actual replay. It holds a model request across 30
+rendered frames, clicks the partially loaded roster, releases loading, and
+compares minion-wave jump camera matrices from two prior replay times. The
+ordinary viewer source and strict replay-state bounds remain unchanged.
 
 The worker-latency trace is historical despite its V38 filename: it explicitly
 requires its recorded **runtime-program-37** page/reference graph. Do not remove

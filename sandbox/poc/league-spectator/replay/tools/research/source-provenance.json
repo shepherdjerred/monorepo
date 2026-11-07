@@ -12,6 +12,11 @@
       "file": "cdp-initialization-gate.mjs",
       "origin": "authored directly in the research tree",
       "purpose": "Hold shared effect resource initialization and verify Play and seeking remain disabled until readiness."
+    },
+    {
+      "file": "cdp-replay-replacement.mjs",
+      "origin": "authored directly in the research tree",
+      "purpose": "Decode a shorter replacement using the existing endTime input, hold model loading across browser frames, and compare destination camera matrices for minion-wave jumps."
     }
   ],
   "helpers": [
