@@ -210,6 +210,13 @@ export type LiveWriteOp =
   | { kind: "actor-spawn"; name: string; world: string }
   | { kind: "actor-remove"; name: string }
   | {
+      kind: "client-action";
+      name: string;
+      action: string;
+      world?: string | undefined;
+      pos?: BlockPos | undefined;
+    }
+  | {
       kind: "actor-act";
       name: string;
       act: string;
@@ -370,6 +377,21 @@ export function assessLiveWrite(
     }
     case "actor-act": {
       return assessActorAct(op, config);
+    }
+    case "client-action": {
+      return {
+        ...assessActorAct(
+          {
+            kind: "actor-act",
+            name: op.name,
+            act: op.action,
+            pos: op.pos,
+            world: op.world,
+          },
+          config,
+        ),
+        summary: `client ${op.name} ${op.action}`,
+      };
     }
   }
 }

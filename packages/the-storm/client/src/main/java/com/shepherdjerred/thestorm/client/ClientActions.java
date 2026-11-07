@@ -36,6 +36,12 @@ final class ClientActions {
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
     var args = request.arguments();
+    if (session.live()
+        && !Set.of(
+                "status", "shutdown", "release", "capture", "look", "hotbar", "input", "use-live")
+            .contains(request.action())) {
+      throw new IllegalArgumentException("Action is not available in a live session");
+    }
     if (Set.of("status", "shutdown", "release", "server-list").contains(request.action())) {
       return control(client, request);
     }
@@ -102,6 +108,7 @@ final class ClientActions {
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);
+      case "use-live" -> useLive(client, request);
       case "attack", "use" -> interact(client, request);
       default -> throw new IllegalArgumentException("Unknown action: " + request.action());
     };
@@ -238,6 +245,9 @@ final class ClientActions {
       if (!button.isString()) throw new IllegalArgumentException("Invalid button");
       buttons.add(button.stringValue());
     }
+    if (session.live() && (buttons.contains("attack") || buttons.contains("use"))) {
+      throw new IllegalArgumentException("Live interactions require the guarded use action");
+    }
     var result = inputs.start(peer, buttons, Protocol.integer(args, "ticks", 1, 100));
     apply(client);
     if (buttons.contains("attack")) KeyMapping.click(client.options.keyAttack.getDefaultKey());
@@ -354,6 +364,38 @@ final class ClientActions {
     } else if (hit instanceof EntityHitResult entity) {
       mode.interact(player, entity.getEntity(), entity, InteractionHand.MAIN_HAND);
     } else mode.useItem(player, InteractionHand.MAIN_HAND);
+    player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
+    return "Interaction sent";
+  }
+
+  private static Object useLive(Minecraft client, Protocol.Request request) {
+    var args = request.arguments();
+    Protocol.keys(args, Set.of("world", "x", "y", "z"));
+    if (client.gui.screen() != null)
+      throw new IllegalStateException("Close the screen to interact");
+    var player = java.util.Objects.requireNonNull(client.player);
+    var level = java.util.Objects.requireNonNull(client.level);
+    if (!player.getMainHandItem().isEmpty()) {
+      throw new IllegalStateException("Select an empty hand before a live interaction");
+    }
+    if (!(client.hitResult instanceof BlockHitResult hit)
+        || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
+      throw new IllegalStateException("Aim at the guarded block");
+    }
+    var pos = hit.getBlockPos();
+    if (!level.dimension().identifier().toString().equals(Protocol.text(args, "world", 256))
+        || pos.getX() != Protocol.integer(args, "x", -30_000_000, 30_000_000)
+        || pos.getY() != Protocol.integer(args, "y", -2048, 2048)
+        || pos.getZ() != Protocol.integer(args, "z", -30_000_000, 30_000_000)) {
+      throw new IllegalStateException("The targeted block changed after the live guard check");
+    }
+    var block = level.getBlockState(pos).getBlock();
+    if (!(block instanceof net.minecraft.world.level.block.SignBlock)
+        && !(block instanceof net.minecraft.world.level.block.ButtonBlock)) {
+      throw new IllegalStateException("Live interaction supports signs and buttons only");
+    }
+    var mode = java.util.Objects.requireNonNull(client.gameMode);
+    mode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
     player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
     return "Interaction sent";
   }

@@ -19,6 +19,7 @@ import { CLIENT_PROJECT } from "#protocol/paths.ts";
 import { ClientRefusedError } from "#protocol/client-socket.ts";
 import { clientRequest } from "./client-socket.ts";
 import { DaemonError } from "./http.ts";
+import { stageAndLaunchPrism } from "./prism.ts";
 
 /**
  * Real Minecraft clients (the-storm's Fabric preview mod) owned by the daemon.
@@ -32,6 +33,7 @@ export type ClientBootstrap = {
   socket: string;
   artifacts: string;
   server: string;
+  target?: "live";
 };
 
 export type LaunchSpec = {
@@ -86,7 +88,7 @@ type Session = {
   summary: ClientSummary;
   socket: string;
   privateDir: string;
-  child: LaunchedClient;
+  child?: LaunchedClient;
 };
 
 const POLL_MS = 500;
@@ -125,6 +127,7 @@ export class ClientManager {
   private readonly sessions = new Map<string, Session>();
   /** Names whose start is in flight, so two starts cannot race for one name. */
   private readonly starting = new Set<string>();
+  private startingLive = false;
 
   constructor(
     private readonly options: {
@@ -162,6 +165,111 @@ export class ClientManager {
       return await this.launch(name, target, game.port);
     } finally {
       this.starting.delete(name);
+    }
+  }
+
+  /** Launch the dedicated Prism instance using Prism's signed-in account. */
+  async startLive(name: string): Promise<ClientSummary> {
+    if (this.sessions.has(name) || this.starting.has(name)) {
+      throw new DaemonError(`Client ${name} is already running`, 409);
+    }
+    if (process.platform !== "darwin") {
+      throw new DaemonError(
+        "Authenticated Prism control currently requires macOS",
+        409,
+      );
+    }
+    if (
+      this.startingLive ||
+      this.list().some((client) => client.target === "live")
+    ) {
+      throw new DaemonError(
+        "A controlled Prism client is already running",
+        409,
+      );
+    }
+    this.startingLive = true;
+    this.starting.add(name);
+    let privateDir: string | undefined;
+    try {
+      privateDir = await mkdtemp(path.join(os.tmpdir(), "mc-client-"));
+      await chmod(privateDir, 0o700);
+      const startedAt = new Date();
+      const artifacts = path.join(
+        this.options.dir,
+        `${name}-${startedAt.getTime().toString()}`,
+      );
+      await mkdir(artifacts, { recursive: true, mode: 0o700 });
+      const bootstrap: ClientBootstrap = {
+        socket: path.join(privateDir, "client.sock"),
+        artifacts,
+        server: "ts-mc.net:25565",
+        target: "live",
+      };
+      const bootstrapPath = path.join(privateDir, "bootstrap.json");
+      await Bun.write(bootstrapPath, JSON.stringify(bootstrap));
+      await chmod(bootstrapPath, 0o600);
+      const launcher = await stageAndLaunchPrism({
+        repoRoot: this.options.repoRoot,
+        artifacts,
+        bootstrap: bootstrapPath,
+      });
+      const session: Session = {
+        summary: {
+          name,
+          target: "live",
+          server: bootstrap.server,
+          pid: launcher.pid,
+          startedAt: startedAt.toISOString(),
+          artifacts,
+        },
+        socket: bootstrap.socket,
+        privateDir,
+      };
+      this.sessions.set(name, session);
+      try {
+        await Promise.race([
+          this.waitUntilJoined(session, path.join(artifacts, "build.log")),
+          launcher.failure,
+        ]);
+        const state = ClientStateSchema.parse(
+          await this.request(name, "status"),
+        );
+        if (!state.connected)
+          throw new Error("Prism client disconnected before registration");
+        session.summary.pid = state.pid;
+        void this.monitorPrism(session);
+      } catch (error) {
+        if (await isSocket(session.socket)) {
+          try {
+            await clientRequest(session.socket, "shutdown", {}, 5000);
+          } catch {
+            /* Client already exited. */
+          }
+        }
+        this.sessions.delete(name);
+        throw error;
+      }
+      return session.summary;
+    } catch (error) {
+      if (privateDir !== undefined)
+        await rm(privateDir, { recursive: true, force: true });
+      throw error;
+    } finally {
+      this.starting.delete(name);
+      this.startingLive = false;
+    }
+  }
+
+  private async monitorPrism(session: Session): Promise<void> {
+    while (this.sessions.get(session.summary.name) === session) {
+      try {
+        process.kill(session.summary.pid, 0);
+      } catch {
+        await this.ended(session, null);
+        return;
+      }
+      await Bun.sleep(2000);
     }
   }
 
@@ -224,7 +332,9 @@ export class ClientManager {
   }
 
   private async reapOnExit(session: Session): Promise<void> {
-    const code = await session.child.exited;
+    const child = session.child;
+    if (child === undefined) return;
+    const code = await child.exited;
     await this.ended(session, code);
   }
 
@@ -236,7 +346,7 @@ export class ClientManager {
     const deadline = Date.now() + timeoutMs;
     let lastError = "the control socket never appeared";
     while (Date.now() < deadline) {
-      const code = session.child.exitCode();
+      const code = session.child?.exitCode() ?? null;
       if (code !== null) {
         throw new Error(
           `Client exited (${code.toString()}) before joining; see ${logPath}`,
@@ -350,6 +460,11 @@ export class ClientManager {
   /** Asks the game to quit, then escalates to SIGTERM and SIGKILL. */
   private async stopSession(session: Session): Promise<void> {
     const { child } = session;
+    if (child === undefined) {
+      await clientRequest(session.socket, "shutdown", {}, 5000);
+      await this.ended(session, null);
+      return;
+    }
     const grace = this.options.stopTimeoutMs ?? 30_000;
     if (child.exitCode() === null) {
       try {

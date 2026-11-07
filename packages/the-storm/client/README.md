@@ -1,7 +1,6 @@
 # Minecraft preview client
 
-This developer tool controls a rendered Minecraft 26.3 client connected to a
-disposable local Paper server. The Fabric mod has its own Gradle build and is
+This developer tool controls a rendered Minecraft 26.3 client. The Fabric mod has its own Gradle build and is
 never included in TheStorm.jar. The Bun launcher reuses The Storm's pinned
 server harness, creates a separate client game directory, and keeps the
 control sockets in a private temporary directory.
@@ -12,6 +11,12 @@ development client uses the offline name `StormPreview` (Gradle property
 `previewUsername` overrides it); no launcher account or normal Prism instance is
 read or changed. The mc-harness daemon also runs this client against its
 sandboxes as `toolkit mc client` (see `packages/mc-harness/README.md`).
+
+The harness can also launch a separate managed Prism instance with Prism's
+signed-in account for an explicitly requested live session. Live actions are
+restricted and pass through the harness's production safeguards; see the
+mc-harness README for the commands and interaction limits. The standalone
+preview commands below remain restricted to disposable local servers.
 
 ## Start a preview
 

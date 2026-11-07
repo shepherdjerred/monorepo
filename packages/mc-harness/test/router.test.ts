@@ -453,13 +453,8 @@ describe("client routes", () => {
     expect(gone.status).toBe(404);
   });
 
-  it("refuses live, unknown sandboxes and bad names", async () => {
+  it("refuses unknown sandboxes and bad names", async () => {
     const { ctx } = context();
-    const live = await call(ctx, "POST", "/clients", {
-      target: "live",
-      name: "Tester",
-    });
-    expect(live.status).toBe(400);
     const missing = await call(ctx, "POST", "/clients", {
       target: "sbx-ffffff",
       name: "Tester",

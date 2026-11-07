@@ -7,7 +7,11 @@ import {
   ClientStatusResponseSchema,
   ClientStopResponseSchema,
 } from "@shepherdjerred/mc-harness/protocol/client.ts";
-import { daemonRequest } from "#lib/mc/client.ts";
+import { daemonRequest, daemonSend } from "#lib/mc/client.ts";
+import {
+  liveWriteHeaders,
+  type LiveWriteFlags,
+} from "@shepherdjerred/mc-harness/protocol/live.ts";
 import { renderClientStatus, renderClients } from "#lib/mc/game-client.ts";
 
 function print<T>(json: boolean, value: T, render: (value: T) => string): void {
@@ -47,12 +51,13 @@ export async function resolveClient(
 export async function mcClientStartCommand(
   start: ClientStartRequest,
   json: boolean,
+  write: LiveWriteFlags = {},
 ): Promise<void> {
-  const status = await daemonRequest(
+  const status = await daemonSend(
     ClientStatusResponseSchema,
     "POST",
     "/clients",
-    start,
+    { body: start, headers: liveWriteHeaders(write) },
   );
   print(json, status, renderClientStatus);
 }
@@ -78,17 +83,19 @@ export async function mcClientStatusCommand(
   print(json, status, renderClientStatus);
 }
 
-export async function mcClientActionCommand(
-  name: string,
-  action: ClientAction,
-  body: Record<string, unknown>,
-  json: boolean,
-): Promise<void> {
-  const result = await daemonRequest(
+export async function mcClientActionCommand(input: {
+  name: string;
+  action: ClientAction;
+  body: Record<string, unknown>;
+  json: boolean;
+  write?: LiveWriteFlags;
+}): Promise<void> {
+  const { name, action, body, json, write = {} } = input;
+  const result = await daemonSend(
     ClientActionResponseSchema,
     "POST",
     clientPath(name, `/${action}`),
-    body,
+    { body, headers: liveWriteHeaders(write) },
   );
   print(json, result, (value) => value.detail);
 }
@@ -110,13 +117,15 @@ export async function mcClientCaptureCommand(
 export async function mcClientStopCommand(
   names: string[],
   json: boolean,
+  write: LiveWriteFlags = {},
 ): Promise<void> {
   const stopped: string[] = [];
   for (const name of names) {
-    const result = await daemonRequest(
+    const result = await daemonSend(
       ClientStopResponseSchema,
       "DELETE",
       clientPath(name),
+      { headers: liveWriteHeaders(write) },
     );
     stopped.push(...result.stopped);
   }

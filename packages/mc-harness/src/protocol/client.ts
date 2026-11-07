@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ConnectedClientStateShape } from "./client-socket.ts";
 import { GameModeSchema } from "./bridge.ts";
 import { SandboxIdSchema } from "./ipc.ts";
+import { LIVE_TARGET_ID } from "./live.ts";
 
 /**
  * The real rendered Minecraft client (the-storm's Fabric preview mod), owned
@@ -34,20 +35,25 @@ export const CLIENT_BUTTONS = [
 ] as const;
 export const ClientButtonSchema = z.enum(CLIENT_BUTTONS);
 
-// The real client joins over offline-mode loopback, so live tsmc (online mode)
-// is never a target: only sandbox ids are accepted.
-export const ClientStartRequestSchema = z.strictObject({
-  target: SandboxIdSchema,
-  name: ClientNameSchema,
-  /** Ops the player through the bridge once it joins. */
-  op: z.boolean().default(false),
-  gameMode: GameModeSchema.optional(),
-});
+export const ClientStartRequestSchema = z.union([
+  z.strictObject({
+    target: z.literal(LIVE_TARGET_ID),
+    name: ClientNameSchema,
+    op: z.literal(false).default(false),
+    gameMode: z.undefined().optional(),
+  }),
+  z.strictObject({
+    target: SandboxIdSchema,
+    name: ClientNameSchema,
+    op: z.boolean().default(false),
+    gameMode: GameModeSchema.optional(),
+  }),
+]);
 export type ClientStartRequest = z.infer<typeof ClientStartRequestSchema>;
 
 export const ClientSummarySchema = z.strictObject({
   name: ClientNameSchema,
-  target: SandboxIdSchema,
+  target: z.union([SandboxIdSchema, z.literal(LIVE_TARGET_ID)]),
   /** Loopback game endpoint the client joined. */
   server: z.string(),
   /** Launcher (Gradle runClient) process; `state.pid` is the game JVM. */
