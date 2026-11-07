@@ -16,6 +16,8 @@
     "bin/codex_theme_restart_terminal.ts",
     "bin/codex_theme_restart_config.ts",
     "bin/codex_theme_restart_events.ts",
+    "bin/executable_herdr_new_worktree.ts",
+    "bin/herdr_new_worktree_core.ts",
     "scripts/*.ts"
   ]
 }

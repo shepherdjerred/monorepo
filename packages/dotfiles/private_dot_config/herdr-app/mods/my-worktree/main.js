@@ -1,8 +1,10 @@
 // Worktree dialog: { space, action: "new" | "open" | "remove" } or
 // { folder, machine } for a repo without a space; optional { branch, tab, argv }.
-// New takes the first message for the agent instead of a branch name: OpenAI
-// names the branch and the tab from it (naming.js), and the agent, picked from
-// Brim's ranking, starts with that message. A given { branch } skips naming.
+// New takes the first message for the agent instead of a branch name, plus the
+// agent (from Brim's ranking) and its mode, model and effort. Enter hands that
+// to ~/bin/herdr-new-worktree and closes: it names the branch and tab with
+// OpenAI (naming.js), creates the worktree and opens the space in the
+// background. A given { branch } skips naming and runs here.
 
 import { View, div, svg } from "gpui-kit";
 import {
@@ -22,54 +24,63 @@ import {
   spaces,
   panes,
   exec,
-  hc,
+  readTextFile,
   home,
 } from "herdr";
 import {
-  KEY_REF,
-  RESPONSES_URL,
-  TIMEOUT_MS,
-  freeBranch,
-  namingRequest,
-  parseNaming,
-} from "./naming.js";
+  CLAUDE_MODELS,
+  agentArgs,
+  capabilities,
+  parseAgyModels,
+  parseCodexModels,
+  parseGrokModels,
+  parseKimiModels,
+} from "./agents.js";
 
-// The OpenAI key, read once per window from 1Password and kept only here.
-let openaiKey = null;
-async function readKey() {
-  if (openaiKey) return openaiKey;
-  let r;
-  try {
-    r = await exec("op", ["read", KEY_REF]);
-  } catch (error) {
-    throw new Error(`1Password: ${String(error)}`);
-  }
-  const key = r.stdout.trim();
-  if (r.code !== 0 || !key)
+// Each agent's model list, from its own catalog on the space's machine (`on`,
+// null for this one; `userHome` is that machine's home). Lists are cached in
+// localStorage per machine and refreshed once per window per agent.
+const CATALOGS = {
+  "claude-code": async () => CLAUDE_MODELS,
+  codex: async (on, userHome) =>
+    parseCodexModels(
+      (await readTextFile(`${userHome}/.codex/models_cache.json`, { on })) ??
+        "{}",
+    ),
+  antigravity: async (on) =>
+    parseAgyModels(await output("agy", ["models"], on)),
+  grok: async (on) => parseGrokModels(await output("grok", ["models"], on)),
+  kimi: async (on, userHome) =>
+    parseKimiModels(
+      (await readTextFile(`${userHome}/.kimi-code/config.toml`, { on })) ?? "",
+    ),
+};
+
+async function output(command, args, on) {
+  const r = await exec(command, args, { on });
+  if (r.code !== 0)
     throw new Error(
-      `1Password: ${(r.stderr || "op read failed").trim().split("\n")[0]}`,
+      (r.stderr || r.stdout).trim().split("\n")[0] || `${command} failed`,
     );
-  openaiKey = key;
-  return key;
+  return r.stdout;
 }
 
-// `{ branch, title }` for a first message, or an Error fit for the dialog.
-async function nameWork(message, deadline) {
-  // 1Password may wait on an approval prompt; the deadline covers that too.
-  const key = await Promise.race([readKey(), deadline]);
-  const reply = await Promise.race([
-    fetch(RESPONSES_URL, namingRequest(message, key)),
-    deadline,
-  ]);
-  let body = null;
+function stored(key) {
   try {
-    body = await Promise.race([reply.json(), deadline]);
-  } catch (error) {
-    if (error?.timeout) throw error;
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
   }
-  if (reply.status === 401) openaiKey = null;
-  return parseNaming(reply.status, body);
 }
+
+function store(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+const NO_CHOICE = { mode: null, model: null, effort: null };
 
 // Agents to start, as `brim --json` ranks them: least used first, then other windows;
 // unavailable ones (no usable quota data) last, with Brim's reason, and still startable.
@@ -345,7 +356,10 @@ export default class Worktree extends View {
     // New without a given branch: the agent's first message, which names it.
     this.messaging = props()?.action === "new" && !props()?.branch;
     this.text = props()?.branch ?? "";
-    this.named = null; // { branch, title } once OpenAI answers
+    this.choice = {}; // provider -> { mode, model, effort }, null = its default
+    this.catalogs = {}; // provider -> { models, error } once read
+    this.choosing = null; // "mode" | "model" | "effort" while its list shows
+    this.optionAt = 0;
     this.list = undefined; // open: the checkouts, once read
     this.at = 0;
     this.input = this.messaging
@@ -355,7 +369,6 @@ export default class Worktree extends View {
     this.input.on("change", (_e, cx) => {
       this.text = this.input.value();
       this.error = "";
-      this.named = null;
       this.at = 0;
       cx.notify();
     });
@@ -363,7 +376,9 @@ export default class Worktree extends View {
     // run work(). Shift-Enter in the message is a new line.
     this.input.on("submit", (e, cx) => {
       if (this.opening) this.open(this.shown()[this.at]);
-      else if (!e?.shift) this.go(cx);
+      else if (e?.shift) return;
+      else if (this.choosing) this.chooseAt(this.optionAt, cx);
+      else this.go(cx);
     });
     this.inputFocused = true;
     this.input.on("focus", (_e, cx) => {
@@ -379,7 +394,6 @@ export default class Worktree extends View {
       cx.timer.after(600, () => this.input.focus());
     }
     this.busy = false;
-    this.status = null; // what work() is doing, while busy
     this.error = "";
     this.repo = undefined; // undefined: looking, null: not in git
     this.dirty = false;
@@ -403,6 +417,7 @@ export default class Worktree extends View {
             other: b.other.length,
             unavailable: b.unavailable.length,
           };
+          this.loadCatalog(this.provider(), cx);
         } catch (error) {
           this.agents = {
             choices: [SHELL],
@@ -455,6 +470,8 @@ export default class Worktree extends View {
         }
         if (repo && this.opening) this.list = await checkouts(repo, this.on);
         this.repo = repo;
+        // Model lists are read on the space's machine, once its home is known.
+        this.loadCatalog(this.provider(), cx);
         cx.notify();
         if (props().branch) await this.work(cx);
       } catch (error) {
@@ -480,82 +497,196 @@ export default class Worktree extends View {
   }
 
   go(cx) {
-    if (this.created) return this.close();
     if (this.busy || !this.repo) return;
-    // Mods have no setTimeout: the naming deadline comes from this context's timer.
-    const deadline = new Promise((_resolve, reject) => {
-      cx.timer.after(TIMEOUT_MS, () =>
-        reject(
-          Object.assign(
-            new Error(`OpenAI didn't answer in ${TIMEOUT_MS / 1000} s.`),
-            { timeout: true },
-          ),
-        ),
-      );
-    });
-    deadline.catch(() => {});
-    cx.spawn(async (cx) => this.work(cx, deadline));
+    if (this.messaging) {
+      this.error = this.startInBackground();
+      if (!this.error) this.close();
+      cx.notify();
+      return;
+    }
+    cx.spawn(async (cx) => this.work(cx));
   }
 
-  async work(cx, deadline) {
+  async work(cx) {
     if (this.busy || !this.repo) return;
     this.busy = true;
     this.error = "";
     cx.notify();
     try {
       this.error =
-        props().action === "remove"
-          ? await this.remove()
-          : await this.create(cx, deadline);
+        props().action === "remove" ? await this.remove() : await this.create();
     } catch (error) {
       this.error = error instanceof Error ? error.message : String(error);
     }
     this.busy = false;
-    this.status = null;
     if (!this.error) this.close();
     cx.notify();
   }
 
-  async create(cx, deadline) {
-    const message = this.messaging ? this.text.trim() : "";
-    if (this.messaging && !message) return "Type a first message.";
+  // The highlighted agent's Brim provider id, or null for Shell.
+  provider() {
+    return this.picking
+      ? (this.agents?.choices[this.pick]?.provider ?? null)
+      : null;
+  }
+
+  choiceFor(provider) {
+    return (
+      this.choice[provider] ??
+      (this.choice[provider] = {
+        ...NO_CHOICE,
+        ...stored(`choice:${provider}`),
+      })
+    );
+  }
+
+  // Hands the work to the detached worker; "" once it is started.
+  startInBackground() {
+    const message = this.text.trim();
+    if (!message) return "Type a first message.";
     if (this.picking && !this.agents)
       return "Still asking Brim for the agents.";
-    const chosen = this.picking ? this.agents.choices[this.pick] : null;
-    const taken = async (name) =>
-      (
-        await git(
-          this.repo.main,
-          ["show-ref", "--verify", "--quiet", `refs/heads/${name}`],
-          this.on,
-        )
-      ).ok;
-    let branch;
-    let exists = false;
-    let title = null;
-    if (this.messaging) {
-      this.status = "Naming…";
-      cx.notify();
-      const named = await nameWork(message, deadline);
-      // A generated name always starts new work: never check out a branch that exists.
-      branch = await freeBranch(named.branch, taken);
-      title = named.title;
-      this.named = { branch, title };
-    } else {
-      // A given branch is used as written; check-ref-format below rejects an
-      // invalid one. Only generated names are coerced.
-      branch = this.text.trim();
-      if (!branch) return "Type a branch name.";
-      exists = await taken(branch);
+    const provider = this.provider();
+    let args = [];
+    let safe = false;
+    try {
+      if (provider)
+        ({ args, safe } = agentArgs(provider, this.choiceFor(provider)));
+    } catch (error) {
+      return error.message;
     }
+    const request = {
+      message,
+      provider,
+      machine: this.on ?? null,
+      repoMain: this.repo.main,
+      repoTop: this.repo.top,
+      root: `${ROOT(this.userHome)}/${this.repo.name}`,
+      agentArgs: args,
+      safe,
+      // A caller's own program and tab, when it gave them instead of a pick.
+      argv: this.picking ? null : (props().argv ?? null),
+      tab: props().tab ?? null,
+    };
+    // The dialog closes now and its tasks with it; a process it started keeps
+    // running. Results: ~/.local/state/herdr-worktree/events.jsonl, the unified
+    // log, and a notification when it fails.
+    exec("sh", [
+      "-c",
+      'nohup "$0" "$1" >/dev/null 2>&1 &',
+      `${home()}/bin/herdr-new-worktree`,
+      JSON.stringify(request),
+    ]);
+    return "";
+  }
+
+  // The agent's model list, cached, then refreshed once per window.
+  loadCatalog(provider, cx) {
+    // The remote home arrives later; init loads again once it has.
+    if (!provider || !CATALOGS[provider] || !this.userHome) return;
+    if (this.catalogs[provider]?.fresh) return;
+    const key = `catalog:${this.on ?? "local"}:${provider}`;
+    const cached = stored(key);
+    this.catalogs[provider] = {
+      models: cached ?? [],
+      fresh: true,
+      error: null,
+    };
+    cx.spawn(async (cx) => {
+      try {
+        const models = await CATALOGS[provider](this.on ?? null, this.userHome);
+        this.catalogs[provider] = { models, fresh: true, error: null };
+        store(key, models);
+      } catch (error) {
+        this.catalogs[provider] = {
+          models: cached ?? [],
+          fresh: true,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+      cx.notify();
+    });
+  }
+
+  // The choices for one control: [{ id, label }], the default first.
+  options(kind, provider) {
+    const caps = capabilities(provider);
+    const none = { id: null, label: "Default" };
+    if (kind === "mode")
+      return [none, ...caps.modes.map((m) => ({ id: m.id, label: m.label }))];
+    if (kind === "model")
+      return [none, ...(this.catalogs[provider]?.models ?? [])];
+    const model = this.catalogs[provider]?.models.find(
+      (m) => m.id === this.choiceFor(provider).model,
+    );
+    const efforts = model?.efforts ?? caps.efforts;
+    return [none, ...efforts.map((e) => ({ id: e, label: e }))];
+  }
+
+  offers(kind, provider) {
+    const caps = capabilities(provider);
+    return kind === "mode"
+      ? caps.modes.length > 0
+      : kind === "model"
+        ? // Only agents whose model list can be read get a Model control.
+          Boolean(caps.model && CATALOGS[provider])
+        : Boolean(caps.effort);
+  }
+
+  choose(kind, id, provider, cx) {
+    const choice = this.choiceFor(provider);
+    choice[kind] = id;
+    // An effort the new model doesn't take goes back to its default.
+    if (
+      kind === "model" &&
+      choice.effort &&
+      !this.options("effort", provider).some((o) => o.id === choice.effort)
+    )
+      choice.effort = null;
+    store(`choice:${provider}`, choice);
+    this.choosing = null;
+    this.error = "";
+    cx.notify();
+  }
+
+  chooseAt(i, cx) {
+    const provider = this.provider();
+    const option = this.options(this.choosing, provider)[i];
+    if (option) this.choose(this.choosing, option.id, provider, cx);
+  }
+
+  // Alt-M / Alt-O / Alt-E step a control without opening its list.
+  cycle(kind, step, cx) {
+    const provider = this.provider();
+    if (!provider || !this.offers(kind, provider)) return;
+    this.loadCatalog(provider, cx);
+    const list = this.options(kind, provider);
+    const now = list.findIndex((o) => o.id === this.choiceFor(provider)[kind]);
+    const next = list[(Math.max(0, now) + step + list.length) % list.length];
+    this.choose(kind, next.id, provider, cx);
+  }
+
+  // A given { branch }: checked out when it exists, else started from here.
+  async create() {
+    // The branch is used as written; check-ref-format rejects an invalid one.
+    const branch = this.text.trim();
+    if (!branch) return "Type a branch name.";
+    if (this.picking && !this.agents)
+      return "Still asking Brim for the agents.";
+    const provider = this.provider();
+    const exists = (
+      await git(
+        this.repo.main,
+        ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`],
+        this.on,
+      )
+    ).ok;
     const valid = await git(
       this.repo.main,
       ["check-ref-format", "--branch", branch],
       this.on,
     );
     if (!valid.ok) return valid.err || `git rejects the branch ${branch}.`;
-    this.status = `Creating ${branch}…`;
-    cx.notify();
     const path = `${ROOT(this.userHome)}/${this.repo.name}/${slug(branch)}`;
     const add = exists
       ? ["worktree", "add", path, branch]
@@ -563,74 +694,20 @@ export default class Worktree extends View {
     const r = await git(this.repo.top, add, this.on);
     if (!r.ok) return r.err || "git worktree add failed.";
     const p = props();
-    const provider = chosen?.provider ?? null;
-    // Herdr appends `task` to argv as one argument, the initial prompt for
-    // most agents. Antigravity takes it only as -i; Kimi has no interactive
-    // initial prompt, so it is typed in once Kimi is ready.
-    const extra = [];
-    if (title && provider === "claude-code") extra.push("--name", title);
-    if (message && provider === "antigravity") extra.push("-i", message);
-    const typed = Boolean(message) && provider === "kimi";
-    const asTask = Boolean(message) && provider !== "antigravity" && !typed;
-    // Brim forwards everything after its `--`. The second `--` ends the
-    // agent's own options, so a message that starts with "-" (a Markdown
-    // list) stays the prompt instead of parsing as a flag.
-    const argv = provider
-      ? [
-          "brim",
-          "--provider",
-          provider,
-          "--",
-          ...extra,
-          ...(asTask ? ["--"] : []),
-        ]
-      : p.argv;
-    // Leave spaces unnamed so they follow the checkout folder and nest under
-    // the repo; the generated title names the first tab instead.
-    run("space.new", {
-      folder: path,
-      machine: this.on,
-      tab: p.tab ?? title ?? undefined,
-      argv,
-      task: argv && asTask ? message : undefined,
-    });
-    this.created = true;
-    if (typed) return this.typeFirstMessage(path, message, cx);
-    return "";
-  }
-
-  // Types the first message into the agent the new space started, once it is
-  // ready: for agents without an initial-prompt argument.
-  async typeFirstMessage(path, message, cx) {
-    this.status = "Waiting for the agent to start…";
-    cx.notify();
-    const mine = (address) =>
-      this.on ? address.startsWith(`${this.on}/`) : !address.includes("/");
-    let address = null;
-    for (let i = 0; i < 40 && !address; i++) {
-      const r = await hc(["ls", "--json"]);
-      if (r.code === 0)
-        address =
-          JSON.parse(r.stdout).terminals.find(
-            (t) => t.cwd === path && mine(t.address),
-          )?.address ?? null;
-      if (!address) await exec("sleep", ["0.25"]);
+    let argv = p.argv;
+    if (provider) {
+      const { args, safe } = agentArgs(provider, this.choiceFor(provider));
+      argv = [
+        ...(safe ? ["env", "AGENT_SAFE=1"] : []),
+        "brim",
+        "--provider",
+        provider,
+        "--",
+        ...args,
+      ];
     }
-    const unsent = "The space is ready, but its first message wasn't sent";
-    if (!address) return `${unsent}: its terminal never appeared.`;
-    // Ready is idle. An agent can report a passing blocked state while it
-    // starts, and send refuses a blocked program, so wait for idle itself.
-    let state = null;
-    for (let i = 0; i < 120 && state !== "idle"; i++) {
-      const r = await hc(["get", address, "--json"]);
-      state = r.code === 0 ? JSON.parse(r.stdout).status?.state : null;
-      if (state !== "idle") await exec("sleep", ["0.5"]);
-    }
-    if (state !== "idle")
-      return `${unsent}: the agent never became idle (last: ${state ?? "unknown"}).`;
-    const sent = await hc(["send", address, message]);
-    if (sent.code !== 0)
-      return `${unsent}: ${(sent.stderr || sent.stdout).trim().split("\n")[0]}`;
+    // Leave spaces unnamed so they follow the checkout folder and nest under the repo.
+    run("space.new", { folder: path, machine: this.on, tab: p.tab, argv });
     return "";
   }
 
@@ -687,6 +764,12 @@ export default class Worktree extends View {
   }
 
   key(e, cx) {
+    // Escape leaves an open option list first, then the dialog.
+    if (e.key === "escape" && this.choosing) {
+      this.choosing = null;
+      cx.stop_propagation();
+      return cx.notify();
+    }
     if (e.key === "escape") return this.close();
     if (this.opening) {
       const n = this.shown().length;
@@ -700,12 +783,143 @@ export default class Worktree extends View {
       return cx.notify();
     }
     if (e.key === "enter" && props()?.action === "remove") return this.go(cx);
+    const shortcut = {
+      "alt-m": ["mode", 1],
+      "alt-shift-m": ["mode", -1],
+      "alt-o": ["model", 1],
+      "alt-shift-o": ["model", -1],
+      "alt-e": ["effort", 1],
+      "alt-shift-e": ["effort", -1],
+    }[e.keystroke];
+    if (this.picking && shortcut) {
+      this.cycle(shortcut[0], shortcut[1], cx);
+      return cx.stop_propagation();
+    }
+    const vertical = e.key === "down" || e.key === "up";
+    if (this.choosing && vertical) {
+      const n = this.options(this.choosing, this.provider()).length;
+      this.optionAt = (this.optionAt + (e.key === "down" ? 1 : n - 1)) % n;
+      cx.stop_propagation();
+      return cx.notify();
+    }
     const n = this.agents?.choices.length ?? 0;
-    if (this.picking && n && (e.key === "down" || e.key === "up")) {
+    if (this.picking && n && vertical) {
       this.pick = (this.pick + (e.key === "down" ? 1 : n - 1)) % n;
+      this.loadCatalog(this.provider(), cx);
       cx.stop_propagation();
       cx.notify();
     }
+  }
+
+  // Mode, model and effort for the highlighted agent: each a chip that opens
+  // its list; only the ones the agent takes are shown.
+  renderChoices(t) {
+    const provider = this.provider();
+    if (!provider) return div();
+    const choice = this.choiceFor(provider);
+    const kinds = ["mode", "model", "effort"].filter((k) =>
+      this.offers(k, provider),
+    );
+    const chip = (kind) => {
+      const label =
+        this.options(kind, provider).find((o) => o.id === choice[kind])
+          ?.label ?? choice[kind];
+      const open = this.choosing === kind;
+      return h_flex()
+        .id(`choice-${kind}`)
+        .flex_none()
+        .h(24)
+        .px(8)
+        .gap(4)
+        .items_center()
+        .rounded(6)
+        .border(1)
+        .border_color(open ? t.accent : t.border)
+        .cursor_pointer()
+        .hover((s) => s.bg(t.hover))
+        .on_click((_e, cx) => {
+          this.choosing = open ? null : kind;
+          this.optionAt = Math.max(
+            0,
+            this.options(kind, provider).findIndex(
+              (o) => o.id === choice[kind],
+            ),
+          );
+          if (kind === "model") this.loadCatalog(provider, cx);
+          cx.notify();
+        })
+        .child(
+          div()
+            .text_size(11)
+            .text_color(t.dim)
+            .child(kind[0].toUpperCase() + kind.slice(1)),
+        )
+        .child(
+          div()
+            .text_size(12)
+            .text_color(choice[kind] ? t.foreground : t.muted)
+            .child(`${label} \u25be`),
+        );
+    };
+    return h_flex().flex_none().gap(6).items_center().children(kinds.map(chip));
+  }
+
+  // The open control's choices, in place of the agent list.
+  renderOptions(t) {
+    const provider = this.provider();
+    const kind = this.choosing;
+    const current = this.choiceFor(provider)[kind];
+    const catalog = this.catalogs[provider];
+    const rows = this.options(kind, provider).map((o, i) =>
+      h_flex()
+        .id(`option-${i}`)
+        .flex_none()
+        .h(28)
+        .px(10)
+        .gap(8)
+        .items_center()
+        .rounded(7)
+        .cursor_pointer()
+        .when(i === this.optionAt, (el) => el.bg(t.selected))
+        .when(i !== this.optionAt, (el) => el.hover((s) => s.bg(t.hover)))
+        .on_click((_e, cx) => this.choose(kind, o.id, provider, cx))
+        .child(
+          div()
+            .flex_1()
+            .min_w(0)
+            .truncate()
+            .text_color(t.foreground)
+            .when(o.id === current, (el) => el.font_semibold())
+            .child(o.label),
+        )
+        .when(Boolean(o.id && o.label !== o.id), (el) =>
+          el.child(
+            div().flex_none().text_size(11).text_color(t.dim).child(o.id),
+          ),
+        ),
+    );
+    if (kind === "model" && catalog?.error)
+      rows.push(
+        div()
+          .flex_none()
+          .px(10)
+          .py(4)
+          .text_size(11.5)
+          .text_color(t.blocked)
+          .child(`Model list: ${catalog.error}`),
+      );
+    return div()
+      .relative()
+      .flex_1()
+      .min_h(0)
+      .child(
+        v_flex()
+          .id("option-list")
+          .size_full()
+          .overflow_y_scroll()
+          .children(rows),
+      )
+      .child(Scrollbar.vertical("option-list").absolute().inset_0());
   }
 
   // The agent list under the branch name: brim's sections, the pick highlighted.
@@ -741,6 +955,7 @@ export default class Worktree extends View {
         .when(off, (el) => el.tooltip(e.reason ?? "no data"))
         .on_click((_e, cx) => {
           this.pick = i;
+          this.loadCatalog(this.provider(), cx);
           cx.notify();
         })
         .child(providerIcon(e, t, off && !on))
@@ -1074,21 +1289,18 @@ export default class Worktree extends View {
             .text_color(t.foreground),
         ),
       )
-      .when(Boolean(this.named), (el) =>
-        el.child(
-          div()
-            .text_size(11.5)
-            .text_color(t.muted)
-            .child(`Branch ${this.named.branch} · tab “${this.named.title}”`),
-        ),
-      )
-      .when(this.busy && Boolean(this.status), (el) =>
-        el.child(div().text_size(11.5).text_color(t.dim).child(this.status)),
+      .when(this.picking && !blocked && !remove, (el) =>
+        el.child(this.renderChoices(t)),
       )
       .when(Boolean(this.error), (el) =>
         el.child(div().text_color(t.blocked).child(this.error)),
       )
-      .when(this.picking && !blocked, (el) => el.child(this.renderAgents(t)))
+      .when(this.picking && !blocked && Boolean(this.choosing), (el) =>
+        el.child(this.renderOptions(t)),
+      )
+      .when(this.picking && !blocked && !this.choosing, (el) =>
+        el.child(this.renderAgents(t)),
+      )
       .when(!(this.picking && !blocked), (el) => el.child(div().flex_1()))
       .child(
         h_flex()
@@ -1097,14 +1309,16 @@ export default class Worktree extends View {
           .text_color(t.dim)
           .child(
             this.busy
-              ? (this.status ?? "working…")
+              ? "working…"
               : blocked
                 ? "esc close"
                 : remove
                   ? "↵ remove · esc cancel"
                   : this.picking
                     ? this.messaging
-                      ? "↑↓ agent · ↵ name and start · ⇧↵ new line · esc cancel"
+                      ? this.choosing
+                        ? "↑↓ choose · ↵ pick · esc back"
+                        : "↑↓ agent · ⌥M ⌥O ⌥E mode, model, effort · ↵ start · ⇧↵ new line · esc cancel"
                       : "↑↓ agent · ↵ create · esc cancel"
                     : "↵ create · esc cancel",
           ),
