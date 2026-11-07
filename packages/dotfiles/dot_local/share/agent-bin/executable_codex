@@ -1,0 +1,22 @@
+#!/bin/sh
+# Codex, through the agent environment (see agent-exec). Approvals and the
+# sandbox are already off in ~/.codex/config.toml. A running Codex never
+# follows macOS appearance changes (openai/codex#45163), so each launch picks
+# the syntax theme for the current appearance; restart-codex-panes relaunches
+# running panes through this wrapper when the appearance flips.
+theme=catppuccin-latte
+# Light mode has no AppleInterfaceStyle key, so defaults prints an error there.
+if [ -x /usr/bin/defaults ] &&
+  [ "$(/usr/bin/defaults read -g AppleInterfaceStyle 2>&1)" = Dark ]; then
+  theme=catppuccin-mocha
+fi
+# Herdr requires --no-daemon so Codex runs its commands inside hc. Codex
+# rejects the flag twice, and Herdr's own launches and restart-codex-panes
+# already pass it, so add it only when it is missing.
+no_daemon=--no-daemon
+for arg in "$@"; do
+  [ "$arg" = --no-daemon ] && no_daemon=""
+done
+# Neither is a bypass flag, so both go after `--` and survive AGENT_SAFE=1.
+# shellcheck disable=SC2086
+exec "${0%/*}/agent-exec" codex -- $no_daemon -c "tui.theme=\"$theme\"" "$@"

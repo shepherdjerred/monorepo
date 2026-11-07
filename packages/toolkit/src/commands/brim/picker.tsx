@@ -1,6 +1,6 @@
 import { useState, type JSX } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import { directBinary, fishWord, noFishCommand } from "#lib/brim/fish.ts";
+import type { LaunchPreview } from "#lib/brim/launch.ts";
 import {
   budgetRemaining,
   columnWidths,
@@ -117,74 +117,39 @@ function PickerRow({
 
 function SpawnPreview({
   entry,
-  programs,
-  noFish,
+  previews,
 }: {
   readonly entry: RankedEntry;
-  readonly programs: ReadonlyMap<string, string>;
-  readonly noFish: boolean;
+  readonly previews: ReadonlyMap<string, LaunchPreview>;
 }): JSX.Element {
   const name = formatPickerName(entry);
-  // Under --no-fish the spawn bypasses fish entirely, so preview the
-  // configured fallback command instead of fish resolution.
-  if (noFish) {
-    const fallback = noFishCommand(entry.provider);
-    if (fallback !== null) {
-      return (
-        <Text>
-          <Text dimColor>{name} · will spawn </Text>
-          <Text color="cyan">{`${fallback.argv.join(" ")} (no-fish)`}</Text>
-        </Text>
-      );
-    }
+  const preview = previews.get(entry.provider);
+  if (preview === undefined) {
+    throw new Error(`No launch preview for provider "${entry.provider}".`);
   }
-  // Resolved `fish -i -c` program (abbreviations spliced as their
-  // expansion, since bare words never expand inside `-c`).
-  const program = programs.get(entry.provider);
-  if (program !== undefined) {
+  if (preview.kind === "unavailable") {
     return (
       <Text>
-        <Text dimColor>{name} · will spawn </Text>
-        <Text color="cyan">{`fish -i -c '${program}'`}</Text>
+        <Text color="red">cannot spawn {name}</Text>
+        <Text dimColor> · {preview.message}</Text>
       </Text>
     );
   }
-  const binary = directBinary(entry.provider);
-  if (binary !== null) {
-    const installed = Bun.which(binary) !== null;
-    return (
-      <Text>
-        <Text dimColor>{name} · will spawn </Text>
-        <Text color={installed ? "yellow" : "red"}>
-          {installed
-            ? `${binary} (direct)`
-            : `${binary} (direct, not installed)`}
-        </Text>
-      </Text>
-    );
-  }
-  const word = fishWord(entry.provider);
   return (
     <Text>
-      <Text color="red">no fish command for {name}</Text>
-      <Text dimColor>
-        {word === null
-          ? " · add an abbreviation to spawn it"
-          : ` · fish defines nothing for "${word}"`}
-      </Text>
+      <Text dimColor>{name} · will spawn </Text>
+      <Text color="cyan">{preview.line}</Text>
     </Text>
   );
 }
 
 export function ProviderPicker({
   result,
-  programs,
-  noFish,
+  previews,
   onSubmit,
 }: {
   readonly result: RankResult;
-  readonly programs: ReadonlyMap<string, string>;
-  readonly noFish: boolean;
+  readonly previews: ReadonlyMap<string, LaunchPreview>;
   readonly onSubmit: (entry: RankedEntry | null) => void;
 }): JSX.Element {
   const { exit } = useApp();
@@ -232,7 +197,7 @@ export function ProviderPicker({
         />
       ))}
       {active === undefined ? null : (
-        <SpawnPreview entry={active} programs={programs} noFish={noFish} />
+        <SpawnPreview entry={active} previews={previews} />
       )}
       <Text dimColor>↑↓ to move · Enter to spawn · Esc to cancel</Text>
     </Box>

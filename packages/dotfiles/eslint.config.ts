@@ -24,4 +24,12 @@ export default [
       ],
     },
   },
+  {
+    // Herdr mods are plain JS loaded by the Herdr app; the test imports the
+    // mod's pure module as it ships.
+    files: ["scripts/worktree-naming.test.ts"],
+    rules: {
+      "custom-rules/require-ts-extensions": "off",
+    },
+  },
 ];

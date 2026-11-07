@@ -1,0 +1,74 @@
+#!/bin/sh
+# Runs a coding-agent CLI in the agent environment. Every wrapper in this
+# directory execs `agent-exec <name> [default flags...] -- [user args...]`.
+#
+# - Agents always use their subscription login: direct provider API keys are
+#   removed, as are the homelab service tokens interactive shells may export.
+# - Agents always run with approvals and sandboxing bypassed via each
+#   wrapper's default flags. AGENT_SAFE=1 skips the default flags for one run;
+#   the environment is still scrubbed.
+# - Agents commit and push as the agent identity (~/.config/agent/gitconfig,
+#   ~/.config/gh-agent) and never wait on an editor or pager.
+#
+# This directory is first on PATH in every shell, so Herdr, Brim and scripts get
+# the same behavior as typing the command. The real binary is the next one on
+# PATH after this directory.
+set -eu
+
+if [ "$#" -lt 2 ]; then
+  echo "usage: agent-exec <name> [default flags...] -- [args...]" >&2
+  exit 2
+fi
+name=$1
+shift
+
+defaults=""
+while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
+  defaults="$defaults $1"
+  shift
+done
+if [ "$#" -eq 0 ]; then
+  echo "agent-exec: missing -- before the user's arguments" >&2
+  exit 2
+fi
+shift
+
+wrapper_dir=$(cd -P -- "$(dirname -- "$0")" && pwd)
+real=""
+old_ifs=$IFS
+IFS=:
+for dir in $PATH; do
+  [ -n "$dir" ] || continue
+  [ -d "$dir" ] || continue
+  resolved=$(cd -P -- "$dir" && pwd) || continue
+  [ "$resolved" = "$wrapper_dir" ] && continue
+  if [ -f "$dir/$name" ] && [ -x "$dir/$name" ]; then
+    real="$dir/$name"
+    break
+  fi
+done
+IFS=$old_ifs
+if [ -z "$real" ]; then
+  echo "$name is not installed or not on PATH (outside $wrapper_dir)" >&2
+  exit 127
+fi
+
+unset ANTHROPIC_API_KEY OPENAI_API_KEY CODEX_API_KEY GEMINI_API_KEY \
+  GOOGLE_API_KEY XAI_API_KEY GROK_API_KEY MOONSHOT_API_KEY KIMI_API_KEY \
+  CURSOR_API_KEY \
+  OP_SERVICE_ACCOUNT_TOKEN BUGSINK_TOKEN GRAFANA_API_KEY DISCORD_USER_TOKEN \
+  DISCORD_BOT_TOKEN POSTHOG_CLI_API_KEY ARGOCD_AUTH_TOKEN WOODPECKER_TOKEN \
+  CF_API_TOKEN CLOUDFLARE_API_TOKEN
+
+EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat
+GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig"
+GH_CONFIG_DIR="$HOME/.config/gh-agent"
+export EDITOR VISUAL GIT_EDITOR PAGER GIT_PAGER GIT_CONFIG_GLOBAL GH_CONFIG_DIR
+
+if [ "${AGENT_SAFE:-}" = 1 ]; then
+  exec "$real" "$@"
+fi
+# Default flags are fixed words chosen by the wrappers (no spaces or globs), so
+# word splitting them is intended.
+# shellcheck disable=SC2086
+exec "$real" $defaults "$@"

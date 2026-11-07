@@ -80,8 +80,6 @@ set-default-apps.sh
 .talos/config
 configure-gcx.sh
 {{- else }}
-# toolkit credential-broker shims and the login-zsh PATH fix-up for them exist
-# only on agent hosts.
+# toolkit credential-broker shims exist only on agent hosts.
 .local/share/toolkit/shims
-.zlogin
 {{- end }}

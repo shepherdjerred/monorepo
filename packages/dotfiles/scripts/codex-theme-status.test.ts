@@ -69,7 +69,6 @@ function dialogFixture(initial: string, choice: string, completed: string) {
     now: Date.now,
     sleep: (milliseconds) => Bun.sleep(milliseconds),
     conversationSaved: () => true,
-    appearanceConfigured: () => true,
     hc: async (args) => {
       if (args[0] === "read") return screen;
       keys.push(String(args[2]));

@@ -1,3 +1,4 @@
+import { isThemeOverride } from "./codex_theme_restart_config.ts";
 import type { Runtime } from "./codex_theme_restart_terminal.ts";
 
 export const uuid =
@@ -61,12 +62,11 @@ function nativeOption(
       : argv[index + 1];
     if (value === undefined) throw new Error("Missing Codex option value");
     return {
+      // The `codex` wrapper appends the theme for the current appearance, so a
+      // preserved launch-time theme would override it with the stale one.
       retained:
         valueFlags.has(flag) &&
-        !(
-          (flag === "-c" || flag === "--config") &&
-          /^\s*tui\.(?:theme|resume_cwd)\s*=/.test(value)
-        )
+        !((flag === "-c" || flag === "--config") && isThemeOverride(value))
           ? [flag, value]
           : [],
       consumed: inline ? 1 : 2,
@@ -159,8 +159,6 @@ export function resumeArguments(
 ): string[] {
   if (!uuid.test(thread)) throw new Error("Invalid Codex conversation UUID");
   const retained = launchOptions(argv);
-  // Even UI-only -c overrides select an embedded server in current Codex.
-  // The worker writes appearance settings through the daemon before restarting.
   return ["resume", thread, ...retained];
 }
 const plainWord = /^[\w@%+=:,./-]+$/;
@@ -181,7 +179,9 @@ function shellWord(value: string): string {
 
 /** The line typed into the interactive shell, so its `codex` wrapper policy still applies. */
 export function launchCommand(argv: readonly string[], thread: string): string {
-  return ["codex", ...resumeArguments(argv, thread)].map((word) => shellWord(word)).join(" ");
+  return ["codex", ...resumeArguments(argv, thread)]
+    .map((word) => shellWord(word))
+    .join(" ");
 }
 
 /**

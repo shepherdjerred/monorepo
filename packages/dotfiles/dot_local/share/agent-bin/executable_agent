@@ -1,0 +1,4 @@
+#!/bin/sh
+# agent is Cursor's alias for cursor-agent; Homebrew's grok-build also ships an
+# `agent`, so name the real binary explicitly.
+exec "${0%/*}/agent-exec" cursor-agent --yolo --sandbox disabled -- "$@"

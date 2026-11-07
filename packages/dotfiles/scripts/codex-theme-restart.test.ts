@@ -8,6 +8,7 @@ import {
   launchCommand,
   resumeArguments,
 } from "../bin/codex_theme_restart_launch.ts";
+import { launchedTheme } from "../bin/codex_theme_restart_config.ts";
 import { parseOptions } from "../bin/codex_theme_restart_options.ts";
 import {
   parseCodexTerminals,
@@ -40,6 +41,7 @@ test("parses terminal targeting and rejects ambiguous scopes", () => {
     onChange: false,
     worker: false,
     probeIdentities: false,
+    status: false,
     terminal: "t5",
   });
   expect(() => parseOptions(["--terminal"])).toThrow("requires a value");
@@ -48,6 +50,13 @@ test("parses terminal targeting and rejects ambiguous scopes", () => {
   );
   expect(() => parseOptions(["--session", "test"])).toThrow("Unknown option");
   expect(() => parseOptions(["--unknown"])).toThrow("Unknown option");
+  expect(parseOptions(["--status"]).status).toBe(true);
+  expect(() => parseOptions(["--status", "--terminal", "t5"])).toThrow(
+    "read-only report",
+  );
+  expect(() => parseOptions(["--status", "--on-change"])).toThrow(
+    "read-only report",
+  );
 });
 
 test("lists only live local Codex terminals", () => {
@@ -121,13 +130,51 @@ test("retains observed bypass flags, other launch policy and argument boundaries
   ]);
 });
 
-test("drops stale UI overrides without adding flags that disable the shared daemon", () => {
+test("drops every launch-time theme override so the wrapper's current theme wins", () => {
   expect(
     resumeArguments(
       ["codex", "-c", 'tui.theme="old"', "resume", "--last"],
       thread,
     ),
   ).toEqual(["resume", thread]);
+  expect(
+    resumeArguments(
+      [
+        "/opt/homebrew/bin/codex",
+        "--no-daemon",
+        "-c=tui.theme=catppuccin-latte",
+        "--config",
+        " tui.theme = 'catppuccin-mocha'",
+        '--config=tui.theme="catppuccin-latte"',
+        "-c",
+        'tui.resume_cwd="session"',
+        "-c",
+        'tui.theme_extra="kept"',
+        "-c=model_reasoning_effort=high",
+        "resume",
+        otherThread,
+        "-c",
+        'tui.theme="catppuccin-mocha"',
+      ],
+      thread,
+    ),
+  ).toEqual([
+    "resume",
+    thread,
+    "--no-daemon",
+    "-c",
+    'tui.resume_cwd="session"',
+    "-c",
+    'tui.theme_extra="kept"',
+    "-c",
+    "model_reasoning_effort=high",
+  ]);
+  expect(
+    launchCommand(
+      ["codex", "--no-daemon", "-c", 'tui.theme="catppuccin-latte"'],
+      thread,
+    ),
+  ).toBe(`codex resume ${thread} --no-daemon`);
   expect(() => resumeArguments(["not-codex"], thread)).toThrow("not Codex");
   expect(() => resumeArguments(["codex", "--unknown-option"], thread)).toThrow(
     "Unsupported",
@@ -170,6 +217,8 @@ type Scenario = {
   lostStartAcknowledgement?: boolean;
   bypass?: boolean;
   lostBypass?: boolean;
+  /** The theme the wrapper appends to the relaunched client; null for none. */
+  relaunchTheme?: string | null;
 };
 
 const isStatusKeys = (call: string[]) =>
@@ -203,11 +252,16 @@ function fixture(scenario: Scenario = {}) {
       const flags = launchLine
         .split(" ")
         .filter((word) => word.startsWith("--dangerously-bypass-"));
+      const theme =
+        scenario.relaunchTheme === undefined
+          ? "catppuccin-mocha"
+          : scenario.relaunchTheme;
       return [
         "/opt/homebrew/bin/codex",
         "resume",
         scenario.wrongResumedThread ? otherThread : thread,
         ...(scenario.lostBypass ? [] : flags),
+        ...(theme === null ? [] : ["-c", `tui.theme="${theme}"`]),
       ];
     }
     if (foregroundPid() === shell) return ["/opt/homebrew/bin/fish", "-l"];
@@ -215,6 +269,8 @@ function fixture(scenario: Scenario = {}) {
       "/opt/homebrew/bin/codex",
       "--no-daemon",
       ...(scenario.bypass ? [bypassFlag] : []),
+      "-c",
+      'tui.theme="catppuccin-latte"',
     ];
   };
   const status = () => {
@@ -293,7 +349,6 @@ function fixture(scenario: Scenario = {}) {
     },
   };
   const runtime: Runtime = {
-    appearanceConfigured: () => true,
     conversationSaved: () => !scenario.unsaved,
     now: () => time,
     sleep: async (milliseconds) => {
@@ -523,7 +578,6 @@ test("a closed terminal is a failure without a blind retry", async () => {
   };
   let calls = 0;
   const runtime: Runtime = {
-    appearanceConfigured: () => true,
     conversationSaved: () => true,
     now: Date.now,
     sleep: async () => {
@@ -611,4 +665,35 @@ test("a continuation is reserved before delivery and never repeated across one t
     message: "Same conversation restored; continuation already handled",
   });
   expect(calls.filter((call) => isPrompt(call))).toHaveLength(0);
+});
+
+test("reports a relaunch without the wrapper's theme after still continuing the turn", async () => {
+  for (const relaunchTheme of [null, "catppuccin-latte"]) {
+    const { calls, execute } = fixture({ status: "working", relaunchTheme });
+    const result = await execute();
+    expect(result).toMatchObject({ status: "failed" });
+    expect(result.message).toContain(
+      "Same conversation restored; continuation submitted once",
+    );
+    expect(result.message).toContain("expected catppuccin-mocha");
+    expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
+  }
+});
+
+test("reads the launch theme from the last override in either option form", () => {
+  expect(launchedTheme(["codex", "--no-daemon"])).toBeUndefined();
+  expect(launchedTheme(["codex", "-c", 'tui.theme="catppuccin-mocha"'])).toBe(
+    "catppuccin-mocha",
+  );
+  expect(
+    launchedTheme([
+      "codex",
+      "--config=tui.theme='catppuccin-mocha'",
+      "-c=tui.theme=catppuccin-latte",
+    ]),
+  ).toBe("catppuccin-latte");
+  expect(launchedTheme(["codex", "-c", 'tui.theme_extra="x"'])).toBeUndefined();
+  expect(
+    launchedTheme(["codex", "--", "-c", 'tui.theme="catppuccin-mocha"']),
+  ).toBeUndefined();
 });

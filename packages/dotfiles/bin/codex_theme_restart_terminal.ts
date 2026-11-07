@@ -1,5 +1,3 @@
-import type { Appearance } from "./codex_theme_restart_options.ts";
-
 export function object(value: unknown): Map<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value))
     throw new TypeError("Expected a JSON object");
@@ -89,7 +87,6 @@ export type Runtime = {
   now: () => number;
   sleep: (milliseconds: number) => Promise<void>;
   conversationSaved: (thread: string) => boolean;
-  appearanceConfigured: (mode: Appearance) => boolean | Promise<boolean>;
 };
 
 export async function snapshotOf(

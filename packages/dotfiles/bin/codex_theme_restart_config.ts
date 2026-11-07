@@ -1,99 +1,45 @@
-import path from "node:path";
-import { object } from "./codex_theme_restart_terminal.ts";
 import type { Appearance } from "./codex_theme_restart_options.ts";
 
+/** Must match the `codex` wrapper's darwin selection and the Catppuccin palettes in Herdr. */
 export function themeForAppearance(mode: Appearance): string {
   return mode === "dark" ? "catppuccin-mocha" : "catppuccin-latte";
 }
 
-/** The daemon's local control socket uses WebSocket frames, not stdio JSONL. */
-export async function syncCodexAppearance(
-  mode: Appearance,
-  codexHome: string,
-): Promise<void> {
-  const socketPath = path.join(
-    codexHome,
-    "app-server-control/app-server-control.sock",
-  );
-  const socket = new WebSocket(`ws+unix://${socketPath}:/rpc`);
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    await new Promise<void>((resolve, reject) => {
-      timer = setTimeout(() => {
-        reject(new Error("Codex settings API timed out; no clients stopped"));
-      }, 15_000);
-      socket.addEventListener("error", () => {
-        reject(new Error("Codex settings socket failed; no clients stopped"));
-      });
-      socket.addEventListener("close", () => {
-        reject(
-          new Error(
-            "Codex settings socket closed before confirmation; no clients stopped",
-          ),
-        );
-      });
-      socket.addEventListener("open", () => {
-        socket.send(
-          JSON.stringify({
-            id: 1,
-            method: "initialize",
-            params: {
-              clientInfo: { name: "codex_theme_restart", version: "1" },
-              capabilities: { experimentalApi: true },
-            },
-          }),
-        );
-      });
-      socket.addEventListener("message", (event) => {
-        try {
-          if (typeof event.data !== "string")
-            throw new TypeError("Invalid settings API message");
-          const message = object(JSON.parse(event.data));
-          if (message.has("error"))
-            throw new Error(
-              "Codex settings API rejected the request; no clients stopped",
-            );
-          if (message.get("id") === 1) {
-            socket.send(JSON.stringify({ method: "initialized" }));
-            socket.send(
-              JSON.stringify({
-                id: 2,
-                method: "config/batchWrite",
-                params: {
-                  edits: [
-                    {
-                      keyPath: "tui.theme",
-                      value: themeForAppearance(mode),
-                      mergeStrategy: "replace",
-                    },
-                    {
-                      keyPath: "tui.resume_cwd",
-                      value: "session",
-                      mergeStrategy: "replace",
-                    },
-                  ],
-                },
-              }),
-            );
-          }
-          if (message.get("id") === 2) {
-            if (object(message.get("result")).get("status") !== "ok")
-              throw new Error(
-                "Codex appearance settings were overridden; no clients stopped",
-              );
-            resolve();
-          }
-        } catch {
-          reject(
-            new Error(
-              "Codex settings API did not confirm the update; no clients stopped",
-            ),
-          );
-        }
-      });
-    });
-  } finally {
-    clearTimeout(timer);
-    socket.close();
+const themeOverride = /^\s*tui\.theme\s*=(.*)$/s;
+
+/** Whether one `-c`/`--config` value overrides `tui.theme`. */
+export function isThemeOverride(value: string): boolean {
+  return themeOverride.test(value);
+}
+
+function tomlString(value: string): string {
+  if (value.length >= 2 && value.startsWith("'") && value.endsWith("'"))
+    return value.slice(1, -1);
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    const parsed: unknown = JSON.parse(value);
+    if (typeof parsed !== "string")
+      throw new TypeError("Invalid tui.theme override");
+    return parsed;
   }
+  // Codex treats a value that is not valid TOML as a literal string.
+  return value;
+}
+
+/**
+ * The theme a running Codex was launched with from its `-c tui.theme=...`
+ * overrides (the last one wins), or undefined when it uses its config file.
+ */
+export function launchedTheme(argv: readonly string[]): string | undefined {
+  let theme: string | undefined;
+  for (let index = 1; index < argv.length; index++) {
+    const argument = argv[index];
+    if (argument === undefined || argument === "--") break;
+    let value: string | undefined;
+    if (argument === "-c" || argument === "--config") value = argv[++index];
+    else if (argument.startsWith("-c=") || argument.startsWith("--config="))
+      value = argument.slice(argument.indexOf("=") + 1);
+    const match = value === undefined ? null : themeOverride.exec(value);
+    if (match?.[1] !== undefined) theme = tomlString(match[1].trim());
+  }
+  return theme;
 }

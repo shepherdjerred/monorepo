@@ -26,6 +26,12 @@ mise activate fish --shims | source
 fish_add_path --path --move ~/.local/share/toolkit/shims
 {{- end }}
 
+# Coding-agent wrappers (claude, codex, agy, cursor-agent, grok, kimi, muse)
+# strip provider API keys and service tokens, bypass approvals and sandboxes,
+# and set the agent git identity. They are real executables, so Herdr, Brim and
+# scripts get the same behavior as typing the command; see agent-exec there.
+fish_add_path --path --move ~/.local/share/agent-bin
+
 # Use abbreviations so scripts use real commands, but your typing expands
 abbr vim nvim
 abbr ls eza
@@ -36,7 +42,6 @@ abbr top "sudo btop"
 abbr btop "sudo btop"
 abbr less ov
 abbr ping gping
-abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --allow-dangerously-skip-permissions"
 abbr finder "open -a Finder"
 abbr gs git-spice
 
@@ -63,10 +68,10 @@ set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 # CLI tool credentials (via 1Password) - only set if op CLI is available.
 # Brokered secrets (Grafana/PostHog/ArgoCD/Discord/Bugsink/Cloudflare
 # tokens) resolve via `toolkit` at call time and are scrubbed from agent
-# shells (see __agent_exec); nothing is exported for them here. Agent hosts
-# render no secrets into files at all: they take the URL-only branch below
-# and resolve credentials at call time through toolkit or
-# scripts/onepassword/with-service-account.sh.
+# environments (see ~/.local/share/agent-bin/agent-exec); nothing is exported
+# for them here. Agent hosts render no secrets into files at all: they take
+# the URL-only branch below and resolve credentials at call time through
+# toolkit or scripts/onepassword/with-service-account.sh.
 {{ $renderSecrets := and (lookPath "op") (ne .profile "agent-host") -}}
 {{ if $renderSecrets -}}
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
@@ -105,62 +110,14 @@ set -gx POSTHOG_CLI_PROJECT_ID '549883'
 {{ end -}}
 if status is-interactive
   {{/* Plaintext provider keys in a file agents can read would defeat the
-       wrappers below that strip them, so agent hosts skip them too. */ -}}
+       agent-bin wrappers that strip them, so agent hosts skip them too. */ -}}
   {{ if $renderSecrets -}}
   set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
   set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
   {{ end -}}
-  # Keep provider API keys available to ordinary tools, but coding-agent
-  # wrappers explicitly remove direct API credentials. Claude and Codex
-  # therefore use their subscription/auth-file flows. Claude Code and Codex
-  # get the agent git/GitHub identity from their own configs; the other agents
-  # get it from __agent_exec. These wrappers are intentionally interactive-only;
-  # launches that bypass fish (Raycast, scripts) must scrub their environment
-  # explicitly.
-  function codex --wraps codex -d "Run Codex without direct provider API keys"
-      if not command -q codex
-          echo "codex is not installed or not on PATH" >&2
-          return 127
-      end
-      env -u (string join "" OPENAI _API_KEY) \
-          -u (string join "" CODEX _API_KEY) \
-          -u (string join "" ANTHROPIC _API_KEY) \
-          (command -s codex) $argv
-  end
-  # Run a coding agent with the agent environment: no direct provider API
-  # keys, plain editor/pager defaults, and the derrej GitHub identity
-  # (~/.config/agent/gitconfig for commits and pushes, ~/.config/gh-agent for gh
-  # and git-spice's CLI auth).
-  function __agent_exec -d "Run a coding agent with the agent environment"
-      if not command -q $argv[1]
-          echo "$argv[1] is not installed or not on PATH" >&2
-          return 127
-      end
-      env -u (string join "" ANTHROPIC _API_KEY) \
-          -u (string join "" OPENAI _API_KEY) \
-          -u (string join "" CODEX _API_KEY) \
-          -u BUGSINK_TOKEN \
-          -u GRAFANA_API_KEY \
-          -u DISCORD_USER_TOKEN \
-          -u DISCORD_BOT_TOKEN \
-          -u POSTHOG_CLI_API_KEY \
-          -u ARGOCD_AUTH_TOKEN \
-          -u WOODPECKER_TOKEN \
-          -u CF_API_TOKEN \
-          EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
-          GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
-          GH_CONFIG_DIR="$HOME/.config/gh-agent" \
-          (command -s $argv[1]) $argv[2..-1]
-  end
-  function agy --wraps agy
-      __agent_exec agy --dangerously-skip-permissions $argv
-  end
-  function grok --wraps grok
-      __agent_exec grok $argv
-  end
-  function muse --wraps muse
-      __agent_exec muse --yolo --disable-sandbox $argv
-  end
+  # Provider API keys stay available to ordinary tools; the coding-agent
+  # wrappers in ~/.local/share/agent-bin remove them so agents always use their
+  # subscription logins.
   fish_vi_key_bindings
 
   starship init fish | source

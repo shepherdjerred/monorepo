@@ -8,22 +8,16 @@ setopt no_nomatch
 
 # Agent hosts route credentialed CLIs (talosctl, argocd, gcx, woodpecker-cli,
 # temporal, posthog-cli) through toolkit shims ahead of mise and Homebrew. The
-# directory exists only on agent hosts. Login shells reorder PATH afterwards
-# (/etc/zprofile's path_helper, then ~/.zprofile's brew shellenv), so ~/.zlogin
-# moves it to the front again.
-_toolkit_shims="$HOME/.local/share/toolkit/shims"
-[[ -d "$_toolkit_shims" ]] && path=("$_toolkit_shims" ${path:#$_toolkit_shims})
-unset _toolkit_shims
+# directory exists only on agent hosts. The coding-agent wrappers in
+# ~/.local/share/agent-bin (see agent-exec there) go first on every machine.
+# Login shells reorder PATH afterwards (/etc/zprofile's path_helper, then
+# ~/.zprofile's brew shellenv), so ~/.zlogin moves both to the front again.
+for _front in "$HOME/.local/share/toolkit/shims" "$HOME/.local/share/agent-bin"; do
+  [[ -d "$_front" ]] && path=("$_front" ${path:#$_front})
+done
+unset _front
 
 # Local-only is the safe default for mobile and unreliable networks. This file
 # is private chezmoi output; it contains the remote credentials only for an
 # explicit `turbo_cache_remote` session switch.
 [[ -f "$HOME/.config/turbo-cache/env.sh" ]] && source "$HOME/.config/turbo-cache/env.sh"
-
-# Match Codex's syntax theme to the current macOS appearance on each launch.
-codex() {
-  local theme=catppuccin-latte
-  # Light mode has no AppleInterfaceStyle key; hide defaults' expected missing-key message.
-  [[ "$(/usr/bin/defaults read -g AppleInterfaceStyle 2>/dev/null)" == Dark ]] && theme=catppuccin-mocha
-  command codex -c "tui.theme=\"$theme\"" "$@"
-}

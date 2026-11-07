@@ -1,4 +1,8 @@
 import {
+  launchedTheme,
+  themeForAppearance,
+} from "./codex_theme_restart_config.ts";
+import {
   bypassFlags,
   launchCommand,
   launchReplacement,
@@ -146,22 +150,27 @@ async function awaitReplacement(
   thread: string,
 ): Promise<Snapshot> {
   const deadline = runtime.now() + 30_000;
-  const mismatch = "Restarted process does not match the requested conversation";
+  const mismatch =
+    "Restarted process does not match the requested conversation";
   for (;;) {
     const snapshot = await snapshotOf(runtime, target.terminal);
     if (snapshot.shell !== target.shell)
       throw new Error("Terminal shell changed during restart");
     const { pid, argv } = snapshot.foreground;
-    if (pid !== snapshot.shell && pid !== target.pid && executable(snapshot) === "codex") {
-        if (
-          !argv.some(
-            (argument, index) =>
-              argument === "resume" && argv[index + 1] === thread,
-          )
+    if (
+      pid !== snapshot.shell &&
+      pid !== target.pid &&
+      executable(snapshot) === "codex"
+    ) {
+      if (
+        !argv.some(
+          (argument, index) =>
+            argument === "resume" && argv[index + 1] === thread,
         )
-          throw new Error(mismatch);
-        return snapshot;
-      }
+      )
+        throw new Error(mismatch);
+      return snapshot;
+    }
     if (runtime.now() >= deadline) throw new Error(mismatch);
     await runtime.sleep(200);
   }
@@ -172,10 +181,10 @@ async function verifyLaunch(
   target: Target,
   thread: string,
 ): Promise<Snapshot> {
-  if (!(await runtime.appearanceConfigured(target.mode)))
-    throw new Error("Codex appearance settings changed during restart");
   const replacement = await awaitReplacement(runtime, target, thread);
-  if (!target.bypass.every((flag) => replacement.foreground.argv.includes(flag))) {
+  if (
+    !target.bypass.every((flag) => replacement.foreground.argv.includes(flag))
+  ) {
     throw new Error(
       "Wrapper did not preserve observed bypass flags; no continuation sent",
     );
@@ -190,7 +199,7 @@ async function verifyLaunch(
   );
   if (resumed !== thread)
     throw new Error("Native /status reported a different resumed conversation");
-  return snapshotOf(runtime, target.terminal);
+  return replacement;
 }
 
 async function settledStatus(
@@ -211,15 +220,17 @@ async function continueTerminal(
   target: Target,
   { thread, wasWorking }: { thread: string; wasWorking: boolean },
   continued: Set<string>,
-): Promise<string> {
-  await verifyLaunch(runtime, target, thread);
-  if (!wasWorking) return "Same conversation restored";
+): Promise<{ message: string; argv: string[] }> {
+  const replacement = await verifyLaunch(runtime, target, thread);
+  const { argv } = replacement.foreground;
+  const done = (message: string) => ({ message, argv });
+  if (!wasWorking) return done("Same conversation restored");
   if (continued.has(thread))
-    return "Same conversation restored; continuation already handled";
+    return done("Same conversation restored; continuation already handled");
   const resumed = await settledStatus(runtime, target.terminal);
   if (resumed.status === "working") {
     continued.add(thread);
-    return "Existing turn is already working; no duplicate prompt sent";
+    return done("Existing turn is already working; no duplicate prompt sent");
   }
   if (resumed.status !== "idle" && resumed.status !== "done") {
     throw new Error(
@@ -228,7 +239,7 @@ async function continueTerminal(
   }
   continued.add(thread);
   await runtime.hc(["send", target.terminal, continuation]);
-  return "Same conversation restored; continuation submitted once";
+  return done("Same conversation restored; continuation submitted once");
 }
 
 export async function restart(
@@ -246,10 +257,7 @@ export async function restart(
     if (target.thread === undefined)
       throw new Error("Restart requires a verified conversation");
     const before = await snapshotOf(runtime, terminal);
-    if (
-      before.shell !== target.shell ||
-      before.foreground.pid !== target.pid
-    )
+    if (before.shell !== target.shell || before.foreground.pid !== target.pid)
       return outcome("skipped", "Terminal process changed before restart");
     const thread = await probeConversation(runtime, before);
     if (thread !== target.thread)
@@ -261,7 +269,7 @@ export async function restart(
     const command = launchCommand(target.argv, thread);
     await exitCodex(runtime, target);
     const startError = await launchReplacement(runtime, terminal, command);
-    const message = await continueTerminal(
+    const { message, argv } = await continueTerminal(
       runtime,
       target,
       { thread, wasWorking },
@@ -271,12 +279,20 @@ export async function restart(
         throw new Error(`${startError}; ${errorMessage(error)}`);
       throw error;
     });
-    return outcome(
-      "restarted",
+    const restored =
       startError === undefined
         ? message
-        : `${message}; hc launch acknowledgement failed but terminal verified (${startError})`,
-    );
+        : `${message}; hc launch acknowledgement failed but terminal verified (${startError})`;
+    // The interrupted conversation is restored and continued either way; a
+    // wrong theme means the `codex` wrapper did not apply the appearance.
+    const expected = themeForAppearance(target.mode);
+    const theme = launchedTheme(argv);
+    if (theme !== expected)
+      return outcome(
+        "failed",
+        `${restored}; relaunched with ${theme === undefined ? "the config default theme" : `theme ${theme}`}, expected ${expected} from the codex wrapper`,
+      );
+    return outcome("restarted", restored);
   } catch (error) {
     return outcome("failed", errorMessage(error));
   }
