@@ -164,11 +164,10 @@ async function clientRoute(
   if (action === undefined && request.method === "DELETE") {
     const summary = ctx.clients.list().find((item) => item.name === client);
     if (summary?.target === LIVE_TARGET_ID) {
-      await ctx.live.write(
-        { kind: "client-action", name: client, action: "stop" },
-        readLiveWriteFlags(request.headers),
-        () => ctx.clients.stop(client),
-      );
+      const reason = readLiveWriteFlags(request.headers).reason;
+      if (reason === undefined)
+        throw new DaemonError('Live client stop needs --reason "<why>"', 400);
+      await ctx.clients.stop(client, reason);
     } else await ctx.clients.stop(client);
     ctx.log("client stopped", { name: client });
     return reply(ClientStopResponseSchema, { stopped: [client] });

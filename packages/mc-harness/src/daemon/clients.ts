@@ -434,8 +434,23 @@ export class ClientManager {
     return out;
   }
 
-  async stop(name: string): Promise<void> {
-    await this.stopSession(this.session(name));
+  async stop(name: string, reason?: string): Promise<void> {
+    const session = this.session(name);
+    if (reason === undefined) return this.stopSession(session);
+    const journal = path.join(session.summary.artifacts, "commands.jsonl");
+    try {
+      await this.stopSession(session);
+      await appendFile(
+        journal,
+        `${JSON.stringify({ at: new Date().toISOString(), action: "stop", reason, ok: true })}\n`,
+      );
+    } catch (error) {
+      await appendFile(
+        journal,
+        `${JSON.stringify({ at: new Date().toISOString(), action: "stop", reason, ok: false, error: describe(error) })}\n`,
+      );
+      throw error;
+    }
   }
 
   /** Stops every client joined to a sandbox that is going away. */

@@ -77,6 +77,32 @@ function fixture() {
 }
 
 describe("live rendered client actions", () => {
+  it("stops and records a reason without contacting the live server", async () => {
+    const f = fixture();
+    const { ctx } = liveContext({
+      runner: async () => {
+        throw new Error("server unavailable");
+      },
+      bridge: new BridgeClient({ baseUrl: "http://unused", token: "unused" }),
+      journal: new LiveJournal("/tmp/unused-live-client-test"),
+    });
+    vi.spyOn(ctx.clients, "list").mockReturnValue([f.response.client]);
+    const stop = vi.spyOn(ctx.clients, "stop").mockResolvedValue();
+    const request = new Request("http://daemon/clients/Tester", {
+      method: "DELETE",
+      headers: { "x-mc-reason": "End%20inspection" },
+    });
+    await dispatchClients(ctx, request, "Tester", undefined);
+    expect(stop).toHaveBeenCalledWith("Tester", "End inspection");
+    await expect(
+      dispatchClients(
+        ctx,
+        new Request("http://daemon/clients/Tester", { method: "DELETE" }),
+        "Tester",
+        undefined,
+      ),
+    ).rejects.toThrow("reason");
+  });
   it("guards movement with the supplied reason", async () => {
     const f = fixture();
     await f.call(

@@ -198,6 +198,8 @@ or `--game-mode`. Movement, hotbar changes, and stopping need a reason and are
 journaled. Live commands, interactions, attacks, and held use/attack inputs are
 disabled; a sign or button can cause effects beyond the clicked block. `look`,
 `status`, `capture` and emergency `release` remain available.
+Stopping a live client is recorded in its local `commands.jsonl`, so it also
+works when the production server or bridge is unreachable.
 
 Actors are Citizens NPCs, so Storm's `Humans.isHuman()` (no `NPC` metadata)
 filters them out of most Storm listeners: towns, economy, shops, quests,

@@ -453,6 +453,30 @@ describe("client routes", () => {
     expect(gone.status).toBe(404);
   });
 
+  it("records a reason and result when stopping an owned client", async () => {
+    const { ctx } = context();
+    await call(ctx, "POST", "/clients", {
+      target: "sbx-abc123",
+      name: "Audit",
+    });
+    const client = ctx.clients.list().find((entry) => entry.name === "Audit");
+    if (client === undefined) throw new Error("client did not start");
+    await ctx.clients.stop("Audit", "End inspection");
+    const log = await readFile(
+      path.join(client.artifacts, "commands.jsonl"),
+      "utf8",
+    );
+    const entries = log
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(entries.at(-1)).toMatchObject({
+      action: "stop",
+      reason: "End inspection",
+      ok: true,
+    });
+  });
+
   it("refuses unknown sandboxes and bad names", async () => {
     const { ctx } = context();
     const missing = await call(ctx, "POST", "/clients", {
