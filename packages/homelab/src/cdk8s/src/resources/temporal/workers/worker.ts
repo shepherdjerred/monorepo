@@ -63,8 +63,11 @@ export function createTemporalWorkerDeployment(
     "temporal-flipt-auth-secret",
     fliptAuthItem.name,
   );
+  // The read-only `homelab-audit` ArgoCD account's token, minted by
+  // tofu/argocd/token.tf. The construct id keeps the generated item and
+  // Secret names stable.
   const argocdItem = new OnePasswordItem(chart, "temporal-argocd-admin-1p", {
-    spec: { itemPath: vaultItemPath("yikdwue26c7gdbk5ftbvaclkli") },
+    spec: { itemPath: vaultItemPath("4ohxvipg3qrpaetx4jycekjavi") },
   });
   const bugsinkItem = new OnePasswordItem(chart, "temporal-bugsink-api-1p", {
     spec: { itemPath: vaultItemPath("jeuqmwh3r4nwu2ivo4pa3gr7om") },
