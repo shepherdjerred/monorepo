@@ -35,10 +35,10 @@ describe("passthrough registry", () => {
     ["woodpecker", "woodpecker-cli", []],
     ["git-spice", "git-spice", []],
     ["posthog", "posthog-cli", []],
-    ["grafana", "gcx", ["--context", "homelab"]],
-    ["prom", "gcx", ["--context", "homelab", "metrics"]],
-    ["loki", "gcx", ["--context", "homelab", "logs"]],
-    ["tempo", "gcx", ["--context", "homelab", "traces"]],
+    ["grafana", "gcx", []],
+    ["prom", "gcx", ["metrics"]],
+    ["loki", "gcx", ["logs"]],
+    ["tempo", "gcx", ["traces"]],
     ["temporal", "temporal", ["--profile", "homelab"]],
     ["argocd", "argocd", ["--grpc-web"]],
     ["cf", "cf", []],
@@ -145,12 +145,7 @@ describe("passthrough registry", () => {
 
   test("preserves every user argument after the fixed prefix", () => {
     const args = ["query", "a b", "", "--", "--literal"];
-    expect(invocation("loki", args).args).toEqual([
-      "--context",
-      "homelab",
-      "logs",
-      ...args,
-    ]);
+    expect(invocation("loki", args).args).toEqual(["logs", ...args]);
   });
 
   test("returns null for non-platform commands", () => {

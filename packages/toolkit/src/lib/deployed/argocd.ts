@@ -9,7 +9,11 @@
  * Degrades cleanly: returns null (with a reason) when the CLI is missing or the
  * call fails, so the command still prints the git/gh verdict.
  */
-import { $ } from "bun";
+import { resolveCredentials } from "#lib/credentials.ts";
+import {
+  buildPassthroughInvocation,
+  lookupExecutable,
+} from "#lib/passthrough.ts";
 import { ArgoAppSchema } from "./schemas.ts";
 import type { ArgoStatus } from "./types.ts";
 
@@ -18,13 +22,53 @@ const REVISION_BUILD_RE = /2\.0\.0-(\d+)/;
 export type ArgoResult =
   { ok: true; status: ArgoStatus } | { ok: false; reason: string };
 
+/**
+ * `argocd app get` through the same broker and defaults as `toolkit argocd`:
+ * the registered token, the homelab server, and `--grpc-web`.
+ */
+async function runArgoAppGet(
+  app: string,
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  try {
+    await resolveCredentials(["ARGOCD_AUTH_TOKEN"]);
+  } catch (error) {
+    return {
+      exitCode: 1,
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error),
+    };
+  }
+  const invocation = buildPassthroughInvocation(
+    "argocd",
+    ["app", "get", app, "-o", "json"],
+    Bun.env,
+  );
+  const executable =
+    invocation === null
+      ? null
+      : lookupExecutable(invocation.executable, invocation.env["PATH"]);
+  if (invocation === null || executable === null) {
+    return { exitCode: 127, stdout: "", stderr: "argocd CLI not found" };
+  }
+  const child = Bun.spawn([executable, ...invocation.args], {
+    env: invocation.env,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  return { exitCode, stdout, stderr };
+}
+
 export async function getArgoApp(app: string): Promise<ArgoResult> {
-  const result = await $`argocd app get ${app} --grpc-web -o json`
-    .nothrow()
-    .quiet();
+  const result = await runArgoAppGet(app);
 
   if (result.exitCode !== 0) {
-    const stderr = result.stderr.toString().trim();
+    const stderr = result.stderr.trim();
     return {
       ok: false,
       reason:
@@ -36,7 +80,7 @@ export async function getArgoApp(app: string): Promise<ArgoResult> {
 
   let json: unknown;
   try {
-    json = JSON.parse(result.stdout.toString());
+    json = JSON.parse(result.stdout);
   } catch {
     return { ok: false, reason: "argocd returned non-JSON output" };
   }

@@ -3,6 +3,11 @@ import { captureJson } from "./process.ts";
 import { sanitizeText } from "./redaction.ts";
 import { ciPods } from "./pods.ts";
 import { woodpeckerJson, type WoodpeckerConfig } from "#lib/woodpecker/ci.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
+import {
+  buildPassthroughInvocation,
+  lookupExecutable,
+} from "#lib/passthrough.ts";
 
 const QueueSchema = z.object({
   paused: z.boolean(),
@@ -70,19 +75,24 @@ async function metric(
   expression: string,
   signal?: AbortSignal,
 ): Promise<Metric[]> {
+  // Same server, token and org as `toolkit prom`; no stored gcx context.
+  await resolveCredentials(["GRAFANA_API_KEY"]);
+  const invocation = buildPassthroughInvocation(
+    "prom",
+    ["query", expression, "-o", "json"],
+    Bun.env,
+  );
+  const executable =
+    invocation === null
+      ? null
+      : lookupExecutable(invocation.executable, invocation.env["PATH"]);
+  if (invocation === null || executable === null)
+    throw new Error("gcx is not installed");
   const result = await captureJson(
-    [
-      "gcx",
-      "--context",
-      "homelab",
-      "metrics",
-      "query",
-      expression,
-      "-o",
-      "json",
-    ],
+    [executable, ...invocation.args],
     MetricsSchema,
     signal,
+    invocation.env,
   );
   if (result.data.result.length === 0)
     throw new Error("Prometheus returned no samples for CI load");

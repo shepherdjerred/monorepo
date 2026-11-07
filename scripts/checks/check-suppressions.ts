@@ -63,6 +63,9 @@ const EXCLUDED_FILES = [
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
   // Intentional: Sentry SDK ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
   "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
+  // Intentional: Bun cannot close a spawned child's extra pipe fd, so toolkit's
+  // /dev/fd/3 handoff (talosconfig without a file) must use node:fs closeSync.
+  "packages/toolkit/src/lib/spawn-forwarding.ts",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
   "packages/temporal/src/activities/fetcher.ts",
   // Intentional: ha-codegen emits `/* eslint-disable */` into the generated HA schema header

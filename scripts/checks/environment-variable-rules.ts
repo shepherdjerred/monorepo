@@ -27,6 +27,10 @@ const VENDOR_INTERFACE_FILES = [
   // The test asserts the exact variable gcx reads, which is the point of the
   // assertion — a test that spelled it differently would not pin the contract.
   "packages/temporal/src/activities/gcx-context.test.ts",
+  // `toolkit grafana|prom|loki|tempo` hand gcx its server and brokered token
+  // through the same runtime overrides, so nothing is written to gcx config.
+  "packages/toolkit/src/lib/passthrough.ts",
+  "packages/toolkit/test/lib/credential-broker.test.ts",
 ];
 
 const VENDOR_INTERFACE_VARIABLES = new Set(["GRAFANA_SERVER", "GRAFANA_TOKEN"]);

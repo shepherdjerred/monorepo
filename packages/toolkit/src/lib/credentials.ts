@@ -1,7 +1,16 @@
 import os from "node:os";
 import { z } from "zod";
-import { BRIM_SYNC_CREDENTIALS } from "#lib/brim/sync/credential-specs.ts";
-import { defaultToolkitConfigPath } from "#lib/toolkit-config.ts";
+import {
+  CREDENTIAL_REGISTRY,
+  PRIVATE_VAULT_REF,
+} from "#lib/credential-registry.ts";
+import type { CredentialSpec } from "#lib/credential-registry.ts";
+import { liveCredentialCache } from "#lib/credential-cache.ts";
+import type { CredentialCache } from "#lib/credential-cache.ts";
+import {
+  defaultToolkitConfigPath,
+  loadToolkitConfig,
+} from "#lib/toolkit-config.ts";
 
 /**
  * Credential broker: resolves service secrets into `Bun.env` just in time.
@@ -11,167 +20,13 @@ import { defaultToolkitConfigPath } from "#lib/toolkit-config.ts";
  * 1Password service account, `keychain:<service>` for the macOS Keychain),
  * then the registry backend below. Values are only ever injected into child
  * process environments; the resolver logs names and backends, never values.
+ *
+ * The 1Password service-account token is handed only to the `op` child that
+ * reads a reference; it is never exported into this process's environment, so
+ * passthrough children never inherit it. Service-account reads go through the
+ * Keychain read cache (see credential-cache.ts) when this is the installed
+ * toolkit binary.
  */
-
-export type CredentialSource =
-  | { readonly kind: "keychain"; readonly service: string }
-  | { readonly kind: "op"; readonly ref: string };
-
-export type CredentialSpec = {
-  readonly description: string;
-  readonly source: CredentialSource;
-};
-
-const PRIVATE_VAULT_REF = "op://63lcesgoblzbpkdr4koye66rei";
-const HOMELAB_VAULT_REF = "op://v64ocnykdqju4ui6j6pua56xw4";
-const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
-const DELIVERY_TRMNL_READER_ITEM_ID = "542onhpijguqgaukmyvbujbu74";
-const DELIVERY_TRMNL_ACCOUNT_ITEM_ID = "p7th6tqeel7k2sm47mrrto7oca";
-const DELIVERY_SITE_ACTIVATOR_ITEM_ID = "l5c76kuxgqckt3xc7pmman6l4u";
-const DELIVERY_CACHE_PURGE_ITEM_ID = "la7gkfl5eqtxiiv2hq3qujx2gi";
-
-export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
-  DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID: {
-    description: "Delivery static-site activator access key",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SITE_ACTIVATOR_ITEM_ID}/DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID`,
-    },
-  },
-  DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY: {
-    description: "Delivery static-site activator secret key",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SITE_ACTIVATOR_ITEM_ID}/DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY`,
-    },
-  },
-  CLOUDFLARE_API_TOKEN: {
-    description: "Delivery six-zone cache-purge token",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_CACHE_PURGE_ITEM_ID}/credential`,
-    },
-  },
-  TRMNL_API_KEY: {
-    description: "Fixed TRMNL plugin configuration key (read/write authority)",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_TRMNL_ACCOUNT_ITEM_ID}/TRMNL_API_KEY`,
-    },
-  },
-  DELIVERY_TRMNL_S3_ACCESS_KEY_ID: {
-    description: "Read-only Delivery TRMNL archive access key",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_TRMNL_READER_ITEM_ID}/DELIVERY_TRMNL_S3_ACCESS_KEY_ID`,
-    },
-  },
-  DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY: {
-    description: "Read-only Delivery TRMNL archive secret key",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_TRMNL_READER_ITEM_ID}/DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY`,
-    },
-  },
-  DELIVERY_PUBLISHER_TOKEN: {
-    description:
-      "Delivery publisher token for immutable licensed archive descriptors",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_PUBLISHER_TOKEN`,
-    },
-  },
-  DELIVERY_EXECUTOR_TOKEN: {
-    description:
-      "Delivery scoped executor token for independent recovery proof completion",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_EXECUTOR_TOKEN`,
-    },
-  },
-  DELIVERY_ATTEST_TOKEN: {
-    description:
-      "Delivery operator attestation token (attest scope only; never an executor credential)",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_ATTEST_TOKEN`,
-    },
-  },
-  DELIVERY_API_TOKEN: {
-    description:
-      "Delivery machine API token (cannot approve production releases)",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_ADMIN_TOKEN`,
-    },
-  },
-  GRAFANA_API_KEY: {
-    description: "Grafana API key",
-    source: {
-      kind: "op",
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password",
-    },
-  },
-  POSTHOG_CLI_API_KEY: {
-    description: "PostHog CLI API key",
-    source: {
-      kind: "op",
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/m7vvkd6ymu6pqk32zm7kqfynve",
-    },
-  },
-  CF_API_TOKEN: {
-    description: "Cloudflare API token",
-    source: {
-      kind: "op",
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/vp4l6tpe2cly6q4w5aremgvnbe/credential",
-    },
-  },
-  ARGOCD_AUTH_TOKEN: {
-    description: "ArgoCD auth token",
-    source: {
-      kind: "op",
-      // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/yikdwue26c7gdbk5ftbvaclkli/ARGOCD_AUTH_TOKEN",
-    },
-  },
-  DISCORD_USER_TOKEN: {
-    description: "Discord user token",
-    source: {
-      kind: "keychain",
-      service: "monorepo-workstation-discord-user-token",
-    },
-  },
-  DISCORD_BOT_TOKEN: {
-    description: "Discord bot token",
-    source: {
-      kind: "keychain",
-      service: "monorepo-workstation-discord-bot-token",
-    },
-  },
-  BUGSINK_TOKEN: {
-    description: "Bugsink API token",
-    source: {
-      kind: "keychain",
-      service: "monorepo-workstation-bugsink-token",
-    },
-  },
-  ...BRIM_SYNC_CREDENTIALS,
-  WOODPECKER_TOKEN: {
-    description: "Woodpecker CI API token",
-    source: {
-      kind: "op",
-      // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/covttsojandjk7fx62a3dbk7em/WOODPECKER_API_TOKEN",
-    },
-  },
-  TEMPORAL_API_KEY: {
-    description: "Temporal external API key",
-    source: {
-      kind: "op",
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/2x4fpii5zq4jbw3l2p2qkvjtiy/api-token",
-    },
-  },
-};
 
 export const TEMPORAL_IN_CLUSTER_ADDRESS =
   "temporal-temporal-server-service:7233";
@@ -180,17 +35,18 @@ export const TEMPORAL_IN_CLUSTER_ADDRESS =
 const KEYCHAIN_ENROLL_REFS: Record<string, string> = {
   "monorepo-workstation-discord-user-token": `${PRIVATE_VAULT_REF}/sskm6skq3mwnyqnhrmqwji6dne/TOKEN`,
   "monorepo-workstation-discord-bot-token": `${PRIVATE_VAULT_REF}/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN`,
-  "monorepo-workstation-bugsink-token":
-    // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-    "op://v64ocnykdqju4ui6j6pua56xw4/jeuqmwh3r4nwu2ivo4pa3gr7om/BUGSINK_TOKEN",
 };
 
 const SERVICE_ACCOUNT_KEYCHAIN_SERVICE =
   "monorepo-homelab-1password-service-account";
 
-/** Subprocess seam: argv in, exit plus captured streams out. */
+/**
+ * Subprocess seam: argv and extra environment in, exit plus captured streams
+ * out. `extraEnvironment` carries the service-account token to `op` only.
+ */
 export type CredentialRun = (
   argv: string[],
+  extraEnvironment?: Readonly<Record<string, string>>,
 ) => Promise<{ exit: number; stdout: string; stderr: string }>;
 
 export type CredentialDeps = {
@@ -198,15 +54,30 @@ export type CredentialDeps = {
   readonly run?: CredentialRun;
   /** Defaults to `~/.toolkit/config.toml`; test hook for a tmpdir file. */
   readonly configPath?: string;
+  /**
+   * Read cache for service-account references. Defaults to the Keychain
+   * cache for the installed binary and to none when `run` is injected.
+   */
+  readonly cache?: CredentialCache | null;
 };
+
+/** The environment every non-`op` child gets: never the service-account token. */
+export function withoutServiceAccountToken(
+  environment: Readonly<Record<string, string | undefined>>,
+): Record<string, string | undefined> {
+  const copy = { ...environment };
+  delete copy["OP_SERVICE_ACCOUNT_TOKEN"];
+  return copy;
+}
 
 async function defaultRun(
   argv: string[],
+  extraEnvironment: Readonly<Record<string, string>> = {},
 ): Promise<{ exit: number; stdout: string; stderr: string }> {
   // Snapshot env explicitly: Bun.spawn resolves PATH from the given env, not
-  // from later Bun.env mutations, and this also carries OP_SERVICE_ACCOUNT_TOKEN.
+  // from later Bun.env mutations. Only `op` receives the token, via extras.
   const child = Bun.spawn(argv, {
-    env: { ...Bun.env },
+    env: { ...withoutServiceAccountToken(Bun.env), ...extraEnvironment },
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
@@ -222,7 +93,7 @@ async function defaultRun(
 /** Vars already resolved in this process; each resolves at most once. */
 const resolvedCredentials = new Set<string>();
 
-/** Service-account token once obtained; mirrors the wrapper's export. */
+/** Service-account token once obtained; held in memory, never exported. */
 let cachedServiceAccountToken: string | undefined;
 
 function credentialError(
@@ -281,8 +152,6 @@ async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
       "toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: swift scripts/onepassword/enroll-service-account.swift",
     );
   }
-  // Inherit into spawned children exactly like with-service-account.sh exports it.
-  Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = token;
   cachedServiceAccountToken = token;
   return token;
 }
@@ -290,14 +159,24 @@ async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
 async function readServiceAccountRef(
   ref: string,
   ctx: ResolutionContext,
-): Promise<string | null> {
-  await serviceAccountToken(ctx);
-  const result = await ctx.run(["op", "read", ref]);
+): Promise<{ value: string; cached: boolean } | null> {
+  const cached = await ctx.cache?.get(ref);
+  if (cached !== undefined && cached !== null) {
+    return { value: cached, cached: true };
+  }
+  const token = await serviceAccountToken(ctx);
+  const result = await ctx.run(["op", "read", ref], {
+    OP_SERVICE_ACCOUNT_TOKEN: token,
+  });
   if (result.exit !== 0) {
     return null;
   }
   const value = result.stdout.trim();
-  return value.length > 0 ? value : null;
+  if (value.length === 0) {
+    return null;
+  }
+  await ctx.cache?.set(ref, value);
+  return { value, cached: false };
 }
 
 function logResolved(name: string, backend: string): void {
@@ -338,24 +217,27 @@ type ResolutionContext = {
   readonly liveSubprocesses: boolean;
   readonly configPath: string;
   readonly overrides: Record<string, string>;
+  readonly cache: CredentialCache | null;
 };
+
+type Resolved = { readonly value: string; readonly backend: string };
 
 async function resolveOverrideValue(
   name: string,
   override: string,
   ctx: ResolutionContext,
-): Promise<string> {
+): Promise<Resolved> {
   const description = CREDENTIAL_REGISTRY[name]?.description ?? "credential";
   if (override.startsWith("op://")) {
-    const value = await readServiceAccountRef(override, ctx);
-    if (value === null) {
+    const read = await readServiceAccountRef(override, ctx);
+    if (read === null) {
       throw credentialError(
         name,
         description,
         "swift scripts/onepassword/enroll-service-account.swift",
       );
     }
-    return value;
+    return { value: read.value, backend: read.cached ? "cache" : "config" };
   }
   const prefix = "keychain:";
   if (override.startsWith(prefix) && override.length > prefix.length) {
@@ -368,7 +250,7 @@ async function resolveOverrideValue(
         `swift scripts/onepassword/enroll-workstation-secret.swift --service ${service} --ref op://<vault>/<item>/<field>`,
       );
     }
-    return value;
+    return { value, backend: "config" };
   }
   throw new Error(
     `toolkit: invalid credential override for ${name} in ${ctx.configPath} (expected op://… or keychain:<service>)`,
@@ -379,7 +261,7 @@ async function resolveRegistryValue(
   name: string,
   spec: CredentialSpec,
   ctx: ResolutionContext,
-): Promise<{ value: string; backend: string }> {
+): Promise<Resolved> {
   if (spec.source.kind === "keychain") {
     const value = await readKeychainValue(spec.source.service, ctx);
     if (value === null) {
@@ -391,21 +273,24 @@ async function resolveRegistryValue(
     }
     return { value, backend: "keychain" };
   }
-  const value = await readServiceAccountRef(spec.source.ref, ctx);
-  if (value === null) {
+  const read = await readServiceAccountRef(spec.source.ref, ctx);
+  if (read === null) {
     throw credentialError(
       name,
       spec.description,
       "swift scripts/onepassword/enroll-service-account.swift",
     );
   }
-  return { value, backend: "service-account" };
+  return {
+    value: read.value,
+    backend: read.cached ? "cache" : "service-account",
+  };
 }
 
 async function resolveOneCredential(
   name: string,
   ctx: ResolutionContext,
-): Promise<{ value: string; backend: string }> {
+): Promise<Resolved> {
   const ambient = Bun.env[name];
   if (ambient !== undefined && ambient.length > 0) {
     // Ambient wins for CI/k8s; skip silently, nothing was brokered.
@@ -413,10 +298,7 @@ async function resolveOneCredential(
   }
   const override = ctx.overrides[name];
   if (override !== undefined) {
-    return {
-      value: await resolveOverrideValue(name, override, ctx),
-      backend: "config",
-    };
+    return resolveOverrideValue(name, override, ctx);
   }
   const spec = CREDENTIAL_REGISTRY[name];
   if (spec === undefined) {
@@ -427,31 +309,110 @@ async function resolveOneCredential(
   return resolveRegistryValue(name, spec, ctx);
 }
 
+async function defaultCache(
+  configPath: string,
+): Promise<CredentialCache | null> {
+  const config = await loadToolkitConfig({ configPath });
+  const ttl = await config.get("credentialCacheTtlSeconds");
+  return liveCredentialCache(ttl.value);
+}
+
+async function resolutionContext(
+  deps: CredentialDeps | undefined,
+): Promise<ResolutionContext> {
+  const configPath = deps?.configPath ?? defaultToolkitConfigPath();
+  const liveSubprocesses = deps?.run === undefined;
+  let cache: CredentialCache | null = null;
+  if (deps?.cache !== undefined) {
+    cache = deps.cache;
+  } else if (liveSubprocesses) {
+    cache = await defaultCache(configPath);
+  }
+  return {
+    run: deps?.run ?? defaultRun,
+    liveSubprocesses,
+    configPath,
+    overrides: await loadCredentialOverrides(configPath),
+    cache,
+  };
+}
+
+/**
+ * Resolve credentials to values without exporting them into this process's
+ * environment. Use for file-shaped secrets handed to one child (kubeconfig
+ * material, talosconfig, AWS credential_process output).
+ */
+export async function resolveCredentialValues(
+  names: readonly string[],
+  deps?: CredentialDeps,
+): Promise<Record<string, string>> {
+  const values: Record<string, string> = {};
+  if (names.length === 0) {
+    return values;
+  }
+  const ctx = await resolutionContext(deps);
+  for (const name of names) {
+    const resolved = await resolveOneCredential(name, ctx);
+    // Cache hits are silent: a stderr line per kubectl call is noise.
+    if (resolved.backend !== "env" && resolved.backend !== "cache") {
+      logResolved(name, resolved.backend);
+    }
+    values[name] = resolved.value;
+  }
+  return values;
+}
+
 export async function resolveCredentials(
   names: readonly string[],
   deps?: CredentialDeps,
 ): Promise<void> {
-  if (names.length === 0) {
-    return;
-  }
-  const configPath = deps?.configPath ?? defaultToolkitConfigPath();
-  const ctx: ResolutionContext = {
-    run: deps?.run ?? defaultRun,
-    liveSubprocesses: deps?.run === undefined,
-    configPath,
-    overrides: await loadCredentialOverrides(configPath),
-  };
-  for (const name of names) {
-    if (resolvedCredentials.has(name)) {
-      continue;
-    }
-    const resolved = await resolveOneCredential(name, ctx);
-    Bun.env[name] = resolved.value;
-    if (resolved.backend !== "env") {
-      logResolved(name, resolved.backend);
-    }
+  const pending = names.filter((name) => !resolvedCredentials.has(name));
+  const values = await resolveCredentialValues(pending, deps);
+  for (const [name, value] of Object.entries(values)) {
+    Bun.env[name] = value;
     resolvedCredentials.add(name);
   }
+}
+
+/** The `op://` reference a credential would be read from, if any. */
+async function credentialRef(
+  name: string,
+  configPath: string,
+): Promise<string | null> {
+  const overrides = await loadCredentialOverrides(configPath);
+  const override = overrides[name];
+  if (override !== undefined) {
+    return override.startsWith("op://") ? override : null;
+  }
+  const spec = CREDENTIAL_REGISTRY[name];
+  return spec?.source.kind === "op" ? spec.source.ref : null;
+}
+
+/**
+ * Drop cached service-account reads so the next use fetches from 1Password.
+ * Without names, every registered credential is flushed. Returns the names
+ * whose entries were removed.
+ */
+export async function flushCredentialCache(
+  names: readonly string[],
+  deps: { readonly cache: CredentialCache; readonly configPath?: string },
+): Promise<string[]> {
+  const configPath = deps.configPath ?? defaultToolkitConfigPath();
+  const targets = names.length > 0 ? names : Object.keys(CREDENTIAL_REGISTRY);
+  const flushed: string[] = [];
+  for (const name of targets) {
+    if (names.length > 0 && CREDENTIAL_REGISTRY[name] === undefined) {
+      const overrides = await loadCredentialOverrides(configPath);
+      if (overrides[name] === undefined) {
+        throw new Error(`toolkit: unknown credential ${name}`);
+      }
+    }
+    const ref = await credentialRef(name, configPath);
+    if (ref !== null && (await deps.cache.delete(ref))) {
+      flushed.push(name);
+    }
+  }
+  return flushed;
 }
 
 function flagValue(args: readonly string[], flag: string): string | undefined {
