@@ -3,6 +3,7 @@ import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createApp } from "./app.ts";
+import { createDrain } from "./drain.ts";
 
 async function assertPublisherMetadataBoundary(
   app: ReturnType<typeof createApp>,
@@ -47,12 +48,14 @@ describe("Delivery API authorization and kill switch", () => {
   let fixture: Awaited<ReturnType<typeof seedDelivery>>;
   let writes = true;
   let app: ReturnType<typeof createApp>;
+  const drain = createDrain({ quietMs: 0, maxMs: 0 });
   beforeAll(async () => {
     cluster = await createTestDatabase();
     delivery = new Delivery(cluster.database);
     fixture = await seedDelivery(delivery);
     app = createApp({
       delivery,
+      drain,
       ciOrigin: "https://woodpecker.sjer.red",
       ciRepositoryId: 1,
       qualifyBuild: async () => "verified",
@@ -229,5 +232,13 @@ describe("Delivery API authorization and kill switch", () => {
     expect(await pending.json()).toEqual({ deployments: [] });
     await delivery.cancel(deployment.id, testOperator);
     writes = true;
+  });
+  test("a draining API reports itself unready and keeps serving", async () => {
+    await drain.untilQuiet();
+    const ready = await app.request("/readyz");
+    const overview = await app.request("/api/v1/overview", { headers: human });
+    expect(ready.status).toBe(503);
+    expect(await ready.json()).toEqual({ status: "draining" });
+    expect(overview.status).toBe(200);
   });
 });

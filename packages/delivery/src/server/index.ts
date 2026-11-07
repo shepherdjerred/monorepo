@@ -26,6 +26,7 @@ import { createTrustedProxyAddresses } from "#infrastructure/ingress/proxy.ts";
 import { createWorkerRecoveryReader } from "#infrastructure/worker-pool/recovery-observation.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { createEnrichment } from "#infrastructure/enrichment/enrichment.ts";
+import { createDrain } from "./drain.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags({
@@ -85,7 +86,9 @@ const forumBundleReader =
         secretAccessKey: bootstrap.DELIVERY_FORUM_S3_SECRET_ACCESS_KEY,
       });
 const readApplication = createApplicationReader();
+const drain = createDrain();
 const app = createApp({
+  drain,
   delivery,
   workerRecoveryReaders: {
     readApplication,
@@ -139,6 +142,9 @@ const server = Bun.serve({
 });
 console.warn(`Delivery listening on ${String(server.port)}`);
 async function shutdown() {
+  // Stop only once proxies have stopped routing here (drain.ts); a pod that
+  // stops listening at once refuses its own rollout's readbacks.
+  await drain.untilQuiet();
   await server.stop();
   await changeFeed.stop();
   await database.$disconnect();
