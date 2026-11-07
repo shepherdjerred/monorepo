@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from maintenance import files, skylands_transfer as transfer
-from maintenance.skylands import MARKER
+from maintenance import files, skylands_transfer as transfer, startup
+from maintenance.skylands import MARKER, require_generation
 
 
 class SkylandsTransferTest(unittest.TestCase):
@@ -29,6 +29,7 @@ class SkylandsTransferTest(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(value)
         (self.data / MARKER).write_text(json.dumps({"world": "skylands", "seed": 1731, "format": "layered-v1"}))
+        (self.data / transfer.VOLUME_MARKER).write_text(json.dumps({"schemaVersion": 1, "status": "COMPLETE", "retired": ["wilds", "peaks"], "requestId": "production"}))
 
     def candidate(self):
         payload = transfer.export_world(self.data, "candidate")
@@ -38,6 +39,8 @@ class SkylandsTransferTest(unittest.TestCase):
     def test_export_is_complete_and_excludes_other_worlds_and_inventories(self):
         payload = transfer.export_world(self.data, "export")
         names = transfer.validate_payload(payload)
+        startup.require_preparation(payload)
+        require_generation(payload, payload / MARKER)
         self.assertIn(str(transfer.DIMENSION / "poi/r.0.0.mca"), names)
         self.assertIn(str(transfer.DIMENSION / "entities/r.0.0.mca"), names)
         self.assertFalse(any("frontier" in name or "playerdata" in name or "session.lock" in name or name.endswith(".db") for name in names))

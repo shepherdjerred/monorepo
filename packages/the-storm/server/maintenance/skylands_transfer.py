@@ -12,6 +12,7 @@ from maintenance import files
 from maintenance.skylands import MARKER, identity
 
 DIMENSION = Path("world/dimensions/minecraft/skylands")
+VOLUME_MARKER = ".the-storm-retired-worlds.json"
 
 
 def regular_path(path: Path) -> None:
@@ -62,11 +63,11 @@ def manifest_digest(manifest: dict[str, str]) -> str:
 def validate_payload(payload: Path) -> dict[str, str]:
     regular_path(payload)
     manifest = files.files(payload)
-    required = {str(DIMENSION / "data/minecraft/world_gen_settings.dat"), "world/level.dat", MARKER}
+    required = {str(DIMENSION / "data/minecraft/world_gen_settings.dat"), "world/level.dat", MARKER, VOLUME_MARKER}
     if not required.issubset(manifest):
         raise ValueError("Transfer lacks native dimension or parent save metadata")
     for name in manifest:
-        if not (name == MARKER or name == "world/level.dat" or name.startswith(
+        if not (name in {MARKER, VOLUME_MARKER, "world/level.dat"} or name.startswith(
             (str(DIMENSION) + "/", "world/data/", "world/datapacks/"))):
             raise ValueError("Transfer contains data outside Skylands and its parent metadata")
     if identity(payload / MARKER) != {"world": "skylands", "seed": 1731, "format": "layered-v1"}:
@@ -95,6 +96,7 @@ def export_world(data: Path, request_id: str) -> Path:
         copy_checked(data / DIMENSION, payload / DIMENSION)
         copy_checked(data / "world/level.dat", payload / "world/level.dat")
         copy_checked(data / MARKER, payload / MARKER)
+        copy_checked(data / VOLUME_MARKER, payload / VOLUME_MARKER)
         for name in ("data", "datapacks"):
             source = data / "world" / name
             regular_path(source)
@@ -182,7 +184,7 @@ def run_request(data: Path, request: Path) -> None:
         raise ValueError("Unknown Skylands transfer operation or fields")
     if not isinstance(value["volumeDigest"], str) or not re.fullmatch(r"[a-f0-9]{64}", value["volumeDigest"]):
         raise ValueError("Invalid volume identity digest")
-    volume_marker = data / ".the-storm-retired-worlds.json"
+    volume_marker = data / VOLUME_MARKER
     regular_path(volume_marker)
     if files.digest(volume_marker) != value["volumeDigest"]:
         print("Skylands transfer request does not target this volume; no action")
