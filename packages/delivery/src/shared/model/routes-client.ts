@@ -24,6 +24,7 @@ import {
   WatchingMonitorSchema,
 } from "./monitor-contract.ts";
 import {
+  AbandonRecoveryIntentSchema,
   AttestationRequestSchema,
   ApproveTofuPlanSchema,
   CatalogReconcileResultSchema,
@@ -135,6 +136,22 @@ export function modelRoutes(request: ReturnType<typeof createRequester>) {
       ),
     recoveryIntent: (id: string) =>
       request(`/recovery-intents/${segment(id)}`, RecoveryIntentV2Schema),
+    /** Every pending recovery intent, oldest first. */
+    pendingRecoveryIntents: () =>
+      request(
+        "/recovery-intents?status=pending",
+        z.object({ intents: z.array(RecoveryIntentV2Schema) }),
+      ),
+    /** Admin: close a pending intent whose deployment ended without needing it. */
+    abandonRecoveryIntent: (
+      id: string,
+      input: z.input<typeof AbandonRecoveryIntentSchema>,
+    ) =>
+      request(
+        `/recovery-intents/${segment(id)}/abandon`,
+        RecoveryIntentV2Schema,
+        checked(AbandonRecoveryIntentSchema, input),
+      ),
     /** Admin: settle a pending `argo` intent by independent readback of the inspected operation. */
     settleRecoveryIntent: (
       id: string,

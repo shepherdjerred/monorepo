@@ -359,10 +359,38 @@ Never delete a lock row or replace a foreign ArgoCD operation to release a
 deployment. Only an intent settled by the independent reader may release it.
 :::
 
+## Close a stale recovery intent
+
+An intent stays pending when its deployment stopped needing recovery another
+way. It still blocks control-plane upgrades, new content barriers and the
+ownership handover, and fires `DeliveryRecoveryIntentsPending` after an hour.
+
+1. List the pending intents, then read the deployment each one names:
+
+   ```bash
+   toolkit deploy recovery --pending --json
+   toolkit deploy status DEPLOYMENT_ID --json
+   ```
+
+   Continue only if the deployment is terminal and `recoveryRequired` is
+   `false`. Otherwise settle the intent as in the section above.
+
+2. Close it with a reason:
+
+   ```bash
+   toolkit deploy recovery INTENT_ID --abandon --reason "Why nothing needs this intent" --machine
+   ```
+
+   The intent ends `failed`. Nothing is released, and the deployment is not
+   changed. This works while writes are paused. The
+   [server refuses](packages/delivery/src/infrastructure/execution/recovery-abandon.ts)
+   while a producer barrier is unrestored or a recovery Workflow owns the
+   intent.
+
 ## Respond to a stalled Delivery dispatch
 
-Four alerts report deployments that stop dispatching, or ownership a settled
-deployment kept. The
+Five alerts report deployments that stop dispatching, recovery that stays
+open, or ownership a settled deployment kept. The
 [Delivery README](packages/delivery/README.md#operations) lists their metrics
 and thresholds.
 
@@ -370,6 +398,7 @@ and thresholds.
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DeliveryRecoveryRequired`       | A recovery-required deployment of the alert's `environment` holds the [dispatch barrier](packages/delivery/src/infrastructure/execution/admission.ts) |
 | `DeliveryQueueStalled`           | A queued deployment of the alert's `environment` has waited past the stall threshold, counting requests a newer set revision superseded               |
+| `DeliveryRecoveryIntentsPending` | A recovery intent or producer restoration has stayed pending for over an hour; see [Close a stale recovery intent](#close-a-stale-recovery-intent)    |
 | `DeliveryPlatformLockStranded`   | A settled deployment of the alert's `environment` that is not running still holds the shared-resources platform lock                                  |
 | `DeliveryStaleOwnershipReleased` | The dispatch sweep released a lock or active pointer of the alert's `kind` that a settled deployment kept                                             |
 

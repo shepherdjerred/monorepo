@@ -12,6 +12,7 @@ const target = 'namespace="delivery",service="delivery"';
 const ALERTS = new Set([
   "DeliveryRecoveryRequired",
   "DeliveryQueueStalled",
+  "DeliveryRecoveryIntentsPending",
   "DeliveryPlatformLockStranded",
   "DeliveryStaleOwnershipReleased",
 ]);
@@ -175,6 +176,45 @@ test("stalled-dispatch alerts fire on held targets, queue age and stranded platf
                 alertname: "DeliveryQueueStalled",
                 eval_time: "25m",
                 exp_alerts: [stalled("delivery-control-plane/prod")],
+              },
+            ],
+          },
+          {
+            name: "recovery intents pending past an hour alert; a recovery that settles does not",
+            interval: "1m",
+            input_series: [
+              {
+                series: `delivery_independent_recoveries_pending{${target}}`,
+                values: "0x10 2x80",
+              },
+            ],
+            alert_rule_test: [
+              {
+                alertname: "DeliveryRecoveryIntentsPending",
+                eval_time: "60m",
+                exp_alerts: [],
+              },
+              {
+                alertname: "DeliveryRecoveryIntentsPending",
+                eval_time: "75m",
+                exp_alerts: [{ exp_labels: { severity: "warning" } }],
+              },
+            ],
+          },
+          {
+            name: "a recovery intent that settles within the hour never alerts",
+            interval: "1m",
+            input_series: [
+              {
+                series: `delivery_independent_recoveries_pending{${target}}`,
+                values: "1x40 0x50",
+              },
+            ],
+            alert_rule_test: [
+              {
+                alertname: "DeliveryRecoveryIntentsPending",
+                eval_time: "85m",
+                exp_alerts: [],
               },
             ],
           },

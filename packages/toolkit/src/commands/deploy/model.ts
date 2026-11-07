@@ -77,6 +77,17 @@ function validateAdmin(
       requireMachine(options, "Catalog reconcile");
       return;
     }
+    case "recovery": {
+      if (options.pending !== (positionals.length === 0))
+        throw new Error(
+          "Use deploy recovery <INTENT_ID> or deploy recovery --pending",
+        );
+      if (!options.abandon) return;
+      requireMachine(options, "Abandoning a recovery intent");
+      if (options.reason === undefined || options.reason.trim() === "")
+        throw new Error("--reason is required");
+      return;
+    }
     case "recover": {
       requireMachine(options, "A recovery intent");
       if (options["expected-generation"] === undefined)
@@ -88,6 +99,16 @@ function validateAdmin(
   }
 }
 
+/** Flags that belong to one verb are refused on every other. */
+function validateVerbFlags(command: string, options: DeployOptions) {
+  if (options.override && !["start", "approve", "reject"].includes(command))
+    throw new Error("--override applies to deploy start, approve and reject");
+  if (command !== "recovery" && (options.abandon || options.pending))
+    throw new Error("--abandon and --pending apply to deploy recovery");
+  if (options.pending && options.abandon)
+    throw new Error("--pending lists intents; --abandon closes one");
+}
+
 /**
  * Checks that need no credential and no network, run before either is
  * resolved. Commands outside the model have nothing to check here.
@@ -97,9 +118,8 @@ export function validateModelCommand(
   positionals: string[],
   options: ModelOptions,
 ) {
+  validateVerbFlags(command, options);
   validateAdmin(command, positionals, options);
-  if (options.override && !["start", "approve", "reject"].includes(command))
-    throw new Error("--override applies to deploy start, approve and reject");
   switch (command) {
     case "rollback": {
       IdentifierSchema.parse(positionals[1]);
@@ -344,6 +364,9 @@ export async function runModelCommand(
   options: ModelOptions,
 ): ModelResult {
   validateModelCommand(command, positionals, options);
+  // Lists every pending intent; the one model read that names no target.
+  if (command === "recovery" && options.pending)
+    return { result: await client.pendingRecoveryIntents(), exitCode: 0 };
   const target = required(positionals[0]);
   switch (command) {
     case "start": {
@@ -365,6 +388,14 @@ export async function runModelCommand(
       return { result: await client.monitor(target), exitCode: 0 };
     }
     case "recovery": {
+      // Closes an intent whose deployment already ended without needing it.
+      if (options.abandon)
+        return {
+          result: await client.abandonRecoveryIntent(target, {
+            reason: required(options.reason).trim(),
+          }),
+          exitCode: 0,
+        };
       return { result: await client.recoveryIntent(target), exitCode: 0 };
     }
     case "approve-plan": {

@@ -104,6 +104,13 @@ describe("model verbs refuse incomplete requests before credentials", () => {
       "--evidence",
     ],
     ["recover", ["scout-prod-37"], ["--machine"], "--expected-generation"],
+    ["recovery", ["argo/r1"], ["--abandon", "--reason", "Stale"], "--machine"],
+    ["recovery", ["argo/r1"], ["--abandon", "--machine"], "--reason"],
+    ["monitor", [fixtures.PROD], ["--abandon"], "--abandon"],
+    ["monitor", [fixtures.PROD], ["--pending"], "--pending"],
+    ["recovery", ["argo/r1"], ["--pending"], "deploy recovery --pending"],
+    ["recovery", [], [], "deploy recovery --pending"],
+    ["recovery", [], ["--pending", "--abandon"], "--pending lists"],
     ["rollback", [fixtures.PROD], [], "Invalid operands"],
     ["monitor", [], [], "Invalid operands"],
   ])("deploy %s %j %j", (command, positionals, args, message) => {
@@ -370,6 +377,44 @@ describe("start, promote and recovery reads", () => {
       kind: "promote",
       sourceEnvironmentId: fixtures.BETA,
     });
+  });
+
+  test("recovery --abandon closes the intent with its reason and changes nothing else", async () => {
+    const intent = fixtures.recoveryIntents.failed;
+    const { client, sent } = delivery({
+      [`POST /recovery-intents/${encodeURIComponent(intent.id)}/abandon`]:
+        intent,
+    });
+    expect(
+      await run(client, "recovery", [
+        intent.id,
+        "--abandon",
+        "--machine",
+        "--reason",
+        "  Its deployment ended without needing recovery  ",
+      ]),
+    ).toEqual({ result: intent, exitCode: 0 });
+    expect(sent).toEqual([
+      {
+        method: "POST",
+        path: `/recovery-intents/${encodeURIComponent(intent.id)}/abandon`,
+        body: { reason: "Its deployment ended without needing recovery" },
+      },
+    ]);
+  });
+
+  test("recovery --pending lists every pending intent without a target", async () => {
+    const intents = { intents: [fixtures.recoveryIntents.failed] };
+    const { client, sent } = delivery({
+      "GET /recovery-intents": intents,
+    });
+    expect(await run(client, "recovery", ["--pending"])).toEqual({
+      result: intents,
+      exitCode: 0,
+    });
+    expect(sent.map((request) => `${request.method} ${request.path}`)).toEqual([
+      "GET /recovery-intents",
+    ]);
   });
 
   test("recovery reads one unified intent", async () => {

@@ -21,6 +21,8 @@ export function parseDeployArgs(args: string[]) {
       interval: { type: "string" },
       file: { type: "string" },
       override: { type: "boolean", default: false },
+      abandon: { type: "boolean", default: false },
+      pending: { type: "boolean", default: false },
       recipe: { type: "string" },
       configuration: { type: "string" },
       stage: { type: "string" },
