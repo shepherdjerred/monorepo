@@ -156,9 +156,12 @@ requires connectivity to both the LAN and tailnet; see
 
 ### Cloudflare
 
-`cloudflare/jerred-archives.tf` owns the private R2 archive bucket. Its bucket
-declaration prevents destruction; its lifecycle rule removes only abandoned
-multipart uploads after seven days and never expires completed archives. Retain
+`cloudflare/jerred-archives.tf` owns the private R2 archive bucket, and
+`cloudflare/pinterest-archives.tf` owns its private counterpart for Pinterest
+work archives. Each bucket declaration prevents destruction; each lifecycle rule
+removes only abandoned multipart uploads after seven days and never expires
+completed archives. The `personal-archives-r2` entry in `cloudflare-tokens`
+grants object read and write on only these two buckets. Retain
 these declarations while the archives exist so ordinary stack applies preserve
 their storage and access policy. `jerred-archives` stays on R2. Velero's
 scheduled backups are the only backup. They are written to the Backblaze
