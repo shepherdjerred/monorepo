@@ -287,6 +287,14 @@ describe("credential preparation", () => {
       file: "packages/homelab/src/tofu/application-secrets/local_override.tf",
       ignored: true,
     },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/local_override.tofu",
+      ignored: true,
+    },
+    {
+      file: "packages/homelab/src/tofu/application-secrets/credentials.tofu.json",
+      ignored: true,
+    },
   ])("handoff rejects uncommitted input: $file", async ({ file, ignored }) => {
     const fixture = await mkdtemp(path.join(tmpdir(), "handoff-source-"));
     const read = async (command: string[]) => {
@@ -306,7 +314,8 @@ describe("credential preparation", () => {
     try {
       await read(["git", "init", "--quiet"]);
       await assertCleanHandoffSource(read);
-      if (ignored) await writeFile(path.join(fixture, ".gitignore"), "*.tf*\n");
+      if (ignored)
+        await writeFile(path.join(fixture, ".gitignore"), "*.tf*\n*.tofu*\n");
       const fixturePath = path.join(fixture, file);
       await mkdir(path.dirname(fixturePath), { recursive: true });
       await writeFile(fixturePath, "synthetic module-resolution input\n");

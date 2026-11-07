@@ -9,6 +9,11 @@ import {
   deliveryTofuGrants,
 } from "homelab/src/delivery-platform-grants.ts";
 import discord from "homelab/src/tofu/discord/desired-state.json" with { type: "json" };
+import {
+  collectOnePasswordTargets,
+  platformDesiredStateVariables,
+} from "homelab/scripts/platform-desired-state.ts";
+import { STACK_MANIFEST } from "homelab/scripts/tofu/tofu-stack-manifest.ts";
 
 test("Recyclarr and ARR provider jobs bind the same canonical credentials", async () => {
   const chart = new Chart(new App(), "recyclarr-credential-contract", {
@@ -94,4 +99,31 @@ test("Minecraft provider and runtime retain the same bot identity and field", ()
   expect(DELIVERY_PLATFORM_ITEMS["discord-minecraft-credentials"].itemId).toBe(
     "q37vet77dfggoqbvu4bqle3gje",
   );
+});
+
+test("every Discord audit target matches its reviewed Delivery grant", () => {
+  const variables = platformDesiredStateVariables(discord, "discord");
+  const bots = z
+    .record(
+      z.string(),
+      z.object({ vault_item_id: z.string(), vault_field: z.string() }),
+    )
+    .parse(variables["discord_bots"]);
+  const grants = deliveryTofuGrants("discord");
+  const sources = STACK_MANIFEST.discord.secretObject?.entries;
+  const owners: Readonly<Record<string, { itemId: string }>> =
+    DELIVERY_PLATFORM_ITEMS;
+  expect(collectOnePasswordTargets(variables)).toHaveLength(
+    Object.keys(bots).length,
+  );
+  for (const [name, bot] of Object.entries(bots)) {
+    const grant = grants.find((entry) => entry.env === sources?.[name]);
+    expect(grant, name).toBeDefined();
+    expect(grant?.key, name).toBe(bot.vault_field);
+    expect(
+      grant === undefined ? undefined : owners[grant.secret]?.itemId,
+      name,
+    ).toBe(bot.vault_item_id);
+    expect(collectOnePasswordTargets(variables)).toContainEqual(bot);
+  }
 });

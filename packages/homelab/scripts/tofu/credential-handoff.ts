@@ -357,6 +357,8 @@ export async function assertCleanHandoffSource(
       ":(top,glob)packages/homelab/src/tofu/application-secrets/*.auto.tfvars*",
       ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tf",
       ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tf.json",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tofu",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tofu.json",
     ],
     "ignored adoption inputs",
   );

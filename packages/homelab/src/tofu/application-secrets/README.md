@@ -72,8 +72,9 @@ hashed metadata and field emptiness, never credential values or fingerprints.
 The vault audit shares synthesis and field transforms with the structural
 checker, evaluates CI grants and toolkit credential locators, scans tracked
 references including dotfiles, and optionally inspects live workload bindings.
-Repeat `--vault ID` to explicitly select additional vaults; the default is the
-Kubernetes vault. References outside that selection remain coverage gaps.
+With no `--vault`, the audit selects the Kubernetes vault. Explicit flags replace
+that default: repeat `--vault ID` for every vault to inspect, including Kubernetes
+when required. References outside that selection remain coverage gaps.
 The audit excludes empty values and identifiers
 from exact credential comparison, including credential-shaped JSON leaves.
 Whole-secret consumers, ambiguous references, provider-owned items,
