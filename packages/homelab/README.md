@@ -241,6 +241,14 @@ talosctl bootstrap --nodes torvalds.tailnet-1a49.ts.net
 talosctl kubeconfig --nodes torvalds.tailnet-1a49.ts.net
 ```
 
+Steps 4 and 7 write admin key material to disk and belong only on the
+bootstrapping machine. Store the resulting talosconfig fields and kubeconfig
+client data in the homelab 1Password items that toolkit's credential registry
+reads, then remove the local files. Every other workstation, including agent
+hosts, uses `toolkit talosctl` and the `toolkit kube credential` exec plugin
+instead; see
+[Set up workstation credentials](../docs/wiki/src/content/docs/how-to/set-up-workstation-credentials.md).
+
 ### Kubernetes
 
 1. Install `helm`:
