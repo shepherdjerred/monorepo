@@ -1,0 +1,208 @@
+import { resolve, dirname } from "node:path";
+import { CORPSE_POLICY_SHA } from "../latest-corpse.mjs";
+const [arg] = process.argv.slice(2);
+if (!arg) throw Error("Usage: publish-corpse-policy.mjs <cache>");
+const cache = resolve(arg),
+  root = resolve(import.meta.dir, ".."),
+  assets = `${cache}/public`,
+  sha = (b) => new Bun.CryptoHasher("sha256").update(b).digest("hex"),
+  raw = async (p) => new Uint8Array(await Bun.file(p).arrayBuffer()),
+  json = async (p) => JSON.parse(new TextDecoder().decode(await raw(p))),
+  check = (v, m) => {
+    if (!v) throw Error(m);
+  },
+  nativePath = `${cache}/research/corpse-policy-native.json`,
+  native = await json(nativePath),
+  comparisonPath = `${cache}/research/corpse-policy-comparison.json`,
+  proof = await json(comparisonPath),
+  visual = await json(`${assets}/evidence/latest-corpse-policy.json`),
+  report = await json(`${cache}/research/latest-semantics-corpse-policy.json`),
+  meta = await json(`${assets}/latest-corpse/package.json`),
+  image = await raw(`${assets}/decoder-16.21-macos/image.bin`),
+  c = proof.counts;
+check(
+  native.packageSha256 === CORPSE_POLICY_SHA &&
+    proof.packageSha256 === CORPSE_POLICY_SHA &&
+    report.corpsePolicyPackageSha256 === CORPSE_POLICY_SHA &&
+    sha(await raw(`${assets}/latest-corpse/package.json`)) ===
+      CORPSE_POLICY_SHA &&
+    meta.decoderImageSha256 === sha(image) &&
+    native.preparerSha256 ===
+      sha(await raw(`${root}/tools/prepare-corpse-policy.py`)) &&
+    proof.nativeEvidenceSha256 === sha(await raw(nativePath)) &&
+    proof.inspectorSha256 ===
+      sha(await raw(`${root}/tools/inspect-corpse-policy.mjs`)) &&
+    visual.comparisonSha256 === sha(await raw(comparisonPath)) &&
+    visual.rendererSha256 ===
+      sha(await raw(`${root}/tools/render-corpse-policy.mjs`)) &&
+    visual.imageSha256 ===
+      sha(await raw(`${assets}/evidence/latest-corpse-policy.png`)) &&
+    visual.svgSha256 ===
+      sha(await raw(`${assets}/evidence/latest-corpse-policy.svg`)) &&
+    JSON.stringify(c) === JSON.stringify(visual.counts),
+  "Corpse policy proof/visual is stale",
+);
+for (const record of [native, proof, visual])
+  for (const [p, h] of Object.entries(record.inputs))
+    check(sha(await raw(p)) === h, `Corpse evidence input changed: ${p}`);
+for (const [name, h] of Object.entries(native.sources))
+  check(
+    sha(await raw(`${root}/tools/${name}`)) === h,
+    "Native corpse helper changed",
+  );
+for (const [name, h] of Object.entries(proof.sources))
+  check(
+    sha(await raw(`${root}/${name}`)) === h,
+    "Corpse integration source changed",
+  );
+for (const b of native.originalBlocks)
+  check(
+    sha(image.subarray(b.rva, b.rva + b.size)) === b.sha256,
+    "Native corpse instruction changed",
+  );
+check(
+  c.structuralPackets === 142 &&
+    c.retirementQueueCases === 3 &&
+    c.assets === 8 &&
+    c.assetRecordChecks === 14 &&
+    c.durationChecks === 8 &&
+    c.deathModeChecks === 256 &&
+    c.deathPacketChecks === 107 &&
+    c.legacyChecks === 45 &&
+    c.clockChecks === 172 &&
+    c.boundaryChecks === 147 &&
+    c.minions === 38 &&
+    c.snapshotChecks === 25042 &&
+    c.reverseSeekChecks === 25042 &&
+    c.preSpawnChecks === 38 &&
+    c.deathChecks === 23 &&
+    c.poseChecks === 30 &&
+    c.pickingChecks === 3 &&
+    c.rejectionChecks === 14 &&
+    report.corpseDeathStates.length === 107 &&
+    proof.scope.nativeFrameRetentionPrefixExecuted &&
+    proof.scope.nativeDeathModePredicateExecuted &&
+    proof.scope.nativeRetirementQueueStorageExecuted &&
+    proof.scope.mainViewerSourceIntegrated &&
+    !proof.scope.nativeLiveClockBindingVerified &&
+    !proof.scope.sceneRetirementCallbackExecuted &&
+    !proof.scope.registryDeletionExecuted &&
+    !proof.scope.deathAnimationTimingVerified &&
+    !proof.scope.corpseFadeVerified &&
+    !proof.scope.championCorpsePolicyVerified &&
+    !proof.scope.browserRun &&
+    !proof.scope.leagueAvCompared &&
+    !proof.scope.wholeMatchVerified &&
+    visual.scope.softwareMeshProjection &&
+    !visual.scope.actualWebGlCapture &&
+    JSON.stringify(visual.triangles) ===
+      JSON.stringify([1063, 1063, 1063, 0, 0]),
+  "Corpse policy coverage incomplete",
+);
+const build = await Bun.build({
+  entrypoints: [
+    `${root}/latest-viewer.mjs`,
+    `${root}/structural-check-worker.mjs`,
+  ],
+  target: "browser",
+  external: ["three", "/assets/*"],
+});
+check(
+  build.success && build.outputs.length === 2,
+  `Corpse viewer/worker build failed: ${build.logs.join("\n")}`,
+);
+const paths = new Map(),
+  visited = new Set();
+async function include(file) {
+  if (visited.has(file)) return;
+  visited.add(file);
+  paths.set(`/${file.slice(root.length + 1).replaceAll("\\", "/")}`, file);
+  for (const m of (await Bun.file(file).text()).matchAll(
+    /(?:from\s*|import\s*\()\s*["'](\.\.?\/[^"']+\.mjs)["']/g,
+  ))
+    await include(resolve(dirname(file), m[1]));
+}
+await include(`${root}/latest-viewer.mjs`);
+await include(`${root}/structural-check-worker.mjs`);
+for (const name of ["latest.html", "README.md", "AV-FIDELITY-MAP.md"])
+  paths.set(`/${name}`, `${root}/${name}`);
+for (const name of [
+  "latest-corpse/package.json",
+  "latest-inventory/package.json",
+  "latest-items/package.json",
+  "latest-experience/package.json",
+  "latest-world-state/package.json",
+  "latest-champion-state/package.json",
+  "latest-replication/package.json",
+  "latest-scene/manifest.json",
+  "latest-scene/world.json",
+  "decoder-16.21-macos/profile.json",
+  "decoder-16.21-macos/image.bin",
+  "decoder-16.21-macos/constructors.bin",
+  "evidence/latest-corpse-policy.png",
+  "evidence/latest-corpse-policy.svg",
+  "evidence/latest-corpse-policy.json",
+])
+  paths.set(`/assets/${name}`, `${assets}/${name}`);
+for (const asset of Object.values(meta.assets))
+  paths.set(
+    `/assets/latest-scene/${asset.catalog}`,
+    `${assets}/latest-scene/${asset.catalog}`,
+  );
+for (const name of [
+  "corpse-policy-native.json",
+  "corpse-policy-comparison.json",
+  "lifecycle-comparison.json",
+  "latest-semantics-corpse-policy.json",
+]) {
+  const dest = `${assets}/evidence/${name}`;
+  await Bun.write(dest, await raw(`${cache}/research/${name}`));
+  paths.set(`/assets/evidence/${name}`, dest);
+}
+const files = await Promise.all(
+    [...paths].map(async ([path, file]) => ({
+      path,
+      sha256: sha(await raw(file)),
+    })),
+  ),
+  checks = [];
+for (const origin of [
+  "http://127.0.0.1:4180",
+  "https://desktop.tailnet-1a49.ts.net",
+]) {
+  let cursor = 0;
+  const results = await Promise.allSettled(
+    Array.from({ length: 6 }, async () => {
+      while (cursor < files.length) {
+        const item = files[cursor++],
+          response = await fetch(`${origin}${item.path}`, {
+            signal: AbortSignal.timeout(30000),
+          });
+        check(
+          response.status === 200 &&
+            sha(await response.arrayBuffer()) === item.sha256,
+          `Corpse HTTP delivery differs: ${origin}${item.path}`,
+        );
+        checks.push({ url: `${origin}${item.path}`, sha256: item.sha256 });
+      }
+    }),
+  );
+  for (const r of results) if (r.status === "rejected") throw r.reason;
+}
+await Bun.write(
+  `${cache}/research/corpse-policy-publication.json`,
+  JSON.stringify(
+    {
+      schema: 1,
+      publisherSha256: sha(await raw(import.meta.path)),
+      comparisonSha256: sha(await raw(comparisonPath)),
+      imageSha256: visual.imageSha256,
+      counts: c,
+      scope: proof.scope,
+      checks: checks.sort((a, b) => a.url.localeCompare(b.url)),
+    },
+    null,
+    2,
+  ),
+);
+console.log(JSON.stringify({ matchedFiles: checks.length, counts: c }));

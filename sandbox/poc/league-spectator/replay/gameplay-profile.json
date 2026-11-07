@@ -1,0 +1,88 @@
+{
+  "minionSpawn": {
+    "opcode": 330,
+    "constructorRva": "0xe79fd0",
+    "entryRva": "0x10a5ff0"
+  },
+  "basicAttack": {
+    "opcode": 181,
+    "constructorRva": "0xe7a320",
+    "entryRva": "0x10a7d40"
+  },
+  "minionAttack": {
+    "opcode": 781,
+    "constructorRva": "0xe7a230",
+    "entryRva": "0x10a7810"
+  },
+  "attackPosition": {
+    "opcode": 908,
+    "constructorRva": "0xe7a2d0",
+    "entryRva": "0x10a7b60"
+  },
+  "minionAttackPosition": {
+    "opcode": 1133,
+    "constructorRva": "0xe7a270",
+    "entryRva": "0x10a7980"
+  },
+  "neutralSpawn": {
+    "opcode": 386,
+    "constructorRva": "0xe88170",
+    "entryRva": "0xf026e0"
+  },
+  "turretSpawn": {
+    "opcode": 815,
+    "constructorRva": "0xe89140",
+    "entryRva": "0xf05110"
+  },
+  "respawn": {
+    "opcode": 1012,
+    "constructorRva": "0xe7be30",
+    "entryRva": "0xef47c0"
+  },
+  "reincarnate": {
+    "opcode": 1224,
+    "constructorRva": "0xe7bec0",
+    "entryRva": "0xef47c0"
+  },
+  "unitDeath": {
+    "opcode": 487,
+    "constructorRva": "0xe7e6d0",
+    "entryRva": "0xef4fe0"
+  },
+  "destroyUnit": {
+    "opcode": 108,
+    "constructorRva": "0xe89bf0",
+    "entryRva": "0xef3e10"
+  },
+  "unitDeathBroadcast": {
+    "opcode": 343,
+    "constructorRva": "0xe7e530",
+    "entryRva": "0xef49d0"
+  },
+  "buildingDeath": {
+    "opcode": 280,
+    "constructorRva": "0xe7a360",
+    "entryRva": "0x10a7eb0"
+  },
+  "replication": {
+    "opcode": 107,
+    "constructorRva": "0xe7f750",
+    "entryRva": "0xef6b40",
+    "healthFields": [
+      "currentHealth",
+      "maxHealth",
+      "healthMaxPenalty",
+      "allShield",
+      "physicalShield",
+      "magicalShield"
+    ],
+    "evidence": {
+      "fieldConstructorRva": "0x2b0860",
+      "healthNameRva": "0x1a1c93c",
+      "maxHealthNameRva": "0x1a1c940",
+      "allShieldNameRva": "0x1a1c958",
+      "physicalShieldNameRva": "0x1a1c968",
+      "magicalShieldNameRva": "0x1a1c978"
+    }
+  }
+}

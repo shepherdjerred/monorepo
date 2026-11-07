@@ -1,0 +1,78 @@
+"""Observe coupled UV birth/update, RNG order and complete native quad geometry."""
+import argparse
+import json
+import math
+from pathlib import Path
+
+import unicorn
+from vfx_bound_quad_native import NativeBoundQuad
+from vfx_camera_quad_native import CAMERA_CACHE
+from vfx_spawn_native import sha
+
+IDENTITY=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+TURNED=[0,0,-1,0,0,1,0,0,1,0,0,0,0,0,0,1]
+CAMERAS=[{"cameraRight":[1,0,0],"cameraUp":[0,1,0],"viewAxis":[0,0,1],"position":[0,0,1000]},
+         {"cameraRight":[0,0,-1],"cameraUp":[0,1,0],"viewAxis":[1,0,0],"position":[1000,0,0]},
+         {"cameraRight":[1/math.sqrt(2),0,-1/math.sqrt(2)],"cameraUp":[1/math.sqrt(6),2/math.sqrt(6),1/math.sqrt(6)],
+          "viewAxis":[1/math.sqrt(3),-1/math.sqrt(3),1/math.sqrt(3)],"position":[600,-600,600]}]
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    for name in ["package","client","output"]:parser.add_argument(name,type=Path)
+    args=parser.parse_args();k=NativeBoundQuad(args.package,args.client)
+    meta=k.checked_json("vfx-bound-quads.json","vfxBoundQuadsSha256")
+    writes=[];active=[False]
+    def write(uc,kind,at,count,value,user):
+        if active[0]:writes.append((at-k.base,count))
+    k.u.hook_add(unicorn.UC_HOOK_MEM_WRITE,write,begin=k.base,end=k.base+len(k.image)-1)
+    cases=[];variants=set();frames=births=vertices=indices=live_graphs=initial_uv=uv_matrices=0;cache_states=set()
+    times=[0,0,1/60,.05,.1,.2,.3,.5,.7,1,1.2,2]
+    for number,ref in enumerate(meta["templates"],1):
+        raw=(args.package/ref["file"]).read_bytes()
+        if sha(raw)!=ref["sha256"]:raise ValueError("Bound quad graph changed")
+        graph=json.loads(raw);actor=ref["effectId"].rsplit("/",1)[0]
+        modes=[(0,1)]
+        if ref["hasMultDefinition"]:modes.append((3,1))
+        for mode,seed in modes:
+            active[0]=True
+            try:k.reset_bound(graph,seed,0,meta)
+            finally:active[0]=False
+            records=[];previous=[0,0,0]
+            for tick,time in enumerate(times):
+                current=[12000+time*130,250+time*3,8500+time*70] if mode==1 else [0,0,0]
+                camera=CAMERAS[1 if mode==1 and tick>=4 else 2 if mode==2 else 0]
+                present=bool(ref["hasMultDefinition"] and (mode in [2,3] or mode==1 and tick>=4))
+                inp={"time":time,"previous":previous,"current":current,"basis":TURNED if mode==2 and tick>=4 else IDENTITY,
+                    "viewPosition":[a+b for a,b in zip(camera["position"],current)],"multTexturePresent":present,
+                    **{key:camera[key] for key in ["cameraRight","cameraUp","viewAxis"]}}
+                active[0]=True
+                try:output=k.frame_bound(inp)
+                except Exception as error:raise ValueError(f"{ref['effectId']}:{ref['emitterIndex']} mode {mode} time {time}: {error}") from error
+                finally:active[0]=False
+                cache_hash=sha(bytes(k.u.mem_read(CAMERA_CACHE+0x158,0x21d8)));cache_states.add(cache_hash)
+                records.append({"input":inp,"output":output,"libraryInputs":list(k.library_inputs),"cameraCacheSha256":cache_hash})
+                frames+=1;births+=len(output["state"]["births"])
+                vertices+=len(output["geometry"]["verticesHex"])//56;indices+=len(output["geometry"]["indicesHex"])//4
+                initial_uv+=output["state"]["vectors"]["uv"]["count"]+output["state"]["vectors"]["multUv"]["count"]
+                uv_matrices+=output["state"]["vectors"]["unknown78"]["count"]+output["state"]["vectors"]["unknown88"]["count"]
+                previous=current
+            if mode==0:
+                had_birth=any(f["output"]["state"]["births"] for f in records);live_graphs+=had_birth
+                if had_birth and any(ref["uvFlags"].values()) and actor not in variants:
+                    variants.add(actor);modes.extend([(1,987654321),(2,0xffffffffffffffff)])
+            cases.append({"graphSha256":ref["sha256"],"mode":mode,"seedHex":f"{seed:016x}","quality":0,"frames":records})
+        if number%100==0:print(json.dumps({"graphs":number,"frames":frames,"births":births}),flush=True)
+    unexpected=[w for w in writes if not 0x2516698<=w[0]<=0x25166a0-w[1]]
+    if unexpected:raise ValueError(f"Unadmitted bound quad global writes {unexpected[:5]}")
+    result={"schema":1,"build":meta["build"],"protocol":meta["protocol"],"definitionSha256":k.profile["vfxBoundQuadsSha256"],
+        "decoderImageSha256":k.profile["decoderImageSha256"],"compilerSources":meta["compilerSources"],
+        "observerSha256":sha(Path(__file__).read_bytes()),"originalBlocks":list(k.blocks.values()),"executableGlobalWrites":sorted(set(writes)),
+        "cases":cases,"summary":{"graphs":len(meta["templates"]),"liveGraphs":live_graphs,"variantActors":len(variants),
+            "cameraCacheStates":len(cache_states),"cases":len(cases),"frames":frames,"births":births,"vertices":vertices,"indices":indices,
+            "initialUvPoolRecords":initial_uv,"uvMatrixRecords":uv_matrices},"scope":meta["scope"]}
+    args.output.write_text(json.dumps(result,separators=(",",":"),allow_nan=False),encoding="utf-8")
+    print(json.dumps({**result["summary"],"originalBlocks":len(k.blocks)}))
+
+
+if __name__=="__main__":main()

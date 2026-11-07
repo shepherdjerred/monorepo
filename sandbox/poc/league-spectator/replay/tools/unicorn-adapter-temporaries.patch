@@ -1,0 +1,14 @@
+diff --git a/qemu/tcg/tcg.c b/qemu/tcg/tcg.c
+--- a/qemu/tcg/tcg.c
++++ b/qemu/tcg/tcg.c
+@@ -1594,3 +1594,10 @@ void tcg_gen_callN(TCGContext *tcg_ctx, void *func, TCGTemp *ret, int nargs, TCG
++    /* Free the narrow-argument temporaries allocated by the WASM adapter. */
++    for (i = 0; i < nargs; i++) {
++        if (!(sizemask & (1 << (i+1)*2))) {
++            tcg_temp_free_internal(tcg_ctx, args[i]);
++        }
++    }
++
+     /* Make sure the fields didn't overflow.  */
+     tcg_debug_assert(TCGOP_CALLI(op) == real_args);
+     tcg_debug_assert(pi <= ARRAY_SIZE(op->args));
