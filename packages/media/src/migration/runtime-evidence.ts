@@ -5,6 +5,7 @@ import type {
 } from "#domain/resolved-contract.ts";
 import {
   ResolvedEvidenceSchema,
+  ResolvedEvidenceProtocolSchema,
   type ResolvedEvidence,
 } from "#domain/resolved-evidence.ts";
 import { parseResolvedScene } from "#domain/resolved-parser.ts";
@@ -107,5 +108,5 @@ export async function collectResolvedEvidence(
     requested.size > 0
   )
     throw new Error("Regex response does not match request");
-  return ResolvedEvidenceSchema.parse({ ...evidence, regex: result });
+  return ResolvedEvidenceProtocolSchema.parse({ ...evidence, regex: result });
 }

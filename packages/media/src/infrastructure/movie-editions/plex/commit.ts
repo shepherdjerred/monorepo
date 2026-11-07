@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {

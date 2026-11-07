@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
-import { MovieRequestV4Schema } from "#shared/movie-editions/lifecycle-v4.ts";
+import { MovieRequestV4Schema } from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
 import { MovieLifecycleCommands } from "./commands.ts";
 import { captureMovieChoiceV4, assertMovieChoiceV4 } from "./authority.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";

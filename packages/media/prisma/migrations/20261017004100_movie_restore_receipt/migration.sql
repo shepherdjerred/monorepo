@@ -92,7 +92,7 @@ BEGIN
     AND decision.evidence->>'restoreOperationId'=NEW.id
     AND decision.evidence #> ARRAY['restoredGenerations',NEW."targetId"]=proof #> '{input,generation}'
     AND decision.manifest=proof->'manifest' AND jsonb_array_length(proof #> '{manifest,assets}')=1
-    AND decision."quarantinedAt"=(source->>'committedAt')::timestamptz
+    AND decision."quarantinedAt"=((source->>'committedAt')::timestamptz AT TIME ZONE 'UTC')
     AND EXISTS (SELECT 1 FROM "RetentionDecision" WHERE id=decision.id AND xmin::text=(txid_current()%4294967296)::text)
     AND target."editionRootId"=NEW."targetId" AND target."desiredPresence" AND target.monitoring
     AND target."intentionallyRemovedAt" IS NULL AND target.availability='importing'
@@ -119,8 +119,8 @@ BEGIN
     AND after_asset->'properties'=asset.properties AND to_jsonb(asset."ownershipEpoch")=source->'recoveryEpoch'
     AND after_asset->'ownershipEpoch'=source->'recoveryEpoch' AND after_asset->'owned'='true'::jsonb
     AND (after_asset->>'supersededByAssetId') IS NOT DISTINCT FROM asset."supersededByAssetId"
-    AND (after_asset->>'plexPublishedAt')::timestamptz IS NOT DISTINCT FROM asset."plexPublishedAt"
-    AND (after_asset->>'rollbackExpiresAt')::timestamptz IS NOT DISTINCT FROM asset."rollbackExpiresAt"
+    AND ((after_asset->>'plexPublishedAt')::timestamptz AT TIME ZONE 'UTC') IS NOT DISTINCT FROM asset."plexPublishedAt"
+    AND ((after_asset->>'rollbackExpiresAt')::timestamptz AT TIME ZONE 'UTC') IS NOT DISTINCT FROM asset."rollbackExpiresAt"
     AND after_asset->'coverage'=jsonb_build_array(jsonb_build_object('mediaId',NEW."targetId",'edition',selected->>'edition','current',true))
     AND (SELECT jsonb_agg(jsonb_build_object('mediaId',"mediaId",'edition',edition,'current',current) ORDER BY "mediaId",edition)
       FROM "AssetCoverage" WHERE "assetId"=asset.id)=after_asset->'coverage'

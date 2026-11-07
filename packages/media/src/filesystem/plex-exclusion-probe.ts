@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import nodePath from "node:path";
 import { z } from "zod";
 import { withAdvisoryLock } from "./advisory-lock.ts";
+import type { MediaPathMapping } from "./media-paths.ts";
 import {
   ProbeJournalSchema,
   readProbeJournal,
@@ -96,12 +97,16 @@ export async function prepareProbeVideo(
 }
 
 /** Read-only preparation never creates the control directory or markers. */
-export async function readExclusionMarkers(libraryRoot: string): Promise<{
+export async function readExclusionMarkers(
+  libraryRoot: string,
+  controlRoot?: string,
+): Promise<{
   rootMarkerBefore: string | null;
   controlMarkerBefore: string | null;
 }> {
   const rootMarker = await safePath(libraryRoot, ".plexignore", false);
-  const controlPath = nodePath.join(libraryRoot, ".media-control");
+  const controlPath =
+    controlRoot ?? nodePath.join(libraryRoot, ".media-control");
   if (await exists(controlPath)) {
     const info = await lstat(controlPath);
     if (!info.isDirectory() || info.isSymbolicLink())
@@ -119,8 +124,10 @@ export async function stageExclusionProbe(
   rawPlan: PlexExclusionPlan,
   rawJournal: ProbeJournal,
   guard: ProbeGuard,
+  mapping?: MediaPathMapping,
 ): Promise<ProbeJournal> {
   const plan = PlexExclusionPlanSchema.parse(rawPlan);
+  const libraryRoot = mapping?.local(plan.libraryRoot) ?? plan.libraryRoot;
   let journal = ProbeJournalSchema.parse(rawJournal);
   const bytes = Buffer.from(journal.videoBase64, "base64");
   if (
@@ -131,8 +138,8 @@ export async function stageExclusionProbe(
     throw new Error("Probe artifact changed");
   await guard.authorize();
   const lock = await safePath(
-    plan.libraryRoot,
-    ".media-control/exclusion.lock",
+    mapping === undefined ? libraryRoot : mapping.local(plan.controlRoot),
+    mapping === undefined ? ".media-control/exclusion.lock" : "exclusion.lock",
     true,
   );
   return await withAdvisoryLock(lock, async (assertHeld) => {
@@ -143,9 +150,9 @@ export async function stageExclusionProbe(
       assertHeld();
     };
     await authorize();
-    journal = await readProbeJournal(plan, journal);
+    journal = await readProbeJournal(plan, journal, mapping);
     const save = async () => {
-      await saveProbeJournal(plan, journal);
+      await saveProbeJournal(plan, journal, mapping);
       await guard.save(journal);
     };
     await save();
@@ -153,7 +160,7 @@ export async function stageExclusionProbe(
     if (!journal.markersCompleted) {
       await replaceMarker(
         {
-          root: plan.libraryRoot,
+          root: libraryRoot,
           before: plan.rootMarkerBefore,
           after: plan.rootMarkerAfter,
         },
@@ -161,7 +168,7 @@ export async function stageExclusionProbe(
       );
       await replaceMarker(
         {
-          root: plan.controlRoot,
+          root: mapping?.local(plan.controlRoot) ?? plan.controlRoot,
           before: plan.controlMarkerBefore,
           after: plan.controlMarkerAfter,
         },
@@ -170,11 +177,10 @@ export async function stageExclusionProbe(
       journal = { ...journal, markersCompleted: true };
       await save();
     }
-    await requireMarkers(plan);
+    await requireMarkers(plan, mapping);
     for (const kind of ["positive", "negative"] as const) {
       const path = kind === "positive" ? plan.positivePath : plan.negativePath;
-      const relative = nodePath.relative(plan.libraryRoot, path);
-      const target = await safePath(plan.libraryRoot, relative, true);
+      const target = await probePath(plan, path, true, mapping);
       const intent = kind === "positive" ? "positiveIntent" : "negativeIntent";
       if (!journal[intent]) {
         if (await exists(target))
@@ -220,31 +226,38 @@ export async function cleanupExclusionProbe(
   rawPlan: PlexExclusionPlan,
   rawJournal: ProbeJournal,
   guard: ProbeGuard,
+  mapping?: MediaPathMapping,
 ): Promise<ProbeJournal> {
   const plan = PlexExclusionPlanSchema.parse(rawPlan);
   let journal = ProbeJournalSchema.parse(rawJournal);
   await guard.authorize();
   const lock = await safePath(
-    plan.libraryRoot,
-    ".media-control/exclusion.lock",
+    mapping === undefined ? plan.libraryRoot : mapping.local(plan.controlRoot),
+    mapping === undefined ? ".media-control/exclusion.lock" : "exclusion.lock",
     false,
   );
   return await withAdvisoryLock(lock, async (assertHeld) => {
-    journal = await readProbeJournal(plan, journal);
+    journal = await readProbeJournal(plan, journal, mapping);
     for (const kind of ["positive", "negative"] as const) {
-      journal = await removeProbe(journal, { plan, kind, guard, assertHeld });
+      journal = await removeProbe(journal, {
+        plan,
+        kind,
+        guard,
+        assertHeld,
+        mapping,
+      });
       journal = {
         ...journal,
         [kind === "positive" ? "positiveRemoved" : "negativeRemoved"]: true,
       };
-      await saveProbeJournal(plan, journal);
+      await saveProbeJournal(plan, journal, mapping);
       await guard.save(journal);
     }
     journal = {
       ...journal,
       cleanedAt: journal.cleanedAt ?? new Date().toISOString(),
     };
-    await saveProbeJournal(plan, journal);
+    await saveProbeJournal(plan, journal, mapping);
     await guard.save(journal);
     assertHeld();
     return journal;
@@ -258,16 +271,15 @@ async function removeProbe(
     kind: "positive" | "negative";
     guard: ProbeGuard;
     assertHeld: () => void;
+    mapping: MediaPathMapping | undefined;
   },
 ): Promise<ProbeJournal> {
-  const { plan, kind, guard, assertHeld } = input;
-  const path = kind === "positive" ? plan.positivePath : plan.negativePath;
+  const { plan, kind, guard, assertHeld, mapping } = input;
+  const canonicalPath =
+    kind === "positive" ? plan.positivePath : plan.negativePath;
+  const path = mapping?.local(canonicalPath) ?? canonicalPath;
   if (!(await exists(path))) return journal;
-  const target = await safePath(
-    plan.libraryRoot,
-    nodePath.relative(plan.libraryRoot, path),
-    false,
-  );
+  const target = await probePath(plan, canonicalPath, false, mapping);
   const actual = await identityOf(target, journal.probeSha256);
   let identity = journal[kind];
   if (identity === null) {
@@ -276,7 +288,7 @@ async function removeProbe(
     if (!intent) throw new Error("Probe ownership journal is incomplete");
     identity = actual;
     journal = { ...journal, [kind]: identity };
-    await saveProbeJournal(plan, journal);
+    await saveProbeJournal(plan, journal, mapping);
     await guard.save(journal);
   }
   requireSameIdentity(identity, actual);
@@ -298,16 +310,45 @@ async function removeProbe(
   return journal;
 }
 
-export async function requireMarkers(plan: PlexExclusionPlan): Promise<void> {
+export async function requireMarkers(
+  plan: PlexExclusionPlan,
+  mapping?: MediaPathMapping,
+): Promise<void> {
   if (
     (await readMarker(
-      await safePath(plan.libraryRoot, ".plexignore", false),
+      await safePath(
+        mapping?.local(plan.libraryRoot) ?? plan.libraryRoot,
+        ".plexignore",
+        false,
+      ),
     )) !== plan.rootMarkerAfter ||
     (await readMarker(
-      await safePath(plan.controlRoot, ".plexignore", false),
+      await safePath(
+        mapping?.local(plan.controlRoot) ?? plan.controlRoot,
+        ".plexignore",
+        false,
+      ),
     )) !== plan.controlMarkerAfter
   )
     throw new Error("Plex exclusion markers changed");
+}
+
+/** Only the IO namespace changes; durable journal hashes always bind the canonical plan. */
+function probePath(
+  plan: PlexExclusionPlan,
+  canonicalPath: string,
+  createParents: boolean,
+  mapping?: MediaPathMapping,
+) {
+  const root =
+    mapping !== undefined && canonicalPath.startsWith(`${plan.controlRoot}/`)
+      ? plan.controlRoot
+      : plan.libraryRoot;
+  return safePath(
+    mapping?.local(root) ?? root,
+    nodePath.relative(root, canonicalPath),
+    createParents,
+  );
 }
 
 async function readMarker(path: string): Promise<string | null> {

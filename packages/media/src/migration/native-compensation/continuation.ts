@@ -14,7 +14,7 @@ import {
   PendingLegacyClaimsError,
   reopenLegacyClaimProtection,
 } from "#infrastructure/recovery/legacy-claims/protection.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import {
   assertCanonicalIdentity,
   assertWritersQuiescent,

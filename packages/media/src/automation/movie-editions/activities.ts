@@ -2,13 +2,14 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import type {
   MovieOperationV4,
   MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { MediaError } from "#application/errors.ts";
 import { reconcileMovieIntentV4 } from "./reconcile.ts";
 import { submitMovieTorrentV4 } from "./submission.ts";
 import { observeMovieAcquisitionV4 } from "./observation.ts";
 import { publishMoviePlexV4 } from "./plex-publication.ts";
+import { publishMovieWithRollbackV4 } from "./rollback/publication.ts";
 import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
 import { findMovieSubtitlesV4 } from "./subtitles/network.ts";
 import {
@@ -24,6 +25,9 @@ import { publishRestoredMovieToPlexV4 } from "./retention/restore-plex.ts";
 import { finalizeMovieRestorationV4 } from "./retention/restore-finalization.ts";
 import { completeMovieRemovalV4 } from "./retention/removal-completion.ts";
 import type { MovieRemovalCompletionV4 } from "#shared/movie-editions/removal-v4.ts";
+import { verifyRolledBackMoviePlexV4 } from "./rollback/verification.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { createRequestedMovieRollbackNetworkFacetV1 } from "./rollback/manual-facet.ts";
 
 /** Credentials may be cached; every dispatch supplies its original invocation capability. */
 export function createMovieNetworkFacetV4(
@@ -36,6 +40,27 @@ export function createMovieNetworkFacetV4(
       plexBindingExecution: () => execution,
     });
   return {
+    ...createRequestedMovieRollbackNetworkFacetV1(context),
+    publishMovieWithRollbackV4: (
+      input: MovieAttemptOperationV4,
+      execution: PlexBindingExecution,
+      budget: PublicationAuthorityReadBudget,
+    ) =>
+      publishMovieWithRollbackV4(
+        { ...context, movieManagement: { execution, budget } },
+        input,
+        execution,
+      ),
+    verifyRolledBackMoviePlexV4: (
+      input: MovieAttemptOperationV4,
+      execution: PlexBindingExecution,
+      budget: PublicationAuthorityReadBudget,
+    ) =>
+      verifyRolledBackMoviePlexV4(
+        { ...context, movieManagement: { execution, budget } },
+        input,
+        execution,
+      ),
     completeMovieRemovalV4: (
       input: MovieRemovalCompletionV4,
       execution: PlexBindingExecution,

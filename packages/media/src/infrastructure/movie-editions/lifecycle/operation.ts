@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,

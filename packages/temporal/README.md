@@ -737,6 +737,25 @@ and outcomes, without the grant, library paths or personal requester fabrication
 Only the newly created transfer becomes Media-owned. The existing reconciliation
 sweep supplies this work without a separate Schedule or Workflow type.
 
+Recent-provider feed matching uses the same management authority for monitored
+adopted movies and individual TV episodes. Its Network adapter captures the SDK
+deadline and one provenance allowance before loading the runtime, then retains
+them through candidate selection and the acquisition command's transaction.
+
+Personal named-edition targets also receive recurring due commands through that
+sweep after a completed search found no acceptable release. Discovery keeps the
+same edition, live choice and generation, deduplicates its due command and
+rechecks cancellation before any reservation. Search-only providers use this
+path without pretending to supply a recent-listing feed.
+
+`rollbackMovieEditionV1Workflow` carries an owner-reviewed rollback through fresh
+Network playback admission, Files preparation, another playback check, the
+journaled inverse and exact Plex verification. Network and Files use separate
+production adapters and retain their original SDK owner and one provenance
+allowance. The original successful acquisition and its serving receipt remain
+historical; rollback cancels the original archive cleanup without extending its
+window and retains the rejected successor's owned captions separately.
+
 `applyLibraryHandoffV3Workflow` runs the separately
 approved initial-library label corrections: `media-files` proves each reviewed
 movie before `media-network` records its send intent and edits the existing Plex
@@ -831,6 +850,18 @@ finite SDK deadlines before and after runtime initialization, awaited locks and
 effects. Ordinary publication uses the same invocation-local deadline factory
 at its recorded filesystem boundary; existing Workflow timeout options and
 historical payload formats remain unchanged.
+
+Series packs with per-episode files use distinct
+`prepareSeriesPackNativeCompensationV1Workflow` and
+`applySeriesPackNativeCompensationV1Workflow` reviews. Their actual outbox commands
+dispatch `compensateSeriesPackNativePublicationV1Workflow` for the whole physical
+group and `publishSeriesPackNativeCompensationV1Workflow` for later household
+publication. Original staging and publication receipts stay unchanged. One Files
+invocation handles the complete reviewed video/caption inventory under its
+original authority allowance; physical completion alone does not release the
+publication fence. A changed playback observation cancels and drains the
+physical Activity before recording a protected terminal outcome. Earlier
+compensation Workflow types and recorded histories retain their original path.
 
 The initially paused `media-capacity` schedule runs each minute with SKIP overlap.
 Its new Workflow first observes canonical mounts on `media-network`, then samples

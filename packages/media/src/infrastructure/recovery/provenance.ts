@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { HandoffScopeSchema } from "#shared/handoff.ts";
 import { BundleReportSchema } from "#shared/migration-handoff.ts";
@@ -14,11 +15,13 @@ export async function unresolvedRecoveryClaims(
       recordDigest: string;
     }[];
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const plans = await db.mediaHandoffPlan.findMany({
     where: { id: { in: input.planIds }, state: "applied" },
     include: { bundleReview: true },
   });
+  budget?.consume(plans.length * 2);
   const media = await db.mediaItem.findMany({
     where: { id: { in: input.mediaIds } },
     include: { parent: { include: { parent: true } } },

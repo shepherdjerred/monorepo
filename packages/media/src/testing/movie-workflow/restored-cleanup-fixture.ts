@@ -3,7 +3,7 @@ import { expect } from "vitest";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { createMovieCleanupFixture } from "./cleanup-fixture.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { queueOperation } from "#automation/store.ts";
 import { evaluateMovieRetentionV4 } from "#automation/movie-editions/retention/evaluate.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";

@@ -11,6 +11,10 @@ import {
   type SubtitleVideo,
 } from "#domain/subtitle-quality.ts";
 import { reusableEmbeddedSubtitle } from "./embedded.ts";
+import {
+  hasPendingSeriesPackPublicationV1,
+  SERIES_PACK_PUBLICATION_PENDING,
+} from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 
 export const SubtitleTargetSchema = z.object({
   language: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/u),
@@ -142,6 +146,13 @@ export async function currentSubtitleWork(
   );
   const requirements = policyRequirements(policies, audio ?? null, epoch);
   const { reasons } = requirements;
+  if (
+    await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: ids,
+      assetIds: [assetId],
+    })
+  )
+    reasons.push(SERIES_PACK_PUBLICATION_PENDING);
   targets.push(...requirements.targets);
   if (
     !asset.owned ||

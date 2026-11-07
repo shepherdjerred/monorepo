@@ -8,7 +8,7 @@ import {
 } from "#infrastructure/native-archive/guards.ts";
 import { stableArchiveFiles } from "#infrastructure/native-archive/plan.ts";
 import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
 import type { PreparedNativeArchive } from "./files.ts";

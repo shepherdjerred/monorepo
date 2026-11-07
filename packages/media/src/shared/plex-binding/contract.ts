@@ -214,6 +214,7 @@ export const PlexBindingReasonSchema = z.enum([
   "scope_changed",
   "ownership_changed",
   "compensation_fence_active",
+  "series_pack_publication_pending",
   "wrong_server",
   "wrong_section",
   "incomplete_inventory",

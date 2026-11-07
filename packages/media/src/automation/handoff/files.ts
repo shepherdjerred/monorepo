@@ -22,6 +22,11 @@ import { ResolvedEvidenceSchema } from "#domain/resolved-evidence.ts";
 import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
 import { unmanagedSidecars } from "./sidecars.ts";
 import { captureHandoffSubtitles, subtitleFileEvidence } from "./subtitles.ts";
+import {
+  storedFilePath,
+  workerFilePath,
+} from "#automation/files/paths/locations.ts";
+import { handoffWorkerPath } from "./paths.ts";
 
 export type HandoffFileContext = { files: FileContext; workerPodUid: string };
 export type PreparedHandoffFiles = {
@@ -72,21 +77,28 @@ export async function prepareHandoffFiles(
     // Initialize only our advisory-lock directory before recording an absent journal's parent identity.
     await safePath(root.control, "locks/handoff-proof.lock", true);
     const binding = network.mounts.bindings.find(
-      (item) => item.canonical.root === root.library,
+      (item) =>
+        item.canonical.root ===
+        storedFilePath(context.files, kind, "library", ""),
     );
     if (binding?.canonical.podUid !== context.workerPodUid)
       throw new Error("Handoff mount proof belongs to another files executor");
     const selected = selectedFiles(scope, kind, focusAssetId);
     const journal = await inspectHandoffJournals(
       root.control,
-      new Set(selected.map((item) => item.canonicalPath)),
+      new Set(
+        selected.map((item) =>
+          workerFilePath(context.files, item.canonicalPath),
+        ),
+      ),
     );
     journals.push(journal);
     for (const file of selected) {
-      const relative = path.relative(root.library, file.canonicalPath);
-      const target = await safePath(root.library, relative, false);
-      if (target !== file.canonicalPath)
-        throw new Error("Handoff target does not match canonical root");
+      const target = await handoffWorkerPath(
+        context.files,
+        kind,
+        file.canonicalPath,
+      );
       await content.capture(target, () =>
         context.files.checkpoint("handoff-file-hashing"),
       );
@@ -108,7 +120,8 @@ export async function prepareHandoffFiles(
   content.seal();
   const files = [];
   for (const item of measured) {
-    const proof = await content.verifiedFile(item.file.canonicalPath);
+    const target = workerFilePath(context.files, item.file.canonicalPath);
+    const proof = await content.verifiedFile(target);
     if (
       proof.sizeBytes !== item.file.sizeBytes ||
       (item.file.capturedChecksum !== null &&
@@ -120,16 +133,20 @@ export async function prepareHandoffFiles(
       canonicalPath: item.file.canonicalPath,
       checksum: proof.sha256,
       sizeBytes: proof.sizeBytes,
-      identity: await content.reviewIdentity(item.file.canonicalPath),
+      identity: await content.reviewIdentity(target),
       properties: item.properties,
       journalDigest: item.journalDigest,
-      unmanagedSidecars: await unmanagedSidecars(item.file.canonicalPath),
+      unmanagedSidecars: await unmanagedSidecars(
+        item.file.canonicalPath,
+        context.files.pathMapping,
+      ),
       subtitles: await subtitleFileEvidence({
         scope,
         file: item.file,
         content,
         videoChecksum: proof.sha256,
         codecs: item.codecs,
+        mapping: context.files.pathMapping,
       }),
     });
   }
@@ -175,7 +192,9 @@ async function measuredProperties(
   scope: HandoffScope,
   file: HandoffFile,
 ) {
-  const probe = await (context.inspect ?? inspectMedia)(file.canonicalPath);
+  const probe = await (context.inspect ?? inspectMedia)(
+    workerFilePath(context, file.canonicalPath),
+  );
   const selected = scope.media.filter((item) =>
     file.mediaIds.includes(item.mediaId),
   );

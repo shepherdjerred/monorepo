@@ -1,5 +1,6 @@
 import path from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
+import { z } from "zod";
+import { mkdir, writeFile, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import type { Database } from "#infrastructure/database.ts";
 import { KnabenProvider } from "#integrations/providers.ts";
@@ -26,7 +27,11 @@ export function movieWorkflowWire(
     providerReleaseId?: string;
     ratingKey?: string;
     partId?: number;
-    playback?: { viewCount: number; lastViewedAt: number; viewOffset: number };
+    playback?: {
+      viewCount?: number | undefined;
+      lastViewedAt?: number | undefined;
+      viewOffset?: number | undefined;
+    };
   },
 ) {
   const hash = randomBytes(20).toString("hex");
@@ -39,10 +44,15 @@ export function movieWorkflowWire(
   const control = {
     sessions,
     loseAddReply: false,
+    loseRemoveReply: false,
+    deletes: 0,
+    ratio: 0,
+    seedingSeconds: 0,
     visible: true,
     beforeProvider: () => Promise.resolve(),
     beforeInfo: () => Promise.resolve(),
     beforeAddReply: () => Promise.resolve(),
+    beforeRemove: () => Promise.resolve(),
     beforeMetadata: () => Promise.resolve(),
   };
   const ratingKey = input.ratingKey ?? "750001";
@@ -85,6 +95,10 @@ export function movieWorkflowWire(
         });
       if (url.pathname.endsWith("/torrents/info")) {
         await control.beforeInfo();
+        if (torrent !== null) {
+          torrent["ratio"] = control.ratio;
+          torrent["seeding_time"] = control.seedingSeconds;
+        }
         return Response.json(
           torrent === null || !control.visible ? [] : [torrent],
         );
@@ -99,12 +113,27 @@ export function movieWorkflowWire(
             priority: 1,
           },
         ]);
-      if (
-        !url.pathname.endsWith("/torrents/add") ||
-        !(init.body instanceof URLSearchParams)
-      )
+      const form = z.instanceof(URLSearchParams).parse(init.body);
+      if (url.pathname.endsWith("/torrents/delete")) {
+        if (form.get("hashes") !== hash || form.get("deleteFiles") !== "true")
+          throw new Error("Actual delete escaped its exact synthetic source");
+        await control.beforeRemove();
+        const source = z.object({ save_path: z.string() }).parse(torrent);
+        const originalPath = path.join(
+          input.downloads,
+          source.save_path.slice("/downloads/".length),
+          name,
+        );
+        await rm(originalPath);
+        control.deletes++;
+        torrent = null;
+        return new Response("", {
+          status: control.loseRemoveReply ? 503 : 200,
+        });
+      }
+      if (!url.pathname.endsWith("/torrents/add"))
         throw new Error("Unexpected synthetic qBit route");
-      const savePath = init.body.get("savepath");
+      const savePath = form.get("savepath");
       if (
         savePath === null ||
         !/^\/downloads\/media\/[a-f0-9-]{36}$/u.test(savePath)
@@ -122,7 +151,7 @@ export function movieWorkflowWire(
         hash,
         infohash_v1: hash,
         infohash_v2: "",
-        tags: init.body.get("tags"),
+        tags: form.get("tags"),
         save_path: savePath,
         content_path: `${savePath}/${name}`,
         name,

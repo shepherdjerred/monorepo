@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MovieOperationV4Schema } from "./automation-v4.ts";
+import { MovieOperationV4Schema } from "./lifecycle/automation-v4.ts";
 import { MovieRestoreReferenceV1Schema } from "./publication-v2.ts";
 import { MovieServingPlexV2Schema } from "./plex-v2.ts";
 import { MovieEditionHashSchema as Hash } from "./registry.ts";

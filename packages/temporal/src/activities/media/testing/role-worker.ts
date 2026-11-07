@@ -1,14 +1,19 @@
 import path from "node:path";
 
 export function pinnedMovieRuntimes() {
-  const temporal = Bun.which("temporal");
-  if (temporal === null) throw new Error("Pinned Temporal CLI required");
-  const resolved = Bun.spawnSync(["mise", "which", "node"], {
+  const temporal = pinnedRuntime("temporal");
+  return { temporal, node: pinnedRuntime("node") };
+}
+
+function pinnedRuntime(name: "temporal" | "node") {
+  const resolved = Bun.spawnSync(["mise", "which", name], {
     stdout: "pipe",
     stderr: "inherit",
   });
-  if (resolved.exitCode !== 0) throw new Error("Pinned Node required");
-  return { temporal, node: resolved.stdout.toString().trim() };
+  if (resolved.exitCode !== 0) throw new Error(`Pinned ${name} required`);
+  const filename = resolved.stdout.toString().trim();
+  if (filename.length === 0) throw new Error(`Pinned ${name} required`);
+  return filename;
 }
 
 /** Credentialless Node child owns only Workflow execution; the caller owns its lifetime. */

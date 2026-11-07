@@ -146,6 +146,8 @@ export class MediaCommandBase {
       mediaId: string;
       generation: number;
       details?: Prisma.InputJsonObject;
+      createdAt?: Date;
+      availableAt?: Date;
     },
   ) {
     const { kind, mediaId, generation, details = {} } = command;
@@ -186,7 +188,21 @@ export class MediaCommandBase {
         kind: selectedKind,
         targetId: mediaId,
         payload,
-        outbox: { create: { kind: selectedKind, payload } },
+        ...(command.createdAt === undefined
+          ? {}
+          : { createdAt: command.createdAt }),
+        outbox: {
+          create: {
+            kind: selectedKind,
+            payload,
+            ...(command.createdAt === undefined
+              ? {}
+              : { createdAt: command.createdAt }),
+            ...(command.availableAt === undefined
+              ? {}
+              : { availableAt: command.availableAt }),
+          },
+        },
       },
     });
     if (route !== null)

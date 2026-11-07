@@ -45,7 +45,6 @@ export async function captureMovieQuarantineAuthorization(
   const { scope, budget } = input.movie;
   await assertPublicationUnfenced(tx, [scope.mediaId], [input.entry.assetId]);
   await assertNoMediaSubtitleReplacement(tx, [scope.mediaId]);
-  await assertMovieQuarantineLegacyClaims(tx, scope.mediaId);
   const decision = await tx.retentionDecision.findUniqueOrThrow({
     where: { id: input.decisionId },
   });
@@ -59,6 +58,11 @@ export async function captureMovieQuarantineAuthorization(
       ownerOverride: z.unknown().optional(),
     })
     .parse(decision.evidence);
+  await assertMovieQuarantineLegacyClaims(
+    tx,
+    { scope, epoch: evidence.recoveryEpoch },
+    budget,
+  );
   if (evidence.ownerOverride !== undefined)
     throw new FileGuardError("owner_override_not_supported");
   await lockMovieQuarantineFacts(tx, {

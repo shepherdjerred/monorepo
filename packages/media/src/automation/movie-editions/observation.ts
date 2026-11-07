@@ -11,10 +11,15 @@ import { movieAttemptEffectAuthorityV4 } from "#infrastructure/movie-editions/li
 import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { validMovieAttemptV4 } from "./submission.ts";
 import { movieManagementContext } from "./management-context.ts";
+import { resolveMovieTransferSourceV1 } from "./transfer-reuse/source.ts";
+import { movieTransferObservationProblem } from "./transfer-reuse/observation.ts";
+import { reserveMovieTransferObservationWriteV1 } from "#infrastructure/movie-editions/transfer-reuse/observation-write.ts";
+import { movieRollbackObservationV1 } from "#infrastructure/movie-editions/rollback/dispatch.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 
 export async function observeMovieAcquisitionV4(
   initial: MediaAutomationContext,
@@ -24,6 +29,21 @@ export async function observeMovieAcquisitionV4(
   const execution = context.plexBindingExecution();
   execution.assertActive();
   const input = MovieAttemptOperationV4Schema.parse(raw);
+  const rollback = await movieRollbackObservationV1(
+    context.db,
+    input,
+    context.movieManagement.budget,
+  );
+  return (
+    rollback ?? observeForwardMovieAcquisitionV4(context, input, execution)
+  );
+}
+
+async function observeForwardMovieAcquisitionV4(
+  context: ReturnType<typeof movieManagementContext>,
+  input: MovieAttemptOperationV4,
+  execution: PlexBindingExecution,
+): ReturnType<MediaNetworkActivities["observeMediaAcquisition"]> {
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
     include: { torrent: true },
@@ -55,8 +75,16 @@ export async function observeMovieAcquisitionV4(
   );
   execution.assertActive();
   if (torrent === null) return { status: "blocked", reason: "torrent_missing" };
-  if (!ownedTorrent(context, torrent, attempt))
+  const source = await resolveMovieTransferSourceV1(
+    context.db,
+    attempt,
+    context.movieManagement.budget,
+  );
+  if (!ownedTorrent(context, torrent, source.owner))
     return { status: "blocked", reason: "torrent_ownership_conflict" };
+  const sourceProblem = movieTransferObservationProblem(source.grant, torrent);
+  if (sourceProblem !== null)
+    return { status: "blocked", reason: sourceProblem };
   const files =
     torrent.progress === 1
       ? await context.qbittorrent.files(torrent.hash, execution.signal)
@@ -88,7 +116,28 @@ export async function observeMovieAcquisitionV4(
       { access, invocation: context.movieManagement },
     );
     if (authority === null) return false;
+    const currentSource = await resolveMovieTransferSourceV1(
+      tx,
+      current,
+      context.movieManagement.budget,
+      { lock: true },
+    );
+    const currentTorrent = await tx.torrent.findUniqueOrThrow({
+      where: { id: torrentId },
+    });
+    context.movieManagement.budget.consume(1);
+    if (
+      ["removing", "removed"].includes(currentTorrent.state) ||
+      !ownedTorrent(context, torrent, currentSource.owner)
+    )
+      return false;
     execution.assertActive();
+    if (currentSource.grant !== null)
+      await reserveMovieTransferObservationWriteV1(
+        tx,
+        { torrentId, observation: torrent },
+        context.movieManagement.budget,
+      );
     await tx.torrent.update({
       where: { id: torrentId },
       data: {

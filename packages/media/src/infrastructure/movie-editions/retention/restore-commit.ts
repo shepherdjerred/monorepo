@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
-import type { MovieOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieRestoreReceiptEnvelopeV1Schema,
   MovieRestoreReceiptV1Schema,

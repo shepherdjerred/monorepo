@@ -13,7 +13,7 @@ import {
   NativeQuarantineFileEvidenceSchema,
 } from "#shared/native-recovery/quarantine.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import {
   inspectQuarantineRoot,
   captureQuarantineGroups,

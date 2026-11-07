@@ -25,6 +25,8 @@ import {
 import { validAttempt, submit } from "./acquisition-submission.ts";
 import { acquisitionInvocation } from "./acquisition-management/invocation.ts";
 import { acknowledgeManagedAcquisition } from "./acquisition-management/acknowledgement.ts";
+import { selectSeriesPackV1 } from "./acquisition-management/series-pack/select.ts";
+import { seriesPackIdentityV1 } from "#shared/acquisition/library-management.ts";
 type AcquisitionActivities = Pick<
   MediaNetworkActivities,
   "reconcileMediaIntent" | "submitMediaTorrent" | "observeMediaAcquisition"
@@ -118,6 +120,8 @@ async function reconcile(
     mediaId: input.mediaId,
     reviewed: selection.identityDecision !== undefined,
     operationId: input.operationId,
+    generation: input.generation,
+    mediaKind: intent.media.kind,
   });
   if (blocker !== null)
     return { status: "blocked", attemptId: null, reason: blocker };
@@ -197,7 +201,11 @@ export function createAcquisitionActivities(
       });
       return {
         status: torrent.progress === 1 ? "ready" : "downloading",
-        reason: null,
+        reason:
+          torrent.progress === 1 &&
+          seriesPackIdentityV1(attempt.identityEvidence) !== null
+            ? "series_pack_publication_v1"
+            : null,
       };
     },
   };
@@ -211,12 +219,30 @@ async function selectionBlocker(
     mediaId: string;
     reviewed: boolean;
     operationId: string;
+    generation: number;
+    mediaKind: string;
   },
 ) {
   const release = await context.db.releaseCandidate.findUniqueOrThrow({
     where: { id: input.releaseId },
   });
-  const ids = await operationCoverage(context.db, input.operationId, release);
+  const selected =
+    input.mediaKind === "episode"
+      ? await selectSeriesPackV1(context, {
+          command: {
+            operationId: input.operationId,
+            mediaId: input.mediaId,
+            generation: input.generation,
+          },
+          release,
+        })
+      : null;
+  const ids = await operationCoverage(
+    context.db,
+    input.operationId,
+    release,
+    context.libraryManagement,
+  );
   const edition = await previewDefaultEdition(context.db, {
     releaseId: input.releaseId,
     mediaIds: ids.length === 0 ? [input.mediaId] : ids,
@@ -229,7 +255,8 @@ async function selectionBlocker(
       id: release.id,
       providerId: release.providerId,
       title: release.title,
-      ...PublicReleaseAttributesSchema.parse(release.attributes),
+      ...(selected?.selected.attributes ??
+        PublicReleaseAttributesSchema.parse(release.attributes)),
     },
     current: await currentRelease(context, input.mediaId),
     profile: input.profile,

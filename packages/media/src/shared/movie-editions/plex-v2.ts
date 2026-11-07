@@ -6,7 +6,7 @@ import {
 } from "#shared/plex-binding/contract.ts";
 import { PlexVerificationFactsSchema } from "#shared/plex-binding/observations.ts";
 import { PlexBindingExpectedSchema } from "#shared/plex-binding/expected.ts";
-import { MovieAttemptOperationV4Schema } from "./automation-v4.ts";
+import { MovieAttemptOperationV4Schema } from "./lifecycle/automation-v4.ts";
 import { MovieEditionHashSchema as Hash } from "./registry.ts";
 
 export const MovieServingPlexV2Schema = z.strictObject({

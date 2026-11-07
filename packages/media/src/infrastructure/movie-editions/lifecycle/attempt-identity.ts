@@ -1,4 +1,8 @@
-import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
+import type {
+  AcquisitionAttempt,
+  MovieEditionChoice,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import {
   MovieAcquisitionIdentitySchema,
@@ -10,7 +14,11 @@ import {
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import { readMovieAssessment } from "#infrastructure/movie-editions/release-assessment.ts";
-import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
+import {
+  readMovieAttemptSponsorRowsV4,
+  movieAttemptQueriedInTransactionV4,
+  type QueriedMovieAttemptV4,
+} from "#infrastructure/movie-editions/attempt-sponsor.ts";
 import { assertSponsorAuthority } from "#infrastructure/acquisition-identity/sponsor.ts";
 import {
   buildCanonicalIdentity,
@@ -32,6 +40,27 @@ export async function readMovieAttemptIdentityV4(
   input: MovieEditionScope,
   budget?: PublicationAuthorityReadBudget,
 ) {
+  const captured = await readMovieAttemptIdentityRowsV4(tx, attempt, input, {
+    ...(budget === undefined ? {} : { budget }),
+  });
+  return {
+    identity: captured.identity,
+    assessment: captured.assessment,
+    release: captured.release,
+  };
+}
+
+async function readMovieAttemptIdentityRowsV4(
+  tx: Prisma.TransactionClient,
+  attempt: AcquisitionAttempt,
+  input: MovieEditionScope,
+  reads: {
+    budget?: PublicationAuthorityReadBudget;
+    queriedAttempt?: QueriedMovieAttemptV4;
+  },
+) {
+  const { budget } = reads;
+  assertQueriedAttempt(tx, attempt, reads.queriedAttempt);
   const scope = MovieEditionScopeSchema.parse(input);
   const identity = MovieAcquisitionIdentitySchema.parse(
     attempt.identityEvidence,
@@ -63,7 +92,7 @@ export async function readMovieAttemptIdentityV4(
     identityHash(assessed.value.canonical) !== identityHash(identity.canonical)
   )
     throw new Error("Movie v4 acquisition assessment binding is corrupt");
-  await assertBirthIdentity(tx, attempt, identity, budget);
+  const birthChoice = await assertBirthIdentity(tx, attempt, identity, reads);
   await tx.$queryRaw`SELECT id FROM "ReleaseCandidate" WHERE id = ${attempt.releaseId} FOR SHARE`;
   const release = await tx.releaseCandidate.findUniqueOrThrow({
     where: { id: attempt.releaseId },
@@ -90,7 +119,19 @@ export async function readMovieAttemptIdentityV4(
   });
   if (hash !== identity.proof.evidenceHash)
     throw new Error("Movie v4 acquisition identity proof hash is corrupt");
-  return { identity, assessment: assessed.value, release };
+  return { identity, assessment: assessed.value, release, birthChoice };
+}
+
+function assertQueriedAttempt(
+  tx: Prisma.TransactionClient,
+  attempt: AcquisitionAttempt,
+  read: QueriedMovieAttemptV4 | undefined,
+) {
+  const queried = movieAttemptQueriedInTransactionV4(tx, attempt.id, read);
+  if (queried !== undefined && queried !== attempt)
+    throw new Error(
+      "Movie identity did not receive its actual queried attempt row",
+    );
 }
 
 /** Caller owns complete movie/target/request/runtime locks before identity reads and physical effects. */
@@ -101,14 +142,20 @@ export async function assertMovieAttemptIdentityV4(
   authority: {
     access: MovieChoiceAccess;
     invocation?: MovieManagementInvocation;
+    queriedAttempt?: QueriedMovieAttemptV4;
   },
 ) {
   const { access, invocation } = authority;
-  const captured = await readMovieAttemptIdentityV4(
+  const { birthChoice, ...captured } = await readMovieAttemptIdentityRowsV4(
     tx,
     attempt,
     scope,
-    invocation?.budget,
+    {
+      ...(invocation === undefined ? {} : { budget: invocation.budget }),
+      ...(authority.queriedAttempt === undefined
+        ? {}
+        : { queriedAttempt: authority.queriedAttempt }),
+    },
   );
   const identity = captured.identity;
   if (
@@ -127,6 +174,9 @@ export async function assertMovieAttemptIdentityV4(
     epoch: attempt.recoveryEpoch,
     access,
     ...(invocation === undefined ? {} : { invocation }),
+    ...(authority.queriedAttempt === undefined
+      ? {}
+      : { queriedAttempt: authority.queriedAttempt }),
   });
   if (identity.schemaVersion === 2)
     await assertSponsorAuthority(tx, {
@@ -138,6 +188,7 @@ export async function assertMovieAttemptIdentityV4(
       movieScope: scope,
       recordedAttemptId: attempt.id,
       ...(invocation === undefined ? {} : { budget: invocation.budget }),
+      ...historicalSponsorReads(authority.queriedAttempt, birthChoice),
     });
   const current = await buildCanonicalIdentity(tx, [scope.mediaId]);
   if (
@@ -194,11 +245,24 @@ export async function assertMovieAttemptIdentityV4(
   return { ...captured, freshness };
 }
 
+function historicalSponsorReads(
+  queried: QueriedMovieAttemptV4 | undefined,
+  choice: MovieEditionChoice | null,
+) {
+  if (queried === undefined) return {};
+  return {
+    queriedAttempt: { ...queried, ...(choice === null ? {} : { choice }) },
+  };
+}
+
 async function assertBirthIdentity(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
   identity: MovieAcquisitionIdentity,
-  budget?: PublicationAuthorityReadBudget,
+  reads: {
+    budget?: PublicationAuthorityReadBudget;
+    queriedAttempt?: QueriedMovieAttemptV4;
+  },
 ) {
   if (identity.schemaVersion === 3) {
     if (
@@ -210,19 +274,20 @@ async function assertBirthIdentity(
       throw new Error(
         "Management acquisition differs from its immutable owner approval",
       );
-    return;
+    return null;
   }
-  const sponsor = await readMovieAttemptSponsor(tx, {
+  const sponsor = await readMovieAttemptSponsorRowsV4(tx, {
     attemptId: attempt.id,
     expectedScope: identity.scope,
     expectedRequestId: identity.sponsorRequestId,
-    ...(budget === undefined ? {} : { budget }),
+    ...reads,
   });
   if (
     sponsor === null ||
-    identityHash(sponsor) !== identityHash(identity.sponsorAuthority)
+    identityHash(sponsor.authority) !== identityHash(identity.sponsorAuthority)
   )
     throw new Error(
       "Movie v4 birth sponsor differs from canonical acquisition identity",
     );
+  return sponsor.choice;
 }

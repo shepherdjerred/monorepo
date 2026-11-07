@@ -5,7 +5,7 @@ import { movieVideoFixture } from "#testing/movie-video.ts";
 import { createManagedMovieFixture } from "#testing/movie-workflow/managed-fixture.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
-import { MovieAttemptOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieAttemptOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { reconcileMovieIntentV4 } from "#automation/movie-editions/reconcile.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { queueLibraryMovieDue } from "#automation/reconciliation/library-movies.ts";

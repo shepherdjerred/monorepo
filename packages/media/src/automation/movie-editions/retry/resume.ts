@@ -1,7 +1,7 @@
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import type { MovieOperationV4 } from "#shared/movie-editions/automation-v4.ts";
-import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/activities-v4.ts";
+import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/lifecycle/activities-v4.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { readMovieAttemptIdentityV4 } from "#infrastructure/movie-editions/lifecycle/attempt-identity.ts";
 import { validMovieAttemptV4 } from "#automation/movie-editions/submission.ts";

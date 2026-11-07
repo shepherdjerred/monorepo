@@ -2,7 +2,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type {
   MovieAttemptOperationV4,
   MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/receipt.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
@@ -12,6 +12,7 @@ import type { MovieSubtitleInstallV4 } from "#shared/movie-editions/subtitles-v4
 import type { MovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
 import { PlexPhysicalGroupSchema } from "#shared/plex-binding/contract.ts";
 import { readMovieRestorePlexReceiptV1 } from "#infrastructure/movie-editions/retention/restore-plex-receipt.ts";
+import { readMovieReplacementCaptionNoticeSourceV2 } from "./replacement-source.ts";
 
 export async function readMovieNoticeProof(
   tx: Prisma.TransactionClient,
@@ -20,6 +21,12 @@ export async function readMovieNoticeProof(
 ) {
   if (payload.kind === "movie_publication")
     return readMovieNoticeSource(tx, payload.source, budget);
+  if (payload.kind === "movie_subtitle_replacement")
+    return readMovieReplacementCaptionNoticeSourceV2(
+      tx,
+      payload.source,
+      budget,
+    );
   return payload.kind === "movie_restoration"
     ? readMovieRestorationNoticeSource(tx, payload.source, budget)
     : readMovieCaptionNoticeSource(tx, payload.source, budget);

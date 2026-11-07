@@ -1,5 +1,8 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { isSeriesPackNativeDescriptorV2 } from "./series-pack/physical.ts";
+import { seriesPackNativePlaybackHistoryV1 } from "./series-pack/playback.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { compensationRecord } from "./records.ts";
@@ -14,8 +17,14 @@ export async function compensationPlayback(
     serverMachineId: string | undefined;
     externalIds: unknown;
   },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<
-  { state: "ordinary" | "protected" } | { state: "verified"; proofHash: string }
+  | { state: "ordinary" | "protected" }
+  | {
+      state: "verified";
+      proofHash: string;
+      protocol?: "series_pack_publication_v3";
+    }
 > {
   const rows = await tx.nativePublicationCompensationContinuation.findMany({
     where: { mediaIds: { has: input.mediaId } },
@@ -27,6 +36,8 @@ export async function compensationPlayback(
   if (rows.length === 0) return { state: "ordinary" };
   if (rows.some((row) => row.fenceRelease === null))
     return { state: "protected" };
+  if (rows.some((row) => isSeriesPackNativeDescriptorV2(row.descriptor)))
+    return seriesPackNativePlaybackHistoryV1(tx, input, { rows, budget });
   const coverage = await tx.assetCoverage.findMany({
     where: { mediaId: input.mediaId, edition: "default", current: true },
     include: { asset: true },

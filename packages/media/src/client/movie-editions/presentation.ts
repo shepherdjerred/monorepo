@@ -3,13 +3,13 @@ import type {
   MovieEditionReason,
 } from "#shared/movie-editions/fulfillment.ts";
 
-const reasons: Record<MovieEditionReason, string> = {
+export const movieEditionReasons: Record<MovieEditionReason, string> = {
   movie_edition_choice_required:
     "Choose an edition. Your request remains protected until you choose or cancel it.",
   movie_edition_choice_changed:
     "Your edition choice changed. Review the current request before trying again.",
   edition_acquisition_not_ready:
-    "Named-edition downloads are not available yet. Your request is saved and remains pending.",
+    "Waiting for the requested edition. A different cut does not fulfill this request.",
   movie_edition_asset_unavailable:
     "Waiting for a verified copy of your selected edition.",
   movie_edition_asset_mismatch:
@@ -33,7 +33,7 @@ const reasons: Record<MovieEditionReason, string> = {
 };
 
 export function movieEditionReason(reason: MovieEditionReason): string {
-  return reasons[reason];
+  return movieEditionReasons[reason];
 }
 
 export function movieFulfillmentLabel(

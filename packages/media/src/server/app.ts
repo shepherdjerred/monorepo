@@ -1,6 +1,16 @@
 import { Hono } from "hono";
 import { registerAcquisitionRoutes } from "./media/acquisition-routes.ts";
 import { registerMediaEditionRoutes } from "./media/movie-edition-routes.ts";
+import { registerMovieLifecycleRoutesV4 } from "./media/movie-lifecycle-routes-v4.ts";
+import { notifyCommittedWrite } from "./notify-write.ts";
+import type { MovieLifecycleApplicationV4 } from "#application/movie-lifecycle-ports-v4.ts";
+import type { MovieHistoryAdministration } from "#application/movie-history-ports.ts";
+import { registerMovieHistoryRoutes } from "./movie-history-routes.ts";
+import type { MovieSubtitleReplacementAdministrationV2 } from "#application/movie-subtitle-replacement-ports.ts";
+import type { MovieRollbackAdministrationV1 } from "#application/movie-rollback-ports.ts";
+import { registerMovieRollbackRoutesV4 } from "./movie-rollback-routes-v4.ts";
+import { registerMovieSubtitleReplacementRoutesV2 } from "./movie-subtitle-replacement-routes-v2.ts";
+import { mediaRequestBodyLimit } from "./request-body-limit.ts";
 import {
   registerLegacyRequesterBindingRoutes,
   type LegacyRequesterBindings,
@@ -23,7 +33,6 @@ import {
   type NativeRecoveryAdministration,
 } from "./native-recovery-routes.ts";
 import { deleteCookie, setCookie } from "hono/cookie";
-import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
 import { registerAdminRoutes, type AdminApplication } from "./admin-routes.ts";
 import { registerPlexRoutes, type PlexAdministration } from "./plex-routes.ts";
@@ -31,7 +40,6 @@ import {
   registerMigrationRoutes,
   type MigrationAdministration,
 } from "./migration-routes.ts";
-import { MAX_MIGRATION_BYTES } from "#shared/migration.ts";
 import {
   registerPlexExclusionRoutes,
   type PlexExclusionAdministration,
@@ -68,6 +76,10 @@ export type MediaAppDependencies = {
     "start" | "poll" | "authenticate" | "verifyCsrf" | "logout"
   >;
   media: MediaApplication;
+  movieLifecycle?: MovieLifecycleApplicationV4;
+  movieHistory?: MovieHistoryAdministration;
+  movieSubtitleReplacements?: MovieSubtitleReplacementAdministrationV2;
+  movieRollback?: MovieRollbackAdministrationV1;
   catalog: CatalogApplication;
   notifications: NotificationApplication;
   admin: AdminApplication;
@@ -99,17 +111,6 @@ const AdoptSchema = z
   })
   .strict();
 
-async function notifyCommittedWrite(
-  dependencies: MediaAppDependencies,
-  requestId: string,
-): Promise<void> {
-  try {
-    await dependencies.afterWrite?.();
-  } catch {
-    dependencies.onError(new Error("Outbox dispatch deferred"), requestId);
-  }
-}
-
 export function createMediaApp(dependencies: MediaAppDependencies) {
   const app = new Hono<{
     Variables: { actor: MediaActor; requestId: string };
@@ -126,29 +127,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     path: "/",
   } satisfies Parameters<typeof setCookie>[3];
   app.use(secureHeaders());
-  app.use(async (c, next) => {
-    if (c.req.method === "POST" && c.req.path === "/events/plex") return next();
-    const upload =
-      c.req.method === "POST" && c.req.path === "/api/v1/admin/subtitles";
-    return bodyLimit({
-      maxSize:
-        c.req.method === "POST" && c.req.path === "/api/v1/admin/migration"
-          ? MAX_MIGRATION_BYTES
-          : upload
-            ? 12 * 1024 * 1024
-            : 64 * 1024,
-      onError: (context) =>
-        context.json(
-          {
-            error: {
-              code: "request_too_large",
-              message: "Request exceeds this endpoint's size limit",
-            },
-          },
-          413,
-        ),
-    })(c, next);
-  });
+  app.use(mediaRequestBodyLimit);
   app.use(async (c, next) => {
     const id = crypto.randomUUID();
     c.set("requestId", id);
@@ -349,6 +328,12 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     refreshProfileAccess: (actor, userId) =>
       dependencies.plexAdmin.refreshProfileAccess(actor, userId),
   });
+  if (dependencies.movieLifecycle !== undefined)
+    registerMovieLifecycleRoutesV4(app, dependencies.movieLifecycle, {
+      requireRequestsEnabled,
+      refreshProfileAccess: (actor, userId) =>
+        dependencies.plexAdmin.refreshProfileAccess(actor, userId),
+    });
   app.get("/api/v1/activity", async (c) =>
     c.json(await dependencies.media.activity(c.get("actor"))),
   );
@@ -487,9 +472,18 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   registerNumberingRoutes(app, dependencies.numberingAdmin);
   registerMigrationRoutes(app, dependencies.migrationAdmin);
   registerHandoffRoutes(app, dependencies.handoffAdmin);
+  if (dependencies.movieHistory !== undefined)
+    registerMovieHistoryRoutes(app, dependencies.movieHistory);
   registerNativeRecoveryRoutes(app, dependencies.nativeRecoveryAdmin);
   registerSubtitleReplacementRoutes(app, dependencies.subtitleReplacements);
+  if (dependencies.movieSubtitleReplacements !== undefined)
+    registerMovieSubtitleReplacementRoutesV2(
+      app,
+      dependencies.movieSubtitleReplacements,
+    );
   registerPlexExclusionRoutes(app, dependencies.plexExclusionAdmin);
+  if (dependencies.movieRollback !== undefined)
+    registerMovieRollbackRoutesV4(app, dependencies.movieRollback);
   app.notFound((c) =>
     c.json(
       { error: { code: "not_found", message: "Endpoint does not exist" } },

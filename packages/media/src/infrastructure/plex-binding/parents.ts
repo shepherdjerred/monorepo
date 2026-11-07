@@ -21,14 +21,18 @@ import { compensationRecord } from "#infrastructure/native-compensation/records.
 import {
   assertCompensationPublicationPhase,
   assertCompensationPublicationPhaseCurrent,
-  type CompensationPublicationPhase,
 } from "#infrastructure/native-compensation/publication/phase.ts";
+import { type CompensationPublicationPhase } from "#infrastructure/native-compensation/series-pack/publication/adapter.ts";
+import { assertSeriesPackNativePlexParentV1 } from "#infrastructure/native-compensation/series-pack/publication/parents.ts";
+import { assertNoPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
+import { assertSeriesPackNativePublicationPhaseV1 } from "#infrastructure/native-compensation/series-pack/publication/phase.ts";
 import { NativeCompensationPublicationCommandSchema } from "#shared/native-recovery/compensation-runtime.ts";
 import { PlexBindingProtection } from "./errors.ts";
 import { ordinaryPlexLineageReader } from "./lineage.ts";
 import { assertPlexRestorationParent } from "./restoration.ts";
 import { bindPlexTransactionDeadline } from "./freshness.ts";
 import { assertPlexRollbackParent } from "./rollback.ts";
+import { hasPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 type LineageReader = () => ReturnType<typeof ordinaryPlexLineageReader>;
 type ParentContext = {
   expected: PlexBindingExpected;
@@ -69,6 +73,21 @@ export async function assertPlexPublicationParents(
 ) {
   const { budget = new PublicationAuthorityReadBudget(), compensationPhase } =
     options;
+  if (compensationPhase !== undefined && "protocol" in compensationPhase) {
+    assertSeriesPackNativePublicationPhaseV1(tx, compensationPhase, budget);
+    await assertNoPendingSeriesPackPublicationV1(tx, {
+      mediaIds: compensationPhase.mediaIds,
+      assetIds: compensationPhase.assetIds,
+      seriesPackPublicationAttemptId:
+        compensationPhase.record.publication.reference.intent.attemptId,
+    });
+  } else if (
+    await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: expected.targets.map((target) => target.scope.mediaId),
+      assetIds: expected.newGroups.map((group) => group.assetId),
+    })
+  )
+    throw new PlexBindingProtection("series_pack_publication_pending");
   const covered = new Set<string>();
   let cachedLineage: ReturnType<typeof ordinaryPlexLineageReader> | undefined;
   const lineage: LineageReader = () =>
@@ -339,6 +358,12 @@ async function compensationParent(
   context: ParentContext,
 ) {
   const { expected, budget, compensationPhase } = context;
+  if (compensationPhase !== undefined && "protocol" in compensationPhase)
+    return assertSeriesPackNativePlexParentV1(tx, parent, {
+      expected,
+      phase: compensationPhase,
+      budget,
+    });
   const phase =
     compensationPhase === undefined
       ? undefined

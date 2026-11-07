@@ -6,6 +6,7 @@ import { movieAssessmentContext } from "#infrastructure/movie-editions/release-a
 import { evaluateRelease } from "#domain/quality.ts";
 import { assertMovieAttemptIdentityV4 } from "./attempt-identity.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
+import type { QueriedMovieAttemptV4 } from "#infrastructure/movie-editions/attempt-sponsor.ts";
 
 /** Complete scope and runtime locks belong to the caller. No version, birth or observation is renewed here. */
 export async function movieAttemptEffectAuthorityV4(
@@ -15,6 +16,7 @@ export async function movieAttemptEffectAuthorityV4(
   authority: {
     access: MovieChoiceAccess;
     invocation?: MovieManagementInvocation;
+    queriedAttempt?: QueriedMovieAttemptV4;
   },
 ) {
   const target = await tx.mediaIntent.findUniqueOrThrow({

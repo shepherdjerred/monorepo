@@ -106,8 +106,8 @@ BEGIN
     AND (proof->>'expiresAt')::timestamptz <= (proof->>'observedAt')::timestamptz+interval '60 seconds'
     AND current_setting('media.plex_deadline_ms',true)::numeric <= extract(epoch FROM (proof->>'expiresAt')::timestamptz)*1000
     AND writer."recoveryEpoch"=attempt."recoveryEpoch" AND writer."revokedAt" IS NULL
-    AND writer."observedAt"<=clock_timestamp() AND writer."expiresAt">clock_timestamp()
-    AND (proof->>'expiresAt')::timestamptz <= writer."expiresAt",false)
+    AND writer."observedAt"<=(clock_timestamp() AT TIME ZONE 'UTC') AND writer."expiresAt">(clock_timestamp() AT TIME ZONE 'UTC')
+    AND ((proof->>'expiresAt')::timestamptz AT TIME ZONE 'UTC') <= writer."expiresAt",false)
   THEN RAISE EXCEPTION 'Movie retry renewal requires actual closed predecessors and the same-transaction original acquisition'; END IF;
   IF transfer='null'::jsonb THEN
     IF attempt."torrentId" IS NOT NULL OR attempt.state<>'reserved'

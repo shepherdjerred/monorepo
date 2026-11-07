@@ -16,6 +16,10 @@ import {
 import { readLibraryMovieManagement } from "#infrastructure/movie-editions/management/authority.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  movieAttemptQueriedInTransactionV4,
+  type QueriedMovieAttemptV4,
+} from "#infrastructure/movie-editions/attempt-sponsor.ts";
 
 type Input = {
   scope: MovieEditionScope;
@@ -30,6 +34,7 @@ type RevalidationInput = {
   epoch: number;
   access: MovieChoiceAccess;
   invocation?: MovieManagementInvocation;
+  queriedAttempt?: QueriedMovieAttemptV4;
 };
 
 /** Caller holds canonical/target/request/runtime locks before acquiring choice identity locks. */
@@ -85,10 +90,17 @@ export async function assertMovieChoiceV4(
   input: RevalidationInput,
 ) {
   const scope = MovieEditionScopeSchema.parse(input.scope);
-  const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: input.attemptId },
-  });
-  input.invocation?.budget.consume(1);
+  const queried = movieAttemptQueriedInTransactionV4(
+    tx,
+    input.attemptId,
+    input.queriedAttempt,
+  );
+  const attempt =
+    queried ??
+    (await tx.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: input.attemptId },
+    }));
+  if (queried === undefined) input.invocation?.budget.consume(1);
   const proof = MovieBirthAuthoritySchema.parse(attempt.movieEditionAuthority);
   if (proof.schemaVersion === 2)
     return assertManagedMovieChoice(tx, { ...input, scope }, attempt, proof);

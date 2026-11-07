@@ -28,9 +28,9 @@ import { targetWhere } from "./editions/targets.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { prepareActionAuthority } from "./acquisition-identity/action.ts";
 
-import { MovieEditionCommands } from "./movie-editions/commands.ts";
+import { MovieLifecycleCommands } from "./movie-editions/lifecycle/commands.ts";
 import type { MovieChoiceAccess } from "./movie-editions/access.ts";
-export class PrismaMediaCommands extends MovieEditionCommands {
+export class PrismaMediaCommands extends MovieLifecycleCommands {
   executeDefaultCommand(
     actor: MediaActor,
     key: string,

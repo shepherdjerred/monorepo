@@ -1038,7 +1038,7 @@ model Operation {
   payload        Json
   status         OperationStatus @default(queued)
   result         Json?
-  createdAt      DateTime        @default(now())
+  createdAt      DateTime        @default(dbgenerated("(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"))
   updatedAt      DateTime        @updatedAt
   outbox         OutboxCommand?
 }
@@ -1051,8 +1051,8 @@ model OutboxCommand {
   payload      Json
   dispatchedAt DateTime?
   attempts     Int       @default(0)
-  availableAt  DateTime  @default(now())
-  createdAt    DateTime  @default(now())
+  availableAt  DateTime  @default(dbgenerated("(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"))
+  createdAt    DateTime  @default(dbgenerated("(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"))
 
   @@index([dispatchedAt, availableAt])
 }

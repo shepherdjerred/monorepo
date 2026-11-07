@@ -3,7 +3,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import {
   MovieOperationV4Schema,
   type MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieQuarantinePlexReceiptV2Schema } from "#shared/movie-editions/quarantine-v2.ts";
 import { MovieRestoreManifestV1Schema } from "#shared/movie-editions/restore-v1.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";

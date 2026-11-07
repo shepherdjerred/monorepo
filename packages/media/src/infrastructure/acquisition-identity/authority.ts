@@ -18,6 +18,7 @@ import {
 import { authorizeRenewal } from "#infrastructure/action-guards.ts";
 import { assertAutomaticIdentity } from "./automatic.ts";
 import { assertSponsorAuthority, type AcquisitionAccess } from "./sponsor.ts";
+import { assertSeriesPackAuthorityV1 } from "./series-pack/authority.ts";
 
 /** Caller retains canonical root/leaf, claims and runtime authority locks first. */
 export async function assertIdentityDecision(
@@ -128,7 +129,26 @@ export async function assertAttemptIdentity(
       "Acquired source evidence changed",
       409,
     );
-  if (identity.proof.kind === "automatic")
+  if ("seriesPackV1" in identity.source) {
+    const invocation = authority?.libraryManagement;
+    if (invocation === undefined)
+      throw new Error(
+        "Series pack authority needs its original Activity invocation",
+      );
+    invocation.budget.consume(1);
+    await assertSeriesPackAuthorityV1(
+      tx,
+      {
+        captured: identity.source.seriesPackV1,
+        release,
+        canonical: current,
+        mediaIds: attempt.mediaIds,
+        primaryMediaId: z.uuid().parse(attempt.mediaIds[0]),
+        historical: purpose === "resume_recorded_submission",
+      },
+      invocation,
+    );
+  } else if (identity.proof.kind === "automatic")
     await assertAutomaticIdentity(tx, release, current);
   return identity;
 }

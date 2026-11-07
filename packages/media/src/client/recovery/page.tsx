@@ -19,6 +19,7 @@ import {
 import { RecoveryResponseForm, RecoveryReleaseForm } from "./review.tsx";
 import { LegacyRequesterBindings } from "./legacy-bindings.tsx";
 import { CapacityPanel } from "#client/capacity/panel.tsx";
+import { MovieHistoryIndexV3 } from "#client/movie-history/index.tsx";
 
 export function RecoveryPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
@@ -86,6 +87,7 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
         </section>
       )}
       <CapacityPanel user={user} />
+      <MovieHistoryIndexV3 user={user} />
       {user.role === "owner" && (
         <section className="panel">
           <p>

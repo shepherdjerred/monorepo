@@ -19,12 +19,46 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { snapshotPublicationAsset } from "./snapshots.ts";
 import type { PublicationAuthorityReadBudget } from "./read-budget.ts";
 import { assertPublicationSubtitleEvidence } from "./subtitle-evidence.ts";
+import {
+  readLockedPublicationSnapshot,
+  type LockedPublicationSnapshots,
+} from "./queried-snapshots.ts";
+import { validateSeriesPackPublicationRowV1 } from "#infrastructure/acquisition-identity/series-pack/publication/store.ts";
+import type {
+  SeriesPackPublicationIntentRefV3,
+  SeriesPackPublicationOutcomeV3,
+} from "#shared/acquisition/series-pack-publication-v1.ts";
+
+type StoredPublicationRecord =
+  | {
+      reference: PublicationIntentRef;
+      outcome: PublicationOutcome | null;
+    }
+  | {
+      reference: SeriesPackPublicationIntentRefV3;
+      outcome: SeriesPackPublicationOutcomeV3 | null;
+    };
 
 export async function loadPublicationIntent(
   tx: Prisma.TransactionClient,
   attemptId: string,
   budget?: PublicationAuthorityReadBudget,
 ): Promise<PublicationIntentRef | null> {
+  const record = await loadPublicationIntentRecord(tx, attemptId, budget);
+  if (record === null) return null;
+  if (record.reference.intent.schemaVersion !== 1)
+    throw new Error(
+      "Versioned pack publication requires its explicit protocol reader",
+    );
+  return PublicationIntentRefSchema.parse(record.reference);
+}
+
+/** Historical readers retain the literal protocol version; this never authorizes forward effects. */
+export async function loadHistoricalPublicationIntent(
+  tx: Prisma.TransactionClient,
+  attemptId: string,
+  budget?: PublicationAuthorityReadBudget,
+) {
   const record = await loadPublicationIntentRecord(tx, attemptId, budget);
   return record?.reference ?? null;
 }
@@ -34,15 +68,24 @@ export async function loadPublicationIntentRecord(
   tx: Prisma.TransactionClient,
   attemptId: string,
   budget?: PublicationAuthorityReadBudget,
-): Promise<{
-  reference: PublicationIntentRef;
-  outcome: PublicationOutcome | null;
-} | null> {
+): Promise<StoredPublicationRecord | null> {
   const row = await tx.mediaPublicationTransition.findUnique({
     where: { attemptId },
   });
   if (row === null) return null;
   budget?.consume(1);
+  if (z.object({ schemaVersion: z.literal(3) }).safeParse(row.intent).success) {
+    if (budget === undefined)
+      throw new Error(
+        "Versioned pack publication requires its caller's provenance allowance",
+      );
+    const { reference, outcome } = await validateSeriesPackPublicationRowV1(
+      tx,
+      row,
+      budget,
+    );
+    return { reference, outcome };
+  }
   const { reference, outcome } = await validatePublicationIntentRow(
     tx,
     row,
@@ -70,11 +113,15 @@ export async function loadPublicationIntentFromQueriedTransition(
 ) {
   if (input.transaction !== tx)
     throw new Error("Publication parent belongs to another transaction");
-  const record = await validatePublicationIntentRow(
-    tx,
-    input.transition,
-    input.budget,
-  );
+  const record = z
+    .object({ schemaVersion: z.literal(3) })
+    .safeParse(input.transition.intent).success
+    ? await validateSeriesPackPublicationRowV1(
+        tx,
+        input.transition,
+        input.budget,
+      )
+    : await validatePublicationIntentRow(tx, input.transition, input.budget);
   return {
     ...record,
     transaction: tx,
@@ -157,6 +204,7 @@ export async function createPublicationIntent(
   tx: Prisma.TransactionClient,
   input: PublicationIntent,
   budget?: PublicationAuthorityReadBudget,
+  snapshots?: LockedPublicationSnapshots,
 ): Promise<PublicationIntentRef> {
   const intent = PublicationIntentSchema.parse(input);
   for (const entry of intent.entries) assertPublicationSubtitleEvidence(entry);
@@ -190,7 +238,8 @@ export async function createPublicationIntent(
     .parse(attempt.filePlan);
   if (plan.length !== intent.entries.length)
     throw new Error("Publication intent omitted plan entries");
-  for (const item of intent.entries) await assertEntry(tx, item, plan, budget);
+  for (const item of intent.entries)
+    await assertEntry(tx, item, plan, { budget, snapshots });
   const intentHash = snapshotHash(nativeJson(intent));
   await tx.mediaPublicationTransition.create({
     data: {
@@ -210,6 +259,7 @@ export async function commitPublicationOutcome(
   tx: Prisma.TransactionClient,
   input: { intent: PublicationIntentRef; outcome: PublicationOutcome },
   budget?: PublicationAuthorityReadBudget,
+  snapshots?: LockedPublicationSnapshots,
 ): Promise<void> {
   await tx.$queryRaw`SELECT id FROM "MediaPublicationTransition" WHERE id=${input.intent.transitionId} FOR UPDATE`;
   const stored = await loadPublicationIntent(
@@ -244,7 +294,7 @@ export async function commitPublicationOutcome(
       throw new Error("Publication outcome is immutable");
     return;
   }
-  await assertOutcomeEntries(tx, stored, outcome, budget);
+  await assertOutcomeEntries(tx, stored, outcome, { budget, snapshots });
   if (outcome.effects.some((effect, index) => effect.ordinal !== index))
     throw new Error("Publication outcome effect prefix is not contiguous");
   await tx.mediaPublicationTransition.update({
@@ -280,8 +330,12 @@ async function assertEntry(
   tx: Prisma.TransactionClient,
   item: PublicationIntent["entries"][number],
   plan: z.infer<typeof FilePlanEntrySchema>[],
-  budget?: PublicationAuthorityReadBudget,
+  reads: {
+    budget: PublicationAuthorityReadBudget | undefined;
+    snapshots: LockedPublicationSnapshots | undefined;
+  },
 ) {
+  const { budget, snapshots } = reads;
   const entry = plan.find((row) => row.operationId === item.entry.operationId);
   if (
     entry === undefined ||
@@ -298,7 +352,7 @@ async function assertEntry(
     item.predecessor.checksum !== entry.previousChecksum ||
     snapshotHash(
       nativeJson(
-        await snapshotPublicationAsset(tx, entry.previousAssetId, budget),
+        await readSnapshot(tx, entry.previousAssetId, budget, snapshots),
       ),
     ) !== snapshotHash(nativeJson(item.predecessor))
   ) {
@@ -320,8 +374,12 @@ async function assertOutcomeEntries(
   tx: Prisma.TransactionClient,
   stored: PublicationIntentRef,
   outcome: PublicationOutcome,
-  budget?: PublicationAuthorityReadBudget,
+  reads: {
+    budget: PublicationAuthorityReadBudget | undefined;
+    snapshots: LockedPublicationSnapshots | undefined;
+  },
 ) {
+  const { budget, snapshots } = reads;
   for (const result of outcome.entries) {
     const item = stored.intent.entries.find(
       (entry) => entry.entry.operationId === result.entryOperationId,
@@ -332,7 +390,7 @@ async function assertOutcomeEntries(
       if (
         asset !== null &&
         snapshotHash(
-          nativeJson(await snapshotPublicationAsset(tx, asset.id, budget)),
+          nativeJson(await readSnapshot(tx, asset.id, budget, snapshots)),
         ) !== snapshotHash(nativeJson(asset))
       )
         throw new Error(
@@ -350,4 +408,15 @@ async function assertOutcomeEntries(
     )
       throw new Error("Publication outcome lifecycle is inconsistent");
   }
+}
+
+async function readSnapshot(
+  tx: Prisma.TransactionClient,
+  assetId: string,
+  budget: PublicationAuthorityReadBudget | undefined,
+  snapshots: LockedPublicationSnapshots | undefined,
+) {
+  return snapshots === undefined
+    ? snapshotPublicationAsset(tx, assetId, budget)
+    : readLockedPublicationSnapshot(tx, assetId, budget, snapshots);
 }

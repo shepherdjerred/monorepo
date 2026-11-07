@@ -1,3 +1,7 @@
+import {
+  isSeriesPackNativeDescriptorV2,
+  findSeriesPackNativePhysicalHistoryV1,
+} from "./series-pack/physical.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   CompensationPhysicalReferenceSchema,
@@ -68,6 +72,7 @@ export async function findCurrentCompensationReceipts(
   input: {
     assetIds: readonly string[];
     recoveryEpoch: number;
+    excludeSeriesPackNative?: true;
   },
   budget?: PublicationAuthorityReadBudget,
   projection?: NativeReceiptReadPort,
@@ -76,6 +81,9 @@ export async function findCurrentCompensationReceipts(
     where: {
       state: "compensated",
       recoveryEpoch: input.recoveryEpoch,
+      ...(input.excludeSeriesPackNative === true
+        ? { NOT: { descriptor: { path: ["schemaVersion"], equals: 2 } } }
+        : {}),
       assetIds: { hasSome: [...input.assetIds] },
     },
     orderBy: { id: "asc" },
@@ -84,6 +92,12 @@ export async function findCurrentCompensationReceipts(
   budget?.consume(rows.length);
   if (rows.length > 100)
     throw new Error("Compensation physical receipt lookup exceeds bound");
+  if (rows.some((row) => isSeriesPackNativeDescriptorV2(row.descriptor)))
+    return findSeriesPackNativePhysicalHistoryV1(
+      tx,
+      { rows, assetIds: input.assetIds },
+      budget,
+    );
   const references = [];
   for (const row of rows) {
     const record = await compensationRecord(tx, row.id, budget, projection);

@@ -7,6 +7,11 @@ import {
 } from "./movie-editions.ts";
 import { assertPrivateHistory } from "./testing/history.ts";
 import { createMovieWatchWorkerActivitiesV4 } from "./movie-watch.ts";
+import type { PublicationAuthorityReadBudget } from "@shepherdjerred/media/publication-authority-budget";
+import {
+  createRequestedMovieRollbackFileWorkerActivitiesV1,
+  createRequestedMovieRollbackNetworkWorkerActivitiesV1,
+} from "./movie-editions/manual-rollback.ts";
 
 afterEach(() => vi.restoreAllMocks());
 function history(encoding: string, value: unknown) {
@@ -65,6 +70,8 @@ const input = {
   },
 };
 const networkMethods = [
+  "publishMovieWithRollbackV4",
+  "verifyRolledBackMoviePlexV4",
   "completeMovieRemovalV4",
   "finalizeMovieRestorationV4",
   "publishRestoredMovieToPlexV4",
@@ -77,6 +84,9 @@ const networkMethods = [
   "finalizeMovieAcquisitionV4",
 ] as const;
 const fileMethods = [
+  "prepareMovieRollbackV4",
+  "rollbackMoviePublicationV4",
+  "prepareMoviePublicationV4",
   "restoreMovieFilesV4",
   "purgeMovieFilesV4",
   "quarantineMovieFilesV4",
@@ -141,6 +151,34 @@ test("scoped Plex hints retain original SDK expiry and cancellation across lazy 
 function networkRuntime(check: (execution: PlexBindingExecution) => void) {
   return {
     movie: {
+      observeRequestedMovieRollbackV1: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "ready" as const, reason: null });
+      },
+      verifyRequestedMovieRollbackV1: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "available" as const, reason: null });
+      },
+      publishMovieWithRollbackV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "available" as const, reason: null });
+      },
+      verifyRolledBackMoviePlexV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "available" as const, reason: null });
+      },
       completeMovieRemovalV4: (
         _input: unknown,
         execution: PlexBindingExecution,
@@ -233,6 +271,47 @@ function networkRuntime(check: (execution: PlexBindingExecution) => void) {
 function fileRuntime(check: (execution: PlexBindingExecution) => void) {
   return {
     movie: {
+      prepareRequestedMovieRollbackV1: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "prepared" as const, reason: null });
+      },
+      rollbackRequestedMoviePublicationV1: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "physically_rolled_back" as const,
+          reason: null,
+        });
+      },
+      prepareMovieRollbackV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "prepared" as const, reason: null });
+      },
+      rollbackMoviePublicationV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "physically_rolled_back" as const,
+          reason: null,
+        });
+      },
+      prepareMoviePublicationV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "prepared" as const });
+      },
       restoreMovieFilesV4: (
         _input: unknown,
         execution: PlexBindingExecution,
@@ -428,3 +507,233 @@ test("movie Network SDK expiry after lazy load never dispatches an acquisition p
   ).rejects.toThrow("Plex binding Activity failed");
   expect(check).not.toHaveBeenCalled();
 });
+
+test("rollback phases retain real SDK owner identity and their own original invocation allowance", async () => {
+  const budgets: PublicationAuthorityReadBudget[] = [];
+  const receivedOwners: unknown[] = [];
+  const runtime = fileRuntime((execution) => execution.assertActive());
+  function capture(
+    _raw: unknown,
+    execution: PlexBindingExecution,
+    owner: unknown,
+    budget: PublicationAuthorityReadBudget,
+  ) {
+    execution.assertActive();
+    receivedOwners.push(owner);
+    expect(budget.take).toBe(101);
+    budget.consume(99);
+    budgets.push(budget);
+  }
+  const activities = createMovieFileWorkerActivitiesV4(() =>
+    Promise.resolve({
+      movie: {
+        ...runtime.movie,
+        prepareMovieRollbackV4: (...args: Parameters<typeof capture>) => {
+          capture(...args);
+          return Promise.resolve({ status: "prepared" as const, reason: null });
+        },
+        rollbackMoviePublicationV4: (...args: Parameters<typeof capture>) => {
+          capture(...args);
+          return Promise.resolve({
+            status: "physically_rolled_back" as const,
+            reason: null,
+          });
+        },
+      },
+    }),
+  );
+  const workflowExecution = {
+    workflowId: "actual-sdk-owner",
+    runId: crypto.randomUUID(),
+  };
+  for (const method of [
+    "prepareMovieRollbackV4",
+    "rollbackMoviePublicationV4",
+  ] as const) {
+    const activity = new MockActivityEnvironment({
+      workflowExecution,
+      activityId: method,
+      scheduledTimestampMs: Date.now(),
+      currentAttemptScheduledTimestampMs: Date.now(),
+      startToCloseTimeoutMs: 120_000,
+      scheduleToCloseTimeoutMs: 180_000,
+    });
+    await activity.run(activities[method], input);
+  }
+  expect(receivedOwners).toEqual([
+    { ...workflowExecution, activityId: "prepareMovieRollbackV4" },
+    { ...workflowExecution, activityId: "rollbackMoviePublicationV4" },
+  ]);
+  expect(budgets).toHaveLength(2);
+  expect(budgets[0]).not.toBe(budgets[1]);
+  expect(budgets.map((budget) => budget.take)).toEqual([2, 2]);
+});
+
+const manualInput = {
+  schemaVersion: 1 as const,
+  operationId: input.operationId,
+  sourceAttemptId: input.attemptId,
+  scope: input.scope,
+};
+
+test("manual Files phases retain actual SDK owner and one original allowance per invocation", async () => {
+  const budgets: PublicationAuthorityReadBudget[] = [];
+  const owners: unknown[] = [];
+  const workflowExecution = {
+    workflowId: "manual-sdk-owner",
+    runId: crypto.randomUUID(),
+  };
+  function capture(
+    _raw: unknown,
+    execution: PlexBindingExecution,
+    owner: unknown,
+    budget: PublicationAuthorityReadBudget,
+  ) {
+    execution.assertActive();
+    owners.push(owner);
+    expect(budget.take).toBe(101);
+    budget.consume(99);
+    budgets.push(budget);
+  }
+  const runtime = fileRuntime((execution) => execution.assertActive());
+  const activities = createRequestedMovieRollbackFileWorkerActivitiesV1(() =>
+    Promise.resolve({
+      movie: {
+        ...runtime.movie,
+        prepareRequestedMovieRollbackV1: (
+          ...args: Parameters<typeof capture>
+        ) => {
+          capture(...args);
+          return Promise.resolve({ status: "prepared" as const, reason: null });
+        },
+        rollbackRequestedMoviePublicationV1: (
+          ...args: Parameters<typeof capture>
+        ) => {
+          capture(...args);
+          return Promise.resolve({
+            status: "physically_rolled_back" as const,
+            reason: null,
+          });
+        },
+      },
+    }),
+  );
+  for (const method of [
+    "prepareRequestedMovieRollbackV1",
+    "rollbackRequestedMoviePublicationV1",
+  ] as const) {
+    const activity = new MockActivityEnvironment({
+      workflowExecution,
+      activityId: method,
+      scheduledTimestampMs: Date.now(),
+      currentAttemptScheduledTimestampMs: Date.now(),
+      startToCloseTimeoutMs: 120_000,
+      scheduleToCloseTimeoutMs: 180_000,
+    });
+    await activity.run(activities[method], manualInput);
+  }
+  expect(owners).toEqual([
+    { ...workflowExecution, activityId: "prepareRequestedMovieRollbackV1" },
+    { ...workflowExecution, activityId: "rollbackRequestedMoviePublicationV1" },
+  ]);
+  expect(budgets).toHaveLength(2);
+  expect(budgets[0]).not.toBe(budgets[1]);
+  expect(budgets.map((budget) => budget.take)).toEqual([2, 2]);
+});
+
+test.each([
+  "observeRequestedMovieRollbackV1",
+  "verifyRequestedMovieRollbackV1",
+] as const)(
+  "%s keeps its original Network observation and allowance through lazy load",
+  async (method) => {
+    const at = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+    const budgets: PublicationAuthorityReadBudget[] = [];
+    const runtime = networkRuntime((execution) => execution.assertActive());
+    function capture(
+      _raw: unknown,
+      execution: PlexBindingExecution,
+      budget: PublicationAuthorityReadBudget,
+    ) {
+      expect(execution.observed.wall).toBe(at);
+      expect(budget.take).toBe(101);
+      budget.consume(99);
+      budgets.push(budget);
+    }
+    const activities = createRequestedMovieRollbackNetworkWorkerActivitiesV1(
+      () => {
+        clock.mockReturnValue(at + 1000);
+        return Promise.resolve({
+          movie: {
+            ...runtime.movie,
+            observeRequestedMovieRollbackV1: (
+              ...args: Parameters<typeof capture>
+            ) => {
+              capture(...args);
+              return Promise.resolve({
+                status: "ready" as const,
+                reason: null,
+              });
+            },
+            verifyRequestedMovieRollbackV1: (
+              ...args: Parameters<typeof capture>
+            ) => {
+              capture(...args);
+              return Promise.resolve({
+                status: "available" as const,
+                reason: null,
+              });
+            },
+          },
+        });
+      },
+    );
+    await environment(at).run(activities[method], manualInput);
+    expect(budgets).toHaveLength(1);
+    expect(budgets[0]?.take).toBe(2);
+  },
+);
+
+test.each([
+  "prepareRequestedMovieRollbackV1",
+  "rollbackRequestedMoviePublicationV1",
+  "observeRequestedMovieRollbackV1",
+  "verifyRequestedMovieRollbackV1",
+] as const)(
+  "%s rejects SDK expiry during a cold runtime before dispatch",
+  async (method) => {
+    const at = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+    const effect = vi.fn();
+    const loaded = vi.fn();
+    const file = createRequestedMovieRollbackFileWorkerActivitiesV1(() => {
+      loaded();
+      clock.mockReturnValue(at + 120_001);
+      return Promise.resolve(fileRuntime(effect));
+    });
+    const network = createRequestedMovieRollbackNetworkWorkerActivitiesV1(
+      () => {
+        loaded();
+        clock.mockReturnValue(at + 120_001);
+        return Promise.resolve(networkRuntime(effect));
+      },
+    );
+    const activities = { ...file, ...network };
+    const activity = new MockActivityEnvironment({
+      workflowExecution: {
+        workflowId: "manual-expiry-owner",
+        runId: crypto.randomUUID(),
+      },
+      scheduledTimestampMs: at,
+      currentAttemptScheduledTimestampMs: at,
+      startToCloseTimeoutMs: 120_000,
+      scheduleToCloseTimeoutMs: 180_000,
+    });
+    await expect(activity.run(activities[method], manualInput)).rejects.toThrow(
+      "Activity failed",
+    );
+    expect(loaded).toHaveBeenCalledTimes(1);
+    expect(effect).not.toHaveBeenCalled();
+  },
+);

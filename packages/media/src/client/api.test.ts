@@ -21,12 +21,34 @@ function memoryStorage() {
   };
 }
 
+async function assertV4CommandIdentity(
+  input: Parameters<typeof writeApi>[0],
+  calls: { url: string; key: string | null }[],
+) {
+  await expect(writeApi({ ...input, version: 4 })).rejects.toThrow(
+    "Unacknowledged",
+  );
+  await expect(writeApi({ ...input, version: 4 })).rejects.toThrow(
+    "Unacknowledged",
+  );
+  expect(calls[6]?.url).toBe("/api/v4/media/film/commands");
+  expect(calls[6]?.key).not.toBe(calls[0]?.key);
+  expect(calls[6]?.key).not.toBe(calls[1]?.key);
+  expect(calls[6]?.key).not.toBe(calls[4]?.key);
+  expect(calls[6]?.key).toBe(calls[7]?.key);
+  await expect(
+    readApi("/media/film/movie-editions/extended_cut", input.schema, 4),
+  ).resolves.toEqual({ status: "ready" });
+  expect(calls[8]?.url).toBe("/api/v4/media/film/movie-editions/extended_cut");
+  expect(calls[8]?.key).toBeNull();
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("browser command identity", () => {
-  it("uses the requested protocol without aliasing outstanding v1 and v2 commands", async () => {
+  it("keeps each supported protocol's outstanding command and retry identity distinct", async () => {
     vi.stubGlobal("sessionStorage", memoryStorage());
     vi.stubGlobal("document", { cookie: "media-csrf=fixture" });
     const calls: { url: string; key: string | null }[] = [];
@@ -74,6 +96,7 @@ describe("browser command identity", () => {
     expect(calls[4]?.key).not.toBe(calls[0]?.key);
     expect(calls[4]?.key).not.toBe(calls[1]?.key);
     expect(calls[4]?.key).toBe(calls[5]?.key);
+    await assertV4CommandIdentity(input, calls);
   });
   it("keeps a command identity through retries but separates users and generations", async () => {
     const storage = memoryStorage();

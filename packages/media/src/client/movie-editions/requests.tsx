@@ -3,25 +3,27 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import {
-  MovieEditionRequestListV3Schema,
-  type MovieEditionRequestView,
-} from "#shared/movie-editions/view.ts";
+  MovieEditionRequestListV4Schema,
+  type MovieEditionRequestViewV4Schema,
+} from "#shared/movie-editions/lifecycle/public-v4.ts";
+import type { z } from "zod";
 import { readApi } from "#client/api.ts";
 import { ErrorNotice, Loading } from "#client/components.tsx";
 import {
   CommandError,
   commandNeedsReview,
 } from "#client/target-controls/errors.tsx";
-import { ListedMediaAction } from "#client/target-controls/protection.tsx";
+import { MovieListedKeepV4 } from "./listed-keep-v4.tsx";
 import { invalidateMovieRequests } from "./api.ts";
 import { MovieRequestSubject } from "./subject.tsx";
+import { ActivateMovieChoiceV4 } from "./activation-v4.tsx";
 import { movieFulfillmentLabel } from "./presentation.ts";
 import {
   movieProtectionSubmission,
   protectionRetryLabel,
   unresolvedMovieProtection,
   useMovieProtection,
-} from "./protection.ts";
+} from "./protection-v4.ts";
 
 export function MovieRequests({ user }: { user: MediaUser }) {
   const [subjectUserId, setSubjectUserId] = useState(user.id);
@@ -51,12 +53,15 @@ function MovieRequestPage({
 }) {
   const [cursor, setCursor] = useState<string | null>(null);
   const requests = useQuery({
-    queryKey: ["movie-requests", subjectUserId, cursor],
+    queryKey: ["movie-requests", 4, subjectUserId, cursor],
     queryFn: async () =>
       readApi(
         `/movie-requests?subjectUserId=${encodeURIComponent(subjectUserId)}${cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`}`,
-        MovieEditionRequestListV3Schema,
-        3,
+        MovieEditionRequestListV4Schema.refine(
+          (page) => page.subjectUserId === subjectUserId,
+          "Movie requests belong to another profile",
+        ),
+        4,
       ),
     refetchInterval: 15_000,
   });
@@ -109,7 +114,7 @@ function MovieRequestRow({
 }: {
   user: MediaUser;
   subjectUserId: string;
-  request: MovieEditionRequestView;
+  request: z.infer<typeof MovieEditionRequestViewV4Schema>;
 }) {
   const mutation = useMovieProtection();
   const unresolved = unresolvedMovieProtection(mutation);
@@ -169,6 +174,12 @@ function MovieRequestRow({
             </Link>
           )}
         <div className="button-row">
+          <SavedMovieChoice
+            user={user}
+            subjectUserId={subjectUserId}
+            request={request}
+            disabled={disabled}
+          />
           {request.active && request.canCancel && (
             <button
               className="button subtle"
@@ -191,20 +202,40 @@ function MovieRequestRow({
               Clear edition choice, keep request
             </button>
           )}
-          {request.active &&
-            !disabled &&
-            request.scope.edition === "default" &&
-            subjectUserId === user.id && (
-              <ListedMediaAction
-                user={user}
-                mediaId={request.scope.mediaId}
-                action="keep"
-              />
-            )}
+          {request.active && !disabled && subjectUserId === user.id && (
+            <MovieListedKeepV4 actorId={user.id} scope={request.scope} />
+          )}
         </div>
         <ProtectionFeedback mutation={mutation} review={reviewLatest} />
       </div>
     </article>
+  );
+}
+
+function SavedMovieChoice({
+  user,
+  subjectUserId,
+  request,
+  disabled,
+}: {
+  user: MediaUser;
+  subjectUserId: string;
+  request: z.infer<typeof MovieEditionRequestViewV4Schema>;
+  disabled: boolean;
+}) {
+  if (
+    !request.active ||
+    !request.activationRequired ||
+    request.access !== "detail"
+  )
+    return null;
+  return (
+    <ActivateMovieChoiceV4
+      actorId={user.id}
+      subjectUserId={subjectUserId}
+      request={request}
+      disabled={disabled || user.restricted}
+    />
   );
 }
 

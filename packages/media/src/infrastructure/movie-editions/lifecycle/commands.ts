@@ -1,5 +1,5 @@
 import type { MediaActor } from "#application/auth.ts";
-import { MovieEditionCommands } from "#infrastructure/movie-editions/commands.ts";
+import { MoviePublicCommandsV4 } from "./public/public-commands.ts";
 import { chooseMovieEdition } from "#infrastructure/movie-editions/request.ts";
 import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
 import {
@@ -9,14 +9,84 @@ import {
   MovieLifecycleCommandV4Schema,
   MovieLifecycleResultV4Schema,
   type MovieLifecycleCommandV4,
-} from "#shared/movie-editions/lifecycle-v4.ts";
+} from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import { queueRequestedMovieRetryV4 } from "./retry-command.ts";
+import { queueRequestedMovieRetryV4 } from "./retry/retry-command.ts";
+import { applyMovieActionV4 } from "./public/public-action.ts";
+import { movieHttpInvocationV4 } from "./public/public-action-authority.ts";
+import { MediaError } from "#application/errors.ts";
+import { queueRequestedMovieCaptionsV4 } from "./requested-captions.ts";
+import { captureMovieActionAccessV4 } from "./public/public-access.ts";
 
 /** Registered only when all v4 effect consumers are available. v3 stays a distinct protocol. */
-export class MovieLifecycleCommands extends MovieEditionCommands {
+export class MovieLifecycleCommands extends MoviePublicCommandsV4 {
+  executeMovieLifecycleV4(
+    actor: MediaActor,
+    key: string,
+    raw: MovieLifecycleCommandV4,
+    beforeNewCommand?: () => Promise<void>,
+  ) {
+    const input = MovieLifecycleCommandV4Schema.parse(raw);
+    if (input.command.action === "retry")
+      return this.retryMovieEditionV4(actor, key, input, beforeNewCommand);
+    const budget = new PublicationAuthorityReadBudget();
+    const invocation = movieHttpInvocationV4(budget);
+    let access:
+      Awaited<ReturnType<typeof captureMovieActionAccessV4>> | undefined;
+    let freshness: MovieChoiceFreshness | null = null;
+    return this.commandWithProtocol(
+      actor,
+      key,
+      {
+        command: { protocol: "movie_lifecycle_v4", input },
+        decode: (value) => MovieLifecycleResultV4Schema.parse(value),
+        beforeNewCommand: async () => {
+          await beforeNewCommand?.();
+          access = await captureMovieActionAccessV4(
+            this.settings,
+            () => this.configuredMovieChoiceAccess(),
+            input.command.action,
+          );
+        },
+        assertCommit: () => {
+          invocation.execution.assertActive();
+          freshness?.assertActive();
+        },
+      },
+      async (tx) => {
+        if (access === undefined)
+          throw new Error("Movie lifecycle access missing");
+        const result = await applyMovieActionV4(tx, actor, input, {
+          access: access.protection,
+          movieAccess: access.choice,
+          invocation,
+          keepDays: this.settings.keepDays,
+        });
+        freshness = result.freshness;
+        const operationId =
+          result.command === null
+            ? undefined
+            : await this.enqueue(tx, actor, {
+                ...result.command,
+                createdAt: new Date(),
+                availableAt: new Date(),
+              });
+        return MovieLifecycleResultV4Schema.parse({
+          schemaVersion: 4,
+          scope: input.scope,
+          result: {
+            ...(operationId === undefined ? {} : { operationId }),
+            status: operationId === undefined ? "completed" : "queued",
+            version: result.applied.mediaVersion,
+          },
+          applied: result.applied,
+        });
+      },
+    );
+  }
+
   retryMovieEditionV4(
     actor: MediaActor,
     key: string,
@@ -51,6 +121,8 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
             this.enqueue(db, actor, {
               kind: "reconcile_movie_edition_v4",
               ...command,
+              createdAt: new Date(),
+              availableAt: new Date(),
             }),
         );
         freshness = queued.freshness;
@@ -75,6 +147,7 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
     beforeNewCommand?: () => Promise<void>,
   ) {
     const input = MovieRequestV4Schema.parse(raw);
+    const budget = new PublicationAuthorityReadBudget();
     let access: MovieChoiceAccess | undefined;
     let freshness: MovieChoiceFreshness | null = null;
     return this.commandWithProtocol(
@@ -94,7 +167,11 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
           throw new Error(
             "Movie v4 access was not captured before its transaction",
           );
-        const result = await chooseMovieEdition(tx, actor, input, access);
+        const result = await chooseMovieEdition(tx, actor, input, {
+          ...access,
+          protocol: 4,
+          budget,
+        });
         freshness = result.freshness;
         const scope = {
           rootMediaId: input.mediaId,
@@ -105,6 +182,19 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
           where: { kind: "movie" },
         });
         const epoch = await commandAutomationEpoch(tx);
+        if (epoch < 0)
+          throw new MediaError(
+            "runtime_protected",
+            "Media automation is paused",
+            409,
+          );
+        const profileId = result.intent.profileId ?? defaults?.profileId;
+        if (profileId === undefined)
+          throw new MediaError(
+            "quality_profile_required",
+            "Select a movie quality profile before requesting",
+            409,
+          );
         const intent = await tx.mediaIntent.update({
           where: {
             mediaId_edition: { mediaId: scope.mediaId, edition: scope.edition },
@@ -113,7 +203,7 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
             desiredPresence: true,
             monitoring: true,
             automationEpoch: epoch,
-            profileId: result.intent.profileId ?? defaults?.profileId ?? null,
+            profileId,
           },
         });
         const quarantined = await tx.assetCoverage.count({
@@ -131,6 +221,8 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
               : "reconcile_movie_edition_v4",
           mediaId: scope.mediaId,
           generation: intent.generation,
+          createdAt: new Date(),
+          availableAt: new Date(),
           details: {
             schemaVersion: 4,
             scope,
@@ -139,6 +231,11 @@ export class MovieLifecycleCommands extends MovieEditionCommands {
             cursor: null,
           },
         });
+        await queueRequestedMovieCaptionsV4(
+          tx,
+          { scope, epoch, access },
+          budget,
+        );
         freshness?.assertActive();
         return MovieRequestResultV4Schema.parse({
           schemaVersion: 4,

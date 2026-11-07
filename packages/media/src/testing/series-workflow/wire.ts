@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import type { Database } from "#infrastructure/database.ts";
 import { KnabenProvider } from "#integrations/providers.ts";
@@ -18,6 +18,7 @@ export function managedSeriesWire(
     items: PlexItem[];
     show: PlexItem;
     episodeSpan?: { season: number; first: number; last: number };
+    seasonRange?: { first: number; last: number };
     members?: {
       season: number;
       first: number;
@@ -31,7 +32,26 @@ export function managedSeriesWire(
   const span = input.episodeSpan ?? { season: 1, first: 1, last: 2 };
   const season = `S${String(span.season).padStart(2, "0")}`;
   const episodes = `${season}E${String(span.first).padStart(2, "0")}${span.first === span.last ? "" : `-E${String(span.last).padStart(2, "0")}`}`;
-  const title = `${input.title.replaceAll(" ", ".")}.2020.${span.first === span.last ? episodes : season}.1080p.WEB-DL.H264.English-MEDIA`;
+  const range = input.seasonRange;
+  if (
+    range !== undefined &&
+    (!Number.isSafeInteger(range.first) ||
+      !Number.isSafeInteger(range.last) ||
+      range.first < 1 ||
+      range.last <= range.first ||
+      range.last > 999)
+  )
+    throw new Error(
+      "Synthetic series range must name positive distinct seasons",
+    );
+  const releaseSpan =
+    range === undefined
+      ? undefined
+      : `S${String(range.first).padStart(2, "0")}-S${String(range.last).padStart(2, "0")}`;
+  const title =
+    releaseSpan === undefined
+      ? `${input.title.replaceAll(" ", ".")}.2020.${span.first === span.last ? episodes : season}.1080p.WEB-DL.H264.English-MEDIA`
+      : `${input.title.replaceAll(" ", ".")}.2020.${releaseSpan}.1080p.WEB-DL.H264.English-MEDIA`;
   const member = title.replace(`.${season}.`, `.${episodes}.`) + ".mkv";
   const members =
     input.members === undefined
@@ -39,7 +59,10 @@ export function managedSeriesWire(
       : input.members.map((part) => ({
           name:
             part.relativePath ??
-            title.replace(`.${season}.`, `.${episodeLabel(part)}.`) + ".mkv",
+            title.replace(
+              `.${releaseSpan ?? season}.`,
+              `.${episodeLabel(part)}.`,
+            ) + ".mkv",
           bytes: part.bytes,
         }));
   const firstMember = members[0];
@@ -61,7 +84,18 @@ export function managedSeriesWire(
   const size = members.reduce((sum, part) => sum + part.bytes.byteLength, 0);
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;
-  const control = {
+  let removals = 0;
+  let ownedDirectory: string | undefined;
+  const control: {
+    loseReply: boolean;
+    visible: boolean;
+    beforeInfo: () => Promise<void>;
+    ratio?: number;
+    seedingTime?: number;
+    state?: string;
+    rejectPublishedPlex?: boolean;
+    allowSourceRemoval?: boolean;
+  } = {
     loseReply: false,
     visible: true,
     beforeInfo: () => Promise.resolve(),
@@ -77,7 +111,7 @@ export function managedSeriesWire(
             Response.json({
               hits: [
                 {
-                  id: `synthetic-series:${input.seriesId}:${episodes}`,
+                  id: `synthetic-series:${input.seriesId}:${releaseSpan ?? episodes}`,
                   title,
                   bytes: size,
                   hash,
@@ -106,7 +140,13 @@ export function managedSeriesWire(
       if (url.pathname.endsWith("/torrents/info")) {
         await control.beforeInfo();
         return Response.json(
-          torrent === null || !control.visible ? [] : [torrent],
+          torrent === null || !control.visible
+            ? []
+            : [
+                {
+                  ...currentTorrentObservation(torrent, control),
+                },
+              ],
         );
       }
       if (url.pathname.endsWith("/torrents/files"))
@@ -119,6 +159,18 @@ export function managedSeriesWire(
             priority: 1,
           })),
         );
+      if (url.pathname.endsWith("/torrents/delete")) {
+        await removeSeriesFixtureSource({
+          allowed: control.allowSourceRemoval === true,
+          present: torrent !== null,
+          directory: ownedDirectory,
+          body: init.body,
+          hash,
+        });
+        torrent = null;
+        removals++;
+        return new Response("Ok.");
+      }
       if (
         !url.pathname.endsWith("/torrents/add") ||
         !(init.body instanceof URLSearchParams)
@@ -143,6 +195,7 @@ export function managedSeriesWire(
           flag: "wx",
         });
       }
+      ownedDirectory = directory;
       adds++;
       torrent = {
         hash,
@@ -205,7 +258,13 @@ export function managedSeriesWire(
               {
                 ...original,
                 file: row.asset.path,
-                size: Number(row.asset.sizeBytes),
+                size:
+                  Number(row.asset.sizeBytes) +
+                  (control.rejectPublishedPlex === true &&
+                  row.asset.torrentId !== null &&
+                  row.asset.state === "published"
+                    ? 1
+                    : 0),
               },
             ],
           },
@@ -243,18 +302,30 @@ export function managedSeriesWire(
           },
         });
       const key = url.pathname.slice("/library/metadata/".length);
+      const seasonMember =
+        range === undefined
+          ? undefined
+          : input.items.find((item) => item.parentRatingKey === key);
       const selected =
         key === input.show.ratingKey
           ? input.show
-          : key === input.items[0]?.parentRatingKey
-            ? {
+          : seasonMember === undefined
+            ? key === input.items[0]?.parentRatingKey
+              ? {
+                  ratingKey: key,
+                  type: "season",
+                  title: "Season 1",
+                  index: span.season,
+                  parentRatingKey: input.show.ratingKey,
+                }
+              : items.find((item) => item.ratingKey === key)
+            : {
                 ratingKey: key,
                 type: "season",
-                title: "Season 1",
-                index: span.season,
+                title: `Season ${String(seasonMember.parentIndex)}`,
+                index: seasonMember.parentIndex,
                 parentRatingKey: input.show.ratingKey,
-              }
-            : items.find((item) => item.ratingKey === key);
+              };
       if (
         selected === undefined ||
         !url.pathname.startsWith("/library/metadata/")
@@ -265,9 +336,50 @@ export function managedSeriesWire(
       });
     },
   );
-  return { providers, qbittorrent, plex, additions: () => adds, control };
+  return {
+    providers,
+    qbittorrent,
+    plex,
+    additions: () => adds,
+    removals: () => removals,
+    control,
+  };
 }
 
 function episodeLabel(span: { season: number; first: number; last: number }) {
   return `S${String(span.season).padStart(2, "0")}E${String(span.first).padStart(2, "0")}${span.first === span.last ? "" : `-E${String(span.last).padStart(2, "0")}`}`;
+}
+
+function currentTorrentObservation(
+  torrent: Record<string, unknown>,
+  control: { ratio?: number; seedingTime?: number; state?: string },
+) {
+  return {
+    ...torrent,
+    ...(control.ratio === undefined ? {} : { ratio: control.ratio }),
+    ...(control.seedingTime === undefined
+      ? {}
+      : { seeding_time: control.seedingTime }),
+    ...(control.state === undefined ? {} : { state: control.state }),
+  };
+}
+
+async function removeSeriesFixtureSource(input: {
+  allowed: boolean;
+  present: boolean;
+  directory: string | undefined;
+  body: RequestInit["body"];
+  hash: string;
+}) {
+  if (
+    !input.allowed ||
+    !input.present ||
+    input.directory === undefined ||
+    !(input.body instanceof URLSearchParams) ||
+    input.body.get("hashes") !== input.hash ||
+    input.body.get("deleteFiles") !== "true"
+  )
+    throw new Error("Unexpected synthetic source removal");
+  // This exact directory was created by the actual owned add in this wire.
+  await rm(input.directory, { recursive: true });
 }

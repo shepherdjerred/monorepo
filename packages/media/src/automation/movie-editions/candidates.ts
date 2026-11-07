@@ -17,6 +17,7 @@ import {
 import { cutCanonical } from "#infrastructure/editions/cut-context.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { referenceConflict } from "#infrastructure/acquisition-identity/evaluation.ts";
+import { rejectedMovieSourceHashesV1 } from "#infrastructure/movie-editions/rollback/rejected-sources.ts";
 import { matchMovieReleaseV4 } from "#domain/editions/release-v4.ts";
 import { evaluateRelease, chooseUpgrade } from "#domain/quality.ts";
 import { IntegrationError } from "#integrations/http.ts";
@@ -31,6 +32,7 @@ import { assessRetainedMovieRelease } from "./release-assessment.ts";
 import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
 import { movieManagementContext } from "./management-context.ts";
 import { movieCurrentQuality } from "./current-quality.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export type MovieCandidateV4 = {
   releaseId: string;
@@ -66,11 +68,13 @@ export async function requireMovieSponsorV4(
   tx: Prisma.TransactionClient,
   scope: MovieEditionScope,
   access: Parameters<typeof eligibleAcquisitionSponsors>[1]["access"],
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const sponsors = await eligibleAcquisitionSponsors(tx, {
     scope,
     access,
     protocol: "movie-v4",
+    ...(budget === undefined ? {} : { budget }),
   });
   const sponsor = sponsors[0];
   if (sponsor === undefined)
@@ -216,8 +220,9 @@ async function assessProviderResults(
   context: MediaAutomationContext,
   scope: MovieEditionScope,
   providerId: string,
-  sources: ProviderCandidate[],
+  input: { sources: ProviderCandidate[]; rejected: ReadonlySet<string> },
 ) {
+  const { sources, rejected } = input;
   if (sources.length > 100)
     throw new MediaError(
       "movie_candidate_limit",
@@ -228,6 +233,7 @@ async function assessProviderResults(
   for (const source of sources) {
     if (source.providerId !== providerId)
       throw new Error("Movie provider returned another provider's source");
+    if (rejected.has(source.infoHash.toLowerCase())) continue;
     const selected = await storeMovieCandidateV4(context, scope, source);
     if (selected !== null) accepted.push(selected);
   }
@@ -254,6 +260,11 @@ export async function searchMovieCandidatesV4(
     where: { enabled: true, id: { in: ProviderIdSchema.options } },
     orderBy: { id: "asc" },
   });
+  const rejected = await rejectedMovieSourceHashesV1(
+    context.db,
+    scope,
+    context.movieManagement.budget,
+  );
   const accepted: MovieCandidateV4[] = [];
   for (const provider of providers) {
     try {
@@ -275,7 +286,10 @@ export async function searchMovieCandidatesV4(
         },
       );
       accepted.push(
-        ...(await assessProviderResults(context, scope, provider.id, sources)),
+        ...(await assessProviderResults(context, scope, provider.id, {
+          sources,
+          rejected,
+        })),
       );
     } catch (error) {
       if (!(error instanceof IntegrationError)) throw error;

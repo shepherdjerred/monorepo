@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { PublicationIntentRefSchema } from "#shared/publication-proof/intent.ts";
 import {
   NativeCompensationDescriptorSchema,
   NativeCompensationExecutionSchema,
@@ -67,7 +68,9 @@ async function readCompensationRecord(
       budget,
     }));
   assertQueriedPublicationParent(tx, queriedParent, budget);
-  const original = queriedParent.reference;
+  // This historical compensation descriptor records the literal v1 protocol.
+  // Versioned pack compensation has its own actual batch parents and executor.
+  const original = PublicationIntentRefSchema.parse(queriedParent.reference);
   if (
     original.transitionId !== row.transitionId ||
     original.intentHash !== descriptor.scope.transition.intentHash ||

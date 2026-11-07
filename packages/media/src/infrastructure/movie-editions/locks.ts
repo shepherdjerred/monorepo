@@ -4,13 +4,14 @@ import { lockCanonicalMedia } from "#infrastructure/editions/locks.ts";
 import {
   compensationGroupMedia,
   assertCompensationGroupUnchanged,
-} from "#infrastructure/native-compensation/routing.ts";
+} from "#infrastructure/native-compensation/group.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 
 /** Full group before targets/claims: no primary-only prelude or late media locks. */
 export async function lockMovieCommand(
   tx: Prisma.TransactionClient,
   scope: MovieEditionScope,
+  options?: { personalProtection: true },
 ) {
   const ids =
     scope.edition === "default"
@@ -37,13 +38,29 @@ export async function lockMovieCommand(
   const target = await tx.mediaIntent.findUnique({
     where: { mediaId_edition: { mediaId: media.id, edition: scope.edition } },
   });
-  if (target !== null && target.editionRootId !== media.id)
+  if (
+    target !== null &&
+    target.editionRootId !== media.id &&
+    !isUnclassifiedProtection(scope, target.editionRootId, options)
+  )
     throw new MediaError(
       "lineage_unresolved",
       "This target's historical lineage requires review",
       409,
     );
   return { media, target };
+}
+
+function isUnclassifiedProtection(
+  scope: MovieEditionScope,
+  rootId: string | null,
+  options: { personalProtection: true } | undefined,
+) {
+  return (
+    options?.personalProtection === true &&
+    scope.edition === "default" &&
+    rootId === null
+  );
 }
 
 export function movieCommandConflict(): MediaError {

@@ -6,6 +6,7 @@ import { createPublicationActivities } from "#automation/publication.ts";
 import { createSeedingActivities } from "#automation/seeding.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
 import { matchProviderFeedSourceV1 } from "#automation/feeds/matching.ts";
+import { matchSeriesPackFeedSourceV1 } from "#automation/feeds/series-pack/matching.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
 import { expandCatalogCoverage } from "#automation/reconciliation/library-series.ts";
 import { createCatalogActivities } from "#automation/reconciliation/catalog.ts";
@@ -34,6 +35,8 @@ export function createMediaNetworkActivities(
     ...createSweepActivities(context),
     matchProviderFeedSource: (input) =>
       matchProviderFeedSourceV1(context, input),
+    matchSeriesPackFeedSource: (input) =>
+      matchSeriesPackFeedSourceV1(context, input),
     ...createCoverageActivities(context),
     expandCatalogRequests: (input) => expandCatalogCoverage(context, input),
     ...createCatalogActivities(context),

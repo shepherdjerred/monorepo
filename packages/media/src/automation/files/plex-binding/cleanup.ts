@@ -24,6 +24,7 @@ import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proo
 import type { CleanupReadInvocation } from "#infrastructure/plex-binding/cleanup/invocation.ts";
 import { now } from "#automation/files/types.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { assertMovieLegacyClaimsResolvedV3 } from "#infrastructure/recovery/legacy-claims/movie/protection.ts";
 import {
   assertLegacyClaimsResolved,
   PendingLegacyClaimsError,
@@ -35,15 +36,23 @@ export async function assertCleanupClaims(
   tx: Transaction,
   mediaIds: readonly string[],
   scope?: MovieEditionScope,
+  invocation?: { epoch: number; budget: PublicationAuthorityReadBudget },
 ) {
   try {
-    await assertLegacyClaimsResolved(tx, mediaIds);
+    if (scope === undefined) await assertLegacyClaimsResolved(tx, mediaIds);
+    else {
+      if (invocation === undefined)
+        throw new Error(
+          "Scoped movie cleanup lost its original claim allowance",
+        );
+      await assertMovieLegacyClaimsResolvedV3(
+        tx,
+        { scope, epoch: invocation.epoch },
+        invocation.budget,
+      );
+    }
   } catch (error) {
-    if (
-      scope !== undefined &&
-      scope.edition !== "default" &&
-      error instanceof PendingLegacyClaimsError
-    )
+    if (scope !== undefined && error instanceof PendingLegacyClaimsError)
       throw new FileGuardError(LEGACY_CLAIM_PROTECTION);
     throw error;
   }
@@ -61,10 +70,12 @@ export async function captureCleanupPlex(
   context: PublicationContext,
   input: UpgradeCleanupPlexInput,
   observed: { wall: number; monotonic: number },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<CleanupPlexProof | null> {
   context.execution.assertActive();
   const invocation = {
     budget:
+      budget ??
       context.movieManagement?.budget ??
       context.libraryManagement?.budget ??
       new PublicationAuthorityReadBudget(),

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { MediaIntent, Prisma } from "#generated/prisma/client.ts";
-import type { MovieOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { readMovieChoice } from "#infrastructure/movie-editions/authority.ts";
 import {
   lockMovieChoiceIdentities,
@@ -11,6 +11,7 @@ import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshn
 import { readLibraryHandoffReceipt } from "#infrastructure/handoff/library-receipt.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import type { MovieRestoreSource } from "./restore-source.ts";
+import { captureExplicitOwnerMovieRestoreV1 } from "./owner-restore.ts";
 
 /** A restore needs current scoped consent, or the actual original library owner's still-active policy. */
 export async function captureMovieRestoreDemand(
@@ -23,6 +24,12 @@ export async function captureMovieRestoreDemand(
   },
   invocation: MovieManagementInvocation,
 ) {
+  const owner = await captureExplicitOwnerMovieRestoreV1(
+    tx,
+    { ...input, operation: input.source.operation },
+    invocation,
+  );
+  if (owner !== null) return owner;
   await lockMovieChoiceIdentities(tx, { mediaIds: [input.command.mediaId] });
   const requests = await tx.mediaRequest.findMany({
     where: {

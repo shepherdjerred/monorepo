@@ -15,7 +15,7 @@ import type { CompensationExecutionDiscovery } from "#infrastructure/native-comp
 import { assertCompensationDiscovery } from "#infrastructure/native-compensation/execution/discovery-check.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { NativeCompensationProtection } from "#infrastructure/native-compensation/protection.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { assertPublicationActive } from "#automation/publication-proof/invocation.ts";

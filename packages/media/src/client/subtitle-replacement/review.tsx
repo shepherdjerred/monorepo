@@ -1,17 +1,40 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
-import { CommandResultSchema } from "#shared/api.ts";
 import { SubtitleReplacementDetailSchema } from "#shared/subtitle-replacement.ts";
 import type { z } from "zod";
-import { readApi, writeApi } from "#client/api.ts";
+import { readApi } from "#client/api.ts";
+import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
+import { CommandError } from "#client/target-controls/errors.tsx";
+import { useSubtitleReplacementCommand } from "./command.ts";
 import {
   PageTitle,
   Loading,
   ErrorNotice,
   humanize,
 } from "#client/components.tsx";
+
+type Review = z.infer<typeof SubtitleReplacementDetailSchema>;
+type Acknowledgement = { version: number; observationHash: string };
+function matchesAcknowledgement(
+  review: Review | undefined,
+  acknowledgement: Acknowledgement | null,
+) {
+  return (
+    review !== undefined &&
+    acknowledgement !== null &&
+    acknowledgement.version === review.version &&
+    acknowledgement.observationHash === review.observationHash
+  );
+}
+function reviewExpired(review: Review | undefined) {
+  return (
+    review?.reviewExpiresAt !== null &&
+    review?.reviewExpiresAt !== undefined &&
+    Date.parse(review.reviewExpiresAt) <= Date.now()
+  );
+}
 
 export function SubtitleReplacementReview({
   user,
@@ -20,7 +43,10 @@ export function SubtitleReplacementReview({
   user: MediaUser;
   id: string;
 }) {
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledgedReview, setAcknowledgedReview] = useState<{
+    version: number;
+    observationHash: string;
+  } | null>(null);
   const result = useQuery({
     queryKey: ["subtitle-replacement", id],
     queryFn: () =>
@@ -30,40 +56,13 @@ export function SubtitleReplacementReview({
       ),
     refetchInterval: 5000,
   });
-  const command = useMutation({
-    mutationFn: async (action: "apply" | "reconcile") => {
-      const review = result.data;
-      if (review === undefined)
-        throw new Error("Load the current review first.");
-      if (
-        action === "apply" &&
-        (!acknowledged || review.observationHash === null)
-      )
-        throw new Error("Review and acknowledge the exact replacement first.");
-      return writeApi({
-        actorId: user.id,
-        path: `/admin/subtitle-replacements/${id}/${action}`,
-        schema: CommandResultSchema,
-        body:
-          action === "apply"
-            ? {
-                expectedVersion: review.version,
-                observationHash: review.observationHash,
-                acknowledgeReplacement: true,
-              }
-            : { expectedVersion: review.version },
-      });
-    },
-    onSuccess: async () => {
-      setAcknowledged(false);
-      await result.refetch();
-    },
+  const command = useSubtitleReplacementCommand(user.id, id, async () => {
+    setAcknowledgedReview(null);
+    await result.refetch();
   });
   const review = result.data;
-  const expired =
-    review?.reviewExpiresAt !== null &&
-    review?.reviewExpiresAt !== undefined &&
-    Date.parse(review.reviewExpiresAt) <= Date.now();
+  const acknowledged = matchesAcknowledgement(review, acknowledgedReview);
+  const expired = reviewExpired(review);
   return (
     <>
       <PageTitle
@@ -80,12 +79,34 @@ export function SubtitleReplacementReview({
       </p>
       {result.isPending && <Loading />}
       {result.error !== null && <ErrorNotice error={result.error} />}
-      {command.error !== null && <ErrorNotice error={command.error} />}
+      <CommandError
+        error={command.error}
+        review={() => {
+          command.reset();
+          setAcknowledgedReview(null);
+          void result.refetch();
+        }}
+      />
+      {command.unknown && (
+        <button
+          className="button"
+          disabled={command.isPending}
+          onClick={command.retryOriginal}
+        >
+          Retry original subtitle action
+        </button>
+      )}
       {review !== undefined && (
         <>
           <ReplacementStatus review={review} expired={expired} />
           <section className="panel">
             <h2>Affected titles</h2>
+            {review.movieScope !== undefined && (
+              <p>
+                Movie edition:{" "}
+                {movieEditionDisplayLabel(review.movieScope.edition)}
+              </p>
+            )}
             <ul>
               {review.titles.map((title) => (
                 <li key={title.mediaId}>
@@ -151,7 +172,14 @@ export function SubtitleReplacementReview({
                     type="checkbox"
                     checked={acknowledged}
                     onChange={(event) => {
-                      setAcknowledged(event.target.checked);
+                      setAcknowledgedReview(
+                        event.target.checked && review.observationHash !== null
+                          ? {
+                              version: review.version,
+                              observationHash: review.observationHash,
+                            }
+                          : null,
+                      );
                     }}
                   />
                   I reviewed every affected title and want this validated
@@ -159,9 +187,17 @@ export function SubtitleReplacementReview({
                 </label>
                 <button
                   className="button primary"
-                  disabled={!acknowledged || command.isPending}
+                  disabled={!acknowledged || command.blocked}
                   onClick={() => {
-                    command.mutate("apply");
+                    if (acknowledged && acknowledgedReview !== null)
+                      command.submit({
+                        action: "apply",
+                        body: {
+                          expectedVersion: acknowledgedReview.version,
+                          observationHash: acknowledgedReview.observationHash,
+                          acknowledgeReplacement: true,
+                        },
+                      });
                   }}
                 >
                   Approve this replacement
@@ -172,12 +208,15 @@ export function SubtitleReplacementReview({
               <button
                 className="button"
                 disabled={
-                  command.isPending ||
+                  command.blocked ||
                   review.state === "applying" ||
                   review.state === "preparing"
                 }
                 onClick={() => {
-                  command.mutate("reconcile");
+                  command.submit({
+                    action: "reconcile",
+                    body: { expectedVersion: review.version },
+                  });
                 }}
               >
                 {command.isPending ? "Submitting…" : "Reconcile operation"}

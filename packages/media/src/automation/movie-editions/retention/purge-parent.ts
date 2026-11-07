@@ -5,8 +5,8 @@ import { FileGuardError, RemovalPlanSchema } from "#automation/files/types.ts";
 import type { FileContext } from "#automation/files/types.ts";
 import { fileOperations } from "#automation/files/file-operations.ts";
 import type { MovieRemovalScope } from "#automation/files/movie-editions/removal-scope.ts";
-import type { MovieDecisionOperationV4 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieDecisionOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieQuarantinePlexReceiptV2Schema,
   type MovieQuarantinePlexReceiptV2,

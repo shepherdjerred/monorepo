@@ -1,4 +1,9 @@
 import path from "node:path";
+import {
+  storedWorkerPath,
+  storedFilePath,
+} from "#automation/files/paths/locations.ts";
+import { writeFile } from "node:fs/promises";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { handoffFixture } from "#automation/handoff/test-fixture.ts";
@@ -23,6 +28,14 @@ import { PlexClient, type PlexEditionItem } from "#integrations/plex.ts";
 import type { MigrationRecord } from "#shared/migration.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
 import { PrepareLibraryHandoffV3Schema } from "#shared/handoff/library-v3.ts";
+import {
+  uploadHouseholdCaptions,
+  householdCaptionSelection,
+} from "./library-fixture/household-captions.ts";
+import { subtitleDestination } from "#domain/subtitle-path.ts";
+import { configureMovieLibraryPaths } from "./library-fixture/movie-paths.ts";
+import type { InitialMovieSidecar } from "./library-fixture/movie-sidecars.ts";
+import { uploadLibraryFixtureSidecarsV1 } from "./library-fixture/tv-sidecars.ts";
 
 type SourceMedia = Extract<MigrationRecord, { kind: "media" }>;
 type Base = Awaited<ReturnType<typeof handoffFixture>>;
@@ -32,7 +45,20 @@ export async function libraryBindingFixture(
   db: Database,
   edition: MovieEditionKey,
   directoryCreated: (directory: string) => void,
-  options: { bytes?: Uint8Array } = {},
+  options: {
+    bytes?: Uint8Array;
+    initialSidecars?: { language: string; bytes: Uint8Array }[];
+    memberAccountId?: string;
+    actualMovieExclusion?: boolean;
+    canonicalStorage?: boolean;
+    householdCaptions?: boolean;
+    monitored?: boolean;
+    movieMetadata?: {
+      year: number;
+      runtimeMinutes: number;
+      originalLanguage: string;
+    };
+  } = {},
 ) {
   const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
   const f = await handoffFixture(db, {
@@ -42,32 +68,42 @@ export async function libraryBindingFixture(
   });
   directoryCreated(f.directory);
   if (options.bytes !== undefined) f.context.files.inspect = inspectMedia;
-  f.context.files.pathMapping = {
-    canonical(kind, root, relative) {
-      return root === "control"
-        ? path.join(`/data/${kind}/.media-control`, relative)
-        : path.join(f.context.files.roots[kind][root], relative);
-    },
-    local(stored) {
-      for (const kind of ["movies", "tv"] as const) {
-        const prefix = `/data/${kind}/.media-control/`;
-        if (stored.startsWith(prefix))
-          return path.join(
-            f.context.files.roots[kind].control,
-            stored.slice(prefix.length),
-          );
-      }
-      return stored;
-    },
-  };
+  await configureMovieLibraryPaths(f, options);
+  const sidecars: InitialMovieSidecar[] | undefined =
+    options.initialSidecars === undefined ? undefined : [];
+  for (const sidecar of options.initialSidecars ?? []) {
+    const filename = subtitleDestination({
+      videoPath: f.target,
+      language: sidecar.language,
+      forced: false,
+      hearingImpaired: false,
+      format: "srt",
+    });
+    await writeFile(filename, sidecar.bytes);
+    sidecars?.push({
+      language: sidecar.language,
+      path: `/movies/${path.basename(filename)}`,
+      videoPath: `/movies/${path.basename(f.target)}`,
+      mediaSourceId: "1",
+    });
+  }
   const source = await adoptLibraryBindingSource(f, {
     kind: "movies",
     edition,
     media: [
-      mediaFixture("1", "movie", {
-        tmdb: z.number().parse(f.network.media.tmdbId),
-      }),
+      {
+        ...mediaFixture("1", "movie", {
+          tmdb: z.number().parse(f.network.media.tmdbId),
+        }),
+        ...(options.monitored === undefined
+          ? {}
+          : { monitored: options.monitored }),
+      },
     ],
+    ...(sidecars === undefined ? {} : { initialSidecars: sidecars }),
+    ...(options.householdCaptions === undefined
+      ? {}
+      : { householdCaptions: options.householdCaptions }),
   });
   return movieLibraryWire(f, source, edition);
 }
@@ -80,6 +116,15 @@ export async function adoptLibraryBindingSource(
     media: SourceMedia[];
     qualitySourceId?: string;
     targetPath?: string;
+    /** Every selected file is a real physical asset, adopted by this ONE approval. */
+    files?: {
+      sourceId: string;
+      targetPath: string;
+      mediaSourceIds: string[];
+      sizeBytes: number;
+    }[];
+    householdCaptions?: boolean;
+    initialSidecars?: InitialMovieSidecar[];
     monitorSeries?: { seriesId: string; includeSpecials: boolean };
   },
 ) {
@@ -102,52 +147,95 @@ export async function adoptLibraryBindingSource(
   const media = structuredClone(options.media);
   for (const root of media.filter((item) => item.parentSourceId === null))
     root.profileSourceId = String(profile.profile.id);
-  const targetPath = options.targetPath ?? f.target;
-  const sourcePath = `/${options.kind}/${path.basename(targetPath)}`;
-  const records: MigrationRecord[] = [
-    ...media,
+  const targetPath =
+    options.targetPath ??
+    storedWorkerPath(f.context.files, options.kind, f.target);
+  const files = options.files ?? [
     {
-      kind: "file",
       sourceId: "file1",
+      targetPath,
       mediaSourceIds: media
         .filter(
           (item) => item.mediaKind === "movie" || item.mediaKind === "episode",
         )
         .map((item) => item.sourceId),
-      path: sourcePath,
       sizeBytes: Buffer.byteLength(f.bytes),
-      checksum: null,
-      downloadHash: null,
-      qualitySourceId: options.qualitySourceId ?? "3",
     },
   ];
-  const uploaded = await administration.upload(f.network.actor, {
-    snapshot: captureFixture(
-      "radarr",
-      options.kind === "movies" ? records : [],
+  const records: MigrationRecord[] = [
+    ...media,
+    ...files.map(
+      (file) =>
+        ({
+          kind: "file",
+          sourceId: file.sourceId,
+          mediaSourceIds: file.mediaSourceIds,
+          path: `/${options.kind}/${path.basename(file.targetPath)}`,
+          sizeBytes: file.sizeBytes,
+          checksum: null,
+          downloadHash: null,
+          qualitySourceId: options.qualitySourceId ?? "3",
+        }) as const,
     ),
+  ];
+  const tvSnapshot = captureFixture(
+    "sonarr",
+    options.kind === "tv" ? records : [],
+  );
+  const movieSnapshot = captureFixture(
+    "radarr",
+    options.kind === "movies" ? records : [],
+  );
+  const uploaded = await administration.upload(f.network.actor, {
+    snapshot: movieSnapshot,
   });
   const empty = await administration.upload(f.network.actor, {
-    snapshot: captureFixture("sonarr", options.kind === "tv" ? records : []),
+    snapshot: tvSnapshot,
   });
   const movieCaptureId = z.uuid().parse(uploaded.captureId);
   const tvCaptureId = z.uuid().parse(empty.captureId);
   const captureId = options.kind === "movies" ? movieCaptureId : tvCaptureId;
+  const captionCapture = await uploadHouseholdCaptions({
+    administration,
+    actor: f.network.actor,
+    enabled: options.householdCaptions === true,
+    kind: options.kind,
+    media,
+    sourceInstanceId: { movies: movieSnapshot, tv: tvSnapshot }[options.kind]
+      .sourceInstanceId,
+  });
+  const sidecarCapture = await uploadLibraryFixtureSidecarsV1({
+    administration,
+    actor: f.network.actor,
+    kind: options.kind,
+    movieInstanceId: movieSnapshot.sourceInstanceId,
+    tvInstanceId: tvSnapshot.sourceInstanceId,
+    sidecars: options.initialSidecars,
+  });
   const review = await bundles.create(f.network.actor, {
     schemaVersion: 2,
     purpose: "initial_library",
-    captureIds: [movieCaptureId, tvCaptureId],
+    captureIds: [
+      movieCaptureId,
+      tvCaptureId,
+      ...(captionCapture === undefined
+        ? []
+        : [z.uuid().parse(captionCapture.captureId)]),
+      ...(sidecarCapture === undefined
+        ? []
+        : [z.uuid().parse(sidecarCapture.captureId)]),
+    ],
     rootMappings: [
       {
         captureId: movieCaptureId,
         sourceRoot: "/movies",
-        canonicalRoot: f.context.files.roots.movies.library,
+        canonicalRoot: storedFilePath(f.context.files, "movies", "library", ""),
         verified: false,
       },
       {
         captureId: tvCaptureId,
         sourceRoot: "/tv",
-        canonicalRoot: f.context.files.roots.tv.library,
+        canonicalRoot: storedFilePath(f.context.files, "tv", "library", ""),
         verified: false,
       },
     ],
@@ -181,7 +269,19 @@ export async function adoptLibraryBindingSource(
     bundleHash: review.manifest.bundleHash,
     reportHash: review.report.reportHash,
     selected: [
-      { provenanceKey: file.provenanceKey, evidenceHash: file.observationHash },
+      ...review.report.entries
+        .filter(
+          (entry) =>
+            entry.kind === "file" ||
+            (options.initialSidecars !== undefined &&
+              entry.kind === "subtitle") ||
+            (options.householdCaptions === true &&
+              entry.kind === "subtitle_preference"),
+        )
+        .map((entry) => ({
+          provenanceKey: entry.provenanceKey,
+          evidenceHash: entry.observationHash,
+        })),
       ...review.report.entries
         .filter(
           (entry) =>
@@ -214,7 +314,11 @@ export async function adoptLibraryBindingSource(
             },
           ]
         : [],
-    subtitlePolicies: [],
+    subtitlePolicies: await householdCaptionSelection(
+      db,
+      review.report.entries,
+      options.householdCaptions === true,
+    ),
   });
   const series = options.monitorSeries;
   const seriesEntry =
@@ -282,10 +386,16 @@ export async function adoptLibraryBindingSource(
     { planId, operationId: z.uuid().parse(applied.operationId) },
     await prepareHandoffFiles(f.context, planId),
   );
-  const asset = await db.libraryAsset.findUniqueOrThrow({
-    where: { path: targetPath },
-  });
-  return { asset, receiptId, reviewId: review.id };
+  const assets = await Promise.all(
+    files.map((selectedFile) =>
+      db.libraryAsset.findUniqueOrThrow({
+        where: { path: selectedFile.targetPath },
+      }),
+    ),
+  );
+  const asset = assets[0];
+  if (asset === undefined) throw new Error("Actual multi-file import is empty");
+  return { asset, assets, receiptId, reviewId: review.id };
 }
 
 async function movieLibraryWire(
@@ -307,7 +417,7 @@ async function movieLibraryWire(
         Part: [
           {
             id: Number(itemId),
-            file: f.target,
+            file: source.asset.path,
             size: Buffer.byteLength(f.bytes),
           },
         ],

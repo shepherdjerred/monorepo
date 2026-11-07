@@ -5,7 +5,7 @@ import { findCurrentCompensationReceipts } from "#infrastructure/native-compensa
 import type { PublicationAuthorityReference } from "#shared/publication-proof/references.ts";
 import { resolvePublicationTransitionAuthority } from "./authority.ts";
 import { publicationArchiveSnapshot } from "./projection.ts";
-import { loadPublicationIntent } from "./store.ts";
+import { loadHistoricalPublicationIntent } from "./store.ts";
 import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 import type { PublicationAuthorityReadBudget } from "./read-budget.ts";
 
@@ -89,7 +89,11 @@ export async function findPublicationOriginalGrant(
     throw new Error("Publication transition grant is ambiguous");
   const transition = candidates[0];
   if (transition === undefined) return null;
-  const parent = await loadPublicationIntent(tx, transition.attemptId, budget);
+  const parent = await loadHistoricalPublicationIntent(
+    tx,
+    transition.attemptId,
+    budget,
+  );
   if (parent === null)
     throw new Error("Publication transition intent disappeared");
   const entry = parent.intent.entries.find(

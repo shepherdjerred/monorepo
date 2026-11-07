@@ -6,7 +6,7 @@ import {
   assertNativeArchiveSnapshot,
 } from "#infrastructure/native-archive/guards.ts";
 import { assertNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import {
   archiveAwait,
   assertArchiveActive,

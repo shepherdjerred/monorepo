@@ -9,6 +9,8 @@ import {
 import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
 import { replacementPaths, type ReplacementProof } from "./files.ts";
 import { artifactIdentity } from "./execution.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
+import { settleMovieReplacementV2 } from "#automation/movie-editions/subtitle-replacement/settle.ts";
 
 export async function settleReplacement(
   tx: Prisma.TransactionClient,
@@ -19,6 +21,8 @@ export async function settleReplacement(
     proof: ReplacementProof;
   },
 ) {
+  if (replacementSnapshot(row.snapshot).schemaVersion === 2)
+    return settleMovieReplacementV2(tx, context, row, input);
   const { outcome, proof } = input;
   const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
   const paths = replacementPaths(context, row);

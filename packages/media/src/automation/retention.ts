@@ -1,6 +1,12 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import {
+  assertHistoricalMovieRetention,
+  HistoricalMovieRetentionProtection,
+} from "#infrastructure/recovery/legacy-claims/historical-movie.ts";
 import { MediaError } from "#application/errors.ts";
 import { networkMovieAccess } from "./editions/access.ts";
 import { currentFulfillmentAsset } from "./editions/fulfillment.ts";
@@ -53,9 +59,12 @@ import { refreshRetentionReceipts } from "./notifications/retention-receipts.ts"
 import {
   hasPendingLegacyClaims,
   persistLegacyClaimProtection,
-  reopenLegacyClaimProtection,
   LEGACY_CLAIM_PROTECTION,
 } from "#infrastructure/recovery/legacy-claims/protection.ts";
+import {
+  historicalRetentionProtection,
+  historicalRetentionResult,
+} from "./retention/historical.ts";
 
 type Result = Awaited<
   ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>
@@ -66,15 +75,6 @@ const protect = (reason: string): Result => ({
   decisionId: null,
   wakeAt: null,
 });
-async function legacyProtection(
-  context: MediaAutomationContext,
-  ids: string[],
-) {
-  if (ids.length > 500) return protect("coverage_requires_review");
-  return (await reopenLegacyClaimProtection(context.db, ids))
-    ? protect(LEGACY_CLAIM_PROTECTION)
-    : null;
-}
 function incompleteWatchReason(observation: {
   quarantined: boolean;
   reason: string | null;
@@ -84,6 +84,7 @@ function incompleteWatchReason(observation: {
     : (observation.reason ?? "watch_unknown");
 }
 type BoundObservation = {
+  budget: PublicationAuthorityReadBudget;
   ids: string[];
   snapshots: Media[];
   observedAt: Date;
@@ -145,6 +146,14 @@ async function evaluateGroup(
       observation.freshness,
     );
     await bindPlexTransactionDeadline(tx, observation.freshness);
+    await assertHistoricalMovieRetention(
+      tx,
+      {
+        mediaIds: ids,
+        generation: { mediaId: input.mediaId, generation: input.generation },
+      },
+      observation.budget,
+    );
     if (await hasPendingLegacyClaims(tx, ids)) {
       await persistLegacyClaimProtection(tx, ids);
       return protect(LEGACY_CLAIM_PROTECTION);
@@ -291,6 +300,10 @@ async function evaluateObservedGroup(
   try {
     return await evaluateGroup(context, input, observation);
   } catch (error) {
+    if (error instanceof HistoricalMovieRetentionProtection)
+      return historicalRetentionResult(error.reason);
+    if (error instanceof NativeArchiveScopeProtection)
+      return protect(error.code);
     if (error instanceof PlexBindingProtection) return protect(error.reason);
     if (
       error instanceof MovieChoiceProtection ||
@@ -306,6 +319,8 @@ export function createRetentionActivities(
 ): Pick<MediaNetworkActivities, "evaluateMediaRetention"> {
   return {
     async evaluateMediaRetention(input) {
+      const budget =
+        base.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
       const execution = base.plexBindingExecution();
       execution.assertActive();
       const context = {
@@ -320,7 +335,12 @@ export function createRetentionActivities(
         ownerOverride === null
           ? await coveredMedia(context, input.mediaId)
           : ownerOverride.media.map((item) => item.id);
-      const legacy = await legacyProtection(context, ids);
+      const legacy = await historicalRetentionProtection(
+        context,
+        ids,
+        input,
+        budget,
+      );
       if (legacy !== null) return legacy;
       const snapshots = await context.db.mediaItem.findMany({
         where: { id: { in: ids } },
@@ -391,6 +411,7 @@ export function createRetentionActivities(
         return protect("active_playback");
       freshness.assertActive();
       return await evaluateObservedGroup(context, input, {
+        budget,
         ids: cohort.mediaIds,
         snapshots: completeSnapshots,
         observedAt: new Date(),

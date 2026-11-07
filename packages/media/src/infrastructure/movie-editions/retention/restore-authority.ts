@@ -3,10 +3,10 @@ import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { readQuarantinedPlexWatchAuthority } from "#infrastructure/plex-binding/quarantine.ts";
 import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { assertNoMediaSubtitleReplacement } from "#automation/files/guards.ts";
-import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
+import { assertMovieLegacyClaimsResolvedV3 } from "#infrastructure/recovery/legacy-claims/movie/protection.ts";
 import { publicationAuthorityDeadline } from "#automation/publication-proof/authority.ts";
 import type { PublicationContext } from "#automation/publication-proof/invocation.ts";
-import type { MovieOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import {
   plexBindingFreshness,
@@ -74,7 +74,11 @@ export async function captureMovieRestoreAuthority(
     [source.entry.assetId],
   );
   await assertNoMediaSubtitleReplacement(tx, [command.mediaId]);
-  await assertLegacyClaimsResolved(tx, [command.mediaId]);
+  await assertMovieLegacyClaimsResolvedV3(
+    tx,
+    { scope: command.scope, epoch },
+    invocation.budget,
+  );
   if (
     (await tx.recoveryHold.count({
       where: {

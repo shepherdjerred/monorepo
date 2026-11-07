@@ -4,6 +4,9 @@ import * as movieSubtitles from "#workflows/media/movie-editions/subtitles.ts";
 import * as movieWatch from "#workflows/media/movie-editions/watch.ts";
 import * as movieRetention from "#workflows/media/movie-editions/retention.ts";
 import * as movieRestore from "#workflows/media/movie-editions/restore.ts";
+import * as movieRollback from "#workflows/media/movie-editions/manual-rollback.ts";
+export const rollbackMovieEditionV1Workflow =
+  movieRollback.rollbackMovieEditionV1Workflow;
 export const restoreMovieEditionV4Workflow =
   movieRestore.restoreMovieEditionV4Workflow;
 export const retainMovieEditionV4Workflow =
@@ -19,6 +22,9 @@ export const acquireMovieEditionV4Workflow =
 import * as providerFeed from "#workflows/media/provider-feed.ts";
 export const matchProviderFeedSourceWorkflow =
   providerFeed.matchProviderFeedSourceWorkflow;
+import * as seriesPackFeed from "#workflows/media/series-pack-feed.ts";
+export const matchSeriesPackFeedSourceWorkflow =
+  seriesPackFeed.matchSeriesPackFeedSourceWorkflow;
 import * as h from "#workflows/media/handoff.ts";
 export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
@@ -73,6 +79,15 @@ export const reverifyPlexBindingWorkflow =
 export const observePlexEventHintWorkflow =
   plexEvents.observePlexEventHintWorkflow;
 import * as compensation from "#workflows/media/native-compensation.ts";
+import * as seriesPackCompensation from "#workflows/media/series-pack/native-compensation.ts";
+export const prepareSeriesPackNativeCompensationV1Workflow =
+  seriesPackCompensation.prepare;
+export const applySeriesPackNativeCompensationV1Workflow =
+  seriesPackCompensation.apply;
+export const compensateSeriesPackNativePublicationV1Workflow =
+  seriesPackCompensation.compensate;
+export const publishSeriesPackNativeCompensationV1Workflow =
+  seriesPackCompensation.publish;
 export const prepareNativeCompensationWorkflow = compensation.prepare;
 export const applyNativeCompensationWorkflow = compensation.apply;
 export const compensateNativePublicationWorkflow = compensation.compensate;

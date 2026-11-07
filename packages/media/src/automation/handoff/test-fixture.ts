@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { CredentialCipher } from "#application/security.ts";
@@ -7,7 +7,7 @@ import type { MediaActor } from "#application/auth.ts";
 import { networkFixture } from "#migration/handoff-network/test-fixture.ts";
 import { observeClaims } from "#migration/handoff-network/claims.ts";
 import { readHandoffPlan } from "#migration/handoff-network/plan.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { handoffFixtureFiles } from "./fixture-files.ts";
 import {
   importResolvedProfiles,
   snapshotHash,
@@ -40,6 +40,13 @@ export async function handoffFixture(
     bytes?: Uint8Array;
     sourceKind?: "radarr" | "sonarr";
     initialEdition?: MovieEditionKey;
+    memberAccountId?: string;
+    canonicalStorage?: boolean;
+    movieMetadata?: {
+      year: number;
+      runtimeMinutes: number;
+      originalLanguage: string;
+    };
     prepareRequest?: (input: {
       request: z.infer<typeof PrepareHandoffSchema>;
       report: z.infer<typeof BundleReportSchema>;
@@ -52,11 +59,11 @@ export async function handoffFixture(
     }) => Promise<void>;
   } = {},
 ) {
-  const file = await fileFixture(db);
-  const network = await networkFixture(
+  const { file, roots, tv, canonicalRoots } = await handoffFixtureFiles(
     db,
-    new CredentialCipher(Buffer.alloc(32, 7).toString("base64")),
+    options,
   );
+  const network = await handoffNetworkFixture(db, options.movieMetadata);
   network.actor.plexAccountId = BigInt(
     `0x${crypto.randomUUID().replaceAll("-", "")}`,
   ).toString();
@@ -73,18 +80,13 @@ export async function handoffFixture(
       ),
     },
   });
-  const roots = file.context.roots.movies;
-  const tv = {
-    library: path.join(file.directory, "tv"),
-    downloads: roots.downloads,
-    control: path.join(file.directory, "tv-control"),
-  };
-  await mkdir(tv.library);
-  await mkdir(tv.control);
-  file.context.roots.tv = tv;
   const fileName = options.fileName ?? "Film.mkv";
   const target = path.join(
     options.sourceKind === "sonarr" ? tv.library : roots.library,
+    fileName,
+  );
+  const canonicalTarget = path.join(
+    options.sourceKind === "sonarr" ? canonicalRoots.tv : canonicalRoots.movies,
     fileName,
   );
   const bytes = options.bytes ?? "Synthetic immutable media";
@@ -112,7 +114,9 @@ export async function handoffFixture(
   });
   for (const mapping of manifest.rootMappings)
     mapping.canonicalRoot =
-      mapping.sourceRoot === "/movies" ? roots.library : tv.library;
+      mapping.sourceRoot === "/movies"
+        ? canonicalRoots.movies
+        : canonicalRoots.tv;
   const report = BundleReportSchema.parse(network.review.report);
   const mediaEntry = report.entries[0];
   const capture = manifest.captures.find(
@@ -263,13 +267,17 @@ export async function handoffFixture(
         }),
     Guid: [{ id: `tmdb://${String(network.media.tmdbId)}` }],
     Media: [
-      { Part: [{ id: 1, file: target, size: Buffer.byteLength(bytes) }] },
+      {
+        Part: [
+          { id: 1, file: canonicalTarget, size: Buffer.byteLength(bytes) },
+        ],
+      },
     ],
   };
   network.context.plex.libraryPage = () =>
     Promise.resolve({ total: 1, items: [plexItem] });
   network.context.plex.metadata = () => Promise.resolve(plexItem);
-  network.context.canonicalRoots = { movies: roots.library, tv: tv.library };
+  network.context.canonicalRoots = canonicalRoots;
   const observe = async () => {
     const stored = await db.mediaHandoffPlan.findUniqueOrThrow({
       where: { id: planId },
@@ -284,7 +292,7 @@ export async function handoffFixture(
         sourceRoot: "/movies",
         canonicalDeployment: "media-media-files",
         canonicalContainer: "media-files",
-        canonicalRoot: roots.library,
+        canonicalRoot: canonicalRoots.movies,
       },
       {
         sourceDeployment: "media-sonarr",
@@ -292,7 +300,7 @@ export async function handoffFixture(
         sourceRoot: "/tv",
         canonicalDeployment: "media-media-files",
         canonicalContainer: "media-files",
-        canonicalRoot: tv.library,
+        canonicalRoot: canonicalRoots.tv,
       },
     ]);
     const evidence = HandoffNetworkEvidenceSchema.parse({
@@ -313,7 +321,7 @@ export async function handoffFixture(
           mediaId: network.media.id,
           ratingKey: "fixture",
           sectionId: "1",
-          canonicalPath: target,
+          canonicalPath: canonicalTarget,
           identityHash: snapshotHash(plexItem),
         },
       ],
@@ -369,4 +377,18 @@ export async function handoffFixture(
     observe,
     request,
   };
+}
+
+async function handoffNetworkFixture(
+  db: Database,
+  movieMetadata?: {
+    year: number;
+    runtimeMinutes: number;
+    originalLanguage: string;
+  },
+) {
+  const cipher = new CredentialCipher(Buffer.alloc(32, 7).toString("base64"));
+  return movieMetadata === undefined
+    ? networkFixture(db, cipher)
+    : networkFixture(db, cipher, "server", { movieMetadata });
 }

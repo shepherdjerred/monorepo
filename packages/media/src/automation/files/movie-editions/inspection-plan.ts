@@ -1,7 +1,7 @@
 import path from "node:path";
 import { z } from "zod";
 import type { PublicationContext } from "#automation/publication-proof/invocation.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieFilePlanSchema,
   MovieBirthAuthoritySchema,

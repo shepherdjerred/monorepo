@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
+import type { MediaPathMapping } from "#filesystem/media-paths.ts";
 import {
   PlexExclusionPlanSchema,
   PlexSectionSnapshotSchema,
@@ -24,6 +25,7 @@ export function createPlexExclusionFileActivities(context: {
   db: Database;
   roots: { movies: string; tv: string };
   checkpoint: () => Promise<void>;
+  pathMapping?: MediaPathMapping;
 }): PlexExclusionFileActivities {
   return {
     async preparePlexExclusionFiles(input) {
@@ -40,7 +42,10 @@ export function createPlexExclusionFileActivities(context: {
         })
         .parse(initial.plan);
       const libraryRoot = context.roots[target.kind];
-      const markers = await readExclusionMarkers(libraryRoot);
+      const markers = await readExclusionMarkers(
+        context.pathMapping?.local(libraryRoot) ?? libraryRoot,
+        context.pathMapping?.local(`${libraryRoot}/.media-control`),
+      );
       const files = await prepareProbeVideo(initial.id);
       const plan = preparePlan({
         runId: initial.id,
@@ -97,14 +102,19 @@ export function createPlexExclusionFileActivities(context: {
           Date.now() - Date.parse(journal.topologyCheckedAt) > 60_000
         )
           throw new Error("Plex exclusion preparation is stale");
-        const files = await stageExclusionProbe(plan, journal.files, {
-          authorize: () => assertRunAuthority(tx, run, input.operationId),
-          checkpoint: context.checkpoint,
-          save: async (value) => {
-            journal = { ...journal, files: value };
-            await saveRun(tx, run.id, journal, "approved");
+        const files = await stageExclusionProbe(
+          plan,
+          journal.files,
+          {
+            authorize: () => assertRunAuthority(tx, run, input.operationId),
+            checkpoint: context.checkpoint,
+            save: async (value) => {
+              journal = { ...journal, files: value };
+              await saveRun(tx, run.id, journal, "approved");
+            },
           },
-        });
+          context.pathMapping,
+        );
         await saveRun(tx, run.id, { ...journal, files }, "staged");
       });
     },
@@ -116,15 +126,20 @@ export function createPlexExclusionFileActivities(context: {
         let journal = RunJournalSchema.parse(run.journal);
         if (journal.files === undefined)
           throw new Error("Plex probe ownership evidence is missing");
-        const files = await cleanupExclusionProbe(plan, journal.files, {
-          authorize: () => assertRunAuthority(tx, run, input.operationId),
-          checkpoint: context.checkpoint,
-          save: async (value) => {
-            journal = { ...journal, files: value };
-            await saveRun(tx, run.id, journal, run.state);
+        const files = await cleanupExclusionProbe(
+          plan,
+          journal.files,
+          {
+            authorize: () => assertRunAuthority(tx, run, input.operationId),
+            checkpoint: context.checkpoint,
+            save: async (value) => {
+              journal = { ...journal, files: value };
+              await saveRun(tx, run.id, journal, run.state);
+            },
           },
-        });
-        await requireMarkers(plan);
+          context.pathMapping,
+        );
+        await requireMarkers(plan, context.pathMapping);
         await saveRun(tx, run.id, { ...journal, files }, "cleaned");
       });
     },

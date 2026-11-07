@@ -10,7 +10,11 @@ import {
   type MovieChoiceAccess,
 } from "#infrastructure/movie-editions/access.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
-import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
+import {
+  readMovieAttemptSponsor,
+  movieAttemptQueriedInTransactionV4,
+  type QueriedMovieAttemptV4,
+} from "#infrastructure/movie-editions/attempt-sponsor.ts";
 import type { LibraryManagementInvocation } from "./library-policy.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
@@ -19,6 +23,7 @@ import {
 } from "#shared/movie-editions/registry.ts";
 
 export type AcquisitionAccess = {
+  seriesPackPublicationAttemptId?: string | undefined;
   libraryManagement?: LibraryManagementInvocation | undefined;
   serverMachineId?: string | undefined;
   movieAccess?: MovieChoiceAccess | undefined;
@@ -246,24 +251,24 @@ export async function assertLegacySubmissionSponsor(
   });
 }
 
+type SponsorAuthorityInput = {
+  authority: AcquisitionIdentitySnapshot["sponsorAuthority"];
+  sponsorRequestId: string;
+  operationId: string;
+  mediaIds: string[];
+  movieAccess?: MovieChoiceAccess | undefined;
+  recordedAttemptId?: string;
+  movieScope?: MovieEditionScope | undefined;
+  budget?: PublicationAuthorityReadBudget;
+  queriedAttempt?: QueriedMovieAttemptV4;
+};
+
 export async function assertSponsorAuthority(
   tx: Prisma.TransactionClient,
-  input: {
-    authority: AcquisitionIdentitySnapshot["sponsorAuthority"];
-    sponsorRequestId: string;
-    operationId: string;
-    mediaIds: string[];
-    movieAccess?: MovieChoiceAccess | undefined;
-    recordedAttemptId?: string;
-    movieScope?: MovieEditionScope | undefined;
-    budget?: PublicationAuthorityReadBudget;
-  },
+  input: SponsorAuthorityInput,
 ) {
   const { scope, where } = scopedSponsor(input);
-  const operation = await tx.operation.findUnique({
-    where: { id: input.operationId },
-  });
-  input.budget?.consume(operation === null ? 0 : 1);
+  const operation = await readSponsorCommand(tx, input);
   if (operation === null)
     throw new MediaError(
       "acquisition_sponsor_unproven",
@@ -345,18 +350,40 @@ export async function assertSponsorAuthority(
   }
 }
 
+async function readSponsorCommand(
+  tx: Prisma.TransactionClient,
+  input: SponsorAuthorityInput,
+) {
+  if (input.queriedAttempt !== undefined)
+    movieAttemptQueriedInTransactionV4(
+      tx,
+      input.recordedAttemptId ?? input.queriedAttempt.attempt.id,
+      input.queriedAttempt,
+    );
+  const queried = input.queriedAttempt?.command;
+  if (queried?.id === input.operationId) return queried;
+  const operation = await tx.operation.findUnique({
+    where: { id: input.operationId },
+  });
+  input.budget?.consume(operation === null ? 0 : 1);
+  return operation;
+}
+
+type MovieSponsorInput = {
+  authority: AcquisitionIdentitySnapshot["sponsorAuthority"];
+  actorId: string;
+  userId: string;
+  requestId: string;
+  movieAccess?: MovieChoiceAccess | undefined;
+  recordedAttemptId?: string;
+  movieScope?: MovieEditionScope | undefined;
+  budget?: PublicationAuthorityReadBudget;
+  queriedAttempt?: QueriedMovieAttemptV4;
+};
+
 async function assertMovieSponsor(
   tx: Prisma.TransactionClient,
-  input: {
-    authority: AcquisitionIdentitySnapshot["sponsorAuthority"];
-    actorId: string;
-    userId: string;
-    requestId: string;
-    movieAccess?: MovieChoiceAccess | undefined;
-    recordedAttemptId?: string;
-    movieScope?: MovieEditionScope | undefined;
-    budget?: PublicationAuthorityReadBudget;
-  },
+  input: MovieSponsorInput,
 ) {
   const choice =
     input.movieAccess === undefined
@@ -374,19 +401,7 @@ async function assertMovieSponsor(
     (choice.status !== "authorized" || choice.actor.id !== input.actorId)
   )
     throw new MovieChoiceProtection("movie_edition_choice_changed");
-  const recorded =
-    input.recordedAttemptId === undefined
-      ? null
-      : await readMovieAttemptSponsor(tx, {
-          attemptId: input.recordedAttemptId,
-          ...(input.budget === undefined ? {} : { budget: input.budget }),
-          ...(input.movieScope === undefined
-            ? {}
-            : {
-                expectedScope: input.movieScope,
-                expectedRequestId: input.requestId,
-              }),
-        });
+  const recorded = await readRecordedMovieSponsor(tx, input);
   if (
     recorded !== null &&
     (recorded.actorId !== input.actorId ||
@@ -395,4 +410,24 @@ async function assertMovieSponsor(
   )
     throw new Error("Recorded movie sponsor differs from acquisition identity");
   return choice !== null || recorded !== null;
+}
+
+function readRecordedMovieSponsor(
+  tx: Prisma.TransactionClient,
+  input: MovieSponsorInput,
+) {
+  if (input.recordedAttemptId === undefined) return null;
+  return readMovieAttemptSponsor(tx, {
+    attemptId: input.recordedAttemptId,
+    ...(input.queriedAttempt === undefined
+      ? {}
+      : { queriedAttempt: input.queriedAttempt }),
+    ...(input.budget === undefined ? {} : { budget: input.budget }),
+    ...(input.movieScope === undefined
+      ? {}
+      : {
+          expectedScope: input.movieScope,
+          expectedRequestId: input.requestId,
+        }),
+  });
 }

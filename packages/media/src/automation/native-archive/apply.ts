@@ -24,10 +24,10 @@ import { nativePhysicalIdentity } from "#infrastructure/native-archive/physical-
 import { assertArchiveAuthority } from "#infrastructure/native-archive/authority.ts";
 import { commitArchiveSupersessions } from "#infrastructure/native-archive/supersession.ts";
 import {
-  assertNativeEvidenceFresh,
   installNativeAuthority,
   nativeApprovingActor,
 } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import { appendNativeSubtitlePolicies } from "#automation/native-subtitles/policies.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { defaultScope } from "#shared/editions/scope.ts";

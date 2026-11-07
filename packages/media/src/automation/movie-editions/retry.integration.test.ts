@@ -16,7 +16,7 @@ import {
   MovieOperationV4Schema,
   type MovieOperationV4,
   type MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieEditionKeySchema,
   type MovieEditionKey,
@@ -37,6 +37,7 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaAuth } from "#application/auth.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
+import { readMovieRetrySourceV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-source.ts";
 
 const closers: (() => Promise<void>)[] = [];
 let bytes: Uint8Array;
@@ -844,7 +845,7 @@ test("a journaled unknown add stays protected until its actual original tagged t
   expect(f.source.wire.additions()).toBe(1);
 }, 60_000);
 
-test("stale retry CAS and an actual prepared publication cannot renew the old attempt", async () => {
+test("stale retry CAS and V1 misrouting of an actual prepared publication cannot renew the old attempt", async () => {
   const f = await submitted("theatrical_cut");
   const db = f.source.db;
   const commands = new MovieLifecycleCommands(db, {
@@ -895,9 +896,6 @@ test("stale retry CAS and an actual prepared publication cannot renew the old at
     where: { id: f.birth.id },
   });
   expect(prepared.filePlan).not.toBeNull();
-  const currentMedia = await db.mediaItem.findUniqueOrThrow({
-    where: { id: f.input.mediaId },
-  });
   const currentTarget = await db.mediaIntent.findUniqueOrThrow({
     where: {
       mediaId_edition: {
@@ -907,15 +905,11 @@ test("stale retry CAS and an actual prepared publication cannot renew the old at
     },
   });
   await expect(
-    commands.retryMovieEditionV4(f.source.user, crypto.randomUUID(), {
-      schemaVersion: 4,
-      scope: f.input.scope,
-      expected: {
-        mediaVersion: currentMedia.version,
-        targetVersion: currentTarget.version,
-      },
-      command: { action: "retry" },
-    }),
+    readMovieRetrySourceV4(
+      db,
+      { attemptId: f.birth.id, scope: f.input.scope },
+      new PublicationAuthorityReadBudget(),
+    ),
   ).rejects.toMatchObject({ code: "movie_retry_prepared_publication" });
   expect(
     await db.acquisitionAttempt.findUniqueOrThrow({

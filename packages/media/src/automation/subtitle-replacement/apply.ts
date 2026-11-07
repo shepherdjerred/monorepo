@@ -36,6 +36,9 @@ import {
 } from "#automation/publication-proof/invocation.ts";
 import { publicationAuthorityDeadline } from "#automation/publication-proof/authority.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import { movieReplacementFreshness } from "#automation/movie-editions/subtitle-replacement/authority.ts";
+import { MovieReplacementSnapshotV2Schema } from "#shared/movie-editions/subtitle-replacement-v2.ts";
+import { holdMovieRollbackCaptionSourceV1 } from "#infrastructure/movie-editions/subtitle-replacement/rollback-source.ts";
 
 export async function applyReplacement(
   initialContext: FileContext,
@@ -64,7 +67,7 @@ export async function applyReplacement(
     if (current.state !== (reconcile ? "reconciling" : "applying"))
       throw new FileGuardError("subtitle_replacement_coordinator_changed");
     if (!reconcile) {
-      await assertReplacementSnapshot(tx, current.id);
+      await assertReplacementSnapshot(tx, current.id, {}, context);
       requireApproval(context, current.review, current.snapshotHash);
     }
     return current;
@@ -106,7 +109,7 @@ export async function applyReplacement(
       ]);
       if (current.state !== "applying")
         throw new FileGuardError("subtitle_replacement_coordinator_changed");
-      await assertReplacementSnapshot(tx, current.id);
+      await assertReplacementSnapshot(tx, current.id, {}, context);
       requireApproval(context, current.review, current.snapshotHash);
       await proof.content.digest(proof.paths.source);
       await proof.content.digest(proof.paths.staged);
@@ -143,6 +146,16 @@ export async function applyReplacement(
         throw new FileGuardError("subtitle_replacement_coordinator_changed");
       if (current.review === null)
         throw new FileGuardError("subtitle_replacement_review_missing");
+      const heldRollbackSource =
+        proof.paths.scope.schemaVersion === 2
+          ? await holdMovieRollbackCaptionSourceV1(
+              tx,
+              MovieReplacementSnapshotV2Schema.parse(current.snapshot),
+              context,
+            )
+          : undefined;
+      const held =
+        heldRollbackSource === undefined ? {} : { heldRollbackSource };
       const effect = await replacementEffectState(
         proof,
         current,
@@ -150,7 +163,7 @@ export async function applyReplacement(
       );
       let forward = effect !== "restored";
       try {
-        await assertReplacementSnapshot(tx, current.id);
+        await assertReplacementSnapshot(tx, current.id, held, context);
         requireApproval(context, current.review, current.snapshotHash);
         if (!(await context.enabled.acquisition())) forward = false;
       } catch (error) {
@@ -166,11 +179,13 @@ export async function applyReplacement(
           tx,
           current.id,
           forward
-            ? {}
+            ? held
             : {
                 allowCompensation: true,
+                ...held,
                 ...(actorId === null ? {} : { actorId }),
               },
+          context,
         );
         await proof.content.digest(proof.paths.video);
         if (forward && !(await context.enabled.acquisition()))
@@ -187,9 +202,14 @@ export async function applyReplacement(
         },
       );
       const observed = { wall: Date.now(), monotonic: performance.now() };
+      const movieFreshness =
+        proof.paths.scope.schemaVersion === 2
+          ? movieReplacementFreshness(context)
+          : undefined;
       const reviewDeadline = current.review.expiresAt.getTime();
       const assertActive = () => {
         freshness.assertActive();
+        movieFreshness?.assertActive();
         if (
           forward &&
           (Date.now() >= reviewDeadline ||
@@ -200,9 +220,12 @@ export async function applyReplacement(
       };
       await bindPlexTransactionDeadline(tx, {
         assertActive,
-        expiresAtMs: forward
-          ? Math.min(freshness.expiresAtMs, reviewDeadline)
-          : freshness.expiresAtMs,
+        expiresAtMs: Math.min(
+          movieFreshness?.expiresAtMs ?? Infinity,
+          forward
+            ? Math.min(freshness.expiresAtMs, reviewDeadline)
+            : freshness.expiresAtMs,
+        ),
       });
       const files = fileOperations(
         { ...context, contentProof: proof.content },
@@ -314,10 +337,15 @@ async function abandonUnstarted(
     if (current.receipt !== null) return;
     if (current.state !== "reconciling")
       throw new FileGuardError("subtitle_replacement_coordinator_changed");
-    await assertReplacementSnapshot(tx, current.id, {
-      allowCompensation: true,
-      ...(actorId === null ? {} : { actorId }),
-    });
+    await assertReplacementSnapshot(
+      tx,
+      current.id,
+      {
+        allowCompensation: true,
+        ...(actorId === null ? {} : { actorId }),
+      },
+      context,
+    );
     await assertNoArtifacts(
       proof,
       current.importOperationId,

@@ -17,6 +17,9 @@ import { removalPlan, assertOwnedAsset } from "./removal-plan.ts";
 import { advanceSubtitleBindings } from "./subtitle-lifecycle/ownership.ts";
 import { fileOperations } from "./file-operations.ts";
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { assertHistoricalMovieRetention } from "#infrastructure/recovery/legacy-claims/historical-movie.ts";
+import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { prepareRemovalProof } from "./content-proof.ts";
 import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
 import {
@@ -43,13 +46,28 @@ import {
   recordCommittedPlexQuarantine,
 } from "#infrastructure/plex-binding/quarantine-commit.ts";
 
+type RemovalOptions =
+  boolean | { purge: boolean; budget: PublicationAuthorityReadBudget };
+function removalOptions(context: FileContext, options: RemovalOptions) {
+  return typeof options === "boolean"
+    ? {
+        purge: options,
+        budget:
+          context.movieManagement?.budget ??
+          context.libraryManagement?.budget ??
+          new PublicationAuthorityReadBudget(),
+      }
+    : options;
+}
+
 export async function removeFiles(
   initialContext: FileContext,
   decisionId: string,
   operationId: string,
-  purge: boolean,
+  options: RemovalOptions,
 ): Promise<void> {
   const observed = { wall: Date.now(), monotonic: performance.now() };
+  const { purge, budget } = removalOptions(initialContext, options);
   const execution = initialContext.publicationExecution?.();
   execution?.assertActive();
   const enabled = purge
@@ -57,13 +75,25 @@ export async function removeFiles(
     : initialContext.enabled.quarantine;
   if (!(await enabled())) throw new FileGuardError("retention_disabled");
   const snapshot = await initialContext.db.$transaction(async (tx) => {
+    const initial = await tx.retentionDecision.findUniqueOrThrow({
+      where: { id: decisionId },
+    });
+    if (initial.edition !== "default")
+      throw new FileGuardError("edition_not_available");
+    await lockMedia(tx, [initial.mediaId]);
     const decision = await tx.retentionDecision.findUniqueOrThrow({
       where: { id: decisionId },
     });
-    if (decision.edition !== "default")
-      throw new FileGuardError("edition_not_available");
-    await lockMedia(tx, [decision.mediaId]);
     const completed = decision.state === (purge ? "purged" : "quarantined");
+    if (!completed) {
+      await lockEffectiveRequests(tx, [decision.mediaId]);
+      await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`;
+      await assertHistoricalMovieRetention(
+        tx,
+        { mediaIds: [decision.mediaId], decisionId },
+        budget,
+      );
+    }
     const epoch = RetentionEpochSchema.parse(decision.evidence).recoveryEpoch;
     if (!completed) {
       const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -113,7 +143,18 @@ export async function removeFiles(
   const movieAccess = snapshot.ownerOverride
     ? undefined
     : await fileMovieAccess(initialContext, mediaIds);
-  if (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
+  if (
+    await reopenLegacyClaimProtection(
+      initialContext.db,
+      mediaIds,
+      (tx, selected) =>
+        assertHistoricalMovieRetention(
+          tx,
+          { mediaIds: selected, decisionId },
+          budget,
+        ),
+    )
+  )
     throw new PendingLegacyClaimsError(mediaIds);
   const context = await prepareRemovalProof(invocation, plan);
   originalFreshness?.assertActive();

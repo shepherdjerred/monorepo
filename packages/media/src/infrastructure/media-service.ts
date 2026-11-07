@@ -1,6 +1,14 @@
 import type { MediaActor } from "#application/auth.ts";
 import { requireOwner } from "#application/errors.ts";
 import type { MediaApplication } from "#application/ports.ts";
+import type { MovieLifecycleApplicationV4 } from "#application/movie-lifecycle-ports-v4.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  readMovieEditionContextV4,
+  readMovieEditionRequestsV4,
+} from "./movie-editions/lifecycle/public/public-view.ts";
+import { readMovieTargetContextV4 } from "./movie-editions/lifecycle/target-view.ts";
 import { PrismaMediaCommands } from "./commands.ts";
 import type { MediaCommandSettings } from "./command-base.ts";
 import type { Database } from "./database.ts";
@@ -27,10 +35,11 @@ import {
   readMovieEditionContext,
   readMovieEditionRequests,
 } from "./movie-editions/view.ts";
+import { captureMovieActionAccessV4 } from "./movie-editions/lifecycle/public/public-access.ts";
 
 export class PrismaMediaApplication
   extends PrismaMediaCommands
-  implements MediaApplication
+  implements MediaApplication, MovieLifecycleApplicationV4
 {
   constructor(
     private readonly db: Database,
@@ -52,6 +61,60 @@ export class PrismaMediaApplication
   }
   private readonly visibilitySections: VisibilitySections | undefined;
   private readonly visibilityPlexAccess: VisibilityPlexAccess | undefined;
+
+  async getMovieEditionContextV4(
+    actor: MediaActor,
+    mediaId: string,
+    subjectUserId: string,
+  ) {
+    const budget = new PublicationAuthorityReadBudget();
+    const access = await this.configuredMovieChoiceAccess();
+    return repeatableRead(this.db, (tx) =>
+      readMovieEditionContextV4(
+        tx,
+        actor,
+        { mediaId, subjectUserId, access },
+        budget,
+      ),
+    );
+  }
+
+  async listMovieEditionRequestsV4(
+    actor: MediaActor,
+    input: { subjectUserId: string; cursor: string | null },
+  ) {
+    const budget = new PublicationAuthorityReadBudget();
+    const access = await captureMovieActionAccessV4(
+      this.settings,
+      () => this.configuredMovieChoiceAccess(),
+      "keep",
+    );
+    return repeatableRead(this.db, (tx) =>
+      readMovieEditionRequestsV4(
+        tx,
+        actor,
+        { ...input, access: access.choice, protection: access.protection },
+        budget,
+      ),
+    );
+  }
+
+  async getMovieTargetContextV4(actor: MediaActor, scope: MovieEditionScope) {
+    const budget = new PublicationAuthorityReadBudget();
+    const access = await captureMovieActionAccessV4(
+      this.settings,
+      () => this.configuredMovieChoiceAccess(),
+      "keep",
+    );
+    return repeatableRead(this.db, (tx) =>
+      readMovieTargetContextV4(
+        tx,
+        actor,
+        { scope, access: access.choice, protection: access.protection },
+        budget,
+      ),
+    );
+  }
 
   async getMovieEditionContext(
     actor: MediaActor,

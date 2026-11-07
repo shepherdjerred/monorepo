@@ -1,3 +1,4 @@
+import { PublicationAuthorityReadBudget } from "@shepherdjerred/media/publication-authority-budget";
 import type { MediaNetworkActivities } from "@shepherdjerred/media/automation";
 import type { PlexEventActivities } from "@shepherdjerred/media/plex-events";
 import type { PlexBindingExecution } from "@shepherdjerred/media/plex-binding";
@@ -15,6 +16,7 @@ type Runtime = {
     [K in keyof Activities]: (
       input: Parameters<Activities[K]>[0],
       execution: PlexBindingExecution,
+      budget: PublicationAuthorityReadBudget,
     ) => ReturnType<Activities[K]>;
   };
 };
@@ -27,26 +29,33 @@ export function createPlexWatchActivities(
     evaluateMediaRetention: (input) =>
       mediaCall(async () => {
         const execution = plexBindingExecution();
+        const budget = new PublicationAuthorityReadBudget();
         execution.assertActive();
         const runtime = await load();
         execution.assertActive();
-        return runtime.plexWatch.evaluateMediaRetention(input, execution);
+        return runtime.plexWatch.evaluateMediaRetention(
+          input,
+          execution,
+          budget,
+        );
       }),
     sweepMediaWork: (input) =>
       mediaCall(async () => {
         const execution = plexBindingExecution();
+        const budget = new PublicationAuthorityReadBudget();
         execution.assertActive();
         const runtime = await load();
         execution.assertActive();
-        return runtime.plexWatch.sweepMediaWork(input, execution);
+        return runtime.plexWatch.sweepMediaWork(input, execution, budget);
       }),
     observePlexEventHint: (input) =>
       watchCall(async () => {
         const execution = plexBindingExecution();
+        const budget = new PublicationAuthorityReadBudget();
         execution.assertActive();
         const runtime = await load();
         execution.assertActive();
-        return runtime.plexWatch.observePlexEventHint(input, execution);
+        return runtime.plexWatch.observePlexEventHint(input, execution, budget);
       }),
   };
 }

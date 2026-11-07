@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { z } from "zod";
 import type { MediaUser } from "#shared/contract.ts";
 import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
+import type { NativeRecoveryDetailProtocolSchema } from "#shared/native-recovery/series-pack/detail.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { writeApi } from "#client/api.ts";
 import { nativeReviewAcknowledged } from "./acknowledgement.ts";
@@ -16,9 +17,10 @@ export function useNativeReviewApproval(input: {
   return useMutation({
     mutationFn: async () => {
       const review = queryClient.getQueryData<
-        z.infer<typeof NativeLifecycleDetailSchema>
+        z.infer<typeof NativeRecoveryDetailProtocolSchema>
       >(["native-recovery-detail", input.id]);
       if (
+        (review !== undefined && "protocol" in review) ||
         !nativeReviewAcknowledged(input.acknowledgement, review) ||
         review?.planHash == null
       )

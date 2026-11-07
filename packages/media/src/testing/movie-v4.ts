@@ -2,8 +2,8 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MovieLifecycleCommands } from "#infrastructure/movie-editions/lifecycle/commands.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
-import { MovieRequestV4Schema } from "#shared/movie-editions/lifecycle-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+import { MovieRequestV4Schema } from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
 import { z } from "zod";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 

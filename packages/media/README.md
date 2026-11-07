@@ -54,7 +54,31 @@ Plex access has a process-local expiry guard checked after final awaited work,
 alongside the existing storage and execution deadlines. Previously committed
 receipts and exact recorded compensation retain their separate recovery paths.
 
-The internal v4 movie producer appends `MovieReleaseAssessment` records rather
+The version-4 public movie API starts exact-edition acquisition for new choices.
+The UI uses it for requests, cancellation, choice revocation and edition lifecycle
+actions. Existing version-3 choices need an explicit activation of the same
+request, immutable choice and revision; activation preserves their original
+command acknowledgements. An uncertain browser response retries the original
+reviewed command, while a version conflict requires another review.
+
+| Route                                                              | Contract                                                                                                                                |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v4/media/:id/movie-edition-context`                      | Current choices, activation requirements and admission reasons.                                                                         |
+| `GET /api/v4/movie-requests`                                       | Paginated exact-edition fulfillment and personal protections, including redacted rows when library access is unavailable.               |
+| `GET /api/v4/media/:id/movie-editions/:edition`                    | Edition state, own holds, allowed actions, safe file/caption summary, bounded recorded transfer history and owner removal confirmation. |
+| `POST /api/v4/media/:id/movie-requests`                            | New explicit edition choice and scoped acquisition intent.                                                                              |
+| `POST /api/v4/media/:id/movie-requests/:requestId/activate-choice` | Start the exact existing saved choice after current permission and version checks.                                                      |
+| `POST /api/v4/media/:id/movie-requests/:requestId/cancel`          | Cancel the exact personal request, including older requests without a saved choice.                                                     |
+| `POST /api/v4/media/:id/movie-requests/:requestId/revoke-choice`   | Clear the live choice while preserving request protection and immutable history.                                                        |
+| `POST /api/v4/media/:id/movie-editions/:edition/actions`           | Scoped Keep, pin, unpin, restore, removal, retry and release selection.                                                                 |
+
+Owner removal reviews the selected edition's complete current file set and moves
+its video and owned captions to recoverable quarantine. It does not authorize
+permanent deletion without retention consent. Owner-only Keep and pin preserve
+quarantine when no personal or library demand remains; an explicit Restore can
+restore those bytes without manufacturing a personal request or monitoring policy.
+
+The v4 movie producer appends `MovieReleaseAssessment` records rather
 than replacing provider snapshots. Each assessment binds the original source
 digest, one movie edition, canonical metadata, parser version and immutable
 quality-profile version. This allows a result previously rejected by the older
@@ -64,7 +88,7 @@ acquisition receipts. PostgreSQL protects both the assessment and its referenced
 provider snapshot from modification. Concurrent equivalent observations reuse
 the first literal assessment; profile or catalog changes create another record.
 Version-2 movie acquisition identities bind an exact assessment ID and hash.
-These contracts are internal; the public v3 routes above retain their behavior.
+These assessment contracts are internal; the public v3 routes above retain their behavior.
 
 Scoped v4 acquisition commands dispatch to dedicated movie coordinators. Discovery,
 reservation and transfer observation run on the Network queue; inspection,
@@ -100,6 +124,31 @@ requester cohort, holds and current serving binding. Each requester needs a
 fulfilled choice for that cut and fresh authenticated watch evidence. Requests
 and holds for another edition retain their own authority. Unclaimed files and
 unresolved household request-history holds remain protected.
+
+Version-3 movie history reviews address one exact cut of an adopted
+library movie. They reuse the existing recovery review, response and release
+tables, with distinct scope and accounting envelopes. Each applicable household
+member supplies their own declaration; a current owner may act for a verified
+managed profile. Requests, edition choices, cancellations and Keep decisions must
+already exist through their actual commands before the review captures them.
+Releasing a review creates none of those decisions. It clears only the selected
+history hold, advances that target's generation, cancels its stale removal
+warnings and queues scoped retention evaluation. Library monitoring, physical
+ownership, Plex binding and original adoption records remain unchanged.
+Optional Seerr claims require actual requester identity bindings and exact-cut
+accounting; unresolved claims continue to protect the file. Independent accounts
+map to their confirmed server account with no managed Home-profile identity.
+Historical unversioned and version-2 recovery scopes retain their original
+readers and cannot consume the version-3 accounting envelope.
+
+The owner opens household history from the selected movie edition. Each person
+finds their pending declarations in Recovery review, with only their own captured
+request, choice and Keep lineage. The review page is `/recovery/movies/:id`.
+Declarations are immutable; changed requests or protections need a new capture.
+The owner releases the exact reviewed household response set after confirming
+the missing-history baseline and existing pins. Unknown browser writes retain
+their original actor, scope, body and idempotency key across a background refresh.
+
 Version-4 removal warnings retain the selected edition and original decision's
 Plex projection. Delivery rechecks watch evidence, Keep, generation and configured
 access after its durable claim. Receipt reconciliation preserves the original
@@ -158,6 +207,60 @@ only its recorded inverse, preserving the downloaded source. Scope, current
 consent, profile, storage authority and the original execution deadline are
 checked before new effects. Provenance reads share one 100-record allowance
 across the invocation. File publication alone does not prove Plex availability.
+
+New scoped movie acquisition histories call `prepareMoviePublicationV4` after
+staging, then publish through the existing Files Activity. Preparation commits
+the same literal version-2 intent and complete predecessor/caption authority
+without changing library assets or captions. Publication rechecks current
+authority and follows that exact committed intent. Each actual Activity retains
+its own original SDK deadline and one 100-record allowance; neither phase resets
+an allowance within an invocation. The `movie-publication-preparation-v1` history
+marker preserves the original Activity sequence for older executions.
+
+The `movie-publication-rollback-v1` acquisition history branch uses
+`publishMovieWithRollbackV4` to retain an actual protected Plex observation before
+requesting rollback. Files first commits private rollback admission, then a
+separate Activity restores the predecessor through the existing causal file
+journal. Both phases carry the actual Workflow and run identity and their own
+original SDK capability and provenance allowance. A missing negative observation
+or a successful successor Plex receipt protects automatic rollback. The original
+acquisition, publication outcome, Plex receipts and publication timestamps remain
+literal. Fresh Network verification must prove the predecessor's original item
+and Part before restoring serving authority; the failed upgrade remains blocked.
+Recorded rollback admission routes retries through inverse recovery before any
+forward publication. Histories preceding this marker keep their recorded
+publisher and failure behavior.
+
+The separate owner command `rollback_movie_edition_v1` reviews the currently
+served successor, its retained predecessor, the exact Plex binding and the
+original cleanup window. `PrismaMovieRollbackCommandsV1` checks the current
+owner's own Plex permissions and compares those reviewed versions before
+queuing a new operation. It does not borrow the upgrade requester's consent or
+extend the cleanup deadline. The private command retains the reason and review;
+the `rollbackMovieEditionV1Workflow` outbox projection carries only its new
+operation ID, source attempt ID and movie scope. The workflow requires fresh
+Network playback observations before admission and again before physical
+restoration. Files admission must win the original cleanup race before any
+inverse effects. Completion belongs to this
+new owner command, while the original successful acquisition remains literal.
+
+The owner opens **Recover the previous file for this edition** from the selected
+movie's controls. `GET /api/v4/media/:id/movie-editions/:edition/rollback`
+returns the eligible file pair and its original deadline; the matching `POST`
+requires that exact review, a reason and separate confirmations to restore the
+predecessor and retain the rejected successor. A queued command is shown as in
+progress before Files admission. Unknown executor state remains protected.
+Browser retries retain the original actor, reviewed body and idempotency key;
+a changed pair or binding requires a fresh review.
+
+An admitted rollback can resume after its exact previous Workflow run reaches
+a terminal state. Owner retry creates a distinct command and executor, with an
+immutable handoff event and a compare-and-swap of the original operation's
+current executor. Running or unknown runs remain protected. Each Activity
+rechecks current permissions and playback under its own SDK deadline; the
+original intent, file journal, acquisition history and cleanup window remain
+unchanged. An interrupted automatic rollback also requires a fresh complete
+playback observation before the owner resumes its inverse.
 
 The internal v4 Plex publisher verifies complete stable server inventories and
 exact metadata readbacks before advancing the selected edition's availability.
@@ -593,6 +696,12 @@ They exclude request and torrent captures, associations and requester inventory.
 Proposed source/canonical roots remain unverified until the trusted handoff
 observer proves the actual mounts. Earlier complete-bundle bodies and hashes
 retain their original format and source requirements.
+
+Handoff Files workers resolve the approved canonical paths through the existing
+worker path mapping for hashing, probes, sidecar discovery and native file locks.
+The approved paths, reports and hashes remain canonical; file identities describe
+the actual local files. Each mapped path must round-trip to its approved library
+root before use. Workers without a mapping retain direct path access.
 
 The owner screen builds this library-only report from selected captures and
 explicit source/Media root paths. After approving the canonical mappings, select
@@ -1040,6 +1149,13 @@ uncertain original add is observed and registered before current demand is
 checked, preserving independent seeding responsibility after cancellation. Retry
 does not add another torrent. Prepared publications require their separate
 continuation authority and are protected from this initial retry protocol.
+That continuation retains the exact stored plan and any existing publication
+intent, including its original attempt snapshot hash. An imported physical
+outcome resumes at Plex without repeating Files work or inventing a live torrent
+observation. If Plex already committed, recovery finalizes its exact original
+input without changing the acquisition coordinator. A new completed Retry finds
+that history through the exact current Plex binding, without recreating a
+reservation or selecting an arbitrary previous attempt.
 
 Scoped movie acquisition failures queue distinct personal and owner intervention
 notices from the actual failed command. Personal delivery retains the original
@@ -1067,8 +1183,12 @@ separate AnimeZ parameters. Readers retain the source-row count for pagination,
 reject oversized pages and keep private download URLs inside Activities. The
 periodic sweep captures encrypted source snapshots, immutable page receipts and
 resumable per-provider checkpoints together. Matching runs in bounded pages on
-the Network worker, checks current exact-title/cut/quality and requester authority,
-and queues proposals through the existing acquisition paths. Workflow histories
+the Network worker, checks current exact-title/cut/quality and acquisition authority,
+and queues proposals through the existing acquisition paths. Monitored adopted
+movies and individual TV episodes use their actual library-management approval
+and current owner permissions, without creating a personal request. Selection
+and commit share the invocation's original deadline and provenance allowance;
+revoked management authority cannot queue an acquisition. Workflow histories
 carry source IDs and cursors rather than private releases. A first pass captures
 the current page; later passes page back to the previous retained head. Disabled
 automation pauses capture and matching. Provider status distinguishes received,
@@ -1256,6 +1376,9 @@ to an immutable artifact by Delivery before rendering a deployment.
 The [API](src/server/index.ts) commits intent and an outbox row together. The
 [outbox dispatcher](src/automation/store.ts) starts workflows using stable IDs;
 a failed Temporal connection leaves the command available for later delivery.
+Command creation and default outbox availability use UTC timestamps independently
+of the database session timezone. Explicit future scheduling retains its supplied
+instant; correcting defaults does not reschedule existing commands.
 The UI reads PostgreSQL projections rather than querying workflow histories.
 
 [Temporal workflows](../temporal/src/workflows/media/core.ts) carry identifiers.
@@ -1343,8 +1466,36 @@ specials. Full canonical and explicitly mapped absolute filenames retain their
 existing interpretation; recorded version-1 plans and movie evidence keep their
 original formats and revalidation behavior.
 
-Requested-edition selection is unavailable; attributed edition text alone
-does not define an edition target or permit replacing a different edition.
+An explicit multi-season source such as `S01-S02` uses a separately retained
+`assess_series_pack_v1` interpretation. It binds the original provider bytes,
+complete bounded canonical seasons and current profile while preserving the
+cached release's original attributes. Only an acquisition carrying that exact
+interpretation can use the derived coverage; identity review does not override
+missing consent, quality, or complete physical groups.
+
+The bounded pack protocol stages up to four physical videos per Files Activity.
+Every batch checks permission for the complete original episode set. Actual
+prepared and completed Operations retain member descriptors and staged journals;
+a separate seal assembles the complete, disjoint FilePlan. The first immutable
+ready observation keeps its literal body and hash. Later observations may refresh
+ratio, seeding time and transfer state while retaining the exact member inventory,
+ownership, paths and native seeding policy.
+
+Publication prepares up to four entries per Activity, then seals a complete
+version-3 intent before the first forward effect. Physical batches extend one
+causal journal. A final transaction publishes all database assets and the whole
+outcome, using actual create/update acknowledgements and SQL checks against the
+prepared inventory. While that intent is pending, current playback, cold Plex
+verification, subtitle readiness, notifications and competing mutations remain
+protected. Recorded inverse batches settle unfinished physical effects under
+their own completed seal. Each Activity retains its original execution deadline
+and one provenance allowance, including known SQL parent reads. Existing
+version-1 callers and recorded Workflow histories retain their publication
+protocol; transaction-held snapshot reuse remains bound to the exact transaction,
+allowance and locked asset set.
+
+Attributed edition text alone does not define an edition target or permit
+replacing a different edition; the explicit movie choice supplies that scope.
 
 To produce a repeatable read-only import report from a saved nonsecret snapshot:
 
@@ -1494,6 +1645,26 @@ select the current subtitle and candidate, prepare the file review, and approve
 its exact observation and version. Only the same video, destination and subtitle
 format are supported; embedded, unowned, cross-epoch and ambiguous files remain
 protected. The video's version does not change.
+
+The movie replacement protocol uses a separate schema2 admission for
+all registered cuts. `PrismaMovieSubtitleReplacements` binds owner upload and
+review to the exact cut, current caption demand, unchanged video and actual
+adoption, restoration, installation or prior replacement receipt. Files retains
+the original Activity capability and caller-owned 100-record provenance budget
+through the native swap. Its immutable receipt records both caption transitions,
+the completed journal and original source; later publication and retention follow
+the actual installation-to-replacement ancestry. An accepted replacement can
+satisfy current caption targets and produce a personal ready notice from its own
+receipt, with the existing readiness cohort dedupe and historical acknowledgement.
+Owners select the edition's installed sidecar on the movie page, upload a
+candidate and open its exact replacement review. The authenticated routes are
+`GET /api/v2/media/:id/movie-editions/:edition/subtitle-target`,
+`POST /api/v2/media/:id/movie-editions/:edition/subtitle-replacements/candidates`
+and `POST /api/v2/media/:id/movie-editions/:edition/subtitle-replacements`.
+The shared review displays the movie edition and binds approval to its current
+version and observation hash. An acknowledged preparation opens that review;
+it does not reselect the reserved video. Historical schema1 replacement inputs,
+receipts and default administration retain their original meaning.
 
 An unsettled replacement reserves the video against concurrent file lifecycle
 changes and ordinary subtitle installation. Reconcile an expired or abandoned
@@ -1741,6 +1912,15 @@ proof; they do not modify the original compensation receipt. The same proof
 participates in later video upgrades, native rebaselines and archive review.
 Compensation does not renew an old subtitle policy: replacement still requires
 a current requested target and reconciled policy authority.
+
+For per-episode TV files, the owner can retry physical restoration or Plex
+publication through the same interrupted-upgrade review. The retry observes the
+exact previous executor's terminal run before atomically selecting a new
+coordinator. It retains the original admission, inverse namespace, file journal,
+completed restoration and deadlines. A running or unknown executor protects the
+group. The effect Workflow receives only `schemaVersion`, `continuationId`,
+`operationId` and `recoveryEpoch`; private completion and binding evidence stay
+in PostgreSQL and the Activity process.
 
 Uncertain filesystem journals, unproved storage replacements
 and unresolved subtitle neighbors remain protected and require their separate

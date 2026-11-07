@@ -1,16 +1,16 @@
 import type { Prisma, RetentionDecision } from "#generated/prisma/client.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { FileGuardError } from "#automation/files/types.ts";
-import {
-  hasPendingLegacyClaims,
-  LEGACY_CLAIM_PROTECTION,
-} from "#infrastructure/recovery/legacy-claims/protection.ts";
+import { LEGACY_CLAIM_PROTECTION } from "#infrastructure/recovery/legacy-claims/protection.ts";
+import { hasPendingMovieLegacyClaimsV3 } from "#infrastructure/recovery/legacy-claims/movie/protection.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function assertMovieQuarantineLegacyClaims(
   tx: Prisma.TransactionClient,
-  mediaId: string,
+  input: { scope: MovieEditionScope; epoch: number },
+  budget: PublicationAuthorityReadBudget,
 ) {
-  if (await hasPendingLegacyClaims(tx, [mediaId]))
+  if (await hasPendingMovieLegacyClaimsV3(tx, input, budget))
     throw new FileGuardError(LEGACY_CLAIM_PROTECTION);
 }
 

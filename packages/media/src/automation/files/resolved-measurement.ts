@@ -1,18 +1,20 @@
 import type { ReleaseAttributes } from "#shared/contract.ts";
 import type { FileContext } from "./types.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
-import {
-  collectResolvedEvidence,
-  prepareResolvedEvidence,
-} from "#migration/runtime-evidence.ts";
+import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
 import type { ResolvedProfile } from "#domain/resolved-contract.ts";
 import type { ResolvedEvidence } from "#domain/resolved-evidence.ts";
+import {
+  prepareFileResolvedEvidenceV1,
+  type SeriesPackMeasurementV1,
+} from "./series-pack/measurement.ts";
 
 /** Run bounded external matching before any final PG lock or filesystem mutation. */
 export async function measureResolvedEvidence(input: {
   context: FileContext;
   measured: ReleaseAttributes;
   filename: string;
+  seriesPack?: SeriesPackMeasurementV1;
 }): Promise<void> {
   const { context, measured, filename } = input;
   const intents = await context.db.mediaIntent.findMany({
@@ -23,7 +25,7 @@ export async function measureResolvedEvidence(input: {
     if (intent.profile === null) continue;
     const profile = QualityRulesSchema.parse(intent.profile.rules).resolved;
     if (profile === undefined) continue;
-    const prepared = prepareResolvedEvidence(profile, {
+    const evidenceInput = {
       id: measured.id,
       title: measured.title,
       filename,
@@ -43,6 +45,10 @@ export async function measureResolvedEvidence(input: {
           ? null
           : [...measured.audioLanguages],
       specialEpisode: intents.every((item) => item.media.seasonNumber === 0),
+    };
+    const prepared = prepareFileResolvedEvidenceV1(profile, evidenceInput, {
+      seriesPack: input.seriesPack,
+      mediaIds: measured.mediaIds,
     });
     measureQuality(profile, prepared, measured.quality);
     const evidence = await collectResolvedEvidence(profile, prepared);

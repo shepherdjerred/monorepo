@@ -15,10 +15,8 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
-import {
-  assertNativeEvidenceFresh,
-  installNativeAuthority,
-} from "#automation/native-recovery/authority.ts";
+import { installNativeAuthority } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";

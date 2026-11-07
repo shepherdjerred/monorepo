@@ -6,7 +6,7 @@ import {
   type NativeArchiveBinding,
 } from "#shared/native-recovery/archive.ts";
 import type { PublicationAuthorityReference } from "#shared/publication-proof/references.ts";
-import { PublicationOutcomeSchema } from "#shared/publication-proof/outcome.ts";
+import { decodeOrdinaryPublicationOutcome } from "#infrastructure/publication-proof/outcome-version.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
@@ -232,7 +232,7 @@ export async function archiveAuthorityParticipants(
   const row = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: reference.transitionId },
   });
-  const outcome = PublicationOutcomeSchema.parse(row.outcome);
+  const outcome = decodeOrdinaryPublicationOutcome(row.outcome);
   const entry = outcome.entries.find(
     (item) =>
       item.predecessor?.id === reference.assetId ||

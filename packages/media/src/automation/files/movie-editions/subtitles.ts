@@ -194,6 +194,8 @@ export async function installMovieSubtitlesV4(
         guards: [preparedAuthority, storage, work.freshness],
       });
       await bindPlexTransactionDeadline(tx, freshness);
+      if (publication.kind === "movie_rollback_publication_v1")
+        budget.consume(1);
       const manifest = await fileOperations(
         context,
         { ...staged.roots, downloads: staged.roots.control },

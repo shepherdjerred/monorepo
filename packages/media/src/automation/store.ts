@@ -4,6 +4,9 @@ import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { isRetryableTransaction } from "#infrastructure/locks.ts";
 import { queueIntervention } from "./notifications/interventions.ts";
 import { routeNativeQuarantineOperation } from "#infrastructure/native-quarantine/continuation.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { requestedMovieRollbackOutboxInputV1 } from "#automation/movie-editions/rollback/outbox-input.ts";
+import { seriesPackNativeEffectOutboxInputV1 } from "#automation/native-compensation/series-pack/outbox.ts";
 
 export type WorkflowStart = {
   workflowType: string;
@@ -20,11 +23,15 @@ export async function queueOperation(
     targetId: string;
     userId?: string;
     payload: Prisma.InputJsonObject;
+    budget?: PublicationAuthorityReadBudget;
+    availableAt?: Date;
+    createdAt?: Date;
   },
 ): Promise<string> {
   const existing = await db.operation.findUnique({
     where: { idempotencyKey: input.key },
   });
+  input.budget?.consume(existing === null ? 0 : 1);
   if (existing !== null) return existing.id;
   const id = crypto.randomUUID();
   const route = await routeNativeQuarantineOperation(db, input);
@@ -44,9 +51,21 @@ export async function queueOperation(
       idempotencyKey: input.key,
       kind,
       targetId: input.targetId,
+      ...(input.createdAt === undefined ? {} : { createdAt: input.createdAt }),
       ...(input.userId === undefined ? {} : { userId: input.userId }),
       payload,
-      outbox: { create: { kind, payload } },
+      outbox: {
+        create: {
+          kind,
+          payload,
+          ...(input.createdAt === undefined
+            ? {}
+            : { createdAt: input.createdAt }),
+          ...(input.availableAt === undefined
+            ? {}
+            : { availableAt: input.availableAt }),
+        },
+      },
     },
   });
   if (route !== null)
@@ -62,6 +81,15 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_series_pack_native_compensation_v1:
+    "prepareSeriesPackNativeCompensationV1Workflow",
+  apply_series_pack_native_compensation_v1:
+    "applySeriesPackNativeCompensationV1Workflow",
+  compensate_series_pack_native_publication_v1:
+    "compensateSeriesPackNativePublicationV1Workflow",
+  publish_series_pack_native_compensation_v1:
+    "publishSeriesPackNativeCompensationV1Workflow",
+  rollback_movie_edition_v1: "rollbackMovieEditionV1Workflow",
   retain_movie_edition_v4: "retainMovieEditionV4Workflow",
   restore_movie_edition_v4: "restoreMovieEditionV4Workflow",
   observe_movie_plex_hint_v4: "observeMoviePlexHintV4Workflow",
@@ -69,6 +97,7 @@ const workflowTypes: Readonly<Record<string, string>> = {
   reconcile_movie_edition_v4: "reconcileMovieEditionV4Workflow",
   acquire_movie_edition_v4: "reconcileMovieEditionV4Workflow",
   match_provider_feed_source_v1: "matchProviderFeedSourceWorkflow",
+  match_series_pack_feed_source_v1: "matchSeriesPackFeedSourceWorkflow",
   reverify_plex_binding: "reverifyPlexBindingWorkflow",
   verify_library_plex_binding: "verifyLibraryPlexBindingWorkflow",
   prepare_native_compensation: "prepareNativeCompensationWorkflow",
@@ -135,11 +164,22 @@ export function createOutboxActivities(
           Array.isArray(payload)
         )
           throw new TypeError("Media command payload must be an object");
+        const workflowInput =
+          command.kind === "rollback_movie_edition_v1"
+            ? requestedMovieRollbackOutboxInputV1(payload, command.operationId)
+            : command.kind === "compensate_series_pack_native_publication_v1" ||
+                command.kind === "publish_series_pack_native_compensation_v1"
+              ? seriesPackNativeEffectOutboxInputV1(
+                  command.kind,
+                  payload,
+                  command.operationId,
+                )
+              : payload;
         try {
           await start({
             workflowType,
             workflowId: `media-operation-${command.operationId}`,
-            input: payload,
+            input: workflowInput,
           });
           await database.outboxCommand.updateMany({
             where: { id: command.id, dispatchedAt: null },

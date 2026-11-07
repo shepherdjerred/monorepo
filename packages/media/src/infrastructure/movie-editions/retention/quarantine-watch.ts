@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Prisma, type Operation } from "#generated/prisma/client.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieQuarantinePlexReceiptV2Schema } from "#shared/movie-editions/quarantine-v2.ts";
 import {
   QuarantinePlexRefV2Schema,
@@ -406,6 +406,8 @@ export async function queueMovieQuarantinedWatchRestore(
     key,
     kind: "restore_movie_edition_v4",
     targetId: scope.mediaId,
+    createdAt: new Date(),
+    availableAt: new Date(),
     payload: {
       schemaVersion: 4,
       scope,

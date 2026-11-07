@@ -125,15 +125,15 @@ BEGIN
     AND group_value->'ownershipEpoch'=to_jsonb(asset."ownershipEpoch") AND group_value->'ownershipEpoch'=expected->'recoveryEpoch'
     AND group_value->>'canonicalRootId'=selected->>'rootMediaId' AND group_value->>'edition'=selected->>'edition'
     AND group_value->'coverage'=jsonb_build_array(selected-'rootMediaId')
-    AND (asset."plexPublishedAt") IS NOT DISTINCT FROM (proof->>'assetPlexPublishedAt')::timestamptz
+    AND (asset."plexPublishedAt") IS NOT DISTINCT FROM ((proof->>'assetPlexPublishedAt')::timestamptz AT TIME ZONE 'UTC')
     AND target.availability='available' AND target."desiredPresence" AND target.monitoring AND target."intentionallyRemovedAt" IS NULL
     AND target."editionRootId"=selected->>'rootMediaId' AND to_jsonb(target.generation)=proof #> '{input,generation}'
     AND to_jsonb(target.version)=expected #> '{targets,0,intentVersion}'
     AND to_jsonb(target."automationEpoch")=expected->'recoveryEpoch' AND to_jsonb(runtime."recoveryEpoch")=expected->'recoveryEpoch'
     AND runtime.mode='active' AND runtime."ownershipConfirmed"
     AND writer."revokedAt" IS NULL AND writer."recoveryEpoch"=runtime."recoveryEpoch"
-    AND writer."observedAt"<=clock_timestamp() AND writer."expiresAt">clock_timestamp()
-    AND writer."expiresAt"=(proof->>'writerExpiresAt')::timestamptz
+    AND writer."observedAt"<=(clock_timestamp() AT TIME ZONE 'UTC') AND writer."expiresAt">(clock_timestamp() AT TIME ZONE 'UTC')
+    AND writer."expiresAt"=((proof->>'writerExpiresAt')::timestamptz AT TIME ZONE 'UTC')
     AND evidence.evidence=association AND evidence."associationHash"=binding->>'associationHash'
     AND evidence."assetId"=asset.id AND evidence."mediaId"=NEW."targetId" AND evidence.edition=selected->>'edition'
     AND evidence."serverMachineId"=association #>> '{access,serverMachineId}'
@@ -141,7 +141,8 @@ BEGIN
     AND EXISTS (SELECT 1 FROM "MediaIntent" WHERE "mediaId"=NEW."targetId" AND edition=selected->>'edition' AND xmin::text=(txid_current()%4294967296)::text)
     AND EXISTS (SELECT 1 FROM "PlexBindingCurrent" p WHERE p."mediaId"=NEW."targetId" AND p.edition=selected->>'edition'
       AND p."evidenceId"=evidence.id AND p."associationHash"=evidence."associationHash" AND to_jsonb(p.revision)=binding->'revision'
-      AND p."verifiedStartedAt"=(verification->>'startedAt')::timestamptz AND p."verifiedCompletedAt"=(verification->>'completedAt')::timestamptz
+      AND p."verifiedStartedAt"=((verification->>'startedAt')::timestamptz AT TIME ZONE 'UTC')
+      AND p."verifiedCompletedAt"=((verification->>'completedAt')::timestamptz AT TIME ZONE 'UTC')
       AND p.xmin::text=(txid_current()%4294967296)::text),false)
   THEN RAISE EXCEPTION 'Movie restore Plex completion lacks its same-transaction actual association and scoped pointer'; END IF;
   SELECT * INTO STRICT claim FROM "PlexClaimGroup" WHERE "serverMachineId"=evidence."serverMachineId" AND "group"=group_value;

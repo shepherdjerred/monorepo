@@ -11,6 +11,7 @@ import {
 import {
   MovieUpgradeCleanupPlexExpectedV2Schema,
   MovieRestoredUpgradeCleanupPlexExpectedV3Schema,
+  MovieRolledBackUpgradeCleanupPlexExpectedV4Schema,
 } from "#shared/plex-binding/cleanup.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -94,7 +95,12 @@ export async function captureMovieUpgradeCleanupExpected(
     ]),
   ].sort();
   const expected = {
-    schemaVersion: serving.expected.schemaVersion === 3 ? 3 : 2,
+    schemaVersion:
+      serving.expected.schemaVersion === 4
+        ? 4
+        : serving.expected.schemaVersion === 3
+          ? 3
+          : 2,
     scope,
     operationId: operation.id,
     cleanupId: cleanup.id,
@@ -138,9 +144,11 @@ export async function captureMovieUpgradeCleanupExpected(
       await cleanupAuthorityDeadline(tx, cleanup.recoveryEpoch, access),
     ).toISOString(),
   };
-  return serving.expected.schemaVersion === 3
-    ? MovieRestoredUpgradeCleanupPlexExpectedV3Schema.parse(expected)
-    : MovieUpgradeCleanupPlexExpectedV2Schema.parse(expected);
+  return serving.expected.schemaVersion === 4
+    ? MovieRolledBackUpgradeCleanupPlexExpectedV4Schema.parse(expected)
+    : serving.expected.schemaVersion === 3
+      ? MovieRestoredUpgradeCleanupPlexExpectedV3Schema.parse(expected)
+      : MovieUpgradeCleanupPlexExpectedV2Schema.parse(expected);
 }
 
 function assertMovieCleanupParent(input: {

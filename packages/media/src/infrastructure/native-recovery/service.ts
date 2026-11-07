@@ -47,6 +47,11 @@ import {
   type PrepareNativeCompensationSchema,
   ApplyNativeCompensationSchema,
 } from "#shared/native-recovery/compensation.ts";
+import { PrismaSeriesPackNativeCompensationV1 } from "#infrastructure/native-compensation/series-pack/service.ts";
+import { retryNativeCompensationCommand } from "#infrastructure/native-compensation/retry-command.ts";
+import { seriesPackNativeCommandInvocationV1 } from "#infrastructure/native-compensation/series-pack/command-invocation.ts";
+import { seriesPackNativeDetailV1 } from "#infrastructure/native-compensation/series-pack/view.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 export class PrismaNativeRecovery extends MediaCommandBase {
   constructor(
@@ -55,16 +60,32 @@ export class PrismaNativeRecovery extends MediaCommandBase {
   ) {
     super(db, { keepDays: 30 });
   }
-  prepareCompensation(
+  async prepareCompensation(
     actor: MediaActor,
     key: string,
     input: z.input<typeof PrepareNativeCompensationSchema>,
   ) {
-    return new PrismaNativeCompensation(this.db, this.describe).prepare(
-      actor,
-      key,
-      input,
+    const invocation = seriesPackNativeCommandInvocationV1();
+    requireOwner(actor);
+    const selected = await this.db.mediaPublicationTransition.findUniqueOrThrow(
+      {
+        where: { id: input.transitionId },
+      },
     );
+    invocation.budget.consume(1);
+    return z.object({ schemaVersion: z.literal(3) }).safeParse(selected.intent)
+      .success
+      ? new PrismaSeriesPackNativeCompensationV1(this.db).prepare(
+          actor,
+          key,
+          input,
+          invocation,
+        )
+      : new PrismaNativeCompensation(this.db, this.describe).prepare(
+          actor,
+          key,
+          input,
+        );
   }
   retryCompensation(
     actor: MediaActor,
@@ -72,20 +93,24 @@ export class PrismaNativeRecovery extends MediaCommandBase {
     id: string,
     input: { expectedVersion: number },
   ) {
-    return new PrismaNativeCompensation(this.db, this.describe).retry(
+    return retryNativeCompensationCommand(this.db, this.describe, {
       actor,
       key,
       id,
-      input,
-    );
+      review: input,
+    });
   }
   async compensationInventory(actor: MediaActor, cursor: string | null = null) {
+    const invocation = seriesPackNativeCommandInvocationV1();
     requireOwner(actor);
     return this.db.$transaction(async (tx) => {
       await assertNativeOwner(tx, actor.id);
+      invocation.budget.consume(1);
       return compensationInventory(
         tx,
         cursor === null ? null : z.uuid().parse(cursor),
+        invocation.budget,
+        invocation.freshness,
       );
     });
   }
@@ -260,6 +285,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
     );
   }
   async detail(actor: MediaActor, id: string) {
+    const invocation = seriesPackNativeCommandInvocationV1();
     requireOwner(actor);
     return this.db.$transaction(async (tx) => {
       await assertNativeOwner(tx, actor.id);
@@ -273,6 +299,24 @@ export class PrismaNativeRecovery extends MediaCommandBase {
           "Native recovery plan does not exist",
           404,
         );
+      if (
+        z
+          .object({
+            schemaVersion: z.literal(3),
+            protocol: z.literal("series_pack_publication_v3"),
+          })
+          .safeParse(row.scope).success
+      ) {
+        invocation.budget.consume(2 + (row.receipt === null ? 0 : 1));
+        await bindPlexTransactionDeadline(tx, invocation.freshness);
+        const detail = await seriesPackNativeDetailV1(
+          tx,
+          row,
+          invocation.budget,
+        );
+        invocation.freshness.assertActive();
+        return detail;
+      }
       const continuations = await tx.nativeQuarantineContinuation.findMany({
         where: { receipt: { planId: id } },
         orderBy: { id: "asc" },
@@ -358,10 +402,27 @@ export class PrismaNativeRecovery extends MediaCommandBase {
       | z.input<typeof ApplyNativeRecoverySchema>
       | z.input<typeof ApplyNativeCompensationSchema>,
   ) {
+    const invocation = seriesPackNativeCommandInvocationV1();
     requireOwner(actor);
     const selected = await this.db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id },
     });
+    if (
+      z
+        .object({
+          schemaVersion: z.literal(3),
+          protocol: z.literal("series_pack_publication_v3"),
+        })
+        .safeParse(selected.scope).success
+    ) {
+      invocation.budget.consume(1);
+      return new PrismaSeriesPackNativeCompensationV1(this.db).apply(
+        actor,
+        key,
+        { planId: id, review: ApplyNativeCompensationSchema.parse(raw) },
+        invocation,
+      );
+    }
     const selectedScope = NativeStoredScopeSchema.parse(selected.scope);
     if (
       selectedScope.schemaVersion === 2 &&

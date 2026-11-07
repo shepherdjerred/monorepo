@@ -21,6 +21,8 @@ import { AssignProfile } from "./profile-controls.tsx";
 import { RequestTitle } from "./request-controls.tsx";
 import { MediaProgress } from "./media-progress/panel.tsx";
 import { MovieFulfillment } from "./movie-editions/fulfillment.tsx";
+import { MovieEditionControlsV4 } from "./movie-editions/target-controls-v4.tsx";
+import { MovieRequestForm } from "./movie-editions/request.tsx";
 import { useTarget } from "./target-controls/api.ts";
 import {
   ProtectionControls,
@@ -102,7 +104,7 @@ function MediaDetails({
         eyebrow={`${humanize(media.kind)}${media.year === null ? "" : ` · ${String(media.year)}`}`}
         title={media.title}
       >
-        <Status value={media.availability} />
+        <TitleAvailability media={media} />
       </PageTitle>
       {media.catalogState === "pending" && (
         <Notice>
@@ -110,8 +112,9 @@ function MediaDetails({
           matching episodes will be included as the catalog finishes updating.
         </Notice>
       )}
-      <MediaProgress visibility={media.visibility} />
+      <TitleProgress media={media} />
       <MovieFulfillment requests={media.visibility.movieRequests} />
+      <MovieFeatures key={media.id} user={user} media={media} />
       {!paired && (
         <Notice>
           <p>
@@ -125,7 +128,11 @@ function MediaDetails({
       )}
       <div className="detail-columns" inert={!paired}>
         <section className="panel">
-          <h2>In your library</h2>
+          <h2>
+            {media.kind === "movie"
+              ? "Unmarked edition in your library"
+              : "In your library"}
+          </h2>
           <dl className="facts">
             <div>
               <dt>Availability</dt>
@@ -149,14 +156,16 @@ function MediaDetails({
             </div>
           </dl>
           {profiles.error !== null && <ErrorNotice error={profiles.error} />}
-          <MediaControls
-            key={`controls:${media.id}`}
-            media={media}
-            user={user}
-            claimed={claimed}
-            context={context}
-          />
-          {(!claimed || media.kind === "movie") && (
+          {media.kind !== "movie" && (
+            <MediaControls
+              key={`controls:${media.id}`}
+              media={media}
+              user={user}
+              claimed={claimed}
+              context={context}
+            />
+          )}
+          {!claimed && media.kind !== "movie" && (
             <RequestTitle
               key={`request:${media.id}`}
               user={user}
@@ -174,81 +183,70 @@ function MediaDetails({
             />
           )}
         </section>
-        <section className="panel">
-          <h2>Files & subtitles</h2>
-          {media.assets.length === 0 ? (
-            <p className="muted">
-              No files have been published yet. Download and import progress is
-              shown above.
-            </p>
-          ) : (
-            media.assets.map(({ asset, current, edition }) => (
-              <div className="asset-card" key={asset.id}>
-                <div className="section-heading">
-                  <h3>{current ? "Current version" : "Previous version"}</h3>
-                  <Status value={asset.state} />
-                </div>
-                <p className="muted">
-                  {humanize(edition)} · Added {dateLabel(asset.createdAt)}
-                </p>
-                {asset.subtitleStatus !== null && (
-                  <div className="retention-summary">
-                    <strong>
-                      {asset.subtitleStatus.satisfied
-                        ? "Subtitle requirements met"
-                        : "Subtitle requirements pending"}
-                    </strong>
-                    {asset.subtitleStatus.missing.map((target) => (
-                      <p className="helper" key={target.sourceItemId}>
-                        {target.language} ·{" "}
-                        {target.forced
-                          ? "Forced dialogue"
-                          : "Regular subtitles"}{" "}
-                        ·{" "}
-                        {target.hearingImpaired === "any"
-                          ? "HI captions optional"
-                          : target.hearingImpaired === "required"
-                            ? "HI captions required"
-                            : "Without HI captions"}
-                      </p>
-                    ))}
-                    {asset.subtitleStatus.protectedReasons.map((reason) => (
-                      <p className="helper" key={reason}>
-                        {humanize(reason)}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                {asset.subtitles.length === 0 ? (
-                  <p className="helper">No matched subtitles yet.</p>
-                ) : (
-                  <ul className="subtitle-list">
-                    {asset.subtitles.map((subtitle) => (
-                      <li key={subtitle.id}>
-                        <span>
-                          {subtitle.language} · {subtitle.providerId}
-                          {subtitle.forced === true ? " · Forced" : ""}
-                          <br />
-                          <small className="helper">
-                            {subtitle.accepted
-                              ? "Quality verified for this video"
-                              : "Quality unverified for this video"}
-                          </small>
-                        </span>
-                        <Status value={subtitle.state} />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <details>
-                  <summary>Media properties</summary>
-                  <pre>{JSON.stringify(asset.properties, null, 2)}</pre>
-                </details>
-              </div>
-            ))
-          )}
-        </section>
+        <MediaFiles media={media} />
       </div>
+      <MediaChildren media={media} />
+      <History media={media} />
+      {media.kind !== "movie" && (
+        <div inert={!paired}>
+          <ReleaseCandidates
+            key={media.id}
+            user={user}
+            mediaId={media.id}
+            context={context}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+function TitleProgress({ media }: { media: MediaDetail }) {
+  return (
+    <MediaProgress
+      visibility={media.visibility}
+      heading={
+        media.kind === "movie"
+          ? "Unmarked edition download & seeding"
+          : "Download & seeding"
+      }
+    />
+  );
+}
+
+function TitleAvailability({ media }: { media: MediaDetail }) {
+  return (
+    <>
+      {media.kind === "movie" && (
+        <span className="helper">Unmarked edition</span>
+      )}
+      <Status value={media.availability} />
+    </>
+  );
+}
+
+function MovieFeatures({
+  user,
+  media,
+}: {
+  user: MediaUser;
+  media: MediaDetail;
+}) {
+  if (media.kind !== "movie") return null;
+  return (
+    <>
+      <MovieEditionControlsV4 user={user} mediaId={media.id} />
+      <section className="panel">
+        <h2>Request a movie edition</h2>
+        <MovieRequestForm user={user} target={{ mediaId: media.id }} />
+      </section>
+    </>
+  );
+}
+
+function MediaChildren({ media }: { media: MediaDetail }) {
+  return (
+    <>
       {media.children.length > 0 && (
         <section className="panel">
           <h2>
@@ -266,16 +264,87 @@ function MediaDetails({
           ))}
         </section>
       )}
-      <History media={media} />
-      <div inert={!paired}>
-        <ReleaseCandidates
-          key={media.id}
-          user={user}
-          mediaId={media.id}
-          context={context}
-        />
-      </div>
     </>
+  );
+}
+
+function MediaFiles({ media }: { media: MediaDetail }) {
+  return (
+    <section className="panel">
+      <h2>
+        {media.kind === "movie"
+          ? "Unmarked edition files & subtitles"
+          : "Files & subtitles"}
+      </h2>
+      {media.assets.length === 0 ? (
+        <p className="muted">
+          No files have been published yet. Download and import progress is
+          shown above.
+        </p>
+      ) : (
+        media.assets.map(({ asset, current, edition }) => (
+          <div className="asset-card" key={asset.id}>
+            <div className="section-heading">
+              <h3>{current ? "Current version" : "Previous version"}</h3>
+              <Status value={asset.state} />
+            </div>
+            <p className="muted">
+              {humanize(edition)} · Added {dateLabel(asset.createdAt)}
+            </p>
+            {asset.subtitleStatus !== null && (
+              <div className="retention-summary">
+                <strong>
+                  {asset.subtitleStatus.satisfied
+                    ? "Subtitle requirements met"
+                    : "Subtitle requirements pending"}
+                </strong>
+                {asset.subtitleStatus.missing.map((target) => (
+                  <p className="helper" key={target.sourceItemId}>
+                    {target.language} ·{" "}
+                    {target.forced ? "Forced dialogue" : "Regular subtitles"} ·{" "}
+                    {target.hearingImpaired === "any"
+                      ? "HI captions optional"
+                      : target.hearingImpaired === "required"
+                        ? "HI captions required"
+                        : "Without HI captions"}
+                  </p>
+                ))}
+                {asset.subtitleStatus.protectedReasons.map((reason) => (
+                  <p className="helper" key={reason}>
+                    {humanize(reason)}
+                  </p>
+                ))}
+              </div>
+            )}
+            {asset.subtitles.length === 0 ? (
+              <p className="helper">No matched subtitles yet.</p>
+            ) : (
+              <ul className="subtitle-list">
+                {asset.subtitles.map((subtitle) => (
+                  <li key={subtitle.id}>
+                    <span>
+                      {subtitle.language} · {subtitle.providerId}
+                      {subtitle.forced === true ? " · Forced" : ""}
+                      <br />
+                      <small className="helper">
+                        {subtitle.accepted
+                          ? "Quality verified for this video"
+                          : "Quality unverified for this video"}
+                      </small>
+                    </span>
+                    <Status value={subtitle.state} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <details>
+              <summary>Media properties</summary>
+              <pre>{JSON.stringify(asset.properties, null, 2)}</pre>
+            </details>
+          </div>
+        ))
+      )}
+    </section>
   );
 }
 

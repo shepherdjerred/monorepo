@@ -3,12 +3,14 @@ import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { readMovieAttemptIdentityV4 } from "./attempt-identity.ts";
 import { MovieBirthAuthoritySchema } from "#shared/movie-editions/management/contracts.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Caller holds the canonical target and request locks. No transfer or file is removed. */
 export async function releaseCancelledMovieReservationV4(
   tx: Prisma.TransactionClient,
   scope: MovieEditionScope,
   requestId: string | null,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const reservation = await tx.acquisitionReservation.findUnique({
     where: {
@@ -16,11 +18,13 @@ export async function releaseCancelledMovieReservationV4(
     },
     include: { attempt: true },
   });
+  if (reservation !== null) budget?.consume(2);
   if (reservation?.attempt.sponsorRequestId !== requestId) return;
   const attempt = reservation.attempt;
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: attempt.operationId },
   });
+  budget?.consume(1);
   if (
     operation.kind !== "reconcile_movie_edition_v4" &&
     operation.kind !== "acquire_movie_edition_v4"
@@ -54,7 +58,7 @@ export async function releaseCancelledMovieReservationV4(
       return;
   }
   if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return;
-  await readMovieAttemptIdentityV4(tx, attempt, scope);
+  await readMovieAttemptIdentityV4(tx, attempt, scope, budget);
   if (attempt.state !== "failed" && attempt.state !== "cancelled")
     await tx.acquisitionAttempt.update({
       where: { id: attempt.id },

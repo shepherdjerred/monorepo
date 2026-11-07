@@ -17,6 +17,7 @@ export async function requireMovieAcquisitionAuthorityV4(
     scope,
     access,
     protocol: "movie-v4",
+    budget: invocation.budget,
   });
   const sponsor = sponsors[0];
   if (sponsor !== undefined) {

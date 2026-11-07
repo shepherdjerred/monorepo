@@ -24,6 +24,9 @@ import {
 } from "./execution.ts";
 import { lockReplacement, assertReplacementOperation } from "./authority.ts";
 import { replacementCandidateBytes } from "./candidate.ts";
+import { publicationAuthorityDeadline } from "#automation/publication-proof/authority.ts";
+import { requirePublicationExecution } from "#automation/publication-proof/invocation.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 const ArtifactName = z.enum([
   "source",
@@ -99,13 +102,32 @@ export async function cleanupReplacement(
         "cleanup_subtitle_replacement",
       ]);
       if (current.cleanupState === "cleaned") return;
-      const authorize = () =>
-        authorizeCleanup({ tx, context, row, current, paths, receipt });
+      const scopedAuthority =
+        paths.scope.schemaVersion === 2
+          ? await publicationAuthorityDeadline(
+              tx,
+              {
+                ...context,
+                execution: requirePublicationExecution(
+                  context.publicationExecution?.(),
+                ),
+                contentProof: content,
+              },
+              { libraryKind: "movies", recoveryEpoch: row.recoveryEpoch },
+            )
+          : undefined;
+      if (scopedAuthority !== undefined)
+        await bindPlexTransactionDeadline(tx, scopedAuthority);
+      const authorize = async () => {
+        await authorizeCleanup({ tx, context, row, current, paths, receipt });
+        scopedAuthority?.assertActive();
+      };
       await authorize();
       const files = fileOperations(
         { ...context, contentProof: content },
         paths.roots,
         authorize,
+        scopedAuthority?.assertActive,
       );
       for (const artifact of receipt.artifacts)
         await cleanupRecordedArtifact({
@@ -131,6 +153,7 @@ export async function cleanupReplacement(
           version: { increment: 1 },
         },
       });
+      scopedAuthority?.assertActive();
     },
     { timeout: 30_000 },
   );

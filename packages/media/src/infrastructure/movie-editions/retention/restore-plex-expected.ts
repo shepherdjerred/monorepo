@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { MovieQuarantinePlexReceiptV2Schema } from "#shared/movie-editions/quarantine-v2.ts";
-import type { MovieOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieRestorePlexExpectedV1Schema } from "#shared/movie-editions/restore-plex-v1.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
@@ -9,7 +9,7 @@ import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { assertNoMediaSubtitleReplacement } from "#automation/files/guards.ts";
-import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
+import { assertMovieLegacyClaimsResolvedV3 } from "#infrastructure/recovery/legacy-claims/movie/protection.ts";
 import { readMovieRestoreCommand } from "./restore-source.ts";
 import { readMovieRestorePublicationParentV1 } from "#infrastructure/movie-editions/publication/restore-records.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
@@ -65,14 +65,18 @@ export async function captureMovieRestorePlexExpectedV1(
     throw new PlexBindingProtection("ownership_changed");
   const demand = await captureMovieRestorePlexDemand(
     tx,
-    { receipt: parent.receipt, target, access },
+    { receipt: parent.receipt, operation, target, access },
     invocation,
   );
   await tx.$queryRaw`SELECT id FROM "LibraryAsset" WHERE id=${parent.asset.id} FOR UPDATE`;
   await tx.$queryRaw`SELECT "assetId" FROM "AssetCoverage" WHERE "assetId"=${parent.asset.id} ORDER BY "mediaId",edition FOR UPDATE`;
   await assertPublicationUnfenced(tx, [command.mediaId], [parent.asset.id]);
   await assertNoMediaSubtitleReplacement(tx, [command.mediaId]);
-  await assertLegacyClaimsResolved(tx, [command.mediaId]);
+  await assertMovieLegacyClaimsResolvedV3(
+    tx,
+    { scope: command.scope, epoch },
+    invocation.budget,
+  );
   if (
     await tx.recoveryHold.count({
       where: {

@@ -24,9 +24,12 @@ import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/rece
 import {
   MovieAttemptOperationV4Schema,
   MovieOperationV4Schema,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieRestorePlexExpectedV1Schema } from "#shared/movie-editions/restore-plex-v1.ts";
 import { readMovieRestorePlexReceiptV1 } from "#infrastructure/movie-editions/retention/restore-plex-receipt.ts";
+import { MovieRollbackPlexExpectedV1Schema } from "#shared/movie-editions/rollback/plex.ts";
+import { MovieRollbackInvocationV1Schema } from "#shared/movie-editions/rollback/operation.ts";
+import { readMovieRollbackPlexV1 } from "#infrastructure/movie-editions/rollback/records.ts";
 
 export async function movieCleanupServing(
   tx: Prisma.TransactionClient,
@@ -88,8 +91,13 @@ export async function movieCleanupServing(
     where: { id: scope.mediaId },
   });
   const body = {
-    schemaVersion: completed.kind === "restored" ? 3 : 1,
-    ...(completed.kind === "restored"
+    schemaVersion:
+      completed.kind === "rolled_back"
+        ? 4
+        : completed.kind === "restored"
+          ? 3
+          : 1,
+    ...(completed.kind === "restored" || completed.kind === "rolled_back"
       ? { originalItem: completed.receipt.expected.originalItem }
       : {}),
     recoveryEpoch: asset.ownershipEpoch,
@@ -117,9 +125,11 @@ export async function movieCleanupServing(
     parents: receipt.expected.parents,
   };
   const expected =
-    completed.kind === "restored"
-      ? MovieRestorePlexExpectedV1Schema.parse(body)
-      : PlexBindingExpectedSchema.parse(body);
+    completed.kind === "rolled_back"
+      ? MovieRollbackPlexExpectedV1Schema.parse(body)
+      : completed.kind === "restored"
+        ? MovieRestorePlexExpectedV1Schema.parse(body)
+        : PlexBindingExpectedSchema.parse(body);
   return { target, group, binding: binding.snapshot, expected };
 }
 
@@ -133,12 +143,16 @@ function assertMovieCleanupServing(input: {
   const { completed, asset, group, binding, scope } = input;
   const receipt = completed.receipt;
   const publishedAt =
-    completed.kind === "restored"
+    completed.kind === "restored" || completed.kind === "rolled_back"
       ? completed.receipt.assetPlexPublishedAt
       : completed.receipt.publishedAt;
   if (
     identityHash(receipt.binding) !== identityHash(binding) ||
-    identityHash(receipt.input.scope) !== identityHash(scope) ||
+    identityHash(
+      completed.kind === "rolled_back"
+        ? completed.receipt.invocation.source.scope
+        : completed.receipt.input.scope,
+    ) !== identityHash(scope) ||
     identityHash(receipt.observation.associations[0].group) !==
       identityHash(group) ||
     asset.state !== "published" ||
@@ -158,6 +172,7 @@ async function movieCleanupReceipt(
         "moviePlexReceiptV2",
         "moviePlexReceiptV3",
         "movieRestorePlexReceiptV1",
+        "movieRollbackPlexV1",
       ].map((key) => ({
         result: {
           path: [key, "receipt", "binding", "evidenceId"],
@@ -171,6 +186,26 @@ async function movieCleanupReceipt(
   const command = completions[0];
   if (command === undefined || completions.length !== 1)
     throw new PlexBindingProtection("ownership_changed");
+  const rolledBack = z
+    .object({
+      movieRollbackPlexV1: z
+        .object({
+          receipt: z.object({ invocation: MovieRollbackInvocationV1Schema }),
+        })
+        .optional(),
+    })
+    .nullable()
+    .parse(command.result)?.movieRollbackPlexV1;
+  if (rolledBack !== undefined) {
+    const parent = await readMovieRollbackPlexV1(
+      tx,
+      rolledBack.receipt.invocation,
+      budget,
+    );
+    return parent === null
+      ? null
+      : { kind: "rolled_back" as const, receipt: parent.plex };
+  }
   if (command.kind === "restore_movie_edition_v4") {
     const raw = z
       .object({

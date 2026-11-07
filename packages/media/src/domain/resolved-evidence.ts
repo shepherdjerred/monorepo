@@ -31,13 +31,24 @@ export const ResolvedEvidenceSchema = z.object({
       .max(10_000),
   }),
 });
-export type ResolvedEvidence = z.infer<typeof ResolvedEvidenceSchema>;
+/** Original parser tags retain their literal schema; the new Sonarr pack grammar is independently versioned. */
+export const SeriesPackResolvedEvidenceV1Schema = ResolvedEvidenceSchema.extend(
+  {
+    source: z.literal("sonarr"),
+    parserVersion: z.literal("scene-series-pack-v1"),
+  },
+).strict();
+export const ResolvedEvidenceProtocolSchema = z.union([
+  ResolvedEvidenceSchema,
+  SeriesPackResolvedEvidenceV1Schema,
+]);
+export type ResolvedEvidence = z.infer<typeof ResolvedEvidenceProtocolSchema>;
 /** Current catalog facts are evaluation inputs; the retained measured evidence stays literal. */
 export function projectResolvedCatalog(
   evidence: ResolvedEvidence,
   metadata: { runtimeMinutes: number | null; originalLanguage: string | null },
 ): ResolvedEvidence {
-  return ResolvedEvidenceSchema.parse({
+  return ResolvedEvidenceProtocolSchema.parse({
     ...evidence,
     release: { ...evidence.release, ...metadata },
   });

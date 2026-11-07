@@ -1,5 +1,6 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
+import { hasPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
 import {
   CommittedQuarantinePlexReceiptSchema,
@@ -197,6 +198,13 @@ export async function readQuarantinedPlexWatchAuthority(
   },
   budget?: PublicationAuthorityReadBudget,
 ): Promise<QuarantinedPlexWatchRead> {
+  if (
+    await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: [input.scope.mediaId],
+      assetIds: [input.assetId],
+    })
+  )
+    return { status: "protected", reason: "series_pack_publication_pending" };
   try {
     return await resolveQuarantine(tx, input, budget);
   } catch (error) {

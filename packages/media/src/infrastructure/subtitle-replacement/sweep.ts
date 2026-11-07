@@ -4,7 +4,7 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { MediaError } from "#application/errors.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
-import { SubtitleReplacementSnapshotSchema } from "#shared/subtitle-replacement.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
 import { assertReplacementCoordinatorTerminal } from "./terminal.ts";
 import { lockSubtitleReplacementScope } from "./locks.ts";
 type SweepContext = Pick<MediaAutomationContext, "db" | "describeWorkflow">;
@@ -72,11 +72,12 @@ async function queueInterrupted(
       row.id,
     );
     await serializable(context.db, async (tx) => {
-      const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
+      const scope = replacementSnapshot(row.snapshot);
       await lockSubtitleReplacementScope(tx, {
         assetId: row.assetId,
         mediaIds: scope.asset.coverage.map((item) => item.mediaId),
         replacementId: row.id,
+        ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
       });
       const current = await tx.subtitleReplacement.findUniqueOrThrow({
         where: { id: row.id },
@@ -87,11 +88,19 @@ async function queueInterrupted(
         where: { id: row.id },
         data: { state: "reconciling", version: { increment: 1 } },
       });
+      const queuedAt = new Date();
       const operationId = await queueOperation(tx, {
         key: `subtitle-replacement-reconcile:${row.id}:${String(current.version)}`,
         kind: "reconcile_subtitle_replacement",
         targetId: row.id,
-        payload: { replacementId: row.id, coordinators: proof.executions },
+        ...(scope.schemaVersion === 2
+          ? { createdAt: queuedAt, availableAt: queuedAt }
+          : {}),
+        payload: {
+          replacementId: row.id,
+          coordinators: proof.executions,
+          ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
+        },
       });
       await tx.subtitleReplacement.update({
         where: { id: row.id },
@@ -132,11 +141,20 @@ async function queueDueCleanup(context: SweepContext, id: string) {
       current.archiveExpiresAt > new Date()
     )
       return;
+    const snapshot = replacementSnapshot(current.snapshot);
+    const queuedAt = new Date();
     await queueOperation(tx, {
       key: `subtitle-replacement-cleanup:${id}:${observed?.runId ?? "initial"}`,
       kind: "cleanup_subtitle_replacement",
       targetId: id,
-      payload: { replacementId: id, recoveryEpoch: current.recoveryEpoch },
+      ...(snapshot.schemaVersion === 2
+        ? { createdAt: queuedAt, availableAt: queuedAt }
+        : {}),
+      payload: {
+        replacementId: id,
+        recoveryEpoch: current.recoveryEpoch,
+        ...(snapshot.schemaVersion === 2 ? { movieScope: snapshot.scope } : {}),
+      },
     });
   });
 }

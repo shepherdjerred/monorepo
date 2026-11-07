@@ -3,7 +3,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import {
   MovieDecisionOperationV4Schema,
   type MovieDecisionOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { FileGuardError, type FileContext } from "#automation/files/types.ts";
 import type { MovieRemovalScope } from "#automation/files/movie-editions/removal-scope.ts";
 import { assertOwnedAsset } from "#automation/files/removal-plan.ts";
@@ -86,6 +86,12 @@ export async function purgeMovieFilesV4(
     })
   )
     return;
+  if (
+    z
+      .object({ ownerRemovalV1: z.unknown().optional() })
+      .parse(snapshot.decision.evidence).ownerRemovalV1 !== undefined
+  )
+    throw new FileGuardError("owner_removal_requires_retention_consent");
   const plan = snapshot.manifest.assets;
   const original = retentionPlexFreshness({
     context: invocation,

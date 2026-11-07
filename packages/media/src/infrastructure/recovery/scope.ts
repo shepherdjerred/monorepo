@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import { historicalDefaultRow } from "#infrastructure/native-recovery/legacy-snapshot.ts";
 import {
@@ -16,6 +17,7 @@ import { currentNativeReceipts } from "./native-receipts.ts";
 import { buildHouseholdScope } from "./household-scope.ts";
 import { lockLegacyClaimKnowledge } from "./legacy-claims/knowledge-fence.ts";
 import { compensationGroupMedia } from "#infrastructure/native-compensation/routing.ts";
+import { recoveryAdoptionScopeV1 } from "./adoption-scope.ts";
 
 export function recoveryConflict(message: string) {
   return new MediaError("recovery_review_changed", message, 409);
@@ -92,16 +94,22 @@ export async function snapshotRecoveryScope(
   db: Prisma.TransactionClient,
   ids: string[],
   machineId: string,
-  version: 1 | 2 = 2,
+  version:
+    1 | 2 | { version: 1 | 2; budget: PublicationAuthorityReadBudget } = 2,
 ) {
-  const legacy = await snapshotLegacyRecoveryScope(db, ids, machineId);
-  return version === 1 ? legacy : buildHouseholdScope(db, legacy, machineId);
+  const budget = typeof version === "number" ? undefined : version.budget;
+  const protocol = typeof version === "number" ? version : version.version;
+  const legacy = await snapshotLegacyRecoveryScope(db, ids, machineId, budget);
+  return protocol === 1
+    ? legacy.scope
+    : buildHouseholdScope(db, legacy.scope, machineId, legacy.nativeBudget);
 }
 
 async function snapshotLegacyRecoveryScope(
   db: Prisma.TransactionClient,
   ids: string[],
   machineId: string,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -186,30 +194,42 @@ async function snapshotLegacyRecoveryScope(
     throw recoveryConflict(
       "Recovery request evidence exceeds the bounded review size",
     );
-  const adoptions = await db.applicationEvent.findMany({
-    where: { mediaId: { in: ids }, kind: "handoff_media_adopted" },
-    orderBy: { createdAt: "desc" },
-    take: 1000,
-  });
-  const planIds = adoptions.map(
-    (row) => z.object({ planId: z.uuid() }).parse(row.payload).planId,
+  const adoptionScope = await recoveryAdoptionScopeV1(
+    db,
+    {
+      ids,
+      assetIds: assets.map((asset) => asset.id),
+      epoch: runtime.recoveryEpoch,
+    },
+    budget,
   );
+  const { planIds } = adoptionScope;
   const receipts = await db.mediaHandoffReceipt.findMany({
     where: { planId: { in: planIds }, recoveryEpoch: runtime.recoveryEpoch },
     select: { id: true, planHash: true },
     orderBy: { id: "asc" },
   });
   const blockers = [];
-  const nativeReceipts = await currentNativeReceipts(db, {
-    assets,
-    epoch: runtime.recoveryEpoch,
-  });
+  const nativeReceipts = await currentNativeReceipts(
+    db,
+    {
+      assets,
+      epoch: runtime.recoveryEpoch,
+    },
+    budget,
+  );
   const nativeAssetIds = new Set(
     nativeReceipts.flatMap((receipt) => receipt.assetIds),
   );
-  if (adoptions.length === 1000)
+  if (adoptionScope.exhausted)
     blockers.push("handoff_history_requires_bounded_reconciliation");
-  if (await unresolvedRecoveryClaims(db, { planIds, mediaIds: ids }))
+  if (
+    await unresolvedRecoveryClaims(
+      db,
+      { planIds, mediaIds: ids },
+      adoptionScope.nativeBudget,
+    )
+  )
     blockers.push("unresolved_migration_household_claim");
   if (holds.length === 0) blockers.push("no_active_recovery_hold");
   if (holds.some((hold) => hold.recoveryEpoch !== runtime.recoveryEpoch))
@@ -269,7 +289,7 @@ async function snapshotLegacyRecoveryScope(
     },
   });
   if (outside > 0) blockers.push("partial_root_request_scope");
-  return LegacyRecoveryScopeSchema.parse({
+  const scope = LegacyRecoveryScopeSchema.parse({
     recoveryEpoch: runtime.recoveryEpoch,
     runtimeVersion: runtime.version,
     media: media.map((item) => ({
@@ -328,6 +348,7 @@ async function snapshotLegacyRecoveryScope(
     nativeReceipts,
     blockers,
   });
+  return { scope, nativeBudget: adoptionScope.nativeBudget };
 }
 
 function recoveryAncestors(item: {

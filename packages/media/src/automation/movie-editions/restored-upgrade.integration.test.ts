@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createRestoredMovieUpgradeFixture } from "#testing/movie-workflow/restored-upgrade-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
-import { MovieAttemptOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieAttemptOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import {
   MoviePublicationIntentV2Schema,

@@ -1,7 +1,9 @@
+import { currentReview } from "./current-review.ts";
 import { z } from "zod";
+import { seriesPackNativeCommandInvocationV1 } from "#infrastructure/native-compensation/series-pack/command-invocation.ts";
+import { assertSeriesPackNativeHouseholdViewV1 } from "#infrastructure/native-compensation/series-pack/household-view.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
-import type { Prisma } from "#generated/prisma/client.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import { MediaCommandBase } from "#infrastructure/command-base.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
@@ -31,10 +33,17 @@ import {
 } from "./release.ts";
 import { recoveryView } from "./view.ts";
 import { recoveryAuthority } from "./authority.ts";
-import { assertRecoveryRespondent } from "./permissions.ts";
+import {
+  assertRecoveryRespondent,
+  currentRecoveryOwner as currentOwner,
+} from "./permissions.ts";
 import { claimAccounting } from "./legacy-claims/accounting.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { assertCompensationGroupUnchanged } from "#infrastructure/native-compensation/routing.ts";
+import {
+  assertLegacyRecoveryProtocol,
+  legacyRecoveryReviewIds,
+} from "./protocol.ts";
 
 export class PrismaRecovery extends MediaCommandBase {
   constructor(
@@ -63,6 +72,7 @@ export class PrismaRecovery extends MediaCommandBase {
         })
       : [];
     const reviews = await this.db.recoveryReview.findMany({
+      where: { id: { in: await legacyRecoveryReviewIds(this.db) } },
       orderBy: { createdAt: "desc" },
       take: 100,
     });
@@ -94,6 +104,7 @@ export class PrismaRecovery extends MediaCommandBase {
   }
 
   async detail(actor: MediaActor, id: string) {
+    const invocation = seriesPackNativeCommandInvocationV1();
     const review = await this.db.recoveryReview.findUnique({
       where: { id },
       include: { responses: { orderBy: { userId: "asc" } }, receipt: true },
@@ -104,10 +115,21 @@ export class PrismaRecovery extends MediaCommandBase {
         "Recovery review does not exist",
         404,
       );
+    assertLegacyRecoveryProtocol(review.scope);
+    const nativeDetail = await this.db.$transaction((tx) =>
+      assertSeriesPackNativeHouseholdViewV1(
+        tx,
+        review,
+        invocation.budget,
+        invocation.freshness,
+      ),
+    );
     const current = await this.db.mediaUser.findUniqueOrThrow({
       where: { id: actor.id },
       include: { plexIdentity: true },
     });
+    if (nativeDetail)
+      invocation.budget.consume(1 + (current.plexIdentity === null ? 0 : 1));
     const owner = current.role === "owner" && !current.restricted;
     const scope = recoveryView(
       RecoveryScopeSchema.parse(review.scope),
@@ -165,6 +187,7 @@ export class PrismaRecovery extends MediaCommandBase {
     raw: z.input<typeof PrepareRecoverySchema>,
   ) {
     requireOwner(actor);
+    const invocation = seriesPackNativeCommandInvocationV1();
     const input = PrepareRecoverySchema.parse(raw);
     await currentOwner(this.db, actor);
     if (this.refreshManaged !== undefined) {
@@ -196,7 +219,10 @@ export class PrismaRecovery extends MediaCommandBase {
         await lockRecoveryScope(db, ids);
         await assertCompensationGroupUnchanged(db, ids, ids);
         await currentOwner(db, actor);
-        const scope = await snapshotRecoveryScope(db, ids, this.machineId);
+        const scope = await snapshotRecoveryScope(db, ids, this.machineId, {
+          version: 2,
+          budget: invocation.budget,
+        });
         const review = await db.recoveryReview.create({
           data: {
             actorId: actor.id,
@@ -222,13 +248,19 @@ export class PrismaRecovery extends MediaCommandBase {
     id: string,
     raw: z.input<typeof RespondRecoverySchema>,
   ) {
+    const invocation = seriesPackNativeCommandInvocationV1();
     const input = RespondRecoverySchema.parse(raw);
     return this.command(
       actor,
       key,
       { kind: "respond_recovery_review", input: { id, ...input } },
       async (db) => {
-        const { review, scope } = await currentReview(db, id, this.machineId);
+        const { review, scope } = await currentReview(
+          db,
+          id,
+          this.machineId,
+          invocation.budget,
+        );
         if (input.scopeHash !== review.scopeHash)
           throw recoveryConflict("Respond to the exact current review");
         const subjectUserId = input.subjectUserId ?? actor.id;
@@ -313,13 +345,19 @@ export class PrismaRecovery extends MediaCommandBase {
     raw: z.input<typeof ReleaseRecoverySchema>,
   ) {
     requireOwner(actor);
+    const invocation = seriesPackNativeCommandInvocationV1();
     const input = ReleaseRecoverySchema.parse(raw);
     return this.command(
       actor,
       key,
       { kind: "release_recovery_hold", input: { id, ...input } },
       async (db) => {
-        const { review, scope } = await currentReview(db, id, this.machineId);
+        const { review, scope } = await currentReview(
+          db,
+          id,
+          this.machineId,
+          invocation.budget,
+        );
         await currentOwner(db, actor);
         const authority = await lockRuntimeAuthority(db, scope.recoveryEpoch);
         if (!authority || scope.blockers.length > 0)
@@ -337,6 +375,7 @@ export class PrismaRecovery extends MediaCommandBase {
           where: { reviewId: id },
           orderBy: { userId: "asc" },
         });
+        invocation.budget.consume(responses.length);
         if (
           responses.length !== scope.users.length ||
           scope.users.some(
@@ -410,10 +449,14 @@ export class PrismaRecovery extends MediaCommandBase {
           if (changed.count !== 1)
             throw recoveryConflict("Recovery hold changed");
         }
-        await queueHouseholdCompensations(db, {
-          mediaIds: scope.media.map((item) => item.id),
-          triggerKey: `household:${id}`,
-        });
+        await queueHouseholdCompensations(
+          db,
+          {
+            mediaIds: scope.media.map((item) => item.id),
+            triggerKey: `household:${id}`,
+          },
+          invocation,
+        );
         await db.recoveryReview.update({
           where: { id },
           data: { state: "released", version: { increment: 1 } },
@@ -441,56 +484,4 @@ export class PrismaRecovery extends MediaCommandBase {
   }
 }
 
-async function currentReview(
-  db: Prisma.TransactionClient,
-  id: string,
-  machineId: string,
-) {
-  const initial = await db.recoveryReview.findUnique({ where: { id } });
-  if (initial === null)
-    throw new MediaError(
-      "recovery_not_found",
-      "Recovery review not found",
-      404,
-    );
-  const scope = RecoveryScopeSchema.parse(initial.scope);
-  await lockRecoveryScope(
-    db,
-    scope.media.map((media) => media.id),
-  );
-  await assertCompensationGroupUnchanged(
-    db,
-    scope.media.map((media) => media.id),
-    scope.media.map((media) => media.id),
-  );
-  await db.$queryRaw`SELECT id FROM "RecoveryReview" WHERE id = ${id} FOR UPDATE`;
-  const review = await db.recoveryReview.findUniqueOrThrow({ where: { id } });
-  if (review.state !== "awaiting_responses" || review.expiresAt <= new Date())
-    throw recoveryConflict(
-      "Prepare a new recovery review; this review is closed or expired",
-    );
-  const current = await snapshotRecoveryScope(
-    db,
-    scope.media.map((media) => media.id),
-    machineId,
-    isRecoveryScopeV2(scope) ? 2 : 1,
-  );
-  if (snapshotHash(nativeJson(current)) !== review.scopeHash)
-    throw recoveryConflict(
-      "Household, requests, pins, physical coverage or recovery authority changed; prepare a fresh review",
-    );
-  return { review, scope };
-}
-
-async function currentOwner(db: Prisma.TransactionClient, actor: MediaActor) {
-  const user = await db.mediaUser.findUniqueOrThrow({
-    where: { id: actor.id },
-  });
-  if (user.role !== "owner" || user.restricted)
-    throw new MediaError(
-      "owner_required",
-      "A current unrestricted owner must review recovery",
-      403,
-    );
-}
 import { queueHouseholdCompensations } from "#infrastructure/native-compensation/routing.ts";

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieEditionHashSchema as Hash,
   MovieEditionScopeSchema,

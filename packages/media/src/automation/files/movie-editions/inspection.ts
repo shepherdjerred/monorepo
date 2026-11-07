@@ -9,7 +9,7 @@ import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.
 import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { snapshotHash } from "#migration/profile-import.ts";

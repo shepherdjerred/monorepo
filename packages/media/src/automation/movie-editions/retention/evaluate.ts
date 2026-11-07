@@ -4,7 +4,7 @@ import { MediaError } from "#application/errors.ts";
 import {
   MovieOperationV4Schema,
   type MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
@@ -13,10 +13,11 @@ import {
   runtimeAuthority,
   lockRuntimeAuthority,
 } from "#infrastructure/handoff/authority.ts";
+import { LEGACY_CLAIM_PROTECTION } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import {
-  hasPendingLegacyClaims,
-  LEGACY_CLAIM_PROTECTION,
-} from "#infrastructure/recovery/legacy-claims/protection.ts";
+  hasPendingMovieLegacyClaimsV3,
+  persistMovieLegacyClaimProtectionV3,
+} from "#infrastructure/recovery/legacy-claims/movie/protection.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import {
@@ -43,6 +44,7 @@ import { serializable } from "#automation/store.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
 import { readMovieRetentionCommand, readMovieRetentionItem } from "./scope.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { evaluateOwnerMovieRemovalV1 } from "./owner-removal.ts";
 
 const protectedResult = (reason: string): RetentionResult => ({
   status: "protected",
@@ -88,6 +90,13 @@ async function evaluateMovieRetention(
     input,
     context.movieManagement.budget,
   );
+  const ownerRemoval = await evaluateOwnerMovieRemovalV1(
+    context,
+    input,
+    execution,
+    command,
+  );
+  if (ownerRemoval !== null) return ownerRemoval;
   const runtime = await runtimeAuthority(context.db);
   execution.assertActive();
   if (!runtime.active || command.epoch !== runtime.epoch)
@@ -100,6 +109,31 @@ async function evaluateMovieRetention(
       wakeAt: null,
       reason: "intent_obsolete",
     };
+  if (
+    original.target.availability === "quarantined" &&
+    original.target.intentionallyRemovedAt !== null
+  ) {
+    const decisions = await context.db.retentionDecision.findMany({
+      where: {
+        mediaId: scope.mediaId,
+        edition: scope.edition,
+        generation: input.generation,
+        state: "quarantined",
+      },
+      select: { evidence: true },
+      take: 2,
+    });
+    context.movieManagement.budget.consume(decisions.length);
+    if (
+      decisions.some(
+        (decision) =>
+          z
+            .object({ ownerRemovalV1: z.unknown().optional() })
+            .parse(decision.evidence).ownerRemovalV1 !== undefined,
+      )
+    )
+      return protectedResult("owner_removal_requires_retention_consent");
+  }
   const gate =
     original.target.availability === "quarantined"
       ? context.gates.purge
@@ -163,8 +197,19 @@ async function evaluateMovieRetention(
         identityHash(command.operation.payload)
     )
       throw new Error("Movie retention command changed during observation");
-    if (await hasPendingLegacyClaims(tx, [scope.mediaId]))
+    if (
+      await hasPendingMovieLegacyClaimsV3(
+        tx,
+        { scope, epoch: runtime.epoch },
+        context.movieManagement.budget,
+      )
+    ) {
+      await persistMovieLegacyClaimProtectionV3(tx, {
+        scope,
+        epoch: runtime.epoch,
+      });
       return protectedResult(LEGACY_CLAIM_PROTECTION);
+    }
     if (
       await tx.recoveryHold.count({
         where: {

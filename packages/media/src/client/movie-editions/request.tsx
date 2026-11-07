@@ -3,26 +3,23 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import type { MediaUser } from "#shared/contract.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
-import type { MovieEditionContextV3 } from "#shared/movie-editions/view.ts";
-import type {
-  MovieRequestV3,
-  MovieRequestResultV3,
-} from "#shared/movie-editions/commands.ts";
+import type { MovieEditionContextV4 } from "#shared/movie-editions/lifecycle/public-v4.ts";
+import type { MovieRequestV4 } from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
 import { ApiError, writeApi } from "#client/api.ts";
 import { ErrorNotice, Loading, Notice } from "#client/components.tsx";
 import {
   CommandError,
   commandNeedsReview,
 } from "#client/target-controls/errors.tsx";
+import { invalidateMovieRequests } from "./api.ts";
 import {
-  invalidateMovieRequests,
-  movieRequest,
-  readMovieContext,
-  submitMovieRequest,
-} from "./api.ts";
+  movieRequestV4,
+  readMovieContextV4,
+  submitMovieRequestV4,
+} from "./request-api-v4.ts";
 import { MovieEditionSelector } from "./selector.tsx";
 import { MovieRequestSubject } from "./subject.tsx";
-import { movieEditionReason } from "./presentation.ts";
+import { movieAdmissionReasonV4 } from "./presentation-v4.ts";
 
 type MovieTarget = { mediaId: string } | { externalId: number };
 
@@ -42,7 +39,7 @@ export function MovieRequestForm({
         change={setSubjectUserId}
       />
       <SubjectMovieRequest
-        key={subjectUserId}
+        key={`${subjectUserId}:${"mediaId" in target ? `media:${target.mediaId}` : `catalog:${String(target.externalId)}`}`}
         user={user}
         target={target}
         subjectUserId={subjectUserId}
@@ -62,24 +59,24 @@ function useMovieRequest({
 }) {
   const [edition, setEdition] = useState<MovieEditionKey | "">("");
   const [languages, setLanguages] = useState("en");
-  const [reviewed, setReviewed] = useState<MovieEditionContextV3 | null>(null);
+  const [reviewed, setReviewed] = useState<MovieEditionContextV4 | null>(null);
   const [adoptedId, setAdoptedId] = useState<string | null>(null);
-  const pending = useRef<MovieRequestV3 | null>(null);
+  const pending = useRef<MovieRequestV4 | null>(null);
   const mediaId = "mediaId" in target ? target.mediaId : adoptedId;
   const context = useQuery({
-    queryKey: ["movie-edition-context", mediaId, subjectUserId],
+    queryKey: ["movie-edition-context", 4, mediaId, subjectUserId],
     enabled: mediaId !== null,
     queryFn: async () => {
       if (mediaId === null)
         throw new Error("Movie has not been added to the catalog.");
-      return readMovieContext(mediaId, subjectUserId);
+      return readMovieContextV4(mediaId, subjectUserId);
     },
     refetchOnWindowFocus: false,
   });
   const request = useMutation({
     mutationFn: async () => {
       if (pending.current !== null)
-        return submitMovieRequest(user.id, pending.current);
+        return submitMovieRequestV4(user.id, pending.current);
       if (edition === "") throw new Error("Choose a movie edition first.");
       let current = reviewed ?? context.data;
       if (current === undefined) {
@@ -92,11 +89,11 @@ function useMovieRequest({
           schema: z.strictObject({ mediaId: z.uuid() }),
         });
         setAdoptedId(adopted.mediaId);
-        current = await readMovieContext(adopted.mediaId, subjectUserId);
+        current = await readMovieContextV4(adopted.mediaId, subjectUserId);
         setReviewed(current);
       }
-      pending.current = movieRequest(current, edition, languages);
-      return submitMovieRequest(user.id, pending.current);
+      pending.current = movieRequestV4(current, edition, languages);
+      return submitMovieRequestV4(user.id, pending.current);
     },
     onSuccess: async (result) => {
       pending.current = null;
@@ -115,7 +112,7 @@ function useMovieRequest({
     mutationFn: async () => {
       if (mediaId === null)
         throw new Error("Movie choices have not loaded yet.");
-      return readMovieContext(mediaId, subjectUserId);
+      return readMovieContextV4(mediaId, subjectUserId);
     },
     onSuccess: (current) => {
       setReviewed(current);
@@ -204,7 +201,7 @@ function SubjectMovieRequest(input: {
       </p>
       {selected?.reasons.map((reason) => (
         <p className="helper" key={reason}>
-          {movieEditionReason(reason)}
+          {movieAdmissionReasonV4(reason)}
         </p>
       ))}
       {mediaId !== null && context.isPending && <Loading />}
@@ -245,7 +242,7 @@ function MovieRequestOutcome({
   succeeded,
   chooseAnother,
 }: {
-  result: MovieRequestResultV3 | undefined;
+  result: Awaited<ReturnType<typeof submitMovieRequestV4>> | undefined;
   succeeded: boolean;
   chooseAnother: () => void;
 }) {
@@ -264,7 +261,7 @@ function MovieRequestOutcome({
         </button>
       )}
       {result?.reason !== null && result?.reason !== undefined && (
-        <p role="status">{movieEditionReason(result.reason)}</p>
+        <p role="status">{movieAdmissionReasonV4(result.reason)}</p>
       )}
     </>
   );

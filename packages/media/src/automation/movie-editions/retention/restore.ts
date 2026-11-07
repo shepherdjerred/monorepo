@@ -3,7 +3,7 @@ import { FileGuardError, type FileContext } from "#automation/files/types.ts";
 import {
   MovieOperationV4Schema,
   type MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MoviePublicationAssetV2Schema } from "#shared/movie-editions/publication-v2.ts";
 import { MovieRestoreReceiptV1Schema } from "#shared/movie-editions/restore-v1.ts";
 import {

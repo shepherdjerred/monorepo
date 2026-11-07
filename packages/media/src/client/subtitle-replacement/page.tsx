@@ -22,7 +22,7 @@ export function SubtitleReplacementPage({ user }: { user: MediaUser }) {
   return id === undefined ? (
     <ReplacementIndex user={user} />
   ) : (
-    <SubtitleReplacementReview user={user} id={id} />
+    <SubtitleReplacementReview key={`${user.id}:${id}`} user={user} id={id} />
   );
 }
 function ReplacementIndex({ user }: { user: MediaUser }) {

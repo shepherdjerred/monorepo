@@ -8,18 +8,71 @@ import type {
   MovieAttemptOperationV4,
   MovieDecisionOperationV4,
   MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { inspectAndStageMovieV4 } from "./inspection.ts";
-import { promoteMovieV4 } from "./publication.ts";
+import { prepareMoviePublicationV4, promoteMovieV4 } from "./publication.ts";
 import { installMovieSubtitlesV4 } from "./subtitles.ts";
 import type { MovieSubtitleInstallV4 } from "#shared/movie-editions/subtitles-v4.ts";
 import { quarantineMovieFilesV4 } from "#automation/movie-editions/retention/quarantine.ts";
 import { purgeMovieFilesV4 } from "#automation/movie-editions/retention/purge.ts";
 import { restoreMovieFilesV4 } from "#automation/movie-editions/retention/restore.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { MovieRollbackExecution } from "#shared/movie-editions/rollback/execution.ts";
+import { prepareMovieRollbackV4 } from "./rollback/preparation.ts";
+import { rollbackMoviePublicationV4 } from "./rollback/publication.ts";
+import { createRequestedMovieRollbackFileFacetV1 } from "./rollback/manual-facet.ts";
 
 export function createMovieFileFacetV4(context: FileContext) {
   return {
+    ...createRequestedMovieRollbackFileFacetV1(context),
+    prepareMovieRollbackV4(
+      input: MovieAttemptOperationV4,
+      execution: PublicationExecution,
+      owner: MovieRollbackExecution,
+      budget: PublicationAuthorityReadBudget,
+    ) {
+      return prepareMovieRollbackV4(
+        {
+          ...context,
+          publicationExecution: () => execution,
+          movieRollbackExecution: owner,
+          movieManagement: { execution, budget },
+        },
+        input,
+      );
+    },
+    rollbackMoviePublicationV4(
+      input: MovieAttemptOperationV4,
+      execution: PublicationExecution,
+      owner: MovieRollbackExecution,
+      budget: PublicationAuthorityReadBudget,
+    ) {
+      return rollbackMoviePublicationV4(
+        {
+          ...context,
+          publicationExecution: () => execution,
+          movieRollbackExecution: owner,
+          movieManagement: { execution, budget },
+        },
+        input,
+      );
+    },
+    async prepareMoviePublicationV4(
+      input: MovieAttemptOperationV4,
+      execution: PublicationExecution,
+      budget: PublicationAuthorityReadBudget,
+    ) {
+      try {
+        await prepareMoviePublicationV4(
+          { ...context, publicationExecution: () => execution },
+          input,
+          budget,
+        );
+        return { status: "prepared" as const };
+      } catch (error) {
+        return blockedMovieFile(error);
+      }
+    },
     async restoreMovieFilesV4(
       input: MovieOperationV4,
       execution: PublicationExecution,

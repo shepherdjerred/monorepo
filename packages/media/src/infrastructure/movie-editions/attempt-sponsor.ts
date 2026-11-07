@@ -1,4 +1,9 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type {
+  AcquisitionAttempt,
+  MovieEditionChoice,
+  Operation,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import {
   MovieEditionBirthAuthoritySchema,
   MovieEditionChoiceAuditSchema,
@@ -12,7 +17,30 @@ type SponsorInput = {
   expectedScope?: MovieEditionScope | undefined;
   expectedRequestId?: string | undefined;
   budget?: PublicationAuthorityReadBudget | undefined;
+  queriedAttempt?: QueriedMovieAttemptV4;
 };
+
+/** Actual rows already queried by the caller in this transaction. This locator
+ * skips duplicate reads only; all birth and current authority checks still run. */
+export type QueriedMovieAttemptV4 = {
+  tx: object;
+  attempt: AcquisitionAttempt;
+  command?: Operation;
+  choice?: MovieEditionChoice;
+};
+
+export function movieAttemptQueriedInTransactionV4(
+  tx: object,
+  attemptId: string,
+  queried?: QueriedMovieAttemptV4,
+) {
+  if (queried === undefined) return;
+  if (queried.tx !== tx || queried.attempt.id !== attemptId)
+    throw new Error(
+      "Queried movie attempt changed its actual transaction or identity",
+    );
+  return queried.attempt;
+}
 
 function assertExpectedSponsor(
   input: SponsorInput,
@@ -38,10 +66,15 @@ export async function readMovieAttemptSponsor(
   tx: Prisma.TransactionClient,
   input: SponsorInput,
 ) {
-  const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: input.attemptId },
-  });
-  input.budget?.consume(1);
+  const captured = await readMovieAttemptSponsorRowsV4(tx, input);
+  return captured === null ? null : captured.authority;
+}
+
+export async function readMovieAttemptSponsorRowsV4(
+  tx: Prisma.TransactionClient,
+  input: SponsorInput,
+) {
+  const attempt = await readSourceAttempt(tx, input);
   if (attempt.movieEditionAuthority === null) {
     if (
       attempt.movieEditionChoiceId !== null ||
@@ -54,10 +87,7 @@ export async function readMovieAttemptSponsor(
     attempt.movieEditionAuthority,
   );
   assertExpectedSponsor(input, proof);
-  const choice = await tx.movieEditionChoice.findUniqueOrThrow({
-    where: { id: proof.choiceId },
-  });
-  input.budget?.consume(1);
+  const choice = await readSourceChoice(tx, input, proof.choiceId);
   const audit = MovieEditionChoiceAuditSchema.parse(choice.authority);
   if (
     attempt.movieEditionChoiceId !== choice.id ||
@@ -77,8 +107,46 @@ export async function readMovieAttemptSponsor(
   )
     throw new Error("Immutable movie attempt attribution changed");
   return {
-    userId: choice.subjectUserId,
-    actorId: choice.actorId,
-    serverMachineId: audit.serverMachineId,
+    authority: {
+      userId: choice.subjectUserId,
+      actorId: choice.actorId,
+      serverMachineId: audit.serverMachineId,
+    },
+    choice,
   };
+}
+
+async function readSourceChoice(
+  tx: Prisma.TransactionClient,
+  input: SponsorInput,
+  choiceId: string,
+) {
+  const queried = input.queriedAttempt?.choice;
+  if (queried !== undefined) {
+    if (queried.id !== choiceId)
+      throw new Error("Queried movie birth choice changed its exact identity");
+    return queried;
+  }
+  const choice = await tx.movieEditionChoice.findUniqueOrThrow({
+    where: { id: choiceId },
+  });
+  input.budget?.consume(1);
+  return choice;
+}
+
+async function readSourceAttempt(
+  tx: Prisma.TransactionClient,
+  input: SponsorInput,
+) {
+  const queried = movieAttemptQueriedInTransactionV4(
+    tx,
+    input.attemptId,
+    input.queriedAttempt,
+  );
+  if (queried !== undefined) return queried;
+  const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: input.attemptId },
+  });
+  input.budget?.consume(1);
+  return attempt;
 }

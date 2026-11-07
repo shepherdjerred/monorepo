@@ -13,7 +13,7 @@ import {
   MovieBirthAuthoritySchema,
   type MovieFilePlan,
 } from "#shared/movie-editions/management/contracts.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   movieEditionDefinition,
   type MovieEditionScope,
@@ -30,6 +30,30 @@ import type { PublicationContext } from "#automation/publication-proof/invocatio
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { ownedSubtitleSidecars } from "#automation/files/subtitle-lifecycle/ownership.ts";
 import { movieCurrentQuality } from "#automation/movie-editions/current-quality.ts";
+import { resolveMovieTransferSourceV1 } from "#automation/movie-editions/transfer-reuse/source.ts";
+import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
+import type { MovieTransferReuseGrantV1 } from "#shared/movie-editions/transfer-reuse/v1.ts";
+import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
+import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
+
+function assertGrantedObservation(
+  raw: unknown,
+  granted: MovieTransferReuseGrantV1["transfer"],
+) {
+  const stored = z
+    .object({ torrent: StoredTorrentObservationSchema })
+    .parse(raw);
+  if (!hasApplicationSeedingPolicy(stored.torrent))
+    throw new FileGuardError("torrent_policy_drift");
+  if (
+    stored.torrent.save_path !== granted.savePath ||
+    stored.torrent.content_path !== granted.contentPath ||
+    stored.torrent.tags !== granted.tags ||
+    stored.torrent.category !== granted.category ||
+    stored.torrent.hash !== granted.qbittorrentId
+  )
+    throw new FileGuardError("movie_download_path_changed");
+}
 
 export const MovieTorrentObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -110,6 +134,32 @@ export async function authorizeMovieFilesV4(
   const observation = MovieTorrentObservationSchema.parse(
     attempt.torrent.observation,
   );
+  if (context.movieManagement === undefined)
+    throw new FileGuardError("movie_publication_execution_context_missing");
+  const source = await resolveMovieTransferSourceV1(
+    tx,
+    attempt,
+    context.movieManagement.budget,
+    {
+      lock: true,
+      actualSource: {
+        transaction: tx,
+        torrent: attempt.torrent,
+        infoHash: CandidateSourceEvidenceSchema.parse(
+          authorized.release.sourceEvidence,
+        ).infoHash,
+        providerId: authorized.release.providerId,
+      },
+    },
+  );
+  if (source.grant !== null) {
+    assertGrantedObservation(
+      attempt.torrent.observation,
+      source.grant.transfer,
+    );
+  }
+  if (["removing", "removed"].includes(attempt.torrent.state))
+    throw new FileGuardError("torrent_unowned");
   authorized.freshness.assertActive();
   context.execution.assertActive();
   return { ...authorized, attempt, observation };

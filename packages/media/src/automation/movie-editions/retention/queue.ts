@@ -72,6 +72,8 @@ export async function queueMovieRetentionFromWatch(
       key: `movie-retention-v4:${scope.mediaId}:${scope.edition}:${String(target.generation)}:${bucket}`,
       kind: "retain_movie_edition_v4",
       targetId: scope.mediaId,
+      createdAt: new Date(),
+      availableAt: new Date(),
       payload: {
         schemaVersion: 4,
         scope,

@@ -4,7 +4,7 @@ import {
   MovieRestoreReferenceV1Schema,
   type MovieRestoreReferenceV1,
 } from "#shared/movie-editions/publication-v2.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieRestoreReceiptV1 } from "#shared/movie-editions/restore-v1.ts";
 import { readMovieRestoreReceiptV1 } from "#infrastructure/movie-editions/retention/restore-commit.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";

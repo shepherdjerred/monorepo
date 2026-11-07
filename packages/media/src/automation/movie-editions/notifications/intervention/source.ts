@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Operation, Prisma } from "#generated/prisma/client.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieInterventionNoticeV4 } from "#shared/movie-editions/intervention/v4.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";

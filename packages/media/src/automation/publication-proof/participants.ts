@@ -144,9 +144,34 @@ export async function observePublicationParticipants(
   return result;
 }
 
+/** Observe one declared path through the existing process-local proof. Domain
+ * parents and the caller's complete path locks provide ownership separately. */
+export async function observePublicationPhysicalPath(
+  context: FileContext,
+  input: {
+    libraryKind: "movies" | "tv";
+    root: "library" | "control";
+    path: string;
+  },
+) {
+  const proof = context.contentProof;
+  if (proof === undefined)
+    throw new FileOperationConflict("Publication proof disappeared");
+  const root = context.roots[input.libraryKind][input.root];
+  const filename = await safePath(root, input.path, false);
+  if (filename !== path.join(root, input.path))
+    throw new FileOperationConflict("Publication participant path changed");
+  return observePhysical(
+    context,
+    input,
+    filename,
+    await proof.digest(filename),
+  );
+}
+
 async function observePhysical(
   context: FileContext,
-  item: ParticipantPath,
+  item: Pick<ParticipantPath, "root" | "path">,
   filename: string,
   checksum: string | null,
 ) {

@@ -35,9 +35,20 @@ async function legacyProtection(
   tx: Prisma.TransactionClient,
   ids: string[],
   epoch: number,
+  input: MediaOperation,
 ) {
   if (!(await lockRuntimeAuthority(tx, epoch)))
     return protectedResult("runtime_protected");
+  const current = await tx.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: input.mediaId, edition: "default" } },
+  });
+  if (current.generation !== input.generation)
+    return {
+      status: "obsolete" as const,
+      reason: "intent_obsolete",
+      decisionId: null,
+      wakeAt: null,
+    };
   if (await hasPendingLegacyClaims(tx, ids)) {
     await persistLegacyClaimProtection(tx, ids);
     return protectedResult(LEGACY_CLAIM_PROTECTION);
@@ -199,7 +210,12 @@ export async function evaluateOwnerOverride(
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
     });
-    const legacy = await legacyProtection(tx, ids, runtime.recoveryEpoch);
+    const legacy = await legacyProtection(
+      tx,
+      ids,
+      runtime.recoveryEpoch,
+      input,
+    );
     if (legacy !== null) return legacy;
     if (
       owner.role !== "owner" ||

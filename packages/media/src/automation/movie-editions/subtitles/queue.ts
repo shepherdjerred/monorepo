@@ -52,6 +52,8 @@ export async function queueMovieSubtitleTargetsV4(
       key,
       kind: "acquire_movie_subtitles_v4",
       targetId: input.assetId,
+      createdAt: new Date(),
+      availableAt: new Date(),
       payload: {
         schemaVersion: 4,
         scope: input.scope,

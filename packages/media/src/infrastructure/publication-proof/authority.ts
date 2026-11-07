@@ -1,5 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import { PublicationOutcomeSchema } from "#shared/publication-proof/outcome.ts";
+import type { PublicationOutcomeSchema } from "#shared/publication-proof/outcome.ts";
 import {
   PublicationTransitionReferenceSchema,
   type PublicationAuthorityReference,
@@ -10,7 +10,8 @@ import { assertPriorNativeBinding } from "#infrastructure/native-archive/prior-b
 import { compensationRecord } from "#infrastructure/native-compensation/records.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { loadPublicationIntent } from "./store.ts";
+import { loadPublicationIntentRecord } from "./store.ts";
+import type { SeriesPackPublicationOutcomeV3 } from "#shared/acquisition/series-pack-publication-v1.ts";
 import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 import { snapshotPublicationAsset } from "./snapshots.ts";
 import {
@@ -122,7 +123,9 @@ async function resolveTransition(
     { kind: "publication_transition_binding" }
   >;
   snapshot: PublicationAssetSnapshot;
-  outcome: ReturnType<typeof PublicationOutcomeSchema.parse>;
+  outcome:
+    | ReturnType<typeof PublicationOutcomeSchema.parse>
+    | SeriesPackPublicationOutcomeV3;
   libraryKind: "movies" | "tv";
 }> {
   const { budget, projection } = options;
@@ -133,10 +136,11 @@ async function resolveTransition(
   const row = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: input.transitionId },
   });
-  const intent = await loadPublicationIntent(tx, row.attemptId, budget);
-  if (intent === null || row.outcome === null || row.outcomeHash === null)
+  const record = await loadPublicationIntentRecord(tx, row.attemptId, budget);
+  if (record?.outcome == null || row.outcomeHash === null)
     throw new Error("Publication transition lacks committed physical outcome");
-  const outcome = PublicationOutcomeSchema.parse(row.outcome);
+  const intent = record.reference;
+  const outcome = record.outcome;
   const matches = outcome.entries.filter(
     (entry) =>
       entry.predecessor?.id === input.assetId ||

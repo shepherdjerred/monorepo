@@ -8,6 +8,21 @@ import {
 } from "#shared/recovery.ts";
 import { MediaError } from "#application/errors.ts";
 
+export async function currentRecoveryOwner(
+  db: Prisma.TransactionClient,
+  actor: MediaActor,
+) {
+  const user = await db.mediaUser.findUniqueOrThrow({
+    where: { id: actor.id },
+  });
+  if (user.role !== "owner" || user.restricted)
+    throw new MediaError(
+      "owner_required",
+      "A current unrestricted owner must review recovery",
+      403,
+    );
+}
+
 export async function assertRecoveryRespondent(
   db: Prisma.TransactionClient,
   input: {

@@ -7,6 +7,7 @@ import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import { StoredCandidateSchema } from "./providers.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import type { ReleaseEvaluation } from "#domain/release-evaluation.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 function identity(attributes: ReleaseAttributes): string {
   return JSON.stringify({
@@ -45,6 +46,7 @@ export async function persistCandidateSnapshot(
     attributes: ReleaseAttributes;
     evaluation: ReleaseEvaluation;
     searchedForMediaId?: string;
+    budget?: PublicationAuthorityReadBudget;
   },
 ): Promise<ReleaseAttributes | null> {
   const { source, attributes: next, evaluation } = input;
@@ -90,6 +92,7 @@ export async function persistCandidateSnapshot(
       },
       update: {},
     });
+    input.budget?.consume(1);
     const releaseId = found.id;
     await tx.$queryRaw(
       Prisma.sql`SELECT id FROM "ReleaseCandidate" WHERE id = ${releaseId} FOR UPDATE`,
@@ -97,6 +100,7 @@ export async function persistCandidateSnapshot(
     const row = await tx.releaseCandidate.findUniqueOrThrow({
       where: { id: releaseId },
     });
+    input.budget?.consume(1);
     const current = {
       id: row.id,
       providerId: row.providerId,

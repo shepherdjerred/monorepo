@@ -9,28 +9,7 @@ import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts"
 import { snapshotHash } from "#migration/profile-import.ts";
 import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
 import type { NativeFileContext } from "./files.ts";
-
-export function assertNativeEvidenceFresh(
-  network: Pick<
-    z.infer<typeof NativeRecoveryNetworkEvidenceSchema>,
-    "capturedAt" | "expiresAt" | "quiescence" | "mounts"
-  >,
-): void {
-  const now = Date.now();
-  for (const evidence of [network, network.quiescence, network.mounts]) {
-    const captured = Date.parse(evidence.capturedAt);
-    const expires = Date.parse(evidence.expiresAt);
-    if (
-      captured > now ||
-      expires <= now ||
-      expires <= captured ||
-      expires - captured > 120_000
-    )
-      throw new Error(
-        "Native recovery authority expired or has invalid freshness",
-      );
-  }
-}
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 
 export async function nativeApprovingActor(
   tx: Prisma.TransactionClient,

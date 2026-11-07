@@ -1,7 +1,6 @@
 import path from "node:path";
 import { z } from "zod";
 import type { Prisma, SubtitleAsset } from "#generated/prisma/client.ts";
-import { SubtitleReplacementSnapshotSchema } from "#shared/subtitle-replacement.ts";
 import type { NativeTerminalDescriptor } from "#shared/native-recovery/terminal.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeSubtitleSnapshot } from "#automation/native-subtitles/snapshot.ts";
@@ -12,6 +11,13 @@ import {
 import type { TerminalSubtitleBindingSchema } from "./terminal-rebinding.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { PublicationSubtitleLineageSchema } from "#shared/publication-proof/subtitle-lineage.ts";
+import {
+  replacementSnapshot,
+  type MovieReplacementReceiptV2,
+} from "#shared/movie-editions/subtitle-replacement-v2.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { readMovieReplacementReceiptV2 } from "#infrastructure/movie-editions/subtitle-replacement/records.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 
 const Receipt = z.object({
   schemaVersion: z.literal(1),
@@ -59,6 +65,7 @@ type Input = {
     bindings: z.infer<typeof TerminalSubtitleBindingSchema>[];
     snapshots: NativeSubtitleSnapshot[];
   }[];
+  movieScope?: MovieEditionScope;
 };
 
 /** A settled replacement explains a changed caption, without adopting any of its archives. */
@@ -102,8 +109,10 @@ export async function terminalSubtitleChain(
       throw new Error(
         "Native restored sidecar has no exact settled replacement",
       );
-    const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
-    const receipt = Receipt.parse(row.receipt.evidence);
+    const { scope, receipt } = await replacementParent(tx, row, {
+      movieScope: input.movieScope,
+      budget,
+    });
     if (
       expected !== undefined &&
       snapshotHash(
@@ -136,14 +145,62 @@ export async function terminalSubtitleChain(
     });
     id = row.candidateSubtitleId;
     checksum = z.string().parse(scope.candidate.checksum);
-    expected = NativeSubtitleSnapshotSchema.parse({
-      ...scope.candidate,
-      state: "installed",
-      path: input.canonicalPath,
-      version: scope.candidate.version + 1,
-    });
+    expected = installedReplacementSuccessor(
+      scope,
+      receipt,
+      input.canonicalPath,
+    );
   }
   throw new Error("Native subtitle replacement chain exceeds bounded lookup");
+}
+
+function installedReplacementSuccessor(
+  scope: ReplacementInput["scope"],
+  receipt: ReplacementInput["receipt"],
+  canonicalPath: string,
+) {
+  return NativeSubtitleSnapshotSchema.parse(
+    receipt.schemaVersion === 2
+      ? receipt.after.candidate
+      : {
+          ...scope.candidate,
+          state: "installed",
+          path: canonicalPath,
+          version: scope.candidate.version + 1,
+        },
+  );
+}
+
+async function replacementParent(
+  tx: Prisma.TransactionClient,
+  row: Prisma.SubtitleReplacementGetPayload<{ include: { receipt: true } }>,
+  input: {
+    movieScope: MovieEditionScope | undefined;
+    budget: PublicationAuthorityReadBudget | undefined;
+  },
+) {
+  const scope = replacementSnapshot(row.snapshot);
+  if (scope.schemaVersion === 1) {
+    if (row.receipt === null)
+      throw new Error("Subtitle replacement receipt disappeared");
+    return { scope, receipt: Receipt.parse(row.receipt.evidence) };
+  }
+  if (
+    input.budget === undefined ||
+    input.movieScope === undefined ||
+    snapshotHash(scope.scope) !== snapshotHash(input.movieScope)
+  )
+    throw new Error(
+      "Movie replacement lineage requires exact scope and original allowance",
+    );
+  const committed = await readMovieReplacementReceiptV2(
+    tx,
+    row.id,
+    input.budget,
+  );
+  if (committed === null || committed.row.receipt?.id !== row.receipt?.id)
+    throw new Error("Movie replacement lineage lost its actual receipt");
+  return { scope, receipt: committed.receipt };
 }
 
 function assertRenewedSubtitle(
@@ -220,8 +277,8 @@ function isCurrent(row: SubtitleAsset, input: Input, checksum: string) {
 type ReplacementInput = {
   input: Input;
   row: Prisma.SubtitleReplacementGetPayload<{ include: { receipt: true } }>;
-  scope: z.infer<typeof SubtitleReplacementSnapshotSchema>;
-  receipt: z.infer<typeof Receipt>;
+  scope: ReturnType<typeof replacementSnapshot>;
+  receipt: z.infer<typeof Receipt> | MovieReplacementReceiptV2;
 };
 function validateReplacement({
   input,
@@ -261,7 +318,7 @@ function validateSnapshot(
     scope.old.path !== scope.destination ||
     path.relative(path.dirname(scope.asset.path), scope.destination) !==
       path.relative(path.dirname(input.asset.path), input.canonicalPath) ||
-    snapshotHash(scope) !== row.snapshotHash
+    snapshotHash(nativeJson(scope)) !== row.snapshotHash
   )
     throw new Error("Native subtitle replacement snapshot binding changed");
   const actual = input.asset.coverage
@@ -381,7 +438,7 @@ function replacementArtifacts({
 
 function receiptArtifactIdentities(
   evidence: unknown,
-  receipt: z.infer<typeof Receipt>,
+  receipt: z.infer<typeof Receipt> | MovieReplacementReceiptV2,
   artifacts: ReturnType<typeof replacementArtifacts>,
 ) {
   const artifactIdentities = [];

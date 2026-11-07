@@ -73,8 +73,9 @@ BEGIN
     AND d.evidence->'recoveryEpoch'=proof->'recoveryEpoch'
     AND to_jsonb(target."automationEpoch")=proof->'recoveryEpoch'
     AND to_jsonb(runtime."recoveryEpoch")=proof->'recoveryEpoch' AND runtime.mode='active' AND runtime."ownershipConfirmed"
-    AND d."quarantinedAt"=(proof->>'committedAt')::timestamptz
-    AND d."quarantinedAt">=date_trunc('milliseconds',transaction_timestamp()) AND d."quarantinedAt"<=clock_timestamp()
+    AND d."quarantinedAt"=((proof->>'committedAt')::timestamptz AT TIME ZONE 'UTC')
+    AND d."quarantinedAt">=(date_trunc('milliseconds',transaction_timestamp()) AT TIME ZONE 'UTC')
+    AND d."quarantinedAt"<=(clock_timestamp() AT TIME ZONE 'UTC')
     AND d."purgeAfter"=d."quarantinedAt"+interval '7 days'
     AND EXISTS (SELECT 1 FROM "MediaItem" WHERE id=selected->>'mediaId' AND kind='movie')
     AND EXISTS (SELECT 1 FROM "RetentionDecision" WHERE id=d.id AND xmin::text=(txid_current() % 4294967296)::text),false) THEN

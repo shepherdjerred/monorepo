@@ -20,6 +20,10 @@ import {
   type VisibilitySections,
 } from "./access.ts";
 import { mediaVisibility } from "./detail.ts";
+import {
+  hasPendingSeriesPackPublicationV1,
+  SERIES_PACK_PUBLICATION_PENDING,
+} from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 
 /** Existing detail transaction; configuration was captured before entering PG. */
 export function readMediaDetail(
@@ -151,6 +155,10 @@ export function readMediaDetail(
       where: { id: "singleton" },
     });
     const policies = await currentSubtitlePolicies(tx, [mediaId]);
+    const publicationPending = await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: [mediaId],
+      assetIds: item.assets.map((coverage) => coverage.asset.id),
+    });
     return MediaDetailSchema.parse({
       ...item,
       intent: defaultIntent(item.intents),
@@ -172,11 +180,14 @@ export function readMediaDetail(
         asset: {
           ...coverage.asset,
           properties: publicAssetProperties(coverage.asset.properties),
-          subtitleStatus: policyStatus({
-            policy: policies[0],
-            asset: coverage.asset,
-            epoch: runtime.recoveryEpoch,
-          }),
+          subtitleStatus: pendingSubtitleStatus(
+            policyStatus({
+              policy: policies[0],
+              asset: coverage.asset,
+              epoch: runtime.recoveryEpoch,
+            }),
+            publicationPending,
+          ),
           subtitles: coverage.asset.subtitles.map((subtitle) => ({
             ...subtitle,
             accepted: subtitleAccepted({
@@ -193,4 +204,21 @@ export function readMediaDetail(
         : {}),
     });
   });
+}
+
+function pendingSubtitleStatus(
+  status: ReturnType<typeof policyStatus>,
+  pending: boolean,
+) {
+  if (!pending) return status;
+  return {
+    satisfied: false,
+    missing: status?.missing ?? [],
+    protectedReasons: [
+      ...new Set([
+        ...(status?.protectedReasons ?? []),
+        SERIES_PACK_PUBLICATION_PENDING,
+      ]),
+    ],
+  };
 }

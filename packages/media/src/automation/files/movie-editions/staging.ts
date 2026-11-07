@@ -9,7 +9,7 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieFilePlan } from "#shared/movie-editions/management/contracts.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { authorizeMovieFilesV4, assertMovieFilePlanV4 } from "./authority.ts";
 

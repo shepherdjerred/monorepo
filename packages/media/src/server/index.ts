@@ -23,8 +23,10 @@ import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.t
 import { PrismaMigrationAdministration } from "#migration/persistence.ts";
 import { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
-import { PrismaSubtitleReplacements } from "#infrastructure/subtitle-replacement/service.ts";
+import { PrismaMovieSubtitleReplacements } from "#infrastructure/movie-editions/subtitle-replacement/service.ts";
+import { PrismaMovieRollbackCommandsV1 } from "#infrastructure/movie-editions/rollback/manual/manual-command.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
+import { PrismaMovieHistoryReviews } from "#infrastructure/movie-editions/history-review/service.ts";
 import { PrismaLegacyRequesterBindings } from "#infrastructure/recovery/legacy-claims/service.ts";
 import { MigrationCatalogDiscovery } from "#migration/catalog-discovery.ts";
 import { PrismaPlexExclusionAdministration } from "#infrastructure/plex-exclusion-service.ts";
@@ -123,32 +125,40 @@ async function movieAccess() {
     movieSectionId: section.value,
   };
 }
-const app = createMediaApp({
-  auth,
-  media: new PrismaMediaApplication(database, {
+const movieSubtitleReplacements = new PrismaMovieSubtitleReplacements(
+  database,
+  {
     keepDays: keepDays.value,
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
     movieAccess,
-    plexAccess: async (sectionType) => {
-      const section = await mediaBehaviorConfig(
-        bootstrap.ENVIRONMENT,
-        true,
-      ).get(
-        sectionType === "movie"
-          ? "permittedMovieSectionId"
-          : "permittedTvSectionId",
-      );
-      return {
-        serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-        sectionId: section.value,
-        sectionType,
-      };
-    },
-    visibilitySections: {
-      movie: permittedMovieSectionId.value,
-      series: permittedTvSectionId.value,
-    },
-  }),
+  },
+  temporal.describe,
+);
+const media = new PrismaMediaApplication(database, {
+  keepDays: keepDays.value,
+  serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  movieAccess,
+  plexAccess: async (sectionType) => {
+    const section = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
+      sectionType === "movie"
+        ? "permittedMovieSectionId"
+        : "permittedTvSectionId",
+    );
+    return {
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      sectionId: section.value,
+      sectionType,
+    };
+  },
+  visibilitySections: {
+    movie: permittedMovieSectionId.value,
+    series: permittedTvSectionId.value,
+  },
+});
+const app = createMediaApp({
+  auth,
+  media,
+  movieLifecycle: media,
   notifications: new PrismaNotificationApplication(database, cipher, discord, {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
     movieAccess,
@@ -199,9 +209,28 @@ const app = createMediaApp({
   },
   numberingAdmin: new PrismaNumberingAdministration(database, tmdbClient),
   handoffAdmin: new PrismaMediaHandoff(database),
-  nativeRecoveryAdmin: new PrismaNativeRecovery(database, temporal.describe),
-  subtitleReplacements: new PrismaSubtitleReplacements(
+  movieHistory: new PrismaMovieHistoryReviews(
     database,
+    {
+      keepDays: keepDays.value,
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      movieAccess,
+    },
+    {
+      refreshManaged: (actor, userId) =>
+        plexAdministration.refreshProfileAccess(actor, userId),
+    },
+  ),
+  nativeRecoveryAdmin: new PrismaNativeRecovery(database, temporal.describe),
+  subtitleReplacements: movieSubtitleReplacements.review,
+  movieSubtitleReplacements,
+  movieRollback: new PrismaMovieRollbackCommandsV1(
+    database,
+    {
+      keepDays: keepDays.value,
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      movieAccess,
+    },
     temporal.describe,
   ),
   recoveryAdmin: new PrismaRecovery(

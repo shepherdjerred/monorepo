@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
 import { evaluateSeeding } from "#domain/seeding.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import type { MediaAutomationContext } from "./context.ts";
@@ -18,7 +19,7 @@ import {
   type CleanupEvaluation,
 } from "#shared/visibility/seeding.ts";
 
-const PolicySchema = z.discriminatedUnion("kind", [
+export const PolicySchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("public") }),
   z.object({ kind: z.literal("unknown") }),
   z.object({
@@ -48,7 +49,15 @@ type SeedingActivities = Pick<
 >;
 type Outcome = Awaited<ReturnType<SeedingActivities["evaluateMediaSeeding"]>>;
 
-async function recordOutcome(
+function sourceRemovalResult(
+  outcome: Outcome,
+): Awaited<ReturnType<SeedingActivities["removeMediaTorrent"]>> {
+  return outcome.status === "removed"
+    ? { status: "removed", reason: null }
+    : { status: "protected", reason: outcome.reason };
+}
+
+export async function recordOutcome(
   db: Pick<Prisma.TransactionClient, "torrent" | "$queryRaw">,
   snapshot: CleanupSnapshot,
   input: {
@@ -76,7 +85,7 @@ function pathsOverlap(first: string, second: string): boolean {
   );
 }
 
-async function sourceDirectoryExclusive(
+export async function sourceDirectoryExclusive(
   context: MediaAutomationContext,
   hash: string,
   isolated: string,
@@ -224,8 +233,58 @@ export function createSeedingActivities(
   context: MediaAutomationContext,
 ): SeedingActivities {
   return {
-    evaluateMediaSeeding: (input) => evaluate(context, input.torrentId),
+    evaluateMediaSeeding: async (input) => {
+      const invocation = movieManagementContext(context);
+      const { scopedMovieSeeding } = await import("./seeding/movie-source.ts");
+      const scoped = await scopedMovieSeeding(
+        invocation,
+        input.torrentId,
+        "evaluation",
+      );
+      if (scoped !== null) return scoped;
+      const { scopedNativeSeriesPackSeedingV1 } =
+        await import("./seeding/series-pack-native/source.ts");
+      const native = await scopedNativeSeriesPackSeedingV1(
+        invocation,
+        input,
+        "evaluation",
+      );
+      if (native !== null) return native;
+      const { scopedSeriesPackSeeding } =
+        await import("./seeding/series-pack-source.ts");
+      return (
+        (await scopedSeriesPackSeeding(
+          invocation,
+          input.torrentId,
+          "evaluation",
+        )) ?? evaluate(context, input.torrentId)
+      );
+    },
     async removeMediaTorrent(input) {
+      const invocation = movieManagementContext(context);
+      const { scopedMovieSeeding } = await import("./seeding/movie-source.ts");
+      const scoped = await scopedMovieSeeding(
+        invocation,
+        input.torrentId,
+        "removal",
+      );
+      if (scoped !== null) return sourceRemovalResult(scoped);
+      const { scopedNativeSeriesPackSeedingV1 } =
+        await import("./seeding/series-pack-native/source.ts");
+      const native = await scopedNativeSeriesPackSeedingV1(
+        invocation,
+        input,
+        "removal",
+      );
+      if (native !== null) return sourceRemovalResult(native);
+      const { scopedSeriesPackSeeding } =
+        await import("./seeding/series-pack-source.ts");
+      const series = await scopedSeriesPackSeeding(
+        invocation,
+        input.torrentId,
+        "removal",
+      );
+      if (series !== null) return sourceRemovalResult(series);
       const outcome = await evaluate(context, input.torrentId);
       if (outcome.status === "removed")
         return { status: "removed", reason: null };

@@ -19,7 +19,7 @@ import {
 } from "#shared/native-recovery/archive.ts";
 import { NativeTerminalEvidenceSchema } from "#shared/native-recovery/terminal.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
-import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
+import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   archiveAwait,

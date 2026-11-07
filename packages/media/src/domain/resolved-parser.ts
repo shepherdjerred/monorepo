@@ -5,7 +5,7 @@ import type {
 } from "./resolved-contract.ts";
 import { parseResolvedAnime } from "./resolved-anime-parser.ts";
 
-type ParsedScene = {
+export type ParsedScene = {
   qualityId: number;
   releaseTitle: string | null;
   releaseGroup: string | null;
@@ -53,6 +53,14 @@ function sceneParts(title: string, source: ResolvedProfile["source"]) {
     releaseGroup: group.groups["group"] ?? "",
   };
 }
+
+/** New explicit protocols reuse the exact existing source-quality/token rules. */
+export {
+  TOKENS as RESOLVED_SCENE_TOKENS,
+  UNKNOWN as RESOLVED_SCENE_UNKNOWN,
+  qualityMatch as matchResolvedSceneQuality,
+  revision as resolvedSceneRevision,
+};
 function qualityMatch(
   quality: SourceQuality,
   source: ResolvedProfile["source"],

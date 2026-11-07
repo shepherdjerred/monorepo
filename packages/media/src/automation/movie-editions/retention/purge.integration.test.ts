@@ -16,7 +16,7 @@ import {
   MovieEditionKeySchema,
   type MovieEditionKey,
 } from "#shared/movie-editions/registry.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { warningHistory } from "#automation/retention/fixtures/elapsed.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
 import { quarantineMovieFilesV4 } from "./quarantine.ts";

@@ -8,6 +8,7 @@ import type { MediaPathMapping } from "#filesystem/media-paths.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import type { LibraryManagementInvocation } from "#infrastructure/acquisition-identity/library-policy.ts";
 import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/invocation.ts";
+import type { MovieRollbackExecution } from "#shared/movie-editions/rollback/execution.ts";
 import * as filePlan from "#shared/file-plan.ts";
 
 export type Transaction = Prisma.TransactionClient;
@@ -15,6 +16,7 @@ export type FileContext = {
   db: Database;
   libraryManagement?: LibraryManagementInvocation;
   movieManagement?: MovieManagementInvocation;
+  movieRollbackExecution?: MovieRollbackExecution;
   serverMachineId?: string;
   permittedMovieSection?: () => Promise<string>;
   plexAccess: (sectionType: "movie" | "show") => Promise<PlexAccess>;

@@ -4,7 +4,7 @@ import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import {
   MovieOperationV4Schema,
   type MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieEditionHashSchema } from "#shared/movie-editions/registry.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
 import { serializable } from "#automation/store.ts";

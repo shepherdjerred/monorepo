@@ -1,16 +1,14 @@
 import nodePath from "node:path";
 import { workerFilePath } from "./paths/locations.ts";
-import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
+import { inspectPreviousSidecars } from "./subtitle-lifecycle/inspection-sidecars.ts";
 import { lstat, realpath } from "node:fs/promises";
 import { z } from "zod";
 import { inspectMedia, type MediaProbe } from "#filesystem/media-tools.ts";
 import { sha256File } from "#filesystem/operations-io.ts";
 import { parseReleaseName } from "#domain/release-parser.ts";
 import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
-import { DefaultAcquisitionIdentitySchema } from "#shared/acquisition/library-management.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import {
-  fileIdentityEvidence,
   IdentityTorrentFileSchema,
   type IdentityTorrentFile,
 } from "./acquisition-identity/evidence.ts";
@@ -43,6 +41,8 @@ import {
 } from "./editions/acquisition.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { libraryFileInvocation } from "#automation/acquisition-management/files.ts";
+import { seriesPackMeasurementV1 } from "./series-pack/measurement.ts";
+import { inspectionIdentity } from "./acquisition-identity/inspection.ts";
 
 const ObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -283,7 +283,7 @@ function assertCandidateCount(
     throw new FileGuardError("movie_files_ambiguous");
 }
 
-async function authorizeInspection(
+export async function authorizeInspection(
   context: Awaited<ReturnType<typeof libraryFileInvocation>>,
   attemptId: string,
   authority: { mediaIds: string[]; movieAccess: MovieChoiceAccess | undefined },
@@ -318,21 +318,21 @@ async function authorizeInspection(
     throw new FileGuardError("committed_plan_changed");
   return true;
 }
-async function inspectEntry(input: {
+export async function inspectEntry(input: {
   context: Awaited<ReturnType<typeof libraryFileInvocation>>;
   attempt: AttemptWithRelease;
   file: IdentityTorrentFile;
   media: NamingItem[];
   savePath: string;
   movieAccess: MovieChoiceAccess | undefined;
+  /** New pack batching may only acknowledge a concurrently committed original receipt. */
+  seriesPackStagingV1?: true;
 }): Promise<FilePlanEntry> {
   const { context, attempt, file, media, savePath } = input;
-  const identity =
-    attempt.identityEvidence === null
-      ? null
-      : DefaultAcquisitionIdentitySchema.parse(attempt.identityEvidence);
-  const evidence =
-    identity === null ? undefined : fileIdentityEvidence(identity, file);
+  const { identity, evidence } = inspectionIdentity(
+    attempt.identityEvidence,
+    file,
+  );
   const mediaIds = evidence?.coverage ?? fileCoverage(file.name, media);
   if (mediaIds.length === 0 || file.progress !== 1)
     throw new FileGuardError("file_coverage_unconfirmed");
@@ -365,6 +365,7 @@ async function inspectEntry(input: {
     context,
     measured,
     filename: nodePath.basename(file.name),
+    ...seriesPackMeasurementV1(identity, evidence),
   });
   const profileVersions = await assertMeasuredUpgrade(
     context.db,
@@ -385,33 +386,16 @@ async function inspectEntry(input: {
           context.roots[kind].library,
           workerFilePath(context, previous.path),
         );
-  const previousSidecars = (
-    previous === null ? [] : ownedSubtitleSidecars(previous)
-  ).map((subtitle) => {
-    if (subtitle.path === null)
-      throw new FileGuardError("subtitle_path_missing");
-    const subtitleChecksum = z
-      .string()
-      .regex(/^[a-f0-9]{64}$/u)
-      .parse(subtitle.checksum);
-    return {
-      subtitleId: subtitle.id,
-      libraryPath: nodePath.relative(
-        context.roots[kind].library,
-        workerFilePath(context, subtitle.path),
-      ),
-      checksum: subtitleChecksum,
-      quarantineId: crypto.randomUUID(),
-      operationId: crypto.randomUUID(),
-    };
-  });
+  const previousSidecars = inspectPreviousSidecars(context, kind, previous);
   const assetId = crypto.randomUUID();
   // Member probing and hashing may outlive the original authorization. Recheck
   // the complete attempt before preparing extracted subtitle control bytes.
-  await authorizeInspection(context, attempt.id, {
+  const committed = await authorizeInspection(context, attempt.id, {
     mediaIds: attempt.mediaIds,
     movieAccess: input.movieAccess,
   });
+  if (committed && input.seriesPackStagingV1 === true)
+    throw new FileGuardError("series_pack_staging_ack_required");
   const embeddedSubtitles = await stageEmbedded({
     context,
     kind,

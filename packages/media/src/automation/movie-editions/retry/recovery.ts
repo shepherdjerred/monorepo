@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { Operation } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import type { MovieOperationV4 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
-import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/activities-v4.ts";
+import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/lifecycle/activities-v4.ts";
 import {
   MovieRetryCaptureV1Schema,
   MovieRetryRenewalV1Schema,
@@ -22,12 +22,12 @@ import {
   readMovieRetrySourceV4,
   captureMovieRetryV1,
   movieRetryBirthHash,
-} from "#infrastructure/movie-editions/lifecycle/retry-source.ts";
-import { movieRetryAuthorityV4 } from "#infrastructure/movie-editions/lifecycle/retry-authority.ts";
+} from "#infrastructure/movie-editions/lifecycle/retry/retry-source.ts";
+import { movieRetryAuthorityV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-authority.ts";
 import {
   commitMovieRetryRenewalV1,
   readMovieRetryRenewalV1,
-} from "#infrastructure/movie-editions/lifecycle/retry-commit.ts";
+} from "#infrastructure/movie-editions/lifecycle/retry/retry-commit.ts";
 import { movieRetryTerminalV1 } from "./terminal.ts";
 import { movieRetryTorrentV1 } from "./torrent.ts";
 import { submitMovieTorrentV4 } from "#automation/movie-editions/submission.ts";

@@ -63,6 +63,7 @@ export async function reserveCandidate(
     context.db,
     input.operationId,
     proposed,
+    context.libraryManagement,
   );
   const movieAccess = await networkMovieAccess(context, proposedIds);
   return serializable(context.db, async (tx) => {
@@ -284,6 +285,7 @@ async function reservationIdentity(
 ) {
   const authority = {
     ...input,
+    libraryManagement: context.libraryManagement,
     ...(context.serverMachineId === undefined
       ? {}
       : { serverMachineId: context.serverMachineId }),

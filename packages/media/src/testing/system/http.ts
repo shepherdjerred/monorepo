@@ -20,7 +20,9 @@ import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
 import { PrismaPlexExclusionAdministration } from "#infrastructure/plex-exclusion-service.ts";
 import { PrismaLegacyRequesterBindings } from "#infrastructure/recovery/legacy-claims/service.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
-import { PrismaSubtitleReplacements } from "#infrastructure/subtitle-replacement/service.ts";
+import { PrismaMovieHistoryReviews } from "#infrastructure/movie-editions/history-review/service.ts";
+import { PrismaMovieSubtitleReplacements } from "#infrastructure/movie-editions/subtitle-replacement/service.ts";
+import { PrismaMovieRollbackCommandsV1 } from "#infrastructure/movie-editions/rollback/manual/manual-command.ts";
 import type { FetchTransport } from "#integrations/http.ts";
 import type { TmdbClient } from "#integrations/tmdb.ts";
 import { MigrationCatalogDiscovery } from "#migration/catalog-discovery.ts";
@@ -51,6 +53,11 @@ export function createSystemHttpServer(input: {
   });
   const movieAccess = () =>
     Promise.resolve({ serverMachineId, movieSectionId: "1" });
+  const movieSubtitleReplacements = new PrismaMovieSubtitleReplacements(
+    db,
+    { keepDays: 30, serverMachineId, movieAccess },
+    input.describeWorkflow,
+  );
   const plexAccess = (sectionType: "movie" | "show") =>
     Promise.resolve({
       serverMachineId,
@@ -65,18 +72,20 @@ export function createSystemHttpServer(input: {
     fetch: (request): Response | Promise<Response> => app.fetch(request),
   });
   const origin = server.url.origin;
+  const media = new PrismaMediaApplication(db, {
+    keepDays: 30,
+    serverMachineId,
+    movieAccess,
+    plexAccess,
+    visibilitySections: { movie: "1", series: "2" },
+  });
   const app = createMediaApp({
     auth: new MediaAuth(new PrismaAuthStore(db), input.plex, cipher, {
       ownerAccountId: input.ownerAccountId,
       sessionLifetimeMs: 3_600_000,
     }),
-    media: new PrismaMediaApplication(db, {
-      keepDays: 30,
-      serverMachineId,
-      movieAccess,
-      plexAccess,
-      visibilitySections: { movie: "1", series: "2" },
-    }),
+    media,
+    movieLifecycle: media,
     catalog,
     admin: new PrismaAdminApplication(db, cipher),
     capacityAdmin: new PrismaCapacityAdministration(db, () =>
@@ -102,9 +111,20 @@ export function createSystemHttpServer(input: {
       new MigrationCatalogDiscovery(db, input.tmdb, catalog),
     ),
     handoffAdmin: new PrismaMediaHandoff(db),
-    nativeRecoveryAdmin: new PrismaNativeRecovery(db, input.describeWorkflow),
-    subtitleReplacements: new PrismaSubtitleReplacements(
+    movieHistory: new PrismaMovieHistoryReviews(
       db,
+      { keepDays: 30, serverMachineId, movieAccess },
+      {
+        refreshManaged: (actor, userId) =>
+          plexAdmin.refreshProfileAccess(actor, userId),
+      },
+    ),
+    nativeRecoveryAdmin: new PrismaNativeRecovery(db, input.describeWorkflow),
+    subtitleReplacements: movieSubtitleReplacements.review,
+    movieSubtitleReplacements,
+    movieRollback: new PrismaMovieRollbackCommandsV1(
+      db,
+      { keepDays: 30, serverMachineId, movieAccess },
       input.describeWorkflow,
     ),
     recoveryAdmin: new PrismaRecovery(db, serverMachineId, (actor, userId) =>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hasPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import {
   allRequestersWatched,
@@ -333,6 +334,12 @@ async function publishedItemCurrent(
   item: z.infer<typeof ItemSchema>,
   epoch: number,
 ): Promise<boolean> {
+  if (
+    await hasPendingSeriesPackPublicationV1(tx, {
+      mediaIds: [item.mediaId],
+    })
+  )
+    return false;
   if (
     item.assetId === undefined ||
     item.assetVersion === undefined ||

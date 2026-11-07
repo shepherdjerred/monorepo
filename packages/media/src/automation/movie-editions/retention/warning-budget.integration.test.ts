@@ -7,7 +7,7 @@ import { queryFixtureDatabase } from "#testing/query-client.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";
 import { queueOperation } from "#automation/store.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
 

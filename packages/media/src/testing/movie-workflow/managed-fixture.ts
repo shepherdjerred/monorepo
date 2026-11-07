@@ -2,7 +2,7 @@ import path from "node:path";
 import { libraryBindingFixture } from "#automation/plex-binding/library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "#automation/plex-binding/library.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import type { automationTestHarness } from "#testing/automation.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";

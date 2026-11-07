@@ -1,4 +1,14 @@
 import type { MatchFeedSourceV1 } from "./feeds/contract.ts";
+import type {
+  SeriesPackStagingInputV1,
+  SeriesPackStagingBatchResultV1,
+  SeriesPackStagingSealResultV1,
+} from "./acquisition/series-pack-staging-v1.ts";
+import type {
+  SeriesPackPublicationInputV1,
+  SeriesPackPublicationBatchResultV1,
+  SeriesPackPublicationSealResultV1,
+} from "./acquisition/series-pack-publication-v1.ts";
 
 export type MediaOperation = {
   operationId: string;
@@ -95,6 +105,11 @@ export type MediaNetworkActivities = PlexBindingActivities & {
     cursor: string | null;
   }) => Promise<{ processed: number; nextCursor: string | null }>;
   dispatchMediaOutbox: () => Promise<{ dispatched: number; deferred: number }>;
+  matchSeriesPackFeedSource: (input: MatchFeedSourceV1) => Promise<{
+    status: "processed" | "paused";
+    processed: number;
+    nextCursor: MatchFeedSourceV1["cursor"];
+  }>;
   matchProviderFeedSource: (input: MatchFeedSourceV1) => Promise<{
     status: "processed" | "paused";
     processed: number;
@@ -182,6 +197,38 @@ export type MediaNetworkActivities = PlexBindingActivities & {
 };
 
 export type MediaFileActivities = {
+  rollbackPublishedSeriesPackV1: (input: MediaAttemptOperation) => Promise<{
+    status: "rolled_back" | "protected" | "obsolete";
+    reason?: string;
+  }>;
+  prepareSeriesPackMembersPublicationV1: (
+    input: SeriesPackPublicationInputV1,
+  ) => Promise<SeriesPackPublicationBatchResultV1<"prepared">>;
+  sealSeriesPackPublicationIntentV1: (
+    input: MediaAttemptOperation,
+  ) => Promise<SeriesPackPublicationSealResultV1<"prepared">>;
+  publishSeriesPackMembersV1: (
+    input: SeriesPackPublicationInputV1,
+  ) => Promise<SeriesPackPublicationBatchResultV1<"published">>;
+  sealSeriesPackPublicationOutcomeV1: (
+    input: MediaAttemptOperation,
+  ) => Promise<SeriesPackPublicationSealResultV1<"published">>;
+  compensateSeriesPackMembersV1: (
+    input: SeriesPackPublicationInputV1,
+  ) => Promise<SeriesPackPublicationBatchResultV1<"compensated">>;
+  sealSeriesPackCompensationV1: (
+    input: MediaAttemptOperation,
+  ) => Promise<SeriesPackPublicationSealResultV1<"compensated">>;
+  stageSeriesPackMembersV1: (
+    input: SeriesPackStagingInputV1,
+  ) => Promise<SeriesPackStagingBatchResultV1>;
+  sealSeriesPackStagingV1: (
+    input: MediaAttemptOperation,
+  ) => Promise<SeriesPackStagingSealResultV1>;
+  prepareSeriesPackPublication: (input: MediaAttemptOperation) => Promise<{
+    status: "prepared" | "blocked" | "obsolete";
+    reason?: string;
+  }>;
   cleanupSupersededMediaFile: (input: {
     operationId: string;
     cleanupId: string;

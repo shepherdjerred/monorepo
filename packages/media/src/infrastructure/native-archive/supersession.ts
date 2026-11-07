@@ -11,7 +11,7 @@ import {
 } from "#shared/native-recovery/archive.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { loadPublicationIntent } from "#infrastructure/publication-proof/store.ts";
+import { loadHistoricalPublicationIntent } from "#infrastructure/publication-proof/store.ts";
 import { NativeArchiveScopeProtection } from "./errors.ts";
 import { stableArchiveFiles } from "./plan.ts";
 import { z } from "zod";
@@ -233,7 +233,11 @@ async function assertChangedPlayback(
   const transition = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: file.authority.transitionId },
   });
-  const intent = await loadPublicationIntent(tx, transition.attemptId, budget);
+  const intent = await loadHistoricalPublicationIntent(
+    tx,
+    transition.attemptId,
+    budget,
+  );
   if (
     intent?.intent.entries.some(
       (entry) =>

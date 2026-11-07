@@ -11,7 +11,13 @@ import {
 import { SeedingDiagnostics } from "./seeding.tsx";
 import "./styles.css";
 
-export function MediaProgress({ visibility }: { visibility: MediaVisibility }) {
+export function MediaProgress({
+  visibility,
+  heading = "Download & seeding",
+}: {
+  visibility: MediaVisibility;
+  heading?: string;
+}) {
   const latest = visibility.attempts[0];
   return (
     <section
@@ -19,7 +25,7 @@ export function MediaProgress({ visibility }: { visibility: MediaVisibility }) {
       aria-labelledby="media-progress-heading"
     >
       <div className="section-heading">
-        <h2 id="media-progress-heading">Download & seeding</h2>
+        <h2 id="media-progress-heading">{heading}</h2>
         <span>
           {visibility.playback.upgradeInProgress
             ? "Upgrade in progress"
@@ -91,7 +97,7 @@ export function MediaProgress({ visibility }: { visibility: MediaVisibility }) {
   );
 }
 
-function TorrentProgress({
+export function TorrentProgress({
   torrent,
   number,
 }: {

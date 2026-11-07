@@ -1,3 +1,9 @@
+import {
+  SERIES_PACK_NATIVE_TV_WATCH_CURSOR,
+  sweepSeriesPackNativeTvWatchV1,
+  hasSeriesPackNativeTvWatchTargetsV1,
+  seriesPackNativeTvWatchDeferralsV1,
+} from "./reconciliation/series-pack-native-watch.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { queueOperation, serializable } from "./store.ts";
@@ -18,6 +24,10 @@ import {
   MOVIE_WATCH_CURSOR,
   sweepMovieWatch,
 } from "./reconciliation/movie-watch.ts";
+import {
+  PERSONAL_MOVIE_DUE_CURSOR,
+  sweepPersonalMovieDueV4,
+} from "./reconciliation/personal-movie-due.ts";
 
 /** Each page is bounded and cursor order is stable under concurrent inserts. */
 export function createSweepActivities(
@@ -27,15 +37,25 @@ export function createSweepActivities(
     async sweepMediaWork(input) {
       const invocation = movieManagementContext(context);
       if (
+        input.kind === "watch" &&
+        input.cursor?.startsWith(SERIES_PACK_NATIVE_TV_WATCH_CURSOR) === true
+      )
+        return sweepSeriesPackNativeTvWatchV1(invocation, input.cursor);
+      if (
+        input.kind === "due" &&
+        input.cursor?.startsWith(PERSONAL_MOVIE_DUE_CURSOR) === true
+      )
+        return sweepPersonalMovieDueV4(invocation, input.cursor);
+      if (
         input.kind === "due" &&
         input.cursor?.startsWith(LIBRARY_MOVIE_DUE_CURSOR) === true
       )
-        return sweepLibraryMovieDue(invocation, input.cursor);
+        return sweepLibraryThenPersonalMovieDue(invocation, input.cursor);
       if (
         input.kind === "watch" &&
         input.cursor?.startsWith(MOVIE_WATCH_CURSOR) === true
       )
-        return sweepMovieWatch(invocation, input.cursor);
+        return sweepMovieWatchWithNativeTail(invocation, input.cursor);
       if (input.kind === "downloads")
         return sweepDownloads(invocation, input.cursor);
       if (input.kind === "feeds")
@@ -48,6 +68,27 @@ export function createSweepActivities(
           });
     },
   };
+}
+
+async function sweepMovieWatchWithNativeTail(
+  context: MediaAutomationContext,
+  cursor: string,
+) {
+  const page = await sweepMovieWatch(context, cursor);
+  return page.nextCursor === null &&
+    (await hasSeriesPackNativeTvWatchTargetsV1(context))
+    ? { ...page, nextCursor: `${SERIES_PACK_NATIVE_TV_WATCH_CURSOR}start` }
+    : page;
+}
+
+async function sweepLibraryThenPersonalMovieDue(
+  context: MediaAutomationContext,
+  cursor: string,
+) {
+  const page = await sweepLibraryMovieDue(context, cursor);
+  return page.nextCursor === null
+    ? { ...page, nextCursor: `${PERSONAL_MOVIE_DUE_CURSOR}start` }
+    : page;
 }
 
 async function sweepIntentPage(
@@ -69,20 +110,21 @@ async function sweepIntentPage(
     take: 50,
     include: { intents: { where: { edition: "default" } } },
   });
+  const deferred =
+    input.kind === "watch"
+      ? await seriesPackNativeTvWatchDeferralsV1(
+          context,
+          media.map((item) => item.id),
+        )
+      : new Set<string>();
   for (const item of media) {
     const intent = defaultIntent(item.intents);
     if (intent === null) throw new Error("Sweep item lost default target");
     if (input.kind === "watch") {
-      if (
-        intent.availability !== "available" &&
-        intent.availability !== "quarantined"
-      )
-        continue;
-      await observeRequesterWatch(context, item.id);
-      await queueRetentionCheck(
+      await sweepDefaultWatchItem(
         context,
-        item.id,
-        String(Math.floor(Date.now() / 300_000)),
+        { id: item.id, availability: intent.availability },
+        deferred,
       );
     } else {
       await queueDue(context, item);
@@ -97,6 +139,22 @@ async function sweepIntentPage(
           ? `${MOVIE_WATCH_CURSOR}start`
           : `${LIBRARY_MOVIE_DUE_CURSOR}start`,
   };
+}
+
+async function sweepDefaultWatchItem(
+  context: MediaAutomationContext,
+  item: { id: string; availability: string },
+  deferred: ReadonlySet<string>,
+) {
+  if (deferred.has(item.id)) return;
+  if (item.availability !== "available" && item.availability !== "quarantined")
+    return;
+  await observeRequesterWatch(context, item.id);
+  await queueRetentionCheck(
+    context,
+    item.id,
+    String(Math.floor(Date.now() / 300_000)),
+  );
 }
 
 async function queueDue(

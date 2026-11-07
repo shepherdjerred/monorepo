@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieEditionHashSchema } from "#shared/movie-editions/registry.ts";
 
 export const MovieInterventionNoticeV4Schema = z

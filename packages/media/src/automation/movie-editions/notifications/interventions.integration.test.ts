@@ -7,7 +7,7 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { MovieLifecycleCommands } from "#infrastructure/movie-editions/lifecycle/commands.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";
 import { createMovieNetworkFacetV4 } from "#automation/movie-editions/activities.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { MovieInterventionNoticeV4Schema } from "#shared/movie-editions/intervention/v4.ts";
 import {

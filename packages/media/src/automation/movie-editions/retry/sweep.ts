@@ -2,11 +2,11 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { MediaError } from "#application/errors.ts";
 import {
-  readMovieRetrySourceV4,
-  captureMovieRetryV1,
-} from "#infrastructure/movie-editions/lifecycle/retry-source.ts";
-import { movieRetryAuthorityV4 } from "#infrastructure/movie-editions/lifecycle/retry-authority.ts";
-import { assertNoPendingMovieRetryV4 } from "#infrastructure/movie-editions/lifecycle/retry-command.ts";
+  selectMovieRetryV4,
+  movieRetrySelectionDetails,
+} from "#infrastructure/movie-editions/lifecycle/retry/retry-selection.ts";
+import { movieRetryAuthorityV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-authority.ts";
+import { assertNoPendingMovieRetryV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-command.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
@@ -33,14 +33,21 @@ export async function queueTerminalMovieRetryV4(
   const { execution, budget } = invocation;
   execution.assertActive();
   try {
-    const source = await readMovieRetrySourceV4(context.db, input, budget);
+    const selected = await selectMovieRetryV4(
+      context.db,
+      { scope: input.scope, mode: "automatic" },
+      budget,
+    );
+    const source = selected.source;
+    if (source.attempt.id !== input.attemptId) return;
     const terminal = await movieRetryTerminalV1(
       context,
       {
         attemptId: source.attempt.id,
         previousCoordinatorOperationId: source.operation.id,
         reservedWithoutTorrent:
-          source.state === "reserved" && source.attempt.torrent === null,
+          source.attempt.state === "reserved" &&
+          source.attempt.torrent === null,
       },
       execution,
     );
@@ -56,11 +63,15 @@ export async function queueTerminalMovieRetryV4(
       });
       if (!(await lockRuntimeAuthority(tx, source.attempt.recoveryEpoch)))
         return;
-      const current = await readMovieRetrySourceV4(tx, input, budget);
-      const capture = captureMovieRetryV1(current, "automatic");
+      const currentSelection = await selectMovieRetryV4(
+        tx,
+        { scope: input.scope, mode: "automatic" },
+        budget,
+      );
+      const current = currentSelection.source;
       if (
-        identityHash(capture) !==
-        identityHash(captureMovieRetryV1(source, "automatic"))
+        identityHash(currentSelection.capture) !==
+        identityHash(selected.capture)
       )
         return;
       const authority = await movieRetryAuthorityV4(tx, {
@@ -69,6 +80,9 @@ export async function queueTerminalMovieRetryV4(
         access,
         invocation,
         budget,
+        ...(current.attempt.state === "completed"
+          ? { purpose: "completed_ack" as const }
+          : {}),
       });
       await assertNoPendingMovieRetryV4(tx, current, budget);
       const lease = await tx.legacyWriterLease.findUniqueOrThrow({
@@ -98,12 +112,14 @@ export async function queueTerminalMovieRetryV4(
         key: `movie-retry-recover-v4:${source.attempt.id}:${source.operation.id}:${terminal.root.runId}:${terminal.child?.runId ?? "unstarted"}`,
         kind: "reconcile_movie_edition_v4",
         targetId: input.scope.mediaId,
+        createdAt: new Date(),
+        availableAt: new Date(),
         payload: {
           schemaVersion: 4,
           scope: input.scope,
           mediaId: input.scope.mediaId,
           generation: current.generation,
-          movieRetryV1: capture,
+          ...movieRetrySelectionDetails(currentSelection),
         },
       });
       freshness.assertActive();

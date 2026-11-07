@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   MovieDecisionOperationV4Schema,
   type MovieDecisionOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieQuarantinePlexReceiptV2Schema } from "#shared/movie-editions/quarantine-v2.ts";
 import {
   FileGuardError,
@@ -51,6 +51,7 @@ import {
 } from "#infrastructure/movie-editions/retention/quarantine-commit.ts";
 import { retireMovieQuarantineBinding } from "#infrastructure/movie-editions/retention/quarantine-invalidation.ts";
 import { captureMovieQuarantineAuthorization } from "./quarantine-authorization.ts";
+import { captureOwnerMovieQuarantineAuthorizationV1 } from "./owner-quarantine.ts";
 
 /** Scoped Files entrypoint; request/receipt history is independent of the ordinary default engine. */
 export async function quarantineMovieFilesV4(
@@ -138,14 +139,28 @@ export async function quarantineMovieFilesV4(
       const entry = snapshot.plan[0];
       if (entry === undefined || snapshot.plan.length !== 1)
         throw new FileGuardError("coverage_changed");
-      const authority = await captureMovieQuarantineAuthorization(tx, {
+      const authorization = {
         movie,
         decisionId: input.decisionId,
         entry,
         policyTime,
         movieAccess,
         plex,
-      });
+      };
+      const owner = z
+        .object({ ownerRemovalV1: z.unknown().optional() })
+        .parse(snapshot.evidence).ownerRemovalV1;
+      const authority =
+        owner === undefined
+          ? await captureMovieQuarantineAuthorization(tx, authorization)
+          : await captureOwnerMovieQuarantineAuthorizationV1(
+              tx,
+              authorization,
+              management.execution,
+              input.operationId,
+            );
+      if (authority === null)
+        throw new Error("Owner removal evidence lost its explicit source");
       const receipt = await captureMovieQuarantineCommit(
         tx,
         { ...input, plan: snapshot.plan, access, budget: movie.budget },

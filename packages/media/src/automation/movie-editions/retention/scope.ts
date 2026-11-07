@@ -3,7 +3,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import {
   MovieOperationV4Schema,
   type MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";

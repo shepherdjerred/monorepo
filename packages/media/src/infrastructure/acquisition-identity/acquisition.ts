@@ -7,6 +7,8 @@ import { MediaError } from "#application/errors.ts";
 import { AcquisitionIdentitySnapshotSchema } from "#shared/acquisition/identity.ts";
 import {
   ManagedSeriesAcquisitionIdentitySchema,
+  SeriesPackPersonalIdentityV1Schema,
+  SeriesPackManagedIdentityV1Schema,
   type LibrarySeriesManagement,
 } from "#shared/acquisition/library-management.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
@@ -26,15 +28,37 @@ import {
 import { assertMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
 import { assertMovieAcquisitionOperationV4 } from "#infrastructure/movie-editions/lifecycle/operation.ts";
 import type { MovieCutEvidenceV2 } from "#shared/movie-editions/cut-v2.ts";
+import type { LibraryManagementInvocation } from "./library-policy.ts";
+import {
+  selectedSeriesPackCandidateV1,
+  readSeriesPackSelectionV1,
+} from "./series-pack/selection.ts";
+import { selectedSeriesPackIdentityV1 } from "./series-pack/factory.ts";
 
 export async function operationCoverage(
   tx: Prisma.TransactionClient,
   operationId: string,
   release: ReleaseCandidate,
+  invocation?: LibraryManagementInvocation,
 ): Promise<string[]> {
   const row = await tx.operation.findUniqueOrThrow({
     where: { id: operationId },
   });
+  if (readSeriesPackSelectionV1(row) !== null) {
+    if (invocation === undefined)
+      throw new Error(
+        "Selected series pack needs its original caller allowance",
+      );
+    invocation.budget.consume(2);
+    const selected = await selectedSeriesPackCandidateV1(
+      tx,
+      { operation: row, release },
+      invocation.budget,
+    );
+    if (selected === null)
+      throw new Error("Actual series pack selection disappeared");
+    return selected.value.attributes.mediaIds;
+  }
   const input = z
     .object({
       identityDecision: z
@@ -60,6 +84,7 @@ type IdentityInput = {
   serverMachineId?: string;
   movieAccess?: MovieChoiceAccess | undefined;
   movieScope?: MovieEditionScope | undefined;
+  libraryManagement?: LibraryManagementInvocation | undefined;
 };
 
 async function candidateScope(
@@ -165,27 +190,18 @@ export async function acquisitionIdentity(
     },
   });
   const sourceProof = sourceIdentityProof(root, release);
-  const blockers = await coordinateBlockers(
-    tx,
+  const pack = await selectedSeriesPackIdentityV1(tx, release, {
+    ...input,
     canonical,
-    release.title,
-    input.mediaIds,
-  );
-  if (blockers.length > 0)
-    throw new MediaError(
-      blockers[0] ?? "identity_coverage_changed",
-      "Release coordinates do not match complete selected coverage",
-      409,
-    );
-  const attributes = PublicReleaseAttributesSchema.parse(release.attributes);
-  if (decision === null)
-    await assertAutomaticIdentity(tx, release, canonical, editionEvidence);
-  if (decision === null && attributes.identityConfidence !== "exact")
-    throw new MediaError(
-      "identity_unconfirmed",
-      "Release identity needs owner confirmation",
-      409,
-    );
+  });
+  await assertSelectedCoordinates(tx, {
+    canonical,
+    release,
+    mediaIds: input.mediaIds,
+    pack,
+    decision,
+    editionEvidence,
+  });
   const digest = candidateDigest(release);
   if (
     decision !== null &&
@@ -198,7 +214,11 @@ export async function acquisitionIdentity(
       409,
     );
   const common = {
-    source: { releaseId: release.id, candidateDigest: digest },
+    source: {
+      releaseId: release.id,
+      candidateDigest: digest,
+      ...(pack === undefined ? {} : { seriesPackV1: pack.captured }),
+    },
     proof:
       decision === null
         ? {
@@ -215,18 +235,62 @@ export async function acquisitionIdentity(
     coverage: [...input.mediaIds].sort(),
     birthEpoch: input.epoch,
   };
+  const PersonalSchema =
+    pack === undefined
+      ? AcquisitionIdentitySnapshotSchema
+      : SeriesPackPersonalIdentityV1Schema;
+  const ManagedSchema =
+    pack === undefined
+      ? ManagedSeriesAcquisitionIdentitySchema
+      : SeriesPackManagedIdentityV1Schema;
   return input.management === undefined
-    ? AcquisitionIdentitySnapshotSchema.parse({
+    ? PersonalSchema.parse({
         schemaVersion: 1,
         ...common,
         sponsorRequestId: input.sponsorRequestId,
         sponsorAuthority,
       })
-    : ManagedSeriesAcquisitionIdentitySchema.parse({
+    : ManagedSchema.parse({
         schemaVersion: 4,
         ...common,
         management: input.management,
       });
+}
+
+async function assertSelectedCoordinates(
+  tx: Prisma.TransactionClient,
+  input: {
+    canonical: Parameters<typeof coordinateBlockers>[1];
+    release: ReleaseCandidate;
+    mediaIds: string[];
+    pack: Awaited<ReturnType<typeof selectedSeriesPackIdentityV1>>;
+    decision: IdentityDecision | null;
+    editionEvidence: MovieCutEvidenceV2 | undefined;
+  },
+) {
+  const { canonical, release, mediaIds, pack, decision, editionEvidence } =
+    input;
+  const blockers =
+    pack === undefined
+      ? await coordinateBlockers(tx, canonical, release.title, mediaIds)
+      : [];
+  if (blockers.length > 0)
+    throw new MediaError(
+      blockers[0] ?? "identity_coverage_changed",
+      "Release coordinates do not match complete selected coverage",
+      409,
+    );
+  const attributes =
+    pack?.value.attributes ??
+    PublicReleaseAttributesSchema.parse(release.attributes);
+  if (decision === null && pack === undefined)
+    await assertAutomaticIdentity(tx, release, canonical, editionEvidence);
+  if (decision === null && attributes.identityConfidence !== "exact")
+    throw new MediaError(
+      "identity_unconfirmed",
+      "Release identity needs owner confirmation",
+      409,
+    );
 }
 async function assertReviewedGenerations(
   tx: Prisma.TransactionClient,

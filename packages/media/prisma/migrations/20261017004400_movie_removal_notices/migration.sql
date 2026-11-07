@@ -42,7 +42,7 @@ BEGIN
     AND to_jsonb(target."automationEpoch")=body->'recoveryEpoch'
     AND runtime.mode='active' AND runtime."ownershipConfirmed" AND to_jsonb(runtime."recoveryEpoch")=body->'recoveryEpoch'
     AND writer."recoveryEpoch"=runtime."recoveryEpoch" AND writer."revokedAt" IS NULL
-    AND writer."observedAt"<=clock_timestamp() AND writer."expiresAt">clock_timestamp(),false)
+    AND writer."observedAt"<=(clock_timestamp() AT TIME ZONE 'UTC') AND writer."expiresAt">(clock_timestamp() AT TIME ZONE 'UTC'),false)
   THEN RAISE EXCEPTION 'Movie post-effect notice requires its exact actual command, current target and personal choice'; END IF;
   IF body->>'kind'='movie_restoration' THEN
     proof:=command.result #> '{movieRestorePlexReceiptV1,receipt}';
@@ -91,7 +91,7 @@ BEGIN
       AND decision."mediaId"=NEW."mediaId" AND decision.edition=selected->>'edition'
       AND to_jsonb(decision.generation)=body->'generation' AND decision.state::text=stage
       AND decision.version=(proof #>> '{decisions,0,quarantinedVersion}')::integer+CASE stage WHEN 'quarantined' THEN 0 ELSE 1 END
-      AND decision."quarantinedAt"=(proof->>'committedAt')::timestamptz
+      AND decision."quarantinedAt"=((proof->>'committedAt')::timestamptz AT TIME ZONE 'UTC')
       AND decision."purgeAfter"=decision."quarantinedAt"+interval '7 days'
       AND (stage<>'purged' OR decision.evidence->>'purgeOperationId'=command.id)
       AND NEW.kind=CASE stage WHEN 'quarantined' THEN 'files_quarantined' ELSE 'files_purged' END

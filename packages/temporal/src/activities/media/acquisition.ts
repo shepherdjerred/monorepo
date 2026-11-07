@@ -8,6 +8,9 @@ import type {
 } from "@shepherdjerred/media/automation/network";
 import { plexBindingCall } from "./plex-binding-execution.ts";
 import { compensationCall } from "./compensation-execution.ts";
+import { PublicationAuthorityReadBudget } from "@shepherdjerred/media/publication-authority-budget";
+import { createSeriesPackStagingWorkerActivitiesV1 } from "./series-pack/staging.ts";
+import { createSeriesPackPublicationWorkerActivitiesV1 } from "./series-pack/publication.ts";
 
 /** Preserve Activity names and arguments; the SDK capability is never serialized into history. */
 export function createAcquisitionNetworkWorkerActivities(
@@ -46,9 +49,40 @@ export function createAcquisitionFileWorkerActivities(
   >,
 ): Pick<
   MediaFileActivities,
-  "inspectAndStageMedia" | "promoteMediaFiles" | "cleanupSupersededMediaFile"
+  | "inspectAndStageMedia"
+  | "promoteMediaFiles"
+  | "cleanupSupersededMediaFile"
+  | "prepareSeriesPackPublication"
+  | "stageSeriesPackMembersV1"
+  | "sealSeriesPackStagingV1"
+  | "prepareSeriesPackMembersPublicationV1"
+  | "sealSeriesPackPublicationIntentV1"
+  | "publishSeriesPackMembersV1"
+  | "sealSeriesPackPublicationOutcomeV1"
+  | "compensateSeriesPackMembersV1"
+  | "sealSeriesPackCompensationV1"
+  | "rollbackPublishedSeriesPackV1"
 > {
   return {
+    ...createSeriesPackStagingWorkerActivitiesV1(load),
+    ...createSeriesPackPublicationWorkerActivitiesV1(load),
+    prepareSeriesPackPublication: (input) => {
+      const observed = { wall: Date.now(), monotonic: performance.now() };
+      const budget = new PublicationAuthorityReadBudget();
+      return compensationCall(async (sdk) => {
+        const runtime = await load();
+        sdk.assertActive();
+        return runtime.acquisition.prepareSeriesPackPublication(
+          input,
+          {
+            ...sdk,
+            observed,
+            checkpoint: () => sdk.checkpoint("series-pack-publication-prepare"),
+          },
+          budget,
+        );
+      });
+    },
     cleanupSupersededMediaFile: (input) => {
       const observed = { wall: Date.now(), monotonic: performance.now() };
       return compensationCall(async (sdk) => {

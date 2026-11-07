@@ -1,16 +1,20 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
-import type { readMovieRetrySourceV4 } from "#infrastructure/movie-editions/lifecycle/retry-source.ts";
+import type { readMovieRetrySourceV4 } from "#infrastructure/movie-editions/lifecycle/retry/retry-source.ts";
 import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
 import { MovieRetryRenewalV1Schema } from "#shared/movie-editions/retry/v1.ts";
 import { ownedTorrent } from "#automation/acquisition-management/ownership.ts";
 import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { MediaError } from "#application/errors.ts";
+import { resolveMovieTransferSourceV1 } from "#automation/movie-editions/transfer-reuse/source.ts";
 
 /** Observe an actual prior Media add, never import an external torrent or issue another add. */
 export async function movieRetryTorrentV1(
   context: MediaAutomationContext,
-  source: Awaited<ReturnType<typeof readMovieRetrySourceV4>>,
+  source: Pick<
+    Awaited<ReturnType<typeof readMovieRetrySourceV4>>,
+    "attempt" | "recorded"
+  > & { state: string },
 ) {
   const execution = context.plexBindingExecution();
   const original = CandidateSourceEvidenceSchema.parse(
@@ -31,15 +35,26 @@ export async function movieRetryTorrentV1(
   )
     return null;
   const torrent = source.attempt.torrent;
+  if (context.movieManagement === undefined)
+    throw new Error(
+      "Movie retry transfer requires its original invocation budget",
+    );
+  const ownership = await resolveMovieTransferSourceV1(
+    context.db,
+    source.attempt,
+    context.movieManagement.budget,
+  );
   if (
     observed === null ||
     torrent === null ||
+    (ownership.grant !== null &&
+      ["removing", "removed"].includes(torrent.state)) ||
     !torrent.owned ||
     torrent.ownershipEpoch !== source.attempt.recoveryEpoch ||
     torrent.infoHash !== original.infoHash ||
     torrent.qbittorrentId !== observed.hash ||
     torrent.providerId !== source.recorded.release.providerId ||
-    !ownedTorrent(context, observed, source.attempt)
+    !ownedTorrent(context, observed, ownership.owner)
   )
     throw new MediaError(
       "movie_retry_torrent_unconfirmed",

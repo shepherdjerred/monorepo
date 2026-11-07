@@ -8,7 +8,7 @@ import {
   MoviePlexReceiptSchema,
   type MoviePlexReceipt,
 } from "#shared/movie-editions/management/plex.ts";
-import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
+import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import {
   MovieFilePlanSchema,
   type MovieFilePlan,

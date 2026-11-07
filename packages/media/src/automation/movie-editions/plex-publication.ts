@@ -3,7 +3,7 @@ import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
@@ -17,6 +17,18 @@ import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/rece
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { plexRead } from "#automation/publication/association/io.ts";
 import { verifyMoviePlexV2 } from "./plex-verification.ts";
+import type { PlexBindingExpected } from "#shared/plex-binding/expected.ts";
+import type { PlexVerificationProtected } from "#shared/plex-binding/observations.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import { movieRollbackForwardFenceV1 } from "#infrastructure/movie-editions/rollback/dispatch.ts";
+
+type RejectionRecorder = (input: {
+  expected: PlexBindingExpected;
+  observation: PlexVerificationProtected;
+  access: MovieChoiceAccess;
+  freshness: PlexBindingFreshness;
+}) => Promise<void>;
 
 type Result = {
   status: "available" | "waiting" | "blocked" | "obsolete";
@@ -28,15 +40,19 @@ export async function publishMoviePlexV4(
   context: MediaAutomationContext,
   raw: MovieAttemptOperationV4,
   execution: PlexBindingExecution,
+  recordRejection?: RejectionRecorder,
 ): Promise<Result> {
   execution.assertActive();
   execution.signal.throwIfAborted();
   const input = MovieAttemptOperationV4Schema.parse(raw);
-  const budget = new PublicationAuthorityReadBudget();
+  const budget =
+    context.movieManagement?.budget ?? new PublicationAuthorityReadBudget();
   const prior = await readMoviePlexReceiptV2(context.db, input, budget);
   execution.assertActive();
   execution.signal.throwIfAborted();
   if (prior !== null) return { status: "available", reason: null };
+  const rollback = await movieRollbackForwardFenceV1(context.db, input, budget);
+  if (rollback !== null) return { status: "blocked", reason: rollback.reason };
   const invocation = plexBindingFreshness({
     observed: execution.observed,
     expiresAtMs: execution.expiresAtMs,
@@ -78,8 +94,15 @@ export async function publishMoviePlexV4(
       },
       execution,
     );
-    if ("status" in verified)
+    if ("status" in verified) {
+      await recordRejection?.({
+        expected: prepared.expected,
+        observation: verified,
+        access,
+        freshness,
+      });
       return { status: "waiting", reason: verified.reason };
+    }
     const currentAccess = requireMovieChoiceAccess(
       (await networkMovieAccess(context, [input.scope.mediaId])) ?? {},
     );

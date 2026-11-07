@@ -3,6 +3,7 @@ import { constants, open, rename, unlink } from "node:fs/promises";
 import { z } from "zod";
 import { exists, safePath, syncDirectory } from "./operations-io.ts";
 import type { PlexExclusionPlan } from "#shared/plex-exclusion.ts";
+import type { MediaPathMapping } from "./media-paths.ts";
 
 const IdentitySchema = z.object({
   dev: z.string(),
@@ -39,9 +40,10 @@ function planDigest(plan: PlexExclusionPlan): string {
 export async function readProbeJournal(
   plan: PlexExclusionPlan,
   fallback: ProbeJournal,
+  mapping?: MediaPathMapping,
 ): Promise<ProbeJournal> {
   const path = await safePath(
-    plan.controlRoot,
+    mapping?.local(plan.controlRoot) ?? plan.controlRoot,
     `exclusion-${plan.runId}.json`,
     false,
   );
@@ -68,19 +70,17 @@ export async function readProbeJournal(
 export async function saveProbeJournal(
   plan: PlexExclusionPlan,
   journal: ProbeJournal,
+  mapping?: MediaPathMapping,
 ): Promise<void> {
+  const controlRoot = mapping?.local(plan.controlRoot) ?? plan.controlRoot;
   const path = await safePath(
-    plan.controlRoot,
+    controlRoot,
     `exclusion-${plan.runId}.json`,
     false,
   );
   const temporary = `${path}.pending`;
   if (await exists(temporary)) {
-    await safePath(
-      plan.controlRoot,
-      `exclusion-${plan.runId}.json.pending`,
-      false,
-    );
+    await safePath(controlRoot, `exclusion-${plan.runId}.json.pending`, false);
     await unlink(temporary);
   }
   const handle = await open(
@@ -100,5 +100,5 @@ export async function saveProbeJournal(
     await handle.close();
   }
   await rename(temporary, path);
-  await syncDirectory(plan.controlRoot);
+  await syncDirectory(controlRoot);
 }

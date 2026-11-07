@@ -86,17 +86,7 @@ import type {
   CheckPrMergeConflictsInput,
 } from "#shared/schemas.ts";
 import type { AgentTaskInput } from "#shared/agent/agent-task.ts";
-import {
-  runGlitterCorpusBackfill as _runGlitterCorpusBackfill,
-  runGlitterCorpusChannelBackfill as _runGlitterCorpusChannelBackfill,
-  runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
-  runGlitterCorpusDaily as _runGlitterCorpusDaily,
-  runGlitterCorpusInventory as _runGlitterCorpusInventory,
-  type GlitterCorpusBackfillInput,
-  type GlitterCorpusChannelBackfillInput,
-  type GlitterCorpusChannelOverlapInput,
-  type GlitterCorpusSnapshotResult,
-} from "./glitter/glitter-corpus.ts";
+import * as glitterCorpus from "./glitter/glitter-corpus.ts";
 import type {
   ChannelStateResult,
   InventoryResult,
@@ -370,7 +360,7 @@ export async function pollWorkflowFailuresWorkflow(): Promise<PollWorkflowFailur
 }
 
 export async function runGlitterCorpusInventory(): Promise<InventoryResult> {
-  return _runGlitterCorpusInventory();
+  return glitterCorpus.runGlitterCorpusInventory();
 }
 
 export async function runGlitterContextRefresh(
@@ -386,24 +376,25 @@ export async function runGlitterContextAudit(
 }
 
 export async function runGlitterCorpusBackfill(
-  input: GlitterCorpusBackfillInput,
-): Promise<GlitterCorpusSnapshotResult> {
-  return _runGlitterCorpusBackfill(input);
+  input: glitterCorpus.GlitterCorpusBackfillInput,
+): Promise<glitterCorpus.GlitterCorpusSnapshotResult> {
+  return glitterCorpus.runGlitterCorpusBackfill(input);
 }
 
 export async function runGlitterCorpusChannelBackfill(
-  input: GlitterCorpusChannelBackfillInput,
+  input: glitterCorpus.GlitterCorpusChannelBackfillInput,
 ): Promise<ChannelStateResult> {
-  return _runGlitterCorpusChannelBackfill(input);
+  return glitterCorpus.runGlitterCorpusChannelBackfill(input);
 }
 
 export async function runGlitterCorpusChannelOverlap(
-  input: GlitterCorpusChannelOverlapInput,
+  input: glitterCorpus.GlitterCorpusChannelOverlapInput,
 ): Promise<ChannelStateResult> {
-  return _runGlitterCorpusChannelOverlap(input);
+  return glitterCorpus.runGlitterCorpusChannelOverlap(input);
 }
 
-export const runGlitterCorpusDaily = () => _runGlitterCorpusDaily();
+export const runGlitterCorpusDaily = () =>
+  glitterCorpus.runGlitterCorpusDaily();
 
 export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
@@ -435,51 +426,59 @@ export const deliveryPlatformRecoveryWorkflow =
 export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
-import * as media from "./media/exports.ts";
-export const prepareMediaHandoffWorkflow = media.prepareMediaHandoffWorkflow,
-  applyLibraryHandoffV3Workflow = media.applyLibraryHandoffV3Workflow,
-  applyMediaHandoffWorkflow = media.applyMediaHandoffWorkflow,
-  prepareNativeArchiveWorkflow = media.prepareNativeArchiveWorkflow,
-  applyNativeArchiveWorkflow = media.applyNativeArchiveWorkflow,
-  cleanupNativeArchiveWorkflow = media.cleanupNativeArchiveWorkflow,
-  prepareNativeQuarantineWorkflow = media.prepareNativeQuarantineWorkflow,
-  applyNativeQuarantineWorkflow = media.applyNativeQuarantineWorkflow,
-  restoreNativeQuarantineWorkflow = media.restoreNativeQuarantineWorkflow,
-  prepareNativeRecoveryWorkflow = media.prepareNativeRecoveryWorkflow,
-  applyNativeRecoveryWorkflow = media.applyNativeRecoveryWorkflow,
-  preparePlexExclusionWorkflow = media.preparePlexExclusionWorkflow,
-  executePlexExclusionWorkflow = media.executePlexExclusionWorkflow,
-  recoverPlexExclusionWorkflow = media.recoverPlexExclusionWorkflow,
-  reconcileMediaWorkflow = media.reconcileMediaWorkflow,
-  reconcileMovieEditionV4Workflow = media.reconcileMovieEditionV4Workflow,
-  acquireMovieEditionV4Workflow = media.acquireMovieEditionV4Workflow,
-  acquireMovieSubtitlesV4Workflow = media.acquireMovieSubtitlesV4Workflow,
-  acquireMediaReleaseWorkflow = media.acquireMediaReleaseWorkflow,
-  acquireMediaSubtitlesWorkflow = media.acquireMediaSubtitlesWorkflow,
-  installMediaSubtitleWorkflow = media.installMediaSubtitleWorkflow,
-  cleanupMediaUpgradeWorkflow = media.cleanupMediaUpgradeWorkflow,
-  maintainMediaTorrentWorkflow = media.maintainMediaTorrentWorkflow,
-  retainMediaWorkflow = media.retainMediaWorkflow,
-  restoreMediaWorkflow = media.restoreMediaWorkflow,
-  deliverMediaNotificationWorkflow = media.deliverMediaNotificationWorkflow,
-  dispatchMediaOutboxWorkflow = media.dispatchMediaOutboxWorkflow,
-  sweepMediaWorkflow = media.sweepMediaWorkflow,
-  matchProviderFeedSourceWorkflow = media.matchProviderFeedSourceWorkflow,
-  expandMediaRequestWorkflow = media.expandMediaRequestWorkflow,
-  refreshMediaCatalogWorkflow = media.refreshMediaCatalogWorkflow,
-  expandCatalogRequestsWorkflow = media.expandCatalogRequestsWorkflow,
-  prepareSubtitleReplacementWorkflow = media.prepareSubtitleReplacementWorkflow,
-  applySubtitleReplacementWorkflow = media.applySubtitleReplacementWorkflow,
-  reconcileSubtitleReplacementWorkflow =
-    media.reconcileSubtitleReplacementWorkflow,
-  cleanupSubtitleReplacementWorkflow = media.cleanupSubtitleReplacementWorkflow,
-  observeMediaCapacityWorkflow = media.observeMediaCapacityWorkflow,
-  reverifyPlexBindingWorkflow = media.reverifyPlexBindingWorkflow,
-  verifyLibraryPlexBindingWorkflow = media.verifyLibraryPlexBindingWorkflow,
-  observePlexEventHintWorkflow = media.observePlexEventHintWorkflow,
-  observeMoviePlexHintV4Workflow = media.observeMoviePlexHintV4Workflow,
-  prepareNativeCompensationWorkflow = media.prepareNativeCompensationWorkflow,
-  applyNativeCompensationWorkflow = media.applyNativeCompensationWorkflow,
-  compensateNativePublicationWorkflow =
-    media.compensateNativePublicationWorkflow,
-  publishCompensatedMediaWorkflow = media.publishCompensatedMediaWorkflow;
+import * as mediaWorkflows from "./media/exports.ts";
+export const {
+  rollbackMovieEditionV1Workflow,
+  restoreMovieEditionV4Workflow,
+  retainMovieEditionV4Workflow,
+  observeMoviePlexHintV4Workflow,
+  acquireMovieSubtitlesV4Workflow,
+  reconcileMovieEditionV4Workflow,
+  acquireMovieEditionV4Workflow,
+  matchProviderFeedSourceWorkflow,
+  matchSeriesPackFeedSourceWorkflow,
+  prepareMediaHandoffWorkflow,
+  applyMediaHandoffWorkflow,
+  applyLibraryHandoffV3Workflow,
+  prepareNativeArchiveWorkflow,
+  applyNativeArchiveWorkflow,
+  cleanupNativeArchiveWorkflow,
+  prepareNativeQuarantineWorkflow,
+  applyNativeQuarantineWorkflow,
+  restoreNativeQuarantineWorkflow,
+  prepareNativeRecoveryWorkflow,
+  applyNativeRecoveryWorkflow,
+  preparePlexExclusionWorkflow,
+  executePlexExclusionWorkflow,
+  recoverPlexExclusionWorkflow,
+  reconcileMediaWorkflow,
+  acquireMediaReleaseWorkflow,
+  acquireMediaSubtitlesWorkflow,
+  installMediaSubtitleWorkflow,
+  cleanupMediaUpgradeWorkflow,
+  maintainMediaTorrentWorkflow,
+  retainMediaWorkflow,
+  restoreMediaWorkflow,
+  deliverMediaNotificationWorkflow,
+  dispatchMediaOutboxWorkflow,
+  sweepMediaWorkflow,
+  expandMediaRequestWorkflow,
+  refreshMediaCatalogWorkflow,
+  expandCatalogRequestsWorkflow,
+  prepareSubtitleReplacementWorkflow,
+  applySubtitleReplacementWorkflow,
+  reconcileSubtitleReplacementWorkflow,
+  cleanupSubtitleReplacementWorkflow,
+  observeMediaCapacityWorkflow,
+  verifyLibraryPlexBindingWorkflow,
+  reverifyPlexBindingWorkflow,
+  observePlexEventHintWorkflow,
+  prepareSeriesPackNativeCompensationV1Workflow,
+  applySeriesPackNativeCompensationV1Workflow,
+  compensateSeriesPackNativePublicationV1Workflow,
+  publishSeriesPackNativeCompensationV1Workflow,
+  prepareNativeCompensationWorkflow,
+  applyNativeCompensationWorkflow,
+  compensateNativePublicationWorkflow,
+  publishCompensatedMediaWorkflow,
+} = { ...mediaWorkflows };

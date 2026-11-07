@@ -22,7 +22,7 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
   MovieOperationV4Schema,
   type MovieOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieReleaseAssessmentRef } from "#shared/movie-editions/release-assessment.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
 import { currentMovieReleaseV4 } from "./candidates.ts";

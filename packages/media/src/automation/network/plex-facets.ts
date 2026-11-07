@@ -1,3 +1,4 @@
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { NativeCompensationExecutionContext } from "#shared/native-recovery/compensation-runtime.ts";
@@ -24,24 +25,36 @@ export function createPlexRuntimeFacets(
       evaluateMediaRetention: (
         input: Parameters<MediaNetworkActivities["evaluateMediaRetention"]>[0],
         execution: PlexBindingExecution,
+        budget?: PublicationAuthorityReadBudget,
       ) =>
         watchInvocation(
           context,
           execution,
           hintsEnabled,
+          budget,
         ).evaluateMediaRetention(input),
       sweepMediaWork: (
         input: Parameters<MediaNetworkActivities["sweepMediaWork"]>[0],
         execution: PlexBindingExecution,
+        budget?: PublicationAuthorityReadBudget,
       ) =>
-        watchInvocation(context, execution, hintsEnabled).sweepMediaWork(input),
+        watchInvocation(
+          context,
+          execution,
+          hintsEnabled,
+          budget,
+        ).sweepMediaWork(input),
       observePlexEventHint: (
         input: ObservePlexHintInput,
         execution: PlexBindingExecution,
+        budget?: PublicationAuthorityReadBudget,
       ) =>
-        watchInvocation(context, execution, hintsEnabled).observePlexEventHint(
-          input,
-        ),
+        watchInvocation(
+          context,
+          execution,
+          hintsEnabled,
+          budget,
+        ).observePlexEventHint(input),
     },
     plexBinding: {
       ...createPlexBindingActivities(context),

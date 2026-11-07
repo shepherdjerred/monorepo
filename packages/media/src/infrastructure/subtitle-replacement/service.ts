@@ -12,7 +12,6 @@ import {
   PrepareSubtitleReplacementSchema,
   ApplySubtitleReplacementSchema,
   ReconcileSubtitleReplacementSchema,
-  SubtitleReplacementSnapshotSchema,
   SubtitleReplacementListSchema,
 } from "#shared/subtitle-replacement.ts";
 import {
@@ -21,13 +20,52 @@ import {
 } from "./locks.ts";
 import { replacementDetail } from "./view.ts";
 import { assertReplacementCoordinatorTerminal } from "./terminal.ts";
+import { replacementSnapshot } from "#shared/movie-editions/subtitle-replacement-v2.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { captureMovieReplacementSnapshotV2 } from "#infrastructure/movie-editions/subtitle-replacement/snapshot.ts";
+import type { Prisma, SubtitleReplacement } from "#generated/prisma/client.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 
 export class PrismaSubtitleReplacements extends MediaCommandBase {
   constructor(
     private readonly db: Database,
     private readonly describe: MediaAutomationContext["describeWorkflow"],
+    private readonly movieAccess?: () => Promise<MovieChoiceAccess>,
   ) {
     super(db, { keepDays: 30 });
+  }
+
+  private replacementMovieAccess() {
+    if (this.movieAccess === undefined)
+      throw new MediaError(
+        "plex_scope_unconfigured",
+        "Movie subtitle review requires configured movie access",
+        503,
+      );
+    return this.movieAccess();
+  }
+
+  private async captureMovieReview(
+    tx: Prisma.TransactionClient,
+    row: SubtitleReplacement,
+    scope: MovieEditionScope,
+  ) {
+    const captured = await captureMovieReplacementSnapshotV2(
+      tx,
+      {
+        scope,
+        assetId: row.assetId,
+        oldSubtitleId: row.oldSubtitleId,
+        candidateSubtitleId: row.candidateSubtitleId,
+        epoch: row.recoveryEpoch,
+      },
+      {
+        access: await this.replacementMovieAccess(),
+        budget: new PublicationAuthorityReadBudget(),
+      },
+    );
+    return captured.snapshot;
   }
 
   async list(actor: MediaActor, cursor: string | null = null) {
@@ -160,11 +198,12 @@ export class PrismaSubtitleReplacements extends MediaCommandBase {
         const initial = await tx.subtitleReplacement.findUniqueOrThrow({
           where: { id },
         });
-        const scope = SubtitleReplacementSnapshotSchema.parse(initial.snapshot);
+        const scope = replacementSnapshot(initial.snapshot);
         await lockSubtitleReplacementScope(tx, {
           assetId: initial.assetId,
           mediaIds: scope.asset.coverage.map((item) => item.mediaId),
           replacementId: id,
+          ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
         });
         await assertReplacementOwner(tx, actor.id);
         const row = await tx.subtitleReplacement.findUniqueOrThrow({
@@ -178,12 +217,15 @@ export class PrismaSubtitleReplacements extends MediaCommandBase {
             "Replacement belongs to unavailable runtime authority",
             409,
           );
-        const current = await captureReplacementSnapshot(tx, {
-          assetId: row.assetId,
-          oldSubtitleId: row.oldSubtitleId,
-          candidateSubtitleId: row.candidateSubtitleId,
-          epoch: row.recoveryEpoch,
-        });
+        const current =
+          scope.schemaVersion === 2
+            ? await this.captureMovieReview(tx, row, scope.scope)
+            : await captureReplacementSnapshot(tx, {
+                assetId: row.assetId,
+                oldSubtitleId: row.oldSubtitleId,
+                candidateSubtitleId: row.candidateSubtitleId,
+                epoch: row.recoveryEpoch,
+              });
         if (
           snapshotHash(z.json().parse(current)) !== row.snapshotHash ||
           row.state !== "awaiting_review" ||
@@ -206,15 +248,20 @@ export class PrismaSubtitleReplacements extends MediaCommandBase {
           where: { id },
           data: { state: "applying", version: { increment: 1 } },
         });
+        const queuedAt = new Date();
         const operationId = await queueOperation(tx, {
           key: `subtitle-replacement-apply:${id}:${input.observationHash}`,
           kind: "apply_subtitle_replacement",
           targetId: id,
           userId: actor.id,
+          ...(scope.schemaVersion === 2
+            ? { createdAt: queuedAt, availableAt: queuedAt }
+            : {}),
           payload: {
             replacementId: id,
             observationHash: input.observationHash,
             actorId: actor.id,
+            ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
           },
         });
         await tx.subtitleReplacement.update({
@@ -261,11 +308,12 @@ export class PrismaSubtitleReplacements extends MediaCommandBase {
       const initial = await tx.subtitleReplacement.findUniqueOrThrow({
         where: { id },
       });
-      const scope = SubtitleReplacementSnapshotSchema.parse(initial.snapshot);
+      const scope = replacementSnapshot(initial.snapshot);
       await lockSubtitleReplacementScope(tx, {
         assetId: initial.assetId,
         mediaIds: scope.asset.coverage.map((item) => item.mediaId),
         replacementId: id,
+        ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
       });
       await assertReplacementOwner(tx, actor.id);
       const row = await tx.subtitleReplacement.findUniqueOrThrow({
@@ -285,15 +333,20 @@ export class PrismaSubtitleReplacements extends MediaCommandBase {
         where: { id },
         data: { state: "reconciling", version: { increment: 1 } },
       });
+      const queuedAt = new Date();
       const operationId = await queueOperation(tx, {
         key: `subtitle-replacement-reconcile:${id}:${String(row.version)}`,
         kind: "reconcile_subtitle_replacement",
         targetId: id,
         userId: actor.id,
+        ...(scope.schemaVersion === 2
+          ? { createdAt: queuedAt, availableAt: queuedAt }
+          : {}),
         payload: {
           replacementId: id,
           actorId: actor.id,
           coordinators: proof.executions,
+          ...(scope.schemaVersion === 2 ? { movieScope: scope.scope } : {}),
         },
       });
       await tx.subtitleReplacement.update({

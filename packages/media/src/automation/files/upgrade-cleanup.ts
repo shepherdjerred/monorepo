@@ -1,4 +1,6 @@
 import { Prisma } from "#generated/prisma/client.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { assertHistoricalMovieRetention } from "#infrastructure/recovery/legacy-claims/historical-movie.ts";
 import { workerFilePath } from "./paths/locations.ts";
 import {
   assertCleanupPhysicalAsset,
@@ -51,7 +53,13 @@ export async function cleanupUpgrade(
   initialContext: FileContext,
   cleanupId: string,
   operationId: string,
+  suppliedBudget?: PublicationAuthorityReadBudget,
 ): Promise<void> {
+  const budget =
+    suppliedBudget ??
+    initialContext.movieManagement?.budget ??
+    initialContext.libraryManagement?.budget ??
+    new PublicationAuthorityReadBudget();
   const observed = { wall: Date.now(), monotonic: performance.now() };
   const execution = initialContext.publicationExecution?.();
   const snapshot = await initialContext.db.upgradeCleanup.findUniqueOrThrow({
@@ -79,6 +87,7 @@ export async function cleanupUpgrade(
     invocation,
     { cleanupId, operationId },
     observed,
+    budget,
   );
   if (proof === null) return;
   const plan = await prepareUpgradeCleanupPlan(invocation, cleanupId);
@@ -89,12 +98,21 @@ export async function cleanupUpgrade(
       ? undefined
       : proof.evidence.expected.scope;
   const edition = movieScope?.edition ?? "default";
+  const intents = proof.evidence.expected.targets;
   if (
-    (movieScope === undefined || movieScope.edition === "default") &&
-    (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
+    movieScope === undefined &&
+    (await reopenLegacyClaimProtection(
+      initialContext.db,
+      mediaIds,
+      (tx, selected) =>
+        assertHistoricalMovieRetention(
+          tx,
+          { mediaIds: selected, generations: intents },
+          budget,
+        ),
+    ))
   )
     throw new PendingLegacyClaimsError(mediaIds);
-  const intents = proof.evidence.expected.targets;
   const generations = new Map(
     intents.map((intent) => [intent.mediaId, intent.generation]),
   );
@@ -127,6 +145,19 @@ export async function cleanupUpgrade(
         where: { id: cleanupId },
       });
       if (current.state === "purged") return;
+      if (movieScope === undefined)
+        await assertHistoricalMovieRetention(
+          tx,
+          { mediaIds, generations: intents },
+          budget,
+        );
+      // The complete selected claim knowledge and identity locks survive every syscall.
+      // Traverse immutable movie parents once under those locks using this Activity's allowance.
+      if (movieScope !== undefined)
+        await assertCleanupClaims(tx, mediaIds, movieScope, {
+          epoch: snapshot.recoveryEpoch,
+          budget: proof.invocation.budget,
+        });
       const authorize = async () => {
         await assertPublicationUnfenced(tx, mediaIds, [
           current.assetId,
@@ -142,7 +173,7 @@ export async function cleanupUpgrade(
         if (!(await context.enabled.purge()))
           throw new FileGuardError("purge_disabled");
         await assertRuntime(tx, snapshot.recoveryEpoch);
-        await assertCleanupClaims(tx, mediaIds, movieScope);
+        if (movieScope === undefined) await assertCleanupClaims(tx, mediaIds);
         if (
           !(await (movieScope === undefined
             ? recordsAuthorized(tx, {

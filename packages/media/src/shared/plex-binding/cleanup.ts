@@ -13,6 +13,7 @@ import { PlexBindingExpectedSchema } from "./expected.ts";
 import { PlexVerificationFactsSchema } from "./observations.ts";
 import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 import { MovieRestorePlexExpectedV1Schema } from "#shared/movie-editions/restore-plex-v1.ts";
+import { MovieRollbackPlexExpectedV1Schema } from "#shared/movie-editions/rollback/plex.ts";
 
 const Ids = z.array(z.uuid()).min(1).max(10_000).refine(plexSortedUnique);
 const Plan = UpgradeCleanupPlanSchema.strict().extend({
@@ -140,17 +141,50 @@ export const MovieRestoredUpgradeCleanupPlexExpectedV3Schema =
       value.bindings[0].scope.edition === value.scope.edition,
     "Restored movie cleanup must retain one exact serving edition",
   );
+/** Rollback has its own physical/serving parents and retains the old cleanup deadline. */
+export const MovieRolledBackUpgradeCleanupPlexExpectedV4Schema = z
+  .strictObject({
+    ...MovieRestoredUpgradeCleanupPlexExpectedV3Schema.shape,
+    schemaVersion: z.literal(4),
+    serving: MovieRollbackPlexExpectedV1Schema,
+  })
+  .refine(
+    (value) =>
+      value.mediaIds.length === 1 &&
+      value.mediaIds[0] === value.scope.mediaId &&
+      value.scope.rootMediaId === value.scope.mediaId &&
+      value.groups.length === 1 &&
+      value.bindings.length === 1 &&
+      value.targets.length === 1 &&
+      value.targets[0]?.mediaId === value.scope.mediaId &&
+      value.groups.every(
+        (group) =>
+          group.edition === value.scope.edition &&
+          group.canonicalRootId === value.scope.rootMediaId &&
+          group.coverage.length === 1 &&
+          group.coverage[0]?.mediaId === value.scope.mediaId,
+      ) &&
+      value.bindings[0]?.scope.mediaId === value.scope.mediaId &&
+      value.bindings[0].scope.edition === value.scope.edition,
+    "Rolled-back movie cleanup must retain one exact serving edition",
+  );
 export const UpgradeCleanupPlexExpectedSchema = z.discriminatedUnion(
   "schemaVersion",
   [
     UpgradeCleanupPlexExpectedV1Schema,
     MovieUpgradeCleanupPlexExpectedV2Schema,
     MovieRestoredUpgradeCleanupPlexExpectedV3Schema,
+    MovieRolledBackUpgradeCleanupPlexExpectedV4Schema,
   ],
 );
 export const UpgradeCleanupPlexEvidenceSchema = z
   .strictObject({
-    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    schemaVersion: z.union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+    ]),
     expected: UpgradeCleanupPlexExpectedSchema,
     expectedHash: Hash,
     sessions: z.strictObject({

@@ -24,11 +24,12 @@ import type { ProviderCandidate } from "#integrations/providers.ts";
 import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { authorizedMovieSubmissionV4 } from "./submission-authority.ts";
 import { MediaError } from "#application/errors.ts";
+import { claimMovieTransferReuseV1 } from "./transfer-reuse/claim.ts";
 
 async function prepareMovieTorrent(
   context: MediaAutomationContext,
@@ -176,6 +177,13 @@ export async function submitMovieTorrentV4(
     execution.signal,
   );
   execution.assertActive();
+  const reused = await claimMovieTransferReuseV1(
+    context,
+    attempt,
+    input,
+    existing,
+  );
+  if (reused !== null) return reused;
   if (existing === null) {
     if (recovering)
       return { status: "blocked", reason: "submission_outcome_unknown" };
@@ -274,6 +282,8 @@ async function registerMovieSubmissionV4(
       key: `seed:${torrent.id}`,
       kind: "maintain_torrent",
       targetId: torrent.id,
+      createdAt: new Date(),
+      availableAt: new Date(),
       payload: { torrentId: torrent.id },
     });
     return true;

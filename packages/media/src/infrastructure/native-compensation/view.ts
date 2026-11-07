@@ -7,6 +7,13 @@ import { loadPublicationIntent } from "#infrastructure/publication-proof/store.t
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { compensationRecord } from "./records.ts";
 import { readVerifiedCompensationPublication } from "./publication-receipt.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import {
+  hasSeriesPackNativeInventoryV1,
+  seriesPackNativeInventoryPageV1,
+} from "./series-pack/inventory.ts";
 
 function inventoryProtection(input: {
   assetCount: number;
@@ -47,6 +54,8 @@ function publicationStateFor(input: {
 export async function compensationInventory(
   tx: Prisma.TransactionClient,
   cursor: string | null,
+  budget?: PublicationAuthorityReadBudget,
+  freshness?: PlexBindingFreshness,
 ) {
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -59,6 +68,20 @@ export async function compensationInventory(
     orderBy: { id: "asc" },
     take: 26,
   });
+  if (hasSeriesPackNativeInventoryV1(rows)) {
+    if (budget === undefined || freshness === undefined)
+      throw new Error(
+        "Native pack inventory requires its original API allowance",
+      );
+    await bindPlexTransactionDeadline(tx, freshness);
+    const page = await seriesPackNativeInventoryPageV1(
+      tx,
+      { rows, recoveryEpoch: runtime.recoveryEpoch },
+      budget,
+    );
+    freshness.assertActive();
+    return page;
+  }
   const items = [];
   for (const row of rows.slice(0, 25)) {
     const reference = await loadPublicationIntent(tx, row.attemptId);

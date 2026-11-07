@@ -13,7 +13,7 @@ import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proo
 import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
-} from "#shared/movie-editions/automation-v4.ts";
+} from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { MoviePublicationOutcomeV2Schema } from "#shared/movie-editions/publication-v2.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
@@ -44,10 +44,27 @@ import {
 
 const hash = (value: unknown) => snapshotHash(nativeJson(value));
 
+/** A separate Activity commits the actual immutable intent without publishing files. */
+export async function prepareMoviePublicationV4(
+  context: FileContext,
+  input: MovieAttemptOperationV4,
+  budget: PublicationAuthorityReadBudget,
+): Promise<void> {
+  const execution = requirePublicationExecution(
+    context.publicationExecution?.(),
+  );
+  await promoteMovieV4(
+    { ...context, movieManagement: { execution, budget } },
+    input,
+    "prepare",
+  );
+}
+
 /** Edition scope is explicit throughout the actual WAL/filesystem producer; original v1 histories remain v1. */
 export async function promoteMovieV4(
   initial: FileContext,
   raw: MovieAttemptOperationV4,
+  phase?: "prepare",
 ): Promise<void> {
   const execution = requirePublicationExecution(
     initial.publicationExecution?.(),
@@ -110,6 +127,7 @@ export async function promoteMovieV4(
       {
         context,
         attempt,
+        ...(phase === undefined ? {} : { phase }),
         plan: plan.entries,
         rawFilePlanHash: hash(attempt.filePlan),
         authorizePlan: async (tx) => {
@@ -216,22 +234,25 @@ export async function promoteMovieV4(
           const stored = await loadMoviePublicationV2(tx, id, budget);
           return stored?.reference ?? null;
         },
-        capture: async (tx, current, transitionId) =>
-          createMoviePublicationV2(
+        capture: async (tx, current, transitionId) => {
+          const captured = await captureMoviePublicationV2(
             tx,
-            await captureMoviePublicationV2(
-              tx,
-              {
-                context,
-                attempt: current,
-                plan,
-                transitionId,
-                rawFilePlanHash: hash(attempt.filePlan),
-              },
-              budget,
-            ),
+            {
+              context,
+              attempt: current,
+              plan,
+              transitionId,
+              rawFilePlanHash: hash(attempt.filePlan),
+            },
             budget,
-          ),
+          );
+          return createMoviePublicationV2(
+            tx,
+            captured.intent,
+            budget,
+            captured.heldRollback,
+          );
+        },
         snapshot: (tx, id) =>
           snapshotMoviePublicationAssetV2(tx, plan.scope, id, budget),
         complete: async (tx, reference, outcome) => {

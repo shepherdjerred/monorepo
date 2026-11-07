@@ -42,7 +42,7 @@ export function hasProvenNoRecoveryAccess(input: {
 /** Required declarations are per title; absent or stale authority never implies denial. */
 export function recoveryHouseholdPairs(input: {
   users: (MediaUser & { plexIdentity: PlexIdentityMapping | null })[];
-  scope: RecoveryScope;
+  scope: Pick<RecoveryScope, "media" | "requests" | "personalHolds">;
   machineId: string;
   ancestorsByMedia: Record<string, string[]>;
   relevantClaims: { userId: string; mediaIds: string[] }[];

@@ -19,6 +19,7 @@ import {
 } from "./access.ts";
 import { matchesMovieDefinition, movieDefinitionRef } from "./definition.ts";
 import { readMovieRequestFulfillment } from "./fulfillment.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function readMovieEditionContext(
   tx: Prisma.TransactionClient,
@@ -28,6 +29,7 @@ export async function readMovieEditionContext(
     subjectUserId: string;
     access: MovieChoiceAccess;
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const subject = await movieChoiceSubject(tx, {
     actorId: actor.id,
@@ -53,6 +55,7 @@ export async function readMovieEditionContext(
   const definitions = await tx.mediaEditionDefinition.findMany({
     where: { rootMediaId: media.id },
   });
+  budget?.consume(definitions.length);
   const targets = await tx.mediaIntent.findMany({
     where: { mediaId: media.id },
   });
@@ -136,7 +139,9 @@ export async function readMovieEditionRequests(
     cursor: string | null;
     access: MovieChoiceAccess;
   },
+  options?: { budget: PublicationAuthorityReadBudget; pageSize: number },
 ) {
+  const pageSize = options?.pageSize ?? 50;
   const subject = await movieChoiceSubject(tx, {
     actorId: actor.id,
     subjectUserId: input.subjectUserId,
@@ -151,9 +156,9 @@ export async function readMovieEditionRequests(
     },
     include: { media: true, target: true },
     orderBy: { id: "asc" },
-    take: 51,
+    take: pageSize + 1,
   });
-  const selected = rows.slice(0, 50);
+  const selected = rows.slice(0, pageSize);
   await lockMovieChoiceIdentities(tx, {
     mediaIds: selected.map((row) => row.mediaId),
     extraUserIds: [actor.id, subject.subject.id],
@@ -175,6 +180,7 @@ export async function readMovieEditionRequests(
           ? null
           : { assetId: asset.id, assetVersion: asset.version },
       access: input.access,
+      ...(options === undefined ? {} : { budget: options.budget }),
     });
     const common = {
       requestId: row.id,
@@ -211,11 +217,11 @@ export async function readMovieEditionRequests(
     schemaVersion: 3,
     subjectUserId: input.subjectUserId,
     items,
-    nextCursor: rows.length > 50 ? (selected.at(-1)?.id ?? null) : null,
+    nextCursor: rows.length > pageSize ? (selected.at(-1)?.id ?? null) : null,
   });
 }
 
-function canReadMovie(
+export function canReadMovie(
   subject: Awaited<ReturnType<typeof movieChoiceSubject>>,
   externalIds: unknown,
   access: MovieChoiceAccess,

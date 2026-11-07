@@ -7,6 +7,7 @@ import {
   ContinueAsNew,
   isCancellation,
   workflowInfo,
+  patched,
 } from "@temporalio/workflow";
 import type {
   MediaAttemptOperation,
@@ -20,6 +21,9 @@ import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-bu
 import * as cleanup from "./cleanup.ts";
 import * as notifications from "./notifications.ts";
 import * as retention from "./retention.ts";
+import { stageSeriesPackMembers } from "./series-pack/staging.ts";
+import { publishAcquisitionFiles } from "./series-pack/publication-flow.ts";
+import { rollbackPublishedSeriesPack } from "./series-pack/bounded-publication.ts";
 
 const network = proxyActivities<MediaNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
@@ -148,7 +152,11 @@ async function awaitDownload(
         status: observation.status,
         ...(observation.reason === null ? {} : { reason: observation.reason }),
       });
-    if (observation.status === "ready") return publishAcquisition(input);
+    if (observation.status === "ready")
+      return publishAcquisition(
+        input,
+        observation.reason === "series_pack_publication_v1",
+      );
     await sleep("1 minute");
   }
   return continueAsNew<typeof acquireMediaReleaseWorkflow>({
@@ -170,14 +178,22 @@ async function awaitSubmission(
 
 async function publishAcquisition(
   input: MediaAttemptOperation,
+  seriesPack = false,
 ): Promise<MediaWorkflowResult> {
-  const staged = await files.inspectAndStageMedia(input);
+  const boundedSeriesPack = seriesPack && patched("series-pack-staging-v1");
+  const staged = boundedSeriesPack
+    ? await stageSeriesPackMembers(input)
+    : await files.inspectAndStageMedia(input);
   if (staged.status !== "staged")
     return finish(input.operationId, {
       status: "blocked",
       ...(staged.reason === undefined ? {} : { reason: staged.reason }),
     });
-  const published = await files.promoteMediaFiles(input);
+  const published = await publishAcquisitionFiles(
+    input,
+    seriesPack,
+    boundedSeriesPack,
+  );
   if (published.status !== "published")
     return finish(input.operationId, {
       status: published.status,
@@ -193,18 +209,32 @@ async function publishAcquisition(
       return rollbackAcquisition(
         input,
         plex.reason ?? "plex_publication_rejected",
+        published.boundedPublication,
       );
     }
     await sleep("1 minute");
   }
-  return rollbackAcquisition(input, "plex_publication_unconfirmed");
+  return rollbackAcquisition(
+    input,
+    "plex_publication_unconfirmed",
+    published.boundedPublication,
+  );
 }
 
 async function rollbackAcquisition(
   input: MediaAttemptOperation,
   publicationReason: string,
+  boundedPublication = false,
 ): Promise<MediaWorkflowResult> {
-  const result = await files.rollbackMediaPromotion(input);
+  const result =
+    boundedPublication && patched("series-pack-published-rollback-v1")
+      ? await rollbackPublishedSeriesPack(input)
+      : await files.rollbackMediaPromotion(input);
+  if (result.status === "obsolete")
+    return finish(input.operationId, {
+      status: "obsolete",
+      ...reason(result.reason),
+    });
   if (
     result.status === "rolled_back" ||
     result.reason === "new_publications_quarantined"

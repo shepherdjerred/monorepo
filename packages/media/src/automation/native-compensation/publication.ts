@@ -157,6 +157,10 @@ export async function publishCompensatedMedia(
                   "Compensated publication changed its invocation budget",
                 );
               assertCompensationActive(publicationExecution);
+              if ("protocol" in phase)
+                throw new Error(
+                  "Historical compensated publisher received a new pack phase",
+                );
               const publication =
                 NativeCompensationVerifiedPublicationSchema.parse({
                   schemaVersion: 1,

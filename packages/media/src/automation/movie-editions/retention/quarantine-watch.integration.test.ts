@@ -15,7 +15,7 @@ import {
   BoundWatchAuthoritySchema,
   QuarantinePlexRefV2Schema,
 } from "#shared/plex-binding/watch.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/automation-v4.ts";
+import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
 import { quarantineMovieFilesV4 } from "./quarantine.ts";
