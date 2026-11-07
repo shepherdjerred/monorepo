@@ -242,9 +242,76 @@ export async function captureMacFileDescriptors(
   );
 }
 
+type CollectionRuntime = {
+  paths: Pick<GuestRuntime["paths"], "evidenceDirectory" | "stateDirectory">;
+  config: Pick<GuestRuntime["config"], "runID">;
+  retire: GuestRuntime["retire"];
+};
+type CollectionControls = {
+  inspectOwners: typeof inspectOwnedMacProcesses;
+  captureDescriptors: typeof captureMacFileDescriptors;
+  captureLog: typeof capture;
+};
+const collectionControls: CollectionControls = {
+  inspectOwners: inspectOwnedMacProcesses,
+  captureDescriptors: captureMacFileDescriptors,
+  captureLog: capture,
+};
+type CollectionOutcome = {
+  failure: "none" | "fd" | "log" | "output" | "owner" | "capture";
+  failureStage?: "retirement";
+};
+
+async function collectOwnerOutputs(
+  runtime: CollectionRuntime,
+  prepared: MacInputPrepared,
+  controls: CollectionControls,
+): Promise<CollectionOutcome> {
+  const owners = await controls.inspectOwners(prepared.input.executable, 5000);
+  if (owners.length !== 1 || Number(owners[0]) !== prepared.input.pid)
+    return { failure: "owner" };
+  let failure: CollectionOutcome["failure"] = "none";
+  try {
+    await controls.captureDescriptors(prepared, "after");
+  } catch {
+    failure = "fd";
+  }
+  try {
+    await runtime.retire();
+  } catch {
+    // A live or unproven owner cannot establish the complete app-output interval.
+    // Keep the failure and available evidence; never stringify retirement errors.
+    return { failure: "capture", failureStage: "retirement" };
+  }
+  const query = macUnifiedLogQuery(
+    prepared.input.pid,
+    prepared.input.launchDate,
+    Date.now(),
+  );
+  try {
+    const result = await controls.captureLog(query.argv);
+    await retain(prepared.evidenceDirectory, "unified", result, {
+      argv: query.argv,
+      requestedInterval: query.interval,
+    });
+    if (
+      result.exitCode !== 0 ||
+      result.stderr.length > 0 ||
+      !result.complete ||
+      result.truncated ||
+      result.timedOut
+    )
+      failure = "log";
+  } catch {
+    failure = "capture";
+  }
+  return { failure };
+}
+
 export async function collectGuestMacInput(
-  runtime: GuestRuntime,
+  runtime: CollectionRuntime,
   sessionID: string,
+  controls = collectionControls,
 ) {
   const directory = path.join(
     runtime.paths.evidenceDirectory,
@@ -258,44 +325,8 @@ export async function collectGuestMacInput(
   assert.equal(prepared.input.sessionID, sessionID);
   assert.equal(prepared.evidenceDirectory, directory);
   assert.equal(prepared.probe, true);
-  let failure: "none" | "fd" | "log" | "output" | "owner" | "capture" = "none";
-  const owners = await inspectOwnedMacProcesses(
-    prepared.input.executable,
-    5000,
-  );
-  if (owners.length !== 1 || Number(owners[0]) !== prepared.input.pid)
-    failure = "owner";
-  else {
-    try {
-      await captureMacFileDescriptors(prepared, "after");
-    } catch {
-      failure = "fd";
-    }
-    await runtime.retire();
-    const end = Date.now();
-    const query = macUnifiedLogQuery(
-      prepared.input.pid,
-      prepared.input.launchDate,
-      end,
-    );
-    try {
-      const result = await capture(query.argv);
-      await retain(directory, "unified", result, {
-        argv: query.argv,
-        requestedInterval: query.interval,
-      });
-      if (
-        result.exitCode !== 0 ||
-        result.stderr.length > 0 ||
-        !result.complete ||
-        result.truncated ||
-        result.timedOut
-      )
-        failure = "log";
-    } catch {
-      failure = "capture";
-    }
-  }
+  const outcome = await collectOwnerOutputs(runtime, prepared, controls);
+  let failure = outcome.failure;
   const { known, failed } = await retainIntent(runtime, prepared);
   if (failed) failure = "capture";
   const files = await readdir(directory);
@@ -331,6 +362,9 @@ export async function collectGuestMacInput(
     JSON.stringify({
       schemaVersion: 1,
       ...record,
+      ...(outcome.failureStage === undefined
+        ? {}
+        : { failureStage: outcome.failureStage }),
       privacyScope:
         "owned-fixture-native-transport-declared-FDs-and-PID-time-unified-logs",
       unifiedLogLevel: ["info", "debug"],
@@ -340,7 +374,10 @@ export async function collectGuestMacInput(
   );
   return record;
 }
-async function retainIntent(runtime: GuestRuntime, prepared: MacInputPrepared) {
+async function retainIntent(
+  runtime: CollectionRuntime,
+  prepared: MacInputPrepared,
+) {
   const {
     evidenceDirectory: directory,
     input: { sessionID },

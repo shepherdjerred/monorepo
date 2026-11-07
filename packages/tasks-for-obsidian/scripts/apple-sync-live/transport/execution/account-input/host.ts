@@ -14,13 +14,13 @@ import type { FileBlob } from "../../fields";
 import type { ExecutionOperation } from "../contract";
 import {
   MacInputPreparedSchema,
-  MacInputCollectedSchema,
   MacInputInstalledSchema,
   macInputFrame,
   assertMacInputCorrelation,
   type MacInputPrepared,
 } from "./protocol";
 import { driveMacInput, startMacPrivateIO } from "./session";
+import { collectMacProbeEvidence } from "./probe-collection";
 import {
   createMacInputApproval,
   requireMacInputApproval,
@@ -134,36 +134,21 @@ export async function runMacInputProbe(
       }
     }
     const nativeFinishedAt = Date.now();
-    let guestFiles: Record<string, Uint8Array> = {},
-      guestCollectionPassed = false;
-    try {
-      const collected = MacInputCollectedSchema.parse(
-        await accountRequest(manifest, { mode: "input_collect", sessionID }),
-      );
-      assert.equal(collected.sessionID, sessionID);
-      assert.equal(collected.evidenceDirectory, prepared.evidenceDirectory);
-      const prefix = "account-input/sessions/" + sessionID + "/";
-      assert.equal(new Set(collected.files).size, collected.files.length);
-      assert.ok(
-        collected.files.every(
-          (file) =>
-            file.startsWith(prefix) && !file.slice(prefix.length).includes("/"),
-        ),
-      );
-      guestFiles = await guestReadFiles(manifest, "evidence", collected.files);
-      assert.deepEqual(
-        Object.keys(guestFiles).sort(),
-        [...collected.files].sort(),
-      );
-      guestCollectionPassed = collected.passed;
-    } catch {
+    const { guestFiles, guestCollectionPassed, failure } =
+      await collectMacProbeEvidence({
+        prepared,
+        request: () =>
+          accountRequest(manifest, { mode: "input_collect", sessionID }),
+        readFiles: (files) => guestReadFiles(manifest, "evidence", files),
+      });
+    if (failure !== null) {
       await writeFile(
         path.join(root, "collection-failure-" + sessionID + ".json"),
         JSON.stringify({
           schemaVersion: 1,
           sessionID,
           operation,
-          classification: "owned-output-collection-incomplete",
+          ...failure,
         }),
         { flag: "wx", mode: 0o600 },
       );
