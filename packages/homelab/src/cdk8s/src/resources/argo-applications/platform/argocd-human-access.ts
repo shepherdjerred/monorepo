@@ -24,6 +24,13 @@ export const HUMAN_ARGOCD_ACCOUNT = "operator";
  */
 export const WORKSTATION_ARGOCD_ACCOUNT = "workstation";
 
+/**
+ * The API-only account the Temporal homelab audit uses through
+ * `toolkit argocd`. It is read-only like the workstation account but a
+ * separate identity, so ArgoCD's logs and token rotation tell them apart.
+ */
+export const HOMELAB_AUDIT_ARGOCD_ACCOUNT = "homelab-audit";
+
 /** `argocd-cm` settings for human access; nothing changes while it is off. */
 export function humanArgoCdSettings(
   readOnly: boolean = humanArgoCdReadOnly(),
@@ -35,6 +42,8 @@ export function humanArgoCdSettings(
         [`accounts.${HUMAN_ARGOCD_ACCOUNT}.enabled`]: true,
         [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}`]: "apiKey",
         [`accounts.${WORKSTATION_ARGOCD_ACCOUNT}.enabled`]: true,
+        [`accounts.${HOMELAB_AUDIT_ARGOCD_ACCOUNT}`]: "apiKey",
+        [`accounts.${HOMELAB_AUDIT_ARGOCD_ACCOUNT}.enabled`]: true,
       }
     : {};
 }
@@ -47,6 +56,7 @@ export function humanArgoCdPolicyRows(
     ? [
         `g, ${HUMAN_ARGOCD_ACCOUNT}, role:readonly`,
         `g, ${WORKSTATION_ARGOCD_ACCOUNT}, role:readonly`,
+        `g, ${HOMELAB_AUDIT_ARGOCD_ACCOUNT}, role:readonly`,
       ]
     : [];
 }

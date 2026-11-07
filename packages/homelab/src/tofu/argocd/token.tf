@@ -131,3 +131,31 @@ output "workstation_onepassword_item_id" {
   description = "1Password item UUID for the read-only workstation ArgoCD token toolkit uses"
   value       = onepassword_item.argocd_workstation_token.uuid
 }
+
+# The read-only API account the Temporal homelab audit uses through
+# `toolkit argocd`. Register it in the ArgoCD chart before creating this token.
+# The temporal worker's 1Password operator item projects the field as
+# ARGOCD_AUTH_TOKEN.
+resource "argocd_account_token" "homelab_audit" {
+  account = "homelab-audit"
+}
+
+resource "onepassword_item" "argocd_homelab_audit_token" {
+  vault = "v64ocnykdqju4ui6j6pua56xw4"
+  title = "argocd-homelab-audit-token"
+
+  section {
+    label = "tokens"
+
+    field {
+      label = "ARGOCD_AUTH_TOKEN"
+      value = argocd_account_token.homelab_audit.jwt
+      type  = "CONCEALED"
+    }
+  }
+}
+
+output "homelab_audit_onepassword_item_id" {
+  description = "1Password item UUID for the read-only homelab-audit ArgoCD token"
+  value       = onepassword_item.argocd_homelab_audit_token.uuid
+}
