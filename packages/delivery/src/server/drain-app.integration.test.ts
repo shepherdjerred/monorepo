@@ -28,6 +28,8 @@ test("a request the app serves while draining extends the drain; a probe does no
   const statuses: Record<string, number> = {};
   const served: { app?: ReturnType<typeof createApp> } = {};
   const drain = createDrain({
+    // Routing has already moved; only requests the app serves extend it.
+    unrouted: async () => true,
     quietMs: 2000,
     maxMs: 25_000,
     now: () => clock,
@@ -64,7 +66,7 @@ test("a request the app serves while draining extends the drain; a probe does no
     },
   });
 
-  await drain.untilQuiet();
+  await drain.untilDrained();
   // The API request at 1s restarts the 2s quiet window; the probe at 2.5s
   // does not, so the drain ends at 3s rather than 2s or 4.5s.
   expect(clock).toBe(3000);

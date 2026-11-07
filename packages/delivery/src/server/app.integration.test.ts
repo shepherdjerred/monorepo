@@ -234,7 +234,7 @@ describe("Delivery API authorization and kill switch", () => {
     writes = true;
   });
   test("a draining API reports itself unready and keeps serving", async () => {
-    await drain.untilQuiet();
+    await drain.untilDrained();
     const ready = await app.request("/readyz");
     const overview = await app.request("/api/v1/overview", { headers: human });
     expect(ready.status).toBe(503);
