@@ -1,5 +1,6 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { escapePrometheusTemplate } from "./shared.ts";
 
 export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -10,8 +11,9 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "FeatureFlagExceptionReviewOverdue",
           annotations: {
             summary: "A feature flag exception needs review",
-            message:
+            message: escapePrometheusTemplate(
               "Default-off exception {{ $labels.issue }} for {{ $labels.flag }} in {{ $labels.flipt_environment }}/{{ $labels.flipt_namespace }} is overdue. Review its enablement criteria.",
+            ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "time() > max by (flipt_environment, flipt_namespace, flag, issue) (feature_flag_exception_review_timestamp_seconds)",
@@ -23,8 +25,9 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "FeatureFlagEvaluationErrors",
           annotations: {
             summary: "Feature flag evaluations are failing",
-            message:
+            message: escapePrometheusTemplate(
               "{{ $labels.job }} is evaluating {{ $labels.flag }} with ERROR results. Check the provider and flag contract; explicit false is not an error.",
+            ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'sum by (job, flag) (rate(feature_flag_evaluations_total{reason="ERROR"}[5m])) > 0',

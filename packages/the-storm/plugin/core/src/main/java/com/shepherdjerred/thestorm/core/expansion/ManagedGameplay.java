@@ -146,9 +146,9 @@ public final class ManagedGameplay implements AutoCloseable {
               System.getLogger(ManagedGameplay.class.getName())
                   .log(
                       System.Logger.Level.WARNING,
-                      "Flag provider unavailable; using declared default for {0}",
+                      "Flag provider unavailable; retaining a fresh value or declared default for {0}",
                       key);
-              return true;
+              return cachedEnabled(key, actor).orElse(true);
             })
         .thenApply(
             enabled -> {

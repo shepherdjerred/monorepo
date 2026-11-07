@@ -3,6 +3,7 @@ import { z } from "zod";
 import { applyDeclaredManagedFlags } from "./flipt-declared-flag-apply.ts";
 import { ManagedFlagInventorySchema } from "./managed-flag-inventory.ts";
 import type { FliptFetcher } from "./managed-flag-drift.ts";
+import { collectManagedSegmentPayloads } from "./flipt-resource-payloads.ts";
 
 const inventory = ManagedFlagInventorySchema.parse({
   version: 3,
@@ -200,4 +201,113 @@ test("readback mismatch and concurrent revision changes stop subsequent writes",
     expect(result.changes.map((c) => c.status)).toEqual([status, "planned"]);
     expect(s.writes).toHaveLength(1);
   }
+});
+
+const targetedInventory = ManagedFlagInventorySchema.parse({
+  ...inventory,
+  flags: inventory.flags.map((flag) =>
+    flag.key === "second"
+      ? {
+          ...flag,
+          default: false,
+          rollouts: [
+            {
+              segmentKey: "audience",
+              segmentOperator: "OR_SEGMENT_OPERATOR",
+              matchType: "ALL_SEGMENT_MATCH_TYPE",
+              constraints: [
+                {
+                  type: "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  property: "stage",
+                  operator: "eq",
+                  value: "beta",
+                },
+              ],
+              result: true,
+            },
+          ],
+        }
+      : flag,
+  ),
+});
+
+test("missing, changed and concurrently edited audiences fail before the first write", async () => {
+  const expected = collectManagedSegmentPayloads(targetedInventory.flags)[0];
+  if (expected === undefined) throw new Error("Missing fixture segment");
+  for (const failure of ["missing", "changed", "revision", "identity"]) {
+    const s = server({
+      missing: failure === "missing" ? "audience" : "absent",
+    });
+    s.payloads.set("audience", {
+      ...expected,
+      constraints: expected.constraints.map((constraint) => ({
+        ...constraint,
+        value: failure === "changed" ? "prod" : "beta",
+      })),
+    });
+    const fetcher: FliptFetcher = async (input, init) => {
+      const response = await s.fetcher(input, init);
+      const url = new URL(input instanceof Request ? input.url : input);
+      if (failure === "revision" && url.pathname.includes("flipt.core.Segment"))
+        return Response.json({
+          resource: {
+            namespaceKey: "test",
+            key: "audience",
+            payload: expected,
+          },
+          revision: "newer",
+        });
+      if (failure === "identity" && url.pathname.includes("flipt.core.Segment"))
+        return Response.json({
+          resource: {
+            namespaceKey: "wrong",
+            key: "audience",
+            payload: expected,
+          },
+          revision: "r0",
+        });
+      return response;
+    };
+    await expect(
+      applyDeclaredManagedFlags({
+        ...scope,
+        inventory: targetedInventory,
+        fetcher,
+        mode: "apply",
+      }),
+    ).rejects.toThrow();
+    expect(s.writes).toHaveLength(0);
+  }
+});
+
+test("shared audience preflight still runs when selected flag payloads are unchanged", async () => {
+  const expected = collectManagedSegmentPayloads(targetedInventory.flags)[0];
+  if (expected === undefined) throw new Error("Missing fixture segment");
+  const s = server();
+  s.payloads.set("audience", {
+    ...expected,
+    name: "Operator-owned title",
+    description: "Preserved",
+  });
+  const result = await applyDeclaredManagedFlags({
+    ...scope,
+    inventory: targetedInventory,
+    fetcher: s.fetcher,
+    mode: "apply",
+  });
+  expect(result.changes.map((change) => change.status)).toEqual([
+    "applied",
+    "applied",
+  ]);
+  expect(s.writes.map((write) => write.key)).toEqual(["first", "second"]);
+  s.payloads.set("audience", { ...expected, constraints: [] });
+  await expect(
+    applyDeclaredManagedFlags({
+      ...scope,
+      inventory: targetedInventory,
+      fetcher: s.fetcher,
+      mode: "apply",
+    }),
+  ).rejects.toThrow("Rollout segment behavior differs");
+  expect(s.writes).toHaveLength(2);
 });

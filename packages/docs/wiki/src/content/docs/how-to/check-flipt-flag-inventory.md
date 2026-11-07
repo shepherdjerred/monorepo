@@ -121,6 +121,9 @@ Inspect the before and after behavior and current revision. Replace
 `--plan-declared` with `--apply-declared` to apply that declaration.
 Both modes require an explicit environment, namespace, and nonempty flag list.
 They reject variant flags and never edit unselected flags or segments.
+Every referenced shared segment must already match its declared audience.
+A missing or different segment blocks the complete selection before any write,
+including when the selected flag payloads are unchanged.
 
 The operator [command](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/check-flipt-flag-inventory.ts)
 preflights every selected resource before writing. Each write uses the current

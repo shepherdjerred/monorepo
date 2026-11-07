@@ -691,7 +691,9 @@ schedule reconciliation.
 
 The `streambot-lol-playback` Schedule reconciles explicitly selected LoL series
 through the isolated `streambot` Activity queue. The worker receives only its
-internal Streambot endpoint and dedicated scheduler credential. Streambot owns
+internal Streambot endpoint and dedicated scheduler credential. Its tracing
+bootstrap sends spans to the internal OTLP collector on port 4318; it has no
+Flipt management access or media user credentials. Streambot owns
 the durable schedules, Discord authorization, media resolution, and playback
 effects. The Schedule starts paused until both consumers are deployed and healthy;
 its next execution reconciles uncertain prior effects from persisted playback

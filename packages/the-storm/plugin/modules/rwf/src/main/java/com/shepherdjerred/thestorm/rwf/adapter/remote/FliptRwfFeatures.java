@@ -32,6 +32,7 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
   private final URI endpoint;
   private final String environment;
   private final String world;
+  private volatile RwfFeatures lastKnown;
 
   /**
    * @param base the Flipt server address
@@ -52,35 +53,43 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
     this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
     this.environment = environment;
     this.world = world;
+    var defaultOn = "prod".equals(environment);
+    this.lastKnown =
+        new RwfFeatures(false, false, false, false, false, false, false, defaultOn, defaultOn);
   }
 
   @Override
   public CompletableFuture<RwfFeatures> evaluate() {
-    var flow = flag(MATCH_FLOW_FLAG_KEY);
-    var carry = flag(CARRY_OVER_FLAG_KEY);
-    var feed = flag(DEATH_FEED_FLAG_KEY);
-    var chat = flag(TEAM_CHAT_FLAG_KEY);
-    var spectate = flag(SPECTATOR_TOOLS_FLAG_KEY);
-    var bombs = flag(BOMB_EFFECTS_FLAG_KEY);
-    var stats = flag(STATS_FLAG_KEY);
-    var host = flag(HOST_SETTINGS_FLAG_KEY);
-    var visits = flag(CANDIDATE_VISITS_FLAG_KEY);
+    var previous = lastKnown;
+    var flow = flag(MATCH_FLOW_FLAG_KEY, previous.matchFlow());
+    var carry = flag(CARRY_OVER_FLAG_KEY, previous.carryOver());
+    var feed = flag(DEATH_FEED_FLAG_KEY, previous.deathFeed());
+    var chat = flag(TEAM_CHAT_FLAG_KEY, previous.teamChat());
+    var spectate = flag(SPECTATOR_TOOLS_FLAG_KEY, previous.spectatorTools());
+    var bombs = flag(BOMB_EFFECTS_FLAG_KEY, previous.bombEffects());
+    var stats = flag(STATS_FLAG_KEY, previous.stats());
+    var host = flag(HOST_SETTINGS_FLAG_KEY, previous.hostSettings());
+    var visits = flag(CANDIDATE_VISITS_FLAG_KEY, previous.candidateVisits());
     return CompletableFuture.allOf(flow, carry, feed, chat, spectate, bombs, stats, host, visits)
         .thenApply(
-            ignored ->
-                new RwfFeatures(
-                    flow.join(),
-                    carry.join(),
-                    feed.join(),
-                    chat.join(),
-                    spectate.join(),
-                    bombs.join(),
-                    stats.join(),
-                    host.join(),
-                    visits.join()));
+            ignored -> {
+              var resolved =
+                  new RwfFeatures(
+                      flow.join(),
+                      carry.join(),
+                      feed.join(),
+                      chat.join(),
+                      spectate.join(),
+                      bombs.join(),
+                      stats.join(),
+                      host.join(),
+                      visits.join());
+              lastKnown = resolved;
+              return resolved;
+            });
   }
 
-  private CompletableFuture<Boolean> flag(String key) {
+  private CompletableFuture<Boolean> flag(String key, boolean fallback) {
     var body =
         "{\"namespace_key\":\""
             + NAMESPACE_KEY
@@ -112,15 +121,14 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
             failure -> {
               var cause = FlagProviderUnavailableException.unwrap(failure);
               if ("prod".equals(environment)
-                  && (HOST_SETTINGS_FLAG_KEY.equals(key) || CANDIDATE_VISITS_FLAG_KEY.equals(key))
                   && (cause instanceof java.io.IOException
                       || cause instanceof FlagProviderUnavailableException)) {
                 System.getLogger(FliptRwfFeatures.class.getName())
                     .log(
                         System.Logger.Level.WARNING,
-                        "Flag provider unavailable; using declared default for {0}",
+                        "Flag provider unavailable; retaining the last value or declared default for {0}",
                         key);
-                return true;
+                return fallback;
               }
               throw new java.util.concurrent.CompletionException(cause);
             });

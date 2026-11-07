@@ -10,6 +10,7 @@ import {
   type ManagedFlagInventory,
 } from "./managed-flag-inventory.ts";
 import type { FliptFetcher } from "./managed-flag-drift.ts";
+import { validateDeclaredSegments } from "./flipt-declared-segment-preflight.ts";
 
 const PayloadSchema = z.looseObject({
   "@type": z.literal(FLIPT_FLAG_TYPE_URL),
@@ -144,9 +145,16 @@ async function previewDeclaredManagedFlags(options: DeclaredFlagApplyOptions) {
       revisionBefore: revision,
     });
   }
-  options.onPlan?.(structuredClone(result));
   if (revision === undefined)
     throw new Error("No declared flags were previewed");
+  await validateDeclaredSegments({
+    flags: selected,
+    endpoint,
+    namespace: options.namespace,
+    revision,
+    fetcher: options.fetcher,
+  });
+  options.onPlan?.(structuredClone(result));
   return { result, endpoint, revision };
 }
 

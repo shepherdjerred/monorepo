@@ -32,6 +32,10 @@ final class ManagedGameplayTest {
         .hasRootCauseMessage("offline");
     response.set(CompletableFuture.completedFuture(false));
     assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isFalse();
+    response.set(
+        CompletableFuture.failedFuture(
+            new FlagProviderUnavailableException(new java.io.IOException("offline"))));
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isFalse();
     response.set(CompletableFuture.failedFuture(new IllegalStateException("invalid response")));
     assertThatThrownBy(() -> gameplay.enabled(ManagedGameplay.STAFF, actor).join())
         .hasRootCauseMessage("invalid response");
