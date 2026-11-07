@@ -59,6 +59,7 @@ import { registerHubRoutes, registerIntegrationRoutes } from "./hub-routes.ts";
 import { registerEventsRoute } from "./events-route.ts";
 import type { ChangeFeed } from "#infrastructure/change-feed/feed.ts";
 import type { Enrichment } from "#infrastructure/enrichment/enrichment.ts";
+import type { Drain } from "./drain.ts";
 
 type Options = {
   sourceRevision?: string;
@@ -76,6 +77,8 @@ type Options = {
   upstreamFetch?: UpstreamFetch;
   changeFeed?: ChangeFeed;
   enrichment?: Enrichment;
+  /** The process's shutdown drain; a draining API reports itself unready. */
+  drain?: Drain;
   qualifyBuild: (
     input: Pick<PublishBuild, "ciUrl" | "sourceRevision">,
   ) => Promise<"pending" | "verified" | "failed">;
@@ -120,6 +123,7 @@ export function createApp(options: Options) {
     })(c, next),
   );
   app.use(async (c, next) => {
+    options.drain?.observe(c.req.raw);
     const requestId = crypto.randomUUID();
     c.set("requestId", requestId);
     c.header("x-request-id", requestId);
@@ -131,6 +135,8 @@ export function createApp(options: Options) {
     return c.body(await deliveryMetrics(options.delivery.database));
   });
   app.get("/readyz", async (c) => {
+    if (options.drain?.draining() === true)
+      return c.json({ status: "draining" }, 503);
     try {
       await options.delivery.database.$queryRaw`SELECT 1`;
       return c.json({ status: "ok" });
