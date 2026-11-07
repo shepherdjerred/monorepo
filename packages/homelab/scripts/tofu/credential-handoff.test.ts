@@ -480,7 +480,7 @@ describe("physical selector adoption", () => {
     ).toThrow("details withheld");
   });
 
-  test("missing/ambiguous fields and unequal ChartMuseum values block adoption", () => {
+  test("ambiguous targets fail and retired ChartMuseum copies do not define ownership", () => {
     expect(
       targetValue(
         [{ ...items[0]!, fields: [...items[0]!.fields, ...items[0]!.fields] }],
@@ -510,10 +510,11 @@ describe("physical selector adoption", () => {
       },
     ]);
     const unit = preview.find((entry) => entry.key === "chartmuseum");
-    expect(unit?.status).toBe("blocked");
-    expect(unit?.reasons).toContain(
-      "targets contain different values; retain both and investigate identity",
-    );
+    expect(unit?.status).toBe("preserve-value-adoption-candidate");
+    expect(unit?.targets.map((entry) => entry.vault_item_id)).toEqual([
+      "wwoism5fsvmbisv4ef47yxqy2i",
+    ]);
+    expect(unit?.reasons).toEqual([]);
     expect(JSON.stringify(preview)).not.toContain("server-value");
   });
 });

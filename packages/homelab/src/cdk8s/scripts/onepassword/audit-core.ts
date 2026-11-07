@@ -8,6 +8,7 @@ import { jsonCredential } from "homelab/scripts/tofu/application-secrets.ts";
 import { buildFieldMapping, resolveAuditItem } from "./field-map.ts";
 
 export type AuditReference = {
+  vault?: string;
   item: string;
   field?: string;
   jsonPath?: string;
@@ -17,6 +18,7 @@ export type AuditReference = {
   source: string;
   wholeItem?: boolean;
   managed?: boolean;
+  optional?: boolean;
 };
 export type AuditCoverage = { inspected: string[]; gaps: string[] };
 const RecordSchema = z.record(z.string(), z.unknown());
@@ -28,7 +30,7 @@ const VolumeSchema = z.object({
 type Manifest = z.infer<typeof ManifestSchema>;
 type ReferenceCollection = {
   references: AuditReference[];
-  bindings: Map<string, string[]>;
+  bindings: Map<string, { item: string; vault: string }[]>;
   unresolved: string[];
 };
 
@@ -67,18 +69,30 @@ function collectImagePulls(
 export function collectAuditConsumption(
   node: unknown,
   into: Map<string, Set<string>>,
+  optional?: Map<string, boolean>,
 ): void {
   if (Array.isArray(node)) {
-    for (const child of node) collectAuditConsumption(child, into);
+    for (const child of node) collectAuditConsumption(child, into, optional);
     return;
   }
   const parsed = RecordSchema.safeParse(node);
   if (!parsed.success) return;
   const object = parsed.data;
   const keyRef = z
-    .object({ name: z.string(), key: z.string() })
+    .object({
+      name: z.string(),
+      key: z.string(),
+      optional: z.boolean().optional(),
+    })
     .safeParse(object["secretKeyRef"]);
-  if (keyRef.success) addConsumption(into, keyRef.data.name, keyRef.data.key);
+  if (keyRef.success) {
+    addConsumption(into, keyRef.data.name, keyRef.data.key);
+    const key = keyRef.data.name + "/" + keyRef.data.key;
+    optional?.set(
+      key,
+      (optional.get(key) ?? true) && keyRef.data.optional === true,
+    );
+  }
   const envFrom = z.object({ name: z.string() }).safeParse(object["secretRef"]);
   if (envFrom.success) addConsumption(into, envFrom.data.name, "*");
   collectVolume(object["secret"], into);
@@ -88,10 +102,11 @@ export function collectAuditConsumption(
     if (
       typeof value === "string" &&
       value !== "" &&
+      !(key.toLowerCase() === "secretname" && Array.isArray(object["items"])) &&
       /(?:existing.*secret|secretname|secretref)$/iu.test(key)
     )
       addConsumption(into, value, "*");
-    collectAuditConsumption(value, into);
+    collectAuditConsumption(value, into, optional);
   }
 }
 
@@ -110,17 +125,37 @@ function collectBinding(
   );
   const location = manifestLocation(manifest, source);
   if (
-    itemPath?.[1] !== VAULT_ID ||
+    itemPath?.[1] === undefined ||
     itemPath[2] === undefined ||
     manifest.metadata?.name === undefined
   ) {
-    unresolved.push(`${location}: malformed or outside-vault item binding`);
+    unresolved.push(`${location}: malformed item binding`);
     return;
   }
   const item = itemPath[2];
+  const vault = itemPath[1];
   const key = `${manifest.metadata.namespace ?? ""}/${manifest.metadata.name}`;
-  bindings.set(key, [...(bindings.get(key) ?? []), item]);
-  references.push({ item, source: location });
+  bindings.set(key, [...(bindings.get(key) ?? []), { item, vault }]);
+  references.push({
+    item,
+    ...(vault === VAULT_ID ? {} : { vault }),
+    source: location,
+  });
+}
+
+function consumerReference(
+  binding: { item: string; vault: string },
+  field: string,
+  source: string,
+  optional: boolean,
+): AuditReference {
+  return {
+    item: binding.item,
+    ...(binding.vault === VAULT_ID ? {} : { vault: binding.vault }),
+    source,
+    ...(optional ? { optional: true } : {}),
+    ...(field === "*" ? { wholeItem: true } : { field, access: "operator" }),
+  };
 }
 
 function collectManifestConsumers(
@@ -135,7 +170,8 @@ function collectManifestConsumers(
       ? manifest.spec?.destination?.namespace
       : manifest.metadata?.namespace;
   const consumption = new Map<string, Set<string>>();
-  collectAuditConsumption(raw, consumption);
+  const optional = new Map<string, boolean>();
+  collectAuditConsumption(raw, consumption, optional);
   const location = `${source}:${namespace ?? ""}/${manifest.kind ?? ""}/${manifest.metadata?.name ?? ""}`;
   for (const [secret, fields] of consumption) {
     const key = `${namespace ?? ""}/${secret}`;
@@ -146,15 +182,16 @@ function collectManifestConsumers(
       );
       continue;
     }
-    for (const item of items)
+    for (const binding of items)
       for (const field of fields)
-        references.push({
-          item,
-          source: location,
-          ...(field === "*"
-            ? { wholeItem: true }
-            : { field, access: "operator" as const }),
-        });
+        references.push(
+          consumerReference(
+            binding,
+            field,
+            location,
+            optional.get(secret + "/" + field) === true,
+          ),
+        );
   }
 }
 
@@ -167,7 +204,7 @@ export function manifestAuditReferences(
 } {
   const references: AuditReference[] = [];
   const unresolved: string[] = [];
-  const bindings = new Map<string, string[]>();
+  const bindings = new Map<string, { item: string; vault: string }[]>();
   const collection = { references, bindings, unresolved };
   for (const raw of manifests) {
     const parsed = ManifestSchema.safeParse(raw);
@@ -193,11 +230,17 @@ export function sourceAuditReferences(
     const parsed = /^op:\/\/([^/]+)\/([^/]+)\/([^?]+)(?:\?.*)?$/u.exec(
       match[2] ?? match[0],
     );
-    if (parsed?.[1] !== VAULT_ID && parsed?.[1]?.toLowerCase() !== "homelab")
+    if (
+      parsed?.[1] === undefined ||
+      parsed[2] === undefined ||
+      parsed[3] === undefined
+    )
       continue;
-    if (parsed[2] === undefined || parsed[3] === undefined) continue;
+    if ([parsed[1], parsed[2], parsed[3]].some((part) => /[<>{}$]/u.test(part)))
+      continue;
     references.push({
       item: parsed[2],
+      ...(parsed[1] === VAULT_ID ? {} : { vault: parsed[1] }),
       field: parsed[3],
       source,
       access: "onepassword",
@@ -206,27 +249,28 @@ export function sourceAuditReferences(
   return references;
 }
 
-/** Repo CI grants are emitted dynamically, so they don't exist in CDK8s pods. */
-export function pipelineGrantManifest(text: string, source: string): unknown {
-  const consumers: unknown[] = [];
-  for (const match of text.matchAll(
-    /grant\(\s*"([\w-]+)"\s*,\s*(?:"([\w.-]+)"|[A-Z_]+)/gu,
-  )) {
-    consumers.push(
-      match[2] === undefined
-        ? { secretRef: { name: match[1] } }
-        : { secretKeyRef: { name: match[1], key: match[2] } },
-    );
-  }
-  for (const match of text.matchAll(
-    /secret:\s*"([\w-]+)"\s*,\s*key:\s*"([\w.-]+)"/gu,
-  ))
-    consumers.push({ secretKeyRef: { name: match[1], key: match[2] } });
-  return {
+/** Consume evaluated grants, including constants and ordered containers. */
+export function pipelineGrantManifests(
+  raw: unknown,
+  source: string,
+): unknown[] {
+  const steps = z
+    .array(
+      z.object({
+        key: z.string(),
+        secrets: z
+          .array(z.object({ secret: z.string(), key: z.string() }))
+          .optional(),
+      }),
+    )
+    .parse(raw);
+  return steps.map((step) => ({
     kind: "Pod",
-    metadata: { namespace: "woodpecker-ci", name: source },
-    consumers,
-  };
+    metadata: { namespace: "woodpecker-ci", name: source + "/" + step.key },
+    consumers: (step.secrets ?? []).map((grant) => ({
+      secretKeyRef: { name: grant.secret, key: grant.key },
+    })),
+  }));
 }
 
 const credentialName =
@@ -328,6 +372,7 @@ function mappingProblems(
         "resolved",
         "whole-item",
         "item-binding",
+        "optional-field-absent",
         "missing-or-ambiguous-item",
       ].includes(mapping.status)
     )
@@ -339,6 +384,7 @@ function mappingProblems(
       items,
       mapping.reference.item,
       mapping.reference.access === "onepassword",
+      mapping.reference.vault,
     );
     if (item !== undefined) unresolvedIds.add(item.id);
   }
@@ -361,6 +407,7 @@ export function buildVaultAudit(
       items,
       reference.item,
       reference.access === "onepassword",
+      reference.vault,
     );
     if (item === undefined) {
       unresolved.push(
@@ -374,12 +421,19 @@ export function buildVaultAudit(
     }
     byItem.set(item.id, [...(byItem.get(item.id) ?? []), reference]);
   }
-  const equal = new Map<string, { item_id: string; field_path: string }[]>();
+  const equal = new Map<
+    string,
+    { item_id: string; vault_id?: string; field_path: string }[]
+  >();
   for (const item of items)
     for (const field of credentialLocations(item, byItem.get(item.id))) {
       equal.set(field.value, [
         ...(equal.get(field.value) ?? []),
-        { item_id: item.id, field_path: field.path },
+        {
+          item_id: item.id,
+          ...(item.vault === undefined ? {} : { vault_id: item.vault.id }),
+          field_path: field.path,
+        },
       ]);
     }
   const duplicates = [...equal.values()]
@@ -422,6 +476,7 @@ export function buildVaultAudit(
     if (unresolvedIds.has(item.id)) classifications.push("unresolved");
     return {
       id: item.id,
+      vault_id: item.vault?.id ?? VAULT_ID,
       title: item.title,
       version: item.version ?? null,
       category: item.category ?? null,
@@ -438,7 +493,7 @@ export function buildVaultAudit(
     };
   });
   return {
-    vault_id: VAULT_ID,
+    vault_ids: [...new Set(items.map((item) => item.vault?.id ?? VAULT_ID))],
     field_mapping: fieldMapping,
     coverage,
     inventory,

@@ -29,7 +29,8 @@ import {
   publishPlatformPlan,
   consumeReviewedPlatformPlan,
 } from "./platform-plan-handoff.ts";
-import { applicationSecrets } from "./application-secrets.ts";
+import { assertApplicationSecretAction } from "./application-secrets.ts";
+import { adoptApplicationSecrets } from "./adopt-application-secrets.ts";
 import {
   assertStackExecutionContext,
   runDockerTokenStack,
@@ -300,7 +301,7 @@ async function validateStack(
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply|prepare|apply-saved [--dry-run]",
+    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply|prepare|apply-saved [--dry-run]\nApplication adoption: application-secrets adopt EXPECTED_HEAD",
   );
   process.exit(1);
 }
@@ -413,16 +414,7 @@ function assertStackActionSupported(
   stack: TofuStack,
   action: TofuAction,
 ): void {
-  if (stack === "application-secrets") {
-    // Initial phase is source preparation only. No CI credential grants,
-    // backend initialization, imports, plans or writes for this stack yet.
-    if (action !== "validate")
-      throw new Error(
-        "application-secrets is preparation-only; only validate is enabled.",
-      );
-    if (Object.keys(applicationSecrets.credentials).length === 0)
-      throw new Error("application-secrets catalog is empty");
-  }
+  if (stack === "application-secrets") assertApplicationSecretAction(action);
   if (
     (action === "prepare" || action === "apply-saved") &&
     !REVIEWABLE_PLATFORM_STACKS.has(stack)
@@ -438,6 +430,8 @@ async function main(): Promise<void> {
   const stackName = positional[0];
   if (stackName === undefined) usage();
   const stack = parseTofuStack(stackName);
+  if (stack === "application-secrets" && positional[1] === "adopt")
+    return adoptApplicationSecrets(args);
   const action = parseAction(positional[1]);
   assertStackExecutionContext(stack, action, Bun.env["CI"]);
   assertStackActionSupported(stack, action);

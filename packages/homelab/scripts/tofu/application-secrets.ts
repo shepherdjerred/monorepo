@@ -71,6 +71,16 @@ export const applicationTargets = Object.values(
   applicationSecrets.credentials,
 ).flatMap((unit) => unit.onepassword_targets);
 
+/** Generic stack actions cannot bypass the dedicated adoption runner. */
+export function assertApplicationSecretAction(action: string): void {
+  if (action !== "validate")
+    throw new Error(
+      "Use operator adopt; general application-secret live actions are disabled.",
+    );
+  if (Object.keys(applicationSecrets.credentials).length === 0)
+    throw new Error("application-secrets catalog is empty");
+}
+
 export function assertPreparationAction(action: string): void {
   if (action !== "preview" && action !== "verify")
     throw new Error(

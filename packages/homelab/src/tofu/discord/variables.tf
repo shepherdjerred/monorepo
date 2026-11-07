@@ -4,6 +4,7 @@ variable "discord_bots" {
     application_name                  = string
     expected_application_id           = string
     vault_item_id                     = string
+    vault_field                       = optional(string, "DISCORD_TOKEN")
     description                       = optional(string)
     custom_install_url                = optional(string)
     interactions_endpoint_url         = optional(string)

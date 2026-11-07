@@ -147,6 +147,7 @@ const OpFileSchema = z.object({
 export const OpItemSchema = z.object({
   id: z.string(),
   title: z.string(),
+  vault: z.object({ id: z.string(), name: z.string().optional() }).optional(),
   version: z.number().int().optional(),
   category: z.string().optional(),
   fields: z.array(OpFieldSchema).optional(),

@@ -43,6 +43,7 @@ Credential helpers (no secrets on disk):
   aws credential <PROFILE>     AWS credential_process for S3-compatible profiles
   run --env NAME[,NAME] -- CMD Run CMD with the named credentials in its env
   credentials flush [NAME...]  Drop cached 1Password reads after a rotation
+  credentials references --json Show effective op:// locators without values
 
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity

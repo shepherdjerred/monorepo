@@ -2,16 +2,17 @@
 
 Manages external resources with [OpenTofu](https://opentofu.org/), including infrastructure, platform organization settings, and replaceable application credentials for services such as Discord, OpenAI, Anthropic, and Google.
 
-Local application credential generation is prepared in
+Local application credential adoption is available in
 [`application-secrets`](application-secrets/README.md). Its wrapper permits
-validation only. The read-only vault audit and handoff previews prepare
-operator review without adding CI vault-write access or changing live values.
+validation and operator-only, preserve-value adoption at an exact source
+revision. General apply and rotation remain disabled. The read-only vault audit
+and handoff previews support review without CI vault-write access.
 
 ## Structure
 
 ```text
 tofu/
-├── argocd/              # ArgoCD account tokens for Woodpecker and Delivery, stored in 1Password
+├── argocd/              # Scoped ArgoCD account tokens, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── backblaze/           # Backup buckets and scoped keys; Velero writes to sjerred-velero (operator-applied)

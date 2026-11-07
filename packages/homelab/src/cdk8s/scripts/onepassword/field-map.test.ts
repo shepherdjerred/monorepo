@@ -27,6 +27,45 @@ const items: OpItem[] = [
 ];
 
 describe("canonical vault field mapping", () => {
+  test("identical titles in different vaults resolve only inside the requested vault", () => {
+    const mapping = buildFieldMapping(
+      [
+        {
+          id: "first",
+          title: "shared-title",
+          vault: { id: VAULT_ID },
+          fields: [{ id: "token", label: "TOKEN", value: privateValue }],
+        },
+        {
+          id: "second",
+          title: "shared-title",
+          vault: { id: "other-vault" },
+          fields: [{ id: "token", label: "TOKEN", value: privateValue }],
+        },
+      ],
+      [
+        { item: "shared-title", field: "token", source: "first" },
+        {
+          vault: "other-vault",
+          item: "shared-title",
+          field: "token",
+          source: "second",
+        },
+      ],
+    );
+    expect(mapping.summary.unresolved_references).toBe(0);
+    expect(
+      mapping.reference_mappings.map((entry) => entry.canonical_reference),
+    ).toEqual([
+      "op://" + VAULT_ID + "/first/token",
+      "op://other-vault/second/token",
+    ]);
+    expect(mapping.fields.map((entry) => entry.locator.vault_id)).toEqual([
+      VAULT_ID,
+      "other-vault",
+    ]);
+    expect(JSON.stringify(mapping)).not.toContain(privateValue);
+  });
   test("includes every physical field and supplemental metadata without values", () => {
     const mapping = buildFieldMapping(items, [
       { item: "service-id", source: "whole", wholeItem: true },
@@ -170,7 +209,9 @@ describe("canonical vault field mapping", () => {
       mapping.reference_mappings.every((entry) => entry.status === "resolved"),
     ).toBe(true);
   });
+});
 
+describe("JSON field selectors", () => {
   test("JSON leaf selectors share a parent reference without losing their pointers", () => {
     const jsonItems = [
       {
@@ -205,6 +246,22 @@ describe("canonical vault field mapping", () => {
 });
 
 describe("canonical selector ambiguity", () => {
+  test("an absent optional field is recorded explicitly while ambiguity still fails", () => {
+    const mapping = buildFieldMapping(items, [
+      { item: "service", field: "ABSENT", optional: true, source: "optional" },
+      {
+        item: "service",
+        field: "API KEY",
+        optional: true,
+        source: "ambiguous",
+      },
+    ]);
+    expect(mapping.reference_mappings.map((entry) => entry.status)).toEqual([
+      "optional-field-absent",
+      "missing-or-ambiguous-field",
+    ]);
+    expect(mapping.summary.unresolved_references).toBe(1);
+  });
   test("an explicit top-level target rejects a field moved into a section", () => {
     const mapping = buildFieldMapping(items, [
       {

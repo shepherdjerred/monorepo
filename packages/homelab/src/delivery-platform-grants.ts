@@ -23,6 +23,8 @@ export const DELIVERY_PLATFORM_ITEMS = {
   "ci-github-credentials": { itemId: "34gzcrhwdm34lpadyly3rcsu44" },
   "ci-cloudflare-credentials": { itemId: "djl2blalora2unjogqnsadlokq" },
   "ci-arr-credentials": { itemId: "vkzv5jm2euzb7727x6uxdpwu5y" },
+  "radarr-api-credentials": { itemId: "tvy75zdvgyajf57rvzywc7nqbu" },
+  "sonarr-api-credentials": { itemId: "ou5byilomqmlx7askklqonyxfi" },
   "openai-tofu-credentials": { itemId: "jkqhgshctzikhed3vwgogtkmuy" },
   "anthropic-tofu-credentials": { itemId: "a3limlclcej76wmf3kftiqex4u" },
   "discord-tofu-credentials": { itemId: "z2tt5eswusadzfsztg4uwr6vay" },
@@ -42,7 +44,11 @@ export const DELIVERY_PLATFORM_ITEMS = {
   },
   "discord-scout-beta-credentials": { itemId: "rtu44pohnp5ixdp2njuv5f6t2e" },
   "discord-scout-prod-credentials": { itemId: "pacrc4wfbtct4y3qazkvazop5a" },
+  // Prior worker images still create Jobs against the original key contract.
   "discord-minecraft-credentials": { itemId: "q37vet77dfggoqbvu4bqle3gje" },
+  "discord-minecraft-tsmc-credentials": {
+    itemId: "yqp25gif2grm5gkg6l44e6vmxy",
+  },
 } as const;
 type Secret = keyof typeof DELIVERY_PLATFORM_ITEMS;
 const providerSecrets: Readonly<Record<string, Secret>> = {
@@ -64,7 +70,7 @@ const discord: Readonly<Record<string, Secret>> = {
   DISCORD_STARLIGHT_PROD_BOT_TOKEN: "discord-starlight-prod-credentials",
   DISCORD_SCOUT_BETA_BOT_TOKEN: "discord-scout-beta-credentials",
   DISCORD_SCOUT_PROD_BOT_TOKEN: "discord-scout-prod-credentials",
-  DISCORD_MINECRAFT_BOT_TOKEN: "discord-minecraft-credentials",
+  DISCORD_MINECRAFT_BOT_TOKEN: "discord-minecraft-tsmc-credentials",
 };
 
 export function deliveryTofuGrants(rawStack: unknown): DeliveryPlatformGrant[] {
@@ -83,7 +89,12 @@ export function deliveryTofuGrants(rawStack: unknown): DeliveryPlatformGrant[] {
     })),
     ...definition.credentials.map(({ source }) => ({
       env: source,
-      secret,
+      secret:
+        stack === "arr" && source === "RADARR_API_KEY"
+          ? "radarr-api-credentials"
+          : stack === "arr" && source === "SONARR_API_KEY"
+            ? "sonarr-api-credentials"
+            : secret,
       key: source === "POSTHOG_CLI_API_KEY" ? "POSTHOG_API_KEY" : source,
     })),
     ...Object.values(definition.secretObject?.entries ?? {}).map((source) => {
@@ -92,7 +103,14 @@ export function deliveryTofuGrants(rawStack: unknown): DeliveryPlatformGrant[] {
         throw new Error(
           "Platform secret object lacks a reviewed original credential owner",
         );
-      return { env: source, secret: owner, key: "DISCORD_TOKEN" };
+      return {
+        env: source,
+        secret: owner,
+        key:
+          source === "DISCORD_MINECRAFT_BOT_TOKEN"
+            ? "DISCORD_BOT_TOKEN"
+            : "DISCORD_TOKEN",
+      };
     }),
     {
       env: "DELIVERY_PLAN_ENCRYPTION_PASSPHRASE",

@@ -48,8 +48,8 @@ export function deliveryPublicationSteps(
         GITHUB_DOWNLOAD,
         ...HANDOFF_KEYS,
         DOCKERHUB_READ,
-        grant("ci-chartmuseum-credentials", "CHARTMUSEUM_USERNAME"),
-        grant("ci-chartmuseum-credentials", "CHARTMUSEUM_PASSWORD"),
+        grant("ci-chartmuseum-basic-auth", "username", "CHARTMUSEUM_USERNAME"),
+        grant("ci-chartmuseum-basic-auth", "password", "CHARTMUSEUM_PASSWORD"),
         grant(
           "ci-delivery-credentials",
           "DELIVERY_PUBLISHER_TOKEN",

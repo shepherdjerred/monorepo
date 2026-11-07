@@ -61,18 +61,6 @@ export function previewAdoption(items: readonly OpItem[]) {
         reasons.push(
           "targets contain different values; retain both and investigate identity",
         );
-      if (key === "chartmuseum") {
-        const server = targetValue(items, {
-          vault_item_id: "wwoism5fsvmbisv4ef47yxqy2i",
-          vault_field: "username",
-        });
-        const ci = targetValue(items, {
-          vault_item_id: "cnutkdwa7uka5hk3wx5gimyfom",
-          vault_field: "CHARTMUSEUM_USERNAME",
-        });
-        if (server === undefined || ci === undefined || server !== ci)
-          reasons.push("ChartMuseum account identity differs or is unresolved");
-      }
       // The import profile uses byte lengths. Its ASCII contract is exercised
       // with both short and >72-byte values against the pinned provider.
       if (
