@@ -35,7 +35,7 @@ const DELIVERY_CACHE_PURGE_ITEM_ID = "la7gkfl5eqtxiiv2hq3qujx2gi";
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
   MC_BRIDGE_TOKEN: {
     description: "Authenticated Minecraft operator bridge",
-    source: {kind: "op", ref: LIVE_TOKEN_OP_REF},
+    source: { kind: "op", ref: LIVE_TOKEN_OP_REF },
   },
   DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID: {
     description: "Delivery static-site activator access key",
