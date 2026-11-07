@@ -1,4 +1,4 @@
-import { directBinary, fishWord } from "#lib/brim/fish.ts";
+import { PROVIDER_COMMANDS } from "#lib/brim/launch.ts";
 import { formatPercent } from "#lib/brim/rank.ts";
 import type { RankedEntry, RankResult } from "#lib/brim/rank.ts";
 
@@ -29,8 +29,7 @@ export function findRequested(
     (entry) =>
       entry.provider.toLowerCase() === normalized ||
       entry.displayName.toLowerCase() === normalized ||
-      fishWord(entry.provider) === normalized ||
-      directBinary(entry.provider) === normalized,
+      PROVIDER_COMMANDS[entry.provider] === normalized,
   );
 }
 

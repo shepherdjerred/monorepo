@@ -252,11 +252,6 @@ describe("AI architecture compatibility exceptions", () => {
           contents: 'const blocked = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]',
         },
         {
-          path: "packages/toolkit/src/lib/brim/fish.ts",
-          contents:
-            'scrubEnv: ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "CODEX_API_KEY"]',
-        },
-        {
           path: "packages/app/src/provider.test.ts",
           contents: "expect(environment.OPENAI_API_KEY).toBeUndefined()",
         },
@@ -273,12 +268,28 @@ describe("AI architecture compatibility exceptions", () => {
             'let usage = URL(string: "https://api.anthropic.com/api/oauth/usage")',
         },
         {
+          path: "packages/dotfiles/private_dot_config/herdr-app/mods/my-worktree/naming.js",
+          contents:
+            'export const RESPONSES_URL = "https://api.openai.com/v1/responses";',
+        },
+        {
           path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatformEndpoints.swift",
           contents:
             'const openai = "https://api.openai.com/v1/organization/costs";\nconst anthropic = "https://api.anthropic.com/v1/organizations/cost_report";',
         },
       ]),
     ).toEqual([]);
+  });
+
+  test("allows the provider endpoint only in the Herdr worktree naming module", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/dotfiles/private_dot_config/herdr-app/mods/my-worktree/main.js",
+          contents: 'fetch("https://api.openai.com/v1/responses")',
+        },
+      ]).map((violation) => violation.rule),
+    ).toEqual(["direct-provider-endpoint"]);
   });
 
   test("allows subscription authentication only for the Pokémon Codex goal workload", () => {

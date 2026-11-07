@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 // `sync` is dispatched before the picker is loaded: it is the only verb that
-// runs on Windows, where the fish and Ink picker paths have no meaning.
+// runs on Windows, where the agent launcher and Ink picker have no meaning.
 try {
   const args = process.argv.slice(2);
   if (args[0] === "sync") {

@@ -15,6 +15,7 @@
     "bin/codex_theme_restart_status.ts",
     "bin/codex_theme_restart_terminal.ts",
     "bin/codex_theme_restart_config.ts",
+    "bin/codex_theme_restart_events.ts",
     "scripts/*.ts"
   ]
 }

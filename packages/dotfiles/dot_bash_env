@@ -30,17 +30,20 @@ fi
 
 # Agent hosts route credentialed CLIs (talosctl, argocd, gcx, woodpecker-cli,
 # temporal, posthog-cli) through toolkit shims, which must precede mise shims
-# and Homebrew. The directory exists only on agent hosts. Move it to the front
-# on every source so later prepends cannot shadow it.
-_toolkit_shims="$HOME/.local/share/toolkit/shims"
-if [[ -d "$_toolkit_shims" ]]; then
-    PATH=":$PATH:"
-    PATH="${PATH//:$_toolkit_shims:/:}"
-    PATH="${PATH#:}"
-    PATH="$_toolkit_shims:${PATH%:}"
-    export PATH
-fi
-unset _toolkit_shims
+# and Homebrew; that directory exists only on agent hosts. The coding-agent
+# wrappers in ~/.local/share/agent-bin (see agent-exec there) go first on every
+# machine. Move both to the front on every source so later prepends cannot
+# shadow them.
+for _front in "$HOME/.local/share/toolkit/shims" "$HOME/.local/share/agent-bin"; do
+    if [[ -d "$_front" ]]; then
+        PATH=":$PATH:"
+        PATH="${PATH//:$_front:/:}"
+        PATH="${PATH#:}"
+        PATH="$_front:${PATH%:}"
+        export PATH
+    fi
+done
+unset _front
 
 # Fix gRPC DNS resolution for Tailscale split DNS on macOS
 # Required for tools like talosctl to resolve Tailscale hostnames

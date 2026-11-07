@@ -103,9 +103,6 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/temporal/src/activities/agent/agent-task-env.ts",
   "packages/temporal/src/shared/agent/provider-credentials.ts",
   "scripts/lib/release-refiner.ts",
-  // Brim's fish launcher scrubs provider keys from spawned agent sessions
-  // (mirroring the user's fish wrappers). It never reads the credentials.
-  "packages/toolkit/src/lib/brim/fish.ts",
 ]);
 // pr-fleet scrubs every provider credential from the environment it hands to
 // agent subprocesses. It never reads them.
@@ -237,6 +234,12 @@ const DIRECT_PROVIDER_URL =
 // path.
 const LLM_BILLING_RECONCILIATION_PATH =
   "packages/temporal/src/shared/llm-billing.ts";
+// The Herdr worktree dialog names a branch and tab with one OpenAI Responses
+// call. Herdr mods are plain JS run by the Herdr app's own runtime, with no
+// npm modules or Node APIs, so @shepherdjerred/llm-runtime cannot load there.
+// Only the mod's pure naming module may hold the endpoint.
+const HERDR_WORKTREE_NAMING_PATH =
+  "packages/dotfiles/private_dot_config/herdr-app/mods/my-worktree/naming.js";
 // The federation audience is Anthropic's API origin by definition; the pod
 // never calls it from here.
 const WORKLOAD_IDENTITY_MANIFEST_PATH =
@@ -337,6 +340,7 @@ const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
     isPath(WHISPER_TRANSCRIPTION_ADAPTER),
     isPath(SUBSCRIPTION_QUOTA_ENDPOINTS),
     isPath(LLM_BILLING_RECONCILIATION_PATH),
+    isPath(HERDR_WORKTREE_NAMING_PATH),
     isPath(WORKLOAD_IDENTITY_MANIFEST_PATH),
     inSet(OPENAI_NATIVE_VOICE_AUDIO_PATHS),
   ],

@@ -3,7 +3,11 @@ import { isShellcheckCandidate } from "../misc/migration-core.ts";
 import { trackedExistingFiles } from "../lib/tracked-files.ts";
 
 export async function checkShellScripts(): Promise<void> {
-  const trackedFiles = await trackedExistingFiles(["*.sh"]);
+  // Extensionless POSIX sh wrappers that go on PATH by their command name.
+  const trackedFiles = await trackedExistingFiles([
+    "*.sh",
+    "packages/dotfiles/dot_local/share/agent-bin/executable_*",
+  ]);
   const files = trackedFiles.filter((path) => isShellcheckCandidate(path));
   if (files.length === 0) {
     console.log("no shell scripts to check");

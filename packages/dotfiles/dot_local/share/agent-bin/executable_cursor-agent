@@ -1,0 +1,3 @@
+#!/bin/sh
+# cursor-agent, through the agent environment (see agent-exec).
+exec "${0%/*}/agent-exec" cursor-agent --yolo --sandbox disabled -- "$@"

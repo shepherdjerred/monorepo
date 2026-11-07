@@ -114,6 +114,8 @@ describe("findRequested", () => {
     expect(kimi?.displayName).toBe("Kimi Code");
     expect(kimi?.reason).toBe("no Brim snapshot cache on this machine");
     expect(findRequested(none, "claude")?.provider).toBe("claude-code");
+    expect(findRequested(none, "agy")?.provider).toBe("antigravity");
+    expect(findRequested(none, "cursor-agent")?.provider).toBe("cursor");
   });
 });
 

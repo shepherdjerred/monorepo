@@ -6,16 +6,14 @@ import {
   SnapshotCacheMissingError,
 } from "#lib/brim/cache.ts";
 import {
-  buildFishProgram,
-  directBinary,
-  fishWord,
-  noFishCommand,
-  resolveFishEntries,
-  type ResolvedFishEntry,
-  spawnDirectBinary,
-  spawnFishProgram,
-  spawnNoFish,
-} from "#lib/brim/fish.ts";
+  formatLaunch,
+  LaunchError,
+  previewLaunch,
+  resolveLaunch,
+  spawnLaunch,
+  type LaunchPreview,
+  type ResolvedLaunch,
+} from "#lib/brim/launch.ts";
 import { findRequested, formatPickerRow } from "#lib/brim/selection.ts";
 import {
   rankSnapshots,
@@ -29,7 +27,8 @@ const USAGE = `
 toolkit brim — start a session on the least-used AI subscription
 
 Ranks live Brim quota snapshots (5-hour gate, then budget usage with pacing)
-and spawns the pick through your interactive fish abbreviations/functions:
+and runs the pick's agent command from PATH (the wrappers in
+~/.local/share/agent-bin own credential scrubbing and bypass flags):
 
   toolkit brim [--provider <id>] [--min-5h <pct>] [--dry-run] [-- <agent args...>]
   toolkit brim --json [--min-5h <pct>]
@@ -42,8 +41,7 @@ Options:
                       even without usable quota data or a Brim cache on this
                       machine (warns)
   --min-5h <pct>      Minimum 5-hour remaining percent to stay available (default 10)
-  --dry-run           Print the resolved fish command without spawning
-  --no-fish           Bypass fish; use the built-in fallback command (can drift)
+  --dry-run           Print the resolved command path and args without spawning
   --no-interactive    Never prompt; take the top-ranked provider
   --snapshots <path>  Read snapshots from <path> instead of Brim's cache
   --json              Print the ranking as JSON and exit without spawning
@@ -53,7 +51,6 @@ type BrimOptions = {
   readonly provider: string | undefined;
   readonly minRemaining: number;
   readonly dryRun: boolean;
-  readonly noFish: boolean;
   readonly noInteractive: boolean;
   readonly snapshotsPath: string | undefined;
   readonly json: boolean;
@@ -106,7 +103,6 @@ function parseOptions(args: string[]): {
       provider: { type: "string" },
       "min-5h": { type: "string", default: "10" },
       "dry-run": { type: "boolean", default: false },
-      "no-fish": { type: "boolean", default: false },
       "no-interactive": { type: "boolean", default: false },
       snapshots: { type: "string" },
       json: { type: "boolean", default: false },
@@ -127,7 +123,6 @@ function parseOptions(args: string[]): {
       provider: parsed.values.provider,
       minRemaining,
       dryRun: parsed.values["dry-run"],
-      noFish: parsed.values["no-fish"],
       noInteractive: parsed.values["no-interactive"],
       snapshotsPath: parsed.values.snapshots,
       json: parsed.values.json,
@@ -152,29 +147,18 @@ function selectRequested(result: RankResult, requested: string): RankedEntry {
   return match;
 }
 
-/** Resolved fish programs per provider, for the picker preview. */
-function previewPrograms(
+/** Launch previews per available provider, for the picker. */
+function launchPreviews(
   available: readonly RankedEntry[],
-  entries: ReadonlyMap<string, ResolvedFishEntry>,
-): ReadonlyMap<string, string> {
-  const programs = new Map<string, string>();
-  for (const entry of available) {
-    const word = fishWord(entry.provider);
-    if (word === null) continue;
-    const program = buildFishProgram(
-      word,
-      entries.get(word) ?? { kind: "none" },
-      [],
-    );
-    if (program !== null) programs.set(entry.provider, program);
-  }
-  return programs;
+): ReadonlyMap<string, LaunchPreview> {
+  return new Map(
+    available.map((entry) => [entry.provider, previewLaunch(entry.provider)]),
+  );
 }
 
 async function resolveSelection(
   result: RankResult,
   options: BrimOptions,
-  previews: ReadonlyMap<string, string>,
 ): Promise<RankedEntry> {
   if (options.provider !== undefined) {
     return selectRequested(result, options.provider);
@@ -192,102 +176,38 @@ async function resolveSelection(
     console.log(render(result));
     fail("All providers are unavailable; nothing to spawn.");
   }
-  const chosen = await runPicker(result, previews, options.noFish);
+  const chosen = await runPicker(result, launchPreviews(available));
   if (chosen === null) {
     fail("Selection cancelled; nothing to spawn.");
   }
   return chosen;
 }
 
-async function spawnDirect(
-  selected: RankedEntry,
-  options: BrimOptions,
-  extraArgs: string[],
-): Promise<void> {
-  const binary = directBinary(selected.provider);
-  if (binary === null) {
-    fail(
-      `No fish abbreviation or fallback binary for ${selected.displayName}. Add one to ~/.config/fish/config.fish.`,
-    );
-  }
-  if (options.dryRun) {
-    console.log(`Would spawn: ${[binary, ...extraArgs].join(" ")} (direct)`);
-    if (Bun.which(binary) === null) {
-      console.log(`note: "${binary}" is not on PATH yet.`);
-    }
-    return;
-  }
+function resolveOrFail(
+  provider: string,
+  extraArgs: readonly string[],
+): ResolvedLaunch {
   try {
-    const { exitCode } = await spawnDirectBinary(binary, extraArgs);
-    process.exit(exitCode);
+    return resolveLaunch(provider, extraArgs);
   } catch (error: unknown) {
-    fail(error instanceof Error ? error.message : String(error));
+    if (error instanceof LaunchError) {
+      fail(error.message);
+    }
+    throw error;
   }
-}
-
-function printFishDryRun(
-  word: string,
-  entry: ResolvedFishEntry,
-  program: string,
-): void {
-  if (entry.kind === "function") {
-    console.log(`fish defines "${word}" as a function:`);
-    console.log(entry.body);
-  } else if (entry.kind === "abbr") {
-    console.log(`fish expands "${word}" to: ${entry.expansion}`);
-  }
-  console.log(`Would spawn: fish -i -c '${program}'`);
 }
 
 async function spawnSelection(
   selected: RankedEntry,
   options: BrimOptions,
   extraArgs: string[],
-  entries: ReadonlyMap<string, ResolvedFishEntry>,
 ): Promise<void> {
-  if (options.noFish) {
-    const fallback = noFishCommand(selected.provider);
-    if (fallback === null) {
-      fail(`No --no-fish fallback configured for "${selected.provider}".`);
-    }
-    if (options.dryRun) {
-      console.log(
-        `Would spawn (no-fish fallback): ${[...fallback.argv, ...extraArgs].join(" ")}`,
-      );
-      return;
-    }
-    console.log(`Spawning (no-fish fallback): ${fallback.argv.join(" ")}`);
-    try {
-      const { exitCode } = await spawnNoFish(selected.provider, extraArgs);
-      process.exit(exitCode);
-    } catch (error: unknown) {
-      fail(error instanceof Error ? error.message : String(error));
-    }
-  }
-  const word = fishWord(selected.provider);
-  if (word === null) {
-    return spawnDirect(selected, options, extraArgs);
-  }
-  const entry = entries.get(word) ?? { kind: "none" };
-  const program = buildFishProgram(word, entry, extraArgs);
-  if (program === null) {
-    // Fish defines nothing for this word: a bare `fish -i -c '<word>'`
-    // would run whatever binary happens to be on PATH without the wrapper
-    // flags, so use the direct binary when one is configured and fail
-    // loudly otherwise.
-    if (directBinary(selected.provider) !== null) {
-      return spawnDirect(selected, options, extraArgs);
-    }
-    fail(
-      `fish defines neither a function nor an abbreviation for "${word}". Add one to ~/.config/fish/config.fish or use --no-fish.`,
-    );
-  }
+  const launch = resolveOrFail(selected.provider, extraArgs);
   if (options.dryRun) {
-    printFishDryRun(word, entry, program);
+    console.log(`Would spawn: ${formatLaunch(launch)}`);
     return;
   }
-  const { exitCode } = await spawnFishProgram(program);
-  process.exit(exitCode);
+  process.exit(await spawnLaunch(launch));
 }
 
 export async function handleBrimCommand(args: string[]): Promise<void> {
@@ -332,27 +252,6 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
     return;
   }
 
-  const available = [...result.ranked, ...result.other];
-  // Unavailable providers too: an explicit --provider may start one.
-  const words = [
-    ...new Set(
-      [...available, ...result.unavailable].flatMap((entry) => {
-        const word = fishWord(entry.provider);
-        return word === null ? [] : [word];
-      }),
-    ),
-  ];
-  // --no-fish promises to bypass fish entirely, so it must not probe for
-  // abbreviations first: on a machine without fish the spawn itself would
-  // throw before the fallback is ever consulted.
-  const entries: ReadonlyMap<string, ResolvedFishEntry> = options.noFish
-    ? new Map()
-    : await resolveFishEntries(words);
-
-  const selected = await resolveSelection(
-    result,
-    options,
-    previewPrograms(available, entries),
-  );
-  await spawnSelection(selected, options, extraArgs, entries);
+  const selected = await resolveSelection(result, options);
+  await spawnSelection(selected, options, extraArgs);
 }

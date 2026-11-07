@@ -1,5 +1,6 @@
 import { render } from "ink";
 import { ProviderPicker } from "#commands/brim/picker.tsx";
+import type { LaunchPreview } from "#lib/brim/launch.ts";
 import type { RankedEntry, RankResult } from "#lib/brim/rank.ts";
 
 /**
@@ -10,15 +11,13 @@ import type { RankedEntry, RankResult } from "#lib/brim/rank.ts";
  */
 export async function runPicker(
   result: RankResult,
-  programs: ReadonlyMap<string, string>,
-  noFish: boolean,
+  previews: ReadonlyMap<string, LaunchPreview>,
 ): Promise<RankedEntry | null> {
   let chosen: RankedEntry | null | undefined;
   const app = render(
     <ProviderPicker
       result={result}
-      programs={programs}
-      noFish={noFish}
+      previews={previews}
       onSubmit={(entry) => {
         chosen = entry;
       }}
@@ -27,7 +26,7 @@ export async function runPicker(
   await app.waitUntilExit();
   // Ink leaves stdin flowing in compiled binaries, which keeps the event
   // loop alive after unmount. Pausing releases it; the underlying TTY fd
-  // stays open, so a later fish spawn with inherited stdio is unaffected.
+  // stays open, so a later agent spawn with inherited stdio is unaffected.
   process.stdin.pause();
   return chosen ?? null;
 }

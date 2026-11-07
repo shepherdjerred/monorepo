@@ -410,6 +410,7 @@
     "//#shellcheck": {
       "inputs": [
         "**/*.sh",
+        "packages/dotfiles/dot_local/share/agent-bin/executable_*",
         "!**/node_modules/**",
         "scripts/tools/shellcheck.ts"
       ]

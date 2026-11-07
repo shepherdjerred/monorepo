@@ -1,9 +1,19 @@
 // Worktree dialog: { space, action: "new" | "open" | "remove" } or
 // { folder, machine } for a repo without a space; optional { branch, tab, argv }.
-// New also picks the agent its first tab starts, from Brim's ranking.
+// New takes the first message for the agent instead of a branch name: OpenAI
+// names the branch and the tab from it (naming.js), and the agent, picked from
+// Brim's ranking, starts with that message. A given { branch } skips naming.
 
 import { View, div, svg } from "gpui-kit";
-import { v_flex, h_flex, InputState, Input, Scrollbar } from "gpui-base";
+import {
+  v_flex,
+  h_flex,
+  InputState,
+  Input,
+  TextareaState,
+  Textarea,
+  Scrollbar,
+} from "gpui-base";
 import {
   run,
   props,
@@ -12,13 +22,59 @@ import {
   spaces,
   panes,
   exec,
+  hc,
   home,
 } from "herdr";
+import {
+  KEY_REF,
+  RESPONSES_URL,
+  TIMEOUT_MS,
+  freeBranch,
+  namingRequest,
+  parseNaming,
+} from "./naming.js";
+
+// The OpenAI key, read once per window from 1Password and kept only here.
+let openaiKey = null;
+async function readKey() {
+  if (openaiKey) return openaiKey;
+  let r;
+  try {
+    r = await exec("op", ["read", KEY_REF]);
+  } catch (error) {
+    throw new Error(`1Password: ${String(error)}`);
+  }
+  const key = r.stdout.trim();
+  if (r.code !== 0 || !key)
+    throw new Error(
+      `1Password: ${(r.stderr || "op read failed").trim().split("\n")[0]}`,
+    );
+  openaiKey = key;
+  return key;
+}
+
+// `{ branch, title }` for a first message, or an Error fit for the dialog.
+async function nameWork(message, deadline) {
+  // 1Password may wait on an approval prompt; the deadline covers that too.
+  const key = await Promise.race([readKey(), deadline]);
+  const reply = await Promise.race([
+    fetch(RESPONSES_URL, namingRequest(message, key)),
+    deadline,
+  ]);
+  let body = null;
+  try {
+    body = await Promise.race([reply.json(), deadline]);
+  } catch (error) {
+    if (error?.timeout) throw error;
+  }
+  if (reply.status === 401) openaiKey = null;
+  return parseNaming(reply.status, body);
+}
 
 // Agents to start, as `brim --json` ranks them: least used first, then other windows;
 // unavailable ones (no usable quota data) last, with Brim's reason, and still startable.
-// One starts the way `brim --provider` does (through the interactive fish setup, on
-// the space's machine); Shell starts none.
+// One starts the way `brim --provider` does (its agent-bin wrapper, on the
+// space's machine); Shell starts none.
 // One-color icons, the same as my-status's quota chips.
 const ICON = {
   "claude-code": "mods/my-status/icons/claude.svg",
@@ -286,23 +342,28 @@ export default class Worktree extends View {
     this.on = this.space()?.machine;
     this.userHome = this.on ? null : home();
     this.opening = props()?.action === "open";
+    // New without a given branch: the agent's first message, which names it.
+    this.messaging = props()?.action === "new" && !props()?.branch;
     this.text = props()?.branch ?? "";
+    this.named = null; // { branch, title } once OpenAI answers
     this.list = undefined; // open: the checkouts, once read
     this.at = 0;
-    this.input = InputState.new({
-      value: this.text,
-      placeholder: this.opening ? "filter worktrees" : "branch name",
-    });
+    this.input = this.messaging
+      ? TextareaState.new({ placeholder: "First message for the agent" })
+      : InputState.new({ value: this.text, placeholder: "filter worktrees" });
+    if (this.messaging) this.input.set_auto_grow(3, 8);
     this.input.on("change", (_e, cx) => {
       this.text = this.input.value();
       this.error = "";
+      this.named = null;
       this.at = 0;
       cx.notify();
     });
-    // Enter in the filter opens the highlighted checkout; only New and Remove run work().
-    this.input.on("submit", (_e, cx) => {
+    // Enter in the filter opens the highlighted checkout; only New and Remove
+    // run work(). Shift-Enter in the message is a new line.
+    this.input.on("submit", (e, cx) => {
       if (this.opening) this.open(this.shown()[this.at]);
-      else this.go(cx);
+      else if (!e?.shift) this.go(cx);
     });
     this.inputFocused = true;
     this.input.on("focus", (_e, cx) => {
@@ -318,6 +379,7 @@ export default class Worktree extends View {
       cx.timer.after(600, () => this.input.focus());
     }
     this.busy = false;
+    this.status = null; // what work() is doing, while busy
     this.error = "";
     this.repo = undefined; // undefined: looking, null: not in git
     this.dirty = false;
@@ -418,51 +480,157 @@ export default class Worktree extends View {
   }
 
   go(cx) {
+    if (this.created) return this.close();
     if (this.busy || !this.repo) return;
-    cx.spawn(async (cx) => this.work(cx));
+    // Mods have no setTimeout: the naming deadline comes from this context's timer.
+    const deadline = new Promise((_resolve, reject) => {
+      cx.timer.after(TIMEOUT_MS, () =>
+        reject(
+          Object.assign(
+            new Error(`OpenAI didn't answer in ${TIMEOUT_MS / 1000} s.`),
+            { timeout: true },
+          ),
+        ),
+      );
+    });
+    deadline.catch(() => {});
+    cx.spawn(async (cx) => this.work(cx, deadline));
   }
 
-  async work(cx) {
+  async work(cx, deadline) {
     if (this.busy || !this.repo) return;
     this.busy = true;
     this.error = "";
     cx.notify();
     try {
       this.error =
-        props().action === "remove" ? await this.remove() : await this.create();
+        props().action === "remove"
+          ? await this.remove()
+          : await this.create(cx, deadline);
     } catch (error) {
-      this.error = String(error);
+      this.error = error instanceof Error ? error.message : String(error);
     }
     this.busy = false;
+    this.status = null;
     if (!this.error) this.close();
     cx.notify();
   }
 
-  async create() {
-    const branch = this.text.trim();
-    if (!branch) return "Type a branch name.";
+  async create(cx, deadline) {
+    const message = this.messaging ? this.text.trim() : "";
+    if (this.messaging && !message) return "Type a first message.";
     if (this.picking && !this.agents)
       return "Still asking Brim for the agents.";
     const chosen = this.picking ? this.agents.choices[this.pick] : null;
+    const taken = async (name) =>
+      (
+        await git(
+          this.repo.main,
+          ["show-ref", "--verify", "--quiet", `refs/heads/${name}`],
+          this.on,
+        )
+      ).ok;
+    let branch;
+    let exists = false;
+    let title = null;
+    if (this.messaging) {
+      this.status = "Naming…";
+      cx.notify();
+      const named = await nameWork(message, deadline);
+      // A generated name always starts new work: never check out a branch that exists.
+      branch = await freeBranch(named.branch, taken);
+      title = named.title;
+      this.named = { branch, title };
+    } else {
+      // A given branch is used as written; check-ref-format below rejects an
+      // invalid one. Only generated names are coerced.
+      branch = this.text.trim();
+      if (!branch) return "Type a branch name.";
+      exists = await taken(branch);
+    }
+    const valid = await git(
+      this.repo.main,
+      ["check-ref-format", "--branch", branch],
+      this.on,
+    );
+    if (!valid.ok) return valid.err || `git rejects the branch ${branch}.`;
+    this.status = `Creating ${branch}…`;
+    cx.notify();
     const path = `${ROOT(this.userHome)}/${this.repo.name}/${slug(branch)}`;
-    const exists = (
-      await git(
-        this.repo.main,
-        ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`],
-        this.on,
-      )
-    ).ok;
     const add = exists
       ? ["worktree", "add", path, branch]
       : ["worktree", "add", "-b", branch, path, "HEAD"];
     const r = await git(this.repo.top, add, this.on);
     if (!r.ok) return r.err || "git worktree add failed.";
     const p = props();
-    // Leave spaces unnamed so they follow the checkout folder and nest under the repo.
-    const argv = chosen?.provider
-      ? ["brim", "--provider", chosen.provider]
+    const provider = chosen?.provider ?? null;
+    // Herdr appends `task` to argv as one argument, the initial prompt for
+    // most agents. Antigravity takes it only as -i; Kimi has no interactive
+    // initial prompt, so it is typed in once Kimi is ready.
+    const extra = [];
+    if (title && provider === "claude-code") extra.push("--name", title);
+    if (message && provider === "antigravity") extra.push("-i", message);
+    const typed = Boolean(message) && provider === "kimi";
+    const asTask = Boolean(message) && provider !== "antigravity" && !typed;
+    // Brim forwards everything after its `--`. The second `--` ends the
+    // agent's own options, so a message that starts with "-" (a Markdown
+    // list) stays the prompt instead of parsing as a flag.
+    const argv = provider
+      ? [
+          "brim",
+          "--provider",
+          provider,
+          "--",
+          ...extra,
+          ...(asTask ? ["--"] : []),
+        ]
       : p.argv;
-    run("space.new", { folder: path, machine: this.on, tab: p.tab, argv });
+    // Leave spaces unnamed so they follow the checkout folder and nest under
+    // the repo; the generated title names the first tab instead.
+    run("space.new", {
+      folder: path,
+      machine: this.on,
+      tab: p.tab ?? title ?? undefined,
+      argv,
+      task: argv && asTask ? message : undefined,
+    });
+    this.created = true;
+    if (typed) return this.typeFirstMessage(path, message, cx);
+    return "";
+  }
+
+  // Types the first message into the agent the new space started, once it is
+  // ready: for agents without an initial-prompt argument.
+  async typeFirstMessage(path, message, cx) {
+    this.status = "Waiting for the agent to start…";
+    cx.notify();
+    const mine = (address) =>
+      this.on ? address.startsWith(`${this.on}/`) : !address.includes("/");
+    let address = null;
+    for (let i = 0; i < 40 && !address; i++) {
+      const r = await hc(["ls", "--json"]);
+      if (r.code === 0)
+        address =
+          JSON.parse(r.stdout).terminals.find(
+            (t) => t.cwd === path && mine(t.address),
+          )?.address ?? null;
+      if (!address) await exec("sleep", ["0.25"]);
+    }
+    const unsent = "The space is ready, but its first message wasn't sent";
+    if (!address) return `${unsent}: its terminal never appeared.`;
+    // Ready is idle. An agent can report a passing blocked state while it
+    // starts, and send refuses a blocked program, so wait for idle itself.
+    let state = null;
+    for (let i = 0; i < 120 && state !== "idle"; i++) {
+      const r = await hc(["get", address, "--json"]);
+      state = r.code === 0 ? JSON.parse(r.stdout).status?.state : null;
+      if (state !== "idle") await exec("sleep", ["0.5"]);
+    }
+    if (state !== "idle")
+      return `${unsent}: the agent never became idle (last: ${state ?? "unknown"}).`;
+    const sent = await hc(["send", address, message]);
+    if (sent.code !== 0)
+      return `${unsent}: ${(sent.stderr || sent.stdout).trim().split("\n")[0]}`;
     return "";
   }
 
@@ -850,7 +1018,9 @@ export default class Worktree extends View {
             ? !r.linked
               ? "This is the repository's main checkout, not a worktree."
               : `Closes the space and deletes ${tilde(r.top, this.userHome)}. The branch stays.`
-            : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/. A branch that exists is checked out; a new one starts from here.`;
+            : this.messaging
+              ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from the message, which the agent starts with.`
+              : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/. A branch that exists is checked out; a new one starts from here.`;
     const blocked = !r || (remove && !r.linked);
     return v_flex()
       .id("worktree")
@@ -879,7 +1049,19 @@ export default class Worktree extends View {
             ),
         ),
       )
-      .when(!remove && !blocked, (el) =>
+      .when(!remove && !blocked && this.messaging, (el) =>
+        el.child(
+          Textarea.new(this.input)
+            .px(10)
+            .py(6)
+            .rounded(6)
+            .border(1)
+            .border_color(this.inputFocused ? t.accent : t.input)
+            .bg(t.background)
+            .text_color(t.foreground),
+        ),
+      )
+      .when(!remove && !blocked && !this.messaging, (el) =>
         el.child(
           Input.new(this.input)
             .h(32)
@@ -891,6 +1073,17 @@ export default class Worktree extends View {
             .bg(t.background)
             .text_color(t.foreground),
         ),
+      )
+      .when(Boolean(this.named), (el) =>
+        el.child(
+          div()
+            .text_size(11.5)
+            .text_color(t.muted)
+            .child(`Branch ${this.named.branch} · tab “${this.named.title}”`),
+        ),
+      )
+      .when(this.busy && Boolean(this.status), (el) =>
+        el.child(div().text_size(11.5).text_color(t.dim).child(this.status)),
       )
       .when(Boolean(this.error), (el) =>
         el.child(div().text_color(t.blocked).child(this.error)),
@@ -904,13 +1097,15 @@ export default class Worktree extends View {
           .text_color(t.dim)
           .child(
             this.busy
-              ? "working…"
+              ? (this.status ?? "working…")
               : blocked
                 ? "esc close"
                 : remove
                   ? "↵ remove · esc cancel"
                   : this.picking
-                    ? "↑↓ agent · ↵ create · esc cancel"
+                    ? this.messaging
+                      ? "↑↓ agent · ↵ name and start · ⇧↵ new line · esc cancel"
+                      : "↑↓ agent · ↵ create · esc cancel"
                     : "↵ create · esc cancel",
           ),
       );

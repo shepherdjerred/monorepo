@@ -5,6 +5,7 @@ export type Options = {
   onChange: boolean;
   worker: boolean;
   probeIdentities: boolean;
+  status: boolean;
   terminal?: string;
 };
 
@@ -21,6 +22,7 @@ export function parseOptions(args: readonly string[]): Options {
     onChange: false,
     worker: false,
     probeIdentities: false,
+    status: false,
   };
   for (let index = 0; index < args.length; index++) {
     const flag = args[index];
@@ -38,6 +40,9 @@ export function parseOptions(args: readonly string[]): Options {
       case "--probe-identities":
         options.probeIdentities = true;
         break;
+      case "--status":
+        options.status = true;
+        break;
       case "--terminal":
         options.terminal = optionValue(flag, args[++index]);
         break;
@@ -49,6 +54,15 @@ export function parseOptions(args: readonly string[]): Options {
     throw new Error(
       "--probe-identities cannot be combined with --dry-run or --on-change",
     );
+  if (
+    options.status &&
+    (options.dryRun ||
+      options.onChange ||
+      options.worker ||
+      options.probeIdentities ||
+      options.terminal !== undefined)
+  )
+    throw new Error("--status is a read-only report and takes no other option");
   if (options.onChange && options.terminal !== undefined) {
     throw new Error("--on-change covers all local terminals");
   }

@@ -1,0 +1,3 @@
+#!/bin/sh
+# claude, through the agent environment (see agent-exec).
+exec "${0%/*}/agent-exec" claude --dangerously-skip-permissions -- "$@"

@@ -198,14 +198,14 @@ new session instead of displaying quotas. It withholds providers whose 5-hour
 window is nearly spent, then orders the rest by budget consumption with pacing
 taken into account. Multi-pool providers rank by their tightest pool, and
 snapshots with no usable quota evidence stay unavailable. Weekly and monthly
-budgets rank together, each labeled with its own kind. The winner launches
-through the user's interactive fish function or abbreviation expansion —
-abbreviations never expand inside `fish -i -c`, so brim resolves the
-expansion first — and a spawned session carries the same flags and
-credential scrubbing as a hand-typed command. Providers without a fish word
-fall back to their bare binary (Cursor via `cursor-agent`, Kimi via `kimi`
-once installed). The
-ranking and fish resolution live in the
+budgets rank together, each labeled with its own kind. Brim runs the
+winner's agent wrapper from `~/.local/share/agent-bin` (`claude`, `codex`,
+`agy`, `cursor-agent`, `grok`, `kimi`, or `muse`). The wrappers own credential
+scrubbing, the agent git identity, and bypass flags, so a spawned session
+matches a hand-typed command. Brim looks there by fixed path rather than
+`PATH`, because Herdr's long-lived core can start it with a `PATH` captured
+before the wrappers were installed; a missing wrapper is an error. The ranking and
+launch map live in the
 [brim toolkit library](https://github.com/shepherdjerred/monorepo/tree/main/packages/toolkit/src/lib/brim).
 
 The menu-bar symbol and text status use the lowest remaining quota: healthy

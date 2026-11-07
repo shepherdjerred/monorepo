@@ -1,0 +1,3 @@
+#!/bin/sh
+# muse, through the agent environment (see agent-exec).
+exec "${0%/*}/agent-exec" muse --yolo --disable-sandbox -- "$@"

@@ -852,6 +852,24 @@ the Codex message database stays on its own machine. `history usage` includes
 mirrored tokens per source, but they never enter the usage-export ledger: the
 machine that spent them already exports them.
 
+#### Brim launch
+
+`toolkit brim` (or the standalone `brim`) ranks Brim's quota snapshots and
+starts the least-used provider:
+
+```bash
+brim [--provider <id>] [--min-5h <pct>] [--dry-run] [-- <agent args...>]
+brim --json
+```
+
+Each provider maps to one agent wrapper in `~/.local/share/agent-bin`:
+`claude`, `codex`, `agy`, `cursor-agent`, `grok`, `kimi`, and `muse`. The
+wrappers own credential scrubbing, the agent git identity, and bypass flags;
+brim adds none of its own. Brim finds them by that fixed path, never `PATH`, so
+a launcher with a stale `PATH` cannot start a bare agent binary. Args after
+`--` pass through verbatim without a shell. An unmapped provider or a missing
+wrapper is an error, and `--dry-run` prints the resolved wrapper path and args.
+
 #### Brim sync
 
 The standalone `brim` binary (also `toolkit brim sync`) keeps an encrypted,

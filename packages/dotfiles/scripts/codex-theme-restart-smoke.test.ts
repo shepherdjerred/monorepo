@@ -9,12 +9,9 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { object } from "../bin/codex_theme_restart_terminal.ts";
 
 const directories: string[] = [];
-const stopServers: (() => Promise<void>)[] = [];
 afterEach(async () => {
-  await Promise.all(stopServers.splice(0).map((stop) => stop()));
   await Promise.all(
     directories
       .splice(0)
@@ -40,9 +37,12 @@ if (args[0] === 'ls') {
 const mockAppearance = `#!/usr/bin/env bun
 console.log(await Bun.file(process.env.HOME + '/mode').text());
 `;
+const mockLogger = String.raw`#!/usr/bin/env bun
+import { appendFileSync } from 'node:fs';
+appendFileSync(process.env.HOME + '/logger-calls', JSON.stringify(process.argv.slice(2)) + '\n');
+`;
 
-async function fixture(configStatus = "ok") {
-  // Unix socket paths must remain shorter than macOS's sockaddr_un limit.
+async function fixture() {
   const directory = await mkdtemp("/tmp/codex-theme-smoke-");
   directories.push(directory);
   const helper = path.join(directory, "restart.ts");
@@ -62,6 +62,10 @@ async function fixture(configStatus = "ok") {
       .replace(
         '"/opt/homebrew/bin/dark-notify"',
         JSON.stringify(path.join(directory, "dark-notify")),
+      )
+      .replace(
+        '"/usr/bin/logger"',
+        JSON.stringify(path.join(directory, "logger")),
       ),
   );
   for (const name of [
@@ -71,6 +75,7 @@ async function fixture(configStatus = "ok") {
     "codex_theme_restart_status.ts",
     "codex_theme_restart_terminal.ts",
     "codex_theme_restart_config.ts",
+    "codex_theme_restart_events.ts",
   ]) {
     await writeFile(
       path.join(directory, name),
@@ -82,41 +87,15 @@ async function fixture(configStatus = "ok") {
   await mkdir(path.join(directory, ".local/bin"), { recursive: true });
   await writeFile(path.join(directory, ".local/bin/hc"), mockHc);
   await writeFile(path.join(directory, "dark-notify"), mockAppearance);
-  await chmod(path.join(directory, ".local/bin/hc"), 0o700);
-  await chmod(path.join(directory, "dark-notify"), 0o700);
-  const control = path.join(directory, ".codex/app-server-control");
-  await mkdir(control, { recursive: true });
-  const server = Bun.serve({
-    unix: path.join(control, "app-server-control.sock"),
-    fetch(request, instance) {
-      if (instance.upgrade(request)) return;
-      return new Response("WebSocket required", { status: 400 });
-    },
-    websocket: {
-      async message(socket, data) {
-        const request = object(JSON.parse(String(data)));
-        if (request.get("id") === 1)
-          socket.send(JSON.stringify({ id: 1, result: {} }));
-        if (request.get("id") === 2) {
-          await writeFile(
-            path.join(directory, "config-edits.json"),
-            JSON.stringify(object(request.get("params")).get("edits")),
-          );
-          socket.send(
-            JSON.stringify({ id: 2, result: { status: configStatus } }),
-          );
-        }
-      },
-    },
-  });
-  stopServers.push(async () => {
-    await server.stop(true);
-  });
+  await writeFile(path.join(directory, "logger"), mockLogger);
+  for (const file of [".local/bin/hc", "dark-notify", "logger"])
+    await chmod(path.join(directory, file), 0o700);
   const stateDirectory = path.join(
     directory,
     ".local/state/codex-theme-restart",
   );
   const state = path.join(stateDirectory, "appearance.json");
+  const events = path.join(stateDirectory, "events.jsonl");
   function start(args: string[]) {
     return Bun.spawn([process.execPath, helper, ...args], {
       env: {
@@ -145,7 +124,24 @@ async function fixture(configStatus = "ok") {
       .split("\n")
       .map((line): unknown => JSON.parse(line));
   }
-  return { directory, stateDirectory, state, start, run, calls };
+  async function lines(file: string): Promise<unknown[]> {
+    if (!(await Bun.file(file).exists())) return [];
+    const contents = await readFile(file, "utf8");
+    return contents
+      .trim()
+      .split("\n")
+      .map((line): unknown => JSON.parse(line));
+  }
+  return {
+    directory,
+    stateDirectory,
+    state,
+    start,
+    run,
+    calls,
+    events: () => lines(events),
+    logged: () => lines(path.join(directory, "logger-calls")),
+  };
 }
 
 async function finish(child: Bun.Subprocess<"ignore", "pipe", "pipe">) {
@@ -186,17 +182,27 @@ test("initializes without restart, deduplicates events, and scans live local ter
   expect(JSON.parse(await readFile(context.state, "utf8"))).toEqual({
     appearance: "dark",
   });
-  expect(
-    JSON.parse(
-      await readFile(path.join(context.directory, "config-edits.json"), "utf8"),
-    ),
-  ).toEqual([
+  expect(await context.events()).toMatchObject([
+    { trigger: "on-change", action: "initialized", ok: true, mode: "light" },
+    { trigger: "on-change", action: "unchanged", ok: true },
     {
-      keyPath: "tui.theme",
-      value: "catppuccin-mocha",
-      mergeStrategy: "replace",
+      trigger: "on-change",
+      action: "restart",
+      ok: true,
+      error: null,
+      previous: "light",
+      mode: "dark",
+      theme: "catppuccin-mocha",
+      panes: [],
     },
-    { keyPath: "tui.resume_cwd", value: "session", mergeStrategy: "replace" },
+  ]);
+  const logged = await context.logged();
+  expect(logged.at(-1)).toEqual([
+    "-t",
+    "codex-theme-restart",
+    "-p",
+    "user.notice",
+    "codex-theme-restart: on-change; ok; appearance light -> dark; theme catppuccin-mocha; 0 restarted, 0 eligible, 0 identified, 0 skipped, 0 failed",
   ]);
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
@@ -211,20 +217,106 @@ test("dry-run creates no state directory and sends only discovery commands", asy
   await expect(stat(context.stateDirectory)).rejects.toMatchObject({
     code: "ENOENT",
   });
-  expect(
-    await Bun.file(path.join(context.directory, "config-edits.json")).exists(),
-  ).toBe(false);
+  expect(await context.logged()).toEqual([]);
   expect(await context.calls()).toEqual([["ls", "--json"]]);
 });
 
-test("requires native settings confirmation before operating on any terminal", async () => {
-  const context = await fixture("overridden");
-  expect(await context.run(["--worker", "--terminal", "t5"])).toMatchObject({
+test("a thrown error is recorded as a failed event and mirrored to the unified log", async () => {
+  const context = await fixture();
+  await writeFile(path.join(context.directory, "mode"), "purple");
+  expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 1,
-    stderr: expect.stringContaining("no clients stopped"),
+    stderr: expect.stringContaining("invalid appearance"),
   });
   expect(await context.calls()).toEqual([]);
   expect(await Bun.file(context.state).exists()).toBe(false);
+  expect(await context.events()).toMatchObject([
+    {
+      trigger: "on-change",
+      ok: false,
+      mode: null,
+      error: "dark-notify returned an invalid appearance",
+    },
+  ]);
+  expect(await context.logged()).toEqual([
+    [
+      "-t",
+      "codex-theme-restart",
+      "-p",
+      "user.err",
+      "codex-theme-restart: on-change; FAILED; appearance unrecorded -> unknown; error: dark-notify returned an invalid appearance",
+    ],
+  ]);
+});
+
+test("a run whose event cannot be saved still reaches the unified log as a failure", async () => {
+  const context = await fixture();
+  // A directory where the log file belongs makes every append fail.
+  await mkdir(path.join(context.stateDirectory, "events.jsonl"), {
+    recursive: true,
+  });
+  expect(await context.run(["--worker", "--on-change"])).toMatchObject({
+    code: 1,
+  });
+  const logged = await context.logged();
+  expect(logged).toHaveLength(1);
+  expect(logged[0]).toEqual([
+    "-t",
+    "codex-theme-restart",
+    "-p",
+    "user.err",
+    expect.stringContaining("FAILED"),
+  ]);
+  expect(JSON.stringify(logged[0])).toContain("events.jsonl not written");
+});
+
+test("records a failed pane when hc is unavailable", async () => {
+  const context = await fixture();
+  await rm(path.join(context.directory, ".local/bin/hc"));
+  expect(await context.run(["--worker"])).toMatchObject({ code: 1 });
+  const [recorded] = await context.events();
+  expect(recorded).toMatchObject({
+    trigger: "manual",
+    action: "restart",
+    ok: false,
+    counts: { failed: 1 },
+    panes: [{ terminal: "*", status: "failed" }],
+  });
+  const logged = await context.logged();
+  expect(logged).toEqual([
+    [
+      "-t",
+      "codex-theme-restart",
+      "-p",
+      "user.err",
+      "codex-theme-restart: manual; FAILED; appearance unrecorded -> light; theme catppuccin-latte; 0 restarted, 0 eligible, 0 identified, 0 skipped, 1 failed",
+    ],
+    [
+      "-t",
+      "codex-theme-restart",
+      "-p",
+      "user.err",
+      expect.stringMatching(/^codex-theme-restart: failed \*: /),
+    ],
+  ]);
+});
+
+test("status reports the last run and appearance without writing anything", async () => {
+  const context = await fixture();
+  expect(await context.run(["--status"])).toMatchObject({
+    code: 1,
+    stdout: expect.stringContaining(
+      "Appearance: recorded unrecorded, current light MISMATCH",
+    ),
+  });
+  await context.run(["--worker", "--on-change"]);
+  const before = await context.events();
+  const report = await context.run(["--status"]);
+  expect(report).toMatchObject({ code: 0 });
+  expect(report.stdout).toContain("Last run: ");
+  expect(report.stdout).toContain("Local Codex terminals: none");
+  expect(await context.events()).toEqual(before);
+  expect(await context.logged()).toHaveLength(1);
 });
 
 test("serializes concurrent appearance events with a real SQLite lock", async () => {
@@ -257,19 +349,13 @@ test("launches a detached worker with scrubbed credentials and reports its event
   const launched = await context.run(["--terminal", "t5"]);
   expect(launched.code).toBe(0);
   expect(launched.stdout).toContain("Restart worker");
-  const log = path.join(context.stateDirectory, "restart.log");
-  await waitFor(() => Bun.file(path.join(context.directory, "calls")).exists());
-  await waitFor(
-    async () => (await Bun.file(log).exists()) && Bun.file(log).size > 0,
-  );
-  const deadline = Date.now() + 3000;
-  while (true) {
-    const contents = await readFile(log, "utf8");
-    if (contents.includes("0 failed")) break;
-    if (Date.now() >= deadline)
-      throw new Error("Detached worker did not finish");
-    await Bun.sleep(20);
-  }
+  await waitFor(async () => {
+    const recorded = await context.events();
+    return recorded.length > 0;
+  });
+  expect(await context.events()).toMatchObject([
+    { trigger: "manual", terminal: "t5", action: "restart", ok: false },
+  ]);
   expect(await context.calls()).toEqual([["ls", "--json"]]);
 });
 
