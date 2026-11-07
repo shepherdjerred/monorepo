@@ -345,6 +345,23 @@ export async function assertCleanHandoffSource(
     throw new Error(
       "Verify requires clean owning source; preview remains available.",
     );
+  const ignored = await read(
+    [
+      "git",
+      "ls-files",
+      "--others",
+      "--ignored",
+      "--exclude-standard",
+      "--",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/terraform.tfvars*",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.auto.tfvars*",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tf",
+      ":(top,glob)packages/homelab/src/tofu/application-secrets/*.tf.json",
+    ],
+    "ignored adoption inputs",
+  );
+  if (ignored.trim() !== "")
+    throw new Error("Uncommitted autoloaded adoption inputs are not allowed.");
 }
 
 export async function main(args: string[]): Promise<void> {
