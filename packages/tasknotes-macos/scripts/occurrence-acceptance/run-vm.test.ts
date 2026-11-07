@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test } from "vitest";
-import { parseMacVMArguments } from "./run-vm.ts";
+import { macVMPlan, parseMacVMArguments } from "./run-vm.ts";
 import {
   persistMacVMCaptureReady,
   readOwnedMacVMJSON,
@@ -46,11 +46,37 @@ test("prepare and exact replay are explicit mutually exclusive operations", () =
       "--setup-capture",
     ]),
   ).toEqual({ vm: "owned", buildID: build, mode: "capture-readiness" });
+  expect(
+    parseMacVMArguments([
+      "--vm",
+      "owned",
+      "--artifact-build",
+      build,
+      "--standalone",
+    ]),
+  ).toEqual({ vm: "owned", buildID: build, mode: "standalone" });
+  expect(macVMPlan("standalone")).toEqual({
+    kind: "native-local-macos",
+    successStatus: "passed",
+  });
+  expect(macVMPlan("capture-readiness").kind).toBe(
+    "native-capture-readiness-macos",
+  );
+  expect(macVMPlan("recurrence").kind).toBe("native-occurrence-macos");
   for (const args of [
     [],
     ["--vm", "owned"],
     ["--vm", "../foreign", "--prepare"],
     ["--vm", "owned", "--prepare", "--setup-capture"],
+    ["--vm", "owned", "--prepare", "--standalone"],
+    [
+      "--vm",
+      "owned",
+      "--artifact-build",
+      build,
+      "--standalone",
+      "--setup-capture",
+    ],
     ["--vm", "owned", "--artifact-build", "../foreign"],
     ["--vm", "owned", "--artifact-build", build, "--prepare"],
   ])

@@ -13,6 +13,12 @@ import {
 
 describe.each([
   {
+    suite: "LocalMutationTests",
+    method: "testDeleteUndoRestoresTheReopenedTask",
+    wrongSuite: "MobileParityTests",
+    wrongMethod: "testWrongCase",
+  },
+  {
     suite: "DependencyEditorUITests",
     method: "testDependencyOptionsAndEditsSurviveColdLaunch",
     wrongSuite: "MobileParityTests",

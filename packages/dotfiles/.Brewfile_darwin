@@ -199,6 +199,8 @@ cask "1password"
 cask "1password-cli"
 # Image editing and design software
 cask "affinity"
+# Command-line tools for building and debugging Android apps
+cask "android-commandlinetools"
 # Memory training application
 cask "anki"
 # CLI for the Claude Platform

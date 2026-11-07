@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { cp, mkdir, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import {
+  configureMacAcceptanceTestRun,
+  macAcceptanceTestRun,
+  type MacJourneyCommand,
+} from "./apple-acceptance/mac-journey.ts";
 import { isMacSessionPreflightFailure } from "./apple-acceptance/mac-session.ts";
 import {
   acceptanceStages,
@@ -44,15 +49,27 @@ async function command(argv: string[], capture = false): Promise<string> {
 /** Real native suite, with a sandbox and Keychain namespace separate from users. */
 export async function runAcceptanceUiTests(
   tests: readonly StandaloneTest[] = standaloneTests,
-  options: { launchSmokeOnly?: boolean } = {},
+  options: {
+    launchSmokeOnly?: boolean;
+    prepared?: {
+      runID: string;
+      evidence: string;
+      derived: string;
+      fixture: string;
+      runnerBundlePath: string;
+      command: MacJourneyCommand;
+      verifyInputs: () => Promise<void>;
+      provenance: Record<string, unknown>;
+    };
+  } = {},
 ): Promise<void> {
   if (process.platform !== "darwin") {
     throw new Error("Native acceptance requires macOS and Xcode.");
   }
-  const runID = crypto.randomUUID();
-  const signing = acceptanceSigningArguments(
-    Bun.env["TASKNOTES_UITEST_IDENTITY"],
-  );
+  const prepared = options.prepared;
+  const execute = prepared?.command ?? command;
+  const seed = prepared?.fixture ?? fixture;
+  const runID = prepared?.runID ?? crypto.randomUUID();
   assert.ok(tests.length > 0, "At least one standalone test must be selected");
   assert.equal(
     new Set(tests).size,
@@ -61,8 +78,11 @@ export async function runAcceptanceUiTests(
   );
   const smokeOnly = options.launchSmokeOnly === true;
   const selectedTests = smokeOnly ? [] : tests.map(standaloneSelector);
-  const derived = path.join(packageRoot, ".build/acceptance-xcode");
-  const evidence = path.join(packageRoot, ".build/native-acceptance", runID);
+  const derived =
+    prepared?.derived ?? path.join(packageRoot, ".build/acceptance-xcode");
+  const evidence =
+    prepared?.evidence ??
+    path.join(packageRoot, ".build/native-acceptance", runID);
   const container = path.join(
     homedir(),
     "Library/Containers/red.sjer.tasknotes.mac.acceptance/Data",
@@ -81,6 +101,7 @@ export async function runAcceptanceUiTests(
     smokeOnly ? "LaunchSmoke.xcresult" : "Smoke.xcresult",
   );
   const receipt = {
+    ...prepared?.provenance,
     schemaVersion: 1,
     runID,
     kind: smokeOnly ? "native-launch-smoke-macos" : "native-local-macos",
@@ -99,26 +120,33 @@ export async function runAcceptanceUiTests(
     path.join(evidence, "run.json"),
     JSON.stringify({ ...receipt, status: "building" }, null, 2),
   );
-  await command(["bun", "run", "mac:preflight"]);
-  await command(["xcodegen", "generate"]);
-  await command([
-    "xcodebuild",
-    "build-for-testing",
-    "-project",
-    "TaskNotes.xcodeproj",
-    "-scheme",
-    "TaskNotesAcceptance",
-    "-configuration",
-    "Debug",
-    "-derivedDataPath",
-    derived,
-    "-destination",
-    "platform=macOS",
-    "-parallel-testing-enabled",
-    "NO",
-    ...signing,
-  ]);
-  await mkdir(directory, { recursive: true });
+  if (prepared) await prepared.verifyInputs();
+  else {
+    const signing = acceptanceSigningArguments(
+      Bun.env["TASKNOTES_UITEST_IDENTITY"],
+    );
+    await execute(["bun", "run", "mac:preflight"]);
+    await execute(["xcodegen", "generate"]);
+    await execute([
+      "xcodebuild",
+      "build-for-testing",
+      "-project",
+      "TaskNotes.xcodeproj",
+      "-scheme",
+      "TaskNotesAcceptance",
+      "-configuration",
+      "Debug",
+      "-derivedDataPath",
+      derived,
+      "-destination",
+      "platform=macOS",
+      "-parallel-testing-enabled",
+      "NO",
+      ...signing,
+    ]);
+  }
+  await mkdir(path.dirname(directory), { recursive: true });
+  await mkdir(directory, { recursive: false });
   await Bun.write(
     descriptor,
     JSON.stringify({
@@ -127,52 +155,24 @@ export async function runAcceptanceUiTests(
       stateDirectory: directory,
     }),
   );
-  await cp(fixture, vault, {
+  await cp(seed, vault, {
     recursive: true,
     errorOnExist: true,
     force: false,
   });
-  const testRuns = await Array.fromAsync(
-    new Bun.Glob("*.xctestrun").scan({
-      cwd: path.join(derived, "Build/Products"),
-      absolute: true,
-    }),
+  const testRun = await macAcceptanceTestRun(derived);
+  await configureMacAcceptanceTestRun(
+    testRun,
+    {
+      FACET_E2E_DESCRIPTOR: descriptor,
+      FACET_E2E_RUN_ID: runID,
+    },
+    execute,
+    prepared?.runnerBundlePath,
   );
-  assert.equal(
-    testRuns.length,
-    1,
-    "Expected one generated acceptance test run",
-  );
-  const testRun = testRuns[0];
-  assert.ok(testRun);
-  for (const [key, value] of Object.entries({
-    FACET_E2E_DESCRIPTOR: descriptor,
-    FACET_E2E_RUN_ID: runID,
-  })) {
-    await command([
-      "plutil",
-      "-replace",
-      `TaskNotesAcceptanceUITests.EnvironmentVariables.${key}`,
-      "-string",
-      value,
-      testRun,
-    ]);
-  }
-  for (const [kind, lifetime] of [
-    ["SystemAttachmentLifetime", "keepNever"],
-    ["UserAttachmentLifetime", "keepAlways"],
-  ] as const)
-    await command([
-      "plutil",
-      "-replace",
-      `TaskNotesAcceptanceUITests.${kind}`,
-      "-string",
-      lifetime,
-      testRun,
-    ]);
   const failures: unknown[] = [];
   try {
-    await executeAcceptanceStages(stages, testRun, command);
+    await executeAcceptanceStages(stages, testRun, execute);
     if (!smokeOnly) {
       const workflows = stages.filter((stage) => stage.kind === "workflow");
       if (workflows.length === 1) {
@@ -184,7 +184,7 @@ export async function runAcceptanceUiTests(
           force: false,
         });
       } else {
-        await command([
+        await execute([
           "xcrun",
           "xcresulttool",
           "merge",
@@ -200,7 +200,7 @@ export async function runAcceptanceUiTests(
         summary: path.join(evidence, "test-summary.json"),
         tests: path.join(evidence, "test-tree.json"),
       },
-      command,
+      execute,
     );
     const summary: unknown = JSON.parse(summaryJSON);
     const testTree: unknown = JSON.parse(testsJSON);
@@ -212,7 +212,7 @@ export async function runAcceptanceUiTests(
     ]) {
       assert.deepEqual(
         await readFile(path.join(vault, relative)),
-        await readFile(path.join(fixture, relative)),
+        await readFile(path.join(seed, relative)),
       );
     }
     const notes = await Array.fromAsync(
@@ -227,6 +227,7 @@ export async function runAcceptanceUiTests(
       ),
       smokeOnly ? [] : expectedStandaloneTitles(tests, runID),
     );
+    if (prepared) await prepared.verifyInputs();
   } catch (error) {
     failures.push(error);
   }
@@ -247,7 +248,7 @@ export async function runAcceptanceUiTests(
     () => cp(directory, path.join(evidence, "state"), { recursive: true }),
     ...retainedResults.map(
       (bundle) => () =>
-        command([
+        execute([
           "xcrun",
           "xcresulttool",
           "export",

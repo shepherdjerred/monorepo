@@ -50,6 +50,7 @@ export async function runSelectedIosJourneyTest(
     suite:
       | "BoardTaskTests"
       | "MobileParityTests"
+      | "LocalMutationTests"
       | "OccurrenceTaskTests"
       | "AccountInputUITests"
       | "DependencyEditorUITests";

@@ -527,6 +527,13 @@ stage verifies every synthetic task, saved view, configuration, reference and
 attachment byte remains unchanged and retains paired app/simulator screenshots.
 This board journey is separate from the existing local and mobile parity gates.
 
+`bun scripts/ios-local-mutation-acceptance.ts` uses a separate owned simulator
+to reopen a completed synthetic task, delete it through the native editor,
+Undo the deletion, cold-launch and complete it again. Stopped-app checkpoints
+retain the exact pre-delete Markdown and require byte-for-byte restoration after
+Undo. All three selectors must pass, unrelated fixture bytes remain unchanged,
+and the ordinary local runner's final completed-task gate remains enforced.
+
 Shared schema positive, negative,
 and raw numeric fixtures run at both Apple and Android boundaries. Retain
 matched XCFramework/source fingerprints and xcresult/rendered artifacts.

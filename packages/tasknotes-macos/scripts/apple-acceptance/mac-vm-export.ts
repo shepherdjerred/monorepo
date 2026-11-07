@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   copyFile,
+  cp,
   link,
   lstat,
   mkdir,
@@ -220,6 +221,12 @@ async function inspectExport(
         `packages/tasknotes-macos/scripts/apple-acceptance/${name}`
       ],
     );
+  for (const file of ["Tasks/Existing.md", "Reference.md", "tasknotes.yaml"])
+    assert.equal(
+      await macFileSHA(path.join(directory, "local-vault", file)),
+      artifact.sources[`packages/tasknotes-fixtures/e2e/local-vault/${file}`],
+      "Exported standalone fixture changed",
+    );
   await verifyMacArtifact(artifact, path.join(directory, "products"), command);
   // Only derived per-run copies may change their test configuration.
   for (const [plan, expected] of Object.entries(artifact.files)) {
@@ -299,6 +306,11 @@ export async function prepareMacVMExport(
       path.join(directory, name),
       1,
     );
+  await cp(
+    path.resolve(root, "../tasknotes-fixtures/e2e/local-vault"),
+    path.join(directory, "local-vault"),
+    { recursive: true, errorOnExist: true, force: false },
+  );
   const bundle = await Bun.build({
     entrypoints: [path.join(root, "scripts/occurrence-acceptance/run-vm.ts")],
     outdir: directory,

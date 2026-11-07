@@ -37,13 +37,23 @@ import {
   runPreparedMacOccurrence,
   type MacAcceptanceMode,
 } from "./run-macos.ts";
+import { runAcceptanceUiTests } from "../run-acceptance-ui-tests.ts";
+import { standaloneTests } from "../acceptance-test-plan.ts";
+import { retireMacRun } from "../apple-acceptance/native-owner.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const share = "/Volumes/My Shared Files/exports";
 const guestBun = "/Volumes/My Shared Files/tools/bun";
 const usage =
-  "Usage: mac:occurrences:e2e --vm <running-VM> (--prepare | --artifact-build <UUID> [--setup-capture])";
-type VMOperation = { vm: string; buildID?: string; mode: MacAcceptanceMode };
+  "Usage: mac:occurrences:e2e --vm <running-VM> (--prepare | --artifact-build <UUID> [--setup-capture | --standalone])";
+type VMMode = MacAcceptanceMode | "standalone";
+type VMOperation = { vm: string; buildID?: string; mode: VMMode };
+
+export function macVMPlan(mode: VMMode) {
+  return mode === "standalone"
+    ? { kind: "native-local-macos", successStatus: "passed" as const }
+    : macAcceptancePlan(mode);
+}
 
 export function parseMacVMArguments(args: string[]): VMOperation {
   assert.ok(args.length >= 3 && args[0] === "--vm", usage);
@@ -57,11 +67,20 @@ export function parseMacVMArguments(args: string[]): VMOperation {
   );
   const buildID = args[3];
   assert.ok(buildID && macUUID.test(buildID), usage);
-  if (args.length === 5) assert.equal(args[4], "--setup-capture", usage);
+  if (args.length === 5)
+    assert.ok(
+      args[4] === "--setup-capture" || args[4] === "--standalone",
+      usage,
+    );
   return {
     vm,
     buildID,
-    mode: args.length === 5 ? "capture-readiness" : "recurrence",
+    mode:
+      args[4] === "--standalone"
+        ? "standalone"
+        : args.length === 5
+          ? "capture-readiness"
+          : "recurrence",
   };
 }
 
@@ -69,12 +88,12 @@ async function guest(
   exportID: string,
   expectedSHA: string,
   runID: string,
-  mode: MacAcceptanceMode,
+  mode: VMMode,
 ): Promise<void> {
   assert.match(exportID, macUUID);
   assert.match(runID, macUUID);
   assert.match(expectedSHA, /^[a-f0-9]{64}$/u);
-  const plan = macAcceptancePlan(mode);
+  const plan = macVMPlan(mode);
   assert.equal(process.platform, "darwin");
   assert.ok(process.getuid && process.getuid() !== 0);
   const exportRoot = path.join(share, exportID),
@@ -155,7 +174,7 @@ async function guest(
       readyRoot,
       `${expectedSHA}-${installedRunner.installationID}.json`,
     );
-    if (mode === "recurrence") {
+    if (mode !== "capture-readiness") {
       assert.ok(
         await Bun.file(readyFile).exists(),
         "Run --setup-capture with this exact artifact first",
@@ -189,39 +208,105 @@ async function guest(
         "packages/tasknotes-macos/scripts/apple-acceptance/occurrence-launches.schema.json"
       ],
     );
-    await runPreparedMacOccurrence({
-      packageRoot: artifact.packageRoot,
-      runID,
-      sources: artifact.sources,
-      mode,
+    const verifyInputs = async () => {
+      assert.equal(await macFileSHA(import.meta.path), bundleSHA);
+      assert.equal(await macFileSHA(payloadFile), expectedSHA);
+      assert.equal(await macFileSHA(artifactFile), artifactSHA);
+      for (const file of [
+        "mac-process-owner.swift",
+        "occurrence-launches.schema.json",
+      ])
+        assert.equal(
+          await macFileSHA(path.join(exportRoot, file)),
+          artifact.sources[
+            `packages/tasknotes-macos/scripts/apple-acceptance/${file}`
+          ],
+        );
+      for (const file of [
+        "Tasks/Existing.md",
+        "Reference.md",
+        "tasknotes.yaml",
+      ])
+        assert.equal(
+          await macFileSHA(path.join(exportRoot, "local-vault", file)),
+          artifact.sources[
+            `packages/tasknotes-fixtures/e2e/local-vault/${file}`
+          ],
+        );
+      await verifyMacArtifact(artifact, products, command);
+      await installedRunner.verify();
+    };
+    const provenance = {
+      executionEnvironment: "headless-tart-guest",
+      artifactBuildRunID: artifact.runID,
+      sourceHead: artifact.sourceHead,
+      artifactSHA256: artifactSHA,
+      payloadSHA256: expectedSHA,
+      runnerInstallationID: installedRunner.installationID,
       runnerBundlePath: installedRunner.bundlePath,
-      provenance: {
-        executionEnvironment: "headless-tart-guest",
-        artifactBuildRunID: artifact.runID,
-        sourceHead: artifact.sourceHead,
-        artifactSHA256: artifactSHA,
-        payloadSHA256: expectedSHA,
-        runnerInstallationID: installedRunner.installationID,
+    };
+    if (mode === "standalone") {
+      const standaloneFailures: unknown[] = [];
+      try {
+        await runAcceptanceUiTests(standaloneTests, {
+          prepared: {
+            runID,
+            evidence,
+            derived: path.join(evidence, "macos"),
+            fixture: path.join(exportRoot, "local-vault"),
+            runnerBundlePath: installedRunner.bundlePath,
+            command,
+            verifyInputs,
+            provenance,
+          },
+        });
+      } catch (error) {
+        standaloneFailures.push(error);
+      }
+      try {
+        const binding = {
+          runID,
+          descriptor: path.join(
+            homedir(),
+            "Library/Containers/red.sjer.tasknotes.mac.acceptance/Data/Library/Application Support/FacetAcceptance",
+            runID,
+            "acceptance.json",
+          ),
+          executable: path.join(
+            products,
+            "Debug/FacetAcceptance.app/Contents/MacOS/FacetAcceptance",
+          ),
+        };
+        // Ordinary XCTest teardown owns termination. Without a retained launch
+        // authority, this proves absence and rejects any remaining process.
+        const retired = await retireMacRun(binding, null, evidence);
+        await Bun.write(
+          path.join(evidence, "ownership-cleanup.json"),
+          JSON.stringify({
+            schemaVersion: 1,
+            ...binding,
+            journalPresent: false,
+            ...retired,
+          }),
+        );
+      } catch (error) {
+        standaloneFailures.push(error);
+      }
+      if (standaloneFailures.length)
+        throw new AggregateError(
+          standaloneFailures,
+          "Standalone guest acceptance or process retirement failed",
+        );
+    } else
+      await runPreparedMacOccurrence({
+        packageRoot: artifact.packageRoot,
+        runID,
+        sources: artifact.sources,
+        mode,
         runnerBundlePath: installedRunner.bundlePath,
-      },
-      verifyInputs: async () => {
-        assert.equal(await macFileSHA(import.meta.path), bundleSHA);
-        assert.equal(await macFileSHA(payloadFile), expectedSHA);
-        assert.equal(await macFileSHA(artifactFile), artifactSHA);
-        for (const file of [
-          "mac-process-owner.swift",
-          "occurrence-launches.schema.json",
-        ])
-          assert.equal(
-            await macFileSHA(path.join(exportRoot, file)),
-            artifact.sources[
-              `packages/tasknotes-macos/scripts/apple-acceptance/${file}`
-            ],
-          );
-        await verifyMacArtifact(artifact, products, command);
-        await installedRunner.verify();
-      },
-    });
+        provenance,
+        verifyInputs,
+      });
     if (mode === "capture-readiness")
       await persistMacVMCaptureReady(readyFile, expectedReady, runID);
     assert.equal(
@@ -246,6 +331,7 @@ async function guest(
       runID,
     );
     if (
+      !(await Bun.file(path.join(evidence, "run.json")).exists()) &&
       !(await Bun.file(
         path.join(evidence, "ownership-cleanup.json"),
       ).exists()) &&
@@ -381,7 +467,7 @@ export async function runMacOccurrenceVM(
   const runID = crypto.randomUUID(),
     failures: unknown[] = [];
   let blocked = false;
-  const plan = macAcceptancePlan(mode);
+  const plan = macVMPlan(mode);
   try {
     await boundedCommand(
       [
@@ -399,7 +485,7 @@ export async function runMacOccurrenceVM(
       {
         cwd: packageRoot,
         logs: path.join(evidence, "guest-exec"),
-        timeoutMS: 420_000,
+        timeoutMS: mode === "standalone" ? 1_260_000 : 420_000,
       },
     );
   } catch (error) {
@@ -482,7 +568,9 @@ if (import.meta.main) {
       exported &&
         sha &&
         run &&
-        (mode === "recurrence" || mode === "capture-readiness"),
+        (mode === "recurrence" ||
+          mode === "capture-readiness" ||
+          mode === "standalone"),
     );
     await guest(exported, sha, run, mode);
   } else await runMacOccurrenceVM(parseMacVMArguments(args));

@@ -39,6 +39,9 @@ async function fixture() {
     "owned.swift",
     "packages/tasknotes-macos/scripts/apple-acceptance/mac-process-owner.swift",
     "packages/tasknotes-macos/scripts/apple-acceptance/occurrence-launches.schema.json",
+    "packages/tasknotes-fixtures/e2e/local-vault/Tasks/Existing.md",
+    "packages/tasknotes-fixtures/e2e/local-vault/Reference.md",
+    "packages/tasknotes-fixtures/e2e/local-vault/tasknotes.yaml",
   ].sort()) {
     const file = path.join(directory, relative);
     await mkdir(path.dirname(file), { recursive: true });
@@ -78,6 +81,20 @@ async function fixture() {
       path.join(exported, name),
       await readFile(path.join(root, "scripts/apple-acceptance", name)),
     );
+  for (const relative of [
+    "Tasks/Existing.md",
+    "Reference.md",
+    "tasknotes.yaml",
+  ]) {
+    const file = path.join(exported, "local-vault", relative);
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(
+      file,
+      await readFile(
+        path.resolve(root, "../tasknotes-fixtures/e2e/local-vault", relative),
+      ),
+    );
+  }
   await writeFile(path.join(exported, "guest.js"), "owned-bundle");
   await writeFile(
     path.join(exported, "payload.json"),
@@ -170,6 +187,19 @@ test("immutable exported xctestrun and bundle tampering fail before replay", asy
   await expect(
     loadMacVMExport(other.root, buildID, other.command),
   ).rejects.toThrow();
+});
+test("standalone synthetic fixture tampering fails before guest replay", async () => {
+  const f = await fixture();
+  await writeFile(
+    path.join(f.exported, "local-vault/Reference.md"),
+    "changed fixture",
+  );
+  await expect(loadMacVMExport(f.root, buildID, f.command)).rejects.toThrow(
+    "standalone fixture",
+  );
+  expect(f.calls.some((argv) => argv.includes("build-for-testing"))).toBe(
+    false,
+  );
 });
 test("prepared receipt must be an owned regular bounded input", async () => {
   const f = await fixture();

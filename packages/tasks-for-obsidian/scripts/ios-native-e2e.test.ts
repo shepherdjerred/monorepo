@@ -194,6 +194,7 @@ describe("shared native selected-test configuration", () => {
   it.each([
     "BoardTaskTests",
     "MobileParityTests",
+    "LocalMutationTests",
     "OccurrenceTaskTests",
   ] as const)(
     "preserves exact selected command, device, result and120s bound for %s",

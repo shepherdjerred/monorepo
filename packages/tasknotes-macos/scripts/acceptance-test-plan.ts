@@ -137,6 +137,7 @@ export function assertExactNativeResults(
         suite:
           | "OccurrenceTaskTests"
           | "MobileParityTests"
+          | "LocalMutationTests"
           | "BoardTaskTests"
           | "DependencyEditorUITests";
       } = {

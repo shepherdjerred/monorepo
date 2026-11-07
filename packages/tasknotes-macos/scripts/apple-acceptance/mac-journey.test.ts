@@ -108,6 +108,33 @@ test("VM result manifest rejects traversal, collisions, foreign identity and byt
     expect(() => readMacEvidence({ ...manifest, files }, proofRunID)).toThrow();
   expect(() => readMacEvidence(manifest, crypto.randomUUID())).toThrow();
 });
+test("standalone evidence admits only the five exact case receipts and result bundles", () => {
+  const files = [
+    "LaunchSmoke.xcresult/Data/data.0",
+    "Smoke.xcresult/Info.plist",
+    "Workflow-4.xcresult/Info.plist",
+    "launch-smoke.json",
+    "workflow-4.json.session-preflight.json",
+    "workflow-4.json.summary.json",
+    "workflow-4.json.tests.json",
+    "test-summary.json",
+    "test-tree.json",
+  ].map((file) => ({ path: file, bytes: 4, sha256: proofSHA }));
+  const manifest = { schemaVersion: 1, runID: proofRunID, files };
+  expect(readMacEvidence(manifest, proofRunID)).toEqual(files);
+  for (const path of [
+    "Workflow-5.xcresult/Info.plist",
+    "workflow-5.json",
+    "foreign.json",
+    "macos/Build/Products/private",
+  ])
+    expect(() =>
+      readMacEvidence(
+        { ...manifest, files: [{ path, bytes: 4, sha256: proofSHA }] },
+        proofRunID,
+      ),
+    ).toThrow();
+});
 test("artifact input graph rejects escaping/dangling links before destination writes", async () => {
   const root = await directory(),
     destination = path.join(root, "fresh");

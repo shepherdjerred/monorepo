@@ -162,6 +162,46 @@ class StandaloneCaptureTest {
             compose.onNodeWithText("Inbox").performClick()
             waitForText("Edited on Android")
             capture("relaunched")
+            compose.onNodeWithContentDescription("Complete Edited on Android").performClick()
+            compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Complete Edited on Android").fetchSemanticsNodes().isEmpty() }
+            compose.onNodeWithText("Browse").performClick()
+            compose.onNodeWithText("Completed").performClick()
+            waitForText("Edited on Android")
+            compose.onNodeWithContentDescription("Uncomplete Edited on Android").assertIsEnabled()
+            capture("completed")
+            activity.close(); activity = null
+            runBlocking { FacetBackgroundSync.awaitBackgroundDrain() }
+            activity = ActivityScenario.launch(MainActivity::class.java)
+            waitForText(name)
+            compose.onNodeWithText("Browse").performClick()
+            compose.onNodeWithText("Completed").performClick()
+            waitForText("Edited on Android")
+            compose.onNodeWithContentDescription("Uncomplete Edited on Android").performClick()
+            compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Uncomplete Edited on Android").fetchSemanticsNodes().isEmpty() }
+            compose.onNodeWithText("Inbox").performClick()
+            waitForText("Edited on Android")
+            capture("reopened")
+            compose.onNodeWithContentDescription("Actions for Edited on Android").performClick()
+            compose.onNodeWithText("Delete").performClick()
+            compose.onNodeWithText("Delete 1 task?").assertIsDisplayed()
+            compose.onNodeWithText("Delete").performClick()
+            compose.waitUntil(15_000) {
+                compose.onAllNodesWithText("Edited on Android").fetchSemanticsNodes().isEmpty() &&
+                    compose.onAllNodesWithText("Undo").fetchSemanticsNodes().size == 1
+            }
+            capture("deleted")
+            compose.onNodeWithText("Undo").assertIsEnabled().performClick()
+            waitForText("Edited on Android")
+            compose.onNodeWithContentDescription("Complete Edited on Android").assertIsEnabled()
+            capture("delete-undone")
+            activity.close(); activity = null
+            runBlocking { FacetBackgroundSync.awaitBackgroundDrain() }
+            activity = ActivityScenario.launch(MainActivity::class.java)
+            waitForText(name)
+            compose.onNodeWithText("Inbox").performClick()
+            waitForText("Edited on Android")
+            compose.onNodeWithContentDescription("Complete Edited on Android").assertIsEnabled()
+            capture("undo-relaunched")
         } catch (failure: Throwable) {
             try { capture("failure") } catch (captureFailure: Throwable) { failure.addSuppressed(captureFailure) }
             throw failure
@@ -172,7 +212,11 @@ class StandaloneCaptureTest {
         // Inspect after the UI writer has drained, never through a competing open engine.
         runBlocking {
             val engine = FacetEngineRunner.open(context)
-            try { assertTrue(engine.refresh(id).tasks.single().title == "Edited on Android") }
+            try {
+                val task = engine.refresh(id).tasks.single()
+                assertEquals("Edited on Android", task.title)
+                assertFalse(task.completed)
+            }
             finally { engine.close() }
         }
     }

@@ -454,6 +454,7 @@ Prepare an explicit signed build before running a guest case:
 ```bash
 bun run mac:occurrences:e2e --vm <running-VM> --prepare
 bun run mac:occurrences:e2e --vm <running-VM> --artifact-build <build-UUID> --setup-capture
+bun run mac:occurrences:e2e --vm <running-VM> --artifact-build <build-UUID> --standalone
 bun run mac:occurrences:e2e --vm <running-VM> --artifact-build <build-UUID>
 ```
 
@@ -467,6 +468,14 @@ diagnostics, unchanged original seed files and one closed launch are retained.
 Normal rolling maintenance may add children. Capture readiness does not establish
 recurrence acceptance. The same stable signed Runner bundle is reused for guest
 permission provisioning and recurrence, while every case gets a fresh app state.
+
+`--standalone` runs the launch-isolation checkpoint and all four ordinary local
+workflows inside that guest using the same exported signed artifact and capture
+readiness receipt. It preserves the ordinary suite's singleton result gates,
+merged exact-suite check, seed-byte checks and final task assertions. The export
+includes a source-fingerprinted copy of the local-vault fixture; neither the
+workspace nor a writable host directory is shared. This is the headless route
+for ordinary Mac acceptance, separate from the recurrence journey below.
 
 Replaying without `--setup-capture` runs the separate local recurrence journey
 in a fresh `Native acceptance` vault. It checks automatic rolling
@@ -513,7 +522,7 @@ receipt, reused PID or replacement process fails closed and leaves the foreign
 process running. Commands retain file-backed logs, bound build/test startup and
 actual process exit, and give retained-owner cleanup a separate bounded budget.
 
-`TASKNOTES_UITEST_IDENTITY=<Apple Development SHA-1>` also signs this acceptance
+`TASKNOTES_UITEST_IDENTITY=<signing identity SHA-1>` also signs this acceptance
 test runner without overriding app or package signing. Its separate runner
 identity may require an existing Accessibility grant; no gate assumes it.
 After building with a stable Apple Development runner identity, open System Settings →

@@ -9,6 +9,9 @@ const maximumFileBytes = 64 * 1024 * 1024;
 const evidenceRoots = new Set([
   "Occurrence.xcresult",
   "CaptureReadiness.xcresult",
+  "LaunchSmoke.xcresult",
+  "Smoke.xcresult",
+  ...[1, 2, 3, 4].map((index) => `Workflow-${index}.xcresult`),
   "screenshots",
   "state",
   "commands",
@@ -21,6 +24,20 @@ const evidenceFiles = new Set([
   "ownership-cleanup.json",
   "session-preflight.json",
   "vm-error.json",
+  "test-summary.json",
+  "test-tree.json",
+  ...[
+    "launch-smoke",
+    "workflow-1",
+    "workflow-2",
+    "workflow-3",
+    "workflow-4",
+  ].flatMap((stage) => [
+    `${stage}.json`,
+    `${stage}.json.session-preflight.json`,
+    `${stage}.json.summary.json`,
+    `${stage}.json.tests.json`,
+  ]),
 ]);
 type EvidenceFile = { path: string; bytes: number; sha256: string };
 
