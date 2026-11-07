@@ -48,11 +48,7 @@ final class DocsCapture implements AutoCloseable {
       throw new IllegalStateException("Recording requires a visible windowed client");
     width = client.getWindow().getScreenWidth();
     height = client.getWindow().getScreenHeight();
-    client
-        .getWindow()
-        .setWindowed(
-            (int) Math.round(1280.0 * width / client.getWindow().getWidth()),
-            (int) Math.round(720.0 * height / client.getWindow().getHeight()));
+    DocsViewport.apply(client);
     error = "";
     observations.clear();
     markers.clear();
@@ -90,7 +86,8 @@ final class DocsCapture implements AutoCloseable {
       if (client.getWindow().isIconified())
         throw new IllegalStateException("Capture window minimized");
       var target = client.gameRenderer.mainRenderTarget();
-      if (target.width != 1280 || target.height != 720) {
+      if (target.width != DocsViewport.target().width()
+          || target.height != DocsViewport.target().height()) {
         if (state.equals("ARMING")) return;
         throw new IllegalStateException("Capture dimensions changed");
       }

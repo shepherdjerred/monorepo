@@ -261,6 +261,9 @@ owns a disposable real-map server and genuine local clients. The camera is
 `TOOLKIT_MC_DIRECTORY` bootstrap gives the worker a private socket, state,
 cache and Docker ownership scope. Interactive daemons and their sandboxes
 remain independently owned.
+Preview clients size their physical framebuffer from the neutral docs-video
+contract, keeping screenshots and clips at 1280×720 on ordinary and Retina
+displays.
 
 `worktree` builds and retains the current server, bridge and client artifacts,
 Git revision, source patch, untracked source, and pinned Paper/plugin jars.

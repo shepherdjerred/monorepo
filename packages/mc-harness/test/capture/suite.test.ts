@@ -95,6 +95,22 @@ it("rejects valid NBT chunks stored at the wrong coordinates", () => {
     "DataVersion",
   );
 });
+it("rejects array-typed version fields even when the NBT stream is well formed", () => {
+  const version = integer("DataVersion", 1);
+  version[0] = 11;
+  const data = Buffer.concat([
+    compound.subarray(0, 3),
+    version,
+    Buffer.from([0, 0, 0, 5]),
+    integer("xPos", 0),
+    integer("zPos", 0),
+    Buffer.from([0]),
+  ]);
+  validateNbt(data);
+  expect(() => validateNbt(data, { x: 0, z: 0, layer: "region" })).toThrow(
+    "Invalid chunk field DataVersion",
+  );
+});
 it("checks uploaded bytes and checks cache integrity on every restore", async () => {
   const data = new Map<string, Uint8Array>();
   const store: BlobStore = {

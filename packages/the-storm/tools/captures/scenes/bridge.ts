@@ -128,9 +128,11 @@ export default defineCaptureScene({
       },
       5,
     );
+    await context.teleport(context.at(2.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(1.5, 0.5, 3.5));
     await context.use();
     await waitForSpan(context, "minecraft:oak_planks");
+    await context.teleport(context.at(4.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(4.5, -0.5, 3.5));
     await context.action("clear-overlays");
     await context.capture({

@@ -37,6 +37,7 @@ public final class PreviewClient implements ClientModInitializer {
           client.options.pauseOnLostFocus = false;
           client.options.fov().set(70);
           client.options.guiScale().set(4);
+          DocsViewport.apply(client);
           client.resizeGui();
           client
               .options

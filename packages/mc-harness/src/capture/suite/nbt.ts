@@ -29,13 +29,19 @@ export function validateNbt(
     return size;
   };
   const remember = (name: string, type: number, start: number) => {
+    if (chunk === undefined) return;
     if (!["DataVersion", "xPos", "zPos", "Position"].includes(name)) return;
     if (fields.has(name)) throw new Error(`Duplicate chunk field ${name}`);
-    if (type === 3) fields.set(name, [bytes.readInt32BE(start)]);
-    else if (type === 11)
+    if (name !== "Position" && type === 3)
+      fields.set(name, [bytes.readInt32BE(start)]);
+    else if (
+      name === "Position" &&
+      type === 11 &&
+      bytes.readInt32BE(start) === 2
+    )
       fields.set(
         name,
-        Array.from({ length: bytes.readInt32BE(start) }, (_, i) =>
+        Array.from({ length: 2 }, (_, i) =>
           bytes.readInt32BE(start + 4 + i * 4),
         ),
       );
