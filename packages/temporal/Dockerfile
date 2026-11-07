@@ -455,6 +455,7 @@ COPY --parents \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
   packages/homelab/scripts/argocd/argocd-apply-safety.ts \
   packages/homelab/scripts/argocd/argocd-destructive-changes.ts \
+  packages/homelab/scripts/argocd/argocd-hooks.ts \
   packages/homelab/scripts/argocd/argocd-json-path.ts \
   packages/homelab/scripts/argocd/argocd-auto-sync-policy.ts \
   packages/homelab/scripts/argocd/argocd-child-sync-timeout.ts \
