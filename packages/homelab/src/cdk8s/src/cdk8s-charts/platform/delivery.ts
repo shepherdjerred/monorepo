@@ -97,6 +97,9 @@ export function createDeliveryChart(
       maxSurge: PercentOrAbsolute.absolute(1),
       maxUnavailable: PercentOrAbsolute.absolute(0),
     }),
+    // The outgoing API drains until proxies stop routing to it (at most 25s,
+    // packages/delivery/src/server/drain.ts) before it stops serving.
+    terminationGracePeriod: Duration.seconds(60),
     automountServiceAccountToken: false,
     securityContext: { fsGroup: 1000 },
   });
