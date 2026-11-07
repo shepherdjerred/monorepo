@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PRESENCE_COOLDOWN_SECONDS,
   cooldownBucket,
+  isConfirmedAway,
   shouldLock,
 } from "./presence.ts";
 
@@ -46,5 +47,18 @@ describe("shouldLock", () => {
 
   it("does not lock if someone in a named zone is still home", () => {
     expect(shouldLock(["Work", "home"])).toBe(false);
+  });
+});
+
+describe("isConfirmedAway", () => {
+  it("treats not_home and named zones as away", () => {
+    expect(isConfirmedAway("not_home")).toBe(true);
+    expect(isConfirmedAway("Work")).toBe(true);
+  });
+
+  it("does not treat home or an unresolved tracker as away", () => {
+    expect(isConfirmedAway("home")).toBe(false);
+    expect(isConfirmedAway("unknown")).toBe(false);
+    expect(isConfirmedAway("unavailable")).toBe(false);
   });
 });

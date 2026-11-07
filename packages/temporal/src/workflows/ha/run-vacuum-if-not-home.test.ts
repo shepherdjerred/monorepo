@@ -226,6 +226,36 @@ describe("runVacuumIfNotHome", () => {
       );
       expect(scenario.started).toEqual(["vacuum.1st_floor"]);
       expect(scenario.outcomes).toEqual([]);
+
+      scenario = makeScenario(["docked", "cleaning", "returning"], true);
+      scenario.states.set("person.jerred", "Work");
+      await testEnv.client.workflow.execute(runVacuumIfNotHome, {
+        taskQueue: TASK_QUEUE,
+        workflowId: `vacuum-named-zone-${crypto.randomUUID()}`,
+      });
+      expect(scenario.started).toEqual(["vacuum.1st_floor"]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "runVacuumIfNotHome",
+          outcome: "executed",
+          reason: "started",
+        },
+      ]);
+
+      scenario = makeScenario(["docked", "cleaning", "returning"], true);
+      scenario.states.set("person.shuxin", "unknown");
+      await testEnv.client.workflow.execute(runVacuumIfNotHome, {
+        taskQueue: TASK_QUEUE,
+        workflowId: `vacuum-unknown-presence-${crypto.randomUUID()}`,
+      });
+      expect(scenario.started).toEqual([]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "runVacuumIfNotHome",
+          outcome: "skipped",
+          reason: "someone-home",
+        },
+      ]);
     });
   }, 60_000);
 });
