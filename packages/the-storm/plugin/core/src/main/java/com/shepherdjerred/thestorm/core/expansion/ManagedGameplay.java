@@ -9,13 +9,14 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Shared asynchronous rollout reader. Every command evaluates its actor; failures fail closed. */
+/** Shared asynchronous rollout reader. Every command evaluates its actor. */
 public final class ManagedGameplay implements AutoCloseable {
   private static final Duration CACHE_TTL = Duration.ofSeconds(30);
 
@@ -35,6 +36,7 @@ public final class ManagedGameplay implements AutoCloseable {
   private final Runnable stop;
   private final boolean ipEnforcementDefault;
   private final InstantSource time;
+  private final Set<String> defaultOnDuringOutage;
   private final Map<EvaluationKey, CachedEvaluation> evaluations = new ConcurrentHashMap<>();
 
   public ManagedGameplay(
@@ -54,10 +56,20 @@ public final class ManagedGameplay implements AutoCloseable {
       Runnable stop,
       boolean ipEnforcementDefault,
       InstantSource time) {
+    this(reader, stop, ipEnforcementDefault, time, Set.of());
+  }
+
+  ManagedGameplay(
+      BiFunction<String, UUID, CompletableFuture<Boolean>> reader,
+      Runnable stop,
+      boolean ipEnforcementDefault,
+      InstantSource time,
+      Set<String> defaultOnDuringOutage) {
     this.reader = reader;
     this.stop = stop;
     this.ipEnforcementDefault = ipEnforcementDefault;
     this.time = time;
+    this.defaultOnDuringOutage = Set.copyOf(defaultOnDuringOutage);
   }
 
   public static ManagedGameplay remote(String url, String environment) {
@@ -104,7 +116,9 @@ public final class ManagedGameplay implements AutoCloseable {
               .thenApply(response -> readEvaluation(response, json));
         },
         client::shutdownNow,
-        "beta".equals(environment));
+        "beta".equals(environment),
+        InstantSource.system(),
+        "prod".equals(environment) ? Set.of(STAFF, IDENTITY, LETTERS) : Set.of());
   }
 
   private static boolean readEvaluation(HttpResponse<String> response, JsonMapper json) {
@@ -123,6 +137,19 @@ public final class ManagedGameplay implements AutoCloseable {
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
     return reader
         .apply(key, actor)
+        .exceptionally(
+            failure -> {
+              var cause = FlagProviderUnavailableException.unwrap(failure);
+              if (!defaultOnDuringOutage.contains(key)
+                  || !(cause instanceof FlagProviderUnavailableException))
+                throw new java.util.concurrent.CompletionException(cause);
+              System.getLogger(ManagedGameplay.class.getName())
+                  .log(
+                      System.Logger.Level.WARNING,
+                      "Flag provider unavailable; using declared default for {0}",
+                      key);
+              return true;
+            })
         .thenApply(
             enabled -> {
               var now = time.instant();

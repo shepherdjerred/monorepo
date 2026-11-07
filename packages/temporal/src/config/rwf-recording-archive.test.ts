@@ -23,9 +23,9 @@ beforeEach(() => {
 });
 
 describe("Red Warfare recording archive configuration", () => {
-  test("an absent flag keeps archiving off", async () => {
+  test("absence uses the declared default while a source outage still blocks archiving", async () => {
     expect(await rwfRecordingArchiveConfig()).toEqual({
-      enabled: false,
+      enabled: true,
       provenance: { enabled: "default" },
     });
     expect(createSource).toHaveBeenCalledExactlyOnceWith({

@@ -7,6 +7,7 @@ import {
 } from "../../packages/feature-flags/src/managed-flag-inventory.ts";
 import {
   checkManagedFlagMatrix,
+  declaredRolloutArguments,
   selectedManagedEnvironments,
   selectedManagedNamespaces,
 } from "./check-flipt-flag-inventory.ts";
@@ -57,6 +58,33 @@ function alignedSnapshot(environment: string, namespace: string) {
 }
 
 describe("check-flipt-flag-inventory", () => {
+  test("rollout modes require explicit scope and cannot mix mutation modes", () => {
+    expect(
+      declaredRolloutArguments([
+        "--plan-declared",
+        "--environment",
+        "prod",
+        "--namespace",
+        "streambot",
+        "--flag",
+        "streambot-history-enabled",
+      ]),
+    ).toEqual({
+      mode: "plan",
+      environment: "prod",
+      namespace: "streambot",
+      flagKeys: ["streambot-history-enabled"],
+    });
+    for (const args of [
+      ["--apply-declared"],
+      ["--plan-declared", "--apply-declared"],
+      ["--plan-declared", "--apply-missing"],
+      ["--flag", "test"],
+      ["--apply-declared", "--environment", "prod", "--namespace", "scout"],
+    ]) {
+      expect(() => declaredRolloutArguments(args)).toThrow();
+    }
+  });
   test("checks the complete environment and namespace matrix by default", async () => {
     const loaded: string[] = [];
     const messages = await checkManagedFlagMatrix({

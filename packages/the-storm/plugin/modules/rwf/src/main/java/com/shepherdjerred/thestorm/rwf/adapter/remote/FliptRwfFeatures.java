@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.remote;
 
+import com.shepherdjerred.thestorm.core.expansion.FlagProviderUnavailableException;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -99,7 +100,30 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(FliptRwfGate::parse);
+        .thenApply(
+            response -> {
+              if (response.statusCode() == 429
+                  || (response.statusCode() >= 500 && response.statusCode() < 600))
+                throw new FlagProviderUnavailableException(
+                    new java.io.IOException(String.format("Flipt HTTP %d", response.statusCode())));
+              return FliptRwfGate.parse(response);
+            })
+        .exceptionally(
+            failure -> {
+              var cause = FlagProviderUnavailableException.unwrap(failure);
+              if ("prod".equals(environment)
+                  && (HOST_SETTINGS_FLAG_KEY.equals(key) || CANDIDATE_VISITS_FLAG_KEY.equals(key))
+                  && (cause instanceof java.io.IOException
+                      || cause instanceof FlagProviderUnavailableException)) {
+                System.getLogger(FliptRwfFeatures.class.getName())
+                    .log(
+                        System.Logger.Level.WARNING,
+                        "Flag provider unavailable; using declared default for {0}",
+                        key);
+                return true;
+              }
+              throw new java.util.concurrent.CompletionException(cause);
+            });
   }
 
   @Override

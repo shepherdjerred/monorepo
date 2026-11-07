@@ -1,4 +1,5 @@
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
+import { flagInventoryMetrics } from "#observability/metrics-flags.ts";
 import { applyMissingManagedFlags } from "@shepherdjerred/feature-flags/flipt-missing-flag-apply.ts";
 import { applyScoutBetaDurableOwnership } from "@shepherdjerred/feature-flags/scout-beta-durable-ownership.ts";
 import { applyRetiredManagedFlags } from "@shepherdjerred/feature-flags/flipt-retired-flag-apply.ts";
@@ -91,6 +92,12 @@ export const fliptFlagInventoryActivities = {
             fetcher,
           });
           const drift = compareManagedFlagInventory(snapshot, expectedFlags);
+          flagInventoryMetrics.observePair(
+            environment.key,
+            namespace,
+            snapshot,
+            new Date(observedAt),
+          );
           const applied = createdByPair.get(`${environment.key}/${namespace}`);
           return {
             namespace,

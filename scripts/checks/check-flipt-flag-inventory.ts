@@ -1,4 +1,5 @@
 import { applyMissingManagedFlags } from "../../packages/feature-flags/src/flipt-missing-flag-apply.ts";
+import { applyDeclaredManagedFlags } from "../../packages/feature-flags/src/flipt-declared-flag-apply.ts";
 import { createFliptOperatorFetcher } from "../../packages/feature-flags/src/flipt-operator-fetcher.ts";
 import {
   compareManagedFlagInventory,
@@ -16,6 +17,41 @@ function argument(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
   const value = Bun.argv[index + 1];
   return index !== -1 && value !== undefined ? value : undefined;
+}
+
+export function declaredRolloutArguments(args: readonly string[]) {
+  const plan = args.includes("--plan-declared");
+  const apply = args.includes("--apply-declared");
+  if (!plan && !apply) {
+    if (args.includes("--flag"))
+      throw new Error("--flag requires --plan-declared or --apply-declared");
+    return;
+  }
+  if ((plan && apply) || args.includes("--apply-missing"))
+    throw new Error("Choose exactly one inventory mutation or preview mode");
+  const value = (name: string) => {
+    const index = args.indexOf(name);
+    const next = args[index + 1];
+    if (next === undefined || index === -1 || next.startsWith("--"))
+      throw new Error(`Explicit ${name} is required`);
+    if (args.lastIndexOf(name) !== index) throw new Error(`Duplicate ${name}`);
+    return next;
+  };
+  const flagKeys = args.flatMap((arg, index) => {
+    if (arg !== "--flag") return [];
+    const key = args[index + 1];
+    if (key === undefined || key.startsWith("--"))
+      throw new Error("--flag requires a key");
+    return [key];
+  });
+  if (flagKeys.length === 0)
+    throw new Error("Explicit --flag selection is required");
+  return {
+    environment: value("--environment"),
+    namespace: value("--namespace"),
+    flagKeys,
+    mode: apply ? ("apply" as const) : ("plan" as const),
+  };
 }
 
 function requiredUrl(): string {
@@ -108,7 +144,36 @@ export async function checkManagedFlagMatrix(options: {
   return messages;
 }
 
+async function runDeclaredRollout(
+  rollout: NonNullable<ReturnType<typeof declaredRolloutArguments>>,
+): Promise<void> {
+  const url = requiredUrl();
+  const result = await applyDeclaredManagedFlags({
+    ...rollout,
+    url,
+    fetcher: createFliptOperatorFetcher(url, Bun.env["FLIPT_OPERATOR_TOKEN"]),
+    onPlan: (plan) => {
+      if (rollout.mode === "apply")
+        console.error(JSON.stringify({ phase: "preview", ...plan }));
+    },
+  });
+  console.log(
+    JSON.stringify(result, null, Bun.argv.includes("--json") ? undefined : 2),
+  );
+  if (
+    result.changes.some(
+      (change) => change.status === "conflict" || change.status === "failed",
+    )
+  )
+    process.exitCode = 1;
+}
+
 async function main(): Promise<void> {
+  const rollout = declaredRolloutArguments(Bun.argv);
+  if (rollout !== undefined) {
+    await runDeclaredRollout(rollout);
+    return;
+  }
   const namespaceFilter = argument("--namespace") ?? Bun.env["FLIPT_NAMESPACE"];
   const environmentFilter =
     argument("--environment") ?? Bun.env["FLIPT_ENVIRONMENT"];

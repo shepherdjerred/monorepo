@@ -1,9 +1,15 @@
 import {
   Counter,
   Histogram,
+  Gauge,
   Registry,
   collectDefaultMetrics,
 } from "prom-client";
+import {
+  createFlagMetricsRecorder,
+  FEATURE_FLAG_METRICS,
+  FEATURE_FLAG_METRIC_LABELS,
+} from "@shepherdjerred/feature-flags/observability.ts";
 
 export type BrainMetrics = ReturnType<typeof createBrainMetrics>;
 
@@ -45,6 +51,36 @@ export function createBrainMetrics(register: Registry = new Registry()) {
   });
 
   return {
+    featureFlags: createFlagMetricsRecorder({
+      evaluations: new Counter({
+        name: FEATURE_FLAG_METRICS.evaluations,
+        help: "Feature flag evaluations by bounded result",
+        labelNames: FEATURE_FLAG_METRIC_LABELS.evaluations,
+        registers: [register],
+      }),
+      errors: new Counter({
+        name: FEATURE_FLAG_METRICS.errors,
+        help: "Feature flag errors by operation",
+        labelNames: FEATURE_FLAG_METRIC_LABELS.errors,
+        registers: [register],
+      }),
+      providerReady: new Gauge({
+        name: FEATURE_FLAG_METRICS.providerReady,
+        help: "Feature flag provider readiness",
+        registers: [register],
+      }),
+      snapshotAge: new Gauge({
+        name: FEATURE_FLAG_METRICS.snapshotAge,
+        help: "Feature flag snapshot age in seconds",
+        registers: [register],
+      }),
+      providerInfo: new Gauge({
+        name: FEATURE_FLAG_METRICS.providerInfo,
+        help: "Configured Flipt environment and namespace",
+        labelNames: FEATURE_FLAG_METRIC_LABELS.providerInfo,
+        registers: [register],
+      }),
+    }),
     costMicrosTotal,
     payloadBytes,
     register,

@@ -13,6 +13,31 @@ import org.junit.jupiter.api.Test;
 
 final class ManagedGameplayTest {
   @Test
+  void approvedDefaultsApplyOnlyToOutagesAndNeverOverrideFalse() {
+    var actor = randomUUID();
+    var response =
+        new AtomicReference<CompletableFuture<Boolean>>(
+            CompletableFuture.failedFuture(
+                new FlagProviderUnavailableException(new java.io.IOException("offline"))));
+    var gameplay =
+        new ManagedGameplay(
+            (key, id) -> response.get(),
+            () -> {},
+            false,
+            InstantSource.system(),
+            java.util.Set.of(
+                ManagedGameplay.STAFF, ManagedGameplay.IDENTITY, ManagedGameplay.LETTERS));
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isTrue();
+    assertThatThrownBy(() -> gameplay.enabled(ManagedGameplay.IP, actor).join())
+        .hasRootCauseMessage("offline");
+    response.set(CompletableFuture.completedFuture(false));
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isFalse();
+    response.set(CompletableFuture.failedFuture(new IllegalStateException("invalid response")));
+    assertThatThrownBy(() -> gameplay.enabled(ManagedGameplay.STAFF, actor).join())
+        .hasRootCauseMessage("invalid response");
+  }
+
+  @Test
   void successfulFalseNeverFallsThroughToTheDefault() {
     var actor = randomUUID();
     var gameplay =

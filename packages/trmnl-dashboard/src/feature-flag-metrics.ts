@@ -15,7 +15,7 @@ export function createFeatureFlagMetrics(): FeatureFlagMetrics {
   const evaluations = new Counter({
     name: FEATURE_FLAG_METRICS.evaluations,
     help: "Feature flag evaluations by flag and resolution reason",
-    labelNames: ["flag", "reason"] as const,
+    labelNames: ["flag", "reason", "value"] as const,
     registers: [registry],
   });
   const errors = new Counter({
@@ -35,12 +35,20 @@ export function createFeatureFlagMetrics(): FeatureFlagMetrics {
     registers: [registry],
   });
 
+  const providerInfo = new Gauge({
+    name: FEATURE_FLAG_METRICS.providerInfo,
+    help: "The Flipt environment and namespace consumed by this process",
+    labelNames: ["flipt_environment", "flipt_namespace"] as const,
+    registers: [registry],
+  });
+
   return {
     recorder: createFlagMetricsRecorder({
       evaluations,
       errors,
       providerReady,
       snapshotAge,
+      providerInfo,
     }),
     render: () => registry.metrics(),
   };

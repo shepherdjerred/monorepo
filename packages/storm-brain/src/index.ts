@@ -5,6 +5,7 @@ import { loadBrainConfig } from "./config.ts";
 import { initBrainFlags, shutdownBrainFlags } from "./flags.ts";
 import { createBrainMetrics, createMetricsHandler } from "./metrics.ts";
 import { isEnabled } from "@shepherdjerred/feature-flags";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { ConversationBudget } from "./conversation-budget.ts";
 import { createConversation } from "./conversation.ts";
 
@@ -12,7 +13,7 @@ const logger = createBrainLogger();
 const metrics = createBrainMetrics();
 await initBrainFlags((message) => {
   logger.warn(`Feature flags failed to initialize: ${message}`);
-});
+}, metrics.featureFlags);
 
 const config = await loadBrainConfig({
   flagSource: createFlagConfigSource({
@@ -36,7 +37,7 @@ const app = createBrainApp(config, {
   conversation: {
     enabled: async () => {
       const result = await isEnabled("storm-brain-conversation-enabled", {
-        default: false,
+        default: managedBooleanDefault("storm-brain-conversation-enabled"),
         targetingKey: "storm-brain",
       });
       return result.value;

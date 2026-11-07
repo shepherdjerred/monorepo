@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   initFeatureFlags,
   isEnabled,
+  stringValue,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags/index.ts";
 import {
@@ -23,13 +24,25 @@ function createTestMetricsRecorder() {
   const errors: unknown[] = [];
   const providerReadiness: number[] = [];
   const snapshotAges: number[] = [];
+  const providerIdentities: unknown[] = [];
   const recorder = createFlagMetricsRecorder({
     evaluations: { inc: (labels) => evaluations.push(labels) },
     errors: { inc: (labels) => errors.push(labels) },
     providerReady: { set: (value) => providerReadiness.push(value) },
     snapshotAge: { set: (value) => snapshotAges.push(value) },
+    providerInfo: {
+      reset: () => providerIdentities.push(null),
+      set: (labels, value) => providerIdentities.push({ ...labels, value }),
+    },
   });
-  return { recorder, evaluations, errors, providerReadiness, snapshotAges };
+  return {
+    recorder,
+    evaluations,
+    errors,
+    providerReadiness,
+    snapshotAges,
+    providerIdentities,
+  };
 }
 
 describe("metric naming", () => {
@@ -47,13 +60,16 @@ describe("metric naming", () => {
       flag: "known-flag",
       reason: "STATIC",
       errorCode: undefined,
+      value: "true",
     });
     recorder.countError("initialize");
     recorder.observeProviderReady(false);
     recorder.observeProviderReady(true);
     recorder.observeSnapshotAge(42);
 
-    expect(evaluations).toEqual([{ flag: "known-flag", reason: "STATIC" }]);
+    expect(evaluations).toEqual([
+      { flag: "known-flag", reason: "STATIC", value: "true" },
+    ]);
     expect(errors).toEqual([{ operation: "initialize" }]);
     expect(providerReadiness).toEqual([0, 1]);
     expect(snapshotAges).toEqual([42]);
@@ -61,6 +77,43 @@ describe("metric naming", () => {
 });
 
 describe("evaluation instrumentation", () => {
+  test("counts false without leaking variant values and reports the configured provider identity", async () => {
+    const { recorder, evaluations, providerIdentities } =
+      createTestMetricsRecorder();
+    await initFeatureFlags({
+      environment: {
+        FEATURE_FLAGS_MODE: "flipt",
+        FLIPT_URL: "http://flipt.invalid:8080",
+        FLIPT_NAMESPACE: "scout",
+        FLIPT_ENVIRONMENT: "prod",
+      },
+      provider: new StaticProvider({
+        ai_reports_enabled: false,
+        "scout-report-ai-model": "private-model-value",
+      }),
+      metrics: recorder,
+    });
+    const disabled = await isEnabled("ai_reports_enabled", {
+      default: true,
+      targetingKey: "never-a-label",
+    });
+    expect(disabled.value).toBe(false);
+    await stringValue("scout-report-ai-model", {
+      default: "default-model",
+      targetingKey: "never-a-label",
+    });
+    expect(evaluations).toEqual([
+      { flag: "ai_reports_enabled", reason: "STATIC", value: "false" },
+      { flag: "scout-report-ai-model", reason: "STATIC", value: "non_boolean" },
+    ]);
+    expect(providerIdentities).toContainEqual({
+      flipt_environment: "prod",
+      flipt_namespace: "scout",
+      value: 1,
+    });
+    await shutdownFeatureFlags();
+    expect(providerIdentities.at(-1)).toBeNull();
+  });
   test("reports the flag, reason, and error code for every evaluation", async () => {
     const events: EvaluationEvent[] = [];
     await initFeatureFlags({
@@ -81,8 +134,18 @@ describe("evaluation instrumentation", () => {
     ).rejects.toThrow();
 
     expect(events).toEqual([
-      { flag: "ai_reports_enabled", reason: "STATIC", errorCode: undefined },
-      { flag: "dares_enabled", reason: "ERROR", errorCode: "FLAG_NOT_FOUND" },
+      {
+        flag: "ai_reports_enabled",
+        reason: "STATIC",
+        errorCode: undefined,
+        value: "true",
+      },
+      {
+        flag: "dares_enabled",
+        reason: "ERROR",
+        errorCode: "FLAG_NOT_FOUND",
+        value: "error",
+      },
     ]);
   });
 

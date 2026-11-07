@@ -18,6 +18,7 @@ type GaugeName =
   | "alert_dashboard_open_alerts"
   | "alert_dashboard_ops_last_ingest_timestamp_seconds"
   | "feature_flag_provider_ready"
+  | "feature_flag_provider_info"
   | "feature_flag_snapshot_age_seconds";
 
 function metricKey(
@@ -50,6 +51,12 @@ export class Metrics {
     labels: Readonly<Record<string, string>> = {},
   ): void {
     this.#gauges.set(metricKey(name, labels), value);
+  }
+
+  clearGauge(name: GaugeName): void {
+    for (const key of this.#gauges.keys()) {
+      if (key === name || key.startsWith(`${name}{`)) this.#gauges.delete(key);
+    }
   }
 
   render(): string {

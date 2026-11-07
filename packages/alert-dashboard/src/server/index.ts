@@ -33,8 +33,12 @@ const metrics = new Metrics();
 const featureFlags = await initFeatureFlagClient({
   environment: Bun.env,
   metrics: flagMetricsRecorder({
-    countEvaluation: (flag, reason) => {
-      metrics.increment("feature_flag_evaluations_total", { flag, reason });
+    countEvaluation: (flag, reason, value) => {
+      metrics.increment("feature_flag_evaluations_total", {
+        flag,
+        reason,
+        value,
+      });
     },
     countError: (operation) => {
       metrics.increment("feature_flag_errors_total", { operation });
@@ -44,6 +48,11 @@ const featureFlags = await initFeatureFlagClient({
     },
     snapshotAge: (seconds) => {
       metrics.gauge("feature_flag_snapshot_age_seconds", seconds);
+    },
+    providerInfo: (info) => {
+      metrics.clearGauge("feature_flag_provider_info");
+      if (info !== undefined)
+        metrics.gauge("feature_flag_provider_info", 1, info);
     },
   }),
 });

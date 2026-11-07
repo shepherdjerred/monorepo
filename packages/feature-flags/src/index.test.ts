@@ -202,6 +202,9 @@ describe("initialization", () => {
       observeSnapshotAge: () => {
         snapshotObservations++;
       },
+      observeProviderInfo: () => {
+        /* Provider identity is covered by observability.test.ts. */
+      },
     } satisfies FlagMetricsRecorder;
 
     await initFeatureFlags({

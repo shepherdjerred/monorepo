@@ -1,10 +1,11 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod/v4";
 
 /**
- * Whether the Red Warfare recording archive may run. Off unless the managed
- * flag says otherwise; an unavailable flag provider also keeps it off, since
+ * Whether the Red Warfare recording archive may run. An unavailable flag
+ * provider keeps it off even with a default-on declaration, since
  * an archive run marks recordings as safe for the plugin to delete.
  */
 export async function rwfRecordingArchiveConfig() {
@@ -14,7 +15,9 @@ export async function rwfRecordingArchiveConfig() {
       enabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
-        default: false,
+        default: managedBooleanDefault(
+          "the-storm-rwf-recording-archive-enabled",
+        ),
         names: { flag: "the-storm-rwf-recording-archive-enabled" },
       },
     } as const,

@@ -10,8 +10,12 @@ export async function runPromtoolFixture(
   try {
     const filename = path.join(directory, "cases.json");
     await Bun.write(filename, JSON.stringify(fixture));
-    // Bun Shell preserves the captured output and throws on a nonzero exit.
-    await $`promtool test rules ${filename}`.quiet();
+    const result = await $`promtool test rules ${filename}`.quiet().nothrow();
+    if (result.exitCode !== 0) {
+      throw new Error(
+        `promtool fixture failed:\n${result.stdout.toString()}${result.stderr.toString()}`,
+      );
+    }
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

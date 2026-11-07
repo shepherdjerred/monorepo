@@ -1,4 +1,5 @@
 import { isEnabled } from "@shepherdjerred/feature-flags";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import type { StreambotBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 
@@ -30,7 +31,7 @@ async function enabled(
   scope: DiscoveryScope,
 ): Promise<boolean> {
   const result = await isEnabled(key, {
-    default: false,
+    default: managedBooleanDefault(key),
     targetingKey: scope.userId,
     attributes: { server: scope.guildId, user: scope.userId },
   });
@@ -47,7 +48,7 @@ export const mediaFeatureGate: MediaFeatureGate = {
     enabled("streambot-automatic-channel-routing-enabled", scope),
   numberedChannels: async (scope) => {
     const result = await isEnabled("streambot-numbered-channels-enabled", {
-      default: false,
+      default: managedBooleanDefault("streambot-numbered-channels-enabled"),
       targetingKey: scope.guildId,
       attributes: { server: scope.guildId },
     });

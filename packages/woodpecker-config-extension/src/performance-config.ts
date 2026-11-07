@@ -1,11 +1,13 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import type { WoodpeckerBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { z } from "zod";
 
-const booleanFlag = (flag: string) => ({
+const booleanFlag = (flag: WoodpeckerBooleanFlagKey) => ({
   schema: z.boolean(),
   sources: ["flag", "default"] as const,
-  default: false,
+  default: managedBooleanDefault(flag),
   names: { flag },
 });
 export const DISABLED_PERFORMANCE = {
@@ -53,7 +55,7 @@ export async function performanceConfig(
     hooks: {
       onSourceError: () => {
         console.warn(
-          "CI performance flag unavailable; retaining baseline behavior",
+          "CI performance flag unavailable; using declared defaults",
         );
       },
     },

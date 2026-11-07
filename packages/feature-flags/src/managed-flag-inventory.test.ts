@@ -388,11 +388,11 @@ describe("The Storm companion pilot rollout", () => {
   });
 
   test.each([
-    ["the-storm-ip-enforcement-enabled", "the-storm"],
-    ["storm-brain-conversation-enabled", "storm"],
+    ["the-storm-ip-enforcement-enabled", "the-storm", false],
+    ["storm-brain-conversation-enabled", "storm", true],
   ])(
-    "enables %s in beta while keeping production and fallback off",
-    (key, namespace) => {
+    "keeps the beta rollout and explicit production decision for %s",
+    (key, namespace, prodEnabled) => {
       const declared = managedFlagInventory.flags.find(
         (flag) => flag.key === key,
       );
@@ -413,7 +413,7 @@ describe("The Storm companion pilot rollout", () => {
         "prod",
         namespace,
       ).find((flag) => flag.key === key);
-      expect(prod).toMatchObject({ default: false, rollouts: [] });
+      expect(prod).toMatchObject({ default: prodEnabled, rollouts: [] });
     },
   );
 });
@@ -498,7 +498,7 @@ describe("Red Warfare Search and Destroy rollout", () => {
 });
 
 describe("durable iMessage ingress rollout", () => {
-  test("enables the beta gateway rollout while prod stays disabled", () => {
+  test("enables Photon in both environments without changing owner lists", () => {
     const betaFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "beta",
@@ -515,6 +515,6 @@ describe("durable iMessage ingress rollout", () => {
     );
 
     expect(betaFlag?.default).toBe(true);
-    expect(prodFlag?.default).toBe(false);
+    expect(prodFlag?.default).toBe(true);
   });
 });

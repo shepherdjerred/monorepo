@@ -1,6 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "defaultOffException": {
+      "type": "object",
+      "required": ["environment", "reason", "issue", "enableWhen", "reviewBy"],
+      "properties": {
+        "environment": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "issue": { "type": "string", "pattern": "^AI-[1-9][0-9]*$" },
+        "enableWhen": { "type": "string", "minLength": 1 },
+        "reviewBy": { "type": "string", "format": "date" }
+      },
+      "additionalProperties": false
+    },
     "constraint": {
       "type": "object",
       "required": ["type", "property", "operator", "value"],
@@ -95,7 +107,12 @@
       "allOf": [
         {
           "if": { "properties": { "type": { "const": "boolean" } } },
-          "then": { "properties": { "default": { "type": "boolean" } } }
+          "then": {
+            "properties": {
+              "default": { "type": "boolean" },
+              "rules": { "maxItems": 0 }
+            }
+          }
         },
         {
           "if": { "properties": { "type": { "const": "variant" } } },
@@ -127,8 +144,16 @@
             "owner": { "type": "string", "minLength": 1 },
             "namespace": { "type": "string", "minLength": 1 },
             "source": { "type": "string", "minLength": 1 },
-            "purpose": { "type": "string", "minLength": 1 }
+            "purpose": { "type": "string", "minLength": 1 },
+            "defaultOffExceptions": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/defaultOffException" }
+            }
           }
+        },
+        {
+          "if": { "properties": { "type": { "const": "variant" } } },
+          "then": { "not": { "required": ["defaultOffExceptions"] } }
         }
       ],
       "unevaluatedProperties": false

@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { exportFeatureFlagsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/feature-flags-dashboard.ts";
 import { exportCiCapacityDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/shared/ci-capacity-dashboard.ts";
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai/ai-provider-dashboard.ts";
@@ -172,6 +173,12 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
     exportFn: exportAlertDashboardJson,
   },
   AI_PROVIDER_DASHBOARD,
+  {
+    id: "feature-flags-dashboard-configmap",
+    name: "feature-flags-dashboard",
+    jsonFilename: "feature-flags.json",
+    exportFn: exportFeatureFlagsDashboardJson,
+  },
   BUILDKITD_DASHBOARD,
   CI_CAPACITY_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,

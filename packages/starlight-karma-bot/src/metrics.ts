@@ -9,7 +9,7 @@ export const registry = new Registry();
 const featureFlagEvaluationsTotal = new Counter({
   name: FEATURE_FLAG_METRICS.evaluations,
   help: "Feature flag evaluations by flag and resolution reason",
-  labelNames: ["flag", "reason"] as const,
+  labelNames: ["flag", "reason", "value"] as const,
   registers: [registry],
 });
 
@@ -32,9 +32,17 @@ const featureFlagSnapshotAgeSeconds = new Gauge({
   registers: [registry],
 });
 
+const featureFlagProviderInfo = new Gauge({
+  name: FEATURE_FLAG_METRICS.providerInfo,
+  help: "The Flipt environment and namespace consumed by this process",
+  labelNames: ["flipt_environment", "flipt_namespace"] as const,
+  registers: [registry],
+});
+
 export const featureFlagMetrics = createFlagMetricsRecorder({
   evaluations: featureFlagEvaluationsTotal,
   errors: featureFlagErrorsTotal,
   providerReady: featureFlagProviderReady,
   snapshotAge: featureFlagSnapshotAgeSeconds,
+  providerInfo: featureFlagProviderInfo,
 });

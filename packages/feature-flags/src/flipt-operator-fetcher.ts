@@ -8,7 +8,7 @@ export function createFliptOperatorFetcher(
 ): FliptFetcher {
   if (token === undefined || token.trim() === "")
     throw new Error(
-      "FLIPT_OPERATOR_TOKEN is required for --apply-missing; inject it through 1Password",
+      "FLIPT_OPERATOR_TOKEN is required for Flipt management operations; inject it through 1Password",
     );
   const origin = new URL(url).origin;
   return (input, init) => {
