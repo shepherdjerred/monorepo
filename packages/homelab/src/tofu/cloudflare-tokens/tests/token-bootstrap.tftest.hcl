@@ -53,8 +53,14 @@ run "committed_cache_uses_existing_user_token_provider" {
   }
   assert {
     condition = (
-      keys(cloudflare_api_token.managed) == ["delivery-static-cache", "woodpecker"] &&
-      keys(nonsensitive(output.cloudflare_api_token_handoffs)) == ["delivery-static-cache", "woodpecker"] &&
+      keys(cloudflare_api_token.managed) == ["delivery-static-cache", "personal-archives-r2", "woodpecker"] &&
+      keys(nonsensitive(output.cloudflare_api_token_handoffs)) == [
+        "delivery-static-cache",
+        "personal-archives-r2",
+        "personal-archives-r2.s3-access-key-id",
+        "personal-archives-r2.s3-secret-access-key",
+        "woodpecker",
+      ] &&
       length(cloudflare_api_token.managed["delivery-static-cache"].policies) == 1 &&
       cloudflare_api_token.managed["delivery-static-cache"].policies[0].effect == "allow" &&
       length(cloudflare_api_token.managed["delivery-static-cache"].policies[0].permission_groups) == 1 &&
@@ -73,6 +79,30 @@ run "committed_cache_uses_existing_user_token_provider" {
       nonsensitive(output.cloudflare_api_token_handoffs["delivery-static-cache"].vault_field) == "credential"
     )
     error_message = "The committed purge token must use the existing user-token provider, preserve the existing managed token and retain its exact expiry and credential handoff."
+  }
+}
+
+run "committed_archive_token_is_scoped_to_archive_buckets" {
+  command = plan
+  variables {
+    cloudflare_api_tokens = jsondecode(file("desired-state.json")).cloudflare_api_tokens
+  }
+  assert {
+    condition = (
+      length(cloudflare_api_token.managed["personal-archives-r2"].policies) == 1 &&
+      cloudflare_api_token.managed["personal-archives-r2"].policies[0].effect == "allow" &&
+      toset([for group in cloudflare_api_token.managed["personal-archives-r2"].policies[0].permission_groups : group.id]) == toset([
+        "6a018a9f2fc74eb6b293b0c548f38b39",
+        "2efd5506f9c8494dacb1fa10a3e7d5b6",
+      ]) &&
+      jsondecode(cloudflare_api_token.managed["personal-archives-r2"].policies[0].resources) == {
+        "com.cloudflare.edge.r2.bucket.48948ed6cd40d73e34d27f0cc10e595f_default_jerred-archives"    = "*"
+        "com.cloudflare.edge.r2.bucket.48948ed6cd40d73e34d27f0cc10e595f_default_pinterest-archives" = "*"
+      } &&
+      nonsensitive(output.cloudflare_api_token_handoffs["personal-archives-r2.s3-access-key-id"].vault_item_id) == "du6dxzjfiml7f7qnj2peyff3ba" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["personal-archives-r2.s3-secret-access-key"].vault_item_id) == "du6dxzjfiml7f7qnj2peyff3ba"
+    )
+    error_message = "The archive token must grant only object read and write on the two archive buckets and hand its R2 keys to its own item."
   }
 }
 

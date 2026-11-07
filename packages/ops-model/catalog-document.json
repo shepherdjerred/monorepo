@@ -3239,7 +3239,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "tofu-cloudflare-tokens/prod/1",
-      "configurationRevisionId": "tofu-cloudflare-tokens/prod/2"
+      "configurationRevisionId": "tofu-cloudflare-tokens/prod/3"
     },
     {
       "id": "tofu-discord/prod",

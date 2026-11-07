@@ -224,6 +224,31 @@
       "vault_item_id": "nhyb6lnjpvjsau2gkmb7n42oeq",
       "vault_field": "config.json",
       "vault_json_path": "/cloudflare/0/authentication/api_token"
+    },
+    "personal-archives-r2": {
+      "name": "Personal archives R2 object read/write",
+      "policies": [
+        {
+          "effect": "allow",
+          "permission_groups": [
+            {
+              "id": "6a018a9f2fc74eb6b293b0c548f38b39",
+              "name": "Workers R2 Storage Bucket Item Read"
+            },
+            {
+              "id": "2efd5506f9c8494dacb1fa10a3e7d5b6",
+              "name": "Workers R2 Storage Bucket Item Write"
+            }
+          ],
+          "resources": {
+            "com.cloudflare.edge.r2.bucket.48948ed6cd40d73e34d27f0cc10e595f_default_jerred-archives": "*",
+            "com.cloudflare.edge.r2.bucket.48948ed6cd40d73e34d27f0cc10e595f_default_pinterest-archives": "*"
+          }
+        }
+      ],
+      "vault_item_id": "du6dxzjfiml7f7qnj2peyff3ba",
+      "vault_field": "CLOUDFLARE_API_TOKEN",
+      "s3_credential": true
     }
   }
 }
