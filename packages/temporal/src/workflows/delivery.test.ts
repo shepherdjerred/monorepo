@@ -338,6 +338,9 @@ describe("Delivery admission wait rollover", () => {
         DELIVERY_WAIT_ROLLOVER_ITERATIONS + 4,
       );
       expect(calls.slice(-3)).toEqual(["apply", "verify", "finish"]);
+      // The run that continued as new applied and finished nothing.
+      for (const action of ["apply", "verify", "finish"])
+        expect(calls.filter((call) => call === action)).toHaveLength(1);
     } finally {
       await environment.teardown();
     }
