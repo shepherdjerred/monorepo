@@ -77,6 +77,13 @@ function validateAdmin(
       requireMachine(options, "Catalog reconcile");
       return;
     }
+    case "recovery": {
+      if (!options.abandon) return;
+      requireMachine(options, "Abandoning a recovery intent");
+      if (options.reason === undefined || options.reason.trim() === "")
+        throw new Error("--reason is required");
+      return;
+    }
     case "recover": {
       requireMachine(options, "A recovery intent");
       if (options["expected-generation"] === undefined)
@@ -86,6 +93,14 @@ function validateAdmin(
       return;
     }
   }
+}
+
+/** Flags that belong to one verb are refused on every other. */
+function validateVerbFlags(command: string, options: DeployOptions) {
+  if (options.override && !["start", "approve", "reject"].includes(command))
+    throw new Error("--override applies to deploy start, approve and reject");
+  if (command !== "recovery" && options.abandon)
+    throw new Error("--abandon applies to deploy recovery");
 }
 
 /**
@@ -98,8 +113,7 @@ export function validateModelCommand(
   options: ModelOptions,
 ) {
   validateAdmin(command, positionals, options);
-  if (options.override && !["start", "approve", "reject"].includes(command))
-    throw new Error("--override applies to deploy start, approve and reject");
+  validateVerbFlags(command, options);
   switch (command) {
     case "rollback": {
       IdentifierSchema.parse(positionals[1]);
@@ -365,6 +379,14 @@ export async function runModelCommand(
       return { result: await client.monitor(target), exitCode: 0 };
     }
     case "recovery": {
+      // Closes an intent whose deployment already ended without needing it.
+      if (options.abandon)
+        return {
+          result: await client.abandonRecoveryIntent(target, {
+            reason: required(options.reason).trim(),
+          }),
+          exitCode: 0,
+        };
       return { result: await client.recoveryIntent(target), exitCode: 0 };
     }
     case "approve-plan": {

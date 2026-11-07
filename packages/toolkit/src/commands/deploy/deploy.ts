@@ -71,6 +71,7 @@ cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
 recover <DEPLOYMENT_ID> --expected-generation <N> --reason <TEXT> [--step <S>] [--operation-id <ID>] --machine  Open a recovery intent; --operation-id settles an ordinary Argo operation by readback
 recovery <INTENT_ID>                   Inspect a recovery intent and its evidence
+recovery <INTENT_ID> --abandon --reason <TEXT> --machine  Close a pending intent whose deployment ended without needing it
 
 Options:
   --json                              Structured output
@@ -80,6 +81,7 @@ Options:
   --expected-generation <N>            Require an exact environment generation
   --expected-worker-generation <N>     Require an exact worker generation for retirement
   --reason <TEXT>                      Approval, rejection, or recovery reason
+  --abandon                            recovery: close a stale pending intent (admin)
   --override                           start: ask for an override approval of a non-eligible deploy;
                                        approve/reject: decide that override approval
   --step <NAME>                        Sub-step a recovery intent names

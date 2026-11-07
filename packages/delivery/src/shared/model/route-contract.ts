@@ -115,6 +115,11 @@ export const ApprovalQueueItemSchema = DeploymentV2Schema.extend({
 export type ApprovalQueueItem = z.infer<typeof ApprovalQueueItemSchema>;
 
 /** `POST /deployments/:id/recovery-intents` (admin, I1). */
+/** Admin: close a pending intent that no longer guards its ended deployment. */
+export const AbandonRecoveryIntentSchema = z.strictObject({
+  reason: z.string().min(20).max(4000),
+});
+
 export const RecoveryIntentRequestSchema = z.strictObject({
   requestId: IdentifierSchema,
   reason: z.string().min(20).max(4000),

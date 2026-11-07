@@ -32,7 +32,10 @@ export function recoveryKindOf(
   // state marker are inspected by platform recovery.
   if (modelTofuTarget(detail) !== null) return "platform";
   const definition = detail.pipeline.definition;
-  return siteReleaseOf(definition) !== undefined ||
+  // A static-site recipe has no Application at all; it recovers through a
+  // content intent, as contentRecoveryKind resolves it.
+  return definition.kind === "static-site" ||
+    siteReleaseOf(definition) !== undefined ||
     forumReleaseOf(definition) !== undefined
     ? "content"
     : "argo";

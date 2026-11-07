@@ -95,6 +95,9 @@ export function invalidRequestMessage(error: z.ZodError | SyntaxError): string {
   return `Invalid request: ${issues.join("; ")}`;
 }
 
+/** Prisma's unique-constraint violation (P2002). */
+const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
+
 export function createApp(options: Options) {
   const app = new Hono<{
     Variables: { principal: Principal; requestId: string };
@@ -437,6 +440,19 @@ export function createApp(options: Options) {
         statuses[error.code],
       );
     }
+    // A concurrent duplicate, such as a second pending recovery intent for
+    // one deployment, is a conflict the caller can act on, not a crash.
+    if (UniqueViolationSchema.safeParse(error).success)
+      return c.json(
+        {
+          error: {
+            code: "CONFLICT",
+            message: "The request conflicts with an existing record",
+            requestId: c.get("requestId"),
+          },
+        },
+        409,
+      );
     console.error(
       JSON.stringify({
         message: "delivery_request_failed",
