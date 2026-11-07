@@ -1,0 +1,10 @@
+{
+  "user_id": "fixture-user",
+  "nickname": "Fixture",
+  "status": "USER_STATUS_NORMAL",
+  "region": "REGION_OVERSEA",
+  "user_level": 25,
+  "user_level_name": "Pro",
+  "goods_version": 2,
+  "created_time": "2026-01-01T00:00:00Z"
+}

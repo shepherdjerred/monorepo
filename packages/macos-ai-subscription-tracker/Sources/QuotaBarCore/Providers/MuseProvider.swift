@@ -77,7 +77,7 @@ public struct MuseProvider: UsageProvider {
     guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.muse) }
     return UsageSnapshot(
       provider: .muse,
-      accountLabel: accountLabel(tier: allowance.tier),
+      plan: PlanInfo(name: allowance.tier),
       windows: windows.sorted { $0.label < $1.label },
       notes: notes,
       sourceTimestamp: now
@@ -121,11 +121,6 @@ public struct MuseProvider: UsageProvider {
     return Date(timeIntervalSince1970: milliseconds / 1_000)
   }
 
-  private static func accountLabel(tier: String?) -> String? {
-    guard let tier = tier?.trimmingCharacters(in: .whitespacesAndNewlines), !tier.isEmpty
-    else { return nil }
-    return tier
-  }
 }
 
 private struct MuseUsageResponse: Decodable {

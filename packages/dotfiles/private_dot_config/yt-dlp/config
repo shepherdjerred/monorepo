@@ -1,5 +1,5 @@
 # Output template: Title [ID].ext
--o %(title)s [%(id)s].%(ext)s
+-o "%(title)s [%(id)s].%(ext)s"
 
 # Prefer best quality
 -f bestvideo*+bestaudio/best

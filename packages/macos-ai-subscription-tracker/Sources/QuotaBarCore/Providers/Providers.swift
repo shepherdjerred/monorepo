@@ -26,19 +26,28 @@ public enum Providers {
       case .antigravity:
         return AntigravityProvider(
           commandRunner: commandRunner,
-          executableURL: antigravityExecutableURL
+          executableURL: antigravityExecutableURL,
+          planSource: AntigravityPlanSource(
+            tokenFile: AntigravityPlanSource.defaultTokenFile(),
+            executable: { try antigravityExecutableURL ?? AntigravityProvider.locateExecutable() },
+            tokenEndpoint: endpoints.antigravityToken,
+            codeAssistEndpoint: endpoints.antigravityCodeAssist
+          )
         )
       case .cursor:
-        return CursorProvider(client: client, endpoint: endpoints.cursorUsage)
+        return CursorProvider(
+          client: client, endpoint: endpoints.cursorUsage, planEndpoint: endpoints.cursorPlan)
       case .kimi:
-        return KimiProvider(client: client, endpoint: endpoints.kimiUsage)
+        return KimiProvider(
+          client: client, endpoint: endpoints.kimiUsage, meEndpoint: endpoints.kimiMe)
       case .grok:
         return GrokProvider(
           client: client,
           userEndpoint: endpoints.grokUser,
           billingEndpoint: endpoints.grokBilling,
           creditsEndpoint: endpoints.grokCredits,
-          resetEndpoint: endpoints.grokResets
+          resetEndpoint: endpoints.grokResets,
+          settingsEndpoint: endpoints.grokSettings
         )
       case .muse:
         return MuseProvider(commandRunner: commandRunner, executableURL: museExecutableURL)

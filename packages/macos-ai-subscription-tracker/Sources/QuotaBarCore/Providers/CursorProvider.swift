@@ -4,23 +4,68 @@ public struct CursorProvider: UsageProvider {
   public let id = ProviderID.cursor
   private let client: ProviderHTTPClient
   private let endpoint: URL
+  private let planEndpoint: URL
 
-  public init(client: ProviderHTTPClient, endpoint: URL) {
+  public init(client: ProviderHTTPClient, endpoint: URL, planEndpoint: URL) {
     self.client = client
     self.endpoint = endpoint
+    self.planEndpoint = planEndpoint
   }
 
+  private static let headers = [
+    "Content-Type": "application/json",
+    "Connect-Protocol-Version": "1",
+  ]
+
   public func fetch() async throws -> UsageSnapshot {
-    let data = try await client.post(
-      provider: id,
-      url: endpoint,
-      body: Data("{}".utf8),
-      headers: [
-        "Content-Type": "application/json",
-        "Connect-Protocol-Version": "1",
-      ]
+    let credential = try await client.resolveCredential(for: id)
+    return try await fetch(usingCredential: credential)
+  }
+
+  /// Usage and plan use one credential. Only a usage 401 restarts the fetch: the plan is
+  /// supplementary, so its failures (401 included) leave it unset with a note.
+  private func fetch(usingCredential credential: ProviderCredential) async throws -> UsageSnapshot {
+    async let planResult = capturePlanSurface {
+      try await client.post(
+        provider: id, url: planEndpoint, body: Data("{}".utf8), credential: credential,
+        headers: Self.headers)
+    }
+    let usageData: Data
+    do {
+      usageData = try await client.post(
+        provider: id, url: endpoint, body: Data("{}".utf8), credential: credential,
+        headers: Self.headers)
+    } catch QuotaError.unauthorized {
+      _ = await planResult
+      return try await restartFetch(excluding: credential)
+    }
+    let usage = try Self.parse(data: usageData)
+    return PlanOutcome(await planResult, parse: Self.parsePlan).applied(to: usage)
+  }
+
+  private func restartFetch(excluding credential: ProviderCredential) async throws -> UsageSnapshot
+  {
+    do {
+      let replacement = try await client.resolveCredential(for: id, excluding: credential)
+      return try await fetch(usingCredential: replacement)
+    } catch QuotaError.credentialsMissing {
+      throw QuotaError.unauthorized(id)
+    }
+  }
+
+  /// `GetPlanInfo`: `planInfo.planName` ("Pro") and `planInfo.price` ("$20/mo"). A price in
+  /// any other form is left unset rather than guessed.
+  public static func parsePlan(data: Data) throws -> PlanInfo? {
+    let response = try JSONDecoder().decode(CursorPlanResponse.self, from: data)
+    return PlanInfo(
+      name: response.planInfo.planName,
+      monthlyCostUSD: response.planInfo.price.flatMap(monthlyDollars)
     )
-    return try Self.parse(data: data)
+  }
+
+  private static func monthlyDollars(_ price: String) -> Int? {
+    guard let match = price.wholeMatch(of: /\$([0-9]{1,5})\/mo/) else { return nil }
+    return Int(match.1)
   }
 
   public static func parse(data: Data, now: Date = .now) throws -> UsageSnapshot {
@@ -67,6 +112,14 @@ public struct CursorProvider: UsageProvider {
       sourceTimestamp: now
     )
   }
+}
+
+private struct CursorPlanResponse: Decodable {
+  struct Plan: Decodable {
+    let planName: String?
+    let price: String?
+  }
+  let planInfo: Plan
 }
 
 private struct CursorUsageResponse: Decodable {

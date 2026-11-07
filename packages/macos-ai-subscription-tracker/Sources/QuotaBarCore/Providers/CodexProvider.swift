@@ -85,6 +85,7 @@ public struct CodexProvider: UsageProvider {
     }
     return UsageSnapshot(
       provider: .codex,
+      plan: PlanInfo(name: PlanName.humanized(response.planType)),
       windows: windows,
       resets: resets.filter { $0.exp > now }.sorted { $0.exp < $1.exp },
       resetErrorMessage: resetErrorMessage,
@@ -130,14 +131,18 @@ private struct WindowDescriptor {
 
 private struct CodexUsageResponse: Decodable {
   let windows: [String: CodexWindow]
+  /// The ChatGPT plan (`pro`, `plus`, …); supplementary, so a non-string leaves it unset.
+  let planType: String?
 
   enum CodingKeys: String, CodingKey {
     case rateLimit = "rate_limit"
+    case planType = "plan_type"
   }
 
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     self.windows = try container.decode(CodexRateLimit.self, forKey: .rateLimit).windows
+    self.planType = try? container.decodeIfPresent(String.self, forKey: .planType)
   }
 }
 

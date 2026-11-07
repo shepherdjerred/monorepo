@@ -1,6 +1,10 @@
 import { parseArgs } from "node:util";
 import { runPicker } from "#commands/brim/run-picker.tsx";
-import { defaultSnapshotsPath, loadSnapshots } from "#lib/brim/cache.ts";
+import {
+  defaultSnapshotsPath,
+  loadSnapshots,
+  SnapshotCacheMissingError,
+} from "#lib/brim/cache.ts";
 import {
   buildFishProgram,
   directBinary,
@@ -12,10 +16,11 @@ import {
   spawnFishProgram,
   spawnNoFish,
 } from "#lib/brim/fish.ts";
-import { formatPickerRow } from "#lib/brim/selection.ts";
+import { findRequested, formatPickerRow } from "#lib/brim/selection.ts";
 import {
-  displayName,
   rankSnapshots,
+  withKnownProviders,
+  withoutQuotaData,
   type RankedEntry,
   type RankResult,
 } from "#lib/brim/rank.ts";
@@ -33,7 +38,9 @@ In a terminal, brim shows an interactive list: move with ↑↓, spawn with
 Enter, cancel with Esc.
 
 Options:
-  --provider <id>     Skip picking; use this provider (id or display name)
+  --provider <id>     Skip picking; use this provider (id or display name),
+                      even without usable quota data or a Brim cache on this
+                      machine (warns)
   --min-5h <pct>      Minimum 5-hour remaining percent to stay available (default 10)
   --dry-run           Print the resolved fish command without spawning
   --no-fish           Bypass fish; use the built-in fallback command (can drift)
@@ -130,30 +137,19 @@ function parseOptions(args: string[]): {
 }
 
 function selectRequested(result: RankResult, requested: string): RankedEntry {
-  const normalized = requested.toLowerCase();
-  const available = availableEntries(result);
-  const match = available.find(
-    (entry) =>
-      entry.provider.toLowerCase() === normalized ||
-      entry.displayName.toLowerCase() === normalized ||
-      fishWord(entry.provider) === normalized ||
-      directBinary(entry.provider) === normalized,
-  );
-  if (match !== undefined) return match;
-  const stuck = result.unavailable.find(
-    (entry) =>
-      entry.provider.toLowerCase() === normalized ||
-      entry.displayName.toLowerCase() === normalized,
-  );
-  if (stuck !== undefined) {
-    console.log(render(result));
+  const match = findRequested(result, requested);
+  if (match === undefined) {
+    const known = [...availableEntries(result), ...result.unavailable];
     fail(
-      `${displayName(stuck.provider)} is unavailable: ${stuck.reason ?? "no data"}.`,
+      `Unknown provider "${requested}". Known: ${known.map((entry) => entry.provider).join(", ") || "none"}.`,
     );
   }
-  fail(
-    `Unknown provider "${requested}". Available: ${available.map((entry) => entry.provider).join(", ") || "none"}.`,
-  );
+  if (!match.available) {
+    console.error(
+      `brim: ${match.displayName} has no usable quota data (${match.reason ?? "no data"}); starting it anyway.`,
+    );
+  }
+  return match;
 }
 
 /** Resolved fish programs per provider, for the picker preview. */
@@ -300,17 +296,26 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
     console.log(USAGE);
     return;
   }
-  let snapshots;
+  let result: RankResult;
   try {
-    snapshots = await loadSnapshots(
-      options.snapshotsPath ?? defaultSnapshotsPath(),
+    result = withKnownProviders(
+      rankSnapshots(
+        await loadSnapshots(options.snapshotsPath ?? defaultSnapshotsPath()),
+        { minFiveHourRemaining: options.minRemaining },
+      ),
     );
   } catch (error: unknown) {
-    fail(error instanceof Error ? error.message : String(error));
+    // An explicit pick needs no ranking, so a machine that never ran the Brim
+    // app (a remote Herdr machine) still starts it. A corrupt cache still fails.
+    if (
+      !(error instanceof SnapshotCacheMissingError) ||
+      options.provider === undefined ||
+      options.json
+    ) {
+      fail(error instanceof Error ? error.message : String(error));
+    }
+    result = withoutQuotaData("no Brim snapshot cache on this machine");
   }
-  const result = rankSnapshots(snapshots, {
-    minFiveHourRemaining: options.minRemaining,
-  });
 
   if (options.json) {
     console.log(
@@ -328,9 +333,10 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
   }
 
   const available = [...result.ranked, ...result.other];
+  // Unavailable providers too: an explicit --provider may start one.
   const words = [
     ...new Set(
-      available.flatMap((entry) => {
+      [...available, ...result.unavailable].flatMap((entry) => {
         const word = fishWord(entry.provider);
         return word === null ? [] : [word];
       }),

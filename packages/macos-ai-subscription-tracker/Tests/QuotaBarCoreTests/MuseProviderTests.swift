@@ -9,7 +9,8 @@ final class MuseProviderTests: XCTestCase {
     let snapshot = try MuseProvider.parse(data: fixture("muse-usage-success"), now: now)
 
     XCTAssertEqual(snapshot.provider, .muse)
-    XCTAssertEqual(snapshot.accountLabel, "Muse Code High Usage")
+    XCTAssertEqual(snapshot.plan?.name, "Muse Code High Usage")
+    XCTAssertNil(snapshot.accountLabel)
     XCTAssertEqual(snapshot.windows.map(\.label), ["5-hour", "Weekly"])
     XCTAssertEqual(snapshot.windows.compactMap(\.usedPercent), [62, 25])
     XCTAssertEqual(snapshot.windows[0].resetAt, date("2026-09-20T17:00:00Z"))

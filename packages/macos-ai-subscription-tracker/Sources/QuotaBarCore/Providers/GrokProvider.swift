@@ -7,15 +7,18 @@ public struct GrokProvider: UsageProvider {
   private let billingEndpoint: URL
   private let creditsEndpoint: URL
   private let resetEndpoint: URL
+  private let settingsEndpoint: URL
 
   public init(
     client: ProviderHTTPClient,
     userEndpoint: URL,
     billingEndpoint: URL,
     creditsEndpoint: URL,
-    resetEndpoint: URL
+    resetEndpoint: URL,
+    settingsEndpoint: URL
   ) {
     self.client = client
+    self.settingsEndpoint = settingsEndpoint
     self.userEndpoint = userEndpoint
     self.billingEndpoint = billingEndpoint
     self.creditsEndpoint = creditsEndpoint
@@ -51,6 +54,11 @@ public struct GrokProvider: UsageProvider {
       try await client.get(
         provider: id, url: creditsEndpoint, credential: credential, headers: surfaceHeaders)
     }
+    // The plan is supplementary: its failures (401 included) become a note, never a restart.
+    async let planResult = capturePlanSurface {
+      try await client.get(
+        provider: id, url: settingsEndpoint, credential: credential, headers: surfaceHeaders)
+    }
     async let resetRequest = captureAuthAwareSurface {
       try await client.post(
         provider: id,
@@ -63,17 +71,19 @@ public struct GrokProvider: UsageProvider {
     let billing = await billingOutcome
     let credits = await creditsOutcome
     let resetOutcome = await resetRequest
+    let plan = PlanOutcome(await planResult, parse: Self.parsePlan)
     if case .unauthorized = billing { return try await restartFetch(excluding: credential) }
     if case .unauthorized = credits { return try await restartFetch(excluding: credential) }
     switch try Self.decodeResetSurface(resetOutcome) {
     case let .decoded(resets, errorMessage):
-      return try Self.parse(
-        billing: billing.surfaceResult,
-        credits: credits.surfaceResult,
-        resets: resets,
-        resetErrorMessage: errorMessage,
-        accountLabel: identity.accountLabel
-      )
+      return plan.applied(
+        to: try Self.parse(
+          billing: billing.surfaceResult,
+          credits: credits.surfaceResult,
+          resets: resets,
+          resetErrorMessage: errorMessage,
+          accountLabel: identity.accountLabel
+        ))
     case .unauthorized:
       return try await restartFetch(excluding: credential)
     }
@@ -273,18 +283,6 @@ public struct GrokProvider: UsageProvider {
     var headers = headers(userID: userID)
     for (name, value) in GrokResetCodec.requestHeaders { headers[name] = value }
     return headers
-  }
-}
-
-public struct GrokIdentity: Decodable, Equatable, Sendable {
-  public let userID: String
-  public let email: String?
-
-  public var accountLabel: String? { email }
-
-  enum CodingKeys: String, CodingKey {
-    case userID = "userId"
-    case email
   }
 }
 

@@ -161,13 +161,16 @@ final class NetworkingTests: XCTestCase {
       userEndpoint: endpoints.grokUser,
       billingEndpoint: endpoints.grokBilling,
       creditsEndpoint: endpoints.grokCredits,
-      resetEndpoint: endpoints.grokResets
+      resetEndpoint: endpoints.grokResets,
+      settingsEndpoint: endpoints.grokSettings
     ).fetch()
     XCTAssertEqual(grok.windows.map(\.label), ["Monthly"])
     XCTAssertFalse(grok.notes.isEmpty)
     XCTAssertNotNil(grok.resetErrorMessage)
     let requests = await transport.requests
-    XCTAssertEqual(requests.filter { $0.provider == .grok }.count, 4)
+    // Identity, billing, credits, resets, and settings (the plan).
+    XCTAssertEqual(requests.filter { $0.provider == .grok }.count, 5)
+    XCTAssertTrue(requests.contains { $0.url == endpoints.grokSettings && $0.method == .get })
     XCTAssertTrue(requests.contains { $0.headers["x-userid"] == "user_quotabar_fixture" })
     XCTAssertEqual(
       requests.first { $0.url == endpoints.grokResets }?.method,
@@ -298,6 +301,9 @@ final class NetworkingTests: XCTestCase {
       endpoints.kimiUsage.absoluteString: .success(
         ProviderResponse(statusCode: 200, data: fixture("kimi-success"))
       ),
+      endpoints.kimiMe.absoluteString: .success(
+        ProviderResponse(statusCode: 200, data: fixture("kimi-me"))
+      ),
     ])
     let client = ProviderHTTPClient(
       transport: transport,
@@ -305,9 +311,13 @@ final class NetworkingTests: XCTestCase {
     )
     let claude = try await ClaudeCodeProvider(client: client, endpoint: endpoints.claudeUsage)
       .fetch()
-    let kimi = try await KimiProvider(client: client, endpoint: endpoints.kimiUsage).fetch()
+    let kimi = try await KimiProvider(
+      client: client, endpoint: endpoints.kimiUsage, meEndpoint: endpoints.kimiMe
+    ).fetch()
     XCTAssertEqual(claude.provider, .claudeCode)
     XCTAssertEqual(kimi.provider, .kimi)
+    XCTAssertEqual(kimi.plan?.name, "Pro")
+    XCTAssertNil(kimi.plan?.monthlyCostUSD)
     let requests = await transport.requests
     XCTAssertEqual(requests.first?.headers["anthropic-beta"], "oauth-2025-04-20")
     XCTAssertEqual(

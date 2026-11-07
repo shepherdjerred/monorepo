@@ -216,18 +216,32 @@ struct MenuBarView: View {
     HStack {
       Text("Subscriptions")
       Spacer()
-      Text(
-        "$\(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: model.settings.showsLegacyProviders))/mo"
-      )
-      .monospacedDigit()
+      Text("$\(totalMonthlyCostUSD)/mo")
+        .monospacedDigit()
     }
     .font(.caption)
     .foregroundStyle(.secondary)
     .padding(.horizontal, 12)
     .padding(.vertical, 7)
-    .help(
-      "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20, Grok $30, Kimi Code $40, Meta Muse $15"
-    )
+    .help(spendBreakdown)
+  }
+
+  private var totalMonthlyCostUSD: Int {
+    SubscriptionPlan.totalMonthlyCostUSD(
+      includingLegacy: model.settings.showsLegacyProviders, snapshots: model.snapshots)
+  }
+
+  /// "Claude Code Max 20x $200, …": each plan as its provider reports it, with its price.
+  private var spendBreakdown: String {
+    let snapshots = model.snapshots
+    return SubscriptionPlan.plans(includingLegacy: model.settings.showsLegacyProviders)
+      .map { plan in
+        let snapshot = snapshots[plan.provider]
+        let name = [plan.provider.displayName, snapshot?.plan?.name].compactMap(\.self)
+          .joined(separator: " ")
+        return "\(name) $\(SubscriptionPlan.monthlyCostUSD(for: plan.provider, snapshot: snapshot))"
+      }
+      .joined(separator: ", ")
   }
 
   private var footer: some View {

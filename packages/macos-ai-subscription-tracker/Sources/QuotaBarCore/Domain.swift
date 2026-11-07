@@ -82,6 +82,20 @@ public struct SubscriptionPlan: Identifiable, Equatable, Sendable {
     plans(includingLegacy: includingLegacy).reduce(0) { total, plan in total + plan.monthlyCostUSD }
   }
 
+  /// The provider's reported price when it has one (Cursor), else this table's.
+  public static func monthlyCostUSD(for provider: ProviderID, snapshot: UsageSnapshot?) -> Int {
+    snapshot?.plan?.monthlyCostUSD ?? plan(for: provider).monthlyCostUSD
+  }
+
+  public static func totalMonthlyCostUSD(
+    includingLegacy: Bool = false,
+    snapshots: [ProviderID: UsageSnapshot]
+  ) -> Int {
+    plans(includingLegacy: includingLegacy).reduce(0) { total, plan in
+      total + monthlyCostUSD(for: plan.provider, snapshot: snapshots[plan.provider])
+    }
+  }
+
   public static func plan(for provider: ProviderID) -> SubscriptionPlan {
     guard let plan = (standard + legacy).first(where: { $0.provider == provider }) else {
       preconditionFailure("Missing subscription plan for \(provider.rawValue)")
@@ -219,9 +233,45 @@ public enum SnapshotFreshness: Equatable, Codable, Sendable {
   case stale(reason: String)
 }
 
+/// The subscription an account is on, as the provider reports it. `monthlyCostUSD` is set
+/// only when the provider reports a price (Cursor); otherwise `SubscriptionPlan` supplies it.
+public struct PlanInfo: Equatable, Codable, Sendable {
+  public let name: String
+  public let monthlyCostUSD: Int?
+
+  /// Nil for a blank name, so a provider that omits its plan shows none.
+  public init?(name: String?, monthlyCostUSD: Int? = nil) {
+    guard let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else {
+      return nil
+    }
+    self.name = name
+    self.monthlyCostUSD = monthlyCostUSD
+  }
+}
+
+/// Readable names for plan identifiers such as `claude_max_20x` or `pro`.
+public enum PlanName {
+  /// Splits on `_`, `-` and spaces, drops a leading provider word (`claude`), title-cases
+  /// words and keeps tokens that start with a digit (`20x`) as they are.
+  public static func humanized(_ raw: String?, droppingPrefix prefix: String? = nil) -> String? {
+    guard let raw else { return nil }
+    var words = raw.split { $0 == "_" || $0 == "-" || $0 == " " }.map(String.init)
+    if let prefix, words.count > 1, words[0].caseInsensitiveCompare(prefix) == .orderedSame {
+      words.removeFirst()
+    }
+    let name = words.map { word in
+      word.first?.isNumber == true
+        ? word.lowercased() : word.prefix(1).uppercased() + word.dropFirst().lowercased()
+    }
+    .joined(separator: " ")
+    return name.isEmpty ? nil : name
+  }
+}
+
 public struct UsageSnapshot: Equatable, Codable, Sendable {
   public let provider: ProviderID
   public let accountLabel: String?
+  public let plan: PlanInfo?
   public let windows: [UsageWindow]
   public let resets: [Reset]
   public let resetErrorMessage: String?
@@ -232,6 +282,7 @@ public struct UsageSnapshot: Equatable, Codable, Sendable {
   public init(
     provider: ProviderID,
     accountLabel: String? = nil,
+    plan: PlanInfo? = nil,
     windows: [UsageWindow],
     resets: [Reset] = [],
     resetErrorMessage: String? = nil,
@@ -241,6 +292,7 @@ public struct UsageSnapshot: Equatable, Codable, Sendable {
   ) {
     self.provider = provider
     self.accountLabel = accountLabel
+    self.plan = plan
     self.windows = windows
     self.resets = resets
     self.resetErrorMessage = resetErrorMessage
@@ -254,15 +306,27 @@ public struct UsageSnapshot: Equatable, Codable, Sendable {
   }
 
   public func markedStale(reason: String) -> UsageSnapshot {
+    replacing(freshness: .stale(reason: reason))
+  }
+
+  /// A copy with the given fields replaced and every other field kept, so no caller can
+  /// drop one (such as `plan`) by rebuilding the snapshot field by field.
+  public func replacing(
+    windows: [UsageWindow]? = nil,
+    plan: PlanInfo? = nil,
+    appendingNotes extraNotes: [String] = [],
+    freshness: SnapshotFreshness? = nil
+  ) -> UsageSnapshot {
     UsageSnapshot(
       provider: provider,
       accountLabel: accountLabel,
-      windows: windows,
+      plan: plan ?? self.plan,
+      windows: windows ?? self.windows,
       resets: resets,
       resetErrorMessage: resetErrorMessage,
-      notes: notes,
+      notes: notes + extraNotes,
       sourceTimestamp: sourceTimestamp,
-      freshness: .stale(reason: reason)
+      freshness: freshness ?? self.freshness
     )
   }
 
@@ -308,5 +372,10 @@ public enum ProviderDisplayState: Equatable, Sendable {
     case .available(let snapshot): snapshot.quotaStatus
     case .disabled, .loading, .unavailable, .unauthenticated: .unavailable
     }
+  }
+
+  public var snapshot: UsageSnapshot? {
+    guard case let .available(snapshot) = self else { return nil }
+    return snapshot
   }
 }

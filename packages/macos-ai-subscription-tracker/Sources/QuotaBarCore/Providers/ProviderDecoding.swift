@@ -137,6 +137,59 @@ func captureAuthAwareSurface(
   }
 }
 
+/// How long a plan request may take. Plans are supplementary, so this sits well inside the
+/// 25-second provider deadline: a slow plan never costs a snapshot its fresh usage.
+let planDeadline: Duration = .seconds(8)
+
+/// `captureSurface` with its own deadline; past it the plan is reported as unavailable.
+func capturePlanSurface(
+  within deadline: Duration = planDeadline,
+  _ operation: @escaping @Sendable () async throws -> Data
+) async -> SurfaceResult {
+  await withTaskGroup(of: SurfaceResult?.self) { group in
+    group.addTask { await captureSurface(operation) }
+    group.addTask {
+      try? await Task.sleep(for: deadline)
+      return nil
+    }
+    let first = await group.next().flatMap(\.self)
+    group.cancelAll()
+    return first ?? .failure("the plan request did not finish in time.")
+  }
+}
+
+/// A plan read by its own request. The plan is supplementary: a failed request or an
+/// unreadable answer leaves it unset with a note, and never fails the usage snapshot.
+struct PlanOutcome: Sendable {
+  let plan: PlanInfo?
+  let notes: [String]
+
+  init(_ result: SurfaceResult, parse: (Data) throws -> PlanInfo?) {
+    switch result {
+    case let .success(data):
+      do {
+        if let plan = try parse(data) {
+          self.plan = plan
+          self.notes = []
+        } else {
+          self.plan = nil
+          self.notes = ["Plan unavailable: the response named no plan."]
+        }
+      } catch {
+        self.plan = nil
+        self.notes = ["Plan unavailable: the response could not be read."]
+      }
+    case let .failure(message):
+      self.plan = nil
+      self.notes = ["Plan unavailable: \(message)"]
+    }
+  }
+
+  func applied(to snapshot: UsageSnapshot) -> UsageSnapshot {
+    snapshot.replacing(plan: plan, appendingNotes: notes)
+  }
+}
+
 func slug(_ value: String) -> String {
   value.lowercased().map { character in
     character.isLetter || character.isNumber ? character : "-"

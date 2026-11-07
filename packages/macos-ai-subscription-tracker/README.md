@@ -11,8 +11,29 @@ Brim is the product name; QuotaBar is the Xcode target, bundle id
 The menu bar also shows the configured personal subscription spend: $200/month
 each for Claude Code and Codex, $20/month each for Google AI Pro and Cursor
 Pro, $30/month for Grok, $40/month for Kimi Code, and $15/month for Meta Muse
-($525/month total). This
-is a reminder, not provider billing data.
+($525/month total). Cursor's own reported price replaces its entry when Cursor
+returns one. This is a reminder, not provider billing data.
+
+## Plans
+
+Each provider row names the plan the account is on, read from the provider
+rather than configured:
+
+| Provider    | Source                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| Claude Code | `cedar_ember.event_props.tier` in the usage response (`claude_max_20x` shows as Max 20x) |
+| Codex       | `plan_type` in the usage response                                                        |
+| Cursor      | `DashboardService/GetPlanInfo`: `planName` and the monthly `price`                       |
+| Grok        | `/v1/settings`: `subscription_tier_display`                                              |
+| Kimi Code   | `/coding/v1/me`: `user_level_name`                                                       |
+| Meta Muse   | the CLI's `allowance.tier`                                                               |
+| Antigravity | Google Code Assist `loadCodeAssist`: `paidTier`, else `currentTier`                      |
+
+Identifier-style names are made readable by one generic rule: split on
+separators, drop the provider word, title-case. There is no rename table. The
+plan is supplementary. A failed or unreadable plan request leaves the plan
+unset, adds a "Plan unavailable" note, and never fails or stales the usage.
+`brim --json` and the Herdr worktree dialog show the same plan.
 
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
@@ -154,9 +175,17 @@ Antigravity is invoked through the signed-in `agy` executable found on the
 current process `PATH` or in standard Homebrew, local, and mise locations. Brim
 runs `agy --print /usage --output-format json --print-timeout 20s`, requires a
 successful zero-turn usage response, and displays the returned Gemini and
-Claude/GPT five-hour and weekly buckets. It never reads, copies, refreshes,
-logs, or persists Google's token. Gemini CLI and Code Assist quotas are outside
-this integration. See the
+Claude/GPT five-hour and weekly buckets. Gemini CLI and Code Assist quotas are
+outside this integration.
+
+The plan is the one exception to leaving agy's sign-in alone, because only
+Google's Code Assist API reports it. Brim reads the refresh token from
+`~/.gemini/antigravity-cli/antigravity-oauth-token` and renews an access token
+in memory. It uses the OAuth client built into the installed `agy` binary, read
+at run time and cached until the binary changes, so no client secret is in this
+repository. The access token is never written, and agy's files are never
+modified. Google does not rotate the refresh token on renewal, so agy's own
+session is unaffected. See the
 [Antigravity usage command](https://antigravity.google/docs/cli/commands/usage).
 
 Muse asks the signed-in `muse` CLI for its allowance. Brim locates `muse` on
@@ -201,14 +230,20 @@ Kimi Code reads its local OAuth credential directory, including a relocated
 every quota window the coding usage payload returns. That includes the rolling
 `limits` array and the named `usages` pools, so a five-hour, daily, weekly, or
 monthly window appears when the account returns it. Brim does not invent a
-window the payload omits. An unscoped top-level `usage` object is labeled
+window the payload omits. The monthly code pool is part of the monthly total,
+so while the two report the same usage and reset only Monthly is shown. A
+five-hour `limits` row counts whole units of its limit, so it may differ from
+the exact five-hour ratio by one unit; Brim then shows the exact ratio, and a
+larger gap is a contradictory response. An unscoped top-level `usage` object is labeled
 Subscription because the payload does not name its period. This is a
 private provider contract: schema drift and authentication failures remain
 explicit, and Brim never substitutes zero usage.
 
 Claude's usage request also asks for saved usage-limit resets. Each unused
-reset is shown with its expiration. Brim never redeems one. A missing or
-ineligible inventory is an explicit unavailable reset state, not zero resets.
+reset is shown with its expiration. Brim never redeems one. An inventory that
+is ineligible for `no_grant` holds no resets and shows as No resets. A missing
+inventory, or one ineligible for any other reason, is an explicit unavailable
+reset state, not zero resets.
 Codename meters such as Iguana Necktie are not shown. Codex also reads the
 authenticated reset-credit surface read-only. Available banked resets are
 shown individually with their expiration dates; Brim does not redeem or

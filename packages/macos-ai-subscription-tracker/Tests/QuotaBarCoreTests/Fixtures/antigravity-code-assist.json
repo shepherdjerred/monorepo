@@ -1,0 +1,8 @@
+{
+  "currentTier": { "id": "free-tier", "name": "Antigravity" },
+  "allowedTiers": [
+    { "id": "free-tier", "name": "Antigravity", "isDefault": true },
+    { "id": "standard-tier", "name": "Gemini Code Assist" }
+  ],
+  "paidTier": { "id": "g1-pro-tier", "name": "Google AI Pro" }
+}

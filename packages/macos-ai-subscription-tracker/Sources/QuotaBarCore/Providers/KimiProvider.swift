@@ -4,19 +4,53 @@ public struct KimiProvider: UsageProvider {
   public let id = ProviderID.kimi
   private let client: ProviderHTTPClient
   private let endpoint: URL
+  private let meEndpoint: URL
 
-  public init(client: ProviderHTTPClient, endpoint: URL) {
+  public init(client: ProviderHTTPClient, endpoint: URL, meEndpoint: URL) {
     self.client = client
     self.endpoint = endpoint
+    self.meEndpoint = meEndpoint
   }
 
+  private static let headers = ["User-Agent": "QuotaBar/1.0"]
+
   public func fetch() async throws -> UsageSnapshot {
-    let data = try await client.get(
-      provider: id,
-      url: endpoint,
-      headers: ["User-Agent": "QuotaBar/1.0"]
-    )
-    return try Self.parse(data: data)
+    let credential = try await client.resolveCredential(for: id)
+    return try await fetch(usingCredential: credential)
+  }
+
+  /// Usage and `/me` use one credential. Only a usage 401 restarts the fetch: the plan is
+  /// supplementary, so its failures (401 included) leave it unset with a note.
+  private func fetch(usingCredential credential: ProviderCredential) async throws -> UsageSnapshot {
+    async let planResult = capturePlanSurface {
+      try await client.get(
+        provider: id, url: meEndpoint, credential: credential, headers: Self.headers)
+    }
+    let usageData: Data
+    do {
+      usageData = try await client.get(
+        provider: id, url: endpoint, credential: credential, headers: Self.headers)
+    } catch QuotaError.unauthorized {
+      _ = await planResult
+      return try await restartFetch(excluding: credential)
+    }
+    let usage = try Self.parse(data: usageData)
+    return PlanOutcome(await planResult, parse: Self.parsePlan).applied(to: usage)
+  }
+
+  private func restartFetch(excluding credential: ProviderCredential) async throws -> UsageSnapshot
+  {
+    do {
+      let replacement = try await client.resolveCredential(for: id, excluding: credential)
+      return try await fetch(usingCredential: replacement)
+    } catch QuotaError.credentialsMissing {
+      throw QuotaError.unauthorized(id)
+    }
+  }
+
+  /// `/coding/v1/me` names the membership level: `user_level_name` ("Pro").
+  public static func parsePlan(data: Data) throws -> PlanInfo? {
+    PlanInfo(name: try JSONDecoder().decode(KimiMeResponse.self, from: data).levelName)
   }
 
   public static func parse(data: Data, now: Date = .now) throws -> UsageSnapshot {
@@ -26,10 +60,16 @@ public struct KimiProvider: UsageProvider {
     if let usage = payload.usage {
       windows.append(try subscriptionWindow(usage, now: now))
     }
+    // An absolute window counts whole units of its limit, so it is only as precise as
+    // one unit (100 / limit percent); a ratio for the same window is exact.
+    var unitPercent: [String: Double] = [:]
     for (index, limit) in payload.limits.enumerated() {
-      windows.append(try limitWindow(limit, index: index, now: now))
+      let window = try limitWindow(limit, index: index, now: now)
+      windows.append(window)
+      if let units = limit.detail.limit { unitPercent[window.id] = 100 / units }
     }
-    try appendRatioWindows(payload.usages, to: &windows, now: now)
+    try appendRatioWindows(payload.usages, to: &windows, unitPercent: unitPercent, now: now)
+    dropCodePoolMatchingTotal(from: &windows)
     guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.kimi) }
     return UsageSnapshot(
       provider: .kimi,
@@ -71,6 +111,7 @@ public struct KimiProvider: UsageProvider {
   private static func appendRatioWindows(
     _ usages: [String: KimiRatio],
     to windows: inout [UsageWindow],
+    unitPercent: [String: Double],
     now: Date
   ) throws {
     var seen = Set(windows.map(\.id))
@@ -78,9 +119,24 @@ public struct KimiProvider: UsageProvider {
       guard let ratio = usages[key] else { throw QuotaValidationError.emptyIdentifier }
       let descriptor = ratioDescriptor(for: key)
       let percent = ratio.usedPercent
-      if descriptor.matchesFiveHour, let existing = windows.first(where: isFiveHour) {
-        guard agrees(existing, percent: percent, resetAt: ratio.resetAt) else {
+      if descriptor.matchesFiveHour, let index = windows.firstIndex(where: isFiveHour) {
+        let existing = windows[index]
+        // The two may differ by the absolute window's rounding (one unit of its limit),
+        // never by more: a larger gap is a contradictory response.
+        let tolerance = max(0.01, unitPercent[existing.id] ?? 0)
+        guard agrees(existing, percent: percent, resetAt: ratio.resetAt, tolerance: tolerance)
+        else {
           throw QuotaValidationError.invalidPairedFields
+        }
+        if let percent {
+          windows[index] = try UsageWindow.validated(
+            id: existing.id,
+            label: existing.label,
+            kind: existing.kind,
+            usedPercent: percent,
+            resetAt: existing.resetAt,
+            sourceTimestamp: existing.sourceTimestamp
+          )
         }
         continue
       }
@@ -98,16 +154,32 @@ public struct KimiProvider: UsageProvider {
     }
   }
 
+  /// The code pool is part of the monthly total. While all usage is code they report the
+  /// same percentage and reset, so the code row repeats the total and is dropped; once
+  /// they differ, both are shown.
+  private static func dropCodePoolMatchingTotal(from windows: inout [UsageWindow]) {
+    guard let total = windows.first(where: { $0.id == "kimi-monthly" }),
+      let code = windows.first(where: { $0.id == "kimi-monthly-code" }),
+      agrees(total, percent: code.usedPercent, resetAt: code.resetAt, tolerance: 0.01)
+    else { return }
+    windows.removeAll { $0.id == "kimi-monthly-code" }
+  }
+
   private static func isFiveHour(_ window: UsageWindow) -> Bool {
     if case let .rolling(durationSeconds) = window.kind, durationSeconds == 18_000 { return true }
     return window.label == "5-hour"
   }
 
-  private static func agrees(_ window: UsageWindow, percent: Double?, resetAt: Date?) -> Bool {
+  private static func agrees(
+    _ window: UsageWindow,
+    percent: Double?,
+    resetAt: Date?,
+    tolerance: Double
+  ) -> Bool {
     let percentAgrees: Bool
     switch (window.usedPercent, percent) {
     case (nil, nil): percentAgrees = true
-    case let (left?, right?): percentAgrees = abs(left - right) <= 0.01
+    case let (left?, right?): percentAgrees = abs(left - right) <= tolerance
     default: percentAgrees = false
     }
     let resetAgrees: Bool
@@ -153,6 +225,11 @@ public struct KimiProvider: UsageProvider {
       )
     }
   }
+}
+
+private struct KimiMeResponse: Decodable {
+  let levelName: String?
+  enum CodingKeys: String, CodingKey { case levelName = "user_level_name" }
 }
 
 private struct KimiRatioDescriptor {

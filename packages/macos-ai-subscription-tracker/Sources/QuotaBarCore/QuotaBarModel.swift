@@ -109,16 +109,12 @@ public final class QuotaBarModel {
     ])
     let windows = snapshot.windows.filter { !removedWindowIDs.contains($0.id) }
     guard windows != snapshot.windows else { return snapshot }
-    return UsageSnapshot(
-      provider: snapshot.provider,
-      accountLabel: snapshot.accountLabel,
-      windows: windows,
-      resets: snapshot.resets,
-      resetErrorMessage: snapshot.resetErrorMessage,
-      notes: snapshot.notes,
-      sourceTimestamp: snapshot.sourceTimestamp,
-      freshness: snapshot.freshness
-    )
+    return snapshot.replacing(windows: windows)
+  }
+
+  /// The snapshot each provider shows now, for prices a provider reports itself.
+  public var snapshots: [ProviderID: UsageSnapshot] {
+    states.compactMapValues(\.snapshot)
   }
 
   public var overallStatus: QuotaStatus {
