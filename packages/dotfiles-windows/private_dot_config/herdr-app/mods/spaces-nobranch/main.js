@@ -308,9 +308,24 @@ export default class Spaces extends View {
     });
   }
 
+  // Spaces whose agents all come from providers hidden in the agents filter.
+  // A space with no agents stays; the filter only hides what it already hid.
+  filtered() {
+    const hidden = shared("agents.hidden") ?? [];
+    if (!hidden.length) return new Set();
+    const seen = new Map();
+    for (const a of agents())
+      seen.set(
+        a.space,
+        (seen.get(a.space) ?? true) && hidden.includes(a.program?.key),
+      );
+    return new Set([...seen].filter(([, all]) => all).map(([id]) => id));
+  }
+
   // Spaces in order, each worktree space moved under its main checkout's.
   ordered() {
-    const sp = spaces(),
+    const hiddenSpaces = this.filtered();
+    const sp = spaces().filter((w) => !hiddenSpaces.has(w.id)),
       ps = panes();
     const ready = (w) =>
       this.shown.has(w.id) ||

@@ -1,6 +1,7 @@
 tap "anthropics/tap"
 tap "artginzburg/tap"
 tap "catppuccin/tap", trusted: true
+tap "cirruslabs/cli", trusted: { formulae: ["tart"] }
 tap "cormacrelf/tap"
 tap "dsully/tap"
 tap "jdx/tap", trusted: true
@@ -8,6 +9,7 @@ tap "lightpanda-io/browser"
 tap "mobile-dev-inc/tap"
 tap "pinchtab/tap"
 tap "rsteube/tap"
+tap "schpet/tap"
 tap "siderolabs/tap"
 tap "xcodesorg/made", trusted: { formulae: ["xcodes"] }
 # Static checker for GitHub Actions workflow files
@@ -90,10 +92,14 @@ brew "innoextract", args: ["HEAD"]
 brew "john-jumbo"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
+# AI coding agent for your terminal
+brew "kimi-code"
 # Static analysis tool for Kubernetes YAML files and Helm charts
 brew "kube-linter"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
+# Next-gen compiler infrastructure
+brew "llvm@22"
 # Run LogQL queries against a Loki server
 brew "logcli"
 # Fast, flexible, config-based cli for linting Markdown/CommonMark files
@@ -174,7 +180,7 @@ brew "artginzburg/tap/sudo-touchid", trusted: true
 brew "cormacrelf/tap/dark-notify", trusted: true
 # Defaults setting for macOS
 brew "dsully/tap/macos-defaults", trusted: true
-# Headless browser for AI agents and automation (nightly build)
+# Headless browser for AI agents and automation
 brew "lightpanda-io/browser/lightpanda", trusted: true
 # The easiest way to automate UI testing for your mobile app
 brew "mobile-dev-inc/tap/maestro", trusted: true
