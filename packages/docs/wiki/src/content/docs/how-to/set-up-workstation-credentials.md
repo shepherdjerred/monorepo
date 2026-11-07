@@ -13,33 +13,42 @@ its source.
 
 ## Before you start
 
-| Piece                         | Where                                                                                         |
-| ----------------------------- | --------------------------------------------------------------------------------------------- |
-| Homelab service account       | Keychain item enrolled by `swift scripts/onepassword/enroll-service-account.swift`            |
-| Developer ID Application cert | Exported from the release Mac as a `.p12`, stored in the private vault                        |
-| ArgoCD `workstation` token    | `argocd-workstation-token`, minted by [`token.tf`](packages/homelab/src/tofu/argocd/token.tf) |
-| chezmoi `agent-host` profile  | [`MACOS_FRESH_INSTALL.md`](packages/dotfiles/MACOS_FRESH_INSTALL.md)                          |
+| Piece                        | Where                                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| Homelab service account      | Keychain item enrolled by `swift scripts/onepassword/enroll-service-account.swift`            |
+| Apple Developer account      | Signed in under Xcode → Settings → Apple Accounts; current Program License Agreement accepted |
+| ArgoCD `workstation` token   | `argocd-workstation-token`, minted by [`token.tf`](packages/homelab/src/tofu/argocd/token.tf) |
+| chezmoi `agent-host` profile | [`MACOS_FRESH_INSTALL.md`](packages/dotfiles/MACOS_FRESH_INSTALL.md)                          |
 
 ## Steps
 
-1. Import the Developer ID certificate so `codesign` can use it without a
-   prompt. Run this yourself; it asks for the login Keychain password.
+1. In Xcode, open **Settings → Apple Accounts**, select the team, choose
+   **Manage Certificates…**, and add a **Developer ID Application**
+   certificate. Its private key stays in this Mac's login Keychain. Confirm
+   exactly one appears:
 
    ```bash
-   security import developer-id.p12 -k ~/Library/Keychains/login.keychain-db \
-     -T /usr/bin/codesign -T /usr/bin/productbuild
+   security find-identity -v -p codesigning
+   ```
+
+2. Let `codesign` use the key without a prompt. It asks for the login
+   password.
+
+   ```bash
    security set-key-partition-list -S apple-tool:,apple:,teamid:<TEAM_ID> -s \
      ~/Library/Keychains/login.keychain-db
-   rm developer-id.p12
    ```
 
-2. Store notarization credentials for release lanes:
+3. Store a notarytool profile for release lanes that use one, with an
+   app-specific password from appleid.apple.com. Xcode-based lanes such as
+   Brim notarize through the signed-in account instead.
 
    ```bash
-   xcrun notarytool store-credentials <profile> --team-id <TEAM_ID>
+   xcrun notarytool store-credentials notary --apple-id <apple-id> \
+     --team-id <TEAM_ID>
    ```
 
-3. Install toolkit. `install:local` signs it with the Developer ID identity
+4. Install toolkit. `install:local` signs it with the Developer ID identity
    and fails if there is not exactly one.
 
    ```bash
@@ -47,7 +56,7 @@ its source.
    codesign -dv ~/.local/bin/toolkit 2>&1 | grep -E 'Identifier|TeamIdentifier'
    ```
 
-4. Apply the agent-host dotfiles. This renders a kubeconfig with only the
+5. Apply the agent-host dotfiles. This renders a kubeconfig with only the
    server, CA, and an `exec` user; `~/.aws/config` with `credential_process`
    profiles; and the shims in `~/.local/share/toolkit/shims`.
 
@@ -57,7 +66,7 @@ its source.
      ~/.local/share/toolkit/shims
    ```
 
-5. Open a new shell and confirm each tool works with nothing on disk:
+6. Open a new shell and confirm each tool works with nothing on disk:
 
    ```bash
    kubectl get nodes
