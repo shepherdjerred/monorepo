@@ -7,8 +7,8 @@ final class AntigravityPlanSourceTests: XCTestCase {
   private let wrongID = "111111111111-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apps.googleusercontent.com"
   private let rightID = "222222222222-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.apps.googleusercontent.com"
   private let secret = "GOCSPX-" + String(repeating: "S", count: 28)
-  private let tokenEndpoint = URL(string: "https://oauth.example.test/token")!
-  private let codeAssistEndpoint = URL(string: "https://code-assist.example.test/load")!
+  private let tokenEndpoint = testURL("https://oauth.example.test/token")
+  private let codeAssistEndpoint = testURL("https://code-assist.example.test/load")
 
   func testFindsClientsWhereGoStringsRunTogether() {
     // A Go binary's strings sit back to back: the secret must stop at exactly 28 characters.
@@ -100,6 +100,12 @@ final class AntigravityPlanSourceTests: XCTestCase {
     ).write(to: tokenFile)
     return Fixture(root: root, tokenFile: tokenFile, binary: binary)
   }
+}
+
+/// A URL literal for these tests; a typo stops the run instead of being force-unwrapped.
+private func testURL(_ string: String) -> URL {
+  guard let url = URL(string: string) else { preconditionFailure("Invalid test URL: \(string)") }
+  return url
 }
 
 private struct Fixture {
