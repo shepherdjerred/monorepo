@@ -65,7 +65,7 @@ export default defineCaptureSuite({
       shots: campShots,
       anchor: [105, 81, 217],
       world: "world",
-      helpers: [],
+      helpers: ["TsmcDemoHelper"],
     },
     {
       id: "command-guides",

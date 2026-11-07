@@ -106,15 +106,24 @@ final class VideoFrames {
 
   private final Path directory;
   private final ExecutorService io;
-  private final Semaphore pending = new Semaphore(8);
+  private final int capacity;
+  private final Semaphore pending;
   private final AtomicReference<String> failure = new AtomicReference<>("");
   private final ConcurrentMap<Integer, Written> written = new ConcurrentHashMap<>();
   private final CompletableFuture<Written> terminal = new CompletableFuture<>();
   private final List<CompletableFuture<?>> holds = new ArrayList<>();
 
   VideoFrames(Path directory, ExecutorService io) {
+    this(directory, io, 8);
+  }
+
+  VideoFrames(Path directory, ExecutorService io, int capacity) {
+    if (capacity < 1 || capacity > FrameClock.FPS)
+      throw new IllegalArgumentException("Pending frame capacity must fit within one second");
     this.directory = directory;
     this.io = io;
+    this.capacity = capacity;
+    pending = new Semaphore(capacity);
   }
 
   CompletableFuture<Path> prepare() {
@@ -220,7 +229,8 @@ final class VideoFrames {
   }
 
   boolean drained() {
-    return pending.availablePermits() == 8 && holds.stream().allMatch(CompletableFuture::isDone);
+    return pending.availablePermits() == capacity
+        && holds.stream().allMatch(CompletableFuture::isDone);
   }
 
   String failure() {

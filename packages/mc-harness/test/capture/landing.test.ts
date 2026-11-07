@@ -1,6 +1,21 @@
 import { expect, it } from "vitest";
 import type { z } from "zod";
-import { assertLanding } from "#src/capture/landing.ts";
+import { assertLanding, assertOriginWorld } from "#src/capture/landing.ts";
+
+it("rejects an origin in another world before it can be checkpointed", () => {
+  expect(() =>
+    assertOriginWorld(
+      { world: "minecraft:the_nether", screen: "" },
+      "minecraft:overworld",
+    ),
+  ).toThrow("fixture world before checkpointing");
+  expect(() =>
+    assertOriginWorld(
+      { world: "minecraft:overworld", screen: "" },
+      "minecraft:overworld",
+    ),
+  ).not.toThrow();
+});
 
 function terrain(states: string[]) {
   const bytes = Buffer.alloc(states.length * 4);

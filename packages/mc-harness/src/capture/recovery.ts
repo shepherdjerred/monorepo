@@ -214,14 +214,18 @@ export async function restoreScene(
   await driver.native("close");
   if (run.cleanup.some((cleanup) => cleanup.kind === "break"))
     await driver.command(`minecraft:gamemode creative ${run.name}`);
-  while (run.cleanup.length > 0) {
-    const cleanup = run.cleanup.at(-1);
+  for (let index = run.cleanup.length - 1; index >= 0; index--) {
+    const cleanup = run.cleanup[index];
     if (cleanup === undefined) throw new Error("Missing cleanup entry");
     await removeFixture(driver, cleanup, run);
-    run.cleanup.pop();
+    // Console dispatch can acknowledge before its asynchronous database work finishes.
+    // Keep compensating commands durable until the restored player state is verified.
+    if (cleanup.kind !== "command") run.cleanup.splice(index, 1);
     await save(directory, run);
   }
   await verifyModules(driver, run, scene.inspectors);
   await restoreTerrain(driver, run);
   await restorePlayer(driver, run);
+  run.cleanup = [];
+  await save(directory, run);
 }

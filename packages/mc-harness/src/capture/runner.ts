@@ -14,7 +14,7 @@ import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { assertNoPendingRun } from "./pending.ts";
 import { SandboxListResponseSchema } from "#protocol/ipc.ts";
 import { isImportedWorld } from "#sandbox/map-provenance.ts";
-import { assertLanding } from "./landing.ts";
+import { assertLanding, assertOriginWorld } from "./landing.ts";
 
 export async function runScene(
   directory: string,
@@ -41,6 +41,10 @@ async function executeScene(
 ): Promise<CaptureRun> {
   let driver: Awaited<ReturnType<typeof createDriver>>;
   try {
+    if (!recovery && run.target === "live")
+      throw new Error(
+        "Stateful capture scenes require a disposable real-map sandbox",
+      );
     if (!recovery) await assertNoPendingRun(directory, run);
     driver = await createDriver(directory, run);
   } catch (error) {
@@ -144,8 +148,7 @@ async function captureScene(
   run.inspection = inspection;
   const player = await status();
   if (!player.connected) throw new Error("Client disconnected");
-  if (player.screen !== "")
-    throw new Error("Close player menus before checkpointing a scene");
+  assertOriginWorld(player, driver.world.key);
   run.origin = {
     world: player.world,
     position: player.position,

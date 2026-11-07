@@ -10,7 +10,7 @@ export default [
       {
         kind: "arrow",
         from: [0.58, 0.63],
-        to: [0.27, 0.84],
+        to: [0.27, 0.75],
         text: "Owner + assistant",
         startMs: 0,
         endMs: 12_000,
@@ -27,7 +27,7 @@ export default [
       {
         kind: "arrow",
         from: [0.58, 0.63],
-        to: [0.27, 0.84],
+        to: [0.27, 0.78],
         text: "Confirm separately",
         startMs: 0,
         endMs: 12_000,

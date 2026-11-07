@@ -85,6 +85,25 @@ export default defineCaptureScene({
       ],
     });
     const base = context.at(0, 0, 0)[1];
+    // Prepare both real views before the timed clip, including their visible chunk meshes.
+    for (const [height, lookHeight] of [
+      [4, 5.5],
+      [0, 1.5],
+    ] as const) {
+      await context.use();
+      await context.waitFor(
+        "preview lift arrival",
+        (state) =>
+          state.connected &&
+          Math.abs(state.position[1] - (base + height)) < 0.2,
+      );
+      await context.lookAt(context.at(3.5, lookHeight, 2.5));
+      await context.waitFor(
+        "preview lift terrain",
+        (state) => state.connected && state["terrainReady"] === true,
+      );
+    }
+    await context.action("clear-overlays");
     await context.record(
       {
         schema: 1,

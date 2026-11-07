@@ -132,6 +132,20 @@ export default defineCaptureScene({
       },
       async () => {
         await context.lookAt(context.at(5.5, 2.5, 2.9375));
+        await context.waitFor(
+          "Stargate button under the crosshair",
+          (state) => {
+            if (!state.connected) return false;
+            const position = state.target["position"];
+            return (
+              state.target.kind === "block" &&
+              Array.isArray(position) &&
+              context
+                .at(5, 2, 2)
+                .every((value, index) => position[index] === value)
+            );
+          },
+        );
         await context.use();
         await context.lookAt(context.at(3.5, 2.62, 3.5));
         await context.action("move", { buttons: ["forward"], ticks: 20 });

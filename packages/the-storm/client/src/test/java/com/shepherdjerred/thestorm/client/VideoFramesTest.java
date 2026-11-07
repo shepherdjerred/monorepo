@@ -78,6 +78,22 @@ class VideoFramesTest {
   }
 
   @Test
+  void documentationBufferAdmitsOneSecondOfImagesButRejectsOverflow(@TempDir Path dir)
+      throws Exception {
+    try (var encoders = VideoFrames.encoders()) {
+      assertThatThrownBy(() -> new VideoFrames(dir, encoders, FrameClock.FPS + 1))
+          .isInstanceOf(IllegalArgumentException.class);
+      var writer = new VideoFrames(dir.resolve("frames"), encoders, FrameClock.FPS);
+      writer.prepare().get(5, TimeUnit.SECONDS);
+      for (var index = 0; index < FrameClock.FPS; index++) writer.reserve();
+      assertThat(writer.drained()).isFalse();
+      assertThatThrownBy(writer::reserve).hasMessage("Frame writer is overloaded");
+      for (var index = 0; index < FrameClock.FPS; index++) writer.reject("cancelled readback");
+      assertThat(writer.drained()).isTrue();
+    }
+  }
+
+  @Test
   void terminalHoldsWaitForPersistenceAndKeepExactPixelsWithParallelCompletion(@TempDir Path dir)
       throws Exception {
     try (var encoders = VideoFrames.encoders()) {

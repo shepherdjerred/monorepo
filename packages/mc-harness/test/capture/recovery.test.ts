@@ -283,7 +283,7 @@ describe("capture recovery", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
-  it("detects a wrong terrain restore and keeps the inventory checkpoint available", async () => {
+  it("detects a wrong terrain restore and retains compensating commands for retry", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "capture-recovery-"));
     const directory = path.join(root, "run");
     try {
@@ -296,6 +296,19 @@ describe("capture recovery", () => {
       ).rejects.toThrow("Restored terrain differs");
       expect(transport.events).not.toContain("capture-player-restore");
       expect(run.checkpoint).toEqual(checkpoint);
+      expect(run.cleanup).toEqual([
+        { kind: "command", command: "restore-track" },
+      ]);
+      expect(
+        RunSchema.parse(await Bun.file(path.join(directory, "run.json")).json())
+          .cleanup,
+      ).toEqual(run.cleanup);
+      transport.corruptTerrain = false;
+      await restoreScene(directory, scene, run, driver(transport));
+      expect(
+        transport.events.filter((event) => event === "restore-track"),
+      ).toHaveLength(2);
+      expect(run.cleanup).toEqual([]);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

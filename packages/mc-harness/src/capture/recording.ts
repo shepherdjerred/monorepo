@@ -46,6 +46,10 @@ export function createRecorder(
       active?.(false);
       const result = await wait("COMPLETE");
       await save(presentation, result.receipt);
+    } catch (error) {
+      const result = RecorderSchema.parse(await native("record-status"));
+      if (result.error !== "") throw new Error(result.error, { cause: error });
+      throw error;
     } finally {
       active?.(false);
       await native("record-cancel");

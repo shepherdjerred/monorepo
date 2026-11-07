@@ -63,6 +63,13 @@ async function boundedAction(
   const operation = await body(request, CaptureBoundedActionSchema);
   const { client: summary, state } = await ctx.clients.status(client);
   if (!state.connected) throw new DaemonError("Client is disconnected", 409);
+  // A crosshair does not bound placement, physics, plugin effects or held input.
+  // Stateful interactions belong to the disposable real-map capture server.
+  if (summary.target === "live")
+    throw new DaemonError(
+      "Stateful capture interactions require a disposable real-map sandbox",
+      409,
+    );
   const target = await ctx.target(summary.target);
   const { worlds } = await target.bridge.info();
   const world = worlds.find((entry) => entry.name === operation.box.world);
@@ -106,32 +113,6 @@ async function boundedAction(
     throw new DaemonError("Aim at the declared fixture", 409);
   const act = () =>
     ctx.clients.request(client, operation.action, operation.arguments);
-  if (summary.target === "live") {
-    if (ctx.live === undefined)
-      throw new DaemonError("Live service unavailable", 503);
-    const { players } = await target.bridge.players();
-    const participant = players.find(
-      (player) => player.name === client && player.uuid === state["uuid"],
-    );
-    if (participant === undefined)
-      throw new DaemonError(
-        "Live player identity differs from the controlled client",
-        409,
-      );
-    const result = await guarded(
-      { target, request, ctx: { live: ctx.live, clients: ctx.clients } },
-      () =>
-        Promise.resolve({
-          kind: "client-act",
-          name: client,
-          uuid: participant.uuid,
-          action: operation.action,
-          box: operation.box,
-        }),
-      act,
-    );
-    return Response.json({ result });
-  }
   return Response.json({ result: await act() });
 }
 
@@ -272,7 +253,7 @@ async function clientAction(
         args.buttons.some((button) => button === "use" || button === "attack"))
     )
       throw new DaemonError(
-        "Live block interactions require a bounded capture scene",
+        "Stateful capture interactions require a disposable real-map sandbox",
         409,
       );
     if (!state.connected)

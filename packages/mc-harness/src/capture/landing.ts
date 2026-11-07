@@ -1,6 +1,17 @@
 import { RegionReadResponseSchema } from "#protocol/bridge.ts";
 import type { CaptureTransport } from "./transport.ts";
 
+/** An origin must be restorable in the fixture world before any checkpoint or mutation. */
+export function assertOriginWorld(
+  player: { world: string; screen: string },
+  world: string,
+): void {
+  if (player.world !== world)
+    throw new Error("Player must be in the fixture world before checkpointing");
+  if (player.screen !== "")
+    throw new Error("Close player menus before checkpointing a scene");
+}
+
 /** Verify the body clearance independently of camera rendering and flight permission. */
 export async function assertLanding(
   transport: Pick<CaptureTransport, "world">,

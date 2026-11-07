@@ -1,7 +1,45 @@
 import type { CaptureContext } from "@shepherdjerred/mc-harness/capture/define.ts";
+import { z } from "zod";
 
 export type Point = [number, number, number];
 export const inspectors = ["wilderness", "shops", "banks"];
+const MessagesSchema = z.object({
+  cursor: z.number(),
+  messages: z.array(z.object({ text: z.string() })),
+});
+
+/** Retry only the structure's explicit cooldown reply; verify the actual server block. */
+export async function useUntilBlock(
+  context: CaptureContext,
+  position: Point,
+  matches: (block: string) => boolean,
+): Promise<void> {
+  const initial = MessagesSchema.parse(
+    await context.action("messages", { since: 0 }),
+  );
+  let cursor = initial.cursor,
+    click = true,
+    observed = "";
+  const deadline = performance.now() + 5000;
+  while (performance.now() < deadline) {
+    if (click) {
+      await context.use();
+    }
+    observed = await context.block(context.at(...position));
+    if (matches(observed)) return;
+    const recent = MessagesSchema.parse(
+      await context.action("messages", { since: cursor }),
+    );
+    cursor = recent.cursor;
+    click = recent.messages.some((message) =>
+      message.text.includes("It is still moving; try again in a moment."),
+    );
+    await Bun.sleep(50);
+  }
+  throw new Error(
+    `Fixture transition at ${position.join(",")} stopped at ${observed}`,
+  );
+}
 
 export async function pad(context: CaptureContext, size: Point): Promise<void> {
   await context.command(`minecraft:gamemode creative ${context.name}`);

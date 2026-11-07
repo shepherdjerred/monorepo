@@ -1,5 +1,11 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
-import { pad, wallSign, camera, waitBlock, inspectors } from "./fixtures.ts";
+import {
+  pad,
+  wallSign,
+  camera,
+  useUntilBlock,
+  inspectors,
+} from "./fixtures.ts";
 
 export default defineCaptureScene({
   name: "moving-door",
@@ -59,8 +65,7 @@ export default defineCaptureScene({
     await context.use();
     await context.feedback("Added 3");
     await context.action("hotbar", { slot: 7 });
-    await context.use();
-    await waitBlock(
+    await useUntilBlock(
       context,
       [3, 3, 3],
       (block) => block === "minecraft:oak_planks",
@@ -76,8 +81,11 @@ export default defineCaptureScene({
       annotations: [],
     });
     await camera(context, [3.5, 0, 0.5], [3.5, 0.5, 3.9]);
-    await context.use();
-    await waitBlock(context, [3, 3, 3], (block) => block === "minecraft:air");
+    await useUntilBlock(
+      context,
+      [3, 3, 3],
+      (block) => block === "minecraft:air",
+    );
     await camera(context, [3.5, 0, -3], [3.5, 3.5, 3.5]);
     await context.capture({
       schema: 1,
@@ -88,8 +96,7 @@ export default defineCaptureScene({
       annotations: [],
     });
     await camera(context, [3.5, 0, 0.5], [3.5, 0.5, 3.9]);
-    await context.use();
-    await waitBlock(
+    await useUntilBlock(
       context,
       [3, 3, 3],
       (block) => block === "minecraft:oak_planks",

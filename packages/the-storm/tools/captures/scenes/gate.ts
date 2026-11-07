@@ -1,5 +1,11 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
-import { pad, wallSign, camera, waitBlock, inspectors } from "./fixtures.ts";
+import {
+  pad,
+  wallSign,
+  camera,
+  useUntilBlock,
+  inspectors,
+} from "./fixtures.ts";
 
 export default defineCaptureScene({
   name: "moving-gate",
@@ -43,8 +49,11 @@ export default defineCaptureScene({
       annotations: [],
     });
     await camera(context, [2.5, 0, 0.5], [2.5, 2.5, 3.9]);
-    await context.use();
-    await waitBlock(context, [4, 2, 4], (block) => block === "minecraft:air");
+    await useUntilBlock(
+      context,
+      [4, 2, 4],
+      (block) => block === "minecraft:air",
+    );
     await camera(context, [-2.5, 0, -2.5], [4.5, 2.5, 4.5]);
     await context.capture({
       schema: 1,
@@ -55,8 +64,7 @@ export default defineCaptureScene({
       annotations: [],
     });
     await camera(context, [2.5, 0, 0.5], [2.5, 2.5, 3.9]);
-    await context.use();
-    await waitBlock(context, [4, 2, 4], (block) =>
+    await useUntilBlock(context, [4, 2, 4], (block) =>
       block.startsWith("minecraft:oak_fence["),
     );
   },

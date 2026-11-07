@@ -54,7 +54,9 @@ final class DocsCapture implements AutoCloseable {
     markers.clear();
     receipt = null;
     clock = new FrameClock(total);
-    var frames = new VideoFrames(artifacts.resolve(name), io);
+    // Absorb GPU-readback/encoding bursts without blocking the render thread. At 1280x720
+    // this retains at most 30 actual RGBA images (about 106 MiB); overload still fails.
+    var frames = new VideoFrames(artifacts.resolve(name), io, FrameClock.FPS);
     writer = frames;
     state = "ARMING";
     var prepared = frames.prepare();

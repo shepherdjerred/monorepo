@@ -300,7 +300,7 @@ deletion. Inspect an interrupted worker with its private
 `TOOLKIT_MC_DIRECTORY` and use the normal daemon shutdown command in that
 namespace. Never use a global sandbox shutdown to clean up a suite.
 
-### Individual scenes and live captures
+### Individual scenes and live observations
 
 Scenes default-export `defineCaptureScene` from `capture/define.ts`. Examples
 live in `packages/the-storm/tools/captures/scenes/`: inventory, cooking pot,
@@ -312,10 +312,15 @@ The owner shop example tests the owner's supported access mode. The separate
 customer scene uses a second genuine client and verifies both players' balances
 and inventory transfers before restoring them.
 
+Stateful scenes and bounded client interactions require a disposable real-map
+sandbox. Crosshair bounds cannot contain every placement, physics effect or
+held interaction on a live server. Live sessions support read-only observations;
+existing interrupted live scenes retain their recovery path.
+
 ```bash
 toolkit mc capture doctor --target live --account XiguaJerred
-toolkit mc capture site find --target live --account XiguaJerred --reason "Scout an unclaimed docs site"
-toolkit mc capture run packages/the-storm/tools/captures/scenes/cooking.ts --site <site.json> --target live --reason "Capture cooking-pot instructions"
+toolkit mc capture site find --target <real-map-id> --account XiguaJerred --reason "Scout an unclaimed docs site"
+toolkit mc capture run packages/the-storm/tools/captures/scenes/cooking.ts --site <site.json> --target <real-map-id> --reason "Capture cooking-pot instructions"
 toolkit mc capture status <run-id>
 toolkit mc capture render <run-id>
 toolkit mc capture review <run-id>

@@ -1,4 +1,4 @@
-import { lstat, appendFile } from "node:fs/promises";
+import { lstat, appendFile, readFile } from "node:fs/promises";
 import { z } from "zod";
 import { clientRequest } from "./client-socket.ts";
 import type { LaunchedClient, LaunchSpec } from "./client-launch.ts";
@@ -95,20 +95,28 @@ export function ownPrismGame(
       }
       if (!alive(pid)) return;
       // Verify the exact bootstrap property before a signal, including PID-reuse protection.
-      const ps = Bun.spawn(["ps", "-p", pid.toString(), "-o", "command="], {
-        stdout: "pipe",
-        stderr: "ignore",
-      });
-      const command = await new Response(ps.stdout).text();
-      const code = await ps.exited;
-      if (
-        code !== 0 ||
-        !command.includes(`-Dstorm.client.session=${spec.bootstrapPath}`)
-      )
+      if (!(await hasSession(pid, spec.bootstrapPath)))
         throw new Error(
           "Refusing to signal a process whose capture-session identity differs",
         );
       process.kill(pid, signal);
     },
   };
+}
+
+async function hasSession(pid: number, bootstrap: string): Promise<boolean> {
+  const argument = `-Dstorm.client.session=${bootstrap}`;
+  if (process.platform === "linux") {
+    const arguments_ = await readFile(
+      `/proc/${pid.toString()}/cmdline`,
+      "utf8",
+    );
+    return arguments_.split("\0").includes(argument);
+  }
+  const ps = Bun.spawn(["ps", "-p", pid.toString(), "-o", "command="], {
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  const command = await new Response(ps.stdout).text();
+  return (await ps.exited) === 0 && command.includes(argument);
 }
