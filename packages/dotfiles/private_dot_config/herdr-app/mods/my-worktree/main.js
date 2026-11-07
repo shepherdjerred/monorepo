@@ -37,24 +37,27 @@ import {
   parseKimiModels,
 } from "./agents.js";
 
-// Each agent's model list, from its own catalog on this computer. Lists are
-// cached in localStorage and refreshed once per window per agent.
+// Each agent's model list, from its own catalog on the space's machine (`on`,
+// null for this one; `userHome` is that machine's home). Lists are cached in
+// localStorage per machine and refreshed once per window per agent.
 const CATALOGS = {
   "claude-code": async () => CLAUDE_MODELS,
-  codex: async () =>
+  codex: async (on, userHome) =>
     parseCodexModels(
-      (await readTextFile(`${home()}/.codex/models_cache.json`)) ?? "{}",
+      (await readTextFile(`${userHome}/.codex/models_cache.json`, { on })) ??
+        "{}",
     ),
-  antigravity: async () => parseAgyModels(await output("agy", ["models"])),
-  grok: async () => parseGrokModels(await output("grok", ["models"])),
-  kimi: async () =>
+  antigravity: async (on) =>
+    parseAgyModels(await output("agy", ["models"], on)),
+  grok: async (on) => parseGrokModels(await output("grok", ["models"], on)),
+  kimi: async (on, userHome) =>
     parseKimiModels(
-      (await readTextFile(`${home()}/.kimi-code/config.toml`)) ?? "",
+      (await readTextFile(`${userHome}/.kimi-code/config.toml`, { on })) ?? "",
     ),
 };
 
-async function output(command, args) {
-  const r = await exec(command, args);
+async function output(command, args, on) {
+  const r = await exec(command, args, { on });
   if (r.code !== 0)
     throw new Error(
       (r.stderr || r.stdout).trim().split("\n")[0] || `${command} failed`,
@@ -467,6 +470,8 @@ export default class Worktree extends View {
         }
         if (repo && this.opening) this.list = await checkouts(repo, this.on);
         this.repo = repo;
+        // Model lists are read on the space's machine, once its home is known.
+        this.loadCatalog(this.provider(), cx);
         cx.notify();
         if (props().branch) await this.work(cx);
       } catch (error) {
@@ -559,6 +564,9 @@ export default class Worktree extends View {
       root: `${ROOT(this.userHome)}/${this.repo.name}`,
       agentArgs: args,
       safe,
+      // A caller's own program and tab, when it gave them instead of a pick.
+      argv: this.picking ? null : (props().argv ?? null),
+      tab: props().tab ?? null,
     };
     // The dialog closes now and its tasks with it; a process it started keeps
     // running. Results: ~/.local/state/herdr-worktree/events.jsonl, the unified
@@ -574,9 +582,11 @@ export default class Worktree extends View {
 
   // The agent's model list, cached, then refreshed once per window.
   loadCatalog(provider, cx) {
-    if (!provider || this.catalogs[provider]?.fresh || !CATALOGS[provider])
-      return;
-    const cached = stored(`catalog:${provider}`);
+    // The remote home arrives later; init loads again once it has.
+    if (!provider || !CATALOGS[provider] || !this.userHome) return;
+    if (this.catalogs[provider]?.fresh) return;
+    const key = `catalog:${this.on ?? "local"}:${provider}`;
+    const cached = stored(key);
     this.catalogs[provider] = {
       models: cached ?? [],
       fresh: true,
@@ -584,9 +594,9 @@ export default class Worktree extends View {
     };
     cx.spawn(async (cx) => {
       try {
-        const models = await CATALOGS[provider]();
+        const models = await CATALOGS[provider](this.on ?? null, this.userHome);
         this.catalogs[provider] = { models, fresh: true, error: null };
-        store(`catalog:${provider}`, models);
+        store(key, models);
       } catch (error) {
         this.catalogs[provider] = {
           models: cached ?? [],
@@ -618,7 +628,8 @@ export default class Worktree extends View {
     return kind === "mode"
       ? caps.modes.length > 0
       : kind === "model"
-        ? Boolean(caps.model)
+        ? // Only agents whose model list can be read get a Model control.
+          Boolean(caps.model && CATALOGS[provider])
         : Boolean(caps.effort);
   }
 
@@ -648,6 +659,7 @@ export default class Worktree extends View {
   cycle(kind, step, cx) {
     const provider = this.provider();
     if (!provider || !this.offers(kind, provider)) return;
+    this.loadCatalog(provider, cx);
     const list = this.options(kind, provider);
     const now = list.findIndex((o) => o.id === this.choiceFor(provider)[kind]);
     const next = list[(Math.max(0, now) + step + list.length) % list.length];
@@ -943,6 +955,7 @@ export default class Worktree extends View {
         .when(off, (el) => el.tooltip(e.reason ?? "no data"))
         .on_click((_e, cx) => {
           this.pick = i;
+          this.loadCatalog(this.provider(), cx);
           cx.notify();
         })
         .child(providerIcon(e, t, off && !on))

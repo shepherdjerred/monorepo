@@ -19,6 +19,10 @@ export type Request = {
   readonly agentArgs: readonly string[];
   /** Skip the agent-bin bypass flags (plan-style modes). */
   readonly safe: boolean;
+  /** A caller's own program instead of a provider, given the message as task. */
+  readonly argv: readonly string[] | null;
+  /** A caller's own first-tab name instead of the generated title. */
+  readonly tab: string | null;
 };
 
 export type Named = { readonly branch: string; readonly title: string };
@@ -76,6 +80,10 @@ function nullableText(value: unknown, field: string): string | null {
   return value === null ? null : text(value, field);
 }
 
+function nullableStrings(value: unknown, field: string): string[] | null {
+  return value === null || value === undefined ? null : strings(value, field);
+}
+
 function strings(value: unknown, field: string): string[] {
   if (!Array.isArray(value))
     throw new TypeError(`Request ${field} must be a string array.`);
@@ -101,6 +109,9 @@ export function parseRequest(json: string): Request {
     root: text(r.get("root"), "root"),
     agentArgs: strings(r.get("agentArgs"), "agentArgs"),
     safe,
+    argv: nullableStrings(r.get("argv"), "argv"),
+    tab:
+      r.get("tab") === undefined ? null : nullableText(r.get("tab"), "tab"),
   };
 }
 
@@ -120,7 +131,10 @@ export function launch(
   named: Named,
 ): { argv: string[] | null; task: string | null; typed: boolean } {
   const { provider, message } = request;
-  if (provider === null) return { argv: null, task: null, typed: false };
+  if (provider === null)
+    return request.argv === null
+      ? { argv: null, task: null, typed: false }
+      : { argv: [...request.argv], task: message, typed: false };
   const extra = [...request.agentArgs];
   if (provider === "claude-code") extra.push("--name", named.title);
   if (provider === "antigravity") extra.push("-i", message);
@@ -222,7 +236,7 @@ export async function createWorktree(
   const terminal = await runtime.newSpace({
     folder: path,
     machine: machine ?? "",
-    tab: named.title,
+    tab: request.tab ?? named.title,
     ...(argv === null ? {} : { argv }),
     ...(task === null ? {} : { task }),
   });

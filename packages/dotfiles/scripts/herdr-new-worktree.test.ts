@@ -18,6 +18,8 @@ const base: Request = {
   root: "/home/.herdr/worktrees/repo",
   agentArgs: [],
   safe: false,
+  argv: null,
+  tab: null,
 };
 const named = { branch: "fix-cache", title: "Fix the cache" };
 const ok: ExecResult = { code: 0, stdout: "", stderr: "" };
@@ -78,6 +80,21 @@ test("requests are checked strictly", () => {
   expect(() => parseRequest(JSON.stringify({ ...base, safe: "no" }))).toThrow(
     "safe",
   );
+});
+
+test("a caller's own program gets the message as its task, and keeps its tab", async () => {
+  const custom = { ...base, provider: null, argv: ["pi"], tab: "work" };
+  expect(launch(custom, named)).toEqual({
+    argv: ["pi"],
+    task: "- fix the cache",
+    typed: false,
+  });
+  const fake = fakeRuntime();
+  await createWorktree(custom, fake.runtime, (step) => steps.push(step));
+  expect(fake.spaces[0]).toMatchObject({ tab: "work", argv: ["pi"] });
+  expect(
+    parseRequest(JSON.stringify({ ...base, argv: undefined, tab: undefined })),
+  ).toMatchObject({ argv: null, tab: null });
 });
 
 test("slug turns slashes and spaces into dashes", () => {
