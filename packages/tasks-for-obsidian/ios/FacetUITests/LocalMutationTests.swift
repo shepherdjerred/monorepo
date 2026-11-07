@@ -118,13 +118,7 @@ final class LocalMutationTests: XCTestCase {
             }
             let bytes: Data
             do { bytes = try Data(contentsOf: marker) } catch {
-                let failure = error as NSError
-                let underlying = failure.userInfo[NSUnderlyingErrorKey] as? NSError
-                if (failure.domain == NSPOSIXErrorDomain && failure.code == ENOENT)
-                    || (underlying?.domain == NSPOSIXErrorDomain && underlying?.code == ENOENT)
-                {
-                    continue
-                }
+                if missingMarker(error as NSError) { continue }
                 throw error
             }
             guard bytes == owner else { throw MutationOwnershipError.wrongRun }
@@ -151,6 +145,14 @@ final class LocalMutationTests: XCTestCase {
         XCTAssertEqual(metadata.isRegularFile, true)
         XCTAssertEqual(metadata.isSymbolicLink, false)
         return note
+    }
+
+    private func missingMarker(_ failure: NSError) -> Bool {
+        if failure.domain == NSPOSIXErrorDomain && failure.code == Int(ENOENT) { return true }
+        guard let underlying = failure.userInfo[NSUnderlyingErrorKey] as? NSError else {
+            return false
+        }
+        return underlying.domain == NSPOSIXErrorDomain && underlying.code == Int(ENOENT)
     }
 
     private func boundApplicationRoot() throws -> URL {
