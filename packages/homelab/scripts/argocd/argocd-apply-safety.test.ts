@@ -733,6 +733,52 @@ describe("ArgoCD Job template immutability", () => {
       "batch/Job delivery/migrate changes immutable /spec/template",
     ]);
   });
+
+  // temporal/temporal-namespace-init on 2026-11-07: the stored completed
+  // hook omits hostNetwork, which the rendered chart declares false.
+  const withHostNetwork = {
+    spec: {
+      containers: [{ name: "migrate", image: "migrate:1" }],
+      hostNetwork: false,
+    },
+  };
+
+  test("a hook Argo recreates on every sync is never blocked by its template", () => {
+    expect(
+      analyzeApplySafety([
+        jobTemplateChange(template, withHostNetwork, {
+          "argocd.argoproj.io/hook": "Sync",
+          "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
+        }),
+        jobTemplateChange(template, changed, {
+          "argocd.argoproj.io/hook": "PreSync",
+          "argocd.argoproj.io/hook-delete-policy":
+            "BeforeHookCreation, HookSucceeded",
+        }),
+        // No policy: Argo assumes BeforeHookCreation.
+        jobTemplateChange(template, changed, {
+          "argocd.argoproj.io/hook": "Sync",
+        }),
+      ]),
+    ).toEqual([]);
+  });
+
+  test("a hook Argo keeps and updates still reports its template change", () => {
+    expect(
+      analyzeApplySafety([
+        jobTemplateChange(template, changed, {
+          "argocd.argoproj.io/hook": "PostSync",
+          "argocd.argoproj.io/hook-delete-policy": "HookSucceeded",
+        }),
+      ]),
+    ).toEqual(["batch/Job delivery/migrate changes immutable /spec/template"]);
+  });
+
+  test("an ordinary Job omitting a declared default still reports it", () => {
+    expect(
+      analyzeApplySafety([jobTemplateChange(template, withHostNetwork)]),
+    ).toEqual(["batch/Job delivery/migrate changes immutable /spec/template"]);
+  });
 });
 
 // An internal image pin moving backwards is how an unmerged `version
