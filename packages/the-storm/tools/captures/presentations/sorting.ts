@@ -10,7 +10,7 @@ export default [
       {
         kind: "arrow",
         from: [0.21, 0.23],
-        to: [0.39, 0.34],
+        to: [0.331, 0.26],
         text: "Split stacks",
         startMs: 0,
         endMs: 12_000,
@@ -18,7 +18,7 @@ export default [
       {
         kind: "arrow",
         from: [0.23, 0.58],
-        to: [0.42, 0.44],
+        to: [0.373, 0.41],
         text: "More of the same item",
         startMs: 0,
         endMs: 12_000,
@@ -35,7 +35,7 @@ export default [
       {
         kind: "arrow",
         from: [0.23, 0.23],
-        to: [0.46, 0.34],
+        to: [0.415, 0.26],
         text: "Combined and organized",
         startMs: 0,
         endMs: 12_000,

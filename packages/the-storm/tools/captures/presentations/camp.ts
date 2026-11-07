@@ -11,7 +11,7 @@ export default [
       {
         kind: "arrow",
         from: [0.58, 0.63],
-        to: [0.27, 0.84],
+        to: [0.35, 0.74],
         text: "Members + land",
         startMs: 0,
         endMs: 12_000,
@@ -28,7 +28,7 @@ export default [
       {
         kind: "arrow",
         from: [0.58, 0.63],
-        to: [0.27, 0.84],
+        to: [0.27, 0.778],
         text: "Personal access",
         startMs: 0,
         endMs: 12_000,
@@ -44,7 +44,7 @@ export default [
       {
         kind: "arrow",
         from: [0.58, 0.63],
-        to: [0.27, 0.84],
+        to: [0.32, 0.815],
         text: "Camp access",
         startMs: 0,
         endMs: 12_000,

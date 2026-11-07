@@ -10,7 +10,7 @@ export default [
       {
         kind: "arrow",
         from: [0.59, 0.65],
-        to: [0.32, 0.84],
+        to: [0.27, 0.815],
         text: "Private",
         startMs: 0,
         endMs: 12_000,
@@ -26,7 +26,7 @@ export default [
       {
         kind: "arrow",
         from: [0.59, 0.65],
-        to: [0.32, 0.84],
+        to: [0.27, 0.815],
         text: "Public",
         startMs: 0,
         endMs: 12_000,
@@ -42,7 +42,7 @@ export default [
       {
         kind: "arrow",
         from: [0.59, 0.65],
-        to: [0.32, 0.84],
+        to: [0.31, 0.815],
         text: "Deposit only",
         startMs: 0,
         endMs: 12_000,
@@ -58,7 +58,7 @@ export default [
       {
         kind: "arrow",
         from: [0.59, 0.65],
-        to: [0.32, 0.84],
+        to: [0.31, 0.815],
         text: "Take only",
         startMs: 0,
         endMs: 12_000,
@@ -74,7 +74,7 @@ export default [
       {
         kind: "arrow",
         from: [0.59, 0.65],
-        to: [0.32, 0.84],
+        to: [0.31, 0.815],
         text: "Look only",
         startMs: 0,
         endMs: 12_000,
@@ -91,7 +91,7 @@ export default [
       {
         kind: "arrow",
         from: [0.59, 0.65],
-        to: [0.26, 0.84],
+        to: [0.055, 0.815],
         text: "Manage access",
         startMs: 0,
         endMs: 12_000,

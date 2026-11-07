@@ -10,7 +10,7 @@ export default [
       {
         kind: "arrow",
         from: [0.7, 0.72],
-        to: [0.19, 0.88],
+        to: [0.23, 0.815],
         text: "Network created",
         startMs: 0,
         endMs: 12_000,

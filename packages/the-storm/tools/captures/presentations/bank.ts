@@ -50,7 +50,7 @@ export default [
       {
         kind: "arrow",
         from: [0.23, 0.23],
-        to: [0.42, 0.34],
+        to: [0.373, 0.26],
         text: "Deposit all three types",
         startMs: 0,
         endMs: 12_000,
@@ -66,7 +66,7 @@ export default [
       {
         kind: "arrow",
         from: [0.23, 0.23],
-        to: [0.4, 0.34],
+        to: [0.373, 0.26],
         text: "Accepted items arrive here",
         startMs: 0,
         endMs: 12_000,
@@ -82,7 +82,7 @@ export default [
       {
         kind: "arrow",
         from: [0.23, 0.23],
-        to: [0.445, 0.34],
+        to: [0.415, 0.26],
         text: "Unmatched logs stay here",
         startMs: 0,
         endMs: 12_000,

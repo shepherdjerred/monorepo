@@ -27,7 +27,7 @@ export default [
       {
         kind: "arrow",
         from: [0.66, 0.42],
-        to: [0.19, 0.61],
+        to: [0.1, 0.365],
         text: "Mechanic II",
         startMs: 0,
         endMs: 12_000,
@@ -61,7 +61,7 @@ export default [
       {
         kind: "arrow",
         from: [0.65, 0.68],
-        to: [0.2, 0.79],
+        to: [0.25, 0.625],
         text: "Selected channel",
         startMs: 0,
         endMs: 12_000,
@@ -77,7 +77,7 @@ export default [
       {
         kind: "arrow",
         from: [0.65, 0.68],
-        to: [0.2, 0.84],
+        to: [0.2, 0.765],
         text: "Command syntax",
         startMs: 0,
         endMs: 12_000,
@@ -93,7 +93,7 @@ export default [
       {
         kind: "arrow",
         from: [0.65, 0.68],
-        to: [0.2, 0.84],
+        to: [0.26, 0.778],
         text: "Describe the problem",
         startMs: 0,
         endMs: 12_000,

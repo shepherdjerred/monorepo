@@ -83,7 +83,7 @@ export default [
       {
         kind: "arrow",
         from: [0.69, 0.27],
-        to: [0.38, 0.35],
+        to: [0.331, 0.26],
         text: "Matching stock",
         startMs: 0,
         endMs: 12_000,
@@ -100,7 +100,7 @@ export default [
       {
         kind: "arrow",
         from: [0.62, 0.65],
-        to: [0.27, 0.845],
+        to: [0.14, 0.778],
         text: "50 crystals paid",
         startMs: 0,
         endMs: 12_000,
@@ -117,7 +117,7 @@ export default [
       {
         kind: "arrow",
         from: [0.62, 0.65],
-        to: [0.27, 0.845],
+        to: [0.14, 0.778],
         text: "40 crystals back",
         startMs: 0,
         endMs: 12_000,
