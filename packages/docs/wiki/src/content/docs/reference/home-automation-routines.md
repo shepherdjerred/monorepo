@@ -33,6 +33,15 @@ state cancels a pending hold and preserves an active incident.
 | `leaving-home`   | last departure      | 90 s         | house must be empty                           | notification, all lights off with per-light verification, vacuum run         |
 | `reconcile-lock` | every presence edge | rolling 90 s | reads live occupancy                          | deadbolt, only when current ≠ desired                                        |
 
+"Away" depends on the routine. Source:
+[`presence.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/infra/presence.ts).
+
+| Person state               | Vacuum, arrival, and departure guards | `reconcile-lock` |
+| -------------------------- | ------------------------------------- | ---------------- |
+| `home`                     | home                                  | home             |
+| `not_home` or a named zone | away                                  | away             |
+| `unknown` or `unavailable` | home                                  | away             |
+
 `reconcile-lock` is a singleton: every presence transition does a
 `signalWithStart` on the fixed workflow ID. Each signal restarts the quiet
 window. Neither `welcome-home` nor `leaving-home` touches the lock.

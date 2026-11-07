@@ -21,3 +21,16 @@ export function cooldownBucket(nowMs: number = Date.now()): string {
 export function shouldLock(personStates: readonly string[]): boolean {
   return personStates.every((state) => state !== "home");
 }
+
+// Whether a person entity positively reports being outside the home zone:
+// `"not_home"` or a named zone such as `"Work"`. Unlike `shouldLock`, an
+// unresolved tracker (`"unknown"` / `"unavailable"`, e.g. during an HA
+// restart) does NOT count as away — starting the vacuums on a person we cannot
+// locate is the unsafe direction, whereas locking the door is the safe one.
+export function isConfirmedAway(personState: string): boolean {
+  return (
+    personState !== "home" &&
+    personState !== "unknown" &&
+    personState !== "unavailable"
+  );
+}

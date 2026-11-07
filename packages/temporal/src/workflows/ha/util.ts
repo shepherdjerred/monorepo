@@ -1,6 +1,7 @@
 import {
   ApplicationFailure,
   log,
+  patched,
   proxyActivities,
   sleep,
   upsertMemo,
@@ -19,6 +20,7 @@ import type {
   WorkflowOutcome,
 } from "#activities/outcome.ts";
 import type { HaSchema } from "#generated/ha-schema.ts";
+import { isConfirmedAway } from "#shared/infra/presence.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // Home Assistant is unreachable for most of a minute while its pod restarts.
@@ -362,12 +364,18 @@ export function matchExact(expected: string): (state: string) => boolean {
   return (state) => state === expected;
 }
 
+// Gates the named-zone presence rule so executions recorded under the old
+// exact-`not_home` rule replay with the decision they originally made.
+export const PRESENCE_NAMED_ZONES_PATCH = "presence-named-zones-away-v1";
+
 export async function everyoneAway(): Promise<boolean> {
   const [jerred, shuxin] = await Promise.all([
     getEntityState("person.jerred"),
     getEntityState("person.shuxin"),
   ]);
-  return jerred.state === "not_home" && shuxin.state === "not_home";
+  return patched(PRESENCE_NAMED_ZONES_PATCH)
+    ? isConfirmedAway(jerred.state) && isConfirmedAway(shuxin.state)
+    : jerred.state === "not_home" && shuxin.state === "not_home";
 }
 
 export async function anyoneHome(): Promise<boolean> {

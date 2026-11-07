@@ -16,7 +16,7 @@ import {
   MOTION_LIGHT_ROOMS,
   type MotionLightRoom,
 } from "#shared/infra/motion-light.ts";
-import { cooldownBucket } from "#shared/infra/presence.ts";
+import { cooldownBucket, isConfirmedAway } from "#shared/infra/presence.ts";
 import {
   PetCareEntityIdSchema,
   PET_CARE_SENSOR_POLICIES,
@@ -237,7 +237,7 @@ async function othersAllAway(
   const states: EntityState[] = await Promise.all(
     others.map((e) => rest.getState(e)),
   );
-  return states.every((s) => s.state === "not_home");
+  return states.every((s) => isConfirmedAway(s.state));
 }
 
 export function handleIosAction(
