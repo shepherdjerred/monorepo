@@ -18,7 +18,7 @@ public struct AntigravityProvider: UsageProvider {
 
   public func fetch() async throws -> UsageSnapshot {
     let executableURL = try executableURL ?? Self.locateExecutable()
-    async let planResult = captureSurface { try await planSource.codeAssistData() }
+    async let planResult = capturePlanSurface { try await planSource.codeAssistData() }
     let result = try await commandRunner.run(
       executableURL: executableURL,
       arguments: ["--print", "/usage", "--output-format", "json", "--print-timeout", "20s"]

@@ -82,6 +82,26 @@ final class PlanTests: XCTestCase {
     XCTAssertEqual(loaded[.codex]?.windows, [window])
   }
 
+  func testSlowPlanRequestBecomesANoteInsteadOfDelayingUsage() async {
+    let slow = await capturePlanSurface(within: .milliseconds(50)) {
+      try await Task.sleep(for: .seconds(30))
+      return Data()
+    }
+    guard case let .failure(message) = slow else {
+      XCTFail("Expected the deadline")
+      return
+    }
+    let outcome = PlanOutcome(slow) { _ in PlanInfo(name: "unused") }
+    XCTAssertNil(outcome.plan)
+    XCTAssertEqual(outcome.notes, ["Plan unavailable: \(message)"])
+
+    let fast = await capturePlanSurface(within: .seconds(5)) { Data("{}".utf8) }
+    guard case .success = fast else {
+      XCTFail("Expected the plan")
+      return
+    }
+  }
+
   func testReportedPriceOverridesTheTable() throws {
     let window = try UsageWindow.validated(
       id: "w", label: "Weekly", kind: .weekly, usedPercent: 5, resetAt: nil, sourceTimestamp: now)

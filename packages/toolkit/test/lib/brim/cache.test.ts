@@ -54,6 +54,14 @@ describe("loadSnapshots", () => {
     );
   });
 
+  it("does not treat an unreadable path as a missing cache", async () => {
+    // A directory exists but cannot be read as a file (EISDIR, not ENOENT).
+    await expect(loadSnapshots(dir)).rejects.toThrow("could not be read");
+    await expect(loadSnapshots(dir)).rejects.not.toBeInstanceOf(
+      SnapshotCacheMissingError,
+    );
+  });
+
   it("types a missing cache apart from a corrupt one", async () => {
     await expect(
       loadSnapshots(path.join(dir, "missing.json")),

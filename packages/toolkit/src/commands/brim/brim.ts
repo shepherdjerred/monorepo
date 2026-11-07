@@ -19,6 +19,7 @@ import {
 import { findRequested, formatPickerRow } from "#lib/brim/selection.ts";
 import {
   rankSnapshots,
+  withKnownProviders,
   withoutQuotaData,
   type RankedEntry,
   type RankResult,
@@ -297,9 +298,11 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
   }
   let result: RankResult;
   try {
-    result = rankSnapshots(
-      await loadSnapshots(options.snapshotsPath ?? defaultSnapshotsPath()),
-      { minFiveHourRemaining: options.minRemaining },
+    result = withKnownProviders(
+      rankSnapshots(
+        await loadSnapshots(options.snapshotsPath ?? defaultSnapshotsPath()),
+        { minFiveHourRemaining: options.minRemaining },
+      ),
     );
   } catch (error: unknown) {
     // An explicit pick needs no ranking, so a machine that never ran the Brim

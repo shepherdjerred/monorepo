@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { RankedEntry } from "#lib/brim/rank.ts";
-import { PROVIDER_ORDER, withoutQuotaData } from "#lib/brim/rank.ts";
+import {
+  PROVIDER_ORDER,
+  withKnownProviders,
+  withoutQuotaData,
+} from "#lib/brim/rank.ts";
 import {
   budgetRemaining,
   columnWidths,
@@ -83,6 +87,22 @@ describe("findRequested", () => {
 
   it("returns undefined for an unknown provider", () => {
     expect(findRequested(result, "nope")).toBeUndefined();
+  });
+
+  it("resolves a known provider the cache has no snapshot for", () => {
+    const known = withKnownProviders({
+      ranked: [ranked],
+      other: [],
+      unavailable: [stale],
+    });
+    expect(known.ranked).toEqual([ranked]);
+    expect(known.unavailable[0]).toBe(stale);
+    expect(new Set(known.unavailable.map((e) => e.provider))).toEqual(
+      new Set(PROVIDER_ORDER.filter((p) => p !== "claude-code")),
+    );
+    const codex = findRequested(known, "codex");
+    expect(codex?.available).toBe(false);
+    expect(codex?.reason).toBe("no Brim snapshot for this provider");
   });
 
   it("resolves every known provider without quota data", () => {

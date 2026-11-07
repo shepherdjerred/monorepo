@@ -55,7 +55,7 @@ public struct GrokProvider: UsageProvider {
         provider: id, url: creditsEndpoint, credential: credential, headers: surfaceHeaders)
     }
     // The plan is supplementary: its failures (401 included) become a note, never a restart.
-    async let planResult = captureSurface {
+    async let planResult = capturePlanSurface {
       try await client.get(
         provider: id, url: settingsEndpoint, credential: credential, headers: surfaceHeaders)
     }

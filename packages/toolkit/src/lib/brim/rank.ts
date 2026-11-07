@@ -25,6 +25,26 @@ const DISPLAY_NAMES: Record<string, string> = {
   muse: "Meta Muse",
 };
 
+/** A known provider with no quota data, unavailable for `reason`. */
+function withoutData(provider: string, reason: string): RankedEntry {
+  return {
+    provider,
+    displayName: displayName(provider),
+    accountLabel: null,
+    planName: null,
+    planMonthlyCostUSD: null,
+    available: false,
+    reason,
+    fiveHourUsed: null,
+    budgetUsed: null,
+    budgetKind: null,
+    pace: null,
+    budgetResetsIn: null,
+    fallbackWindow: null,
+    snapshotAge: null,
+  };
+}
+
 /**
  * Every known provider as unavailable with one reason: the result when there is
  * no quota data at all, so an explicit `--provider` still resolves by name.
@@ -33,22 +53,32 @@ export function withoutQuotaData(reason: string): RankResult {
   return {
     ranked: [],
     other: [],
-    unavailable: PROVIDER_ORDER.map((provider) => ({
-      provider,
-      displayName: displayName(provider),
-      accountLabel: null,
-      planName: null,
-      planMonthlyCostUSD: null,
-      available: false,
-      reason,
-      fiveHourUsed: null,
-      budgetUsed: null,
-      budgetKind: null,
-      pace: null,
-      budgetResetsIn: null,
-      fallbackWindow: null,
-      snapshotAge: null,
-    })),
+    unavailable: PROVIDER_ORDER.map((provider) =>
+      withoutData(provider, reason),
+    ),
+  };
+}
+
+/**
+ * Adds each known provider the cache has no snapshot for (Brim saves only
+ * successful fetches, so a provider never signed in is absent) as unavailable,
+ * so it can still be started by name and offered by pickers.
+ */
+export function withKnownProviders(result: RankResult): RankResult {
+  const present = new Set(
+    [...result.ranked, ...result.other, ...result.unavailable].map(
+      (entry) => entry.provider,
+    ),
+  );
+  return {
+    ...result,
+    unavailable: [
+      ...result.unavailable,
+      ...PROVIDER_ORDER.filter((provider) => !present.has(provider)).map(
+        (provider) =>
+          withoutData(provider, "no Brim snapshot for this provider"),
+      ),
+    ],
   };
 }
 

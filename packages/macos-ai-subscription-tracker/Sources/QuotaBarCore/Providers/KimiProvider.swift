@@ -22,7 +22,7 @@ public struct KimiProvider: UsageProvider {
   /// Usage and `/me` use one credential. Only a usage 401 restarts the fetch: the plan is
   /// supplementary, so its failures (401 included) leave it unset with a note.
   private func fetch(usingCredential credential: ProviderCredential) async throws -> UsageSnapshot {
-    async let planResult = captureSurface {
+    async let planResult = capturePlanSurface {
       try await client.get(
         provider: id, url: meEndpoint, credential: credential, headers: Self.headers)
     }

@@ -299,7 +299,11 @@ export default class Worktree extends View {
       this.at = 0;
       cx.notify();
     });
-    this.input.on("submit", (_e, cx) => this.go(cx));
+    // Enter in the filter opens the highlighted checkout; only New and Remove run work().
+    this.input.on("submit", (_e, cx) => {
+      if (this.opening) this.open(this.shown()[this.at]);
+      else this.go(cx);
+    });
     this.inputFocused = true;
     this.input.on("focus", (_e, cx) => {
       this.inputFocused = true;
@@ -470,7 +474,8 @@ export default class Worktree extends View {
   }
 
   open(c) {
-    if (!c) return;
+    if (!c || this.opened) return;
+    this.opened = true;
     this.close();
     const s = spaceOf(c.path, this.list, this.on, spaces(), panes());
     if (s) run("space.select", { id: s.id });
@@ -517,7 +522,9 @@ export default class Worktree extends View {
     if (e.key === "escape") return this.close();
     if (this.opening) {
       const n = this.shown().length;
-      if (e.key === "enter") this.open(this.shown()[this.at]);
+      // With the filter focused, its submit handles Enter.
+      if (e.key === "enter" && !this.inputFocused)
+        this.open(this.shown()[this.at]);
       else if ((e.key === "down" || e.key === "up") && n)
         this.at = (this.at + (e.key === "down" ? 1 : n - 1)) % n;
       else return;

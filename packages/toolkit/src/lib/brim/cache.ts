@@ -76,8 +76,16 @@ export async function loadSnapshots(
   let raw: string;
   try {
     raw = await readFile(filePath, "utf8");
-  } catch {
-    throw new SnapshotCacheMissingError(filePath);
+  } catch (error: unknown) {
+    // Only an absent file means "never ran Brim here"; permissions, a directory,
+    // or a failing disk surface as themselves.
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      throw new SnapshotCacheMissingError(filePath);
+    }
+    throw new Error(
+      `Brim snapshot cache at ${filePath} could not be read: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
   }
   let parsed: unknown;
   try {
