@@ -41,6 +41,35 @@ receives the identity without pre-creating its directory. Restarts require the
 same world, seed and format. This gate performs no world or BlueMap deletion;
 publishing this image does not authorize an automatic reset.
 
+### Skylands transfer
+
+`skylands-transfer.json` is an explicit one-shot pre-start maintenance request.
+The normal request is `{ "operation": "none" }`. An `export` request with an
+`id` and `volumeDigest` copies the complete Skylands dimension and parent loading metadata into
+`/data/.storm-maintenance/skylands/<id>/payload`, with a checksum receipt.
+Production player data, plugin databases and other dimensions are excluded.
+Exports require an initialized native Skylands save and refuse linked paths.
+`volumeDigest` is the SHA256 of that volume's `.the-storm-retired-worlds.json`;
+requests targeting another volume do nothing, so fresh fixtures are unaffected.
+Interrupted exports require inspection and a fresh request ID; the source is
+never changed. Run exports only on the intended existing production volume.
+
+Use `python3 /opt/the-storm/skylands-transfer.py --inspect <payload>` to obtain
+the reviewed manifest digest. An `install` request contains `id`, `volumeDigest` and `digest`,
+and reads that same payload location. It stages and verifies the candidate,
+retains the original dimension as `original-dimension` beside the payload, then
+installs only `world/dimensions/minecraft/skylands`. Parent save metadata and
+production inventories/databases remain in place. Rename interruptions resume
+from the durable receipt; completed requests never replay over later live edits.
+Rollback requires stopped-volume maintenance using the retained original and
+the matching prior release; image rollback alone does not restore terrain.
+
+The helper runs before Paper and refuses an actively locked save. A normal
+retained-volume deployment does not export or replace terrain unless its image
+contains the explicit request. Keep local playtesting in disposable copies and
+validate native terrain before approving an installation digest. Transfer data
+is private operational staging, never a repository or public PR asset.
+
 ## Plugin and configuration ownership
 
 `owned/plugins/TheStorm/config.yml` registers and enables all 31 Storm modules,
