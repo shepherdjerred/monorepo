@@ -33,10 +33,10 @@ final class LocalMutationTests: XCTestCase {
     }
 
     func testDeleteUndoRestoresTheReopenedTask() throws {
-        let note = try ownedNote()
-        let beforeDelete = try Data(contentsOf: note)
         let app = launch()
         XCTAssertTrue(task(in: app).waitForExistence(timeout: 20), app.debugDescription)
+        let note = try ownedNote()
+        let beforeDelete = try Data(contentsOf: note)
         task(in: app).tap()
         let title = app.textFields["facet.editor.title"]
         XCTAssertTrue(title.waitForExistence(timeout: 5), app.debugDescription)
@@ -103,10 +103,60 @@ final class LocalMutationTests: XCTestCase {
     }
 
     private func ownedNote() throws -> URL {
+        let root = try boundApplicationRoot()
+        let runID = try XCTUnwrap(ProcessInfo.processInfo.environment["FACET_MUTATION_RUN_ID"])
+        _ = try XCTUnwrap(UUID(uuidString: runID))
+        let owner = Data((runID + "\n").utf8)
+        let containers = try FileManager.default.contentsOfDirectory(
+            at: root, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        var matches: [URL] = []
+        for container in containers where UUID(uuidString: container.lastPathComponent) != nil {
+            let vault = container.appendingPathComponent("Documents/Native acceptance")
+            let marker = vault.appendingPathComponent(".facet-local-mutation-owner")
+            guard marker.resolvingSymlinksInPath().path == marker.path else {
+                throw MutationOwnershipError.linkedPath
+            }
+            let bytes: Data
+            do { bytes = try Data(contentsOf: marker) } catch {
+                let failure = error as NSError
+                let underlying = failure.userInfo[NSUnderlyingErrorKey] as? NSError
+                if (failure.domain == NSPOSIXErrorDomain && failure.code == ENOENT)
+                    || (underlying?.domain == NSPOSIXErrorDomain && underlying?.code == ENOENT)
+                {
+                    continue
+                }
+                throw error
+            }
+            guard bytes == owner else { throw MutationOwnershipError.wrongRun }
+            for directory in [container, container.appendingPathComponent("Documents"), vault] {
+                let metadata = try directory.resourceValues(forKeys: [
+                    .isDirectoryKey, .isSymbolicLinkKey,
+                ])
+                guard metadata.isDirectory == true, metadata.isSymbolicLink == false else {
+                    throw MutationOwnershipError.linkedPath
+                }
+            }
+            let metadata = try marker.resourceValues(forKeys: [
+                .isRegularFileKey, .isSymbolicLinkKey,
+            ])
+            guard metadata.isRegularFile == true, metadata.isSymbolicLink == false else {
+                throw MutationOwnershipError.linkedPath
+            }
+            matches.append(vault.appendingPathComponent("Tasks/Mutation.md"))
+        }
+        XCTAssertEqual(matches.count, 1, "Exactly one current vault must retain this run marker.")
+        let note = try XCTUnwrap(matches.first)
+        XCTAssertEqual(note.resolvingSymlinksInPath().path, note.path)
+        let metadata = try note.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        XCTAssertEqual(metadata.isRegularFile, true)
+        XCTAssertEqual(metadata.isSymbolicLink, false)
+        return note
+    }
+
+    private func boundApplicationRoot() throws -> URL {
         let environment = ProcessInfo.processInfo.environment
         let simulator = try XCTUnwrap(environment["FACET_E2E_SIMULATOR"])
         XCTAssertEqual(simulator, environment["SIMULATOR_UDID"])
-        _ = try XCTUnwrap(environment["FACET_MUTATION_RUN_ID"].flatMap(UUID.init(uuidString:)))
         let path = try XCTUnwrap(environment["FACET_MUTATION_TASK_PATH"])
         let note = URL(fileURLWithPath: path).standardizedFileURL
         XCTAssertEqual(note.path, path)
@@ -119,10 +169,9 @@ final class LocalMutationTests: XCTestCase {
             container.lastPathComponent, "Documents", "Native acceptance", "Tasks", "Mutation.md",
         ]
         XCTAssertEqual(Array(note.pathComponents.suffix(suffix.count)), suffix)
-        let metadata = try note.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
-        XCTAssertEqual(metadata.isRegularFile, true)
-        XCTAssertEqual(metadata.isSymbolicLink, false)
-        return note
+        let root = container.deletingLastPathComponent()
+        XCTAssertEqual(root.resolvingSymlinksInPath().path, root.path)
+        return root
     }
 
     private func attach(_ app: XCUIApplication, _ name: String) {
@@ -132,3 +181,5 @@ final class LocalMutationTests: XCTestCase {
         add(image)
     }
 }
+
+private enum MutationOwnershipError: Error { case linkedPath, wrongRun }

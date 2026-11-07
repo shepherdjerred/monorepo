@@ -7,10 +7,17 @@ import Foundation
 enum MacAcceptanceOwnership {
     private enum OwnershipError: Error { case owner, descriptor }
 
-    static func buildDirectory(package: URL, runID: UUID, native: Bool, occurrence: Bool) -> URL {
+    static func buildDirectory(
+        package: URL, runID: UUID, native: Bool, occurrence: Bool, isolatedRunID: String? = nil
+    ) throws -> URL {
+        if let isolatedRunID {
+            guard native, isolatedRunID == runID.uuidString.lowercased() else {
+                throw OwnershipError.descriptor
+            }
+        }
         if native {
             return package.appendingPathComponent(
-                occurrence
+                occurrence || isolatedRunID != nil
                     ? ".build/occurrence-acceptance/\(runID.uuidString.lowercased())/macos"
                     : ".build/acceptance-xcode")
         }

@@ -533,6 +533,8 @@ Undo the deletion, cold-launch and complete it again. Stopped-app checkpoints
 retain the exact pre-delete Markdown and require byte-for-byte restoration after
 Undo. The simulator-bound UI runner also reads those bytes before deletion,
 requires an actual `ENOENT` before Undo, and rereads identical bytes afterward.
+An exclusive run marker locates the same synthetic vault after XCTest relocates
+its data container; discovery stays inside that run's owned simulator.
 All three selectors must pass, unrelated fixture bytes remain unchanged,
 and the ordinary local runner's final completed-task gate remains enforced.
 

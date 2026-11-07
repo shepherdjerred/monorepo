@@ -156,10 +156,11 @@
             else { throw CaptureError.descriptor }
             let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
                 .deletingLastPathComponent()
-            let build = MacAcceptanceOwnership.buildDirectory(
+            let build = try MacAcceptanceOwnership.buildDirectory(
                 package: package, runID: runID,
                 native: app.launchArguments.contains("--facet-native-acceptance"),
-                occurrence: environment["FACET_OCCURRENCE_DAY"] != nil)
+                occurrence: environment["FACET_OCCURRENCE_DAY"] != nil,
+                isolatedRunID: environment["FACET_E2E_ISOLATED_BUILD_RUN_ID"])
             let executable = build.appendingPathComponent(
                 "Build/Products/Debug/FacetAcceptance.app/Contents/MacOS/FacetAcceptance")
             let applications = NSRunningApplication.runningApplications(

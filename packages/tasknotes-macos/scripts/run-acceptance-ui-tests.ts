@@ -166,6 +166,7 @@ export async function runAcceptanceUiTests(
     {
       FACET_E2E_DESCRIPTOR: descriptor,
       FACET_E2E_RUN_ID: runID,
+      ...(prepared ? { FACET_E2E_ISOLATED_BUILD_RUN_ID: runID } : {}),
     },
     execute,
     prepared?.runnerBundlePath,

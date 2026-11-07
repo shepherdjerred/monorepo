@@ -7,6 +7,10 @@ import { assertExactNativeResults } from "tasknotes-macos/scripts/acceptance-tes
 import { runIosNativeJourney, verifyVault } from "./ios-native-e2e.ts";
 import { exportIosJourneyAttachments } from "./native-acceptance/attachments.ts";
 import {
+  initializeMutationOwner,
+  requireMutationOwner,
+} from "./native-acceptance/local-mutation-owner.ts";
+import {
   configureIosJourneyTests,
   runSelectedIosJourneyTest,
 } from "./native-acceptance/selected-tests.ts";
@@ -41,6 +45,8 @@ export async function runIosLocalMutationAcceptance(): Promise<void> {
     kind: "native-local-mutation-ios",
     seed: seedIosLocalMutationVault,
     execute: async (context) => {
+      const runID = z.uuid().parse(path.basename(context.evidence));
+      await initializeMutationOwner(await context.vault(), runID);
       await configureIosJourneyTests(context.testRun, {}, context.command);
       const results: string[] = [];
       for (const [index, test] of tests.entries()) {
@@ -53,10 +59,11 @@ export async function runIosLocalMutationAcceptance(): Promise<void> {
         try {
           const ownedVault = await context.vault();
           assert.equal(await realpath(ownedVault), ownedVault);
+          await requireMutationOwner(ownedVault, runID);
           await configureIosJourneyTests(
             context.testRun,
             {
-              FACET_MUTATION_RUN_ID: path.basename(context.evidence),
+              FACET_MUTATION_RUN_ID: runID,
               FACET_MUTATION_TASK_PATH: path.join(ownedVault, taskPath),
             },
             context.command,
@@ -92,6 +99,7 @@ export async function runIosLocalMutationAcceptance(): Promise<void> {
             { target: "TasksForObsidianUITests", suite: "LocalMutationTests" },
           );
           const vault = await context.vault();
+          await requireMutationOwner(vault, runID);
           for (const relative of [
             "Tasks/Existing.md",
             "Reference.md",
