@@ -7,6 +7,7 @@ import {
   type createRecoveryInspector,
 } from "#infrastructure/recovery.ts";
 import type { Principal } from "#shared/contract.ts";
+import { AbandonRecoveryIntentSchema } from "#shared/model/route-contract.ts";
 
 /**
  * `POST /recovery-intents/:id/settle` (admin, 4.15): the independent
@@ -42,6 +43,20 @@ export function registerRecoveryRoute(
         input.reason,
         c.get("principal"),
         settled,
+      ),
+    );
+  });
+  /**
+   * `POST /recovery-intents/:id/abandon` (admin): closes a pending intent
+   * whose deployment already ended without needing it. It releases nothing.
+   */
+  app.post("/api/v1/recovery-intents/:id/abandon", async (c) => {
+    const input = AbandonRecoveryIntentSchema.parse(await c.req.json());
+    return c.json(
+      await delivery.abandonRecoveryIntent(
+        c.req.param("id"),
+        input.reason,
+        c.get("principal"),
       ),
     );
   });

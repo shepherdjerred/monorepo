@@ -120,6 +120,7 @@ export function createRecoveryInspector(options: {
     const application = applicationOf(definition);
     if (
       application === null ||
+      definition.kind === "static-site" ||
       applicationsOf(definition).length !== 1 ||
       workerRolloutOf(definition) !== undefined ||
       siteReleaseOf(definition) !== undefined ||
