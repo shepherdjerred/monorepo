@@ -1,3 +1,4 @@
+import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
   DeploymentDetailSchema,
@@ -11,7 +12,7 @@ import {
   type EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { runDeliveryJob } from "#lib/delivery/job.ts";
+import { DeliveryJobFailedError, runDeliveryJob } from "#lib/delivery/job.ts";
 import { deliveryJobManifest } from "#lib/delivery/job-manifest.ts";
 import type {
   DeliveryJobRequest,
@@ -31,6 +32,44 @@ import {
   workerRunnerImage,
 } from "#lib/delivery/workers/worker-plan.ts";
 import { executorIdentity } from "#activities/delivery/model/stages.ts";
+
+/**
+ * Stages whose Job only reads and proves (image provenance, candidate replay
+ * and pinned canaries) and runs before routing moves. When the executor sees
+ * such a Job fail, it settles the stage itself: nothing changed. Any other
+ * outcome, and every effect stage, stays running for independent recovery.
+ */
+const SELF_SETTLING_STAGES: ReadonlySet<string> = new Set([
+  "worker-image-provenance",
+  "worker-preflight",
+]);
+
+async function settleFailedReadOnlyStage(
+  write: { path: string; stage: string; operationId: string },
+  evidence: EvidenceInput[],
+  reason: string,
+): Promise<never> {
+  const { path, stage, operationId } = write;
+  await deliveryRequest(path, z.unknown(), {
+    key: stage,
+    status: "failed",
+    operationId,
+    message: `${stage}: read-only Job failed; nothing changed`,
+    evidence: [
+      ...evidence,
+      {
+        kind: "preflight",
+        operationId,
+        summary: `${stage} is read-only and its Job reached a terminal failure before any routing change: ${reason}`,
+      },
+    ],
+    executor: executorIdentity(),
+  });
+  throw ApplicationFailure.nonRetryable(
+    `${stage} failed: ${reason}`,
+    "DeliveryReadOnlyStageFailed",
+  );
+}
 
 async function workerJob(
   detail: DeploymentDetail,
@@ -71,7 +110,7 @@ async function workerJob(
   });
   let native: DeliveryJobReceipt | undefined;
   const nativeEvidence: EvidenceInput[] = [];
-  const result = await runDeliveryJob(request, async (receipt) => {
+  const run = runDeliveryJob(request, async (receipt) => {
     native = receipt;
     nativeEvidence.push({
       kind: "preflight",
@@ -87,6 +126,22 @@ async function workerJob(
       executor: executorIdentity(),
     });
   });
+  let result: Awaited<typeof run>;
+  try {
+    result = await run;
+  } catch (error) {
+    if (
+      native !== undefined &&
+      error instanceof DeliveryJobFailedError &&
+      SELF_SETTLING_STAGES.has(stage)
+    )
+      await settleFailedReadOnlyStage(
+        { path, stage, operationId },
+        nativeEvidence,
+        error.message,
+      );
+    throw error;
+  }
   if (native === undefined)
     throw new Error("Worker Job did not persist its native identity");
   return { result, operationId, native, nativeEvidence };

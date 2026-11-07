@@ -84,6 +84,15 @@ export async function getOrCreateDeliveryJob(
   return observed;
 }
 
+/**
+ * The recorded Job itself reached its Failed condition: a known, terminal
+ * outcome, unlike a lost lease, a replaced Job or a deadline, whose outcome
+ * the executor cannot see.
+ */
+export class DeliveryJobFailedError extends Error {
+  override readonly name = "DeliveryJobFailedError";
+}
+
 async function waitForJob(
   jobs: BatchV1Api,
   expected: V1Job,
@@ -112,7 +121,7 @@ async function waitForJob(
           condition.type === "Failed" && condition.status === "True",
       ) === true
     )
-      throw new Error(
+      throw new DeliveryJobFailedError(
         "Delivery Job failed; inspect its recorded UID and bounded stage logs",
       );
     if (
