@@ -268,7 +268,8 @@ Schedules persist independently of playback history. Temporal's declarative
 and Streambot's authenticated internal listener. The Schedule starts paused;
 activate it only after the dedicated worker and listener are healthy. The
 `streambot-lol-esports-enabled` and `streambot-lol-autoplay-enabled` gates default
-off and require the existing sports gate. `STREAMBOT_SCHEDULER_TOKEN` is credential
+on in production and require the existing sports gate. Beta Flipt copies do not
+represent a deployed beta service. `STREAMBOT_SCHEDULER_TOKEN` is credential
 bootstrap; the homelab projects its dedicated 1Password item into the two consumers.
 The package's `e2e:sports` harness accepts `E2E_LOL_LEAGUE=worlds` (or another
 supported league) instead of `E2E_SPORTS_URL` and does not need PinchTab for LoL.

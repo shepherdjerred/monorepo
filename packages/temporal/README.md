@@ -925,7 +925,7 @@ Postal credentials stay in 1Password; service endpoints and host routing are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.
 
 `temporal-daily-report-notifications-enabled` resolves per Activity and defaults
-off in production, with beta targeting declared for acceptance. When enabled,
+on in production; beta retains its declared targeting. When enabled,
 the homelab audit and Scout queue-window daily schedules, plus the explicit
 beta notification canary, use changed-condition mail.
 Each run keeps its full immutable report under

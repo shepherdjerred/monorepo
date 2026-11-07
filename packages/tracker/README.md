@@ -45,7 +45,7 @@ The production server serves `dist/client` itself. Migrations run with
 Operational behavior comes from the typed configuration package and the
 `tracker` Flipt namespace. `tracker-writes-enabled` defaults to false.
 `tracker-attachment-max-bytes` defaults to 26214400 (25 MiB) and is bounded at
-100 MiB. `tracker-telemetry-enabled` defaults to false; enabling tracing requires
+100 MiB. `tracker-telemetry-enabled` defaults on in production; tracing requires
 `OTEL_EXPORTER_OTLP_ENDPOINT`. `BUGSINK_DSN` is an optional credential. Telemetry
 does not send request bodies, actor metadata or issue descriptions.
 
