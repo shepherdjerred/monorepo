@@ -137,6 +137,38 @@ func captureAuthAwareSurface(
   }
 }
 
+/// A plan read by its own request. The plan is supplementary: a failed request or an
+/// unreadable answer leaves it unset with a note, and never fails the usage snapshot.
+struct PlanOutcome: Sendable {
+  let plan: PlanInfo?
+  let notes: [String]
+
+  init(_ result: SurfaceResult, parse: (Data) throws -> PlanInfo?) {
+    switch result {
+    case let .success(data):
+      do {
+        if let plan = try parse(data) {
+          self.plan = plan
+          self.notes = []
+        } else {
+          self.plan = nil
+          self.notes = ["Plan unavailable: the response named no plan."]
+        }
+      } catch {
+        self.plan = nil
+        self.notes = ["Plan unavailable: the response could not be read."]
+      }
+    case let .failure(message):
+      self.plan = nil
+      self.notes = ["Plan unavailable: \(message)"]
+    }
+  }
+
+  func applied(to snapshot: UsageSnapshot) -> UsageSnapshot {
+    snapshot.replacing(plan: plan, appendingNotes: notes)
+  }
+}
+
 func slug(_ value: String) -> String {
   value.lowercased().map { character in
     character.isLetter || character.isNumber ? character : "-"

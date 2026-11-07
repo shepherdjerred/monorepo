@@ -41,6 +41,10 @@ for Claude Code and Codex, $20/month each for Google AI Pro and Cursor Pro,
 $30/month for Grok, $40/month for Kimi Code, and $15/month for Meta Muse
 ($525/month total). These
 figures are reminders, not provider billing data.
+Plan names are different: each provider row names the plan its account reports.
+Only Cursor reports a price, so its price replaces the reminder value and the
+rest stay configured. A plan comes from a side request or field, so a failed plan
+lookup adds a note and never stales the quota.
 The reminder values live in the
 [subscription plan model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift).
 
@@ -78,8 +82,9 @@ codename meters such as Nimbus Quill and Iguana Necktie, which are not the
 session or weekly allowance. Fable is shown as a policy-only row when no
 independent counter is exposed. The same usage request asks for saved
 usage-limit resets. Brim shows each unused reset's expiration and never
-redeems one. A missing or ineligible inventory stays an explicit unavailable
-reset state rather than a displayed zero. Codex labels
+redeems one. Claude answers `no_grant` when the account holds no resets, so that
+shows as No resets. A missing inventory, or any other ineligible reason, stays an
+explicit unavailable reset state rather than a displayed zero. Codex labels
 windows from returned duration and reset metadata, so a missing five-hour
 window is not invented. It also reads the reset-credit surface read-only and
 shows each available banked reset with its expiration; Brim never redeems a
@@ -105,9 +110,12 @@ uses for Claude discovery.
 Google means Antigravity under the user's Google AI Pro subscription. Brim
 asks the already signed-in `agy` CLI for its zero-turn `/usage` result and
 displays the Gemini and Claude/GPT five-hour and weekly pools. The CLI remains
-the token owner: Brim never reads, copies, refreshes, logs, or persists the
-Google token. Gemini CLI and Code Assist quotas are deliberately outside this
-boundary. The contract is documented by the
+the token owner for usage. The plan name is the one exception, because only
+Google's Code Assist `loadCodeAssist` call reports the paid tier. For that call
+Brim renews an access token from agy's saved refresh token in memory, using the
+OAuth client inside the installed `agy` binary. It never writes agy's files or
+the access token. Google keeps the refresh token unchanged, so agy's session is
+unaffected. Gemini CLI and Code Assist quotas stay outside this boundary. The contract is documented by the
 [Antigravity usage command](https://antigravity.google/docs/cli/commands/usage).
 
 Cursor means the active local Cursor Pro session. Brim reads only the local
@@ -147,7 +155,8 @@ credentials; expired credentials must be renewed by signing in again through
 Kimi Code. Kimi responses are a private
 contract. Brim shows every quota window that payload names: each `limits`
 duration and each `usages` pool, including five-hour, monthly total, and
-monthly code when those keys are present. A daily or weekly row appears only
+monthly code when those keys are present. Monthly code is part of the monthly
+total, so it is shown only once its usage differs from the total's. A daily or weekly row appears only
 when the payload includes that duration. Brim does not invent a window the
 account does not return. Malformed or changed responses become unavailable or
 stale states and are covered by local fixtures.

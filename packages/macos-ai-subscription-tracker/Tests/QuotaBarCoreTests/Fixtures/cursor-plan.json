@@ -1,0 +1,16 @@
+{
+  "planInfo": {
+    "planName": "Pro",
+    "includedAmountCents": 2000,
+    "price": "$20/mo",
+    "billingCycleEnd": "1796082955000",
+    "planOwner": "PLAN_OWNER_STRIPE",
+    "includedUsagePeriod": "INCLUDED_USAGE_PERIOD_MONTHLY"
+  },
+  "nextUpgrade": {
+    "tier": "pro_plus",
+    "name": "Pro+",
+    "price": "$60/mo",
+    "description": "3x usage on all models"
+  }
+}

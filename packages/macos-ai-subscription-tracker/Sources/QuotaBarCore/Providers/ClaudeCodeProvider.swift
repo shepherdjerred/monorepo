@@ -79,12 +79,21 @@ public struct ClaudeCodeProvider: UsageProvider {
     let resets = Self.resetInventory(from: data, now: now)
     return UsageSnapshot(
       provider: .claudeCode,
+      plan: Self.plan(from: data),
       windows: windowsByID.values.sorted { $0.label < $1.label },
       resets: resets.resets,
       resetErrorMessage: resets.errorMessage,
       notes: notes,
       sourceTimestamp: now
     )
+  }
+
+  /// The plan tier (`claude_max_20x` → "Max 20x") from `cedar_ember.event_props`. The plan
+  /// is supplementary, so an absent or unexpected block leaves it unset instead of failing.
+  private static func plan(from data: Data) -> PlanInfo? {
+    let tier = try? JSONDecoder().decode(ClaudePlanEnvelope.self, from: data).cedarEmber?
+      .eventProps?.tier
+    return PlanInfo(name: PlanName.humanized(tier, droppingPrefix: "claude"))
   }
 
   /// Reads `cedar_ember` from the same usage body. A missing or rejected inventory does not
@@ -102,6 +111,13 @@ public struct ClaudeCodeProvider: UsageProvider {
     case .malformed:
       return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.malformed)
     case let .parsed(block):
+      if block.hasNoGrants {
+        // "No grant" with grants listed contradicts itself.
+        guard block.grants.isEmpty else {
+          return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.malformed)
+        }
+        return ClaudeResetInventory(resets: [], errorMessage: nil)
+      }
       guard block.eligible else {
         return ClaudeResetInventory(resets: [], errorMessage: ClaudeResetMessage.ineligible)
       }
@@ -309,6 +325,20 @@ private struct ClaudeResetInventory {
   let errorMessage: String?
 }
 
+private struct ClaudePlanEnvelope: Decodable {
+  let cedarEmber: ClaudePlanBlock?
+  enum CodingKeys: String, CodingKey { case cedarEmber = "cedar_ember" }
+}
+
+private struct ClaudePlanBlock: Decodable {
+  let eventProps: ClaudePlanEventProps?
+  enum CodingKeys: String, CodingKey { case eventProps = "event_props" }
+}
+
+private struct ClaudePlanEventProps: Decodable {
+  let tier: String?
+}
+
 private struct ClaudeResetEnvelope: Decodable {
   enum State {
     case missing
@@ -344,7 +374,18 @@ private struct ClaudeResetEnvelope: Decodable {
 
 private struct ClaudeResetBlock: Decodable {
   let eligible: Bool
+  let ineligibleReason: String?
   let grants: [ClaudeResetGrant]
+
+  enum CodingKeys: String, CodingKey {
+    case eligible
+    case ineligibleReason = "ineligible_reason"
+    case grants
+  }
+
+  /// `no_grant` answers the inventory: this account holds no saved resets right now.
+  /// Any other ineligible reason (e.g. `surface`) means the inventory was withheld.
+  var hasNoGrants: Bool { !eligible && ineligibleReason == "no_grant" }
 
   func resets(at now: Date) -> [Reset] {
     var resets: [Reset] = []

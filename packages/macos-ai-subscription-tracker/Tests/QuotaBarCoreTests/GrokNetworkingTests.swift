@@ -34,7 +34,8 @@ final class GrokNetworkingTests: XCTestCase {
       userEndpoint: endpoints.grokUser,
       billingEndpoint: endpoints.grokBilling,
       creditsEndpoint: endpoints.grokCredits,
-      resetEndpoint: endpoints.grokResets
+      resetEndpoint: endpoints.grokResets,
+      settingsEndpoint: endpoints.grokSettings
     ).fetch()
 
     XCTAssertTrue(grok.windows.map(\.label).contains("Monthly"))
@@ -81,7 +82,8 @@ final class GrokNetworkingTests: XCTestCase {
       userEndpoint: endpoints.grokUser,
       billingEndpoint: endpoints.grokBilling,
       creditsEndpoint: endpoints.grokCredits,
-      resetEndpoint: endpoints.grokResets
+      resetEndpoint: endpoints.grokResets,
+      settingsEndpoint: endpoints.grokSettings
     )
 
     do {

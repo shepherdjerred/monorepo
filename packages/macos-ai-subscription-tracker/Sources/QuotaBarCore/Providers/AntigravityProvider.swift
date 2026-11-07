@@ -4,22 +4,43 @@ public struct AntigravityProvider: UsageProvider {
   public let id = ProviderID.antigravity
   private let commandRunner: any CommandRunning
   private let executableURL: URL?
+  private let planSource: any AntigravityPlanFetching
 
-  public init(commandRunner: any CommandRunning, executableURL: URL? = nil) {
+  public init(
+    commandRunner: any CommandRunning,
+    executableURL: URL? = nil,
+    planSource: any AntigravityPlanFetching
+  ) {
     self.commandRunner = commandRunner
     self.executableURL = executableURL
+    self.planSource = planSource
   }
 
   public func fetch() async throws -> UsageSnapshot {
     let executableURL = try executableURL ?? Self.locateExecutable()
+    async let planResult = captureSurface { try await planSource.codeAssistData() }
     let result = try await commandRunner.run(
       executableURL: executableURL,
       arguments: ["--print", "/usage", "--output-format", "json", "--print-timeout", "20s"]
     )
     guard result.terminationStatus == 0 else {
+      _ = await planResult
       throw QuotaError.credentialsMissing(id)
     }
-    return try Self.parse(data: result.stdout)
+    let usage = try Self.parse(data: result.stdout)
+    return PlanOutcome(await planResult, parse: Self.parsePlan).applied(to: usage)
+  }
+
+  /// `loadCodeAssist` names the Google AI subscription as `paidTier` ("Google AI Pro"); an
+  /// account without one has only `currentTier` (the free "Antigravity" tier).
+  public static func parsePlan(data: Data) throws -> PlanInfo? {
+    struct Tier: Decodable { let name: String? }
+    struct Answer: Decodable {
+      let paidTier: Tier?
+      let currentTier: Tier?
+    }
+    let answer = try JSONDecoder().decode(Answer.self, from: data)
+    return PlanInfo(name: answer.paidTier?.name) ?? PlanInfo(name: answer.currentTier?.name)
   }
 
   public static func locateExecutable(

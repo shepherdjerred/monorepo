@@ -1,3 +1,4 @@
+import { directBinary, fishWord } from "#lib/brim/fish.ts";
 import { formatPercent } from "#lib/brim/rank.ts";
 import type { RankedEntry, RankResult } from "#lib/brim/rank.ts";
 
@@ -12,6 +13,25 @@ export function pickerOptions(result: RankResult): PickerOption[] {
     key: entry.provider,
     entry,
   }));
+}
+
+/**
+ * The provider `--provider` names: by id, display name, or command word.
+ * Unavailable providers match too, after the available ones: an explicit pick
+ * starts even without usable quota data (signed out, stale snapshot).
+ */
+export function findRequested(
+  result: RankResult,
+  requested: string,
+): RankedEntry | undefined {
+  const normalized = requested.toLowerCase();
+  return [...result.ranked, ...result.other, ...result.unavailable].find(
+    (entry) =>
+      entry.provider.toLowerCase() === normalized ||
+      entry.displayName.toLowerCase() === normalized ||
+      fishWord(entry.provider) === normalized ||
+      directBinary(entry.provider) === normalized,
+  );
 }
 
 /** Wrap-around cursor movement for the picker list. */
@@ -85,12 +105,14 @@ export function budgetRemaining(entry: RankedEntry): number | null {
   return used === null ? null : 100 - used;
 }
 
+/** "Grok (SuperGrok, grok@example.com)": the plan, then the account, when known. */
 export function formatPickerName(entry: RankedEntry): string {
-  const names =
-    entry.accountLabel === null
-      ? [entry.displayName]
-      : [entry.displayName, `(${entry.accountLabel})`];
-  return names.join(" ");
+  const details = [entry.planName, entry.accountLabel].flatMap((detail) =>
+    detail === null ? [] : [detail],
+  );
+  return details.length === 0
+    ? entry.displayName
+    : `${entry.displayName} (${details.join(", ")})`;
 }
 
 export function formatPickerStats(entry: RankedEntry): string {

@@ -58,9 +58,11 @@ final class AntigravityCursorProviderTests: XCTestCase {
     )
     let snapshot = try await AntigravityProvider(
       commandRunner: runner,
-      executableURL: executable
+      executableURL: executable,
+      planSource: StubPlanSource(.success(fixture("antigravity-code-assist")))
     ).fetch()
     XCTAssertEqual(snapshot.provider, .antigravity)
+    XCTAssertEqual(snapshot.plan?.name, "Google AI Pro")
     let calls = await runner.calls
     let call = try XCTUnwrap(calls.first)
     XCTAssertEqual(call.executableURL, executable)
@@ -73,15 +75,46 @@ final class AntigravityCursorProviderTests: XCTestCase {
       result: .success(CommandResult(stdout: Data(), terminationStatus: 1))
     )
     await XCTAssertThrowsErrorAsync {
-      try await AntigravityProvider(commandRunner: failed, executableURL: executable).fetch()
+      try await AntigravityProvider(
+        commandRunner: failed, executableURL: executable,
+        planSource: StubPlanSource(.success(Data()))
+      ).fetch()
     }
     let timeout = StubCommandRunner(result: .failure(.requestTimedOut(.antigravity)))
     do {
-      _ = try await AntigravityProvider(commandRunner: timeout, executableURL: executable).fetch()
+      _ = try await AntigravityProvider(
+        commandRunner: timeout, executableURL: executable,
+        planSource: StubPlanSource(.success(Data()))
+      ).fetch()
       XCTFail("Expected timeout")
     } catch {
       XCTAssertEqual(error as? QuotaError, .requestTimedOut(.antigravity))
     }
+  }
+
+  func testAntigravityPlanFailureKeepsUsageAndSaysWhy() async throws {
+    let runner = StubCommandRunner(
+      result: .success(CommandResult(stdout: fixture("antigravity-success"), terminationStatus: 0))
+    )
+    let snapshot = try await AntigravityProvider(
+      commandRunner: runner,
+      executableURL: URL(fileURLWithPath: "/test/agy"),
+      planSource: StubPlanSource(.failure(.unauthorized(.antigravity)))
+    ).fetch()
+    XCTAssertFalse(snapshot.windows.isEmpty)
+    XCTAssertNil(snapshot.plan)
+    XCTAssertTrue(snapshot.notes.contains { $0.hasPrefix("Plan unavailable:") })
+  }
+
+  func testAntigravityPlanPrefersPaidTierOverFreeTier() throws {
+    XCTAssertEqual(
+      try AntigravityProvider.parsePlan(data: fixture("antigravity-code-assist"))?.name,
+      "Google AI Pro")
+    XCTAssertEqual(
+      try AntigravityProvider.parsePlan(
+        data: Data(#"{"currentTier":{"id":"free-tier","name":"Antigravity"}}"#.utf8))?.name,
+      "Antigravity")
+    XCTAssertNil(try AntigravityProvider.parsePlan(data: Data("{}".utf8)))
   }
 
   func testAntigravityExecutableDiscoveryUsesPathWithoutShell() throws {
@@ -137,27 +170,71 @@ final class AntigravityCursorProviderTests: XCTestCase {
 
   func testCursorPostsConnectJSONWithLocalCredential() async throws {
     let endpoints = try ProviderEndpoints.live(environment: [:])
-    let transport = StubTransport([
-      .success(ProviderResponse(statusCode: 200, data: fixture("cursor-success")))
+    let transport = RoutingTransport(routes: [
+      endpoints.cursorUsage.absoluteString: .success(
+        ProviderResponse(statusCode: 200, data: fixture("cursor-success"))),
+      endpoints.cursorPlan.absoluteString: .success(
+        ProviderResponse(statusCode: 200, data: fixture("cursor-plan"))),
     ])
     let provider = CursorProvider(
       client: ProviderHTTPClient(
         transport: transport,
         credentials: StubCredentialStore(tokens: ["cursor-local-token"])
       ),
-      endpoint: endpoints.cursorUsage
+      endpoint: endpoints.cursorUsage,
+      planEndpoint: endpoints.cursorPlan
     )
 
-    _ = try await provider.fetch()
+    let snapshot = try await provider.fetch()
 
+    XCTAssertEqual(snapshot.plan, PlanInfo(name: "Pro", monthlyCostUSD: 20))
     let requests = await transport.requests
-    let request = try XCTUnwrap(requests.first)
-    XCTAssertEqual(request.method, .post)
-    XCTAssertEqual(request.body, Data("{}".utf8))
-    XCTAssertEqual(request.headers["Content-Type"], "application/json")
-    XCTAssertEqual(request.headers["Connect-Protocol-Version"], "1")
-    XCTAssertFalse(request.description.contains("cursor-local-token"))
-    XCTAssertFalse(request.description.contains("{}"))
+    XCTAssertEqual(Set(requests.map(\.url)), [endpoints.cursorUsage, endpoints.cursorPlan])
+    for request in requests {
+      XCTAssertEqual(request.method, .post)
+      XCTAssertEqual(request.body, Data("{}".utf8))
+      XCTAssertEqual(request.headers["Content-Type"], "application/json")
+      XCTAssertEqual(request.headers["Connect-Protocol-Version"], "1")
+      XCTAssertEqual(request.bearerToken, "cursor-local-token")
+      XCTAssertFalse(request.description.contains("cursor-local-token"))
+      XCTAssertFalse(request.description.contains("{}"))
+    }
+  }
+
+  func testCursorPlanFailureKeepsUsageAndSaysWhy() async throws {
+    let endpoints = try ProviderEndpoints.live(environment: [:])
+    let provider = CursorProvider(
+      client: ProviderHTTPClient(
+        transport: RoutingTransport(routes: [
+          endpoints.cursorUsage.absoluteString: .success(
+            ProviderResponse(statusCode: 200, data: fixture("cursor-success"))),
+          endpoints.cursorPlan.absoluteString: .success(
+            ProviderResponse(statusCode: 401, data: Data())),
+        ]),
+        credentials: StubCredentialStore(tokens: ["token"])
+      ),
+      endpoint: endpoints.cursorUsage,
+      planEndpoint: endpoints.cursorPlan
+    )
+
+    let snapshot = try await provider.fetch()
+
+    XCTAssertEqual(snapshot.windows.count, 2)
+    XCTAssertEqual(snapshot.freshness, .current)
+    XCTAssertNil(snapshot.plan)
+    XCTAssertTrue(snapshot.notes.contains { $0.hasPrefix("Plan unavailable:") })
+  }
+
+  func testCursorPlanPriceParsesOnlyMonthlyDollars() throws {
+    func plan(_ price: String) throws -> PlanInfo? {
+      try CursorProvider.parsePlan(
+        data: Data(#"{"planInfo":{"planName":"Pro","price":"\#(price)"}}"#.utf8))
+    }
+    XCTAssertEqual(try plan("$20/mo")?.monthlyCostUSD, 20)
+    XCTAssertNil(try plan("$20/yr")?.monthlyCostUSD)
+    XCTAssertNil(try plan("€20/mo")?.monthlyCostUSD)
+    XCTAssertEqual(try plan("custom")?.name, "Pro")
+    XCTAssertNil(try CursorProvider.parsePlan(data: Data(#"{"planInfo":{"planName":" "}}"#.utf8)))
   }
 
   func testCursorRejectsMissingPoolsInvalidResetsAuthenticationAndTimeouts() async throws {
@@ -174,12 +251,16 @@ final class AntigravityCursorProviderTests: XCTestCase {
     }
 
     let endpoint = try XCTUnwrap(URL(string: "https://example.com/cursor"))
+    let planEndpoint = try XCTUnwrap(URL(string: "https://example.com/cursor-plan"))
     let unauthorized = CursorProvider(
       client: ProviderHTTPClient(
-        transport: StubTransport([.success(ProviderResponse(statusCode: 401, data: Data()))]),
+        transport: RoutingTransport(routes: [
+          endpoint.absoluteString: .success(ProviderResponse(statusCode: 401, data: Data()))
+        ]),
         credentials: StubCredentialStore(tokens: ["token"])
       ),
-      endpoint: endpoint
+      endpoint: endpoint,
+      planEndpoint: planEndpoint
     )
     do {
       _ = try await unauthorized.fetch()
@@ -190,10 +271,13 @@ final class AntigravityCursorProviderTests: XCTestCase {
 
     let timedOut = CursorProvider(
       client: ProviderHTTPClient(
-        transport: StubTransport([.failure(.requestTimedOut(.cursor))]),
+        transport: RoutingTransport(routes: [
+          endpoint.absoluteString: .failure(.requestTimedOut(.cursor))
+        ]),
         credentials: StubCredentialStore(tokens: ["token"])
       ),
-      endpoint: endpoint
+      endpoint: endpoint,
+      planEndpoint: planEndpoint
     )
     do {
       _ = try await timedOut.fetch()
@@ -202,6 +286,12 @@ final class AntigravityCursorProviderTests: XCTestCase {
       XCTAssertEqual(error as? QuotaError, .requestTimedOut(.cursor))
     }
   }
+}
+
+private struct StubPlanSource: AntigravityPlanFetching {
+  let result: Result<Data, QuotaError>
+  init(_ result: Result<Data, QuotaError>) { self.result = result }
+  func codeAssistData() async throws -> Data { try result.get() }
 }
 
 private actor StubCommandRunner: CommandRunning {

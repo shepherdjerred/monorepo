@@ -21,6 +21,7 @@ import {
   layout,
   nextCommand,
   exec,
+  hc,
 } from "herdr";
 
 // Agents whose provider is at a usage limit (Brim) are hidden until "hide.exhausted"
@@ -203,6 +204,28 @@ function duration(ms) {
   return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`;
 }
 
+// Which device an agent runs on: another machine by its SSH target (`hc machine ls`
+// `target`, which stays put when Herdr renames a machine after its host), its name or
+// its host; this computer by its platform. An unlisted machine shows its name.
+const DEVICES = { karpathy: "mac-mini-top", desktop: "windows" };
+// Machine name -> [target, host], refreshed with the machine list.
+let machineAliases = {};
+async function loadMachineAliases() {
+  const r = await hc(["machine", "ls", "--json"]);
+  if (r.code !== 0)
+    throw new Error(r.stderr.trim() || `hc machine ls exited ${r.code}`);
+  machineAliases = Object.fromEntries(
+    JSON.parse(r.stdout).machines.map((m) => [m.name, [m.target, m.host]]),
+  );
+}
+function device(machine) {
+  if (!machine) return window()?.platform === "windows" ? "windows" : "laptop";
+  const key = [machine, ...(machineAliases[machine] ?? [])].find(
+    (k) => k in DEVICES,
+  );
+  return key ? DEVICES[key] : null;
+}
+
 // The agent's icon from the app's program table: a one-color glyph or a picture.
 function icon(p, size, color) {
   if (!p?.icon) return null;
@@ -221,6 +244,14 @@ export default class Agents extends View {
     cx.timer.every(30000, (cx) => cx.notify());
     cx.timer.every(60000, (cx) => this.pollBrim(cx));
     this.pollBrim(cx);
+    // Machines can be renamed or added while the app runs; their icons follow.
+    const aliases = (cx) =>
+      cx.spawn(async (cx) => {
+        await loadMachineAliases();
+        cx.notify();
+      });
+    cx.timer.every(60000, aliases);
+    aliases(cx);
     cx.spawn(async (cx) => {
       for (;;) {
         if ((await nextCommand()) === "toggle-exhausted")
@@ -620,6 +651,7 @@ export default class Agents extends View {
       const more = detail.get(a.address);
       // An agent on another machine (`vps/t7`) says which.
       const machine = a.address.includes("/") ? a.address.split("/")[0] : null;
+      const host = device(machine);
       if (collapsed) {
         return h_flex()
           .id(`ag-${a.address}`)
@@ -741,8 +773,19 @@ export default class Agents extends View {
               ),
             ),
         )
-        .when(Boolean(machine), (el) =>
-          el.child(div().text_size(10).text_color(t.dim).child(machine)),
+        .child(
+          div()
+            .id(`host-${a.address}`)
+            .flex_none()
+            .tooltip(machine ?? "This computer")
+            .child(
+              host
+                ? svg(`mods/my-agents/${host}.svg`)
+                    .size(12)
+                    .flex_none()
+                    .text_color(t.dim)
+                : div().text_size(10).text_color(t.dim).child(machine),
+            ),
         )
         .when(subs.length > 0, (el) => el.child(fold(a, subs)))
         .when(this.hovered === a.address, (el) => el.child(pin))

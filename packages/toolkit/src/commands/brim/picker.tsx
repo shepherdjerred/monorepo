@@ -5,6 +5,7 @@ import {
   budgetRemaining,
   columnWidths,
   formatAlignedStats,
+  formatPickerName,
   pressureColor,
   pressureForRemaining,
   usageBar,
@@ -123,10 +124,7 @@ function SpawnPreview({
   readonly programs: ReadonlyMap<string, string>;
   readonly noFish: boolean;
 }): JSX.Element {
-  const name =
-    entry.accountLabel === null
-      ? entry.displayName
-      : `${entry.displayName} (${entry.accountLabel})`;
+  const name = formatPickerName(entry);
   // Under --no-fish the spawn bypasses fish entirely, so preview the
   // configured fallback command instead of fish resolution.
   if (noFish) {

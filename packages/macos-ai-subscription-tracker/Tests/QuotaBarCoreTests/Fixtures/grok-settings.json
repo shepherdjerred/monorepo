@@ -1,0 +1,7 @@
+{
+  "allow_access": "true",
+  "default_model": "grok-build",
+  "subscription_tier_display": "SuperGrok",
+  "subscription_watch_interval_secs": "60",
+  "worktree_type": "standalone"
+}

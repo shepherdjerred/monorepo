@@ -5,32 +5,47 @@ public struct ProviderEndpoints: Sendable {
   public let codexUsage: URL
   public let codexResets: URL
   public let cursorUsage: URL
+  public let cursorPlan: URL
   public let kimiUsage: URL
+  public let kimiMe: URL
   public let grokUser: URL
   public let grokBilling: URL
   public let grokCredits: URL
   public let grokResets: URL
+  public let grokSettings: URL
+  public let antigravityToken: URL
+  public let antigravityCodeAssist: URL
 
   public init(
     claudeUsage: URL,
     codexUsage: URL,
     codexResets: URL,
     cursorUsage: URL,
+    cursorPlan: URL,
     kimiUsage: URL,
+    kimiMe: URL,
     grokUser: URL,
     grokBilling: URL,
     grokCredits: URL,
-    grokResets: URL
+    grokResets: URL,
+    grokSettings: URL,
+    antigravityToken: URL,
+    antigravityCodeAssist: URL
   ) {
     self.claudeUsage = claudeUsage
     self.codexUsage = codexUsage
     self.codexResets = codexResets
     self.cursorUsage = cursorUsage
+    self.cursorPlan = cursorPlan
     self.kimiUsage = kimiUsage
+    self.kimiMe = kimiMe
     self.grokUser = grokUser
     self.grokBilling = grokBilling
     self.grokCredits = grokCredits
     self.grokResets = grokResets
+    self.grokSettings = grokSettings
+    self.antigravityToken = antigravityToken
+    self.antigravityCodeAssist = antigravityCodeAssist
   }
 
   public static func live() throws -> ProviderEndpoints {
@@ -72,8 +87,16 @@ public struct ProviderEndpoints: Sendable {
         "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage",
         provider: .cursor
       ),
+      cursorPlan: url(
+        "https://api2.cursor.sh/aiserver.v1.DashboardService/GetPlanInfo",
+        provider: .cursor
+      ),
       kimiUsage: url(
         environment["QUOTABAR_KIMI_USAGE_URL"] ?? "https://api.kimi.com/coding/v1/usages",
+        provider: .kimi
+      ),
+      kimiMe: url(
+        environment["QUOTABAR_KIMI_ME_URL"] ?? "https://api.kimi.com/coding/v1/me",
         provider: .kimi
       ),
       grokUser: url("https://cli-chat-proxy.grok.com/v1/user", provider: .grok),
@@ -85,6 +108,12 @@ public struct ProviderEndpoints: Sendable {
       grokResets: url(
         "https://grok.com/grok_api_v2.GrokBuildBilling/GetRemainingResets",
         provider: .grok
+      ),
+      grokSettings: url("https://cli-chat-proxy.grok.com/v1/settings", provider: .grok),
+      antigravityToken: url("https://oauth2.googleapis.com/token", provider: .antigravity),
+      antigravityCodeAssist: url(
+        "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist",
+        provider: .antigravity
       )
     )
   }

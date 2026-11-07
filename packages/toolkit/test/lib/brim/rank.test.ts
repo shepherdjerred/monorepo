@@ -168,6 +168,35 @@ describe("rankSnapshots", () => {
     expect(cursor?.budgetUsed).toBe(40);
   });
 
+  it("carries each provider's plan, available or not", () => {
+    const result = rankSnapshots(
+      [
+        {
+          ...snapshot("cursor", [
+            win("Cursor Models", { monthly: {} }, 40, 20),
+          ]),
+          plan: { name: "Pro", monthlyCostUSD: 20 },
+        },
+        {
+          ...snapshot("kimi", [win("Monthly", { monthly: {} }, 40, 20)], {
+            stale: { reason: "Kimi Code credentials expired." },
+          }),
+          plan: { name: "Pro" },
+        },
+        snapshot("codex", [win("Weekly", { weekly: {} }, 5, 3)]),
+      ],
+      { nowMs: NOW_MS },
+    );
+    const cursor = result.ranked.find((entry) => entry.provider === "cursor");
+    expect(cursor?.planName).toBe("Pro");
+    expect(cursor?.planMonthlyCostUSD).toBe(20);
+    const kimi = result.unavailable.find((entry) => entry.provider === "kimi");
+    expect(kimi?.planName).toBe("Pro");
+    expect(kimi?.planMonthlyCostUSD).toBeNull();
+    const codex = result.ranked.find((entry) => entry.provider === "codex");
+    expect(codex?.planName).toBeNull();
+  });
+
   it("moves 5-hour-exhausted providers to unavailable", () => {
     const result = rankSnapshots(
       [

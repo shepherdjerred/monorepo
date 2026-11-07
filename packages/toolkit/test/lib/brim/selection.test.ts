@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { RankedEntry } from "#lib/brim/rank.ts";
+import { PROVIDER_ORDER, withoutQuotaData } from "#lib/brim/rank.ts";
 import {
   budgetRemaining,
   columnWidths,
+  findRequested,
   formatAlignedStats,
   formatCompactStats,
   formatPickerName,
@@ -22,6 +24,8 @@ function entry(
     provider,
     displayName: provider,
     accountLabel: null,
+    planName: null,
+    planMonthlyCostUSD: null,
     available: true,
     reason: null,
     fiveHourUsed: null,
@@ -50,6 +54,46 @@ describe("pickerOptions", () => {
     });
     expect(options.map((option) => option.key)).toEqual(["codex", "kimi"]);
     expect(options[1]?.entry).toBe(other);
+  });
+});
+
+describe("findRequested", () => {
+  const ranked = entry("claude-code", { displayName: "Claude Code" });
+  const stale = entry("grok", {
+    displayName: "Grok",
+    available: false,
+    reason: "stale: Grok credentials expired.",
+    budgetUsed: null,
+    budgetKind: null,
+  });
+  const result = { ranked: [ranked], other: [], unavailable: [stale] };
+
+  it("matches an available provider by id, display name, or command word", () => {
+    expect(findRequested(result, "claude-code")).toBe(ranked);
+    expect(findRequested(result, "Claude Code")).toBe(ranked);
+    expect(findRequested(result, "claude")).toBe(ranked);
+  });
+
+  it("matches an unavailable provider, keeping its reason", () => {
+    const match = findRequested(result, "grok");
+    expect(match).toBe(stale);
+    expect(match?.available).toBe(false);
+    expect(findRequested(result, "GROK")).toBe(stale);
+  });
+
+  it("returns undefined for an unknown provider", () => {
+    expect(findRequested(result, "nope")).toBeUndefined();
+  });
+
+  it("resolves every known provider without quota data", () => {
+    const none = withoutQuotaData("no Brim snapshot cache on this machine");
+    expect(none.ranked).toEqual([]);
+    expect(none.unavailable.map((e) => e.provider)).toEqual(PROVIDER_ORDER);
+    const kimi = findRequested(none, "kimi");
+    expect(kimi?.available).toBe(false);
+    expect(kimi?.displayName).toBe("Kimi Code");
+    expect(kimi?.reason).toBe("no Brim snapshot cache on this machine");
+    expect(findRequested(none, "claude")?.provider).toBe("claude-code");
   });
 });
 
@@ -126,7 +170,7 @@ describe("budgetRemaining", () => {
 });
 
 describe("formatPickerName", () => {
-  it("appends the account label when present", () => {
+  it("appends the plan, then the account label, when present", () => {
     expect(formatPickerName(entry("grok", { displayName: "Grok" }))).toBe(
       "Grok",
     );
@@ -134,10 +178,19 @@ describe("formatPickerName", () => {
       formatPickerName(
         entry("muse", {
           displayName: "Meta Muse",
-          accountLabel: "Muse Code High Usage",
+          planName: "Muse Code High Usage",
         }),
       ),
     ).toBe("Meta Muse (Muse Code High Usage)");
+    expect(
+      formatPickerName(
+        entry("grok", {
+          displayName: "Grok",
+          planName: "SuperGrok",
+          accountLabel: "grok@example.com",
+        }),
+      ),
+    ).toBe("Grok (SuperGrok, grok@example.com)");
   });
 });
 

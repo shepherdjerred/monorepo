@@ -101,14 +101,22 @@ struct ProviderSectionView: View {
       ProviderLogo(provider: overview.provider)
       Text(overview.provider.displayName)
         .font(.subheadline.weight(.semibold))
+      if let plan = overview.state.snapshot?.plan {
+        Text(plan.name)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+      }
       ForEach(overview.badges) { badge in
         ProviderBadgeView(badge: badge)
       }
       Spacer()
-      Text("$\(SubscriptionPlan.plan(for: overview.provider).monthlyCostUSD)/mo")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .monospacedDigit()
+      Text(
+        "$\(SubscriptionPlan.monthlyCostUSD(for: overview.provider, snapshot: overview.state.snapshot))/mo"
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
+      .monospacedDigit()
       if let url = overview.provider.usageURL {
         Link(destination: url) {
           Image(systemName: "arrow.up.right.square")

@@ -25,6 +25,33 @@ const DISPLAY_NAMES: Record<string, string> = {
   muse: "Meta Muse",
 };
 
+/**
+ * Every known provider as unavailable with one reason: the result when there is
+ * no quota data at all, so an explicit `--provider` still resolves by name.
+ */
+export function withoutQuotaData(reason: string): RankResult {
+  return {
+    ranked: [],
+    other: [],
+    unavailable: PROVIDER_ORDER.map((provider) => ({
+      provider,
+      displayName: displayName(provider),
+      accountLabel: null,
+      planName: null,
+      planMonthlyCostUSD: null,
+      available: false,
+      reason,
+      fiveHourUsed: null,
+      budgetUsed: null,
+      budgetKind: null,
+      pace: null,
+      budgetResetsIn: null,
+      fallbackWindow: null,
+      snapshotAge: null,
+    })),
+  };
+}
+
 export function displayName(provider: string): string {
   return DISPLAY_NAMES[provider] ?? provider;
 }
@@ -38,6 +65,10 @@ export type RankedEntry = {
   readonly provider: string;
   readonly displayName: string;
   readonly accountLabel: string | null;
+  /** The plan as the provider reports it (e.g. "Max 20x"), or null when unknown. */
+  readonly planName: string | null;
+  /** The provider's own monthly price, when it reports one (Cursor). */
+  readonly planMonthlyCostUSD: number | null;
   readonly available: boolean;
   /** Non-null when `available` is false. */
   readonly reason: string | null;
@@ -338,6 +369,8 @@ function classifySnapshot(
     provider: snapshot.provider,
     displayName: displayName(snapshot.provider),
     accountLabel: snapshot.accountLabel ?? null,
+    planName: snapshot.plan?.name ?? null,
+    planMonthlyCostUSD: snapshot.plan?.monthlyCostUSD ?? null,
     snapshotAge,
   };
   const unavailable = (

@@ -7,6 +7,7 @@ import {
   COCOA_EPOCH_OFFSET_SECONDS,
   defaultSnapshotsPath,
   loadSnapshots,
+  SnapshotCacheMissingError,
 } from "#lib/brim/cache.ts";
 
 const dir = await mkdtemp(path.join(tmpdir(), "brim-cache-"));
@@ -50,6 +51,17 @@ describe("loadSnapshots", () => {
   it("fails loudly on a missing file instead of reporting zero usage", async () => {
     await expect(loadSnapshots(path.join(dir, "missing.json"))).rejects.toThrow(
       "not found",
+    );
+  });
+
+  it("types a missing cache apart from a corrupt one", async () => {
+    await expect(
+      loadSnapshots(path.join(dir, "missing.json")),
+    ).rejects.toBeInstanceOf(SnapshotCacheMissingError);
+    const file = path.join(dir, "corrupt.json");
+    await writeFile(file, "{");
+    await expect(loadSnapshots(file)).rejects.not.toBeInstanceOf(
+      SnapshotCacheMissingError,
     );
   });
 
