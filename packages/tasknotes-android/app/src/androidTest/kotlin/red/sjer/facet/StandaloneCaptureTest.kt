@@ -187,6 +187,7 @@ class StandaloneCaptureTest {
             compose.onNodeWithText("Delete").performClick()
             compose.waitUntil(15_000) {
                 compose.onAllNodesWithText("Edited on Android").fetchSemanticsNodes().isEmpty() &&
+                    compose.onAllNodesWithText("Task deleted").fetchSemanticsNodes().size == 1 &&
                     compose.onAllNodesWithText("Undo").fetchSemanticsNodes().size == 1
             }
             capture("deleted")
