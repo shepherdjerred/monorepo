@@ -187,12 +187,19 @@ export async function workerApplicationResources(
           kind: z.string(),
           name: z.string(),
           namespace: z.string().optional(),
+          uid: z.string().nullish(),
         }),
       ),
     })
     .parse(await read(`${app}/resource-tree`));
   const resources = [];
-  for (const node of tree.nodes.filter((entry) => entry.kind === kind)) {
+  // The tree also lists resources the Application declares but that do not
+  // exist (health Missing, no uid). They have no live state to inspect, and
+  // Argo refuses to read them, so a written but never-synced body (as a
+  // failed apply-safety leaves one) would fail every later release.
+  for (const node of tree.nodes.filter(
+    (entry) => entry.kind === kind && typeof entry.uid === "string",
+  )) {
     const query = new URLSearchParams({
       resourceName: node.name,
       kind,
