@@ -6,9 +6,27 @@ import {
 import { createStructuredLogger } from "#observability/logging.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { featureFlagMetrics } from "#observability/metrics-flags.ts";
+import {
+  loadFeatureFlagConfiguration,
+  type Environment,
+} from "@shepherdjerred/feature-flags/config/load.ts";
 
 const FLAG_KEY = "temporal-call-graph-tracing";
 const log = createStructuredLogger("config.call-graph-tracing");
+
+export function callGraphTracingDefault(
+  bootstrap: Environment,
+  workloadEnvironment: string,
+): boolean {
+  const configuration = loadFeatureFlagConfiguration(bootstrap);
+  const environment =
+    configuration.mode === "flipt"
+      ? configuration.environment
+      : workloadEnvironment === "prod" || workloadEnvironment === "production"
+        ? "prod"
+        : "beta";
+  return managedBooleanDefault(FLAG_KEY, environment);
+}
 
 export async function initializeCallGraphTracing(options: {
   readonly environment: string;
@@ -21,12 +39,7 @@ export async function initializeCallGraphTracing(options: {
     },
   });
   const result = await isEnabled(FLAG_KEY, {
-    default: managedBooleanDefault(
-      FLAG_KEY,
-      options.environment === "prod" || options.environment === "production"
-        ? "prod"
-        : "beta",
-    ),
+    default: callGraphTracingDefault(Bun.env, options.environment),
     targetingKey: `temporal-worker-${options.workerRole}`,
     attributes: {
       environment: options.environment,

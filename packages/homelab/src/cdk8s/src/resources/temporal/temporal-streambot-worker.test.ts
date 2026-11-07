@@ -5,7 +5,7 @@ import {
   findTemporalWorkerContainer,
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
-test("the LoL scheduler worker has one credential and only internal Streambot and Temporal access", () => {
+test("the LoL scheduler worker keeps one credential and reaches only its internal dependencies and trace collector", () => {
   const resources = synthesizeTemporalResources(
     ".test-synth-temporal-streambot-worker",
   );
@@ -25,6 +25,14 @@ test("the LoL scheduler worker has one credential and only internal Streambot an
   );
   expect(container.env.map((entry) => entry.name)).not.toContain("BOT_TOKEN");
   expect(container.env.map((entry) => entry.name)).not.toContain("USER_TOKENS");
+  expect(container.env).toContainEqual({
+    name: "TELEMETRY_ENABLED",
+    value: "true",
+  });
+  expect(container.env).toContainEqual({
+    name: "OTLP_ENDPOINT",
+    value: "http://alloy-gateway.alloy-gateway.svc.cluster.local:4318",
+  });
   const otherDeployments = resources.filter(
     (resource) =>
       resource.kind === "Deployment" &&
@@ -43,6 +51,27 @@ test("the LoL scheduler worker has one credential and only internal Streambot an
   expect(rendered).toContain('"port":7233');
   expect(rendered).toContain('"app":"streambot"');
   expect(rendered).not.toContain('"port":443');
+  const collector = z
+    .object({
+      egress: z.array(
+        z.object({
+          ports: z.array(z.object({ port: z.number(), protocol: z.string() })),
+          to: z.array(z.unknown()).optional(),
+        }),
+      ),
+    })
+    .parse(policy.spec)
+    .egress.find((rule) => rule.ports.some((port) => port.port === 4318));
+  expect(collector).toEqual({
+    to: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
+        },
+      },
+    ],
+    ports: [{ port: 4318, protocol: "TCP" }],
+  });
   const server = findTemporalResource(
     resources,
     "NetworkPolicy",
