@@ -107,6 +107,12 @@ try {
   const captures = [];
   for (const previousTime of [46, 58]) {
     await seek(previousTime);
+    // A seek only resets the clock. Render the starting world before clicking
+    // so stale group transforms would differ between the two jump attempts.
+    const previous = await c.evaluate(`(async()=>{
+      const captured=await replayEffectDiagnostics.captureCurrent();
+      return {time:captured.time,cameraWorld:captured.drawSnapshot.cameraWorld};
+    })()`);
     await c.evaluate("document.querySelector('#minion-jump').click()");
     const capture = await c.evaluate(
       "replayEffectDiagnostics.captureCurrent()",
@@ -118,6 +124,7 @@ try {
       );
     captures.push({
       previousTime,
+      previous,
       time: capture.time,
       cameraWorld: capture.drawSnapshot.cameraWorld,
       cameraProjection: capture.drawSnapshot.cameraProjection,

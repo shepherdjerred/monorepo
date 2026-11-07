@@ -31,5 +31,6 @@ reconstruction of the same replay. A diagnostic Worker wrapper selects the
 existing decoder `endTime` input; it does not fabricate decoded events. A model
 request stays held across 30 browser frames while Play and seek remain disabled.
 Clicking a partially loaded champion roster raises no error. After loading,
-minion-wave jumps from 46 and 58 seconds produce identical camera matrices at
-60 seconds. The screenshot shows that destination, not combat coverage or FPS.
+the world is rendered at each starting time before minion-wave jumps from 46 and
+58 seconds produce identical camera matrices at 60 seconds. The screenshot shows
+that destination, not combat coverage or FPS.
