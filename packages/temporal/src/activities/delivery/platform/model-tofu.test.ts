@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type * as Client from "#lib/delivery/client.ts";
 import { MockActivityEnvironment } from "@temporalio/testing";
 import type {
   DeliveryJobReceipt,
@@ -20,7 +21,8 @@ const api = vi.hoisted(() => {
   const calls: { path: string; body: unknown }[] = [];
   return { calls, responses: new Map<string, unknown>() };
 });
-vi.mock("#lib/delivery/client.ts", () => ({
+vi.mock("#lib/delivery/client.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof Client>()),
   deliveryRequest: vi.fn(
     (
       path: string,

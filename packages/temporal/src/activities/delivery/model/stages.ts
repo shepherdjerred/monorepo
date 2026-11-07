@@ -5,13 +5,34 @@ import {
   type DeploymentDetail,
   type EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
-import { deliveryRequest } from "#lib/delivery/client.ts";
+import {
+  DELIVERY_API_UNAVAILABLE_WAIT,
+  deliveryRequest,
+  whileDeliveryApiUnavailable,
+} from "#lib/delivery/client.ts";
 
 export const deploymentPath = (id: string) =>
   `deployments/${encodeURIComponent(id)}`;
 
+/**
+ * A step's reads and stage writes outlast a short API outage: a self-hosted
+ * sync replaces the very API it reads back through (D8). The Activity keeps
+ * heartbeating while it waits, and a stage write is safe to repeat because
+ * the server accepts the same status and message again unchanged.
+ */
+async function despiteApiRollout<T>(operation: () => Promise<T>) {
+  return await whileDeliveryApiUnavailable(operation, {
+    ...DELIVERY_API_UNAVAILABLE_WAIT,
+    onWait: (attempt) => {
+      Context.current().heartbeat({ deliveryApiUnavailable: attempt });
+    },
+  });
+}
+
 export async function deploymentDetail(id: string): Promise<DeploymentDetail> {
-  return await deliveryRequest(deploymentPath(id), DeploymentDetailSchema);
+  return await despiteApiRollout(() =>
+    deliveryRequest(deploymentPath(id), DeploymentDetailSchema),
+  );
 }
 
 export function stageOf(current: DeploymentDetail, key: string) {
@@ -29,18 +50,21 @@ export async function recordStage(
     message?: string;
   },
 ) {
-  await deliveryRequest(
-    `${deploymentPath(current.deployment.id)}/stages`,
-    z.unknown(),
-    {
-      key,
-      status,
-      operationId: receipt.operationId,
-      message: receipt.message ?? `${key}: ${status}`,
-      evidence: receipt.evidence ?? [],
-      // Only the executor that owns the deployment writes its stages (D7).
-      executor: executorIdentity(),
-    },
+  const executor = executorIdentity();
+  await despiteApiRollout(() =>
+    deliveryRequest(
+      `${deploymentPath(current.deployment.id)}/stages`,
+      z.unknown(),
+      {
+        key,
+        status,
+        operationId: receipt.operationId,
+        message: receipt.message ?? `${key}: ${status}`,
+        evidence: receipt.evidence ?? [],
+        // Only the executor that owns the deployment writes its stages (D7).
+        executor,
+      },
+    ),
   );
 }
 
