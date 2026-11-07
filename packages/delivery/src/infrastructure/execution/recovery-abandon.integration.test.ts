@@ -7,7 +7,7 @@ import {
   requestOnProd,
 } from "#testing/model-fixture.ts";
 import { deliveryMetrics } from "#server/metrics.ts";
-import { createApp } from "#server/app.ts";
+import { createTestApp } from "#testing/http-app.ts";
 
 const context = useDeliveryFixture({ registration: arcadeRegistration });
 const reason = "The deployment ended without needing this recovery";
@@ -149,29 +149,19 @@ const adminToken = "fixture-admin-credential-32-characters";
 
 /** The real API with writes paused, as the ownership handover runs it. */
 function pausedApi() {
-  return createApp({
-    delivery: context.delivery,
-    ciOrigin: "https://woodpecker.sjer.red",
-    ciRepositoryId: 1,
-    qualifyBuild: async () => "verified",
-    peerAddress: () => "127.0.0.1",
-    config: {
-      publicOrigin: "http://delivery.test",
-      machineCredentials: [
-        {
-          token: adminToken,
-          principal: {
-            id: "fixture-admin",
-            kind: "machine",
-            scopes: ["read", "admin"],
-          },
+  return createTestApp(context.delivery, {
+    machineCredentials: [
+      {
+        token: adminToken,
+        principal: {
+          id: "fixture-admin",
+          kind: "machine",
+          scopes: ["read", "admin"],
         },
-      ],
-      writesEnabled: async () => false,
-      enabledEnvironments: async () => [],
-      operatorLogins: async () => [],
-      trustedProxyAddresses: async () => [],
-    },
+      },
+    ],
+    writesEnabled: async () => false,
+    enabledEnvironments: async () => [],
   });
 }
 

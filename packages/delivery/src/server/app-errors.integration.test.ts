@@ -1,27 +1,17 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
-import { createApp } from "./app.ts";
+import { createTestApp } from "#testing/http-app.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let app: ReturnType<typeof createApp>;
+let app: ReturnType<typeof createTestApp>;
 
 beforeAll(async () => {
   cluster = await createTestDatabase();
-  app = createApp({
-    delivery: new Delivery(cluster.database),
-    ciOrigin: "https://woodpecker.sjer.red",
-    ciRepositoryId: 1,
-    qualifyBuild: async () => "verified",
-    peerAddress: () => "127.0.0.1",
-    config: {
-      publicOrigin: "http://delivery.test",
-      machineCredentials: [],
-      writesEnabled: async () => true,
-      enabledEnvironments: async () => [],
-      operatorLogins: async () => [],
-      trustedProxyAddresses: async () => [],
-    },
+  app = createTestApp(new Delivery(cluster.database), {
+    machineCredentials: [],
+    writesEnabled: async () => true,
+    enabledEnvironments: async () => [],
   });
   // Registered before the first request builds the matcher.
   app.post("/unique-violation-probe", () => {
