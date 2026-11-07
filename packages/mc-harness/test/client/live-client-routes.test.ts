@@ -77,29 +77,25 @@ function fixture() {
 }
 
 describe("live rendered client actions", () => {
-  it("guards a block interaction and binds the request to the inspected target", async () => {
+  it("guards movement with the supplied reason", async () => {
     const f = fixture();
     await f.call(
-      "use",
-      {},
-      { "x-mc-reason": "Test%20gate", "x-mc-allow-players": "1" },
+      "move",
+      { buttons: ["forward"], ticks: 1 },
+      { "x-mc-reason": "Inspect%20spawn" },
     );
     expect(f.write).toHaveBeenCalledWith(
       {
         kind: "client-action",
         name: "Tester",
-        action: "use",
-        world: "world",
-        pos: { x: 9, y: 75, z: 111 },
+        action: "move",
       },
-      expect.objectContaining({ reason: "Test gate", allowPlayers: true }),
+      expect.objectContaining({ reason: "Inspect spawn" }),
       expect.any(Function),
     );
-    expect(f.request).toHaveBeenCalledWith("Tester", "use-live", {
-      world: "minecraft:overworld",
-      x: 9,
-      y: 75,
-      z: 111,
+    expect(f.request).toHaveBeenCalledWith("Tester", "input", {
+      buttons: ["forward"],
+      ticks: 1,
     });
   });
 
@@ -109,30 +105,10 @@ describe("live rendered client actions", () => {
       "unavailable",
     );
     await expect(f.call("attack", {})).rejects.toThrow("unavailable");
+    await expect(f.call("use", {})).rejects.toThrow("unavailable");
     await expect(
       f.call("move", { buttons: ["use"], ticks: 1 }),
-    ).rejects.toThrow("guarded use");
+    ).rejects.toThrow("unavailable");
     expect(f.request).not.toHaveBeenCalled();
-  });
-
-  it("refuses use on a non-control block", async () => {
-    const f = fixture();
-    if (!f.response.state.connected)
-      throw new Error("fixture must be connected");
-    f.status.mockResolvedValueOnce({
-      client: f.response.client,
-      state: {
-        ...f.response.state,
-        connected: true,
-        world: "minecraft:overworld",
-        target: {
-          kind: "block",
-          position: [9, 75, 111],
-          type: "minecraft:stone",
-        },
-      },
-    });
-    await expect(f.call("use", {})).rejects.toThrow("signs and buttons only");
-    expect(f.write).not.toHaveBeenCalled();
   });
 });

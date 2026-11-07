@@ -1,7 +1,6 @@
 import {
   CLIENT_ACTION_REQUEST_SCHEMAS,
   type ClientAction,
-  type ClientState,
   ClientActionResponseSchema,
   ClientActionSchema,
   ClientCaptureRequestSchema,
@@ -100,44 +99,11 @@ async function clientAction(
       client,
       action: parsed.data,
       args,
-      state: current.state,
     });
   }
   const wire = parsed.data === "move" ? "input" : parsed.data;
   const result = await ctx.clients.request(client, wire, args);
   return reply(ClientActionResponseSchema, { detail: detail(result) });
-}
-
-function liveHit(state: ClientState) {
-  if (!state.connected)
-    throw new DaemonError("Live client is not connected", 409);
-  const hit = z
-    .strictObject({
-      kind: z.literal("block"),
-      position: z.tuple([z.number().int(), z.number().int(), z.number().int()]),
-      type: z.string(),
-    })
-    .parse(state.target);
-  if (!hit.type.endsWith("_sign") && !hit.type.endsWith("_button"))
-    throw new DaemonError(
-      "Live interactions support signs and buttons only",
-      403,
-    );
-  const dimension = state.world;
-  const names: Record<string, string> = {
-    "minecraft:overworld": "world",
-    "minecraft:the_nether": "world_nether",
-    "minecraft:the_end": "world_the_end",
-  };
-  const world =
-    names[dimension] ??
-    (dimension.startsWith("minecraft:")
-      ? dimension.slice("minecraft:".length)
-      : undefined);
-  if (world === undefined || !/^[a-z0-9_]+$/u.test(world))
-    throw new DaemonError("Unknown live world", 403);
-  const [x, y, zValue] = hit.position;
-  return { dimension, world, pos: { x, y, z: zValue } };
 }
 
 async function liveClientAction(input: {
@@ -146,12 +112,11 @@ async function liveClientAction(input: {
   client: string;
   action: ClientAction;
   args: Record<string, unknown>;
-  state: ClientState;
 }): Promise<Response> {
-  const { ctx, request, client, action, args, state } = input;
-  if (action === "command" || action === "attack")
+  const { ctx, request, client, action, args } = input;
+  if (action === "command" || action === "attack" || action === "use")
     throw new DaemonError(
-      "Commands and attacks are unavailable for live clients",
+      "Commands and interactions are unavailable for live clients",
       403,
     );
   if (
@@ -161,32 +126,20 @@ async function liveClientAction(input: {
       .parse(args["buttons"])
       .some((button) => button === "attack" || button === "use")
   )
-    throw new DaemonError(
-      "Live interactions must use the guarded use action",
-      403,
-    );
+    throw new DaemonError("Live interactions are unavailable", 403);
   if (action === "look" || action === "release")
     return reply(ClientActionResponseSchema, {
       detail: detail(await ctx.clients.request(client, action, args)),
     });
-  const hit = action === "use" ? liveHit(state) : undefined;
-  const wire =
-    action === "move" ? "input" : action === "use" ? "use-live" : action;
+  const wire = action === "move" ? "input" : action;
   const result = await ctx.live.write(
     {
       kind: "client-action",
       name: client,
       action,
-      world: hit?.world,
-      pos: hit?.pos,
     },
     readLiveWriteFlags(request.headers),
-    () =>
-      ctx.clients.request(
-        client,
-        wire,
-        hit === undefined ? args : { world: hit.dimension, ...hit.pos },
-      ),
+    () => ctx.clients.request(client, wire, args),
   );
   return reply(ClientActionResponseSchema, { detail: detail(result) });
 }

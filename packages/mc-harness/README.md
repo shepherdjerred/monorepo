@@ -194,12 +194,10 @@ Start the daemon with the live bridge token, then run `toolkit mc client start
 --target live --reason "<why>"`. The daemon builds a dedicated managed Prism
 instance with the pinned Fabric client; Prism retains and uses its own account.
 No account token is read or copied by the harness. Live never permits `--op`
-or `--game-mode`. Movement, hotbar changes, sign/button use, and stopping need
-a reason and are journaled. A sign/button interaction requires an empty hand,
-passes the live player/protection checks, and takes an undo snapshot. Live
-commands, attacks, and held use/attack inputs are disabled. `look`, `status`,
-`capture` and emergency `release` remain available. A live interaction is
-bound to the observed world and block, and fails if the target changes.
+or `--game-mode`. Movement, hotbar changes, and stopping need a reason and are
+journaled. Live commands, interactions, attacks, and held use/attack inputs are
+disabled; a sign or button can cause effects beyond the clicked block. `look`,
+`status`, `capture` and emergency `release` remain available.
 
 Actors are Citizens NPCs, so Storm's `Humans.isHuman()` (no `NPC` metadata)
 filters them out of most Storm listeners: towns, economy, shops, quests,

@@ -638,7 +638,7 @@ PinchTab credentials or config.
 For an authenticated production client, sign in to Prism Launcher on macOS,
 start the Minecraft daemon with its live bridge credential, and use
 `toolkit mc client start --target live --reason "<why>"`. Production movement
-and interactions require a reason; sign/button use is guarded and snapshotted.
+and hotbar changes require a reason; interactions are disabled on live clients.
 See the [mc-harness client reference](../mc-harness/README.md#real-client).
 
 `toolkit mc` is a thin client for the `@shepherdjerred/mc-harness` daemon. The

@@ -110,7 +110,7 @@ describe("authenticated Prism control", () => {
     ).toBe(false);
   });
 
-  it("treats live interaction as a snapshotted block write", () => {
+  it("rejects live block interactions that can have wider effects", () => {
     const config: LiveGuardConfig = {
       writes: true,
       worlds: ["world"],
@@ -119,27 +119,17 @@ describe("authenticated Prism control", () => {
       maxSnapshotVolume: 100,
       protectedRegions: [],
     };
-    const assessment = assessLiveWrite(
-      {
-        kind: "client-action",
-        name: "Tester",
-        action: "use",
-        world: "world",
-        pos: { x: 1, y: 2, z: 3 },
-      },
-      config,
-    );
-    expect(assessment.tier).toBe(1);
-    expect(assessment.box).toEqual({
-      world: "world",
-      min: { x: 1, y: 2, z: 3 },
-      max: { x: 1, y: 2, z: 3 },
-    });
     expect(() =>
       assessLiveWrite(
-        { kind: "client-action", name: "Tester", action: "use" },
+        {
+          kind: "client-action",
+          name: "Tester",
+          action: "use",
+          world: "world",
+          pos: { x: 1, y: 2, z: 3 },
+        },
         config,
       ),
-    ).toThrow("position");
+    ).toThrow("Unsupported live client action");
   });
 });

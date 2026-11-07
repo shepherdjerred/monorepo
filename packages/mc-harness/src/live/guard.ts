@@ -379,6 +379,9 @@ export function assessLiveWrite(
       return assessActorAct(op, config);
     }
     case "client-action": {
+      if (!["start", "stop", "move", "hotbar"].includes(op.action)) {
+        throw new Error("Unsupported live client action");
+      }
       return {
         ...assessActorAct(
           {

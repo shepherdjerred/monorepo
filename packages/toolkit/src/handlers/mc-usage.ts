@@ -54,10 +54,8 @@ and requires --target live and --reason; it never grants op or changes game mode
   toolkit mc client command <text…>     Runs as the player (no leading slash)
   toolkit mc client capture [--out f.png]   Screenshot of the rendered frame
   toolkit mc client stop [--name n] | --all
-Live move, hotbar, use and stop require --reason. Live use also needs
---allow-players for nearby players and --allow-protected for protected areas;
-only signs and buttons with an empty hand are supported. Attacks and commands
-are disabled in live clients.
+Live move, hotbar and stop require --reason. Use, attacks and commands are
+disabled in live clients.
 --name picks the client when several run (default: the only one).
 
 ${LIVE_USAGE}

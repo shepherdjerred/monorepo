@@ -20,6 +20,7 @@ import { ClientRefusedError } from "#protocol/client-socket.ts";
 import { clientRequest } from "./client-socket.ts";
 import { DaemonError } from "./http.ts";
 import { stageAndLaunchPrism } from "./prism.ts";
+import { stopPrism } from "./prism-process.ts";
 
 /**
  * Real Minecraft clients (the-storm's Fabric preview mod) owned by the daemon.
@@ -89,6 +90,7 @@ type Session = {
   socket: string;
   privateDir: string;
   child?: LaunchedClient;
+  bootstrapPath?: string;
 };
 
 const POLL_MS = 500;
@@ -225,6 +227,7 @@ export class ClientManager {
         },
         socket: bootstrap.socket,
         privateDir,
+        bootstrapPath,
       };
       this.sessions.set(name, session);
       try {
@@ -240,19 +243,12 @@ export class ClientManager {
         session.summary.pid = state.pid;
         void this.monitorPrism(session);
       } catch (error) {
-        if (await isSocket(session.socket)) {
-          try {
-            await clientRequest(session.socket, "shutdown", {}, 5000);
-          } catch {
-            /* Client already exited. */
-          }
-        }
-        this.sessions.delete(name);
+        await this.stopSession(session);
         throw error;
       }
       return session.summary;
     } catch (error) {
-      if (privateDir !== undefined)
+      if (privateDir !== undefined && !this.sessions.has(name))
         await rm(privateDir, { recursive: true, force: true });
       throw error;
     } finally {
@@ -461,7 +457,17 @@ export class ClientManager {
   private async stopSession(session: Session): Promise<void> {
     const { child } = session;
     if (child === undefined) {
-      await clientRequest(session.socket, "shutdown", {}, 5000);
+      try {
+        await clientRequest(session.socket, "shutdown", {}, 5000);
+      } catch {
+        // Fall back to the verified Prism game process.
+      }
+      if (session.bootstrapPath === undefined)
+        throw new Error("Missing Prism bootstrap path");
+      await stopPrism(
+        session.bootstrapPath,
+        (this.options.stopTimeoutMs ?? 30_000) / 3,
+      );
       await this.ended(session, null);
       return;
     }
