@@ -42,6 +42,31 @@ Each wrapper execs `agent-exec`, which:
 `codex` also passes the `tui.theme` for the current macOS appearance on every
 launch (see below).
 
+## New worktree dialog
+
+The Herdr `my-worktree` mod's New dialog takes the agent's first message
+instead of a branch name. Pick the agent (Brim's ranking) and, for agents that
+take them, a mode, model and effort: click a chip, or step it with ⌥M, ⌥O and
+⌥E. Model lists come from each CLI's own catalog and are cached; choices are
+remembered per agent. Plan modes run with `AGENT_SAFE=1`, so the wrapper adds
+no bypass flag that would contradict them.
+
+Enter closes the dialog and starts `~/bin/herdr-new-worktree` detached. It
+names a branch and tab title with one OpenAI Responses call (`naming.js`, the
+personal key read with `op read`), creates the worktree on the space's machine
+through `hc exec`, and opens a space whose agent starts with the message. A
+generated branch that already exists gets a `-2` suffix. A given `{ branch }`
+skips naming and runs in the dialog.
+
+Every run appends one line to `~/.local/state/herdr-worktree/events.jsonl`
+(no message text) and to the unified log; a failure also posts a macOS
+notification. `~/bin/herdr-new-worktree --status` prints the last runs and
+exits non-zero when the latest failed:
+
+```bash
+/usr/bin/log show --last 1d --style compact --predicate 'eventMessage CONTAINS "herdr-worktree"'
+```
+
 ## Codex appearance changes
 
 macOS switches between light and dark at local sunrise and sunset. Herdr and
@@ -115,3 +140,15 @@ argument that cannot be shell-quoted safely), failed exits, and blocked startups
 are reported without force-killing or blindly retrying continuation prompts.
 Failed or skipped terminals require inspection and an explicit manual retry;
 duplicate appearance events do not replay partial restarts.
+
+## Taildrop inbox
+
+On the workstation profile, the `com.jerred.taildrop` LaunchAgent keeps
+`tailscale file get --loop --conflict=rename ~/taildrop` running, so files sent
+with `tailscale file cp <file> macbook:` move straight from the Taildrop inbox
+into `~/taildrop`. The open-source `tailscaled` on the MacBook otherwise holds
+received files until someone runs `tailscale file get`. A same-named file gets a
+numbered suffix instead of being overwritten. Agent hosts only send files, so
+the LaunchAgent and the `~/taildrop` directory are not installed there.
+
+Check the receiver with `launchctl print gui/$(id -u)/com.jerred.taildrop`.

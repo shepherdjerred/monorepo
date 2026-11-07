@@ -57,6 +57,23 @@ project `AGENTS.md` or skill.
 - Use foreground polling or the product's monitoring facility for waits. Never
   promise an agent will wake up after the turn ends.
 
+## Sharing results with Jerred
+
+Jerred usually reaches agent hosts (such as `karpathy`) from his MacBook
+(`macbook`). On a remote machine, deliver visual output to him; on the MacBook
+itself, open it locally. Load `tailscale-helper` for anything beyond this.
+
+- Send files (PDFs, images, rendered assets) with
+  `tailscale file cp <file> macbook:`; they land in `~/taildrop`. Tell him what
+  was sent.
+- Serve a website on an unused port with
+  `tailscale serve --bg --https=<port> http://127.0.0.1:<port>` and give him
+  `https://<host>.tailnet-1a49.ts.net:<port>/`. Run `tailscale serve status`
+  first; never change `/` or an existing listener. Remove only what you added
+  with `tailscale serve --https=<port> off` when done or asked.
+- If `tailscale file cp` fails because the MacBook is offline, say so, then
+  serve the file or report its path.
+
 ## Delivery
 
 - Follow the repository's branch and PR workflow. Do not create or merge a PR

@@ -1,0 +1,245 @@
+// The work behind the Herdr new-worktree dialog, run detached after the
+// dialog closes: name the branch and tab from the first message, create the
+// worktree on the space's machine, and open a space whose agent starts with
+// that message. The dialog only gathers choices; this owns the slow parts.
+
+export type Request = {
+  /** The agent's first message; also what the branch and tab are named from. */
+  readonly message: string;
+  /** Brim provider id, or null for a plain shell. */
+  readonly provider: string | null;
+  /** hc machine name, or null for this computer. */
+  readonly machine: string | null;
+  /** The repository's main checkout and the checkout the dialog was opened in. */
+  readonly repoMain: string;
+  readonly repoTop: string;
+  /** Folder the checkout goes in: <home>/.herdr/worktrees/<repo>. */
+  readonly root: string;
+  /** Agent flags from the dialog's mode, model and effort choices. */
+  readonly agentArgs: readonly string[];
+  /** Skip the agent-bin bypass flags (plan-style modes). */
+  readonly safe: boolean;
+};
+
+export type Named = { readonly branch: string; readonly title: string };
+
+export type ExecResult = {
+  readonly code: number;
+  readonly stdout: string;
+  readonly stderr: string;
+};
+
+export type Runtime = {
+  /** One OpenAI call: a valid branch name and a short title. */
+  readonly name: (message: string) => Promise<Named>;
+  /** `base`, or the first free `base-N`. */
+  readonly freeBranch: (
+    base: string,
+    taken: (name: string) => Promise<boolean>,
+  ) => Promise<string>;
+  /** Run git on the machine (null: here) in `cwd`. */
+  readonly git: (
+    machine: string | null,
+    cwd: string,
+    args: string[],
+  ) => Promise<ExecResult>;
+  /** `herdr-app do space.new <json>`; resolves to the new terminal's address. */
+  readonly newSpace: (args: Record<string, unknown>) => Promise<string>;
+  /** An `hc` call, for agents whose first message is typed in. */
+  readonly hc: (args: string[]) => Promise<ExecResult>;
+  readonly sleep: (ms: number) => Promise<void>;
+};
+
+export type Step = "naming" | "branch" | "worktree" | "space" | "message";
+
+export type Outcome = {
+  readonly branch: string;
+  readonly title: string;
+  readonly path: string;
+  readonly terminal: string;
+  readonly messageSent: "argument" | "typed" | "none";
+};
+
+export function fields(value: unknown, what: string): Map<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    throw new TypeError(`${what} must be a JSON object.`);
+  return new Map<string, unknown>(Object.entries(value));
+}
+
+function text(value: unknown, field: string): string {
+  if (typeof value !== "string" || value.length === 0)
+    throw new TypeError(`Request ${field} must be a non-empty string.`);
+  return value;
+}
+
+function nullableText(value: unknown, field: string): string | null {
+  return value === null ? null : text(value, field);
+}
+
+function strings(value: unknown, field: string): string[] {
+  if (!Array.isArray(value))
+    throw new TypeError(`Request ${field} must be a string array.`);
+  return value.map((item: unknown) => {
+    if (typeof item !== "string")
+      throw new TypeError(`Request ${field} must be a string array.`);
+    return item;
+  });
+}
+
+/** The dialog's request, checked: a malformed one is a broken contract. */
+export function parseRequest(json: string): Request {
+  const r = fields(JSON.parse(json), "Request");
+  const safe = r.get("safe");
+  if (typeof safe !== "boolean")
+    throw new TypeError("Request safe must be a boolean.");
+  return {
+    message: text(r.get("message"), "message").trim(),
+    provider: nullableText(r.get("provider"), "provider"),
+    machine: nullableText(r.get("machine"), "machine"),
+    repoMain: text(r.get("repoMain"), "repoMain"),
+    repoTop: text(r.get("repoTop"), "repoTop"),
+    root: text(r.get("root"), "root"),
+    agentArgs: strings(r.get("agentArgs"), "agentArgs"),
+    safe,
+  };
+}
+
+/** Checkouts go to <root>/<branch, slashes as dashes>. */
+export function slug(branch: string): string {
+  return branch.replaceAll(/[^\w.-]+/g, "-").replaceAll(/^-+|-+$/g, "");
+}
+
+/**
+ * How the first message reaches each agent. Herdr appends `task` to argv as
+ * one argument, the initial prompt for most agents; a second `--` keeps a
+ * message that starts with "-" from parsing as a flag. Antigravity takes it
+ * only as -i, and Kimi has no initial-prompt argument, so it is typed in.
+ */
+export function launch(
+  request: Request,
+  named: Named,
+): { argv: string[] | null; task: string | null; typed: boolean } {
+  const { provider, message } = request;
+  if (provider === null) return { argv: null, task: null, typed: false };
+  const extra = [...request.agentArgs];
+  if (provider === "claude-code") extra.push("--name", named.title);
+  if (provider === "antigravity") extra.push("-i", message);
+  const typed = provider === "kimi";
+  const asTask = provider !== "antigravity" && !typed;
+  const argv = [
+    ...(request.safe ? ["env", "AGENT_SAFE=1"] : []),
+    "brim",
+    "--provider",
+    provider,
+    "--",
+    ...extra,
+    ...(asTask ? ["--"] : []),
+  ];
+  return { argv, task: asTask ? message : null, typed };
+}
+
+function firstLine(result: ExecResult, fallback: string): string {
+  const output = result.stderr.trim() === "" ? result.stdout : result.stderr;
+  const line = output.trim().split("\n")[0] ?? "";
+  return line === "" ? fallback : line;
+}
+
+function agentState(result: ExecResult): string | null {
+  if (result.code !== 0) return null;
+  const status = fields(JSON.parse(result.stdout), "hc get").get("status");
+  if (status === null || status === undefined) return null;
+  const state = fields(status, "hc status").get("state");
+  return typeof state === "string" ? state : null;
+}
+
+/** Wait until the agent is idle (a passing startup "blocked" is not ready), then type. */
+async function typeFirstMessage(
+  runtime: Runtime,
+  terminal: string,
+  message: string,
+): Promise<void> {
+  let state: string | null = null;
+  for (let i = 0; i < 120; i++) {
+    state = agentState(await runtime.hc(["get", terminal, "--json"]));
+    if (state === "idle") break;
+    await runtime.sleep(500);
+  }
+  if (state !== "idle")
+    throw new Error(
+      `The space is ready, but the agent never became idle (last: ${state ?? "unknown"}); its first message wasn't sent.`,
+    );
+  const sent = await runtime.hc(["send", terminal, message]);
+  if (sent.code !== 0)
+    throw new Error(
+      `The space is ready, but its first message wasn't sent: ${firstLine(sent, "hc send failed")}`,
+    );
+}
+
+/** Name it, create the worktree, open the space. Throws a message fit for a person. */
+export async function createWorktree(
+  request: Request,
+  runtime: Runtime,
+  progress: (step: Step) => void,
+): Promise<Outcome> {
+  const { machine } = request;
+  progress("naming");
+  const named = await runtime.name(request.message);
+  progress("branch");
+  const taken = async (name: string) => {
+    const shown = await runtime.git(machine, request.repoMain, [
+      "show-ref",
+      "--verify",
+      "--quiet",
+      `refs/heads/${name}`,
+    ]);
+    return shown.code === 0;
+  };
+  // A generated name always starts new work: never check out a branch that exists.
+  const branch = await runtime.freeBranch(named.branch, taken);
+  const valid = await runtime.git(machine, request.repoMain, [
+    "check-ref-format",
+    "--branch",
+    branch,
+  ]);
+  if (valid.code !== 0)
+    throw new Error(firstLine(valid, `git rejects the branch ${branch}.`));
+  const path = `${request.root}/${slug(branch)}`;
+  progress("worktree");
+  const added = await runtime.git(machine, request.repoTop, [
+    "worktree",
+    "add",
+    "-b",
+    branch,
+    path,
+    "HEAD",
+  ]);
+  if (added.code !== 0)
+    throw new Error(firstLine(added, "git worktree add failed."));
+  progress("space");
+  const { argv, task, typed } = launch(request, { branch, title: named.title });
+  // Spaces stay unnamed so they follow the checkout and nest under the repo;
+  // the generated title names the first tab.
+  const terminal = await runtime.newSpace({
+    folder: path,
+    machine: machine ?? "",
+    tab: named.title,
+    ...(argv === null ? {} : { argv }),
+    ...(task === null ? {} : { task }),
+  });
+  if (typed) {
+    progress("message");
+    const remote = machine !== null && !terminal.includes("/");
+    await typeFirstMessage(
+      runtime,
+      remote ? `${machine}/${terminal}` : terminal,
+      request.message,
+    );
+  }
+  return {
+    branch,
+    title: named.title,
+    path,
+    terminal,
+    messageSent: argv === null ? "none" : typed ? "typed" : "argument",
+  };
+}

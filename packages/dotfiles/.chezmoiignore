@@ -69,6 +69,9 @@ Library/Application Support/Cursor
 Library/Application Support/Sublime Text
 install-sublime-package-control.sh
 set-default-apps.sh
+# Agent hosts send Taildrop files; only the workstation receives them.
+Library/LaunchAgents/com.jerred.taildrop.plist
+taildrop
 # Agent hosts keep no rendered secrets on disk; commands resolve credentials
 # at call time through toolkit or scripts/onepassword/with-service-account.sh.
 # ~/.kube/config and ~/.aws/config still render there, secret-free: kubectl and

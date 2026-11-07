@@ -16,6 +16,8 @@ export default [
       "bin/git_cleanup_core.ts",
       "bin/executable_restart_codex_panes.ts",
       "bin/codex_theme_restart_*.ts",
+      "bin/executable_herdr_new_worktree.ts",
+      "bin/herdr_new_worktree_core.ts",
     ],
     rules: {
       "unicorn/filename-case": [
@@ -27,7 +29,10 @@ export default [
   {
     // Herdr mods are plain JS loaded by the Herdr app; the test imports the
     // mod's pure module as it ships.
-    files: ["scripts/worktree-naming.test.ts"],
+    files: [
+      "scripts/worktree-naming.test.ts",
+      "scripts/worktree-agents.test.ts",
+    ],
     rules: {
       "custom-rules/require-ts-extensions": "off",
     },
