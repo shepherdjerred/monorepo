@@ -379,24 +379,24 @@ export function assessLiveWrite(
       return assessActorAct(op, config);
     }
     case "client-action": {
-      if (!["start", "stop", "move", "hotbar"].includes(op.action)) {
-        throw new Error("Unsupported live client action");
-      }
-      return {
-        ...assessActorAct(
-          {
-            kind: "actor-act",
-            name: op.name,
-            act: op.action,
-            pos: op.pos,
-            world: op.world,
-          },
-          config,
-        ),
-        summary: `client ${op.name} ${op.action}`,
-      };
+      return assessClientAction(op);
     }
   }
+}
+
+function assessClientAction(
+  op: Extract<LiveWriteOp, { kind: "client-action" }>,
+): LiveAssessment {
+  if (!["start", "stop", "move", "hotbar"].includes(op.action))
+    throw new Error("Unsupported live client action");
+  return {
+    read: false,
+    tier: 0,
+    dangerous: false,
+    world: null,
+    box: null,
+    summary: `client ${op.name} ${op.action}`,
+  };
 }
 
 const BLOCK_ACTIONS = new Set(["break", "place", "use"]);

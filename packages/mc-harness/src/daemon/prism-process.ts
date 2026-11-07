@@ -27,18 +27,29 @@ function prismPid(bootstrapPath: string): number | undefined {
   return matches[0];
 }
 
+const defaultControls = {
+  find: prismPid,
+  signal: (pid: number, signal: NodeJS.Signals) => {
+    process.kill(pid, signal);
+  },
+};
+
 export async function stopPrism(
   bootstrapPath: string,
   grace: number,
+  controls: {
+    find: (path: string) => number | undefined;
+    signal: (pid: number, signal: NodeJS.Signals) => void;
+  } = defaultControls,
 ): Promise<void> {
-  const initialPid = prismPid(bootstrapPath);
+  const initialPid = controls.find(bootstrapPath);
   if (initialPid === undefined) return;
   for (const signal of [undefined, "SIGTERM", "SIGKILL"] as const) {
-    if (prismPid(bootstrapPath) !== initialPid) return;
-    if (signal !== undefined) process.kill(initialPid, signal);
+    if (controls.find(bootstrapPath) !== initialPid) return;
+    if (signal !== undefined) controls.signal(initialPid, signal);
     const deadline = Date.now() + grace;
     while (Date.now() < deadline) {
-      if (prismPid(bootstrapPath) !== initialPid) return;
+      if (controls.find(bootstrapPath) !== initialPid) return;
       await Bun.sleep(100);
     }
   }
