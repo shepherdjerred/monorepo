@@ -445,7 +445,7 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
                     }
                     break;
                 case Core.ObsidianSessionEffect.Failed failure:
-                    if (failure.OperationId is not null)
+                    if (!failure.Retryable && failure.OperationId is not null)
                         _queued.Remove(failure.OperationId);
                     if (!failure.Retryable)
                     {

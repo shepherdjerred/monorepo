@@ -17,6 +17,8 @@
     // No `outputs`: swiftlint produces none, and the win here is turbo's cached
     // log/exit replay keyed on the source hash.
     "lint": {
+      // SourceKit must use the explicitly selected Xcode in strict env mode.
+      "env": ["$TURBO_EXTENDS$", "DEVELOPER_DIR"],
       "inputs": [
         "Sources/**",
         "Tests/**",

@@ -221,6 +221,9 @@ publishes the engine and account together, so failed initialization can retry.
 An outbound connection failure retains pending uploads and retires its worker.
 Returning to the foreground starts a new authorized transport after the previous
 worker has unbound; authentication and contract failures require their own recovery.
+Retryable socket disconnects retain upload admission identities while Rust retries
+the same receipts. Acknowledgment, cancellation or session retirement releases
+that ownership; reconnect does not enqueue a second copy.
 
 The Xcode application target (`project.yml`, XcodeGen — the `.xcodeproj` is
 generated and gitignored) links `TaskNotesMac` and supplies only the `@main`
@@ -229,6 +232,29 @@ entry point in `App/`, so SwiftPM and Xcode compile the same sources.
 Tests: `Tests/TaskNotesKitTests` (Swift Testing, headless),
 `Tests/TaskNotesMacTests` (image snapshots; the only test target that sees
 SwiftUI), `UITests/` (XCUITest, run via `mac:e2e`).
+
+### Account-free Sync integration
+
+`bun run mac:sync:fixture` runs the focused, headless `FacetSyncFixtureTests`
+suite against an owned loopback HTTP/WebSocket server. The suite starts and
+stops the server itself and uses public synthetic account values and isolated
+replica directories. It needs Bun, Xcode and the matching Rust XCFramework;
+it does not read Keychain credentials or contact an Obsidian account.
+Run with full Xcode selected. If the global selection is Command Line Tools,
+prefix the command with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+(or the path to your selected Xcode installation).
+
+The clients use the real Rust-backed Apple account and session implementation.
+A Debug-only internal test seam maps the synthetic Sync host to loopback;
+the release account origin and Sync host restrictions remain unchanged.
+The server retains opaque encrypted data in its own SQLite database. Its
+reference tests compare the pinned upstream transcript separately from the
+native integration journey.
+
+This lane establishes local protocol integration. Official-service acceptance,
+native UI journeys, signing and store release remain separate checks. Use a
+dedicated test account for the official-service lane; routine local tests need
+no account enrollment or password-manager approval.
 
 ### Isolated native acceptance
 
@@ -307,9 +333,12 @@ the Personal vault.
 
 Routine Keychain reads disable authentication UI and fail on missing, locked or
 denied items without prompting, changing trust or trying another backend. Keep
-the selected Apple Development signing identity stable; a helper replacement
-does not silently broaden an existing item's access policy. The required
-`--account`, `--vault` and `--item` locators bind the local record to its original
+the explicitly selected signing identity stable. Helper installation accepts the
+pinned Apple Development or Developer ID Application profile; the installation
+receipt binds verification to that exact certificate, team and helper identifier.
+Existing Apple Development installations remain valid. Selecting another profile
+for an installed helper fails without replacing it or changing any item's access
+policy. The required `--account`, `--vault` and `--item` locators bind the local record to its original
 item. Explicit `--credential-backend desktop` selects attended reads;
 `--credential-backend service-account` requires separately provisioned machine
 access and uses the token's account rather than passing `op --account`.

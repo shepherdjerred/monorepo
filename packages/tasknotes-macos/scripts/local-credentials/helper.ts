@@ -22,6 +22,14 @@ export const helperSigning = {
   team: "63ZAG7X889",
   identifier: "red.sjer.facet.acceptance.credentials",
 } as const;
+/** Existing installations retain their original leaf; setup chooses a profile explicitly. */
+export const helperSigningProfiles = [
+  helperSigning,
+  {
+    ...helperSigning,
+    identity: "24A3B092357E0CF905EF748F63104EBE6ED64C79",
+  },
+] as const;
 const sourceNames = ["LocalCredentialStore.swift", "main.swift"];
 const sourceRoot = path.join(import.meta.dir, "native");
 export function helperPaths() {
@@ -84,8 +92,30 @@ const runCommand: HelperCommand = (argv) => {
 function requireCommand(argv: string[], run: HelperCommand) {
   if (run(argv).status !== 0) fail("signature_or_tooling");
 }
-export function signatureRequirement() {
-  return `=identifier "${helperSigning.identifier}" and certificate leaf = H"${helperSigning.identity}" and certificate leaf[subject.OU] = "${helperSigning.team}"`;
+function signingProfile(identity: string, team: string) {
+  const selected = helperSigningProfiles.find(
+    (profile) => profile.identity === identity && profile.team === team,
+  );
+  if (selected === undefined) fail("signing_identity");
+  return selected;
+}
+export function helperSigningForReceipt(receipt: unknown) {
+  if (typeof receipt !== "object" || receipt === null) fail("provenance");
+  const selected = helperSigningProfiles.find(
+    (profile) =>
+      Reflect.get(receipt, "identity") === profile.identity &&
+      Reflect.get(receipt, "team") === profile.team &&
+      Reflect.get(receipt, "identifier") === profile.identifier,
+  );
+  if (selected === undefined) fail("provenance");
+  return selected;
+}
+export function signatureRequirement(
+  identity: string = helperSigning.identity,
+  team: string = helperSigning.team,
+) {
+  const selected = signingProfile(identity, team);
+  return `=identifier "${selected.identifier}" and certificate leaf = H"${selected.identity}" and certificate leaf[subject.OU] = "${selected.team}"`;
 }
 export function requireHelperProvenance(
   value: unknown,
@@ -102,7 +132,10 @@ export function requireHelperProvenance(
 ) {
   if (!isDeepStrictEqual(value, expected)) fail("provenance");
 }
-export function verifyInstalledHelper(run: HelperCommand = runCommand) {
+export function verifyInstalledHelper(
+  run: HelperCommand = runCommand,
+  expectedIdentity?: string,
+) {
   try {
     if (process.platform !== "darwin") fail("platform");
     const selected = helperPaths();
@@ -122,10 +155,13 @@ export function verifyInstalledHelper(run: HelperCommand = runCommand) {
       receipt.compilerVersion.length > 4096
     )
       fail("provenance");
+    const signing = helperSigningForReceipt(receipt);
+    if (expectedIdentity !== undefined && signing.identity !== expectedIdentity)
+      fail("signing_identity_changed");
     const expected = {
       schemaVersion: 1,
       kind: "facet-local-credential-helper",
-      ...helperSigning,
+      ...signing,
       compilerVersion: receipt.compilerVersion,
       helperSHA256: digest(readFileSync(selected.executable)),
       sourceFiles: sourceInventory(),
@@ -137,7 +173,7 @@ export function verifyInstalledHelper(run: HelperCommand = runCommand) {
         "--verify",
         "--strict",
         "--test-requirement",
-        signatureRequirement(),
+        signatureRequirement(signing.identity, signing.team),
         selected.executable,
       ],
       run,
@@ -164,12 +200,11 @@ export function installLocalHelper(
   team: string,
   run: HelperCommand = runCommand,
 ) {
-  if (identity !== helperSigning.identity || team !== helperSigning.team)
-    fail("signing_identity");
+  const signing = signingProfile(identity, team);
   if (process.platform !== "darwin") fail("platform");
   const selected = helperPaths();
   if (existsSync(selected.executable) || existsSync(selected.receipt)) {
-    verifyInstalledHelper(run);
+    verifyInstalledHelper(run, signing.identity);
     return { status: "already-installed", executable: selected.executable };
   }
   for (const directory of [selected.directory, selected.bin]) {
@@ -212,7 +247,7 @@ export function installLocalHelper(
         "--sign",
         identity,
         "--identifier",
-        helperSigning.identifier,
+        signing.identifier,
         executable,
       ],
       run,
@@ -223,7 +258,7 @@ export function installLocalHelper(
         "--verify",
         "--strict",
         "--test-requirement",
-        signatureRequirement(),
+        signatureRequirement(signing.identity, signing.team),
         executable,
       ],
       run,
@@ -233,7 +268,7 @@ export function installLocalHelper(
     const receipt = {
       schemaVersion: 1,
       kind: "facet-local-credential-helper",
-      ...helperSigning,
+      ...signing,
       compilerVersion: compiler.stdout,
       helperSHA256: digest(readFileSync(executable)),
       sourceFiles: inputs,
@@ -244,7 +279,7 @@ export function installLocalHelper(
       flag: "wx",
       mode: 0o600,
     });
-    verifyInstalledHelper(run);
+    verifyInstalledHelper(run, signing.identity);
   } catch (error) {
     if (published && !existsSync(selected.receipt))
       unlinkSync(selected.executable);

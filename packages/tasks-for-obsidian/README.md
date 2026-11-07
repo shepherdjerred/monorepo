@@ -102,6 +102,13 @@ task_detection:
 
 ### Live Apple Sync acceptance
 
+For routine account-free protocol checks, run
+`bun run --cwd packages/tasknotes-macos mac:sync:fixture` from the workspace root. The
+[headless integration lane](../tasknotes-macos/README.md#account-free-sync-integration)
+starts its own synthetic server and exercises the shared Apple host without
+Keychain enrollment or an Obsidian account. It does not complete any live-service
+checkpoint below. Use a dedicated test account for that separate acceptance lane.
+
 Automated live acceptance requires an already provisioned, running headless Tart
 guest. Prepare with explicit guest and immutable official-app export identities:
 
@@ -194,8 +201,12 @@ bun ../tasknotes-macos/scripts/local-credentials.ts enroll \
   --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
 ```
 
-Installation requires the explicit existing Apple Development identity and team
-from the helper's pinned signing profile; other identities fail before setup.
+Installation requires an explicit existing identity and team from the helper's
+pinned Apple Development or Developer ID Application signing profiles; other
+identities fail before setup. The receipt binds future verification to the exact
+selected profile, so existing installations retain their original signer. An
+install command selecting another profile refuses to replace the installed helper
+or change any existing credential item's trust.
 The helper remains at
 `~/Library/Application Support/FacetAcceptanceCredentials/bin/facet-credentials`;
 only that signed helper is trusted to read its credential item. Enrollment reads

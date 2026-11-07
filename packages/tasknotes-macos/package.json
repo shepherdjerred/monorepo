@@ -9,6 +9,7 @@
     "mac:preflight": "cd ../tasknotes-core && cargo run --quiet --package xtask -- check-xcframework",
     "mac:build": "bun run mac:preflight && swift build",
     "mac:test": "bun run mac:preflight && swift test",
+    "mac:sync:fixture": "bun run mac:preflight && swift test --filter FacetSyncFixtureTests",
     "mac:snapshots": "bun run mac:preflight && swift test --filter TaskNotesMacTests",
     "mac:typecheck": "bun run mac:preflight && swift build --build-tests",
     "mac:format": "xcrun swift-format format --in-place --parallel --recursive Sources Tests App UITests Package.swift",

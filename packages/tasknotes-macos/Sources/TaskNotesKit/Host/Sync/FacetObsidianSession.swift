@@ -44,6 +44,7 @@ public actor FacetObsidianSession {
     internal let access: FacetSyncAccess
     internal let core: FfiObsidianSession
     internal let limits: ObsidianTransportLimits
+    internal let socketEndpoint: FacetSyncSocketEndpoint
     internal let sendMessage:
         @Sendable (URLSessionWebSocketTask, URLSessionWebSocketTask.Message) async throws -> Void
     internal let events = FacetSyncEventQueue<Event>(capacity: 8)
@@ -81,6 +82,7 @@ public actor FacetObsidianSession {
         access: FacetSyncAccess, checkpoint: String, changed: @escaping @Sendable () async -> Void,
         status: @escaping @Sendable (FacetSyncStatus) async -> Void,
         remoteChanged: @escaping @Sendable () async -> Void = {},
+        socketEndpoint: FacetSyncSocketEndpoint = .official,
         sendMessage:
             @escaping @Sendable (
                 URLSessionWebSocketTask, URLSessionWebSocketTask.Message
@@ -94,6 +96,7 @@ public actor FacetObsidianSession {
         self.remoteChanged = remoteChanged
         self.status = status
         self.sendMessage = sendMessage
+        self.socketEndpoint = socketEndpoint
         limits = try obsidianTransportLimits()
         let vault = access.identity.vault
         core = try FfiObsidianSession(
@@ -110,11 +113,26 @@ public actor FacetObsidianSession {
         remoteChanged: @escaping @Sendable () async -> Void = {},
         retain: @escaping @Sendable (FacetObsidianSession) async -> Bool = { _ in true }
     ) async throws -> FacetObsidianSession {
+        try await open(
+            engine: engine, account: account, profileID: profileID,
+            socketEndpoint: .official, changed: changed, status: status,
+            remoteChanged: remoteChanged, retain: retain)
+    }
+
+    internal static func open(
+        engine: FacetEngine, account: FacetObsidianAccount, profileID: String,
+        socketEndpoint: FacetSyncSocketEndpoint = .official,
+        changed: @escaping @Sendable () async -> Void,
+        status: @escaping @Sendable (FacetSyncStatus) async -> Void,
+        remoteChanged: @escaping @Sendable () async -> Void = {},
+        retain: @escaping @Sendable (FacetObsidianSession) async -> Bool = { _ in true }
+    ) async throws -> FacetObsidianSession {
         let authorized = try await account.access(profileID: profileID)
         let checkpoint = try await engine.checkpoint(profileID: profileID)
         let host = try FacetObsidianSession(
             engine: engine, account: account, profileID: profileID, access: authorized,
-            checkpoint: checkpoint, changed: changed, status: status, remoteChanged: remoteChanged)
+            checkpoint: checkpoint, changed: changed, status: status, remoteChanged: remoteChanged,
+            socketEndpoint: socketEndpoint)
         do {
             try await engine.bindOwnedSession(host.core, profileID: profileID)
             try _Concurrency.Task.checkCancellation()

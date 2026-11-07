@@ -180,7 +180,10 @@ class ObsidianReplicaSession private constructor(
                     dirty = true
                 }
                 is ObsidianSessionEffect.Cancelled -> queued.remove(effect.operationId)
-                is ObsidianSessionEffect.Failed -> { effect.operationId?.let { queued.remove(it) }; state(effect.message) }
+                is ObsidianSessionEffect.Failed -> {
+                    if (!effect.retryable) effect.operationId?.let { queued.remove(it) }
+                    state(effect.message)
+                }
                 is ObsidianSessionEffect.Ready -> { ready = true; state("Downloading pending changes…"); dirty = true }
             }
             if (effect.triggersOccurrenceMaintenance()) maintenanceDirty = true

@@ -47,9 +47,7 @@ extension FacetObsidianSession {
                 return
             }
         #endif
-        guard let url = URL(string: address), url.scheme == "wss" else {
-            throw FacetSyncError.transport
-        }
+        let url = try socketEndpoint.resolve(address, expectedHost: access.identity.vault.host)
         reader?.cancel()
         socket?.cancel(with: .goingAway, reason: nil)
         epoch += 1
@@ -108,7 +106,9 @@ extension FacetObsidianSession {
             dirty = true
         case .cancelled(let id): queued.remove(id)
         case .failed(_, _, let retryable, let operationID):
-            if let operationID { queued.remove(operationID) }
+            // Rust retains the exact active upload for retry. Releasing its
+            // Swift admission here would enqueue the same receipt twice.
+            if !retryable, let operationID { queued.remove(operationID) }
             ready = false
             transportPhase = retryable ? .offline : .reconnectRequired
         case .ready:
