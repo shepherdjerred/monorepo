@@ -7,6 +7,7 @@ import {
   createDeliveryWorkers,
   replayFixture,
 } from "#workflows/testing/delivery-workers.ts";
+import { DELIVERY_WAIT_ROLLOVER_ITERATIONS } from "./delivery/admission.ts";
 
 async function execute(failApply: boolean, waits = 0) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -296,6 +297,51 @@ describe("Delivery Workflow", () => {
       "finish",
     ]);
   }, 60_000);
+});
+
+describe("Delivery admission wait rollover", () => {
+  it("a long wait for admission continues as a new run and claims once", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    let waits = DELIVERY_WAIT_ROLLOVER_ITERATIONS + 3;
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      prepareDelivery: () => {
+        calls.push("prepare");
+        return waits-- > 0
+          ? { status: "waiting" }
+          : { status: "ready", workerRollout: false, workerHosts: false };
+      },
+      applyDelivery: () => {
+        calls.push("apply");
+      },
+      verifyDelivery: () => {
+        calls.push("verify");
+        return [];
+      },
+      finishDelivery: () => {
+        calls.push("finish");
+      },
+    });
+    try {
+      const handle = await environment.client.workflow.start(
+        "deliveryDeploymentWorkflow",
+        {
+          workflowId: `delivery-rollover-${crypto.randomUUID()}`,
+          taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+          args: [{ deploymentId: "deployment-waiting" }],
+        },
+      );
+      await workflows.runUntil(activities.runUntil(handle.result()));
+      const final = await handle.describe();
+      expect(final.runId).not.toBe(handle.firstExecutionRunId);
+      expect(calls.filter((call) => call === "prepare")).toHaveLength(
+        DELIVERY_WAIT_ROLLOVER_ITERATIONS + 4,
+      );
+      expect(calls.slice(-3)).toEqual(["apply", "verify", "finish"]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 180_000);
 });
 
 describe("Delivery replication retirement", () => {
