@@ -29,7 +29,10 @@ credentials and do not skip database verification when binaries are missing.
 `bun run migrate:deploy` applies committed Prisma migrations using `DATABASE_URL`.
 
 The hosted API keeps its existing pod serving while one replacement runs
-migrations and becomes ready. Executors need this journal during the API's own
+migrations and becomes ready. On shutdown the outgoing pod reports
+`/readyz` unready and keeps serving until its EndpointSlice entry is no longer
+ready while another is, then until no request has arrived for two seconds,
+bounded at 25 seconds (`src/server/drain.ts`). Executors need this journal during the API's own
 release. Schema migrations must therefore remain compatible with the serving
 revision until its replacement passes readiness.
 
@@ -513,6 +516,7 @@ missing projection pauses settlement and keeps ownership.
 | Reader Role                        | Grant                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `delivery-application-reader`      | get, list, watch Applications in `argocd`                                                               |
+| `delivery-endpoint-reader`         | get, list, watch EndpointSlices in `delivery`, read while the API drains on shutdown                    |
 | `delivery-worker-recovery-reader`  | get, list, watch Pods and Deployments in `temporal`, `scout-beta` and `scout-prod`                      |
 | `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |

@@ -86,6 +86,22 @@ export const DELIVERY_KUBERNETES_READERS = {
       { apiGroups: ["apps"], resources: ["deployments"], verbs: READ },
     ],
   },
+  /**
+   * The API's own Service endpoints, read while it drains on shutdown: it
+   * stops serving only once its endpoint is no longer ready and another is.
+   */
+  endpointDrain: {
+    name: "delivery-endpoint-reader",
+    directory: "/var/run/delivery-endpoint-reader",
+    namespaces: ["delivery"],
+    rules: [
+      {
+        apiGroups: ["discovery.k8s.io"],
+        resources: ["endpointslices"],
+        verbs: READ,
+      },
+    ],
+  },
 } as const satisfies Record<string, DeliveryKubernetesReader>;
 
 /**
