@@ -166,6 +166,13 @@ scheduled backups are the only backup. They are written to the Backblaze
 bucket that held backups taken before that move is no longer managed and is
 retired out-of-band, as is the unused `glitter-discord-corpus` bucket.
 
+`cloudflare/ts-mc-bucket.tf` and `cloudflare/sjerred-bucket.tf` own the public
+download buckets behind `storage.ts-mc.net` and `files.sjer.red`. Both prevent
+destruction, keep `r2.dev` disabled, and only abort abandoned multipart uploads.
+Their custom domains stay attached out-of-band: provider 5.27 cannot import an
+existing `cloudflare_r2_custom_domain`, and creating one that already exists
+fails.
+
 Each domain's `.tf` file owns its existing zone and application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
 DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS settings, and certificate
