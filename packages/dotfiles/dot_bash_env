@@ -28,6 +28,20 @@ if command -v mise &>/dev/null; then
     eval "$(mise activate bash --shims)"
 fi
 
+# Agent hosts route credentialed CLIs (talosctl, argocd, gcx, woodpecker-cli,
+# temporal, posthog-cli) through toolkit shims, which must precede mise shims
+# and Homebrew. The directory exists only on agent hosts. Move it to the front
+# on every source so later prepends cannot shadow it.
+_toolkit_shims="$HOME/.local/share/toolkit/shims"
+if [[ -d "$_toolkit_shims" ]]; then
+    PATH=":$PATH:"
+    PATH="${PATH//:$_toolkit_shims:/:}"
+    PATH="${PATH#:}"
+    PATH="$_toolkit_shims:${PATH%:}"
+    export PATH
+fi
+unset _toolkit_shims
+
 # Fix gRPC DNS resolution for Tailscale split DNS on macOS
 # Required for tools like talosctl to resolve Tailscale hostnames
 export GRPC_DNS_RESOLVER=native

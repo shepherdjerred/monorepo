@@ -47,15 +47,33 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["toolkit", "talosctl", ["reset", "wipe"]],
+    decision = "forbidden",
+    justification = "Do not reset or wipe Talos nodes through the toolkit credential passthrough.",
+)
+
+prefix_rule(
     pattern = ["argocd", "cluster", "rm"],
     decision = "forbidden",
     justification = "Do not remove Argo CD clusters.",
 )
 
 prefix_rule(
+    pattern = ["toolkit", "argocd", "cluster", "rm"],
+    decision = "forbidden",
+    justification = "Do not remove Argo CD clusters through the toolkit credential passthrough.",
+)
+
+prefix_rule(
     pattern = ["argocd", "app", "sync", "--prune"],
     decision = "forbidden",
     justification = "Do not prune resources through Argo CD sync.",
+)
+
+prefix_rule(
+    pattern = ["toolkit", "argocd", "app", "sync", "--prune"],
+    decision = "forbidden",
+    justification = "Do not prune resources through Argo CD sync via the toolkit credential passthrough.",
 )
 
 prefix_rule(

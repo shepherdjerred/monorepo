@@ -55,6 +55,24 @@ At the console (or KVM) once:
 From then on, `ssh <name>` and Herdr's `hc machine add <name>` reach the host
 without the console.
 
+An agent host keeps no credential files. Do not run `talosctl kubeconfig`,
+`gcx login`, or `argocd login` there, and do not copy `~/.talos/config` or
+`~/.aws/credentials` onto it. Toolkit brokers every credential at call time:
+
+- `~/.kube/config` holds only the cluster address, its public CA (read at
+  apply time through the service account), and the `admin@torvalds` context;
+  kubectl obtains a client credential from `toolkit kube credential`.
+- `~/.aws/config` gives the bucket-scoped `b2-velero`, `b2-postgres-wal`, and
+  `b2-seaweedfs-backups` profiles, plus `seaweedfs` and `brim-sync`, a
+  `credential_process` of `toolkit aws credential <profile>`.
+- `~/.local/share/toolkit/shims` holds `talosctl`, `argocd`, `gcx`,
+  `woodpecker-cli`, `temporal`, and `posthog-cli` shims that run the matching
+  `toolkit` passthrough. Fish, bash, and zsh put that directory ahead of the
+  mise shims and Homebrew.
+
+Verify with `command -v talosctl` (resolves to the shim), `kubectl get nodes`,
+and `aws --profile seaweedfs s3 ls`.
+
 ## Before erasing the Mac
 
 - Identify the authoritative sync service for every important data set and

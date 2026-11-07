@@ -71,10 +71,17 @@ install-sublime-package-control.sh
 set-default-apps.sh
 # Agent hosts keep no rendered secrets on disk; commands resolve credentials
 # at call time through toolkit or scripts/onepassword/with-service-account.sh.
+# ~/.kube/config and ~/.aws/config still render there, secret-free: kubectl and
+# the AWS SDKs call toolkit as their credential plugin. gcx takes its server
+# and token from `toolkit grafana`, so the gcx login script stays off.
 .aws/credentials
 .config/argocd/config
 .config/turbo-cache
-.kube/config
 .talos/config
 configure-gcx.sh
+{{- else }}
+# toolkit credential-broker shims and the login-zsh PATH fix-up for them exist
+# only on agent hosts.
+.local/share/toolkit/shims
+.zlogin
 {{- end }}

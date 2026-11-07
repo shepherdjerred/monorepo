@@ -17,6 +17,14 @@ end
 # and use only --shims mode (~2ms, just adds PATH entry)
 set -gx MISE_FISH_AUTO_ACTIVATE 0
 mise activate fish --shims | source
+{{- if eq .profile "agent-host" }}
+# Agent hosts route credentialed CLIs (talosctl, argocd, gcx, woodpecker-cli,
+# temporal, posthog-cli) through toolkit shims, which resolve credentials at
+# call time. They must precede mise shims and Homebrew. mise runs in --shims
+# mode, which prepends once and installs no hook-env prompt handler, so moving
+# the shim directory to the front here survives the session.
+fish_add_path --path --move ~/.local/share/toolkit/shims
+{{- end }}
 
 # Use abbreviations so scripts use real commands, but your typing expands
 abbr vim nvim
