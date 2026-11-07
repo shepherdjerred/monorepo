@@ -179,13 +179,36 @@ bun run android:lint
 ANDROID_HOME=/path/to/android/sdk bun scripts/verify-page-size.ts
 gradle :host:assembleDebugAndroidTest :app:assembleDebugAndroidTest
 ANDROID_HOME=/path/to/android/sdk ANDROID_SERIAL=emulator-5554 bun scripts/verify-runtime.ts
+ANDROID_HOME=/path/to/android/sdk ANDROID_SERIAL=emulator-5554 bun run android:sync:acceptance
 ```
 
 Repeat runtime acceptance on both4KiB and16KiB images. ELF/ZIP checks cover Rust,
 JNI and JNA for both ABIs. JVM/schema tests and emulator tests prove different
 layers. Screenshots/transcripts stay under ignored `artifacts/acceptance`.
-The verifier retains separate file-backed command output and enforces one
-eight-minute budget across the complete journey. Each command also has a bounded
+The baseline verifier selects the complete seven-test private-host class and
+three Compose journeys by name. The separate Sync launcher owns a disposable
+loopback protocol server, reverses only its port to an explicitly selected
+emulator, and clears only the self-instrumenting `red.sjer.facet.host.test`
+package. It exercises MFA, vault access, Android Keystore, two encrypted peers,
+offline outbox persistence across engine reopen, and disconnects before and
+after server commit. It retains source/APK hashes, counters and transcripts;
+it does not prove compatibility with the official live service.
+
+The alternate HTTP/WebSocket transport exists only in the debug source set.
+It is scoped in memory, permits loopback only for the two fixed synthetic
+origins, and never changes Rust's production origin validation. Release builds
+contain an immutable normal transport with no fixture capability. Cleartext
+is allowed only for `127.0.0.1` in the debug manifest. Direct full connected
+host instrumentation requires the launcher's `fixtureConfig` argument and
+fails before its test action when it is absent; the focused launchers supply
+each suite's prerequisites. `android:runtime` assembles all three APKs before
+running both lanes. The runners require successful start/end records for every
+expected test and reject skipped or assumed tests.
+The baseline verifier retains separate file-backed command output and enforces
+one eight-minute budget across its complete journey. The separate Sync lane has
+a five-minute acceptance budget and a separate 30-second cleanup budget. It
+force-stops only its owned library test package and confirms that package's
+processes have exited before retiring its fixture or reverse port. Each command also has a bounded
 exit wait. Completion checks both wall and monotonic elapsed time, so suspension,
 late timer delivery or wall-clock rollback cannot turn an overdue exit into a pass.
 

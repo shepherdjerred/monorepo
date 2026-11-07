@@ -8,7 +8,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.json.*
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -39,7 +38,7 @@ class ObsidianReplicaSession private constructor(
     }
     private val events = Channel<Event>(8)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val client = OkHttpClient.Builder().followRedirects(false).build()
+    private val client = ObsidianTransport.client()
     private val nonce = SecureRandom()
     private val limits = obsidianTransportLimits()
     private val metadata = mutableMapOf<ULong, JsonObject>()

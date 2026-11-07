@@ -28,3 +28,12 @@ dependencies {
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
 }
+
+val fixtureArgument = providers.gradleProperty("android.testInstrumentationRunnerArguments.fixtureConfig")
+tasks.matching { it.name.startsWith("connected") && it.name.endsWith("AndroidTest") }.configureEach {
+    doFirst {
+        require(fixtureArgument.isPresent) {
+            "The full host suite requires its account-free fixture. Use bun run android:runtime with ANDROID_HOME and an owned emulator ANDROID_SERIAL."
+        }
+    }
+}

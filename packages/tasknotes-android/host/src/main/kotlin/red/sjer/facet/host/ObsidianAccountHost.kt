@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Call
@@ -35,7 +34,7 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
     private val account = FfiObsidianAccount()
     private val secrets = VaultSecrets(context.applicationContext)
     private val preferences = context.getSharedPreferences("facet.remote-vaults", Context.MODE_PRIVATE)
-    private val client = OkHttpClient.Builder().followRedirects(false).build()
+    private val client = ObsidianTransport.client()
     private val mutex = Mutex()
     private val signInTransition = FacetAccountSignInTransition()
     private var choices: List<ObsidianRemoteVault> = emptyList()

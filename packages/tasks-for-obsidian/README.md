@@ -531,7 +531,9 @@ This board journey is separate from the existing local and mobile parity gates.
 to reopen a completed synthetic task, delete it through the native editor,
 Undo the deletion, cold-launch and complete it again. Stopped-app checkpoints
 retain the exact pre-delete Markdown and require byte-for-byte restoration after
-Undo. All three selectors must pass, unrelated fixture bytes remain unchanged,
+Undo. The simulator-bound UI runner also reads those bytes before deletion,
+requires an actual `ENOENT` before Undo, and rereads identical bytes afterward.
+All three selectors must pass, unrelated fixture bytes remain unchanged,
 and the ordinary local runner's final completed-task gate remains enforced.
 
 Shared schema positive, negative,

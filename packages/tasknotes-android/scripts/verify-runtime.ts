@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { mkdirSync } from "node:fs";
 import { nativeInputs } from "./native-inputs";
 import { AcceptanceDeadline, boundedCommand } from "./bounded-command.ts";
+import { assertInstrumentationSuccess } from "./instrumentation-results";
 
 const acceptance = new AcceptanceDeadline(480_000);
 
@@ -140,24 +141,48 @@ for (const [apk, identity] of apkPackages) {
       `Installed APK differs from the reviewed artifact for ${identity}.`,
     );
 }
-for (const [name, target] of [
-  ["host", "red.sjer.facet.host.test"],
-  ["compose", "red.sjer.facet.test"],
-]) {
+for (const [name, target, testClass, tests] of [
+  [
+    "host",
+    "red.sjer.facet.host.test",
+    "red.sjer.facet.host.PrivateReplicaRuntimeTest",
+    [
+      "cancelledAbsentAutomaticEnvelopeWithChangedParentRetiresBeforeFreshGeneration",
+      "rollingGenerationRetainsAutomaticEnvelopeAndCoreUndoPolicyAcrossRestart",
+      "immutableActionEnvelopeSurvivesUncertainResponseAndRestart",
+      "missingRootFailsInsteadOfPretendingTheVaultIsEmpty",
+      "captureEditAndReopenPreserveMarkdownAndUnknownFields",
+      "atomicExchangeRetainsDisplacedBytesUntilAcknowledged",
+      "metadataRecoveryPagesKeepExactVersions",
+    ],
+  ],
+  [
+    "compose",
+    "red.sjer.facet.test",
+    "red.sjer.facet.StandaloneCaptureTest",
+    [
+      "seriesGenerateRepairUndoAndRelaunchUseDurableCoreReceipts",
+      "captureEditAndRelaunchUseThePrivateMarkdownVault",
+      "dependencyEditAndRelaunchPreserveStructuredMetadata",
+    ],
+  ],
+] as const) {
   const transcript = await run([
     "shell",
     "am",
     "instrument",
     "-w",
     "-r",
+    "-e",
+    "class",
+    testClass,
     `${target}/androidx.test.runner.AndroidJUnitRunner`,
   ]);
   await Bun.write(resolve(artifacts, `${name}.txt`), transcript);
-  if (
-    !/OK \(\d+ tests?\)/.test(transcript) ||
-    /FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed/.test(transcript)
-  )
-    throw new Error(`${name} native acceptance failed; inspect ${artifacts}.`);
+  assertInstrumentationSuccess(
+    transcript,
+    tests.map((test) => `${testClass}#${test}`),
+  );
 }
 await run(["shell", "am", "start", "-W", "-n", "red.sjer.facet/.MainActivity"]);
 await run(["shell", "uiautomator", "dump", "/sdcard/facet-acceptance.xml"]);

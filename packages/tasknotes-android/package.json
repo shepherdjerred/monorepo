@@ -21,8 +21,9 @@
     "android:lint": "gradle --console=plain :host:lintDebug :app:lintDebug",
     "android:package": "bun run android:native && gradle --console=plain :app:bundleRelease",
     "android:release": "bun scripts/sign-release.ts",
-    "android:runtime": "gradle --console=plain :host:connectedDebugAndroidTest :app:connectedDebugAndroidTest",
+    "android:runtime": "gradle --console=plain :app:assembleDebug :host:assembleDebugAndroidTest :app:assembleDebugAndroidTest && bun scripts/verify-runtime.ts && bun scripts/verify-sync-runtime.ts",
     "android:runtime:acceptance": "bun scripts/verify-runtime.ts",
+    "android:sync:acceptance": "bun scripts/verify-sync-runtime.ts",
     "android:verify": "bun run android:build && bun run android:test && bun run android:lint && bun run android:runtime && bun scripts/verify-page-size.ts"
   }
 }

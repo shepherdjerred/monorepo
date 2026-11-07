@@ -21,6 +21,7 @@
 		45E5C130E2BB9281D646FEC1 /* LiveSyncLifecycleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5235AB9742DC842D3303532D /* LiveSyncLifecycleUITests.swift */; };
 		4AE68BDD9152C45D1EEBB243 /* AccountInputSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1EB8C89E98DF40C5B3484B0 /* AccountInputSocket.swift */; };
 		4E6985EC943E01996BBC1153 /* TodayTasksProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */; };
+		501B90596D4E96082C38777E /* LocalMutationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FCB151E53FA32E77C09583 /* LocalMutationTests.swift */; };
 		5A6DCDE335C45B1ACCDF54B8 /* BoardTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72682CFAC1D4EB470162937D /* BoardTaskTests.swift */; };
 		5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */; };
 		5FD7C4C5B836E6573B5BC8D6 /* native-license-inventory.json in Resources */ = {isa = PBXBuildFile; fileRef = 8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */; };
@@ -138,6 +139,7 @@
 		EAC0D0E1DE43BD5AD7367A49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EC73F7B09BE57D9707A6260B /* FacetDelightGalleryFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetDelightGalleryFixtures.swift; sourceTree = "<group>"; };
 		EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F0FCB151E53FA32E77C09583 /* LocalMutationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalMutationTests.swift; sourceTree = "<group>"; };
 		F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 		FE970B6EE04B52AD7857868D /* LiveSyncVaultUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSyncVaultUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -297,6 +299,7 @@
 			isa = PBXGroup;
 			children = (
 				2F1C5B84F4C7CA48E82226A9 /* FacetKeyboardBootstrap.swift */,
+				F0FCB151E53FA32E77C09583 /* LocalMutationTests.swift */,
 				B7CAE5513F4B8E99AC1B2990 /* MobileParityTests.swift */,
 				38FB2A2990D633E3F148854F /* OccurrenceTaskTests.swift */,
 				4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */,
@@ -569,6 +572,7 @@
 				13A926586C9F704484833CBB /* LiveSyncConflictUITests.swift in Sources */,
 				45E5C130E2BB9281D646FEC1 /* LiveSyncLifecycleUITests.swift in Sources */,
 				7F4C39A329A5BFA7BB433978 /* LiveSyncVaultUITests.swift in Sources */,
+				501B90596D4E96082C38777E /* LocalMutationTests.swift in Sources */,
 				005E47EF03AEB91CA7D4A4B2 /* MobileParityTests.swift in Sources */,
 				04D62FFC4B2773544507D570 /* OccurrenceTaskTests.swift in Sources */,
 				5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */,

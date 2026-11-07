@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, readFile } from "node:fs/promises";
+import { cp, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { readAcceptanceResultReports } from "tasknotes-macos/scripts/acceptance-execution.ts";
@@ -22,21 +22,24 @@ const tests = [
   "testRestorationSurvivesColdLaunchAndCanCompleteAgain",
 ] as const;
 
+/** Canonical task metadata matches the Rust capture producer's persisted shape. */
+export async function seedIosLocalMutationVault(vault: string): Promise<void> {
+  await cp(fixture, vault, {
+    recursive: true,
+    errorOnExist: true,
+    force: false,
+  });
+  await Bun.write(
+    path.join(vault, taskPath),
+    '---\ncontexts: []\npriority: "normal"\nprojects: []\nstatus: "done"\ntags: ["task"]\ntitle: "E2E edited task"\ndateCreated: "2026-01-01T12:00:00Z"\ndateModified: "2026-01-01T12:00:00Z"\ncompletedDate: "2026-01-01"\n---\nSynthetic mutation acceptance body.\n',
+  );
+}
+
 export async function runIosLocalMutationAcceptance(): Promise<void> {
   let beforeDelete: Uint8Array | undefined;
   await runIosNativeJourney({
     kind: "native-local-mutation-ios",
-    seed: async (vault) => {
-      await cp(fixture, vault, {
-        recursive: true,
-        errorOnExist: true,
-        force: false,
-      });
-      await Bun.write(
-        path.join(vault, taskPath),
-        '---\ntitle: E2E edited task\nstatus: done\ntags: [task]\ncompletedDate: "2026-01-01T12:00:00Z"\n---\nSynthetic mutation acceptance body.\n',
-      );
-    },
+    seed: seedIosLocalMutationVault,
     execute: async (context) => {
       await configureIosJourneyTests(context.testRun, {}, context.command);
       const results: string[] = [];
@@ -48,6 +51,16 @@ export async function runIosLocalMutationAcceptance(): Promise<void> {
         results.push(result);
         const failures: unknown[] = [];
         try {
+          const ownedVault = await context.vault();
+          assert.equal(await realpath(ownedVault), ownedVault);
+          await configureIosJourneyTests(
+            context.testRun,
+            {
+              FACET_MUTATION_RUN_ID: path.basename(context.evidence),
+              FACET_MUTATION_TASK_PATH: path.join(ownedVault, taskPath),
+            },
+            context.command,
+          );
           await runSelectedIosJourneyTest(
             {
               testRun: context.testRun,
