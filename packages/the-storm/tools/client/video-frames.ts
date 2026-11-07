@@ -1,5 +1,6 @@
 import { z } from "zod";
 import wire from "#client-video-wire";
+import { framebufferShape } from "@shepherdjerred/mc-harness/protocol/framebuffer.ts";
 
 export const Camera = z.strictObject({
   position: z.tuple([z.number(), z.number(), z.number()]),
@@ -14,26 +15,7 @@ export const FrameReceipt = z.strictObject({
   schema: z.literal(1),
   kind: z.literal("rwf-rendered-frames"),
   acceptance: z.literal("unaccepted"),
-  source: z.literal("minecraft-framebuffer"),
-  fps: z.literal(30),
-  requestedFrames: z.number().int().min(1).max(1800),
-  complete: z.literal(true),
-  error: z.literal(""),
-  frames: z
-    .array(
-      z.strictObject({
-        frame: z.strictObject({
-          index: z.number().int().nonnegative(),
-          elapsedNanos: z.number().int().nonnegative(),
-          worldTick: z.number().int().nonnegative(),
-          camera: Camera,
-        }),
-        file: z.string().regex(/^\d{6}\.png$/u),
-        sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-      }),
-    )
-    .min(1)
-    .max(1800),
+  ...framebufferShape(Camera),
 });
 export type FrameReceipt = z.infer<typeof FrameReceipt>;
 

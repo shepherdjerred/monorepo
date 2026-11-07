@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { localRollout } from "#src/capture/suite/rollout.ts";
-import type { BlobStore } from "#src/capture/suite/store.ts";
+import { memoryStore } from "./suite-fixtures.ts";
 import { SandboxCreateRequestSchema } from "#protocol/ipc.ts";
 
 it("records the first real evaluation and replays it after upstream disappears", async () => {
@@ -17,18 +17,7 @@ it("records the first real evaluation and replays it after upstream disappears",
       return Response.json({ enabled });
     },
   });
-  const objects = new Map<string, Uint8Array>();
-  const store: BlobStore = {
-    write: (key, bytes) => {
-      objects.set(key, bytes);
-      return Promise.resolve();
-    },
-    read: (key) => {
-      const bytes = objects.get(key);
-      if (bytes === undefined) throw new Error("Missing blob");
-      return Promise.resolve(bytes);
-    },
-  };
+  const store = memoryStore();
   const cache = await mkdtemp(path.join(os.tmpdir(), "rollout-test-"));
   const recorder = await localRollout({
     source: {

@@ -1,3 +1,5 @@
+import presentations from "#captures/presentations/elevator.ts";
+import { presentation } from "#captures/presentations/lookup.ts";
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 
 export default defineCaptureScene({
@@ -57,33 +59,11 @@ export default defineCaptureScene({
     await context.teleport(context.at(-2.5, 0, -2.5), 0, 0);
     await context.lookAt(context.at(3.5, 3.5, 2.5));
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "elevator-layout",
-      alt: "Two vertically aligned lift signs with a safe platform at each stop",
-      caption:
-        "Align the signs vertically and leave room to stand at each floor.",
-      annotations: [],
-    });
+    await context.capture(presentation(presentations, "elevator-layout"));
     await context.teleport(context.at(3.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(3.5, 1.5, 2.5));
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "elevator-lower",
-      alt: "The lower elevator sign in the wilderness",
-      caption: "Right-click Lift Up to reach the aligned upper stop.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.7, 0.25],
-          to: [0.5, 0.5],
-          text: "Lower stop",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "elevator-lower"));
     const base = context.at(0, 0, 0)[1];
     // Prepare both real views before the timed clip, including their visible chunk meshes.
     for (const [height, lookHeight] of [
@@ -105,32 +85,7 @@ export default defineCaptureScene({
     }
     await context.action("clear-overlays");
     await context.record(
-      {
-        schema: 1,
-        name: "elevator-travel",
-        alt: "Using the elevator to travel up and return to ground level",
-        caption: "The signs move the player between aligned stops.",
-        annotations: [
-          {
-            kind: "arrow",
-            from: [0.65, 0.28],
-            to: [0.5, 0.5],
-            text: "Upper stop",
-            atStep: "up-end",
-            startMs: 0,
-            endMs: 1800,
-          },
-          {
-            kind: "arrow",
-            from: [0.65, 0.28],
-            to: [0.5, 0.5],
-            text: "Back at ground",
-            atStep: "down-end",
-            startMs: 0,
-            endMs: 1800,
-          },
-        ],
-      },
+      presentation(presentations, "elevator-travel"),
       async () => {
         await context.step("up", async () => {
           await context.use();

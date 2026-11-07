@@ -8,16 +8,7 @@ import {
   restoreFixture,
   localFixtureSource,
 } from "#src/capture/suite/fixture.ts";
-import type { BlobStore } from "#src/capture/suite/store.ts";
-
-function integer(name: string, value: number) {
-  const bytes = Buffer.alloc(7 + name.length);
-  bytes[0] = 3;
-  bytes.writeUInt16BE(name.length, 1);
-  bytes.write(name, 3);
-  bytes.writeInt32BE(value, 3 + name.length);
-  return bytes;
-}
+import { integer, memoryStore } from "./suite-fixtures.ts";
 
 async function terrain(root: string) {
   for (const [rx, rz] of [
@@ -64,18 +55,7 @@ it("round-trips padded native terrain, dimension settings and datapacks without 
   const source = path.join(root, "source"),
     cache = path.join(root, "cache"),
     destination = path.join(root, "restored");
-  const objects = new Map<string, Uint8Array>();
-  const store: BlobStore = {
-    write: (key, bytes) => {
-      objects.set(key, bytes);
-      return Promise.resolve();
-    },
-    read: (key) => {
-      const bytes = objects.get(key);
-      if (bytes === undefined) throw new Error("Missing blob");
-      return Promise.resolve(bytes);
-    },
-  };
+  const store = memoryStore();
   const settings = gzipSync(Buffer.from([10, 0, 0, 0]));
   try {
     await terrain(source);

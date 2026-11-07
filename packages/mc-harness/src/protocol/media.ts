@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { framebufferShape } from "./framebuffer.ts";
 
 export const MediaName = z.string().regex(/^[a-z][a-z0-9-]{0,79}$/u);
 const unit = z.number().min(0).max(1);
@@ -35,8 +36,10 @@ const camera = z.strictObject({
   hud: z.boolean(),
   nameplates: z.boolean(),
 });
+const framebuffer = framebufferShape(camera);
 export const DocsFramesSchema = z
   .strictObject({
+    ...framebuffer,
     markers: z
       .array(
         z.strictObject({
@@ -47,28 +50,14 @@ export const DocsFramesSchema = z
       .max(200),
     schema: z.literal(4),
     kind: z.literal("mc-docs-frames"),
-    source: z.literal("minecraft-framebuffer"),
-    fps: z.literal(30),
-    requestedFrames: z.number().int().min(1).max(1800),
-    complete: z.literal(true),
-    error: z.literal(""),
-    frames: z
-      .array(
-        z.strictObject({
-          frame: z.strictObject({
-            index: z.number().int().nonnegative(),
-            elapsedNanos: z.number().int().nonnegative(),
-            worldTick: z.number().int().nonnegative(),
-            camera,
-          }),
-          file: z.string().regex(/^\d{6}\.png$/u),
-          sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-          observation: z.strictObject({
-            world: z.string(),
-            screen: z.string(),
-          }),
+    frames: framebuffer.frames.element
+      .extend({
+        observation: z.strictObject({
+          world: z.string(),
+          screen: z.string(),
         }),
-      )
+      })
+      .array()
       .min(1)
       .max(1800),
   })

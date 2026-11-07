@@ -1,5 +1,5 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
-import { camera, inspectors } from "./fixtures.ts";
+import { camera, inspectors, commandShot } from "./fixtures.ts";
 import { localHelper } from "#captures/helper.ts";
 
 export default defineCaptureScene({
@@ -31,7 +31,7 @@ export default defineCaptureScene({
     );
   },
   run: async (context) => {
-    for (const [name, command, expected, caption] of [
+    for (const shot of [
       [
         "town-roles",
         "town info",
@@ -45,17 +45,7 @@ export default defineCaptureScene({
         "Ownership handover requires a separate confirmation before the owner changes.",
       ],
     ] as const) {
-      await context.action("clear-overlays");
-      await context.playerCommand(command, expected);
-      await context.action("chat-open");
-      await context.capture({
-        schema: 1,
-        name,
-        alt: caption,
-        caption,
-        annotations: [],
-      });
-      await context.action("close");
+      await commandShot(context, shot);
     }
   },
 });

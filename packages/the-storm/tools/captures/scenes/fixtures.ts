@@ -3,6 +3,24 @@ import { z } from "zod";
 
 export type Point = [number, number, number];
 export const inspectors = ["wilderness", "shops", "banks"];
+
+/** Capture a confirmed command reply with the chat open, then return to gameplay. */
+export async function commandShot(
+  context: CaptureContext,
+  [name, command, expected, caption]: readonly [string, string, string, string],
+): Promise<void> {
+  await context.action("clear-overlays");
+  await context.playerCommand(command, expected);
+  await context.action("chat-open");
+  await context.capture({
+    schema: 1,
+    name,
+    alt: caption,
+    caption,
+    annotations: [],
+  });
+  await context.action("close");
+}
 const MessagesSchema = z.object({
   cursor: z.number(),
   messages: z.array(z.object({ text: z.string() })),

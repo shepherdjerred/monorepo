@@ -1,4 +1,5 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
+import { pad } from "./fixtures.ts";
 
 export default defineCaptureScene({
   name: "cooking-pot",
@@ -9,17 +10,7 @@ export default defineCaptureScene({
   inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
     await context.track("mechanic", 1);
-    await context.command(`minecraft:gamemode creative ${context.name}`);
-    await context.set(
-      context.at(0, 0, 0),
-      context.at(6, 3, 6),
-      "minecraft:air",
-    );
-    await context.set(
-      context.at(0, -1, 0),
-      context.at(6, -1, 6),
-      "minecraft:stone_bricks",
-    );
+    await pad(context, [6, 3, 6]);
     await context.set(
       context.at(3, 0, 2),
       context.at(3, 0, 2),

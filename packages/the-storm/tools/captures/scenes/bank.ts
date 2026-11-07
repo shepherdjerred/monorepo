@@ -1,3 +1,5 @@
+import presentations from "#captures/presentations/bank.ts";
+import { presentation } from "#captures/presentations/lookup.ts";
 import { z } from "zod";
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 
@@ -55,48 +57,10 @@ export default defineCaptureScene({
     await context.teleport(context.at(3.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(3.5, 0.5, 3.5));
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "deposit-bank",
-      alt: "A deposit bank barrel beside a cobblestone shelf",
-      caption: "Closing the bank sends matching items to its linked shelf.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.62, 0.3],
-          to: [0.65, 0.51],
-          text: "Drop-off bank",
-          startMs: 0,
-          endMs: 12_000,
-        },
-        {
-          kind: "arrow",
-          from: [0.16, 0.29],
-          to: [0.21, 0.52],
-          text: "Matching shelf",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "deposit-bank"));
     await context.teleport(context.at(5.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(5.5, 0.5, 2.5));
-    await context.capture({
-      schema: 1,
-      name: "bank-shelf-types",
-      alt: "A shelf sign accepts cobblestone and oak planks on separate lines",
-      caption: "Name one accepted item on each nonempty line below [Shelf].",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.63, 0.29],
-          to: [0.51, 0.45],
-          text: "One item type per line",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "bank-shelf-types"));
     await context.teleport(context.at(2.5, 0, 5.5), 180, 0);
     await context.command(
       `minecraft:item replace entity ${context.name} hotbar.1 with minecraft:cobblestone 16`,
@@ -128,23 +92,7 @@ export default defineCaptureScene({
           .filter((item) => item.count > 0).length === 3,
     );
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "bank-deposit",
-      alt: "Cobblestone, oak planks, and spruce logs placed in the deposit bank",
-      caption:
-        "Put supplies in the bank, then close it to route matching items.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.23, 0.23],
-          to: [0.42, 0.34],
-          text: "Deposit all three types",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "bank-deposit"));
     await context.action("close");
     await context.teleport(context.at(5.5, 0, 5.5), 180, 0);
     await context.lookAt(context.at(5.5, 0.5, 3.5));
@@ -162,22 +110,7 @@ export default defineCaptureScene({
         )
       );
     });
-    await context.capture({
-      schema: 1,
-      name: "bank-delivered",
-      alt: "Sixteen cobblestone and twelve oak planks have arrived in the linked shelf barrel",
-      caption: "The shelf receives both accepted item types.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.23, 0.23],
-          to: [0.4, 0.34],
-          text: "Accepted items arrive here",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "bank-delivered"));
     await context.action("close");
     await context.teleport(context.at(2.5, 0, 5.5), 180, 0);
     await context.lookAt(context.at(2.5, 0.5, 3.5));
@@ -194,22 +127,7 @@ export default defineCaptureScene({
         )
       );
     });
-    await context.capture({
-      schema: 1,
-      name: "bank-unmatched",
-      alt: "Four spruce logs remain in the deposit bank after the matching items moved",
-      caption: "Items without a matching shelf stay in the bank.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.23, 0.23],
-          to: [0.445, 0.34],
-          text: "Unmatched logs stay here",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "bank-unmatched"));
     await context.action("close");
   },
 });

@@ -17,19 +17,12 @@ import {
   type SuiteScenario,
 } from "#src/capture/suite/define.ts";
 import type { CaptureContext } from "#src/capture/define.ts";
+import { integer } from "./suite-fixtures.ts";
 
 const compound = Buffer.from([10, 0, 0, 0]);
 const unexpected = (): never => {
   throw new Error("Unexpected scene operation");
 };
-function integer(name: string, value: number) {
-  const bytes = Buffer.alloc(7 + name.length);
-  bytes[0] = 3;
-  bytes.writeUInt16BE(name.length, 1);
-  bytes.write(name, 3);
-  bytes.writeInt32BE(value, 3 + name.length);
-  return bytes;
-}
 function chunkNbt(x: number, z: number) {
   return Buffer.concat([
     compound.subarray(0, 3),

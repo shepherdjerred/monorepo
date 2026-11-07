@@ -1,3 +1,5 @@
+import presentations from "#captures/presentations/bridge.ts";
+import { presentation } from "#captures/presentations/lookup.ts";
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 import type { CaptureContext } from "@shepherdjerred/mc-harness/capture/define.ts";
 
@@ -78,41 +80,10 @@ export default defineCaptureScene({
     await context.teleport(context.at(4.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(4.5, -0.5, 3.5));
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "bridge-retracted",
-      alt: "The moving bridge is retracted, leaving a gap between its matching ends",
-      caption: "Matching Bridge signs control the gap between the fixed ends.",
-      annotations: [],
-    });
+    await context.capture(presentation(presentations, "bridge-retracted"));
     await context.lookAt(context.at(1.5, 0.5, 3.5));
     await context.record(
-      {
-        schema: 1,
-        name: "moving-bridge",
-        alt: "A sign-controlled bridge opens and closes over a trench",
-        caption: "Right-click either Bridge sign to toggle the moving section.",
-        annotations: [
-          {
-            kind: "label",
-            from: [0.15, 0.2],
-            to: [0.15, 0.2],
-            text: "Walkway extended",
-            atStep: "open-end",
-            startMs: 0,
-            endMs: 1500,
-          },
-          {
-            kind: "label",
-            from: [0.15, 0.2],
-            to: [0.15, 0.2],
-            text: "Walkway retracted",
-            atStep: "close-end",
-            startMs: 0,
-            endMs: 1500,
-          },
-        ],
-      },
+      presentation(presentations, "moving-bridge"),
       async () => {
         await context.step("open", async () => {
           await context.use();
@@ -135,13 +106,7 @@ export default defineCaptureScene({
     await context.teleport(context.at(4.5, 0, 0.5), 0, 0);
     await context.lookAt(context.at(4.5, -0.5, 3.5));
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "bridge-extended",
-      alt: "Bridge planks span the five spaces between its fixed ends",
-      caption: "Activating either sign extends the walkway across the gap.",
-      annotations: [],
-    });
+    await context.capture(presentation(presentations, "bridge-extended"));
     // Keep stock placed: terrain restoration removes it without dropping stored materials.
   },
 });

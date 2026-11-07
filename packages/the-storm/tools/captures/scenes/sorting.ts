@@ -1,5 +1,8 @@
+import presentations from "#captures/presentations/sorting.ts";
+import { presentation } from "#captures/presentations/lookup.ts";
 import { z } from "zod";
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
+import { pad } from "./fixtures.ts";
 
 const Slots = z.object({
   containerId: z.number(),
@@ -15,16 +18,7 @@ export default defineCaptureScene({
   staging: [-3, 0, -3],
   inspectors: ["wilderness", "shops", "banks"],
   setup: async (context) => {
-    await context.set(
-      context.at(0, 0, 0),
-      context.at(6, 3, 6),
-      "minecraft:air",
-    );
-    await context.set(
-      context.at(0, -1, 0),
-      context.at(6, -1, 6),
-      "minecraft:stone_bricks",
-    );
+    await pad(context, [6, 3, 6]);
     await context.set(
       context.at(3, 0, 3),
       context.at(3, 0, 3),
@@ -60,30 +54,7 @@ export default defineCaptureScene({
           .filter((item) => item.count > 0).length === 7,
     );
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "sorting-before",
-      alt: "Seven scattered stacks in a barrel, including split cobblestone and oak planks",
-      caption: "Before sorting: matching stacks are split across the barrel.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.21, 0.23],
-          to: [0.39, 0.34],
-          text: "Split stacks",
-          startMs: 0,
-          endMs: 12_000,
-        },
-        {
-          kind: "arrow",
-          from: [0.23, 0.58],
-          to: [0.42, 0.44],
-          text: "More of the same item",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "sorting-before"));
     await context.action("close");
     await context.attack(true);
     await context.feedback("Sorted.");
@@ -117,23 +88,7 @@ export default defineCaptureScene({
       },
     );
     await context.action("clear-overlays");
-    await context.capture({
-      schema: 1,
-      name: "sorting-after",
-      alt: "Five organized stacks in the same barrel, with cobblestone and oak planks combined",
-      caption:
-        "After sorting: duplicate stacks combine and items fill the first slots.",
-      annotations: [
-        {
-          kind: "arrow",
-          from: [0.23, 0.23],
-          to: [0.46, 0.34],
-          text: "Combined and organized",
-          startMs: 0,
-          endMs: 12_000,
-        },
-      ],
-    });
+    await context.capture(presentation(presentations, "sorting-after"));
     await context.action("close");
   },
 });
