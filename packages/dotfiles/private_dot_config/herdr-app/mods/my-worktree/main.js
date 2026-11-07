@@ -29,7 +29,6 @@ import {
   KEY_REF,
   RESPONSES_URL,
   TIMEOUT_MS,
-  branchName,
   freeBranch,
   namingRequest,
   parseNaming,
@@ -56,7 +55,8 @@ async function readKey() {
 
 // `{ branch, title }` for a first message, or an Error fit for the dialog.
 async function nameWork(message, deadline) {
-  const key = await readKey();
+  // 1Password may wait on an approval prompt; the deadline covers that too.
+  const key = await Promise.race([readKey(), deadline]);
   const reply = await Promise.race([
     fetch(RESPONSES_URL, namingRequest(message, key)),
     deadline,
@@ -542,7 +542,9 @@ export default class Worktree extends View {
       title = named.title;
       this.named = { branch, title };
     } else {
-      branch = branchName(this.text);
+      // A given branch is used as written; check-ref-format below rejects an
+      // invalid one. Only generated names are coerced.
+      branch = this.text.trim();
       if (!branch) return "Type a branch name.";
       exists = await taken(branch);
     }
@@ -569,12 +571,18 @@ export default class Worktree extends View {
     if (title && provider === "claude-code") extra.push("--name", title);
     if (message && provider === "antigravity") extra.push("-i", message);
     const typed = Boolean(message) && provider === "kimi";
+    const asTask = Boolean(message) && provider !== "antigravity" && !typed;
+    // Brim forwards everything after its `--`. The second `--` ends the
+    // agent's own options, so a message that starts with "-" (a Markdown
+    // list) stays the prompt instead of parsing as a flag.
     const argv = provider
       ? [
           "brim",
           "--provider",
           provider,
-          ...(extra.length ? ["--", ...extra] : []),
+          "--",
+          ...extra,
+          ...(asTask ? ["--"] : []),
         ]
       : p.argv;
     // Leave spaces unnamed so they follow the checkout folder and nest under
@@ -584,10 +592,7 @@ export default class Worktree extends View {
       machine: this.on,
       tab: p.tab ?? title ?? undefined,
       argv,
-      task:
-        argv && message && provider !== "antigravity" && !typed
-          ? message
-          : undefined,
+      task: argv && asTask ? message : undefined,
     });
     this.created = true;
     if (typed) return this.typeFirstMessage(path, message, cx);

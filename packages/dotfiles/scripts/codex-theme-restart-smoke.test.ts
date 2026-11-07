@@ -249,6 +249,27 @@ test("a thrown error is recorded as a failed event and mirrored to the unified l
   ]);
 });
 
+test("a run whose event cannot be saved still reaches the unified log as a failure", async () => {
+  const context = await fixture();
+  // A directory where the log file belongs makes every append fail.
+  await mkdir(path.join(context.stateDirectory, "events.jsonl"), {
+    recursive: true,
+  });
+  expect(await context.run(["--worker", "--on-change"])).toMatchObject({
+    code: 1,
+  });
+  const logged = await context.logged();
+  expect(logged).toHaveLength(1);
+  expect(logged[0]).toEqual([
+    "-t",
+    "codex-theme-restart",
+    "-p",
+    "user.err",
+    expect.stringContaining("FAILED"),
+  ]);
+  expect(JSON.stringify(logged[0])).toContain("events.jsonl not written");
+});
+
 test("records a failed pane when hc is unavailable", async () => {
   const context = await fixture();
   await rm(path.join(context.directory, ".local/bin/hc"));

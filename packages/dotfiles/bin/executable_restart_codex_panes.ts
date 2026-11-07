@@ -318,16 +318,36 @@ async function work(options: Options): Promise<number> {
     error: failure,
     counts: countOutcomes(progress.panes),
   };
+  // Only the lock holder trims the log: a trim rewrites the file, and a
+  // worker without the lock could replace an event appended meanwhile.
+  let saveFailure: string | null = null;
   try {
-    await appendEvent(eventsPath, event);
+    await appendEvent(
+      eventsPath,
+      event,
+      lock === undefined ? Number.POSITIVE_INFINITY : 500,
+    );
+  } catch (error) {
+    saveFailure = errorMessage(error);
   } finally {
     if (lock !== undefined) {
       lock.run("ROLLBACK");
       lock.close();
     }
   }
-  await mirror(event);
-  return event.ok ? 0 : 1;
+  // The unified log still hears about a run whose event could not be saved.
+  const reported: RunEvent =
+    saveFailure === null
+      ? event
+      : {
+          ...event,
+          ok: false,
+          error: [event.error, `events.jsonl not written: ${saveFailure}`]
+            .filter(Boolean)
+            .join("; "),
+        };
+  await mirror(reported);
+  return reported.ok ? 0 : 1;
 }
 
 async function codexConfigTheme(): Promise<string | undefined> {
