@@ -62,15 +62,22 @@ async function runningStage(deploymentId: string) {
 
 async function settleByReadback(deploymentId: string, requestId: string) {
   const detail = await context.delivery.detail(deploymentId);
-  const intent = await context.delivery.requestRecoveryIntent(
-    deploymentId,
-    {
-      requestId,
-      reason: "Independent Application readback of the recorded sync",
-      expectedGeneration: detail.environment.generation,
-    },
-    testOperator,
-  );
+  // A dispatch tick may already have opened the deployment's intent
+  // automatically (auto-recovery.ts); settle that one instead of a second.
+  const opened = await context.cluster.database.recoveryIntent.findFirst({
+    where: { deploymentId, status: "pending" },
+  });
+  const intent =
+    opened ??
+    (await context.delivery.requestRecoveryIntent(
+      deploymentId,
+      {
+        requestId,
+        reason: "Independent Application readback of the recorded sync",
+        expectedGeneration: detail.environment.generation,
+      },
+      testOperator,
+    ));
   expect(intent.kind).toBe("argo");
   await context.delivery.settleArgoIntent(
     intent.id,
@@ -108,8 +115,10 @@ test("a running operator-run platform holder canceled and then settled releases 
     },
     testExecutor,
   );
-  // Recovery-required keeps every row, and the sweep leaves it alone.
-  await context.delivery.reconcile([], testExecutor);
+  // Recovery-required keeps every row, and the sweep leaves it alone; the
+  // tick only opens the deployment's own recovery intent.
+  const tick = await context.delivery.reconcile([], testExecutor);
+  expect(tick.recoveryIntentsOpened).toEqual([`argo/auto-${deployment.id}`]);
   expect(await arcadeOwnership()).toEqual({
     targetLocks: [
       { instance: "application:arcade", deploymentId: deployment.id },

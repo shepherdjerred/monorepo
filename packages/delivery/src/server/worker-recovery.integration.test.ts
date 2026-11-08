@@ -521,3 +521,24 @@ test("worker recovery settlement releases the platform lock its holder kept, so 
     await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
   ).toMatchObject({ deploymentId: stack.id });
 });
+
+test("a dispatch tick opens a recovery-required worker deployment's worker intent itself", async () => {
+  const { deployment } = await failedWorker();
+  const tick = await context.delivery.reconcile([], testExecutor);
+  expect(tick.recoveryIntentsOpened).toHaveLength(1);
+  // The worker recovery dispatcher proves it; opening releases nothing.
+  expect(
+    await context.cluster.database.recoveryIntent.findFirstOrThrow({
+      where: { deploymentId: deployment.id },
+    }),
+  ).toMatchObject({
+    kind: "worker",
+    status: "pending",
+    requestedBy: "delivery/auto-recovery",
+  });
+  expect(
+    await context.cluster.database.deployment.findUniqueOrThrow({
+      where: { id: deployment.id },
+    }),
+  ).toMatchObject({ recoveryRequired: true });
+});

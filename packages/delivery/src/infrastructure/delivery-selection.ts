@@ -192,8 +192,14 @@ export async function reconcile(
     enabledEnvironments,
     actor,
   );
+  // A recovery-required deployment gets its independent reader without
+  // waiting for a person (auto-recovery.ts).
+  const recovery = await this.openAutomaticRecoveryIntents();
   return {
     deployments: [...selected, ...platform.deployments],
+    ...(recovery.opened.length === 0
+      ? {}
+      : { recoveryIntentsOpened: recovery.opened }),
     ...(platform.waiting.length === 0 ? {} : { waiting: platform.waiting }),
     ...(leasesExpired.length === 0 ? {} : { leasesExpired }),
     ...(ownershipReleased.length === 0 ? {} : { ownershipReleased }),

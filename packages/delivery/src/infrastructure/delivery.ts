@@ -36,6 +36,10 @@ import {
 } from "#infrastructure/execution/ownership.ts";
 import { settleArgoIntent } from "#infrastructure/execution/argo-settlement.ts";
 import {
+  openAutomaticRecoveryIntents,
+  settleAutomaticArgoIntents,
+} from "#infrastructure/execution/auto-recovery.ts";
+import {
   abandonRecoveryIntent,
   pendingRecoveryIntents,
 } from "#infrastructure/execution/recovery-abandon.ts";
@@ -197,6 +201,8 @@ export class Delivery {
   stage = stage;
   finish = finish;
   settleArgoIntent = settleArgoIntent;
+  openAutomaticRecoveryIntents = openAutomaticRecoveryIntents;
+  settleAutomaticArgoIntents = settleAutomaticArgoIntents;
   abandonRecoveryIntent = abandonRecoveryIntent;
   pendingRecoveryIntents = pendingRecoveryIntents;
   pending = pending;

@@ -291,6 +291,12 @@ A deployment ends `recovery-required` after an ambiguous effect, an expired
 lease, or an unsettled sub-step. It keeps its locks until a recovery intent
 succeeds ([4.15](packages/delivery/docs/model.md#415-recovery-intent)).
 
+Delivery opens the intent itself on its next dispatch tick, and worker,
+platform and `argo` intents settle without you when their reader proves the
+target. Follow these steps only for a content or compound target, or when
+`DeliveryRecoveryRequired` keeps firing because the automatic intent failed:
+`toolkit deploy recovery --pending --json` shows it, with its evidence.
+
 1. Read the deployment's environment generation, its recipe and the sub-step
    it names:
 

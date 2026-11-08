@@ -477,7 +477,12 @@ stop at a safe boundary, not an assertion that side effects were undone.
 
 An ambiguous effect, an expired lease or an unsettled sub-step ends the
 deployment `recovery-required`, keeping its result and its locks
-([4.15](docs/model.md#415-recovery-intent)). An administrator creates a
+([4.15](docs/model.md#415-recovery-intent)). Each dispatch tick opens one intent itself for a recovery-required
+deployment that has none, as the `delivery/auto-recovery` actor, and settles a
+pending `argo` intent once the API's own Application reader proves the
+operation finished; content and compound targets are left to an operator, and
+a deployment is attempted once (`src/infrastructure/execution/auto-recovery.ts`).
+An administrator creates a
 recovery intent with `POST /deployments/:id/recovery-intents`, supplying a
 request ID, reason, expected generation and, for a compound recipe, the
 sub-step. A deployment has at most one pending intent. Its `kind` follows the
