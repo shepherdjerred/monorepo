@@ -66,6 +66,10 @@ paths = [
   # Scout test/runtime logs are gitignored outputs and may be written while the
   # parallel source scan runs. Staged source still goes through `gitleaks protect`.
   '''packages/scout-for-lol/.*/logs/''',
+  # The Android native build's input manifest (gitignored, written while the
+  # parallel scan runs) maps Rust source paths to their sha256 digests; digests
+  # of files such as auth.rs and api.rs flag as generic-api-key.
+  '''^packages/tasknotes-android/build/rust-jni/source\.manifest\.json$''',
 ]
 
 [[allowlists]]
