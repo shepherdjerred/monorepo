@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
-import { createTestDatabase } from "#testing/postgres.ts";
-import { freshWorkerProof, workerFixture } from "#testing/worker-fixture.ts";
+import { expect, test } from "vitest";
+import { freshWorkerProof } from "#testing/worker-fixture.ts";
+import { workerPoolSuite } from "#testing/worker-pool-suite.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
-import { Delivery } from "#infrastructure/delivery.ts";
 import { freezeWorkerSnapshot } from "./pool.ts";
 import {
   WorkerPoolSnapshotSchema,
@@ -10,24 +9,9 @@ import {
   WorkerRetirementClaimSchema,
 } from "#shared/contract.ts";
 
-let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let delivery: Delivery;
-let fixture: Awaited<ReturnType<typeof workerFixture>>;
-beforeAll(async () => {
-  cluster = await createTestDatabase();
-  delivery = new Delivery(cluster.database);
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
-beforeEach(async () => {
-  await cluster.database.$executeRawUnsafe(
-    'TRUNCATE "Environment", "Pipeline", "Build", "VersionSet", "Request", "Audit" CASCADE',
-  );
-  fixture = await workerFixture(delivery);
-});
+const suite = workerPoolSuite();
 async function baseline() {
-  return fixture.acceptedPool();
+  return suite.fixture.acceptedPool();
 }
 
 test("fixed worker profiles retain immutable original artifacts and both central namespaces", async () => {
@@ -50,10 +34,10 @@ test("fixed worker profiles retain immutable original artifacts and both central
     }).success,
   ).toBe(false);
   await expect(
-    delivery.registerWorker(
+    suite.delivery.registerWorker(
       {
         requestId: "wrong-profile",
-        environmentId: fixture.environmentId,
+        environmentId: suite.fixture.environmentId,
         expectedGeneration: 4,
         artifactId: a.artifactId,
         introducedByDeploymentId: a.deployment.id,
@@ -62,7 +46,7 @@ test("fixed worker profiles retain immutable original artifacts and both central
       testOperator,
     ),
   ).rejects.toMatchObject({ code: "INVALID" });
-  const view = await delivery.workers(fixture.environmentId, {
+  const view = await suite.delivery.workers(suite.fixture.environmentId, {
     id: "reader",
     kind: "human",
     scopes: ["read"],
@@ -71,9 +55,9 @@ test("fixed worker profiles retain immutable original artifacts and both central
 });
 
 test("pool registration uses environment CAS and does not duplicate a concurrent request", async () => {
-  const a = await fixture.acceptedRelease(1);
-  const env = await cluster.database.environment.findUniqueOrThrow({
-    where: { id: fixture.environmentId },
+  const a = await suite.fixture.acceptedRelease(1);
+  const env = await suite.cluster.database.environment.findUniqueOrThrow({
+    where: { id: suite.fixture.environmentId },
   });
   const input = {
     requestId: "same-adoption",
@@ -84,13 +68,13 @@ test("pool registration uses environment CAS and does not duplicate a concurrent
     target: "central" as const,
   };
   const [first, repeated] = await Promise.all([
-    delivery.registerWorker(input, testOperator),
-    delivery.registerWorker(input, testOperator),
+    suite.delivery.registerWorker(input, testOperator),
+    suite.delivery.registerWorker(input, testOperator),
   ]);
   expect(first).toEqual(repeated);
-  expect(await cluster.database.workerVersion.count()).toBe(1);
+  expect(await suite.cluster.database.workerVersion.count()).toBe(1);
   await expect(
-    delivery.registerWorker(
+    suite.delivery.registerWorker(
       { ...input, requestId: "stale-adoption" },
       testOperator,
     ),
@@ -99,13 +83,13 @@ test("pool registration uses environment CAS and does not duplicate a concurrent
 
 test("rollback freezes the accepted candidate plus newer live hosts without changing original identities", async () => {
   const { a, workerA, workerB, snapshotA } = await baseline();
-  const c = await fixture.acceptedRelease(3);
-  const workerC = await fixture.adopt(c);
-  const detail = await delivery.detail(a.deployment.id);
-  const frozen = await cluster.database.$transaction((tx) =>
+  const c = await suite.fixture.acceptedRelease(3);
+  const workerC = await suite.fixture.adopt(c);
+  const detail = await suite.delivery.detail(a.deployment.id);
+  const frozen = await suite.cluster.database.$transaction((tx) =>
     freezeWorkerSnapshot(tx, {
       environment: detail.environment,
-      pipeline: fixture.workerPipeline,
+      pipeline: suite.fixture.workerPipeline,
       versionSet: detail.versionSet,
       deploymentId: "rollback/frozen",
       restored: { deploymentId: a.deployment.id, snapshot: snapshotA },
@@ -122,7 +106,7 @@ test("rollback freezes the accepted candidate plus newer live hosts without chan
       .map((row) => row.id)
       .toSorted(),
   ).toEqual([workerA.id, workerB.id, workerC.id].toSorted());
-  const stored = await cluster.database.deployment.findUniqueOrThrow({
+  const stored = await suite.cluster.database.deployment.findUniqueOrThrow({
     where: { id: a.deployment.id },
   });
   expect(WorkerPoolSnapshotSchema.parse(stored.workerSnapshot)).toEqual(
@@ -138,7 +122,11 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
     expectedEnvironmentGeneration: env.generation,
     expectedWorkerGeneration: workerA.generation,
   };
-  const selected = await delivery.retireWorker(workerA.id, input, testOperator);
+  const selected = await suite.delivery.retireWorker(
+    workerA.id,
+    input,
+    testOperator,
+  );
   expect(selected.kind).toBe("retire-host");
   expect(selected.workerSnapshot?.candidateBuildId).toBe(workerB.buildId);
   expect(
@@ -146,38 +134,38 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
       ?.replicas,
   ).toBe(0);
   const beforeAcceptance =
-    await cluster.database.workerVersion.findUniqueOrThrow({
+    await suite.cluster.database.workerVersion.findUniqueOrThrow({
       where: { id: workerA.id },
     });
   expect(beforeAcceptance.replicas).toBe(1);
-  expect(await delivery.retireWorker(workerA.id, input, testOperator)).toEqual(
-    selected,
-  );
+  expect(
+    await suite.delivery.retireWorker(workerA.id, input, testOperator),
+  ).toEqual(selected);
   await expect(
-    delivery.retireWorker(
+    suite.delivery.retireWorker(
       workerA.id,
       { ...input, expectedWorkerGeneration: 99 },
       testOperator,
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  await expect(delivery.claim(selected.id, testExecutor)).rejects.toMatchObject(
-    { code: "INVALID" },
-  );
-  await delivery.claim(selected.id, testExecutor, proof);
   await expect(
-    delivery.claim(
+    suite.delivery.claim(selected.id, testExecutor),
+  ).rejects.toMatchObject({ code: "INVALID" });
+  await suite.delivery.claim(selected.id, testExecutor, proof);
+  await expect(
+    suite.delivery.claim(
       selected.id,
       testExecutor,
       freshWorkerProof(workerA, workerB.buildId, Date.now() - 120_000),
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  await delivery.claim(
+  await suite.delivery.claim(
     selected.id,
     testExecutor,
     freshWorkerProof(workerA, workerB.buildId),
   );
   expect(
-    await cluster.database.targetLock.count({
+    await suite.cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
@@ -191,9 +179,9 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
       { kind: "acceptance" as const, summary: "Retired host absent" },
     ],
   };
-  await delivery.finish(selected.id, result, testExecutor);
-  await delivery.finish(selected.id, result, testExecutor);
-  const retired = await cluster.database.workerVersion.findUniqueOrThrow({
+  await suite.delivery.finish(selected.id, result, testExecutor);
+  await suite.delivery.finish(selected.id, result, testExecutor);
+  const retired = await suite.cluster.database.workerVersion.findUniqueOrThrow({
     where: { id: workerA.id },
   });
   expect(retired).toMatchObject({
@@ -202,8 +190,8 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
     artifactId: workerA.artifactId,
   });
   expect(retired.retirementProof).toMatchObject({ deploymentId: selected.id });
-  expect(await cluster.database.workerVersion.count()).toBe(2);
-  expect(await cluster.database.targetLock.count()).toBe(0);
+  expect(await suite.cluster.database.workerVersion.count()).toBe(2);
+  expect(await suite.cluster.database.targetLock.count()).toBe(0);
 });
 
 test("rollback never replaces a currently live retained host with a historical zero", async () => {
@@ -215,11 +203,11 @@ test("rollback never replaces a currently live retained host with a historical z
       { ...workerB, replicas: 0, retiredAt: new Date().toISOString() },
     ],
   });
-  const detail = await delivery.detail(a.deployment.id);
-  const frozen = await cluster.database.$transaction((tx) =>
+  const detail = await suite.delivery.detail(a.deployment.id);
+  const frozen = await suite.cluster.database.$transaction((tx) =>
     freezeWorkerSnapshot(tx, {
       environment: detail.environment,
-      pipeline: fixture.workerPipeline,
+      pipeline: suite.fixture.workerPipeline,
       versionSet: detail.versionSet,
       deploymentId: "historical-zero-rollback",
       restored: { deploymentId: a.deployment.id, snapshot: historical },
@@ -233,10 +221,10 @@ test("rollback never replaces a currently live retained host with a historical z
     versions: [{ ...workerA, artifactId: workerB.artifactId }],
   });
   await expect(
-    cluster.database.$transaction((tx) =>
+    suite.cluster.database.$transaction((tx) =>
       freezeWorkerSnapshot(tx, {
         environment: detail.environment,
-        pipeline: fixture.workerPipeline,
+        pipeline: suite.fixture.workerPipeline,
         versionSet: detail.versionSet,
         deploymentId: "identity-conflict",
         restored: { deploymentId: a.deployment.id, snapshot: changedIdentity },
@@ -247,7 +235,7 @@ test("rollback never replaces a currently live retained host with a historical z
 
 test("failed ambiguous retirement retains hosts and the Application lock without a desired-zero commit", async () => {
   const { workerA, workerB, env } = await baseline();
-  const selected = await delivery.retireWorker(
+  const selected = await suite.delivery.retireWorker(
     workerA.id,
     {
       requestId: "retire-failure",
@@ -256,12 +244,12 @@ test("failed ambiguous retirement retains hosts and the Application lock without
     },
     testOperator,
   );
-  await delivery.claim(
+  await suite.delivery.claim(
     selected.id,
     testExecutor,
     freshWorkerProof(workerA, workerB.buildId),
   );
-  await delivery.finish(
+  await suite.delivery.finish(
     selected.id,
     {
       status: "failed",
@@ -273,18 +261,20 @@ test("failed ambiguous retirement retains hosts and the Application lock without
     },
     testExecutor,
   );
-  const retained = await cluster.database.workerVersion.findUniqueOrThrow({
-    where: { id: workerA.id },
-  });
+  const retained = await suite.cluster.database.workerVersion.findUniqueOrThrow(
+    {
+      where: { id: workerA.id },
+    },
+  );
   expect(retained.replicas).toBe(1);
   expect(retained.generation).toBe(0);
   expect(
-    await cluster.database.targetLock.count({
+    await suite.cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
   await expect(
-    delivery.registerWorker(
+    suite.delivery.registerWorker(
       {
         requestId: "change-pool-during-recovery",
         environmentId: env.id,
@@ -307,9 +297,13 @@ test("retirement rejects incomplete, stale, routed, sticky-drained and reference
     expectedWorkerGeneration: workerA.generation,
   };
   await expect(
-    delivery.retireWorker(workerB.id, input, testOperator),
+    suite.delivery.retireWorker(workerB.id, input, testOperator),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  const selected = await delivery.retireWorker(workerA.id, input, testOperator);
+  const selected = await suite.delivery.retireWorker(
+    workerA.id,
+    input,
+    testOperator,
+  );
   for (const proofs of [
     proof.proofs.slice(0, 1),
     freshWorkerProof(workerA, workerB.buildId, Date.now() - 120_000).proofs,
@@ -320,12 +314,12 @@ test("retirement rejects incomplete, stale, routed, sticky-drained and reference
     })),
   ])
     await expect(
-      delivery.claim(selected.id, testExecutor, { proofs }),
+      suite.delivery.claim(selected.id, testExecutor, { proofs }),
     ).rejects.toMatchObject({
       code: expect.stringMatching(/INVALID|CONFLICT/u),
     });
   expect(
-    await cluster.database.deployment.count({
+    await suite.cluster.database.deployment.count({
       where: { kind: "retire-host" },
     }),
   ).toBe(1);
@@ -333,7 +327,7 @@ test("retirement rejects incomplete, stale, routed, sticky-drained and reference
 
 test("inactive-unreferenced retirement preserves fresh accepted-pool ownership without inventing drainage", async () => {
   const { workerA, workerB, env } = await baseline();
-  const selected = await delivery.retireWorker(
+  const selected = await suite.delivery.retireWorker(
     workerA.id,
     {
       requestId: "inactive/retire",
@@ -391,7 +385,7 @@ test("inactive-unreferenced retirement preserves fresh accepted-pool ownership w
     { change: { drainageStatus: "DRAINED" }, error: { name: "ZodError" } },
   ]) {
     const claim = async () =>
-      await delivery.claim(
+      await suite.delivery.claim(
         selected.id,
         testExecutor,
         WorkerRetirementClaimSchema.parse({
@@ -400,8 +394,8 @@ test("inactive-unreferenced retirement preserves fresh accepted-pool ownership w
       );
     await expect(claim()).rejects.toMatchObject(error);
   }
-  await delivery.claim(selected.id, testExecutor, proof);
-  const worker = await cluster.database.workerVersion.findUniqueOrThrow({
+  await suite.delivery.claim(selected.id, testExecutor, proof);
+  const worker = await suite.cluster.database.workerVersion.findUniqueOrThrow({
     where: { id: workerA.id },
   });
   expect(worker.replicas).toBe(1);
@@ -410,17 +404,17 @@ test("inactive-unreferenced retirement preserves fresh accepted-pool ownership w
     proofs: proof.proofs,
   });
   expect(
-    await cluster.database.targetLock.count({
+    await suite.cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
 });
 
 test("Scout production retirement requires exact human approval before fresh executor claim", async () => {
-  fixture = await workerFixture(delivery, "scout-prod");
+  await suite.useTarget("scout-prod");
   const { workerA, workerB, env } = await baseline();
   const proof = freshWorkerProof(workerA, workerB.buildId);
-  const selected = await delivery.retireWorker(
+  const selected = await suite.delivery.retireWorker(
     workerA.id,
     {
       requestId: "scout/retire",
@@ -431,18 +425,18 @@ test("Scout production retirement requires exact human approval before fresh exe
   );
   expect(selected.status).toBe("awaiting_approval");
   await expect(
-    delivery.claim(selected.id, testExecutor, proof),
+    suite.delivery.claim(selected.id, testExecutor, proof),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  await delivery.approve(
+  await suite.delivery.approve(
     selected.id,
     { decision: "approve", reason: "Retire the exact proven old host" },
     testOperator,
   );
-  await delivery.claim(
+  await suite.delivery.claim(
     selected.id,
     testExecutor,
     freshWorkerProof(workerA, workerB.buildId),
   );
-  const detail = await delivery.detail(selected.id);
+  const detail = await suite.delivery.detail(selected.id);
   expect(detail.deployment.workerSnapshot).toEqual(selected.workerSnapshot);
 });

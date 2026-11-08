@@ -683,6 +683,15 @@ expected environment/worker generations. It creates a normal identity-bound
 routing candidate unchanged. Scout production retirement requires human approval.
 The intent changes no worker replica state and accepts no caller-supplied proof.
 
+Delivery also retires drained hosts itself. Each dispatch tick, the executor
+reads execute-scoped `GET /api/v1/workers/retirement-candidates`: idle
+environments without required approval, and their live, unreferenced hosts
+other than the accepted candidate. For each environment it runs the read-only
+retirement proof below and proposes the first host that passes through
+`POST /api/v1/workers/:id/auto-retire`. Delivery then requests the same
+`retire-host` deployment as `delivery/auto-retire`. A host whose retirement
+ever failed or was canceled is never offered again, so an operator decides it.
+
 The executor supplies fresh proof when claiming retirement and again immediately
 before effects. Every served namespace/queue must exclude the retired build from
 current and ramping routing and report zero exact open executions. The drainage

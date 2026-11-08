@@ -16,6 +16,7 @@ import {
   DELIVERY_WAIT_ROLLOVER_PATCH,
   admissionRolloverDue,
 } from "./delivery/admission.ts";
+import { proposeDrainedRetirements } from "./delivery/retirement.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
@@ -520,9 +521,10 @@ export async function deliveryDispatchWorkflow() {
     metadata.dispatchDeliveryForumBaselines(),
     metadata.dispatchDeliveryPlatformRecoveries(),
   ]);
-  const observationFailures = patched(DELIVERY_DISPATCH_MODEL_PATCH)
+  const observed = patched(DELIVERY_DISPATCH_MODEL_PATCH)
     ? await observeAcceptedSelections()
     : [];
+  const tickFailures = [...observed, ...(await proposeDrainedRetirements())];
   if (dispatched.status === "rejected") throw dispatched.reason;
   if (qualified.status === "rejected") throw qualified.reason;
   if (recovered.status === "rejected") throw recovered.reason;
@@ -531,7 +533,7 @@ export async function deliveryDispatchWorkflow() {
   if (forumBaseline.status === "rejected") throw forumBaseline.reason;
   if (platformRecovered.status === "rejected") throw platformRecovered.reason;
   if (replicationFailures.length > 0) throw replicationFailures[0];
-  if (observationFailures.length > 0) throw observationFailures[0];
+  if (tickFailures.length > 0) throw tickFailures[0];
   return dispatched.value;
 }
 

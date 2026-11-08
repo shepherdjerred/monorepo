@@ -28,6 +28,27 @@ export function registerWorkerRoutes(
       201,
     ),
   );
+  app.get("/api/v1/workers/retirement-candidates", async (c) =>
+    c.json(await delivery.retirementCandidates(c.get("principal"))),
+  );
+  app.post("/api/v1/workers/:id/auto-retire", async (c) => {
+    requireScope(c.get("principal"), "execute");
+    const worker = required(
+      await delivery.database.workerVersion.findUnique({
+        where: { id: c.req.param("id") },
+      }),
+      "Worker version",
+    );
+    await enabled(worker.environmentId);
+    return c.json(
+      await delivery.autoRetireWorker(
+        worker.id,
+        await c.req.json(),
+        c.get("principal"),
+      ),
+      201,
+    );
+  });
   app.post("/api/v1/workers/:id/retire", async (c) => {
     requireScope(c.get("principal"), "deploy");
     const worker = required(

@@ -305,6 +305,7 @@ describe("Delivery model step executor (T3)", () => {
       qualifyDeliveryForumBundles: () => Promise.resolve(),
       dispatchDeliveryForumBaselines: () => Promise.resolve(),
       dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+      retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
       observeDeliveryMonitors: () => {
         observed.push("monitors");
         return { observed: 1 };
