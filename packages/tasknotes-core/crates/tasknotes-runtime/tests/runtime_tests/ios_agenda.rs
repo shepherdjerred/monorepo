@@ -372,13 +372,13 @@ fn ios_agenda_date_sorts_use_their_own_property_and_keep_missing_values_last() -
         ),
         ("Missing", json!({})),
     ])?;
-    for field in ["scheduledDate", "createdDate", "completedDate"] {
+    for field in ["dueDate", "scheduledDate", "createdDate", "completedDate"] {
         let ascending = Query {
             sort_field: Some(field.into()),
             sort_direction: Some("asc".into()),
             ..Query::default()
         };
-        let expected = if field == "completedDate" {
+        let expected = if matches!(field, "dueDate" | "completedDate") {
             ["A late", "Z early", "Missing"]
         } else {
             ["Z early", "A late", "Missing"]
@@ -397,6 +397,88 @@ fn ios_agenda_date_sorts_use_their_own_property_and_keep_missing_values_last() -
             [expected[1], expected[0], expected[2]],
             "{field}"
         );
+    }
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_due_date_sort_orders_same_day_times_before_pagination() -> Result<()> {
+    let (engine, _) = setup(&[
+        ("A evening", json!({"due":"2026-10-25T17:00:00Z"})),
+        ("Z morning", json!({"due":"2026-10-25T09:00:00Z"})),
+        ("M literal day", json!({"due":"2026-10-25"})),
+        ("Missing", json!({})),
+    ])?;
+    for timezone in [None, Some("UTC"), Some("America/Los_Angeles")] {
+        for direction in ["asc", "desc"] {
+            let expected = if direction == "asc" {
+                ["M literal day", "Z morning", "A evening", "Missing"]
+            } else {
+                ["A evening", "Z morning", "M literal day", "Missing"]
+            };
+            let mut request = Query {
+                sort_field: Some("dueDate".into()),
+                sort_direction: Some(direction.into()),
+                timezone: timezone.map(str::to_owned),
+                ..Query::default()
+            };
+            let snapshot = engine.snapshot("a", &request)?;
+            assert_eq!(snapshot.total_count, 4);
+            assert_eq!(titles(&snapshot), expected, "{timezone:?} {direction}");
+            request.limit = Some(1);
+            for (offset, title) in (0_u32..).zip(expected) {
+                request.offset = offset;
+                assert_eq!(
+                    titles(&engine.snapshot("a", &request)?),
+                    [title],
+                    "{timezone:?} {direction} page {offset}"
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_due_date_sort_compares_offset_instants_and_keeps_path_ties_stable() -> Result<()> {
+    let (engine, _) = setup(&[
+        ("A equivalent", json!({"due":"2026-10-26T01:30:00+02:00"})),
+        ("Z equivalent", json!({"due":"2026-10-25T23:30:00Z"})),
+        ("M earlier", json!({"due":"2026-10-25T23:00:00Z"})),
+        ("B later", json!({"due":"2026-10-25T22:45:00-01:00"})),
+        ("Missing", json!({})),
+    ])?;
+    for timezone in [None, Some("UTC"), Some("Asia/Tokyo")] {
+        for direction in ["asc", "desc"] {
+            let expected = if direction == "asc" {
+                [
+                    "M earlier",
+                    "A equivalent",
+                    "Z equivalent",
+                    "B later",
+                    "Missing",
+                ]
+            } else {
+                [
+                    "B later",
+                    "A equivalent",
+                    "Z equivalent",
+                    "M earlier",
+                    "Missing",
+                ]
+            };
+            let request = Query {
+                sort_field: Some("dueDate".into()),
+                sort_direction: Some(direction.into()),
+                timezone: timezone.map(str::to_owned),
+                ..Query::default()
+            };
+            assert_eq!(
+                titles(&engine.snapshot("a", &request)?),
+                expected,
+                "{timezone:?} {direction}"
+            );
+        }
     }
     Ok(())
 }

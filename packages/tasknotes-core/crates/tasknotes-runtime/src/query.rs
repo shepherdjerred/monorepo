@@ -371,20 +371,9 @@ fn compare(
                         .and_then(Value::as_f64)
                         .unwrap_or(0.0),
                 ),
-            "dueDate" => date_compare(
-                left.properties
-                    .get("due")
-                    .and_then(Value::as_str)
-                    .and_then(date_part),
-                right
-                    .properties
-                    .get("due")
-                    .and_then(Value::as_str)
-                    .and_then(date_part),
-                direction,
-            ),
-            "scheduledDate" | "createdDate" | "completedDate" => {
+            "dueDate" | "scheduledDate" | "createdDate" | "completedDate" => {
                 let key = match sort {
+                    "dueDate" => "due",
                     "scheduledDate" => "scheduled",
                     "createdDate" => "dateCreated",
                     _ => "completedDate",
