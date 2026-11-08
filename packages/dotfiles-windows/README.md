@@ -27,6 +27,10 @@ fish comes from MSYS2. Two settings make it behave like a native shell:
 - The user environment variable `MSYS2_PATH_TYPE=inherit` passes the Windows
   `PATH` into fish, so native tools such as `claude`, `codex` and `op` resolve.
 
+`~/.local/bin/fish.cmd` puts `fish` on the Windows `PATH`, so it starts from
+PowerShell, cmd and other programs that search `PATH`. Herdr does not use it:
+herdr-core opens PowerShell for every terminal on Windows.
+
 noctty, Cursor and VS Code open fish by default. Both fish and the PowerShell 7
 profile wrap `claude` and `codex`: direct provider API keys are removed and the
 agents run without permission prompts or a sandbox. The fish credential
