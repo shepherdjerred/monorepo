@@ -22,15 +22,19 @@ public sealed interface ShopOwner {
    */
   record Town(UUID id, String name) implements ShopOwner {}
 
-  /** A server shop: unlimited stock, trading with the server account. */
-  record Admin() implements ShopOwner {}
+  /** Server account; finite stock is explicitly enabled for historical shops in staff custody. */
+  record Admin(boolean finiteStock) implements ShopOwner {
+    public Admin() {
+      this(false);
+    }
+  }
 
   /** Whether {@code id} is this shop's player or town. Nobody owns an admin shop. */
   default boolean isOwnedBy(UUID id) {
     return switch (this) {
       case Player(var owner, _) -> owner.equals(id);
       case Town(var town, _) -> town.equals(id);
-      case Admin() -> false;
+      case Admin(_) -> false;
     };
   }
 
@@ -39,7 +43,7 @@ public sealed interface ShopOwner {
     return switch (this) {
       case Player(_, var name) -> Optional.of(name);
       case Town(_, var name) -> Optional.of(name);
-      case Admin() -> Optional.empty();
+      case Admin(_) -> Optional.empty();
     };
   }
 }

@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.piston.BlockMove;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Enemy;
@@ -23,8 +24,16 @@ final class Guard {
     this.protection = protection;
   }
 
+  Optional<UUID> automationActor(Block sign) {
+    return protection.automationActor(sign.getLocation());
+  }
+
   Decision check(UUID player, ProtectedAction action, PaperGrid grid, Pos pos) {
     return protection.check(player, action, grid.location(pos));
+  }
+
+  Decision checkLift(UUID player, UUID owner, PaperGrid grid, Pos pos) {
+    return protection.checkLift(player, owner, grid.location(pos));
   }
 
   /** Whether {@code a} and {@code b} lie on land with the same owner. */

@@ -208,6 +208,10 @@ final class QolHarness implements AutoCloseable {
     enabling =
         plugin -> {
           var services = new Services();
+          // Chunk discovery is exercised on Paper; MockBukkit cannot enumerate block entities.
+          services.provide(
+              com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+              chunk -> new org.bukkit.block.BlockState[0]);
           services.provide(
               BlockChanges.class, new AuditedBlockChanges(harness.recordedChanges::add));
           services.provide(

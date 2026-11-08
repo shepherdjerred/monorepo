@@ -1,8 +1,10 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
 import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.bukkit.Material;
@@ -35,6 +37,40 @@ public final class ItemTemplates {
   /** A one-item stack of a plain material, as named on a sign or in a catalog. */
   public ItemFingerprint plain(Material material) {
     return fingerprint(ItemStack.of(material));
+  }
+
+  /** Exact original contents of one historical bundle purchase, stored on its sign. */
+  public ItemFingerprint bundle(List<ItemStack> items) {
+    if (items.isEmpty()
+        || items.stream().anyMatch(stack -> stack.getType().isAir() || stack.getAmount() < 1)) {
+      throw new IllegalArgumentException("a shop bundle needs nonempty item stacks");
+    }
+    var bytes = ItemStack.serializeItemsAsBytes(items.toArray(ItemStack[]::new));
+    return new ItemFingerprint(
+        "bundle", "bundle:" + Base64.getEncoder().encodeToString(bytes), true);
+  }
+
+  public List<ItemStack> bundleItems(ItemFingerprint fingerprint) {
+    if (!fingerprint.bundleDeal()) throw new IllegalArgumentException("not a bundle deal");
+    var items =
+        Arrays.asList(
+            ItemStack.deserializeItemsFromBytes(
+                Base64.getDecoder().decode(fingerprint.template().substring("bundle:".length()))));
+    if (items.isEmpty()
+        || items.stream()
+            .anyMatch(stack -> stack == null || stack.getType().isAir() || stack.getAmount() < 1)) {
+      throw new IllegalStateException("invalid world shop bundle");
+    }
+    return List.copyOf(items);
+  }
+
+  ItemFingerprint decode(String encoded) {
+    if (encoded.startsWith("bundle:")) {
+      var fingerprint = new ItemFingerprint("bundle", encoded, true);
+      bundleItems(fingerprint);
+      return fingerprint;
+    }
+    return fingerprint(ItemStack.deserializeBytes(Base64.getDecoder().decode(encoded)));
   }
 
   /** The one-item template a fingerprint describes. Callers must not change it. */
@@ -76,7 +112,10 @@ public final class ItemTemplates {
    * Log}.
    */
   public static Optional<Material> item(String name) {
-    var material = Material.matchMaterial(name.strip());
+    var key =
+        com.shepherdjerred.thestorm.core.material.LegacyItemKeys.resolve(name)
+            .orElseGet(name::strip);
+    var material = Material.matchMaterial(key);
     return material != null && material.isItem() && !material.isAir()
         ? Optional.of(material)
         : Optional.empty();

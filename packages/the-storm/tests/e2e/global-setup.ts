@@ -14,6 +14,8 @@ import {
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
 import { parseExternalServer } from "#e2e/harness/external/inputs.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
+import { RconClient } from "#e2e/harness/rcon.ts";
+import { waitUntil } from "./harness/bot.ts";
 import { startServer, type ServerInfo } from "./harness/server.ts";
 import {
   configureCapacityFeatures,
@@ -53,6 +55,64 @@ const ownedConfigDir = path.join(
   "plugins",
   "TheStorm",
 );
+
+function historicalShopEnvironment(): Record<string, string> {
+  const mode = Bun.env["STORM_E2E_HISTORICAL_SHOPS"];
+  return mode === undefined ? {} : { STORM_E2E_HISTORICAL_SHOPS: mode };
+}
+
+function worldSignProofEnvironment(): Record<string, string> {
+  return Bun.env["STORM_E2E_WORLD_SIGNS"] === "1"
+    ? { STORM_E2E_WORLD_SIGNS: "1" }
+    : {};
+}
+
+function historicalTownEnvironment(): Record<string, string> {
+  return Bun.env["STORM_E2E_HISTORICAL_TOWNS"] === "1"
+    ? { STORM_E2E_HISTORICAL_TOWNS: "1" }
+    : {};
+}
+
+async function restoreReviewedShops(server: ServerInfo): Promise<void> {
+  if (Bun.env["STORM_E2E_HISTORICAL_SHOPS"] === undefined) return;
+  await waitUntil(
+    "world shop index ready",
+    async () => /Indexed \d+ world shops/u.test(await serverLogs(server)),
+    30_000,
+  );
+  const rcon = await RconClient.connect({
+    host: server.host,
+    port: server.rconPort,
+    password: server.rconPassword,
+  });
+  try {
+    const reply = await rcon.command("shoprestore apply");
+    if (reply.includes("Unknown or incomplete command"))
+      throw new Error(`Legacy restoration command was rejected: ${reply}`);
+  } finally {
+    rcon.close();
+  }
+  await waitUntil(
+    "explicit legacy shop conversion complete",
+    async () => {
+      const logs = await serverLogs(server);
+      if (logs.includes("Legacy shop operation failed"))
+        throw new Error(logs.slice(-12_000));
+      return logs.includes("Completed reviewed legacy shop conversion");
+    },
+    180_000,
+  );
+}
+
+function savedLogPath(full: boolean): string {
+  return path.join(
+    packageRoot,
+    ".cache",
+    "e2e",
+    ...(full ? ["full"] : []),
+    "latest-server.log",
+  );
+}
 
 async function arenaAdmission(server: ServerInfo): Promise<void> {
   // An idle runner can report "open" before asynchronous map validation finishes.
@@ -130,7 +190,10 @@ export default async function setup(project: TestProject) {
     ...(profile === "capacity" ? { resources: capacityResources() } : {}),
     ownedConfigDir,
     env: {
+      ...worldSignProofEnvironment(),
       ...bootstrap,
+      ...historicalShopEnvironment(),
+      ...historicalTownEnvironment(),
       // The managed-flag gates (rwf join here; crier and merchant in the full
       // suite) evaluate against the fake brain's Flipt double.
       FLIPT_URL: brainBaseUrl,
@@ -181,7 +244,9 @@ export default async function setup(project: TestProject) {
   }
   try {
     if (full) await arenaAdmission(server.info);
+    await restoreReviewedShops(server.info);
   } catch (error) {
+    await Bun.write(savedLogPath(full), await serverLogs(server.info));
     await server.stop();
     await brain.stop();
     throw error;
@@ -193,16 +258,7 @@ export default async function setup(project: TestProject) {
       // Preserve the complete server output before removing the disposable
       // container. This is the only useful evidence for boot and disconnect
       // failures in local E2E runs.
-      await Bun.write(
-        path.join(
-          packageRoot,
-          ".cache",
-          "e2e",
-          ...(full ? ["full"] : []),
-          "latest-server.log",
-        ),
-        await serverLogs(server.info),
-      );
+      await Bun.write(savedLogPath(full), await serverLogs(server.info));
     } finally {
       await server.stop();
       await brain.stop();

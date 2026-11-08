@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shops.adapter.db;
 import static com.shepherdjerred.thestorm.shops.adapter.db.generated.Tables.SHOPS_REFUND_FAILURE;
 import static com.shepherdjerred.thestorm.shops.adapter.db.generated.Tables.SHOPS_SHOP;
 import static com.shepherdjerred.thestorm.shops.adapter.db.generated.Tables.SHOPS_TRADE;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.jooq.impl.DSL.sum;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
@@ -53,43 +54,191 @@ public final class JooqShopStore implements ShopStore {
   public CompletableFuture<Long> saveShop(SignShop shop) {
     return database.write(
         dsl -> {
-          var record = dsl.newRecord(SHOPS_SHOP);
-          record.setId(Math.toIntExact(shop.id()));
-          record.setWorld(shop.sign().world().toString());
-          record.setSignX(shop.sign().x());
-          record.setSignY(shop.sign().y());
-          record.setSignZ(shop.sign().z());
-          shop.container()
-              .ifPresent(
-                  container -> {
-                    record.setContainerX(container.x());
-                    record.setContainerY(container.y());
-                    record.setContainerZ(container.z());
-                  });
-          switch (shop.owner()) {
-            case ShopOwner.Player(var id, var name) -> {
-              record.setOwnerKind(PLAYER);
-              record.setOwnerId(id.toString());
-              record.setOwnerName(name);
-            }
-            case ShopOwner.Town(var id, var name) -> {
-              record.setOwnerKind(TOWN);
-              record.setOwnerId(id.toString());
-              record.setOwnerName(name);
-            }
-            case ShopOwner.Admin() -> {
-              record.setOwnerKind(ADMIN);
-              record.setOwnerName(ADMIN);
-            }
-          }
-          record.setQuantity(shop.quantity());
-          shop.prices().buy().ifPresent(price -> record.setBuyPrice(price.crystals()));
-          shop.prices().sell().ifPresent(price -> record.setSellPrice(price.crystals()));
-          shop.item().ifPresent(item -> setItem(record, item));
-          record.setCreatedAt(shop.createdAt().toEpochMilli());
-          record.store();
+          insertShop(dsl, shop);
           return shop.id();
         });
+  }
+
+  @Override
+  public CompletableFuture<Long> indexShop(SignShop shop) {
+    return database.write(
+        dsl -> {
+          var record = shopRecord(dsl, shop);
+          dsl.insertInto(SHOPS_SHOP)
+              .set(record)
+              .onConflict(SHOPS_SHOP.ID)
+              .doUpdate()
+              .set(record)
+              .execute();
+          return shop.id();
+        });
+  }
+
+  /**
+   * Atomically records a verified historical shop and its permanent receipt. A conflicting modern
+   * sign is left untouched; removing an imported shop never causes it to be recreated.
+   */
+  public CompletableFuture<HistoricalImport> importHistorical(String sourceId, SignShop shop) {
+    if (sourceId.isBlank()) throw new IllegalArgumentException("blank historical shop identity");
+    if (!historicalAuthority(shop.owner()) || shop.container().isEmpty()) {
+      throw new IllegalArgumentException(
+          "historical shops require a player or finite staff custody, and a container");
+    }
+    if (!shop.container().orElseThrow().world().equals(shop.sign().world())) {
+      throw new IllegalArgumentException("historical sign and container must share a world");
+    }
+    if (shop.item().isEmpty()) {
+      throw new IllegalArgumentException("historical shop item must be identified");
+    }
+    return database.write(
+        dsl -> {
+          var sign = shop.sign();
+          var receipt =
+              dsl.fetchOne(
+                  "select world, sign_x, sign_y, sign_z from shops_historical_import where source_id = ?",
+                  sourceId);
+          if (receipt != null) {
+            if (!sign.world().toString().equals(receipt.get("world", String.class))
+                || sign.x() != receipt.get("sign_x", Integer.class)
+                || sign.y() != receipt.get("sign_y", Integer.class)
+                || sign.z() != receipt.get("sign_z", Integer.class)) {
+              throw new IllegalStateException(
+                  "historical shop identity changed position: " + sourceId);
+            }
+            return HistoricalImport.ALREADY_IMPORTED;
+          }
+          var world = sign.world().toString();
+          if (dsl.fetchExists(
+                  dsl.selectOne()
+                      .from(SHOPS_SHOP)
+                      .where(
+                          SHOPS_SHOP.WORLD.eq(world),
+                          SHOPS_SHOP.SIGN_X.eq(sign.x()),
+                          SHOPS_SHOP.SIGN_Y.eq(sign.y()),
+                          SHOPS_SHOP.SIGN_Z.eq(sign.z())))
+              || dsl.fetchOne(
+                      "select 1 from shops_historical_import where world = ? and sign_x = ? and sign_y = ? and sign_z = ?",
+                      world,
+                      sign.x(),
+                      sign.y(),
+                      sign.z())
+                  != null) {
+            return HistoricalImport.CONFLICT;
+          }
+          insertShop(dsl, shop);
+          dsl.execute(
+              "insert into shops_historical_import (source_id, world, sign_x, sign_y, sign_z, shop_id, state) values (?, ?, ?, ?, ?, ?, 'in_doubt')",
+              sourceId,
+              world,
+              sign.x(),
+              sign.y(),
+              sign.z(),
+              shop.id());
+          return HistoricalImport.IMPORTED;
+        });
+  }
+
+  private static boolean historicalAuthority(ShopOwner owner) {
+    return owner instanceof ShopOwner.Player
+        || (owner instanceof ShopOwner.Admin(var finite) && finite);
+  }
+
+  public enum HistoricalImport {
+    IMPORTED,
+    ALREADY_IMPORTED,
+    CONFLICT
+  }
+
+  /** An interrupted world write is never repeated automatically. */
+  public CompletableFuture<List<Long>> pendingHistoricalShops() {
+    return database.read(
+        dsl ->
+            dsl.fetch("select shop_id from shops_historical_import where state = 'in_doubt'")
+                .map(row -> row.get("shop_id", Long.class)));
+  }
+
+  /** Completed receipts retain the source-to-shop link even after a shop is removed. */
+  public CompletableFuture<Map<String, Long>> completedHistoricalShops() {
+    return database.read(
+        dsl ->
+            dsl
+                .fetch(
+                    "select source_id, shop_id from shops_historical_import where state = 'complete'")
+                .stream()
+                .collect(
+                    toUnmodifiableMap(
+                        row -> row.get("source_id", String.class),
+                        row -> row.get("shop_id", Long.class))));
+  }
+
+  public CompletableFuture<Integer> completeHistorical(String sourceId, long shopId) {
+    return database.write(
+        dsl ->
+            dsl.execute(
+                "update shops_historical_import set state = 'complete' where source_id = ? and shop_id = ? and state = 'in_doubt'",
+                sourceId,
+                shopId));
+  }
+
+  /** Cancels a pending import only when the caller has not changed the world. */
+  public CompletableFuture<Boolean> cancelHistorical(String sourceId, long shopId) {
+    return database.write(
+        dsl -> {
+          var removed =
+              dsl.execute(
+                  "delete from shops_historical_import where source_id = ? and shop_id = ? and state = 'in_doubt'",
+                  sourceId,
+                  shopId);
+          if (removed == 0) return false;
+          if (dsl.deleteFrom(SHOPS_SHOP).where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId))).execute()
+              != 1) {
+            throw new IllegalStateException("pending historical shop disappeared: " + shopId);
+          }
+          return true;
+        });
+  }
+
+  private static void insertShop(org.jooq.DSLContext dsl, SignShop shop) {
+    shopRecord(dsl, shop).store();
+  }
+
+  private static ShopsShopRecord shopRecord(org.jooq.DSLContext dsl, SignShop shop) {
+    var record = dsl.newRecord(SHOPS_SHOP);
+    record.setId(Math.toIntExact(shop.id()));
+    record.setWorld(shop.sign().world().toString());
+    record.setSignX(shop.sign().x());
+    record.setSignY(shop.sign().y());
+    record.setSignZ(shop.sign().z());
+    shop.container()
+        .ifPresent(
+            container -> {
+              record.setContainerX(container.x());
+              record.setContainerY(container.y());
+              record.setContainerZ(container.z());
+            });
+    switch (shop.owner()) {
+      case ShopOwner.Player(var id, var name) -> {
+        record.setOwnerKind(PLAYER);
+        record.setOwnerId(id.toString());
+        record.setOwnerName(name);
+      }
+      case ShopOwner.Town(var id, var name) -> {
+        record.setOwnerKind(TOWN);
+        record.setOwnerId(id.toString());
+        record.setOwnerName(name);
+      }
+      case ShopOwner.Admin(_) -> {
+        record.setOwnerKind(ADMIN);
+        record.setOwnerName(ADMIN);
+      }
+    }
+    record.setAdminStocked(shop.owner() instanceof ShopOwner.Admin(var finite) && finite ? 1 : 0);
+    record.setQuantity(shop.quantity());
+    shop.prices().buy().ifPresent(price -> record.setBuyPrice(price.crystals()));
+    shop.prices().sell().ifPresent(price -> record.setSellPrice(price.crystals()));
+    shop.item().ifPresent(item -> setItem(record, item));
+    record.setCreatedAt(shop.createdAt().toEpochMilli());
+    return record;
   }
 
   @Override
@@ -258,7 +407,7 @@ public final class JooqShopStore implements ShopStore {
           case TOWN ->
               new ShopOwner.Town(
                   UUID.fromString(requireColumn(record.getOwnerId())), record.getOwnerName());
-          case ADMIN -> new ShopOwner.Admin();
+          case ADMIN -> new ShopOwner.Admin(record.getAdminStocked() == 1);
           default -> throw new IllegalStateException("unknown owner kind " + record.getOwnerKind());
         };
     var prices =

@@ -16,14 +16,17 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.towns.app.TownPayout;
 import com.shepherdjerred.thestorm.towns.app.TownsSnapshot;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.lock.Lock;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockGrant;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -69,6 +72,164 @@ final class JooqTownsStoreTest {
   @Test
   void anEmptyDatabaseLoadsNothing() throws Exception {
     assertThat(load()).isEqualTo(new TownsSnapshot(java.util.List.of(), java.util.List.of()));
+  }
+
+  @Test
+  void map2ImportAddsSevenTownsToTheExistingMap1Baseline() throws Exception {
+    var parsed =
+        com.shepherdjerred.thestorm.core.config.StrictYaml.parse(
+            "heritage.yml",
+            java.nio.file.Files.readString(
+                Path.of("../../../server/owned/plugins/TheStorm/heritage.yml")),
+            com.shepherdjerred.thestorm.towns.domain.heritage.HeritageConfig.class);
+    var catalog =
+        switch (parsed) {
+          case com.shepherdjerred.thestorm.core.result.Result.Ok(var value) -> value;
+          case com.shepherdjerred.thestorm.core.result.Result.Err(var problems) ->
+              throw new AssertionError(problems);
+        };
+    var sites =
+        catalog.sites().stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER).toList();
+    for (var site : sites) {
+      if (site.world().equals("world"))
+        await(
+            store.createTown(
+                Town.found(
+                    site.activeTownId().orElseThrow(),
+                    site.activeTownName(),
+                    CLAIMED,
+                    site.editors().getFirst().player())));
+    }
+    assertThat(load().towns()).hasSize(7);
+    var result = await(store.importHeritage(sites, CLAIMED));
+    assertThat(result.conflicts()).isEmpty();
+    assertThat(result.towns())
+        .hasSize(7)
+        .allSatisfy(
+            town ->
+                assertThat(
+                        sites.stream()
+                            .filter(site -> site.activeTownId().orElseThrow().equals(town.id()))
+                            .findFirst()
+                            .orElseThrow()
+                            .world())
+                    .isEqualTo("map2"));
+    assertThat(load().towns()).hasSize(14);
+    assertThat(await(store.importHeritage(sites, CLAIMED)).towns()).isEmpty();
+  }
+
+  @Test
+  void unidentifiedMayorsDoNotPreventCreatingAnActualTown() throws Exception {
+    var site =
+        new HeritageSite(
+            "unassigned-town",
+            "Unassigned Town",
+            HeritageSite.Kind.HERITAGE,
+            "Unassigned_Town",
+            "map2",
+            RegionProfile.SAFE,
+            Set.of(new HeritageSite.Chunk(0, 0)),
+            List.of(),
+            Set.of(),
+            List.of(),
+            "survey");
+    var result = await(store.importHeritage(List.of(site), CLAIMED));
+    assertThat(result.conflicts()).isEmpty();
+    assertThat(result.towns())
+        .containsExactly(
+            Town.historical(site.activeTownId().orElseThrow(), "Unassigned_Town", CLAIMED));
+    var restored = load().towns().getFirst();
+    assertThat(restored.historicalCustody()).isTrue();
+    assertThat(restored.mayor()).isEmpty();
+    assertThat(restored.members()).isEmpty();
+    assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
+    var assigned = restored.transferredTo(OWNER, 1);
+    await(store.saveTown(assigned));
+    var reopened = load().towns().getFirst();
+    assertThat(reopened.historicalCustody()).isFalse();
+    assertThat(reopened.owner()).isEqualTo(OWNER);
+    assertThat(reopened.members()).containsExactly(Map.entry(OWNER, TownRole.OWNER));
+    assertThatThrownBy(() -> reopened.withoutMember(OWNER))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void historicalTownImportIsAtomicAndDoesNotResurrectADeletedTown() throws Exception {
+    var site =
+        new HeritageSite(
+            "old-town",
+            "OldTown",
+            HeritageSite.Kind.PLAYER,
+            "OldTown",
+            "map2",
+            RegionProfile.SAFE,
+            Set.of(new HeritageSite.Chunk(0, 0)),
+            List.of(),
+            Set.of(),
+            List.of(new HeritageSite.Editor(OWNER, "Owner")),
+            "Historical evidence");
+    var first = await(store.importHeritage(List.of(site), CLAIMED));
+    assertThat(first.towns()).hasSize(1);
+    assertThat(load().towns()).containsExactlyElementsOf(first.towns());
+    assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
+    await(
+        database.write(
+            dsl -> {
+              dsl.execute(
+                  "delete from towns_member where town_id = ?",
+                  site.activeTownId().orElseThrow().toString());
+              dsl.execute(
+                  "delete from towns_town where id = ?",
+                  site.activeTownId().orElseThrow().toString());
+              return true;
+            }));
+    assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
+    assertThat(load().towns()).isEmpty();
+  }
+
+  @Test
+  void conflictingOwnerIsReportedWithoutChangingTheExistingTown() throws Exception {
+    await(store.createTown(Fixtures.townA()));
+    var site =
+        new HeritageSite(
+            "old-town",
+            "OldTown",
+            HeritageSite.Kind.PLAYER,
+            "OldTown",
+            "map2",
+            RegionProfile.SAFE,
+            Set.of(new HeritageSite.Chunk(0, 0)),
+            List.of(),
+            Set.of(),
+            List.of(new HeritageSite.Editor(OWNER, "Owner")),
+            "Historical evidence");
+    var result = await(store.importHeritage(List.of(site), CLAIMED));
+    assertThat(result.towns()).isEmpty();
+    assertThat(result.conflicts()).containsExactly("old-town");
+    assertThat(load().towns()).containsExactly(Fixtures.townA());
+  }
+
+  @Test
+  void existingHistoricalTownGetsReceiptBeforeItIsDisbanded() throws Exception {
+    var site =
+        new HeritageSite(
+            "old-town",
+            "OldTown",
+            HeritageSite.Kind.PLAYER,
+            "OldTown",
+            "map2",
+            RegionProfile.SAFE,
+            Set.of(new HeritageSite.Chunk(0, 0)),
+            List.of(),
+            Set.of(),
+            List.of(new HeritageSite.Editor(OWNER, "Owner")),
+            "Historical evidence");
+    var town = Town.found(site.activeTownId().orElseThrow(), "OldTown", CLAIMED, OWNER);
+    await(store.createTown(town));
+    assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
+    await(store.deleteTown(TownPayout.of(town)));
+    assertThat(await(store.importHeritage(List.of(site), CLAIMED)).towns()).isEmpty();
+    assertThat(load().towns()).isEmpty();
   }
 
   @Test

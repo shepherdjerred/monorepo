@@ -236,6 +236,7 @@ public final class QolPaper {
         loaded -> {
           if (!paper.stopped) {
             banks.load(loaded);
+            bankListener.discoverLoaded();
           }
         },
         failure -> {

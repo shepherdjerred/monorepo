@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.StargateAccess;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
+import com.shepherdjerred.thestorm.mechanics.domain.stargate.GateSignText;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.Stargate;
 import java.time.Duration;
@@ -269,7 +270,11 @@ final class StargatePortals implements Listener {
               .automaticCells(gate.ownerId(), grid, java.util.List.of(gate.sign()))
               .isAllowed()
           && signBlock.getState() instanceof Sign sign) {
-        sign.getSide(Side.FRONT).line(1, Component.text(destination.name()));
+        var text =
+            GateSignText.display(
+                gate, book.registry().network(gate.networkId()).orElseThrow(), destination.name());
+        for (var line = 0; line < text.size(); line++)
+          sign.getSide(Side.FRONT).line(line, Component.text(text.get(line)));
         sign.update();
       }
     }

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.core.protection;
 
+import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Location;
 
@@ -9,7 +10,38 @@ import org.bukkit.Location;
  */
 public interface Protection {
 
+  /** Reserved identity for server automation, with no player bypass permissions. */
+  UUID SERVER_AUTOMATION = new UUID(0, 0);
+
+  /** The same server identity used by historical public lifts. */
+  UUID SERVER_HISTORICAL_LIFT = SERVER_AUTOMATION;
+
   Decision check(UUID player, ProtectedAction action, Location location);
+
+  /** A proven land editor whose rights an unsigned imported mechanism may use. */
+  default Optional<UUID> automationActor(Location location) {
+    return Optional.empty();
+  }
+
+  /** Checks a bound lift sign. Implementations may allow public lifts in public shop parcels. */
+  default Decision checkLift(UUID player, UUID owner, Location location) {
+    return check(player, ProtectedAction.INTERACT, location);
+  }
+
+  /** Whether a reviewed historical server lift may be bound at this location. */
+  default boolean mayBindServerHistoricalLift(Location location) {
+    return false;
+  }
+
+  /** Whether a specifically surveyed server-owned historical circuit may operate here. */
+  default boolean mayOperateServerHistoricalCircuit(Location location) {
+    return false;
+  }
+
+  /** Trusted, exact-catalog shop restoration only; does not grant any player access. */
+  default boolean mayRestoreHistoricalShop(Location location) {
+    return false;
+  }
 
   /**
    * Decides whether {@code attacker}, standing at {@code attackerAt}, may harm a creature at {@code

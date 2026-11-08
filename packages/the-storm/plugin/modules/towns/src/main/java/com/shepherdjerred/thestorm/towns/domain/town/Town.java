@@ -12,12 +12,13 @@ import java.util.UUID;
  * @param id stable id
  * @param name unique (ignoring case) display name; a camp uses its founder's account name
  * @param createdAt when it was founded
- * @param members every member and their role; exactly one {@link TownRole#OWNER}
+ * @param members every member and role; one owner, or no members while in historical custody
  * @param governorLevel the owner's Governor level when last seen online (0 to {@link
  *     #MAX_GOVERNOR_LEVEL}), which sets how much land a town may hold while they are away
  * @param kind camp or town
  * @param lastActive when a camp member was last on the server; empty for a town
  * @param expiryWarned whether the camp's members have already been warned about this idle period
+ * @param historicalCustody an archived town with an unidentified mayor, held without player members
  */
 public record Town(
     UUID id,
@@ -27,7 +28,8 @@ public record Town(
     int governorLevel,
     TownKind kind,
     Optional<Instant> lastActive,
-    boolean expiryWarned) {
+    boolean expiryWarned,
+    boolean historicalCustody) {
 
   /** The highest Governor level, matching the tracks module's highest level. */
   public static final int MAX_GOVERNOR_LEVEL = 5;
@@ -36,7 +38,10 @@ public record Town(
   public Town {
     members = Map.copyOf(members);
     var owners = members.values().stream().filter(role -> role == TownRole.OWNER).count();
-    if (owners != 1) {
+    if (historicalCustody && (!members.isEmpty() || governorLevel != 0 || kind != TownKind.TOWN)) {
+      throw new IllegalArgumentException("staff-custody historical towns have no player members");
+    }
+    if (!historicalCustody && owners != 1) {
       throw new IllegalArgumentException(
           "town " + name + " must have exactly one owner, has " + owners);
     }
@@ -68,7 +73,13 @@ public record Town(
         0,
         TownKind.TOWN,
         Optional.empty(),
+        false,
         false);
+  }
+
+  /** A recorded town whose mayor has not been identified. No player receives ownership. */
+  public static Town historical(UUID id, String name, Instant createdAt) {
+    return new Town(id, name, createdAt, Map.of(), 0, TownKind.TOWN, Optional.empty(), false, true);
   }
 
   /** A new camp named {@code name}, owned by {@code founder}, active as of {@code createdAt}. */
@@ -81,6 +92,7 @@ public record Town(
         0,
         TownKind.CAMP,
         Optional.of(createdAt),
+        false,
         false);
   }
 
@@ -93,11 +105,16 @@ public record Town(
   }
 
   public UUID owner() {
+    return mayor()
+        .orElseThrow(() -> new IllegalStateException("town mayor is unassigned: " + name));
+  }
+
+  /** Staff-custody historical towns have no player mayor. */
+  public Optional<UUID> mayor() {
     return members.entrySet().stream()
         .filter(entry -> entry.getValue() == TownRole.OWNER)
         .map(Map.Entry::getKey)
-        .findFirst()
-        .orElseThrow();
+        .findFirst();
   }
 
   /** A copy where {@code player} has {@code role}, joining if they were not a member. */
@@ -119,6 +136,18 @@ public record Town(
    * as an assistant.
    */
   public Town transferredTo(UUID member, int level) {
+    if (historicalCustody) {
+      return new Town(
+          id,
+          name,
+          createdAt,
+          Map.of(member, TownRole.OWNER),
+          level,
+          TownKind.TOWN,
+          Optional.empty(),
+          false,
+          false);
+    }
     var next = new HashMap<>(members);
     next.put(owner(), TownRole.ASSISTANT);
     next.put(member, TownRole.OWNER);
@@ -154,14 +183,24 @@ public record Town(
     if (!isCamp()) {
       throw new IllegalArgumentException("only a camp graduates");
     }
-    return new Town(id, newName, createdAt, members, level, TownKind.TOWN, Optional.empty(), false);
+    return new Town(
+        id, newName, createdAt, members, level, TownKind.TOWN, Optional.empty(), false, false);
   }
 
   private Town copy(String nextName, Map<UUID, TownRole> nextMembers, int level) {
-    return new Town(id, nextName, createdAt, nextMembers, level, kind, lastActive, expiryWarned);
+    return new Town(
+        id,
+        nextName,
+        createdAt,
+        nextMembers,
+        level,
+        kind,
+        lastActive,
+        expiryWarned,
+        historicalCustody);
   }
 
   private Town clock(Optional<Instant> active, boolean warned) {
-    return new Town(id, name, createdAt, members, governorLevel, kind, active, warned);
+    return new Town(id, name, createdAt, members, governorLevel, kind, active, warned, false);
   }
 }

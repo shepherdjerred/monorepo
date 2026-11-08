@@ -503,9 +503,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -34.5,
+        x: -33.5,
         y: 64.0,
-        z: 1.5,
+        z: 9.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -534,14 +534,14 @@ npcs:
     trainer: none
   winston:
     name: Winston · Inventor
-    description: By the florist, on the arena path
+    description: Watches the station's rail machinery
     skin: vanilla:wide/efe
     home:
       {
         world: minecraft:overworld,
-        x: -35.5,
-        y: 64.0,
-        z: 1.5,
+        x: -39.5,
+        y: 60.0,
+        z: 165.5,
         yaw: 180.0,
         pitch: 0.0,
       }

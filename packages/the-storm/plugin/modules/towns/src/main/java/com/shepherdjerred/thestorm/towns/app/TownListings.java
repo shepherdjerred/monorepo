@@ -68,20 +68,41 @@ public final class TownListings implements TownRead {
     var display =
         state.heritage().sites().stream()
             .filter(site -> site.activeTownName().equalsIgnoreCase(name))
-            .map(com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite::name)
+            .map(this::displayName)
             .findFirst()
             .orElse(name);
     var active = state.named(name);
     if (active.isPresent()) {
+      var town = active.orElseThrow();
+      if (!town.isCamp()
+          && state.heritage().sites().stream()
+              .noneMatch(site -> site.activeTownId().equals(Optional.of(town.id())))) {
+        return Optional.of(
+            new TownSummary(town.name(), town.members().size(), state.claimCount(town.id())));
+      }
       display =
           state.heritage().sites().stream()
               .filter(site -> site.activeTownId().equals(Optional.of(active.orElseThrow().id())))
-              .map(com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite::name)
+              .map(this::displayName)
               .findFirst()
               .orElse(display);
     }
     var requested = display;
-    return directory().stream().filter(town -> town.name().equalsIgnoreCase(requested)).findFirst();
+    var match =
+        state.heritage().sites().stream()
+            .filter(site -> site.name().equalsIgnoreCase(requested))
+            .map(this::displayName)
+            .findFirst()
+            .orElse(requested);
+    return directory().stream().filter(town -> town.name().equalsIgnoreCase(match)).findFirst();
+  }
+
+  private String displayName(com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite site) {
+    return site.activeTownId()
+        .flatMap(state::town)
+        .filter(town -> !town.name().equalsIgnoreCase(site.activeTownName()))
+        .map(com.shepherdjerred.thestorm.towns.domain.town.Town::name)
+        .orElseGet(site::name);
   }
 
   /** Name completion covers the entire directory, including entries after the first page. */
@@ -94,29 +115,39 @@ public final class TownListings implements TownRead {
         .toList();
   }
 
+  private static String custody(
+      com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite site,
+      Optional<com.shepherdjerred.thestorm.towns.domain.town.Town> town) {
+    var holder =
+        site.editors().isEmpty()
+            ? "Staff custody"
+            : String.join(
+                    ", ",
+                    site.editors().stream()
+                        .map(
+                            com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Editor
+                                ::name)
+                        .toList())
+                + " within proven footprint; staff in buffer";
+    return town.filter(com.shepherdjerred.thestorm.towns.domain.town.Town::historicalCustody)
+            .isPresent()
+        ? "Mayor unassigned; " + holder
+        : holder;
+  }
+
   private List<TownSummary> directory() {
     var result = new ArrayList<TownSummary>();
     for (var site : state.heritage().sites()) {
       var town = site.activeTownId().flatMap(state::town);
       result.add(
           new TownSummary(
-              site.name(),
+              displayName(site),
               town.map(value -> value.members().size()).orElse(0),
               town.map(value -> state.claimCount(value.id())).orElse(0),
               site.kind(),
               site.footprint().size(),
-              site.editors().isEmpty()
-                  ? "Staff custody"
-                  : String.join(
-                          ", ",
-                          site.editors().stream()
-                              .map(
-                                  com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite
-                                          .Editor
-                                      ::name)
-                              .toList())
-                      + " within proven footprint; staff in buffer",
-              "Reconstructed from the 2015 archive; original Towny claims unavailable"));
+              custody(site, town),
+              site.provenance()));
     }
     for (var town : state.towns()) {
       if (town.isCamp()) {

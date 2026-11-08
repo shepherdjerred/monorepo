@@ -94,6 +94,28 @@ public final class StargateBook {
         new StargateStore.Snapshot(current.networks(), gates), () -> store.createGate(gate));
   }
 
+  /**
+   * World definitions publish immediately; the database write only refreshes their search index.
+   */
+  public CompletableFuture<Void> recoverWorldGate(StargateNetwork network, Stargate gate) {
+    var current = current();
+    var networks = new ArrayList<>(current.networks());
+    if (registry().network(network.id()).isEmpty()) {
+      if (!(network.access() instanceof NetworkAccess.Public))
+        throw new IllegalArgumentException(
+            "private network access requires its durable membership");
+      networks.add(network);
+    }
+    var gates = new ArrayList<>(current.gates());
+    gates.removeIf(old -> old.id().equals(gate.id()));
+    gates.add(gate);
+    var next = new StargateStore.Snapshot(networks, gates);
+    var validated = new StargateRegistry(next);
+    snapshot = next;
+    registry = validated;
+    return store.indexGate(network, gate);
+  }
+
   /** Commit an automatically created public network and its first gate together. */
   public CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate) {
     if (!network.id().equals(gate.networkId())

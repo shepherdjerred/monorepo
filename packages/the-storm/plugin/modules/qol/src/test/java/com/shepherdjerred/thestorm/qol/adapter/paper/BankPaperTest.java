@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -59,6 +61,31 @@ final class BankPaperTest {
   }
 
   @Test
+  void aBlankShelfSamplesItsCurrentContentsLikeMondoChest() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var bank = chest(0);
+    write(alice, signOn(bank), "[Bank]", "", "", "");
+    var shelf = chest(3);
+    write(alice, signOn(shelf), "[Shelf]", "", "", "");
+    var stock = ((Container) shelf.getState()).getInventory();
+    stock.addItem(ItemStack.of(Material.STONE, 1));
+    var incoming = ((Container) bank.getState()).getInventory();
+    incoming.addItem(ItemStack.of(Material.STONE, 10), ItemStack.of(Material.DIRT, 12));
+    alice.openInventory(incoming);
+    alice.closeInventory();
+    assertThat(count(bank, Material.STONE)).isZero();
+    assertThat(count(shelf, Material.STONE)).isEqualTo(11);
+    assertThat(count(bank, Material.DIRT)).isEqualTo(12);
+
+    stock.clear();
+    stock.addItem(ItemStack.of(Material.DIRT, 1));
+    alice.openInventory(incoming);
+    alice.closeInventory();
+    assertThat(count(bank, Material.DIRT)).isZero();
+    assertThat(count(shelf, Material.DIRT)).isEqualTo(13);
+  }
+
+  @Test
   void aShopContainerCannotBecomeABank() {
     var alice = harness.playerAt("Alice", 0, 0);
     var bank = chest(0);
@@ -78,6 +105,79 @@ final class BankPaperTest {
     assertThat(event.isCancelled()).isTrue();
     assertThat(harness.awaitMessage(alice, "This land belongs to Aegis.")).isNotEmpty();
     assertThat(requireNonNull(harness.paper, "qol").banks().all()).isEmpty();
+  }
+
+  @Test
+  void bankAndShelfLinksSurviveDeletingTheirDatabaseIndex() throws Exception {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var bank = chest(0);
+    write(alice, signOn(bank), "[Bank]", "", "", "");
+    var shelf = chest(3);
+    write(alice, signOn(shelf), "[Shelf]", "stone", "", "");
+    var book = requireNonNull(harness.paper, "qol").banks();
+    var id = book.all().getFirst().id();
+    var store = new com.shepherdjerred.thestorm.qol.adapter.db.JooqBankStore(harness.database);
+    store.delete(id).get(5, TimeUnit.SECONDS);
+    book.load(List.of());
+
+    var inventory = ((Container) bank.getState()).getInventory();
+    inventory.addItem(ItemStack.of(Material.STONE, 10));
+    alice.openInventory(inventory);
+    alice.closeInventory();
+
+    assertThat(count(bank, Material.STONE)).isZero();
+    assertThat(count(shelf, Material.STONE)).isEqualTo(10);
+    assertThat(book.all())
+        .singleElement()
+        .satisfies(restored -> assertThat(restored.owner()).isEqualTo(alice.getUniqueId()));
+  }
+
+  @Test
+  void currentShelfTextOverridesTheOldStoredFilter() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var bank = chest(0);
+    write(alice, signOn(bank), "[Bank]", "", "", "");
+    var shelf = chest(3);
+    var signBlock = signOn(shelf);
+    write(alice, signBlock, "[Shelf]", "stone", "", "");
+    var sign = (org.bukkit.block.Sign) signBlock.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("dirt"));
+    sign.update();
+    var inventory = ((Container) bank.getState()).getInventory();
+    inventory.addItem(ItemStack.of(Material.STONE, 10), ItemStack.of(Material.DIRT, 12));
+
+    alice.openInventory(inventory);
+    alice.closeInventory();
+
+    assertThat(count(bank, Material.STONE)).isEqualTo(10);
+    assertThat(count(shelf, Material.STONE)).isZero();
+    assertThat(count(shelf, Material.DIRT)).isEqualTo(12);
+  }
+
+  @Test
+  void aLaterCancellationCannotPersistABank() throws Exception {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var plugin = requireNonNull(harness.server.getPluginManager().getPlugin("TheStorm"));
+    harness
+        .server
+        .getPluginManager()
+        .registerEvent(
+            SignChangeEvent.class,
+            new org.bukkit.event.Listener() {},
+            org.bukkit.event.EventPriority.HIGHEST,
+            (listener, event) -> ((SignChangeEvent) event).setCancelled(true),
+            plugin);
+    var bank = chest(0);
+
+    assertThat(write(alice, signOn(bank), "[Bank]", "", "", "").isCancelled()).isTrue();
+
+    assertThat(requireNonNull(harness.paper, "qol").banks().all()).isEmpty();
+    assertThat(new WorldBanks(harness.server).read(bank)).isEmpty();
+    assertThat(
+            new com.shepherdjerred.thestorm.qol.adapter.db.JooqBankStore(harness.database)
+                .loadAll()
+                .get(5, TimeUnit.SECONDS))
+        .isEmpty();
   }
 
   private Block chest(int x) {
@@ -103,6 +203,12 @@ final class BankPaperTest {
     }
     var event = new SignChangeEvent(sign, player, components, Side.FRONT);
     harness.server.getPluginManager().callEvent(event);
+    if (!event.isCancelled()) {
+      var state = (org.bukkit.block.Sign) sign.getState();
+      for (var index = 0; index < 4; index++)
+        state.getSide(Side.FRONT).line(index, event.lines().get(index));
+      state.update();
+    }
     return event;
   }
 

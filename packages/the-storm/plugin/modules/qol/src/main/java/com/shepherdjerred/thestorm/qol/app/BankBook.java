@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/** The banks in memory. The database is the record; this is the copy the main thread reads. */
+/** Rebuildable bank lookup index; world metadata and current shelf signs define loaded banks. */
 public final class BankBook {
 
   private final Map<String, StoredBank> byId = new HashMap<>();

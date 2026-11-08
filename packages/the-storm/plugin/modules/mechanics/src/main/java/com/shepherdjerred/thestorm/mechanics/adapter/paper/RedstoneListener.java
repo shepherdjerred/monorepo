@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Target;
 import java.time.Duration;
@@ -101,7 +102,7 @@ final class RedstoneListener implements Listener {
     if (mechanism.isEmpty() || !mechanism.orElseThrow().isStructure()) {
       return;
     }
-    var owner = kit.signs().owner(sign);
+    var owner = kit.signs().owner(sign).or(() -> kit.guard().automationActor(block));
     if (!kit.gatekeeper().enabled(mechanism.orElseThrow().feature()) || owner.isEmpty()) {
       return;
     }
@@ -112,6 +113,16 @@ final class RedstoneListener implements Listener {
                 .check(owner.orElseThrow(), ProtectedAction.INTERACT, grid, PaperGrid.pos(source))
                 .isAllowed();
     if (mayUseSource) {
+      if (!kit.signs().hasBinding(sign)) {
+        switch (structures.prepare(
+            owner.orElseThrow(), new Structures.Use(grid, PaperGrid.pos(block), view))) {
+          case Result.Err<Runnable, net.kyori.adventure.text.Component> _ -> {
+            return;
+          }
+          case Result.Ok<Runnable, net.kyori.adventure.text.Component>(var binding) ->
+              binding.run();
+        }
+      }
       // Nobody to tell if it fails: the structure simply stays as it is.
       var target = powered(block, owner.orElseThrow(), grid) ? Target.OPEN : Target.CLOSE;
       structures.toggle(

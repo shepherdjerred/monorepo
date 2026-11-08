@@ -1,0 +1,187 @@
+# 2015 spawn market, Pigrider's identified historical shop parcel. Signs and chest coordinates
+# were checked against the live imported world. The iron and hay containers have matching goods;
+# the blaze-rod container is directly below its listing and was empty when surveyed.
+# Surveyed 2026-10-28, overworld region r.0.-1.mca SHA-256:
+# d47495e4e1516fb15ce3764a7b878b9b86c0622c416f49b26d89fd7afa434c6d
+# id,world,sign x,y,z,container x,y,z,owner uuid,name,item,quantity,price,stock target,original item name
+2015-pigrider-iron,world,138,69,-97,138,68,-97,c538a540-3e91-4680-9e98-43f4d811e8e2,Pigrider102,iron_ingot,6,18,32,Iron Ingot
+2015-pigrider-blaze,world,134,69,-97,134,68,-97,c538a540-3e91-4680-9e98-43f4d811e8e2,Pigrider102,blaze_rod,1,18,16,Blaze Rod
+2015-pigrider-hay,world,131,69,-89,131,68,-89,c538a540-3e91-4680-9e98-43f4d811e8e2,Pigrider102,hay_block,5,20,320,Hay Bale
+2015-pigrider-skull,world,131,69,-93,131,68,-93,c538a540-3e91-4680-9e98-43f4d811e8e2,Pigrider102,skeleton_skull,1,95,16,Skeleton Skull
+# The sign specifies an Unbreaking I diamond pick; its directly underlying chest
+# was empty, so the item is reconstructed with only the advertised enchantment.
+2015-pigrider-unbreaking-pick,world,131,69,-95,131,68,-95,c538a540-3e91-4680-9e98-43f4d811e8e2,Pigrider102,diamond_pickaxe,1,100,8,Unbr. 1 Dia Pick,UNBREAKING_PICK
+# Fifteen matching extended haste potions were in the chest below this sign;
+# one other potion in the same chest has a different base and is preserved.
+2015-pigrider-haste,world,141,69,-96,141,68,-96,c538a540-3e91-4680-9e98-43f4d811e8e2,Pigrider102,potion,1,15,16,Haste Potion Ext.,HASTE_POTION_EXT
+# PikachuPals' parcel: the sign names gunpowder and the single nearby matching
+# container was the only one in the parcel with ordinary gunpowder on survey.
+# The same row has matching arrows and string in the chests aligned behind the signs.
+2015-pikachupals-gunpowder,world,160,68,-126,160,67,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,gunpowder,32,25,256,Gunpowder
+2015-pikachupals-arrows,world,158,68,-126,158,67,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,arrow,64,20,512,Arrows
+2015-pikachupals-string,world,162,68,-126,162,67,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,string,16,10,512,String
+# Rotten flesh shares the adjacent arrow chest. This association is reconstructed:
+# the original item was not present in that chest.
+2015-pikachupals-flesh,world,159,68,-126,158,67,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,rotten_flesh,64,15,256,Rotten Flesh
+# These containers held matching ordinary items during the survey.
+2015-pikachupals-bones,world,161,68,-126,161,68,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,bone,64,20,256,Bones
+2015-pikachupals-chicken,world,162,69,-119,164,66,-119,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,cooked_chicken,10,14,128,Roast Chicken
+# These food and head listings use reconstructed nearby storage in the same
+# shop. Steak shares the chicken container; the others were empty on survey.
+2015-pikachupals-steak,world,162,69,-120,164,66,-119,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,cooked_beef,32,45,256,Steak
+2015-pikachupals-carrot,world,162,69,-118,164,67,-120,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,carrot,8,5,256,Carrots
+2015-pikachupals-baked-potato,world,162,69,-117,164,66,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,baked_potato,8,10,256,Baked,QUANTITY_WITH_POTATOES
+2015-pikachupals-zombie-head,world,159,68,-130,159,68,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,zombie_head,1,250,16,Zombie,QUANTITY_WITH_HEAD
+2015-pikachupals-skeleton-head,world,160,68,-130,160,69,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,skeleton_skull,1,160,16,Skeleton,QUANTITY_WITH_HEAD
+# The nearby chest held 21 ordinary spider eyes; no other parcel chest held them.
+2015-pikachupals-spider-eyes,world,162,68,-130,162,69,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,spider_eye,2,5,32,Spider,QUANTITY_WITH_EYES
+# Eight identical mundane potions with a 9,600-tick ambient haste effect were
+# found in the chest immediately behind the original haste sign.
+2015-pikachupals-haste-potion,world,156,91,-118,156,91,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,10,4,Haste,HASTE_POTION
+# The fire-resistance chest held two long-duration potions. The other chests
+# were empty; standard durations and those chest associations are reconstructed.
+2015-pikachupals-fire-potion,world,160,91,-118,160,91,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,15,4,Fire Resistance,FIRE_RESISTANCE_POTION
+2015-pikachupals-water-potion,world,158,91,-118,158,91,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,10,4,Water Breathing,WATER_BREATHING_POTION
+2015-pikachupals-night-potion,world,164,91,-118,164,91,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,15,4,Night Vision,NIGHT_VISION_POTION
+2015-pikachupals-invisibility-potion,world,162,91,-118,162,91,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,15,4,Invisibility,INVISIBILITY_POTION
+# The sign does not specify strength or duration; use the ordinary leaping
+# potion. The adjacent chest was empty during the survey.
+2015-pikachupals-leaping-potion,world,164,96,-123,165,96,-123,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,20,4,Leaping,LEAPING_POTION
+2015-pikachupals-speed-potion,world,164,96,-130,165,96,-130,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,10,4,Swiftness I,SWIFTNESS_POTION
+2015-pikachupals-speed2-potion,world,164,96,-129,165,96,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,potion,1,15,4,Swiftness II,STRONG_SWIFTNESS_POTION
+# The two music-room chests held the matching discs on survey. Distribute the
+# listings between them so one-item-per-slot discs have room for modest stock.
+2015-pikachupals-disc-cat,world,158,80,-127,162,79,-123,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_cat,1,50,8,Cat,ITEM_DISK
+2015-pikachupals-disc-13,world,160,80,-127,162,79,-123,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_13,1,50,8,13,ITEM_DISK
+2015-pikachupals-disc-blocks,world,164,80,-127,162,79,-123,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_blocks,1,50,8,Blocks,ITEM_DISK
+2015-pikachupals-disc-strad,world,162,80,-127,162,79,-122,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_strad,1,50,8,Strad,ITEM_DISK
+2015-pikachupals-disc-ward,world,164,80,-118,162,79,-122,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_ward,1,50,8,Ward,ITEM_DISK
+2015-pikachupals-disc-mellohi,world,162,80,-118,162,79,-122,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_mellohi,1,50,8,Mellohi,ITEM_DISK
+# These remaining music listings use two empty shop chests as reconstructed
+# storage. Their original inventory associations were not found.
+# The note block listing shares the first of these chests; its own original
+# storage was not found.
+2015-pikachupals-note-block,world,155,79,-123,158,69,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,note_block,1,20,16,Note Block,ONE_NOTE_BLOCK
+2015-pikachupals-disc-11,world,154,80,-127,158,69,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_11,1,50,8,11,ITEM_DISK
+2015-pikachupals-disc-chirp,world,156,80,-127,158,69,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_chirp,1,50,8,Chirp,ITEM_DISK
+2015-pikachupals-disc-wait,world,158,80,-118,158,69,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_wait,1,50,8,Wait,ITEM_DISK
+2015-pikachupals-disc-far,world,156,80,-118,159,70,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_far,1,50,8,Far,ITEM_DISK
+2015-pikachupals-disc-stal,world,154,80,-118,159,70,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_stal,1,50,8,Stal,ITEM_DISK
+2015-pikachupals-disc-mall,world,160,80,-118,159,70,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,music_disc_mall,1,50,8,Mall,ITEM_DISK
+# Each banner listing is paired with the nearest empty chest on that shop floor;
+# these empty-container associations are reconstructed from the stall layout.
+2015-pikachupals-banner-magenta,world,155,73,-123,154,72,-123,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,magenta_banner,1,15,16,Magenta,ITEM_BANNER
+2015-pikachupals-banner-light-gray,world,159,73,-127,159,72,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,light_gray_banner,1,15,16,Light Grey,ITEM_BANNER
+2015-pikachupals-banner-white,world,157,73,-127,157,72,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,white_banner,1,15,16,White,ITEM_BANNER
+2015-pikachupals-banner-black,world,155,73,-127,154,72,-127,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,black_banner,1,15,16,Black,ITEM_BANNER
+2015-pikachupals-banner-light-blue,world,159,73,-118,159,72,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,light_blue_banner,1,15,16,Light Blue,ITEM_BANNER
+2015-pikachupals-banner-cyan,world,157,73,-118,157,72,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,cyan_banner,1,15,16,Cyan,ITEM_BANNER
+2015-pikachupals-banner-blue,world,155,73,-118,155,72,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,blue_banner,1,15,16,Blue,ITEM_BANNER
+2015-pikachupals-banner-purple,world,155,73,-121,154,72,-121,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,purple_banner,1,15,16,Purple,ITEM_BANNER
+2015-pikachupals-banner-pink,world,155,73,-125,154,72,-125,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,pink_banner,1,15,16,Pink,ITEM_BANNER
+2015-pikachupals-banner-brown,world,163,73,-124,164,72,-124,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,brown_banner,1,15,16,Brown,ITEM_BANNER
+2015-pikachupals-banner-red,world,163,73,-127,163,72,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,red_banner,1,15,16,Red,ITEM_BANNER
+2015-pikachupals-banner-gray,world,161,73,-127,161,72,-128,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,gray_banner,1,15,16,Grey,ITEM_BANNER
+2015-pikachupals-banner-lime,world,163,73,-118,164,72,-118,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,lime_banner,1,15,16,Lime,ITEM_BANNER
+2015-pikachupals-banner-green,world,161,73,-118,161,72,-117,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,green_banner,1,15,16,Green,ITEM_BANNER
+2015-pikachupals-banner-orange,world,163,73,-122,164,72,-122,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,orange_banner,1,15,16,Orange,ITEM_BANNER
+2015-pikachupals-banner-yellow,world,163,73,-120,164,72,-120,af1c824a-8ff5-4912-9470-b32c07ffd1f8,PikachuPals,yellow_banner,1,15,16,Yellow,ITEM_BANNER
+# Smaland47's paired bone signs face the same stocked double chest; both halves
+# and the original sign text were checked against the 2015 spawn region.
+2015-smaland-bones-64,world,43,59,-142,43,59,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bone,64,25,1024,Bones,QUANTITY_ITEM_DOLLAR
+2015-smaland-bones-128,world,42,59,-142,43,59,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bone,128,45,1024,Bones,QUANTITY_ITEM_DOLLAR
+# These steak signs are directly in front of an empty double chest.
+2015-smaland-steak-32,world,45,58,-142,45,58,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,cooked_beef,32,35,512,Steak,QUANTITY_ITEM_DOLLAR
+2015-smaland-steak-64,world,46,58,-142,45,58,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,cooked_beef,64,65,512,Steak,QUANTITY_ITEM_DOLLAR
+# Upstairs listings share the matching bone and arrow stockroom chests. The
+# pearl chest is the only container in this parcel with ordinary ender pearls.
+2015-smaland-bones-32,world,33,63,-150,43,59,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bone,32,15,1024,Bones,QUANTITY_ITEM_DOLLAR
+2015-smaland-arrows-32,world,33,65,-151,43,58,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,arrow,32,30,512,Arrows,QUANTITY_ITEM_DOLLAR
+2015-smaland-arrows-64,world,33,65,-150,43,58,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,arrow,64,50,512,Arrows,QUANTITY_ITEM_DOLLAR
+2015-smaland-arrows-128,world,33,65,-149,43,58,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,arrow,128,90,512,Arrows,QUANTITY_ITEM_DOLLAR
+2015-smaland-pearl,world,33,64,-152,38,63,-141,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,ender_pearl,1,25,24,Enderpearl,ITEM_DOLLAR
+# Bow storage is reconstructed in an empty chest in the same shop. Enchanted
+# bows have only the enchantments stated on their signs, four of each variant.
+2015-smaland-bow,world,33,64,-151,35,63,-144,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,30,4,Bow,ITEM_DOLLAR
+2015-smaland-bow-power4,world,41,63,-145,35,63,-144,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,75,4,Power IV Bow,BOW_POWER_IV
+2015-smaland-bow-flame,world,41,63,-146,35,63,-144,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,75,4,Flame I Bow,BOW_FLAME_I
+2015-smaland-bow-flame-punch,world,41,64,-145,35,63,-144,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,60,4,Flame Punch Bow,BOW_UNBREAKING_FLAME_PUNCH
+2015-smaland-bow-power-punch,world,41,64,-144,35,63,-144,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,50,4,Power Punch Bow,BOW_UNBREAKING_POWER_PUNCH
+2015-smaland-bow-flame-power,world,41,63,-144,35,63,-144,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,125,4,Flame Power Bow,BOW_UNBREAKING_FLAME_POWER
+# Reconstructed from the sign's Power III and 73 remaining uses; no matching
+# original bow was found. The empty chest is reconstructed storage.
+2015-smaland-bow-used,world,41,64,-146,33,63,-152,3ced328d-f079-45e4-ad71-8c721c4a699b,Smaland47,bow,1,30,4,Used Power III,BOW_USED_POWER_III
+# EternalRegret is a documented name-and-location inference for the Minemart
+# owner, not a recovered claim record. The empty chest is reconstructed storage.
+2015-eternal-dark-oak,world,113,71,-169,116,70,-166,4ef5998c-d6b3-4779-9da5-9065d3b1a365,EternalRegret,dark_oak_log,128,100,512,Dark Oak Logs,TWO_STACKS_CREDITS
+# Setery10's sky-shop crop signs are linked to empty ground-floor chests in the
+# same preserved shop. These container associations are reconstructed.
+2015-setery-sugar-cane,world,111,153,-142,113,63,-138,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,sugar_cane,64,16,256,Sugar Cane,QUANTITY_ITEM_FOR_PRICE
+2015-setery-pumpkin-seeds,world,111,154,-142,113,63,-139,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,pumpkin_seeds,16,5,128,Pumpkin Seeds,QUANTITY_ITEM_FOR_PRICE
+2015-setery-wheat-seeds,world,112,153,-142,115,63,-138,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,wheat_seeds,32,8,256,Seeds,QUANTITY_ITEM_FOR_PRICE
+2015-setery-melon-seeds,world,114,153,-142,115,63,-139,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,melon_seeds,16,5,128,Melon Seeds,QUANTITY_ITEM_FOR_PRICE
+2015-setery-cocoa,world,113,153,-142,117,63,-138,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,cocoa_beans,16,20,128,Cocoa Beans,QUANTITY_ITEM_FOR_PRICE
+2015-setery-carrot,world,113,154,-142,117,63,-139,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,carrot,10,7,128,Carrots,QUANTITY_ITEM_FOR_PRICE
+2015-setery-potato,world,112,154,-142,119,63,-138,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,potato,10,7,128,Potatos,QUANTITY_ITEM_FOR_PRICE
+2015-setery-wheat,world,114,154,-142,119,63,-139,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,wheat,32,8,256,Wheat,QUANTITY_ITEM_FOR_PRICE
+# Additional empty chests in the same shop are reconstructed storage for these
+# original signs. Horse equipment and minecarts use restrained stock targets.
+2015-setery-gold-horse,world,110,158,-147,105,67,-139,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,golden_horse_armor,1,95,8,Gold Horse,QUANTITY_WITH_ARMOR
+2015-setery-iron-horse,world,109,158,-147,106,67,-139,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,iron_horse_armor,1,75,8,Iron Horse,QUANTITY_WITH_ARMOR_FOR
+2015-setery-saddle,world,112,158,-147,120,67,-142,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,saddle,1,100,8,Saddle,QUANTITY_ITEM_FOR_PRICE
+2015-setery-minecart,world,113,68,-143,120,67,-144,4cbf0d59-3b40-473d-8318-0c97aba5e548,Setery10,minecart,1,5,16,minecart,DEAL_OF_WEEK
+# Detern's 2016 shop: these are linked to the labeled stockroom containers that
+# held the matching ordinary items in the surveyed map2 r.-1.-1.mca region.
+# Surveyed region SHA-256: 4b2646d8bd7c9736bb3f8496dafa1e6db92b831fb1b58d08bfd802a07535acda
+# Most signs include a quantity before the item name; the two mushroom signs do not.
+# id,world,sign x,y,z,container x,y,z,owner uuid,name,item,quantity,price,stock target,original item name,sign format
+2016-detern-dirt,map2,-40,66,-125,-40,58,-131,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,dirt,32,10,1024,Dirt,QUANTITY_ITEM_FOR_PRICE
+2016-detern-cobble,map2,-34,66,-125,-38,56,-116,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,cobblestone,32,15,1024,Cobblestone,QUANTITY_ITEM_FOR_PRICE
+2016-detern-stone,map2,-34,66,-126,-39,57,-116,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,stone,8,6,512,Stone,QUANTITY_ITEM_FOR_PRICE
+2016-detern-stonebrick,map2,-34,66,-124,-39,56,-117,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,stone_bricks,16,7,512,Stonebrick,QUANTITY_ITEM_FOR_PRICE
+2016-detern-granite,map2,-38,66,-127,-33,56,-123,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,granite,32,25,512,Granite,QUANTITY_ITEM_FOR_PRICE
+2016-detern-diorite,map2,-37,66,-127,-33,56,-125,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,diorite,32,25,512,Diorite,QUANTITY_ITEM_FOR_PRICE
+2016-detern-andesite,map2,-39,66,-127,-33,57,-124,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,andesite,32,25,512,Andesite,QUANTITY_ITEM_FOR_PRICE
+2016-detern-gravel,map2,-36,71,-119,-33,57,-122,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,gravel,16,6,512,Gravel,QUANTITY_ITEM_FOR_PRICE
+# The sand stockroom container is reconstructed from an empty chest in the
+# same shop; no original sand container was identified during the survey.
+2016-detern-sand,map2,-35,71,-119,-41,56,-122,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,sand,16,8,1024,Sand,QUANTITY_ITEM_FOR_PRICE
+2016-detern-oak,map2,-40,71,-123,-36,56,-116,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,oak_log,16,10,256,Oak,QUANTITY_ITEM_FOR_PRICE
+2016-detern-birch,map2,-40,71,-125,-40,56,-120,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,birch_log,16,10,256,Birch,QUANTITY_ITEM_FOR_PRICE
+2016-detern-jungle,map2,-40,71,-126,-39,56,-119,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,jungle_log,16,10,256,Jungle Wood,QUANTITY_ITEM_FOR_PRICE
+2016-detern-spruce,map2,-40,71,-124,-37,57,-116,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,spruce_log,16,10,256,Spruce,QUANTITY_ITEM_FOR_PRICE
+# The empty chest behind the "ACAIA LOG" stockroom sign identifies acacia.
+2016-detern-acacia,map2,-40,71,-128,-41,57,-120,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,acacia_log,16,10,256,Acacia,QUANTITY_ITEM_FOR_PRICE
+2016-detern-dark-oak,map2,-40,71,-127,-39,57,-118,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,dark_oak_log,16,10,256,Dark Oak,QUANTITY_ITEM_FOR_PRICE
+2016-detern-oak-leaves,map2,-40,66,-123,-35,57,-126,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,oak_leaves,8,8,256,O Leaves,QUANTITY_ITEM_FOR_PRICE
+2016-detern-spruce-leaves,map2,-40,66,-124,-36,56,-126,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,spruce_leaves,8,8,256,S Leaves,QUANTITY_ITEM_FOR_PRICE
+2016-detern-vines,map2,-40,66,-122,-37,57,-126,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,vine,16,8,256,Vines,QUANTITY_ITEM_FOR_PRICE
+2016-detern-red-mushroom,map2,-40,66,-126,-40,56,-131,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,red_mushroom,1,2,128,RedMushroom,ITEM_FOR_PRICE
+2016-detern-brown-mushroom,map2,-40,66,-127,-41,57,-131,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,brown_mushroom,1,2,128,BrownMushroom,ITEM_FOR_PRICE
+2016-detern-obsidian,map2,-40,66,-121,-38,56,-126,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,obsidian,4,35,16,Obsidian,QUANTITY_ITEM_FOR_PRICE
+2016-detern-iron-horse,map2,-34,71,-127,-33,56,-119,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,iron_horse_armor,1,45,16,Iron H Armor,QUANTITY_ITEM_FOR_PRICE
+2016-detern-gold-horse,map2,-34,71,-128,-33,57,-118,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,golden_horse_armor,1,90,8,Gold H Armor,QUANTITY_ITEM_FOR_PRICE
+# These three empty containers are directly identified by their adjacent
+# stockroom labels; their quantities are intentionally restrained.
+2016-detern-diamond-horse,map2,-34,71,-129,-33,56,-117,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,diamond_horse_armor,1,140,8,Dia H Armor,QUANTITY_ITEM_FOR_PRICE
+2016-detern-name-tag,map2,-34,71,-125,-33,56,-121,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,name_tag,1,75,16,Name Tag,QUANTITY_ITEM_FOR_PRICE
+2016-detern-saddle,map2,-34,71,-126,-33,57,-120,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,saddle,1,35,8,Saddle,QUANTITY_ITEM_FOR_PRICE
+# Dockozel's 2016 signs and owner are surveyed. The containers below are the
+# proposed new cellar stockroom, not original containers. Until that room is
+# installed the importer skips these rows without changing the existing stall.
+2016-dockozel-diamond,map2,-72,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,diamond,1,125,24,Diamond,QUANTITY_WITH_ITEM
+2016-dockozel-coal,map2,-71,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,coal,1,12,128,Coal,QUANTITY_WITH_ITEM
+2016-dockozel-gold,map2,-70,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,gold_ingot,1,30,32,Gold Ingot,QUANTITY_WITH_ITEM
+2016-dockozel-iron,map2,-69,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,iron_ingot,1,2,32,Iron Ingot,QUANTITY_WITH_ITEM
+2016-dockozel-ice,map2,-68,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,packed_ice,16,150,64,Packed Ice,QUANTITY_WITH_ITEM
+2016-dockozel-pumpkin,map2,-67,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,pumpkin,1,3,128,Pumpkin,QUANTITY_WITH_ITEM
+2016-dockozel-mutton,map2,-66,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,mutton,1,8,128,Mutton,QUANTITY_WITH_ITEM
+2016-dockozel-sea-lantern,map2,-65,69,-97,-70,64,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,sea_lantern,1,200,16,Sea Lantern,QUANTITY_WITH_ITEM
+2016-dockozel-cobweb,map2,-64,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cobweb,1,10,16,Cobweb,QUANTITY_WITH_ITEM
+2016-dockozel-steak,map2,-70,69,-93,-68,64,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cooked_beef,16,6,128,Steak,QUANTITY_WITH_ITEM
+2016-dockozel-netherrack,map2,-69,69,-93,-66,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,netherrack,32,2,512,Netherrack,QUANTITY_WITH_ITEM
+2016-dockozel-cobble,map2,-67,69,-93,-66,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cobblestone,32,2,1024,Cobble,QUANTITY_WITH_ITEM
+2016-dockozel-rails,map2,-68,69,-93,-64,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,rail,32,12,64,Rails,QUANTITY_WITH_ITEM
+2016-dockozel-stone,map2,-66,69,-93,-64,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,stone,32,4,512,Stone,QUANTITY_WITH_ITEM
+2016-dockozel-prismarine,map2,-65,69,-93,-64,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,prismarine,16,20,64,Prismarine,QUANTITY_WITH_ITEM
+2016-dockozel-prismarine-bricks,map2,-64,69,-93,-70,64,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,prismarine_bricks,16,25,64,Prismarine,QUANTITY_WITH_BRICKS

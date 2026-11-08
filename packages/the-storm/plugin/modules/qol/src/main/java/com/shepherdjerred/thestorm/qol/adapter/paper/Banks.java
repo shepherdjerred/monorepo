@@ -26,6 +26,7 @@ import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -75,6 +76,10 @@ final class Banks implements Listener {
   private final QolConfig.Bank config;
   private final Protection protection;
   private final Services services;
+  private final WorldBanks worldBanks;
+  private final IdentityHashMap<SignChangeEvent, List<StoredBank>> pendingSigns =
+      new IdentityHashMap<>();
+  private @Nullable List<StoredBank> planningSign;
   private final Places places = new Places();
 
   record Gear(
@@ -92,6 +97,7 @@ final class Banks implements Listener {
     this.config = gear.config();
     this.protection = gear.protection();
     this.services = gear.services();
+    this.worldBanks = new WorldBanks(runtime.server());
   }
 
   BankBook book() {
@@ -111,25 +117,44 @@ final class Banks implements Listener {
       return;
     }
     var sign = event.getBlock();
-    var ok =
-        switch (kind.orElseThrow()) {
-          case BANK -> createBank(player, sign);
-          case SHELF, RELOAD -> {
-            var text = readText(event);
-            if (text.isEmpty()) {
-              Say.error(player, LABEL, "A shelf line must name an item, or say restack.");
-              yield false;
+    var planned = new ArrayList<StoredBank>();
+    planningSign = planned;
+    boolean ok;
+    try {
+      ok =
+          switch (kind.orElseThrow()) {
+            case BANK -> createBank(player, sign);
+            case SHELF, RELOAD -> {
+              var text = readText(event);
+              if (text.isEmpty()) {
+                Say.error(player, LABEL, "A shelf line must name an item, or say restack.");
+                yield false;
+              }
+              yield switch (kind.orElseThrow()) {
+                case BANK -> false;
+                case SHELF ->
+                    book.shelfAtSign(BankBlocks.spot(sign)).isPresent()
+                        ? reload(player, sign, text.orElseThrow())
+                        : placeShelf(player, sign, text.orElseThrow());
+                case RELOAD -> reload(player, sign, text.orElseThrow());
+              };
             }
-            yield switch (kind.orElseThrow()) {
-              case BANK -> false;
-              case SHELF -> placeShelf(player, sign, text.orElseThrow());
-              case RELOAD -> reload(player, sign, text.orElseThrow());
-            };
-          }
-        };
+          };
+    } finally {
+      planningSign = null;
+    }
     if (!ok) {
       event.setCancelled(true);
+    } else {
+      if (kind.orElseThrow() == Kind.RELOAD) event.line(0, Component.text("[Shelf]"));
+      pendingSigns.put(event, List.copyOf(planned));
     }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  void commitSign(SignChangeEvent event) {
+    var accepted = pendingSigns.remove(event);
+    if (accepted != null && !event.isCancelled()) accepted.forEach(this::remember);
   }
 
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -652,6 +677,10 @@ final class Banks implements Listener {
     }
 
     private void shelve(UUID actor, StoredBank bank, @Nullable Player tell) {
+      var current = block(bank.container()).flatMap(worldBanks::read);
+      if (current.isEmpty()) return;
+      bank = current.orElseThrow();
+      book.put(bank);
       if (!actorMayShelve(tell, bank)) {
         return;
       }
@@ -820,6 +849,7 @@ final class Banks implements Listener {
 
     private Optional<StoredBank> bankContainer(Block block) {
       for (var half : BankBlocks.halves(block)) {
+        worldBanks.read(half).ifPresent(book::put);
         var spot = BankBlocks.spot(half);
         for (var bank : book.all()) {
           if (bank.container().isAt(spot.world(), spot.x(), spot.y(), spot.z())) {
@@ -942,13 +972,15 @@ final class Banks implements Listener {
       }
       var empty = 0;
       var partial = new HashMap<String, Integer>();
+      var materials = shelf.materials();
+      if (materials.isEmpty()) materials = samples(inventory);
       for (var stack : contents) {
         if (stack == null || stack.getType().isAir()) {
           empty++;
           continue;
         }
         var key = stack.getType().getKey().toString();
-        if (!shelf.materials().contains(key)) {
+        if (!materials.contains(key)) {
           continue;
         }
         var room = stack.getMaxStackSize() - stack.getAmount();
@@ -956,7 +988,16 @@ final class Banks implements Listener {
           partial.merge(key, room, Integer::sum);
         }
       }
-      return new ShelfOpening(shelf.id(), shelf.materials(), empty, partial);
+      return new ShelfOpening(shelf.id(), materials, empty, partial);
+    }
+
+    private static Set<String> samples(Inventory inventory) {
+      var materials = new LinkedHashSet<String>();
+      for (var stack : java.util.Objects.requireNonNull(inventory.getContents())) {
+        if (stack != null && !stack.getType().isAir())
+          materials.add(stack.getType().getKey().toString());
+      }
+      return Set.copyOf(materials);
     }
 
     private static void compact(Inventory inventory, Set<String> materials) {
@@ -1139,13 +1180,49 @@ final class Banks implements Listener {
   }
 
   private void remember(StoredBank bank) {
+    var planned = planningSign;
+    if (planned != null) {
+      planned.add(bank);
+      return;
+    }
+    worldBanks.write(bank);
     book.put(bank);
     runtime.onMain(store.save(bank), "save bank", saved -> {}, failed -> {});
   }
 
   private void forget(StoredBank bank) {
+    worldBanks.remove(bank);
     book.remove(bank.id());
     runtime.onMain(store.delete(bank.id()), "delete bank", saved -> {}, failed -> {});
+  }
+
+  /** Rebuilds loaded banks from world metadata even when their database index is empty. */
+  void discoverLoaded() {
+    // Upgrade existing banks once from their old index before treating world metadata as
+    // authoritative.
+    for (var bank : book.all()) {
+      block(bank.container())
+          .filter(
+              container -> !worldBanks.hasDefinition(container) && worldBanks.hasMasterSign(bank))
+          .ifPresent(container -> worldBanks.write(bank));
+    }
+    for (var world : runtime.server().getWorlds()) {
+      for (var chunk : world.getLoadedChunks()) discover(chunk);
+    }
+  }
+
+  @EventHandler
+  void onChunkLoad(org.bukkit.event.world.ChunkLoadEvent event) {
+    if (book.isLoaded()) discover(event.getChunk());
+  }
+
+  private void discover(org.bukkit.Chunk chunk) {
+    for (var state :
+        services
+            .require(com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class)
+            .inChunk(chunk)) {
+      worldBanks.read(state.getBlock()).ifPresent(book::put);
+    }
   }
 
   private void resolve(String name, Consumer<UUID> found, Runnable missing) {

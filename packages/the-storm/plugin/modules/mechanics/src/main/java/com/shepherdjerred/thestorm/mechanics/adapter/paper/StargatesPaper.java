@@ -73,9 +73,9 @@ public final class StargatesPaper {
   public static StargatesPaper start(
       ModuleContext context, StargateConfig config, @Nullable FliptStargatesGate rollout) {
     var enabled = new AtomicBoolean(false);
-    var book =
-        new StargateBook(
-            new JooqStargateStore(context.database()), context.scheduler().mainThread());
+    var storage = new WorldStargateStore(context, new JooqStargateStore(context.database()));
+    var book = new StargateBook(storage, context.scheduler().mainThread());
+    storage.attach(book);
     var access =
         new StargateAccess(
             context.services().require(TrackLevels.class),
@@ -89,6 +89,7 @@ public final class StargatesPaper {
         .registerEarly("stargates", portals::resetPlayer);
     var serverHub = new StargateServerHub(context, book, settings, config.serverGates());
     var events = context.plugin().getServer().getPluginManager();
+    events.registerEvents(storage, context.plugin());
     events.registerEvents(new StargateProtection(context, book, portals), context.plugin());
     events.registerEvents(
         new StargateCreation(context, book, access, enabled::get), context.plugin());

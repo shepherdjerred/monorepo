@@ -90,6 +90,11 @@ public final class TownsModule implements StormModule {
     }
     state.attachHeritage(
         new com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex(heritage.sites()));
+    var imported =
+        await(store.importHeritage(heritage.sites(), context.time().instant()), "historical towns");
+    if (!imported.conflicts().isEmpty()) {
+      context.logger().warn("Historical towns need owner or name review: {}", imported.conflicts());
+    }
     state.load(await(store.loadAll(), "towns"));
     var renamed =
         await(

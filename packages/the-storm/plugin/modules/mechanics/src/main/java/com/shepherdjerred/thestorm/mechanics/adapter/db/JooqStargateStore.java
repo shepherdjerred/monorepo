@@ -160,6 +160,35 @@ public final class JooqStargateStore implements StargateStore {
   }
 
   @Override
+  public CompletableFuture<Void> indexGate(StargateNetwork network, Stargate gate) {
+    return database.write(
+        dsl -> {
+          dsl.transaction(
+              configuration -> {
+                var tx = configuration.dsl();
+                if (!tx.fetchExists(
+                    MECHANICS_STARGATE_NETWORK,
+                    MECHANICS_STARGATE_NETWORK.ID.eq(network.id().toString()))) {
+                  if (!(network.access() instanceof NetworkAccess.Public))
+                    throw new IllegalStateException(
+                        "cannot reconstruct private network membership from a sign");
+                  tx.insertInto(MECHANICS_STARGATE_NETWORK)
+                      .set(MECHANICS_STARGATE_NETWORK.ID, network.id().toString())
+                      .set(MECHANICS_STARGATE_NETWORK.NAME, network.name())
+                      .set(MECHANICS_STARGATE_NETWORK.NAME_KEY, key(network.name()))
+                      .set(MECHANICS_STARGATE_NETWORK.KIND, "public")
+                      .execute();
+                }
+                tx.deleteFrom(MECHANICS_STARGATE_GATE)
+                    .where(MECHANICS_STARGATE_GATE.ID.eq(gate.id().toString()))
+                    .execute();
+                insertGate(tx, gate);
+              });
+          return null;
+        });
+  }
+
+  @Override
   public CompletableFuture<Boolean> deleteGate(UUID id) {
     return database.write(
         dsl ->

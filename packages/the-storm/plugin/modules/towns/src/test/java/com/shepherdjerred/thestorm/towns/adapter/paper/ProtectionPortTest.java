@@ -121,6 +121,18 @@ final class ProtectionPortTest extends AegisServer {
   }
 
   @Test
+  void homeImportsDoNotGrantGeneralHeritageAccess() {
+    var player = bob.getUniqueId();
+    var preservedWilderness = at(1_000_000, 1_000_000);
+    assertThat(port().check(player, ProtectedAction.SET_HOME, preservedWilderness).isAllowed())
+        .isFalse();
+    assertThat(port().check(player, ProtectedAction.BUILD, preservedWilderness).isAllowed())
+        .isFalse();
+    assertThat(port().check(player, ProtectedAction.SET_HOME, at(170, Z)).isAllowed()).isFalse();
+    assertThat(port().check(player, ProtectedAction.SET_HOME, at(8, 8)).isAllowed()).isFalse();
+  }
+
+  @Test
   void callsOffTheMainThreadThrow() throws InterruptedException {
     var port = port();
     var thrown = new AtomicReference<Throwable>();

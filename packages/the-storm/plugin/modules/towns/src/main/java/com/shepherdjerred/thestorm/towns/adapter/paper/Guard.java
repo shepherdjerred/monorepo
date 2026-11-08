@@ -84,6 +84,30 @@ final class Guard {
         world.getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
   }
 
+  Optional<java.util.UUID> automationActor(Location location) {
+    var land = land(location);
+    if (land instanceof Land.HeritageLand(_, var editors, _)) {
+      return editors.size() == 1 ? Optional.of(editors.iterator().next()) : Optional.empty();
+    }
+    if (land instanceof Land.ParcelLand(var parcel)) {
+      return parcel.owners().size() == 1
+          ? Optional.of(parcel.owners().iterator().next())
+          : Optional.empty();
+    }
+    if (land instanceof Land.TownLand(var claim)) {
+      return claim
+          .resident()
+          .or(
+              () ->
+                  state
+                      .town(claim.townId())
+                      .flatMap(com.shepherdjerred.thestorm.towns.domain.town.Town::mayor));
+    }
+    return land instanceof Land.Wilderness
+        ? Optional.of(com.shepherdjerred.thestorm.core.protection.Protection.SERVER_AUTOMATION)
+        : Optional.empty();
+  }
+
   Land land(Entity entity) {
     return land(entity.getLocation());
   }

@@ -138,10 +138,16 @@ dialogues:
             then: trainer
           - label: What does a Shopkeeper do?
             then: goto:about
+          - label: Where are the trainers?
+            then: goto:trainers
           - label: Goodbye
             then: close
       about:
         text: Shopkeepers run chest shops, rent stalls in the market and keep this town's crystals moving. Every level opens more of it up.
+        next: greet
+        options: []
+      trainers:
+        text: Darren teaches mechanics in the smithy southwest of here. Lynn teaches spells in the wizard's tower to the northeast. Zavier teaches engineering by the mine entrance to the south. Aldric teaches governors west, near the bank.
         next: greet
         options: []
   darren:
@@ -275,10 +281,10 @@ npcs:
     skin: vanilla:wide/kai
     home:
       world: minecraft:overworld
-      x: -37.5
-      y: 64
-      z: 0.5
-      yaw: 0.0
+      x: -46.5
+      y: 70
+      z: 23.5
+      yaw: -90.0
       pitch: 0.0
     pose: standing
     roles: [trainer, beginner-safe]
@@ -291,10 +297,10 @@ npcs:
     skin: vanilla:wide/efe
     home:
       world: minecraft:overworld
-      x: -39.5
-      y: 64
-      z: 0.5
-      yaw: 0.0
+      x: -44.5
+      y: 66
+      z: 165.5
+      yaw: -135.0
       pitch: 0.0
     pose: standing
     roles: [trainer, beginner-safe]
@@ -307,10 +313,10 @@ npcs:
     skin: vanilla:slim/alex
     home:
       world: minecraft:overworld
-      x: -43.5
-      y: 66
-      z: 0.5
-      yaw: 0.0
+      x: -28.5
+      y: 72
+      z: -32.5
+      yaw: -45.0
       pitch: 0.0
     pose: standing
     roles: [trainer, beginner-safe]

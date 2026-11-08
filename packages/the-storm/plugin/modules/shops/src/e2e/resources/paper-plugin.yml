@@ -1,0 +1,5 @@
+name: TheStormHistoricalStockE2E
+version: "1.0.0"
+main: com.shepherdjerred.thestorm.shops.adapter.paper.HistoricalStockE2EPlugin
+api-version: "26.3"
+description: Test-only real-Paper historical shop stock fixture

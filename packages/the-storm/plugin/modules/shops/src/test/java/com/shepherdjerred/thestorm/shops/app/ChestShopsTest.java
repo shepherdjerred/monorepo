@@ -238,12 +238,12 @@ final class ChestShopsTest {
   }
 
   @Test
-  void aShopThatCannotBeSavedIsForgotten() {
+  void aFailedIndexWriteDoesNotRemoveAnAcceptedWorldShop() {
     store.failSaves = true;
 
     create(ALICE, 0);
 
-    assertThat(registry.atSign(at(0))).isEmpty();
+    assertThat(registry.atSign(at(0))).isPresent();
   }
 
   @Test

@@ -125,6 +125,9 @@ public final class TheStormPlugin extends JavaPlugin {
         PaperSavedPlayerData.locate(
             getServer(), pool, new PaperScheduler(this), getComponentLogger()));
     services.provide(BlockChanges.class, CoreProtectBlocks.create(this));
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+        org.bukkit.Chunk::getTileEntities);
     getServer()
         .getPluginManager()
         .registerEvents(

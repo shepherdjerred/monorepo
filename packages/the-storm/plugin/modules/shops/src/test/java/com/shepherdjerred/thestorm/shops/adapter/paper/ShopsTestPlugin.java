@@ -55,6 +55,12 @@ public class ShopsTestPlugin extends JavaPlugin {
   static final class TestProtection implements Protection {
     final Set<ProtectedAction> denied = new HashSet<>();
     boolean sameLand = true;
+    boolean restorationAllowed = true;
+
+    @Override
+    public boolean mayRestoreHistoricalShop(Location location) {
+      return restorationAllowed;
+    }
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
@@ -118,6 +124,13 @@ public class ShopsTestPlugin extends JavaPlugin {
           }
         });
     services.provide(Protection.class, protection);
+    // Chunk discovery is exercised on Paper; MockBukkit cannot enumerate block entities.
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+        chunk -> new org.bukkit.block.BlockState[0]);
+    services.provide(
+        com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class,
+        new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry());
     services.provide(
         com.shepherdjerred.thestorm.core.protection.ManagedTrades.class, location -> true);
     services.provide(

@@ -21,6 +21,11 @@ public interface ShopStore {
   /** Stores a new shop; completes with its id. */
   CompletableFuture<Long> saveShop(SignShop shop);
 
+  /** Updates the optional lookup index from an authoritative world sign. */
+  default CompletableFuture<Long> indexShop(SignShop shop) {
+    return saveShop(shop);
+  }
+
   /** Sets the item a {@code ?} shop trades; completes with the rows changed. */
   CompletableFuture<Integer> setItem(long shopId, ItemFingerprint item);
 

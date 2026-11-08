@@ -52,6 +52,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     HeritageFixtures.install(this);
     new BeginnerFixtures(this).register();
     world = Objects.requireNonNull(getServer().getWorld("world"));
+    prepareHistoricalShops();
     var modules = section(yaml("config.yml"), "modules");
     var prepared = new ArrayList<String>();
     var worldOn = enabled(modules, "world", prepared);
@@ -67,8 +68,10 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     if (townsOn) {
       protectedWorlds();
       HistoricalLockFixtures.seed(world, content.toPath());
+      prepareHistoricalTowns();
     }
     if (enabled(modules, "essentials", prepared)) {
+      HistoricalHomeFixtures.seed(content.toPath());
       world.setSpawnLocation(0, 65, 0);
       var essentials = yaml("essentials.yml");
       stand(section(essentials, "spawn"));
@@ -123,6 +126,17 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     jfr = new JfrFixtures(this);
     jfr.register();
     getServer().getPluginManager().registerEvents(this, this);
+  }
+
+  private void prepareHistoricalShops() {
+    var mode = System.getenv("STORM_E2E_HISTORICAL_SHOPS");
+    if (mode != null) HistoricalShopFixtures.prepare(world, content.toPath(), mode);
+  }
+
+  private void prepareHistoricalTowns() {
+    if ("1".equals(System.getenv("STORM_E2E_HISTORICAL_TOWNS"))) {
+      HistoricalTownFixtures.seed(content.toPath());
+    }
   }
 
   /** The fixtures start first, so release shared plugin resources before TheStorm unloads. */

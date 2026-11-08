@@ -1333,6 +1333,25 @@ allows the player still redirects that respawn. On startup, each player's saved
 respawn is copied into that home when they do not already have one, including
 when the bed block is already gone.
 
+Recovered destinations are ordinary editable homes, listed with `/homes`.
+The newest recorded main-world destination is imported as `home`; distinct older
+destinations use `map1` or `map2`, and surveyed owner destinations use `town`.
+Existing names and vanilla respawns are preserved. Name collisions use the map
+name and, if needed, a numeric suffix. Identical locations are imported once.
+After saved vanilla respawns have been read successfully, the newest archived
+respawn also supplies the reserved `bed` home for players whose native respawn
+is missing. Existing bed homes remain authoritative. Town destinations never
+become beds. The normal bed listener restores that saved respawn on joining.
+Players can rename or delete these homes normally; durable import receipts stop
+a deleted destination from returning after restart. Later edits and travel use
+the ordinary home limit, pricing, cooldowns, protection and safe-landing checks.
+
+Returning players receive ordinary home, town and RTP guidance when first seen
+by Essentials. Their current position is retained. The bundled catalog only uses
+explicit original `SpawnWorld=world` records, mapped to 2015 `world` or 2016
+`map2`; unknown worlds are not inferred. Changed source evidence fails the
+import rather than overwriting it.
+
 Essentials publishes `TeleportTravel`: one reservation, warmup, guard,
 payment, refund, and delivery-confirmation flow. The starter compass uses a
 complimentary path that skips the quote, the charge, the warmup, and the RTP
@@ -1451,21 +1470,98 @@ players collect them through the same saved receipt path. Overflow is owner
 only until the grave expires, then anyone can collect it. Loaded chunks are
 reconciled at startup and on chunk load. Interaction and nearby player movement
 also trigger expiry in chunks that stay loaded. Collection pauses while QoL is
-disabled; the stored stacks remain available when it starts again.
 
-## Shop startup
+## World signs and recovery
 
-The shops module registers a temporary guard before it reads stored sign shops
-from SQLite. While the read or reconciliation is pending, possible shop signs
-and configured shop containers cannot be opened, changed, or used for inventory
-transfer. Catalog names remain available to NPC validation, but catalog menus
-and `/shop` report that shops are loading. A failed read leaves the guard active
-and logs the startup failure; a successful read publishes the registry only
-after stale admin shops have been closed.
+Chest-shop definitions come from the current sign, its connected inventory and
+world metadata. SQLite keeps a rebuildable index; balances, trade receipts and
+restoration receipts remain durable database records. Startup guards shop
+interactions until that index has loaded and loaded chunks have been reconciled.
+Definitions are rediscovered as chunks load, and each trade rechecks the current
+sign before committing its quoted price.
 
-## Red Warfare Search and Destroy (rwf)
+New chest shops use the classic ChestShop layout:
 
-The `rwf` module ports libraryaddict's Red Warfare Search and Destroy (see
+```text
+Owner
+Quantity
+B 10:S 5
+Item
+```
+
+Leave the first line blank to use your own name. A fourth-line `?` identifies
+the first nonempty stack in the connected chest; an empty chest can be configured
+by right-clicking the sign with the traded item. Numeric legacy item IDs and
+metadata, such as `35:14`, resolve through the generated vanilla item registry.
+Stable owner UUIDs, exact item components, bundle contents and remote container
+links live in the sign's persistent world data. Ordinary quantity, price and
+item-label edits override the old index. True multi-item offers display
+`Bundle deal`; a transaction transfers every ingredient of a complete deal.
+
+`/shoprestore` previews the reviewed legacy conversion catalog.
+`/shoprestore apply` explicitly converts matching old SignShop listings to
+ChestShop and stocks them once. Conversion receipts prevent repeat grants and
+reviving a deliberately removed shop. Existing inventory is preserved; catalog
+validation caps valuable additions and cheap stock. Missing containers and
+unresolved definitions are reported individually. These catalog operations do
+not run on ordinary server startup.
+
+Bank ownership, permissions and Shelf links live on the master container.
+Current `[Shelf]` text supplies its filters; a blank filter samples the Shelf
+inventory, following MondoChest's original behavior. Deleting the database index
+does not discard the bank. For the one-time MondoChest conversion, rewrite its
+headers to `[Bank]` and `[Shelf]` and retain the recovered links in world metadata.
+
+Stargates keep their owners and options in their signs' world data and rebuild
+their gate index from loaded chunks. Their rendered signs use the old
+`-Name-`, `>Destination<` and `(Network)` layout; creation still takes name,
+destination, network and the optional `A` flag. Public networks are recoverable
+from world definitions. Private invitations and town membership require their
+durable access records; missing access data never makes a gate public.
+Server-owned gate locations and approved landings remain declared in owned
+configuration.
+
+## CraftBook mechanisms
+
+Lift signs and ordinary mechanisms use their existing text and physical blocks;
+they do not need a coordinate catalog or a database row. Unsigned player
+interactions use the player's land rights. Background machinery uses a recorded
+creator or an unambiguous permitted land editor. Every affected cell still
+requires permission, and unloaded chunks stay unloaded.
+
+The following original IC identifiers are recognized on the second sign line:
+
+| IC                       | Behavior                                        |
+| ------------------------ | ----------------------------------------------- |
+| MC1001                   | Inverter                                        |
+| MC3002                   | AND gate over connected inputs                  |
+| MC1110 / MC1111          | Wireless transmitter / receiver                 |
+| MC1421                   | Clock; powered input pauses it                  |
+| MC1219                   | Auto-crafter with recipe samples in a dispenser |
+| MC1220                   | Block breaker                                   |
+| MC1223                   | Bonemeal terraformer                            |
+| MC1229                   | Item sorter                                     |
+| MC1234 / MC1235 / MC1239 | Planter / cultivator / harvester                |
+| MC1244 / MC1280          | Animal harvester / breeder                      |
+
+The self-trigger suffix belongs outside the brackets, for example
+`[MC1111]S`. Clocks always self-trigger and retain their counter in the sign.
+Farm machines consume real seeds, tools, buckets, food and bonemeal; they
+respect shop reservations and land boundaries. Radius and offset parameters
+come from the sign. External WorldGuard region names require their original
+definition or an explicit-coordinate rewrite.
+
+`MC1253` needs its named original firework show file. Named `[Area]` mechanisms
+likewise need their saved areas. SignShop's Slot, paid Toggle and Jukebox signs
+contain only descriptions and prices; their original inventory/device links
+must be recovered before a faithful conversion is possible.
+
+Extended native acceptance, outside CI:
+
+```bash
+STORM_E2E_WORLD_SIGNS=1 bun --no-install --bun vitest run --config vitest.e2e.config.ts tests/e2e/restoration/world-circuits.e2e.test.ts
+```
+
 `NOTICE`): one-life team PvP where attackers arm an enemy team's TNT bomb with
 a blaze-powder fuse, defenders defuse it, a nuke in the middle kills everyone
 but the team that armed it, and a poison forces long matches to a result. A

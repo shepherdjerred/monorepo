@@ -194,7 +194,20 @@ final class ShopCommand {
       player.sendMessage(Replies.error("That is not a shop."));
       return 0;
     }
-    player.sendMessage(Replies.info(describe(shop.orElseThrow())));
+    var found = shop.orElseThrow();
+    player.sendMessage(Replies.info(describe(found)));
+    found
+        .item()
+        .filter(com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint::bundleDeal)
+        .ifPresent(
+            bundle -> {
+              for (var item : new ItemTemplates().bundleItems(bundle)) {
+                player.sendMessage(
+                    net.kyori.adventure.text.Component.text(item.getAmount() + " × ")
+                        .append(item.displayName())
+                        .hoverEvent(item.asHoverEvent()));
+              }
+            });
     return Command.SINGLE_SUCCESS;
   }
 
@@ -241,7 +254,7 @@ final class ShopCommand {
         switch (shop.owner()) {
           case ShopOwner.Player(_, var name) -> name;
           case ShopOwner.Town(_, var name) -> name;
-          case ShopOwner.Admin() -> adminShopLabel;
+          case ShopOwner.Admin(_) -> adminShopLabel;
         };
     var item =
         shop.item()

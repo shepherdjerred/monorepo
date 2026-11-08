@@ -5,9 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -17,6 +20,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,14 +90,11 @@ final class SignClickListenerTest {
   }
 
   @Test
-  void anOldSignSaysHowToSetItUp() {
+  void anOldLiftIsRecognizedWithoutRewritingOrAnImportRecord() {
     var event = rightClick(oldSign("[Lift Up]"));
 
     assertThat(event.useInteractedBlock()).isEqualTo(Event.Result.DENY);
-    assertThat(messages())
-        .containsExactly(
-            "[Elevator]: This sign isn't set up yet. Sneak and right-click it with an empty hand,"
-                + " then press Done to set it up.");
+    assertThat(messages()).anySatisfy(message -> assertThat(message).contains("No lift sign"));
   }
 
   @Test
@@ -112,5 +113,46 @@ final class SignClickListenerTest {
 
     assertThat(event.useInteractedBlock()).isNotEqualTo(Event.Result.DENY);
     assertThat(messages()).isEmpty();
+  }
+
+  @Test
+  void anUnsignedLiftDoesNotAcquireAnOwnerFromAClick() {
+    world.loadChunk(10, -8);
+    var bottom = world.getBlockAt(160, 68, -122);
+    bottom.setType(Material.OAK_SIGN);
+    var sign = (Sign) bottom.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift Up]"));
+    sign.update();
+    player.teleport(new Location(world, 161.5, 68, -121.5));
+
+    rightClick(bottom);
+
+    assertThat(messages()).anySatisfy(message -> assertThat(message).contains("No lift sign"));
+    var plugin = Objects.requireNonNull(server.getPluginManager().getPlugin("TheStorm"));
+    assertThat(
+            ((Sign) bottom.getState())
+                .getPersistentDataContainer()
+                .get(new NamespacedKey(plugin, "mechanic_owner"), PersistentDataType.STRING))
+        .isNull();
+  }
+
+  @Test
+  void aChangedHistoricalSignIsNotClaimed() {
+    var block = world.getBlockAt(160, 68, -122);
+    block.setType(Material.OAK_SIGN);
+    var sign = (Sign) block.getState();
+    sign.getSide(Side.FRONT).line(1, Component.text("[Lift Up]"));
+    sign.getSide(Side.FRONT).line(3, Component.text("changed"));
+    sign.update();
+
+    rightClick(block);
+
+    assertThat(messages()).anySatisfy(message -> assertThat(message).contains("No lift sign"));
+    var plugin = Objects.requireNonNull(server.getPluginManager().getPlugin("TheStorm"));
+    assertThat(
+            ((Sign) block.getState())
+                .getPersistentDataContainer()
+                .has(new NamespacedKey(plugin, "mechanic_owner")))
+        .isFalse();
   }
 }

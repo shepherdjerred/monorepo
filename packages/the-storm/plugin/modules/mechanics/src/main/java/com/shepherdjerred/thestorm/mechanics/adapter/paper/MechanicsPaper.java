@@ -40,6 +40,9 @@ public final class MechanicsPaper {
     events.registerEvents(copier, plugin);
     events.registerEvents(new HiddenSwitchListener(kit), plugin);
     events.registerEvents(new RedstoneListener(kit, structures), plugin);
+    var circuits = new IntegratedCircuits(context, kit, protection);
+    events.registerEvents(circuits, plugin);
+    circuits.start();
     events.registerEvents(new PistonListener(kit), plugin);
     events.registerEvents(new DropListener(kit), plugin);
     events.registerEvents(new PaintingListener(kit), plugin);
