@@ -1,5 +1,10 @@
 #!/usr/bin/env bun
 
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
+import { spawn } from "node:child_process";
+
 type GitValidator = (command: readonly string[]) => Promise<number>;
 type ChangedFilesReader = (
   base: string,
@@ -43,6 +48,47 @@ function fullTreeScanCommand(): string[] {
   ];
 }
 
+// CI tasks share a checkout and create ignored outputs in parallel. Archive HEAD
+// so the full scan covers exactly the source that this pipeline verifies.
+export async function createTrackedSnapshot(
+  repository: string,
+): Promise<string> {
+  const snapshot = await mkdtemp(nodePath.join(tmpdir(), "gitleaks-source-"));
+  try {
+    const exitCode = await new Promise<number>((resolve, reject) => {
+      const archive = spawn(
+        "bash",
+        [
+          "-o",
+          "pipefail",
+          "-c",
+          'git archive HEAD | tar -xf - -C "$1"',
+          "bash",
+          snapshot,
+        ],
+        { cwd: repository, stdio: "inherit" },
+      );
+      archive.once("error", reject);
+      archive.once("exit", (code) => {
+        if (code === null) {
+          resolve(1);
+        } else {
+          resolve(code);
+        }
+      });
+    });
+    if (exitCode !== 0) {
+      throw new Error(
+        "Could not archive the committed source tree for gitleaks",
+      );
+    }
+    return snapshot;
+  } catch (error) {
+    await rm(snapshot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
 export async function gitleaksCommand(
   environment: Readonly<Record<string, string | undefined>>,
   validator: GitValidator = validate,
@@ -84,13 +130,26 @@ export async function gitleaksCommand(
 
 async function main(): Promise<number> {
   const command = await gitleaksCommand(Bun.env);
-  const child = Bun.spawn(command, {
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-    env: Bun.env,
-  });
-  return child.exited;
+  const fullTreeScan = command[1] === "detect";
+  const ci = Bun.env["CI"];
+  const snapshot =
+    fullTreeScan && ci !== undefined && ci !== ""
+      ? await createTrackedSnapshot(process.cwd())
+      : undefined;
+  try {
+    const child = Bun.spawn(command, {
+      cwd: snapshot ?? process.cwd(),
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: Bun.env,
+    });
+    return await child.exited;
+  } finally {
+    if (snapshot !== undefined) {
+      await rm(snapshot, { recursive: true, force: true });
+    }
+  }
 }
 
 if (import.meta.main) process.exitCode = await main();
