@@ -5,10 +5,8 @@ import { parseTimeout } from "#lib/ci/arguments.ts";
 import { ciBenchmarkCommand } from "#commands/ci-benchmark.ts";
 import { ciSourceProofCommand } from "#commands/ci-source-proof.ts";
 import { ciAnalyzeCommand } from "#commands/ci-analyze.ts";
-import {
-  requiredCredentialsFor,
-  resolveCredentials,
-} from "#lib/credentials.ts";
+import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
 
 function validateOptions(
   action: string,

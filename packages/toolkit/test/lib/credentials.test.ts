@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import {
-  requiredCredentialsFor,
   resolveCredentialValues,
   resolveCredentials,
 } from "#lib/credentials.ts";

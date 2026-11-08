@@ -25,7 +25,17 @@ import { z } from "zod";
 
 export const CACHE_SERVICE = "toolkit-credential-cache";
 
-export const DEFAULT_CACHE_TTL_SECONDS = 3600;
+/**
+ * One day. The account's daily budget (1,000 requests on the current plan) is
+ * shared by every host and agent, and the cached values rarely rotate; after a
+ * rotation, `toolkit credentials flush NAME` drops the stale entry.
+ */
+export const DEFAULT_CACHE_TTL_SECONDS = 86_400;
+
+/** Mirrors `installPaths().binary` in scripts/install-core.ts. */
+export function installedToolkitPath(): string {
+  return path.join(os.homedir(), ".local", "bin", "toolkit");
+}
 
 export type CredentialCache = {
   get: (ref: string) => Promise<string | null>;
@@ -101,9 +111,7 @@ export function liveCredentialCache(
   ttlSeconds: number,
 ): CredentialCache | null {
   if (process.platform !== "darwin" || ttlSeconds <= 0) return null;
-  // Mirrors `installPaths().binary` in scripts/install-core.ts.
-  return process.execPath ===
-    path.join(os.homedir(), ".local", "bin", "toolkit")
+  return process.execPath === installedToolkitPath()
     ? createCredentialCache({ store: Bun.secrets, ttlSeconds })
     : null;
 }

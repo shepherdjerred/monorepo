@@ -3,7 +3,7 @@ import type { CredentialCache } from "#lib/credential-cache.ts";
 import {
   credentialReferences,
   flushCredentialCache,
-} from "#lib/credentials.ts";
+} from "#lib/credential-overrides.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 
 /**

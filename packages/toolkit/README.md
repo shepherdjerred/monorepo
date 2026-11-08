@@ -1016,19 +1016,29 @@ never exports it into its own environment, so no other child inherits it.
 
 The installed binary caches each service-account read in the login Keychain
 (service `toolkit-credential-cache`, one item per `op://` reference keyed by
-its SHA-256) for `credentialCacheTtlSeconds` (default one hour; `0`
-disables). The whole 1Password account shares a daily read budget, and an
-agent may call kubectl or talosctl hundreds of times an hour; the cache keeps
-that to roughly one read per credential per hour. Cache hits are silent.
-After rotating a secret, run `toolkit credentials flush [NAME...]`.
+its SHA-256) for `credentialCacheTtlSeconds` (default one day; `0`
+disables). The whole 1Password account shares one daily request budget
+(1,000 on the current plan) across every host and agent, and an agent may call
+kubectl or talosctl hundreds of times an hour; the cache keeps that to roughly
+one read per credential per day. Concurrent callers that miss the cache take a
+per-reference lock under `~/Library/Caches/toolkit/credential-locks`, so only
+one of them reads. Cache hits are silent. After rotating a secret, run
+`toolkit credentials flush [NAME...]`; otherwise the old value is served until
+its entry expires.
 
 Keychain items trust the binary that created them by its code signature, so
 only the installed toolkit uses the cache, and `install:local` signs it with
 the single "Developer ID Application" identity in the login Keychain
 (identifier `red.sjer.toolkit`) and fails without one. An ad-hoc signature
 changes on every build and would stall unattended agents on an access
-prompt. Builds run through `bun` or from `dist/` never use the cache. If the command reports missing enrollment, use the
-repository's existing setup from its root:
+prompt. A process that cannot use the cache, such as a `bun
+packages/toolkit/src/index.ts` source run or a package importing
+`@shepherdjerred/toolkit/lib/credentials.ts`, borrows the installed binary's
+cache: it resolves each credential through
+`~/.local/bin/toolkit run --env NAME -- printenv NAME`. Without an installed
+binary it reads 1Password directly and warns that the read spends the shared
+budget. If the command reports missing enrollment, use the repository's
+existing setup from its root:
 
 ```bash
 swift scripts/onepassword/enroll-service-account.swift
@@ -1041,8 +1051,23 @@ session (`launchctl managername` prints `Background`, and
 an SSH login that has since ended started it, such as an SSH-started herdr
 holder. Run the command from the GUI login session or replace that process.
 A `could not be read from 1Password: …` error quotes `op`'s reason instead; a
-rate limit there means the account's shared read budget is exhausted, not
-that enrollment is missing.
+rate limit there means the shared budget is exhausted, not that enrollment is
+missing, and the error names the exhausted budget and when it resets from
+`op service-account ratelimit`.
+
+Every resolution other than an ambient variable appends one JSON line to
+`~/.toolkit/logs/credential-reads.jsonl` (rotated to `.1` past 10 MB):
+`ts`, `host`, `runtime` (`installed` or `source`), `command` (the first two
+command words), `ppid`, `name`, `backend` (`cache`, `delegated`,
+`service-account`, `config` or `keychain`; `null` on failure) and `outcome`
+(`ok`, `rate-limited` or `error`). Values are never logged.
+`scripts/onepassword/with-service-account.sh` appends a `wrapper` line for each
+command it starts. To see what spent the budget:
+
+```bash
+jq -r 'select(.backend == "service-account" or .backend == "config" or .backend == "wrapper") | [.host, .runtime, .command, .name] | @tsv' \
+  ~/.toolkit/logs/credential-reads.jsonl | sort | uniq -c | sort -rn | head
+```
 
 Commands outside toolkit reuse the same Keychain credential by wrapping
 `op run` or `op read` with `scripts/onepassword/with-service-account.sh`, so
@@ -1082,7 +1107,7 @@ value or unparseable file is an error, not a fallback.
 | `BRIM_SYNC_S3_CREDENTIALS` / `brim.sync.s3.credentials`           | `profile` (`broker` on agent hosts)                   |
 | `BRIM_SYNC_RECIPIENT` / `brim.sync.recipient`                     | the archive's age public key                          |
 | `BRIM_SYNC_PULL_SINCE_DAYS` / `brim.sync.pull.since.days`         | `30`                                                  |
-| `CREDENTIAL_CACHE_TTL_SECONDS` / `credential.cache.ttl.seconds`   | `3600` (`0` disables the Keychain read cache)         |
+| `CREDENTIAL_CACHE_TTL_SECONDS` / `credential.cache.ttl.seconds`   | `86400` (`0` disables the Keychain read cache)        |
 
 The history daemon runs under launchd without your shell environment, so set
 its keys in the TOML file. It reads them once at start.
