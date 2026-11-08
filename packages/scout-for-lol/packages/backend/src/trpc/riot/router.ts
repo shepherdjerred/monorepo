@@ -29,6 +29,7 @@ export const riotAccountRouter = router({
       })),
       linkingEnabled: await isPolicyEnabled("riot_account_linking_enabled", {
         user: ctx.webSession.discordId,
+        stage: configuration.environment,
       }),
       linkingConfigured:
         configuration.riotRsoClientId !== undefined &&

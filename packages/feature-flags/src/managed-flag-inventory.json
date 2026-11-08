@@ -2047,7 +2047,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The existing Riot Sign On client credentials and exact callback are not provisioned; live account ownership and notification acceptance remain pending.",
+          "issue": "AI-468",
+          "enableWhen": "Provision beta RSO credentials and callback, release the required bootstrap through GitOps, verify live ownership and notification controls, and authorize global beta linking.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Production Riot Sign On provisioning and live account ownership and notification acceptance remain pending.",
+          "issue": "AI-468",
+          "enableWhen": "Accept the beta flow, provision production RSO credentials and callback, release the required bootstrap through GitOps, verify live behavior, and authorize global production linking.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout-consumer-player-profiles-enabled",

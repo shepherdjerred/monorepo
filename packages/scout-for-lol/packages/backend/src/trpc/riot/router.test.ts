@@ -3,6 +3,7 @@ import { DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import configuration, {
   resetConfigurationForTests,
 } from "#src/configuration.ts";
+import type { FlagAttributes } from "#src/configuration/flags.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import {
@@ -15,12 +16,17 @@ import {
   RIOT_LINK_COOKIE,
 } from "./link-cookie.ts";
 
-const stubs = vi.hoisted(() => ({ enabled: true, verify: vi.fn() }));
+const stubs = vi.hoisted(() => ({
+  enabled: true,
+  betaOnly: false,
+  verify: vi.fn(),
+}));
 vi.mock("#src/configuration/flags.ts", async () => ({
   ...(await vi.importActual<Record<string, unknown>>(
     "#src/configuration/flags.ts",
   )),
-  isPolicyEnabled: async () => stubs.enabled,
+  isPolicyEnabled: async (_name: string, attributes: FlagAttributes = {}) =>
+    stubs.enabled && (!stubs.betaOnly || attributes["stage"] === "beta"),
 }));
 vi.mock("./provider.ts", async () => ({
   ...(await vi.importActual<Record<string, unknown>>("./provider.ts")),
@@ -49,6 +55,7 @@ const appOrigin = testAppOrigin();
 
 beforeEach(async () => {
   stubs.enabled = true;
+  stubs.betaOnly = false;
   stubs.verify.mockReset();
   stubs.verify.mockResolvedValue(identity);
   await db.riotOAuthLinkAttempt.deleteMany();
@@ -187,7 +194,7 @@ async function route(request: Request) {
   return response;
 }
 
-async function startFlow() {
+async function requestStart() {
   const { jwt } = await signSession({ discordId: owner });
   const claims = await verifySession(jwt);
   if (claims === null) throw new Error("Invalid test session");
@@ -201,6 +208,11 @@ async function startFlow() {
       },
     }),
   );
+  return { response, claims };
+}
+
+async function startFlow() {
+  const { response, claims } = await requestStart();
   expect(response.status).toBe(200);
   const authorize = new URL(
     RiotLinkStartResponseSchema.parse(await response.json()).authorizeUrl,
@@ -219,6 +231,27 @@ async function startFlow() {
 }
 
 describe("Riot HTTP handshake", () => {
+  test.each(["beta", "prod"] as const)(
+    "applies beta-only linking to both settings and sign-in in %s",
+    async (stage) => {
+      stubs.betaOnly = true;
+      const environment = vi
+        .spyOn(configuration, "environment", "get")
+        .mockReturnValue(stage);
+      try {
+        const ownerCaller = await caller();
+        const listing = await ownerCaller.riotAccount.list();
+        expect(listing.linkingEnabled).toBe(stage === "beta");
+        const { response } = await requestStart();
+        expect(response.status).toBe(stage === "beta" ? 200 : 403);
+        expect(await db.riotOAuthLinkAttempt.count()).toBe(
+          stage === "beta" ? 1 : 0,
+        );
+      } finally {
+        environment.mockRestore();
+      }
+    },
+  );
   test("uses a Lax HttpOnly flow cookie and finishes under the existing Strict session", async () => {
     const flow = await startFlow();
     expect(flow.header).toContain("HttpOnly");
@@ -277,17 +310,7 @@ describe("Riot HTTP handshake", () => {
     );
     expect(anonymous.status).toBe(401);
     stubs.enabled = false;
-    const { jwt } = await signSession({ discordId: owner });
-    const disabled = await route(
-      new Request(`${appOrigin}/api/auth/riot/start`, {
-        method: "POST",
-        headers: {
-          Cookie: `scout_session=${jwt}; scout_csrf=csrf`,
-          Origin: appOrigin,
-          "X-CSRF-Token": "csrf",
-        },
-      }),
-    );
+    const { response: disabled } = await requestStart();
     expect(disabled.status).toBe(403);
   });
 });

@@ -75,6 +75,7 @@ async function start(request: Request): Promise<Response> {
   if (
     !(await isPolicyEnabled("riot_account_linking_enabled", {
       user: ctx.webSession.discordId,
+      stage: configuration.environment,
     }))
   ) {
     throw new TRPCError({
