@@ -98,7 +98,7 @@ final class ServerGateTest {
   }
 
   @Test
-  void shippedWelcomeGateHasApprovedCircleAndAllFourDestinations() throws Exception {
+  void shippedWelcomeGateHasApprovedCircleAndAllDestinations() throws Exception {
     var yaml = Files.readString(Path.of("../../../server/owned/plugins/TheStorm/stargates.yml"));
     var result = StrictYaml.parse("stargates.yml", yaml, StargateConfig.class);
     assertThat(result).isInstanceOf(Result.Ok.class);
@@ -110,7 +110,7 @@ final class ServerGateTest {
     assertThat(gate.allowPreservedPortal()).isTrue();
     assertThat(gate.destinations())
         .extracting(ServerGate.Destination::label)
-        .containsExactly("2026", "2015", "Skylands", "Creative");
+        .containsExactly("2026", "2015", "2016", "Skylands", "Creative");
   }
 
   @Test

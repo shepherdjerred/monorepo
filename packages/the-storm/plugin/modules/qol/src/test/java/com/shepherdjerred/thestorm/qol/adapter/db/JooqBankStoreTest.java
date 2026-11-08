@@ -39,6 +39,17 @@ final class JooqBankStoreTest {
   }
 
   @Test
+  void accountResetDeletesOwnedBanksAndTheirGrantsOnOtherBanks() {
+    var at = new Spot("world", 1, 64, 2);
+    var alice = new StoredBank("alice", ALICE, at, at, Map.of(BOB, BankRole.ADD), List.of());
+    var bob = new StoredBank("bob", BOB, at, at, Map.of(ALICE, BankRole.MANAGE), List.of());
+    store.save(alice).join();
+    store.save(bob).join();
+    new JooqPlayerReset(database).reset(ALICE).join();
+    assertThat(store.loadAll().join()).containsExactly(bob.withoutGrant(ALICE));
+  }
+
+  @Test
   void aBankAndItsShelfSurviveARestart() {
     var bank =
         new StoredBank(

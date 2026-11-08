@@ -55,9 +55,17 @@ public class ShopsTestPlugin extends JavaPlugin {
   static final class TestProtection implements Protection {
     final Set<ProtectedAction> denied = new HashSet<>();
     boolean sameLand = true;
+    boolean restorationAllowed = true;
+    Runnable beforeCheck = () -> {};
+
+    @Override
+    public boolean mayRestoreHistoricalShop(Location location) {
+      return restorationAllowed;
+    }
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
+      beforeCheck.run();
       return denied.contains(action)
           ? new Decision.Denied(Component.text("This land belongs to Aegis."))
           : Decision.allowed();
@@ -88,6 +96,12 @@ public class ShopsTestPlugin extends JavaPlugin {
     return ((ReadyServerShops) services.require(ServerShops.class)).isReady();
   }
 
+  private @org.jspecify.annotations.Nullable ModuleContext moduleContext;
+
+  ModuleContext context() {
+    return Objects.requireNonNull(moduleContext, "module context");
+  }
+
   @Override
   public void onEnable() {
     var directory = Objects.requireNonNull(ShopsTestPlugin.directory, "directory");
@@ -105,6 +119,9 @@ public class ShopsTestPlugin extends JavaPlugin {
     this.database = database;
     services.provide(Wallets.class, wallets);
     services.provide(
+        com.shepherdjerred.thestorm.core.world.ChunkTickets.class,
+        new com.shepherdjerred.thestorm.core.world.ChunkTickets(this));
+    services.provide(
         MoneyFormatter.class,
         new MoneyFormatter() {
           @Override
@@ -118,6 +135,13 @@ public class ShopsTestPlugin extends JavaPlugin {
           }
         });
     services.provide(Protection.class, protection);
+    // Chunk discovery is exercised on Paper; MockBukkit cannot enumerate block entities.
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+        chunk -> new org.bukkit.block.BlockState[0]);
+    services.provide(
+        com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class,
+        new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry());
     services.provide(
         com.shepherdjerred.thestorm.core.protection.ManagedTrades.class, location -> true);
     services.provide(
@@ -146,6 +170,7 @@ public class ShopsTestPlugin extends JavaPlugin {
             RandomGenerator.getDefault(),
             getComponentLogger(),
             com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
+    moduleContext = context;
     new ShopsModule().enable(context);
   }
 

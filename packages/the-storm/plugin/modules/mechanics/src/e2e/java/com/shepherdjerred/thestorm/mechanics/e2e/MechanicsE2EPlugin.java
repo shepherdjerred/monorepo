@@ -56,7 +56,10 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     var database = StormDatabase.open(getDataPath().resolve("mechanics-e2e.db"));
     this.database = database;
     var services = new Services();
-    services.provide(Protection.class, new OpenProtection());
+    services.provide(Protection.class, new OpenProtection(productionProtection()));
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+        org.bukkit.Chunk::getTileEntities);
     services.provide(
         BlockChanges.class,
         new AuditedBlockChanges(
@@ -91,7 +94,6 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
             RandomGenerator.getDefault(),
             getComponentLogger(),
             com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
-    new MechanicsModule().enable(context);
     var world = getServer().getWorld("world");
     if (world == null) {
       throw new IllegalStateException("Paper did not load the E2E world");
@@ -99,6 +101,34 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     prepareBridge(world);
     prepareSuperPush(world);
     prepareCrush(world);
+    var worldSignProof = "1".equals(System.getenv("STORM_E2E_WORLD_SIGNS"));
+    if (worldSignProof) CircuitFixtures.prepare(world);
+    new MechanicsModule().enable(context);
+    if (worldSignProof) {
+      getLifecycleManager()
+          .registerEventHandler(
+              io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents.COMMANDS,
+              event ->
+                  event
+                      .registrar()
+                      .register(
+                          io.papermc.paper.command.brigadier.Commands.literal("stormworldsignproof")
+                              .executes(
+                                  command -> {
+                                    var _ =
+                                        com.shepherdjerred.thestorm.mechanics.adapter.paper
+                                            .WorldGatePaperProof.run(context)
+                                            .whenComplete(
+                                                (ignored, error) -> {
+                                                  if (error != null)
+                                                    getComponentLogger()
+                                                        .error(
+                                                            "WORLD_STARGATE_PAPER_FAILED", error);
+                                                });
+                                    return 1;
+                                  })
+                              .build()));
+    }
     getServer().getPluginManager().registerEvents(this, this);
     getComponentLogger().info("Enabled real-Paper mechanics E2E harness");
   }
@@ -219,10 +249,52 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     block.setBlockData(state, false);
   }
 
+  private Protection productionProtection() {
+    var plugin =
+        java.util.Objects.requireNonNull(getServer().getPluginManager().getPlugin("TheStorm"));
+    try {
+      return Protection.class.cast(
+          plugin.getClass().getMethod("service", Class.class).invoke(plugin, Protection.class));
+    } catch (ReflectiveOperationException error) {
+      throw new IllegalStateException("Production protection service is unavailable", error);
+    }
+  }
+
   private static final class OpenProtection implements Protection {
+    private final Protection production;
+
+    OpenProtection(Protection production) {
+      this.production = production;
+    }
+
+    @Override
+    public java.util.Optional<UUID> automationActor(Location location) {
+      if (location.getBlockX() == 532) return java.util.Optional.of(new UUID(0, 532));
+      if (location.getBlockX() == 536) return java.util.Optional.of(new UUID(0, 536));
+      return java.util.Optional.of(Protection.SERVER_AUTOMATION);
+    }
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
+      if (action == ProtectedAction.OPEN_CONTAINER
+          || action == ProtectedAction.INSERT_ITEM
+          || action == ProtectedAction.REMOVE_ITEM)
+        return production.check(player, action, location);
+      if (location.getBlockX() == 532
+          && action == ProtectedAction.USE_REDSTONE
+          && !player.equals(new UUID(0, 532)))
+        return new Decision.Denied(Component.text("Private wireless receiver fixture"));
+      if (location.getBlockX() >= 606
+          && location.getBlockX() <= 610
+          && location.getBlockY() >= -37
+          && (action == ProtectedAction.AUTOMATIC_BUILD
+              || action == ProtectedAction.AUTOMATIC_BREAK))
+        return new Decision.Denied(Component.text("Protected tree canopy fixture"));
+      if (location.getBlockX() == 592
+          && location.getBlockZ() < 0
+          && (action == ProtectedAction.AUTOMATIC_BUILD
+              || action == ProtectedAction.AUTOMATIC_BREAK))
+        return new Decision.Denied(Component.text("Protected crop fixture"));
       return Decision.allowed();
     }
 

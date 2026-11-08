@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.shops.adapter.content.HistoricalShopCatalog;
+import com.shepherdjerred.thestorm.shops.adapter.db.JooqShopStore;
 import com.shepherdjerred.thestorm.shops.app.Background;
 import com.shepherdjerred.thestorm.shops.app.CatalogTrades;
 import com.shepherdjerred.thestorm.shops.app.ChestShops;
@@ -33,6 +35,56 @@ import org.bukkit.plugin.IllegalPluginAccessException;
 public final class ShopsPaper {
 
   private ShopsPaper() {}
+
+  public record HistoricalState(
+      ShopRegistry registry,
+      JooqShopStore store,
+      List<HistoricalShopCatalog.Entry> entries,
+      java.util.Map<String, Long> completed,
+      List<Catalog> catalogs) {}
+
+  /** Restores reviewed historical shops before publishing the registry as ready. */
+  public record HistoricalRestoration(
+      java.util.concurrent.CompletableFuture<Void> completion, Runnable retryChangedContainers) {}
+
+  public static HistoricalRestoration restoreHistorical(
+      ModuleContext context, ShopsConfig config, HistoricalState state) {
+    var plugin = context.plugin();
+    var blocks =
+        new ShopBlocks(
+            plugin,
+            state.registry(),
+            containers(config.chestShops().containers()),
+            context
+                .services()
+                .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                .epochs());
+    var importer =
+        new HistoricalShops(
+            new HistoricalShops.Services(
+                plugin,
+                state.registry(),
+                blocks,
+                state.store(),
+                context.services().require(Protection.class),
+                new ServerOffers(state.catalogs(), state.registry())),
+            new HistoricalShops.ImportRuntime(
+                context.scheduler().mainThread(),
+                context.time(),
+                context.logger(),
+                (world, x, z) -> world.getChunkAtAsync(x, z),
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.world.ChunkTickets.class),
+                state.completed()));
+    plugin.getServer().getPluginManager().registerEvents(importer, plugin);
+    return new HistoricalRestoration(
+        importer.restore(
+            state.entries().stream()
+                .filter(entry -> !config.chestShops().shopsDisabledIn(entry.world()))
+                .toList()),
+        importer::retryChangedContainers);
+  }
 
   /**
    * The container materials a config names, each checked against the running game.
@@ -113,7 +165,14 @@ public final class ShopsPaper {
             context.logger());
     var settings = config.chestShops();
     var notices = new OwnerNoticesListener(server, state.store(), replies, settings.summaryLines());
-    var blocks = new ShopBlocks(plugin, state.registry(), containers(settings.containers()));
+    var blocks =
+        new ShopBlocks(
+            plugin,
+            state.registry(),
+            containers(settings.containers()),
+            services
+                .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                .epochs());
     services.provide(
         com.shepherdjerred.thestorm.core.protection.ReservedContainers.class,
         new ShopReservations(state.registry()));
@@ -139,8 +198,17 @@ public final class ShopsPaper {
                 blocks,
                 services.require(com.shepherdjerred.thestorm.core.protection.ManagedTrades.class)));
     var templates = new ItemTemplates();
+    var parser = new ShopSignParser(settings.maxQuantity(), settings.adminShopLabel());
+    var discovery =
+        new WorldShopDiscovery(
+            context,
+            blocks,
+            state.store(),
+            new WorldShopDiscovery.Parsing(
+                parser, templates, new ServerOffers(state.catalogs(), state.registry())));
     var protection = services.require(Protection.class);
     var events = server.getPluginManager();
+    events.registerEvents(discovery, plugin);
     ShopsPermissions.register(events);
     events.registerEvents(
         new ShopReadinessListener(state.registry(), containers(settings.containers())), plugin);
@@ -161,7 +229,7 @@ public final class ShopsPaper {
     events.registerEvents(
         new ShopSignListener(
             new ShopSignListener.Deps(
-                new ShopSignParser(settings.maxQuantity(), settings.adminShopLabel()),
+                parser,
                 settings.adminShopLabel(),
                 chestShops,
                 state.registry(),
@@ -217,7 +285,11 @@ public final class ShopsPaper {
     return new Installed(
         serverShops,
         new ShutdownDrain(mainThread, locks, journal),
-        chestShops::closeLoopingAdminShops,
+        () -> {
+          state.registry().observeLastId(blocks.lastWorldId());
+          discovery.scanLoaded();
+          chestShops.closeLoopingAdminShops();
+        },
         player -> {
           state.registry().reset(player);
           usage.reset(player);

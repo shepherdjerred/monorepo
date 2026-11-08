@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.shops.domain.config.ShopsConfig;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jspecify.annotations.Nullable;
 
@@ -30,7 +31,7 @@ public final class ShopsModule implements StormModule {
   private @Nullable ShutdownDrain drain;
   private @Nullable ComponentLogger logger;
 
-  private record Loaded(List<SignShop> shops, long lastId) {}
+  private record Loaded(List<SignShop> shops, long lastId, List<Long> pending) {}
 
   @Override
   public String id() {
@@ -67,19 +68,39 @@ public final class ShopsModule implements StormModule {
     var installed =
         ShopsPaper.install(context, config, new ShopsPaper.State(registry, store, catalogs));
     context.services().provide(ServerShops.class, installed.serverShops());
+    com.shepherdjerred.thestorm.shops.adapter.paper.HistoricalShopOperations.install(
+        context,
+        config,
+        new com.shepherdjerred.thestorm.shops.adapter.paper.HistoricalShopOperations.State(
+            registry, store, catalogs));
     var reset =
         new com.shepherdjerred.thestorm.shops.adapter.db.JooqPlayerReset(context.database());
     context
         .services()
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
         .register(
-            id(), player -> reset.reset(player).thenRun(() -> installed.forget().accept(player)));
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenRunAsync(
+                        () -> installed.forget().accept(player), context.scheduler().mainThread()));
     this.drain = installed.drain();
     this.logger = context.logger();
+    var shops = store.loadShops();
+    var lastId = store.lastShopId();
+    var pending = store.pendingHistoricalShops();
     var _ =
-        store
-            .loadShops()
-            .thenCombine(store.lastShopId(), Loaded::new)
+        CompletableFuture.allOf(
+                shops,
+                lastId,
+                pending,
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                    .epochs()
+                    .loaded())
+            .thenApply(ignored -> new Loaded(shops.join(), lastId.join(), pending.join()))
             .whenCompleteAsync(
                 (loaded, failure) -> {
                   if (!context.plugin().isEnabled()) {
@@ -93,17 +114,26 @@ public final class ShopsModule implements StormModule {
                   }
                   try {
                     registry.initialize(loaded.shops(), loaded.lastId());
-                    // A catalog edit or stale sign can close an admin shop. Do this before trading.
-                    installed.reconcile().run();
+                    closeInterrupted(context, registry, loaded.pending());
                     registry.publishReady();
-                    context.logger().info("Loaded {} shops", loaded.shops().size());
+                    installed.reconcile().run();
+                    context.logger().info("Indexed {} world shops", registry.all().size());
                   } catch (RuntimeException error) {
+                    registry.suspend();
                     context
                         .logger()
                         .error("Shops remain guarded: startup reconciliation failed", error);
                   }
                 },
                 context.scheduler().mainThread());
+  }
+
+  private static void closeInterrupted(
+      ModuleContext context, ShopRegistry registry, List<Long> ids) {
+    for (var id : ids) {
+      registry.retainClosure(id, "historical import needs staff reconciliation");
+      context.logger().error("Historical shop {} has an interrupted import; it remains closed", id);
+    }
   }
 
   @Override

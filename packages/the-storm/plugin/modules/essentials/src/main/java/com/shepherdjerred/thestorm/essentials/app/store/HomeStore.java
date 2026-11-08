@@ -29,6 +29,9 @@ public interface HomeStore {
    */
   CompletableFuture<Boolean> insertBedIfAbsent(UUID player, Position position);
 
+  /** Removes only the exact bed position, for cancelling a raced backfill. */
+  CompletableFuture<Boolean> deleteBedIfMatches(UUID player, Position position);
+
   /** Deletes a home; false if it did not exist. */
   CompletableFuture<Boolean> delete(UUID player, PlaceName name);
 

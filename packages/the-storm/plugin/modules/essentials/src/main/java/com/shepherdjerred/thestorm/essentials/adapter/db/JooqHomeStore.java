@@ -20,14 +20,32 @@ import java.util.concurrent.CompletableFuture;
 public final class JooqHomeStore implements HomeStore {
 
   private final StormDatabase database;
+  private final CompletableFuture<Void> ready;
 
   public JooqHomeStore(StormDatabase database) {
+    this(database, CompletableFuture.completedFuture(null));
+  }
+
+  /**
+   * Waits for the historical import attempt, whose failure is reported by its caller. A failed
+   * archive import must not disable ordinary home storage.
+   */
+  public JooqHomeStore(StormDatabase database, CompletableFuture<Void> ready) {
     this.database = database;
+    this.ready = ready.handle((ignored, failure) -> null);
+  }
+
+  private <T> CompletableFuture<T> read(java.util.function.Function<org.jooq.DSLContext, T> work) {
+    return ready.thenCompose(ignored -> database.read(work));
+  }
+
+  private <T> CompletableFuture<T> write(java.util.function.Function<org.jooq.DSLContext, T> work) {
+    return ready.thenCompose(ignored -> database.write(work));
   }
 
   @Override
   public CompletableFuture<List<Home>> homes(UUID player) {
-    return database.read(
+    return read(
         dsl ->
             dsl.selectFrom(ESSENTIALS_HOMES)
                 .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
@@ -38,7 +56,7 @@ public final class JooqHomeStore implements HomeStore {
   @Override
   public CompletableFuture<Result<HomeRules.Change, HomeError>> set(
       UUID player, Home home, int limit) {
-    return database.write(
+    return write(
         dsl -> {
           var existing =
               dsl.select(ESSENTIALS_HOMES.NAME)
@@ -73,7 +91,7 @@ public final class JooqHomeStore implements HomeStore {
 
   @Override
   public CompletableFuture<Set<UUID>> bedOwners() {
-    return database.read(
+    return read(
         dsl ->
             dsl.select(ESSENTIALS_HOMES.PLAYER)
                 .from(ESSENTIALS_HOMES)
@@ -83,7 +101,7 @@ public final class JooqHomeStore implements HomeStore {
 
   @Override
   public CompletableFuture<Boolean> insertBedIfAbsent(UUID player, Position position) {
-    return database.write(
+    return write(
         dsl ->
             dsl.insertInto(ESSENTIALS_HOMES)
                     .set(ESSENTIALS_HOMES.PLAYER, player.toString())
@@ -101,8 +119,26 @@ public final class JooqHomeStore implements HomeStore {
   }
 
   @Override
+  public CompletableFuture<Boolean> deleteBedIfMatches(UUID player, Position position) {
+    return write(
+        dsl ->
+            dsl.deleteFrom(ESSENTIALS_HOMES)
+                    .where(
+                        ESSENTIALS_HOMES.PLAYER.eq(player.toString()),
+                        ESSENTIALS_HOMES.NAME.eq(HomeRules.BED.value()),
+                        ESSENTIALS_HOMES.WORLD.eq(position.world()),
+                        ESSENTIALS_HOMES.X.eq(position.x()),
+                        ESSENTIALS_HOMES.Y.eq(position.y()),
+                        ESSENTIALS_HOMES.Z.eq(position.z()),
+                        ESSENTIALS_HOMES.YAW.eq((double) position.yaw()),
+                        ESSENTIALS_HOMES.PITCH.eq((double) position.pitch()))
+                    .execute()
+                == 1);
+  }
+
+  @Override
   public CompletableFuture<Boolean> delete(UUID player, PlaceName name) {
-    return database.write(
+    return write(
         dsl ->
             dsl.deleteFrom(ESSENTIALS_HOMES)
                     .where(ESSENTIALS_HOMES.PLAYER.eq(player.toString()))
@@ -125,7 +161,7 @@ public final class JooqHomeStore implements HomeStore {
 
   @Override
   public CompletableFuture<Boolean> rename(UUID player, PlaceName from, PlaceName to) {
-    return database.write(
+    return write(
         sql -> {
           var owner = ESSENTIALS_HOMES.PLAYER.eq(player.toString());
           if (sql.fetchExists(

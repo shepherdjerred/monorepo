@@ -62,16 +62,18 @@ final class ShopClickListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   public void onClick(PlayerInteractEvent event) {
-    if (!blocks.registry().isReady()) {
-      return;
-    }
     var click = click(event.getAction());
     var block = event.getClickedBlock();
     if (click.isEmpty() || block == null || event.getHand() != EquipmentSlot.HAND) {
       return;
     }
+    if (!blocks.registry().isReady()) {
+      loading(event, blocks, block);
+      return;
+    }
     var shop = blocks.shopAtSign(block);
     if (shop.isEmpty()) {
+      pending(event, block);
       return;
     }
     var player = event.getPlayer();
@@ -97,6 +99,22 @@ final class ShopClickListener implements Listener {
     }
     event.setCancelled(true);
     trade(player, found, settings.directionOf(click.orElseThrow()), tradingOwn);
+  }
+
+  private void pending(PlayerInteractEvent event, Block block) {
+    if (!blocks.isPendingShopSign(block)) return;
+    event.setCancelled(true);
+    event
+        .getPlayer()
+        .sendMessage(
+            Replies.info("This shop needs its owner or item identified before it can trade."));
+  }
+
+  static void loading(PlayerInteractEvent event, ShopBlocks blocks, Block block) {
+    if (blocks.isPendingShopSign(block)) {
+      event.setCancelled(true);
+      event.getPlayer().sendMessage(Replies.info("Shops are loading. Please try again shortly."));
+    }
   }
 
   /**
@@ -157,17 +175,21 @@ final class ShopClickListener implements Listener {
       player.sendMessage(Replies.error("You cannot " + action + " that item here."));
       return;
     }
+    if (item.bundleDeal()
+        && templates.bundleItems(item).stream()
+            .anyMatch(
+                part ->
+                    !ShopMaterialAccess.may(player, action, ItemTemplates.key(part.getType())))) {
+      player.sendMessage(Replies.error("You cannot trade an item in this bundle here."));
+      return;
+    }
     var visit =
         new ChestShops.Visit(
             shop,
             direction,
             new Customer(player.getUniqueId(), player.getName()),
-            InventoryHoldings.ofPlayer(
-                player.getServer(),
-                player.getUniqueId(),
-                templates.template(item),
-                ShopBlocks.locationOf(player)),
-            shop.isAdmin() ? Holdings.UNLIMITED : containerHoldings(shop, item),
+            playerHoldings(player, item),
+            shop.unlimitedStock() ? Holdings.UNLIMITED : containerHoldings(shop, item),
             shop.container()
                 .flatMap(blocks::block)
                 .map(ShopBlocks::containerBlocks)
@@ -195,17 +217,40 @@ final class ShopClickListener implements Listener {
 
   private Holdings containerHoldings(SignShop shop, ItemFingerprint item) {
     var container = shop.container().orElseThrow();
+    if (item.bundleDeal()) {
+      return new BundleHoldings(
+          () -> blocks.block(container).flatMap(ShopBlocks::inventoryOf),
+          templates.bundleItems(item),
+          () -> blocks.center(container));
+    }
     return InventoryHoldings.of(
         () -> blocks.block(container).flatMap(ShopBlocks::inventoryOf),
         templates.template(item),
         () -> blocks.center(container));
   }
 
+  private Holdings playerHoldings(Player player, ItemFingerprint item) {
+    var server = player.getServer();
+    var id = player.getUniqueId();
+    var at = ShopBlocks.locationOf(player);
+    if (item.bundleDeal()) {
+      return new BundleHoldings(
+          () -> Optional.ofNullable(server.getPlayer(id)).map(Player::getInventory),
+          templates.bundleItems(item),
+          () ->
+              Optional.ofNullable(server.getPlayer(id))
+                  .map(ShopBlocks::locationOf)
+                  .or(() -> Optional.of(at)));
+    }
+    return InventoryHoldings.ofPlayer(server, id, templates.template(item), at);
+  }
+
   private String shopName(SignShop shop) {
     return switch (shop.owner()) {
       case ShopOwner.Player(_, var name) -> name + "'s shop";
       case ShopOwner.Town(_, var name) -> name + "'s shop";
-      case ShopOwner.Admin() -> "the " + settings.adminShopLabel();
+      case ShopOwner.Admin(var finite) ->
+          finite ? "a shop in staff custody" : "the " + settings.adminShopLabel();
     };
   }
 

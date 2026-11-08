@@ -37,13 +37,18 @@ public record SignShop(
     if (quantity < 1) {
       throw new IllegalArgumentException("quantity must be positive: " + quantity);
     }
-    if (!(owner instanceof ShopOwner.Admin) && container.isEmpty()) {
+    if (container.isEmpty() && (!(owner instanceof ShopOwner.Admin admin) || admin.finiteStock())) {
       throw new IllegalArgumentException("a player's or town's shop needs a container");
     }
   }
 
   public boolean isAdmin() {
     return owner instanceof ShopOwner.Admin;
+  }
+
+  /** A server-owned historical shop can use real stock while ownership is unresolved. */
+  public boolean unlimitedStock() {
+    return owner instanceof ShopOwner.Admin(var finite) && !finite;
   }
 
   public SignShop withItem(ItemFingerprint fingerprint) {
@@ -57,10 +62,14 @@ public record SignShop(
         switch (owner) {
           case ShopOwner.Player(_, var name) -> name;
           case ShopOwner.Town(_, var name) -> name;
-          case ShopOwner.Admin() -> adminShopLabel;
+          case ShopOwner.Admin(var finite) -> finite ? "Staff custody" : adminShopLabel;
         };
     var itemLabel =
-        item.map(found -> ItemNames.signLabel(found.material(), found.special()))
+        item.map(
+                found ->
+                    found.bundleDeal()
+                        ? "Bundle deal"
+                        : ItemNames.signLabel(found.material(), found.special()))
             .orElse(ItemLine.PENDING_MARKER);
     return SignLayout.render(ownerLabel, quantity, prices, itemLabel);
   }

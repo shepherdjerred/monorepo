@@ -352,6 +352,18 @@ final class LockGuard {
             landTown(block), knowsPassword(actor.player(), lock), inGroup(player, lock)));
   }
 
+  /** Offline automation uses durable owner/trust/town rights, without online permission groups. */
+  LockAccess.Movement movement(UUID player, boolean bypass, Block block) {
+    var lock = lockOf(block);
+    return lock == null
+        ? LockAccess.Movement.FULL
+        : access.movement(
+            lock,
+            player,
+            bypass,
+            new LockAccess.Approach(landTown(block), knowsPassword(player, lock), false));
+  }
+
   boolean knowsPassword(UUID player, Lock lock) {
     return passwords.getOrDefault(player, Set.of()).contains(lock.id());
   }

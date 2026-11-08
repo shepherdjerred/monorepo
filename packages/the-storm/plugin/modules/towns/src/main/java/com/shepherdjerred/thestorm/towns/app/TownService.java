@@ -340,12 +340,14 @@ public final class TownService {
 
   /** {@code town} with its owner's live Governor level when they are online. */
   public Town withLiveLevel(Town town) {
+    if (town.historicalCustody()) return town;
     var live = levels.liveLevel(town.owner());
     return live.isPresent() ? town.withGovernorLevel(live.getAsInt()) : town;
   }
 
   /** The most chunks {@code town} may hold now. */
   public int maxClaims(Town town) {
+    if (town.historicalCustody()) return 0;
     return claiming.limits().maxClaims(withLiveLevel(town));
   }
 

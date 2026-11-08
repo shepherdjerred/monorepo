@@ -43,20 +43,23 @@ record Kit(
     return sealedWorlds.isSealed(world);
   }
 
-  /**
-   * Whether {@code player} may use {@code feature}'s sign, telling them why not. A sign with no
-   * recorded creator was not built through this plugin and must be rewritten first.
-   */
+  /** Whether {@code player} may use {@code feature}'s sign, telling them why not. */
   Optional<UUID> admit(Player player, Feature feature, Sign sign) {
     var refusal = gatekeeper.mayUse(feature, player::hasPermission);
     if (refusal.isPresent()) {
       Replies.error(player, feature, refusal.orElseThrow());
       return Optional.empty();
     }
-    var owner = signs.owner(sign);
-    if (owner.isEmpty()) {
-      Replies.error(player, feature, NOT_SET_UP);
-    }
-    return owner;
+    // An unsigned imported sign can act with the current user's existing land rights.
+    // It does not acquire creator ownership merely because somebody clicked it.
+    return Optional.of(
+        signs
+            .owner(sign)
+            .or(
+                () ->
+                    feature == Feature.ELEVATOR
+                        ? guard.automationActor(sign.getBlock())
+                        : Optional.empty())
+            .orElseGet(player::getUniqueId));
   }
 }

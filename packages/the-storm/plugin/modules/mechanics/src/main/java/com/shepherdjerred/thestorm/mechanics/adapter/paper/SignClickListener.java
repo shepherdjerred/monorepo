@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.SignView;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Mechanism;
 import java.util.UUID;
@@ -81,16 +82,37 @@ final class SignClickListener implements Listener {
     if (mechanism == Mechanism.HIDDEN_SWITCH || mechanism.isPiston()) {
       return;
     }
-    var owner = kit.admit(player, feature, sign);
+    var currentSign = block.getState(false) instanceof Sign current ? current : sign;
+    var owner = kit.admit(player, feature, currentSign);
     if (owner.isEmpty()) {
       return;
     }
     var grid = new PaperGrid(block.getWorld());
     var pos = PaperGrid.pos(block);
-    var entry = kit.guard().check(player.getUniqueId(), ProtectedAction.INTERACT, grid, pos);
+    var entry =
+        mechanism.isLift()
+            ? kit.guard().checkLift(player.getUniqueId(), owner.orElseThrow(), grid, pos)
+            : kit.guard().check(player.getUniqueId(), ProtectedAction.INTERACT, grid, pos);
     if (entry instanceof Decision.Denied(var reason)) {
       Replies.error(player, feature, reason);
       return;
+    }
+    if (mechanism.isStructure() && !kit.signs().hasBinding(currentSign)) {
+      var use = new Structures.Use(grid, pos, view);
+      switch (handlers.structures().prepare(owner.orElseThrow(), use)) {
+        case Result.Err<Runnable, net.kyori.adventure.text.Component>(var reason) -> {
+          Replies.error(player, feature, reason);
+          return;
+        }
+        case Result.Ok<Runnable, net.kyori.adventure.text.Component>(var bind) -> {
+          bind.run();
+          var adopted = (Sign) block.getState();
+          kit.signs().setOwner(adopted, owner.orElseThrow());
+          if (!adopted.update(false, false))
+            throw new IllegalStateException(
+                "mechanism sign changed while binding its world structure");
+        }
+      }
     }
     dispatch(new Click(player, block, view, owner.orElseThrow()));
   }

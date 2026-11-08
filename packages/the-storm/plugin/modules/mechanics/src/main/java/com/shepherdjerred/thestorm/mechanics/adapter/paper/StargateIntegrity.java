@@ -42,6 +42,7 @@ final class StargateIntegrity {
   private static boolean check(PaperGrid grid, Stargate gate, StargateNetwork network, Mode mode) {
     if (!grid.world().getUID().equals(gate.worldId()) || !grid.loaded(gate.sign())) return false;
     if (!(grid.block(gate.sign()).getState() instanceof Sign sign)) return false;
+    if (WorldGateData.removed(sign)) return false;
     var view =
         PaperGrid.view(
             grid.block(gate.sign()),

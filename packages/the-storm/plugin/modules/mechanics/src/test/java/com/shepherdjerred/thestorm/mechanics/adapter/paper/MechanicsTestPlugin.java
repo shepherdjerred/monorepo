@@ -82,6 +82,9 @@ public class MechanicsTestPlugin extends JavaPlugin {
           }
         };
     services.provide(Protection.class, protection);
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+        chunk -> new org.bukkit.block.BlockState[0]);
     services.provide(BlockChanges.class, new AuditedBlockChanges(change -> {}));
     services.provide(SealedWorlds.class, sealed);
     var context =

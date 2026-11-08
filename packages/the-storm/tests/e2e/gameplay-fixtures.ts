@@ -252,16 +252,26 @@ async function profileFixtures(
           "agent",
           "rwf",
           "reset",
+          ...(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] === undefined
+            ? []
+            : ["shops"]),
+          ...(Bun.env["STORM_E2E_HISTORICAL_MECHANICS"] === "1"
+            ? ["mechanics"]
+            : []),
         ]),
         fixturesJar,
         rwf: { kits: [], ...rwfTestSettings, maps: suiteMaps },
-        mechanicsE2eJar: path.join(
-          packageRoot,
-          "plugin/modules/mechanics/build/libs/TheStormMechanicsE2E.jar",
-        ),
-        mechanicsConfig: await Bun.file(
-          path.join(content, "mechanics.yml"),
-        ).text(),
+        ...(Bun.env["STORM_E2E_HISTORICAL_MECHANICS"] === "1"
+          ? {}
+          : {
+              mechanicsE2eJar: path.join(
+                packageRoot,
+                "plugin/modules/mechanics/build/libs/TheStormMechanicsE2E.jar",
+              ),
+              mechanicsConfig: await Bun.file(
+                path.join(content, "mechanics.yml"),
+              ).text(),
+            }),
       };
     }
   }

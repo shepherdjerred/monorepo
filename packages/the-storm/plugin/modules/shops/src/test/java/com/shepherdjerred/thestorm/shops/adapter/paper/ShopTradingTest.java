@@ -3,6 +3,12 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.shops.adapter.db.JooqShopStore;
+import com.shepherdjerred.thestorm.shops.app.ServerShops;
+import com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner;
+import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
@@ -143,9 +149,10 @@ final class ShopTradingTest extends ShopsFixture {
     var chest = chest(0);
     var sword = ItemStack.of(Material.DIAMOND_SWORD);
     sword.addUnsafeEnchantment(Enchantment.SHARPNESS, 3);
+    // An empty chest leaves ? pending; stocked chests now fill it immediately.
+    var sign = shop(alice, chest, "", "1", "B 200", "?");
     give(inventoryOf(chest), Material.DIAMOND_SWORD, 1);
     inventoryOf(chest).addItem(sword.clone());
-    var sign = shop(alice, chest, "", "1", "B 200", "?");
     messages(alice);
     alice.getInventory().setItemInMainHand(sword.clone());
 
@@ -193,6 +200,62 @@ final class ShopTradingTest extends ShopsFixture {
     assertThat(messages(alice))
         .containsExactly("[Shop]: Your shop holds 20 Coal with room for 1708 more.");
     assertThat(leftClick.useInteractedBlock()).isNotEqualTo(Event.Result.DENY);
+  }
+
+  @Test
+  void serverCustodyShopsUseFiniteChestStock() throws Exception {
+    var root = admin("Root");
+    var bob = player("Bob", 0);
+    var chest = chest(0);
+    give(inventoryOf(chest), Material.EMERALD, 4);
+    var sign = shop(root, chest, "Admin Shop", "4", "B 60", "emerald");
+    var registry = ((ReadyServerShops) plugin.services.require(ServerShops.class)).registry();
+    var original = registry.atSign(ShopBlocks.pos(sign)).orElseThrow();
+    var stocked =
+        new SignShop(
+            original.id(),
+            original.sign(),
+            original.container(),
+            new ShopOwner.Admin(true),
+            original.quantity(),
+            original.prices(),
+            original.item(),
+            original.createdAt().truncatedTo(java.time.temporal.ChronoUnit.MILLIS));
+    var store = new JooqShopStore(plugin.database());
+    store.deleteShop(original.id()).get(5, TimeUnit.SECONDS);
+    store.saveShop(stocked).get(5, TimeUnit.SECONDS);
+    registry.replace(stocked);
+    new ShopBlocks(plugin, registry, Set.of(Material.CHEST))
+        .rewrite(sign, stocked, stocked.lines("Admin Shop"));
+    assertThat(store.loadShops().get(5, TimeUnit.SECONDS)).contains(stocked);
+    setBalance(bob, 120);
+    click(bob, sign, Action.RIGHT_CLICK_BLOCK);
+    assertThat(awaitLine(bob, "You bought"))
+        .contains("[Shop]: You bought 4 Emerald from a shop in staff custody for 60 crystals.");
+    assertThat(count(inventoryOf(chest), Material.EMERALD)).isZero();
+    assertThat(count(bob.getInventory(), Material.EMERALD)).isEqualTo(4);
+    assertThat(balance(bob)).isEqualTo(60);
+    click(bob, sign, Action.RIGHT_CLICK_BLOCK);
+    assertThat(awaitLine(bob, "Out of stock")).isNotEmpty();
+    assertThat(balance(bob)).isEqualTo(60);
+    assertThat(count(bob.getInventory(), Material.EMERALD)).isEqualTo(4);
+  }
+
+  @Test
+  void ordinaryAdminSignsOnChestsRemainUnlimited() throws Exception {
+    var root = admin("Root");
+    var bob = player("Bob", 0);
+    var chest = chest(0);
+    give(inventoryOf(chest), Material.EMERALD, 4);
+    var sign = shop(root, chest, "Admin Shop", "4", "B 60", "emerald");
+    setBalance(bob, 120);
+    for (var trade = 0; trade < 2; trade++) {
+      click(bob, sign, Action.RIGHT_CLICK_BLOCK);
+      assertThat(awaitLine(bob, "You bought")).isNotEmpty();
+    }
+    assertThat(count(inventoryOf(chest), Material.EMERALD)).isEqualTo(4);
+    assertThat(count(bob.getInventory(), Material.EMERALD)).isEqualTo(8);
+    assertThat(balance(bob)).isZero();
   }
 
   @Test

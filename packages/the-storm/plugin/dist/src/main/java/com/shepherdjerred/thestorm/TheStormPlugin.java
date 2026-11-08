@@ -109,7 +109,10 @@ public final class TheStormPlugin extends JavaPlugin {
     services.provide(
         com.shepherdjerred.thestorm.core.players.VisitPass.class,
         new com.shepherdjerred.thestorm.core.players.VisitPasses());
-    var resets = new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry();
+    var resets =
+        new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry(
+            new com.shepherdjerred.thestorm.core.reset.AccountEpochs(
+                new com.shepherdjerred.thestorm.core.reset.SqlAccountEpochs(db)));
     services.provide(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class, resets);
     resets.diagnostics(message -> getComponentLogger().info("{}", message));
     resets.register("core", players::reset);
@@ -125,6 +128,9 @@ public final class TheStormPlugin extends JavaPlugin {
         PaperSavedPlayerData.locate(
             getServer(), pool, new PaperScheduler(this), getComponentLogger()));
     services.provide(BlockChanges.class, CoreProtectBlocks.create(this));
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
+        org.bukkit.Chunk::getTileEntities);
     getServer()
         .getPluginManager()
         .registerEvents(

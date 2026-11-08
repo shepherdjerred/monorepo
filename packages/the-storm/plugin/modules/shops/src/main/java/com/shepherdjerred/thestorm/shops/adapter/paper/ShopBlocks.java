@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -39,13 +41,42 @@ public final class ShopBlocks {
   private final Set<Material> containers;
   private final NamespacedKey shopIdKey;
   private final NamespacedKey itemKey;
+  private final WorldShopData worldData;
+  private Consumer<Block> discover = ignored -> {};
+  private Consumer<SignShop> index = ignored -> {};
 
   public ShopBlocks(Plugin plugin, ShopRegistry registry, Set<Material> containers) {
+    this(
+        plugin,
+        registry,
+        containers,
+        com.shepherdjerred.thestorm.core.reset.AccountEpochs.inMemory());
+  }
+
+  public ShopBlocks(
+      Plugin plugin,
+      ShopRegistry registry,
+      Set<Material> containers,
+      com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs) {
     this.server = plugin.getServer();
     this.registry = registry;
     this.containers = Set.copyOf(containers);
     this.shopIdKey = new NamespacedKey(plugin, "shop_id");
     this.itemKey = new NamespacedKey(plugin, "shop_item");
+    this.worldData = new WorldShopData(plugin, epochs);
+  }
+
+  boolean legacyOwner(com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner owner) {
+    return worldData.legacyOwner(owner);
+  }
+
+  void discovery(Consumer<Block> discover, Consumer<SignShop> index) {
+    this.discover = discover;
+    this.index = index;
+  }
+
+  long lastWorldId() {
+    return server.getWorlds().stream().mapToLong(worldData::lastId).max().orElse(0);
   }
 
   public ShopRegistry registry() {
@@ -77,6 +108,7 @@ public final class ShopBlocks {
    * never shop signs.
    */
   public static Optional<Block> supportOf(Block sign) {
+    if (!loaded(sign)) return Optional.empty();
     var data = sign.getBlockData();
     if (data instanceof WallSign wall) {
       return Optional.of(sign.getRelative(wall.getFacing().getOppositeFace()));
@@ -89,7 +121,26 @@ public final class ShopBlocks {
 
   /** Whether chest shops may trade from this block. */
   public boolean isShopContainer(Block block) {
-    return containers.contains(block.getType()) && block.getState(false) instanceof Container;
+    return loaded(block)
+        && containers.contains(block.getType())
+        && block.getState(false) instanceof Container;
+  }
+
+  private static boolean loaded(Block block) {
+    return block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4);
+  }
+
+  /** ChestShop also accepts a chest immediately below or beside the sign. */
+  public Optional<Block> connectedContainer(Block sign) {
+    if (!loaded(sign)) return Optional.empty();
+    var support = supportOf(sign).filter(this::isShopContainer);
+    if (support.isPresent()) return support;
+    for (var face :
+        List.of(BlockFace.DOWN, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)) {
+      var neighbor = sign.getRelative(face);
+      if (isShopContainer(neighbor)) return Optional.of(neighbor);
+    }
+    return Optional.empty();
   }
 
   /** The container's blocks: itself, and the other half of a double chest. */
@@ -126,8 +177,24 @@ public final class ShopBlocks {
 
   /** The shops trading from this block or, for a double chest, from either half. */
   public List<SignShop> shopsOnContainer(Block block) {
+    for (var position : containerBlocks(block)) {
+      block(position)
+          .ifPresent(
+              container -> {
+                for (var face :
+                    List.of(
+                        BlockFace.UP,
+                        BlockFace.NORTH,
+                        BlockFace.EAST,
+                        BlockFace.SOUTH,
+                        BlockFace.WEST)) {
+                  shopAtSign(container.getRelative(face));
+                }
+              });
+    }
     return containerBlocks(block).stream()
         .flatMap(pos -> registry.tradingFrom(pos).stream())
+        .filter(shop -> block(shop.sign()).flatMap(this::shopAtSign).isPresent())
         .distinct()
         .toList();
   }
@@ -162,15 +229,95 @@ public final class ShopBlocks {
     return shops.stream().distinct().toList();
   }
 
-  /** The shop whose sign this is, if the sign still carries that shop's id. */
+  /** Reconstructs the current shop from its world identity, visible text and connected chest. */
   public Optional<SignShop> shopAtSign(Block block) {
-    // The registry lookup is cheap; read the block state only for a registered sign.
-    var shop = registry.atSign(pos(block));
-    if (shop.isEmpty() || !(block.getState(false) instanceof Sign sign)) {
+    if (!loaded(block)) return Optional.empty();
+    if (!(block.getState(false) instanceof Sign sign)) {
+      registry.atSign(pos(block)).ifPresent(shop -> registry.evict(shop.id()));
       return Optional.empty();
     }
-    var id = sign.getPersistentDataContainer().get(shopIdKey, PersistentDataType.LONG);
-    return shop.filter(found -> id != null && found.id() == id);
+    var lines = lines(sign);
+    var previous = registry.atSign(pos(block));
+    upgradeIdentity(sign, previous, lines);
+    if (worldData.revoked(sign)) {
+      previous.ifPresent(shop -> registry.evict(shop.id()));
+      return Optional.empty();
+    }
+    var found =
+        worldData
+            .read(sign, lines, connectedContainer(block).map(ShopBlocks::pos))
+            .filter(
+                shop ->
+                    shop.container().isEmpty()
+                        || shop.container()
+                            .flatMap(this::block)
+                            .filter(this::isShopContainer)
+                            .isPresent());
+    if (found.isEmpty()) {
+      previous.ifPresent(shop -> registry.evict(shop.id()));
+      if (registry.isReady() && !worldData.identified(sign)) discover.accept(block);
+      return registry.atSign(pos(block));
+    }
+    var current = found.orElseThrow();
+    var collision = registry.byId(current.id());
+    if (collision.isPresent() && !collision.orElseThrow().sign().equals(current.sign())) {
+      current =
+          new SignShop(
+              registry.reserveId(),
+              current.sign(),
+              current.container(),
+              current.owner(),
+              current.quantity(),
+              current.prices(),
+              current.item(),
+              current.createdAt());
+      stamp(block, current);
+    }
+    if (!previous.equals(Optional.of(current))) {
+      var closure = registry.closure(current.id());
+      previous.ifPresent(shop -> registry.evict(shop.id()));
+      registry.evict(current.id());
+      registry.add(current);
+      var installed = current;
+      closure.ifPresent(reason -> registry.close(installed.id(), reason));
+      index.accept(current);
+    }
+    return Optional.of(current);
+  }
+
+  private void upgradeIdentity(Sign sign, Optional<SignShop> previous, SignLines lines) {
+    var savedId = sign.getPersistentDataContainer().get(shopIdKey, PersistentDataType.LONG);
+    var identity = new NamespacedKey(shopIdKey.getNamespace(), "shop_owner_kind");
+    // Upgrade a stamped legacy sign only before its owner's first account reset.
+    if (previous.isEmpty() || savedId == null || sign.getPersistentDataContainer().has(identity))
+      return;
+    var shop = previous.orElseThrow();
+    if (!legacyOwner(shop.owner())
+        || shop.id() != savedId
+        || !lines.owner().equals(shop.lines("Admin Shop").owner())) return;
+    worldData.write(sign, shop, lines.owner());
+    if (!sign.update(false, false))
+      throw new IllegalStateException("shop sign changed during identity upgrade");
+  }
+
+  static SignLines lines(Sign sign) {
+    return new SignLines(
+        sign.getSide(Side.FRONT).lines().stream()
+            .map(PlainTextComponentSerializer.plainText()::serialize)
+            .toList());
+  }
+
+  /** Recognizes saved shops and legacy buy/sell signs before the registry is ready. */
+  boolean isPendingShopSign(Block block) {
+    if (!(block.getState(false) instanceof Sign sign)) return false;
+    if (sign.getPersistentDataContainer().has(shopIdKey, PersistentDataType.LONG)) return true;
+    var first =
+        PlainTextComponentSerializer.plainText().serialize(sign.getSide(Side.FRONT).line(0));
+    return first.equalsIgnoreCase("[buy]")
+        || first.equalsIgnoreCase("[sell]")
+        || new com.shepherdjerred.thestorm.shops.domain.sign.ShopSignParser(
+                999_999_999, "Admin Shop")
+            .looksLikeShop(lines(sign));
   }
 
   /**
@@ -182,16 +329,17 @@ public final class ShopBlocks {
     if (!(block.getState(false) instanceof Sign)) {
       return false;
     }
-    write(block, shop, Optional.empty());
-    return true;
+    return write(block, shop, Optional.empty());
   }
 
   /** Rewrites a shop sign's lines and stamps it. */
   public void rewrite(Block block, SignShop shop, SignLines lines) {
-    write(block, shop, Optional.of(lines));
+    if (!write(block, shop, Optional.of(lines))) {
+      throw new IllegalStateException("could not update shop sign " + shop.id());
+    }
   }
 
-  private void write(Block block, SignShop shop, Optional<SignLines> lines) {
+  private boolean write(Block block, SignShop shop, Optional<SignLines> lines) {
     if (!(block.getState() instanceof Sign sign)) {
       throw new IllegalStateException("shop " + shop.id() + " has no sign at " + pos(block));
     }
@@ -208,7 +356,8 @@ public final class ShopBlocks {
         .ifPresentOrElse(
             item -> data.set(itemKey, PersistentDataType.STRING, item.template()),
             () -> data.remove(itemKey));
-    sign.update();
+    worldData.write(sign, shop, lines(sign).owner());
+    return sign.update();
   }
 
   /** The live inventory of a container block, or empty if it is no longer a container. */

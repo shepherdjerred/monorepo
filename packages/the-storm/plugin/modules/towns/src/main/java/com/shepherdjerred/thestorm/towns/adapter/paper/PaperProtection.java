@@ -60,13 +60,12 @@ final class PaperProtection implements Protection {
     if (guard.isSealed(Guard.world(location))) {
       return Decision.allowed();
     }
-    var actor = actor(player);
-    var act = new Act(actionOf(action), subjectOf(action, location));
     var land = guard.land(location);
-    if ((action == ProtectedAction.AUTOMATIC_BUILD || action == ProtectedAction.AUTOMATIC_BREAK)
-        && land instanceof Land.HeritageLand(var site, _, _)) {
-      return decision(new Verdict.Deny(new Denial.ByRegion(site.name(), act.action())));
-    }
+    var automatic =
+        action == ProtectedAction.AUTOMATIC_BUILD || action == ProtectedAction.AUTOMATIC_BREAK;
+    var actor =
+        automatic && land instanceof Land.HeritageLand ? Actor.player(player) : actor(player);
+    var act = new Act(actionOf(action), subjectOf(action, location));
     var verdict =
         opensContainer(action)
                 && rendering.kinds().isLockable(location.getBlock().getType())
@@ -84,6 +83,83 @@ final class PaperProtection implements Protection {
           containerVerdict(new ContainerCheck(player, actor.bypass(), action, block), verdict);
     }
     return decision(verdict);
+  }
+
+  @Override
+  public java.util.Optional<UUID> automationActor(Location location) {
+    if (mayBindServerHistoricalLift(location))
+      return java.util.Optional.of(Protection.SERVER_AUTOMATION);
+    requireMainThread();
+    return guard.automationActor(location);
+  }
+
+  @Override
+  public Decision checkLift(UUID player, UUID owner, Location location) {
+    var ordinary = check(player, ProtectedAction.INTERACT, location);
+    if (ordinary.isAllowed()) return ordinary;
+    var land = guard.land(location);
+    if (owner.equals(Protection.SERVER_HISTORICAL_LIFT) && serverHistoricalLiftLand(land)) {
+      return Decision.allowed();
+    }
+    if (publicShopLift(land, owner) && check(owner, ProtectedAction.BUILD, location).isAllowed()) {
+      return Decision.allowed();
+    }
+    return ordinary;
+  }
+
+  @Override
+  public boolean mayBindServerHistoricalLift(Location location) {
+    requireMainThread();
+    return serverHistoricalLiftLand(guard.land(location));
+  }
+
+  @Override
+  public boolean mayOperateServerHistoricalCircuit(Location location) {
+    requireMainThread();
+    return serverSpawnLift(guard.land(location));
+  }
+
+  @Override
+  public boolean mayRestoreHistoricalShop(Location location) {
+    requireMainThread();
+    if (guard.isSealed(Guard.world(location))) return false;
+    var land = guard.land(location).underlyingLand();
+    return !(land instanceof Land.WorkLand)
+        && (!(land instanceof Land.ParcelLand(var parcel))
+            || parcel.phase()
+                == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE);
+  }
+
+  static boolean serverSpawnLift(Land land) {
+    return land instanceof Land.HeritageLand(var site, _, var underlying)
+        && site.kind() == com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Kind.SERVER
+        && site.id().equals("spawn")
+        && (underlying instanceof Land.Wilderness
+            || (underlying instanceof Land.RegionLand(var region) && region.id().equals("spawn"))
+            || (underlying instanceof Land.ParcelLand(var parcel)
+                && parcel.definition().kind()
+                    == com.shepherdjerred.thestorm.towns.domain.parcel.ParcelKind.PERMANENT_SHOP
+                && parcel.phase()
+                    == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE
+                && parcel.owners().isEmpty()));
+  }
+
+  /** Catalogued lifts may also be restored on unclaimed or staff-held historical land. */
+  static boolean serverHistoricalLiftLand(Land land) {
+    if (serverSpawnLift(land) || land instanceof Land.Wilderness) return true;
+    return land instanceof Land.HeritageLand(var site, var editors, var underlying)
+        && site.editors().isEmpty()
+        && editors.isEmpty()
+        && underlying instanceof Land.Wilderness;
+  }
+
+  static boolean publicShopLift(Land land, UUID owner) {
+    return land instanceof Land.HeritageLand(_, _, Land.ParcelLand(var parcel))
+        && parcel.definition().kind()
+            == com.shepherdjerred.thestorm.towns.domain.parcel.ParcelKind.PERMANENT_SHOP
+        && parcel.phase()
+            == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE
+        && parcel.owners().contains(owner);
   }
 
   /**
@@ -182,23 +258,23 @@ final class PaperProtection implements Protection {
             : locks.mayBreak(check.player(), check.bypass(), halves);
     if (!opened
         || (opensContainer(check.action())
-            && !itemMoveAllowed(check.player(), check.action(), check.block()))) {
+            && halves.stream().anyMatch(block -> !itemMoveAllowed(check, block)))) {
       return new Verdict.Deny(new Denial.Locked());
     }
     return verdict;
   }
 
   /** Opening is already decided. Insert and remove also follow the lock's direction. */
-  private boolean itemMoveAllowed(UUID player, ProtectedAction action, Block block) {
-    if (action == ProtectedAction.OPEN_CONTAINER) {
+  private boolean itemMoveAllowed(ContainerCheck check, Block block) {
+    if (check.action() == ProtectedAction.OPEN_CONTAINER) {
       return true;
     }
-    var online = server.getPlayer(player);
-    if (online == null) {
-      return false;
-    }
-    var movement = locks.movement(online, block);
-    return action == ProtectedAction.INSERT_ITEM
+    var online = server.getPlayer(check.player());
+    var movement =
+        online == null
+            ? locks.movement(check.player(), check.bypass(), block)
+            : locks.movement(online, block);
+    return check.action() == ProtectedAction.INSERT_ITEM
         ? movement == LockAccess.Movement.FULL || movement == LockAccess.Movement.PUT
         : movement == LockAccess.Movement.FULL || movement == LockAccess.Movement.TAKE;
   }

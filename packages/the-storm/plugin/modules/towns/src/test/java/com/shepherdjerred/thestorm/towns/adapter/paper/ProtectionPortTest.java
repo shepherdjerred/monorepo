@@ -24,6 +24,25 @@ final class ProtectionPortTest extends AegisServer {
   }
 
   @Test
+  void offlineAutomationMayUseUnlockedInventoriesOnlyWhereItsLandRightsAllow() {
+    var owner = alice.getUniqueId();
+    var stranger = bob.getUniqueId();
+    alice.disconnect();
+    bob.disconnect();
+    var wild = at(500, 500);
+    var claimed = at(170, Z);
+    wild.getBlock().setType(org.bukkit.Material.CHEST);
+    claimed.getBlock().setType(org.bukkit.Material.CHEST);
+    for (var action :
+        new ProtectedAction[] {ProtectedAction.INSERT_ITEM, ProtectedAction.REMOVE_ITEM}) {
+      assertThat(port().check(owner, action, claimed).isAllowed()).isTrue();
+      assertThat(port().check(stranger, action, claimed).isAllowed()).isFalse();
+      assertThat(port().check(Protection.SERVER_AUTOMATION, action, wild).isAllowed()).isTrue();
+      assertThat(port().check(Protection.SERVER_AUTOMATION, action, claimed).isAllowed()).isFalse();
+    }
+  }
+
+  @Test
   void playersFightOnlyWherePvpIsOnForBoth() throws InterruptedException {
     // New claims have PvP on; Aegis turns it off on both of its chunks.
     for (var x : new int[] {165, 180}) {
@@ -118,6 +137,18 @@ final class ProtectionPortTest extends AegisServer {
                 .isAllowed())
         .as("ordinary wilderness mechanisms still work")
         .isTrue();
+  }
+
+  @Test
+  void homeImportsDoNotGrantGeneralHeritageAccess() {
+    var player = bob.getUniqueId();
+    var preservedWilderness = at(1_000_000, 1_000_000);
+    assertThat(port().check(player, ProtectedAction.SET_HOME, preservedWilderness).isAllowed())
+        .isFalse();
+    assertThat(port().check(player, ProtectedAction.BUILD, preservedWilderness).isAllowed())
+        .isFalse();
+    assertThat(port().check(player, ProtectedAction.SET_HOME, at(170, Z)).isAllowed()).isFalse();
+    assertThat(port().check(player, ProtectedAction.SET_HOME, at(8, 8)).isAllowed()).isFalse();
   }
 
   @Test

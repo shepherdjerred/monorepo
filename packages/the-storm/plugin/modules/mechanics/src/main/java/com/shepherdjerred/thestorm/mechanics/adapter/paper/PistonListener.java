@@ -205,7 +205,7 @@ final class PistonListener implements Listener {
         continue;
       }
       var mechanism = PaperGrid.view(block, PaperGrid.frontLines(sign)).mechanism();
-      var owner = kit.signs().owner(sign);
+      var owner = kit.signs().owner(sign).or(() -> kit.guard().automationActor(block));
       if (mechanism.isPresent()
           && mechanism.orElseThrow().isPiston()
           && owner.isPresent()

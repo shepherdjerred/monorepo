@@ -186,7 +186,7 @@ final class ShopSignListener implements Listener {
     return switch (parser.parse(lines)) {
       case Result.Err<ShopSignDraft, List<SignProblem>>(var problems) -> refuse(player, problems);
       case Result.Ok<ShopSignDraft, List<SignProblem>>(var draft) ->
-          switch (item(draft.item())) {
+          switch (item(draft.item(), block)) {
             case Result.Err<Optional<ItemFingerprint>, SignProblem>(var problem) ->
                 refuse(player, List.of(problem));
             case Result.Ok<Optional<ItemFingerprint>, SignProblem>(var item) -> {
@@ -321,7 +321,7 @@ final class ShopSignListener implements Listener {
     var block = attempt.block();
     var draft = attempt.draft();
     var item = attempt.item();
-    var container = ShopBlocks.supportOf(block).filter(blocks::isShopContainer);
+    var container = blocks.connectedContainer(block);
     if (!allowedToBuild(player, block, container)) {
       return Optional.empty();
     }
@@ -396,7 +396,7 @@ final class ShopSignListener implements Listener {
   private int levelFor(Player creator, ShopOwner owner) {
     var yours = ShopsPermissions.shopkeeperLevel(creator);
     return switch (owner) {
-      case ShopOwner.Admin() -> 0;
+      case ShopOwner.Admin(_) -> 0;
       case ShopOwner.Town(_, _) -> yours;
       case ShopOwner.Player(var id, _) -> {
         var online = online(creator, id);
@@ -421,9 +421,15 @@ final class ShopSignListener implements Listener {
   }
 
   /** The item the sign names, or empty for {@code ?}. */
-  private Result<Optional<ItemFingerprint>, SignProblem> item(ItemLine line) {
+  private Result<Optional<ItemFingerprint>, SignProblem> item(ItemLine line, Block sign) {
     return switch (line) {
-      case ItemLine.Pending() -> Result.ok(Optional.empty());
+      case ItemLine.Pending() ->
+          Result.ok(
+              blocks.connectedContainer(sign).flatMap(ShopBlocks::inventoryOf).stream()
+                  .flatMap(inventory -> java.util.Arrays.stream(inventory.getStorageContents()))
+                  .filter(stack -> stack != null && !stack.getType().isAir())
+                  .findFirst()
+                  .map(templates::fingerprint));
       case ItemLine.Named(var name) ->
           ItemTemplates.item(name)
               .<Result<Optional<ItemFingerprint>, SignProblem>>map(

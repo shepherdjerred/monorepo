@@ -56,7 +56,10 @@ abstract class ShopsFixture {
         MockBukkit.loadWith(
             ShopsTestPlugin.class,
             new PluginDescriptionFile("TheStorm", "test", ShopsTestPlugin.class.getName()));
-    world = server.addSimpleWorld("world");
+    // Ordinary shop tests do not operate on the production historical catalog.
+    world = new TicketWorld();
+    server.addWorld(world);
+    world.loadChunk(0, 0);
     for (var attempt = 0; attempt < 400 && !plugin.shopsReady(); attempt++) {
       server.getScheduler().performOneTick();
       Thread.sleep(5);
@@ -67,6 +70,28 @@ abstract class ShopsFixture {
   @AfterEach
   void stop() {
     MockBukkit.unmock();
+  }
+
+  /** MockBukkit lacks plugin tickets; native import acceptance proves Paper's unload behavior. */
+  private static final class TicketWorld extends WorldMock {
+    private record Ticket(int x, int z, org.bukkit.plugin.Plugin plugin) {}
+
+    private final java.util.Set<Ticket> tickets = new java.util.HashSet<>();
+
+    TicketWorld() {
+      super(new org.bukkit.WorldCreator("shop-test-world"));
+    }
+
+    @Override
+    public boolean addPluginChunkTicket(int x, int z, org.bukkit.plugin.Plugin owner) {
+      loadChunk(x, z);
+      return tickets.add(new Ticket(x, z, owner));
+    }
+
+    @Override
+    public boolean removePluginChunkTicket(int x, int z, org.bukkit.plugin.Plugin owner) {
+      return tickets.remove(new Ticket(x, z, owner));
+    }
   }
 
   static String plain(Component component) {
@@ -89,6 +114,7 @@ abstract class ShopsFixture {
   }
 
   Block container(int x, Material type) {
+    world.loadChunk(x >> 4, 0);
     var block = world.getBlockAt(x, 64, 0);
     block.setType(type);
     return block;
@@ -109,12 +135,19 @@ abstract class ShopsFixture {
   }
 
   SignChangeEvent write(Player player, Block sign, String... lines) {
+    world.loadChunk(sign.getX() >> 4, sign.getZ() >> 4);
     var components = new ArrayList<Component>();
     for (var line : lines) {
       components.add(Component.text(line));
     }
     var event = new SignChangeEvent(sign, player, components, Side.FRONT);
     server.getPluginManager().callEvent(event);
+    if (!event.isCancelled()) {
+      var state = (org.bukkit.block.Sign) sign.getState();
+      for (var index = 0; index < 4; index++)
+        state.getSide(Side.FRONT).line(index, event.lines().get(index));
+      state.update();
+    }
     return event;
   }
 

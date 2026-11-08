@@ -62,6 +62,7 @@ public final class Fixtures {
         0,
         TownKind.TOWN,
         Optional.empty(),
+        false,
         false);
   }
 

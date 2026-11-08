@@ -1,0 +1,60 @@
+import { describe, expect } from "vitest";
+import { Vec3 } from "vec3";
+import { test } from "#e2e/fixtures.ts";
+import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
+import {
+  closeRestorationChest,
+  waitForHistoricalShop,
+  visitIronListing,
+} from "./shop-assertions.ts";
+
+describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "placed")(
+  "historical shop placement protection",
+  () => {
+    test("retains the owner's access checks for a player-placed replacement", async ({
+      bot,
+      rcon,
+      server,
+    }) => {
+      await visitIronListing(bot, rcon);
+      await rcon.command(
+        `item replace entity ${bot.username} hotbar.0 with minecraft:chest`,
+      );
+      bot.setQuickBarSlot(0);
+      await waitUntil("holding chest", () => bot.heldItem?.name === "chest");
+      await waitUntil(
+        "chest support loaded",
+        () => bot.blockAt(new Vec3(138, 67, -97))?.name === "stone",
+      );
+      const support = bot.blockAt(new Vec3(138, 67, -97));
+      if (support === null) throw new Error("Missing fixture support");
+      await bot.placeBlock(support, new Vec3(0, 1, 0));
+      await waitUntil("ownership refusal logged", async () => {
+        const logs = await serverLogs(server);
+        return logs.includes(
+          "2015-pigrider-iron skipped: owner cannot open container",
+        );
+      });
+      const logs = await serverLogs(server);
+      expect(logs).toMatch(
+        /2015-pigrider-iron skipped: owner cannot open container:.*lock/i,
+      );
+      await rcon.command("setblock 138 68 -95 minecraft:stone");
+      await rcon.command(
+        `minecraft:tp ${bot.username} 138.5 69 -95.5 facing 138.5 68.3 -96.5`,
+      );
+      await waitUntil(
+        "player facing chest",
+        () => Math.abs(bot.entity.position.z + 95.5) < 0.25,
+      );
+      const unlocked = waitForMessage(bot, /Unlocked/);
+      bot.chat("/unlock");
+      await unlocked;
+      await closeRestorationChest(bot, new Vec3(138, 68, -97));
+      await waitForHistoricalShop(rcon, 138, 69, -97);
+      const contents = await rcon.command("data get block 138 68 -97 Items");
+      expect(contents).toContain("minecraft:iron_ingot");
+    });
+  },
+);

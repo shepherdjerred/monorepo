@@ -12,9 +12,7 @@ import {
 import { basePaperEnv } from "@shepherdjerred/mc-harness/sandbox/paper-env.ts";
 import {
   envArgs,
-  publishedPort,
   reapPidOwnedContainers,
-  startAndAwaitDone,
   warmMountArgs,
   warmMounts,
 } from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
@@ -31,7 +29,7 @@ import {
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
 import { stageRwf } from "./rwf-staging.ts";
-import { verifyRconReady } from "./boot/rcon-ready.ts";
+import { bootContainer } from "#e2e/harness/paper/boot.ts";
 import { stageWorld } from "./world-copy.ts";
 import { serverIcon } from "./paths.ts";
 import { ExternalServerShape } from "#e2e/harness/external/inputs.ts";
@@ -351,30 +349,6 @@ function serverEnv(server: {
     STORM_BRAIN_BEARER_TOKEN: server.brainToken,
     ...server.extra,
     MEMORY: server.heap,
-  };
-}
-
-async function bootContainer(
-  id: string,
-  rconPassword: string,
-  deadline: number,
-): Promise<Omit<ServerInfo & { kind: "container" }, "bootMs">> {
-  await startAndAwaitDone(id, deadline, [
-    "The Storm failed to enable",
-    "Error occurred while enabling",
-  ]);
-  const game = await publishedPort(id, 25_565);
-  const rcon = await publishedPort(id, 25_575);
-  // The Done line proves the game port; prove RCON accepts and executes a
-  // command too before handing the server to the E2E suite.
-  await verifyRconReady(rcon, rconPassword, deadline);
-  return {
-    kind: "container",
-    containerId: id,
-    host: game.host,
-    gamePort: game.port,
-    rconPort: rcon.port,
-    rconPassword,
   };
 }
 

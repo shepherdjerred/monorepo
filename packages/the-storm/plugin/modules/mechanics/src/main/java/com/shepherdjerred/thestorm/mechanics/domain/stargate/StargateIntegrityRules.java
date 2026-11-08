@@ -48,11 +48,7 @@ public final class StargateIntegrityRules {
     if (sign.mount() != Mount.WALL
         || sign.facing().isEmpty()
         || sign.facing().orElseThrow() != gate.facing()
-        || !sign.line(0).strip().equals(gate.name())
-        || (gate.fixedDestination() != null
-            && !sign.line(1).strip().equalsIgnoreCase(gate.fixedDestination()))
-        || (gate.alwaysOpen() && !sign.line(3).strip().equalsIgnoreCase("A"))
-        || !sign.line(2).strip().equalsIgnoreCase(network.name())
+        || !GateSignText.matches(sign, gate, network)
         || !inspection.buttonMatches()) return false;
     return gate.frame().frameBlocks().stream()
         .allMatch(pos -> grid.contains(pos) && grid.cellAt(pos).is("minecraft:obsidian"));

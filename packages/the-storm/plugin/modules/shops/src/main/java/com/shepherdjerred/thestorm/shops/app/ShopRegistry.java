@@ -70,9 +70,23 @@ public final class ShopRegistry {
     return ready;
   }
 
+  public void suspend() {
+    ready = false;
+  }
+
+  /** Includes the durable world sequence when a derived database index was removed. */
+  public void observeLastId(long id) {
+    lastId = Math.max(lastId, id);
+  }
+
   /** The id the next new shop gets. Ids are never reused. */
   public long nextId() {
     return lastId + 1;
+  }
+
+  /** Reserves an id before work that can yield to another shop creation. */
+  public long reserveId() {
+    return ++lastId;
   }
 
   public void add(SignShop shop) {
@@ -104,12 +118,24 @@ public final class ShopRegistry {
     if (!byId.containsKey(id)) {
       throw new IllegalArgumentException("no shop " + id);
     }
+    retainClosure(id, why);
+  }
+
+  /** Retains a durable recovery obligation even before that shop's chunk has been discovered. */
+  public void retainClosure(long id, String why) {
+    if (id < 1) throw new IllegalArgumentException("invalid shop id " + id);
+    observeLastId(id);
     closed.put(id, why);
   }
 
   /** Why a shop is closed, if it is. */
   public Optional<String> closure(long id) {
     return Optional.ofNullable(closed.get(id));
+  }
+
+  /** Reopens only the closure installed by the caller. */
+  public void reopen(long id, String expectedReason) {
+    closed.remove(id, expectedReason);
   }
 
   /** Every closed shop and why, in the order they were closed. */
@@ -119,6 +145,11 @@ public final class ShopRegistry {
 
   public void remove(long id) {
     closed.remove(id);
+    evict(id);
+  }
+
+  /** Drops a cached definition without forgetting why the identity must remain closed. */
+  public void evict(long id) {
     var shop = byId.remove(id);
     if (shop == null) {
       return;

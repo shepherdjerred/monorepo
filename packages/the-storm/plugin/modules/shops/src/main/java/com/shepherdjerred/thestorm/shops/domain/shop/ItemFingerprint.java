@@ -17,4 +17,9 @@ public record ItemFingerprint(String material, String template, boolean special)
       throw new IllegalArgumentException("a fingerprint needs a material and a template");
     }
   }
+
+  /** A historical multi-item offer, rather than a Minecraft bundle item. */
+  public boolean bundleDeal() {
+    return template.startsWith("bundle:");
+  }
 }

@@ -36,7 +36,8 @@ final class PaperShopEffects implements ShopEffects {
                     blocks
                         .block(pos)
                         .map(block -> managedTrades.active(block.getLocation()))
-                        .orElse(false));
+                        .orElse(false))
+        && blocks.block(shop.sign()).flatMap(blocks::shopAtSign).filter(shop::equals).isPresent();
   }
 
   @Override

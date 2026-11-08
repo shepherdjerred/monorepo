@@ -23,6 +23,11 @@ public interface StargateStore {
 
   CompletableFuture<Void> createGate(Stargate gate);
 
+  /** Rebuildable world index; public networks can be recovered with their physical gates. */
+  default CompletableFuture<Void> indexGate(StargateNetwork network, Stargate gate) {
+    return createGate(gate);
+  }
+
   CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate);
 
   CompletableFuture<Boolean> deleteGate(UUID id);
