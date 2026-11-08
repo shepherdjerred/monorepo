@@ -50,16 +50,17 @@ if started_from_ssh "$pid"; then
     status=$("$hc" server status --json)
 fi
 
-while read -r holder terminals; do
+while read -r holder terminals instance; do
     started_from_ssh "$holder" || continue
     if [ "$terminals" -eq 0 ]; then
         log "holder $holder was started from SSH and holds no terminals; ending it"
         kill "$holder"
         continue
     fi
-    # Report each holder once, not every minute.
+    # Report each holder once, not every minute. The instance id is unique per
+    # holder, unlike its pid, which a later holder can reuse.
     mkdir -p "$state"
-    marker="$state/reported-holder-$holder"
+    marker="$state/reported-holder-$instance"
     [ -e "$marker" ] && continue
     log "WARNING: holder $holder was started from SSH and still runs $terminals terminals." \
         "Its agents cannot see the login Keychain and can die with the session." \
@@ -67,4 +68,4 @@ while read -r holder terminals; do
         "and kept terminals come back as shells in a new launchd holder."
     /usr/bin/osascript -e "display notification \"Holder $holder runs $terminals terminals from an SSH login. Replacing it ends them; see ~/Library/Logs/herdr-core-ensure.log.\" with title \"Herdr holder needs replacing\""
     touch "$marker"
-done < <(/usr/bin/jq -r '.holders[] | "\(.pid) \(.terminals)"' <<<"$status")
+done < <(/usr/bin/jq -r '.holders[] | "\(.pid) \(.terminals) \(.instance)"' <<<"$status")
