@@ -139,8 +139,9 @@ the events itself. These need a real server:
 - On a claim only its owner can use (sole member of the camp or town, nobody
   trusted on the claim, switches and building not public), redstone fires the
   owner's locked dispenser, dropper or crafter without `/lock redstone on`,
-  unless the power comes from a control or wire on other land. This is
-  judged when the machine fires, so sharing the claim stops it.
+  unless the power comes from a control or wire on land that is not equally
+  private to the owner, including a claim of the same town whose switches are
+  public. This is judged when the machine fires, so sharing a claim stops it.
   Elsewhere redstone stays blocked until the owner runs `/lock redstone on`,
   because someone else could flip the owner's lever. Only players who can
   open the lock may wire beside it. `/lock info` shows grants and options.

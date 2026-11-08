@@ -445,6 +445,37 @@ final class LockListenersTest extends AegisServer {
   }
 
   @Test
+  void aPrivateClaimsMachineRunsFromAControlOnItsOwnersOtherPrivateClaim() {
+    var machine = block(CLAIM_X + 15, Y, Z);
+    machine.setType(Material.DISPENSER);
+    assertThat(placed(alice, machine, Material.DISPENSER)).isTrue();
+    block(CLAIM_X + 16, Y, Z).setType(Material.LEVER);
+
+    assertThat(
+            call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isFalse();
+  }
+
+  @Test
+  void aPrivateClaimsMachineIgnoresAPublicSwitchOnTheSameTownsOtherClaim()
+      throws InterruptedException {
+    var machine = block(CLAIM_X + 15, Y, Z);
+    machine.setType(Material.DISPENSER);
+    assertThat(placed(alice, machine, Material.DISPENSER)).isTrue();
+    block(CLAIM_X + 16, Y, Z).setType(Material.LEVER);
+
+    alice.setLocation(new Location(world, CLAIM_X + 20, Y, Z));
+    server.dispatchCommand(alice, "claim flag public-switches true");
+    awaitLine(alice, "public-switches is now on here.");
+
+    assertThat(
+            call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isTrue();
+  }
+
+  @Test
   void anUnlockedHopperItsOwnerPlacedStillCannotDrainTheirLock() {
     var placers = new Placers(new NamespacedKey(plugin, "placed_by"));
     var claimChest = container(CLAIM_X + 10, Y, null);

@@ -450,7 +450,7 @@ final class LockListener implements Listener {
 
   private static boolean onlyLimitReached(List<LockProblem> problems) {
     return !problems.isEmpty()
-        && problems.stream().allMatch(problem -> problem instanceof LockProblem.LimitReached);
+        && problems.stream().allMatch(LockProblem.LimitReached.class::isInstance);
   }
 
   /** Told when a placed block stays unlocked because its placer holds the most locks allowed. */

@@ -137,21 +137,28 @@ final class LockGuard {
 
   /**
    * A locked machine may use its own inventory from redstone when its owner allowed redstone, or
-   * when it stands on a claim nobody but its owner can use and no power reaches it from other land,
-   * so nobody else can work its controls. Both are judged when the machine fires, so it stops on
-   * its own once the claim is shared or a control on other land is wired to it.
+   * when it stands on a claim nobody but its owner can use and every redstone component that could
+   * power it stands on such a claim too, so nobody else can work its controls. A neighbouring claim
+   * of the same town counts only while it is private as well: its public switches would otherwise
+   * let anyone fire the machine. Both are judged when the machine fires, so it stops on its own
+   * once a claim is shared or a control on other land is wired to it.
    */
   boolean mayAutomate(Block block) {
     var lock = lockOf(block);
     return lock == null
         || lock.options().redstone()
-        || (onOwnersPrivateClaim(lock, block) && !redstone.foreignPistonPower(block));
+        || (onOwnersPrivateClaim(lock, block)
+            && !redstone.untrustedPistonPower(block, land -> ownersPrivate(lock, land)));
   }
 
   /** True when {@code block} stands on a claim only {@code lock}'s owner can use. */
   boolean onOwnersPrivateClaim(Lock lock, Block block) {
-    if (!(towns.landAt(block.getWorld().getName(), block.getX(), block.getY(), block.getZ())
-        instanceof Land.TownLand(var claim))) {
+    return ownersPrivate(
+        lock, towns.landAt(block.getWorld().getName(), block.getX(), block.getY(), block.getZ()));
+  }
+
+  private boolean ownersPrivate(Lock lock, Land land) {
+    if (!(land instanceof Land.TownLand(var claim))) {
       return false;
     }
     return towns
