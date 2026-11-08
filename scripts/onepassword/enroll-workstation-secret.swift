@@ -112,14 +112,45 @@ private func storeInKeychain(service: String, token: String) {
   let item = query.merging(value) { _, replacement in replacement }
   let addStatus = SecItemAdd(item as CFDictionary, nil)
   guard addStatus == errSecSuccess else {
+    if addStatus == errSecWrPerm {
+      fail(
+        "Keychain add failed (OSStatus \(addStatus)): this process cannot write the login Keychain. \(outsideLoginSessionHint)"
+      )
+    }
     fail("Keychain add failed (OSStatus \(addStatus)).")
   }
+}
+
+private let outsideLoginSessionHint =
+  "Run this from a terminal in the GUI login session. A process started by an SSH login that has since ended, such as an SSH-started herdr holder, sees only the System keychain until it is replaced."
+
+/// A process outside the login session resolves only the System keychain,
+/// so the secret could never be saved; stop before reading it.
+private func requireLoginKeychain() {
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+  process.arguments = ["list-keychains"]
+  let output = Pipe()
+  process.standardOutput = output
+  process.standardError = FileHandle.nullDevice
+  do {
+    try process.run()
+  } catch {
+    return
+  }
+  let listing = String(decoding: output.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+  process.waitUntilExit()
+  guard process.terminationStatus == 0, !listing.contains("login.keychain") else {
+    return
+  }
+  fail("This process cannot see the login Keychain, so the secret cannot be saved. \(outsideLoginSessionHint)")
 }
 
 private func main() {
   guard isatty(STDIN_FILENO) == 1 else {
     fail("Run this installer in an interactive terminal; do not pipe the secret.")
   }
+  requireLoginKeychain()
 
   let (service, ref, paste) = parseArguments()
   let value = paste ? readPastedValue() : readWithOnePassword(ref)

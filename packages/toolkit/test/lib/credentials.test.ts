@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   requiredCredentialsFor,
+  resolveCredentialValues,
   resolveCredentials,
 } from "#lib/credentials.ts";
 import type { CredentialRun } from "#lib/credentials.ts";
@@ -348,6 +349,108 @@ describe("credential resolver backends", () => {
         kind: "op",
         ref: "op://v64ocnykdqju4ui6j6pua56xw4/2x4fpii5zq4jbw3l2p2qkvjtiy/api-token",
       },
+    });
+  });
+});
+
+/**
+ * A `security`/`launchctl` stub where every item lookup fails, the keychain
+ * search list is `keychain`, and the launchd session is `session`.
+ */
+function keychainSessionRun(
+  keychain: string,
+  session: string,
+  calls: string[][],
+): RunFn {
+  return stubRun((argv) => {
+    if (argv[0] === "security" && argv[1] === "list-keychains") {
+      return { exit: 0, stdout: `    "${keychain}"\n`, stderr: "" };
+    }
+    return argv[0] === "launchctl"
+      ? { exit: 0, stdout: `${session}\n`, stderr: "" }
+      : { exit: 44, stdout: "", stderr: "could not be found" };
+  }, calls);
+}
+
+describe("credential resolver failure reasons", () => {
+  test("an op read failure reports 1Password's reason, not enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "ambient-sa-token";
+      const missing = await configPath(null);
+      const run = stubRun(
+        () => ({
+          exit: 1,
+          stdout: "",
+          stderr:
+            "[ERROR] 2026/11/07 21:57:43 could not read secret 'op://v/i/f': Too many requests. Your client has been rate-limited.\n",
+        }),
+        [],
+      );
+      const failure: unknown = await resolveCredentialValues(
+        ["WOODPECKER_TOKEN"],
+        { run, configPath: `${missing}.absent` },
+      ).then(
+        () => null,
+        (error: unknown) => error,
+      );
+      const message = failure instanceof Error ? failure.message : "";
+      expect(message).toBe(
+        "toolkit: WOODPECKER_TOKEN (Woodpecker CI API token) could not be read from 1Password: could not read secret 'op://v/i/f': Too many requests. Your client has been rate-limited.",
+      );
+      expect(message).not.toContain("ambient-sa-token");
+    });
+  });
+});
+
+describe("credential resolver keychain visibility", () => {
+  test("an unreachable login keychain is named instead of enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      const missing = await configPath(null);
+      const calls: string[][] = [];
+      const deps = {
+        run: keychainSessionRun(
+          "/Library/Keychains/System.keychain",
+          "Background",
+          calls,
+        ),
+        configPath: `${missing}.absent`,
+      };
+      for (const name of ["ARGOCD_AUTH_TOKEN", "DISCORD_BOT_TOKEN"]) {
+        const failure: unknown = await resolveCredentialValues(
+          [name],
+          deps,
+        ).then(
+          () => null,
+          (error: unknown) => error,
+        );
+        expect(failure).toBeInstanceOf(Error);
+        const message = failure instanceof Error ? failure.message : "";
+        expect(message).toContain(
+          "cannot see the login Keychain (launchd session: Background; search list: /Library/Keychains/System.keychain)",
+        );
+        expect(message).not.toMatch(/Enroll|enroll-/);
+      }
+      expect(calls.map((argv) => argv[0])).not.toContain("op");
+    });
+  });
+
+  test("a missing item with the login keychain visible still names enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      const missing = await configPath(null);
+      const calls: string[][] = [];
+      await expect(
+        resolveCredentialValues(["ARGOCD_AUTH_TOKEN"], {
+          run: keychainSessionRun(
+            "/Users/someone/Library/Keychains/login.keychain-db",
+            "Aqua",
+            calls,
+          ),
+          configPath: `${missing}.absent`,
+        }),
+      ).rejects.toThrow(
+        "no homelab 1Password service account token is available in Keychain. Enroll it with: swift scripts/onepassword/enroll-service-account.swift",
+      );
+      expect(calls.map((argv) => argv[0])).not.toContain("launchctl");
     });
   });
 });
