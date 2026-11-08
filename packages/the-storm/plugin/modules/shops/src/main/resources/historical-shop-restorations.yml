@@ -3,6 +3,30 @@
 # Decimal prices use equivalent integral batches where practical; staff prices obey server price-loop limits.
 # Custom templates are copied from the recorded original slot, retaining item components.
 entries:
+  # The original Spider Head sign remains in PikachuPals' owned shop. Its lost
+  # remote link uses this empty shop chest and one copied surviving MHF_Spider
+  # template. The source container and its item are left untouched.
+  - {
+      "id": "2015-reconstructed-spider-head-158-68--130",
+      "world": "world",
+      "sign": { "x": 158, "y": 68, "z": -130 },
+      "container": { "x": 161, "y": 70, "z": -128 },
+      "owner": "af1c824a-8ff5-4912-9470-b32c07ffd1f8",
+      "ownerName": "PikachuPals",
+      "item": "player_head",
+      "quantity": 1,
+      "price": 225,
+      "stockTarget": 1,
+      "historicalItemName": "Spider Head",
+      "signFormat": "QUANTITY_ITEM",
+      "details":
+        {
+          "originalLines": ["[Buy]", "1 Spider", "Head", "225"],
+          "sourceSlot": 0,
+          "buysFromPlayer": false,
+          "rewrite": true,
+        },
+    }
   - {
       "id": "2016-reconstructed--21-67--124",
       "world": "map2",
