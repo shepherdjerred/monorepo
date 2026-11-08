@@ -173,9 +173,14 @@ retired out-of-band, as is the unused `glitter-discord-corpus` bucket.
 `cloudflare/ts-mc-bucket.tf` and `cloudflare/sjerred-bucket.tf` own the public
 download buckets behind `storage.ts-mc.net` and `files.sjer.red`. Both prevent
 destruction, keep `r2.dev` disabled, and only abort abandoned multipart uploads.
-Their custom domains stay attached out-of-band: provider 5.27 cannot import an
-existing `cloudflare_r2_custom_domain`, and creating one that already exists
-fails.
+They also own the two custom domains, which create those DNS records. The
+provider cannot import an existing `cloudflare_r2_custom_domain` and fails to
+create one that already exists. To adopt another live domain, pull the state
+and add an entry with only its identifying attributes. Then run a targeted
+refresh-only apply against a local-backend copy so the API fills in the rest,
+and confirm a full plan shows no changes before pushing that state. Write the
+pulled state to a file inside the `op run` child, because `op run` masks
+secret values, including the account ID, in the child's standard output.
 
 Each domain's `.tf` file owns its existing zone and application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,

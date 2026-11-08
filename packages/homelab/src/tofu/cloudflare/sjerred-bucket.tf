@@ -15,10 +15,23 @@ resource "cloudflare_r2_bucket" "sjerred" {
   }
 }
 
-# The bucket is public only through its files.sjer.red custom domain. The
-# provider cannot import an existing cloudflare_r2_custom_domain, and creating
-# one that already exists fails, so the domain stays attached out-of-band (see
-# the note in sjer-red.tf). The r2.dev development URL stays disabled.
+# The bucket is public only through the files.sjer.red custom domain, which
+# also owns that DNS record. The provider cannot import a custom domain, so its
+# state entry was adopted from a refresh of the live domain (see the README).
+# Destroying it takes the public downloads offline.
+resource "cloudflare_r2_custom_domain" "sjerred" {
+  account_id  = var.cloudflare_account_id
+  bucket_name = cloudflare_r2_bucket.sjerred.name
+  domain      = "files.sjer.red"
+  zone_id     = cloudflare_zone.sjer_red.id
+  enabled     = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# The r2.dev development URL stays disabled.
 resource "cloudflare_r2_managed_domain" "sjerred" {
   account_id  = var.cloudflare_account_id
   bucket_name = cloudflare_r2_bucket.sjerred.name
