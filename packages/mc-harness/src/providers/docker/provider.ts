@@ -155,6 +155,7 @@ export class DockerSandboxProvider implements SandboxProvider {
     string,
     Awaited<ReturnType<typeof startCaptureProxy>>
   >();
+  private readonly adoptions = new Map<string, Promise<SandboxRecord>>();
 
   constructor(
     private readonly options: {
@@ -367,14 +368,44 @@ export class DockerSandboxProvider implements SandboxProvider {
         .filter((row) => row.running)
         .map((row) => row.containerId.slice(0, 12)),
     );
-    return records.map((record) => ({
-      ...record,
-      status:
-        running.has(dockerContainerId(record).slice(0, 12)) &&
-        (record.world !== "real-map" || this.proxies.has(record.id))
-          ? "ready"
-          : "stopped",
-    }));
+    return Promise.all(
+      records.map(async (record) => {
+        if (!running.has(dockerContainerId(record).slice(0, 12)))
+          return { ...record, status: "stopped" as const };
+        const adopted =
+          record.world === "real-map" && !this.proxies.has(record.id)
+            ? await this.adopt(record)
+            : record;
+        return { ...adopted, status: "ready" as const };
+      }),
+    );
+  }
+
+  private async adopt(record: SandboxRecord): Promise<SandboxRecord> {
+    const pending = this.adoptions.get(record.id);
+    if (pending !== undefined) return pending;
+    const adoption = (async () => {
+      const game = await publishedPort(dockerContainerId(record), GAME_PORT);
+      const proxy = await startCaptureProxy(game);
+      const adopted = {
+        ...record,
+        endpoints: { ...record.endpoints, game: proxy.endpoint },
+      };
+      try {
+        await this.options.store.write(adopted);
+        this.proxies.set(record.id, proxy);
+        return adopted;
+      } catch (error) {
+        proxy.close();
+        throw error;
+      }
+    })();
+    this.adoptions.set(record.id, adoption);
+    try {
+      return await adoption;
+    } finally {
+      this.adoptions.delete(record.id);
+    }
   }
 
   async destroy(id: string): Promise<void> {

@@ -58,7 +58,9 @@ without them.
 Containers carry `mc-harness.*` labels (sandbox id, profile, expiry, owner,
 keep). The daemon reaps expired and exited sandboxes on start, before each
 create, and every 30 seconds while it runs, and removes non-kept sandboxes when
-it shuts down. The socket server, idle TTL, state file and the PID identity
+it shuts down. Retained real-map containers recreate their loopback admission
+proxy when a new daemon adopts them, and persist the new game endpoint before
+reporting ready. The socket server, idle TTL, state file and the PID identity
 check behind `toolkit mc daemon stop` come from `@shepherdjerred/unix-socket-daemon`:
 a stale state file whose PID now belongs to another process is cleaned up
 without signalling it. Creates are
@@ -271,7 +273,12 @@ displays.
 
 `worktree` builds and retains the current server, bridge and client artifacts,
 Git revision, source patch, untracked source, and pinned Paper/plugin jars.
-Source inputs pass secret scanning before retention. Saved runtime restoration
+Source inputs pass secret scanning before retention.
+Custom suites must live under a retained source root, such as
+`packages/the-storm/tools/captures/`. Working-copy runs refuse changes outside
+those roots before building; commit shared-package changes first. Generated
+`ts-mc-docs` files are outputs and do not enter the runtime archive.
+Saved runtime restoration
 uses a detached checkout; the original Git revision must remain available in
 the local repository. The pinned container image, Bun packages, Gradle and
 client/Mojang dependencies still require their registries or local caches.

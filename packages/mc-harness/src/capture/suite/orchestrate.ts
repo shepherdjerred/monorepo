@@ -9,6 +9,7 @@ import { renderMedia } from "#src/capture/media.ts";
 import { verifyLiveFixtureClass, withLiveFixture } from "./csi.ts";
 import { retainFixture, restoreFixture } from "./fixture.ts";
 import { retainRuntime, restoreRuntime } from "./runtime.ts";
+import { verifyRuntimeInputs } from "./runtime-sources.ts";
 import { localSession } from "./session.ts";
 import { executeScenario } from "./execute.ts";
 import {
@@ -106,6 +107,8 @@ export async function runSuite(options: SuiteOptions) {
   const suite = await loadSuite(options.suiteFile);
   relativeSuiteFile(options.repoRoot, options.suiteFile);
   selectScenarios(suite, options);
+  if (options.runtime === "worktree")
+    await verifyRuntimeInputs(options.repoRoot, options.suiteFile);
   await verifyLiveFixtureClass();
   const store = awsStore("the-storm-capture-fixtures");
   const runtime = await runtimeRoot({ ...options, store }, directory, cache);

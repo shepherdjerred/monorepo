@@ -202,6 +202,11 @@ describe("published Storm image profiles", () => {
       frozenConfig([...current, "skylands"]),
     );
     expect(after.enabledModules).toContain("skylands");
+    const withStargates = stormImageConfig(
+      image,
+      frozenConfig([...current, "skylands", "stargates"]),
+    );
+    expect(withStargates.enabledModules).not.toContain("stargates");
     expect(
       stormModuleConfig(
         frozenConfig([...current, "skylands"]).yaml,

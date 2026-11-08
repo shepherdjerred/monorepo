@@ -2,6 +2,10 @@ import { mkdir, lstat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { command } from "./process.ts";
+import {
+  RuntimeSourcePathSchema,
+  verifyRuntimeInputs,
+} from "./runtime-sources.ts";
 import { retainBlob, cachedBlob, type BlobStore } from "./store.ts";
 import { CACHE_DIR } from "#protocol/paths.ts";
 import { ensureArtifact, paperJarName } from "#sandbox/artifacts.ts";
@@ -14,18 +18,6 @@ import {
   multiverseCore,
 } from "#src/pins.ts";
 
-const sourcePath = z
-  .string()
-  .refine(
-    (file) =>
-      !file
-        .split("/")
-        .some((part) => part === ".." || part === "." || part === "") &&
-      /^(?:packages\/(?:mc-harness|the-storm|toolkit)\/|packages\/homelab\/scripts\/minecraft\/|bun\.lock$|package\.json$)/u.test(
-        file,
-      ),
-    "Invalid runtime source path",
-  );
 const hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const dependencyPath = z
   .string()
@@ -34,8 +26,12 @@ export const RuntimeSchema = z.strictObject({
   schema: z.literal(1),
   revision: z.string().regex(/^[a-f0-9]{40}$/u),
   patch: hash,
-  files: z.array(z.strictObject({ path: sourcePath, sha256: hash })),
-  artifacts: z.array(z.strictObject({ path: sourcePath, sha256: hash })),
+  files: z.array(
+    z.strictObject({ path: RuntimeSourcePathSchema, sha256: hash }),
+  ),
+  artifacts: z.array(
+    z.strictObject({ path: RuntimeSourcePathSchema, sha256: hash }),
+  ),
   dependencies: z
     .array(z.strictObject({ path: dependencyPath, sha256: hash }))
     .min(1),
@@ -57,6 +53,7 @@ export async function retainRuntime(
   repoRoot: string,
   store: BlobStore,
 ): Promise<string> {
+  await verifyRuntimeInputs(repoRoot);
   const git = (args: string[]) => command(["git", "-C", repoRoot, ...args]);
   const revisionOutput = await git(["rev-parse", "HEAD"]);
   const revision = revisionOutput.trim();
@@ -79,7 +76,7 @@ export async function retainRuntime(
   const untracked = untrackedOutput.split("\0").filter(Boolean);
   const sources: { path: string; bytes: Uint8Array }[] = [];
   for (const relative of untracked) {
-    sourcePath.parse(relative);
+    RuntimeSourcePathSchema.parse(relative);
     if (
       !/\.(?:ts|js|json|java|yml|yaml|xml|toml|kts|sql|properties|md)$/u.test(
         relative,

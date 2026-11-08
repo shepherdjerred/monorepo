@@ -66,10 +66,7 @@ export const STORM_DEV_WITH_CREATIVE = [
  * Modules a published image enables only when its frozen config lists them.
  * Images built before a module existed neither have it nor need it.
  */
-const STORM_IMAGE_OPTIONAL_MODULES: ReadonlySet<string> = new Set([
-  "skylands",
-  "stargates",
-]);
+const STORM_IMAGE_OPTIONAL_MODULES: ReadonlySet<string> = new Set(["skylands"]);
 
 /**
  * Modules every published-image sandbox requires. Companions' local gameplay
