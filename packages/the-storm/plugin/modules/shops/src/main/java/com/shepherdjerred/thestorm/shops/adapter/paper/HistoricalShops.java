@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.shops.adapter.content.HistoricalShopCatalog.Entry;
 import com.shepherdjerred.thestorm.shops.adapter.db.JooqShopStore;
 import com.shepherdjerred.thestorm.shops.app.ShopRegistry;
@@ -51,6 +52,7 @@ final class HistoricalShops implements Listener {
   private final ItemTemplates templates = new ItemTemplates();
   private final HistoricalStock stock;
   private final ChunkLoader chunks;
+  private final ChunkTickets tickets;
   private final Map<String, Long> completed;
   private final Set<Entry> awaitingContainer = new LinkedHashSet<>();
   private final Set<com.shepherdjerred.thestorm.shops.domain.shop.BlockPos> changedContainers =
@@ -74,6 +76,7 @@ final class HistoricalShops implements Listener {
       InstantSource time,
       Logger logger,
       ChunkLoader chunks,
+      ChunkTickets tickets,
       Map<String, Long> completed) {}
 
   HistoricalShops(Services services, ImportRuntime runtime) {
@@ -89,6 +92,7 @@ final class HistoricalShops implements Listener {
     this.logger = runtime.logger();
     this.stock = new HistoricalStock(plugin);
     this.chunks = runtime.chunks();
+    this.tickets = runtime.tickets();
     this.completed = Map.copyOf(runtime.completed());
   }
 
@@ -159,15 +163,32 @@ final class HistoricalShops implements Listener {
     }
     var sign = entry.sign();
     var chest = entry.container();
-    return chunks
-        .load(world, sign.x() >> 4, sign.z() >> 4)
-        .thenCombine(chunks.load(world, chest.x() >> 4, chest.z() >> 4), (a, b) -> true)
+    var held = new java.util.ArrayList<HeldChunk>();
+    return holdChunk(world, sign.x() >> 4, sign.z() >> 4, held)
+        .thenCombine(holdChunk(world, chest.x() >> 4, chest.z() >> 4, held), (a, b) -> true)
         .thenComposeAsync(
             ignored ->
                 prepare(
                     entry,
                     world.getBlockAt(sign.x(), sign.y(), sign.z()),
                     world.getBlockAt(chest.x(), chest.y(), chest.z())),
+            main)
+        .whenCompleteAsync(
+            (ignored, error) -> held.forEach(chunk -> tickets.release(world, chunk.x(), chunk.z())),
+            main);
+  }
+
+  private record HeldChunk(int x, int z) {}
+
+  private CompletableFuture<Void> holdChunk(
+      org.bukkit.World world, int x, int z, List<HeldChunk> held) {
+    return chunks
+        .load(world, x, z)
+        .thenRunAsync(
+            () -> {
+              tickets.hold(world, x, z);
+              held.add(new HeldChunk(x, z));
+            },
             main);
   }
 
@@ -218,7 +239,7 @@ final class HistoricalShops implements Listener {
         && receipt == shop.id()
         && shop.container().filter(ShopBlocks.pos(chest)::equals).isPresent()
         && (blocks.shopAtSign(sign).isEmpty() || !stock.wasStocked(chest, entry.id()))) {
-      registry.close(shop.id(), "historical shop world data needs staff reconciliation");
+      registry.retainClosure(shop.id(), "historical shop world data needs staff reconciliation");
       logger.error("Historical shop {} has incomplete saved world data", entry.id());
     }
   }
@@ -255,15 +276,15 @@ final class HistoricalShops implements Listener {
     var shop = pending.shop();
     var sign = pending.sign();
     var chest = pending.chest();
+    var problem = importProblem(entry, sign, chest, ItemTemplates.item(entry.item()));
+    if (problem != null) {
+      registry.retainClosure(shop.id(), "historical import needs reconciliation");
+      throw new IllegalStateException(
+          "Historical shop changed during import: " + entry.id() + ": " + problem);
+    }
+    // Protection can inspect connected shops. Publish only after it has checked the old sign.
     registry.add(shop);
     registry.close(shop.id(), IMPORTING);
-    if (!matches(sign, entry)
-        || hasShopStamp(sign)
-        || !blocks.isShopContainer(chest)
-        || !allowed(entry, sign, chest)) {
-      registry.close(shop.id(), "historical import needs reconciliation");
-      throw new IllegalStateException("Historical shop changed during import: " + entry.id());
-    }
     var fingerprint = shop.item().orElseThrow();
     var targets =
         fingerprint.bundleDeal()
@@ -468,10 +489,6 @@ final class HistoricalShops implements Listener {
       case SPLASH_STRONG_HARMING -> PotionType.STRONG_HARMING;
       default -> null;
     };
-  }
-
-  private boolean allowed(Entry entry, Block sign, Block chest) {
-    return accessProblem(entry, sign, chest).isEmpty();
   }
 
   private Optional<String> accessProblem(Entry entry, Block sign, Block chest) {

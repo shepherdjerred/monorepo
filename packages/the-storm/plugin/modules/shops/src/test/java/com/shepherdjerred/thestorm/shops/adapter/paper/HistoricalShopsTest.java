@@ -79,6 +79,7 @@ final class HistoricalShopsTest extends ShopsFixture {
             InstantSource.system(),
             plugin.getComponentLogger(),
             (ignored, x, z) -> CompletableFuture.completedFuture(null),
+            plugin.services.require(com.shepherdjerred.thestorm.core.world.ChunkTickets.class),
             java.util.Map.of()));
   }
 
@@ -284,6 +285,7 @@ final class HistoricalShopsTest extends ShopsFixture {
                 InstantSource.system(),
                 plugin.getComponentLogger(),
                 (ignored, x, z) -> CompletableFuture.completedFuture(null),
+                plugin.services.require(com.shepherdjerred.thestorm.core.world.ChunkTickets.class),
                 store.completedHistoricalShops().get()));
     finish(recovery.restore(List.of(entry())));
     assertThat(restarted.closure(shop.id())).isEmpty();
@@ -377,6 +379,26 @@ final class HistoricalShopsTest extends ShopsFixture {
     assertThat(count(inventory, Material.DIAMOND)).isEqualTo(15);
     assertThat(count(inventory, Material.GOLD_INGOT)).isEqualTo(15);
     assertThat(plugin.wallets.balanceOf(new AccountId.Player(OWNER))).isEqualTo(28);
+  }
+
+  @Test
+  void protectionMayInspectTheOldSignWithoutEvictingAnUnfinishedImport() throws Exception {
+    var sign = oldSign();
+    var registry = ((ReadyServerShops) plugin.services.require(ServerShops.class)).registry();
+    var blocks = new ShopBlocks(plugin, registry, Set.of(Material.CHEST));
+    var tickets =
+        plugin.services.require(com.shepherdjerred.thestorm.core.world.ChunkTickets.class);
+    plugin.protection.beforeCheck =
+        () -> {
+          assertThat(tickets.holds(world, 0, 0)).isPositive();
+          blocks.shopAtSign(sign);
+        };
+    finish(
+        importer(registry, blocks, new JooqShopStore(plugin.database())).restore(List.of(entry())));
+    assertThat(registry.atSign(ShopBlocks.pos(sign))).isPresent();
+    assertThat(blocks.shopAtSign(sign)).isEqualTo(registry.atSign(ShopBlocks.pos(sign)));
+    assertThat(registry.closed()).isEmpty();
+    assertThat(tickets.holds(world, 0, 0)).isZero();
   }
 
   @Test

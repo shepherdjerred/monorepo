@@ -73,6 +73,9 @@ public final class ShopsPaper {
                 context.time(),
                 context.logger(),
                 (world, x, z) -> world.getChunkAtAsync(x, z),
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.world.ChunkTickets.class),
                 state.completed()));
     plugin.getServer().getPluginManager().registerEvents(importer, plugin);
     return new HistoricalRestoration(

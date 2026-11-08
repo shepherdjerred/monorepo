@@ -56,6 +56,7 @@ public class ShopsTestPlugin extends JavaPlugin {
     final Set<ProtectedAction> denied = new HashSet<>();
     boolean sameLand = true;
     boolean restorationAllowed = true;
+    Runnable beforeCheck = () -> {};
 
     @Override
     public boolean mayRestoreHistoricalShop(Location location) {
@@ -64,6 +65,7 @@ public class ShopsTestPlugin extends JavaPlugin {
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
+      beforeCheck.run();
       return denied.contains(action)
           ? new Decision.Denied(Component.text("This land belongs to Aegis."))
           : Decision.allowed();
@@ -116,6 +118,9 @@ public class ShopsTestPlugin extends JavaPlugin {
     var database = StormDatabase.open(directory.resolve("t.db"));
     this.database = database;
     services.provide(Wallets.class, wallets);
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.ChunkTickets.class,
+        new com.shepherdjerred.thestorm.core.world.ChunkTickets(this));
     services.provide(
         MoneyFormatter.class,
         new MoneyFormatter() {

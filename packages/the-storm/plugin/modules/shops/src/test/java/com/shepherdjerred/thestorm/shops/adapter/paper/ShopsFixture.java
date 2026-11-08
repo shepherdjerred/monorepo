@@ -57,7 +57,8 @@ abstract class ShopsFixture {
             ShopsTestPlugin.class,
             new PluginDescriptionFile("TheStorm", "test", ShopsTestPlugin.class.getName()));
     // Ordinary shop tests do not operate on the production historical catalog.
-    world = server.addSimpleWorld("shop-test-world");
+    world = new TicketWorld();
+    server.addWorld(world);
     world.loadChunk(0, 0);
     for (var attempt = 0; attempt < 400 && !plugin.shopsReady(); attempt++) {
       server.getScheduler().performOneTick();
@@ -69,6 +70,28 @@ abstract class ShopsFixture {
   @AfterEach
   void stop() {
     MockBukkit.unmock();
+  }
+
+  /** MockBukkit lacks plugin tickets; native import acceptance proves Paper's unload behavior. */
+  private static final class TicketWorld extends WorldMock {
+    private record Ticket(int x, int z, org.bukkit.plugin.Plugin plugin) {}
+
+    private final java.util.Set<Ticket> tickets = new java.util.HashSet<>();
+
+    TicketWorld() {
+      super(new org.bukkit.WorldCreator("shop-test-world"));
+    }
+
+    @Override
+    public boolean addPluginChunkTicket(int x, int z, org.bukkit.plugin.Plugin owner) {
+      loadChunk(x, z);
+      return tickets.add(new Ticket(x, z, owner));
+    }
+
+    @Override
+    public boolean removePluginChunkTicket(int x, int z, org.bukkit.plugin.Plugin owner) {
+      return tickets.remove(new Ticket(x, z, owner));
+    }
   }
 
   static String plain(Component component) {
