@@ -3362,7 +3362,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "The reviewed beacon world is staged but is not installed or accepted in production yet; new launches must wait for the dimension replacement and live safety checks.",
+          "issue": "AI-448",
+          "enableWhen": "Deploy the matching beacon snapshot, verify all 19 protected towers and 38 BlueMap markers plus saved-player safety, and pass a live launch/landing check; then enable the production rollout.",
+          "reviewBy": "2026-11-14"
+        }
+      ]
     },
     {
       "key": "the-storm-rwf-enabled",
