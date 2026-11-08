@@ -18,8 +18,9 @@
 # - a core started from SSH: `hc server restart` replaces it with a launchd one.
 #   A planned restart keeps every running terminal in its existing holder, so
 #   it does not fix the holder;
-# - an SSH-born holder with no terminals is ended, and the launchd core starts
-#   a fresh one for the next terminal;
+# - an SSH-born holder with no terminals is frozen, checked for programs, and
+#   ended only if it runs none; the launchd core starts a fresh one for the
+#   next terminal;
 # - an SSH-born holder with live terminals is reported once, in the log and as
 #   a macOS notification, but never ended here: that ends its terminals.
 #
@@ -53,8 +54,18 @@ fi
 while read -r holder terminals instance; do
     started_from_ssh "$holder" || continue
     if [ "$terminals" -eq 0 ]; then
+        # The count above can be stale if a client opens a terminal meanwhile.
+        # Freeze the holder so it cannot start a program, then end it only if
+        # it runs none: its programs are its direct children.
+        if ! kill -STOP "$holder"; then
+            continue # it exited after the status read
+        fi
+        if pgrep -P "$holder" >/dev/null; then
+            kill -CONT "$holder"
+            continue # it gained a terminal; the next run reports it
+        fi
         log "holder $holder was started from SSH and holds no terminals; ending it"
-        kill "$holder"
+        kill -KILL "$holder"
         continue
     fi
     # Report each holder once, not every minute. The instance id is unique per
