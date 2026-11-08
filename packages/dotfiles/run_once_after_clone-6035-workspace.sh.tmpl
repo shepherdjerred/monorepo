@@ -1,0 +1,16 @@
+#!/bin/bash
+# Assistant hosts only (see .chezmoiignore): clone the Georgia Tech CS 6035
+# course workspace. The repository is private, so `gh` must be signed in; until
+# it is, this fails with that instruction and chezmoi retries on the next apply.
+set -euo pipefail
+
+target="$HOME/git/6035-workspace"
+if [ -d "$target/.git" ]; then
+    exit 0
+fi
+if ! gh auth status >/dev/null 2>&1; then
+    echo "clone-6035-workspace: run 'gh auth login', then 'chezmoi apply'" >&2
+    exit 1
+fi
+mkdir -p "$HOME/git"
+gh repo clone sj-omscs/6035-workspace "$target"

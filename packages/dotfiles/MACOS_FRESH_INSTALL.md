@@ -73,6 +73,47 @@ An agent host keeps no credential files. Do not run `talosctl kubeconfig`,
 Verify with `command -v talosctl` (resolves to the shim), `kubectl get nodes`,
 and `aws --profile seaweedfs s3 ls`.
 
+## Assistant hosts
+
+An assistant host is a GUI Mac that a ChatGPT Dot uses as its connected
+computer; `jobs` is the first. A Dot can use a Mac only while the ChatGPT app is
+open there, and a ChatGPT account connects one Mac at a time. You administer
+the host over Tailscale SSH and Herdr, with a KVM for the console.
+
+Install it with `DOTFILES_PROFILE=assistant-host bash install_macos.sh`. The
+profile installs only the taps, formulae, and casks in
+`.chezmoidata/assistant-host.yaml`: ChatGPT, 1Password, Google Chrome,
+Obsidian, Ghostty, and the shell and remote-administration tools. It carries no
+coding agents, language runtimes, homelab CLIs, or credentials, and keeps
+Atuin local-only. The `com.jerred.chatgpt` LaunchAgent starts ChatGPT at login
+and reopens it within a minute if it quits.
+
+At the console (or KVM) once:
+
+1. Sign in with your Apple ID, turn on Messages in iCloud, and enable FileVault.
+   Each reboot then needs a console unlock, which also logs in the user so
+   ChatGPT and Herdr core start.
+2. Run `sudo pmset -a sleep 0 disksleep 0 autorestart 1 womp 1`, and set
+   **Require password after screen saver begins or display is turned off** to
+   **Never** so a Dot can keep using the unlocked session. FileVault still
+   protects the disk at rest.
+3. Bring up Tailscale SSH as described in [Tailscale SSH](#tailscale-ssh), then
+   run `hc machine add <name> --install` from the Mac that drives Herdr.
+4. Run `gh auth login`, then `chezmoi apply` so the CS 6035 workspace clones to
+   `~/git/6035-workspace`.
+5. Sign in to the 1Password app for your own use. Set it to lock after one
+   minute and on screen lock. Do not install the 1Password CLI or browser
+   extension; no agent gets the vault.
+6. In Google Chrome, sign in to the sites a Dot should browse, and install the
+   Anti-Captcha extension with its API key.
+7. Sign in to Obsidian Sync and open the vault.
+8. Sign in to ChatGPT. In the Dot's settings, under **Computers**, choose
+   **Allow access** for this Mac, then grant the Accessibility, Screen
+   Recording, and Automation prompts macOS shows.
+
+Account-level ChatGPT connectors (for example the Monarch and Home Assistant
+MCP servers) belong to the ChatGPT account, not to this Mac.
+
 ## Before erasing the Mac
 
 - Identify the authoritative sync service for every important data set and

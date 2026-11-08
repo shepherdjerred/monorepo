@@ -1,0 +1,51 @@
+# Package selection for the "assistant-host" profile (see .chezmoi.toml.tmpl):
+# a GUI Mac that ChatGPT Dots drives through the ChatGPT app, reached for
+# administration over Tailscale SSH and Herdr. dot_Brewfile.tmpl filters the
+# workstation's `.Brewfile_darwin` dump down to exactly these entries; unlike
+# agent hosts, formulae are allowlisted too, and go, uv, npm, and VS Code
+# entries are all dropped. Every name must also appear in `.Brewfile_darwin`,
+# which scripts/brewfile-allowlists.test.ts checks.
+assistantHost:
+  taps:
+    - cormacrelf/tap
+    - dsully/tap
+    - rsteube/tap
+  brews:
+    # Remote administration: Tailscale SSH (the GUI app cannot serve SSH) and
+    # the dotfiles themselves.
+    - tailscale
+    - chezmoi
+    - gh
+    - git
+    # The fish config starts these unconditionally (config.fish.tmpl).
+    - fish
+    - mise
+    - starship
+    - atuin
+    - rsteube/tap/carapace
+    # The git config's pager and external diff.
+    - git-delta
+    - difftastic
+    # Targets of the fish abbreviations and everyday shell use.
+    - bat
+    - btop
+    - eza
+    - fd
+    - gping
+    - jq
+    - neovim
+    - ov
+    - ripgrep
+    # Theme sync LaunchAgent and the macOS defaults applied on every profile.
+    - cormacrelf/tap/dark-notify
+    - dsully/tap/macos-defaults
+  casks:
+    # 1Password is for the person at the console only; no agent gets the
+    # vault (no browser extension in the Dots Chrome profile, no CLI).
+    - 1password
+    - chatgpt
+    # Provides the xterm-ghostty terminfo for sessions opened from Ghostty.
+    - ghostty
+    # The everyday browser a Dot drives on this Mac.
+    - google-chrome
+    - obsidian

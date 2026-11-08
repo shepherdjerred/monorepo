@@ -24,6 +24,7 @@ node_modules
 coverage
 .turbo
 package.json
+ci-tests.json
 tsconfig.json
 eslint.config.ts
 README.md
@@ -63,9 +64,9 @@ Library/Application Support/pinchtab/config.json
 Library/Application Support/eza/theme.yml
 {{- end }}
 
-{{- if eq .profile "agent-host" }}
-# Headless agent hosts install only the casks in .chezmoidata/agent-host.yaml,
-# so configuration for absent desktop apps stays out.
+{{- if ne .profile "workstation" }}
+# Agent and assistant hosts install only the casks their .chezmoidata
+# allowlist names, so configuration for absent desktop apps stays out.
 .config/contact-profiles
 install-fastmail-contacts.sh
 .config/zed
@@ -74,9 +75,12 @@ Library/Application Support/Cursor
 Library/Application Support/Sublime Text
 install-sublime-package-control.sh
 set-default-apps.sh
-# Agent hosts send Taildrop files; only the workstation receives them.
+# Other Macs send Taildrop files; only the workstation receives them.
 Library/LaunchAgents/com.jerred.taildrop.plist
 taildrop
+{{- end }}
+
+{{- if eq .profile "agent-host" }}
 # Agent hosts keep no rendered secrets on disk; commands resolve credentials
 # at call time through toolkit or scripts/onepassword/with-service-account.sh.
 # ~/.kube/config and ~/.aws/config still render there, secret-free: kubectl and
@@ -90,4 +94,61 @@ configure-gcx.sh
 {{- else }}
 # toolkit credential-broker shims exist only on agent hosts.
 .local/share/toolkit/shims
+{{- end }}
+
+{{- if eq .profile "assistant-host" }}
+# Assistant hosts are driven by a personal-assistant agent through the GUI and
+# administered over Tailscale SSH and Herdr core. They carry no coding agents,
+# toolchains, or homelab credentials, so everything for those stays out.
+AGENTS.md
+.agents
+.claude
+.codex
+.gemini
+.config/agent
+.config/opencode
+.local/share/agent-bin
+.local/share/toolkit
+.local/bin/hc-agent-status
+install-claude-managed-settings.sh
+# Toolchains: mise runs in shims mode for the shell, with no runtimes installed.
+.bunfig.toml
+.default-cargo-crates
+.default-npm-packages
+.default-python-packages
+# Homelab and infrastructure CLIs and credentials.
+.aws
+.kube
+.talos
+.gnupg
+.config/argocd
+.config/bk.yaml
+.config/turbo-cache
+.local/bin/cf
+configure-gcx.sh
+Library/Application Support/temporalio
+# Coding-workflow helpers; ~/bin keeps only the theme sync.
+bin/chezmoi_watchman.sh
+bin/codex_theme_restart_*.ts
+bin/git_cleanup
+bin/git_cleanup*.ts
+bin/herdr-new-worktree
+bin/herdr_new_worktree*.ts
+bin/restart-codex-panes
+bin/restart_codex_panes.ts
+bin/update.ts
+bin/write_brewfile.sh
+.config/lvim
+.config/zellij
+.config/yt-dlp
+# The Herdr window runs on the Macs that reach this one; here only herdr-core
+# runs, kept by its LaunchAgent and ~/.local/bin/herdr-core-ensure.
+.config/herdr-app
+# Automation browsers and document tooling a Dot does not use.
+install-docling.sh
+install-pinchtab-daemon.sh
+{{- else }}
+# Only assistant hosts keep ChatGPT open for Dots or carry the course repo.
+Library/LaunchAgents/com.jerred.chatgpt.plist
+clone-6035-workspace.sh
 {{- end }}

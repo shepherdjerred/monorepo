@@ -63,7 +63,8 @@ discover_berkeley_mono_source_dir() {
 
 log_info "Starting macOS dotfiles install"
 
-# The machine profile ("workstation" or "agent-host") is owned by chezmoi:
+# The machine profile ("workstation", "agent-host", or "assistant-host") is
+# owned by chezmoi:
 # .chezmoi.toml.tmpl records DOTFILES_PROFILE at the first init, validates it,
 # and keeps the recorded value when a later run leaves the variable unset.
 # DOTFILES_PROFILE is resolved from chezmoi after init below.
@@ -119,18 +120,32 @@ else
     DOTFILES_SOURCE_DIR="${HOME}/git/monorepo/packages/dotfiles"
 fi
 
+# Record the profile without applying, so every later step can depend on it.
+chezmoi init --source "${DOTFILES_SOURCE_DIR}"
+DOTFILES_PROFILE="$(chezmoi execute-template '{{ .profile }}')"
+log_info "Machine profile: ${DOTFILES_PROFILE}"
+
 # Install Brewfile
 if command -v brew &>/dev/null; then
     log_info "Trusting third-party Homebrew formulae"
-    third_party_formulae=(
-        "artginzburg/tap/sudo-touchid"
-        "cormacrelf/tap/dark-notify"
-        "dsully/tap/macos-defaults"
-        "lightpanda-io/browser/lightpanda"
-        "pinchtab/tap/pinchtab"
-        "rsteube/tap/carapace"
-        "siderolabs/tap/talosctl"
-    )
+    if [ "${DOTFILES_PROFILE}" = "assistant-host" ]; then
+        # Only the third-party formulae .chezmoidata/assistant-host.yaml keeps.
+        third_party_formulae=(
+            "cormacrelf/tap/dark-notify"
+            "dsully/tap/macos-defaults"
+            "rsteube/tap/carapace"
+        )
+    else
+        third_party_formulae=(
+            "artginzburg/tap/sudo-touchid"
+            "cormacrelf/tap/dark-notify"
+            "dsully/tap/macos-defaults"
+            "lightpanda-io/browser/lightpanda"
+            "pinchtab/tap/pinchtab"
+            "rsteube/tap/carapace"
+            "siderolabs/tap/talosctl"
+        )
+    fi
     for formula in "${third_party_formulae[@]}"; do
         tap="${formula%/*}"
         retry 3 5 brew tap "$tap"
@@ -138,9 +153,10 @@ if command -v brew &>/dev/null; then
     done
 
     # Woodpecker publishes no Homebrew formula, so its CLI is a pinned release
-    # binary. `toolkit woodpecker` shells out to it.
+    # binary. `toolkit woodpecker` shells out to it. Assistant hosts run no
+    # toolkit.
     woodpecker_cli_version="3.18.1"
-    if [ ! -x "${HOME}/.local/bin/woodpecker-cli" ]; then
+    if [ "${DOTFILES_PROFILE}" != "assistant-host" ] && [ ! -x "${HOME}/.local/bin/woodpecker-cli" ]; then
         log_info "Installing woodpecker-cli ${woodpecker_cli_version}"
         mkdir -p "${HOME}/.local/bin"
         woodpecker_archive="$(mktemp -d)/woodpecker-cli.tar.gz"
@@ -151,12 +167,9 @@ if command -v brew &>/dev/null; then
         log_success "woodpecker-cli installed"
     fi
 
-    # Record the profile without applying, then install the profile's rendered
-    # Brewfile so setup hooks still run after their prerequisites exist.
+    # Install the profile's rendered Brewfile before applying, so setup hooks
+    # still run after their prerequisites exist.
     log_info "Installing Brewfile packages"
-    chezmoi init --source "${DOTFILES_SOURCE_DIR}"
-    DOTFILES_PROFILE="$(chezmoi execute-template '{{ .profile }}')"
-    log_info "Machine profile: ${DOTFILES_PROFILE}"
     rendered_brewfile="$(mktemp)"
     chezmoi execute-template <"${DOTFILES_SOURCE_DIR}/dot_Brewfile.tmpl" >"${rendered_brewfile}"
     retry 3 5 brew bundle --file="${rendered_brewfile}"
@@ -165,13 +178,16 @@ if command -v brew &>/dev/null; then
     # leaves these global CLIs without the binaries their scripts download
     # (nvim-treesitter then cannot build parsers). `npm config set` merges into
     # ~/.npmrc instead of replacing it. Run from $HOME: inside a workspace (such
-    # as the monorepo) `npm config` fails with ENOWORKSPACES.
-    npm_script_packages=(tree-sitter-cli @posthog/cli)
-    (
-        cd "${HOME}"
-        npm config set allow-scripts="$(IFS=,; echo "${npm_script_packages[*]}")" --location=user
-        npm rebuild -g "${npm_script_packages[@]}"
-    )
+    # as the monorepo) `npm config` fails with ENOWORKSPACES. Assistant hosts
+    # install no npm packages.
+    if [ "${DOTFILES_PROFILE}" != "assistant-host" ]; then
+        npm_script_packages=(tree-sitter-cli @posthog/cli)
+        (
+            cd "${HOME}"
+            npm config set allow-scripts="$(IFS=,; echo "${npm_script_packages[*]}")" --location=user
+            npm rebuild -g "${npm_script_packages[@]}"
+        )
+    fi
     log_success "Brewfile packages installed"
 
     log_info "Applying dotfiles after package prerequisites are installed"
@@ -195,7 +211,7 @@ if command -v brew &>/dev/null; then
         log_info "tailscaled system daemon already installed"
     fi
 
-    if [ "${DOTFILES_PROFILE}" != "agent-host" ]; then
+    if [ "${DOTFILES_PROFILE}" = "workstation" ]; then
         log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
         sudo-touchid --with-reattach
         log_success "Touch ID for sudo enabled"
@@ -233,8 +249,11 @@ open "/Applications/Syntax Highlight.app" 2>/dev/null || true
 # QLMarkdown: Quick Look extension for Markdown rendering (unsigned Homebrew cask)
 open "/Applications/QLMarkdown.app" 2>/dev/null || true
 
-# Install language runtimes via mise
-if command -v mise &>/dev/null; then
+# Install language runtimes via mise. Assistant hosts keep mise only for the
+# shell's shims mode and install no runtimes.
+if [ "${DOTFILES_PROFILE}" = "assistant-host" ]; then
+    log_info "Assistant host: skipping mise runtimes"
+elif command -v mise &>/dev/null; then
     log_info "Installing language runtimes via mise"
     retry 3 5 mise install --yes
     log_success "Mise runtimes installed"
@@ -268,8 +287,11 @@ else
     log_warn "Skipping fisher install: fish not available"
 fi
 
-# Neovim: install plugins, LSP servers, and tree-sitter parsers
-if command -v nvim &>/dev/null; then
+# Neovim: install plugins, LSP servers, and tree-sitter parsers. Assistant hosts
+# have no tree-sitter CLI or compilers; plugins bootstrap on first launch.
+if [ "${DOTFILES_PROFILE}" = "assistant-host" ]; then
+    log_info "Assistant host: skipping Neovim plugin and parser install"
+elif command -v nvim &>/dev/null; then
     log_info "Installing Neovim plugins"
     nvim --headless "+Lazy! sync" +qa
     log_info "Installing tree-sitter parsers"
@@ -287,9 +309,10 @@ if command -v atuin &>/dev/null; then
     ATUIN_LOGGED_IN=$?
     set -e
 
-    # Agent hosts keep history local so agents cannot search other devices'.
-    if [ "${DOTFILES_PROFILE}" = "agent-host" ]; then
-        log_info "Agent host: leaving Atuin local-only (no login or sync)"
+    # Agent and assistant hosts keep history local so agents cannot search
+    # other devices'.
+    if [ "${DOTFILES_PROFILE}" != "workstation" ]; then
+        log_info "${DOTFILES_PROFILE}: leaving Atuin local-only (no login or sync)"
     elif [ "$ATUIN_LOGGED_IN" -ne 0 ]; then
         atuin login -u sjerred || true
         set +e
@@ -298,7 +321,7 @@ if command -v atuin &>/dev/null; then
         set -e
     fi
 
-    if [ "${DOTFILES_PROFILE}" != "agent-host" ] && [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
+    if [ "${DOTFILES_PROFILE}" = "workstation" ] && [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
         atuin sync || true
     fi
     log_success "Atuin configured"

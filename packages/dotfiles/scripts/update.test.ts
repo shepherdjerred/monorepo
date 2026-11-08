@@ -51,14 +51,16 @@ test("exports the Brewfile on workstations only", async () => {
     true,
   );
 
-  const agentHostCommands: Command[] = [];
-  await main(
-    async (command) => {
-      agentHostCommands.push(command);
-    },
-    async () => "agent-host",
-  );
-  expect(agentHostCommands.some((command) => isBrewfileExport(command))).toBe(
-    false,
-  );
+  for (const profile of ["agent-host", "assistant-host"]) {
+    const hostCommands: Command[] = [];
+    await main(
+      async (command) => {
+        hostCommands.push(command);
+      },
+      async () => profile,
+    );
+    expect(hostCommands.some((command) => isBrewfileExport(command))).toBe(
+      false,
+    );
+  }
 });

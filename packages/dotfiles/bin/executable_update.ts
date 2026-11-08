@@ -99,9 +99,10 @@ export async function main(
     updateBrew(runCommand),
   ]);
 
-  // Export current brew state. .Brewfile_darwin is the workstation dump; an
-  // agent host installs a filtered subset, so write_brewfile.sh refuses there.
-  if ((await readProfile()) === "agent-host") return;
+  // Export current brew state. .Brewfile_darwin is the workstation dump; agent
+  // and assistant hosts install a filtered subset, so write_brewfile.sh refuses
+  // there.
+  if ((await readProfile()) !== "workstation") return;
   const home = Bun.env["HOME"];
   if (home === undefined) throw new Error("HOME is required");
   await runCommand({

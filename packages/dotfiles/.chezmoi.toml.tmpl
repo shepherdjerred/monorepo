@@ -1,12 +1,14 @@
 {{- $monorepoPath := joinPath .chezmoi.homeDir "git/monorepo/packages/dotfiles" -}}
 {{- /* Machine profile. "workstation" is the full desktop; "agent-host" is a
-       headless machine for coding agents reached over Tailscale SSH. Set once
-       with `DOTFILES_PROFILE=agent-host chezmoi init`; later inits keep the
+       headless machine for coding agents reached over Tailscale SSH;
+       "assistant-host" is a GUI Mac that a personal-assistant agent (ChatGPT
+       Dots) drives, with almost no coding or infrastructure tooling. Set once
+       with `DOTFILES_PROFILE=<profile> chezmoi init`; later inits keep the
        recorded value. */ -}}
 {{- $profile := get . "profile" | default "workstation" -}}
 {{- $profile = env "DOTFILES_PROFILE" | default $profile -}}
-{{- if not (has $profile (list "workstation" "agent-host")) -}}
-{{-   fail (printf "unknown DOTFILES_PROFILE %q; expected workstation or agent-host" $profile) -}}
+{{- if not (has $profile (list "workstation" "agent-host" "assistant-host")) -}}
+{{-   fail (printf "unknown DOTFILES_PROFILE %q; expected workstation, agent-host, or assistant-host" $profile) -}}
 {{- end -}}
 {{- if stat $monorepoPath }}
 sourceDir = {{ $monorepoPath | quote }}

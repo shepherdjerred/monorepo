@@ -2,7 +2,9 @@
 # .chezmoi.toml.tmpl). `.Brewfile_darwin` stays the generated dump of the full
 # workstation; dot_Brewfile.tmpl filters it for agent hosts instead of keeping a
 # second hand-maintained list. Every tap, formula, go, uv, and npm entry is kept.
-# Only these casks survive, and VS Code extensions are dropped.
+# Only these casks survive, and VS Code extensions are dropped. The
+# "assistant-host" profile filters the same dump through assistant-host.yaml.
+# scripts/brewfile-allowlists.test.ts checks both lists against the dump.
 agentHost:
   casks:
     - 1password-cli
