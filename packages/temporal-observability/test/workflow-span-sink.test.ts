@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { resourceFromAttributes } from "@opentelemetry/resources";
+import { SpanKind, SpanStatusCode } from "@opentelemetry/api";
 import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
@@ -8,6 +9,7 @@ import {
   createValidatedWorkflowSpanSink,
   forwardValidatedWorkflowSpans,
 } from "@shepherdjerred/temporal-observability/workflow-span-sink";
+import type { SerializableSpan } from "@temporalio/interceptors-opentelemetry-v2/lib/workflow/index.js";
 
 const WORKFLOW_INFO = {
   namespace: "prod",
@@ -20,18 +22,24 @@ const WORKFLOW_INFO = {
 function span(
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
-  return {
+  const valid = {
     name: "RunWorkflow:exampleWorkflow",
-    kind: 1,
+    kind: SpanKind.SERVER,
     spanContext: {
       traceId: "0123456789abcdef0123456789abcdef",
       spanId: "0123456789abcdef",
       traceFlags: 1,
     },
-    parentSpanId: "fedcba9876543210",
+    parentSpanContext: {
+      traceId: "0123456789abcdef0123456789abcdef",
+      spanId: "fedcba9876543210",
+      traceFlags: 1,
+      traceState: "vendor=parent",
+      isRemote: true,
+    },
     startTime: [1, 0],
     endTime: [2, 0],
-    status: { code: 1 },
+    status: { code: SpanStatusCode.OK },
     attributes: { existing: "value" },
     links: [],
     events: [],
@@ -40,9 +48,9 @@ function span(
     droppedAttributesCount: 0,
     droppedLinksCount: 0,
     droppedEventsCount: 0,
-    instrumentationLibrary: { name: "temporal-workflow" },
-    ...overrides,
-  };
+    instrumentationScope: { name: "temporal-workflow", version: "1.24.0" },
+  } satisfies SerializableSpan;
+  return { ...valid, ...overrides };
 }
 
 describe("createValidatedWorkflowSpanSink", () => {
@@ -62,6 +70,14 @@ describe("createValidatedWorkflowSpanSink", () => {
       spanId: "0123456789abcdef",
     });
     expect(exported[0]?.parentSpanContext?.spanId).toBe("fedcba9876543210");
+    expect(exported[0]?.parentSpanContext?.isRemote).toBe(true);
+    expect(exported[0]?.parentSpanContext?.traceState?.serialize()).toBe(
+      "vendor=parent",
+    );
+    expect(exported[0]?.instrumentationScope).toEqual({
+      name: "temporal-workflow",
+      version: "1.24.0",
+    });
     expect(exported[0]?.attributes).toMatchObject({
       existing: "value",
       "temporal.namespace": "prod",
@@ -80,6 +96,20 @@ describe("createValidatedWorkflowSpanSink", () => {
         span({ spanContext: { traceId: "bad", spanId: "bad", traceFlags: 1 } }),
       ]);
     }).toThrow();
+    expect(exporter.getFinishedSpans()).toHaveLength(0);
+  });
+
+  test("rejects the obsolete SDK wire fields instead of losing parentage", () => {
+    const exporter = new InMemorySpanExporter();
+    const processor = new SimpleSpanProcessor(exporter);
+    expect(() =>
+      forwardValidatedWorkflowSpans(
+        processor,
+        resourceFromAttributes({}),
+        WORKFLOW_INFO,
+        [span({ parentSpanId: "fedcba9876543210" })],
+      ),
+    ).toThrow();
     expect(exporter.getFinishedSpans()).toHaveLength(0);
   });
 });

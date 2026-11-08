@@ -7,6 +7,7 @@
     "./interceptors": "./src/interceptors.ts",
     "./log-fields": "./src/log-fields.ts",
     "./tracing-resource": "./src/tracing-resource.ts",
+    "./workflow-interceptors": "./src/workflow-interceptors.ts",
     "./workflow-span-sink": "./src/workflow-span-sink.ts"
   },
   "scripts": {
