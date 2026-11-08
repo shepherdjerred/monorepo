@@ -152,7 +152,9 @@ export async function localSession(input: {
         )
           break;
         if (performance.now() > deadline)
-          throw new Error("Native camera did not acknowledge the demo arrival");
+          throw new Error(
+            `Native camera did not acknowledge the demo arrival: ${JSON.stringify({ expected: { world, position: [x - 2.5, y, zz - 2.5] }, observed: state.connected ? { world: state.world, position: state.position, screen: state.screen, terrainReady: state["terrainReady"], clientLoaded: state["clientLoaded"] } : state })}`,
+          );
         await Bun.sleep(100);
       }
       for (const name of ["XiguaJerred", ...input.helpers])
