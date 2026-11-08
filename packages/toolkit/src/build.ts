@@ -1,3 +1,5 @@
+import path from "node:path";
+
 type Command = readonly string[];
 
 type RunCommand = (command: Command, cwd: string) => Promise<void>;
@@ -53,6 +55,7 @@ export async function buildToolkit(
 }
 
 if (import.meta.main) {
-  const root = import.meta.dir.replace(/\/src$/, "");
+  // The package root is this file's parent folder on every platform.
+  const root = path.dirname(import.meta.dir);
   await buildToolkit(root);
 }
