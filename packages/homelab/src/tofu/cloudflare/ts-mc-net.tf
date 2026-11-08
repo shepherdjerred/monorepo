@@ -61,7 +61,7 @@ resource "cloudflare_dns_record" "ts_mc_net_cname_public" {
   proxied = true
 }
 
-# storage.ts-mc.net CNAME is auto-managed by Cloudflare R2 custom domain
+# The storage.ts-mc.net record belongs to cloudflare_r2_custom_domain.ts_mc.
 
 # ── SRV ─────────────────────────────────────────────────────────────────────
 

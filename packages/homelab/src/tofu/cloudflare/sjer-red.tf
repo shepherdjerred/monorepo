@@ -97,7 +97,7 @@ resource "cloudflare_dns_record" "sjer_red_cname_discord_plays_pokemon_com" {
   proxied = true
 }
 
-# files.sjer.red CNAME is auto-managed by Cloudflare R2 custom domain
+# The files.sjer.red record belongs to cloudflare_r2_custom_domain.sjerred.
 
 resource "cloudflare_dns_record" "sjer_red_cname_freshrss" {
   zone_id = cloudflare_zone.sjer_red.id
