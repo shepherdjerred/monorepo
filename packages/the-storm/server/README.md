@@ -279,6 +279,18 @@ Configuration belongs in these places:
 | Homelab chart                                              | Server identity, credentials, and service bootstrap                           |
 | Persistent volume                                          | Worlds, vanilla inventories, permissions, plugin databases, and runtime state |
 
+The patches keep survival mechanics vanilla where Spigot and Paper defaults
+diverge. Hunger and thunder use vanilla values. Entity activation throttling is
+off, so far-away farm mobs tick normally. Full hoppers have no extra cooldown,
+entity collisions are uncapped, players take cramming damage, phantoms attack
+anyone, and pearls in unloaded chunks keep their thrower, so stasis chambers
+work. Every Paper `unsupported-settings` exploit stays explicitly off: no TNT,
+carpet, rail or sand duplication, no headless pistons, and no breaking of
+bedrock or end portal frames. The mob caps above vanilla, the 15-minute item
+despawn, and levelled mobs remain deliberate Storm changes. Patches overwrite
+volume files on every boot, so removing an op leaves its last value in place;
+restore a default by putting its value explicitly.
+
 Never add `plugins/TheStorm` itself to `owned.roots`: it contains the runtime
 database. Floodgate generates its private key on the volume; the image never
 owns or copies that key. `plugins/Citizens` is not an owned root either: it

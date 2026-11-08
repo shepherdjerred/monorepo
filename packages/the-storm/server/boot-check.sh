@@ -37,7 +37,7 @@ manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm MCBridge)
 # The modules owned/plugins/TheStorm/config.yml enables: all 27 registered.
-enabled_modules=(agent arena chat companions creative discord economy essentials mail mechanics messages mobs npcs qol quests rwf rwfbots safety seasonal shards shops skills spells tickets towns tracks world)
+enabled_modules=(advancements agent arena chat companions creative discord economy essentials mail mechanics messages mobs npcs qol quests reset rwf rwfbots safety seasonal shards shops skills skylands spells stargates tickets towns tracks world)
 # Non-secret fixture: MCBridge disables itself without a token of >= 32 chars.
 bridge_token=storm-boot-check-bridge-fixture-token
 
@@ -122,7 +122,7 @@ boot() { # label [docker run args...]
   enabled=$(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr -d ' ' | tr ',' '\n' | sort | tr '\n' ' ')
   expected=$(printf '%s\n' "${enabled_modules[@]}" | sort | tr '\n' ' ')
   [[ "$enabled" == "$expected" ]] ||
-    fail "$label: expected all 27 Storm modules enabled: $expected; got: $enabled"
+    fail "$label: expected all ${#enabled_modules[@]} Storm modules enabled: $expected; got: $enabled"
   if grep -E 'Could not prepare arenas|Could not validate shard altars|Spawn preparation failed' "$log"; then
     fail "$label: required world fixtures failed"
   fi
@@ -131,8 +131,22 @@ boot() { # label [docker run args...]
 expect_patched() { # label: the patch step's values are in place
   on_volume grep -qx 'spawn-protection=0' /data/server.properties ||
     fail "$1: server.properties does not turn vanilla spawn protection off"
-  on_volume grep -q 'thunder-chance: 10000' /data/spigot.yml ||
-    fail "$1: spigot.yml was not patched"
+  # Vanilla parity: these differ from the Spigot and Paper defaults (or from the
+  # old Storm overrides), so they prove each patch reached its file.
+  on_volume grep -qx '    thunder-chance: 100000' /data/spigot.yml ||
+    fail "$1: spigot.yml does not use vanilla thunder"
+  on_volume grep -qx '      regen-exhaustion: 6.0' /data/spigot.yml ||
+    fail "$1: spigot.yml does not use vanilla hunger"
+  on_volume grep -A8 '^    entity-activation-range:' /data/spigot.yml | grep -qx '      monsters: 0' ||
+    fail "$1: spigot.yml still throttles inactive entities"
+  on_volume grep -qx '  cooldown-when-full: false' /data/config/paper-world-defaults.yml ||
+    fail "$1: paper-world-defaults.yml keeps the full-hopper cooldown"
+  on_volume grep -qx '  disable-unloaded-chunk-enderpearl-exploit: false' /data/config/paper-world-defaults.yml ||
+    fail "$1: paper-world-defaults.yml still drops pearls in unloaded chunks"
+  on_volume grep -qx '  max-entity-collisions: 2147483647' /data/config/paper-world-defaults.yml ||
+    fail "$1: paper-world-defaults.yml still caps entity collisions"
+  on_volume grep -qx '  allow-piston-duplication: false' /data/config/paper-global.yml ||
+    fail "$1: paper-global.yml allows piston duplication"
 }
 
 expect_bedrock() { # label: first-boot config and generated Floodgate key exist
