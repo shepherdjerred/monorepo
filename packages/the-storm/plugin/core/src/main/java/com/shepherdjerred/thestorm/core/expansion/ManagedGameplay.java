@@ -43,6 +43,7 @@ public final class ManagedGameplay implements AutoCloseable {
   private final InstantSource time;
   private final OutageDefaults outageDefaults;
   private final Map<EvaluationKey, CachedEvaluation> evaluations = new ConcurrentHashMap<>();
+  private final Map<EvaluationKey, Boolean> lastSuccessful = new ConcurrentHashMap<>();
 
   public ManagedGameplay(
       BiFunction<String, UUID, CompletableFuture<Boolean>> reader, Runnable stop) {
@@ -141,6 +142,12 @@ public final class ManagedGameplay implements AutoCloseable {
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
     return reader
         .apply(key, actor)
+        .thenApply(
+            enabled -> {
+              if (outageDefaults.enabled().contains(key))
+                lastSuccessful.put(new EvaluationKey(key, actor), enabled);
+              return enabled;
+            })
         .exceptionally(
             failure -> {
               var cause = FlagProviderUnavailableException.unwrap(failure);
@@ -150,9 +157,9 @@ public final class ManagedGameplay implements AutoCloseable {
               System.getLogger(ManagedGameplay.class.getName())
                   .log(
                       System.Logger.Level.WARNING,
-                      "Flag provider unavailable; retaining a fresh value or declared default for {0}",
+                      "Flag provider unavailable; retaining the last successful value or declared default for {0}",
                       key);
-              return cachedEnabled(key, actor).orElse(true);
+              return lastSuccessful.getOrDefault(new EvaluationKey(key, actor), true);
             })
         .thenApply(
             enabled -> {

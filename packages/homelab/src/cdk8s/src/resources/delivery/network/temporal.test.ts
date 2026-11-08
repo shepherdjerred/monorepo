@@ -5,6 +5,7 @@ import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-cha
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
 import { createDeliveryControlPlaneChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery-control-plane.ts";
 import { podTemplateSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 const Selector = z.object({
   matchLabels: z.record(z.string(), z.string()).optional(),
@@ -179,6 +180,48 @@ beforeAll(() => {
 });
 
 describe("actual Delivery client reachability to Temporal", () => {
+  it("boots both Flipt-consuming control-plane roles with an exporter and collector-only OTLP egress", () => {
+    const producers = workloads.filter((workload) =>
+      ["delivery-worker", "delivery-platform-worker"].includes(
+        workload.spec.template.metadata.labels["component"] ?? "",
+      ),
+    );
+    expect(producers).toHaveLength(2);
+    for (const workload of producers) {
+      const source = client(workload);
+      const environment = workload.spec.template.spec.containers.flatMap(
+        (container) => container.env,
+      );
+      expect(environment).toEqual(
+        expect.arrayContaining([
+          { name: "TELEMETRY_ENABLED", value: "true" },
+          { name: "OTLP_ENDPOINT", value: OTLP_GATEWAY_BASE_URL },
+          { name: "TELEMETRY_SERVICE_NAME", value: workload.metadata.name },
+        ]),
+      );
+      const egress = policies
+        .filter(
+          (policy) =>
+            policy.metadata.namespace === source.namespace &&
+            matches(policy.spec.podSelector, source.labels),
+        )
+        .flatMap((policy) => policy.spec.egress ?? [])
+        .filter((rule) => rule.ports?.some((port) => port.port === 4318));
+      expect(egress).toEqual([
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
+              },
+            },
+          ],
+          ports: [{ port: 4318, protocol: "TCP" }],
+        },
+      ]);
+    }
+  });
+
   it("admits all three independently released pollers on gRPC only with their exact Kubernetes namespace", () => {
     expect(
       workloads

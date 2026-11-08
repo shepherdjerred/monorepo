@@ -12,6 +12,10 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import { createDeliveryJobs } from "./jobs.ts";
+import {
+  temporalTelemetryEnvironment,
+  temporalTelemetryEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 const namespace = (name: string) => ({
   namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": name } },
 });
@@ -56,6 +60,7 @@ export function createDeliveryPlatformWorker(
     memoryRequest: Size.mebibytes(256),
     memoryLimit: Size.gibibytes(1),
     envVariables: {
+      ...temporalTelemetryEnvironment("temporal-delivery-platform-worker"),
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
@@ -80,6 +85,7 @@ export function createDeliveryPlatformWorker(
       ingress: [{ from: [namespace("prometheus")], ports: ports(9464, 9465) }],
       egress: [
         dnsEgressRule(),
+        temporalTelemetryEgressRule(),
         { ports: ports(443) },
         kubernetesApiEgressRule(),
         {

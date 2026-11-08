@@ -292,6 +292,11 @@ chart and reject historical archives that contain protected control-plane
 workloads. Image equality alone could not protect commands, probes, credentials
 or other template fields across application rollback.
 
+Both Flipt-consuming control-plane Activity roles export telemetry through the
+internal OTLP collector. Their exporter bootstrap and collector egress belong
+to the control-plane chart, so changing them uses the same independent upgrade
+path, including chart-only upgrades that retain the original Temporal image.
+
 An admin control-plane intent freezes the controller chart and original Temporal
 image independently, including chart-only upgrades that retain older image
 provenance. Its claim waits for every other Delivery execution and recovery to

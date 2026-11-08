@@ -43,6 +43,31 @@ final class ManagedGameplayTest {
   }
 
   @Test
+  void outageAnswersSurviveCacheExpiryAndCleanupForOtherActors() {
+    var actor = randomUUID();
+    var other = randomUUID();
+    var now = new AtomicReference<>(Instant.EPOCH);
+    var response = new AtomicReference<>(CompletableFuture.completedFuture(false));
+    var gameplay =
+        new ManagedGameplay(
+            (key, id) -> response.get(),
+            () -> {},
+            (InstantSource) now::get,
+            new ManagedGameplay.OutageDefaults(false, java.util.Set.of(ManagedGameplay.STAFF)));
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isFalse();
+    now.set(Instant.EPOCH.plusSeconds(31));
+    response.set(CompletableFuture.completedFuture(true));
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, other).join()).isTrue();
+    assertThat(gameplay.cachedEnabled(ManagedGameplay.STAFF, actor)).isEmpty();
+    response.set(
+        CompletableFuture.failedFuture(
+            new FlagProviderUnavailableException(new java.io.IOException("offline"))));
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isFalse();
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, other).join()).isTrue();
+    assertThat(gameplay.enabled(ManagedGameplay.STAFF, randomUUID()).join()).isTrue();
+  }
+
+  @Test
   void successfulFalseNeverFallsThroughToTheDefault() {
     var actor = randomUUID();
     var gameplay =
