@@ -207,6 +207,27 @@ const scenario: SuiteScenario = {
       }),
   },
 };
+it("selects a named batch in authored order and refuses partial, duplicate, or empty IDs", () => {
+  const other = {
+    ...scenario,
+    id: "other",
+    shots: scenario.shots.map((p) => ({ ...p, name: "other-shot" })),
+  };
+  const suite = defineCaptureSuite({
+    id: "batch",
+    bootstrap: [0, 64, 0],
+    patches: [
+      { world: "world", min: [-16, -16], max: [16, 16], paddingChunks: 2 },
+    ],
+    scenarios: [scenario, other],
+  });
+  expect(selectScenarios(suite, { scenario: "other,cook" })).toEqual([
+    scenario,
+    other,
+  ]);
+  for (const value of ["cook,missing", "cook,cook", "cook,", ""])
+    expect(() => selectScenarios(suite, { scenario: value })).toThrow();
+});
 it("validates output identity and rejects empty selections", () => {
   const suite = defineCaptureSuite({
     id: "example",

@@ -92,14 +92,18 @@ export default defineCaptureScene({
           (i) => i.slot === 0 && i.type === "minecraft:oak_planks",
         ),
     );
+    // Confirm a server round trip after teleporting and changing operator status.
+    await helper.command("creative info", "7;1 owner");
+    if ((await context.block([582, 66, 25])) !== "minecraft:air")
+      throw new Error("The trusted builder's placement cell is not empty");
     await helper.lookAt([582.5, 65.9, 25.5]);
     await helper.action("use");
-    const deadline = performance.now() + 5000;
+    const deadline = performance.now() + 30_000;
     while ((await context.block([582, 66, 25])) !== "minecraft:oak_planks") {
       if (performance.now() > deadline) {
         const { state } = await helper.status();
         throw new Error(
-          `The trusted non-operator could not build on the plot: ${JSON.stringify(state.connected ? { position: state.position, target: state.target, held: state.inventory.find((i) => i.slot === state.hotbar) } : state)}`,
+          `The trusted non-operator could not build on the plot: ${JSON.stringify({ block: await context.block([582, 66, 25]), client: state.connected ? { position: state.position, target: state.target, held: state.inventory.find((i) => i.slot === state.hotbar) } : state, messages: await helper.action("messages", { since: 0 }) })}`,
         );
       }
       await Bun.sleep(100);

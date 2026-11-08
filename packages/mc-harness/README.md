@@ -277,6 +277,32 @@ toolkit mc capture suite replay <run-id>
 toolkit mc capture suite render <run-id> --shot cooking-pot
 ```
 
+`--scenario` also accepts comma-separated IDs, such as `cooking,pipes`.
+The selection retains authored order and refuses duplicate or unknown IDs.
+
+For the entire TSMC catalog, use the resumable driver with an existing fixture:
+
+```bash
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --fixture <sha256>
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --resume <campaign-id>
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --replay <campaign-id> --fresh
+```
+
+The driver retains the shared mechanics as one batch, followed by one batch per
+fresh scenario. Successful batches keep their private S3 run records and publish
+their selected outputs. An atomic local checkpoint under
+`$TOOLKIT_MC_DIRECTORY/campaigns` records each completed batch; a failed batch
+remains pending. Resume skips completed batches and reuses the first batch's
+immutable runtime and terrain. Source edits require a new campaign. Commit media
+only after the entire campaign and visual review pass.
+
+Complete campaign manifests are content-addressed and indexed privately in S3.
+Replay restores each batch's own saved rollout decisions; `--fresh` selects the
+fresh scenarios, while omitting it replays every batch. The driver refuses
+concurrent runs of the same campaign. After an interrupted process, confirm it
+has stopped before removing its reported stale `.lock` directory. Partial
+campaign checkpoints remain local to the capture host.
+
 By default, `run` flushes saved live terrain, takes a CSI snapshot, and reads a
 read-only disposable clone. An explicit `--fixture <sha256>` reuses an already
 retained private S3 fixture and requires its terrain patches to match the suite

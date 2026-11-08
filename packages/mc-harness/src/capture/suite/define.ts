@@ -252,9 +252,19 @@ export function selectScenarios(
   suite: CaptureSuite,
   selection: { scenario?: string | undefined; shot?: string | undefined },
 ) {
+  const ids =
+    selection.scenario === undefined
+      ? undefined
+      : z.array(MediaName).min(1).parse(selection.scenario.split(","));
+  if (
+    ids !== undefined &&
+    (new Set(ids).size !== ids.length ||
+      ids.some((id) => !suite.scenarios.some((s) => s.id === id)))
+  )
+    throw new Error("Scenario selection contains duplicate or unknown IDs");
   const selected = suite.scenarios.filter(
     (s) =>
-      (selection.scenario === undefined || s.id === selection.scenario) &&
+      (ids === undefined || ids.includes(s.id)) &&
       (selection.shot === undefined ||
         s.shots.some((p) => p.name === selection.shot)),
   );
