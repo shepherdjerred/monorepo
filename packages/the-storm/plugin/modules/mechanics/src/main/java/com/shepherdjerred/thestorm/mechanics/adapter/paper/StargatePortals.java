@@ -9,7 +9,6 @@ import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.StargateAccess;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
-import com.shepherdjerred.thestorm.mechanics.domain.stargate.GateSignText;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.Stargate;
 import java.time.Duration;
@@ -22,9 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Axis;
 import org.bukkit.Material;
-import org.bukkit.block.Sign;
 import org.bukkit.block.data.Orientable;
-import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -59,6 +56,7 @@ final class StargatePortals implements Listener {
   private final java.util.function.BooleanSupplier enabled;
   private final StargateTravel travel;
   private final Map<UUID, UUID> selected = new HashMap<>();
+  private final Map<UUID, Stargate> displayed = new HashMap<>();
   private final Map<UUID, OpenGate> active = new HashMap<>();
   private final Map<UUID, Set<WorldChunk>> destinationTickets = new HashMap<>();
   private final Set<UUID> loadingPermanent = new HashSet<>();
@@ -88,6 +86,7 @@ final class StargatePortals implements Listener {
 
   private void reconcilePermanent() {
     if (stopped || !book.ready()) return;
+    clearRemovedSelections();
     for (var entry : java.util.List.copyOf(active.values())) {
       if (entry.gate().alwaysOpen() && !permanentValid(entry.gate(), entry.target(), true)) {
         entry.closing().cancel();
@@ -261,24 +260,69 @@ final class StargatePortals implements Listener {
     }
     var destination = destinations.get(next);
     selected.put(gate.id(), destination.id());
+    displayed.put(gate.id(), gate);
     var world = context.plugin().getServer().getWorld(gate.worldId());
     if (world != null) {
       var grid = new PaperGrid(world);
       var signBlock = grid.block(gate.sign());
-      if (!protection.isPreserved(signBlock.getLocation())
-          && new Guard(protection)
-              .automaticCells(gate.ownerId(), grid, java.util.List.of(gate.sign()))
-              .isAllowed()
-          && signBlock.getState() instanceof Sign sign) {
-        var text =
-            GateSignText.display(
-                gate, book.registry().network(gate.networkId()).orElseThrow(), destination.name());
-        for (var line = 0; line < text.size(); line++)
-          sign.getSide(Side.FRONT).line(line, Component.text(text.get(line)));
-        sign.update();
-      }
+      signBlock.getChunk().getPlayersSeeingChunk().forEach(viewer -> display(gate, viewer));
     }
     tell(player, "Destination: " + destination.name() + ". Press the button to open the gate.");
+  }
+
+  private void display(Stargate gate, Player player) {
+    if (!book.ready() || !allowed(player, gate)) return;
+    var choice = selected.get(gate.id());
+    if (choice == null) return;
+    var destinations = book.registry().destinations(gate);
+    var index = -1;
+    for (var i = 0; i < destinations.size(); i++)
+      if (destinations.get(i).id().equals(choice)) index = i;
+    if (index < 0) return;
+    var world = context.plugin().getServer().getWorld(gate.worldId());
+    var pos = gate.sign();
+    if (world == null || !world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) return;
+    var labels = destinations.stream().map(Stargate::name).toList();
+    StargateDialSign.show(
+        player,
+        world.getBlockAt(pos.x(), pos.y(), pos.z()),
+        StargateDialSign.lines(gate.name(), labels, index));
+  }
+
+  private void clearRemovedSelections() {
+    var registry = book.registry();
+    for (var entry : java.util.List.copyOf(selected.entrySet())) {
+      if (registry.gate(entry.getKey()).isPresent() && registry.gate(entry.getValue()).isPresent())
+        continue;
+      selected.remove(entry.getKey());
+      var gate = displayed.remove(entry.getKey());
+      if (gate != null) restore(gate);
+    }
+  }
+
+  private void restore(Stargate gate) {
+    var world = context.plugin().getServer().getWorld(gate.worldId());
+    var pos = gate.sign();
+    if (world == null || !world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) return;
+    var block = world.getBlockAt(pos.x(), pos.y(), pos.z());
+    block
+        .getChunk()
+        .getPlayersSeeingChunk()
+        .forEach(player -> StargateDialSign.restore(player, block));
+  }
+
+  @EventHandler
+  void playerChunkLoaded(io.papermc.paper.event.packet.PlayerChunkLoadEvent event) {
+    if (!enabled.getAsBoolean() || !book.ready()) return;
+    var chunk = event.getChunk();
+    var registry = book.registry();
+    selected.keySet().stream()
+        .map(registry::gate)
+        .flatMap(java.util.Optional::stream)
+        .filter(gate -> gate.worldId().equals(chunk.getWorld().getUID()))
+        .filter(
+            gate -> gate.sign().x() >> 4 == chunk.getX() && gate.sign().z() >> 4 == chunk.getZ())
+        .forEach(gate -> display(gate, event.getPlayer()));
   }
 
   private void activate(Player player, Stargate gate) {
@@ -620,6 +664,7 @@ final class StargatePortals implements Listener {
   void stop() {
     stopped = true;
     permanentTick.cancel();
+    displayed.values().forEach(this::restore);
     for (var entry : java.util.List.copyOf(active.values())) {
       entry.closing().cancel();
       close(entry.gate().id());

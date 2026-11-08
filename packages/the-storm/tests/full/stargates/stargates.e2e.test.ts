@@ -123,9 +123,20 @@ test("a private Stargate network admits its invited players and denies others", 
   );
   bot.chat(`/stargate network invite Testgate ${secondBot.username}`);
   await invited;
+  const originalSign = await rcon.command("data get block 401 72 1 front_text");
   const allowed = waitForMessage(secondBot, /Destination: Second/u);
   await secondBot.activateBlock(visitorSign);
   await allowed;
+  await waitUntil(
+    "invited player sees the selected destination on the sign",
+    () =>
+      JSON.stringify(secondBot.blockAt(new Vec3(401, 72, 1))?.entity)?.includes(
+        ">Second<",
+      ) ?? false,
+  );
+  expect(await rcon.command("data get block 401 72 1 front_text")).toBe(
+    originalSign,
+  );
   await verifyInviteeCannotRemove(secondBot, rcon, visitorSign);
   await rcon.command(`tp ${bot.username} 401.5 71 3.5`);
   await waitUntil(
