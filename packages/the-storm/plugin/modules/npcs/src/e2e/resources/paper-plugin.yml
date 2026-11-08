@@ -6,7 +6,7 @@ description: Disposable existing-Citizens admission proof; never ship to product
 dependencies:
   server:
     TheStorm:
-      load: BEFORE
+      load: AFTER
       required: true
       join-classpath: true
     Citizens:

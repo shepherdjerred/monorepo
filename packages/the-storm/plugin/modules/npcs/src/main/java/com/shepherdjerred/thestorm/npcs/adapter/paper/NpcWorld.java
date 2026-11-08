@@ -319,7 +319,8 @@ final class NpcWorld {
     var entry = live.get(npc.id());
     var previousHome =
         entry == null ? parts.bodies().savedHome(entity) : Optional.of(entry.npc.home().toString());
-    if (previousHome.isPresent() && !previousHome.get().equals(npc.home().toString())) {
+    if (entry == null
+        || (previousHome.isPresent() && !previousHome.get().equals(npc.home().toString()))) {
       parts.bodies().stop(entity);
       if (!entity.teleport(homeLocation(npc))) {
         throw new IllegalStateException("could not move NPC " + npc.id() + " to its new home");

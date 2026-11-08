@@ -231,7 +231,6 @@ export async function stagePlugins(
     path.join(pluginsDir, "TheStorm.jar"),
     Bun.file(options.stormJar),
   );
-  await stageExtraPlugins(pluginsDir, options.extraPluginJars ?? []);
   if (options.ownedConfigDir !== undefined) {
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
@@ -328,6 +327,7 @@ export async function stagePlugins(
       recursive: true,
     });
   }
+  await stageExtraPlugins(pluginsDir, options.extraPluginJars ?? []);
   return pluginsDir;
 }
 

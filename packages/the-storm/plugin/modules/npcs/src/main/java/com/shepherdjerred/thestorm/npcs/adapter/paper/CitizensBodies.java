@@ -96,12 +96,7 @@ public final class CitizensBodies implements NpcBodies, Listener {
             .orElseGet(() -> registry().createNPC(EntityType.PLAYER, definition.name()));
     npc.data().setPersistent(OWNER, definition.id());
     configure(npc, definition);
-    var home = location(definition);
-    if (npc.isSpawned()) {
-      if (!body(npc).teleport(home)) {
-        throw new IllegalStateException("Citizens could not relocate " + definition.id());
-      }
-    } else if (!npc.spawn(home)) {
+    if (!npc.isSpawned() && !npc.spawn(location(definition))) {
       throw new IllegalStateException("Citizens could not spawn " + definition.id());
     }
     var entity = body(npc);
