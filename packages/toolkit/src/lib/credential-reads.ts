@@ -1,7 +1,16 @@
-import { createHash } from "node:crypto";
-import { appendFile, mkdir, rename, rm, stat } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  appendFile,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { installedToolkitPath } from "#lib/credential-cache.ts";
 
 /**
@@ -42,20 +51,79 @@ export async function liveDelegate(): Promise<string | null> {
   return (await Bun.file(installed).exists()) ? installed : null;
 }
 
+const ReferencesSchema = z.array(
+  z.looseObject({ name: z.string(), ref: z.string() }),
+);
+
+/** Per runner: the installed binary's effective `op://` reference per name. */
+const installedReferences = new WeakMap<
+  Run,
+  Map<string, Promise<ReadonlyMap<string, string> | null>>
+>();
+
+async function readInstalledReferences(
+  installed: string,
+  run: Run,
+): Promise<ReadonlyMap<string, string> | null> {
+  // `credentials references` lists locators only and never reads a value.
+  const result = await run([installed, "credentials", "references", "--json"], {
+    [DELEGATED_ENVIRONMENT]: "1",
+  });
+  if (result.exit !== 0) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(result.stdout);
+  } catch {
+    return null;
+  }
+  const entries = ReferencesSchema.safeParse(parsed);
+  return entries.success
+    ? new Map(entries.data.map((entry) => [entry.name, entry.ref]))
+    : null;
+}
+
+function referencesOf(
+  installed: string,
+  run: Run,
+): Promise<ReadonlyMap<string, string> | null> {
+  let byBinary = installedReferences.get(run);
+  if (byBinary === undefined) {
+    byBinary = new Map();
+    installedReferences.set(run, byBinary);
+  }
+  let references = byBinary.get(installed);
+  if (references === undefined) {
+    references = readInstalledReferences(installed, run);
+    byBinary.set(installed, references);
+  }
+  return references;
+}
+
 /**
- * Resolve one credential through the installed binary's cache. `toolkit run`
- * hands the value to `printenv` only; the captured stdout is returned and
- * never logged. Returns null when that binary does not know the credential
- * (an older install), so the caller reads it directly.
+ * Resolve one credential through the installed binary's cache. It delegates
+ * only when that binary resolves the name to the same `op://` reference this
+ * process chose (an older install or a different config file may not), and
+ * passes an explicit service-account token along. `toolkit run` hands the
+ * value to `printenv` only; the captured stdout is returned and never logged.
+ * Returns null when delegation does not apply, so the caller reads directly.
  */
 export async function readDelegated(
   name: string,
+  ref: string,
   installed: string,
   run: Run,
 ): Promise<string | null> {
+  const references = await referencesOf(installed, run);
+  if (references?.get(name) !== ref) return null;
+  const token = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
   const result = await run(
     [installed, "run", "--env", name, "--", "/usr/bin/printenv", name],
-    { [DELEGATED_ENVIRONMENT]: "1" },
+    {
+      [DELEGATED_ENVIRONMENT]: "1",
+      ...(token !== undefined && token.length > 0
+        ? { OP_SERVICE_ACCOUNT_TOKEN: token }
+        : {}),
+    },
   );
   const lines = result.stderr
     .split("\n")
@@ -82,27 +150,54 @@ export type ReferenceLock = <T>(
   body: () => Promise<T>,
 ) => Promise<T>;
 
-function isAlreadyExists(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "EEXIST";
+function errorCode(error: unknown): unknown {
+  return error instanceof Error && "code" in error ? error.code : undefined;
 }
 
-async function lockAgeMs(
-  directory: string,
-  now: number,
-): Promise<number | null> {
+const OWNER_FILE = "owner";
+
+async function lockOwner(directory: string): Promise<string | null> {
   try {
-    const info = await stat(directory);
-    return now - info.mtimeMs;
+    return await readFile(path.join(directory, OWNER_FILE), "utf8");
   } catch {
     return null;
   }
 }
 
+/** Whether the process named by an owner record (`pid:token`) is running. */
+function ownerAlive(owner: string): boolean {
+  const pid = Number.parseInt(owner.split(":")[0] ?? "", 10);
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM: the process exists but belongs to someone else.
+    return errorCode(error) === "EPERM";
+  }
+}
+
+async function abandoned(
+  directory: string,
+  owner: string | null,
+  staleMs: number,
+): Promise<boolean> {
+  if (owner !== null) return !ownerAlive(owner);
+  // Created but not yet claimed, or the holder died in between.
+  try {
+    const info = await stat(directory);
+    return Date.now() - info.mtimeMs > staleMs;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * A lock held as a directory per reference (`mkdir` is atomic). A holder that
- * died leaves a directory older than `staleMs`, which the next caller removes.
- * A waiter that runs out of `maxWaitMs` proceeds without the lock rather than
- * failing the command.
+ * A lock held as a directory per reference (`mkdir` is atomic) with an owner
+ * record of `pid:token`. A waiter takes over only from a dead owner, or from
+ * an unclaimed directory older than `staleMs`, and a holder releases only its
+ * own lock. A waiter that runs out of `maxWaitMs` proceeds without the lock:
+ * the lock saves budget, it does not guard correctness.
  */
 export function directoryLock(options: {
   readonly root: string;
@@ -119,16 +214,23 @@ export function directoryLock(options: {
       options.root,
       createHash("sha256").update(ref).digest("hex"),
     );
+    const mine = `${String(process.pid)}:${randomUUID()}`;
     const deadline = Date.now() + maxWaitMs;
     let held = false;
     while (!held && Date.now() < deadline) {
       try {
         await mkdir(directory);
+        await writeFile(path.join(directory, OWNER_FILE), mine, {
+          mode: 0o600,
+        });
         held = true;
       } catch (error) {
-        if (!isAlreadyExists(error)) throw error;
-        const age = await lockAgeMs(directory, Date.now());
-        if (age !== null && age > staleMs) {
+        if (errorCode(error) !== "EEXIST") throw error;
+        const owner = await lockOwner(directory);
+        const takeOver =
+          (await abandoned(directory, owner, staleMs)) &&
+          (await lockOwner(directory)) === owner;
+        if (takeOver) {
           await rm(directory, { recursive: true, force: true });
         } else {
           await Bun.sleep(pollMs);
@@ -138,7 +240,9 @@ export function directoryLock(options: {
     try {
       return await body();
     } finally {
-      if (held) await rm(directory, { recursive: true, force: true });
+      if (held && (await lockOwner(directory)) === mine) {
+        await rm(directory, { recursive: true, force: true });
+      }
     }
   };
 }
@@ -174,16 +278,44 @@ function commandLabel(argv: readonly string[]): string {
     .join(" ");
 }
 
+const LOG_FILE = /^credential-reads-(\d{4}-\d{2}-\d{2})\.jsonl$/;
+
+/** Daily file name, shared with `scripts/onepassword/with-service-account.sh`. */
+export function readLogFile(directory: string, at: Date): string {
+  return path.join(
+    directory,
+    `credential-reads-${at.toISOString().slice(0, 10)}.jsonl`,
+  );
+}
+
+async function pruneReadLogs(
+  directory: string,
+  at: Date,
+  retainDays: number,
+): Promise<void> {
+  const cutoff = new Date(at.getTime() - retainDays * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  for (const entry of await readdir(directory)) {
+    const day = LOG_FILE.exec(entry)?.[1];
+    if (day !== undefined && day < cutoff) {
+      await rm(path.join(directory, entry), { force: true });
+    }
+  }
+}
+
 /**
- * Append one JSON line per resolution. The log is diagnostics: a write
- * failure is reported once on stderr and never fails the command.
+ * Append one JSON line per resolution to a daily file and drop files older
+ * than `retainDays`; appends are atomic and nothing is renamed, so concurrent
+ * processes cannot lose records. The log is diagnostics: a write failure is
+ * reported once on stderr and never fails the command.
  */
 export function fileReadLog(options: {
-  readonly file: string;
-  readonly maxBytes?: number;
+  readonly directory: string;
+  readonly retainDays?: number;
   readonly now?: () => Date;
 }): ReadLog {
-  const maxBytes = options.maxBytes ?? 10 * 1024 * 1024;
+  const retainDays = options.retainDays ?? 14;
   const now = options.now ?? (() => new Date());
   const context = {
     host: os.hostname(),
@@ -192,26 +324,25 @@ export function fileReadLog(options: {
     command: commandLabel(process.argv),
     ppid: process.ppid,
   };
+  let pruned = false;
   let reported = false;
   return async (event) => {
-    const line = JSON.stringify({
-      ts: now().toISOString(),
-      ...context,
-      ...event,
-    });
+    const at = now();
+    const line = JSON.stringify({ ts: at.toISOString(), ...context, ...event });
     try {
-      await mkdir(path.dirname(options.file), { recursive: true, mode: 0o700 });
-      const size = await stat(options.file).then(
-        (info) => info.size,
-        () => 0,
-      );
-      if (size > maxBytes) await rename(options.file, `${options.file}.1`);
-      await appendFile(options.file, `${line}\n`, { mode: 0o600 });
+      await mkdir(options.directory, { recursive: true, mode: 0o700 });
+      await appendFile(readLogFile(options.directory, at), `${line}\n`, {
+        mode: 0o600,
+      });
+      if (!pruned) {
+        pruned = true;
+        await pruneReadLogs(options.directory, at, retainDays);
+      }
     } catch (error) {
       if (!reported) {
         reported = true;
         console.error(
-          `toolkit: credential read log ${options.file} unavailable: ${error instanceof Error ? error.message : String(error)}`,
+          `toolkit: credential read log in ${options.directory} unavailable: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
@@ -220,7 +351,7 @@ export function fileReadLog(options: {
 
 export function liveReadLog(): ReadLog {
   return fileReadLog({
-    file: path.join(os.homedir(), ".toolkit", "logs", "credential-reads.jsonl"),
+    directory: path.join(os.homedir(), ".toolkit", "logs"),
   });
 }
 

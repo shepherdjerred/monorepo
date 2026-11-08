@@ -274,7 +274,7 @@ async function readServiceAccountRef(
     return { value: cached, source: "cache" };
   }
   if (ctx.cache === null && ctx.delegate !== null) {
-    const value = await readDelegated(name, ctx.delegate, ctx.run);
+    const value = await readDelegated(name, ref, ctx.delegate, ctx.run);
     if (value !== null) return { value, source: "delegated" };
   }
   if (ctx.cache === null && ctx.liveSubprocesses) {

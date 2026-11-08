@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
@@ -14,6 +22,7 @@ import {
   fileReadLog,
 } from "#lib/credential-reads.ts";
 import type { ReadEvent } from "#lib/credential-reads.ts";
+import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
 import { resolveCredentialValues } from "#lib/credentials.ts";
 import type { CredentialRun } from "#lib/credentials.ts";
 
@@ -95,12 +104,36 @@ async function absentConfig(): Promise<string> {
   return path.join(await scratch(), "absent.toml");
 }
 
+const WOODPECKER_SOURCE = CREDENTIAL_REGISTRY["WOODPECKER_TOKEN"]?.source;
+const WOODPECKER_REF =
+  WOODPECKER_SOURCE?.kind === "op" ? WOODPECKER_SOURCE.ref : "unset";
+
+/** An installed toolkit that reports `ref` for WOODPECKER_TOKEN. */
+function installedReply(ref: string, run: Reply): (argv: string[]) => Reply {
+  return (argv) => {
+    if (argv[0] !== INSTALLED) return { exit: 0, stdout: VALUE, stderr: "" };
+    return argv[1] === "credentials"
+      ? {
+          exit: 0,
+          stdout: JSON.stringify([
+            { name: "WOODPECKER_TOKEN", ref, source: "registry" },
+          ]),
+          stderr: "",
+        }
+      : run;
+  };
+}
+
 describe("borrowing the installed toolkit's cache", () => {
   test("an uncached process resolves through the installed binary, not op", async () => {
     await isolated(async () => {
       const calls: { argv: string[]; extra: Record<string, string> }[] = [];
       const run = recordingRun(
-        () => ({ exit: 0, stdout: `${VALUE}\n`, stderr: "" }),
+        installedReply(WOODPECKER_REF, {
+          exit: 0,
+          stdout: `${VALUE}\n`,
+          stderr: "",
+        }),
         calls,
       );
       const values = await resolveCredentialValues(["WOODPECKER_TOKEN"], {
@@ -112,6 +145,10 @@ describe("borrowing the installed toolkit's cache", () => {
       expect(values["WOODPECKER_TOKEN"]).toBe(VALUE);
       expect(calls).toEqual([
         {
+          argv: [INSTALLED, "credentials", "references", "--json"],
+          extra: { [DELEGATED_ENVIRONMENT]: "1" },
+        },
+        {
           argv: [
             INSTALLED,
             "run",
@@ -121,25 +158,26 @@ describe("borrowing the installed toolkit's cache", () => {
             "/usr/bin/printenv",
             "WOODPECKER_TOKEN",
           ],
-          extra: { [DELEGATED_ENVIRONMENT]: "1" },
+          // The caller's explicit token goes to the trusted reader.
+          extra: {
+            [DELEGATED_ENVIRONMENT]: "1",
+            OP_SERVICE_ACCOUNT_TOKEN: "ambient-sa-token",
+          },
         },
       ]);
       expect(stderrLines.join("\n")).not.toContain(VALUE);
     });
   });
 
-  test("an install that does not know the credential falls back to op", async () => {
+  test("an install resolving the name to another reference is not used", async () => {
     await isolated(async () => {
       const calls: { argv: string[]; extra: Record<string, string> }[] = [];
       const run = recordingRun(
-        (argv) =>
-          argv[0] === INSTALLED
-            ? {
-                exit: 1,
-                stdout: "",
-                stderr: "toolkit: unknown credential WOODPECKER_TOKEN\n",
-              }
-            : { exit: 0, stdout: VALUE, stderr: "" },
+        installedReply("op://other/item/field", {
+          exit: 0,
+          stdout: "wrong-secret",
+          stderr: "",
+        }),
         calls,
       );
       const values = await resolveCredentialValues(["WOODPECKER_TOKEN"], {
@@ -150,16 +188,37 @@ describe("borrowing the installed toolkit's cache", () => {
       });
       expect(values["WOODPECKER_TOKEN"]).toBe(VALUE);
       expect(calls.map((call) => call.argv.slice(0, 2))).toEqual([
-        [INSTALLED, "run"],
+        [INSTALLED, "credentials"],
         ["op", "read"],
       ]);
+    });
+  });
+
+  test("an install without reference listing falls back to op", async () => {
+    await isolated(async () => {
+      const calls: { argv: string[]; extra: Record<string, string> }[] = [];
+      const run = recordingRun(
+        (argv) =>
+          argv[0] === INSTALLED
+            ? { exit: 2, stdout: "", stderr: "Usage: toolkit credentials\n" }
+            : { exit: 0, stdout: VALUE, stderr: "" },
+        calls,
+      );
+      const values = await resolveCredentialValues(["WOODPECKER_TOKEN"], {
+        run,
+        cache: null,
+        installedToolkit: INSTALLED,
+        configPath: await absentConfig(),
+      });
+      expect(values["WOODPECKER_TOKEN"]).toBe(VALUE);
+      expect(calls.map((call) => call.argv[0])).toEqual([INSTALLED, "op"]);
     });
   });
 
   test("a delegated failure surfaces the installed binary's reason", async () => {
     await isolated(async () => {
       const run = recordingRun(
-        () => ({
+        installedReply(WOODPECKER_REF, {
           exit: 1,
           stdout: "",
           stderr:
@@ -178,6 +237,10 @@ describe("borrowing the installed toolkit's cache", () => {
     });
   });
 });
+
+function lockDirectory(root: string, ref: string): string {
+  return path.join(root, createHash("sha256").update(ref).digest("hex"));
+}
 
 describe("one reader per credential", () => {
   test("concurrent cold callers make one op read", async () => {
@@ -208,19 +271,30 @@ describe("one reader per credential", () => {
     });
   });
 
-  test("a stale lock left by a dead holder is taken over", async () => {
+  test("a lock whose owner died is taken over", async () => {
     const root = await scratch();
-    const lock = directoryLock({ root, staleMs: 0, pollMs: 5 });
-    const order: string[] = [];
+    const directory = lockDirectory(root, "op://v/i/f");
+    await mkdir(directory, { recursive: true });
+    await writeFile(path.join(directory, "owner"), "2147483646:dead");
+    const lock = directoryLock({ root, pollMs: 5, maxWaitMs: 5000 });
+    const started = Date.now();
+    await lock("op://v/i/f", () => Promise.resolve());
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect(await Bun.file(path.join(directory, "owner")).exists()).toBe(false);
+  });
+
+  test("a slow live holder keeps its lock", async () => {
+    const root = await scratch();
+    const directory = lockDirectory(root, "op://v/i/f");
+    const lock = directoryLock({ root, staleMs: 0, pollMs: 5, maxWaitMs: 50 });
     await lock("op://v/i/f", async () => {
-      order.push("first");
-      // A second caller treats the held directory as stale and proceeds.
-      await lock("op://v/i/f", () => {
-        order.push("second");
-        return Promise.resolve();
-      });
+      const owner = await readFile(path.join(directory, "owner"), "utf8");
+      // The waiter gives up after maxWaitMs and runs unlocked; it must not
+      // remove or replace the live holder's lock.
+      await lock("op://v/i/f", () => Promise.resolve());
+      expect(await readFile(path.join(directory, "owner"), "utf8")).toBe(owner);
     });
-    expect(order).toEqual(["first", "second"]);
+    expect(await Bun.file(path.join(directory, "owner")).exists()).toBe(false);
   });
 });
 
@@ -249,10 +323,19 @@ describe("credential read log", () => {
     });
   });
 
-  test("the file log is JSONL with context and no value", async () => {
-    const file = path.join(await scratch(), "logs", "reads.jsonl");
+  test("the file log is daily JSONL with context, no value, and pruning", async () => {
+    const directory = path.join(await scratch(), "logs");
+    await mkdir(directory, { recursive: true });
+    await writeFile(
+      path.join(directory, "credential-reads-2026-10-01.jsonl"),
+      "{}\n",
+    );
+    await writeFile(
+      path.join(directory, "credential-reads-2026-11-01.jsonl"),
+      "{}\n",
+    );
     const log = fileReadLog({
-      file,
+      directory,
       now: () => new Date("2026-11-08T08:00:00.000Z"),
     });
     await log({ name: "WOODPECKER_TOKEN", backend: "cache", outcome: "ok" });
@@ -261,7 +344,10 @@ describe("credential read log", () => {
       backend: null,
       outcome: "rate-limited",
     });
-    const contents = await readFile(file, "utf8");
+    const contents = await readFile(
+      path.join(directory, "credential-reads-2026-11-08.jsonl"),
+      "utf8",
+    );
     const lines = contents.trim().split("\n");
     expect(lines).toHaveLength(2);
     const first: unknown = JSON.parse(lines[0] ?? "");
@@ -274,6 +360,11 @@ describe("credential read log", () => {
       outcome: "ok",
     });
     expect(lines.join("\n")).not.toContain(VALUE);
+    const remaining = await readdir(directory);
+    expect(remaining.toSorted()).toEqual([
+      "credential-reads-2026-11-01.jsonl",
+      "credential-reads-2026-11-08.jsonl",
+    ]);
   });
 });
 

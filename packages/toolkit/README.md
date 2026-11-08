@@ -1055,18 +1055,21 @@ rate limit there means the shared budget is exhausted, not that enrollment is
 missing, and the error names the exhausted budget and when it resets from
 `op service-account ratelimit`.
 
-Every resolution other than an ambient variable appends one JSON line to
-`~/.toolkit/logs/credential-reads.jsonl` (rotated to `.1` past 10 MB):
-`ts`, `host`, `runtime` (`installed` or `source`), `command` (the first two
-command words), `ppid`, `name`, `backend` (`cache`, `delegated`,
-`service-account`, `config` or `keychain`; `null` on failure) and `outcome`
-(`ok`, `rate-limited` or `error`). Values are never logged.
-`scripts/onepassword/with-service-account.sh` appends a `wrapper` line for each
-command it starts. To see what spent the budget:
+Every resolution other than an ambient variable appends one JSON line to a
+daily file, `~/.toolkit/logs/credential-reads-YYYY-MM-DD.jsonl` (UTC; files
+older than 14 days are deleted): `ts`, `host`, `runtime` (`installed` or
+`source`), `command` (the first two command words), `ppid`, `name`, `backend`
+(`cache`, `delegated`, `service-account`, `config` or `keychain`; `null` on
+failure) and `outcome` (`ok`, `rate-limited` or `error`). Values are never
+logged. `scripts/onepassword/with-service-account.sh` appends a `wrapper` line
+to the same file for each command it starts. A source run delegates only when
+the installed binary resolves the name to the same `op://` reference (checked
+with `toolkit credentials references --json`), and passes an explicit
+`OP_SERVICE_ACCOUNT_TOKEN` to it. To see what spent the budget:
 
 ```bash
 jq -r 'select(.backend == "service-account" or .backend == "config" or .backend == "wrapper") | [.host, .runtime, .command, .name] | @tsv' \
-  ~/.toolkit/logs/credential-reads.jsonl | sort | uniq -c | sort -rn | head
+  ~/.toolkit/logs/credential-reads-*.jsonl | sort | uniq -c | sort -rn | head
 ```
 
 Commands outside toolkit reuse the same Keychain credential by wrapping
