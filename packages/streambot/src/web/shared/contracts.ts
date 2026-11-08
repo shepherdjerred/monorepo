@@ -242,6 +242,7 @@ export const SportsResultsSchema = z.array(
     startsAt: z.iso.datetime().nullable(),
     sportsArtwork: SportsArtworkSchema.optional(),
     canSchedule: z.boolean().optional(),
+    proOnly: z.literal(true).optional(),
   }),
 );
 

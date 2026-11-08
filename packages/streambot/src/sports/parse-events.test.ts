@@ -8,6 +8,7 @@ import { matchSportsEvents } from "@shepherdjerred/streambot/sports/sports-servi
 import { SportsService } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { sportsListingText } from "@shepherdjerred/streambot/sports/listing-text.ts";
 import { selectSportsPlayback } from "@shepherdjerred/streambot/sports/playback-selection.ts";
+import { SportsProOnlyError } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
   ChannelIdSchema,
@@ -157,5 +158,104 @@ describe("sports listings", () => {
       kind: "found",
       events: [{ provider: "streameast" }, { provider: "tvsportslive" }],
     });
+  });
+});
+
+describe("StreamEast Pro-only events", () => {
+  it("flags StreamEast Pro cards so listings can show them without offering playback", () => {
+    const events = parseStreamEastEvents(
+      '<div class="m-card m-card--live" data-match-id="pro" data-pro-only="1" data-time="1790449200"><a class="m-card__link" href="/other-events/fiji-vs-australia/" aria-label="Fiji vs Australia"></a></div>' +
+        '<div class="m-card m-card--live" data-match-id="free" data-time="1790449200"><a class="m-card__link" href="/nfl/bears-vs-packers/" aria-label="Bears vs Packers"></a></div>',
+      NOW,
+    );
+    expect(events.map((event) => [event.title, event.proOnly])).toEqual([
+      ["Fiji vs Australia", true],
+      ["Bears vs Packers", undefined],
+    ]);
+  });
+
+  it("never resolves a Pro-only match and says why it cannot play", async () => {
+    const event: SportsEvent = {
+      id: "streameast:pro",
+      provider: "streameast",
+      title: "Fiji vs Australia",
+      status: "live",
+      startsAt: null,
+      pageUrl: "https://v2.streameast.ga/other-events/fiji-vs-australia/",
+      proOnly: true,
+    };
+    let resolves = 0;
+    await expect(
+      selectSportsPlayback({
+        query: "Fiji vs Australia",
+        provider: "auto",
+        signal: new AbortController().signal,
+        catalog: {
+          listToday: async () => [event],
+          search: async () => ({ kind: "found", events: [event] }),
+        },
+        resolve: async () => {
+          resolves += 1;
+          throw new Error("must not resolve");
+        },
+      }),
+    ).rejects.toThrow(
+      "Fiji vs Australia is only streaming on StreamEast Pro, which Streambot can't play.",
+    );
+    expect(resolves).toBe(0);
+  });
+
+  it("names StreamEast Pro when the watch page turns out to be subscriber-only", async () => {
+    const event: SportsEvent = {
+      id: "streameast:gated",
+      provider: "streameast",
+      title: "Fiji vs Australia",
+      status: "live",
+      startsAt: null,
+      pageUrl: "https://v2.streameast.ga/other-events/fiji-vs-australia/",
+    };
+    await expect(
+      selectSportsPlayback({
+        query: "Fiji vs Australia",
+        provider: "streameast",
+        signal: new AbortController().signal,
+        catalog: {
+          listToday: async () => [event],
+          search: async () => ({ kind: "found", events: [event] }),
+        },
+        resolve: async () => {
+          throw new SportsProOnlyError();
+        },
+      }),
+    ).rejects.toThrow("only streaming on StreamEast Pro");
+  });
+
+  it("labels Pro-only games in the spoken listing", async () => {
+    const text = await sportsListingText({
+      scope: {
+        guildId: GuildIdSchema.parse("100000000000000001"),
+        channelId: ChannelIdSchema.parse("100000000000000002"),
+        userId: UserIdSchema.parse("100000000000000003"),
+      },
+      catalog: {
+        listToday: async () => [
+          {
+            id: "streameast:pro",
+            provider: "streameast",
+            title: "Fiji vs Australia",
+            status: "live",
+            startsAt: null,
+            pageUrl: "https://v2.streameast.ga/other-events/fiji-vs-australia/",
+            proOnly: true,
+          },
+        ],
+        search: async () => ({ kind: "not-found" }),
+      },
+      enabled: async () => true,
+      signal: new AbortController().signal,
+    });
+    expect(text).toBe(
+      "LIVE: Fiji vs Australia (streameast, Pro only, not playable)",
+    );
   });
 });

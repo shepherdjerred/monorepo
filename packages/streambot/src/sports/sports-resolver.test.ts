@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  BrowserSportsResolver,
+  SportsProOnlyError,
+} from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import type { SportsPageRenderer } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 
 /** Encode a playlist URL the way StreamEast's player script stores it. */
@@ -216,5 +219,38 @@ describe("BrowserSportsResolver", () => {
     expect(runtimeReads).toEqual([
       "https://embed.st/embed/admin/ppv-baltimore-ravens-at-dallas-cowboys/1",
     ]);
+  });
+});
+
+describe("StreamEast Pro-only events", () => {
+  it("reports a watch page whose every stream is StreamEast Pro as subscriber-only", async () => {
+    const browser: SportsPageRenderer = {
+      html: async () =>
+        '<ul><li class="se-stream is-pro is-active" data-stream-i="0"></li>' +
+        '<li class="se-stream is-pro" data-stream-i="1"></li>' +
+        '<li class="se-stream se-stream--share"></li></ul>',
+      runtimeStreams: async () => ({ resources: [], headers: {} }),
+    };
+    await expect(
+      new BrowserSportsResolver(browser).resolve(
+        "https://v2.streameast.ga/other-events/fiji-vs-australia/",
+        new AbortController().signal,
+      ),
+    ).rejects.toBeInstanceOf(SportsProOnlyError);
+  });
+
+  it("does not call a page with any free stream Pro-only", async () => {
+    const browser: SportsPageRenderer = {
+      html: async () =>
+        '<ul><li class="se-stream" data-stream-i="0"></li>' +
+        '<li class="se-stream is-pro" data-stream-i="1"></li></ul>',
+      runtimeStreams: async () => ({ resources: [], headers: {} }),
+    };
+    const failure = new BrowserSportsResolver(browser).resolve(
+      "https://v2.streameast.ga/nfl/bears-vs-packers/",
+      new AbortController().signal,
+    );
+    await expect(failure).rejects.toThrow("No supported live HLS stream");
+    await expect(failure).rejects.not.toBeInstanceOf(SportsProOnlyError);
   });
 });

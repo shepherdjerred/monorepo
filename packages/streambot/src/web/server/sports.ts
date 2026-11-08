@@ -57,6 +57,7 @@ export class WebSports {
           }
         : {}),
       ...(event.artwork === undefined ? {} : { sportsArtwork: event.artwork }),
+      ...(event.proOnly === true ? { proOnly: true as const } : {}),
     }));
   }
 
@@ -71,6 +72,12 @@ export class WebSports {
         409,
         "sports_upcoming",
         "This event is not live yet. Refresh the listings when it starts.",
+      );
+    if (event.proOnly === true)
+      throw new WebError(
+        409,
+        "sports_pro_only",
+        "This event is only on StreamEast Pro, which Streambot can't play.",
       );
     return {
       source: {

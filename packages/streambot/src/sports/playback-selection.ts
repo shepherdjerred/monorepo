@@ -3,6 +3,7 @@ import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts"
 import { sportsEventTimeLabel } from "@shepherdjerred/streambot/sports/parse-events.ts";
 import type {
   SportsCatalog,
+  SportsEvent,
   SportsProviderPreference,
 } from "@shepherdjerred/streambot/sports/types.ts";
 import type {
@@ -12,7 +13,10 @@ import type {
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import { isHttpUrl } from "@shepherdjerred/streambot/discord/resolve.ts";
-import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  SportsProOnlyError,
+  sportsEventForSource,
+} from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import { throwIfSportsRequestAborted } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { hasLolSportsCue } from "./lolesports.ts";
 import { redactMediaUrls } from "@shepherdjerred/discord-video-stream";
@@ -48,6 +52,10 @@ function logSportsResolveFailure(
     page: loggablePage(event.pageUrl),
     error: redactMediaUrls(getErrorMessage(error)),
   });
+}
+
+function proOnlyMessage(title: string): string {
+  return `${title} is only streaming on StreamEast Pro, which Streambot can't play. Pick a game without the Pro badge.`;
 }
 
 export type SportsPlaybackSelection = {
@@ -99,6 +107,8 @@ export function assertSportsSubtitleOptions(
 
 export async function selectDirectRequestUrl(input: {
   readonly query: string;
+  /** The listing event when the URL came from a sports listing; a pasted URL has none. */
+  readonly listed?: SportsEvent;
   readonly spoken: boolean | undefined;
   readonly source: PlaySource;
   readonly scope: DiscoveryScope | null;
@@ -136,6 +146,8 @@ export async function selectDirectRequestUrl(input: {
     throw new PlaybackCommandBoundaryError(
       "Choose this series from the LoL Esports schedule, then play its live listing.",
     );
+  if (input.listed?.proOnly === true)
+    throw new PlaybackCommandBoundaryError(proOnlyMessage(input.listed.title));
   const source: Source = { kind: "url", url: event.pageUrl, mode: "video" };
   let preResolved: ResolvedSource;
   try {
@@ -143,6 +155,11 @@ export async function selectDirectRequestUrl(input: {
   } catch (error) {
     throwIfSportsRequestAborted(input.signal);
     logSportsResolveFailure(event, error);
+    if (error instanceof SportsProOnlyError)
+      throw new PlaybackCommandBoundaryError(
+        proOnlyMessage(input.listed?.title ?? "That game"),
+        { cause: error },
+      );
     throw new PlaybackCommandBoundaryError(
       `I couldn't start the ${event.provider} stream right now. Please try again later.`,
       { cause: error },
@@ -185,8 +202,10 @@ export async function selectSportsSourceOverride(input: {
   ) {
     return null;
   }
+  const listed = input.source.sportsEvent;
   const direct = await selectDirectRequestUrl({
     query: input.source.url,
+    ...(listed === undefined ? {} : { listed }),
     spoken: false,
     source: "auto",
     scope: input.scope,
@@ -195,6 +214,47 @@ export async function selectSportsSourceOverride(input: {
     resolve: input.resolve,
   });
   return direct?.sports === true ? { ...direct, source: input.source } : null;
+}
+
+/**
+ * Resolve one listed event: its selection, `"pro-only"` when only subscribers can watch it, or
+ * `"failed"` when auto mode may try the next provider. An explicit provider's failure is final.
+ */
+async function attemptSportsEvent(
+  event: SportsEvent,
+  input: {
+    readonly provider: SportsProviderPreference;
+    readonly signal: AbortSignal;
+    readonly resolve: (
+      source: Source,
+      signal: AbortSignal,
+    ) => Promise<ResolvedSource>;
+  },
+): Promise<SportsPlaybackSelection | "pro-only" | "failed"> {
+  if (event.proOnly === true) return "pro-only";
+  const source: Source = {
+    kind: "url",
+    url: event.pageUrl,
+    mode: "video",
+    sportsEvent: event,
+  };
+  try {
+    return {
+      source,
+      preResolved: await input.resolve(source, input.signal),
+    };
+  } catch (error) {
+    input.signal.throwIfAborted();
+    logSportsResolveFailure(event, error);
+    if (error instanceof SportsProOnlyError) return "pro-only";
+    if (input.provider !== "auto") {
+      throw new PlaybackCommandBoundaryError(
+        `I couldn't start the ${event.provider} stream for ${event.title}.`,
+        { cause: error },
+      );
+    }
+    return "failed";
+  }
 }
 
 export async function selectSportsPlayback(input: {
@@ -229,30 +289,16 @@ export async function selectSportsPlayback(input: {
     );
   }
 
+  let proOnly = 0;
   for (const event of result.events) {
     input.signal.throwIfAborted();
-    const source: Source = {
-      kind: "url",
-      url: event.pageUrl,
-      mode: "video",
-      sportsEvent: event,
-    };
-    try {
-      return {
-        source,
-        preResolved: await input.resolve(source, input.signal),
-      };
-    } catch (error) {
-      input.signal.throwIfAborted();
-      logSportsResolveFailure(event, error);
-      if (input.provider !== "auto") {
-        throw new PlaybackCommandBoundaryError(
-          `I couldn't start the ${event.provider} stream for ${event.title}.`,
-          { cause: error },
-        );
-      }
-    }
+    const attempt = await attemptSportsEvent(event, input);
+    if (attempt === "pro-only") proOnly += 1;
+    else if (attempt !== "failed") return attempt;
   }
+  const first = result.events[0];
+  if (first !== undefined && proOnly === result.events.length)
+    throw new PlaybackCommandBoundaryError(proOnlyMessage(first.title));
   throw new PlaybackCommandBoundaryError(
     `I found ${result.events[0]?.title ?? input.query}, but its listed providers could not start a stream right now.`,
   );

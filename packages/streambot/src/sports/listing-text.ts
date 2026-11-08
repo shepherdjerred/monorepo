@@ -75,7 +75,7 @@ export async function sportsListingText(
         .slice(0, 10)
         .map(
           (event) =>
-            `${sportsEventTimeLabel(event)}: ${event.title} (${event.provider})`,
+            `${sportsEventTimeLabel(event)}: ${event.title} (${event.provider}${event.proOnly === true ? ", Pro only, not playable" : ""})`,
         )
         .join("; ");
 }

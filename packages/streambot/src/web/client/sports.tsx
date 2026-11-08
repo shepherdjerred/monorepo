@@ -221,15 +221,21 @@ export function Sports(props: MediaListProps) {
             {...(event.sportsArtwork === undefined
               ? {}
               : { sportsArtwork: event.sportsArtwork })}
-            available={event.status !== "scheduled"}
-            {...(event.status === "unknown"
-              ? {}
-              : {
-                  badge:
-                    event.status === "live"
-                      ? ("Live" as const)
-                      : ("Upcoming" as const),
-                })}
+            available={event.status !== "scheduled" && event.proOnly !== true}
+            {...(event.proOnly === true
+              ? {
+                  badge: "Pro only" as const,
+                  unavailableReason:
+                    "Only on StreamEast Pro, which Streambot can't play",
+                }
+              : event.status === "unknown"
+                ? {}
+                : {
+                    badge:
+                      event.status === "live"
+                        ? ("Live" as const)
+                        : ("Upcoming" as const),
+                  })}
           />
         ))}
       </div>
