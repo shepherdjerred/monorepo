@@ -87,7 +87,7 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
               "A provider is not ready, so every flag in that pod reports PROVIDER_NOT_READY and resolves to its call-site default while initialization retries in the background.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "feature_flag_provider_ready == 0",
+            "(feature_flag_provider_ready == 0) and on (job, instance) feature_flag_provider_info",
           ),
           for: "5m",
           labels: { severity: "warning" },

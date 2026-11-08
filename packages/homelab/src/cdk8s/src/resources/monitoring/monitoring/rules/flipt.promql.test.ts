@@ -8,8 +8,13 @@ test("replacement observer OFF wins over old ON and stale observations disappear
   const stale = rules.find(
     (rule) => rule.alert === "FeatureFlagInventoryObservationStale",
   )?.expr.value;
+  const failingProvider = rules.find(
+    (rule) => rule.alert === "FeatureFlagProviderInitFailing",
+  )?.expr.value;
   if (typeof stale !== "string")
     throw new TypeError("Missing observation alert");
+  if (typeof failingProvider !== "string")
+    throw new TypeError("Missing provider readiness alert");
   expect(
     rules.find((rule) => rule.alert === "FeatureFlagExceptionReviewOverdue")
       ?.for,
@@ -23,6 +28,14 @@ test("replacement observer OFF wins over old ON and stale observations disappear
       {
         interval: "1m",
         input_series: [
+          ...["disabled", "failed", "ready"].map((instance) => ({
+            series: `feature_flag_provider_ready{job="worker",instance="${instance}"}`,
+            values: `${instance === "ready" ? "1" : "0"}+0x30`,
+          })),
+          ...["failed", "ready"].map((instance) => ({
+            series: `feature_flag_provider_info{job="worker",instance="${instance}",flipt_environment="prod",flipt_namespace="temporal"}`,
+            values: "1+0x30",
+          })),
           {
             series:
               'feature_flag_inventory_expected{flipt_environment="prod",flipt_namespace="test"}',
@@ -40,6 +53,17 @@ test("replacement observer OFF wins over old ON and stale observations disappear
           ]),
         ],
         promql_expr_test: [
+          {
+            expr: failingProvider,
+            eval_time: "5m",
+            exp_samples: [
+              {
+                labels:
+                  'feature_flag_provider_ready{job="worker",instance="failed"}',
+                value: 0,
+              },
+            ],
+          },
           {
             expr: `sum((${LIVE_FLAG_STATES_QUERY}) * on (state) group_left() label_replace(vector(1), "state", "off", "", ""))`,
             eval_time: "5m",
