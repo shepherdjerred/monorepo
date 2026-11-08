@@ -25,6 +25,7 @@ const { values } = parseArgs({
     resume: { type: "string" },
     replay: { type: "string" },
     fresh: { type: "boolean" },
+    "verify-replay": { type: "boolean" },
   },
 });
 const root = path.resolve(import.meta.dirname, "../../../..");
@@ -38,10 +39,11 @@ async function currentSuite() {
 if (
   [values.fixture, values.resume, values.replay].filter((v) => v !== undefined)
     .length !== 1 ||
-  (values.fresh === true && values.replay === undefined)
+  (values.fresh === true && values.replay === undefined) ||
+  (values["verify-replay"] === true && values.replay !== undefined)
 )
   throw new Error(
-    "Choose --fixture SHA256, --resume UUID, or --replay UUID [--fresh]",
+    "Choose --fixture SHA256 [--verify-replay], --resume UUID [--verify-replay], or --replay UUID [--fresh]",
   );
 async function saved(id: string) {
   z.uuid().parse(id);
@@ -156,22 +158,32 @@ async function run(state: Campaign) {
     ) !== new TextDecoder().decode(pointer)
   )
     throw new Error("Campaign index readback differs");
-  process.stdout.write(JSON.stringify(complete) + "\n");
+  return complete;
+}
+async function locked(first: Campaign, reload: boolean) {
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const lock = path.join(directory, `${first.id}.lock`);
+  try {
+    await mkdir(lock, { mode: 0o700 });
+  } catch (error) {
+    throw new Error(
+      `Cannot acquire campaign lock ${lock}; confirm the previous runner has stopped before removing a stale lock`,
+      { cause: error },
+    );
+  }
+  try {
+    // A concurrent process may have completed a batch while the checkpoint loaded.
+    return await run(reload ? await initial() : first);
+  } finally {
+    await rmdir(lock);
+  }
 }
 const first = await initial();
-await mkdir(directory, { recursive: true, mode: 0o700 });
-const lock = path.join(directory, `${first.id}.lock`);
-try {
-  await mkdir(lock, { mode: 0o700 });
-} catch (error) {
+if (values["verify-replay"] === true && first.replay !== null)
   throw new Error(
-    `Cannot acquire campaign lock ${lock}; confirm the previous runner has stopped before removing a stale lock`,
-    { cause: error },
+    "Use --resume without --verify-replay for a saved replay checkpoint",
   );
-}
-try {
-  // A concurrent process may have completed a batch while this process loaded the checkpoint.
-  await run(values.resume === undefined ? first : await initial());
-} finally {
-  await rmdir(lock);
-}
+let complete = await locked(first, values.resume !== undefined);
+if (values["verify-replay"] === true)
+  complete = await locked(replayCampaign(complete, true), false);
+process.stdout.write(JSON.stringify(complete) + "\n");

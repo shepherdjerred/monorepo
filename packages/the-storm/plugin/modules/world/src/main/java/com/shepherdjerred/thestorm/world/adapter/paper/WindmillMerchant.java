@@ -81,7 +81,6 @@ public final class WindmillMerchant implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
-    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     arrive(
         event.getPlayer(),
         requireNonNull(event.getPlayer().getLocation(), "joining player location"));
@@ -117,7 +116,8 @@ public final class WindmillMerchant implements Listener {
   }
 
   private void arrive(Player player, Location destination) {
-    if (!nearAnchor(destination)) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(player)
+        || !nearAnchor(destination)) {
       return;
     }
     var world = requireNonNull(destination.getWorld(), "merchant arrival world");

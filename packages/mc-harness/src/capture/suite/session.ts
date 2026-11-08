@@ -89,13 +89,29 @@ export async function localSession(input: {
       throw new Error(`Demo setup rejected: ${result.output.join("\n")}`);
   };
   try {
-    for (const name of ["XiguaJerred", ...input.helpers])
+    for (const name of ["XiguaJerred", ...input.helpers]) {
       await control.request(ClientStatusResponseSchema, "POST", "/clients", {
         target: server.id,
         name,
         op: true,
         gameMode: "CREATIVE",
       });
+      // Finish the initial join before a teleport can replace its loading chunks.
+      const deadline = performance.now() + 30_000;
+      for (;;) {
+        const { state } = await control.request(
+          ClientStatusResponseSchema,
+          "GET",
+          `/clients/${name}`,
+        );
+        if (state.connected && state["clientLoaded"] === true) break;
+        if (performance.now() > deadline)
+          throw new Error(
+            `Native client ${name} did not complete the initial world loading handshake`,
+          );
+        await Bun.sleep(100);
+      }
+    }
   } catch (error) {
     await control.request(
       SandboxDownResponseSchema,

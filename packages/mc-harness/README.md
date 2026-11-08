@@ -286,6 +286,7 @@ For the entire TSMC catalog, use the resumable driver with an existing fixture:
 
 ```bash
 toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --fixture <sha256>
+toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --fixture <sha256> --verify-replay
 toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --resume <campaign-id>
 toolkit run --env SEAWEEDFS_S3_ACCESS_KEY_ID,SEAWEEDFS_S3_SECRET_ACCESS_KEY -- bun packages/the-storm/tools/captures/regenerate.ts --replay <campaign-id> --fresh
 ```
@@ -299,6 +300,10 @@ immutable runtime and terrain. Capturing edited recipes requires a new campaign.
 only after the entire campaign and visual review pass.
 
 Complete campaign manifests are content-addressed and indexed privately in S3.
+`--verify-replay` captures the full catalog and then replays all fresh scenarios
+from its saved inputs in the same credentialed process. It returns the completed
+replay campaign, whose `replay` field identifies the full capture campaign. If
+replay fails, resume its reported checkpoint with `--resume <replay-id>`.
 Replay follows the retained catalog even if current recipes have changed, and
 restores each batch's own saved rollout decisions; `--fresh` selects the
 fresh scenarios, while omitting it replays every batch. The driver refuses
