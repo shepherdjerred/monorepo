@@ -150,10 +150,9 @@ public final class BodyDriver {
               .withActiveJump(
                   bot.reflex()
                       .activeJump()
-                      .filter(
-                          active ->
-                              active.stage() != ActiveJump.Stage.AIRBORNE
-                                  || active.launchTick() != frame.tick())));
+                      .filter(active ->
+                          active.stage() != ActiveJump.Stage.AIRBORNE
+                              || active.launchTick() != frame.tick())));
       return false;
     }
     apply(bot, command, frame);
@@ -211,13 +210,12 @@ public final class BodyDriver {
           frame
               .ids()
               .uuid(target)
-              .ifPresent(
-                  victim ->
-                      record(
-                          bot,
-                          frame.ids().isSummon(target)
-                              ? actions.strikeSummon(id, victim)
-                              : actions.melee(id, victim)));
+              .ifPresent(victim ->
+                  record(
+                      bot,
+                      frame.ids().isSummon(target)
+                          ? actions.strikeSummon(id, victim)
+                          : actions.melee(id, victim)));
       case BodyCommand.StartUse _ -> startUse(bot, frame.tick());
       case BodyCommand.ReleaseUse _ -> releaseUse(bot, frame);
       case BodyCommand.CancelUse _ -> {
@@ -249,14 +247,13 @@ public final class BodyDriver {
     if (!bot.drafted().kit().isInvisibleKit() || !unreserved) return requested;
     return bodies
         .entity(bot.uuid())
-        .map(
-            player -> {
-              for (var slot = 8; slot >= 0; slot--) {
-                var item = player.getInventory().getItem(slot);
-                if (item == null || item.getType().isAir()) return slot;
-              }
-              return requested;
-            })
+        .map(player -> {
+          for (var slot = 8; slot >= 0; slot--) {
+            var item = player.getInventory().getItem(slot);
+            if (item == null || item.getType().isAir()) return slot;
+          }
+          return requested;
+        })
         .orElse(requested);
   }
 
@@ -301,14 +298,13 @@ public final class BodyDriver {
     return bodies
         .entity(bot.uuid())
         .filter(player -> !player.isDead())
-        .filter(
-            player -> {
-              var item = player.getInventory().getItem(use.slot());
-              var velocity = player.getVelocity();
-              return item != null
-                  && item.getType() == Material.GOAT_HORN
-                  && Math.hypot(velocity.getX(), velocity.getZ()) > AT_REST;
-            })
+        .filter(player -> {
+          var item = player.getInventory().getItem(use.slot());
+          var velocity = player.getVelocity();
+          return item != null
+              && item.getType() == Material.GOAT_HORN
+              && Math.hypot(velocity.getX(), velocity.getZ()) > AT_REST;
+        })
         .isPresent();
   }
 
@@ -337,12 +333,11 @@ public final class BodyDriver {
   private void lookAt(BotBody bot, Vec3 point) {
     bodies
         .entity(bot.uuid())
-        .ifPresent(
-            player -> {
-              var eye = player.getEyeLocation();
-              var facing = Facing.looking(new Vec3(eye.getX(), eye.getY(), eye.getZ()), point);
-              bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch());
-            });
+        .ifPresent(player -> {
+          var eye = player.getEyeLocation();
+          var facing = Facing.looking(new Vec3(eye.getX(), eye.getY(), eye.getZ()), point);
+          bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch());
+        });
   }
 
   private void startUse(BotBody bot, long tick) {
@@ -363,55 +358,54 @@ public final class BodyDriver {
   private boolean move(BotBody bot, BodyCommand.MoveToward movement, Frame frame) {
     return bodies
         .entity(bot.uuid())
-        .map(
-            player -> {
-              var position = Places.at(player);
-              var step =
-                  MotionRecovery.tick(
-                      bot.motion(),
-                      new Vec3(position.getX(), position.getY(), position.getZ()),
-                      movement.waypoint(),
-                      frame.tick());
-              bot.motion(step.state());
-              var recovering = step.state().escapingUntil() > frame.tick();
-              var hop = recovering ? Hop.WALK : movement.hop();
-              var at = new Vec3(position.getX(), position.getY(), position.getZ());
-              var checked =
-                  recovering
-                      ? escape(
-                          bot,
-                          MotionRecovery.escapes(step.state(), at, movement.waypoint()),
+        .map(player -> {
+          var position = Places.at(player);
+          var step =
+              MotionRecovery.tick(
+                  bot.motion(),
+                  new Vec3(position.getX(), position.getY(), position.getZ()),
+                  movement.waypoint(),
+                  frame.tick());
+          bot.motion(step.state());
+          var recovering = step.state().escapingUntil() > frame.tick();
+          var hop = recovering ? Hop.WALK : movement.hop();
+          var at = new Vec3(position.getX(), position.getY(), position.getZ());
+          var checked =
+              recovering
+                  ? escape(
+                      bot,
+                      MotionRecovery.escapes(step.state(), at, movement.waypoint()),
+                      movement.sprint(),
+                      frame)
+                  : bodies.moveSafely(
+                      bot.uuid(),
+                      new Bodies.MotionTarget(
+                          location(step.destination()),
                           movement.sprint(),
-                          frame)
-                      : bodies.moveSafely(
-                          bot.uuid(),
-                          new Bodies.MotionTarget(
-                              location(step.destination()),
-                              movement.sprint(),
-                              hop,
-                              frame.bounds(),
-                              bot.reflex()
-                                  .activeJump()
-                                  .filter(active -> active.stage() == ActiveJump.Stage.RUN_UP)
-                                  .flatMap(active -> active.waypoint().launch())));
-              if (step.jump() && !checked.refused()) {
-                bodies.jump(bot.uuid());
-              }
-              var refusal = new Refusal(checked, hop, recovering);
-              report(bot, refusal, frame.tick());
-              if (step.replan()) {
-                bot.requestMovementRecovery("STALLED", frame.tick());
-              }
-              if (step.replan() || checked.refused()) {
-                bot.noteStuck(
-                    snapshot(player, movement, refusal)
-                        + bodies.lastRefusal(bot.uuid()).map(why -> "; why " + why).orElse(""),
-                    frame.tick());
-              }
-              return !recovering
-                  && (checked == MovementSafety.Reason.CLEAR
-                      || checked == MovementSafety.Reason.REDIRECTED);
-            })
+                          hop,
+                          frame.bounds(),
+                          bot.reflex()
+                              .activeJump()
+                              .filter(active -> active.stage() == ActiveJump.Stage.RUN_UP)
+                              .flatMap(active -> active.waypoint().launch())));
+          if (step.jump() && !checked.refused()) {
+            bodies.jump(bot.uuid());
+          }
+          var refusal = new Refusal(checked, hop, recovering);
+          report(bot, refusal, frame.tick());
+          if (step.replan()) {
+            bot.requestMovementRecovery("STALLED", frame.tick());
+          }
+          if (step.replan() || checked.refused()) {
+            bot.noteStuck(
+                snapshot(player, movement, refusal)
+                    + bodies.lastRefusal(bot.uuid()).map(why -> "; why " + why).orElse(""),
+                frame.tick());
+          }
+          return !recovering
+              && (checked == MovementSafety.Reason.CLEAR
+                  || checked == MovementSafety.Reason.REDIRECTED);
+        })
         .orElse(false);
   }
 
@@ -483,14 +477,13 @@ public final class BodyDriver {
       record(bot, actions.useWeapon(bot.uuid(), WeaponUse.RELEASE));
       bodies
           .entity(bot.uuid())
-          .ifPresent(
-              player -> {
-                var held = player.getInventory().getItemInMainHand();
-                if (held.getItemMeta() instanceof CrossbowMeta crossbow
-                    && crossbow.hasChargedProjectiles()) {
-                  record(bot, actions.useWeapon(bot.uuid(), WeaponUse.START));
-                }
-              });
+          .ifPresent(player -> {
+            var held = player.getInventory().getItemInMainHand();
+            if (held.getItemMeta() instanceof CrossbowMeta crossbow
+                && crossbow.hasChargedProjectiles()) {
+              record(bot, actions.useWeapon(bot.uuid(), WeaponUse.START));
+            }
+          });
       bot.drawStart(-1);
       return;
     }
@@ -516,17 +509,16 @@ public final class BodyDriver {
   private boolean nativeUse(BotBody bot) {
     return bodies
         .entity(bot.uuid())
-        .map(
-            player -> {
-              var held = player.getInventory().getItemInMainHand();
-              var type = held.getType();
-              return type == Material.BOW
-                  || type == Material.CROSSBOW
-                  || type == Material.TRIDENT
-                  || type == Material.WIND_CHARGE
-                  || type == Material.SHIELD
-                  || type.name().endsWith("_SPEAR");
-            })
+        .map(player -> {
+          var held = player.getInventory().getItemInMainHand();
+          var type = held.getType();
+          return type == Material.BOW
+              || type == Material.CROSSBOW
+              || type == Material.TRIDENT
+              || type == Material.WIND_CHARGE
+              || type == Material.SHIELD
+              || type.name().endsWith("_SPEAR");
+        })
         .orElse(false);
   }
 

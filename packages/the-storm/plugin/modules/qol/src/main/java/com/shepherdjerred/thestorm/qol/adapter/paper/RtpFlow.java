@@ -56,15 +56,14 @@ final class RtpFlow {
 
   void start(Player player, String worldName, Optional<String> biome, boolean fromCompass) {
     var world = destination(player, worldName, biome);
-    world.ifPresent(
-        target -> {
-          var description = "wilderness in " + worldName;
-          if (fromCompass) {
-            travel.complimentary(player, description, () -> reserved(player, target, biome));
-          } else {
-            travel.randomTeleport(player, description, () -> prepare(player, target, biome, false));
-          }
-        });
+    world.ifPresent(target -> {
+      var description = "wilderness in " + worldName;
+      if (fromCompass) {
+        travel.complimentary(player, description, () -> reserved(player, target, biome));
+      } else {
+        travel.randomTeleport(player, description, () -> prepare(player, target, biome, false));
+      }
+    });
   }
 
   private CompletableFuture<Result<TeleportTravel.Landing, Component>> reserved(
@@ -216,12 +215,11 @@ final class RtpFlow {
         .services()
         .find(com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class)
         .flatMap(destinations -> destinations.random(world.getName()))
-        .ifPresent(
-            origin -> {
-              spawn.setX(origin.x());
-              spawn.setY(origin.y());
-              spawn.setZ(origin.z());
-            });
+        .ifPresent(origin -> {
+          spawn.setX(origin.x());
+          spawn.setY(origin.y());
+          spawn.setZ(origin.z());
+        });
     var border = world.getWorldBorder();
     var center = border.getCenter();
     var claims = land.chunks(world.getName());

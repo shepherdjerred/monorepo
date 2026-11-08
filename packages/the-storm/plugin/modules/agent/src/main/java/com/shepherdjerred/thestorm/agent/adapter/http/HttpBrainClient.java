@@ -152,13 +152,12 @@ public final class HttpBrainClient implements BrainClient, AutoCloseable {
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build();
     return http.sendAsync(call, HttpResponse.BodyHandlers.ofString())
-        .handle(
-            (response, failure) -> {
-              if (failure != null) {
-                throw new BrainException("storm-brain " + flow + " call failed", failure);
-              }
-              return answer(flow, response, answer);
-            });
+        .handle((response, failure) -> {
+          if (failure != null) {
+            throw new BrainException("storm-brain " + flow + " call failed", failure);
+          }
+          return answer(flow, response, answer);
+        });
   }
 
   private <Answer> Answer answer(String flow, HttpResponse<String> response, Class<Answer> answer) {

@@ -36,12 +36,11 @@ final class HeritageTownImportTest {
     assertThat(plan.conflicts()).isEmpty();
     assertThat(plan.towns())
         .singleElement()
-        .satisfies(
-            town -> {
-              assertThat(town.id()).isEqualTo(site.activeTownId().orElseThrow());
-              assertThat(town.owner()).isEqualTo(OWNER);
-              assertThat(town.members()).hasSize(1);
-            });
+        .satisfies(town -> {
+          assertThat(town.id()).isEqualTo(site.activeTownId().orElseThrow());
+          assertThat(town.owner()).isEqualTo(OWNER);
+          assertThat(town.members()).hasSize(1);
+        });
   }
 
   @Test

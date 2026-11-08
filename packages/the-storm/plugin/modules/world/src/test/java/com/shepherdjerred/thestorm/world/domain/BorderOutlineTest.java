@@ -40,10 +40,9 @@ final class BorderOutlineTest {
 
   @Test
   void anOutlineNeedsAPolygon() {
-    assertThatThrownBy(
-            () ->
-                new BorderOutline(
-                    "world", List.of(new BorderOutline.Point(0, 0), new BorderOutline.Point(1, 1))))
+    assertThatThrownBy(() ->
+            new BorderOutline(
+                "world", List.of(new BorderOutline.Point(0, 0), new BorderOutline.Point(1, 1))))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

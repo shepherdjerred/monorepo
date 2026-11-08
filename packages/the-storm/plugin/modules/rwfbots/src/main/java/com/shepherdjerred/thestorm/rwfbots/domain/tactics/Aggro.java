@@ -51,14 +51,13 @@ public final class Aggro {
     return situation.knownEnemies().stream()
         .filter(enemy -> enemy.id().equals(held.attacker()))
         .findFirst()
-        .map(
-            enemy ->
-                new Pull(
-                    enemy.id(),
-                    enemy.pos(),
-                    enemy.pos().distance(self),
-                    enemy.visible(),
-                    enemy.pos().horizontalDistance(held.anchor()) <= Grudge.LEASH))
+        .map(enemy ->
+            new Pull(
+                enemy.id(),
+                enemy.pos(),
+                enemy.pos().distance(self),
+                enemy.visible(),
+                enemy.pos().horizontalDistance(held.anchor()) <= Grudge.LEASH))
         .filter(pull -> !atFuse(situation) || pull.distance() <= ObjectivePolicy.IMMEDIATE_MELEE);
   }
 
@@ -91,10 +90,9 @@ public final class Aggro {
     var eye = situation.self().eye();
     var arming =
         situation.snapshot().bombs().stream()
-            .filter(
-                bomb ->
-                    bomb.state() instanceof BombState.Arming(var team, var _, var _)
-                        && team.equals(situation.self().team()))
+            .filter(bomb ->
+                bomb.state() instanceof BombState.Arming(var team, var _, var _)
+                    && team.equals(situation.self().team()))
             .anyMatch(bomb -> bomb.pos().distance(eye) <= Reflex.BOMB_REACH);
     return arming
         || situation

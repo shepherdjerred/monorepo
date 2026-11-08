@@ -135,11 +135,10 @@ final class EssentialsPaperTest {
     harness.until(() -> !log(griefer.getUniqueId()).isEmpty());
     assertThat(log(griefer.getUniqueId()))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.action()).isEqualTo(ModerationAction.KICK);
-              assertThat(entry.reason()).isEqualTo("spamming");
-            });
+        .satisfies(entry -> {
+          assertThat(entry.action()).isEqualTo(ModerationAction.KICK);
+          assertThat(entry.reason()).isEqualTo("spamming");
+        });
   }
 
   @Test
@@ -154,11 +153,10 @@ final class EssentialsPaperTest {
     harness.until(() -> !griefer.isOnline());
     assertThat(log(griefer.getUniqueId()))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.action()).isEqualTo(ModerationAction.BAN);
-              assertThat(entry.expiresAt()).isPresent();
-            });
+        .satisfies(entry -> {
+          assertThat(entry.action()).isEqualTo(ModerationAction.BAN);
+          assertThat(entry.expiresAt()).isPresent();
+        });
   }
 
   @Test
@@ -174,11 +172,10 @@ final class EssentialsPaperTest {
     moderator.performCommand("kick Admin abuse");
 
     var observed = new ArrayList<String>();
-    harness.until(
-        () -> {
-          observed.addAll(messages(moderator));
-          return observed.stream().filter(m -> m.contains("exempt")).count() == 2;
-        });
+    harness.until(() -> {
+      observed.addAll(messages(moderator));
+      return observed.stream().filter(m -> m.contains("exempt")).count() == 2;
+    });
     assertThat(observed).filteredOn(m -> m.contains("exempt")).hasSize(2);
     assertThat(admin.isOnline()).isTrue();
     assertThat(log(admin.getUniqueId())).isEmpty();
@@ -195,11 +192,10 @@ final class EssentialsPaperTest {
     moderator.performCommand("ban " + absent + " griefing");
 
     var observed = new ArrayList<String>();
-    harness.until(
-        () -> {
-          observed.addAll(messages(moderator));
-          return observed.stream().anyMatch(m -> m.contains("Use the console"));
-        });
+    harness.until(() -> {
+      observed.addAll(messages(moderator));
+      return observed.stream().anyMatch(m -> m.contains("Use the console"));
+    });
     assertThat(observed).anyMatch(m -> m.contains("Use the console"));
     harness.server.dispatchCommand(
         harness.server.getConsoleSender(), "ban " + absent + " griefing");

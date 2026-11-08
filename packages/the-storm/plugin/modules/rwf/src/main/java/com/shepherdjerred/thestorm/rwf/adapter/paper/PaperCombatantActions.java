@@ -130,11 +130,10 @@ final class PaperCombatantActions implements CombatantActions {
               }
               var refusal =
                   Rewind.refusal(abilities.ready(id, Rewind.ID, runner.now()), clock)
-                      .map(
-                          why ->
-                              why == Rewind.Refusal.COOLING_DOWN
-                                  ? ActionRefusal.COOLING_DOWN
-                                  : ActionRefusal.NO_LANDING);
+                      .map(why ->
+                          why == Rewind.Refusal.COOLING_DOWN
+                              ? ActionRefusal.COOLING_DOWN
+                              : ActionRefusal.NO_LANDING);
               // The kit answers either way, as Red Warfare did: a refusal in red, or the jump.
               runner.handle(new MatchEvent.Ability(id, new AbilityInput.Rewind(), runner.now()));
               if (refusal.isEmpty()) {

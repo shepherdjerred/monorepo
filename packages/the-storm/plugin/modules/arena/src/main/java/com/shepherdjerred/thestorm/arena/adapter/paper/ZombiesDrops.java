@@ -143,28 +143,24 @@ final class ZombiesDrops {
       case RESONANT_SHARD -> runner.fighters().forEach(ally -> runner.talents().resonate(ally));
       case COPPER_PULSE ->
           runner.world().enemies().stream()
-              .filter(
-                  enemy ->
-                      enemy.getLocation().distanceSquared(at) <= 100
-                          && player.hasLineOfSight(enemy))
+              .filter(enemy ->
+                  enemy.getLocation().distanceSquared(at) <= 100 && player.hasLineOfSight(enemy))
               .limit(8)
-              .forEach(
-                  enemy -> {
-                    runner.combat().damage(enemy, player, 6);
-                    if (!runner.combat().bossEntity(enemy))
-                      enemy.addPotionEffect(
-                          new org.bukkit.potion.PotionEffect(
-                              org.bukkit.potion.PotionEffectType.SLOWNESS, 40, 2));
-                  });
+              .forEach(enemy -> {
+                runner.combat().damage(enemy, player, 6);
+                if (!runner.combat().bossEntity(enemy))
+                  enemy.addPotionEffect(
+                      new org.bukkit.potion.PotionEffect(
+                          org.bukkit.potion.PotionEffectType.SLOWNESS, 40, 2));
+              });
     }
     runner
         .online()
-        .forEach(
-            ally -> {
-              ally.playSound(at, org.bukkit.Sound.BLOCK_AMETHYST_BLOCK_CHIME, .65f, 1.2f);
-              Texts.info(ally, drop.title() + " · " + drop.description());
-              runner.hud().hint(ally, drop.title(), 4);
-            });
+        .forEach(ally -> {
+          ally.playSound(at, org.bukkit.Sound.BLOCK_AMETHYST_BLOCK_CHIME, .65f, 1.2f);
+          Texts.info(ally, drop.title() + " · " + drop.description());
+          runner.hud().hint(ally, drop.title(), 4);
+        });
   }
 
   private void field(Field field) {
@@ -197,12 +193,11 @@ final class ZombiesDrops {
     if (charges == 0) return;
     surge.put(player.getUniqueId(), charges - 1);
     runner.world().enemies().stream()
-        .filter(
-            enemy ->
-                !enemy.equals(target)
-                    && enemy.getLocation().distanceSquared(target.getLocation()) <= 16
-                    && target.hasLineOfSight(enemy)
-                    && player.hasLineOfSight(enemy))
+        .filter(enemy ->
+            !enemy.equals(target)
+                && enemy.getLocation().distanceSquared(target.getLocation()) <= 16
+                && target.hasLineOfSight(enemy)
+                && player.hasLineOfSight(enemy))
         .limit(2)
         .forEach(enemy -> runner.combat().damage(enemy, player, 3));
     player.spawnParticle(

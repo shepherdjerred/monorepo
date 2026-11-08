@@ -49,11 +49,10 @@ public final class ResetCommands {
             .executes(command -> usage(command.getSource().getSender()))
             .then(
                 argument("player", word())
-                    .executes(
-                        command ->
-                            invoke(
-                                command.getSource().getSender(),
-                                command.getArgument("player", String.class))))
+                    .executes(command ->
+                        invoke(
+                            command.getSource().getSender(),
+                            command.getArgument("player", String.class))))
             .build(),
         "Reset a player to first-join state");
   }

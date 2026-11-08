@@ -92,14 +92,13 @@ final class Snapshots {
    * is not in an arena.
    */
   void load(Predicate<UUID> inArena) {
-    keeper.load(
-        () -> {
-          for (var player : runtime.server().getOnlinePlayers()) {
-            if (!inArena.test(player.getUniqueId())) {
-              recover(player, keeper.joinedFromDisk(player.getUniqueId()));
-            }
-          }
-        });
+    keeper.load(() -> {
+      for (var player : runtime.server().getOnlinePlayers()) {
+        if (!inArena.test(player.getUniqueId())) {
+          recover(player, keeper.joinedFromDisk(player.getUniqueId()));
+        }
+      }
+    });
   }
 
   /** Why a new snapshot of {@code player} cannot be taken yet, if it cannot. */

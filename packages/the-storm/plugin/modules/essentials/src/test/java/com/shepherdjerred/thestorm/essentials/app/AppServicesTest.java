@@ -276,16 +276,12 @@ final class AppServicesTest {
     assertThat(guards.check(ALICE, home)).isEmpty();
 
     guards.add((mover, destination) -> Optional.empty());
-    guards.add(
-        (mover, destination) ->
-            mover.equals(ALICE)
-                ? Optional.of(Component.text("You are in combat."))
-                : Optional.empty());
-    guards.add(
-        (mover, destination) ->
-            destination.getX() > 50
-                ? Optional.of(Component.text("No teleports into the arena."))
-                : Optional.empty());
+    guards.add((mover, destination) ->
+        mover.equals(ALICE) ? Optional.of(Component.text("You are in combat.")) : Optional.empty());
+    guards.add((mover, destination) ->
+        destination.getX() > 50
+            ? Optional.of(Component.text("No teleports into the arena."))
+            : Optional.empty());
 
     assertThat(guards.check(ALICE, home)).contains(Component.text("You are in combat."));
     assertThat(guards.check(BOB, arena)).contains(Component.text("No teleports into the arena."));

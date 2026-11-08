@@ -80,12 +80,11 @@ public final class LearningObservations implements ObservationSource {
     var nav = match.nav();
     var clouds =
         vision.snapshot().stream()
-            .map(
-                field ->
-                    new com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud(
-                        new com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3(
-                            field.center().x(), field.center().y(), field.center().z()),
-                        field.radius()))
+            .map(field ->
+                new com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3(
+                        field.center().x(), field.center().y(), field.center().z()),
+                    field.radius()))
             .toList();
     var perceiver =
         new Perception(new SenseContext(nav.grid(), nav.graph(), nav.regions(), levers, clouds));

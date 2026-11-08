@@ -42,23 +42,21 @@ final class JooqStreakStoreTest {
       var store = new JooqStreakStore(database);
       store.save(PLAYER, StreakLoadout.DEFAULT).join();
       database
-          .write(
-              dsl ->
-                  dsl.update(RWF_STREAK_PREFS)
-                      .set(RWF_STREAK_PREFS.REWARD_2, "UNKNOWN")
-                      .where(RWF_STREAK_PREFS.PLAYER.eq(PLAYER.toString()))
-                      .execute())
+          .write(dsl ->
+              dsl.update(RWF_STREAK_PREFS)
+                  .set(RWF_STREAK_PREFS.REWARD_2, "UNKNOWN")
+                  .where(RWF_STREAK_PREFS.PLAYER.eq(PLAYER.toString()))
+                  .execute())
           .join();
       assertThatThrownBy(() -> store.load(PLAYER).join())
           .hasCauseInstanceOf(IllegalArgumentException.class);
       database
-          .write(
-              dsl ->
-                  dsl.update(RWF_STREAK_PREFS)
-                      .set(RWF_STREAK_PREFS.REWARD_1, "SUPPLY_CRATE")
-                      .set(RWF_STREAK_PREFS.REWARD_2, "WOLVES")
-                      .where(RWF_STREAK_PREFS.PLAYER.eq(PLAYER.toString()))
-                      .execute())
+          .write(dsl ->
+              dsl.update(RWF_STREAK_PREFS)
+                  .set(RWF_STREAK_PREFS.REWARD_1, "SUPPLY_CRATE")
+                  .set(RWF_STREAK_PREFS.REWARD_2, "WOLVES")
+                  .where(RWF_STREAK_PREFS.PLAYER.eq(PLAYER.toString()))
+                  .execute())
           .join();
       assertThatThrownBy(() -> store.load(PLAYER).join())
           .hasCauseInstanceOf(IllegalArgumentException.class);

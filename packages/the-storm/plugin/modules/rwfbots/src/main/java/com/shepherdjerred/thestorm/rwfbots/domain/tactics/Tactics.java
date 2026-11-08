@@ -108,11 +108,10 @@ public final class Tactics {
     var plan =
         current
             .filter(existing -> existing.option() == chosen)
-            .map(
-                existing ->
-                    refresh(existing)
-                        ? Planner.expand(chosen, situation, context).since(existing.startedTick())
-                        : existing)
+            .map(existing ->
+                refresh(existing)
+                    ? Planner.expand(chosen, situation, context).since(existing.startedTick())
+                    : existing)
             .orElseGet(() -> fresh(chosen, situation, context, trip));
     if (chosen == Option.ARM && objective.memory().detour().isPresent()) {
       plan = Planner.detourPlan(situation, context, objective.memory().detour().orElseThrow());
@@ -209,12 +208,11 @@ public final class Tactics {
         .filter(plan -> plan.option() != Option.ARM || !armBlocked(state, situation, context))
         .filter(plan -> BombGuard.stillAnswering(plan, situation))
         .filter(plan -> !retargets(plan, situation, context))
-        .filter(
-            plan ->
-                plan.current()
-                    .coverNode()
-                    .map(node -> Planner.coverAvailable(situation, context, node))
-                    .orElse(true));
+        .filter(plan ->
+            plan.current()
+                .coverNode()
+                .map(node -> Planner.coverAvailable(situation, context, node))
+                .orElse(true));
   }
 
   /**
@@ -352,13 +350,12 @@ public final class Tactics {
     if (!plan.assignment().isEmpty() && assignedFuse.isPresent()) return false;
     return situation.board().roles().entrySet().stream()
         .filter(entry -> entry.getValue() == Role.RETAKE)
-        .noneMatch(
-            entry ->
-                situation
-                    .snapshot()
-                    .combatant(entry.getKey())
-                    .map(fighter -> fighter.alive())
-                    .orElse(false));
+        .noneMatch(entry ->
+            situation
+                .snapshot()
+                .combatant(entry.getKey())
+                .map(fighter -> fighter.alive())
+                .orElse(false));
   }
 
   private static boolean quietStart(Situation situation, Features features) {
@@ -414,10 +411,9 @@ public final class Tactics {
     var aggro = Aggro.pull(situation).filter(pull -> pull.visible() || pull.chase()).isPresent();
     var close =
         situation.knownEnemies().stream()
-            .anyMatch(
-                enemy ->
-                    enemy.visible()
-                        && enemy.pos().distance(situation.self().pos()) <= Planner.CLOSE_FIGHT);
+            .anyMatch(enemy ->
+                enemy.visible()
+                    && enemy.pos().distance(situation.self().pos()) <= Planner.CLOSE_FIGHT);
     return detour
         && !hurt
         && !aggro
@@ -426,9 +422,8 @@ public final class Tactics {
         && situation
             .slot()
             .filter(slot -> situation.role() == Role.ROTATE || slot.kind() == SlotKind.SWEEP)
-            .filter(
-                slot ->
-                    slot.pos().horizontalDistance(situation.self().pos()) > Features.SLOT_RADIUS)
+            .filter(slot ->
+                slot.pos().horizontalDistance(situation.self().pos()) > Features.SLOT_RADIUS)
             .isPresent();
   }
 
@@ -468,9 +463,8 @@ public final class Tactics {
     var state = thought.state();
     return state
         .plan()
-        .map(
-            plan ->
-                BombGuard.admitted(plan, thought.decision().bot(), board, state.lastThinkTick()))
+        .map(plan ->
+            BombGuard.admitted(plan, thought.decision().bot(), board, state.lastThinkTick()))
         .orElse(true);
   }
 
@@ -531,12 +525,11 @@ public final class Tactics {
 
   private static Map<Option, Double> aboveFloor(EnumMap<Option, Double> scores) {
     var candidates = new EnumMap<Option, Double>(Option.class);
-    scores.forEach(
-        (option, score) -> {
-          if (score >= Utilities.FLOOR) {
-            candidates.put(option, score);
-          }
-        });
+    scores.forEach((option, score) -> {
+      if (score >= Utilities.FLOOR) {
+        candidates.put(option, score);
+      }
+    });
     if (candidates.isEmpty()) {
       candidates.put(Option.HOLD_ANGLE, Utilities.FLOOR);
     }

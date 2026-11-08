@@ -125,12 +125,11 @@ final class PaperSavedPlayerDataTest {
   void aMarkerThatIsNotAStringBreaksTheContract() throws IOException {
     var file =
         write(
-            playerFile(
-                out -> {
-                  out.writeByte(NbtReader.INT);
-                  out.writeUTF(KEY.toString());
-                  out.writeInt(7);
-                }));
+            playerFile(out -> {
+              out.writeByte(NbtReader.INT);
+              out.writeUTF(KEY.toString());
+              out.writeInt(7);
+            }));
 
     assertThatThrownBy(() -> PaperSavedPlayerData.read(file, KEY))
         .isInstanceOf(IllegalStateException.class);

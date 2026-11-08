@@ -243,9 +243,8 @@ final class PlayerListener implements Listener {
       // The kit itself tells the player why the clock would not work, in Red Warfare's words.
       actions
           .useRewind(member.orElseThrow().id())
-          .filter(
-              refusal ->
-                  refusal != ActionRefusal.COOLING_DOWN && refusal != ActionRefusal.NO_LANDING)
+          .filter(refusal ->
+              refusal != ActionRefusal.COOLING_DOWN && refusal != ActionRefusal.NO_LANDING)
           .ifPresent(refusal -> Texts.error(player, refusal));
     }
   }

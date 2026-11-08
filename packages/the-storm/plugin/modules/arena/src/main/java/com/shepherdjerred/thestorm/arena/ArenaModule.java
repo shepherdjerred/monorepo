@@ -49,9 +49,8 @@ public final class ArenaModule implements StormModule {
 
   /** Arena chunks are held through core's shared {@link ChunkTickets}. */
   public ArenaModule() {
-    this(
-        context ->
-            new ServerHooks(ChunkKeeper.shared(context.services().require(ChunkTickets.class))));
+    this(context ->
+        new ServerHooks(ChunkKeeper.shared(context.services().require(ChunkTickets.class))));
   }
 
   /** For tests, which run where chunk tickets are not available. */
@@ -120,10 +119,9 @@ public final class ArenaModule implements StormModule {
     context
         .services()
         .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
-        .ifPresent(
-            safety ->
-                safety.evidenceContext(
-                    "arena", player -> started.presence().arenaOf(player).orElse("none")));
+        .ifPresent(safety ->
+            safety.evidenceContext(
+                "arena", player -> started.presence().arenaOf(player).orElse("none")));
     context.services().provide(ArenaRecords.class, leaderboard);
     context
         .services()
@@ -135,23 +133,20 @@ public final class ArenaModule implements StormModule {
         context
             .services()
             .find(DiscordRelay.class)
-            .map(
-                relay ->
-                    ArenaDiscordPosts.start(
-                        relay,
-                        leaderboard,
-                        content.arenas().stream().map(ArenaDefinition::id).toList(),
-                        context.logger()))
+            .map(relay ->
+                ArenaDiscordPosts.start(
+                    relay,
+                    leaderboard,
+                    content.arenas().stream().map(ArenaDefinition::id).toList(),
+                    context.logger()))
             .map(posts -> started.events().subscribe(posts::accept))
             .orElse(null);
     context
         .services()
         .find(DiscordRelay.class)
-        .ifPresent(
-            relay ->
-                relay.addCommand(
-                    new ArenaTopCommand(leaderboard, content.arenas(), context.logger())
-                        .command()));
+        .ifPresent(relay ->
+            relay.addCommand(
+                new ArenaTopCommand(leaderboard, content.arenas(), context.logger()).command()));
   }
 
   @Override

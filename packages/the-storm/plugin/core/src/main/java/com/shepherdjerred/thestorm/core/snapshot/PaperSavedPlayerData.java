@@ -64,17 +64,16 @@ public final class PaperSavedPlayerData implements SavedPlayerData {
   @Override
   public CompletableFuture<Void> save(Player player) {
     var written = new CompletableFuture<Void>();
-    pacer.submit(
-        () -> {
-          try {
-            if (player.isOnline()) {
-              player.saveData();
-            }
-            written.complete(null);
-          } catch (RuntimeException failure) {
-            written.completeExceptionally(failure);
-          }
-        });
+    pacer.submit(() -> {
+      try {
+        if (player.isOnline()) {
+          player.saveData();
+        }
+        written.complete(null);
+      } catch (RuntimeException failure) {
+        written.completeExceptionally(failure);
+      }
+    });
     return written;
   }
 

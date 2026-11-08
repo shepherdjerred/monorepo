@@ -129,25 +129,24 @@ final class ShardsConfigTest {
   void messagesRequireTheirPlaceholders() {
     var messages = load().messages();
 
-    assertThatThrownBy(
-            () ->
-                new ShardMessages(
-                    "You found a shard.",
-                    messages.noStorm(),
-                    messages.notUpgradeable(),
-                    messages.atMaxTier(),
-                    messages.notEnoughShards(),
-                    messages.upgraded(),
-                    messages.failed(),
-                    messages.shattered(),
-                    messages.broadcast(),
-                    messages.infoUnupgraded(),
-                    messages.infoWeapon(),
-                    messages.infoArmor(),
-                    messages.infoNotUpgradeable(),
-                    messages.given(),
-                    messages.received(),
-                    messages.help()))
+    assertThatThrownBy(() ->
+            new ShardMessages(
+                "You found a shard.",
+                messages.noStorm(),
+                messages.notUpgradeable(),
+                messages.atMaxTier(),
+                messages.notEnoughShards(),
+                messages.upgraded(),
+                messages.failed(),
+                messages.shattered(),
+                messages.broadcast(),
+                messages.infoUnupgraded(),
+                messages.infoWeapon(),
+                messages.infoArmor(),
+                messages.infoNotUpgradeable(),
+                messages.given(),
+                messages.received(),
+                messages.help()))
         .hasMessageContaining("messages.found must contain <amount>");
   }
 
@@ -163,25 +162,23 @@ final class ShardsConfigTest {
     var config = load();
     var windmill = config.altars().getFirst();
 
-    assertThatThrownBy(
-            () ->
-                new ShardsConfig(
-                    config.item(),
-                    config.drops(),
-                    config.upgrades(),
-                    List.of(),
-                    config.bonuses(),
-                    config.messages()))
+    assertThatThrownBy(() ->
+            new ShardsConfig(
+                config.item(),
+                config.drops(),
+                config.upgrades(),
+                List.of(),
+                config.bonuses(),
+                config.messages()))
         .hasMessageContaining("altars");
-    assertThatThrownBy(
-            () ->
-                new ShardsConfig(
-                    config.item(),
-                    config.drops(),
-                    config.upgrades(),
-                    List.of(windmill, windmill),
-                    config.bonuses(),
-                    config.messages()))
+    assertThatThrownBy(() ->
+            new ShardsConfig(
+                config.item(),
+                config.drops(),
+                config.upgrades(),
+                List.of(windmill, windmill),
+                config.bonuses(),
+                config.messages()))
         .hasMessageContaining("repeat");
   }
 }

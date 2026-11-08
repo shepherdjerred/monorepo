@@ -184,25 +184,22 @@ final class ArenaWorld {
     var generation = ++preloadGeneration;
     var loads =
         definition.region().chunks().stream()
-            .map(
-                chunk ->
-                    world
-                        .getChunkAtAsync(chunk.x(), chunk.z(), false)
-                        // Paper completes this future on the server thread. Take the plugin
-                        // ticket before yielding: its temporary load ticket can expire before
-                        // a callback scheduled for another tick runs.
-                        .thenAccept(
-                            loaded -> {
-                              if (generation != preloadGeneration) {
-                                return;
-                              }
-                              if (loaded == null || !world.isChunkLoaded(chunk.x(), chunk.z())) {
-                                throw new IllegalStateException(
-                                    "arena chunk " + chunk + " is unavailable");
-                              }
-                              parts.chunks().keep(world, List.of(chunk));
-                              heldChunks.add(chunk);
-                            }))
+            .map(chunk ->
+                world
+                    .getChunkAtAsync(chunk.x(), chunk.z(), false)
+                    // Paper completes this future on the server thread. Take the plugin
+                    // ticket before yielding: its temporary load ticket can expire before
+                    // a callback scheduled for another tick runs.
+                    .thenAccept(loaded -> {
+                      if (generation != preloadGeneration) {
+                        return;
+                      }
+                      if (loaded == null || !world.isChunkLoaded(chunk.x(), chunk.z())) {
+                        throw new IllegalStateException("arena chunk " + chunk + " is unavailable");
+                      }
+                      parts.chunks().keep(world, List.of(chunk));
+                      heldChunks.add(chunk);
+                    }))
             .toArray(CompletableFuture[]::new);
     var _ =
         CompletableFuture.allOf(loads)

@@ -56,10 +56,9 @@ final class WorldShopDiscovery implements Listener {
         .plugin()
         .getServer()
         .getWorlds()
-        .forEach(
-            world -> {
-              for (var chunk : world.getLoadedChunks()) scan(chunk);
-            });
+        .forEach(world -> {
+          for (var chunk : world.getLoadedChunks()) scan(chunk);
+        });
   }
 
   @EventHandler
@@ -80,14 +79,13 @@ final class WorldShopDiscovery implements Listener {
   private void index(SignShop shop) {
     offers
         .check(shop)
-        .ifPresent(
-            problem -> {
-              if (blocks.registry().closure(shop.id()).isEmpty())
-                blocks.registry().close(shop.id(), problem.describe());
-              context
-                  .logger()
-                  .error("Closed recovered admin shop {}: {}", shop.id(), problem.describe());
-            });
+        .ifPresent(problem -> {
+          if (blocks.registry().closure(shop.id()).isEmpty())
+            blocks.registry().close(shop.id(), problem.describe());
+          context
+              .logger()
+              .error("Closed recovered admin shop {}: {}", shop.id(), problem.describe());
+        });
     Background.logFailure(store.indexShop(shop), context.logger(), "index world shop " + shop.id());
   }
 

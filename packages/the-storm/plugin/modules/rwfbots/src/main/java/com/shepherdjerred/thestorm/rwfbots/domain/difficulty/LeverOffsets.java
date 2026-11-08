@@ -18,13 +18,12 @@ public record LeverOffsets(Map<Lever, Double> offsets) {
 
   public LeverOffsets {
     var copy = new EnumMap<Lever, Double>(Lever.class);
-    offsets.forEach(
-        (lever, z) -> {
-          if (!(Math.abs(z) <= MAX_Z)) {
-            throw new IllegalArgumentException(lever.key() + " offset must be -3..3: " + z);
-          }
-          copy.put(lever, z);
-        });
+    offsets.forEach((lever, z) -> {
+      if (!(Math.abs(z) <= MAX_Z)) {
+        throw new IllegalArgumentException(lever.key() + " offset must be -3..3: " + z);
+      }
+      copy.put(lever, z);
+    });
     offsets = Map.copyOf(copy);
   }
 

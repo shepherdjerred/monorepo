@@ -36,12 +36,11 @@ final class PostHogTransport implements AnalyticsTransport {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.discarding())
-        .thenAccept(
-            response -> {
-              if (response.statusCode() != 200)
-                throw new IllegalStateException(
-                    "PostHog capture returned HTTP " + response.statusCode());
-            });
+        .thenAccept(response -> {
+          if (response.statusCode() != 200)
+            throw new IllegalStateException(
+                "PostHog capture returned HTTP " + response.statusCode());
+        });
   }
 
   @Override

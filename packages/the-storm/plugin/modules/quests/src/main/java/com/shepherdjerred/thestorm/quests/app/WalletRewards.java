@@ -32,13 +32,12 @@ public final class WalletRewards implements Rewards {
         .transferOnce(
             new KeyedTransfer(
                 effect, new AccountId.Server(), new AccountId.Player(player), amount, reason))
-        .thenApply(
-            result ->
-                switch (result) {
-                  case Result.Ok<Receipt, EconomyError> _ -> Result.ok(formatter.words(amount));
-                  case Result.Err<Receipt, EconomyError>(var error) ->
-                      Result.err("the bank refused the payment: " + error);
-                });
+        .thenApply(result ->
+            switch (result) {
+              case Result.Ok<Receipt, EconomyError> _ -> Result.ok(formatter.words(amount));
+              case Result.Err<Receipt, EconomyError>(var error) ->
+                  Result.err("the bank refused the payment: " + error);
+            });
   }
 
   @Override

@@ -28,10 +28,9 @@ public record TacticalMemory(
 
   public TacticalMemory blocked(Vec3 goal, long tick) {
     var copy = new HashMap<Vec3, Long>();
-    blockedUntil.forEach(
-        (point, until) -> {
-          if (until > tick) copy.put(point, until);
-        });
+    blockedUntil.forEach((point, until) -> {
+      if (until > tick) copy.put(point, until);
+    });
     copy.put(goal, tick + BLOCK_TICKS);
     if (copy.size() > 16) {
       var oldest =

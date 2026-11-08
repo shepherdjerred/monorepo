@@ -492,12 +492,11 @@ final class SnapshotKeeperTest {
 
     List<Snapshot> unrestored() {
       var unrestored = new ArrayList<Snapshot>();
-      rows.forEach(
-          (player, snapshot) -> {
-            if (!restoredAt.containsKey(player)) {
-              unrestored.add(snapshot);
-            }
-          });
+      rows.forEach((player, snapshot) -> {
+        if (!restoredAt.containsKey(player)) {
+          unrestored.add(snapshot);
+        }
+      });
       return unrestored;
     }
   }

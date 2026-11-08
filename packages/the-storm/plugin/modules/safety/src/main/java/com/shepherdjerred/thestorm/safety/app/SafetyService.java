@@ -140,13 +140,12 @@ public final class SafetyService implements ContentSafety {
               .thenCompose(done -> persisted)
               .thenCompose(done -> inspect(submission, sensitive, deadline));
       queue.tail =
-          result.handle(
-              (done, failure) -> {
-                synchronized (queue) {
-                  queue.pending--;
-                }
-                return null;
-              });
+          result.handle((done, failure) -> {
+            synchronized (queue) {
+              queue.pending--;
+            }
+            return null;
+          });
       return result.copy().orTimeout(config.publicationTimeoutSeconds(), TimeUnit.SECONDS);
     }
   }
@@ -155,76 +154,66 @@ public final class SafetyService implements ContentSafety {
       ContentSubmission submission, boolean sensitive, Instant deadline) {
     if (!time.instant().isBefore(deadline))
       return finish(submission.id(), "queue-expired")
-          .thenCompose(
-              done ->
-                  CompletableFuture.failedFuture(
-                      new IllegalStateException("Content publication deadline exceeded")));
+          .thenCompose(done ->
+              CompletableFuture.failedFuture(
+                  new IllegalStateException("Content publication deadline exceeded")));
     var work =
         enabled
             .apply(submission.player())
-            .thenCompose(
-                screen -> {
-                  if (sensitive)
-                    return CompletableFuture.completedFuture(
-                        verdict(
-                            "block",
-                            "none",
-                            "Remove credential-shaped content before publishing. No misconduct strike was recorded.",
-                            0));
-                  return muted
-                      .apply(submission.player())
-                      .thenCompose(
-                          isMuted -> {
-                            if (isMuted
-                                && !java.util.Set.of("ticket", "command")
-                                    .contains(submission.surface()))
-                              return CompletableFuture.completedFuture(
-                                  verdict(
-                                      "block",
-                                      "none",
-                                      "You are muted or chat state is still loading. Reports to staff remain available.",
-                                      0));
-                            if (!screen)
-                              return CompletableFuture.completedFuture(
-                                  verdict(
-                                          "allow",
-                                          "none",
-                                          "Screening rollout disabled; attempt retained.",
-                                          0)
-                                      .withoutScreening());
-                            return store
-                                .recent(submission.player(), time.instant().minusSeconds(20), 64)
-                                .thenCompose(recent -> classify(submission, recent, deadline));
-                          });
-                })
-            .thenCompose(
-                review -> {
-                  if (!time.instant().isBefore(deadline))
-                    return CompletableFuture.failedFuture(
-                        new IllegalStateException("Content publication deadline exceeded"));
-                  return store
-                      .event(
-                          submission.id(),
-                          "decision",
-                          JSON.writeValueAsString(review),
-                          time.instant())
-                      .thenCompose(done -> reviews.apply(submission, review))
-                      .thenCompose(done -> applyPenalty(submission, review, deadline));
-                });
+            .thenCompose(screen -> {
+              if (sensitive)
+                return CompletableFuture.completedFuture(
+                    verdict(
+                        "block",
+                        "none",
+                        "Remove credential-shaped content before publishing. No misconduct strike was recorded.",
+                        0));
+              return muted
+                  .apply(submission.player())
+                  .thenCompose(isMuted -> {
+                    if (isMuted
+                        && !java.util.Set.of("ticket", "command").contains(submission.surface()))
+                      return CompletableFuture.completedFuture(
+                          verdict(
+                              "block",
+                              "none",
+                              "You are muted or chat state is still loading. Reports to staff remain available.",
+                              0));
+                    if (!screen)
+                      return CompletableFuture.completedFuture(
+                          verdict(
+                                  "allow",
+                                  "none",
+                                  "Screening rollout disabled; attempt retained.",
+                                  0)
+                              .withoutScreening());
+                    return store
+                        .recent(submission.player(), time.instant().minusSeconds(20), 64)
+                        .thenCompose(recent -> classify(submission, recent, deadline));
+                  });
+            })
+            .thenCompose(review -> {
+              if (!time.instant().isBefore(deadline))
+                return CompletableFuture.failedFuture(
+                    new IllegalStateException("Content publication deadline exceeded"));
+              return store
+                  .event(
+                      submission.id(), "decision", JSON.writeValueAsString(review), time.instant())
+                  .thenCompose(done -> reviews.apply(submission, review))
+                  .thenCompose(done -> applyPenalty(submission, review, deadline));
+            });
     return work.orTimeout(config.publicationTimeoutSeconds(), TimeUnit.SECONDS)
-        .exceptionallyCompose(
-            failure ->
-                store
-                    .event(
-                        submission.id(),
-                        "unavailable",
-                        "Content remains unpublished; no strike.",
-                        time.instant())
-                    .thenCompose(
-                        done ->
-                            CompletableFuture.failedFuture(
-                                new IllegalStateException(
-                                    "Content screening temporarily unavailable", failure))));
+        .exceptionallyCompose(failure ->
+            store
+                .event(
+                    submission.id(),
+                    "unavailable",
+                    "Content remains unpublished; no strike.",
+                    time.instant())
+                .thenCompose(done ->
+                    CompletableFuture.failedFuture(
+                        new IllegalStateException(
+                            "Content screening temporarily unavailable", failure))));
   }
 
   private CompletableFuture<ContentReview> classify(
@@ -257,10 +246,9 @@ public final class SafetyService implements ContentSafety {
           deadline);
     if (java.util.Set.of("chat", "message", "discord").contains(submission.surface())
         && earlier.stream()
-                .filter(
-                    entry ->
-                        java.util.Set.of("chat", "message", "discord")
-                            .contains(entry.submission().surface()))
+                .filter(entry ->
+                    java.util.Set.of("chat", "message", "discord")
+                        .contains(entry.submission().surface()))
                 .count()
             >= 24)
       return CompletableFuture.completedFuture(
@@ -286,36 +274,32 @@ public final class SafetyService implements ContentSafety {
             : submission.text() + "\nStructured content:\n" + submission.components();
     for (var window : ContentRules.windows(complete)) {
       result =
-          result.thenCompose(
-              previous -> {
-                if (!previous.allowed()) return CompletableFuture.completedFuture(previous);
-                if (!time.instant().isBefore(deadline))
-                  return CompletableFuture.failedFuture(
-                      new IllegalStateException("Content deadline exceeded"));
-                return classifier
-                    .classify(submission, window, surrounding)
-                    .thenCompose(
-                        review ->
-                            store
-                                .event(
-                                    submission.id(),
-                                    "window-decision",
-                                    JSON.writeValueAsString(review),
-                                    time.instant())
-                                .thenApply(
-                                    done ->
-                                        new ContentReview(
-                                            review.decision(),
-                                            review.category(),
-                                            review.confidence(),
-                                            review.reason(),
-                                            review.model(),
-                                            Math.addExact(
-                                                previous.costMicros(), review.costMicros()),
-                                            review.muteSeconds(),
-                                            review.scores(),
-                                            review.screened())));
-              });
+          result.thenCompose(previous -> {
+            if (!previous.allowed()) return CompletableFuture.completedFuture(previous);
+            if (!time.instant().isBefore(deadline))
+              return CompletableFuture.failedFuture(
+                  new IllegalStateException("Content deadline exceeded"));
+            return classifier
+                .classify(submission, window, surrounding)
+                .thenCompose(review ->
+                    store
+                        .event(
+                            submission.id(),
+                            "window-decision",
+                            JSON.writeValueAsString(review),
+                            time.instant())
+                        .thenApply(done ->
+                            new ContentReview(
+                                review.decision(),
+                                review.category(),
+                                review.confidence(),
+                                review.reason(),
+                                review.model(),
+                                Math.addExact(previous.costMicros(), review.costMicros()),
+                                review.muteSeconds(),
+                                review.scores(),
+                                review.screened())));
+          });
     }
     return result.thenCompose(review -> advertising(submission, review, deadline));
   }
@@ -330,19 +314,17 @@ public final class SafetyService implements ContentSafety {
               submission.player(),
               time.instant().minus(DAY),
               deadline.minusSeconds(config.publicationTimeoutSeconds()))
-          .thenCompose(
-              strikes ->
-                  store
-                      .event(
-                          submission.id(),
-                          "advertising",
-                          "Confirmed unsolicited promotion; notification receipt is recorded separately.",
-                          time.instant())
-                      .thenCompose(
-                          done ->
-                              strikes > 0
-                                  ? withPenalty(submission, review, deadline)
-                                  : CompletableFuture.completedFuture(review)));
+          .thenCompose(strikes ->
+              store
+                  .event(
+                      submission.id(),
+                      "advertising",
+                      "Confirmed unsolicited promotion; notification receipt is recorded separately.",
+                      time.instant())
+                  .thenCompose(done ->
+                      strikes > 0
+                          ? withPenalty(submission, review, deadline)
+                          : CompletableFuture.completedFuture(review)));
     }
     return CompletableFuture.completedFuture(review);
   }
@@ -351,24 +333,23 @@ public final class SafetyService implements ContentSafety {
       ContentSubmission submission, ContentReview review, Instant deadline) {
     return store
         .strikes(submission.player(), "penalty", time.instant().minus(WEEK))
-        .thenCompose(
-            strikes -> {
-              if (!time.instant().isBefore(deadline))
-                return CompletableFuture.failedFuture(
-                    new IllegalStateException("Content deadline exceeded"));
-              var seconds = strikes > 0 ? 3600 : 600;
-              return CompletableFuture.completedFuture(
-                  new ContentReview(
-                      review.decision(),
-                      review.category(),
-                      review.confidence(),
-                      review.reason(),
-                      review.model(),
-                      review.costMicros(),
-                      seconds,
-                      review.scores(),
-                      review.screened()));
-            });
+        .thenCompose(strikes -> {
+          if (!time.instant().isBefore(deadline))
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Content deadline exceeded"));
+          var seconds = strikes > 0 ? 3600 : 600;
+          return CompletableFuture.completedFuture(
+              new ContentReview(
+                  review.decision(),
+                  review.category(),
+                  review.confidence(),
+                  review.reason(),
+                  review.model(),
+                  review.costMicros(),
+                  seconds,
+                  review.scores(),
+                  review.screened()));
+        });
   }
 
   private CompletableFuture<ContentReview> applyPenalty(
@@ -376,21 +357,18 @@ public final class SafetyService implements ContentSafety {
     if (review.muteSeconds() == 0) return CompletableFuture.completedFuture(review);
     return store
         .event(submission.id(), "penalty-intent", review.category(), time.instant())
-        .thenCompose(
-            done -> {
-              if (!time.instant().isBefore(deadline))
-                return CompletableFuture.failedFuture(
-                    new IllegalStateException("Content deadline exceeded"));
-              return penalty
-                  .apply(
-                      new com.shepherdjerred.thestorm.core.safety.ContentPenalty(
-                          submission, review, deadline))
-                  .thenCompose(
-                      applied ->
-                          store.event(
-                              submission.id(), "penalty", review.category(), time.instant()))
-                  .thenApply(saved -> review);
-            });
+        .thenCompose(done -> {
+          if (!time.instant().isBefore(deadline))
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Content deadline exceeded"));
+          return penalty
+              .apply(
+                  new com.shepherdjerred.thestorm.core.safety.ContentPenalty(
+                      submission, review, deadline))
+              .thenCompose(applied ->
+                  store.event(submission.id(), "penalty", review.category(), time.instant()))
+              .thenApply(saved -> review);
+        });
   }
 
   private static ContentReview verdict(String decision, String category, String reason, int mute) {
@@ -431,12 +409,9 @@ public final class SafetyService implements ContentSafety {
   public CompletableFuture<Void> observeBatch(List<EvidenceStore.Observation> observations) {
     return store.observations(
         observations.stream()
-            .map(
-                observation ->
-                    new EvidenceStore.Observation(
-                        sanitized(observation.submission()),
-                        observation.outcome(),
-                        observation.at()))
+            .map(observation ->
+                new EvidenceStore.Observation(
+                    sanitized(observation.submission()), observation.outcome(), observation.at()))
             .toList());
   }
 }

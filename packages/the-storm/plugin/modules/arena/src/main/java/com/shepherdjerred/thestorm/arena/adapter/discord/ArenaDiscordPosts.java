@@ -40,19 +40,17 @@ public final class ArenaDiscordPosts {
       var _ =
           leaderboard
               .top(arena, 1)
-              .whenComplete(
-                  (top, failure) -> {
-                    if (failure != null) {
-                      logger.error(
-                          Component.text("arena: loading the " + arena + " record failed"),
-                          failure);
-                    } else {
-                      posts.bests.merge(
-                          arena,
-                          top.stream().mapToInt(LeaderboardStore.Standing::wave).max().orElse(0),
-                          Math::max);
-                    }
-                  });
+              .whenComplete((top, failure) -> {
+                if (failure != null) {
+                  logger.error(
+                      Component.text("arena: loading the " + arena + " record failed"), failure);
+                } else {
+                  posts.bests.merge(
+                      arena,
+                      top.stream().mapToInt(LeaderboardStore.Standing::wave).max().orElse(0),
+                      Math::max);
+                }
+              });
     }
     return posts;
   }
@@ -82,9 +80,8 @@ public final class ArenaDiscordPosts {
                 run.arena(),
                 run.tier(),
                 run.fighters().stream()
-                    .map(
-                        fighter ->
-                            new ArenaRunResult.Player(fighter.id(), fighter.name(), fighter.wave()))
+                    .map(fighter ->
+                        new ArenaRunResult.Player(fighter.id(), fighter.name(), fighter.wave()))
                     .toList(),
                 record));
       }

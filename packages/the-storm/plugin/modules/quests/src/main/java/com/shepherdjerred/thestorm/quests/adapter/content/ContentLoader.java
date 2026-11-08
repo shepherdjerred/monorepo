@@ -33,20 +33,18 @@ public final class ContentLoader {
       Path dataDirectory, ContentCheck.Rules rules) {
     return read(dataDirectory.resolve(DIRECTORY))
         .flatMap(ContentCompiler::compile)
-        .flatMap(
-            content -> {
-              var problems = ContentCheck.problems(content, rules);
-              return problems.isEmpty() ? Result.ok(content) : Result.err(problems);
-            });
+        .flatMap(content -> {
+          var problems = ContentCheck.problems(content, rules);
+          return problems.isEmpty() ? Result.ok(content) : Result.err(problems);
+        });
   }
 
   static Result<List<Sourced>, List<ContentProblem>> read(Path directory) {
     List<Path> paths;
     try (Stream<Path> walk = Files.walk(directory)) {
       paths =
-          walk.filter(
-                  path ->
-                      Files.isRegularFile(path) && path.getFileName().toString().endsWith(".yml"))
+          walk.filter(path ->
+                  Files.isRegularFile(path) && path.getFileName().toString().endsWith(".yml"))
               .sorted()
               .toList();
     } catch (IOException e) {
@@ -68,10 +66,9 @@ public final class ContentLoader {
         case Result.Ok<ContentFile, List<Problem>>(var file) ->
             files.add(new Sourced(source, file));
         case Result.Err<ContentFile, List<Problem>>(var parseProblems) ->
-            parseProblems.forEach(
-                problem ->
-                    problems.add(
-                        new ContentProblem(problem.source(), problem.path(), problem.message())));
+            parseProblems.forEach(problem ->
+                problems.add(
+                    new ContentProblem(problem.source(), problem.path(), problem.message())));
       }
     }
     return problems.isEmpty() ? Result.ok(files) : Result.err(problems);

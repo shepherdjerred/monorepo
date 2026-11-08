@@ -146,10 +146,9 @@ public final class TownsPaper {
           plots
               .book()
               .byId(baseline.parcelId())
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "stored baseline has no configured plot " + baseline.parcelId()));
+              .orElseThrow(() ->
+                  new IllegalStateException(
+                      "stored baseline has no configured plot " + baseline.parcelId()));
       if (!baseline
           .definitionHash()
           .equals(

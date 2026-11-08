@@ -41,35 +41,27 @@ final class KitRulesTest {
         .hasMessageContaining("potion key");
     assertThatThrownBy(() -> spec("ARROW", 16, null, Slot.OFF_HAND))
         .hasMessageContaining("amount 1");
-    assertThatThrownBy(
-            () ->
-                new ItemSpec(
-                    "IRON_SWORD",
-                    1,
-                    Optional.of(" "),
-                    Map.of(),
-                    Optional.empty(),
-                    Optional.empty()))
+    assertThatThrownBy(() ->
+            new ItemSpec(
+                "IRON_SWORD", 1, Optional.of(" "), Map.of(), Optional.empty(), Optional.empty()))
         .hasMessageContaining("name");
-    assertThatThrownBy(
-            () ->
-                new ItemSpec(
-                    "IRON_SWORD",
-                    1,
-                    Optional.empty(),
-                    Map.of("Sharpness", 1),
-                    Optional.empty(),
-                    Optional.empty()))
+    assertThatThrownBy(() ->
+            new ItemSpec(
+                "IRON_SWORD",
+                1,
+                Optional.empty(),
+                Map.of("Sharpness", 1),
+                Optional.empty(),
+                Optional.empty()))
         .hasMessageContaining("enchantment key");
-    assertThatThrownBy(
-            () ->
-                new ItemSpec(
-                    "IRON_SWORD",
-                    1,
-                    Optional.empty(),
-                    Map.of("sharpness", 0),
-                    Optional.empty(),
-                    Optional.empty()))
+    assertThatThrownBy(() ->
+            new ItemSpec(
+                "IRON_SWORD",
+                1,
+                Optional.empty(),
+                Map.of("sharpness", 0),
+                Optional.empty(),
+                Optional.empty()))
         .hasMessageContaining("level");
   }
 
@@ -90,25 +82,16 @@ final class KitRulesTest {
         .hasMessageContaining("name");
     assertThatThrownBy(() -> new ArenaClass("Knight", false, List.of(), List.of(), Map.of(), 0))
         .hasMessageContaining("item");
-    assertThatThrownBy(
-            () ->
-                new ArenaClass(
-                    "Knight", false, List.of(item("IRON_SWORD")), List.of(), Map.of(), 11))
+    assertThatThrownBy(() ->
+            new ArenaClass("Knight", false, List.of(item("IRON_SWORD")), List.of(), Map.of(), 11))
         .hasMessageContaining("wolves");
-    assertThatThrownBy(
-            () ->
-                new ArenaClass(
-                    "Knight", false, List.of(item("IRON_SWORD")), List.of(), Map.of("Speed", 0), 0))
+    assertThatThrownBy(() ->
+            new ArenaClass(
+                "Knight", false, List.of(item("IRON_SWORD")), List.of(), Map.of("Speed", 0), 0))
         .hasMessageContaining("effect key");
-    assertThatThrownBy(
-            () ->
-                new ArenaClass(
-                    "Knight",
-                    false,
-                    List.of(item("IRON_SWORD")),
-                    List.of(),
-                    Map.of("speed", -1),
-                    0))
+    assertThatThrownBy(() ->
+            new ArenaClass(
+                "Knight", false, List.of(item("IRON_SWORD")), List.of(), Map.of("speed", -1), 0))
         .hasMessageContaining("amplifier");
   }
 

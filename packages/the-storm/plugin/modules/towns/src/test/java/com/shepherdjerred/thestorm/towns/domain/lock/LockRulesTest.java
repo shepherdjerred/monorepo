@@ -323,10 +323,9 @@ final class LockRulesTest {
     assertThatThrownBy(() -> Lock.of(NEW_ID, OWNER, Set.of(LEFT)).withTrust(OWNER, LockGrant.USE))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new LockPolicy(0, true)).isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new LockAttempt(
-                    OWNER, List.of(), new LockAttempt.Standing(null, true, OPEN, false), NEW_ID))
+    assertThatThrownBy(() ->
+            new LockAttempt(
+                OWNER, List.of(), new LockAttempt.Standing(null, true, OPEN, false), NEW_ID))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

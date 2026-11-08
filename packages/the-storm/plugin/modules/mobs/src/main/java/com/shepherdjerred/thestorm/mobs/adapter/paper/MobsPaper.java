@@ -87,11 +87,10 @@ public final class MobsPaper {
         new BeginnerProtection(
             context, config.beginnerLuck(), new JooqBeginnerTimeStore(context.database()));
     var beginnerListener = new BeginnerLuckListener(context, config, levels, beginner);
-    beginner.observeChanges(
-        id -> {
-          var player = server.getPlayer(id);
-          if (player != null) beginnerListener.nearby(player.getLocation());
-        });
+    beginner.observeChanges(id -> {
+      var player = server.getPlayer(id);
+      if (player != null) beginnerListener.nearby(player.getLocation());
+    });
     List<Listener> listeners =
         List.of(
             new SpawnListener(rules, levels, regions, context.random()),

@@ -153,12 +153,11 @@ final class SkillListener implements Listener {
     var _ =
         levels
             .markPlaced(position(block))
-            .whenComplete(
-                (_, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not mark placed skill block", failure);
-                  }
-                });
+            .whenComplete((_, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not mark placed skill block", failure);
+              }
+            });
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -187,12 +186,11 @@ final class SkillListener implements Listener {
     var _ =
         levels
             .growPlacedTree(saplings, generated)
-            .whenComplete(
-                (_, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not track generated tree blocks", failure);
-                  }
-                });
+            .whenComplete((_, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not track generated tree blocks", failure);
+              }
+            });
   }
 
   private static List<BlockPosition> treeSaplings(Block source, TreeType species) {
@@ -292,11 +290,8 @@ final class SkillListener implements Listener {
     var _ =
         levels
             .landFalling(id, destination)
-            .thenCompose(
-                marked ->
-                    marked
-                        ? CompletableFuture.completedFuture(true)
-                        : levels.markPlaced(destination))
+            .thenCompose(marked ->
+                marked ? CompletableFuture.completedFuture(true) : levels.markPlaced(destination))
             .whenComplete((_, failure) -> logMoveFailure(failure));
   }
 
@@ -349,11 +344,10 @@ final class SkillListener implements Listener {
               if (failure != null) {
                 context.logger().error("Could not check skill block", failure);
               } else if (!placed && eligible && !drops.isEmpty()) {
-                skill.ifPresent(
-                    awarded -> {
-                      award(player, awarded, SkillActivities.blockExperience(awarded, material));
-                      extraDrops(player, awarded, location, drops);
-                    });
+                skill.ifPresent(awarded -> {
+                  award(player, awarded, SkillActivities.blockExperience(awarded, material));
+                  extraDrops(player, awarded, location, drops);
+                });
               }
             },
             context.scheduler().mainThread());
@@ -391,11 +385,10 @@ final class SkillListener implements Listener {
       return;
     }
     SkillActivities.combat(event, attacker.getInventory().getItemInMainHand())
-        .ifPresent(
-            skill -> {
-              event.setDamage(
-                  event.getDamage() * SkillPerks.combatDamageMultiplier(progress.level(skill)));
-            });
+        .ifPresent(skill -> {
+          event.setDamage(
+              event.getDamage() * SkillPerks.combatDamageMultiplier(progress.level(skill)));
+        });
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -234,22 +234,18 @@ public record SurvivalContent(
       if (zone.emeralds() > 0 && zone.gate().isEmpty())
         throw new IllegalArgumentException("Paid district needs a gate: " + zone.id());
       zone.spawns()
-          .forEach(
-              p -> {
-                if (!zone.contains(p)) throw new IllegalArgumentException("Misplaced spawn");
-              });
+          .forEach(p -> {
+            if (!zone.contains(p)) throw new IllegalArgumentException("Misplaced spawn");
+          });
       zone.safePoints()
-          .forEach(
-              p -> {
-                if (!zone.contains(p)) throw new IllegalArgumentException("Misplaced safe point");
-              });
+          .forEach(p -> {
+            if (!zone.contains(p)) throw new IllegalArgumentException("Misplaced safe point");
+          });
       zone.purchaseSigns().forEach(p -> add(fixtures, arena.region(), p));
       zone.gate()
-          .forEach(
-              p -> {
-                if (!arena.region().contains(p))
-                  throw new IllegalArgumentException("Misplaced gate");
-              });
+          .forEach(p -> {
+            if (!arena.region().contains(p)) throw new IllegalArgumentException("Misplaced gate");
+          });
       zone.stations().forEach(s -> add(fixtures, arena.region(), s.block()));
       zone.resources().forEach(r -> add(fixtures, arena.region(), r.block()));
       zone.defenses().forEach(d -> add(fixtures, arena.region(), d.block()));
@@ -277,11 +273,10 @@ public record SurvivalContent(
         }
       }
     }
-    machines.forEach(
-        m -> {
-          add(fixtures, arena.region(), m.block());
-          m.interactions().forEach(p -> add(fixtures, arena.region(), p));
-        });
+    machines.forEach(m -> {
+      add(fixtures, arena.region(), m.block());
+      m.interactions().forEach(p -> add(fixtures, arena.region(), p));
+    });
     planeParts.forEach(p -> add(fixtures, arena.region(), p.block()));
     add(fixtures, arena.region(), planeWorkbench);
     add(fixtures, arena.region(), bossObjective);

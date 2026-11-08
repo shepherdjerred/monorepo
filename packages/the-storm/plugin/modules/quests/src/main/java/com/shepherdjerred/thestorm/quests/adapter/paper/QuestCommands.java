@@ -78,17 +78,14 @@ final class QuestCommands {
             Commands.literal("track")
                 .then(
                     activeQuest()
-                        .executes(
-                            context ->
-                                track(context.getSource().getSender(), getString(context, QUEST)))))
+                        .executes(context ->
+                            track(context.getSource().getSender(), getString(context, QUEST)))))
         .then(
             Commands.literal("abandon")
                 .then(
                     activeQuest()
-                        .executes(
-                            context ->
-                                abandon(
-                                    context.getSource().getSender(), getString(context, QUEST)))))
+                        .executes(context ->
+                            abandon(context.getSource().getSender(), getString(context, QUEST)))))
         .then(Commands.literal("top").executes(context -> top(context.getSource().getSender())))
         .then(admin())
         .build();
@@ -103,30 +100,27 @@ final class QuestCommands {
                     Commands.argument(PLAYER, ArgumentTypes.player())
                         .then(
                             anyQuest()
-                                .executes(
-                                    context ->
-                                        admin(
-                                            context,
-                                            target ->
-                                                wiring
-                                                    .service()
-                                                    .adminReset(
-                                                        target, getString(context, QUEST)))))))
+                                .executes(context ->
+                                    admin(
+                                        context,
+                                        target ->
+                                            wiring
+                                                .service()
+                                                .adminReset(target, getString(context, QUEST)))))))
         .then(
             Commands.literal("complete")
                 .then(
                     Commands.argument(PLAYER, ArgumentTypes.player())
                         .then(
                             anyQuest()
-                                .executes(
-                                    context ->
-                                        admin(
-                                            context,
-                                            target ->
-                                                wiring
-                                                    .service()
-                                                    .adminComplete(
-                                                        target, getString(context, QUEST)))))))
+                                .executes(context ->
+                                    admin(
+                                        context,
+                                        target ->
+                                            wiring
+                                                .service()
+                                                .adminComplete(
+                                                    target, getString(context, QUEST)))))))
         .then(
             Commands.literal("stage")
                 .then(
@@ -135,17 +129,16 @@ final class QuestCommands {
                             anyQuest()
                                 .then(
                                     Commands.argument(STAGE, word())
-                                        .executes(
-                                            context ->
-                                                admin(
-                                                    context,
-                                                    target ->
-                                                        wiring
-                                                            .service()
-                                                            .adminStage(
-                                                                target,
-                                                                getString(context, QUEST),
-                                                                getString(context, STAGE))))))))
+                                        .executes(context ->
+                                            admin(
+                                                context,
+                                                target ->
+                                                    wiring
+                                                        .service()
+                                                        .adminStage(
+                                                            target,
+                                                            getString(context, QUEST),
+                                                            getString(context, STAGE))))))))
         .then(
             Commands.literal("effects")
                 .then(Commands.argument(PLAYER, word()).executes(this::listEffects)))
@@ -188,17 +181,16 @@ final class QuestCommands {
                   if (effects.isEmpty()) {
                     sender.sendMessage(info("None."));
                   }
-                  effects.forEach(
-                      effect ->
-                          sender.sendMessage(
-                              info(
-                                  effect.id()
-                                      + " "
-                                      + effect.status()
-                                      + " "
-                                      + effect.quest()
-                                      + " "
-                                      + effect.action())));
+                  effects.forEach(effect ->
+                      sender.sendMessage(
+                          info(
+                              effect.id()
+                                  + " "
+                                  + effect.status()
+                                  + " "
+                                  + effect.quest()
+                                  + " "
+                                  + effect.action())));
                 },
                 wiring.mainThread());
     return Command.SINGLE_SUCCESS;
@@ -252,34 +244,31 @@ final class QuestCommands {
 
   private RequiredArgumentBuilder<CommandSourceStack, String> activeQuest() {
     return Commands.argument(QUEST, word())
-        .suggests(
-            (context, builder) -> {
-              if (context.getSource().getSender() instanceof Player player) {
-                var prefix = builder.getRemainingLowerCase();
-                wiring
-                    .service()
-                    .state(player.getUniqueId())
-                    .ifPresent(
-                        state ->
-                            state.active().keySet().stream()
-                                .filter(id -> id.startsWith(prefix))
-                                .forEach(builder::suggest));
-              }
-              return builder.buildFuture();
-            });
+        .suggests((context, builder) -> {
+          if (context.getSource().getSender() instanceof Player player) {
+            var prefix = builder.getRemainingLowerCase();
+            wiring
+                .service()
+                .state(player.getUniqueId())
+                .ifPresent(state ->
+                    state.active().keySet().stream()
+                        .filter(id -> id.startsWith(prefix))
+                        .forEach(builder::suggest));
+          }
+          return builder.buildFuture();
+        });
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> anyQuest() {
     return Commands.argument(QUEST, word())
-        .suggests(
-            (context, builder) -> {
-              var prefix = builder.getRemainingLowerCase();
-              wiring.service().content().quests().keySet().stream()
-                  .filter(id -> id.startsWith(prefix))
-                  .sorted()
-                  .forEach(builder::suggest);
-              return builder.buildFuture();
-            });
+        .suggests((context, builder) -> {
+          var prefix = builder.getRemainingLowerCase();
+          wiring.service().content().quests().keySet().stream()
+              .filter(id -> id.startsWith(prefix))
+              .sorted()
+              .forEach(builder::suggest);
+          return builder.buildFuture();
+        });
   }
 
   private int journal(CommandSender sender) {

@@ -61,15 +61,14 @@ final class ObjectivePlayTest {
           if (bomb.owner instanceof BombOwner.Team) firstPlant.putIfAbsent(team, world.tick);
         }
       }
-      world.boards.forEach(
-          (team, board) -> {
-            if (board.plan().push() >= Playbook.PLANT_GO) {
-              planterSent.putIfAbsent(team, world.tick);
-            }
-            if (board.plan().slots().stream().anyMatch(slot -> slot.kind() == SlotKind.SWEEP)) {
-              hunted.put(team, true);
-            }
-          });
+      world.boards.forEach((team, board) -> {
+        if (board.plan().push() >= Playbook.PLANT_GO) {
+          planterSent.putIfAbsent(team, world.tick);
+        }
+        if (board.plan().slots().stream().anyMatch(slot -> slot.kind() == SlotKind.SWEEP)) {
+          hunted.put(team, true);
+        }
+      });
     }
 
     long first() {

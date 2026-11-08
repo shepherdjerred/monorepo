@@ -143,12 +143,11 @@ final class BodyMovement {
 
   private void retainFlight(Flight candidate, boolean grounded) {
     flight =
-        flight.filter(
-            previous ->
-                !grounded
-                    && previous.target().equals(candidate.target())
-                    && previous.hop() == candidate.hop()
-                    && candidate.started() - previous.started() <= 60);
+        flight.filter(previous ->
+            !grounded
+                && previous.target().equals(candidate.target())
+                && previous.hop() == candidate.hop()
+                && candidate.started() - previous.started() <= 60);
   }
 
   private void beginFlight(Flight candidate, MovementSafety.Reason reason) {

@@ -34,11 +34,10 @@ public record HeritageConfig(
         throw new IllegalArgumentException("duplicate heritage archive: " + archive.id());
       }
       if (sites.stream()
-          .noneMatch(
-              site ->
-                  site.id().equals(archive.spawnSite())
-                      && site.kind() == HeritageSite.Kind.SERVER
-                      && site.world().equals(archive.world()))) {
+          .noneMatch(site ->
+              site.id().equals(archive.spawnSite())
+                  && site.kind() == HeritageSite.Kind.SERVER
+                  && site.world().equals(archive.world()))) {
         throw new IllegalArgumentException(
             "heritage archive is missing its server spawn site: " + archive.id());
       }

@@ -145,11 +145,10 @@ public final class WorldStargateStore implements StargateStore, Listener {
       } else
         world
             .read(block)
-            .ifPresent(
-                definition -> {
-                  found.add(definition);
-                  deferredDefinitions.remove(block);
-                });
+            .ifPresent(definition -> {
+              found.add(definition);
+              deferredDefinitions.remove(block);
+            });
     }
     return List.copyOf(found);
   }
@@ -264,20 +263,18 @@ public final class WorldStargateStore implements StargateStore, Listener {
             () ->
                 networks
                     .values()
-                    .removeIf(
-                        network ->
-                            network.access() instanceof NetworkAccess.Private(var owner, _)
-                                && owner.equals(player)),
+                    .removeIf(network ->
+                        network.access() instanceof NetworkAccess.Private(var owner, _)
+                            && owner.equals(player)),
             context.scheduler().mainThread());
   }
 
   private CompletableFuture<Void> cache(CompletableFuture<Void> write, String operation) {
-    return write.exceptionally(
-        error -> {
-          context
-              .logger()
-              .error("World Stargate saved; could not {} its database index", operation, error);
-          return null;
-        });
+    return write.exceptionally(error -> {
+      context
+          .logger()
+          .error("World Stargate saved; could not {} its database index", operation, error);
+      return null;
+    });
   }
 }

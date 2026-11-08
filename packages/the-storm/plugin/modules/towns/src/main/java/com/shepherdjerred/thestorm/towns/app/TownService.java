@@ -91,17 +91,16 @@ public final class TownService {
       return Result.err(List.of(new TownProblem.NameTaken(name)));
     }
     return TownRules.graduate(player, name, level, state())
-        .map(
-            town ->
-                settling.persist(
-                    town,
-                    settling.store().saveTown(town),
-                    Settling.Busy.of(town, Set.of()),
-                    () -> {
-                      state().replaceTown(town);
-                      settling.events().landChanged(town.id());
-                      milestones.publish(new TownMilestones.Milestone.Founded(town.name(), player));
-                    }));
+        .map(town ->
+            settling.persist(
+                town,
+                settling.store().saveTown(town),
+                Settling.Busy.of(town, Set.of()),
+                () -> {
+                  state().replaceTown(town);
+                  settling.events().landChanged(town.id());
+                  milestones.publish(new TownMilestones.Milestone.Founded(town.name(), player));
+                }));
   }
 
   /** Deletes {@code player}'s camp once they repeat {@code delete}. */
@@ -111,16 +110,15 @@ public final class TownService {
       return Result.err(List.of(new TownProblem.Busy()));
     }
     return TownRules.disbandCamp(player, confirmation, state())
-        .map(
-            town ->
-                settling.persist(
-                    town,
-                    settling.store().deleteCamp(town.id(), notices),
-                    Settling.Busy.of(town, Set.of()),
-                    () -> {
-                      state().removeTown(town.id());
-                      settling.events().removed(town.id());
-                    }));
+        .map(town ->
+            settling.persist(
+                town,
+                settling.store().deleteCamp(town.id(), notices),
+                Settling.Busy.of(town, Set.of()),
+                () -> {
+                  state().removeTown(town.id());
+                  settling.events().removed(town.id());
+                }));
   }
 
   /** Refreshes a camp's idle clock when {@code player}, one of its members, is on the server. */
@@ -187,56 +185,50 @@ public final class TownService {
             clocks.time().instant(),
             governorLevel);
     return TownRules.found(founding, state())
-        .map(
-            town -> {
-              state().addTown(town);
-              return settling.persist(
-                  town,
-                  settling.store().createTown(town),
-                  Settling.Busy.of(town, Set.of()),
-                  () ->
-                      milestones.publish(
-                          new TownMilestones.Milestone.Founded(town.name(), founder)));
-            });
+        .map(town -> {
+          state().addTown(town);
+          return settling.persist(
+              town,
+              settling.store().createTown(town),
+              Settling.Busy.of(town, Set.of()),
+              () -> milestones.publish(new TownMilestones.Milestone.Founded(town.name(), founder)));
+        });
   }
 
   /** The town {@code player} may delete now, confirmed by repeating its name. */
   public Result<Town, List<TownProblem>> checkDisband(UUID player, String confirmation) {
     return TownRules.disband(player, confirmation, state())
-        .flatMap(
-            town ->
-                settling.isBusy(Settling.Busy.of(town, Set.of()))
-                    ? Result.<Town, List<TownProblem>>err(List.of(new TownProblem.Busy()))
-                    : Result.ok(town));
+        .flatMap(town ->
+            settling.isBusy(Settling.Busy.of(town, Set.of()))
+                ? Result.<Town, List<TownProblem>>err(List.of(new TownProblem.Busy()))
+                : Result.ok(town));
   }
 
   /** Deletes {@code player}'s town and durably records its treasury payout for {@link Treasury}. */
   public Result<Change<Town>, List<TownProblem>> disband(UUID player, String confirmation) {
     return checkDisband(player, confirmation)
-        .map(
-            town -> {
-              var claims = state().claimsOf(town.id());
-              var chunks = new HashSet<ChunkPos>();
-              claims.forEach(claim -> chunks.add(claim.chunk()));
-              return settling.persist(
-                  town,
-                  settling.store().deleteTown(TownPayout.of(town)),
-                  Settling.Busy.of(town, chunks),
-                  () -> {
-                    state().removeTown(town.id());
-                    settling.events().removed(town.id());
-                  });
-            });
+        .map(town -> {
+          var claims = state().claimsOf(town.id());
+          var chunks = new HashSet<ChunkPos>();
+          claims.forEach(claim -> chunks.add(claim.chunk()));
+          return settling.persist(
+              town,
+              settling.store().deleteTown(TownPayout.of(town)),
+              Settling.Busy.of(town, chunks),
+              () -> {
+                state().removeTown(town.id());
+                settling.events().removed(town.id());
+              });
+        });
   }
 
   public Result<Change<Claim>, List<ClaimProblem>> claim(UUID player, ChunkPos chunk) {
     return attempt(player, chunk)
-        .flatMap(
-            attempt -> {
-              var town = withLiveLevel(attempt.town());
-              var fresh = new ClaimAttempt(player, town, chunk, attempt.map());
-              return claiming.claim(fresh).map(claim -> save(claim, town, attempt.town()));
-            });
+        .flatMap(attempt -> {
+          var town = withLiveLevel(attempt.town());
+          var fresh = new ClaimAttempt(player, town, chunk, attempt.map());
+          return claiming.claim(fresh).map(claim -> save(claim, town, attempt.town()));
+        });
   }
 
   private Change<Claim> save(Claim claim, Town town, Town stored) {
@@ -257,31 +249,29 @@ public final class TownService {
           settling.events().landChanged(claim.townId());
           state()
               .town(claim.townId())
-              .ifPresent(
-                  grown -> {
-                    if (!grown.isCamp()) {
-                      milestones.publish(
-                          new TownMilestones.Milestone.Grew(
-                              grown.id(), grown.name(), state().claimsOf(grown.id()).size()));
-                    }
-                  });
+              .ifPresent(grown -> {
+                if (!grown.isCamp()) {
+                  milestones.publish(
+                      new TownMilestones.Milestone.Grew(
+                          grown.id(), grown.name(), state().claimsOf(grown.id()).size()));
+                }
+              });
         });
   }
 
   public Result<Change<Claim>, List<ClaimProblem>> unclaim(UUID player, ChunkPos chunk) {
     return attempt(player, chunk)
         .flatMap(claiming::unclaim)
-        .map(
-            claim -> {
-              return settling.persist(
-                  claim,
-                  settling.store().removeClaim(claim.chunk()),
-                  Settling.Busy.of(claim),
-                  () -> {
-                    state().removeClaim(claim.chunk());
-                    settling.events().landChanged(claim.townId());
-                  });
-            });
+        .map(claim -> {
+          return settling.persist(
+              claim,
+              settling.store().removeClaim(claim.chunk()),
+              Settling.Busy.of(claim),
+              () -> {
+                state().removeClaim(claim.chunk());
+                settling.events().landChanged(claim.townId());
+              });
+        });
   }
 
   public Result<Change<Claim>, List<ClaimProblem>> setFlag(

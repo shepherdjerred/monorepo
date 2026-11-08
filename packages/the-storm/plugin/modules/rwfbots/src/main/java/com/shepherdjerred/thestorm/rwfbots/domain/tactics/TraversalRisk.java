@@ -35,9 +35,8 @@ public final class TraversalRisk {
     var enemies = situation.knownEnemies();
     var pressure =
         enemies.stream()
-            .filter(
-                enemy ->
-                    enemy.confidence() >= 0.4 && enemy.pos().distance(situation.self().pos()) <= 18)
+            .filter(enemy ->
+                enemy.confidence() >= 0.4 && enemy.pos().distance(situation.self().pos()) <= 18)
             .count();
     var deadline = deadline(situation, goal);
     var urgency = urgency(situation, context, deadline);

@@ -126,10 +126,8 @@ record DuelSetup(
         SPEC.kind(),
         harness
             .baseline(match.matchId())
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "native duel lacks the frozen hard authored baseline")),
+            .orElseThrow(() ->
+                new IllegalStateException("native duel lacks the frozen hard authored baseline")),
         match.matchId(),
         selection.seed(),
         selection.side(),

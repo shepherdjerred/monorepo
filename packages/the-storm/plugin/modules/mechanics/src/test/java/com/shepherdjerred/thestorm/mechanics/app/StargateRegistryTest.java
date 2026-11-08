@@ -54,10 +54,9 @@ final class StargateRegistryTest {
             () -> new StargateRegistry(new StargateStore.Snapshot(List.of(), List.of(first))))
         .isInstanceOf(IllegalStateException.class);
     var overlap = gate(2, "Two", 1);
-    assertThatThrownBy(
-            () ->
-                new StargateRegistry(
-                    new StargateStore.Snapshot(List.of(network), List.of(first, overlap))))
+    assertThatThrownBy(() ->
+            new StargateRegistry(
+                new StargateStore.Snapshot(List.of(network), List.of(first, overlap))))
         .isInstanceOf(IllegalStateException.class);
   }
 }

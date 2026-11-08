@@ -60,11 +60,10 @@ public final class StaffState {
     loaded =
         store
             .load()
-            .thenAccept(
-                entries -> {
-                  entries.forEach(this::apply);
-                  ready = true;
-                });
+            .thenAccept(entries -> {
+              entries.forEach(this::apply);
+              ready = true;
+            });
   }
 
   public boolean ready() {

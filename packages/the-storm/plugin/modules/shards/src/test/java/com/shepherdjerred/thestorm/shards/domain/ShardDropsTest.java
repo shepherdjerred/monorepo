@@ -183,23 +183,19 @@ final class ShardDropsTest {
     assertThatThrownBy(
             () -> new DropsConfig(List.of("world"), List.of(), Map.of("ZOMBIE", rule), Map.of()))
         .hasMessageContaining("namespaced key");
-    assertThatThrownBy(
-            () ->
-                new DropsConfig(
-                    List.of(OVERWORLD, OVERWORLD), List.of(), Map.of("ZOMBIE", rule), Map.of()))
+    assertThatThrownBy(() ->
+            new DropsConfig(
+                List.of(OVERWORLD, OVERWORLD), List.of(), Map.of("ZOMBIE", rule), Map.of()))
         .hasMessageContaining("repeat");
-    assertThatThrownBy(
-            () ->
-                new DropsConfig(
-                    List.of(OVERWORLD), List.of("spawner"), Map.of("ZOMBIE", rule), Map.of()))
+    assertThatThrownBy(() ->
+            new DropsConfig(
+                List.of(OVERWORLD), List.of("spawner"), Map.of("ZOMBIE", rule), Map.of()))
         .hasMessageContaining("excludedSpawnReasons");
     assertThatThrownBy(
             () -> new DropsConfig(List.of(OVERWORLD), List.of(), Map.of("zombie", rule), Map.of()))
         .hasMessageContaining("drops.mobs");
-    assertThatThrownBy(
-            () ->
-                new DropsConfig(
-                    List.of(OVERWORLD), List.of(), Map.of(), Map.of("diamond_ore", rule)))
+    assertThatThrownBy(() ->
+            new DropsConfig(List.of(OVERWORLD), List.of(), Map.of(), Map.of("diamond_ore", rule)))
         .hasMessageContaining("drops.blocks");
     assertThatThrownBy(() -> new DropsConfig(List.of(OVERWORLD), List.of(), Map.of(), Map.of()))
         .hasMessageContaining("at least one");

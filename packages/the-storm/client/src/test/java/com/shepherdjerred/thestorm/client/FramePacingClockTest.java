@@ -48,10 +48,8 @@ final class FramePacingClockTest {
         .isInstanceOf(IllegalArgumentException.class);
     var clock = new FramePacingClock(0, 60, 100);
     clock.rendered(10, new FramePacingClock.RenderObservation(0, true, false, 120, CAMERA));
-    assertThatThrownBy(
-            () ->
-                clock.rendered(
-                    10, new FramePacingClock.RenderObservation(0, true, false, 120, CAMERA)))
+    assertThatThrownBy(() ->
+            clock.rendered(10, new FramePacingClock.RenderObservation(0, true, false, 120, CAMERA)))
         .isInstanceOf(IllegalArgumentException.class);
     clock.interrupted(30);
     assertThat(clock.completion()).isEqualTo("INTERRUPTED");

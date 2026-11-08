@@ -68,17 +68,16 @@ public final class DetailsExportFixtures implements AutoCloseable {
                                 source -> source.getSender() instanceof RemoteConsoleCommandSender)
                             .then(
                                 Commands.argument("request", StringArgumentType.greedyString())
-                                    .executes(
-                                        command -> {
-                                          command
-                                              .getSource()
-                                              .getSender()
-                                              .sendMessage(
-                                                  command(
-                                                      StringArgumentType.getString(
-                                                          command, "request")));
-                                          return 1;
-                                        }))
+                                    .executes(command -> {
+                                      command
+                                          .getSource()
+                                          .getSender()
+                                          .sendMessage(
+                                              command(
+                                                  StringArgumentType.getString(
+                                                      command, "request")));
+                                      return 1;
+                                    }))
                             .build()));
   }
 
@@ -98,23 +97,21 @@ public final class DetailsExportFixtures implements AutoCloseable {
             parts[7]);
     started = true;
     status = "{\"state\":\"reading\"}";
-    writer.execute(
-        () -> {
-          try {
-            var chunks =
-                GSON.fromJson(
-                    Files.readString(plugin.getDataFolder().toPath().resolve("source-chunks.json")),
-                    Chunk[].class);
-            if (chunks.length == 0)
-              throw new IllegalArgumentException("missing audited source chunks");
-            plugin
-                .getServer()
-                .getScheduler()
-                .runTask(plugin, () -> capture(request, List.of(chunks), 0));
-          } catch (Exception failure) {
-            fail(failure);
-          }
-        });
+    writer.execute(() -> {
+      try {
+        var chunks =
+            GSON.fromJson(
+                Files.readString(plugin.getDataFolder().toPath().resolve("source-chunks.json")),
+                Chunk[].class);
+        if (chunks.length == 0) throw new IllegalArgumentException("missing audited source chunks");
+        plugin
+            .getServer()
+            .getScheduler()
+            .runTask(plugin, () -> capture(request, List.of(chunks), 0));
+      } catch (Exception failure) {
+        fail(failure);
+      }
+    });
     return status;
   }
 
@@ -127,25 +124,24 @@ public final class DetailsExportFixtures implements AutoCloseable {
     var chunk = chunks.get(index);
     var loading = world.getChunkAtAsync(chunk.x(), chunk.z(), true);
     var _ =
-        loading.whenComplete(
-            (loaded, failure) ->
-                plugin
-                    .getServer()
-                    .getScheduler()
-                    .runTask(
-                        plugin,
-                        () -> {
-                          if (failure != null) {
-                            fail(failure);
-                            return;
-                          }
-                          try {
-                            for (var state : loaded.getTileEntities()) capture(request, state);
-                            capture(request, chunks, index + 1);
-                          } catch (RuntimeException problem) {
-                            fail(problem);
-                          }
-                        }));
+        loading.whenComplete((loaded, failure) ->
+            plugin
+                .getServer()
+                .getScheduler()
+                .runTask(
+                    plugin,
+                    () -> {
+                      if (failure != null) {
+                        fail(failure);
+                        return;
+                      }
+                      try {
+                        for (var state : loaded.getTileEntities()) capture(request, state);
+                        capture(request, chunks, index + 1);
+                      } catch (RuntimeException problem) {
+                        fail(problem);
+                      }
+                    }));
   }
 
   private void capture(Request request, org.bukkit.block.BlockState state) {

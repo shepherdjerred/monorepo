@@ -72,12 +72,11 @@ final class SpellItems implements SpellScrolls {
     item.setData(DataComponentTypes.ITEM_MODEL, Key.key(entry.look().model()));
     item.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
     item.setData(DataComponentTypes.LORE, ItemLore.lore(focusLore(entry)));
-    item.editPersistentDataContainer(
-        pdc -> {
-          pdc.set(formKey, PersistentDataType.STRING, FOCUS);
-          pdc.set(ownerKey, PersistentDataType.STRING, owner.toString());
-          pdc.set(generationKey, PersistentDataType.LONG, generation);
-        });
+    item.editPersistentDataContainer(pdc -> {
+      pdc.set(formKey, PersistentDataType.STRING, FOCUS);
+      pdc.set(ownerKey, PersistentDataType.STRING, owner.toString());
+      pdc.set(generationKey, PersistentDataType.LONG, generation);
+    });
     return item;
   }
 

@@ -62,24 +62,23 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
         org.bukkit.Chunk::getTileEntities);
     services.provide(
         BlockChanges.class,
-        new AuditedBlockChanges(
-            change -> {
-              if (change.actor().equals("#storm-mechanics-crush")) {
-                if (!change
-                    .location()
-                    .getBlock()
-                    .getBlockData()
-                    .getAsString()
-                    .equals(change.before().getAsString())) {
-                  throw new IllegalStateException("Crush audit occurred after its world mutation");
-                }
-                getComponentLogger()
-                    .info(
-                        "Audited crush before natural break: {} -> {}",
-                        change.before().getAsString(),
-                        change.after().getAsString());
-              }
-            }));
+        new AuditedBlockChanges(change -> {
+          if (change.actor().equals("#storm-mechanics-crush")) {
+            if (!change
+                .location()
+                .getBlock()
+                .getBlockData()
+                .getAsString()
+                .equals(change.before().getAsString())) {
+              throw new IllegalStateException("Crush audit occurred after its world mutation");
+            }
+            getComponentLogger()
+                .info(
+                    "Audited crush before natural break: {} -> {}",
+                    change.before().getAsString(),
+                    change.after().getAsString());
+          }
+        }));
     services.provide(SealedWorlds.class, new SealedWorlds());
     var context =
         new ModuleContext(
@@ -113,20 +112,17 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
                       .registrar()
                       .register(
                           io.papermc.paper.command.brigadier.Commands.literal("stormworldsignproof")
-                              .executes(
-                                  command -> {
-                                    var _ =
-                                        com.shepherdjerred.thestorm.mechanics.adapter.paper
-                                            .WorldGatePaperProof.run(context)
-                                            .whenComplete(
-                                                (ignored, error) -> {
-                                                  if (error != null)
-                                                    getComponentLogger()
-                                                        .error(
-                                                            "WORLD_STARGATE_PAPER_FAILED", error);
-                                                });
-                                    return 1;
-                                  })
+                              .executes(command -> {
+                                var _ =
+                                    com.shepherdjerred.thestorm.mechanics.adapter.paper
+                                        .WorldGatePaperProof.run(context)
+                                        .whenComplete((ignored, error) -> {
+                                          if (error != null)
+                                            getComponentLogger()
+                                                .error("WORLD_STARGATE_PAPER_FAILED", error);
+                                        });
+                                return 1;
+                              })
                               .build()));
     }
     getServer().getPluginManager().registerEvents(this, this);

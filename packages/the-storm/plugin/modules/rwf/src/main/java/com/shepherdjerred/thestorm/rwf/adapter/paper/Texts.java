@@ -369,11 +369,10 @@ final class Texts {
             "The game has been in progress for " + time(running.toSeconds()), NamedTextColor.GRAY));
     untilPoison
         .filter(left -> !left.isNegative() && !left.isZero())
-        .ifPresent(
-            left ->
-                lines.add(
-                    Component.text(
-                        "Poison will begin in " + time(left.toSeconds()), NamedTextColor.GRAY)));
+        .ifPresent(left ->
+            lines.add(
+                Component.text(
+                    "Poison will begin in " + time(left.toSeconds()), NamedTextColor.GRAY)));
     return List.copyOf(lines);
   }
 

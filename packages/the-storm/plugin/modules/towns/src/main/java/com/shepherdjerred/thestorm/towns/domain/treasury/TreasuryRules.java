@@ -17,23 +17,21 @@ public final class TreasuryRules {
   public static Result<Town, TreasuryProblem> member(UUID player, TownDirectory towns) {
     return towns
         .townOf(player)
-        .<Result<Town, TreasuryProblem>>map(
-            town ->
-                town.isCamp()
-                    ? Result.err(new TreasuryProblem.TownsOnly())
-                    : Result.<Town, TreasuryProblem>ok(town))
+        .<Result<Town, TreasuryProblem>>map(town ->
+            town.isCamp()
+                ? Result.err(new TreasuryProblem.TownsOnly())
+                : Result.<Town, TreasuryProblem>ok(town))
         .orElseGet(() -> Result.err(new TreasuryProblem.NotInTown()));
   }
 
   /** The town whose treasury {@code player} may withdraw from. */
   public static Result<Town, TreasuryProblem> withdrawer(UUID player, TownDirectory towns) {
     return member(player, towns)
-        .flatMap(
-            town -> {
-              var role = town.roleOf(player).orElseThrow();
-              return role.manages()
-                  ? Result.ok(town)
-                  : Result.err(new TreasuryProblem.CannotWithdraw(role));
-            });
+        .flatMap(town -> {
+          var role = town.roleOf(player).orElseThrow();
+          return role.manages()
+              ? Result.ok(town)
+              : Result.err(new TreasuryProblem.CannotWithdraw(role));
+        });
   }
 }

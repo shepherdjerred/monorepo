@@ -23,20 +23,19 @@ public final class ResetLoginGate implements Listener {
     var _ =
         store
             .isPending(event.getUniqueId())
-            .whenComplete(
-                (pending, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not check player reset status", failure);
-                    event.disallow(
-                        AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
-                        Component.text(
-                            "Player reset status is unavailable. Please try again shortly."));
-                  } else if (Boolean.TRUE.equals(pending)) {
-                    event.disallow(
-                        AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
-                        Component.text(
-                            "Your player reset is still finishing. Please try again shortly."));
-                  }
-                });
+            .whenComplete((pending, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not check player reset status", failure);
+                event.disallow(
+                    AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    Component.text(
+                        "Player reset status is unavailable. Please try again shortly."));
+              } else if (Boolean.TRUE.equals(pending)) {
+                event.disallow(
+                    AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    Component.text(
+                        "Your player reset is still finishing. Please try again shortly."));
+              }
+            });
   }
 }

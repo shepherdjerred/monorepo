@@ -23,11 +23,10 @@ public final class DialogueScreens {
     var buttons =
         node.next()
             .map(next -> List.of(new Button(continueLabel, new Choice.ShowNode(graph, next))))
-            .orElseGet(
-                () ->
-                    node.options().stream()
-                        .map(option -> new Button(option.label(), choice(graph, option.effect())))
-                        .toList());
+            .orElseGet(() ->
+                node.options().stream()
+                    .map(option -> new Button(option.label(), choice(graph, option.effect())))
+                    .toList());
     return new Screen(graph.title(), node.text(), buttons);
   }
 

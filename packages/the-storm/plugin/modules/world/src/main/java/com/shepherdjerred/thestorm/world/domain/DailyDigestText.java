@@ -37,14 +37,13 @@ public final class DailyDigestText {
   public static List<String> lines(View view) {
     var activity =
         view.recorded()
-            .map(
-                report ->
-                    report.arrivals()
-                        + " distinct player arrivals and "
-                        + report.deaths()
-                        + " player deaths recorded since "
-                        + TIME.withZone(view.zone()).format(report.firstObserved())
-                        + ".")
+            .map(report ->
+                report.arrivals()
+                    + " distinct player arrivals and "
+                    + report.deaths()
+                    + " player deaths recorded since "
+                    + TIME.withZone(view.zone()).format(report.firstObserved())
+                    + ".")
             .orElse("No main-world activity has been recorded for this date.");
     var weather =
         view.now().thundering()

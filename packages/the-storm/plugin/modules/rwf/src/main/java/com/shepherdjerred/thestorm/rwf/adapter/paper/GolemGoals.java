@@ -250,10 +250,9 @@ final class GolemGoals {
         golem.swingMainHand();
         summons
             .of(golem)
-            .ifPresent(
-                summon -> {
-                  if (summons.strike(summon, target)) landed(golem);
-                });
+            .ifPresent(summon -> {
+              if (summons.strike(summon, target)) landed(golem);
+            });
       }
     }
 

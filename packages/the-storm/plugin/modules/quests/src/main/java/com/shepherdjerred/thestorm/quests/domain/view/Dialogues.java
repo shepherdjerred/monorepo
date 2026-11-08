@@ -104,11 +104,9 @@ public final class Dialogues {
   /** Whether the stage has something to hand in or report at {@code npc}. */
   public static boolean handsInAt(Stage stage, String npc) {
     return stage.objectives().stream()
-        .anyMatch(
-            objective ->
-                (objective instanceof Objective.Talk talk && talk.npc().equals(npc))
-                    || (objective instanceof Objective.Deliver deliver
-                        && deliver.npc().equals(npc)));
+        .anyMatch(objective ->
+            (objective instanceof Objective.Talk talk && talk.npc().equals(npc))
+                || (objective instanceof Objective.Deliver deliver && deliver.npc().equals(npc)));
   }
 
   private static void add(Build build, Entry entry) {

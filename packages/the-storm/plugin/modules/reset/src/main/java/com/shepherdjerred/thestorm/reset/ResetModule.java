@@ -46,20 +46,16 @@ public final class ResetModule implements StormModule {
     paper = ResetPaper.start(context, store, resets);
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              var _ =
-                  resets
-                      .resume()
-                      .whenComplete(
-                          (ignored, failure) -> {
-                            if (failure != null) {
-                              context
-                                  .logger()
-                                  .error("Could not resume pending player resets", failure);
-                            }
-                          });
-            });
+        .runOnMainThread(() -> {
+          var _ =
+              resets
+                  .resume()
+                  .whenComplete((ignored, failure) -> {
+                    if (failure != null) {
+                      context.logger().error("Could not resume pending player resets", failure);
+                    }
+                  });
+        });
   }
 
   @Override

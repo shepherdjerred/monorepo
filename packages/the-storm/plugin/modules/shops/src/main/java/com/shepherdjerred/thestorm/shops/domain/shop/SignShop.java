@@ -65,11 +65,10 @@ public record SignShop(
           case ShopOwner.Admin(var finite) -> finite ? "Staff custody" : adminShopLabel;
         };
     var itemLabel =
-        item.map(
-                found ->
-                    found.bundleDeal()
-                        ? "Bundle deal"
-                        : ItemNames.signLabel(found.material(), found.special()))
+        item.map(found ->
+                found.bundleDeal()
+                    ? "Bundle deal"
+                    : ItemNames.signLabel(found.material(), found.special()))
             .orElse(ItemLine.PENDING_MARKER);
     return SignLayout.render(ownerLabel, quantity, prices, itemLabel);
   }

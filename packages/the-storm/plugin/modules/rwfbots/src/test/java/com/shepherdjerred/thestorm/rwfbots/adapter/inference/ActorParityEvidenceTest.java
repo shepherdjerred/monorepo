@@ -49,10 +49,9 @@ final class ActorParityEvidenceTest {
     assertThat(replay.batches()).containsExactly(1, 3, 20, 100);
     assertThat(replay.steps()).isEqualTo(16);
     assertThat(Files.readAllBytes(output)).isEqualTo(before);
-    assertThatThrownBy(
-            () ->
-                ActorParityEvidence.write(
-                    fixture().resolve("onnx"), fixture().resolve("samples.json"), output))
+    assertThatThrownBy(() ->
+            ActorParityEvidence.write(
+                fixture().resolve("onnx"), fixture().resolve("samples.json"), output))
         .isInstanceOf(java.io.UncheckedIOException.class);
     assertThat(Files.readAllBytes(output)).isEqualTo(before);
   }
@@ -66,25 +65,22 @@ final class ActorParityEvidenceTest {
     changed.put("atol", 1e-4);
     Files.writeString(file, ActorParityEvidence.JSON.writeValueAsString(changed));
     assertThatIllegalArgumentException()
-        .isThrownBy(
-            () ->
-                ActorParityEvidence.verify(
-                    fixture().resolve("onnx"), fixture().resolve("samples.json"), file));
+        .isThrownBy(() ->
+            ActorParityEvidence.verify(
+                fixture().resolve("onnx"), fixture().resolve("samples.json"), file));
     changed = (ObjectNode) ActorParityEvidence.JSON.readTree(original);
     ((ObjectNode) changed.path("artifacts")).put("weights_sha256", "a".repeat(64));
     Files.writeString(file, ActorParityEvidence.JSON.writeValueAsString(changed));
     assertThatIllegalArgumentException()
-        .isThrownBy(
-            () ->
-                ActorParityEvidence.verify(
-                    fixture().resolve("onnx"), fixture().resolve("samples.json"), file));
+        .isThrownBy(() ->
+            ActorParityEvidence.verify(
+                fixture().resolve("onnx"), fixture().resolve("samples.json"), file));
     changed = (ObjectNode) ActorParityEvidence.JSON.readTree(original);
     changed.put("schema", "1");
     Files.writeString(file, ActorParityEvidence.JSON.writeValueAsString(changed));
-    assertThatThrownBy(
-            () ->
-                ActorParityEvidence.verify(
-                    fixture().resolve("onnx"), fixture().resolve("samples.json"), file))
+    assertThatThrownBy(() ->
+            ActorParityEvidence.verify(
+                fixture().resolve("onnx"), fixture().resolve("samples.json"), file))
         .isInstanceOf(RuntimeException.class);
   }
 
@@ -100,10 +96,9 @@ final class ActorParityEvidenceTest {
       var changed = samples().put(field, "0".repeat(64));
       var file = write(out, changed);
       assertThatIllegalArgumentException()
-          .isThrownBy(
-              () ->
-                  ActorParityEvidence.write(
-                      fixture().resolve("onnx"), file, out.resolve("receipt.json")));
+          .isThrownBy(() ->
+              ActorParityEvidence.write(
+                  fixture().resolve("onnx"), file, out.resolve("receipt.json")));
     }
     assertThat(out.resolve("receipt.json")).doesNotExist();
   }
@@ -116,10 +111,9 @@ final class ActorParityEvidenceTest {
         .set(0, ActorParityEvidence.JSON.valueToTree(50));
     var file = write(out, changed);
     assertThatIllegalArgumentException()
-        .isThrownBy(
-            () ->
-                ActorParityEvidence.write(
-                    fixture().resolve("onnx"), file, out.resolve("receipt.json")));
+        .isThrownBy(() ->
+            ActorParityEvidence.write(
+                fixture().resolve("onnx"), file, out.resolve("receipt.json")));
     var incomplete = samples();
     ((tools.jackson.databind.node.ArrayNode) incomplete.path("cases").path(0).path("steps"))
         .remove(15);

@@ -65,20 +65,19 @@ public final class TicketDiscordCommand {
             .open(
                 new TicketDraft(
                     reporter.orElseThrow(), category.orElseThrow(), summary, Optional.empty()))
-            .whenComplete(
-                (ticket, failure) -> {
-                  if (failure != null) {
-                    logger.error(Component.text("tickets: filing from Discord failed"), failure);
-                    reply.accept("Filing failed; staff have been told.");
-                  } else {
-                    reply.accept(
-                        "Ticket #"
-                            + ticket.id()
-                            + " opened: "
-                            + DiscordRelay.escape(summary)
-                            + ". Staff will review it.");
-                  }
-                });
+            .whenComplete((ticket, failure) -> {
+              if (failure != null) {
+                logger.error(Component.text("tickets: filing from Discord failed"), failure);
+                reply.accept("Filing failed; staff have been told.");
+              } else {
+                reply.accept(
+                    "Ticket #"
+                        + ticket.id()
+                        + " opened: "
+                        + DiscordRelay.escape(summary)
+                        + ". Staff will review it.");
+              }
+            });
   }
 
   static Optional<TicketCategory> category(String id) {

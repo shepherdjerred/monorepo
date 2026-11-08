@@ -48,14 +48,13 @@ public final class ToggleCommands {
     var label = label(channel);
     return Commands.literal("toggle-" + label.toLowerCase(Locale.ROOT))
         .requires(source -> source.getSender() instanceof Player)
-        .executes(
-            context -> {
-              if (context.getSource().getSender() instanceof Player player) {
-                var hears = preferences.toggle(player, channel).hears(channel);
-                player.sendMessage(HouseStyle.info(label, state(label, hears)));
-              }
-              return Command.SINGLE_SUCCESS;
-            })
+        .executes(context -> {
+          if (context.getSource().getSender() instanceof Player player) {
+            var hears = preferences.toggle(player, channel).hears(channel);
+            player.sendMessage(HouseStyle.info(label, state(label, hears)));
+          }
+          return Command.SINGLE_SUCCESS;
+        })
         .build();
   }
 

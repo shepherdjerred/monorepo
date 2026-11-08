@@ -30,14 +30,13 @@ final class Cleanse implements Spell {
     if (harmful.isEmpty() && caster.getFireTicks() <= 0 && caster.getFreezeTicks() <= 0) {
       return Result.err(CastProblem.noTarget("affliction"));
     }
-    return Result.ok(
-        () -> {
-          for (PotionEffectType type : harmful) {
-            caster.removePotionEffect(type);
-          }
-          caster.setFireTicks(0);
-          caster.setFreezeTicks(0);
-          tools.fx().cast(kind(), Magic.chest(caster));
-        });
+    return Result.ok(() -> {
+      for (PotionEffectType type : harmful) {
+        caster.removePotionEffect(type);
+      }
+      caster.setFireTicks(0);
+      caster.setFreezeTicks(0);
+      tools.fx().cast(kind(), Magic.chest(caster));
+    });
   }
 }

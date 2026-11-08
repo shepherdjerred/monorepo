@@ -105,10 +105,9 @@ final class StarterCompassListener implements Listener {
     if (StarterCompass.marked(event.getOldCursor())
         || (compass.pending(player)
             && event.getRawSlots().stream()
-                .anyMatch(
-                    slot ->
-                        player.getInventory().equals(event.getView().getInventory(slot))
-                            && event.getView().convertSlot(slot) == StarterCompass.SLOT)))
+                .anyMatch(slot ->
+                    player.getInventory().equals(event.getView().getInventory(slot))
+                        && event.getView().convertSlot(slot) == StarterCompass.SLOT)))
       event.setCancelled(true);
   }
 

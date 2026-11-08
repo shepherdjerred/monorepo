@@ -55,11 +55,10 @@ record Kit(
     return Optional.of(
         signs
             .owner(sign)
-            .or(
-                () ->
-                    feature == Feature.ELEVATOR
-                        ? guard.automationActor(sign.getBlock())
-                        : Optional.empty())
+            .or(() ->
+                feature == Feature.ELEVATOR
+                    ? guard.automationActor(sign.getBlock())
+                    : Optional.empty())
             .orElseGet(player::getUniqueId));
   }
 }

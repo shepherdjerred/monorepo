@@ -228,13 +228,12 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     if (snapshot.isPresent()) {
       var world = snapshot.orElseThrow();
       // Sightings nearest a human go first, so the team's budget goes on what they can use.
-      thinking.ifPresent(
-          loop ->
-              loop.drainReports().stream()
-                  .sorted(
-                      java.util.Comparator.comparingDouble(TeamReport::usefulness)
-                          .thenComparing(report -> report.sighting().reporter()))
-                  .forEach(report -> report(report, world, now)));
+      thinking.ifPresent(loop ->
+          loop.drainReports().stream()
+              .sorted(
+                  java.util.Comparator.comparingDouble(TeamReport::usefulness)
+                      .thenComparing(report -> report.sighting().reporter()))
+              .forEach(report -> report(report, world, now)));
     }
     thinking.ifPresent(loop -> loop.drainCallouts().forEach(callout -> callout(callout, now)));
     for (var uuid : List.copyOf(speeches.keySet())) advance(uuid, snapshot, now);
@@ -344,13 +343,12 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
         state
             .combatant(speaker.getUniqueId())
             .flatMap(MatchState.Fighter::team)
-            .filter(
-                team ->
-                    state
-                        .combatant(viewer.getUniqueId())
-                        .flatMap(MatchState.Fighter::team)
-                        .filter(team::equals)
-                        .isPresent())
+            .filter(team ->
+                state
+                    .combatant(viewer.getUniqueId())
+                    .flatMap(MatchState.Fighter::team)
+                    .filter(team::equals)
+                    .isPresent())
             .isPresent();
     return teammate
         && Places.at(viewer).distanceSquared(Places.at(speaker)) <= 24 * 24
@@ -377,22 +375,18 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
         thinking
             .flatMap(loop -> loop.board().of(me.id()))
             .map(thought -> thought.decision().option())
-            .filter(
-                option ->
-                    option == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.DEFUSE
-                        || option == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.ARM
-                        || option
-                            == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.HELP_ARM)
-            .flatMap(
-                option ->
-                    thinking
-                        .flatMap(loop -> loop.board().of(me.id()))
-                        .flatMap(thought -> thought.decision().bomb()))
+            .filter(option ->
+                option == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.DEFUSE
+                    || option == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.ARM
+                    || option == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.HELP_ARM)
+            .flatMap(option ->
+                thinking
+                    .flatMap(loop -> loop.board().of(me.id()))
+                    .flatMap(thought -> thought.decision().bomb()))
             .flatMap(world::bomb)
-            .filter(
-                bomb ->
-                    bomb.pos().distance(me.eye())
-                        <= com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex.BOMB_REACH)
+            .filter(bomb ->
+                bomb.pos().distance(me.eye())
+                    <= com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex.BOMB_REACH)
             .isPresent();
     if (busy
         || parts
@@ -413,10 +407,9 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     return danger
         || speech
             .report()
-            .filter(
-                report ->
-                    world.tick() - report.sighting().seenTick() > 120
-                        || !report.team().equals(me.team()))
+            .filter(report ->
+                world.tick() - report.sighting().seenTick() > 120
+                    || !report.team().equals(me.team()))
             .isPresent();
   }
 
@@ -498,9 +491,8 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
       clearSpeech();
     after.combatants().stream()
         .filter(fighter -> !fighter.alive())
-        .filter(
-            fighter ->
-                before.combatant(fighter.uuid()).filter(MatchState.Fighter::alive).isPresent())
+        .filter(fighter ->
+            before.combatant(fighter.uuid()).filter(MatchState.Fighter::alive).isPresent())
         .forEach(fighter -> cancel(fighter.uuid()));
     var now = parts.time().instant();
     var lines = new ArrayList<Utterance>();
@@ -688,11 +680,10 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
                     line.text(),
                     prefix(line),
                     audience::contains));
-    refused.ifPresent(
-        why ->
-            parts
-                .logger()
-                .debug("rwfbots: chat refused {}'s line in {}: {}", line.name(), channel, why));
+    refused.ifPresent(why ->
+        parts
+            .logger()
+            .debug("rwfbots: chat refused {}'s line in {}: {}", line.name(), channel, why));
     return refused.isEmpty();
   }
 

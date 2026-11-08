@@ -47,13 +47,12 @@ final class JooqNpcStateStoreTest {
     try (var database = StormDatabase.open(directory.resolve("corrupt.db"))) {
       database.migrate("npcs", getClass().getClassLoader());
       await(
-          database.write(
-              dsl ->
-                  dsl.execute(
-                      """
-          INSERT INTO npc_wanted(world, player_uuid, until_tick)
-          VALUES ('minecraft:overworld', 'invalid', 24000)
-          """)));
+          database.write(dsl ->
+              dsl.execute(
+                  """
+                  INSERT INTO npc_wanted(world, player_uuid, until_tick)
+                  VALUES ('minecraft:overworld', 'invalid', 24000)
+                  """)));
       assertThatThrownBy(() -> await(new JooqNpcStateStore(database).load()))
           .hasRootCauseInstanceOf(IllegalArgumentException.class);
     }

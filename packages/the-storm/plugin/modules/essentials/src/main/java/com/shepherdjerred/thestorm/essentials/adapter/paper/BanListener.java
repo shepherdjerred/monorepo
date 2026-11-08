@@ -32,11 +32,10 @@ final class BanListener implements Listener {
     }
     moderation
         .activeBanNow(event.getUniqueId())
-        .ifPresent(
-            ban ->
-                event.disallow(
-                    AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
-                    BanMessages.banned(ban, runtime.time().instant())));
+        .ifPresent(ban ->
+            event.disallow(
+                AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
+                BanMessages.banned(ban, runtime.time().instant())));
   }
 
   private void refuse(AsyncPlayerPreLoginEvent event) {

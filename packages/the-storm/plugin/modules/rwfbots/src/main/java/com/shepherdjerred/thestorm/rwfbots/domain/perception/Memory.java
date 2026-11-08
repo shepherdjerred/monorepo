@@ -65,12 +65,11 @@ public record Memory(Map<CombatantId, Sighting> sightings) {
   /** This memory without sightings decayed below {@link #FORGET_BELOW} at {@code now}. */
   public Memory prune(long now, double tauTicks) {
     var copy = new HashMap<CombatantId, Sighting>();
-    sightings.forEach(
-        (enemy, sighting) -> {
-          if (sighting.confidenceAt(now, tauTicks) >= FORGET_BELOW) {
-            copy.put(enemy, sighting);
-          }
-        });
+    sightings.forEach((enemy, sighting) -> {
+      if (sighting.confidenceAt(now, tauTicks) >= FORGET_BELOW) {
+        copy.put(enemy, sighting);
+      }
+    });
     return copy.size() == sightings.size() ? this : new Memory(copy);
   }
 }

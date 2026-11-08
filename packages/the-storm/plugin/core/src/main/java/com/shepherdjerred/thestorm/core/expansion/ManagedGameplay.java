@@ -110,14 +110,13 @@ public final class ManagedGameplay implements AutoCloseable {
                   .build();
           return client
               .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-              .exceptionallyCompose(
-                  failure -> {
-                    var cause = FlagProviderUnavailableException.unwrap(failure);
-                    return CompletableFuture.failedFuture(
-                        cause instanceof java.io.IOException
-                            ? new FlagProviderUnavailableException(cause)
-                            : cause);
-                  })
+              .exceptionallyCompose(failure -> {
+                var cause = FlagProviderUnavailableException.unwrap(failure);
+                return CompletableFuture.failedFuture(
+                    cause instanceof java.io.IOException
+                        ? new FlagProviderUnavailableException(cause)
+                        : cause);
+              })
               .thenApply(response -> readEvaluation(response, json));
         },
         client::shutdownNow,
@@ -143,39 +142,33 @@ public final class ManagedGameplay implements AutoCloseable {
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
     return reader
         .apply(key, actor)
-        .thenApply(
-            enabled -> {
-              if (outageDefaults.enabled().contains(key))
-                lastSuccessful.put(new EvaluationKey(key, actor), enabled);
-              return enabled;
-            })
-        .exceptionally(
-            failure -> {
-              var cause = FlagProviderUnavailableException.unwrap(failure);
-              if (!outageDefaults.enabled().contains(key)
-                  || !(cause instanceof FlagProviderUnavailableException))
-                throw new java.util.concurrent.CompletionException(cause);
-              System.getLogger(ManagedGameplay.class.getName())
-                  .log(
-                      System.Logger.Level.WARNING,
-                      "Flag provider unavailable; retaining the last successful value or declared default for {0}",
-                      key);
-              return lastSuccessful.getOrDefault(new EvaluationKey(key, actor), true);
-            })
-        .thenApply(
-            enabled -> {
-              var now = time.instant();
-              evaluations
-                  .entrySet()
-                  .removeIf(
-                      entry ->
-                          !IP.equals(entry.getKey().key())
-                              && !now.isBefore(entry.getValue().expires()));
-              evaluations.put(
-                  new EvaluationKey(key, actor),
-                  new CachedEvaluation(enabled, now.plus(CACHE_TTL)));
-              return enabled;
-            });
+        .thenApply(enabled -> {
+          if (outageDefaults.enabled().contains(key))
+            lastSuccessful.put(new EvaluationKey(key, actor), enabled);
+          return enabled;
+        })
+        .exceptionally(failure -> {
+          var cause = FlagProviderUnavailableException.unwrap(failure);
+          if (!outageDefaults.enabled().contains(key)
+              || !(cause instanceof FlagProviderUnavailableException))
+            throw new java.util.concurrent.CompletionException(cause);
+          System.getLogger(ManagedGameplay.class.getName())
+              .log(
+                  System.Logger.Level.WARNING,
+                  "Flag provider unavailable; retaining the last successful value or declared default for {0}",
+                  key);
+          return lastSuccessful.getOrDefault(new EvaluationKey(key, actor), true);
+        })
+        .thenApply(enabled -> {
+          var now = time.instant();
+          evaluations
+              .entrySet()
+              .removeIf(entry ->
+                  !IP.equals(entry.getKey().key()) && !now.isBefore(entry.getValue().expires()));
+          evaluations.put(
+              new EvaluationKey(key, actor), new CachedEvaluation(enabled, now.plus(CACHE_TTL)));
+          return enabled;
+        });
   }
 
   /** Uses and briefly caches the declared default only for an observed provider outage. */
@@ -185,17 +178,16 @@ public final class ManagedGameplay implements AutoCloseable {
       boolean fallback,
       java.util.function.Consumer<Throwable> unavailable) {
     return enabled(key, actor)
-        .exceptionally(
-            failure -> {
-              var cause = FlagProviderUnavailableException.unwrap(failure);
-              if (!(cause instanceof FlagProviderUnavailableException))
-                throw new java.util.concurrent.CompletionException(cause);
-              unavailable.accept(cause);
-              evaluations.put(
-                  new EvaluationKey(key, actor),
-                  new CachedEvaluation(fallback, time.instant().plus(CACHE_TTL)));
-              return fallback;
-            });
+        .exceptionally(failure -> {
+          var cause = FlagProviderUnavailableException.unwrap(failure);
+          if (!(cause instanceof FlagProviderUnavailableException))
+            throw new java.util.concurrent.CompletionException(cause);
+          unavailable.accept(cause);
+          evaluations.put(
+              new EvaluationKey(key, actor),
+              new CachedEvaluation(fallback, time.instant().plus(CACHE_TTL)));
+          return fallback;
+        });
   }
 
   /**

@@ -47,39 +47,35 @@ public final class LinkCommands {
                 .executes(this::usage)
                 .then(
                     Commands.argument(CODE, StringArgumentType.word())
-                        .executes(
-                            context ->
-                                asPlayer(
-                                    context,
-                                    player ->
-                                        links
-                                            .confirm(
-                                                player, StringArgumentType.getString(context, CODE))
-                                            .thenApply(
-                                                linked ->
-                                                    linked.isPresent()
-                                                        ? ok(
-                                                            "Linked to Discord. Use /discord dms"
-                                                                + " on to get your minigame results"
-                                                                + " there.")
-                                                        : error(
-                                                            "That code is wrong or expired. Use"
-                                                                + " /link in Discord for a new"
-                                                                + " one."))))))
+                        .executes(context ->
+                            asPlayer(
+                                context,
+                                player ->
+                                    links
+                                        .confirm(
+                                            player, StringArgumentType.getString(context, CODE))
+                                        .thenApply(linked ->
+                                            linked.isPresent()
+                                                ? ok(
+                                                    "Linked to Discord. Use /discord dms"
+                                                        + " on to get your minigame results"
+                                                        + " there.")
+                                                : error(
+                                                    "That code is wrong or expired. Use"
+                                                        + " /link in Discord for a new"
+                                                        + " one."))))))
         .then(
             Commands.literal("unlink")
-                .executes(
-                    context ->
-                        asPlayer(
-                            context,
-                            player ->
-                                links
-                                    .unlink(player)
-                                    .thenApply(
-                                        removed ->
-                                            removed
-                                                ? ok("Unlinked from Discord.")
-                                                : error("You are not linked to Discord.")))))
+                .executes(context ->
+                    asPlayer(
+                        context,
+                        player ->
+                            links
+                                .unlink(player)
+                                .thenApply(removed ->
+                                    removed
+                                        ? ok("Unlinked from Discord.")
+                                        : error("You are not linked to Discord.")))))
         .then(
             Commands.literal("dms")
                 .then(Commands.literal("on").executes(context -> dms(context, true)))
@@ -93,14 +89,13 @@ public final class LinkCommands {
         player ->
             links
                 .setDms(player, on)
-                .thenApply(
-                    linked ->
-                        !linked
-                            ? error("Link to Discord first: use /link in The Storm's Discord.")
-                            : ok(
-                                on
-                                    ? "Your minigame results will be sent to you on Discord."
-                                    : "Your minigame results will no longer be sent to you.")));
+                .thenApply(linked ->
+                    !linked
+                        ? error("Link to Discord first: use /link in The Storm's Discord.")
+                        : ok(
+                            on
+                                ? "Your minigame results will be sent to you on Discord."
+                                : "Your minigame results will no longer be sent to you.")));
   }
 
   private int usage(CommandContext<CommandSourceStack> context) {

@@ -147,21 +147,17 @@ final class TownCommands {
                 Commands.literal("create")
                     .then(
                         Commands.argument(NAME, word())
-                            .executes(
-                                context ->
-                                    asPlayer(
-                                        context,
-                                        player -> found(player, getString(context, NAME))))))
+                            .executes(context ->
+                                asPlayer(
+                                    context, player -> found(player, getString(context, NAME))))))
             .then(
                 Commands.literal("delete")
                     .executes(context -> asPlayer(context, player -> delete(player, "")))
                     .then(
                         Commands.argument(NAME, word())
-                            .executes(
-                                context ->
-                                    asPlayer(
-                                        context,
-                                        player -> delete(player, getString(context, NAME))))));
+                            .executes(context ->
+                                asPlayer(
+                                    context, player -> delete(player, getString(context, NAME))))));
     parts.members().attach(town);
     parts.treasuryCommands().attach(town);
     town.then(
@@ -170,24 +166,22 @@ final class TownCommands {
             .then(
                 Commands.argument(
                         "page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
-                    .executes(
-                        context ->
-                            showDirectory(
-                                context,
-                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(
-                                    context, "page")))));
+                    .executes(context ->
+                        showDirectory(
+                            context,
+                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(
+                                context, "page")))));
     town.then(
         Commands.literal("info")
             .then(
                 Commands.argument(
                         NAME, com.mojang.brigadier.arguments.StringArgumentType.greedyString())
-                    .suggests(
-                        (context, builder) -> {
-                          new TownListings(state)
-                              .matchingNames(builder.getRemainingLowerCase())
-                              .forEach(builder::suggest);
-                          return builder.buildFuture();
-                        })
+                    .suggests((context, builder) -> {
+                      new TownListings(state)
+                          .matchingNames(builder.getRemainingLowerCase())
+                          .forEach(builder::suggest);
+                      return builder.buildFuture();
+                    })
                     .executes(context -> showDirectoryInfo(context, getString(context, NAME)))));
     return town.build();
   }
@@ -211,20 +205,19 @@ final class TownCommands {
                 + " total)"));
     listing
         .towns()
-        .forEach(
-            town ->
-                sender.sendMessage(
-                    Notices.info(
-                        town.name()
-                            + " ["
-                            + town.kind()
-                            + "] — "
-                            + town.members()
-                            + " members, "
-                            + town.claims()
-                            + " claims, "
-                            + town.protectedChunks()
-                            + " permanently protected chunks")));
+        .forEach(town ->
+            sender.sendMessage(
+                Notices.info(
+                    town.name()
+                        + " ["
+                        + town.kind()
+                        + "] — "
+                        + town.members()
+                        + " members, "
+                        + town.claims()
+                        + " claims, "
+                        + town.protectedChunks()
+                        + " permanently protected chunks")));
     return Command.SINGLE_SUCCESS;
   }
 
@@ -262,25 +255,23 @@ final class TownCommands {
             Commands.literal("flag")
                 .then(
                     Commands.argument(FLAG, word())
-                        .suggests(
-                            (context, builder) -> {
-                              Arrays.stream(ClaimFlag.values())
-                                  .map(Explanations::flagName)
-                                  .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
-                                  .forEach(builder::suggest);
-                              return builder.buildFuture();
-                            })
+                        .suggests((context, builder) -> {
+                          Arrays.stream(ClaimFlag.values())
+                              .map(Explanations::flagName)
+                              .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
+                              .forEach(builder::suggest);
+                          return builder.buildFuture();
+                        })
                         .then(
                             Commands.argument(VALUE, bool())
-                                .executes(
-                                    context ->
-                                        asPlayer(
-                                            context,
-                                            player ->
-                                                setFlag(
-                                                    player,
-                                                    getString(context, FLAG),
-                                                    getBool(context, VALUE)))))))
+                                .executes(context ->
+                                    asPlayer(
+                                        context,
+                                        player ->
+                                            setFlag(
+                                                player,
+                                                getString(context, FLAG),
+                                                getBool(context, VALUE)))))))
         .then(trustCommand("trust", true))
         .then(trustCommand("untrust", false))
         .build();
@@ -291,10 +282,9 @@ final class TownCommands {
         .then(
             Commands.argument(PLAYER, word())
                 .suggests(TownCommands::suggestOnline)
-                .executes(
-                    context ->
-                        asPlayer(
-                            context, player -> trustHere(player, getString(context, PLAYER), on))));
+                .executes(context ->
+                    asPlayer(
+                        context, player -> trustHere(player, getString(context, PLAYER), on))));
   }
 
   private LiteralCommandNode<CommandSourceStack> unclaim() {
@@ -348,46 +338,45 @@ final class TownCommands {
         parts
             .treasury()
             .delete(player.getUniqueId(), confirmation)
-            .whenComplete(
-                (result, failure) -> {
-                  if (failure != null) {
-                    parts.runtime().logger().error("Deleting a town failed", failure);
-                    player.sendMessage(Notices.error("The town could not be deleted; try again."));
-                    return;
-                  }
-                  switch (result) {
-                    case Result.Err<Change<Town>, List<TownProblem>>(var problems) ->
-                        parts.runtime().refuse(player, problems);
-                    case Result.Ok<Change<Town>, List<TownProblem>>(var change) -> {
-                      var _ =
-                          change
-                              .saved()
-                              .whenCompleteAsync(
-                                  (ignored, saveFailure) -> {
-                                    if (saveFailure != null) {
-                                      parts
-                                          .runtime()
-                                          .logger()
-                                          .error("Deleting a town failed", saveFailure);
-                                      player.sendMessage(
-                                          Notices.error(
-                                              payoutPending(saveFailure)
-                                                  ? "The town was deleted, but its treasury payout is pending recovery."
-                                                  : "The town could not be saved, so it was kept. Try again."));
-                                      return;
-                                    }
-                                    player.sendMessage(
-                                        Notices.success(
-                                            "Deleted "
-                                                + change.value().name()
-                                                + " and released its "
-                                                + claims.orElse(0)
-                                                + " chunk(s). Its treasury is yours."));
-                                  },
-                                  parts.runtime().scheduler().mainThread());
-                    }
-                  }
-                });
+            .whenComplete((result, failure) -> {
+              if (failure != null) {
+                parts.runtime().logger().error("Deleting a town failed", failure);
+                player.sendMessage(Notices.error("The town could not be deleted; try again."));
+                return;
+              }
+              switch (result) {
+                case Result.Err<Change<Town>, List<TownProblem>>(var problems) ->
+                    parts.runtime().refuse(player, problems);
+                case Result.Ok<Change<Town>, List<TownProblem>>(var change) -> {
+                  var _ =
+                      change
+                          .saved()
+                          .whenCompleteAsync(
+                              (ignored, saveFailure) -> {
+                                if (saveFailure != null) {
+                                  parts
+                                      .runtime()
+                                      .logger()
+                                      .error("Deleting a town failed", saveFailure);
+                                  player.sendMessage(
+                                      Notices.error(
+                                          payoutPending(saveFailure)
+                                              ? "The town was deleted, but its treasury payout is pending recovery."
+                                              : "The town could not be saved, so it was kept. Try again."));
+                                  return;
+                                }
+                                player.sendMessage(
+                                    Notices.success(
+                                        "Deleted "
+                                            + change.value().name()
+                                            + " and released its "
+                                            + claims.orElse(0)
+                                            + " chunk(s). Its treasury is yours."));
+                              },
+                              parts.runtime().scheduler().mainThread());
+                }
+              }
+            });
   }
 
   private static boolean payoutPending(Throwable failure) {
@@ -569,9 +558,8 @@ final class TownCommands {
       case Result.Ok<Change<Claim>, List<ClaimProblem>>(var change) ->
           parts.runtime().whenSaved(player, change.saved(), message.apply(change.value()));
       case Result.Err<Change<Claim>, List<ClaimProblem>>(var problems) ->
-          problems.forEach(
-              problem ->
-                  player.sendMessage(Notices.error(Explanations.explain(problem, this::townName))));
+          problems.forEach(problem ->
+              player.sendMessage(Notices.error(Explanations.explain(problem, this::townName))));
     }
   }
 

@@ -143,10 +143,9 @@ final class TraversalRoute {
   Optional<com.shepherdjerred.thestorm.rwfbots.domain.world.JumpLaunch> runUp() {
     return reflex
         .activeJump()
-        .filter(
-            active ->
-                active.stage()
-                    == com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump.Stage.RUN_UP)
+        .filter(active ->
+            active.stage()
+                == com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump.Stage.RUN_UP)
         .flatMap(active -> active.waypoint().launch());
   }
 

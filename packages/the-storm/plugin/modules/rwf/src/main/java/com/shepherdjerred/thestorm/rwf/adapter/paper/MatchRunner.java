@@ -452,13 +452,12 @@ final class MatchRunner implements MatchView, MatchEvents {
    * vote; the chosen map is prepared while the countdown runs.
    */
   void open() {
-    refreshFeatures(
-        () -> {
-          ready = true;
-          match = match.withSettings(settings());
-          parts.boards().showKills(features.deathFeed());
-          offerBallot();
-        });
+    refreshFeatures(() -> {
+      ready = true;
+      match = match.withSettings(settings());
+      parts.boards().showKills(features.deathFeed());
+      offerBallot();
+    });
   }
 
   /** Reads the flags for the next match; on failure the features already in force stay. */
@@ -625,11 +624,10 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (!votedBefore && voted.isPresent()) {
       match
           .ballot()
-          .ifPresent(
-              closed -> {
-                ledger.ballotClosed(closed, now());
-                lastBallot = Optional.of(closed);
-              });
+          .ifPresent(closed -> {
+            ledger.ballotClosed(closed, now());
+            lastBallot = Optional.of(closed);
+          });
     }
     // Bots are drafted once the chosen map is loaded (rwfbots needs its navigation confirmed),
     // while the countdown runs, or as the preview opens when the map loaded only after it.
@@ -746,29 +744,25 @@ final class MatchRunner implements MatchView, MatchEvents {
             experience.settings().canonical(experience.seed())
                 + ";fingerprint="
                 + experience.settings().fingerprint(experience.seed()));
-    lastBallot.ifPresent(
-        ballot ->
-            parts
-                .recordings()
-                .ballot(
-                    ballot.candidates().stream()
-                        .map(
-                            c ->
-                                new Occurrence.Ballot.Candidate(c.mapId(), ballot.count(c.mapId())))
-                        .toList(),
-                    ballot.chosen().orElseThrow()));
+    lastBallot.ifPresent(ballot ->
+        parts
+            .recordings()
+            .ballot(
+                ballot.candidates().stream()
+                    .map(c -> new Occurrence.Ballot.Candidate(c.mapId(), ballot.count(c.mapId())))
+                    .toList(),
+                ballot.chosen().orElseThrow()));
     lastBallot = Optional.empty();
     for (var member : match.members()) {
       entity(member.id())
-          .ifPresent(
-              player ->
-                  parts
-                      .boards()
-                      .assign(
-                          player,
-                          member.team().orElseThrow(),
-                          member.id().isBot(),
-                          member.kit().filter(Medic.ID::equals).isPresent()));
+          .ifPresent(player ->
+              parts
+                  .boards()
+                  .assign(
+                      player,
+                      member.team().orElseThrow(),
+                      member.id().isBot(),
+                      member.kit().filter(Medic.ID::equals).isPresent()));
       parts.recordings().event(now(), "joined", member.id(), member.team().orElseThrow().name());
     }
   }
@@ -966,14 +960,13 @@ final class MatchRunner implements MatchView, MatchEvents {
       parts
           .recordings()
           .end(now(), winner, reason, pendingPay)
-          .ifPresent(
-              summary ->
-                  parts
-                      .context()
-                      .onMain(
-                          summary.thenCompose(s -> parts.store().recordingFinished(matchId, s)),
-                          ignored -> {},
-                          "finish the recording of rwf match " + matchId));
+          .ifPresent(summary ->
+              parts
+                  .context()
+                  .onMain(
+                      summary.thenCompose(s -> parts.store().recordingFinished(matchId, s)),
+                      ignored -> {},
+                      "finish the recording of rwf match " + matchId));
       liveAt = null;
     }
   }
@@ -1042,13 +1035,12 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
       if (ticks % DISPLAY_EVERY_TICKS == 0) {
         current()
-            .ifPresent(
-                snapshot ->
-                    parts
-                        .boards()
-                        .render(
-                            snapshot,
-                            parts.bombs().concealed(BombMarkers.Sabotage.of(MatchRunner.this))));
+            .ifPresent(snapshot ->
+                parts
+                    .boards()
+                    .render(
+                        snapshot,
+                        parts.bombs().concealed(BombMarkers.Sabotage.of(MatchRunner.this))));
         var chat = teamChat;
         if (chat != null) {
           chat.refresh();
@@ -1100,15 +1092,14 @@ final class MatchRunner implements MatchView, MatchEvents {
       ended
           .outcome()
           .winner()
-          .ifPresent(
-              team ->
-                  Celebration.halfSecond(
-                      match.members().stream()
-                          .filter(member -> member.team().filter(team::equals).isPresent())
-                          .flatMap(member -> entity(member.id()).stream())
-                          .toList(),
-                      Hats.dye(team),
-                      parts.context().random()));
+          .ifPresent(team ->
+              Celebration.halfSecond(
+                  match.members().stream()
+                      .filter(member -> member.team().filter(team::equals).isPresent())
+                      .flatMap(member -> entity(member.id()).stream())
+                      .toList(),
+                  Hats.dye(team),
+                  parts.context().random()));
     }
 
     /**
@@ -1261,9 +1252,8 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
       if (ticks % DISPLAY_EVERY_TICKS == 0) {
         current()
-            .ifPresent(
-                snapshot ->
-                    parts.bombs().update(snapshot, BombMarkers.Sabotage.of(MatchRunner.this)));
+            .ifPresent(snapshot ->
+                parts.bombs().update(snapshot, BombMarkers.Sabotage.of(MatchRunner.this)));
       }
       powers.tick(now);
     }
@@ -1366,17 +1356,16 @@ final class MatchRunner implements MatchView, MatchEvents {
       return;
     }
     memberOf(shooter.getUniqueId())
-        .ifPresent(
-            member -> {
-              ledger.shot(member.id());
-              parts
-                  .recordings()
-                  .projectile(
-                      member.id(),
-                      machineName(projectile.getType().name()),
-                      Places.vec(Places.at(projectile)),
-                      Places.vec(projectile.getVelocity()));
-            });
+        .ifPresent(member -> {
+          ledger.shot(member.id());
+          parts
+              .recordings()
+              .projectile(
+                  member.id(),
+                  machineName(projectile.getType().name()),
+                  Places.vec(Places.at(projectile)),
+                  Places.vec(projectile.getVelocity()));
+        });
   }
 
   /** A fighter ate a steak. */
@@ -1732,11 +1721,10 @@ final class MatchRunner implements MatchView, MatchEvents {
                     parts.menus().armory().layout(id.uuid(), kitId));
             member(id)
                 .flatMap(Combatant::team)
-                .ifPresent(
-                    team ->
-                        player
-                            .getInventory()
-                            .setItem(KitFactory.TEAM_SLOT, parts.kits().teamHotbar(team)));
+                .ifPresent(team ->
+                    player
+                        .getInventory()
+                        .setItem(KitFactory.TEAM_SLOT, parts.kits().teamHotbar(team)));
             if (!id.isBot()
                 && (match.phase().kitsOpen() || match.phase() instanceof Phase.Resetting)) {
               parts.kits().giveLobbyItems(player, features.hostSettings());
@@ -1872,12 +1860,11 @@ final class MatchRunner implements MatchView, MatchEvents {
           now());
       killer
           .flatMap(MatchRunner.this::member)
-          .ifPresent(
-              by -> {
-                if (features.deathFeed()) {
-                  parts.boards().kills(by.name(), by.score().kills());
-                }
-              });
+          .ifPresent(by -> {
+            if (features.deathFeed()) {
+              parts.boards().kills(by.name(), by.score().kills());
+            }
+          });
       parts
           .recordings()
           .kill(
@@ -2027,18 +2014,17 @@ final class MatchRunner implements MatchView, MatchEvents {
         resetDone();
         return;
       }
-      map.verifyAndRepair(
-          ok -> {
-            if (!ok) {
-              parts
-                  .context()
-                  .logger()
-                  .error("Map {} could not be repaired; the lobby stays closed", map.id());
-              ready = false;
-              return;
-            }
-            resetDone();
-          });
+      map.verifyAndRepair(ok -> {
+        if (!ok) {
+          parts
+              .context()
+              .logger()
+              .error("Map {} could not be repaired; the lobby stays closed", map.id());
+          ready = false;
+          return;
+        }
+        resetDone();
+      });
     }
 
     /** The flags are read again for the next match, and then the reset is done. */
@@ -2053,10 +2039,8 @@ final class MatchRunner implements MatchView, MatchEvents {
     var experience = experiences.freeze(match.matchId(), match.seed());
     return new MatchEvent.BallotOpened(
         rotation.candidates(count, experience.settings().maps()).stream()
-            .map(
-                map ->
-                    new Ballot.Candidate(
-                        map.id(), map.definition().name(), map.definition().author()))
+            .map(map ->
+                new Ballot.Candidate(map.id(), map.definition().name(), map.definition().author()))
             .toList(),
         visits.enabled() ? Optional.of(CandidateVisits.VOTING_LENGTH) : Optional.empty());
   }
@@ -2085,12 +2069,11 @@ final class MatchRunner implements MatchView, MatchEvents {
                   ? new MatchEvent.MapReady(map.orElseThrow().definition(), now())
                   : new MatchEvent.MapFailed(mapId);
           var refused = handle(event);
-          refused.ifPresent(
-              error ->
-                  parts
-                      .context()
-                      .logger()
-                      .info("rwf: map {} prepared after the vote moved on ({})", mapId, error));
+          refused.ifPresent(error ->
+              parts
+                  .context()
+                  .logger()
+                  .info("rwf: map {} prepared after the vote moved on ({})", mapId, error));
         });
   }
 

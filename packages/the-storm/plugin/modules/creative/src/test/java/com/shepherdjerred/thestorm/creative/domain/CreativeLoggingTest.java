@@ -38,13 +38,12 @@ final class CreativeLoggingTest {
         .hasMessageContaining("block-place")
         .hasMessageContaining("sign-text")
         .hasMessageContaining("worldedit")
-        .satisfies(
-            error -> {
-              var message = error.getMessage();
-              assertThat(message).doesNotContain("block-break");
-              assertThat(message).doesNotContain("buckets");
-              assertThat(message).doesNotContain("entity-change");
-            });
+        .satisfies(error -> {
+          var message = error.getMessage();
+          assertThat(message).doesNotContain("block-break");
+          assertThat(message).doesNotContain("buckets");
+          assertThat(message).doesNotContain("entity-change");
+        });
   }
 
   @Test

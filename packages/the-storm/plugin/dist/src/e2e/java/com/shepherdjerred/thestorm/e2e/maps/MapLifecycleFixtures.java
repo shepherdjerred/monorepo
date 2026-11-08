@@ -191,12 +191,11 @@ public final class MapLifecycleFixtures implements BasicCommand {
       counts.put(
           map.id(),
           loaded.stream()
-              .filter(
-                  chunk ->
-                      chunk.getX() >= (region.min().x() >> 4)
-                          && chunk.getX() <= (region.max().x() >> 4)
-                          && chunk.getZ() >= (region.min().z() >> 4)
-                          && chunk.getZ() <= (region.max().z() >> 4))
+              .filter(chunk ->
+                  chunk.getX() >= (region.min().x() >> 4)
+                      && chunk.getX() <= (region.max().x() >> 4)
+                      && chunk.getZ() >= (region.min().z() >> 4)
+                      && chunk.getZ() <= (region.max().z() >> 4))
               .count());
     }
     return counts;

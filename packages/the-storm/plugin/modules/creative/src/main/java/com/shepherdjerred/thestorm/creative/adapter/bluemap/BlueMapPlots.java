@@ -54,12 +54,11 @@ public final class BlueMapPlots {
 
   private void draw(BlueMapAPI api, List<PlotMarker> markers) {
     api.getWorld(world)
-        .ifPresent(
-            blue -> {
-              for (var map : blue.getMaps()) {
-                replace(map, markers);
-              }
-            });
+        .ifPresent(blue -> {
+          for (var map : blue.getMaps()) {
+            replace(map, markers);
+          }
+        });
   }
 
   private static void replace(BlueMapMap map, List<PlotMarker> markers) {

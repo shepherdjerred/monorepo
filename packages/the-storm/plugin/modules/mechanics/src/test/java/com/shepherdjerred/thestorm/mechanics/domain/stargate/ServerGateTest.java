@@ -38,27 +38,25 @@ final class ServerGateTest {
             "Skylands", "skylands", ServerGate.Kind.WORLD, new Pos(1, 70, 1));
     var duplicate =
         new ServerGate.Destination("skylands", "world", ServerGate.Kind.WORLD, new Pos(1, 70, 1));
-    assertThatThrownBy(
-            () ->
-                new ServerGate(
-                    "spawn",
-                    "world",
-                    new Pos(6, 73, 110),
-                    Direction.WEST,
-                    new Pos(9, 75, 111),
-                    false,
-                    List.of(first, duplicate)))
+    assertThatThrownBy(() ->
+            new ServerGate(
+                "spawn",
+                "world",
+                new Pos(6, 73, 110),
+                Direction.WEST,
+                new Pos(9, 75, 111),
+                false,
+                List.of(first, duplicate)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new ServerGate(
-                    "spawn",
-                    "world",
-                    new Pos(6, 73, 110),
-                    Direction.WEST,
-                    new Pos(6, 75, 111),
-                    false,
-                    List.of(first)))
+    assertThatThrownBy(() ->
+            new ServerGate(
+                "spawn",
+                "world",
+                new Pos(6, 73, 110),
+                Direction.WEST,
+                new Pos(6, 75, 111),
+                false,
+                List.of(first)))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

@@ -162,13 +162,12 @@ final class JooqStatsStoreTest {
 
     var marks =
         database
-            .read(
-                dsl ->
-                    dsl.select(RWF_MATCH_PLAYER.AFK)
-                        .from(RWF_MATCH_PLAYER)
-                        .where(RWF_MATCH_PLAYER.MATCH_ID.eq(id.toString()))
-                        .orderBy(RWF_MATCH_PLAYER.PLAYER)
-                        .fetch(RWF_MATCH_PLAYER.AFK))
+            .read(dsl ->
+                dsl.select(RWF_MATCH_PLAYER.AFK)
+                    .from(RWF_MATCH_PLAYER)
+                    .where(RWF_MATCH_PLAYER.MATCH_ID.eq(id.toString()))
+                    .orderBy(RWF_MATCH_PLAYER.PLAYER)
+                    .fetch(RWF_MATCH_PLAYER.AFK))
             .join();
 
     assertThat(marks).containsExactly(false, true);
@@ -217,10 +216,9 @@ final class JooqStatsStoreTest {
     assertThat(stats.totals(ALICE).join()).isEmpty();
     assertThat(stats.history(ALICE, 5).join())
         .singleElement()
-        .satisfies(
-            row -> {
-              assertThat(row.matchId()).isEqualTo(id);
-              assertThat(row.assists()).isEmpty();
-            });
+        .satisfies(row -> {
+          assertThat(row.matchId()).isEqualTo(id);
+          assertThat(row.assists()).isEmpty();
+        });
   }
 }

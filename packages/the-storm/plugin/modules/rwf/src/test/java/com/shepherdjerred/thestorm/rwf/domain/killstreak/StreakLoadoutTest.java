@@ -19,15 +19,12 @@ final class StreakLoadoutTest {
 
   @Test
   void threeDistinctThresholdsAreRequiredEvenWhenRewardIdsDiffer() {
-    assertThatThrownBy(
-            () ->
-                new StreakLoadout(
-                    List.of(Killstreak.SUPPLY_CRATE, Killstreak.WOLVES, Killstreak.NAPALM)))
+    assertThatThrownBy(() ->
+            new StreakLoadout(
+                List.of(Killstreak.SUPPLY_CRATE, Killstreak.WOLVES, Killstreak.NAPALM)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new StreakLoadout(
-                    List.of(Killstreak.COMPASS, Killstreak.COMPASS, Killstreak.NAPALM)))
+    assertThatThrownBy(() ->
+            new StreakLoadout(List.of(Killstreak.COMPASS, Killstreak.COMPASS, Killstreak.NAPALM)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new StreakLoadout(List.of(Killstreak.COMPASS, Killstreak.WOLVES)))
         .isInstanceOf(IllegalArgumentException.class);

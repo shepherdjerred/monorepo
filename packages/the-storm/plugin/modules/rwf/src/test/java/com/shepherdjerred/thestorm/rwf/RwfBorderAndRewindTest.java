@@ -70,12 +70,11 @@ final class RwfBorderAndRewindTest {
     var _ =
         harness
             .events()
-            .subscribe(
-                notification -> {
-                  if (notification.event() instanceof MatchEvent.Died died) {
-                    deaths.add(died);
-                  }
-                });
+            .subscribe(notification -> {
+              if (notification.event() instanceof MatchEvent.Died died) {
+                deaths.add(died);
+              }
+            });
     return deaths;
   }
 
@@ -128,11 +127,10 @@ final class RwfBorderAndRewindTest {
     assertThat(harness.combatant(player).alive()).isFalse();
     assertThat(deaths)
         .singleElement()
-        .satisfies(
-            died -> {
-              assertThat(died.cause()).isEqualTo(AttackType.VOID_PUSHED);
-              assertThat(died.killer()).contains(pusher.id());
-            });
+        .satisfies(died -> {
+          assertThat(died.cause()).isEqualTo(AttackType.VOID_PUSHED);
+          assertThat(died.killer()).contains(pusher.id());
+        });
   }
 
   @Test

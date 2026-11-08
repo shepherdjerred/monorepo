@@ -76,12 +76,11 @@ final class JooqStargateStoreTest {
   @Test
   void duplicateNamesAndInvitationsOnPublicNetworksAreRejected() throws Exception {
     store.createNetwork(new StargateNetwork(NETWORK, "Road", new NetworkAccess.Public())).get();
-    assertThatThrownBy(
-            () ->
-                store
-                    .createNetwork(
-                        new StargateNetwork(new UUID(1, 1), "ROAD", new NetworkAccess.Public()))
-                    .get())
+    assertThatThrownBy(() ->
+            store
+                .createNetwork(
+                    new StargateNetwork(new UUID(1, 1), "ROAD", new NetworkAccess.Public()))
+                .get())
         .isInstanceOf(ExecutionException.class);
     assertThatThrownBy(() -> store.replaceInvitations(NETWORK, Set.of(GUEST)).get())
         .isInstanceOf(ExecutionException.class);

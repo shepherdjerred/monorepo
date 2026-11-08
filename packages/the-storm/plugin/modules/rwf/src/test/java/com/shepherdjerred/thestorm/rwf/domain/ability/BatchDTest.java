@@ -166,10 +166,9 @@ final class BatchDTest {
       assertThat(effects).contains(new AbilityEffect.Meter(ALICE, 1, -1));
       assertThat(Sacrificial.guardian(bout.abilities, BOB)).contains(ALICE);
       assertThat(bout.act(ALICE, new AbilityInput.Bond(BOB)))
-          .anyMatch(
-              e ->
-                  e instanceof AbilityEffect.Say say
-                      && say.text().equals("You've already claimed this warrior!"));
+          .anyMatch(e ->
+              e instanceof AbilityEffect.Say say
+                  && say.text().equals("You've already claimed this warrior!"));
     }
 
     @Test
@@ -177,15 +176,13 @@ final class BatchDTest {
       var bout = bout();
 
       assertThat(bout.act(ALICE, new AbilityInput.Bond(CAROL)))
-          .anyMatch(
-              e ->
-                  e instanceof AbilityEffect.Say say
-                      && say.text().equals("They are not on your team! Run away!"));
+          .anyMatch(e ->
+              e instanceof AbilityEffect.Say say
+                  && say.text().equals("They are not on your team! Run away!"));
       assertThat(bout.act(ALICE, new AbilityInput.Bond(DAVE)))
-          .anyMatch(
-              e ->
-                  e instanceof AbilityEffect.Say say
-                      && say.text().equals("You cannot sacrifice a Dwarf!"));
+          .anyMatch(e ->
+              e instanceof AbilityEffect.Say say
+                  && say.text().equals("You cannot sacrifice a Dwarf!"));
       assertThat(Sacrificial.guardian(bout.abilities, CAROL)).isEmpty();
       assertThat(Sacrificial.guardian(bout.abilities, DAVE)).isEmpty();
     }
@@ -198,11 +195,10 @@ final class BatchDTest {
       bout.act(ALICE, new AbilityInput.Bond(BOB));
 
       assertThat(bout.act(DAVE, new AbilityInput.Bond(BOB)))
-          .anyMatch(
-              e ->
-                  e instanceof AbilityEffect.Say say
-                      && say.text()
-                          .equals("This warrior has already been claimed by another sacrificial!"));
+          .anyMatch(e ->
+              e instanceof AbilityEffect.Say say
+                  && say.text()
+                      .equals("This warrior has already been claimed by another sacrificial!"));
     }
 
     @Test

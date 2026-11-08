@@ -192,12 +192,11 @@ final class JooqStoresTest {
     assertThat(store.loadAll().join()).extracting(Snapshot::player).containsExactly(BOB);
     var marked =
         database
-            .read(
-                dsl ->
-                    dsl.select(ARENA_SNAPSHOTS.RESTORED_AT)
-                        .from(ARENA_SNAPSHOTS)
-                        .where(ARENA_SNAPSHOTS.PLAYER.eq(ALICE.toString()))
-                        .fetchOptional(ARENA_SNAPSHOTS.RESTORED_AT))
+            .read(dsl ->
+                dsl.select(ARENA_SNAPSHOTS.RESTORED_AT)
+                    .from(ARENA_SNAPSHOTS)
+                    .where(ARENA_SNAPSHOTS.PLAYER.eq(ALICE.toString()))
+                    .fetchOptional(ARENA_SNAPSHOTS.RESTORED_AT))
             .join();
     assertThat(marked).contains(T0.toEpochMilli());
   }
@@ -314,11 +313,10 @@ final class JooqStoresTest {
 
     assertThat(rewards.pending(ALICE).join())
         .singleElement()
-        .satisfies(
-            reward -> {
-              assertThat(reward.reason()).isEqualTo("vault:wave20");
-              assertThat(reward.items()).isEqualTo(loot);
-            });
+        .satisfies(reward -> {
+          assertThat(reward.reason()).isEqualTo("vault:wave20");
+          assertThat(reward.items()).isEqualTo(loot);
+        });
     assertThat(rewards.pending(ALICE).join()).isEqualTo(claimed);
   }
 }

@@ -63,11 +63,10 @@ final class PathReconstructionTest {
     assertThat(stationary.nodes()).containsExactly(from);
     assertThat(stationary.waypoints())
         .singleElement()
-        .satisfies(
-            point -> {
-              assertThat(point.pos()).isEqualTo(graph.feet(from));
-              assertThat(point.hop()).isEqualTo(Hop.WALK);
-            });
+        .satisfies(point -> {
+          assertThat(point.pos()).isEqualTo(graph.feet(from));
+          assertThat(point.hop()).isEqualTo(Hop.WALK);
+        });
     assertThat(stationary.cost()).isZero();
     assertThat(stationary.toFollow()).isEmpty();
   }

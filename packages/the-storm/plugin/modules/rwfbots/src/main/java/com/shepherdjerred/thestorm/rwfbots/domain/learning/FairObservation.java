@@ -53,14 +53,12 @@ public final class FairObservation {
               .filter(
                   sighting -> sighting.confidenceAt(percept.tick(), Perception.TAU_TICKS) >= 0.05)
               .min(
-                  Comparator.comparingDouble(
-                      sighting ->
-                          sighting.predictedPos(percept.tick()).distanceSquared(self.pos())));
+                  Comparator.comparingDouble(sighting ->
+                      sighting.predictedPos(percept.tick()).distanceSquared(self.pos())));
     }
     values.put(Feature.TARGET_VISIBLE, visible.isPresent() ? 1.0 : 0.0);
-    target.ifPresent(
-        sighting ->
-            target(values, self, new Axes(forward, side), new Target(sighting, percept.tick())));
+    target.ifPresent(sighting ->
+        target(values, self, new Axes(forward, side), new Target(sighting, percept.tick())));
     for (var ray = 0; ray < 8; ray++) {
       var direction = new Facing(self.yaw() + ray * 45.0, 0).direction();
       var hit =

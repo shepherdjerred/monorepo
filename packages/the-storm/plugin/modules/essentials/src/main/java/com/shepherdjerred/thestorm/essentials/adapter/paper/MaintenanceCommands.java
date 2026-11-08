@@ -30,24 +30,22 @@ final class MaintenanceCommands implements Listener {
   void register(Commands commands) {
     var command =
         literal("storm-maintenance")
-            .requires(
-                source ->
-                    source.getSender() instanceof ConsoleCommandSender
-                        || source.getSender() instanceof RemoteConsoleCommandSender);
+            .requires(source ->
+                source.getSender() instanceof ConsoleCommandSender
+                    || source.getSender() instanceof RemoteConsoleCommandSender);
     for (var action : new String[] {"begin", "end"}) {
       command.then(
           literal(action)
               .then(
                   argument("owner", word())
-                      .executes(
-                          context -> {
-                            var requested = getString(context, "owner");
-                            if (!requested.matches("[a-z0-9-]{1,64}")) {
-                              throw new IllegalArgumentException(
-                                  "maintenance owner must be 1-64 lowercase letters, digits or hyphens");
-                            }
-                            return change(context.getSource().getSender(), action, requested);
-                          })));
+                      .executes(context -> {
+                        var requested = getString(context, "owner");
+                        if (!requested.matches("[a-z0-9-]{1,64}")) {
+                          throw new IllegalArgumentException(
+                              "maintenance owner must be 1-64 lowercase letters, digits or hyphens");
+                        }
+                        return change(context.getSource().getSender(), action, requested);
+                      })));
     }
     commands.register(command.build(), "Console-only empty-server maintenance admission");
   }

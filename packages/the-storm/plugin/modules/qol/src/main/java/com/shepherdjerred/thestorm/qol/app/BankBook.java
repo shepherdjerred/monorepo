@@ -38,10 +38,9 @@ public final class BankBook {
 
   public Optional<StoredBank> atContainer(Spot spot) {
     return byId.values().stream()
-        .filter(
-            bank ->
-                same(bank.container(), spot)
-                    || bank.shelves().stream().anyMatch(shelf -> same(shelf.container(), spot)))
+        .filter(bank ->
+            same(bank.container(), spot)
+                || bank.shelves().stream().anyMatch(shelf -> same(shelf.container(), spot)))
         .findFirst();
   }
 
@@ -59,10 +58,9 @@ public final class BankBook {
   /** The shelf whose sign or container is {@code spot}, and the bank it belongs to. */
   public Optional<StoredBank> bankOfShelf(Spot spot) {
     return byId.values().stream()
-        .filter(
-            bank ->
-                bank.shelves().stream()
-                    .anyMatch(shelf -> same(shelf.sign(), spot) || same(shelf.container(), spot)))
+        .filter(bank ->
+            bank.shelves().stream()
+                .anyMatch(shelf -> same(shelf.sign(), spot) || same(shelf.container(), spot)))
         .findFirst();
   }
 

@@ -52,29 +52,25 @@ public final class ArenaFixtures implements Listener {
                     .registrar()
                     .register(
                         Commands.literal("storm-fixture-cube")
-                            .requires(
-                                source ->
-                                    source.getSender()
-                                            instanceof org.bukkit.command.ConsoleCommandSender
-                                        || source.getSender()
-                                            instanceof
-                                            org.bukkit.command.RemoteConsoleCommandSender)
+                            .requires(source ->
+                                source.getSender()
+                                        instanceof org.bukkit.command.ConsoleCommandSender
+                                    || source.getSender()
+                                        instanceof org.bukkit.command.RemoteConsoleCommandSender)
                             .then(
                                 Commands.argument("mob", StringArgumentType.word())
                                     .then(
                                         Commands.argument("player", StringArgumentType.word())
-                                            .executes(
-                                                command -> {
-                                                  fixtures.spawn(
-                                                      StringArgumentType.getString(command, "mob"),
-                                                      StringArgumentType.getString(
-                                                          command, "player"));
-                                                  command
-                                                      .getSource()
-                                                      .getSender()
-                                                      .sendMessage("Spawned native cube.");
-                                                  return 1;
-                                                })))
+                                            .executes(command -> {
+                                              fixtures.spawn(
+                                                  StringArgumentType.getString(command, "mob"),
+                                                  StringArgumentType.getString(command, "player"));
+                                              command
+                                                  .getSource()
+                                                  .getSender()
+                                                  .sendMessage("Spawned native cube.");
+                                              return 1;
+                                            })))
                             .build()));
   }
 
@@ -88,10 +84,9 @@ public final class ArenaFixtures implements Listener {
                     .registrar()
                     .register(
                         Commands.literal("storm-fixture-survival")
-                            .requires(
-                                source ->
-                                    source.getSender()
-                                        instanceof org.bukkit.command.RemoteConsoleCommandSender)
+                            .requires(source ->
+                                source.getSender()
+                                    instanceof org.bukkit.command.RemoteConsoleCommandSender)
                             .then(
                                 Commands.argument("action", StringArgumentType.word())
                                     .then(
@@ -99,30 +94,27 @@ public final class ArenaFixtures implements Listener {
                                             .then(
                                                 Commands.argument(
                                                         "value", StringArgumentType.word())
-                                                    .executes(
-                                                        command -> {
-                                                          var player =
-                                                              java.util.Objects.requireNonNull(
-                                                                  plugin
-                                                                      .getServer()
-                                                                      .getPlayerExact(
-                                                                          StringArgumentType
-                                                                              .getString(
-                                                                                  command,
-                                                                                  "player")));
-                                                          command
-                                                              .getSource()
-                                                              .getSender()
-                                                              .sendMessage(
-                                                                  ArenaNativeProbe.survival(
-                                                                      storm,
-                                                                      player,
+                                                    .executes(command -> {
+                                                      var player =
+                                                          java.util.Objects.requireNonNull(
+                                                              plugin
+                                                                  .getServer()
+                                                                  .getPlayerExact(
                                                                       StringArgumentType.getString(
-                                                                          command, "action"),
-                                                                      StringArgumentType.getString(
-                                                                          command, "value")));
-                                                          return 1;
-                                                        }))))
+                                                                          command, "player")));
+                                                      command
+                                                          .getSource()
+                                                          .getSender()
+                                                          .sendMessage(
+                                                              ArenaNativeProbe.survival(
+                                                                  storm,
+                                                                  player,
+                                                                  StringArgumentType.getString(
+                                                                      command, "action"),
+                                                                  StringArgumentType.getString(
+                                                                      command, "value")));
+                                                      return 1;
+                                                    }))))
                             .build()));
   }
 

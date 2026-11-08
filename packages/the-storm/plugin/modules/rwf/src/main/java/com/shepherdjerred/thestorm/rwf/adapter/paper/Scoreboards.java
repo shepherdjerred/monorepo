@@ -639,23 +639,21 @@ final class Scoreboards {
           Optional.of(
               armed
                   .defusing()
-                  .map(
-                      defusing ->
-                          bar(defusing, "▍")
-                              .append(Component.text(" "))
-                              .append(
-                                  Component.text(
-                                      String.valueOf(armed.remaining()),
-                                      color(team),
-                                      TextDecoration.BOLD)))
-                  .orElseGet(
-                      () ->
-                          Component.text("Bomb ", color(team))
-                              .append(
-                                  Component.text(
-                                      String.valueOf(armed.remaining()),
-                                      color(team),
-                                      TextDecoration.BOLD))));
+                  .map(defusing ->
+                      bar(defusing, "▍")
+                          .append(Component.text(" "))
+                          .append(
+                              Component.text(
+                                  String.valueOf(armed.remaining()),
+                                  color(team),
+                                  TextDecoration.BOLD)))
+                  .orElseGet(() ->
+                      Component.text("Bomb ", color(team))
+                          .append(
+                              Component.text(
+                                  String.valueOf(armed.remaining()),
+                                  color(team),
+                                  TextDecoration.BOLD))));
       case MatchSnapshot.BombView.State.Destroyed _ -> Optional.empty();
       case MatchSnapshot.BombView.State.Idle _, MatchSnapshot.BombView.State.Arming _ ->
           Optional.of(Component.text("Bomb is Safe"));

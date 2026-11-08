@@ -33,13 +33,8 @@ final class StaffPaper {
     new StaffAdministration(commands).register();
     new StaffEffects(commands).register();
     listeners = List.of(visibility, inventories, entities, jails, ip.clients);
-    listeners.forEach(
-        listener ->
-            context
-                .plugin()
-                .getServer()
-                .getPluginManager()
-                .registerEvents(listener, context.plugin()));
+    listeners.forEach(listener ->
+        context.plugin().getServer().getPluginManager().registerEvents(listener, context.plugin()));
     sweep =
         context
             .scheduler()

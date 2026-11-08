@@ -292,11 +292,10 @@ final class OriginalKitsATest {
           .extracting(piece -> piece.look().dye().orElseThrow())
           .containsExactly("#FFFFFF", "#000000", "#FFFFFF", "#000000");
       assertThat(KitBook.PYRO.armor())
-          .allMatch(
-              piece ->
-                  piece.enchantmentLevel("fire_protection") == 1
-                      && piece.enchantmentLevel("blast_protection") == 2
-                      && piece.enchantmentLevel("projectile_protection") == 1);
+          .allMatch(piece ->
+              piece.enchantmentLevel("fire_protection") == 1
+                  && piece.enchantmentLevel("blast_protection") == 2
+                  && piece.enchantmentLevel("projectile_protection") == 1);
     }
 
     @Test

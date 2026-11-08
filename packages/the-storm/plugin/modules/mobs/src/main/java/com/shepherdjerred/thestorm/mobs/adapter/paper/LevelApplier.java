@@ -95,20 +95,19 @@ final class LevelApplier implements MobLevels {
     var lowest = old.isPresent() ? Math.min(rewardLevel(mob), level) : level;
     data.set(MobKeys.REWARD_LEVEL, PersistentDataType.INTEGER, lowest);
     var type = typeKey(mob);
-    ATTRIBUTES.forEach(
-        (stat, attribute) -> {
-          var instance = mob.getAttribute(attribute);
-          if (instance == null) {
-            return;
-          }
-          var key = MobKeys.modifier(stat);
-          instance.removeModifier(key);
-          var bonus = scaling.bonus(stat, type, level, cap);
-          if (bonus > 0) {
-            instance.addModifier(
-                new AttributeModifier(key, bonus, operation(stat), EquipmentSlotGroup.ANY));
-          }
-        });
+    ATTRIBUTES.forEach((stat, attribute) -> {
+      var instance = mob.getAttribute(attribute);
+      if (instance == null) {
+        return;
+      }
+      var key = MobKeys.modifier(stat);
+      instance.removeModifier(key);
+      var bonus = scaling.bonus(stat, type, level, cap);
+      if (bonus > 0) {
+        instance.addModifier(
+            new AttributeModifier(key, bonus, operation(stat), EquipmentSlotGroup.ANY));
+      }
+    });
     var maxHealth = mob.getAttribute(Attribute.MAX_HEALTH);
     if (maxHealth != null && (fresh || mob.getHealth() > maxHealth.getValue())) {
       mob.setHealth(maxHealth.getValue());
@@ -152,13 +151,12 @@ final class LevelApplier implements MobLevels {
    * from another mob, whose nameplate names the old type.
    */
   void clear(LivingEntity mob, Component plate) {
-    ATTRIBUTES.forEach(
-        (stat, attribute) -> {
-          var instance = mob.getAttribute(attribute);
-          if (instance != null) {
-            instance.removeModifier(MobKeys.modifier(stat));
-          }
-        });
+    ATTRIBUTES.forEach((stat, attribute) -> {
+      var instance = mob.getAttribute(attribute);
+      if (instance != null) {
+        instance.removeModifier(MobKeys.modifier(stat));
+      }
+    });
     var maxHealth = mob.getAttribute(Attribute.MAX_HEALTH);
     if (maxHealth != null && mob.getHealth() > maxHealth.getValue()) {
       mob.setHealth(maxHealth.getValue());

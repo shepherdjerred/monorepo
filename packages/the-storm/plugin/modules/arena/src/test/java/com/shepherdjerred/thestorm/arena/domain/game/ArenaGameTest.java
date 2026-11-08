@@ -833,14 +833,13 @@ final class ArenaGameTest {
 
   private static List<UUID> restoredIn(List<GameEffect> effects) {
     return effects.stream()
-        .<UUID>mapMulti(
-            (effect, out) -> {
-              if (effect instanceof Restore(var player)) {
-                out.accept(player);
-              } else if (effect instanceof RestoreAfterRespawn(var player)) {
-                out.accept(player);
-              }
-            })
+        .<UUID>mapMulti((effect, out) -> {
+          if (effect instanceof Restore(var player)) {
+            out.accept(player);
+          } else if (effect instanceof RestoreAfterRespawn(var player)) {
+            out.accept(player);
+          }
+        })
         .toList();
   }
 }

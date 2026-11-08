@@ -38,20 +38,18 @@ final class SkillsCommands {
             .then(Commands.literal("top").executes(source -> top(source.getSource().getSender())))
             .then(
                 Commands.argument("skill", word())
-                    .suggests(
-                        (source, suggestions) -> {
-                          var prefix = suggestions.getRemainingLowerCase();
-                          for (var skill : Skill.values()) {
-                            var name = skill.name().toLowerCase(Locale.ROOT);
-                            if (name.startsWith(prefix)) {
-                              suggestions.suggest(name);
-                            }
-                          }
-                          return suggestions.buildFuture();
-                        })
-                    .executes(
-                        source ->
-                            detail(source.getSource().getSender(), getString(source, "skill"))))
+                    .suggests((source, suggestions) -> {
+                      var prefix = suggestions.getRemainingLowerCase();
+                      for (var skill : Skill.values()) {
+                        var name = skill.name().toLowerCase(Locale.ROOT);
+                        if (name.startsWith(prefix)) {
+                          suggestions.suggest(name);
+                        }
+                      }
+                      return suggestions.buildFuture();
+                    })
+                    .executes(source ->
+                        detail(source.getSource().getSender(), getString(source, "skill"))))
             .build(),
         "Shows your skill progression and power-level leaderboard",
         List.of("mcmmo"));

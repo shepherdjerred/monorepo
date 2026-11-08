@@ -92,13 +92,12 @@ final class SurvivalItems {
   static void validate(SurvivalContent content) {
     content
         .recipes()
-        .forEach(
-            recipe -> {
-              material(recipe.material());
-              recipe.ingredients().keySet().forEach(SurvivalItems::material);
-              var output = ItemStack.of(material(recipe.material()), recipe.amount());
-              validateRecipe(recipe, output);
-            });
+        .forEach(recipe -> {
+          material(recipe.material());
+          recipe.ingredients().keySet().forEach(SurvivalItems::material);
+          var output = ItemStack.of(material(recipe.material()), recipe.amount());
+          validateRecipe(recipe, output);
+        });
     content.zones().stream()
         .flatMap(z -> z.resources().stream())
         .forEach(resource -> material(resource.material()));
@@ -121,22 +120,20 @@ final class SurvivalItems {
       throw new IllegalArgumentException("Potion type must match item for " + recipe.id());
     recipe
         .enchantments()
-        .forEach(
-            (id, level) -> {
-              var enchantment = enchantment(id);
-              if (!enchantment.canEnchantItem(output) || level > enchantment.getMaxLevel())
-                throw new IllegalArgumentException("Incompatible enchantment in " + recipe.id());
-            });
+        .forEach((id, level) -> {
+          var enchantment = enchantment(id);
+          if (!enchantment.canEnchantItem(output) || level > enchantment.getMaxLevel())
+            throw new IllegalArgumentException("Incompatible enchantment in " + recipe.id());
+        });
   }
 
   ItemStack recipe(SurvivalContent.Recipe recipe) {
     var result = stack(material(recipe.material()), recipe.amount());
     if (recipe.potion() != SurvivalContent.PotionKind.NONE)
-      result.editMeta(
-          meta -> {
-            var potion = (org.bukkit.inventory.meta.PotionMeta) meta;
-            potion.setBasePotionType(org.bukkit.potion.PotionType.valueOf(recipe.potion().name()));
-          });
+      result.editMeta(meta -> {
+        var potion = (org.bukkit.inventory.meta.PotionMeta) meta;
+        potion.setBasePotionType(org.bukkit.potion.PotionType.valueOf(recipe.potion().name()));
+      });
     recipe.enchantments().forEach((id, level) -> result.addEnchantment(enchantment(id), level));
     return result;
   }
@@ -301,14 +298,13 @@ final class SurvivalItems {
   void ability(Player player) {
     var compass = stack(Material.COMPASS, 1);
     keys.gear(compass, "survival_ability");
-    compass.editMeta(
-        meta -> {
-          meta.setEnchantmentGlintOverride(true);
-          meta.displayName(net.kyori.adventure.text.Component.text("Class ability · Right-click"));
-          meta.lore(
-              java.util.List.of(
-                  net.kyori.adventure.text.Component.text("Sneak + right-click: class upgrades")));
-        });
+    compass.editMeta(meta -> {
+      meta.setEnchantmentGlintOverride(true);
+      meta.displayName(net.kyori.adventure.text.Component.text("Class ability · Right-click"));
+      meta.lore(
+          java.util.List.of(
+              net.kyori.adventure.text.Component.text("Sneak + right-click: class upgrades")));
+    });
     player.getInventory().setItem(8, compass);
   }
 
@@ -441,12 +437,8 @@ final class SurvivalItems {
     var rarity = keys.rarity(item);
     var effect =
         legendary(item)
-            .map(
-                id ->
-                    content.legendaries().stream()
-                        .filter(r -> r.id() == id)
-                        .findFirst()
-                        .orElseThrow());
+            .map(id ->
+                content.legendaries().stream().filter(r -> r.id() == id).findFirst().orElseThrow());
     var title =
         rarity.name().substring(0, 1)
             + rarity.name().substring(1).toLowerCase(java.util.Locale.ROOT);
@@ -460,28 +452,24 @@ final class SurvivalItems {
           case LEGENDARY -> net.kyori.adventure.text.format.NamedTextColor.GOLD;
           case MYTHIC -> net.kyori.adventure.text.format.NamedTextColor.AQUA;
         };
-    item.editMeta(
-        meta -> {
-          meta.displayName(
-              net.kyori.adventure.text.Component.text(
-                  title
-                      + suffix
-                      + " · "
-                      + effect
-                          .map(SurvivalContent.LegendaryReward::name)
-                          .orElseGet(() -> name(item.getType())),
-                  color));
-          var lore = new java.util.ArrayList<net.kyori.adventure.text.Component>();
-          lore.add(
-              net.kyori.adventure.text.Component.text(
-                  "Rarity: "
-                      + title
-                      + " · Augmentation: "
-                      + (level == 0 ? "None" : suffix.trim())));
-          effect.ifPresent(
-              value -> lore.add(net.kyori.adventure.text.Component.text(value.description())));
-          meta.lore(lore);
-        });
+    item.editMeta(meta -> {
+      meta.displayName(
+          net.kyori.adventure.text.Component.text(
+              title
+                  + suffix
+                  + " · "
+                  + effect
+                      .map(SurvivalContent.LegendaryReward::name)
+                      .orElseGet(() -> name(item.getType())),
+              color));
+      var lore = new java.util.ArrayList<net.kyori.adventure.text.Component>();
+      lore.add(
+          net.kyori.adventure.text.Component.text(
+              "Rarity: " + title + " · Augmentation: " + (level == 0 ? "None" : suffix.trim())));
+      effect.ifPresent(
+          value -> lore.add(net.kyori.adventure.text.Component.text(value.description())));
+      meta.lore(lore);
+    });
   }
 
   boolean owns(ItemStack item) {
@@ -560,14 +548,12 @@ final class SurvivalItems {
     payment
         .sources()
         .carried()
-        .forEach(
-            (resource, amount) -> {
-              if (player == null
-                  || !player.getUniqueId().equals(payment.player())
-                  || !deliverInventory(
-                      player, java.util.List.of(stack(material(resource), amount))))
-                bank.supplies().deposit(resource, amount);
-            });
+        .forEach((resource, amount) -> {
+          if (player == null
+              || !player.getUniqueId().equals(payment.player())
+              || !deliverInventory(player, java.util.List.of(stack(material(resource), amount))))
+            bank.supplies().deposit(resource, amount);
+        });
   }
 
   private void remove(Player player, Material material, int amount) {
@@ -624,11 +610,10 @@ final class SurvivalItems {
             || stack.getType() == Material.CROSSBOW
             || stack.getType() == Material.TRIDENT
             || legendary(stack)
-                .filter(
-                    id ->
-                        id
-                            == com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon
-                                .GRAVITON)
+                .filter(id ->
+                    id
+                        == com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon
+                            .GRAVITON)
                 .isPresent());
   }
 
@@ -651,11 +636,9 @@ final class SurvivalItems {
     if (!equipment(stack) || tier < 1 || tier > 3)
       throw new IllegalArgumentException("Invalid upgrade");
     keys.upgrade(stack, tier);
-    stack.editMeta(
-        meta -> {
-          if (meta instanceof org.bukkit.inventory.meta.Damageable damageable)
-            damageable.setDamage(0);
-        });
+    stack.editMeta(meta -> {
+      if (meta instanceof org.bukkit.inventory.meta.Damageable damageable) damageable.setDamage(0);
+    });
     var enchantment = SurvivalEquipment.primary(stack);
     if (enchantment.canEnchantItem(stack)
         && !stack.getItemMeta().hasConflictingEnchant(enchantment))

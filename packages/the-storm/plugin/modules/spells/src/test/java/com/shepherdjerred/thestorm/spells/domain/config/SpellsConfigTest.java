@@ -78,16 +78,15 @@ final class SpellsConfigTest {
         parse(shipped).spells().all().entrySet().stream()
             .collect(groupingBy(entry -> entry.getValue().cooldownGroup(), toUnmodifiableSet()));
 
-    groups.forEach(
-        (group, members) -> {
-          if (group.equals("sky")) {
-            assertThat(members)
-                .extracting(Map.Entry::getKey)
-                .containsExactlyInAnyOrder(SpellKind.DAWN, SpellKind.DUSK);
-          } else {
-            assertThat(members).hasSize(1);
-          }
-        });
+    groups.forEach((group, members) -> {
+      if (group.equals("sky")) {
+        assertThat(members)
+            .extracting(Map.Entry::getKey)
+            .containsExactlyInAnyOrder(SpellKind.DAWN, SpellKind.DUSK);
+      } else {
+        assertThat(members).hasSize(1);
+      }
+    });
   }
 
   @Test

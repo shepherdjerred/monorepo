@@ -157,15 +157,14 @@ final class HistoricalLockTest {
     assertThatThrownBy(
             () -> new Lock.Restoration(new UUID(0, 0), "parcel:shop", Map.of(OWNER, "Owner")))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Lock(
-                    UUID.randomUUID(),
-                    NOMAD,
-                    Set.of(CHEST),
-                    Map.of(),
-                    Lock.Options.NONE,
-                    shared().restoration()))
+    assertThatThrownBy(() ->
+            new Lock(
+                UUID.randomUUID(),
+                NOMAD,
+                Set.of(CHEST),
+                Map.of(),
+                Lock.Options.NONE,
+                shared().restoration()))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> shared().withTrust(MEMBER, LockGrant.USE))
         .isInstanceOf(IllegalArgumentException.class);

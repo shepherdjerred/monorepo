@@ -95,22 +95,19 @@ final class TpaCommands {
       String name, TpaRequest.Direction direction) {
     return literal(name)
         .requires(Cmd.permission(EssentialsPermissions.TPA))
-        .executes(
-            context ->
-                Cmd.asPlayer(
-                    context,
-                    player ->
-                        player.sendMessage(
-                            Component.text("Use /" + name + " <player>.")
-                                .append(TeleportInfoCommands.help(TeleportKind.TPA)))))
+        .executes(context ->
+            Cmd.asPlayer(
+                context,
+                player ->
+                    player.sendMessage(
+                        Component.text("Use /" + name + " <player>.")
+                            .append(TeleportInfoCommands.help(TeleportKind.TPA)))))
         .then(
             argument(PLAYER, word())
                 .suggests(Cmd.onlinePlayers(runtime.server()))
-                .executes(
-                    context ->
-                        Cmd.asPlayer(
-                            context,
-                            player -> send(player, Cmd.string(context, PLAYER), direction))));
+                .executes(context ->
+                    Cmd.asPlayer(
+                        context, player -> send(player, Cmd.string(context, PLAYER), direction))));
   }
 
   private LiteralArgumentBuilder<CommandSourceStack> answer(String name, boolean accept) {
@@ -121,25 +118,23 @@ final class TpaCommands {
         .then(
             argument(PLAYER, word())
                 .suggests(Cmd.onlinePlayers(runtime.server()))
-                .executes(
-                    context ->
-                        Cmd.asPlayer(
-                            context,
-                            player ->
-                                answerFrom(
-                                    player, Cmd.string(context, PLAYER), Optional.empty(), accept)))
+                .executes(context ->
+                    Cmd.asPlayer(
+                        context,
+                        player ->
+                            answerFrom(
+                                player, Cmd.string(context, PLAYER), Optional.empty(), accept)))
                 .then(
                     argument(ID, longArg(1))
-                        .executes(
-                            context ->
-                                Cmd.asPlayer(
-                                    context,
-                                    player ->
-                                        answerFrom(
-                                            player,
-                                            Cmd.string(context, PLAYER),
-                                            Optional.of(LongArgumentType.getLong(context, ID)),
-                                            accept)))));
+                        .executes(context ->
+                            Cmd.asPlayer(
+                                context,
+                                player ->
+                                    answerFrom(
+                                        player,
+                                        Cmd.string(context, PLAYER),
+                                        Optional.of(LongArgumentType.getLong(context, ID)),
+                                        accept)))));
   }
 
   private void toggle(Player player) {

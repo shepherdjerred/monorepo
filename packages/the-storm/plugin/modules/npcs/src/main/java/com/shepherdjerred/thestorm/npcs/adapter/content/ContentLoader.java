@@ -37,9 +37,8 @@ public final class ContentLoader {
     try (var listing = Files.list(directory)) {
       paths =
           listing
-              .filter(
-                  path ->
-                      Files.isRegularFile(path) && path.getFileName().toString().endsWith(".yml"))
+              .filter(path ->
+                  Files.isRegularFile(path) && path.getFileName().toString().endsWith(".yml"))
               .sorted()
               .toList();
     } catch (IOException e) {
@@ -61,10 +60,9 @@ public final class ContentLoader {
         case Result.Ok<ContentFile, List<Problem>>(var file) ->
             files.add(new Sourced(source, file));
         case Result.Err<ContentFile, List<Problem>>(var parseProblems) ->
-            parseProblems.forEach(
-                problem ->
-                    problems.add(
-                        new ContentProblem(problem.source(), problem.path(), problem.message())));
+            parseProblems.forEach(problem ->
+                problems.add(
+                    new ContentProblem(problem.source(), problem.path(), problem.message())));
       }
     }
     return problems.isEmpty() ? Result.ok(files) : Result.err(problems);

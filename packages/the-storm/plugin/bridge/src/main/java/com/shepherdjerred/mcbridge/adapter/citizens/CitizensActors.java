@@ -286,10 +286,8 @@ public final class CitizensActors implements Actors {
     navigator
         .getLocalParameters()
         .distanceMargin(request.range())
-        .addSingleUseCallback(
-            reason ->
-                outcome.complete(
-                    reason == null ? "arrived" : reason.name().toLowerCase(Locale.ROOT)));
+        .addSingleUseCallback(reason ->
+            outcome.complete(reason == null ? "arrived" : reason.name().toLowerCase(Locale.ROOT)));
     return outcome.completeOnTimeout(
         "timeout", request.timeout().toMillis(), TimeUnit.MILLISECONDS);
   }
@@ -612,11 +610,10 @@ public final class CitizensActors implements Actors {
         yield player.getNearbyEntities(NEARBY_RADIUS, NEARBY_RADIUS, NEARBY_RADIUS).stream()
             .filter(entity -> entity.getType() == type)
             .min(Comparator.comparingDouble(entity -> entity.getLocation().distance(origin)))
-            .orElseThrow(
-                () ->
-                    new BridgeException(
-                        ErrorCode.NOT_FOUND,
-                        "no " + ofType.type() + " within " + (int) NEARBY_RADIUS + " blocks"));
+            .orElseThrow(() ->
+                new BridgeException(
+                    ErrorCode.NOT_FOUND,
+                    "no " + ofType.type() + " within " + (int) NEARBY_RADIUS + " blocks"));
       }
     };
   }

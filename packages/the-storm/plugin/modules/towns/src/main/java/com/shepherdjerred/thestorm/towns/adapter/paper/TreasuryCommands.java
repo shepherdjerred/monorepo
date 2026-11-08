@@ -40,19 +40,16 @@ final class TreasuryCommands {
             Commands.literal("deposit")
                 .then(
                     Commands.argument(AMOUNT, longArg(1))
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context, player -> deposit(player, getLong(context, AMOUNT))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context, player -> deposit(player, getLong(context, AMOUNT))))))
         .then(
             Commands.literal("withdraw")
                 .then(
                     Commands.argument(AMOUNT, longArg(1))
-                        .executes(
-                            context ->
-                                TownCommands.asPlayer(
-                                    context,
-                                    player -> withdraw(player, getLong(context, AMOUNT))))))
+                        .executes(context ->
+                            TownCommands.asPlayer(
+                                context, player -> withdraw(player, getLong(context, AMOUNT))))))
         .then(
             Commands.literal("balance")
                 .executes(context -> TownCommands.asPlayer(context, this::balance)));
@@ -84,20 +81,19 @@ final class TreasuryCommands {
       CompletableFuture<Result<T, TreasuryProblem>> pending,
       Function<T, String> success) {
     var _ =
-        pending.whenComplete(
-            (result, failure) -> {
-              if (failure != null) {
-                logger.error("A treasury request failed", failure);
-                player.sendMessage(Notices.error("The treasury could not be reached; try again."));
-                return;
-              }
-              switch (result) {
-                case Result.Ok<T, TreasuryProblem>(var value) ->
-                    player.sendMessage(Notices.success(success.apply(value)));
-                case Result.Err<T, TreasuryProblem>(var problem) ->
-                    player.sendMessage(Notices.error(explain(problem)));
-              }
-            });
+        pending.whenComplete((result, failure) -> {
+          if (failure != null) {
+            logger.error("A treasury request failed", failure);
+            player.sendMessage(Notices.error("The treasury could not be reached; try again."));
+            return;
+          }
+          switch (result) {
+            case Result.Ok<T, TreasuryProblem>(var value) ->
+                player.sendMessage(Notices.success(success.apply(value)));
+            case Result.Err<T, TreasuryProblem>(var problem) ->
+                player.sendMessage(Notices.error(explain(problem)));
+          }
+        });
   }
 
   private String explain(TreasuryProblem problem) {

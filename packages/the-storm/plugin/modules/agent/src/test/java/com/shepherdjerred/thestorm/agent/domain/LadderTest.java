@@ -42,17 +42,14 @@ final class LadderTest {
   void stepsWithoutRungsAndBadDurationsAreRejected() {
     assertThatThrownBy(() -> new Ladder(Offense.SPAM, "7d", List.of()))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Ladder(Offense.SPAM, "7d", List.of(new LadderStep(LadderAction.MUTE, "none"))))
+    assertThatThrownBy(() ->
+            new Ladder(Offense.SPAM, "7d", List.of(new LadderStep(LadderAction.MUTE, "none"))))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () -> new Ladder(Offense.SPAM, "7d", List.of(new LadderStep(LadderAction.WARN, "10m"))))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Ladder(
-                    Offense.SPAM, "soon", List.of(new LadderStep(LadderAction.WARN, "none"))))
+    assertThatThrownBy(() ->
+            new Ladder(Offense.SPAM, "soon", List.of(new LadderStep(LadderAction.WARN, "none"))))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

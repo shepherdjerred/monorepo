@@ -14,30 +14,24 @@ public final class BossTactics {
       throw new IllegalArgumentException("boss parties must have 1-4 fighters");
     }
     return base.stream()
-        .map(
-            ability -> {
-              var count =
-                  switch (ability.type()) {
-                    case SUMMON_ADDS ->
-                        Math.min(
-                            20,
-                            (int) Math.ceil(ability.count() * (1 + (players - 1) * 0.5))
-                                + (enraged ? 1 : 0));
-                    case HEART -> Math.min(20, ability.count() + players - 1);
-                    default -> ability.count();
-                  };
-              var cooldown =
-                  enraged && ability.type() != AbilityType.HEART
-                      ? Duration.ofMillis(Math.max(3000, ability.cooldown().toMillis() * 3 / 4))
-                      : ability.cooldown();
-              return new AbilitySpec(
-                  ability.type(),
-                  cooldown,
-                  ability.radius(),
-                  ability.power(),
-                  count,
-                  ability.summon());
-            })
+        .map(ability -> {
+          var count =
+              switch (ability.type()) {
+                case SUMMON_ADDS ->
+                    Math.min(
+                        20,
+                        (int) Math.ceil(ability.count() * (1 + (players - 1) * 0.5))
+                            + (enraged ? 1 : 0));
+                case HEART -> Math.min(20, ability.count() + players - 1);
+                default -> ability.count();
+              };
+          var cooldown =
+              enraged && ability.type() != AbilityType.HEART
+                  ? Duration.ofMillis(Math.max(3000, ability.cooldown().toMillis() * 3 / 4))
+                  : ability.cooldown();
+          return new AbilitySpec(
+              ability.type(), cooldown, ability.radius(), ability.power(), count, ability.summon());
+        })
         .toList();
   }
 

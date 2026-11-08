@@ -47,23 +47,22 @@ final class Freeze implements Spell {
   public Result<Effect, CastProblem> prepare(Player caster) {
     var ticks = Magic.ticks(settings.durationSeconds());
     return Aim.creatureEffect(tools, caster, settings.range())
-        .map(
-            target -> {
-              var water = iceable(caster, target);
-              // Freeze ticks thaw by 2 a tick outside powder snow; this keeps the target fully
-              // frozen (and taking frost damage) for the whole duration.
-              var blow =
-                  Harm.Blow.none()
-                      .withFreeze(target.getMaxFreezeTicks() + 2 * ticks)
-                      .withPotion(PotionEffectType.SLOWNESS, ticks, SLOWNESS)
-                      .then(frozen -> iceOver(water));
-              return () -> {
-                if (tools.harm().strike(caster, target, blow)) {
-                  tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
-                  tools.fx().cast(kind(), Magic.chest(target));
-                }
-              };
-            });
+        .map(target -> {
+          var water = iceable(caster, target);
+          // Freeze ticks thaw by 2 a tick outside powder snow; this keeps the target fully
+          // frozen (and taking frost damage) for the whole duration.
+          var blow =
+              Harm.Blow.none()
+                  .withFreeze(target.getMaxFreezeTicks() + 2 * ticks)
+                  .withPotion(PotionEffectType.SLOWNESS, ticks, SLOWNESS)
+                  .then(frozen -> iceOver(water));
+          return () -> {
+            if (tools.harm().strike(caster, target, blow)) {
+              tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
+              tools.fx().cast(kind(), Magic.chest(target));
+            }
+          };
+        });
   }
 
   private void iceOver(List<Block> water) {

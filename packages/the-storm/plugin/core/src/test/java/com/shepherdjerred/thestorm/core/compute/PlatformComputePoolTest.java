@@ -67,16 +67,15 @@ final class PlatformComputePoolTest {
     var started = new CountDownLatch(1);
     var finished = new CountDownLatch(1);
     pool.executor()
-        .execute(
-            () -> {
-              started.countDown();
-              try {
-                Thread.sleep(Duration.ofMillis(200));
-              } catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
-              }
-              finished.countDown();
-            });
+        .execute(() -> {
+          started.countDown();
+          try {
+            Thread.sleep(Duration.ofMillis(200));
+          } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+          }
+          finished.countDown();
+        });
     assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
     pool.close();
     assertThat(finished.getCount()).isZero();
@@ -87,10 +86,9 @@ final class PlatformComputePoolTest {
     var pool = new PlatformComputePool(1, logger);
     try {
       pool.executor()
-          .execute(
-              () -> {
-                throw new IllegalStateException("boom");
-              });
+          .execute(() -> {
+            throw new IllegalStateException("boom");
+          });
       var event = logged.poll(5, TimeUnit.SECONDS);
       assertThat(event).isNotNull();
       assertThat(event.getMessage()).contains("Compute work on {} failed");

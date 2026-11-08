@@ -30,67 +30,64 @@ public final class JooqEvidenceStore implements EvidenceStore {
 
   /** A crash between admission and its receipt never causes an automatic replay on restart. */
   public CompletableFuture<Integer> recover(Instant at) {
-    return database.write(
-        dsl ->
-            dsl.insertInto(table("safety_event"))
-                .columns(
-                    field("submission_id", String.class),
-                    field("outcome", String.class),
-                    field("details", String.class),
-                    field("created_at", String.class))
-                .select(
-                    dsl.select(
-                            field("id", String.class),
-                            org.jooq.impl.DSL.val("interrupted"),
-                            org.jooq.impl.DSL.val(
-                                "Publication status unknown after restart; content was not replayed."),
-                            org.jooq.impl.DSL.val(stamp(at)))
-                        .from(table("safety_submission"))
-                        .whereNotExists(
-                            dsl.selectOne()
-                                .from(table("safety_event"))
-                                .where(
-                                    field("submission_id", String.class)
-                                        .eq(field("safety_submission.id", String.class)))
-                                .and(
-                                    field("outcome", String.class)
-                                        .notIn(
-                                            "decision",
-                                            "window-decision",
-                                            "advertising",
-                                            "penalty-intent",
-                                            "penalty"))))
-                .execute());
+    return database.write(dsl ->
+        dsl.insertInto(table("safety_event"))
+            .columns(
+                field("submission_id", String.class),
+                field("outcome", String.class),
+                field("details", String.class),
+                field("created_at", String.class))
+            .select(
+                dsl.select(
+                        field("id", String.class),
+                        org.jooq.impl.DSL.val("interrupted"),
+                        org.jooq.impl.DSL.val(
+                            "Publication status unknown after restart; content was not replayed."),
+                        org.jooq.impl.DSL.val(stamp(at)))
+                    .from(table("safety_submission"))
+                    .whereNotExists(
+                        dsl.selectOne()
+                            .from(table("safety_event"))
+                            .where(
+                                field("submission_id", String.class)
+                                    .eq(field("safety_submission.id", String.class)))
+                            .and(
+                                field("outcome", String.class)
+                                    .notIn(
+                                        "decision",
+                                        "window-decision",
+                                        "advertising",
+                                        "penalty-intent",
+                                        "penalty"))))
+            .execute());
   }
 
   /** Erases one player's submissions and their dependent evidence events. */
   public CompletableFuture<Void> reset(UUID player) {
     return database
-        .write(
-            dsl -> {
-              var submissions =
-                  dsl.select(field("id", String.class))
-                      .from(table("safety_submission"))
-                      .where(field("player", String.class).eq(player.toString()));
-              dsl.deleteFrom(table("safety_event"))
-                  .where(field("submission_id", String.class).in(submissions))
-                  .execute();
-              dsl.deleteFrom(table("safety_submission"))
-                  .where(field("player", String.class).eq(player.toString()))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          var submissions =
+              dsl.select(field("id", String.class))
+                  .from(table("safety_submission"))
+                  .where(field("player", String.class).eq(player.toString()));
+          dsl.deleteFrom(table("safety_event"))
+              .where(field("submission_id", String.class).in(submissions))
+              .execute();
+          dsl.deleteFrom(table("safety_submission"))
+              .where(field("player", String.class).eq(player.toString()))
+              .execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 
   @Override
   public CompletableFuture<Void> attempt(ContentSubmission submission, Instant at) {
     return database
-        .write(
-            dsl -> {
-              insertSubmission(dsl, submission, at);
-              return true;
-            })
+        .write(dsl -> {
+          insertSubmission(dsl, submission, at);
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
@@ -124,11 +121,10 @@ public final class JooqEvidenceStore implements EvidenceStore {
   public CompletableFuture<Void> event(
       UUID submission, String outcome, String details, Instant at) {
     return database
-        .write(
-            dsl -> {
-              insertEvent(dsl, new Event(submission, outcome, details, at));
-              return true;
-            })
+        .write(dsl -> {
+          insertEvent(dsl, new Event(submission, outcome, details, at));
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
@@ -143,66 +139,59 @@ public final class JooqEvidenceStore implements EvidenceStore {
   public CompletableFuture<Void> observations(List<Observation> observations) {
     var batch = List.copyOf(observations);
     return database
-        .write(
-            dsl -> {
-              for (var observation : batch) {
-                insertSubmission(dsl, observation.submission(), observation.at());
-                insertEvent(
-                    dsl,
-                    new Event(
-                        observation.submission().id(),
-                        observation.outcome(),
-                        "",
-                        observation.at()));
-              }
-              return true;
-            })
+        .write(dsl -> {
+          for (var observation : batch) {
+            insertSubmission(dsl, observation.submission(), observation.at());
+            insertEvent(
+                dsl,
+                new Event(
+                    observation.submission().id(), observation.outcome(), "", observation.at()));
+          }
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
   @Override
   public CompletableFuture<List<Entry>> recent(UUID player, Instant since, int limit) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(table("safety_submission"))
-                .where(
-                    field("player", String.class)
-                        .eq(player.toString())
-                        .and(field("created_at", String.class).ge(stamp(since)))
-                        .and(
-                            field("surface", String.class)
-                                .notIn("activity", "anticheat", "evidence-access")))
-                .orderBy(field("created_at").desc())
-                .limit(limit)
-                .fetch(
-                    row ->
-                        new Entry(
-                            new ContentSubmission(
-                                UUID.fromString(row.get("id", String.class)),
-                                player,
-                                row.get("name", String.class),
-                                row.get("surface", String.class),
-                                row.get("audience", String.class),
-                                row.get("original_text", String.class),
-                                row.get("components", String.class),
-                                row.get("object_ref", String.class)),
-                            Instant.parse(row.get("created_at", String.class)))));
+    return database.read(dsl ->
+        dsl.selectFrom(table("safety_submission"))
+            .where(
+                field("player", String.class)
+                    .eq(player.toString())
+                    .and(field("created_at", String.class).ge(stamp(since)))
+                    .and(
+                        field("surface", String.class)
+                            .notIn("activity", "anticheat", "evidence-access")))
+            .orderBy(field("created_at").desc())
+            .limit(limit)
+            .fetch(row ->
+                new Entry(
+                    new ContentSubmission(
+                        UUID.fromString(row.get("id", String.class)),
+                        player,
+                        row.get("name", String.class),
+                        row.get("surface", String.class),
+                        row.get("audience", String.class),
+                        row.get("original_text", String.class),
+                        row.get("components", String.class),
+                        row.get("object_ref", String.class)),
+                    Instant.parse(row.get("created_at", String.class)))));
   }
 
   @Override
   public CompletableFuture<String> search(String player, String text, int limit) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(table("safety_submission"))
-                .where(
-                    field("player", String.class)
-                        .containsIgnoreCase(player)
-                        .or(field("name", String.class).containsIgnoreCase(player)))
-                .and(field("original_text", String.class).containsIgnoreCase(text))
-                .orderBy(field("created_at").desc())
-                .limit(limit)
-                .fetch()
-                .formatJSON());
+    return database.read(dsl ->
+        dsl.selectFrom(table("safety_submission"))
+            .where(
+                field("player", String.class)
+                    .containsIgnoreCase(player)
+                    .or(field("name", String.class).containsIgnoreCase(player)))
+            .and(field("original_text", String.class).containsIgnoreCase(text))
+            .orderBy(field("created_at").desc())
+            .limit(limit)
+            .fetch()
+            .formatJSON());
   }
 
   @Override
@@ -218,60 +207,54 @@ public final class JooqEvidenceStore implements EvidenceStore {
 
   private CompletableFuture<Integer> count(
       UUID player, String outcome, Instant since, Instant before) {
-    return database.read(
-        dsl ->
-            dsl.selectCount()
-                .from(table("safety_event"))
-                .join(table("safety_submission"))
-                .on(
-                    field("safety_submission.id", String.class)
-                        .eq(field("safety_event.submission_id", String.class)))
-                .where(field("safety_submission.player", String.class).eq(player.toString()))
-                .and(field("safety_event.outcome", String.class).eq(outcome))
-                .and(field("safety_event.created_at", String.class).ge(stamp(since)))
-                .and(field("safety_event.created_at", String.class).le(stamp(before)))
-                .andNotExists(
-                    dsl.selectOne()
-                        .from(table("safety_event").as("correction"))
-                        .where(
-                            field("correction.submission_id", String.class)
-                                .eq(field("safety_submission.id", String.class)))
-                        .and(field("correction.outcome", String.class).eq("overturned")))
-                .fetchSingle(0, int.class));
+    return database.read(dsl ->
+        dsl.selectCount()
+            .from(table("safety_event"))
+            .join(table("safety_submission"))
+            .on(
+                field("safety_submission.id", String.class)
+                    .eq(field("safety_event.submission_id", String.class)))
+            .where(field("safety_submission.player", String.class).eq(player.toString()))
+            .and(field("safety_event.outcome", String.class).eq(outcome))
+            .and(field("safety_event.created_at", String.class).ge(stamp(since)))
+            .and(field("safety_event.created_at", String.class).le(stamp(before)))
+            .andNotExists(
+                dsl.selectOne()
+                    .from(table("safety_event").as("correction"))
+                    .where(
+                        field("correction.submission_id", String.class)
+                            .eq(field("safety_submission.id", String.class)))
+                    .and(field("correction.outcome", String.class).eq("overturned")))
+            .fetchSingle(0, int.class));
   }
 
   @Override
   public CompletableFuture<List<Entry>> context(String audience, Instant since, int limit) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(table("safety_submission"))
-                .where(field("audience", String.class).eq(audience))
-                .and(field("created_at", String.class).ge(stamp(since)))
-                .and(
-                    field("id", String.class)
-                        .in(
-                            dsl.select(field("submission_id", String.class))
-                                .from(table("safety_event"))
-                                .where(
-                                    field("outcome", String.class)
-                                        .in(
-                                            "delivered",
-                                            "command-dispatched",
-                                            "discord-delivered"))))
-                .orderBy(field("created_at").desc())
-                .limit(limit)
-                .fetch(
-                    row ->
-                        new Entry(
-                            new ContentSubmission(
-                                UUID.fromString(row.get("id", String.class)),
-                                UUID.fromString(row.get("player", String.class)),
-                                row.get("name", String.class),
-                                row.get("surface", String.class),
-                                row.get("audience", String.class),
-                                row.get("original_text", String.class),
-                                row.get("components", String.class),
-                                row.get("object_ref", String.class)),
-                            Instant.parse(row.get("created_at", String.class)))));
+    return database.read(dsl ->
+        dsl.selectFrom(table("safety_submission"))
+            .where(field("audience", String.class).eq(audience))
+            .and(field("created_at", String.class).ge(stamp(since)))
+            .and(
+                field("id", String.class)
+                    .in(
+                        dsl.select(field("submission_id", String.class))
+                            .from(table("safety_event"))
+                            .where(
+                                field("outcome", String.class)
+                                    .in("delivered", "command-dispatched", "discord-delivered"))))
+            .orderBy(field("created_at").desc())
+            .limit(limit)
+            .fetch(row ->
+                new Entry(
+                    new ContentSubmission(
+                        UUID.fromString(row.get("id", String.class)),
+                        UUID.fromString(row.get("player", String.class)),
+                        row.get("name", String.class),
+                        row.get("surface", String.class),
+                        row.get("audience", String.class),
+                        row.get("original_text", String.class),
+                        row.get("components", String.class),
+                        row.get("object_ref", String.class)),
+                    Instant.parse(row.get("created_at", String.class)))));
   }
 }

@@ -66,11 +66,10 @@ final class BatchBTest {
 
       assertThat(effects).contains(new AbilityEffect.Heal(BOB, 4));
       assertThat(effects)
-          .anyMatch(
-              e ->
-                  e instanceof AbilityEffect.Say say
-                      && say.to().equals(List.of(BOB))
-                      && say.text().endsWith(" has healed you!"));
+          .anyMatch(e ->
+              e instanceof AbilityEffect.Say say
+                  && say.to().equals(List.of(BOB))
+                  && say.text().endsWith(" has healed you!"));
       assertThat(bout.abilities.ready(ALICE, Medic.cooldown(BOB), bout.now)).isFalse();
       bout.advance(Duration.ofMillis(1200));
       assertThat(bout.abilities.ready(ALICE, Medic.cooldown(BOB), bout.now))

@@ -44,16 +44,15 @@ public record MatchRecord(
     if (header.schemaVersion() == 2
         && (!observations.isEmpty()
             || inputs.stream()
-                .anyMatch(
-                    input ->
-                        !input.equals(
-                            new InputFrame(
-                                new InputFrame.Legacy(
-                                    input.tick(),
-                                    input.pseudonym(),
-                                    input.keys(),
-                                    input.yaw(),
-                                    input.pitch())))))) {
+                .anyMatch(input ->
+                    !input.equals(
+                        new InputFrame(
+                            new InputFrame.Legacy(
+                                input.tick(),
+                                input.pseudonym(),
+                                input.keys(),
+                                input.yaw(),
+                                input.pitch())))))) {
       throw new IllegalArgumentException(
           "schema 2 cannot encode observations or complete controls");
     }

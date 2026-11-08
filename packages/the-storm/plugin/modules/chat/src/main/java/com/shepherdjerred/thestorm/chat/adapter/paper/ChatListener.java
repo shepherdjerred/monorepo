@@ -46,10 +46,9 @@ public final class ChatListener implements Listener {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
         event
             .viewers()
-            .removeIf(
-                viewer ->
-                    viewer instanceof Player other
-                        && !service.receives(line, other.getUniqueId(), Speakers.isStaff(other)));
+            .removeIf(viewer ->
+                viewer instanceof Player other
+                    && !service.receives(line, other.getUniqueId(), Speakers.isStaff(other)));
         var plain = MiniMessage.miniMessage().deserialize(service.render(line));
         event.renderer(
             new ChannelRenderer(
@@ -58,10 +57,9 @@ public final class ChatListener implements Listener {
                     viewer instanceof Player other
                         ? service
                             .nameColor(line, other.getUniqueId())
-                            .map(
-                                color ->
-                                    MiniMessage.miniMessage()
-                                        .deserialize(service.render(line, Optional.of(color))))
+                            .map(color ->
+                                MiniMessage.miniMessage()
+                                    .deserialize(service.render(line, Optional.of(color))))
                             .orElse(plain)
                         : plain));
         Feedback.noticeCalmed(player, line.message(), service.capsNotice());

@@ -26,45 +26,43 @@ public final class JooqBackStore implements BackStore {
   public CompletableFuture<Void> push(UUID player, BackEntry entry, int capacity) {
     var position = entry.position();
     return database
-        .write(
-            dsl -> {
-              dsl.insertInto(ESSENTIALS_BACK_HISTORY)
-                  .set(ESSENTIALS_BACK_HISTORY.PLAYER, player.toString())
-                  .set(ESSENTIALS_BACK_HISTORY.WORLD, position.world())
-                  .set(ESSENTIALS_BACK_HISTORY.X, position.x())
-                  .set(ESSENTIALS_BACK_HISTORY.Y, position.y())
-                  .set(ESSENTIALS_BACK_HISTORY.Z, position.z())
-                  .set(ESSENTIALS_BACK_HISTORY.YAW, (double) position.yaw())
-                  .set(ESSENTIALS_BACK_HISTORY.PITCH, (double) position.pitch())
-                  .set(ESSENTIALS_BACK_HISTORY.CAUSE, entry.cause().name().toLowerCase(Locale.ROOT))
-                  .set(ESSENTIALS_BACK_HISTORY.AT, entry.at().toEpochMilli())
-                  .execute();
-              var keep =
-                  dsl.select(ESSENTIALS_BACK_HISTORY.ID)
-                      .from(ESSENTIALS_BACK_HISTORY)
-                      .where(ESSENTIALS_BACK_HISTORY.PLAYER.eq(player.toString()))
-                      .orderBy(ESSENTIALS_BACK_HISTORY.ID.desc())
-                      .limit(capacity);
-              dsl.deleteFrom(ESSENTIALS_BACK_HISTORY)
+        .write(dsl -> {
+          dsl.insertInto(ESSENTIALS_BACK_HISTORY)
+              .set(ESSENTIALS_BACK_HISTORY.PLAYER, player.toString())
+              .set(ESSENTIALS_BACK_HISTORY.WORLD, position.world())
+              .set(ESSENTIALS_BACK_HISTORY.X, position.x())
+              .set(ESSENTIALS_BACK_HISTORY.Y, position.y())
+              .set(ESSENTIALS_BACK_HISTORY.Z, position.z())
+              .set(ESSENTIALS_BACK_HISTORY.YAW, (double) position.yaw())
+              .set(ESSENTIALS_BACK_HISTORY.PITCH, (double) position.pitch())
+              .set(ESSENTIALS_BACK_HISTORY.CAUSE, entry.cause().name().toLowerCase(Locale.ROOT))
+              .set(ESSENTIALS_BACK_HISTORY.AT, entry.at().toEpochMilli())
+              .execute();
+          var keep =
+              dsl.select(ESSENTIALS_BACK_HISTORY.ID)
+                  .from(ESSENTIALS_BACK_HISTORY)
                   .where(ESSENTIALS_BACK_HISTORY.PLAYER.eq(player.toString()))
-                  .and(ESSENTIALS_BACK_HISTORY.ID.notIn(keep))
-                  .execute();
-              return true;
-            })
+                  .orderBy(ESSENTIALS_BACK_HISTORY.ID.desc())
+                  .limit(capacity);
+          dsl.deleteFrom(ESSENTIALS_BACK_HISTORY)
+              .where(ESSENTIALS_BACK_HISTORY.PLAYER.eq(player.toString()))
+              .and(ESSENTIALS_BACK_HISTORY.ID.notIn(keep))
+              .execute();
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
   @Override
   public CompletableFuture<BackHistory> history(UUID player, int capacity) {
-    return database.read(
-        dsl ->
-            BackHistory.of(
-                capacity,
-                dsl.selectFrom(ESSENTIALS_BACK_HISTORY)
-                    .where(ESSENTIALS_BACK_HISTORY.PLAYER.eq(player.toString()))
-                    .orderBy(ESSENTIALS_BACK_HISTORY.ID.desc())
-                    .limit(capacity)
-                    .fetch(JooqBackStore::toEntry)));
+    return database.read(dsl ->
+        BackHistory.of(
+            capacity,
+            dsl.selectFrom(ESSENTIALS_BACK_HISTORY)
+                .where(ESSENTIALS_BACK_HISTORY.PLAYER.eq(player.toString()))
+                .orderBy(ESSENTIALS_BACK_HISTORY.ID.desc())
+                .limit(capacity)
+                .fetch(JooqBackStore::toEntry)));
   }
 
   private static BackEntry toEntry(EssentialsBackHistoryRecord row) {

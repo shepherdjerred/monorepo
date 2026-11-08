@@ -141,17 +141,16 @@ final class Terrain {
     var end = Math.min(coordinates.size(), start + CHUNK_LOAD_BATCH);
     var loads =
         coordinates.subList(start, end).stream()
-            .map(
-                chunk ->
-                    world()
-                        .getChunkAtAsync(chunk[0], chunk[1], true)
-                        .thenAcceptAsync(
-                            loaded -> {
-                              if (released) return;
-                              chunks.hold(world(), chunk[0], chunk[1]);
-                              held.add(chunk);
-                            },
-                            context.mainThread()))
+            .map(chunk ->
+                world()
+                    .getChunkAtAsync(chunk[0], chunk[1], true)
+                    .thenAcceptAsync(
+                        loaded -> {
+                          if (released) return;
+                          chunks.hold(world(), chunk[0], chunk[1]);
+                          held.add(chunk);
+                        },
+                        context.mainThread()))
             .toArray(CompletableFuture[]::new);
     var _ =
         CompletableFuture.allOf(loads)
@@ -200,23 +199,21 @@ final class Terrain {
       throw new IllegalStateException(id() + " is already busy");
     }
     ready = false;
-    verify(
-        matches -> {
-          if (matches.isEmpty()) {
-            done.accept(false);
-          } else if (matches.orElseThrow()) {
-            ready = true;
-            done.accept(true);
-          } else {
-            context.logger().warn("{} differs from its schematic; pasting it", id());
-            beforePaste.run();
-            paste(
-                () -> {
-                  ready = !released;
-                  done.accept(!released);
-                });
-          }
+    verify(matches -> {
+      if (matches.isEmpty()) {
+        done.accept(false);
+      } else if (matches.orElseThrow()) {
+        ready = true;
+        done.accept(true);
+      } else {
+        context.logger().warn("{} differs from its schematic; pasting it", id());
+        beforePaste.run();
+        paste(() -> {
+          ready = !released;
+          done.accept(!released);
         });
+      }
+    });
   }
 
   /**

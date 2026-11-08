@@ -66,16 +66,14 @@ final class PerksCommands {
             Commands.literal("buy")
                 .then(
                     trackArgument()
-                        .executes(
-                            context ->
-                                buy(context.getSource().getSender(), getString(context, TRACK)))))
+                        .executes(context ->
+                            buy(context.getSource().getSender(), getString(context, TRACK)))))
         .then(
             Commands.literal("info")
                 .then(
                     trackArgument()
-                        .executes(
-                            context ->
-                                info(context.getSource().getSender(), getString(context, TRACK)))))
+                        .executes(context ->
+                            info(context.getSource().getSender(), getString(context, TRACK)))))
         .then(admin.node())
         .build();
   }
@@ -126,14 +124,13 @@ final class PerksCommands {
 
   private int info(CommandSender sender, String id) {
     track(sender, id)
-        .ifPresent(
-            track -> {
-              var owned =
-                  sender instanceof Player player
-                      ? useCases.cache().level(player.getUniqueId(), track)
-                      : 0;
-              presenter.info(track, owned).forEach(sender::sendMessage);
-            });
+        .ifPresent(track -> {
+          var owned =
+              sender instanceof Player player
+                  ? useCases.cache().level(player.getUniqueId(), track)
+                  : 0;
+          presenter.info(track, owned).forEach(sender::sendMessage);
+        });
     return Command.SINGLE_SUCCESS;
   }
 

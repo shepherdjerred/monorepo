@@ -114,15 +114,14 @@ final class RunnerRules {
           case LIVE -> Optional.of(PublicGameDirectory.Phase.RUNNING);
           case ENDED, RESETTING -> Optional.<PublicGameDirectory.Phase>empty();
         };
-    return phase.map(
-        listed ->
-            new PublicGameDirectory.Game(
-                snapshot.matchId().toString(),
-                PublicGameDirectory.Kind.RWF,
-                snapshot.mapId().orElse("Red Warfare"),
-                listed,
-                "",
-                players));
+    return phase.map(listed ->
+        new PublicGameDirectory.Game(
+            snapshot.matchId().toString(),
+            PublicGameDirectory.Kind.RWF,
+            snapshot.mapId().orElse("Red Warfare"),
+            listed,
+            "",
+            players));
   }
 
   /** The row's start: the live instant, or {@code endedAt} when the match never (quite) started. */

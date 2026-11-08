@@ -97,13 +97,12 @@ public final class GrimHooks implements Listener, AutoCloseable {
     var _ =
         safety
             .observe(submission, cancelled ? "grim-suppressed" : "grim-flag")
-            .exceptionally(
-                failure -> {
-                  context
-                      .logger()
-                      .error("Anticheat evidence write failed: {}", submission.id(), failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              context
+                  .logger()
+                  .error("Anticheat evidence write failed: {}", submission.id(), failure);
+              return null;
+            });
   }
 
   @EventHandler(priority = EventPriority.LOWEST)
@@ -167,11 +166,10 @@ public final class GrimHooks implements Listener, AutoCloseable {
         .plugin()
         .getServer()
         .getOnlinePlayers()
-        .forEach(
-            player -> {
-              var attachment = controls.remove(player.getUniqueId());
-              if (attachment != null) player.removeAttachment(attachment);
-            });
+        .forEach(player -> {
+          var attachment = controls.remove(player.getUniqueId());
+          if (attachment != null) player.removeAttachment(attachment);
+        });
     controls.clear();
   }
 }

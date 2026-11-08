@@ -86,19 +86,17 @@ final class CandidateMenu implements InventoryHolder {
 
   static ItemStack item(Material material, String title, List<String> lore) {
     var stack = ItemStack.of(material);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text(title, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
-          meta.lore(
-              lore.stream()
-                  .map(
-                      line ->
-                          Component.text(line, NamedTextColor.GRAY)
-                              .decoration(TextDecoration.ITALIC, false))
-                  .map(Component.class::cast)
-                  .toList());
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text(title, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
+      meta.lore(
+          lore.stream()
+              .map(line ->
+                  Component.text(line, NamedTextColor.GRAY)
+                      .decoration(TextDecoration.ITALIC, false))
+              .map(Component.class::cast)
+              .toList());
+    });
     return stack;
   }
 

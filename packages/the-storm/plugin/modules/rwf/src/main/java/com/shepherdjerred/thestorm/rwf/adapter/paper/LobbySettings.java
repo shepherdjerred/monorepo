@@ -24,16 +24,13 @@ final class LobbySettings {
     var host = runner.session().host();
     if (previous.equals(host)) return;
     host.flatMap(runner::memberOf)
-        .ifPresent(
-            member ->
-                runner
-                    .humanEntities()
-                    .forEach(
-                        player ->
-                            Texts.info(
-                                player,
-                                member.name()
-                                    + " is the host. Open Match settings with the comparator.")));
+        .ifPresent(member ->
+            runner
+                .humanEntities()
+                .forEach(player ->
+                    Texts.info(
+                        player,
+                        member.name() + " is the host. Open Match settings with the comparator.")));
   }
 
   void open(Player player) {
@@ -71,20 +68,14 @@ final class LobbySettings {
             var base =
                 options
                     .count()
-                    .orElseGet(
-                        () ->
-                            runner
-                                .match()
-                                .map()
-                                .map(
-                                    map ->
-                                        Math.max(
-                                            0, runner.lobbySizes().target(map) - runner.humans()))
-                                .orElseGet(
-                                    () ->
-                                        Math.max(
-                                            0,
-                                            config.match().targetCombatants() - runner.humans())));
+                    .orElseGet(() ->
+                        runner
+                            .match()
+                            .map()
+                            .map(map ->
+                                Math.max(0, runner.lobbySizes().target(map) - runner.humans()))
+                            .orElseGet(() ->
+                                Math.max(0, config.match().targetCombatants() - runner.humans())));
             var count =
                 Math.clamp(
                     base + (slot == SettingsMenu.MORE ? step : -step),

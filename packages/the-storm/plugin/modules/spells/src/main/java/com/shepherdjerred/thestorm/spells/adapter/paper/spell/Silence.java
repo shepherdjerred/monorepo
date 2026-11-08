@@ -30,11 +30,10 @@ final class Silence implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creatureEffect(tools, caster, settings.range())
-        .flatMap(
-            target ->
-                target instanceof Player victim
-                    ? Result.ok(victim)
-                    : Result.err(CastProblem.noTarget("player in sight")))
+        .flatMap(target ->
+            target instanceof Player victim
+                ? Result.ok(victim)
+                : Result.err(CastProblem.noTarget("player in sight")))
         .map(victim -> () -> silence(caster, victim));
   }
 
@@ -47,12 +46,11 @@ final class Silence implements Spell {
                 caster,
                 victim,
                 Harm.Blow.none()
-                    .then(
-                        target ->
-                            tools
-                                .state()
-                                .silences()
-                                .start(victim.getUniqueId(), duration, tools.time().instant())));
+                    .then(target ->
+                        tools
+                            .state()
+                            .silences()
+                            .start(victim.getUniqueId(), duration, tools.time().instant())));
     if (!landed) {
       return;
     }

@@ -97,17 +97,16 @@ public final class JooqLocksStore implements LocksStore {
     }
     return dsl.selectFrom(TOWNS_LOCK)
         .orderBy(TOWNS_LOCK.ID)
-        .fetch(
-            row -> {
-              var id = UUID.fromString(row.getId());
-              return new Lock(
-                  id,
-                  UUID.fromString(row.getOwnerId()),
-                  blocks.getOrDefault(id, Set.of()),
-                  trusted.getOrDefault(id, Map.of()),
-                  options(row, groups.getOrDefault(id, Set.of()), towns.getOrDefault(id, Set.of())),
-                  restorations.getOrDefault(id, Lock.Restoration.NONE));
-            });
+        .fetch(row -> {
+          var id = UUID.fromString(row.getId());
+          return new Lock(
+              id,
+              UUID.fromString(row.getOwnerId()),
+              blocks.getOrDefault(id, Set.of()),
+              trusted.getOrDefault(id, Map.of()),
+              options(row, groups.getOrDefault(id, Set.of()), towns.getOrDefault(id, Set.of())),
+              restorations.getOrDefault(id, Lock.Restoration.NONE));
+        });
   }
 
   @Override
@@ -186,67 +185,64 @@ public final class JooqLocksStore implements LocksStore {
 
   @Override
   public CompletableFuture<Void> delete(UUID id) {
-    return write(
-        dsl -> {
-          var key = id.toString();
-          dsl.deleteFrom(TOWNS_LOCK_HISTORICAL_OWNER)
-              .where(TOWNS_LOCK_HISTORICAL_OWNER.LOCK_ID.eq(key))
-              .execute();
-          dsl.deleteFrom(TOWNS_LOCK_RESTORATION)
-              .where(TOWNS_LOCK_RESTORATION.LOCK_ID.eq(key))
-              .execute();
-          dsl.deleteFrom(TOWNS_LOCK_BLOCK).where(TOWNS_LOCK_BLOCK.LOCK_ID.eq(key)).execute();
-          dsl.deleteFrom(TOWNS_LOCK_TRUST).where(TOWNS_LOCK_TRUST.LOCK_ID.eq(key)).execute();
-          dsl.deleteFrom(TOWNS_LOCK_ENTRY).where(TOWNS_LOCK_ENTRY.LOCK_ID.eq(key)).execute();
-          var deleted = dsl.deleteFrom(TOWNS_LOCK).where(TOWNS_LOCK.ID.eq(key)).execute();
-          if (deleted != 1) {
-            throw new IllegalStateException("lock " + id + " is not stored");
-          }
-        });
+    return write(dsl -> {
+      var key = id.toString();
+      dsl.deleteFrom(TOWNS_LOCK_HISTORICAL_OWNER)
+          .where(TOWNS_LOCK_HISTORICAL_OWNER.LOCK_ID.eq(key))
+          .execute();
+      dsl.deleteFrom(TOWNS_LOCK_RESTORATION)
+          .where(TOWNS_LOCK_RESTORATION.LOCK_ID.eq(key))
+          .execute();
+      dsl.deleteFrom(TOWNS_LOCK_BLOCK).where(TOWNS_LOCK_BLOCK.LOCK_ID.eq(key)).execute();
+      dsl.deleteFrom(TOWNS_LOCK_TRUST).where(TOWNS_LOCK_TRUST.LOCK_ID.eq(key)).execute();
+      dsl.deleteFrom(TOWNS_LOCK_ENTRY).where(TOWNS_LOCK_ENTRY.LOCK_ID.eq(key)).execute();
+      var deleted = dsl.deleteFrom(TOWNS_LOCK).where(TOWNS_LOCK.ID.eq(key)).execute();
+      if (deleted != 1) {
+        throw new IllegalStateException("lock " + id + " is not stored");
+      }
+    });
   }
 
   @Override
   public CompletableFuture<Map<UUID, LockModes>> loadModes() {
-    return database.write(
-        dsl -> {
-          var loaded = new HashMap<UUID, LockModes>();
-          for (var row : dsl.selectFrom(TOWNS_LOCK_MODE).fetch()) {
-            var template = row.getTemplateId();
-            loaded.put(
-                UUID.fromString(row.getPlayerId()),
-                new LockModes(
-                    row.getPersist() == 1,
-                    row.getNolock() == 1,
-                    row.getDropTransfer() == 1,
-                    row.getQuiet() == 1,
-                    template == null || template.isEmpty()
-                        ? Optional.empty()
-                        : Optional.of(UUID.fromString(template))));
-          }
-          return loaded;
-        });
+    return database.write(dsl -> {
+      var loaded = new HashMap<UUID, LockModes>();
+      for (var row : dsl.selectFrom(TOWNS_LOCK_MODE).fetch()) {
+        var template = row.getTemplateId();
+        loaded.put(
+            UUID.fromString(row.getPlayerId()),
+            new LockModes(
+                row.getPersist() == 1,
+                row.getNolock() == 1,
+                row.getDropTransfer() == 1,
+                row.getQuiet() == 1,
+                template == null || template.isEmpty()
+                    ? Optional.empty()
+                    : Optional.of(UUID.fromString(template))));
+      }
+      return loaded;
+    });
   }
 
   @Override
   public CompletableFuture<Void> saveMode(UUID player, LockModes modes) {
-    return write(
-        dsl -> {
-          dsl.insertInto(TOWNS_LOCK_MODE)
-              .set(TOWNS_LOCK_MODE.PLAYER_ID, player.toString())
-              .set(TOWNS_LOCK_MODE.PERSIST, bit(modes.persist()))
-              .set(TOWNS_LOCK_MODE.NOLOCK, bit(modes.nolock()))
-              .set(TOWNS_LOCK_MODE.DROP_TRANSFER, bit(modes.dropTransfer()))
-              .set(TOWNS_LOCK_MODE.QUIET, bit(modes.quiet()))
-              .set(TOWNS_LOCK_MODE.TEMPLATE_ID, modes.template().map(UUID::toString).orElse(null))
-              .onConflict(TOWNS_LOCK_MODE.PLAYER_ID)
-              .doUpdate()
-              .set(TOWNS_LOCK_MODE.PERSIST, bit(modes.persist()))
-              .set(TOWNS_LOCK_MODE.NOLOCK, bit(modes.nolock()))
-              .set(TOWNS_LOCK_MODE.DROP_TRANSFER, bit(modes.dropTransfer()))
-              .set(TOWNS_LOCK_MODE.QUIET, bit(modes.quiet()))
-              .set(TOWNS_LOCK_MODE.TEMPLATE_ID, modes.template().map(UUID::toString).orElse(null))
-              .execute();
-        });
+    return write(dsl -> {
+      dsl.insertInto(TOWNS_LOCK_MODE)
+          .set(TOWNS_LOCK_MODE.PLAYER_ID, player.toString())
+          .set(TOWNS_LOCK_MODE.PERSIST, bit(modes.persist()))
+          .set(TOWNS_LOCK_MODE.NOLOCK, bit(modes.nolock()))
+          .set(TOWNS_LOCK_MODE.DROP_TRANSFER, bit(modes.dropTransfer()))
+          .set(TOWNS_LOCK_MODE.QUIET, bit(modes.quiet()))
+          .set(TOWNS_LOCK_MODE.TEMPLATE_ID, modes.template().map(UUID::toString).orElse(null))
+          .onConflict(TOWNS_LOCK_MODE.PLAYER_ID)
+          .doUpdate()
+          .set(TOWNS_LOCK_MODE.PERSIST, bit(modes.persist()))
+          .set(TOWNS_LOCK_MODE.NOLOCK, bit(modes.nolock()))
+          .set(TOWNS_LOCK_MODE.DROP_TRANSFER, bit(modes.dropTransfer()))
+          .set(TOWNS_LOCK_MODE.QUIET, bit(modes.quiet()))
+          .set(TOWNS_LOCK_MODE.TEMPLATE_ID, modes.template().map(UUID::toString).orElse(null))
+          .execute();
+    });
   }
 
   private static void insertEntry(DSLContext dsl, String lockId, String kind, String key) {
@@ -302,11 +298,10 @@ public final class JooqLocksStore implements LocksStore {
 
   private CompletableFuture<Void> write(Consumer<DSLContext> work) {
     return database
-        .write(
-            dsl -> {
-              work.accept(dsl);
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          work.accept(dsl);
+          return Boolean.TRUE;
+        })
         .thenAccept(done -> {});
   }
 }

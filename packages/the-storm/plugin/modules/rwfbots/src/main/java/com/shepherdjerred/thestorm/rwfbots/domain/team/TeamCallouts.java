@@ -126,14 +126,13 @@ public final class TeamCallouts {
     if (lit.add(bomb.id())) {
       var retaker =
           scene.board().plan().assignment().entrySet().stream()
-              .filter(
-                  entry ->
-                      scene
-                          .board()
-                          .plan()
-                          .slot(entry.getValue())
-                          .map(slot -> slot.role() == Role.RETAKE)
-                          .orElse(false))
+              .filter(entry ->
+                  scene
+                      .board()
+                      .plan()
+                      .slot(entry.getValue())
+                      .map(slot -> slot.role() == Role.RETAKE)
+                      .orElse(false))
               .map(Map.Entry::getKey)
               .flatMap(id -> scene.bots().stream().filter(bot -> bot.id().equals(id)))
               .filter(bot -> !busy(scene, bot))
@@ -145,10 +144,9 @@ public final class TeamCallouts {
     if (bomb.state() instanceof BombState.Armed(var remaining)
         && remaining <= LOW_FUSE_TICKS
         && scene.decisions().values().stream()
-            .noneMatch(
-                decision ->
-                    decision.option() == Option.DEFUSE
-                        && decision.bomb().filter(bomb.id()::equals).isPresent())) {
+            .noneMatch(decision ->
+                decision.option() == Option.DEFUSE
+                    && decision.bomb().filter(bomb.id()::equals).isPresent())) {
       call(scene, "need-defuse:" + bomb.id().value(), out, Callout.Kind.NEED_DEFUSE)
           .accept(nearest(scene, bomb.pos(), Optional.empty()), bomb.pos(), place);
     }
@@ -214,12 +212,8 @@ public final class TeamCallouts {
       if (!need.urgent()) continue;
       var helper =
           scene.bots().stream()
-              .filter(
-                  bot ->
-                      plan.slotOf(bot.id())
-                          .flatMap(Slot::buddy)
-                          .filter(human.id()::equals)
-                          .isPresent())
+              .filter(bot ->
+                  plan.slotOf(bot.id()).flatMap(Slot::buddy).filter(human.id()::equals).isPresent())
               .filter(bot -> !busy(scene, bot))
               .min(byDistance(human.pos()));
       if (helper.isEmpty()) continue;

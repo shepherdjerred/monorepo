@@ -98,12 +98,11 @@ public final class SeasonalDoors implements Listener {
     long dy = (long) door.getY() - spawn.getBlockY();
     long dz = (long) door.getZ() - spawn.getBlockZ();
     return event.doors().stream()
-        .anyMatch(
-            expected ->
-                expected.east() == dx
-                    && expected.up() == dy
-                    && expected.south() == dz
-                    && door.getType().name().equals(expected.material()));
+        .anyMatch(expected ->
+            expected.east() == dx
+                && expected.up() == dy
+                && expected.south() == dz
+                && door.getType().name().equals(expected.material()));
   }
 
   private void visit(Player player, Block door, SeasonalConfig.Event event, LocalDate today) {

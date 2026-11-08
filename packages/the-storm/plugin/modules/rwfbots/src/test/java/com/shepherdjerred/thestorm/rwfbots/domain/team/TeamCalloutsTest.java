@@ -95,12 +95,11 @@ final class TeamCalloutsTest {
         calls.observe(scene(world(100, bots, arming, new BombState.Idle()), board, Map.of(), bots));
     assertThat(first)
         .singleElement()
-        .satisfies(
-            call -> {
-              assertThat(call.kind()).isEqualTo(Callout.Kind.ENEMY_PLANTING);
-              assertThat(call.speaker()).isEqualTo(near.id());
-              assertThat(call.place()).isEqualTo("red bomb");
-            });
+        .satisfies(call -> {
+          assertThat(call.kind()).isEqualTo(Callout.Kind.ENEMY_PLANTING);
+          assertThat(call.speaker()).isEqualTo(near.id());
+          assertThat(call.place()).isEqualTo("red bomb");
+        });
     assertThat(
             calls.observe(
                 scene(world(140, bots, arming, new BombState.Idle()), board, Map.of(), bots)))
@@ -180,13 +179,12 @@ final class TeamCalloutsTest {
                     world(10, bots, new BombState.Idle(), new BombState.Idle()), board, arm, bots));
     assertThat(onTheWay)
         .singleElement()
-        .satisfies(
-            call -> {
-              assertThat(call.kind()).isEqualTo(Callout.Kind.PLANTING);
-              assertThat(call.speaker()).isEqualTo(planter.id());
-              assertThat(call.subject()).isEmpty();
-              assertThat(call.place()).isEqualTo("blue bomb");
-            });
+        .satisfies(call -> {
+          assertThat(call.kind()).isEqualTo(Callout.Kind.PLANTING);
+          assertThat(call.speaker()).isEqualTo(planter.id());
+          assertThat(call.subject()).isEmpty();
+          assertThat(call.place()).isEqualTo("blue bomb");
+        });
     var atFuse = planter.withPos(BLUE_FUSE.plus(-1, -0.5, 0));
     var there = List.of(atFuse, mate);
     var clicking = Map.of(atFuse.id(), decision(atFuse, Option.ARM, BLUE_BOMB, 10));
@@ -199,11 +197,10 @@ final class TeamCalloutsTest {
                         clicking,
                         there)))
         .singleElement()
-        .satisfies(
-            call -> {
-              assertThat(call.speaker()).isEqualTo(mate.id());
-              assertThat(call.subject()).contains(atFuse.id());
-            });
+        .satisfies(call -> {
+          assertThat(call.speaker()).isEqualTo(mate.id());
+          assertThat(call.subject()).contains(atFuse.id());
+        });
   }
 
   @Test
@@ -239,12 +236,11 @@ final class TeamCalloutsTest {
     var calls = new TeamCallouts();
     assertThat(calls.observe(scene(arming, board, Map.of(), List.of(bot))))
         .singleElement()
-        .satisfies(
-            call -> {
-              assertThat(call.kind()).isEqualTo(Callout.Kind.COVERING);
-              assertThat(call.speaker()).isEqualTo(bot.id());
-              assertThat(call.subject()).contains(human.id());
-            });
+        .satisfies(call -> {
+          assertThat(call.kind()).isEqualTo(Callout.Kind.COVERING);
+          assertThat(call.speaker()).isEqualTo(bot.id());
+          assertThat(call.subject()).contains(human.id());
+        });
     assertThat(calls.observe(scene(arming, board, Map.of(), List.of(bot)))).isEmpty();
   }
 
@@ -267,11 +263,10 @@ final class TeamCalloutsTest {
                     List.of(bot)));
     assertThat(calls)
         .singleElement()
-        .satisfies(
-            call -> {
-              assertThat(call.kind()).isEqualTo(Callout.Kind.NEED_HELP);
-              assertThat(call.place()).isEqualTo("north mid");
-            });
+        .satisfies(call -> {
+          assertThat(call.kind()).isEqualTo(Callout.Kind.NEED_HELP);
+          assertThat(call.place()).isEqualTo("north mid");
+        });
   }
 
   @Test

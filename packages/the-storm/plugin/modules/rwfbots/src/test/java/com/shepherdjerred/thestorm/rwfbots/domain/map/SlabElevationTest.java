@@ -47,10 +47,9 @@ final class SlabElevationTest {
             .toList();
     assertThat(jumps).isNotEmpty();
     assertThat(jumps)
-        .allSatisfy(
-            point -> {
-              assertThat(point.launch().orElseThrow().takeoff().y()).isEqualTo(1.5);
-              assertThat(point.launch().orElseThrow().runUpStart().y()).isEqualTo(1.5);
-            });
+        .allSatisfy(point -> {
+          assertThat(point.launch().orElseThrow().takeoff().y()).isEqualTo(1.5);
+          assertThat(point.launch().orElseThrow().runUpStart().y()).isEqualTo(1.5);
+        });
   }
 }

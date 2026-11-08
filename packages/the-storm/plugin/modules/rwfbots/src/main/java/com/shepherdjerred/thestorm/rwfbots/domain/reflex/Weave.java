@@ -88,11 +88,10 @@ final class Weave {
   static boolean loosed(ReflexInput input, CombatantView archer) {
     var now = input.snapshot().tick();
     return input.snapshot().stimuli().stream()
-        .anyMatch(
-            stimulus ->
-                stimulus.kind() == Stimulus.Kind.BOW_SHOT
-                    && stimulus.tick() == now
-                    && stimulus.source().filter(archer.id()::equals).isPresent());
+        .anyMatch(stimulus ->
+            stimulus.kind() == Stimulus.Kind.BOW_SHOT
+                && stimulus.tick() == now
+                && stimulus.source().filter(archer.id()::equals).isPresent());
   }
 
   /**

@@ -208,13 +208,12 @@ public final class ArenaPaper {
             module.services().require(SealedWorlds.class));
     var provisioners =
         data.survivalMaps().stream()
-            .map(
-                survival ->
-                    new SettlementProvisioner(
-                        context,
-                        survival,
-                        new SettlementProvisioner.Ports(
-                            app.settlementStore(), module.services(), hooks.chunks())))
+            .map(survival ->
+                new SettlementProvisioner(
+                    context,
+                    survival,
+                    new SettlementProvisioner.Ports(
+                        app.settlementStore(), module.services(), hooks.chunks())))
             .toList();
     context.presence(arenas);
     var commands = new ArenaCommands(context, arenas, content.classes(), app.leaderboard());

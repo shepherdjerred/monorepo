@@ -87,20 +87,18 @@ final class LayeredPlanningTest {
 
   private static boolean joined(SkyPiece parent, SkyPiece child) {
     return parent.template().joins().stream()
-        .anyMatch(
-            a ->
-                child.template().joins().stream()
-                    .anyMatch(
-                        b ->
-                            a.target().equals(b.name())
-                                && parent
-                                    .at(a.position())
-                                    .add(parent.direction(a.direction()))
-                                    .equals(child.at(b.position()))
-                                && parent
-                                    .direction(a.direction())
-                                    .add(child.direction(b.direction()))
-                                    .equals(new SkyPosition(0, 0, 0))));
+        .anyMatch(a ->
+            child.template().joins().stream()
+                .anyMatch(b ->
+                    a.target().equals(b.name())
+                        && parent
+                            .at(a.position())
+                            .add(parent.direction(a.direction()))
+                            .equals(child.at(b.position()))
+                        && parent
+                            .direction(a.direction())
+                            .add(child.direction(b.direction()))
+                            .equals(new SkyPosition(0, 0, 0))));
   }
 
   @Test
@@ -130,35 +128,32 @@ final class LayeredPlanningTest {
   void plansRejectEditsResidentsAndPiecesOutsideTheirOwnCell() {
     var cell = new SkyCell(0, 0);
     var outside = new SkyPosition(-1, 100, 100);
-    assertThatThrownBy(
-            () ->
-                new SkyPlan(
-                    cell,
-                    SkyCell.Kind.MINE,
-                    List.of(),
-                    List.of(new SkyPlan.Edit(outside, "minecraft:stone")),
-                    List.of()))
+    assertThatThrownBy(() ->
+            new SkyPlan(
+                cell,
+                SkyCell.Kind.MINE,
+                List.of(),
+                List.of(new SkyPlan.Edit(outside, "minecraft:stone")),
+                List.of()))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new SkyPlan(
-                    cell,
-                    SkyCell.Kind.VILLAGE,
-                    List.of(),
-                    List.of(),
-                    List.of(new SkyPlan.Resident(outside, SkyPlan.ResidentKind.VILLAGER))))
+    assertThatThrownBy(() ->
+            new SkyPlan(
+                cell,
+                SkyCell.Kind.VILLAGE,
+                List.of(),
+                List.of(),
+                List.of(new SkyPlan.Resident(outside, SkyPlan.ResidentKind.VILLAGER))))
         .isInstanceOf(IllegalArgumentException.class);
     var shape =
         new SkyTemplate(
             "test", new SkyPosition(3, 4, 5), new SkyPosition(0, 1, -1), List.of(), 0, List.of());
-    assertThatThrownBy(
-            () ->
-                new SkyPlan(
-                    cell,
-                    SkyCell.Kind.VILLAGE,
-                    List.of(new SkyPiece(shape, outside, 0)),
-                    List.of(),
-                    List.of()))
+    assertThatThrownBy(() ->
+            new SkyPlan(
+                cell,
+                SkyCell.Kind.VILLAGE,
+                List.of(new SkyPiece(shape, outside, 0)),
+                List.of(),
+                List.of()))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

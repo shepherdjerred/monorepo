@@ -136,11 +136,10 @@ public final class Reflex {
         input.self().traversal().maySprint()
             ? run.commands
             : run.commands.stream()
-                .map(
-                    command ->
-                        command instanceof BodyCommand.MoveToward(var point, var _, var hop)
-                            ? new BodyCommand.MoveToward(point, false, hop)
-                            : command)
+                .map(command ->
+                    command instanceof BodyCommand.MoveToward(var point, var _, var hop)
+                        ? new BodyCommand.MoveToward(point, false, hop)
+                        : command)
                 .toList();
     return new Step(next, commands);
   }
@@ -264,15 +263,14 @@ public final class Reflex {
       if (target.isPresent() || bomb.isPresent() || state.isDrawing()) return;
       input
           .threat()
-          .ifPresent(
-              at ->
-                  state =
-                      state.withAim(
-                          AimController.aim(
-                              state.aim(),
-                              Facing.looking(self.eye(), at.plus(0, 1.3, 0)),
-                              levers(),
-                              random)));
+          .ifPresent(at ->
+              state =
+                  state.withAim(
+                      AimController.aim(
+                          state.aim(),
+                          Facing.looking(self.eye(), at.plus(0, 1.3, 0)),
+                          levers(),
+                          random)));
     }
 
     private void act(Optional<BombView> bomb, Optional<CombatantView> target) {
@@ -392,11 +390,10 @@ public final class Reflex {
     /** Eats a steak when {@link SteakEating} says so, a right-click apart from kit items. */
     private void steak() {
       SteakEating.choose(context.loadout(), input, state, commands)
-          .ifPresent(
-              eat -> {
-                commands.add(eat);
-                state = state.withNextRightClick(now + STEAK_GAP_TICKS);
-              });
+          .ifPresent(eat -> {
+            commands.add(eat);
+            state = state.withNextRightClick(now + STEAK_GAP_TICKS);
+          });
     }
 
     private Optional<BombView> bombInReach() {
@@ -723,11 +720,10 @@ public final class Reflex {
     private Optional<ActiveJump> committedJump() {
       return state
           .activeJump()
-          .filter(
-              jump ->
-                  jump.stage() == ActiveJump.Stage.AIRBORNE
-                      || (!input.decision().waypoints().isEmpty()
-                          && jump.intent().equals(jumpIntent())));
+          .filter(jump ->
+              jump.stage() == ActiveJump.Stage.AIRBORNE
+                  || (!input.decision().waypoints().isEmpty()
+                      && jump.intent().equals(jumpIntent())));
     }
 
     private ActiveJump.Intent jumpIntent() {
@@ -759,11 +755,10 @@ public final class Reflex {
       commands.add(new BodyCommand.MoveToward(launch.steer(), sprint, waypoint.hop()));
       launch
           .jump()
-          .ifPresent(
-              jump -> {
-                commands.add(jump);
-                state = state.withLastJump(now);
-              });
+          .ifPresent(jump -> {
+            commands.add(jump);
+            state = state.withLastJump(now);
+          });
       lookAhead(destination);
     }
 
@@ -882,11 +877,10 @@ public final class Reflex {
           waypoint
               .launch()
               .map(launch -> launch.durationTicks())
-              .orElseGet(
-                  () ->
-                      (double)
-                          TraversalCosts.drop(
-                              Math.max(1, (int) Math.ceil(self.pos().y() - waypoint.pos().y()))));
+              .orElseGet(() ->
+                  (double)
+                      TraversalCosts.drop(
+                          Math.max(1, (int) Math.ceil(self.pos().y() - waypoint.pos().y()))));
       var landing =
           duration >= (double) (Long.MAX_VALUE - now - 2)
               ? Long.MAX_VALUE
@@ -904,13 +898,12 @@ public final class Reflex {
               active, new JumpController.Request(jump.waypoint(), jump.intent()), self, now);
       state = state.withActiveJump(step.state());
       if (step.state().isEmpty() && !step.failed()) return;
-      commands.removeIf(
-          command ->
-              command instanceof BodyCommand.MoveToward
-                  || command instanceof BodyCommand.Stop
-                  || command instanceof BodyCommand.Jump
-                  || command instanceof BodyCommand.Sneak
-                  || command instanceof BodyCommand.StartUse);
+      commands.removeIf(command ->
+          command instanceof BodyCommand.MoveToward
+              || command instanceof BodyCommand.Stop
+              || command instanceof BodyCommand.Jump
+              || command instanceof BodyCommand.Sneak
+              || command instanceof BodyCommand.StartUse);
       commands.add(new BodyCommand.Sneak(false));
       if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
       state = state.withDrawStart(-1).withEating(-1, false);

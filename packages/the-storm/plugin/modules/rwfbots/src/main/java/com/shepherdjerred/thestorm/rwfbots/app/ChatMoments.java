@@ -72,14 +72,13 @@ public final class ChatMoments {
   public static ChatScene scene(MatchState state, Function<UUID, Optional<Personality>> bots) {
     return new ChatScene(
         state.combatants().stream()
-            .map(
-                fighter ->
-                    new ChatScene.Member(
-                        fighter.uuid(),
-                        fighter.name(),
-                        fighter.bot() ? bots.apply(fighter.uuid()) : Optional.empty(),
-                        fighter.team().map(ChatMoments::teamName),
-                        fighter.alive()))
+            .map(fighter ->
+                new ChatScene.Member(
+                    fighter.uuid(),
+                    fighter.name(),
+                    fighter.bot() ? bots.apply(fighter.uuid()) : Optional.empty(),
+                    fighter.team().map(ChatMoments::teamName),
+                    fighter.alive()))
             .toList());
   }
 

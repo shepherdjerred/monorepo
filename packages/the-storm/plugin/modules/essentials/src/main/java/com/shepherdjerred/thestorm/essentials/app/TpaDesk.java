@@ -29,11 +29,10 @@ public final class TpaDesk {
   public Result<TpaRequest, TpaError> sendStaff(UUID requester, UUID target) {
     return requests
         .sendStaff(requester, target, TpaRequest.Direction.TO_REQUESTER, time.instant())
-        .map(
-            sent -> {
-              requests = sent.remaining();
-              return sent.request();
-            });
+        .map(sent -> {
+          requests = sent.remaining();
+          return sent.request();
+        });
   }
 
   public TpaDesk(InstantSource time, TpaRequests.Rules rules) {
@@ -46,11 +45,10 @@ public final class TpaDesk {
       UUID requester, UUID target, TpaRequest.Direction direction) {
     return requests
         .send(requester, target, direction, time.instant())
-        .map(
-            sent -> {
-              requests = sent.remaining();
-              return sent.request();
-            });
+        .map(sent -> {
+          requests = sent.remaining();
+          return sent.request();
+        });
   }
 
   /** The request {@code selector} names, left in place. */
@@ -62,11 +60,10 @@ public final class TpaDesk {
   public Result<TpaRequest, TpaError> take(UUID target, TpaSelector selector) {
     return requests
         .take(target, selector, time.instant())
-        .map(
-            taken -> {
-              requests = taken.remaining();
-              return taken.request();
-            });
+        .map(taken -> {
+          requests = taken.remaining();
+          return taken.request();
+        });
   }
 
   /** Drops lapsed requests and returns them, so both players can be told. */

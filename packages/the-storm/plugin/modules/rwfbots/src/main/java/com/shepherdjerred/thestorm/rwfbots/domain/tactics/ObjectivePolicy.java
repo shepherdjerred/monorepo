@@ -108,11 +108,10 @@ public final class ObjectivePolicy {
     var plan = situation.board().plan();
     var team =
         situation.livingAllies().stream()
-            .filter(
-                ally ->
-                    plan.slotOf(ally.id())
-                        .map(slot -> slot.role() == Role.RETAKE || slot.role() == Role.DEFEND)
-                        .orElse(false))
+            .filter(ally ->
+                plan.slotOf(ally.id())
+                    .map(slot -> slot.role() == Role.RETAKE || slot.role() == Role.DEFEND)
+                    .orElse(false))
             .toList();
     var present =
         team.stream().filter(ally -> ally.pos().distance(bomb.pos()) <= STAGE_RADIUS).count();
@@ -240,10 +239,8 @@ public final class ObjectivePolicy {
       Situation situation, TacticsContext context, BombView bomb) {
     var board = situation.board();
     return situation.snapshot().alive(situation.self().team()).stream()
-        .filter(
-            bot ->
-                board.plan().assignment().isEmpty()
-                    || board.plan().assignment().containsKey(bot.id()))
+        .filter(bot ->
+            board.plan().assignment().isEmpty() || board.plan().assignment().containsKey(bot.id()))
         .filter(bot -> Double.isFinite(travelTicks(bot, bomb, context)))
         .sorted(
             Comparator.comparing((CombatantView bot) -> board.pinned(bot.id(), situation.now()))

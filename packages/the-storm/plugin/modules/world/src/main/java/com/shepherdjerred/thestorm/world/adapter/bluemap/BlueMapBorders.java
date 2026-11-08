@@ -59,17 +59,16 @@ public final class BlueMapBorders {
         continue;
       }
       api.getWorld(world)
-          .ifPresent(
-              blue -> {
-                for (var map : blue.getMaps()) {
-                  var set =
-                      map.getMarkerSets()
-                          .computeIfAbsent(
-                              SET_ID,
-                              id -> MarkerSet.builder().label(SET_LABEL).toggleable(true).build());
-                  set.put(MARKER_ID, marker(outline));
-                }
-              });
+          .ifPresent(blue -> {
+            for (var map : blue.getMaps()) {
+              var set =
+                  map.getMarkerSets()
+                      .computeIfAbsent(
+                          SET_ID,
+                          id -> MarkerSet.builder().label(SET_LABEL).toggleable(true).build());
+              set.put(MARKER_ID, marker(outline));
+            }
+          });
     }
   }
 

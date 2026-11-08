@@ -38,56 +38,53 @@ final class Entomb implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creatureEffect(tools, caster, settings.range())
-        .flatMap(
-            target -> {
-              var world = target.getWorld();
-              var feet = Aim.pos(target.getLocation().getBlock());
-              var height = Math.max(1, (int) Math.ceil(target.getHeight()));
-              var shell = Aim.blocks(world, Shapes.tomb(feet, height));
-              return Aim.buildable(tools, caster, shell, Replaceability.Mode.OPEN_SPACE)
-                  .map(
-                      blocks -> {
-                        return new Effect() {
-                          @Override
-                          public void beforeCommit(Runnable commit, Runnable failed) {
-                            if (!target.isValid()
-                                || target.isDead()
-                                || !target.getWorld().equals(world)
-                                || !Aim.pos(target.getLocation().getBlock()).equals(feet)
-                                || tools.harm().denial(caster, target).isPresent()) {
-                              failed.run();
-                              return;
-                            }
-                            tools
-                                .blocks()
-                                .place(
-                                    blocks,
-                                    material.createBlockData(),
-                                    Duration.ofSeconds(settings.durationSeconds()),
-                                    new TemporaryBlocks.GuardedPlacement(
-                                        () ->
-                                            target.isValid()
-                                                && !target.isDead()
-                                                && target.getWorld().equals(world)
-                                                && Aim.pos(target.getLocation().getBlock())
-                                                    .equals(feet)
-                                                && tools.harm().denial(caster, target).isEmpty(),
-                                        saved -> {
-                                          if (saved) {
-                                            tools.harm().breakStealth(caster);
-                                            commit.run();
-                                          } else {
-                                            failed.run();
-                                          }
-                                        }));
-                          }
+        .flatMap(target -> {
+          var world = target.getWorld();
+          var feet = Aim.pos(target.getLocation().getBlock());
+          var height = Math.max(1, (int) Math.ceil(target.getHeight()));
+          var shell = Aim.blocks(world, Shapes.tomb(feet, height));
+          return Aim.buildable(tools, caster, shell, Replaceability.Mode.OPEN_SPACE)
+              .map(blocks -> {
+                return new Effect() {
+                  @Override
+                  public void beforeCommit(Runnable commit, Runnable failed) {
+                    if (!target.isValid()
+                        || target.isDead()
+                        || !target.getWorld().equals(world)
+                        || !Aim.pos(target.getLocation().getBlock()).equals(feet)
+                        || tools.harm().denial(caster, target).isPresent()) {
+                      failed.run();
+                      return;
+                    }
+                    tools
+                        .blocks()
+                        .place(
+                            blocks,
+                            material.createBlockData(),
+                            Duration.ofSeconds(settings.durationSeconds()),
+                            new TemporaryBlocks.GuardedPlacement(
+                                () ->
+                                    target.isValid()
+                                        && !target.isDead()
+                                        && target.getWorld().equals(world)
+                                        && Aim.pos(target.getLocation().getBlock()).equals(feet)
+                                        && tools.harm().denial(caster, target).isEmpty(),
+                                saved -> {
+                                  if (saved) {
+                                    tools.harm().breakStealth(caster);
+                                    commit.run();
+                                  } else {
+                                    failed.run();
+                                  }
+                                }));
+                  }
 
-                          @Override
-                          public void apply() {
-                            tools.fx().cast(kind(), Magic.chest(target));
-                          }
-                        };
-                      });
-            });
+                  @Override
+                  public void apply() {
+                    tools.fx().cast(kind(), Magic.chest(target));
+                  }
+                };
+              });
+        });
   }
 }

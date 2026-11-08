@@ -78,12 +78,11 @@ final class FullHeightDropsTest {
 
   @Test
   void corruptWideDamageCannotNameAnUnsaturatedOrMissingEdge() {
-    assertThatThrownBy(
-            () ->
-                new EdgeCapabilities(
-                    new byte[] {0},
-                    new DamageOverflow(new int[] {0}, new int[] {300}),
-                    LaunchData.standard(new byte[] {0})))
+    assertThatThrownBy(() ->
+            new EdgeCapabilities(
+                new byte[] {0},
+                new DamageOverflow(new int[] {0}, new int[] {300}),
+                LaunchData.standard(new byte[] {0})))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new DamageOverflow(new int[] {0}, new int[] {255}))
         .isInstanceOf(IllegalArgumentException.class);

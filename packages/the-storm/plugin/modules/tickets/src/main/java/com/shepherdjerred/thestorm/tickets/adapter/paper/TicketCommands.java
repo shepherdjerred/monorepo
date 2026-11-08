@@ -86,11 +86,10 @@ public final class TicketCommands {
         .then(
             Commands.argument(FILTER, StringArgumentType.word())
                 .suggests(this::suggestFilters)
-                .executes(
-                    context ->
-                        list(
-                            context.getSource().getSender(),
-                            StringArgumentType.getString(context, FILTER))))
+                .executes(context ->
+                    list(
+                        context.getSource().getSender(),
+                        StringArgumentType.getString(context, FILTER))))
         .build();
   }
 
@@ -275,14 +274,13 @@ public final class TicketCommands {
       moved =
           tickets
               .comment(id, new CommentDraft(author.orElseThrow(), false, note))
-              .thenCompose(
-                  commented ->
-                      switch (commented) {
-                        case Result.Ok<TicketComment, TicketError>(_) ->
-                            tickets.transition(id, TicketStatus.RESOLVED);
-                        case Result.Err<TicketComment, TicketError>(var error) ->
-                            CompletableFuture.completedFuture(Result.err(error));
-                      });
+              .thenCompose(commented ->
+                  switch (commented) {
+                    case Result.Ok<TicketComment, TicketError>(_) ->
+                        tickets.transition(id, TicketStatus.RESOLVED);
+                    case Result.Err<TicketComment, TicketError>(var error) ->
+                        CompletableFuture.completedFuture(Result.err(error));
+                  });
     }
     runtime.onMain(
         moved,

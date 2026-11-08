@@ -145,18 +145,17 @@ public final class StructureBinder {
         mechanism.feature() == Feature.BRIDGE
             ? SpanFinder.bridgeBase(site.grid(), site.sign(), spanConfig(mechanism))
             : SpanFinder.doorBase(site.grid(), site.sign(), mechanism, spanConfig(mechanism));
-    return base.flatMap(
-        anchor ->
-            switch (findSpan(site)) {
-              case Result.Ok<Span, StructureProblem>(var span) -> link(site, span);
-              case Result.Err<Span, StructureProblem>(StructureProblem.NoFarEnd _) -> {
-                var alone =
-                    new Binding.SpanEnd(
-                        site.grid().cellAt(anchor).material(), anchor, Optional.empty(), true);
-                yield Result.ok(new Bind(List.of(new Write(site.sign(), alone)), List.of()));
-              }
-              case Result.Err<Span, StructureProblem>(var problem) -> Result.err(problem);
-            });
+    return base.flatMap(anchor ->
+        switch (findSpan(site)) {
+          case Result.Ok<Span, StructureProblem>(var span) -> link(site, span);
+          case Result.Err<Span, StructureProblem>(StructureProblem.NoFarEnd _) -> {
+            var alone =
+                new Binding.SpanEnd(
+                    site.grid().cellAt(anchor).material(), anchor, Optional.empty(), true);
+            yield Result.ok(new Bind(List.of(new Write(site.sign(), alone)), List.of()));
+          }
+          case Result.Err<Span, StructureProblem>(var problem) -> Result.err(problem);
+        });
   }
 
   private Result<Bind, StructureProblem> link(Site site, Span span) {
@@ -181,22 +180,18 @@ public final class StructureBinder {
             .filter(pos -> site.grid().cellAt(pos).is(structure.material()))
             .toList();
     return StructureToggle.movable(standing, site.grid())
-        .map(
-            ok ->
-                new Bind(
-                    List.of(
-                        new Write(
-                            site.sign(),
-                            new Binding.SpanEnd(
-                                structure.material(),
-                                structure.template(),
-                                Optional.of(far),
-                                false)),
-                        new Write(
-                            far,
-                            new Binding.SpanEnd(
-                                other.material(), other.anchor(), Optional.of(site.sign()), true))),
-                    structure.cells()));
+        .map(ok ->
+            new Bind(
+                List.of(
+                    new Write(
+                        site.sign(),
+                        new Binding.SpanEnd(
+                            structure.material(), structure.template(), Optional.of(far), false)),
+                    new Write(
+                        far,
+                        new Binding.SpanEnd(
+                            other.material(), other.anchor(), Optional.of(site.sign()), true))),
+                structure.cells()));
   }
 
   /** Whether the sign at {@code partner} is a living end linked to {@code end}. */
@@ -212,19 +207,18 @@ public final class StructureBinder {
   private Result<Bind, StructureProblem> bindGate(Site site) {
     var gateConfig = config.gate();
     return GateFinder.find(site.grid(), site.sign(), gateConfig)
-        .flatMap(
-            gate -> {
-              var structure = GateFinder.columns(site.grid(), gate, gateConfig.maxHeight());
-              var standing =
-                  structure.cells().stream()
-                      .filter(pos -> site.grid().cellAt(pos).is(gate.material()))
-                      .toList();
-              // The creator must be allowed to change the tops too: they anchor the gate.
-              var cells = new ArrayList<>(structure.cells());
-              cells.addAll(gate.tops());
-              return StructureToggle.movable(standing, site.grid())
-                  .map(ok -> new Bind(gateWrites(site, gate), cells));
-            });
+        .flatMap(gate -> {
+          var structure = GateFinder.columns(site.grid(), gate, gateConfig.maxHeight());
+          var standing =
+              structure.cells().stream()
+                  .filter(pos -> site.grid().cellAt(pos).is(gate.material()))
+                  .toList();
+          // The creator must be allowed to change the tops too: they anchor the gate.
+          var cells = new ArrayList<>(structure.cells());
+          cells.addAll(gate.tops());
+          return StructureToggle.movable(standing, site.grid())
+              .map(ok -> new Bind(gateWrites(site, gate), cells));
+        });
   }
 
   /** Links to a gate sign that already frames the same columns, else binds this sign alone. */
@@ -297,20 +291,19 @@ public final class StructureBinder {
           "exactly one end keeps the stock: " + site.sign() + " and " + partner);
     }
     return findSpan(site)
-        .flatMap(
-            span -> {
-              var structure = span.structure();
-              if (!span.farSign().equals(partner)) {
-                return Result.err(
-                    new StructureProblem.Changed("another sign now stands between the ends"));
-              }
-              if (!structure.material().equals(end.material())
-                  || !structure.template().equals(end.anchor())
-                  || !span.farBase().equals(other.anchor())) {
-                return Result.err(new StructureProblem.Changed("an end block was replaced"));
-              }
-              return Result.ok(new Bound(structure, end.keeper() ? site.sign() : partner));
-            });
+        .flatMap(span -> {
+          var structure = span.structure();
+          if (!span.farSign().equals(partner)) {
+            return Result.err(
+                new StructureProblem.Changed("another sign now stands between the ends"));
+          }
+          if (!structure.material().equals(end.material())
+              || !structure.template().equals(end.anchor())
+              || !span.farBase().equals(other.anchor())) {
+            return Result.err(new StructureProblem.Changed("an end block was replaced"));
+          }
+          return Result.ok(new Bound(structure, end.keeper() ? site.sign() : partner));
+        });
   }
 
   private Result<Bound, StructureProblem> resolveGate(Site site, Binding.GateFrame frame) {

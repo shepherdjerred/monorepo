@@ -179,12 +179,11 @@ final class TeleportPaymentsTest {
     assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
     assertThat(wallets.receipts())
         .singleElement()
-        .satisfies(
-            receipt -> {
-              assertThat(receipt.from()).isEqualTo(WALLET);
-              assertThat(receipt.to()).isEqualTo(new AccountId.Server());
-              assertThat(receipt.reason()).isEqualTo("teleport:home");
-            });
+        .satisfies(receipt -> {
+          assertThat(receipt.from()).isEqualTo(WALLET);
+          assertThat(receipt.to()).isEqualTo(new AccountId.Server());
+          assertThat(receipt.reason()).isEqualTo("teleport:home");
+        });
     assertThat(java.util.Objects.requireNonNull(usage.usage.get(PLAYER)).until(TeleportKind.HOME))
         .isEqualTo(clock.instant().plus(Duration.ofMinutes(1)));
   }

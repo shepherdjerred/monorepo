@@ -49,9 +49,8 @@ final class PaperNames {
       config
           .drops()
           .blocks()
-          .forEach(
-              (block, rule) ->
-                  checkDropStack(problems, "drops.blocks." + block, rule.max(), stackSize));
+          .forEach((block, rule) ->
+              checkDropStack(problems, "drops.blocks." + block, rule.max(), stackSize));
     }
     check(
         problems,
@@ -61,9 +60,8 @@ final class PaperNames {
     config
         .bonuses()
         .tables()
-        .forEach(
-            (category, table) ->
-                check(problems, "bonuses." + category, table.materials(), PaperNames::isItem));
+        .forEach((category, table) ->
+            check(problems, "bonuses." + category, table.materials(), PaperNames::isItem));
     for (var altar : config.altars()) {
       altarNameProblem(altar, server).ifPresent(problems::add);
     }

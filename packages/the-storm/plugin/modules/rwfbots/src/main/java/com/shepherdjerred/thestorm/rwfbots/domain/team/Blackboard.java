@@ -378,12 +378,11 @@ public record Blackboard(
    */
   public Set<Integer> pathsAhead(CombatantId self) {
     var out = new HashSet<Integer>();
-    paths.forEach(
-        (bot, nodes) -> {
-          if (bot.value() < self.value()) {
-            out.addAll(nodes);
-          }
-        });
+    paths.forEach((bot, nodes) -> {
+      if (bot.value() < self.value()) {
+        out.addAll(nodes);
+      }
+    });
     return out;
   }
 }

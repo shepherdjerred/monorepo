@@ -228,22 +228,15 @@ final class RegressionMelee implements BasicCommand {
 
   private static List<String> wall(World world) {
     return SPEC.wall().stream()
-        .map(
-            point ->
-                world
-                    .getBlockAt(point.get(0), point.get(1), point.get(2))
-                    .getBlockData()
-                    .getAsString())
+        .map(point ->
+            world.getBlockAt(point.get(0), point.get(1), point.get(2)).getBlockData().getAsString())
         .toList();
   }
 
   private static void wall(World world, Material material) {
     SPEC.wall()
-        .forEach(
-            point ->
-                world
-                    .getBlockAt(point.get(0), point.get(1), point.get(2))
-                    .setType(material, false));
+        .forEach(point ->
+            world.getBlockAt(point.get(0), point.get(1), point.get(2)).setType(material, false));
   }
 
   private static Body body(Player player) {

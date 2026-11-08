@@ -26,23 +26,22 @@ final class ForcePush implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creatureEffectsAround(tools, caster, settings.radius())
-        .map(
-            victims ->
-                () -> {
-                  var centre = Magic.vec(Magic.at(caster));
-                  for (var victim : victims) {
-                    var push =
-                        Knockback.away(
-                            centre,
-                            Magic.vec(victim.getLocation()),
-                            settings.strength(),
-                            settings.lift());
-                    tools
-                        .harm()
-                        .strike(caster, victim, Harm.Blow.none().withVelocity(Magic.vector(push)));
-                  }
-                  tools.fx().cast(kind(), Magic.at(caster));
-                  tools.fx().ring(kind(), Magic.at(caster), settings.radius());
-                });
+        .map(victims ->
+            () -> {
+              var centre = Magic.vec(Magic.at(caster));
+              for (var victim : victims) {
+                var push =
+                    Knockback.away(
+                        centre,
+                        Magic.vec(victim.getLocation()),
+                        settings.strength(),
+                        settings.lift());
+                tools
+                    .harm()
+                    .strike(caster, victim, Harm.Blow.none().withVelocity(Magic.vector(push)));
+              }
+              tools.fx().cast(kind(), Magic.at(caster));
+              tools.fx().ring(kind(), Magic.at(caster), settings.radius());
+            });
   }
 }

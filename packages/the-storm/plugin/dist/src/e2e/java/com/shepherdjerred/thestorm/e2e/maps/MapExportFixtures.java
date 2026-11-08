@@ -77,17 +77,16 @@ public final class MapExportFixtures implements AutoCloseable {
                                 source -> source.getSender() instanceof RemoteConsoleCommandSender)
                             .then(
                                 Commands.argument("request", StringArgumentType.greedyString())
-                                    .executes(
-                                        command -> {
-                                          command
-                                              .getSource()
-                                              .getSender()
-                                              .sendMessage(
-                                                  command(
-                                                      StringArgumentType.getString(
-                                                          command, "request")));
-                                          return 1;
-                                        }))
+                                    .executes(command -> {
+                                      command
+                                          .getSource()
+                                          .getSender()
+                                          .sendMessage(
+                                              command(
+                                                  StringArgumentType.getString(
+                                                      command, "request")));
+                                      return 1;
+                                    }))
                             .build()));
   }
 
@@ -106,25 +105,23 @@ public final class MapExportFixtures implements AutoCloseable {
             Integer.parseInt(parts[5]));
     started = true;
     status = "{\"state\":\"reading\"}";
-    writer.execute(
-        () -> {
-          try {
-            var json =
-                Files.readString(plugin.getDataFolder().toPath().resolve("source-chunks.json"));
-            var chunks = GSON.fromJson(json, SourceChunk[].class);
-            if (chunks.length == 0) throw new IllegalArgumentException("no audited source chunks");
-            for (var chunk : chunks) {
-              if (!sourceChunks.add(chunk))
-                throw new IllegalArgumentException("duplicate source chunk");
-            }
-            plugin
-                .getServer()
-                .getScheduler()
-                .runTask(plugin, () -> capture(bounds, bounds.minX() >> 4, bounds.minZ() >> 4));
-          } catch (Exception failure) {
-            fail(failure);
-          }
-        });
+    writer.execute(() -> {
+      try {
+        var json = Files.readString(plugin.getDataFolder().toPath().resolve("source-chunks.json"));
+        var chunks = GSON.fromJson(json, SourceChunk[].class);
+        if (chunks.length == 0) throw new IllegalArgumentException("no audited source chunks");
+        for (var chunk : chunks) {
+          if (!sourceChunks.add(chunk))
+            throw new IllegalArgumentException("duplicate source chunk");
+        }
+        plugin
+            .getServer()
+            .getScheduler()
+            .runTask(plugin, () -> capture(bounds, bounds.minX() >> 4, bounds.minZ() >> 4));
+      } catch (Exception failure) {
+        fail(failure);
+      }
+    });
     return status;
   }
 
@@ -138,12 +135,11 @@ public final class MapExportFixtures implements AutoCloseable {
     loading =
         world
             .getChunkAtAsync(chunkX, chunkZ, true)
-            .whenComplete(
-                (chunk, failure) ->
-                    plugin
-                        .getServer()
-                        .getScheduler()
-                        .runTask(plugin, () -> captured(bounds, request, chunk, failure)));
+            .whenComplete((chunk, failure) ->
+                plugin
+                    .getServer()
+                    .getScheduler()
+                    .runTask(plugin, () -> captured(bounds, request, chunk, failure)));
   }
 
   private void captured(

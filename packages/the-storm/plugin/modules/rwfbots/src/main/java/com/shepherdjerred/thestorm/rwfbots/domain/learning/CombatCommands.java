@@ -62,12 +62,11 @@ public final class CombatCommands {
         || input.target().isEmpty()
         || authoredMotion(context)) return false;
     return context.authored().commands().stream()
-        .noneMatch(
-            command ->
-                command instanceof BodyCommand.StartUse
-                    || command instanceof BodyCommand.ReleaseUse
-                    || command instanceof BodyCommand.CancelUse
-                    || (command instanceof BodyCommand.SelectSlot(var slot) && slot != 1));
+        .noneMatch(command ->
+            command instanceof BodyCommand.StartUse
+                || command instanceof BodyCommand.ReleaseUse
+                || command instanceof BodyCommand.CancelUse
+                || (command instanceof BodyCommand.SelectSlot(var slot) && slot != 1));
   }
 
   /** Unsafe tickets are rejected whole so applied metrics and executed action labels agree. */

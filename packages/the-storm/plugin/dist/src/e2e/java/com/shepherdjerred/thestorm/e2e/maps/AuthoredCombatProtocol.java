@@ -35,13 +35,12 @@ record AuthoredCombatProtocol(
           || wire.maximumRows() != 4096
           || !wire.records().keySet().equals(types.keySet()))
         throw new IllegalStateException("authored combat contract incompatible");
-      types.forEach(
-          (name, type) -> {
-            var fields =
-                Arrays.stream(type.getRecordComponents()).map(field -> field.getName()).toList();
-            if (!fields.equals(wire.records().get(name)))
-              throw new IllegalStateException("authored combat fields differ: " + name);
-          });
+      types.forEach((name, type) -> {
+        var fields =
+            Arrays.stream(type.getRecordComponents()).map(field -> field.getName()).toList();
+        if (!fields.equals(wire.records().get(name)))
+          throw new IllegalStateException("authored combat fields differ: " + name);
+      });
       return wire;
     } catch (IOException failure) {
       throw new IllegalStateException("authored combat contract unreadable", failure);

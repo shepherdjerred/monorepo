@@ -115,15 +115,14 @@ public final class LockService {
     }
     var attempt = new LockAttempt(player, blocks, standing, TownRules.newId(clocks.random()));
     return LockRules.lock(attempt, book, policy)
-        .map(
-            lock -> {
-              var typed =
-                  type == LockType.PRIVATE && password.isEmpty()
-                      ? applyTemplate(player, lock)
-                      : lock.withType(type, password);
-              book.put(typed);
-              return persist(typed, store.save(typed));
-            });
+        .map(lock -> {
+          var typed =
+              type == LockType.PRIVATE && password.isEmpty()
+                  ? applyTemplate(player, lock)
+                  : lock.withType(type, password);
+          book.put(typed);
+          return persist(typed, store.save(typed));
+        });
   }
 
   /**
@@ -136,10 +135,9 @@ public final class LockService {
       return refusedBusy();
     }
     return LockRules.unlock(lock, mayUnlock)
-        .map(
-            found -> {
-              return persistUnlock(found);
-            });
+        .map(found -> {
+          return persistUnlock(found);
+        });
   }
 
   /** Keep the old lock authoritative until storage confirms its deletion. */
@@ -276,10 +274,9 @@ public final class LockService {
       return refusedBusy();
     }
     return rule.apply(lock)
-        .map(
-            updated -> {
-              return persist(updated, store.save(updated), () -> book.put(updated));
-            });
+        .map(updated -> {
+          return persist(updated, store.save(updated), () -> book.put(updated));
+        });
   }
 
   private boolean isBusy(Optional<Lock> lock) {

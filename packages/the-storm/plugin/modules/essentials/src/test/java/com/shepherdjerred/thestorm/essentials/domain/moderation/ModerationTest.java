@@ -117,19 +117,14 @@ final class ModerationTest {
 
   @Test
   void entriesValidateReasonAndExpiry() {
-    assertThatThrownBy(
-            () ->
-                AuditEntry.of(
-                    GRIEFER, ModerationAction.KICK, STAFF, AuditEntry.Term.permanent(" ", T0)))
+    assertThatThrownBy(() ->
+            AuditEntry.of(
+                GRIEFER, ModerationAction.KICK, STAFF, AuditEntry.Term.permanent(" ", T0)))
         .isInstanceOf(IllegalArgumentException.class);
     var longReason = "x".repeat(AuditEntry.MAX_REASON_LENGTH + 1);
-    assertThatThrownBy(
-            () ->
-                AuditEntry.of(
-                    GRIEFER,
-                    ModerationAction.KICK,
-                    STAFF,
-                    AuditEntry.Term.permanent(longReason, T0)))
+    assertThatThrownBy(() ->
+            AuditEntry.of(
+                GRIEFER, ModerationAction.KICK, STAFF, AuditEntry.Term.permanent(longReason, T0)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> entry(ModerationAction.KICK, Optional.of(Duration.ofHours(1)), T0))
         .isInstanceOf(IllegalArgumentException.class);

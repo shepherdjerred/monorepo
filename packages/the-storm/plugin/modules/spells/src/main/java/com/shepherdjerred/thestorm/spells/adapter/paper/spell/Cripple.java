@@ -31,13 +31,12 @@ final class Cripple implements Spell {
             .withPotion(PotionEffectType.SLOWNESS, ticks, settings.amplifier())
             .withPotion(PotionEffectType.WEAKNESS, ticks, settings.amplifier());
     return Aim.creatureEffect(tools, caster, settings.range())
-        .map(
-            target ->
-                () -> {
-                  if (tools.harm().strike(caster, target, blow)) {
-                    tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
-                    tools.fx().cast(kind(), Magic.chest(target));
-                  }
-                });
+        .map(target ->
+            () -> {
+              if (tools.harm().strike(caster, target, blow)) {
+                tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
+                tools.fx().cast(kind(), Magic.chest(target));
+              }
+            });
   }
 }

@@ -72,16 +72,15 @@ final class PaperWorld implements QuestWorld {
   @Override
   public void give(UUID player, ItemMatch item, int amount) {
     player(player)
-        .ifPresent(
-            found -> {
-              for (var stack : ItemStacks.make(item, amount)) {
-                found
-                    .getInventory()
-                    .addItem(stack)
-                    .values()
-                    .forEach(left -> found.getWorld().dropItem(Locations.of(found), left));
-              }
-            });
+        .ifPresent(found -> {
+          for (var stack : ItemStacks.make(item, amount)) {
+            found
+                .getInventory()
+                .addItem(stack)
+                .values()
+                .forEach(left -> found.getWorld().dropItem(Locations.of(found), left));
+          }
+        });
   }
 
   @Override
@@ -128,11 +127,10 @@ final class PaperWorld implements QuestWorld {
       entity.addScoreboardTag(KillCredit.QUEST_SPAWNED);
       spawn
           .name()
-          .ifPresent(
-              name -> {
-                entity.customName(Component.text(name));
-                entity.setCustomNameVisible(true);
-              });
+          .ifPresent(name -> {
+            entity.customName(Component.text(name));
+            entity.setCustomNameVisible(true);
+          });
       entity.setPersistent(false);
       var _ = parts.scheduler().runOnMainThreadLater(parts.spawnedMobLife(), entity::remove);
     }
@@ -151,14 +149,12 @@ final class PaperWorld implements QuestWorld {
   @Override
   public void markers(UUID player, Map<String, NpcMark> marks) {
     player(player)
-        .ifPresent(
-            found ->
-                marks.forEach(
-                    (npc, mark) -> {
-                      if (parts.npcs().find(npc).isPresent()) {
-                        parts.markers().set(found, npc, marker(mark));
-                      }
-                    }));
+        .ifPresent(found ->
+            marks.forEach((npc, mark) -> {
+              if (parts.npcs().find(npc).isPresent()) {
+                parts.markers().set(found, npc, marker(mark));
+              }
+            }));
   }
 
   @Override

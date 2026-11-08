@@ -32,9 +32,8 @@ public final class PlatformComputePool implements ComputePool {
         Thread.ofPlatform()
             .name("storm-compute-", 0)
             .daemon(true)
-            .uncaughtExceptionHandler(
-                (thread, failure) ->
-                    logger.error("Compute work on {} failed", thread.getName(), failure))
+            .uncaughtExceptionHandler((thread, failure) ->
+                logger.error("Compute work on {} failed", thread.getName(), failure))
             .factory();
     this.executor = Executors.newFixedThreadPool(threads, factory);
     this.threads = threads;

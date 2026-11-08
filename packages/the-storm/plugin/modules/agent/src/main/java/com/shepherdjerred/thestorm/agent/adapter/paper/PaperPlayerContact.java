@@ -21,32 +21,30 @@ public final class PaperPlayerContact implements PlayerContact {
   @Override
   public CompletableFuture<Boolean> tell(UUID player, String text) {
     var done = new CompletableFuture<Boolean>();
-    scheduler.runOnMainThread(
-        () -> {
-          var online = server.getPlayer(player);
-          if (online == null) {
-            done.complete(false);
-            return;
-          }
-          online.sendMessage(Component.text(text));
-          done.complete(true);
-        });
+    scheduler.runOnMainThread(() -> {
+      var online = server.getPlayer(player);
+      if (online == null) {
+        done.complete(false);
+        return;
+      }
+      online.sendMessage(Component.text(text));
+      done.complete(true);
+    });
     return done;
   }
 
   @Override
   public CompletableFuture<Boolean> kick(UUID player, String reason) {
     var done = new CompletableFuture<Boolean>();
-    scheduler.runOnMainThread(
-        () -> {
-          var online = server.getPlayer(player);
-          if (online == null) {
-            done.complete(false);
-            return;
-          }
-          online.kick(Component.text(reason));
-          done.complete(true);
-        });
+    scheduler.runOnMainThread(() -> {
+      var online = server.getPlayer(player);
+      if (online == null) {
+        done.complete(false);
+        return;
+      }
+      online.kick(Component.text(reason));
+      done.complete(true);
+    });
     return done;
   }
 }

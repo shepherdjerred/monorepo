@@ -61,43 +61,39 @@ final class Stats {
                 .executes(ctx -> RwfCommands.asPlayer(ctx, this::own))
                 .then(
                     Commands.argument("player", StringArgumentType.word())
-                        .executes(
-                            ctx -> {
-                              of(
-                                  ctx.getSource().getSender(),
-                                  StringArgumentType.getString(ctx, "player"));
-                              return 1;
-                            })))
+                        .executes(ctx -> {
+                          of(
+                              ctx.getSource().getSender(),
+                              StringArgumentType.getString(ctx, "player"));
+                          return 1;
+                        })))
         .then(
             Commands.literal("top")
                 .requires(RwfCommands.permission(RwfPermissions.STATS))
-                .executes(
-                    ctx -> {
-                      top(ctx.getSource().getSender(), StatsStore.Stat.KILLS);
-                      return 1;
-                    })
+                .executes(ctx -> {
+                  top(ctx.getSource().getSender(), StatsStore.Stat.KILLS);
+                  return 1;
+                })
                 .then(
                     Commands.argument("stat", StringArgumentType.word())
                         .suggests(
-                            RwfCommands.suggest(
-                                () ->
-                                    Arrays.stream(StatsStore.Stat.values())
-                                        .map(s -> s.name().toLowerCase(Locale.ROOT))
-                                        .toList()))
-                        .executes(
-                            ctx -> {
-                              var name = StringArgumentType.getString(ctx, "stat");
-                              var stat =
-                                  Arrays.stream(StatsStore.Stat.values())
-                                      .filter(s -> s.name().equalsIgnoreCase(name))
-                                      .findFirst();
-                              if (stat.isEmpty()) {
-                                Texts.error(ctx.getSource().getSender(), "No such statistic.");
-                              } else {
-                                top(ctx.getSource().getSender(), stat.orElseThrow());
-                              }
-                              return 1;
-                            })))
+                            RwfCommands.suggest(() ->
+                                Arrays.stream(StatsStore.Stat.values())
+                                    .map(s -> s.name().toLowerCase(Locale.ROOT))
+                                    .toList()))
+                        .executes(ctx -> {
+                          var name = StringArgumentType.getString(ctx, "stat");
+                          var stat =
+                              Arrays.stream(StatsStore.Stat.values())
+                                  .filter(s -> s.name().equalsIgnoreCase(name))
+                                  .findFirst();
+                          if (stat.isEmpty()) {
+                            Texts.error(ctx.getSource().getSender(), "No such statistic.");
+                          } else {
+                            top(ctx.getSource().getSender(), stat.orElseThrow());
+                          }
+                          return 1;
+                        })))
         .then(
             Commands.literal("history")
                 .requires(RwfCommands.permission(RwfPermissions.STATS))

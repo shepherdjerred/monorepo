@@ -66,12 +66,11 @@ public final class SurvivalActions {
     if (slot.isEmpty()) return false;
     var support =
         java.util.Arrays.stream(org.bukkit.block.BlockFace.values())
-            .filter(
-                face ->
-                    face.getModX() * face.getModX()
-                            + face.getModY() * face.getModY()
-                            + face.getModZ() * face.getModZ()
-                        == 1)
+            .filter(face ->
+                face.getModX() * face.getModX()
+                        + face.getModY() * face.getModY()
+                        + face.getModZ() * face.getModZ()
+                    == 1)
             .map(block::getRelative)
             .filter(relative -> relative.getType().isSolid())
             .findFirst();

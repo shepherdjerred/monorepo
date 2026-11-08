@@ -71,22 +71,21 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
     var host = flag(HOST_SETTINGS_FLAG_KEY, previous.hostSettings());
     var visits = flag(CANDIDATE_VISITS_FLAG_KEY, previous.candidateVisits());
     return CompletableFuture.allOf(flow, carry, feed, chat, spectate, bombs, stats, host, visits)
-        .thenApply(
-            ignored -> {
-              var resolved =
-                  new RwfFeatures(
-                      flow.join(),
-                      carry.join(),
-                      feed.join(),
-                      chat.join(),
-                      spectate.join(),
-                      bombs.join(),
-                      stats.join(),
-                      host.join(),
-                      visits.join());
-              lastKnown = resolved;
-              return resolved;
-            });
+        .thenApply(ignored -> {
+          var resolved =
+              new RwfFeatures(
+                  flow.join(),
+                  carry.join(),
+                  feed.join(),
+                  chat.join(),
+                  spectate.join(),
+                  bombs.join(),
+                  stats.join(),
+                  host.join(),
+                  visits.join());
+          lastKnown = resolved;
+          return resolved;
+        });
   }
 
   private CompletableFuture<Boolean> flag(String key, boolean fallback) {
@@ -109,29 +108,27 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(
-            response -> {
-              if (response.statusCode() == 429
-                  || (response.statusCode() >= 500 && response.statusCode() < 600))
-                throw new FlagProviderUnavailableException(
-                    new java.io.IOException(String.format("Flipt HTTP %d", response.statusCode())));
-              return FliptRwfGate.parse(response);
-            })
-        .exceptionally(
-            failure -> {
-              var cause = FlagProviderUnavailableException.unwrap(failure);
-              if ("prod".equals(environment)
-                  && (cause instanceof java.io.IOException
-                      || cause instanceof FlagProviderUnavailableException)) {
-                System.getLogger(FliptRwfFeatures.class.getName())
-                    .log(
-                        System.Logger.Level.WARNING,
-                        "Flag provider unavailable; retaining the last value or declared default for {0}",
-                        key);
-                return fallback;
-              }
-              throw new java.util.concurrent.CompletionException(cause);
-            });
+        .thenApply(response -> {
+          if (response.statusCode() == 429
+              || (response.statusCode() >= 500 && response.statusCode() < 600))
+            throw new FlagProviderUnavailableException(
+                new java.io.IOException(String.format("Flipt HTTP %d", response.statusCode())));
+          return FliptRwfGate.parse(response);
+        })
+        .exceptionally(failure -> {
+          var cause = FlagProviderUnavailableException.unwrap(failure);
+          if ("prod".equals(environment)
+              && (cause instanceof java.io.IOException
+                  || cause instanceof FlagProviderUnavailableException)) {
+            System.getLogger(FliptRwfFeatures.class.getName())
+                .log(
+                    System.Logger.Level.WARNING,
+                    "Flag provider unavailable; retaining the last value or declared default for {0}",
+                    key);
+            return fallback;
+          }
+          throw new java.util.concurrent.CompletionException(cause);
+        });
   }
 
   @Override

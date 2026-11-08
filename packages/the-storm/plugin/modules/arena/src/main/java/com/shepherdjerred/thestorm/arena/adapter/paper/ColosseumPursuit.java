@@ -45,9 +45,8 @@ final class ColosseumPursuit {
           var entrance =
               world.definition().playerSpawns().stream()
                   .min(
-                      Comparator.comparingDouble(
-                          p ->
-                              Places.location(world.world(), p).distanceSquared(Places.at(target))))
+                      Comparator.comparingDouble(p ->
+                          Places.location(world.world(), p).distanceSquared(Places.at(target))))
                   .orElseThrow();
           ArenaPlacement.relocate(
               enemy, world.definition(), Places.location(world.world(), entrance));

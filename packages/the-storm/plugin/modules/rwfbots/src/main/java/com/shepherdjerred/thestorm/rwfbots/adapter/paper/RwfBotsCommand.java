@@ -88,27 +88,23 @@ public final class RwfBotsCommand {
                         .executes(ctx -> load(ctx.getSource().getSender()))
                         .then(
                             Commands.literal("reset")
-                                .executes(
-                                    ctx ->
-                                        load(
-                                            ctx.getSource().getSender(),
-                                            ticker.drainLoadTelemetry()))))
+                                .executes(ctx ->
+                                    load(
+                                        ctx.getSource().getSender(), ticker.drainLoadTelemetry()))))
                 .then(Commands.literal("slots").executes(ctx -> slots(ctx.getSource().getSender())))
                 .then(
                     Commands.literal("learning")
                         .executes(ctx -> learning(ctx.getSource().getSender())))
                 .then(
                     Commands.argument("bot", StringArgumentType.word())
-                        .suggests(
-                            (ctx, builder) -> {
-                              roster.live().forEach(bot -> builder.suggest(bot.name()));
-                              return builder.buildFuture();
-                            })
-                        .executes(
-                            ctx ->
-                                bot(
-                                    ctx.getSource().getSender(),
-                                    StringArgumentType.getString(ctx, "bot")))))
+                        .suggests((ctx, builder) -> {
+                          roster.live().forEach(bot -> builder.suggest(bot.name()));
+                          return builder.buildFuture();
+                        })
+                        .executes(ctx ->
+                            bot(
+                                ctx.getSource().getSender(),
+                                StringArgumentType.getString(ctx, "bot")))))
         .build();
   }
 
@@ -211,22 +207,21 @@ public final class RwfBotsCommand {
             metrics.modelRejected()));
     metrics
         .inference()
-        .ifPresent(
-            inference ->
-                info(
-                    to,
-                    String.format(
-                        Locale.ROOT,
-                        "inference submitted %d; skipped %d; rejected %d; deadline met %d; missed %d; expired %d; context drops %d; resets %d; max batch %d",
-                        inference.submitted(),
-                        inference.skipped(),
-                        inference.rejected(),
-                        inference.deadlineMet(),
-                        inference.deadlineMissed(),
-                        inference.expired(),
-                        inference.contextDrops(),
-                        inference.resets(),
-                        inference.maximumBatch())));
+        .ifPresent(inference ->
+            info(
+                to,
+                String.format(
+                    Locale.ROOT,
+                    "inference submitted %d; skipped %d; rejected %d; deadline met %d; missed %d; expired %d; context drops %d; resets %d; max batch %d",
+                    inference.submitted(),
+                    inference.skipped(),
+                    inference.rejected(),
+                    inference.deadlineMet(),
+                    inference.deadlineMissed(),
+                    inference.expired(),
+                    inference.contextDrops(),
+                    inference.resets(),
+                    inference.maximumBatch())));
     return OK;
   }
 
@@ -243,39 +238,37 @@ public final class RwfBotsCommand {
     }
     plans.entrySet().stream()
         .sorted(Map.Entry.comparingByKey((a, b) -> a.value().compareTo(b.value())))
-        .forEach(
-            entry -> {
-              var plan = entry.getValue();
-              info(
-                  sender,
-                  String.format(
-                      Locale.ROOT,
-                      "%s: %s, objective %s, %d lanes, push %.2f, dealt at tick %d",
-                      entry.getKey().value(),
-                      plan.strategy().map(Object::toString).orElse("-"),
-                      plan.objective().map(Object::toString).orElse("none"),
-                      plan.lanes().size(),
-                      plan.push(),
-                      plan.dealtTick()));
-              plan.assignment().entrySet().stream()
-                  .sorted(Map.Entry.comparingByValue())
-                  .forEach(
-                      held -> {
-                        var slot = plan.slot(held.getValue()).orElseThrow();
-                        info(
-                            sender,
-                            String.format(
-                                Locale.ROOT,
-                                "  %s holds %s (%s) at %.0f %.0f %.0f, lane %d",
-                                names.getOrDefault(held.getKey(), held.getKey().toString()),
-                                slot.key(),
-                                slot.role().name().toLowerCase(Locale.ROOT),
-                                slot.pos().x(),
-                                slot.pos().y(),
-                                slot.pos().z(),
-                                slot.lane()));
-                      });
-            });
+        .forEach(entry -> {
+          var plan = entry.getValue();
+          info(
+              sender,
+              String.format(
+                  Locale.ROOT,
+                  "%s: %s, objective %s, %d lanes, push %.2f, dealt at tick %d",
+                  entry.getKey().value(),
+                  plan.strategy().map(Object::toString).orElse("-"),
+                  plan.objective().map(Object::toString).orElse("none"),
+                  plan.lanes().size(),
+                  plan.push(),
+                  plan.dealtTick()));
+          plan.assignment().entrySet().stream()
+              .sorted(Map.Entry.comparingByValue())
+              .forEach(held -> {
+                var slot = plan.slot(held.getValue()).orElseThrow();
+                info(
+                    sender,
+                    String.format(
+                        Locale.ROOT,
+                        "  %s holds %s (%s) at %.0f %.0f %.0f, lane %d",
+                        names.getOrDefault(held.getKey(), held.getKey().toString()),
+                        slot.key(),
+                        slot.role().name().toLowerCase(Locale.ROOT),
+                        slot.pos().x(),
+                        slot.pos().y(),
+                        slot.pos().z(),
+                        slot.lane()));
+              });
+        });
     if (sender instanceof Player player) {
       overlay.show(player);
       info(sender, "drawing slots (rings) and routes (trails) for 10 s");
@@ -311,19 +304,18 @@ public final class RwfBotsCommand {
     info(
         to,
         thought
-            .map(
-                t ->
-                    String.format(
-                        Locale.ROOT,
-                        "decision from tick %d (life %d): %s, target %s, %d waypoints, bomb %s,"
-                            + " sees %d",
-                        t.decision().snapshotTick(),
-                        t.lifeEpoch(),
-                        t.decision().option(),
-                        t.decision().target().map(Object::toString).orElse("-"),
-                        t.decision().waypoints().size(),
-                        t.decision().bomb().map(Object::toString).orElse("-"),
-                        t.percept().visible().size()))
+            .map(t ->
+                String.format(
+                    Locale.ROOT,
+                    "decision from tick %d (life %d): %s, target %s, %d waypoints, bomb %s,"
+                        + " sees %d",
+                    t.decision().snapshotTick(),
+                    t.lifeEpoch(),
+                    t.decision().option(),
+                    t.decision().target().map(Object::toString).orElse("-"),
+                    t.decision().waypoints().size(),
+                    t.decision().bomb().map(Object::toString).orElse("-"),
+                    t.percept().visible().size()))
             .orElse("no thought on the board yet"));
     info(
         to,

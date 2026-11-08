@@ -197,12 +197,11 @@ public final class BatchedInference implements AutoCloseable {
             .toList();
     try {
       running =
-          compute.submit(
-              () -> {
-                var began = clock.getAsLong();
-                var output = actor.forward(input);
-                return new Completion(pending, output, clock.getAsLong() - began);
-              });
+          compute.submit(() -> {
+            var began = clock.getAsLong();
+            var output = actor.forward(input);
+            return new Completion(pending, output, clock.getAsLong() - began);
+          });
       submitted += rows;
       maximumBatch = Math.max(maximumBatch, rows);
     } catch (RejectedExecutionException failure) {
@@ -238,13 +237,12 @@ public final class BatchedInference implements AutoCloseable {
             ? Optional.<ActionTicket>empty()
             : slot.action;
     var valid =
-        action.filter(
-            ticket ->
-                ticket.applies(
-                    current.identity().match(),
-                    current.identity().body(),
-                    current.identity().life(),
-                    current.tick()));
+        action.filter(ticket ->
+            ticket.applies(
+                current.identity().match(),
+                current.identity().body(),
+                current.identity().life(),
+                current.tick()));
     if (valid.isPresent()) hits++;
     else misses++;
     return valid;

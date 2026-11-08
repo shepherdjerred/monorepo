@@ -52,26 +52,24 @@ public final class JooqShopStore implements ShopStore {
 
   @Override
   public CompletableFuture<Long> saveShop(SignShop shop) {
-    return database.write(
-        dsl -> {
-          insertShop(dsl, shop);
-          return shop.id();
-        });
+    return database.write(dsl -> {
+      insertShop(dsl, shop);
+      return shop.id();
+    });
   }
 
   @Override
   public CompletableFuture<Long> indexShop(SignShop shop) {
-    return database.write(
-        dsl -> {
-          var record = shopRecord(dsl, shop);
-          dsl.insertInto(SHOPS_SHOP)
-              .set(record)
-              .onConflict(SHOPS_SHOP.ID)
-              .doUpdate()
-              .set(record)
-              .execute();
-          return shop.id();
-        });
+    return database.write(dsl -> {
+      var record = shopRecord(dsl, shop);
+      dsl.insertInto(SHOPS_SHOP)
+          .set(record)
+          .onConflict(SHOPS_SHOP.ID)
+          .doUpdate()
+          .set(record)
+          .execute();
+      return shop.id();
+    });
   }
 
   /**
@@ -90,52 +88,50 @@ public final class JooqShopStore implements ShopStore {
     if (shop.item().isEmpty()) {
       throw new IllegalArgumentException("historical shop item must be identified");
     }
-    return database.write(
-        dsl -> {
-          var sign = shop.sign();
-          var receipt =
-              dsl.fetchOne(
-                  "select world, sign_x, sign_y, sign_z from shops_historical_import where source_id = ?",
-                  sourceId);
-          if (receipt != null) {
-            if (!sign.world().toString().equals(receipt.get("world", String.class))
-                || sign.x() != receipt.get("sign_x", Integer.class)
-                || sign.y() != receipt.get("sign_y", Integer.class)
-                || sign.z() != receipt.get("sign_z", Integer.class)) {
-              throw new IllegalStateException(
-                  "historical shop identity changed position: " + sourceId);
-            }
-            return HistoricalImport.ALREADY_IMPORTED;
-          }
-          var world = sign.world().toString();
-          if (dsl.fetchExists(
-                  dsl.selectOne()
-                      .from(SHOPS_SHOP)
-                      .where(
-                          SHOPS_SHOP.WORLD.eq(world),
-                          SHOPS_SHOP.SIGN_X.eq(sign.x()),
-                          SHOPS_SHOP.SIGN_Y.eq(sign.y()),
-                          SHOPS_SHOP.SIGN_Z.eq(sign.z())))
-              || dsl.fetchOne(
-                      "select 1 from shops_historical_import where world = ? and sign_x = ? and sign_y = ? and sign_z = ?",
-                      world,
-                      sign.x(),
-                      sign.y(),
-                      sign.z())
-                  != null) {
-            return HistoricalImport.CONFLICT;
-          }
-          insertShop(dsl, shop);
-          dsl.execute(
-              "insert into shops_historical_import (source_id, world, sign_x, sign_y, sign_z, shop_id, state) values (?, ?, ?, ?, ?, ?, 'in_doubt')",
-              sourceId,
-              world,
-              sign.x(),
-              sign.y(),
-              sign.z(),
-              shop.id());
-          return HistoricalImport.IMPORTED;
-        });
+    return database.write(dsl -> {
+      var sign = shop.sign();
+      var receipt =
+          dsl.fetchOne(
+              "select world, sign_x, sign_y, sign_z from shops_historical_import where source_id = ?",
+              sourceId);
+      if (receipt != null) {
+        if (!sign.world().toString().equals(receipt.get("world", String.class))
+            || sign.x() != receipt.get("sign_x", Integer.class)
+            || sign.y() != receipt.get("sign_y", Integer.class)
+            || sign.z() != receipt.get("sign_z", Integer.class)) {
+          throw new IllegalStateException("historical shop identity changed position: " + sourceId);
+        }
+        return HistoricalImport.ALREADY_IMPORTED;
+      }
+      var world = sign.world().toString();
+      if (dsl.fetchExists(
+              dsl.selectOne()
+                  .from(SHOPS_SHOP)
+                  .where(
+                      SHOPS_SHOP.WORLD.eq(world),
+                      SHOPS_SHOP.SIGN_X.eq(sign.x()),
+                      SHOPS_SHOP.SIGN_Y.eq(sign.y()),
+                      SHOPS_SHOP.SIGN_Z.eq(sign.z())))
+          || dsl.fetchOne(
+                  "select 1 from shops_historical_import where world = ? and sign_x = ? and sign_y = ? and sign_z = ?",
+                  world,
+                  sign.x(),
+                  sign.y(),
+                  sign.z())
+              != null) {
+        return HistoricalImport.CONFLICT;
+      }
+      insertShop(dsl, shop);
+      dsl.execute(
+          "insert into shops_historical_import (source_id, world, sign_x, sign_y, sign_z, shop_id, state) values (?, ?, ?, ?, ?, ?, 'in_doubt')",
+          sourceId,
+          world,
+          sign.x(),
+          sign.y(),
+          sign.z(),
+          shop.id());
+      return HistoricalImport.IMPORTED;
+    });
   }
 
   private static boolean historicalAuthority(ShopOwner owner) {
@@ -151,51 +147,47 @@ public final class JooqShopStore implements ShopStore {
 
   /** An interrupted world write is never repeated automatically. */
   public CompletableFuture<List<Long>> pendingHistoricalShops() {
-    return database.read(
-        dsl ->
-            dsl.fetch("select shop_id from shops_historical_import where state = 'in_doubt'")
-                .map(row -> row.get("shop_id", Long.class)));
+    return database.read(dsl ->
+        dsl.fetch("select shop_id from shops_historical_import where state = 'in_doubt'")
+            .map(row -> row.get("shop_id", Long.class)));
   }
 
   /** Completed receipts retain the source-to-shop link even after a shop is removed. */
   public CompletableFuture<Map<String, Long>> completedHistoricalShops() {
-    return database.read(
-        dsl ->
-            dsl
-                .fetch(
-                    "select source_id, shop_id from shops_historical_import where state = 'complete'")
-                .stream()
-                .collect(
-                    toUnmodifiableMap(
-                        row -> row.get("source_id", String.class),
-                        row -> row.get("shop_id", Long.class))));
+    return database.read(dsl ->
+        dsl
+            .fetch(
+                "select source_id, shop_id from shops_historical_import where state = 'complete'")
+            .stream()
+            .collect(
+                toUnmodifiableMap(
+                    row -> row.get("source_id", String.class),
+                    row -> row.get("shop_id", Long.class))));
   }
 
   public CompletableFuture<Integer> completeHistorical(String sourceId, long shopId) {
-    return database.write(
-        dsl ->
-            dsl.execute(
-                "update shops_historical_import set state = 'complete' where source_id = ? and shop_id = ? and state = 'in_doubt'",
-                sourceId,
-                shopId));
+    return database.write(dsl ->
+        dsl.execute(
+            "update shops_historical_import set state = 'complete' where source_id = ? and shop_id = ? and state = 'in_doubt'",
+            sourceId,
+            shopId));
   }
 
   /** Cancels a pending import only when the caller has not changed the world. */
   public CompletableFuture<Boolean> cancelHistorical(String sourceId, long shopId) {
-    return database.write(
-        dsl -> {
-          var removed =
-              dsl.execute(
-                  "delete from shops_historical_import where source_id = ? and shop_id = ? and state = 'in_doubt'",
-                  sourceId,
-                  shopId);
-          if (removed == 0) return false;
-          if (dsl.deleteFrom(SHOPS_SHOP).where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId))).execute()
-              != 1) {
-            throw new IllegalStateException("pending historical shop disappeared: " + shopId);
-          }
-          return true;
-        });
+    return database.write(dsl -> {
+      var removed =
+          dsl.execute(
+              "delete from shops_historical_import where source_id = ? and shop_id = ? and state = 'in_doubt'",
+              sourceId,
+              shopId);
+      if (removed == 0) return false;
+      if (dsl.deleteFrom(SHOPS_SHOP).where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId))).execute()
+          != 1) {
+        throw new IllegalStateException("pending historical shop disappeared: " + shopId);
+      }
+      return true;
+    });
   }
 
   private static void insertShop(org.jooq.DSLContext dsl, SignShop shop) {
@@ -210,12 +202,11 @@ public final class JooqShopStore implements ShopStore {
     record.setSignY(shop.sign().y());
     record.setSignZ(shop.sign().z());
     shop.container()
-        .ifPresent(
-            container -> {
-              record.setContainerX(container.x());
-              record.setContainerY(container.y());
-              record.setContainerZ(container.z());
-            });
+        .ifPresent(container -> {
+          record.setContainerX(container.x());
+          record.setContainerY(container.y());
+          record.setContainerZ(container.z());
+        });
     switch (shop.owner()) {
       case ShopOwner.Player(var id, var name) -> {
         record.setOwnerKind(PLAYER);
@@ -243,68 +234,64 @@ public final class JooqShopStore implements ShopStore {
 
   @Override
   public CompletableFuture<Integer> setItem(long shopId, ItemFingerprint item) {
-    return database.write(
-        dsl ->
-            dsl.update(SHOPS_SHOP)
-                .set(SHOPS_SHOP.ITEM_MATERIAL, item.material())
-                .set(SHOPS_SHOP.ITEM_TEMPLATE, item.template())
-                .set(SHOPS_SHOP.ITEM_SPECIAL, item.special() ? 1 : 0)
-                .where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId)))
-                .execute());
+    return database.write(dsl ->
+        dsl.update(SHOPS_SHOP)
+            .set(SHOPS_SHOP.ITEM_MATERIAL, item.material())
+            .set(SHOPS_SHOP.ITEM_TEMPLATE, item.template())
+            .set(SHOPS_SHOP.ITEM_SPECIAL, item.special() ? 1 : 0)
+            .where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId)))
+            .execute());
   }
 
   @Override
   public CompletableFuture<Integer> deleteShop(long shopId) {
-    return database.write(
-        dsl ->
-            dsl.deleteFrom(SHOPS_SHOP).where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId))).execute());
+    return database.write(dsl ->
+        dsl.deleteFrom(SHOPS_SHOP).where(SHOPS_SHOP.ID.eq(Math.toIntExact(shopId))).execute());
   }
 
   @Override
   public CompletableFuture<Long> recordTrade(TradeRecord trade, boolean ownerNotified) {
-    return database.write(
-        dsl -> {
-          var record = dsl.newRecord(SHOPS_TRADE);
-          switch (trade.site()) {
-            case TradeSite.Chest(var shopId, var owner) -> {
-              record.setSource(CHEST);
-              record.setShopId(Math.toIntExact(shopId));
-              record.setOwnerId(owner.toString());
-            }
-            case TradeSite.Admin(var shopId) -> {
-              record.setSource(ADMIN);
-              record.setShopId(Math.toIntExact(shopId));
-            }
-            case TradeSite.Catalog(var catalogId) -> {
-              record.setSource(CATALOG);
-              record.setCatalogId(catalogId);
-            }
-          }
-          record.setCustomerId(trade.customer().toString());
-          record.setCustomerName(trade.customerName());
-          record.setDirection(trade.direction().id());
-          record.setItemMaterial(trade.material());
-          record.setQuantity(trade.quantity());
-          record.setPrice(trade.price());
-          record.setAt(trade.at().toEpochMilli());
-          record.setOwnerNotified(ownerNotified ? 1 : 0);
-          record.store();
-          return record.getId().longValue();
-        });
+    return database.write(dsl -> {
+      var record = dsl.newRecord(SHOPS_TRADE);
+      switch (trade.site()) {
+        case TradeSite.Chest(var shopId, var owner) -> {
+          record.setSource(CHEST);
+          record.setShopId(Math.toIntExact(shopId));
+          record.setOwnerId(owner.toString());
+        }
+        case TradeSite.Admin(var shopId) -> {
+          record.setSource(ADMIN);
+          record.setShopId(Math.toIntExact(shopId));
+        }
+        case TradeSite.Catalog(var catalogId) -> {
+          record.setSource(CATALOG);
+          record.setCatalogId(catalogId);
+        }
+      }
+      record.setCustomerId(trade.customer().toString());
+      record.setCustomerName(trade.customerName());
+      record.setDirection(trade.direction().id());
+      record.setItemMaterial(trade.material());
+      record.setQuantity(trade.quantity());
+      record.setPrice(trade.price());
+      record.setAt(trade.at().toEpochMilli());
+      record.setOwnerNotified(ownerNotified ? 1 : 0);
+      record.store();
+      return record.getId().longValue();
+    });
   }
 
   @Override
   public CompletableFuture<List<PendingTrade>> listUnnotified(UUID owner) {
     var ownerId = owner.toString();
-    return database.read(
-        dsl ->
-            dsl.selectFrom(SHOPS_TRADE)
-                .where(
-                    SHOPS_TRADE.SOURCE.eq(CHEST),
-                    SHOPS_TRADE.OWNER_ID.eq(ownerId),
-                    SHOPS_TRADE.OWNER_NOTIFIED.eq(0))
-                .orderBy(SHOPS_TRADE.ID)
-                .fetch(row -> new PendingTrade(row.getId().longValue(), toTrade(row))));
+    return database.read(dsl ->
+        dsl.selectFrom(SHOPS_TRADE)
+            .where(
+                SHOPS_TRADE.SOURCE.eq(CHEST),
+                SHOPS_TRADE.OWNER_ID.eq(ownerId),
+                SHOPS_TRADE.OWNER_NOTIFIED.eq(0))
+            .orderBy(SHOPS_TRADE.ID)
+            .fetch(row -> new PendingTrade(row.getId().longValue(), toTrade(row))));
   }
 
   @Override
@@ -313,72 +300,64 @@ public final class JooqShopStore implements ShopStore {
       return CompletableFuture.completedFuture(0);
     }
     var storedIds = ids.stream().map(Math::toIntExact).toList();
-    return database.write(
-        dsl ->
-            dsl.update(SHOPS_TRADE)
-                .set(SHOPS_TRADE.OWNER_NOTIFIED, 1)
-                .where(
-                    SHOPS_TRADE.SOURCE.eq(CHEST),
-                    SHOPS_TRADE.OWNER_ID.eq(owner.toString()),
-                    SHOPS_TRADE.OWNER_NOTIFIED.eq(0),
-                    SHOPS_TRADE.ID.in(storedIds))
-                .execute());
+    return database.write(dsl ->
+        dsl.update(SHOPS_TRADE)
+            .set(SHOPS_TRADE.OWNER_NOTIFIED, 1)
+            .where(
+                SHOPS_TRADE.SOURCE.eq(CHEST),
+                SHOPS_TRADE.OWNER_ID.eq(owner.toString()),
+                SHOPS_TRADE.OWNER_NOTIFIED.eq(0),
+                SHOPS_TRADE.ID.in(storedIds))
+            .execute());
   }
 
   @Override
   public CompletableFuture<Map<UsageKey, Integer>> catalogUsageSince(UUID customer, Instant since) {
     var total = sum(SHOPS_TRADE.QUANTITY);
-    return database.read(
-        dsl ->
-            dsl.select(
-                    SHOPS_TRADE.CATALOG_ID, SHOPS_TRADE.ITEM_MATERIAL, SHOPS_TRADE.DIRECTION, total)
-                .from(SHOPS_TRADE)
-                .where(
-                    SHOPS_TRADE.CUSTOMER_ID.eq(customer.toString()),
-                    SHOPS_TRADE.SOURCE.eq(CATALOG),
-                    SHOPS_TRADE.AT.ge(since.toEpochMilli()))
-                .groupBy(SHOPS_TRADE.CATALOG_ID, SHOPS_TRADE.ITEM_MATERIAL, SHOPS_TRADE.DIRECTION)
-                .fetchMap(
-                    row ->
-                        new UsageKey(
-                            requireColumn(row.value1()),
-                            row.value2(),
-                            Direction.fromId(row.value3())),
-                    row -> requireColumn(row.value4()).intValueExact()));
+    return database.read(dsl ->
+        dsl.select(SHOPS_TRADE.CATALOG_ID, SHOPS_TRADE.ITEM_MATERIAL, SHOPS_TRADE.DIRECTION, total)
+            .from(SHOPS_TRADE)
+            .where(
+                SHOPS_TRADE.CUSTOMER_ID.eq(customer.toString()),
+                SHOPS_TRADE.SOURCE.eq(CATALOG),
+                SHOPS_TRADE.AT.ge(since.toEpochMilli()))
+            .groupBy(SHOPS_TRADE.CATALOG_ID, SHOPS_TRADE.ITEM_MATERIAL, SHOPS_TRADE.DIRECTION)
+            .fetchMap(
+                row ->
+                    new UsageKey(
+                        requireColumn(row.value1()), row.value2(), Direction.fromId(row.value3())),
+                row -> requireColumn(row.value4()).intValueExact()));
   }
 
   @Override
   public CompletableFuture<Long> lastShopId() {
     // AUTOINCREMENT keeps the highest id ever used, even after that shop is deleted.
-    return database.read(
-        dsl ->
-            dsl.resultQuery("select seq from sqlite_sequence where name = ?", "shops_shop")
-                .fetchOptional(0, Long.class)
-                .orElse(0L));
+    return database.read(dsl ->
+        dsl.resultQuery("select seq from sqlite_sequence where name = ?", "shops_shop")
+            .fetchOptional(0, Long.class)
+            .orElse(0L));
   }
 
   @Override
   public CompletableFuture<Long> recordRefundFailure(RefundFailure failure) {
-    return database.write(
-        dsl -> {
-          var record = dsl.newRecord(SHOPS_REFUND_FAILURE);
-          record.setPayerKind(kind(failure.payer()));
-          record.setPayerId(id(failure.payer()));
-          record.setPayeeKind(kind(failure.payee()));
-          record.setPayeeId(id(failure.payee()));
-          record.setAmount(failure.amount().amount());
-          record.setReason(failure.reason());
-          failure
-              .held()
-              .ifPresent(
-                  held -> {
-                    record.setHeldItem(held.item());
-                    record.setHeldQuantity(held.quantity());
-                  });
-          record.setAt(failure.at().toEpochMilli());
-          record.store();
-          return record.getId().longValue();
-        });
+    return database.write(dsl -> {
+      var record = dsl.newRecord(SHOPS_REFUND_FAILURE);
+      record.setPayerKind(kind(failure.payer()));
+      record.setPayerId(id(failure.payer()));
+      record.setPayeeKind(kind(failure.payee()));
+      record.setPayeeId(id(failure.payee()));
+      record.setAmount(failure.amount().amount());
+      record.setReason(failure.reason());
+      failure
+          .held()
+          .ifPresent(held -> {
+            record.setHeldItem(held.item());
+            record.setHeldQuantity(held.quantity());
+          });
+      record.setAt(failure.at().toEpochMilli());
+      record.store();
+      return record.getId().longValue();
+    });
   }
 
   private static void setItem(ShopsShopRecord record, ItemFingerprint item) {
@@ -392,13 +371,12 @@ public final class JooqShopStore implements ShopStore {
     var sign = new BlockPos(world, record.getSignX(), record.getSignY(), record.getSignZ());
     var container =
         Optional.ofNullable(nullable(record.getContainerX()))
-            .map(
-                x ->
-                    new BlockPos(
-                        world,
-                        x,
-                        requireColumn(record.getContainerY()),
-                        requireColumn(record.getContainerZ())));
+            .map(x ->
+                new BlockPos(
+                    world,
+                    x,
+                    requireColumn(record.getContainerY()),
+                    requireColumn(record.getContainerZ())));
     ShopOwner owner =
         switch (record.getOwnerKind()) {
           case PLAYER ->
@@ -416,12 +394,11 @@ public final class JooqShopStore implements ShopStore {
             Optional.ofNullable(nullable(record.getSellPrice())).map(Price::of));
     var item =
         Optional.ofNullable(nullable(record.getItemMaterial()))
-            .map(
-                material ->
-                    new ItemFingerprint(
-                        material,
-                        requireColumn(record.getItemTemplate()),
-                        requireColumn(record.getItemSpecial()) == 1));
+            .map(material ->
+                new ItemFingerprint(
+                    material,
+                    requireColumn(record.getItemTemplate()),
+                    requireColumn(record.getItemSpecial()) == 1));
     return new SignShop(
         record.getId(),
         sign,

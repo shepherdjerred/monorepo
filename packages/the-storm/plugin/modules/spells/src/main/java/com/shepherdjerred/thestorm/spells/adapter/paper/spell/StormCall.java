@@ -51,11 +51,10 @@ final class StormCall implements Spell {
                 tools.targets().around(caster, where, settings.radius()).stream()
                     .filter(caster::hasLineOfSight)
                     .toList());
-    return Result.ok(
-        () -> {
-          flash(where);
-          strike(caster, victims.allowed());
-        });
+    return Result.ok(() -> {
+      flash(where);
+      strike(caster, victims.allowed());
+    });
   }
 
   private Optional<Location> aim(Player caster) {
@@ -86,12 +85,11 @@ final class StormCall implements Spell {
         Harm.Blow.none()
             .withDamage(settings.damage())
             .withFire(Magic.ticks(settings.fireSeconds()))
-            .then(
-                victim -> {
-                  if (victim instanceof Creeper creeper) {
-                    creeper.setPowered(true);
-                  }
-                });
+            .then(victim -> {
+              if (victim instanceof Creeper creeper) {
+                creeper.setPowered(true);
+              }
+            });
     victims.forEach(victim -> tools.harm().strike(caster, victim, bolt));
   }
 }

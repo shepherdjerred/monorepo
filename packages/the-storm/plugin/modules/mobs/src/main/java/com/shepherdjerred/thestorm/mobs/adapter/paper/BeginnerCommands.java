@@ -14,28 +14,27 @@ final class BeginnerCommands {
   static void register(ModuleContext context, BeginnerStatus beginner, Commands commands) {
     commands.register(
         Commands.literal("beginnersluck")
-            .executes(
-                command -> {
-                  var sender = command.getSource().getSender();
-                  if (!(sender instanceof Player player)) {
-                    sender.sendMessage("Only players have beginner's luck.");
-                    return 0;
-                  }
-                  var _ =
-                      beginner
-                          .status(player.getUniqueId())
-                          .whenCompleteAsync(
-                              (status, failure) -> {
-                                if (!player.isOnline()) return;
-                                if (failure != null) {
-                                  context.logger().error("Could not read beginner status", failure);
-                                  player.sendMessage(
-                                      "Your beginner protection is still loading. Try again shortly.");
-                                } else player.sendMessage(describe(status));
-                              },
-                              context.scheduler().mainThread());
-                  return 1;
-                })
+            .executes(command -> {
+              var sender = command.getSource().getSender();
+              if (!(sender instanceof Player player)) {
+                sender.sendMessage("Only players have beginner's luck.");
+                return 0;
+              }
+              var _ =
+                  beginner
+                      .status(player.getUniqueId())
+                      .whenCompleteAsync(
+                          (status, failure) -> {
+                            if (!player.isOnline()) return;
+                            if (failure != null) {
+                              context.logger().error("Could not read beginner status", failure);
+                              player.sendMessage(
+                                  "Your beginner protection is still loading. Try again shortly.");
+                            } else player.sendMessage(describe(status));
+                          },
+                          context.scheduler().mainThread());
+              return 1;
+            })
             .build(),
         "Show your beginner protection and active playtime");
   }

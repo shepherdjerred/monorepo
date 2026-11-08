@@ -11,11 +11,10 @@ public final class Background {
   /** Logs {@code future}'s failure, if it fails, as "Could not {@code what}". */
   public static void logFailure(CompletableFuture<?> future, Logger logger, String what) {
     var _ =
-        future.whenComplete(
-            (value, error) -> {
-              if (error != null) {
-                logger.error("Could not {}", what, error);
-              }
-            });
+        future.whenComplete((value, error) -> {
+          if (error != null) {
+            logger.error("Could not {}", what, error);
+          }
+        });
   }
 }

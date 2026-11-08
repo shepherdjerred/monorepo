@@ -94,14 +94,13 @@ final class MatchLedger {
   /** A living fighter is at {@code at}: the distance from where they last stood is added. */
   void walked(CombatantId id, Vec3 at) {
     var line = line(id);
-    line.last.ifPresent(
-        last -> {
-          var step = last.distanceTo(at);
-          // A teleport (the Time Machine, the spawn) is not a walk.
-          if (step < 10) {
-            line.distance += step;
-          }
-        });
+    line.last.ifPresent(last -> {
+      var step = last.distanceTo(at);
+      // A teleport (the Time Machine, the spawn) is not a walk.
+      if (step < 10) {
+        line.distance += step;
+      }
+    });
     line.last = Optional.of(at);
   }
 
@@ -250,11 +249,10 @@ final class MatchLedger {
           outcome
               .filter(o -> !(o instanceof Outcome.Stopped))
               .filter(o -> member.leftAt().isEmpty() || member.diedAt().isPresent())
-              .map(
-                  o ->
-                      o.winner().filter(member::onTeam).isPresent()
-                          ? MatchStats.Result.WIN
-                          : MatchStats.Result.LOSS)
+              .map(o ->
+                  o.winner().filter(member::onTeam).isPresent()
+                      ? MatchStats.Result.WIN
+                      : MatchStats.Result.LOSS)
               .orElse(MatchStats.Result.NONE);
       var gone = member.diedAt().or(member::leftAt).orElse(endedAt);
       var alive = gone.isBefore(liveAt) ? Duration.ZERO : Duration.between(liveAt, gone);

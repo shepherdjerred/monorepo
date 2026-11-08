@@ -79,12 +79,11 @@ public final class SpanFinder {
     }
     var extend = view.facing().orElseThrow().opposite();
     return bridgeBase(grid, sign, config)
-        .flatMap(
-            base -> {
-              var up = sign.distanceAlong(base, Direction.UP) > 0 ? Direction.UP : Direction.DOWN;
-              var layout = new Layout(extend, up, up, extend.clockwise());
-              return find(new Search(grid, sign, layout, config));
-            });
+        .flatMap(base -> {
+          var up = sign.distanceAlong(base, Direction.UP) > 0 ? Direction.UP : Direction.DOWN;
+          var layout = new Layout(extend, up, up, extend.clockwise());
+          return find(new Search(grid, sign, layout, config));
+        });
   }
 
   /** The door a {@code [Door Up]} or {@code [Door Down]} sign at {@code sign} controls. */
@@ -97,14 +96,10 @@ public final class SpanFinder {
     var across = view.facing().orElseThrow().clockwise();
     var extend = doorDirection(mechanism);
     return doorBase(grid, sign, mechanism, config)
-        .flatMap(
-            base ->
-                find(
-                    new Search(
-                        grid,
-                        sign,
-                        new Layout(extend, extend, extend.opposite(), across),
-                        config)));
+        .flatMap(base ->
+            find(
+                new Search(
+                    grid, sign, new Layout(extend, extend, extend.opposite(), across), config)));
   }
 
   private static Direction doorDirection(Mechanism mechanism) {

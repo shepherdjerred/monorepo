@@ -53,24 +53,21 @@ public final class IdentityCommands implements Listener {
     permissions();
     commands.register(
         literal("nick")
-            .requires(
-                source ->
-                    identities.ready()
-                        && PlayerVisibility.restored()
-                        && source.getSender() instanceof Player
-                        && source.getSender().hasPermission("thestorm.essentials.nick"))
+            .requires(source ->
+                identities.ready()
+                    && PlayerVisibility.restored()
+                    && source.getSender() instanceof Player
+                    && source.getSender().hasPermission("thestorm.essentials.nick"))
             .then(
                 argument("arguments", greedyString())
-                    .executes(
-                        command -> {
-                          var player = (Player) command.getSource().getSender();
-                          gated(
-                              player,
-                              ManagedGameplay.IDENTITY,
-                              () ->
-                                  nickname(player, command.getArgument("arguments", String.class)));
-                          return 1;
-                        }))
+                    .executes(command -> {
+                      var player = (Player) command.getSource().getSender();
+                      gated(
+                          player,
+                          ManagedGameplay.IDENTITY,
+                          () -> nickname(player, command.getArgument("arguments", String.class)));
+                      return 1;
+                    }))
             .build(),
         "Set your plain-text nickname: /nick <name|off>");
     registerToggle(commands, "msgtoggle", Identity::toggleMessages, ManagedGameplay.IDENTITY);
@@ -78,21 +75,19 @@ public final class IdentityCommands implements Listener {
     registerToggle(commands, "socialspy", Identity::toggleSpy, ManagedGameplay.STAFF);
     commands.register(
         literal("realname")
-            .requires(
-                source ->
-                    identities.ready()
-                        && PlayerVisibility.restored()
-                        && source.getSender() instanceof Player
-                        && source.getSender().hasPermission("thestorm.essentials.realname"))
+            .requires(source ->
+                identities.ready()
+                    && PlayerVisibility.restored()
+                    && source.getSender() instanceof Player
+                    && source.getSender().hasPermission("thestorm.essentials.realname"))
             .then(
                 argument("nickname", greedyString())
-                    .executes(
-                        command -> {
-                          var sender = (Player) command.getSource().getSender();
-                          var name = command.getArgument("nickname", String.class);
-                          gated(sender, ManagedGameplay.IDENTITY, () -> realName(sender, name));
-                          return 1;
-                        }))
+                    .executes(command -> {
+                      var sender = (Player) command.getSource().getSender();
+                      var name = command.getArgument("nickname", String.class);
+                      gated(sender, ManagedGameplay.IDENTITY, () -> realName(sender, name));
+                      return 1;
+                    }))
             .build(),
         "Find the real username behind a nickname");
   }
@@ -130,17 +125,15 @@ public final class IdentityCommands implements Listener {
     var permission = "thestorm.essentials." + name;
     commands.register(
         literal(name)
-            .requires(
-                source ->
-                    identities.ready()
-                        && source.getSender() instanceof Player
-                        && source.getSender().hasPermission(permission))
-            .executes(
-                command -> {
-                  var player = (Player) command.getSource().getSender();
-                  gated(player, gate, () -> update(player, player.getUniqueId(), toggle, name));
-                  return 1;
-                })
+            .requires(source ->
+                identities.ready()
+                    && source.getSender() instanceof Player
+                    && source.getSender().hasPermission(permission))
+            .executes(command -> {
+              var player = (Player) command.getSource().getSender();
+              gated(player, gate, () -> update(player, player.getUniqueId(), toggle, name));
+              return 1;
+            })
             .build(),
         "Toggle " + name);
   }
@@ -297,26 +290,25 @@ public final class IdentityCommands implements Listener {
     apply(player);
     var collision =
         identities.named(player.getName()).filter(id -> !id.equals(player.getUniqueId()));
-    collision.ifPresent(
-        id -> {
-          var _ =
-              identities
-                  .change(
-                      id,
-                      identity -> identity.named(Optional.empty()),
-                      new com.shepherdjerred.thestorm.chat.app.IdentityStore.Audit(
-                          new UUID(0, 0), context.time().instant(), "username-collision"))
-                  .whenCompleteAsync(
-                      (saved, failure) -> {
-                        if (failure != null) {
-                          context.logger().error("Could not remove a colliding nickname", failure);
-                          return;
-                        }
-                        var online = context.plugin().getServer().getPlayer(id);
-                        if (online != null) apply(online);
-                      },
-                      context.scheduler().mainThread());
-        });
+    collision.ifPresent(id -> {
+      var _ =
+          identities
+              .change(
+                  id,
+                  identity -> identity.named(Optional.empty()),
+                  new com.shepherdjerred.thestorm.chat.app.IdentityStore.Audit(
+                      new UUID(0, 0), context.time().instant(), "username-collision"))
+              .whenCompleteAsync(
+                  (saved, failure) -> {
+                    if (failure != null) {
+                      context.logger().error("Could not remove a colliding nickname", failure);
+                      return;
+                    }
+                    var online = context.plugin().getServer().getPlayer(id);
+                    if (online != null) apply(online);
+                  },
+                  context.scheduler().mainThread());
+    });
   }
 
   @EventHandler

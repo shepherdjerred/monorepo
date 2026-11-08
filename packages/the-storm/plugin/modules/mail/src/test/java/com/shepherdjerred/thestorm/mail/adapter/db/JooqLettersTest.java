@@ -66,11 +66,9 @@ final class JooqLettersTest {
       db.migrate("mail", getClass().getClassLoader());
       int count =
           await(
-              db.read(
-                  sql ->
-                      sql.fetchCount(
-                          com.shepherdjerred.thestorm.mail.adapter.db.generated.Tables
-                              .MAIL_LETTERS)));
+              db.read(sql ->
+                  sql.fetchCount(
+                      com.shepherdjerred.thestorm.mail.adapter.db.generated.Tables.MAIL_LETTERS)));
       assertThat(count).isEqualTo(2);
     }
   }

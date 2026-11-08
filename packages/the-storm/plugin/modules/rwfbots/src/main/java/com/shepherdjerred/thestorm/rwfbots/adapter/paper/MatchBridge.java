@@ -107,11 +107,10 @@ public final class MatchBridge implements Consumer<MatchNotification> {
           parts
               .nav()
               .confirm(chosen.mapId(), chosen.blocksSha256())
-              .ifPresent(
-                  problem ->
-                      parts
-                          .logger()
-                          .error("rwfbots: map {} runs humans-only: {}", chosen.mapId(), problem));
+              .ifPresent(problem ->
+                  parts
+                      .logger()
+                      .error("rwfbots: map {} runs humans-only: {}", chosen.mapId(), problem));
       case Transition.Change.Joined joined -> joined(joined.uuid(), after);
       case Transition.Change.Died died -> died(died);
       case Transition.Change.BombClicked click -> clicked(click, after);
@@ -141,25 +140,19 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     parts
         .roster()
         .bot(uuid)
-        .ifPresent(
-            bot -> {
-              var kit =
-                  parts.roster().harness().controlled(after.matchId())
-                      ? "trooper"
-                      : parts.lobby().arrived(bot, after);
-              parts
-                  .actions()
-                  .pickKit(uuid, kit)
-                  .ifPresent(
-                      refusal ->
-                          parts
-                              .logger()
-                              .warn(
-                                  "rwfbots: {} could not pick kit {}: {}",
-                                  bot.name(),
-                                  kit,
-                                  refusal));
-            });
+        .ifPresent(bot -> {
+          var kit =
+              parts.roster().harness().controlled(after.matchId())
+                  ? "trooper"
+                  : parts.lobby().arrived(bot, after);
+          parts
+              .actions()
+              .pickKit(uuid, kit)
+              .ifPresent(refusal ->
+                  parts
+                      .logger()
+                      .warn("rwfbots: {} could not pick kit {}: {}", bot.name(), kit, refusal));
+        });
   }
 
   /**
@@ -180,11 +173,10 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     parts
         .roster()
         .bot(died.victim())
-        .ifPresent(
-            bot -> {
-              bot.tally(bot.tally().death());
-              newLife(bot);
-            });
+        .ifPresent(bot -> {
+          bot.tally(bot.tally().death());
+          newLife(bot);
+        });
     died.killer()
         .flatMap(parts.roster()::bot)
         .ifPresent(killer -> killer.tally(killer.tally().kill()));
@@ -193,14 +185,12 @@ public final class MatchBridge implements Consumer<MatchNotification> {
   private void clicked(Transition.Change.BombClicked click, MatchState after) {
     after
         .bomb(click.bombId())
-        .ifPresent(
-            bomb ->
-                parts
-                    .stimuli()
-                    .fuseClicked(
-                        click.uuid(),
-                        new Location(
-                            parts.world(), bomb.x() + 0.5, bomb.y() + 0.5, bomb.z() + 0.5)));
+        .ifPresent(bomb ->
+            parts
+                .stimuli()
+                .fuseClicked(
+                    click.uuid(),
+                    new Location(parts.world(), bomb.x() + 0.5, bomb.y() + 0.5, bomb.z() + 0.5)));
   }
 
   private void effect(Transition.Effect effect) {
@@ -225,14 +215,13 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     parts
         .roster()
         .bot(stat.uuid())
-        .ifPresent(
-            bot -> {
-              switch (stat.stat()) {
-                case "Armed" -> bot.tally(bot.tally().plant());
-                case "Defused" -> bot.tally(bot.tally().defuse());
-                default -> {}
-              }
-            });
+        .ifPresent(bot -> {
+          switch (stat.stat()) {
+            case "Armed" -> bot.tally(bot.tally().plant());
+            case "Defused" -> bot.tally(bot.tally().defuse());
+            default -> {}
+          }
+        });
   }
 
   private void bump(UUID uuid) {
@@ -387,11 +376,10 @@ public final class MatchBridge implements Consumer<MatchNotification> {
 
   private void logFailure(java.util.concurrent.CompletableFuture<?> future, String what) {
     var _ =
-        future.whenComplete(
-            (value, failure) -> {
-              if (failure != null) {
-                parts.logger().error("rwfbots: could not {}", what, failure);
-              }
-            });
+        future.whenComplete((value, failure) -> {
+          if (failure != null) {
+            parts.logger().error("rwfbots: could not {}", what, failure);
+          }
+        });
   }
 }

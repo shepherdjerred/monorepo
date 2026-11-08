@@ -46,10 +46,9 @@ final class RustworksRulesTest {
     assertThat((double) newCombat / oldCombat).isBetween(1.5, 1.6);
     var average = (double) oldCombat / 10;
     assertThat(content.zones().stream().filter(z -> z.emeralds() > 0))
-        .allSatisfy(
-            zone ->
-                assertThat(zone.areas().stream().mapToInt(RustworksRulesTest::area).sum() / average)
-                    .isBetween(.5, .75));
+        .allSatisfy(zone ->
+            assertThat(zone.areas().stream().mapToInt(RustworksRulesTest::area).sum() / average)
+                .isBetween(.5, .75));
     assertThat(content.recipes()).isEqualTo(settlement.recipes());
     assertThat(content.classes()).isEqualTo(settlement.classes());
     assertThat(content.legendaries()).isEqualTo(settlement.legendaries());
@@ -62,14 +61,13 @@ final class RustworksRulesTest {
     assertThat(blueprint.size()).isLessThanOrEqualTo(SurvivalBlueprint.budget(content));
     var exit = content.arena().exit().point().block();
     assertThat(blueprint.keySet())
-        .allSatisfy(
-            pos ->
-                assertThat(
-                        content.arena().region().contains(pos)
-                            || (pos.x() == exit.x()
-                                && pos.z() == exit.z()
-                                && Math.abs(pos.y() - exit.y()) <= 1))
-                    .isTrue());
+        .allSatisfy(pos ->
+            assertThat(
+                    content.arena().region().contains(pos)
+                        || (pos.x() == exit.x()
+                            && pos.z() == exit.z()
+                            && Math.abs(pos.y() - exit.y()) <= 1))
+                .isTrue());
     assertThat(
             content.zones().stream()
                 .flatMap(z -> z.stations().stream())

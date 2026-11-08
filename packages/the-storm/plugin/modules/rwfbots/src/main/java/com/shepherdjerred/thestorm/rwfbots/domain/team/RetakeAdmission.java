@@ -255,11 +255,10 @@ public final class RetakeAdmission {
       if (admitted.size() == state.workers().size()) return Status.ADMITTED;
       var exhausted =
           pending.stream()
-              .anyMatch(
-                  worker ->
-                      !checked
-                          .getOrDefault(worker.key(), Set.of())
-                          .containsAll(routes.candidates(worker)));
+              .anyMatch(worker ->
+                  !checked
+                      .getOrDefault(worker.key(), Set.of())
+                      .containsAll(routes.candidates(worker)));
       return exhausted ? Status.EXHAUSTED : Status.NO_CAPABLE_WORKER;
     }
   }

@@ -91,10 +91,9 @@ final class SurvivalBoons {
         && now.isBefore(state.hit.plusSeconds(4))
         && ready(player, SurvivalPerk.EMBERWEAVE, 6)) {
       runner.world().enemies().stream()
-          .filter(
-              enemy ->
-                  enemy.getLocation().distanceSquared(target.getLocation()) <= 9
-                      && player.hasLineOfSight(enemy))
+          .filter(enemy ->
+              enemy.getLocation().distanceSquared(target.getLocation()) <= 9
+                  && player.hasLineOfSight(enemy))
           .limit(3)
           .forEach(enemy -> runner.combat().damage(enemy, player, 3));
       cue(player, Particle.SMALL_FLAME, "Emberweave · cinder burst");

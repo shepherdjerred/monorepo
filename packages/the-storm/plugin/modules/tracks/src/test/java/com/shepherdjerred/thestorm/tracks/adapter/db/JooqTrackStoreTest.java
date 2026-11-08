@@ -142,13 +142,12 @@ final class JooqTrackStoreTest {
     assertThat(await(store.load(ALICE))).isEqualTo(owning(MECHANIC, 3, GOVERNOR, 2));
     var positions =
         await(
-            database.read(
-                dsl ->
-                    dsl.select(TRACKS_LEVEL.POSITION)
-                        .from(TRACKS_LEVEL)
-                        .where(TRACKS_LEVEL.PLAYER_ID.eq(ALICE.toString()))
-                        .orderBy(TRACKS_LEVEL.POSITION)
-                        .fetch(TRACKS_LEVEL.POSITION)));
+            database.read(dsl ->
+                dsl.select(TRACKS_LEVEL.POSITION)
+                    .from(TRACKS_LEVEL)
+                    .where(TRACKS_LEVEL.PLAYER_ID.eq(ALICE.toString()))
+                    .orderBy(TRACKS_LEVEL.POSITION)
+                    .fetch(TRACKS_LEVEL.POSITION)));
     assertThat(positions).containsExactly(0, 1);
   }
 
@@ -178,13 +177,11 @@ final class JooqTrackStoreTest {
   void concurrentUpdatesNeverLoseALevel() throws Exception {
     var futures = new ArrayList<CompletableFuture<Result<TrackProgress, AdminProblem>>>();
     IntStream.range(0, 5)
-        .forEach(
-            ignored ->
-                futures.add(
-                    store.update(
-                        ALICE,
-                        current ->
-                            AdminChanges.set(current, MECHANIC, current.level(MECHANIC) + 1))));
+        .forEach(ignored ->
+            futures.add(
+                store.update(
+                    ALICE,
+                    current -> AdminChanges.set(current, MECHANIC, current.level(MECHANIC) + 1))));
     for (var future : futures) {
       assertThat(await(future).isOk()).isTrue();
     }
@@ -198,23 +195,21 @@ final class JooqTrackStoreTest {
     var id = ALICE.toString();
 
     var badTrack =
-        database.write(
-            dsl ->
-                dsl.insertInto(TRACKS_LEVEL)
-                    .set(TRACKS_LEVEL.PLAYER_ID, id)
-                    .set(TRACKS_LEVEL.TRACK, "wizard")
-                    .set(TRACKS_LEVEL.LEVEL, 1)
-                    .set(TRACKS_LEVEL.POSITION, 1)
-                    .execute());
+        database.write(dsl ->
+            dsl.insertInto(TRACKS_LEVEL)
+                .set(TRACKS_LEVEL.PLAYER_ID, id)
+                .set(TRACKS_LEVEL.TRACK, "wizard")
+                .set(TRACKS_LEVEL.LEVEL, 1)
+                .set(TRACKS_LEVEL.POSITION, 1)
+                .execute());
     var badLevel =
-        database.write(
-            dsl ->
-                dsl.insertInto(TRACKS_LEVEL)
-                    .set(TRACKS_LEVEL.PLAYER_ID, id)
-                    .set(TRACKS_LEVEL.TRACK, "engineer")
-                    .set(TRACKS_LEVEL.LEVEL, 6)
-                    .set(TRACKS_LEVEL.POSITION, 1)
-                    .execute());
+        database.write(dsl ->
+            dsl.insertInto(TRACKS_LEVEL)
+                .set(TRACKS_LEVEL.PLAYER_ID, id)
+                .set(TRACKS_LEVEL.TRACK, "engineer")
+                .set(TRACKS_LEVEL.LEVEL, 6)
+                .set(TRACKS_LEVEL.POSITION, 1)
+                .execute());
 
     assertThatThrownBy(() -> await(badTrack)).isInstanceOf(ExecutionException.class);
     assertThatThrownBy(() -> await(badLevel)).isInstanceOf(ExecutionException.class);

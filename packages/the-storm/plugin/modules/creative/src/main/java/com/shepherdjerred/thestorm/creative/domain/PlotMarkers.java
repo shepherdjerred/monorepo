@@ -20,13 +20,12 @@ public final class PlotMarkers {
       String mapWorld, CreativeConfig config, List<PlotView> views) {
     var playable =
         views.stream()
-            .filter(
-                view ->
-                    ClaimRules.inside(
-                        config.grid().bounds(view.id()),
-                        config.borderCenterX(),
-                        config.borderCenterZ(),
-                        config.borderSize()))
+            .filter(view ->
+                ClaimRules.inside(
+                    config.grid().bounds(view.id()),
+                    config.borderCenterX(),
+                    config.borderCenterZ(),
+                    config.borderSize()))
             .toList();
     return select(mapWorld, config.world(), playable, config.grid());
   }

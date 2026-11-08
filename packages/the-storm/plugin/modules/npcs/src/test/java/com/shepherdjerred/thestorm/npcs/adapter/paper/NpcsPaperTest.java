@@ -65,17 +65,17 @@ final class NpcsPaperTest {
 
   private String npc(String id, String name, double x, String dialogue) {
     return """
-          %s:
-            name: "%s"
-            description: Test
-            skin: none
-            home: { world: "%s", x: %s, y: 64.0, z: 0.5, yaw: 0.0, pitch: 0.0 }
-            pose: sneaking
-            roles: [test]
-            schedule: none
-            dialogue: %s
-            trainer: none
-        """
+      %s:
+        name: "%s"
+        description: Test
+        skin: none
+        home: { world: "%s", x: %s, y: 64.0, z: 0.5, yaw: 0.0, pitch: 0.0 }
+        pose: sneaking
+        roles: [test]
+        schedule: none
+        dialogue: %s
+        trainer: none
+    """
         .formatted(id, name, worldKey(), x, dialogue);
   }
 
@@ -217,11 +217,10 @@ final class NpcsPaperTest {
     assertThat(event.isCancelled()).isTrue();
     assertThat(plugin().shown)
         .singleElement()
-        .satisfies(
-            shown -> {
-              assertThat(shown.player()).isSameAs(player);
-              assertThat(shown.screen().body()).isEqualTo("Welcome in.");
-            });
+        .satisfies(shown -> {
+          assertThat(shown.player()).isSameAs(player);
+          assertThat(shown.screen().body()).isEqualTo("Welcome in.");
+        });
     // Pressing Bye closes the dialog.
     plugin().shown.getFirst().onClick().accept(0);
     assertThat(plugin().closed).containsExactly(player);

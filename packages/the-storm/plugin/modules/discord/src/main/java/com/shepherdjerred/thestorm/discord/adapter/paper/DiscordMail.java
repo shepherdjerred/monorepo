@@ -96,49 +96,44 @@ public final class DiscordMail {
     }
     var _ =
         send(sender.orElseThrow(), to.strip(), text.strip())
-            .whenComplete(
-                (answer, failure) -> {
-                  if (failure != null) {
-                    runtime.logger().error("Sending a letter from Discord failed", failure);
-                    reply.accept("That did not work; try again in a moment.");
-                  } else {
-                    reply.accept(answer);
-                  }
-                });
+            .whenComplete((answer, failure) -> {
+              if (failure != null) {
+                runtime.logger().error("Sending a letter from Discord failed", failure);
+                reply.accept("That did not work; try again in a moment.");
+              } else {
+                reply.accept(answer);
+              }
+            });
   }
 
   private CompletableFuture<String> send(UUID sender, String to, String text) {
     var gameplay = ports.gameplay();
     return gameplay
         .enabled(ManagedGameplay.LETTERS, sender)
-        .thenCompose(
-            allowed ->
-                !allowed
-                    ? done("Letters are not enabled for you.")
-                    : ports
-                        .players()
-                        .byName(to)
-                        .thenCompose(
-                            recipient ->
-                                recipient.isEmpty()
-                                    ? done(DiscordRelay.escape(to) + " has never played here.")
-                                    : toRecipient(sender, recipient.orElseThrow(), text)));
+        .thenCompose(allowed ->
+            !allowed
+                ? done("Letters are not enabled for you.")
+                : ports
+                    .players()
+                    .byName(to)
+                    .thenCompose(recipient ->
+                        recipient.isEmpty()
+                            ? done(DiscordRelay.escape(to) + " has never played here.")
+                            : toRecipient(sender, recipient.orElseThrow(), text)));
   }
 
   private CompletableFuture<String> toRecipient(UUID sender, KnownPlayer recipient, String text) {
     var gameplay = ports.gameplay();
     return gameplay
         .enabled(ManagedGameplay.LETTERS, recipient.uuid())
-        .thenCompose(
-            allowed ->
-                !allowed
-                    ? done("Letters are not available for that player.")
-                    : gameplay
-                        .enabled(ManagedGameplay.IDENTITY, recipient.uuid())
-                        .thenCombine(ports.players().byId(sender), Checked::new)
-                        .thenComposeAsync(
-                            checked -> write(sender, checked, recipient, text),
-                            runtime.mainThread()));
+        .thenCompose(allowed ->
+            !allowed
+                ? done("Letters are not available for that player.")
+                : gameplay
+                    .enabled(ManagedGameplay.IDENTITY, recipient.uuid())
+                    .thenCombine(ports.players().byId(sender), Checked::new)
+                    .thenComposeAsync(
+                        checked -> write(sender, checked, recipient, text), runtime.mainThread()));
   }
 
   private record Checked(boolean identity, Optional<KnownPlayer> sender) {}

@@ -51,13 +51,12 @@ public final class MarkerBoard {
   /** Every player who sees a marker above {@code npc}, with their marker. */
   public Map<UUID, QuestMarker> above(String npc) {
     var result = new HashMap<UUID, QuestMarker>();
-    byPlayer.forEach(
-        (player, markers) -> {
-          var marker = markers.get(npc);
-          if (marker != null) {
-            result.put(player, marker);
-          }
-        });
+    byPlayer.forEach((player, markers) -> {
+      var marker = markers.get(npc);
+      if (marker != null) {
+        result.put(player, marker);
+      }
+    });
     return Map.copyOf(result);
   }
 

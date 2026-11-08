@@ -38,10 +38,9 @@ final class RetakeFormationTest {
 
   private static List<CombatantView> bots(int count) {
     return IntStream.range(0, count)
-        .mapToObj(
-            index ->
-                Fixtures.combatant(
-                    index + 1, Fixtures.RED, NAV.graph().feet(index % NAV.graph().nodeCount())))
+        .mapToObj(index ->
+            Fixtures.combatant(
+                index + 1, Fixtures.RED, NAV.graph().feet(index % NAV.graph().nodeCount())))
         .toList();
   }
 
@@ -121,10 +120,9 @@ final class RetakeFormationTest {
     var layouts = new java.util.HashMap<String, BombScreens.Layout>();
     NAV.bombScreens()
         .sites()
-        .forEach(
-            (name, layout) ->
-                layouts.put(
-                    name, new BombScreens.Layout(layout.workers().subList(0, 1), List.of(), 0)));
+        .forEach((name, layout) ->
+            layouts.put(
+                name, new BombScreens.Layout(layout.workers().subList(0, 1), List.of(), 0)));
     var tight =
         new NavArtifact(
             NAV.formatVersion(),

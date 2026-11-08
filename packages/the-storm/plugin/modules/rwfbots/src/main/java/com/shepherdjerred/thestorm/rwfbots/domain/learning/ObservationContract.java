@@ -30,13 +30,11 @@ public record ObservationContract(List<Field> fields) {
     if (!values.keySet().equals(EnumSet.allOf(Feature.class)))
       throw new IllegalArgumentException("incomplete observation");
     return fields.stream()
-        .map(
-            field -> {
-              var value = java.util.Objects.requireNonNull(values.get(field.feature()));
-              if (!Double.isFinite(value))
-                throw new IllegalArgumentException("nonfinite observation");
-              return Math.clamp(value / field.scale(), -1, 1);
-            })
+        .map(field -> {
+          var value = java.util.Objects.requireNonNull(values.get(field.feature()));
+          if (!Double.isFinite(value)) throw new IllegalArgumentException("nonfinite observation");
+          return Math.clamp(value / field.scale(), -1, 1);
+        })
         .toList();
   }
 }

@@ -92,23 +92,21 @@ final class CandidateVisits {
               || runner
                   .match()
                   .ballot()
-                  .filter(
-                      vote ->
-                          !vote.closed()
-                              && vote.candidates().stream()
-                                  .map(Ballot.Candidate::mapId)
-                                  .toList()
-                                  .equals(ids))
+                  .filter(vote ->
+                      !vote.closed()
+                          && vote.candidates().stream()
+                              .map(Ballot.Candidate::mapId)
+                              .toList()
+                              .equals(ids))
                   .isEmpty()) return;
           if (ok) {
             runner.handle(new MatchEvent.CandidatesReady(ids, runner.now()));
             runner
                 .humanEntities()
-                .forEach(
-                    player ->
-                        Texts.info(
-                            player,
-                            "Candidate maps are ready. Visit and vote with /rwf maps; voting stays open for 90 seconds."));
+                .forEach(player ->
+                    Texts.info(
+                        player,
+                        "Candidate maps are ready. Visit and vote with /rwf maps; voting stays open for 90 seconds."));
           } else {
             abort();
           }
@@ -118,11 +116,10 @@ final class CandidateVisits {
   void abort() {
     runner
         .humanEntities()
-        .forEach(
-            player ->
-                Texts.error(
-                    player,
-                    "A candidate map could not be prepared. This ballot was aborted; rejoin after an operator checks the map."));
+        .forEach(player ->
+            Texts.error(
+                player,
+                "A candidate map could not be prepared. This ballot was aborted; rejoin after an operator checks the map."));
     cancel();
     candidatePreparationFailed = true;
     runner.closeCandidateAdmission();

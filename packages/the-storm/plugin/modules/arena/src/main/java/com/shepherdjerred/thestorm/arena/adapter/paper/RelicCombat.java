@@ -137,12 +137,11 @@ final class RelicCombat {
     if (direction.lengthSquared() < .01) return;
     direction.normalize();
     nearby(player, Places.at(player), 6)
-        .filter(
-            enemy -> {
-              var vector =
-                  enemy.getLocation().toVector().subtract(Places.at(player).toVector()).setY(0);
-              return vector.lengthSquared() < .01 || vector.normalize().dot(direction) >= .5;
-            })
+        .filter(enemy -> {
+          var vector =
+              enemy.getLocation().toVector().subtract(Places.at(player).toVector()).setY(0);
+          return vector.lengthSquared() < .01 || vector.normalize().dot(direction) >= .5;
+        })
         .limit(6)
         .forEach(enemy -> runner.combat().damage(enemy, player, damage));
     cue(player, Particle.WAX_OFF, "Faultline · stored force released");
@@ -287,12 +286,11 @@ final class RelicCombat {
 
   private java.util.stream.Stream<LivingEntity> nearby(Player player, Location at, double radius) {
     return runner.world().enemies().stream()
-        .filter(
-            enemy ->
-                enemy.isValid()
-                    && !enemy.isDead()
-                    && enemy.getLocation().distanceSquared(at) <= radius * radius
-                    && player.hasLineOfSight(enemy))
+        .filter(enemy ->
+            enemy.isValid()
+                && !enemy.isDead()
+                && enemy.getLocation().distanceSquared(at) <= radius * radius
+                && player.hasLineOfSight(enemy))
         .sorted(
             java.util.Comparator.comparingDouble(enemy -> enemy.getLocation().distanceSquared(at)));
   }

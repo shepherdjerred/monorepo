@@ -86,14 +86,13 @@ final class TeamChat {
 
   /** Plugs into chat, when the chat module is on. */
   void register(Optional<ChannelRegistry> registry) {
-    registry.ifPresent(
-        chat -> {
-          subscriptions.add(chat.registerMembership(ChatChannel.TEAM, this::team));
-          subscriptions.add(chat.registerMembership(ChatChannel.DEAD, this::dead));
-          subscriptions.add(chat.registerRouter(this::route));
-          subscriptions.add(chat.registerTap(this::heard));
-          subscriptions.add(chat.registerNameColors(names));
-        });
+    registry.ifPresent(chat -> {
+      subscriptions.add(chat.registerMembership(ChatChannel.TEAM, this::team));
+      subscriptions.add(chat.registerMembership(ChatChannel.DEAD, this::dead));
+      subscriptions.add(chat.registerRouter(this::route));
+      subscriptions.add(chat.registerTap(this::heard));
+      subscriptions.add(chat.registerNameColors(names));
+    });
   }
 
   void unregister() {
@@ -145,12 +144,11 @@ final class TeamChat {
     var out = new HashSet<UUID>();
     current
         .teams()
-        .forEach(
-            (id, color) -> {
-              if (color == team && current.alive().contains(id)) {
-                out.add(id);
-              }
-            });
+        .forEach((id, color) -> {
+          if (color == team && current.alive().contains(id)) {
+            out.add(id);
+          }
+        });
     return Optional.of(Set.copyOf(out));
   }
 

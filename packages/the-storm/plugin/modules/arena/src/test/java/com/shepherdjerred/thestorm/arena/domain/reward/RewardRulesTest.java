@@ -126,10 +126,9 @@ final class RewardRulesTest {
 
     assertThat(vault.at(10)).isPresent();
     assertThat(vault.at(15)).isEmpty();
-    assertThatThrownBy(
-            () ->
-                new VaultSettings(
-                    "UTC", List.of(new VaultMilestone(10, table), new VaultMilestone(10, table))))
+    assertThatThrownBy(() ->
+            new VaultSettings(
+                "UTC", List.of(new VaultMilestone(10, table), new VaultMilestone(10, table))))
         .hasMessageContaining("two milestones");
     assertThatThrownBy(() -> new VaultSettings("Mars/Olympus", List.of()))
         .hasMessageContaining("time zone");

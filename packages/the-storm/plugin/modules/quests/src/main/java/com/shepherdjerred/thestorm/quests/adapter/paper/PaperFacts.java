@@ -56,13 +56,12 @@ final class PaperFacts implements Facts {
     var location = Locations.of(player);
     return content
         .region(region)
-        .filter(
-            found ->
-                found.contains(
-                    player.getWorld().getKey().asString(),
-                    location.getX(),
-                    location.getY(),
-                    location.getZ()))
+        .filter(found ->
+            found.contains(
+                player.getWorld().getKey().asString(),
+                location.getX(),
+                location.getY(),
+                location.getZ()))
         .isPresent();
   }
 

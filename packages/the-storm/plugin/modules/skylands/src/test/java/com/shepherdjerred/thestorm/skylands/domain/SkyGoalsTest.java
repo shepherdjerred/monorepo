@@ -24,12 +24,11 @@ final class SkyGoalsTest {
       assertThat(index.compatible(p))
           .isEqualTo(
               points.stream()
-                  .noneMatch(
-                      q ->
-                          q.x() == p.x()
-                              && q.z() == p.z()
-                              && Math.abs(q.y() - p.y()) > 0
-                              && Math.abs(q.y() - p.y()) < 4));
+                  .noneMatch(q ->
+                      q.x() == p.x()
+                          && q.z() == p.z()
+                          && Math.abs(q.y() - p.y()) > 0
+                          && Math.abs(q.y() - p.y()) < 4));
     }
   }
 }

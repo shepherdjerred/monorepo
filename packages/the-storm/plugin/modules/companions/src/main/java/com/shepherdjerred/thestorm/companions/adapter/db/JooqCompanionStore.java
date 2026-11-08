@@ -28,17 +28,16 @@ public final class JooqCompanionStore implements CompanionStore {
 
   @Override
   public CompletableFuture<Map<String, Stored>> load() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(COMPANION_STATE)
-                .fetchMap(
-                    row -> java.util.Objects.requireNonNull(row.getId()),
-                    row ->
-                        new Stored(
-                            decode(
-                                java.util.Objects.requireNonNull(row.getSnapshot()),
-                                java.util.Objects.requireNonNull(row.getNpcUuid())),
-                            Optional.ofNullable(row.getPending()))));
+    return database.read(dsl ->
+        dsl.selectFrom(COMPANION_STATE)
+            .fetchMap(
+                row -> java.util.Objects.requireNonNull(row.getId()),
+                row ->
+                    new Stored(
+                        decode(
+                            java.util.Objects.requireNonNull(row.getSnapshot()),
+                            java.util.Objects.requireNonNull(row.getNpcUuid())),
+                        Optional.ofNullable(row.getPending()))));
   }
 
   private static CompanionState decode(byte[] bytes, String npcId) {
@@ -51,70 +50,66 @@ public final class JooqCompanionStore implements CompanionStore {
   @Override
   public CompletableFuture<Void> save(String id, CompanionState state) {
     return database
-        .write(
-            dsl -> {
-              var current =
-                  dsl.select(COMPANION_STATE.PENDING, COMPANION_STATE.NPC_UUID)
-                      .from(COMPANION_STATE)
-                      .where(COMPANION_STATE.ID.eq(id))
-                      .fetchOne();
-              if (current != null && current.value1() != null)
-                throw new IllegalStateException("cannot overwrite an unfinished companion effect");
-              if (current != null && !state.npcId().toString().equals(current.value2()))
-                throw new IllegalStateException("cannot replace a companion identity");
-              dsl.insertInto(COMPANION_STATE)
-                  .set(COMPANION_STATE.ID, id)
-                  .set(COMPANION_STATE.NPC_UUID, state.npcId().toString())
-                  .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
-                  .onConflict(COMPANION_STATE.ID)
-                  .doUpdate()
-                  .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          var current =
+              dsl.select(COMPANION_STATE.PENDING, COMPANION_STATE.NPC_UUID)
+                  .from(COMPANION_STATE)
+                  .where(COMPANION_STATE.ID.eq(id))
+                  .fetchOne();
+          if (current != null && current.value1() != null)
+            throw new IllegalStateException("cannot overwrite an unfinished companion effect");
+          if (current != null && !state.npcId().toString().equals(current.value2()))
+            throw new IllegalStateException("cannot replace a companion identity");
+          dsl.insertInto(COMPANION_STATE)
+              .set(COMPANION_STATE.ID, id)
+              .set(COMPANION_STATE.NPC_UUID, state.npcId().toString())
+              .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
+              .onConflict(COMPANION_STATE.ID)
+              .doUpdate()
+              .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
+              .execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 
   @Override
   public CompletableFuture<Void> begin(String id, CompanionState state, String effect) {
     return database
-        .write(
-            dsl -> {
-              var changed =
-                  dsl.update(COMPANION_STATE)
-                      .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
-                      .set(COMPANION_STATE.PENDING, effect)
-                      .where(
-                          COMPANION_STATE.ID.eq(id),
-                          COMPANION_STATE.PENDING.isNull(),
-                          COMPANION_STATE.NPC_UUID.eq(state.npcId().toString()))
-                      .execute();
-              if (changed != 1)
-                throw new IllegalStateException(
-                    "companion is missing or already has a pending effect");
-              return true;
-            })
+        .write(dsl -> {
+          var changed =
+              dsl.update(COMPANION_STATE)
+                  .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
+                  .set(COMPANION_STATE.PENDING, effect)
+                  .where(
+                      COMPANION_STATE.ID.eq(id),
+                      COMPANION_STATE.PENDING.isNull(),
+                      COMPANION_STATE.NPC_UUID.eq(state.npcId().toString()))
+                  .execute();
+          if (changed != 1)
+            throw new IllegalStateException("companion is missing or already has a pending effect");
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 
   @Override
   public CompletableFuture<Void> finish(String id, CompanionState state) {
     return database
-        .write(
-            dsl -> {
-              var changed =
-                  dsl.update(COMPANION_STATE)
-                      .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
-                      .setNull(COMPANION_STATE.PENDING)
-                      .where(
-                          COMPANION_STATE.ID.eq(id),
-                          COMPANION_STATE.PENDING.isNotNull(),
-                          COMPANION_STATE.NPC_UUID.eq(state.npcId().toString()))
-                      .execute();
-              if (changed != 1)
-                throw new IllegalStateException("companion has no pending effect to finish");
-              return true;
-            })
+        .write(dsl -> {
+          var changed =
+              dsl.update(COMPANION_STATE)
+                  .set(COMPANION_STATE.SNAPSHOT, JSON.writeValueAsBytes(state))
+                  .setNull(COMPANION_STATE.PENDING)
+                  .where(
+                      COMPANION_STATE.ID.eq(id),
+                      COMPANION_STATE.PENDING.isNotNull(),
+                      COMPANION_STATE.NPC_UUID.eq(state.npcId().toString()))
+                  .execute();
+          if (changed != 1)
+            throw new IllegalStateException("companion has no pending effect to finish");
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

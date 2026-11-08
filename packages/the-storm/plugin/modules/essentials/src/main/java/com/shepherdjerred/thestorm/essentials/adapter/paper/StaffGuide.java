@@ -22,21 +22,19 @@ final class StaffGuide {
   void register(Commands commands) {
     commands.register(
         Commands.literal("help")
-            .executes(
-                command -> {
-                  show(command.getSource().getSender(), "");
-                  return 1;
-                })
+            .executes(command -> {
+              show(command.getSource().getSender(), "");
+              return 1;
+            })
             .then(
                 Commands.argument(
                         "command", com.mojang.brigadier.arguments.StringArgumentType.word())
-                    .executes(
-                        command -> {
-                          show(
-                              command.getSource().getSender(),
-                              command.getArgument("command", String.class));
-                          return 1;
-                        }))
+                    .executes(command -> {
+                      show(
+                          command.getSource().getSender(),
+                          command.getArgument("command", String.class));
+                      return 1;
+                    }))
             .build(),
         "Show your command guide");
   }

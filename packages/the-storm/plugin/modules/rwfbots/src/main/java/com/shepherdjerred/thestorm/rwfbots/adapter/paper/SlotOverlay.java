@@ -72,23 +72,21 @@ final class SlotOverlay {
     var teamOf = new HashMap<CombatantId, TeamId>();
     board
         .plans()
-        .forEach(
-            (team, plan) -> {
-              plan.assignment().keySet().forEach(bot -> teamOf.put(bot, team));
-              for (var slot : plan.slots()) {
-                ring(viewer, slot, colour(team));
-              }
-            });
+        .forEach((team, plan) -> {
+          plan.assignment().keySet().forEach(bot -> teamOf.put(bot, team));
+          for (var slot : plan.slots()) {
+            ring(viewer, slot, colour(team));
+          }
+        });
     board
         .thoughts()
-        .forEach(
-            (bot, thought) -> {
-              var team = teamOf.get(bot);
-              var colour = team == null ? Color.WHITE : colour(team);
-              for (var waypoint : thought.decision().waypoints()) {
-                dust(viewer, waypoint.pos().plus(0, 0.2, 0), colour, ROUTE_SIZE);
-              }
-            });
+        .forEach((bot, thought) -> {
+          var team = teamOf.get(bot);
+          var colour = team == null ? Color.WHITE : colour(team);
+          for (var waypoint : thought.decision().waypoints()) {
+            dust(viewer, waypoint.pos().plus(0, 0.2, 0), colour, ROUTE_SIZE);
+          }
+        });
   }
 
   private static void ring(Player viewer, Slot slot, Color colour) {

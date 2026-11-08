@@ -56,17 +56,15 @@ final class BeginnerProtection implements BeginnerStatus {
         context
             .services()
             .require(ActivityFeed.class)
-            .observe(
-                (id, active) -> {
-                  clock.activity(id, active);
-                  context
-                      .scheduler()
-                      .runOnMainThread(
-                          () -> {
-                            var player = context.plugin().getServer().getPlayer(id);
-                            if (player != null && !stopped) warm(player);
-                          });
-                });
+            .observe((id, active) -> {
+              clock.activity(id, active);
+              context
+                  .scheduler()
+                  .runOnMainThread(() -> {
+                    var player = context.plugin().getServer().getPlayer(id);
+                    if (player != null && !stopped) warm(player);
+                  });
+            });
   }
 
   void start() {
@@ -177,10 +175,9 @@ final class BeginnerProtection implements BeginnerStatus {
   private void changed(UUID id) {
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              if (!stopped) changes.forEach(observer -> observer.accept(id));
-            });
+        .runOnMainThread(() -> {
+          if (!stopped) changes.forEach(observer -> observer.accept(id));
+        });
   }
 
   void left(Player player) {
@@ -218,16 +215,15 @@ final class BeginnerProtection implements BeginnerStatus {
     if (previous == null || previous >= phase) return;
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              var player = context.plugin().getServer().getPlayer(id);
-              if (player != null && !stopped)
-                player.sendMessage(
-                    phase == 1
-                        ? "Beginner's luck: difficulty now rises gradually until "
-                            + rules.normalAfter().toHours()
-                            + " active hours. /beginnersluck shows your progress."
-                        : "Your beginner's luck has ended. Wilderness combat is now at normal difficulty.");
-            });
+        .runOnMainThread(() -> {
+          var player = context.plugin().getServer().getPlayer(id);
+          if (player != null && !stopped)
+            player.sendMessage(
+                phase == 1
+                    ? "Beginner's luck: difficulty now rises gradually until "
+                        + rules.normalAfter().toHours()
+                        + " active hours. /beginnersluck shows your progress."
+                    : "Your beginner's luck has ended. Wilderness combat is now at normal difficulty.");
+        });
   }
 }

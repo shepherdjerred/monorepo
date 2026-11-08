@@ -29,26 +29,23 @@ public final class GameActivity {
   public void started(Collection<UUID> players) {
     players.stream()
         .filter(members::contains)
-        .forEach(
-            player ->
-                analytics.interaction(
-                    player,
-                    action(
-                        ProductAnalytics.Action.ARENA_STARTED,
-                        ProductAnalytics.Action.RWF_STARTED)));
+        .forEach(player ->
+            analytics.interaction(
+                player,
+                action(
+                    ProductAnalytics.Action.ARENA_STARTED, ProductAnalytics.Action.RWF_STARTED)));
   }
 
   /** A run ended, including a forced stop. Individual departures are recorded separately. */
   public void completed(Collection<UUID> players) {
     players.stream()
         .filter(members::contains)
-        .forEach(
-            player ->
-                analytics.interaction(
-                    player,
-                    action(
-                        ProductAnalytics.Action.ARENA_COMPLETED,
-                        ProductAnalytics.Action.RWF_COMPLETED)));
+        .forEach(player ->
+            analytics.interaction(
+                player,
+                action(
+                    ProductAnalytics.Action.ARENA_COMPLETED,
+                    ProductAnalytics.Action.RWF_COMPLETED)));
   }
 
   public void left(UUID player) {

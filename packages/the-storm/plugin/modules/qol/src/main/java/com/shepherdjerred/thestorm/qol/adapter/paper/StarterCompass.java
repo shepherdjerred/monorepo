@@ -73,16 +73,15 @@ final class StarterCompass {
 
   static ItemStack item(Player player, int remaining) {
     var item = new ItemStack(Material.COMPASS);
-    item.editMeta(
-        meta -> {
-          meta.displayName(Component.text("Choose a Biome"));
-          meta.lore(
-              List.of(
-                  Component.text(
-                      "Left- or right-click to choose a biome. " + remaining + " trips left.")));
-          meta.getPersistentDataContainer()
-              .set(OWNER, PersistentDataType.STRING, player.getUniqueId().toString());
-        });
+    item.editMeta(meta -> {
+      meta.displayName(Component.text("Choose a Biome"));
+      meta.lore(
+          List.of(
+              Component.text(
+                  "Left- or right-click to choose a biome. " + remaining + " trips left.")));
+      meta.getPersistentDataContainer()
+          .set(OWNER, PersistentDataType.STRING, player.getUniqueId().toString());
+    });
     return item;
   }
 
@@ -236,9 +235,8 @@ final class StarterCompass {
   void afterRespawn(Player player) {
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              if (player.isOnline()) reconcile(player);
-            });
+        .runOnMainThread(() -> {
+          if (player.isOnline()) reconcile(player);
+        });
   }
 }

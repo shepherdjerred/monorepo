@@ -23,46 +23,44 @@ public final class JooqPersonalityStatsStore implements PersonalityStatsStore {
 
   @Override
   public CompletableFuture<List<PersonalityStats>> loadAll() {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(RWFBOTS_PERSONALITY_STATS)
-                .orderBy(RWFBOTS_PERSONALITY_STATS.PERSONALITY_ID)
-                .fetch(JooqPersonalityStatsStore::stats));
+    return database.read(dsl ->
+        dsl.selectFrom(RWFBOTS_PERSONALITY_STATS)
+            .orderBy(RWFBOTS_PERSONALITY_STATS.PERSONALITY_ID)
+            .fetch(JooqPersonalityStatsStore::stats));
   }
 
   @Override
   public CompletableFuture<Void> save(Collection<PersonalityStats> stats) {
     var rows = List.copyOf(stats);
     return database
-        .write(
-            dsl -> {
-              for (var row : rows) {
-                dsl.insertInto(RWFBOTS_PERSONALITY_STATS)
-                    .set(RWFBOTS_PERSONALITY_STATS.PERSONALITY_ID, row.personalityId())
-                    .set(RWFBOTS_PERSONALITY_STATS.MATCHES, row.matches())
-                    .set(RWFBOTS_PERSONALITY_STATS.WINS, row.wins())
-                    .set(RWFBOTS_PERSONALITY_STATS.KILLS, row.kills())
-                    .set(RWFBOTS_PERSONALITY_STATS.DEATHS, row.deaths())
-                    .set(RWFBOTS_PERSONALITY_STATS.PLANTS, row.plants())
-                    .set(RWFBOTS_PERSONALITY_STATS.DEFUSES, row.defuses())
-                    .set(RWFBOTS_PERSONALITY_STATS.MU, row.rating().mu())
-                    .set(RWFBOTS_PERSONALITY_STATS.SIGMA, row.rating().sigma())
-                    .set(RWFBOTS_PERSONALITY_STATS.LAST_SEEN, row.lastSeen().toEpochMilli())
-                    .onConflict(RWFBOTS_PERSONALITY_STATS.PERSONALITY_ID)
-                    .doUpdate()
-                    .set(RWFBOTS_PERSONALITY_STATS.MATCHES, row.matches())
-                    .set(RWFBOTS_PERSONALITY_STATS.WINS, row.wins())
-                    .set(RWFBOTS_PERSONALITY_STATS.KILLS, row.kills())
-                    .set(RWFBOTS_PERSONALITY_STATS.DEATHS, row.deaths())
-                    .set(RWFBOTS_PERSONALITY_STATS.PLANTS, row.plants())
-                    .set(RWFBOTS_PERSONALITY_STATS.DEFUSES, row.defuses())
-                    .set(RWFBOTS_PERSONALITY_STATS.MU, row.rating().mu())
-                    .set(RWFBOTS_PERSONALITY_STATS.SIGMA, row.rating().sigma())
-                    .set(RWFBOTS_PERSONALITY_STATS.LAST_SEEN, row.lastSeen().toEpochMilli())
-                    .execute();
-              }
-              return rows.size();
-            })
+        .write(dsl -> {
+          for (var row : rows) {
+            dsl.insertInto(RWFBOTS_PERSONALITY_STATS)
+                .set(RWFBOTS_PERSONALITY_STATS.PERSONALITY_ID, row.personalityId())
+                .set(RWFBOTS_PERSONALITY_STATS.MATCHES, row.matches())
+                .set(RWFBOTS_PERSONALITY_STATS.WINS, row.wins())
+                .set(RWFBOTS_PERSONALITY_STATS.KILLS, row.kills())
+                .set(RWFBOTS_PERSONALITY_STATS.DEATHS, row.deaths())
+                .set(RWFBOTS_PERSONALITY_STATS.PLANTS, row.plants())
+                .set(RWFBOTS_PERSONALITY_STATS.DEFUSES, row.defuses())
+                .set(RWFBOTS_PERSONALITY_STATS.MU, row.rating().mu())
+                .set(RWFBOTS_PERSONALITY_STATS.SIGMA, row.rating().sigma())
+                .set(RWFBOTS_PERSONALITY_STATS.LAST_SEEN, row.lastSeen().toEpochMilli())
+                .onConflict(RWFBOTS_PERSONALITY_STATS.PERSONALITY_ID)
+                .doUpdate()
+                .set(RWFBOTS_PERSONALITY_STATS.MATCHES, row.matches())
+                .set(RWFBOTS_PERSONALITY_STATS.WINS, row.wins())
+                .set(RWFBOTS_PERSONALITY_STATS.KILLS, row.kills())
+                .set(RWFBOTS_PERSONALITY_STATS.DEATHS, row.deaths())
+                .set(RWFBOTS_PERSONALITY_STATS.PLANTS, row.plants())
+                .set(RWFBOTS_PERSONALITY_STATS.DEFUSES, row.defuses())
+                .set(RWFBOTS_PERSONALITY_STATS.MU, row.rating().mu())
+                .set(RWFBOTS_PERSONALITY_STATS.SIGMA, row.rating().sigma())
+                .set(RWFBOTS_PERSONALITY_STATS.LAST_SEEN, row.lastSeen().toEpochMilli())
+                .execute();
+          }
+          return rows.size();
+        })
         .thenAccept(count -> {});
   }
 

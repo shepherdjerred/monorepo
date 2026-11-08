@@ -32,11 +32,10 @@ final class ChainLightning implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creature(tools, caster, settings.range())
-        .map(
-            first -> {
-              var path = path(caster, first);
-              return () -> strike(caster, path);
-            });
+        .map(first -> {
+          var path = path(caster, first);
+          return () -> strike(caster, path);
+        });
   }
 
   private List<LivingEntity> path(Player caster, LivingEntity first) {

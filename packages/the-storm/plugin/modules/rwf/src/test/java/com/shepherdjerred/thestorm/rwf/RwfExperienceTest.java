@@ -202,14 +202,13 @@ final class RwfExperienceTest {
     tickUntil(harness, PhaseKind.LIVE, 6);
     var killer =
         harness.bots.spawned().stream()
-            .filter(
-                bot ->
-                    harness
-                        .snapshot()
-                        .combatant(harness.bots.idOf(bot).orElseThrow())
-                        .flatMap(MatchSnapshot.CombatantView::team)
-                        .filter(team -> !team.equals(teamOf(harness, alice)))
-                        .isPresent())
+            .filter(bot ->
+                harness
+                    .snapshot()
+                    .combatant(harness.bots.idOf(bot).orElseThrow())
+                    .flatMap(MatchSnapshot.CombatantView::team)
+                    .filter(team -> !team.equals(teamOf(harness, alice)))
+                    .isPresent())
             .findFirst()
             .orElseThrow();
     for (var i = 0; i < 40 && harness.combatant(alice).alive(); i++) {
@@ -234,14 +233,13 @@ final class RwfExperienceTest {
     var enemy = teamOf(harness, alice) == TeamColor.RED ? TeamColor.BLUE : TeamColor.RED;
     var enemies =
         harness.bots.spawned().stream()
-            .filter(
-                bot ->
-                    harness
-                        .snapshot()
-                        .combatant(harness.bots.idOf(bot).orElseThrow())
-                        .flatMap(MatchSnapshot.CombatantView::team)
-                        .filter(enemy::equals)
-                        .isPresent())
+            .filter(bot ->
+                harness
+                    .snapshot()
+                    .combatant(harness.bots.idOf(bot).orElseThrow())
+                    .flatMap(MatchSnapshot.CombatantView::team)
+                    .filter(enemy::equals)
+                    .isPresent())
             .toList();
     var killer = enemies.get(0);
     var helper = enemies.get(1);
@@ -317,12 +315,11 @@ final class RwfExperienceTest {
     assertThat(chat.route(new ChannelRouter.Request(speaker, ChatChannel.GLOBAL, "unlucky", false)))
         .contains(new ChannelRouter.Routed(ChatChannel.DEAD, "unlucky"));
     assertThat(chat.membership(ChannelKey.DEAD).orElseThrow().members(speaker))
-        .hasValueSatisfying(
-            heard ->
-                assertThat(heard)
-                    .contains(speaker)
-                    .doesNotContainAnyElementsOf(
-                        mates.stream().filter(id -> !id.equals(speaker)).toList()));
+        .hasValueSatisfying(heard ->
+            assertThat(heard)
+                .contains(speaker)
+                .doesNotContainAnyElementsOf(
+                    mates.stream().filter(id -> !id.equals(speaker)).toList()));
     assertThat(chat.membership(ChannelKey.TEAM).orElseThrow().members(speaker)).isEmpty();
   }
 
@@ -335,14 +332,13 @@ final class RwfExperienceTest {
     var enemy = teamOf(harness, alice) == TeamColor.RED ? TeamColor.BLUE : TeamColor.RED;
     var killer =
         harness.bots.spawned().stream()
-            .filter(
-                bot ->
-                    harness
-                        .snapshot()
-                        .combatant(harness.bots.idOf(bot).orElseThrow())
-                        .flatMap(MatchSnapshot.CombatantView::team)
-                        .filter(enemy::equals)
-                        .isPresent())
+            .filter(bot ->
+                harness
+                    .snapshot()
+                    .combatant(harness.bots.idOf(bot).orElseThrow())
+                    .flatMap(MatchSnapshot.CombatantView::team)
+                    .filter(enemy::equals)
+                    .isPresent())
             .findFirst()
             .orElseThrow();
     for (var i = 0; i < 40 && harness.combatant(alice).alive(); i++) {

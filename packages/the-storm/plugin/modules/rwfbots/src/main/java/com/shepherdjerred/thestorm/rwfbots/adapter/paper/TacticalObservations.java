@@ -35,11 +35,10 @@ final class TacticalObservations {
     }
     var clouds =
         vision.snapshot().stream()
-            .map(
-                field ->
-                    new SightCloud(
-                        new Vec3(field.center().x(), field.center().y(), field.center().z()),
-                        field.radius()))
+            .map(field ->
+                new SightCloud(
+                    new Vec3(field.center().x(), field.center().y(), field.center().z()),
+                    field.radius()))
             .toList();
     loop.observedSmoke(clouds);
     for (var cue : reports.since(cursor)) {

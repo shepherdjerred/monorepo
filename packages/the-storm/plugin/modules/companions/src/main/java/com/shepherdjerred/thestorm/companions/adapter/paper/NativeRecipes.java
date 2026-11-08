@@ -57,9 +57,8 @@ public final class NativeRecipes {
 
   private static int cost(Selected recipe, Map<String, Integer> stock) {
     return recipe.plan().ingredients().entrySet().stream()
-        .mapToInt(
-            entry ->
-                stock.getOrDefault(entry.getKey(), 0) >= entry.getValue() ? 0 : entry.getValue())
+        .mapToInt(entry ->
+            stock.getOrDefault(entry.getKey(), 0) >= entry.getValue() ? 0 : entry.getValue())
         .sum();
   }
 

@@ -81,17 +81,16 @@ public final class ContentCheck {
 
   private void run() {
     new TreeMap<>(content.regions())
-        .forEach(
-            (id, region) -> {
-              at("quests", "regions." + id);
-              if (!rules.registry().worlds().contains(region.world())) {
-                problem("world " + region.world() + " is not loaded");
-              }
-              if (!rules.allowedWorld().equals(region.world())) {
-                problem("world " + region.world() + " is outside the main world");
-              }
-              text("name", region.name(), MAX_NAME);
-            });
+        .forEach((id, region) -> {
+          at("quests", "regions." + id);
+          if (!rules.registry().worlds().contains(region.world())) {
+            problem("world " + region.world() + " is not loaded");
+          }
+          if (!rules.allowedWorld().equals(region.world())) {
+            problem("world " + region.world() + " is outside the main world");
+          }
+          text("name", region.name(), MAX_NAME);
+        });
     if (!rules.registry().npcs().contains(rules.boardNpc())) {
       at("quests.yml", "board.npc");
       problem("board NPC " + rules.boardNpc() + " does not exist");
@@ -100,14 +99,13 @@ public final class ContentCheck {
     new TreeMap<>(content.templates()).values().forEach(this::template);
     requirementCycles();
     startQuestCycles();
-    variablesRead.forEach(
-        (variable, where) -> {
-          if (!variablesSet.contains(variable)) {
-            problems.add(
-                new ContentProblem(
-                    where, "", "variable " + variable + " is read but no action ever sets it"));
-          }
-        });
+    variablesRead.forEach((variable, where) -> {
+      if (!variablesSet.contains(variable)) {
+        problems.add(
+            new ContentProblem(
+                where, "", "variable " + variable + " is read but no action ever sets it"));
+      }
+    });
   }
 
   // ---- quests --------------------------------------------------------------------------------

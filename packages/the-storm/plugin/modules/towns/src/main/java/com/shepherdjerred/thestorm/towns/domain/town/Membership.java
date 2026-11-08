@@ -27,19 +27,18 @@ public final class Membership {
   public static Result<Town, List<TownProblem>> invite(
       UUID inviter, PlayerRef invitee, TownDirectory towns, int campMembers) {
     return managerOf(inviter, towns)
-        .flatMap(
-            town -> {
-              if (invitee.id().equals(inviter)) {
-                return err(new TownProblem.NotYourself());
-              }
-              if (towns.townOf(invitee.id()).isPresent()) {
-                return err(new TownProblem.TargetInTown(invitee.name()));
-              }
-              if (town.isCamp() && town.members().size() >= campMembers) {
-                return err(new TownProblem.CampFull(campMembers));
-              }
-              return Result.ok(town);
-            });
+        .flatMap(town -> {
+          if (invitee.id().equals(inviter)) {
+            return err(new TownProblem.NotYourself());
+          }
+          if (towns.townOf(invitee.id()).isPresent()) {
+            return err(new TownProblem.TargetInTown(invitee.name()));
+          }
+          if (town.isCamp() && town.members().size() >= campMembers) {
+            return err(new TownProblem.CampFull(campMembers));
+          }
+          return Result.ok(town);
+        });
   }
 
   public static Result<Town, List<TownProblem>> join(
@@ -75,11 +74,10 @@ public final class Membership {
   /** {@code player}'s town without them. */
   public static Result<Town, List<TownProblem>> leave(UUID player, TownDirectory towns) {
     return townOf(player, towns)
-        .flatMap(
-            town ->
-                town.roleOf(player).orElseThrow() == TownRole.OWNER
-                    ? err(new TownProblem.OwnerCannotLeave())
-                    : Result.ok(town.withoutMember(player)));
+        .flatMap(town ->
+            town.roleOf(player).orElseThrow() == TownRole.OWNER
+                ? err(new TownProblem.OwnerCannotLeave())
+                : Result.ok(town.withoutMember(player)));
   }
 
   /** {@code actor}'s town without {@code target}, who must rank below them. */
@@ -87,14 +85,13 @@ public final class Membership {
       UUID actor, PlayerRef target, TownDirectory towns) {
     return managerOf(actor, towns)
         .flatMap(town -> memberOf(town, actor, target))
-        .flatMap(
-            town -> {
-              var actorRole = town.roleOf(actor).orElseThrow();
-              var targetRole = town.roleOf(target.id()).orElseThrow();
-              return actorRole.outranks(targetRole)
-                  ? Result.ok(town.withoutMember(target.id()))
-                  : err(new TownProblem.Outranked(target.name()));
-            });
+        .flatMap(town -> {
+          var actorRole = town.roleOf(actor).orElseThrow();
+          var targetRole = town.roleOf(target.id()).orElseThrow();
+          return actorRole.outranks(targetRole)
+              ? Result.ok(town.withoutMember(target.id()))
+              : err(new TownProblem.Outranked(target.name()));
+        });
   }
 
   /** {@code actor}'s town with the member {@code target} made an assistant. Owner only. */
@@ -120,21 +117,20 @@ public final class Membership {
     return ownerOf(actor, towns)
         .flatMap(Membership::townsOnly)
         .flatMap(town -> memberOf(town, actor, target))
-        .flatMap(
-            town -> {
-              if (!successor.online()) {
-                return err(new TownProblem.TargetOffline(target.name()));
-              }
-              if (successor.governorLevel() < 1) {
-                return err(new TownProblem.NotAGovernor(target.name()));
-              }
-              if (successor.claims() > successor.claimLimit()) {
-                return err(
-                    new TownProblem.TooMuchLand(
-                        target.name(), successor.claims(), successor.claimLimit()));
-              }
-              return Result.ok(town.transferredTo(target.id(), successor.governorLevel()));
-            });
+        .flatMap(town -> {
+          if (!successor.online()) {
+            return err(new TownProblem.TargetOffline(target.name()));
+          }
+          if (successor.governorLevel() < 1) {
+            return err(new TownProblem.NotAGovernor(target.name()));
+          }
+          if (successor.claims() > successor.claimLimit()) {
+            return err(
+                new TownProblem.TooMuchLand(
+                    target.name(), successor.claims(), successor.claimLimit()));
+          }
+          return Result.ok(town.transferredTo(target.id(), successor.governorLevel()));
+        });
   }
 
   /** {@code actor}'s town, when they own it and {@code target} is another of its members. */
@@ -160,20 +156,19 @@ public final class Membership {
       UUID actor, String name, TownDirectory towns) {
     return ownerOf(actor, towns)
         .flatMap(town -> townsOnly(town))
-        .flatMap(
-            town -> {
-              if (!TownNames.isValid(name)) {
-                return err(new TownProblem.InvalidName(name));
-              }
-              if (!TownNames.isPublic(name)) {
-                return err(new TownProblem.ReservedName(name));
-              }
-              var holder = towns.named(name);
-              if (holder.isPresent() && !holder.get().id().equals(town.id())) {
-                return err(new TownProblem.NameTaken(name));
-              }
-              return Result.ok(town.renamed(name));
-            });
+        .flatMap(town -> {
+          if (!TownNames.isValid(name)) {
+            return err(new TownProblem.InvalidName(name));
+          }
+          if (!TownNames.isPublic(name)) {
+            return err(new TownProblem.ReservedName(name));
+          }
+          var holder = towns.named(name);
+          if (holder.isPresent() && !holder.get().id().equals(town.id())) {
+            return err(new TownProblem.NameTaken(name));
+          }
+          return Result.ok(town.renamed(name));
+        });
   }
 
   private static Result<Town, List<TownProblem>> rank(
@@ -181,14 +176,13 @@ public final class Membership {
     return ownerOf(actor, towns)
         .flatMap(Membership::townsOnly)
         .flatMap(town -> memberOf(town, actor, target))
-        .flatMap(
-            town -> {
-              var current = town.roleOf(target.id()).orElseThrow();
-              var from = to == TownRole.ASSISTANT ? TownRole.MEMBER : TownRole.ASSISTANT;
-              return current == from
-                  ? Result.ok(town.withMember(target.id(), to))
-                  : err(new TownProblem.AlreadyRanked(target.name(), current));
-            });
+        .flatMap(town -> {
+          var current = town.roleOf(target.id()).orElseThrow();
+          var from = to == TownRole.ASSISTANT ? TownRole.MEMBER : TownRole.ASSISTANT;
+          return current == from
+              ? Result.ok(town.withMember(target.id(), to))
+              : err(new TownProblem.AlreadyRanked(target.name(), current));
+        });
   }
 
   /** The town {@code actor} belongs to. */
@@ -201,22 +195,18 @@ public final class Membership {
 
   private static Result<Town, List<TownProblem>> managerOf(UUID actor, TownDirectory towns) {
     return townOf(actor, towns)
-        .flatMap(
-            town -> {
-              var role = town.roleOf(actor).orElseThrow();
-              return role.manages()
-                  ? Result.ok(town)
-                  : err(new TownProblem.CannotManageMembers(role));
-            });
+        .flatMap(town -> {
+          var role = town.roleOf(actor).orElseThrow();
+          return role.manages() ? Result.ok(town) : err(new TownProblem.CannotManageMembers(role));
+        });
   }
 
   private static Result<Town, List<TownProblem>> ownerOf(UUID actor, TownDirectory towns) {
     return townOf(actor, towns)
-        .flatMap(
-            town -> {
-              var role = town.roleOf(actor).orElseThrow();
-              return role == TownRole.OWNER ? Result.ok(town) : err(new TownProblem.NotOwner(role));
-            });
+        .flatMap(town -> {
+          var role = town.roleOf(actor).orElseThrow();
+          return role == TownRole.OWNER ? Result.ok(town) : err(new TownProblem.NotOwner(role));
+        });
   }
 
   private static Result<Town, List<TownProblem>> townsOnly(Town town) {

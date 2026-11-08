@@ -28,69 +28,64 @@ public final class JooqDailyLedger implements DailyLedger {
 
   @Override
   public CompletableFuture<Void> recordArrival(LocalDate date, UUID player, Instant at) {
-    return write(
-        dsl -> {
-          ensureDay(dsl, date, at);
-          dsl.insertInto(WORLD_DIGEST_ARRIVAL)
-              .set(WORLD_DIGEST_ARRIVAL.DAY, date.toEpochDay())
-              .set(WORLD_DIGEST_ARRIVAL.PLAYER_UUID, player.toString())
-              .onConflictDoNothing()
-              .execute();
-        });
+    return write(dsl -> {
+      ensureDay(dsl, date, at);
+      dsl.insertInto(WORLD_DIGEST_ARRIVAL)
+          .set(WORLD_DIGEST_ARRIVAL.DAY, date.toEpochDay())
+          .set(WORLD_DIGEST_ARRIVAL.PLAYER_UUID, player.toString())
+          .onConflictDoNothing()
+          .execute();
+    });
   }
 
   @Override
   public CompletableFuture<Void> recordDeath(LocalDate date, Instant at) {
-    return write(
-        dsl -> {
-          ensureDay(dsl, date, at);
-          dsl.update(WORLD_DIGEST_DAY)
-              .set(WORLD_DIGEST_DAY.DEATHS, WORLD_DIGEST_DAY.DEATHS.add(1))
-              .where(WORLD_DIGEST_DAY.DAY.eq(date.toEpochDay()))
-              .execute();
-        });
+    return write(dsl -> {
+      ensureDay(dsl, date, at);
+      dsl.update(WORLD_DIGEST_DAY)
+          .set(WORLD_DIGEST_DAY.DEATHS, WORLD_DIGEST_DAY.DEATHS.add(1))
+          .where(WORLD_DIGEST_DAY.DAY.eq(date.toEpochDay()))
+          .execute();
+    });
   }
 
   @Override
   public CompletableFuture<Optional<DailyReport>> read(LocalDate date) {
-    return database.read(
-        dsl -> {
-          var day =
-              dsl.selectFrom(WORLD_DIGEST_DAY)
-                  .where(WORLD_DIGEST_DAY.DAY.eq(date.toEpochDay()))
-                  .fetchOne();
-          if (day == null) {
-            return Optional.empty();
-          }
-          var visits =
-              dsl.fetchCount(WORLD_DIGEST_ARRIVAL, WORLD_DIGEST_ARRIVAL.DAY.eq(date.toEpochDay()));
-          return Optional.of(
-              new DailyReport(
-                  date,
-                  Instant.ofEpochMilli(requireNonNull(day.getFirstObservedMs())),
-                  visits,
-                  requireNonNull(day.getDeaths())));
-        });
+    return database.read(dsl -> {
+      var day =
+          dsl.selectFrom(WORLD_DIGEST_DAY)
+              .where(WORLD_DIGEST_DAY.DAY.eq(date.toEpochDay()))
+              .fetchOne();
+      if (day == null) {
+        return Optional.empty();
+      }
+      var visits =
+          dsl.fetchCount(WORLD_DIGEST_ARRIVAL, WORLD_DIGEST_ARRIVAL.DAY.eq(date.toEpochDay()));
+      return Optional.of(
+          new DailyReport(
+              date,
+              Instant.ofEpochMilli(requireNonNull(day.getFirstObservedMs())),
+              visits,
+              requireNonNull(day.getDeaths())));
+    });
   }
 
   /** Removes only this player's arrivals; aggregate deaths have no player identity to delete. */
   public CompletableFuture<Void> reset(UUID player) {
     return database
-        .write(
-            dsl ->
-                dsl.deleteFrom(WORLD_DIGEST_ARRIVAL)
-                    .where(WORLD_DIGEST_ARRIVAL.PLAYER_UUID.eq(player.toString()))
-                    .execute())
+        .write(dsl ->
+            dsl.deleteFrom(WORLD_DIGEST_ARRIVAL)
+                .where(WORLD_DIGEST_ARRIVAL.PLAYER_UUID.eq(player.toString()))
+                .execute())
         .thenAccept(ignored -> {});
   }
 
   private CompletableFuture<Void> write(Consumer<DSLContext> work) {
     return database
-        .write(
-            dsl -> {
-              work.accept(dsl);
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          work.accept(dsl);
+          return Boolean.TRUE;
+        })
         .thenAccept(done -> {});
   }
 

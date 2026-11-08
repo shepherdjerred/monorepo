@@ -71,11 +71,10 @@ final class ReflexCoverOccupancyTest {
             .toList();
     assertThat(moves)
         .singleElement()
-        .satisfies(
-            move -> {
-              assertThat(move.waypoint().x()).isGreaterThan(POSITION.x());
-              assertThat(move.waypoint().z()).isLessThan(POSITION.z());
-            });
+        .satisfies(move -> {
+          assertThat(move.waypoint().x()).isGreaterThan(POSITION.x());
+          assertThat(move.waypoint().z()).isLessThan(POSITION.z());
+        });
   }
 
   private record Scene(

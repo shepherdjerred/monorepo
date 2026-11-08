@@ -43,11 +43,10 @@ final class StrictYamlTest {
 
     assertThat(problems(result))
         .singleElement()
-        .satisfies(
-            problem -> {
-              assertThat(problem.source()).isEqualTo("quest.yml");
-              assertThat(problem.message()).contains("extra");
-            });
+        .satisfies(problem -> {
+          assertThat(problem.source()).isEqualTo("quest.yml");
+          assertThat(problem.message()).contains("extra");
+        });
   }
 
   @Test
@@ -91,11 +90,10 @@ final class StrictYamlTest {
 
     assertThat(problems(StrictYaml.parse("quest.yml", yaml, Quest.class)))
         .singleElement()
-        .satisfies(
-            problem -> {
-              assertThat(problem.path()).isEqualTo("rewards[0]");
-              assertThat(problem.message()).isEqualTo("amount must be positive");
-            });
+        .satisfies(problem -> {
+          assertThat(problem.path()).isEqualTo("rewards[0]");
+          assertThat(problem.message()).isEqualTo("amount must be positive");
+        });
   }
 
   private static List<Problem> problems(Result<Quest, List<Problem>> result) {

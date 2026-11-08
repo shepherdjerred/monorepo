@@ -87,11 +87,10 @@ public final class PlayerResetRegistry {
             .toList();
     for (var handler : ordered) {
       result =
-          result.thenCompose(
-              ignored -> {
-                diagnostics.accept("Resetting module " + handler.getKey());
-                return handler.getValue().reset(player);
-              });
+          result.thenCompose(ignored -> {
+            diagnostics.accept("Resetting module " + handler.getKey());
+            return handler.getValue().reset(player);
+          });
     }
     return result;
   }

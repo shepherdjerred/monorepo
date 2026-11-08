@@ -52,9 +52,8 @@ final class BeginnerLuckTest {
             () -> new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(6), 0.1, 1, 64, 3))
         .isInstanceOf(IllegalArgumentException.class);
     for (var multiplier : new double[] {-0.1, 1.1, Double.NaN, Double.POSITIVE_INFINITY}) {
-      assertThatThrownBy(
-              () ->
-                  new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(12), multiplier, 1, 64, 3))
+      assertThatThrownBy(() ->
+              new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(12), multiplier, 1, 64, 3))
           .isInstanceOf(IllegalArgumentException.class);
     }
     assertThatThrownBy(() -> luck.progress(-1)).isInstanceOf(IllegalArgumentException.class);

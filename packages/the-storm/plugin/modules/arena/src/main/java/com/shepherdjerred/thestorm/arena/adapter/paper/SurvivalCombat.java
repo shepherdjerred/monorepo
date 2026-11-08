@@ -179,15 +179,14 @@ final class SurvivalCombat {
               services.context().time().instant(),
               this::adds);
     }
-    audience.forEach(
-        p ->
-            Texts.info(
-                p,
-                "Round "
-                    + number
-                    + ": "
-                    + plan.event()
-                    + (plan.boss().isEmpty() ? "" : " — " + boss().orElseThrow().name())));
+    audience.forEach(p ->
+        Texts.info(
+            p,
+            "Round "
+                + number
+                + ": "
+                + plan.event()
+                + (plan.boss().isEmpty() ? "" : " — " + boss().orElseThrow().name())));
   }
 
   private List<Player> fighters = List.of();
@@ -216,22 +215,20 @@ final class SurvivalCombat {
       world.enemies().forEach(enemy -> recover(enemy, fighters));
     }
     boss()
-        .ifPresent(
-            b -> {
-              b.tick(services.context().time().instant(), fighters, audience);
-              if (b.charged()) {
-                map.charge(b.entity().getLocation());
-              }
-            });
-    var highlight = remaining() > 0 && remaining() < 3;
-    world.enemies().forEach(enemy -> enemy.setGlowing(highlight));
-    map.tick(
-        (enemy, id) -> {
-          var player = services.context().server().getPlayer(id);
-          if (player != null) {
-            hit(enemy, player);
+        .ifPresent(b -> {
+          b.tick(services.context().time().instant(), fighters, audience);
+          if (b.charged()) {
+            map.charge(b.entity().getLocation());
           }
         });
+    var highlight = remaining() > 0 && remaining() < 3;
+    world.enemies().forEach(enemy -> enemy.setGlowing(highlight));
+    map.tick((enemy, id) -> {
+      var player = services.context().server().getPlayer(id);
+      if (player != null) {
+        hit(enemy, player);
+      }
+    });
   }
 
   private void spawnQueued() {
@@ -347,22 +344,20 @@ final class SurvivalCombat {
     if (stalled == PursuitWatch.Action.NONE) return;
     var occupied =
         fighters.stream()
-            .anyMatch(
-                p -> {
-                  var area =
-                      map.zone(p)
+            .anyMatch(p -> {
+              var area =
+                  map.zone(p)
+                      .map(
+                          com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent.Zone
+                              ::id);
+              return area.equals(
+                      map.zone(at)
                           .map(
                               com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent.Zone
-                                  ::id);
-                  return area.equals(
-                          map.zone(at)
-                              .map(
-                                  com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent
-                                          .Zone
-                                      ::id))
-                      && (area.isPresent()
-                          || map.content().expedition().area().contains(Places.point(at)));
-                });
+                                  ::id))
+                  && (area.isPresent()
+                      || map.content().expedition().area().contains(Places.point(at)));
+            });
     if (!occupied || stalled == PursuitWatch.Action.RELOCATE) {
       enemy.teleport(entrance());
       return;

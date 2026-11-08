@@ -78,11 +78,10 @@ final class Binder {
     var inventory = player.getInventory();
     var slot =
         freeSlot(inventory)
-            .or(
-                () ->
-                    fociSlots(inventory, player, spell).stream()
-                        .filter(held -> held < STORAGE_SLOTS)
-                        .findFirst());
+            .or(() ->
+                fociSlots(inventory, player, spell).stream()
+                    .filter(held -> held < STORAGE_SLOTS)
+                    .findFirst());
     if (slot.isEmpty()) {
       return Optional.of(new Refusal.InventoryFull());
     }
@@ -108,11 +107,10 @@ final class Binder {
               }
               var destination =
                   freeSlot(inventory)
-                      .or(
-                          () ->
-                              fociSlots(inventory, player, spell).stream()
-                                  .filter(held -> held < STORAGE_SLOTS)
-                                  .findFirst());
+                      .or(() ->
+                          fociSlots(inventory, player, spell).stream()
+                              .filter(held -> held < STORAGE_SLOTS)
+                              .findFirst());
               if (destination.isEmpty()) {
                 rollback(key, generation, player, completed);
                 return;

@@ -120,16 +120,15 @@ final class ShowcaseReplay implements CombatHarness.Controller {
     var catalog = PersonalityFiles.load(storm.getDataFolder().toPath());
     var draft =
         COHORT.stream()
-            .map(
-                seat -> {
-                  var personality = catalog.byId(seat.personality()).orElseThrow();
-                  return new Director.Drafted(
-                      personality,
-                      seat.kit(),
-                      MatchCompetence.levers(personality, EXPERIENCE, SEED),
-                      new Rating(SkillScale.toMu(personality.skill()), Rating.DEFAULT.sigma()),
-                      MatchCompetence.style(personality, EXPERIENCE));
-                })
+            .map(seat -> {
+              var personality = catalog.byId(seat.personality()).orElseThrow();
+              return new Director.Drafted(
+                  personality,
+                  seat.kit(),
+                  MatchCompetence.levers(personality, EXPERIENCE, SEED),
+                  new Rating(SkillScale.toMu(personality.skill()), Rating.DEFAULT.sigma()),
+                  MatchCompetence.style(personality, EXPERIENCE));
+            })
             .toList();
     var harness = storm.service(CombatHarness.class);
     harness.attachAuthored(draft, this);
@@ -177,10 +176,9 @@ final class ShowcaseReplay implements CombatHarness.Controller {
       storm
           .service(ShowcaseControl.class)
           .stop(owned)
-          .ifPresent(
-              refusal -> {
-                throw new IllegalStateException(refusal);
-              });
+          .ifPresent(refusal -> {
+            throw new IllegalStateException(refusal);
+          });
     }
     detach();
     return status();

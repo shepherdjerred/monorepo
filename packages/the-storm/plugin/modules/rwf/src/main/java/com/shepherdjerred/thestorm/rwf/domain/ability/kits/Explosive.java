@@ -17,8 +17,8 @@ import java.time.Duration;
 /**
  * The Explosive. An RPG flies like an arrow until it hits, then explodes (power 6.5, at most 20
  * damage, no block damage), throwing its firer back; the launcher recharges for 30 seconds, and an
- * Explosive caught in its own RPG takes 4 more and credits nobody. Grenades are thrown from five 5-
- * second charges, so up to five fly at once, and explode 3 seconds after the throw (power 5.5, at
+ * Explosive caught in its own RPG takes 4 more and credits nobody. Grenades are thrown from five
+ * 5-second charges, so up to five fly at once, and explode 3 seconds after the throw (power 5.5, at
  * most 16); a dead thrower's grenade only bangs, hurting nobody, which the server does alone. On
  * Red Warfare's one-second clock, once the restock has recharged and fewer than 20 grenades are
  * held, one more arrives and the restock recharges for 13 seconds (8 at the start of the match).

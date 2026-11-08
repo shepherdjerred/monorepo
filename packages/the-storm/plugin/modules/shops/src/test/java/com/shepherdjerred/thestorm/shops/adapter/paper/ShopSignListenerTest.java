@@ -29,14 +29,12 @@ final class ShopSignListenerTest extends ShopsFixture {
     var stored = storedShops();
     assertThat(stored)
         .singleElement()
-        .satisfies(
-            shop -> {
-              assertThat(shop.owner())
-                  .isEqualTo(new ShopOwner.Player(alice.getUniqueId(), "Alice"));
-              assertThat(shop.quantity()).isEqualTo(16);
-              assertThat(shop.item())
-                  .hasValueSatisfying(item -> assertThat(item.material()).isEqualTo("coal"));
-            });
+        .satisfies(shop -> {
+          assertThat(shop.owner()).isEqualTo(new ShopOwner.Player(alice.getUniqueId(), "Alice"));
+          assertThat(shop.quantity()).isEqualTo(16);
+          assertThat(shop.item())
+              .hasValueSatisfying(item -> assertThat(item.material()).isEqualTo("coal"));
+        });
     var stamped =
         ((Sign) sign.getState())
             .getPersistentDataContainer()
@@ -57,9 +55,8 @@ final class ShopSignListenerTest extends ShopsFixture {
     assertThat(lines(event)).containsExactly("Bob", "1", "B 5", "Coal");
     assertThat(storedShops())
         .singleElement()
-        .satisfies(
-            shop ->
-                assertThat(shop.owner()).isEqualTo(new ShopOwner.Player(bob.getUniqueId(), "Bob")));
+        .satisfies(shop ->
+            assertThat(shop.owner()).isEqualTo(new ShopOwner.Player(bob.getUniqueId(), "Bob")));
   }
 
   @Test

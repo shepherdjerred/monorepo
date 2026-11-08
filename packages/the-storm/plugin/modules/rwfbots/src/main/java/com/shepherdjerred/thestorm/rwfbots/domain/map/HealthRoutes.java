@@ -247,13 +247,12 @@ public final class HealthRoutes {
 
     private final Map<Integer, List<Label>> frontier = new HashMap<>();
     private final PriorityQueue<Label> open =
-        new PriorityQueue<>(
-            (left, right) -> {
-              var cost = Double.compare(left.cost, right.cost);
-              if (cost != 0) return cost;
-              var damage = Integer.compare(left.damage, right.damage);
-              return damage != 0 ? damage : Integer.compare(left.node, right.node);
-            });
+        new PriorityQueue<>((left, right) -> {
+          var cost = Double.compare(left.cost, right.cost);
+          if (cost != 0) return cost;
+          var damage = Integer.compare(left.damage, right.damage);
+          return damage != 0 ? damage : Integer.compare(left.node, right.node);
+        });
 
     Search(NavGraph graph, Request request, EdgePolicy edges) {
       this.graph = graph;

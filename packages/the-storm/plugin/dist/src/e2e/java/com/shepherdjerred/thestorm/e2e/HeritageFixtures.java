@@ -24,43 +24,41 @@ final class HeritageFixtures {
                     .registrar()
                     .register(
                         Commands.literal("heritagefixture")
-                            .requires(
-                                source ->
-                                    source.getSender() instanceof ConsoleCommandSender
-                                        || source.getSender() instanceof RemoteConsoleCommandSender)
+                            .requires(source ->
+                                source.getSender() instanceof ConsoleCommandSender
+                                    || source.getSender() instanceof RemoteConsoleCommandSender)
                             .then(
                                 Commands.literal("death")
                                     .then(
                                         Commands.argument("player", StringArgumentType.word())
-                                            .executes(
-                                                context -> {
-                                                  var player =
+                                            .executes(context -> {
+                                              var player =
+                                                  Objects.requireNonNull(
+                                                      plugin
+                                                          .getServer()
+                                                          .getPlayerExact(
+                                                              StringArgumentType.getString(
+                                                                  context, "player")));
+                                              var storm =
+                                                  (TheStormPlugin)
                                                       Objects.requireNonNull(
                                                           plugin
                                                               .getServer()
-                                                              .getPlayerExact(
-                                                                  StringArgumentType.getString(
-                                                                      context, "player")));
-                                                  var storm =
-                                                      (TheStormPlugin)
-                                                          Objects.requireNonNull(
-                                                              plugin
-                                                                  .getServer()
-                                                                  .getPluginManager()
-                                                                  .getPlugin("TheStorm"));
-                                                  if (!storm
-                                                      .service(Protection.class)
-                                                      .isPreserved(player.getLocation())) {
-                                                    throw new IllegalStateException(
-                                                        "Death fixture requires preserved land");
-                                                  }
-                                                  // Direct native death bypasses Safe land's damage
-                                                  // cancellation. Paper still
-                                                  // dispatches the real death event and performs
-                                                  // vanilla inventory/XP handling.
-                                                  player.setHealth(0);
-                                                  return 1;
-                                                })))
+                                                              .getPluginManager()
+                                                              .getPlugin("TheStorm"));
+                                              if (!storm
+                                                  .service(Protection.class)
+                                                  .isPreserved(player.getLocation())) {
+                                                throw new IllegalStateException(
+                                                    "Death fixture requires preserved land");
+                                              }
+                                              // Direct native death bypasses Safe land's damage
+                                              // cancellation. Paper still
+                                              // dispatches the real death event and performs
+                                              // vanilla inventory/XP handling.
+                                              player.setHealth(0);
+                                              return 1;
+                                            })))
                             .build()));
   }
 }

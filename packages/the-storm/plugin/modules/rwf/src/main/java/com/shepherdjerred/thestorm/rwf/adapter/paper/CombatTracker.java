@@ -102,12 +102,11 @@ final class CombatTracker {
     windows.put(id, new Window(started, damage));
     prune(victim);
     last.put(id, new Last(damage, attacker, cause));
-    attacker.ifPresent(
-        who -> {
-          var now = time.instant();
-          credits.put(id, new Credit(who, KillCredit.hit(now)));
-          knocks.put(id, new Knock(who, new Knocked(cause, now)));
-        });
+    attacker.ifPresent(who -> {
+      var now = time.instant();
+      credits.put(id, new Credit(who, KillCredit.hit(now)));
+      knocks.put(id, new Knock(who, new Knocked(cause, now)));
+    });
   }
 
   /**

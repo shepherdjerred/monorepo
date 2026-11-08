@@ -103,16 +103,14 @@ final class EdgeFightTest {
 
     void add(SimBody bot, SimBody foe) {
       fights++;
-      bot.death.ifPresent(
-          death -> {
-            botDeaths++;
-            if (death.offEdge()) botOffEdge++;
-          });
-      foe.death.ifPresent(
-          death -> {
-            foeDeaths++;
-            if (death.offEdge()) foeOffEdge++;
-          });
+      bot.death.ifPresent(death -> {
+        botDeaths++;
+        if (death.offEdge()) botOffEdge++;
+      });
+      foe.death.ifPresent(death -> {
+        foeDeaths++;
+        if (death.offEdge()) foeOffEdge++;
+      });
     }
 
     @Override

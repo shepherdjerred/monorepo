@@ -358,11 +358,10 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
                   Optional.of(BOUNDS),
                   reflex
                       .activeJump()
-                      .filter(
-                          active ->
-                              active.stage()
-                                  == com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump
-                                      .Stage.RUN_UP)
+                      .filter(active ->
+                          active.stage()
+                              == com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump.Stage
+                                  .RUN_UP)
                       .flatMap(active -> active.waypoint().launch())));
       case BodyCommand.Look(var yaw, var pitch) -> owner.look(id, (float) yaw, (float) pitch);
       case BodyCommand.Jump _ -> owner.jump(id);

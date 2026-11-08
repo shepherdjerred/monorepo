@@ -101,12 +101,11 @@ final class MovementTerrainTest {
     assertThat(terrain.bankExit(feet, goal)).isEmpty();
     for (var y = 1; y <= 3; y++) world.getBlockAt(3, y, 2).setType(Material.STONE);
     assertThat(terrain.bankExit(feet, goal))
-        .hasValueSatisfying(
-            bank -> {
-              assertThat(bank.y()).isEqualTo(4);
-              assertThat(bank.x()).isGreaterThanOrEqualTo(3.25);
-              assertThat(terrain.clear(bank)).isTrue();
-            });
+        .hasValueSatisfying(bank -> {
+          assertThat(bank.y()).isEqualTo(4);
+          assertThat(bank.x()).isGreaterThanOrEqualTo(3.25);
+          assertThat(terrain.clear(bank)).isTrue();
+        });
     world.getBlockAt(3, 3, 2).setType(Material.MAGMA_BLOCK);
     assertThat(terrain.bankExit(feet, goal)).isEmpty();
   }

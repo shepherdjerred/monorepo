@@ -26,18 +26,17 @@ final class CombatantViewTest {
   void snapshotRejectsDuplicateIds() {
     var a = combatant(1, RED, Vec3.ZERO);
     var b = combatant(1, BLUE, Vec3.ZERO);
-    assertThatThrownBy(
-            () ->
-                new WorldSnapshot(
-                    0,
-                    MatchPhase.LIVE,
-                    List.of(a, b),
-                    List.of(),
-                    PoisonView.NONE,
-                    "m",
-                    List.of(),
-                    List.of(),
-                    List.of()))
+    assertThatThrownBy(() ->
+            new WorldSnapshot(
+                0,
+                MatchPhase.LIVE,
+                List.of(a, b),
+                List.of(),
+                PoisonView.NONE,
+                "m",
+                List.of(),
+                List.of(),
+                List.of()))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

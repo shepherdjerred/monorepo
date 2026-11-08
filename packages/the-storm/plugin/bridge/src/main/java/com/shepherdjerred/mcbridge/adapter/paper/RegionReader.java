@@ -86,13 +86,12 @@ public final class RegionReader {
         futures.add(
             world
                 .getChunkAtAsync(cx, cz)
-                .thenApply(
-                    chunk ->
-                        new ChunkData(
-                            cx,
-                            cz,
-                            chunk.getChunkSnapshot(false, false, false),
-                            entitiesIn(chunk.getTileEntities(false), box))));
+                .thenApply(chunk ->
+                    new ChunkData(
+                        cx,
+                        cz,
+                        chunk.getChunkSnapshot(false, false, false),
+                        entitiesIn(chunk.getTileEntities(false), box))));
       }
     }
     return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))

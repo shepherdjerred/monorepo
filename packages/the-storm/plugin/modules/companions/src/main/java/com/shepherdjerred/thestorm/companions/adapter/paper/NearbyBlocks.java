@@ -19,18 +19,16 @@ final class NearbyBlocks {
 
   static Stream<Block> footprint(Location origin, int width, int depth, int height) {
     return IntStream.range(0, width * depth * height)
-        .mapToObj(
-            index -> {
-              var x = index % width;
-              var y = index / (width * depth);
-              var z = index / width % depth;
-              return origin.clone().add(x, y, z);
-            })
-        .filter(
-            spot ->
-                spot.getBlockY() >= spot.getWorld().getMinHeight()
-                    && spot.getBlockY() < spot.getWorld().getMaxHeight()
-                    && spot.getWorld().isChunkLoaded(spot.getBlockX() >> 4, spot.getBlockZ() >> 4))
+        .mapToObj(index -> {
+          var x = index % width;
+          var y = index / (width * depth);
+          var z = index / width % depth;
+          return origin.clone().add(x, y, z);
+        })
+        .filter(spot ->
+            spot.getBlockY() >= spot.getWorld().getMinHeight()
+                && spot.getBlockY() < spot.getWorld().getMaxHeight()
+                && spot.getWorld().isChunkLoaded(spot.getBlockX() >> 4, spot.getBlockZ() >> 4))
         .map(Location::getBlock);
   }
 }

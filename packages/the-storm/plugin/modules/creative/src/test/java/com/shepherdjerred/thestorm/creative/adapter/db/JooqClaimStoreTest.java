@@ -136,14 +136,13 @@ final class JooqClaimStoreTest {
       var store = new JooqClaimStore(database);
       store.save(claimed).join();
       database
-          .write(
-              dsl ->
-                  dsl.query(
-                          "INSERT INTO creative_trust (plot_x, plot_z, member) VALUES (?, ?, ?)",
-                          plot.x(),
-                          plot.z(),
-                          FRIEND.toString())
-                      .execute())
+          .write(dsl ->
+              dsl.query(
+                      "INSERT INTO creative_trust (plot_x, plot_z, member) VALUES (?, ?, ?)",
+                      plot.x(),
+                      plot.z(),
+                      FRIEND.toString())
+                  .execute())
           .join();
 
       assertThat(store.loadAll().join().getFirst().access())
@@ -177,14 +176,13 @@ final class JooqClaimStoreTest {
       assertThat(store.loadAll().join().getFirst().flags()).isEmpty();
 
       database
-          .write(
-              dsl ->
-                  dsl.query(
-                          "INSERT INTO creative_flags (plot_x, plot_z, flag) VALUES (?, ?, ?)",
-                          plot.x(),
-                          plot.z(),
-                          "fly")
-                      .execute())
+          .write(dsl ->
+              dsl.query(
+                      "INSERT INTO creative_flags (plot_x, plot_z, flag) VALUES (?, ?, ?)",
+                      plot.x(),
+                      plot.z(),
+                      "fly")
+                  .execute())
           .join();
       assertThatThrownBy(() -> store.loadAll().join())
           .cause()
@@ -221,14 +219,13 @@ final class JooqClaimStoreTest {
       assertThat(store.loadAll().join().getFirst().surface()).isEqualTo(PlotSurface.DEFAULT);
 
       database
-          .write(
-              dsl ->
-                  dsl.query(
-                          "UPDATE creative_claims SET floor = ? WHERE plot_x = ? AND plot_z = ?",
-                          "minecraft:tnt",
-                          plot.x(),
-                          plot.z())
-                      .execute())
+          .write(dsl ->
+              dsl.query(
+                      "UPDATE creative_claims SET floor = ? WHERE plot_x = ? AND plot_z = ?",
+                      "minecraft:tnt",
+                      plot.x(),
+                      plot.z())
+                  .execute())
           .join();
       assertThatThrownBy(() -> store.loadAll().join())
           .cause()

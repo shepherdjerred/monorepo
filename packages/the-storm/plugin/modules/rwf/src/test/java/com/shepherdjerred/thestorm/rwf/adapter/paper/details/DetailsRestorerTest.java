@@ -78,9 +78,8 @@ final class DetailsRestorerTest {
         1,
         "a".repeat(64),
         IntStream.range(0, 9)
-            .mapToObj(
-                index ->
-                    new MapDetails.Container(new BlockPos(index, 0, 0), "minecraft:chest", payload))
+            .mapToObj(index ->
+                new MapDetails.Container(new BlockPos(index, 0, 0), "minecraft:chest", payload))
             .toList(),
         List.of());
   }

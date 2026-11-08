@@ -126,22 +126,21 @@ final class SettlementProvisioner {
     }
     var loads =
         chunks.stream()
-            .map(
-                chunk ->
-                    world
-                        .getChunkAtAsync(chunk.x(), chunk.z(), true)
-                        .thenAcceptAsync(
-                            loaded -> {
-                              if (stopped) {
-                                return;
-                              }
-                              if (loaded == null) {
-                                throw new IllegalStateException("Missing provision chunk");
-                              }
-                              tickets.keep(world, List.of(chunk));
-                              held.add(chunk);
-                            },
-                            context.mainThread()))
+            .map(chunk ->
+                world
+                    .getChunkAtAsync(chunk.x(), chunk.z(), true)
+                    .thenAcceptAsync(
+                        loaded -> {
+                          if (stopped) {
+                            return;
+                          }
+                          if (loaded == null) {
+                            throw new IllegalStateException("Missing provision chunk");
+                          }
+                          tickets.keep(world, List.of(chunk));
+                          held.add(chunk);
+                        },
+                        context.mainThread()))
             .toArray(CompletableFuture[]::new);
     var _ =
         CompletableFuture.allOf(loads)
@@ -417,10 +416,9 @@ final class SettlementProvisioner {
   private static String hashChanges(List<SettlementStore.Change> changes) {
     try {
       var digest = MessageDigest.getInstance("SHA-256");
-      changes.forEach(
-          c ->
-              digest.update(
-                  (c.block() + c.before() + c.after() + "\n").getBytes(StandardCharsets.UTF_8)));
+      changes.forEach(c ->
+          digest.update(
+              (c.block() + c.before() + c.after() + "\n").getBytes(StandardCharsets.UTF_8)));
       return HexFormat.of().formatHex(digest.digest());
     } catch (NoSuchAlgorithmException failure) {
       throw new IllegalStateException(failure);

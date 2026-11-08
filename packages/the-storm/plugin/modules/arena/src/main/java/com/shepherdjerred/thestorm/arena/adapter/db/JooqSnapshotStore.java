@@ -32,99 +32,95 @@ public final class JooqSnapshotStore implements SnapshotStore {
   @Override
   public CompletableFuture<Void> save(Snapshot snapshot) {
     return Writes.done(
-        database.write(
-            dsl -> {
-              var player = snapshot.player().toString();
-              dsl.deleteFrom(ARENA_SNAPSHOTS).where(ARENA_SNAPSHOTS.PLAYER.eq(player)).execute();
-              var position = snapshot.position();
-              var vitals = snapshot.vitals();
-              var experience = snapshot.experience();
-              dsl.insertInto(ARENA_SNAPSHOTS)
-                  .set(ARENA_SNAPSHOTS.PLAYER, player)
-                  .set(ARENA_SNAPSHOTS.ARENA, snapshot.scope())
-                  .set(ARENA_SNAPSHOTS.WORLD, position.world())
-                  .set(ARENA_SNAPSHOTS.X, position.x())
-                  .set(ARENA_SNAPSHOTS.Y, position.y())
-                  .set(ARENA_SNAPSHOTS.Z, position.z())
-                  .set(ARENA_SNAPSHOTS.YAW, (double) position.yaw())
-                  .set(ARENA_SNAPSHOTS.PITCH, (double) position.pitch())
-                  .set(ARENA_SNAPSHOTS.HEALTH, vitals.health())
-                  .set(ARENA_SNAPSHOTS.FOOD, vitals.food())
-                  .set(ARENA_SNAPSHOTS.SATURATION, (double) vitals.saturation())
-                  .set(ARENA_SNAPSHOTS.EXHAUSTION, (double) vitals.exhaustion())
-                  .set(ARENA_SNAPSHOTS.GAME_MODE, vitals.gameMode())
-                  .set(ARENA_SNAPSHOTS.ALLOW_FLIGHT, vitals.allowFlight())
-                  .set(ARENA_SNAPSHOTS.FLYING, vitals.flying())
-                  .set(ARENA_SNAPSHOTS.FLY_SPEED, vitals.flySpeed())
-                  .set(ARENA_SNAPSHOTS.MAXIMUM_NO_DAMAGE_TICKS, vitals.maximumNoDamageTicks())
-                  .set(ARENA_SNAPSHOTS.VITALS_VERSION, vitals.formatVersion())
-                  .set(ARENA_SNAPSHOTS.LEVEL, experience.level())
-                  .set(ARENA_SNAPSHOTS.PROGRESS, (double) experience.progress())
-                  .set(ARENA_SNAPSHOTS.TOTAL_EXPERIENCE, experience.total())
-                  .set(ARENA_SNAPSHOTS.INVENTORY, snapshot.inventory().bytes())
-                  .set(ARENA_SNAPSHOTS.TAKEN_AT, snapshot.takenAt().toEpochMilli())
-                  .execute();
-              var effects = snapshot.effects();
-              for (var i = 0; i < effects.size(); i++) {
-                var effect = effects.get(i);
-                dsl.insertInto(ARENA_SNAPSHOT_EFFECTS)
-                    .set(ARENA_SNAPSHOT_EFFECTS.PLAYER, player)
-                    .set(ARENA_SNAPSHOT_EFFECTS.POSITION, i)
-                    .set(ARENA_SNAPSHOT_EFFECTS.EFFECT, effect.type())
-                    .set(ARENA_SNAPSHOT_EFFECTS.AMPLIFIER, effect.amplifier())
-                    .set(ARENA_SNAPSHOT_EFFECTS.DURATION, effect.duration())
-                    .set(ARENA_SNAPSHOT_EFFECTS.AMBIENT, effect.ambient())
-                    .set(ARENA_SNAPSHOT_EFFECTS.PARTICLES, effect.particles())
-                    .set(ARENA_SNAPSHOT_EFFECTS.ICON, effect.icon())
-                    .execute();
-              }
-              return true;
-            }));
+        database.write(dsl -> {
+          var player = snapshot.player().toString();
+          dsl.deleteFrom(ARENA_SNAPSHOTS).where(ARENA_SNAPSHOTS.PLAYER.eq(player)).execute();
+          var position = snapshot.position();
+          var vitals = snapshot.vitals();
+          var experience = snapshot.experience();
+          dsl.insertInto(ARENA_SNAPSHOTS)
+              .set(ARENA_SNAPSHOTS.PLAYER, player)
+              .set(ARENA_SNAPSHOTS.ARENA, snapshot.scope())
+              .set(ARENA_SNAPSHOTS.WORLD, position.world())
+              .set(ARENA_SNAPSHOTS.X, position.x())
+              .set(ARENA_SNAPSHOTS.Y, position.y())
+              .set(ARENA_SNAPSHOTS.Z, position.z())
+              .set(ARENA_SNAPSHOTS.YAW, (double) position.yaw())
+              .set(ARENA_SNAPSHOTS.PITCH, (double) position.pitch())
+              .set(ARENA_SNAPSHOTS.HEALTH, vitals.health())
+              .set(ARENA_SNAPSHOTS.FOOD, vitals.food())
+              .set(ARENA_SNAPSHOTS.SATURATION, (double) vitals.saturation())
+              .set(ARENA_SNAPSHOTS.EXHAUSTION, (double) vitals.exhaustion())
+              .set(ARENA_SNAPSHOTS.GAME_MODE, vitals.gameMode())
+              .set(ARENA_SNAPSHOTS.ALLOW_FLIGHT, vitals.allowFlight())
+              .set(ARENA_SNAPSHOTS.FLYING, vitals.flying())
+              .set(ARENA_SNAPSHOTS.FLY_SPEED, vitals.flySpeed())
+              .set(ARENA_SNAPSHOTS.MAXIMUM_NO_DAMAGE_TICKS, vitals.maximumNoDamageTicks())
+              .set(ARENA_SNAPSHOTS.VITALS_VERSION, vitals.formatVersion())
+              .set(ARENA_SNAPSHOTS.LEVEL, experience.level())
+              .set(ARENA_SNAPSHOTS.PROGRESS, (double) experience.progress())
+              .set(ARENA_SNAPSHOTS.TOTAL_EXPERIENCE, experience.total())
+              .set(ARENA_SNAPSHOTS.INVENTORY, snapshot.inventory().bytes())
+              .set(ARENA_SNAPSHOTS.TAKEN_AT, snapshot.takenAt().toEpochMilli())
+              .execute();
+          var effects = snapshot.effects();
+          for (var i = 0; i < effects.size(); i++) {
+            var effect = effects.get(i);
+            dsl.insertInto(ARENA_SNAPSHOT_EFFECTS)
+                .set(ARENA_SNAPSHOT_EFFECTS.PLAYER, player)
+                .set(ARENA_SNAPSHOT_EFFECTS.POSITION, i)
+                .set(ARENA_SNAPSHOT_EFFECTS.EFFECT, effect.type())
+                .set(ARENA_SNAPSHOT_EFFECTS.AMPLIFIER, effect.amplifier())
+                .set(ARENA_SNAPSHOT_EFFECTS.DURATION, effect.duration())
+                .set(ARENA_SNAPSHOT_EFFECTS.AMBIENT, effect.ambient())
+                .set(ARENA_SNAPSHOT_EFFECTS.PARTICLES, effect.particles())
+                .set(ARENA_SNAPSHOT_EFFECTS.ICON, effect.icon())
+                .execute();
+          }
+          return true;
+        }));
   }
 
   @Override
   public CompletableFuture<Boolean> markRestored(UUID player, Instant at) {
-    return database.write(
-        dsl ->
-            dsl.update(ARENA_SNAPSHOTS)
-                    .set(ARENA_SNAPSHOTS.RESTORED_AT, at.toEpochMilli())
-                    .where(ARENA_SNAPSHOTS.PLAYER.eq(player.toString()))
-                    .and(ARENA_SNAPSHOTS.RESTORED_AT.isNull())
-                    .execute()
-                > 0);
+    return database.write(dsl ->
+        dsl.update(ARENA_SNAPSHOTS)
+                .set(ARENA_SNAPSHOTS.RESTORED_AT, at.toEpochMilli())
+                .where(ARENA_SNAPSHOTS.PLAYER.eq(player.toString()))
+                .and(ARENA_SNAPSHOTS.RESTORED_AT.isNull())
+                .execute()
+            > 0);
   }
 
   @Override
   public CompletableFuture<Void> deleteRestored(UUID player) {
     return Writes.done(
-        database.write(
-            dsl ->
-                dsl.deleteFrom(ARENA_SNAPSHOTS)
-                    .where(ARENA_SNAPSHOTS.PLAYER.eq(player.toString()))
-                    .and(ARENA_SNAPSHOTS.RESTORED_AT.isNotNull())
-                    .execute()));
+        database.write(dsl ->
+            dsl.deleteFrom(ARENA_SNAPSHOTS)
+                .where(ARENA_SNAPSHOTS.PLAYER.eq(player.toString()))
+                .and(ARENA_SNAPSHOTS.RESTORED_AT.isNotNull())
+                .execute()));
   }
 
   @Override
   public CompletableFuture<List<Snapshot>> loadAll() {
-    return database.read(
-        dsl -> {
-          Map<String, List<ArenaSnapshotEffectsRecord>> effects =
-              dsl
-                  .selectFrom(ARENA_SNAPSHOT_EFFECTS)
-                  .orderBy(ARENA_SNAPSHOT_EFFECTS.PLAYER, ARENA_SNAPSHOT_EFFECTS.POSITION)
-                  .fetch()
-                  .stream()
-                  .collect(groupingBy(ArenaSnapshotEffectsRecord::getPlayer));
-          return dsl
-              .selectFrom(ARENA_SNAPSHOTS)
-              .where(ARENA_SNAPSHOTS.RESTORED_AT.isNull())
-              .orderBy(ARENA_SNAPSHOTS.TAKEN_AT)
+    return database.read(dsl -> {
+      Map<String, List<ArenaSnapshotEffectsRecord>> effects =
+          dsl
+              .selectFrom(ARENA_SNAPSHOT_EFFECTS)
+              .orderBy(ARENA_SNAPSHOT_EFFECTS.PLAYER, ARENA_SNAPSHOT_EFFECTS.POSITION)
               .fetch()
               .stream()
-              .map(row -> toSnapshot(row, effects.getOrDefault(row.getPlayer(), List.of())))
-              .toList();
-        });
+              .collect(groupingBy(ArenaSnapshotEffectsRecord::getPlayer));
+      return dsl
+          .selectFrom(ARENA_SNAPSHOTS)
+          .where(ARENA_SNAPSHOTS.RESTORED_AT.isNull())
+          .orderBy(ARENA_SNAPSHOTS.TAKEN_AT)
+          .fetch()
+          .stream()
+          .map(row -> toSnapshot(row, effects.getOrDefault(row.getPlayer(), List.of())))
+          .toList();
+    });
   }
 
   private static Snapshot toSnapshot(

@@ -61,26 +61,23 @@ final class ArenaCommands {
                                     com.mojang.brigadier.arguments.IntegerArgumentType.integer(
                                         1, 1000))
                                 .requires(permission(ArenaPermissions.DEBUG))
-                                .executes(
-                                    command ->
-                                        asPlayer(
-                                            command,
-                                            player ->
-                                                arenas
-                                                    .byId(
-                                                        StringArgumentType.getString(
-                                                            command, "arena"))
-                                                    .ifPresentOrElse(
-                                                        runner ->
-                                                            arenas.joinDebug(
-                                                                player,
-                                                                runner,
-                                                                com.mojang.brigadier.arguments
-                                                                    .IntegerArgumentType.getInteger(
-                                                                    command, "round")),
-                                                        () ->
-                                                            Texts.error(
-                                                                player, "Unknown arena.")))))))
+                                .executes(command ->
+                                    asPlayer(
+                                        command,
+                                        player ->
+                                            arenas
+                                                .byId(
+                                                    StringArgumentType.getString(command, "arena"))
+                                                .ifPresentOrElse(
+                                                    runner ->
+                                                        arenas.joinDebug(
+                                                            player,
+                                                            runner,
+                                                            com.mojang.brigadier.arguments
+                                                                .IntegerArgumentType.getInteger(
+                                                                command, "round")),
+                                                    () ->
+                                                        Texts.error(player, "Unknown arena.")))))))
         .then(
             Commands.literal("spec")
                 .requires(permission(ArenaPermissions.SPECTATE))
@@ -95,23 +92,20 @@ final class ArenaCommands {
                 .then(
                     Commands.argument("class", StringArgumentType.word())
                         .suggests(
-                            suggest(
-                                () ->
-                                    java.util.stream.Stream.concat(
-                                            classes.classes().keySet().stream(),
-                                            java.util.Arrays.stream(
-                                                    com.shepherdjerred.thestorm.arena.domain
-                                                        .survival.SurvivalClass.values())
-                                                .map(c -> c.name().toLowerCase(Locale.ROOT)))
-                                        .toList()))
-                        .executes(
-                            context ->
-                                asPlayer(
-                                    context,
-                                    player ->
-                                        pickClass(
-                                            player,
-                                            StringArgumentType.getString(context, "class"))))))
+                            suggest(() ->
+                                java.util.stream.Stream.concat(
+                                        classes.classes().keySet().stream(),
+                                        java.util.Arrays.stream(
+                                                com.shepherdjerred.thestorm.arena.domain.survival
+                                                    .SurvivalClass.values())
+                                            .map(c -> c.name().toLowerCase(Locale.ROOT)))
+                                    .toList()))
+                        .executes(context ->
+                            asPlayer(
+                                context,
+                                player ->
+                                    pickClass(
+                                        player, StringArgumentType.getString(context, "class"))))))
         .then(
             Commands.literal("ready")
                 .requires(permission(ArenaPermissions.PLAY))
@@ -126,11 +120,10 @@ final class ArenaCommands {
                 .then(
                     Commands.argument("arena", StringArgumentType.word())
                         .suggests(suggest(arenas::ids))
-                        .executes(
-                            context ->
-                                top(
-                                    context.getSource().getSender(),
-                                    StringArgumentType.getString(context, "arena")))))
+                        .executes(context ->
+                            top(
+                                context.getSource().getSender(),
+                                StringArgumentType.getString(context, "arena")))))
         .then(
             Commands.literal("here")
                 .requires(permission(ArenaPermissions.ADMIN))
@@ -150,35 +143,33 @@ final class ArenaCommands {
       BiConsumer<Player, ArenaRunner> action) {
     return Commands.argument("arena", StringArgumentType.word())
         .suggests(suggest(arenas::ids))
-        .executes(
-            context ->
-                asPlayer(
-                    context,
-                    player -> {
-                      var id = StringArgumentType.getString(context, "arena");
-                      arenas
-                          .byId(id)
-                          .ifPresentOrElse(
-                              runner -> action.accept(player, runner),
-                              () -> Texts.error(player, "There is no arena called " + id + "."));
-                    }));
+        .executes(context ->
+            asPlayer(
+                context,
+                player -> {
+                  var id = StringArgumentType.getString(context, "arena");
+                  arenas
+                      .byId(id)
+                      .ifPresentOrElse(
+                          runner -> action.accept(player, runner),
+                          () -> Texts.error(player, "There is no arena called " + id + "."));
+                }));
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> adminArenaArgument(
       BiConsumer<CommandSender, ArenaRunner> action) {
     return Commands.argument("arena", StringArgumentType.word())
         .suggests(suggest(arenas::ids))
-        .executes(
-            context -> {
-              var sender = context.getSource().getSender();
-              var id = StringArgumentType.getString(context, "arena");
-              arenas
-                  .byId(id)
-                  .ifPresentOrElse(
-                      runner -> action.accept(sender, runner),
-                      () -> Texts.error(sender, "There is no arena called " + id + "."));
-              return OK;
-            });
+        .executes(context -> {
+          var sender = context.getSource().getSender();
+          var id = StringArgumentType.getString(context, "arena");
+          arenas
+              .byId(id)
+              .ifPresentOrElse(
+                  runner -> action.accept(sender, runner),
+                  () -> Texts.error(sender, "There is no arena called " + id + "."));
+          return OK;
+        });
   }
 
   private void join(Player player, ArenaRunner runner) {

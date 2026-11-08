@@ -61,21 +61,17 @@ final class SpellsCommand {
             Commands.literal("bind")
                 .then(
                     Commands.argument(SPELL, word())
-                        .suggests(
-                            (context, builder) ->
-                                suggest(
-                                    builder, kind -> knows(context.getSource().getSender(), kind)))
-                        .executes(
-                            context ->
-                                bind(context.getSource().getSender(), getString(context, SPELL)))))
+                        .suggests((context, builder) ->
+                            suggest(builder, kind -> knows(context.getSource().getSender(), kind)))
+                        .executes(context ->
+                            bind(context.getSource().getSender(), getString(context, SPELL)))))
         .then(
             Commands.literal("info")
                 .then(
                     Commands.argument(SPELL, word())
                         .suggests((context, builder) -> suggest(builder, kind -> true))
-                        .executes(
-                            context ->
-                                info(context.getSource().getSender(), getString(context, SPELL)))))
+                        .executes(context ->
+                            info(context.getSource().getSender(), getString(context, SPELL)))))
         .then(
             Commands.literal("scroll")
                 .requires(source -> source.getSender().hasPermission(Access.ADMIN))
@@ -88,9 +84,8 @@ final class SpellsCommand {
                                 .then(
                                     Commands.argument(
                                             AMOUNT, integer(1, config.scroll().maxStack()))
-                                        .executes(
-                                            context ->
-                                                scroll(context, getInteger(context, AMOUNT)))))))
+                                        .executes(context ->
+                                            scroll(context, getInteger(context, AMOUNT)))))))
         .build();
   }
 

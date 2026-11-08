@@ -175,22 +175,19 @@ public record Abilities(
             .ifPresent(ability -> ability.hit(self.orElseThrow(), hit, engine));
         engine
             .fighter(hit.victim())
-            .ifPresent(
-                victim ->
-                    engine.hurt(
-                        victim,
-                        new AbilityInput.Hurt(Optional.of(actor), hit.type(), hit.damage())));
+            .ifPresent(victim ->
+                engine.hurt(
+                    victim, new AbilityInput.Hurt(Optional.of(actor), hit.type(), hit.damage())));
       }
       case AbilityInput.Hurt hurt -> engine.hurt(self.orElseThrow(), hurt);
       case AbilityInput.Touch touch -> engine.touch(self.orElseThrow(), touch);
       default ->
           abilityOf(self.orElseThrow().kit())
-              .ifPresent(
-                  ability -> {
-                    var before = engine.effects.size();
-                    ability.act(self.orElseThrow(), input, engine);
-                    engine.used(actor, ability.id(), input, before);
-                  });
+              .ifPresent(ability -> {
+                var before = engine.effects.size();
+                ability.act(self.orElseThrow(), input, engine);
+                engine.used(actor, ability.id(), input, before);
+              });
     }
     return engine.step();
   }
@@ -226,9 +223,8 @@ public record Abilities(
     var engine = new Engine(this, board);
     engine
         .fighter(death.victim())
-        .ifPresent(
-            victim ->
-                abilityOf(victim.kit()).ifPresent(ability -> ability.died(victim, death, engine)));
+        .ifPresent(victim ->
+            abilityOf(victim.kit()).ifPresent(ability -> ability.died(victim, death, engine)));
     for (var fighter : engine.living()) {
       if (!fighter.id().equals(death.victim())) {
         abilityOf(fighter.kit()).ifPresent(ability -> ability.died(fighter, death, engine));
@@ -286,10 +282,9 @@ public record Abilities(
       }
       var answered =
           effects.subList(before, effects.size()).stream()
-              .anyMatch(
-                  effect ->
-                      !(effect instanceof AbilityEffect.Say say
-                          && say.tone() == AbilityEffect.Tone.REFUSED));
+              .anyMatch(effect ->
+                  !(effect instanceof AbilityEffect.Say say
+                      && say.tone() == AbilityEffect.Tone.REFUSED));
       if (answered) {
         uses.add(new AbilityEffect.Used(actor, ability, target(input)));
       }

@@ -163,10 +163,9 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
       throw new IllegalStateException("bind requires the joined human Training Yard countdown");
     BotActions.over(storm().service(CombatantActions.class), view())
         .pickKit(body, chosen.kit())
-        .ifPresent(
-            refusal -> {
-              throw new IllegalStateException("real kit selection refused: " + refusal);
-            });
+        .ifPresent(refusal -> {
+          throw new IllegalStateException("real kit selection refused: " + refusal);
+        });
     subject = Optional.of(body);
     match = Optional.of(current.matchId());
     scenario = Optional.of(chosen);
@@ -576,11 +575,10 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   }
 
   private void restoreEnvironment() {
-    environment.ifPresent(
-        controlled -> {
-          controlled.restore();
-          setup("environment-restored", controlled.evidence());
-        });
+    environment.ifPresent(controlled -> {
+      controlled.restore();
+      setup("environment-restored", controlled.evidence());
+    });
     environment = Optional.empty();
   }
 

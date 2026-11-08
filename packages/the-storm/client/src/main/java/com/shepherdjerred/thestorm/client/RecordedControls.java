@@ -91,11 +91,10 @@ final class RecordedControls {
     PayloadTypeRegistry.clientboundPlay().register(Observation.TYPE, Observation.CODEC);
     ClientPlayNetworking.registerGlobalReceiver(
         Observation.TYPE, (payload, context) -> observationTick = payload.tick());
-    ClientPreAttackCallback.EVENT.register(
-        (client, player, clicks) -> {
-          pulses.attack();
-          return false;
-        });
+    ClientPreAttackCallback.EVENT.register((client, player, clicks) -> {
+      pulses.attack();
+      return false;
+    });
     UseItemCallback.EVENT.register((player, level, hand) -> recordUse(player));
     UseBlockCallback.EVENT.register((player, level, hand, hit) -> recordUse(player));
     UseEntityCallback.EVENT.register((player, level, hand, entity, hit) -> recordUse(player));

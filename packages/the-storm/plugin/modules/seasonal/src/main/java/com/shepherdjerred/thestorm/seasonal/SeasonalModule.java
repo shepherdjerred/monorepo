@@ -55,10 +55,8 @@ public final class SeasonalModule implements StormModule {
   private static List<SeasonalEvent> running(SeasonalConfig config, InstantSource time) {
     var today = LocalDate.ofInstant(time.instant(), config.zone());
     return config.activeOn(today).stream()
-        .map(
-            event ->
-                new SeasonalEvent(
-                    event.title(), UNTIL.format(MonthDay.parse("--" + event.lastDay()))))
+        .map(event ->
+            new SeasonalEvent(event.title(), UNTIL.format(MonthDay.parse("--" + event.lastDay()))))
         .toList();
   }
 }

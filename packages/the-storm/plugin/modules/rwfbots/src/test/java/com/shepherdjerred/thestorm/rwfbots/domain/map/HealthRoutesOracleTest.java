@@ -75,12 +75,11 @@ final class HealthRoutesOracleTest {
     var expected = enumerate(course, request, damage, new Prefix(0, 0, 0, 0));
     var actual = HealthRoutes.find(graph, request, edges, null);
     assertThat(actual.isPresent()).isEqualTo(Double.isFinite(expected));
-    actual.ifPresent(
-        route -> {
-          assertThat(route.weightedCost()).isCloseTo(expected, within(1e-9));
-          assertThat(route.damage()).isLessThanOrEqualTo((int) risk.damageBudget());
-          assertThat(risk.allows(route.path().cost())).isTrue();
-        });
+    actual.ifPresent(route -> {
+      assertThat(route.weightedCost()).isCloseTo(expected, within(1e-9));
+      assertThat(route.damage()).isLessThanOrEqualTo((int) risk.damageBudget());
+      assertThat(risk.allows(route.path().cost())).isTrue();
+    });
   }
 
   @Test
@@ -91,11 +90,10 @@ final class HealthRoutesOracleTest {
     var motion = new NavGraph.EdgeMotion(graph::edgeCost, edge -> true, 1);
     var edges =
         new HealthRoutes.EdgePolicy(edge -> course.damage().get(edge), motion)
-            .withToll(
-                (edge, source, duration) -> {
-                  calls.incrementAndGet();
-                  return course.tolls().get(edge);
-                });
+            .withToll((edge, source, duration) -> {
+              calls.incrementAndGet();
+              return course.tolls().get(edge);
+            });
     var route =
         HealthRoutes.find(
                 graph,

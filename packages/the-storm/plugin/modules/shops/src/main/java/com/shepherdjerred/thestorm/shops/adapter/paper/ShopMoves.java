@@ -71,11 +71,10 @@ final class ShopMoves implements ShopRelocation {
           || shop.isAdmin()
           || !shop.owner().isOwnedBy(owner)
           || shop.container().stream()
-              .anyMatch(
-                  pos ->
-                      !inside(area, pos)
-                          || ShopBlocks.containerBlocks(blocks.block(pos).orElseThrow()).stream()
-                              .anyMatch(half -> !inside(area, half)))) {
+              .anyMatch(pos ->
+                  !inside(area, pos)
+                      || ShopBlocks.containerBlocks(blocks.block(pos).orElseThrow()).stream()
+                          .anyMatch(half -> !inside(area, half)))) {
         throw new IllegalStateException("shop ownership or bounds cross this rental plot");
       }
       selected.add(shop);
@@ -157,17 +156,16 @@ final class ShopMoves implements ShopRelocation {
   public CompletableFuture<Void> removePlaced(byte[] snapshot, Target target) {
     var moved =
         ShopArchive.decode(snapshot).stream()
-            .map(
-                saved ->
-                    new SignShop(
-                        saved.id(),
-                        translated(saved.sign(), target),
-                        saved.container().map(pos -> translated(pos, target)),
-                        saved.owner(),
-                        saved.quantity(),
-                        saved.prices(),
-                        saved.item(),
-                        saved.createdAt()))
+            .map(saved ->
+                new SignShop(
+                    saved.id(),
+                    translated(saved.sign(), target),
+                    saved.container().map(pos -> translated(pos, target)),
+                    saved.owner(),
+                    saved.quantity(),
+                    saved.prices(),
+                    saved.item(),
+                    saved.createdAt()))
             .toList();
     return remove(ShopArchive.encode(moved));
   }

@@ -104,25 +104,24 @@ final class KitWorld {
   void gear(AbilityEffect.Gear gear) {
     runner
         .entity(gear.id())
-        .ifPresent(
-            player -> {
-              var levels =
-                  Map.of(
-                      enchantment("sharpness"), gear.sharpness(),
-                      enchantment("protection"), gear.protection(),
-                      enchantment("blast_protection"), gear.blastProtection());
-              var inventory = player.getInventory();
-              for (var slot = 0; slot < inventory.getSize(); slot++) {
-                var item = inventory.getItem(slot);
-                if (item != null && enchant(item, levels)) {
-                  inventory.setItem(slot, item);
-                }
-              }
-              var cursor = player.getItemOnCursor();
-              if (enchant(cursor, levels)) {
-                player.setItemOnCursor(cursor);
-              }
-            });
+        .ifPresent(player -> {
+          var levels =
+              Map.of(
+                  enchantment("sharpness"), gear.sharpness(),
+                  enchantment("protection"), gear.protection(),
+                  enchantment("blast_protection"), gear.blastProtection());
+          var inventory = player.getInventory();
+          for (var slot = 0; slot < inventory.getSize(); slot++) {
+            var item = inventory.getItem(slot);
+            if (item != null && enchant(item, levels)) {
+              inventory.setItem(slot, item);
+            }
+          }
+          var cursor = player.getItemOnCursor();
+          if (enchant(cursor, levels)) {
+            player.setItemOnCursor(cursor);
+          }
+        });
   }
 
   /** Enchants {@code item} at {@code levels} where it can be; whether it changed. */
@@ -161,24 +160,19 @@ final class KitWorld {
   void damage(AbilityEffect.Damage damage) {
     runner
         .entity(damage.id())
-        .ifPresent(
-            victim -> {
-              var side = runner.kits().side(victim.getUniqueId());
-              if (side.isEmpty() || victim.isDead()) {
-                return;
-              }
-              var hit =
-                  DamageFormula.Hit.of(damage.cause(), damage.amount(), KitFactory.armor(victim));
-              var computed =
-                  KitCombat.damage(
-                      hit,
-                      Optional.empty(),
-                      side.orElseThrow(),
-                      runner.match().random(runner.now()));
-              var dealt = PaperKitResistance.apply(victim, computed, damage.cause());
-              tracker.hit(victim, dealt, damage.by().map(CombatantId::uuid), damage.cause());
-              Harm.take(victim, dealt);
-            });
+        .ifPresent(victim -> {
+          var side = runner.kits().side(victim.getUniqueId());
+          if (side.isEmpty() || victim.isDead()) {
+            return;
+          }
+          var hit = DamageFormula.Hit.of(damage.cause(), damage.amount(), KitFactory.armor(victim));
+          var computed =
+              KitCombat.damage(
+                  hit, Optional.empty(), side.orElseThrow(), runner.match().random(runner.now()));
+          var dealt = PaperKitResistance.apply(victim, computed, damage.cause());
+          tracker.hit(victim, dealt, damage.by().map(CombatantId::uuid), damage.cause());
+          Harm.take(victim, dealt);
+        });
   }
 
   /** {@code glow.target()} glows for {@code glow.team()} only. */
@@ -221,14 +215,13 @@ final class KitWorld {
     for (var member : runner.match().members()) {
       runner
           .entity(member.id())
-          .ifPresent(
-              player -> {
-                if (member.onTeam(team)) {
-                  player.showEntity(context.plugin(), display);
-                } else {
-                  player.hideEntity(context.plugin(), display);
-                }
-              });
+          .ifPresent(player -> {
+            if (member.onTeam(team)) {
+              player.showEntity(context.plugin(), display);
+            } else {
+              player.hideEntity(context.plugin(), display);
+            }
+          });
     }
   }
 
@@ -343,10 +336,8 @@ final class KitWorld {
         var team = member.team().orElseThrow();
         runner
             .entity(member.id())
-            .ifPresent(
-                player ->
-                    prints.add(
-                        new Print(member.id(), team, Places.at(player).add(0, 0.05, 0), now)));
+            .ifPresent(player ->
+                prints.add(new Print(member.id(), team, Places.at(player).add(0, 0.05, 0), now)));
       }
     }
     while (!prints.isEmpty() && prints.peekFirst().time().plus(Tracker.TRAIL).isBefore(now)) {

@@ -47,15 +47,14 @@ final class Snapshots {
    * is not in the match.
    */
   void load(Predicate<UUID> inMatch, Runnable loaded) {
-    keeper.load(
-        () -> {
-          for (var player : runtime.server().getOnlinePlayers()) {
-            if (!inMatch.test(player.getUniqueId())) {
-              recover(player, keeper.joinedFromDisk(player.getUniqueId()));
-            }
-          }
-          loaded.run();
-        });
+    keeper.load(() -> {
+      for (var player : runtime.server().getOnlinePlayers()) {
+        if (!inMatch.test(player.getUniqueId())) {
+          recover(player, keeper.joinedFromDisk(player.getUniqueId()));
+        }
+      }
+      loaded.run();
+    });
   }
 
   Optional<SnapshotBook.Refusal> refusal(UUID player) {

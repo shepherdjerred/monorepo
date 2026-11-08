@@ -17,21 +17,19 @@ public final class VideoGameTest implements FabricClientGameTest {
     var directory = output();
     var capture = new VideoCapture(directory);
     var ticking = new AtomicBoolean(true);
-    ClientTickEvents.END_CLIENT_TICK.register(
-        client -> {
-          if (ticking.get()) capture.tick(client);
-        });
+    ClientTickEvents.END_CLIENT_TICK.register(client -> {
+      if (ticking.get()) capture.tick(client);
+    });
     context.runOnClient(client -> RenderCapture.install(capture));
     try (var world = context.worldBuilder().create()) {
       world.getConnection().waitForChunksRender();
       world.getServer().runCommand("gamemode spectator @a");
       world.getServer().runCommand("tp @a 0 120 0 135 30");
       context.waitFor(client -> client.player != null && client.player.isSpectator());
-      context.runOnClient(
-          client -> {
-            client.gui.setScreen(null);
-            client.options.pauseOnLostFocus = false;
-          });
+      context.runOnClient(client -> {
+        client.gui.setScreen(null);
+        client.options.pauseOnLostFocus = false;
+      });
       context.waitTicks(40);
       var hud = context.computeOnClient(client -> client.gui.hud.isHidden());
       arm(context, capture, "native-one-frame", 1);
@@ -66,11 +64,10 @@ public final class VideoGameTest implements FabricClientGameTest {
       context.waitFor(client -> "READY".equals(capture.status().state()), 600);
       // Make the adverse render rate explicit instead of depending on runner scheduling.
       var limit = context.computeOnClient(client -> client.options.framerateLimit().get());
-      context.runOnClient(
-          client -> {
-            client.options.framerateLimit().set(20);
-            capture.start();
-          });
+      context.runOnClient(client -> {
+        client.options.framerateLimit().set(20);
+        capture.start();
+      });
       context.waitFor(client -> "FAILED".equals(capture.status().state()), 600);
       context.runOnClient(client -> client.options.framerateLimit().set(limit));
       var failed = context.computeOnClient(client -> capture.status());
@@ -80,11 +77,10 @@ public final class VideoGameTest implements FabricClientGameTest {
     } catch (IOException e) {
       throw new IllegalStateException("Cannot read rendered evidence", e);
     } finally {
-      context.runOnClient(
-          client -> {
-            capture.cancel(client);
-            RenderCapture.remove(capture);
-          });
+      context.runOnClient(client -> {
+        capture.cancel(client);
+        RenderCapture.remove(capture);
+      });
       ticking.set(false);
       capture.close();
     }

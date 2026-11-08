@@ -91,9 +91,8 @@ final class SpyFriendlyFireTest {
     var board = viewer.getScoreboard();
     return players.stream()
         .sorted(
-            Comparator.comparing(
-                    (Player player) ->
-                        requireNonNull(board.getEntryTeam(player.getName())).getName())
+            Comparator.comparing((Player player) ->
+                    requireNonNull(board.getEntryTeam(player.getName())).getName())
                 .thenComparing(Player::getName, String.CASE_INSENSITIVE_ORDER))
         .map(Player::getName)
         .toList();

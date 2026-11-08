@@ -48,20 +48,19 @@ public final class FliptRentalGate implements RentalGate, AutoCloseable {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(
-            response -> {
-              if (response.statusCode() != 200) {
-                throw new IllegalStateException(
-                    "rental flag evaluation returned HTTP " + response.statusCode());
-              }
-              var root = JSON.readTree(response.body());
-              var enabled = root.get("enabled");
-              if (enabled == null || !enabled.isBoolean()) {
-                throw new IllegalStateException(
-                    "rental flag evaluation is missing a boolean enabled field");
-              }
-              return enabled.booleanValue();
-            });
+        .thenApply(response -> {
+          if (response.statusCode() != 200) {
+            throw new IllegalStateException(
+                "rental flag evaluation returned HTTP " + response.statusCode());
+          }
+          var root = JSON.readTree(response.body());
+          var enabled = root.get("enabled");
+          if (enabled == null || !enabled.isBoolean()) {
+            throw new IllegalStateException(
+                "rental flag evaluation is missing a boolean enabled field");
+          }
+          return enabled.booleanValue();
+        });
   }
 
   @Override

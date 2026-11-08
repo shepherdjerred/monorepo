@@ -36,10 +36,9 @@ public record StoredBank(
   /** The shelf whose sign or container is {@code spot}. */
   public Optional<StoredShelf> shelfAt(Spot spot) {
     return shelves.stream()
-        .filter(
-            shelf ->
-                shelf.sign().isAt(spot.world(), spot.x(), spot.y(), spot.z())
-                    || shelf.container().isAt(spot.world(), spot.x(), spot.y(), spot.z()))
+        .filter(shelf ->
+            shelf.sign().isAt(spot.world(), spot.x(), spot.y(), spot.z())
+                || shelf.container().isAt(spot.world(), spot.x(), spot.y(), spot.z()))
         .findFirst();
   }
 

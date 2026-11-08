@@ -146,20 +146,18 @@ final class DiscordMailTest {
     assertThat(replies).containsExactly("Letter sent to Bob.");
     assertThat(sent)
         .singleElement()
-        .satisfies(
-            letter -> {
-              assertThat(letter.sender()).isEqualTo(ALICE);
-              assertThat(letter.senderName()).isEqualTo("Alice");
-              assertThat(letter.recipient()).isEqualTo(BOB);
-              assertThat(letter.text()).isEqualTo("hello there");
-            });
+        .satisfies(letter -> {
+          assertThat(letter.sender()).isEqualTo(ALICE);
+          assertThat(letter.senderName()).isEqualTo("Alice");
+          assertThat(letter.recipient()).isEqualTo(BOB);
+          assertThat(letter.text()).isEqualTo("hello there");
+        });
     assertThat(attempts)
         .singleElement()
-        .satisfies(
-            attempt -> {
-              assertThat(attempt.staff()).isFalse();
-              assertThat(attempt.bypass()).isFalse();
-            });
+        .satisfies(attempt -> {
+          assertThat(attempt.staff()).isFalse();
+          assertThat(attempt.bypass()).isFalse();
+        });
     assertThat(delivered).containsExactly("hello there");
   }
 

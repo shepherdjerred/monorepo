@@ -74,17 +74,16 @@ public final class ArenaNativeProbe {
       }
       case "positions" ->
           runner.world().enemies().stream()
-              .map(
-                  enemy -> {
-                    var at = enemy.getLocation();
-                    return String.format(
-                        java.util.Locale.ROOT,
-                        "{\"id\":\"%s\",\"x\":%s,\"y\":%s,\"z\":%s}",
-                        enemy.getUniqueId(),
-                        at.getX(),
-                        at.getY(),
-                        at.getZ());
-                  })
+              .map(enemy -> {
+                var at = enemy.getLocation();
+                return String.format(
+                    java.util.Locale.ROOT,
+                    "{\"id\":\"%s\",\"x\":%s,\"y\":%s,\"z\":%s}",
+                    enemy.getUniqueId(),
+                    at.getX(),
+                    at.getY(),
+                    at.getZ());
+              })
               .collect(java.util.stream.Collectors.joining(",", "[", "]"));
       case "pursuit" ->
           "Fighter "
@@ -93,17 +92,14 @@ public final class ArenaNativeProbe {
               + runner.map().entrance(player)
               + " enemies="
               + runner.world().enemies().stream()
-                  .map(
-                      enemy ->
-                          enemy.getType()
-                              + " id="
-                              + enemy.getUniqueId()
-                              + " at="
-                              + enemy.getLocation()
-                              + " target="
-                              + (enemy instanceof org.bukkit.entity.Mob mob
-                                  ? mob.getTarget()
-                                  : "none"))
+                  .map(enemy ->
+                      enemy.getType()
+                          + " id="
+                          + enemy.getUniqueId()
+                          + " at="
+                          + enemy.getLocation()
+                          + " target="
+                          + (enemy instanceof org.bukkit.entity.Mob mob ? mob.getTarget() : "none"))
                   .toList();
       case "cast" -> {
         var boss = runner.combat().boss().orElseThrow();

@@ -90,11 +90,10 @@ final class TeleportFlowArrivalTest {
         new Ticket(alice, alice, TeleportKind.TPA, Destination.player(bob), Optional.of(bob)));
 
     var observed = new ArrayList<String>();
-    harness.until(
-        () -> {
-          observed.addAll(messages(bob));
-          return observed.stream().anyMatch(message -> message.contains("request completed"));
-        });
+    harness.until(() -> {
+      observed.addAll(messages(bob));
+      return observed.stream().anyMatch(message -> message.contains("request completed"));
+    });
     assertThat(observed).anyMatch(message -> message.contains("request completed"));
     assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(75);
     assertThat(flow.isBusy(alice.getUniqueId())).isFalse();

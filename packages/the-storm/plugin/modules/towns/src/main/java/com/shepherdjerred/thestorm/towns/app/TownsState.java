@@ -215,10 +215,9 @@ public final class TownsState
   /** Historic directory names remain reserved after an imported town is renamed or disbanded. */
   public boolean heritageNameReserved(String name, Optional<UUID> requester) {
     return heritage.sites().stream()
-        .anyMatch(
-            site ->
-                (site.name().equalsIgnoreCase(name) || site.activeTownName().equalsIgnoreCase(name))
-                    && (site.activeTownId().isEmpty() || !site.activeTownId().equals(requester)));
+        .anyMatch(site ->
+            (site.name().equalsIgnoreCase(name) || site.activeTownName().equalsIgnoreCase(name))
+                && (site.activeTownId().isEmpty() || !site.activeTownId().equals(requester)));
   }
 
   public Collection<Town> towns() {

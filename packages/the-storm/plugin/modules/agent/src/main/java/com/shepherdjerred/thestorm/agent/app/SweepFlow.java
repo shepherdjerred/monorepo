@@ -49,19 +49,17 @@ public final class SweepFlow {
     return services
         .tickets()
         .openSnapshots()
-        .thenCompose(
-            tickets -> {
-              var now = services.time().instant();
-              var runs = tickets.stream().map(ticket -> runOne(ticket, now)).toList();
-              return CompletableFuture.allOf(runs.toArray(CompletableFuture[]::new))
-                  .thenApply(
-                      done ->
-                          new Report(
-                              count(runs, Outcome.REDRIVEN),
-                              count(runs, Outcome.SLA_BREACHED),
-                              count(runs, Outcome.FAILED),
-                              false));
-            })
+        .thenCompose(tickets -> {
+          var now = services.time().instant();
+          var runs = tickets.stream().map(ticket -> runOne(ticket, now)).toList();
+          return CompletableFuture.allOf(runs.toArray(CompletableFuture[]::new))
+              .thenApply(done ->
+                  new Report(
+                      count(runs, Outcome.REDRIVEN),
+                      count(runs, Outcome.SLA_BREACHED),
+                      count(runs, Outcome.FAILED),
+                      false));
+        })
         .whenComplete((report, failure) -> running.set(false));
   }
 
@@ -98,30 +96,27 @@ public final class SweepFlow {
     var age = Duration.between(ticket.createdAt(), now);
     if (services.config().shadow()) {
       return record(ticket, "would-escalate sla-breach: open " + ageText(age), now)
-          .thenApply(
-              done -> {
-                slaFlagged.add(ticket.id());
-                return Outcome.SLA_BREACHED;
-              });
+          .thenApply(done -> {
+            slaFlagged.add(ticket.id());
+            return Outcome.SLA_BREACHED;
+          });
     }
     var note = "sla-breach: open " + ageText(age) + " with no resolution";
     return services
         .tickets()
         .escalateAgentTicket(ticket.id(), Notes.clip(note, TicketService.MAX_AGENT_COMMENT))
-        .thenCompose(
-            moved ->
-                switch (moved) {
-                  case Result.Ok<TicketSnapshot, TicketFailure>(var escalated) ->
-                      record(escalated, note, now)
-                          .thenApply(
-                              done -> {
-                                slaFlagged.add(ticket.id());
-                                return Outcome.SLA_BREACHED;
-                              });
-                  // The ticket moved on while the sweep ran; nothing to do.
-                  case Result.Err<TicketSnapshot, TicketFailure> _ ->
-                      CompletableFuture.completedFuture(Outcome.SKIPPED);
-                });
+        .thenCompose(moved ->
+            switch (moved) {
+              case Result.Ok<TicketSnapshot, TicketFailure>(var escalated) ->
+                  record(escalated, note, now)
+                      .thenApply(done -> {
+                        slaFlagged.add(ticket.id());
+                        return Outcome.SLA_BREACHED;
+                      });
+              // The ticket moved on while the sweep ran; nothing to do.
+              case Result.Err<TicketSnapshot, TicketFailure> _ ->
+                  CompletableFuture.completedFuture(Outcome.SKIPPED);
+            });
   }
 
   private CompletableFuture<AgentDecision> record(TicketSnapshot ticket, String note, Instant now) {

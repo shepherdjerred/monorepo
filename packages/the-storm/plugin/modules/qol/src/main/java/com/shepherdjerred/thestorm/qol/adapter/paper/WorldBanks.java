@@ -62,10 +62,9 @@ final class WorldBanks {
     if (bank.sign().equals(bank.container()))
       return block(bank.container()).filter(BankBlocks::isContainer).isPresent();
     return block(bank.sign())
-        .filter(
-            sign ->
-                sign.getState(false) instanceof Sign current
-                    && lines(current).getFirst().equalsIgnoreCase("[Bank]"))
+        .filter(sign ->
+            sign.getState(false) instanceof Sign current
+                && lines(current).getFirst().equalsIgnoreCase("[Bank]"))
         .isPresent();
   }
 
@@ -97,9 +96,8 @@ final class WorldBanks {
     for (var shelf : bank.shelves()) {
       block(shelf.sign())
           .filter(sign -> sign.getState(false) instanceof Sign)
-          .ifPresent(
-              sign ->
-                  visible.add(new VisibleShelf(shelf.id(), lines((Sign) sign.getState(false)))));
+          .ifPresent(sign ->
+              visible.add(new VisibleShelf(shelf.id(), lines((Sign) sign.getState(false)))));
     }
     state
         .getPersistentDataContainer()
@@ -192,14 +190,13 @@ final class WorldBanks {
 
   void remove(StoredBank bank) {
     block(bank.container())
-        .ifPresent(
-            container -> {
-              if (container.getState() instanceof TileState state) {
-                state.getPersistentDataContainer().remove(KEY);
-                if (!state.update(false, false))
-                  throw new IllegalStateException("bank changed while deleting its metadata");
-              }
-            });
+        .ifPresent(container -> {
+          if (container.getState() instanceof TileState state) {
+            state.getPersistentDataContainer().remove(KEY);
+            if (!state.update(false, false))
+              throw new IllegalStateException("bank changed while deleting its metadata");
+          }
+        });
   }
 
   private Optional<Block> block(Spot spot) {

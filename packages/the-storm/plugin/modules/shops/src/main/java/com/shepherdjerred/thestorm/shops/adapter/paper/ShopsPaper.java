@@ -141,16 +141,15 @@ public final class ShopsPaper {
     // Trades settle through the pump, so the shutdown drain can finish them on the main thread
     // once the scheduler stops taking tasks.
     var mainThread =
-        new MainThreadPump(
-            task -> {
-              if (plugin.isEnabled()) {
-                try {
-                  context.scheduler().runOnMainThread(task);
-                } catch (IllegalPluginAccessException e) {
-                  logger.debug("Shop work left queued for the shutdown drain", e);
-                }
-              }
-            });
+        new MainThreadPump(task -> {
+          if (plugin.isEnabled()) {
+            try {
+              context.scheduler().runOnMainThread(task);
+            } catch (IllegalPluginAccessException e) {
+              logger.debug("Shop work left queued for the shutdown drain", e);
+            }
+          }
+        });
     var locks = new ShopLocks();
     var journal = new RefundJournal(state.store(), context.time(), logger);
     var engine = new TradeEngine(services.require(Wallets.class), mainThread, journal);
@@ -255,10 +254,9 @@ public final class ShopsPaper {
     events.registerEvents(new CatalogUsageListener(usage, logger), plugin);
     server
         .getOnlinePlayers()
-        .forEach(
-            player ->
-                Background.logFailure(
-                    usage.preload(player.getUniqueId()), logger, "load catalog usage"));
+        .forEach(player ->
+            Background.logFailure(
+                usage.preload(player.getUniqueId()), logger, "load catalog usage"));
     var catalogTrades =
         new CatalogTrades(state.catalogs(), wiring, usage, config.catalogs().maxLots());
     var dialogs =

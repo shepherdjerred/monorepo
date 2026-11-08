@@ -25,83 +25,71 @@ final class HistoricalShopCatalogTest {
         .containsExactly("[Buy]", "6", "Iron Ingot", "18");
     assertThat(entries.stream().filter(entry -> entry.id().equals("2015-eternal-dark-oak")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines())
-                  .containsExactly("[Buy]", "Dark Oak Logs", "2 Stacks for", "100cr");
-              assertThat(entry.quantity()).isEqualTo(128);
-              assertThat(entry.stockTarget()).isEqualTo(512);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines())
+              .containsExactly("[Buy]", "Dark Oak Logs", "2 Stacks for", "100cr");
+          assertThat(entry.quantity()).isEqualTo(128);
+          assertThat(entry.stockTarget()).isEqualTo(512);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2015-pikachupals-note-block")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines()).containsExactly("[Buy]", "One Note", "Block", "20");
-              assertThat(entry.stockTarget()).isEqualTo(16);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "One Note", "Block", "20");
+          assertThat(entry.stockTarget()).isEqualTo(16);
+        });
     assertThat(
             entries.stream().filter(entry -> entry.id().equals("2015-pikachupals-leaping-potion")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines())
-                  .containsExactly("[Buy]", "Potion of", "Leaping", "20");
-              assertThat(entry.stockTarget()).isEqualTo(4);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "Potion of", "Leaping", "20");
+          assertThat(entry.stockTarget()).isEqualTo(4);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2015-pigrider-unbreaking-pick")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines())
-                  .containsExactly("[Buy]", "1", "Unbr. 1 Dia Pick", "100");
-              assertThat(entry.stockTarget()).isEqualTo(8);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines())
+              .containsExactly("[Buy]", "1", "Unbr. 1 Dia Pick", "100");
+          assertThat(entry.stockTarget()).isEqualTo(8);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2015-pigrider-haste")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines())
-                  .containsExactly("[Buy]", "1", "Haste Potion Ext.", "15");
-              assertThat(entry.stockTarget()).isEqualTo(16);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines())
+              .containsExactly("[Buy]", "1", "Haste Potion Ext.", "15");
+          assertThat(entry.stockTarget()).isEqualTo(16);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2015-smaland-bones-128")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines()).containsExactly("[Buy]", "128 Bones", "", "$45");
-              assertThat(entry.quantity()).isEqualTo(128);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "128 Bones", "", "$45");
+          assertThat(entry.quantity()).isEqualTo(128);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2015-smaland-pearl")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines()).containsExactly("[Buy]", "Enderpearl", "", "$25");
-              assertThat(entry.stockTarget()).isEqualTo(24);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "Enderpearl", "", "$25");
+          assertThat(entry.stockTarget()).isEqualTo(24);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2016-detern-cobble")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines())
-                  .containsExactly("[Buy]", "32 Cobblestone", "for", "15");
-              assertThat(entry.quantity()).isEqualTo(32);
-              assertThat(entry.stockTarget()).isEqualTo(1024);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "32 Cobblestone", "for", "15");
+          assertThat(entry.quantity()).isEqualTo(32);
+          assertThat(entry.stockTarget()).isEqualTo(1024);
+        });
     assertThat(entries.stream().filter(entry -> entry.id().equals("2016-dockozel-diamond")))
         .singleElement()
-        .satisfies(
-            entry -> {
-              assertThat(entry.expectedLines()).containsExactly("[Buy]", "1 Diamond", "", "125");
-              assertThat(entry.stockTarget()).isEqualTo(24);
-              assertThat(entry.container().y()).isEqualTo(63);
-            });
+        .satisfies(entry -> {
+          assertThat(entry.expectedLines()).containsExactly("[Buy]", "1 Diamond", "", "125");
+          assertThat(entry.stockTarget()).isEqualTo(24);
+          assertThat(entry.container().y()).isEqualTo(63);
+        });
     assertThat(
             entries.stream().filter(entry -> entry.id().equals("2016-dockozel-prismarine-bricks")))
         .singleElement()
-        .satisfies(
-            entry ->
-                assertThat(entry.expectedLines())
-                    .containsExactly("[Buy]", "16 Prismarine", "Bricks", "25"));
+        .satisfies(entry ->
+            assertThat(entry.expectedLines())
+                .containsExactly("[Buy]", "16 Prismarine", "Bricks", "25"));
   }
 
   @Test

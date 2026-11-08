@@ -96,12 +96,11 @@ public final class DiscordModule implements StormModule {
     var _ =
         links
             .load()
-            .whenComplete(
-                (loaded, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not load Discord links", failure);
-                  }
-                });
+            .whenComplete((loaded, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not load Discord links", failure);
+              }
+            });
     var bridge = new JdaBridge(context.logger());
     var relay =
         new DiscordRelay(

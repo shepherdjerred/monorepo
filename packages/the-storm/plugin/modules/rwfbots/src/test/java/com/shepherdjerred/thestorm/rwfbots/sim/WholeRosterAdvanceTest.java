@@ -52,12 +52,11 @@ final class WholeRosterAdvanceTest {
     // The preserved Paper diagnostic used the final seed with TURTLE against RUSH.
     // These are deterministic sim draws, not a reconstruction of its different personalities.
     return Stream.of(10L, 11L, 1922958427992948195L)
-        .flatMap(
-            seed ->
-                Stream.of(
-                    new Matchup(seed, Strategy.TURTLE, Strategy.RUSH),
-                    new Matchup(seed, Strategy.RUSH, Strategy.TURTLE),
-                    new Matchup(seed, Strategy.TURTLE, Strategy.TURTLE)));
+        .flatMap(seed ->
+            Stream.of(
+                new Matchup(seed, Strategy.TURTLE, Strategy.RUSH),
+                new Matchup(seed, Strategy.RUSH, Strategy.TURTLE),
+                new Matchup(seed, Strategy.TURTLE, Strategy.TURTLE)));
   }
 
   @MethodSource("matchups")
@@ -69,12 +68,11 @@ final class WholeRosterAdvanceTest {
 
   private static Stream<CohortMatchup> rangedMatchups() {
     return matchups()
-        .flatMap(
-            match ->
-                Stream.of(
-                    new CohortMatchup(match, Cohort.RANGED_HEAVY, Cohort.MIXED),
-                    new CohortMatchup(match, Cohort.MIXED, Cohort.RANGED_HEAVY),
-                    new CohortMatchup(match, Cohort.RANGED_HEAVY, Cohort.RANGED_HEAVY)));
+        .flatMap(match ->
+            Stream.of(
+                new CohortMatchup(match, Cohort.RANGED_HEAVY, Cohort.MIXED),
+                new CohortMatchup(match, Cohort.MIXED, Cohort.RANGED_HEAVY),
+                new CohortMatchup(match, Cohort.RANGED_HEAVY, Cohort.RANGED_HEAVY)));
   }
 
   @MethodSource("rangedMatchups")
@@ -180,9 +178,8 @@ final class WholeRosterAdvanceTest {
                 + body.decision.map(decision -> decision.waypoints()).orElseGet(List::of)
                 + " nearestAlly "
                 + world.bodies.values().stream()
-                    .filter(
-                        ally ->
-                            ally.alive && ally.team.equals(body.team) && !ally.id.equals(body.id))
+                    .filter(ally ->
+                        ally.alive && ally.team.equals(body.team) && !ally.id.equals(body.id))
                     .mapToDouble(ally -> ally.pos.distance(body.pos))
                     .min()
                     .orElse(Double.POSITIVE_INFINITY));

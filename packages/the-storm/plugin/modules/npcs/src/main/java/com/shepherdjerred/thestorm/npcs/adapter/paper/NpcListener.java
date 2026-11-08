@@ -106,20 +106,14 @@ final class NpcListener implements Listener {
     }
     world
         .npcOf(event.getEntity())
-        .ifPresent(
-            npc ->
-                NpcAttackers.attacker(event)
-                    .ifPresent(
-                        attacker -> {
-                          var victim = (org.bukkit.entity.LivingEntity) event.getEntity();
-                          world
-                              .combat()
-                              .hit(
-                                  npc,
-                                  victim,
-                                  attacker,
-                                  event.getFinalDamage() >= victim.getHealth());
-                        }));
+        .ifPresent(npc ->
+            NpcAttackers.attacker(event)
+                .ifPresent(attacker -> {
+                  var victim = (org.bukkit.entity.LivingEntity) event.getEntity();
+                  world
+                      .combat()
+                      .hit(npc, victim, attacker, event.getFinalDamage() >= victim.getHealth());
+                }));
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -134,17 +128,16 @@ final class NpcListener implements Listener {
   void onDeath(EntityDeathEvent event) {
     world
         .npcOf(event.getEntity())
-        .ifPresent(
-            npc -> {
-              world
-                  .combat()
-                  .died(
-                      npc,
-                      event.getEntity(),
-                      NpcAttackers.attacker(event.getDamageSource())
-                          .or(() -> java.util.Optional.ofNullable(event.getEntity().getKiller())));
-              world.died(npc.id());
-            });
+        .ifPresent(npc -> {
+          world
+              .combat()
+              .died(
+                  npc,
+                  event.getEntity(),
+                  NpcAttackers.attacker(event.getDamageSource())
+                      .or(() -> java.util.Optional.ofNullable(event.getEntity().getKiller())));
+          world.died(npc.id());
+        });
   }
 
   @EventHandler

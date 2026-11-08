@@ -70,19 +70,18 @@ final class PackedShops implements Listener {
 
   ItemStack token(PlotRecovery recovery) {
     var item = new ItemStack(Material.CHEST);
-    item.editMeta(
-        meta -> {
-          meta.displayName(Component.text("Packed shop: " + recovery.parcelId()));
-          meta.lore(
-              List.of(
-                  Component.text("Right-click a block to preview your shop."),
-                  Component.text("Then /plot confirm or /plot cancel."),
-                  Component.text("Only the original owner can unpack this.")));
-          meta.getPersistentDataContainer()
-              .set(recoveryKey, PersistentDataType.STRING, recovery.id().toString());
-          meta.getPersistentDataContainer()
-              .set(tokenKey, PersistentDataType.STRING, recovery.token().toString());
-        });
+    item.editMeta(meta -> {
+      meta.displayName(Component.text("Packed shop: " + recovery.parcelId()));
+      meta.lore(
+          List.of(
+              Component.text("Right-click a block to preview your shop."),
+              Component.text("Then /plot confirm or /plot cancel."),
+              Component.text("Only the original owner can unpack this.")));
+      meta.getPersistentDataContainer()
+          .set(recoveryKey, PersistentDataType.STRING, recovery.id().toString());
+      meta.getPersistentDataContainer()
+          .set(tokenKey, PersistentDataType.STRING, recovery.token().toString());
+    });
     return item;
   }
 
@@ -218,17 +217,16 @@ final class PackedShops implements Listener {
             main())
         .thenComposeAsync(ignored -> parts.world().capture(area(preview.destination())), main())
         .thenApplyAsync(before -> new Blob(Schematics.encode(before.clipboard())), parts.archives())
-        .thenCompose(
-            before ->
-                parts
-                    .recoveries()
-                    .placing(
-                        new com.shepherdjerred.thestorm.towns.app.RecoveryStore.Placement(
-                            recovery.id(),
-                            recovery.owner(),
-                            recovery.token(),
-                            preview.destination(),
-                            before)))
+        .thenCompose(before ->
+            parts
+                .recoveries()
+                .placing(
+                    new com.shepherdjerred.thestorm.towns.app.RecoveryStore.Placement(
+                        recovery.id(),
+                        recovery.owner(),
+                        recovery.token(),
+                        preview.destination(),
+                        before)))
         .thenComposeAsync(ignored -> parts.recoveries().byId(recovery.id()), main())
         .thenComposeAsync(current -> resume(current.orElseThrow()), main())
         .whenCompleteAsync(
@@ -486,9 +484,8 @@ final class PackedShops implements Listener {
                                         "packed",
                                         List.of(
                                             new MailItem(token(replacement).serializeAsBytes())))))
-                            .thenCompose(
-                                posted ->
-                                    parts.recoveries().reissue(id, owner, recovery.token(), next));
+                            .thenCompose(posted ->
+                                parts.recoveries().reissue(id, owner, recovery.token(), next));
                       },
                       main());
             },
@@ -585,12 +582,11 @@ final class PackedShops implements Listener {
 
   private CompletableFuture<Void> selected(PlotRecovery recovery) {
     return mail.selection(recovery.id(), recovery.owner())
-        .thenAccept(
-            choice -> {
-              if (!choice.equals(Optional.of("packed"))) {
-                throw new IllegalArgumentException("claim the packed option from /mail first");
-              }
-            });
+        .thenAccept(choice -> {
+          if (!choice.equals(Optional.of("packed"))) {
+            throw new IllegalArgumentException("claim the packed option from /mail first");
+          }
+        });
   }
 
   private static void requireOwner(PlotRecovery recovery, UUID owner, UUID token) {

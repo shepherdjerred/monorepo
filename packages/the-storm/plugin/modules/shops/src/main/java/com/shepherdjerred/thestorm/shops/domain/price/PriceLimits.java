@@ -40,14 +40,12 @@ public record PriceLimits(
     check("minBuy", minBuy, maxBuy);
     check("minSell", minSell, maxSell);
     var keyed = new java.util.HashMap<String, Band>();
-    materials.forEach(
-        (name, band) -> {
-          if (!name.matches("[A-Za-z0-9_]+")) {
-            throw new IllegalArgumentException(
-                "material limits are names like DIAMOND, not " + name);
-          }
-          keyed.put(name.toUpperCase(Locale.ROOT), band);
-        });
+    materials.forEach((name, band) -> {
+      if (!name.matches("[A-Za-z0-9_]+")) {
+        throw new IllegalArgumentException("material limits are names like DIAMOND, not " + name);
+      }
+      keyed.put(name.toUpperCase(Locale.ROOT), band);
+    });
     materials = Map.copyOf(keyed);
   }
 

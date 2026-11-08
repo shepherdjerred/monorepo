@@ -54,14 +54,11 @@ final class ExperienceCommands {
     for (var value : type.getEnumConstants()) {
       setting.then(
           Commands.literal(value.name().toLowerCase(Locale.ROOT))
-              .executes(
-                  ctx -> {
-                    runner
-                        .experiences()
-                        .select(update.apply(runner.experiences().pending(), value));
-                    saved(ctx.getSource().getSender());
-                    return read(ctx.getSource().getSender());
-                  }));
+              .executes(ctx -> {
+                runner.experiences().select(update.apply(runner.experiences().pending(), value));
+                saved(ctx.getSource().getSender());
+                return read(ctx.getSource().getSender());
+              }));
     }
     command.then(setting);
   }
@@ -71,20 +68,18 @@ final class ExperienceCommands {
     return Commands.literal(name)
         .then(
             Commands.argument("ids", StringArgumentType.greedyString())
-                .suggests(
-                    (ctx, builder) -> {
-                      available.get().forEach(builder::suggest);
-                      builder.suggest("all");
-                      return builder.buildFuture();
-                    })
-                .executes(
-                    ctx ->
-                        setPool(
-                            new PoolInput(
-                                ctx.getSource().getSender(),
-                                name,
-                                StringArgumentType.getString(ctx, "ids"),
-                                available.get()))));
+                .suggests((ctx, builder) -> {
+                  available.get().forEach(builder::suggest);
+                  builder.suggest("all");
+                  return builder.buildFuture();
+                })
+                .executes(ctx ->
+                    setPool(
+                        new PoolInput(
+                            ctx.getSource().getSender(),
+                            name,
+                            StringArgumentType.getString(ctx, "ids"),
+                            available.get()))));
   }
 
   private record PoolInput(

@@ -120,11 +120,10 @@ final class ManagedGameplayTest {
                 CompletableFuture.failedFuture(
                     new IllegalStateException("rollout response lacks enabled")),
             () -> {});
-    assertThatThrownBy(
-            () ->
-                gameplay
-                    .enabledOrDefault(ManagedGameplay.CONTENT_SAFETY, actor, false, failure -> {})
-                    .join())
+    assertThatThrownBy(() ->
+            gameplay
+                .enabledOrDefault(ManagedGameplay.CONTENT_SAFETY, actor, false, failure -> {})
+                .join())
         .hasRootCauseMessage("rollout response lacks enabled");
     assertThat(gameplay.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, actor)).isEmpty();
   }

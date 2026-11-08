@@ -25,11 +25,10 @@ final class FixtureShutdownTest {
     var available = new AtomicBoolean(true);
     var calls = new AtomicInteger();
     var shutdown =
-        new FixtureShutdown(
-            () -> {
-              if (!available.get()) throw new NoClassDefFoundError("product already unloaded");
-              calls.incrementAndGet();
-            });
+        new FixtureShutdown(() -> {
+          if (!available.get()) throw new NoClassDefFoundError("product already unloaded");
+          calls.incrementAndGet();
+        });
 
     shutdown.pluginDisabling("TheStorm");
     available.set(false);
@@ -55,10 +54,9 @@ final class FixtureShutdownTest {
   void reportsClassloaderFailuresUnchanged() {
     var failure = new NoClassDefFoundError("synthetic missing product class");
     var shutdown =
-        new FixtureShutdown(
-            () -> {
-              throw failure;
-            });
+        new FixtureShutdown(() -> {
+          throw failure;
+        });
 
     assertSame(
         failure,

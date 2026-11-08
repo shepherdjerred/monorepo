@@ -63,12 +63,11 @@ public record ItemLook(
     if (lore.isEmpty() == loreColor.isPresent()) {
       throw new IllegalArgumentException("a lore colour is given exactly when there is lore");
     }
-    dye.ifPresent(
-        value -> {
-          if (!TEAM_DYE.equals(value) && !HEX.matcher(value).matches()) {
-            throw new IllegalArgumentException("dye must be #RRGGBB or team: " + value);
-          }
-        });
+    dye.ifPresent(value -> {
+      if (!TEAM_DYE.equals(value) && !HEX.matcher(value).matches()) {
+        throw new IllegalArgumentException("dye must be #RRGGBB or team: " + value);
+      }
+    });
   }
 
   private static void requireColor(String color) {

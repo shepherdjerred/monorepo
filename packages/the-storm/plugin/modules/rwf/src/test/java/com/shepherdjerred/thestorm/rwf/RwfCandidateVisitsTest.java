@@ -70,9 +70,8 @@ class RwfCandidateVisitsTest {
   }
 
   private static void ready(RwfHarness harness) {
-    harness.until(
-        () ->
-            harness.snapshot().ballot().orElseThrow().visits().orElseThrow().readyAt().isPresent());
+    harness.until(() ->
+        harness.snapshot().ballot().orElseThrow().visits().orElseThrow().readyAt().isPresent());
   }
 
   private static void click(RwfHarness harness, PlayerMock player, int slot) {

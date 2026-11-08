@@ -288,10 +288,9 @@ final class BombMarkers {
   private static Component title(BombSite site) {
     return site.owner()
         .team()
-        .map(
-            team ->
-                Component.text(
-                    team.displayName() + "'s Bomb", Scoreboards.color(team), TextDecoration.BOLD))
+        .map(team ->
+            Component.text(
+                team.displayName() + "'s Bomb", Scoreboards.color(team), TextDecoration.BOLD))
         .orElseGet(() -> Component.text("Unarmed nuke", NamedTextColor.WHITE));
   }
 
@@ -336,12 +335,11 @@ final class BombMarkers {
     var hidden = new HashSet<UUID>();
     sabotage
         .viewers()
-        .forEach(
-            (viewer, team) -> {
-              if (Saboteur.hides(view, armer, team, sabotage.sabotaging())) {
-                hidden.add(viewer.getUniqueId());
-              }
-            });
+        .forEach((viewer, team) -> {
+          if (Saboteur.hides(view, armer, team, sabotage.sabotaging())) {
+            hidden.add(viewer.getUniqueId());
+          }
+        });
     return hidden;
   }
 

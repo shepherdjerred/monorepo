@@ -359,11 +359,10 @@ public final class ThinkLoop {
       completion =
           worker
               .think(current, snapshot, queuedAt)
-              .whenComplete(
-                  (ignored, problem) -> {
-                    trace.close();
-                    finished(current, queuedAt, problem);
-                  });
+              .whenComplete((ignored, problem) -> {
+                trace.close();
+                finished(current, queuedAt, problem);
+              });
     } catch (RuntimeException problem) {
       trace.close();
       finished(current, queuedAt, problem);
@@ -533,61 +532,57 @@ public final class ThinkLoop {
       var sensing = prepared.sensing();
       return batches
           .map(flight(cycle, "perception"), sensing, mind -> observe(cycle, mind))
-          .thenCompose(
-              observations -> {
-                if (!current(cycle))
-                  return CompletableFuture.completedFuture(List.<PendingTeam>of());
-                var observationCommit =
-                    ThinkFlight.section(flight(cycle, "observation-commit"), observations.size());
-                try {
-                  for (var observation : observations) commitObservation(cycle, observation);
-                } finally {
-                  observationCommit.close();
-                }
-                var orderedTeams =
-                    teams.entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey(Comparator.comparing(TeamId::value)))
-                        .map(Map.Entry::getValue)
-                        .toList();
-                return batches.map(
-                    flight(cycle, "team-prepare"), orderedTeams, team -> prepareTeam(cycle, team));
-              })
+          .thenCompose(observations -> {
+            if (!current(cycle)) return CompletableFuture.completedFuture(List.<PendingTeam>of());
+            var observationCommit =
+                ThinkFlight.section(flight(cycle, "observation-commit"), observations.size());
+            try {
+              for (var observation : observations) commitObservation(cycle, observation);
+            } finally {
+              observationCommit.close();
+            }
+            var orderedTeams =
+                teams.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey(Comparator.comparing(TeamId::value)))
+                    .map(Map.Entry::getValue)
+                    .toList();
+            return batches.map(
+                flight(cycle, "team-prepare"), orderedTeams, team -> prepareTeam(cycle, team));
+          })
           .thenCompose(pending -> dealTeams(cycle, pending))
-          .thenCompose(
-              plans -> {
-                if (!current(cycle)) return CompletableFuture.completedFuture(List.<Proposal>of());
-                var teamCommit = ThinkFlight.section(flight(cycle, "team-commit"), plans.size());
-                try {
-                  for (var plan : plans) {
-                    plan.team().board = plan.board();
-                    plan.team().admission = plan.admission();
-                    plan.team().lastTick = plan.tick();
-                  }
-                } finally {
-                  teamCommit.close();
-                }
-                return batches.balanced(
-                    flight(cycle, "tactics"),
-                    selectTactics(cycle, active),
-                    (batch, work) -> propose(cycle, work, workspaces.get(batch)));
-              })
-          .thenAccept(
-              proposals -> {
-                var tacticsCommit =
-                    ThinkFlight.section(flight(cycle, "tactics-commit"), proposals.size());
-                try {
-                  for (var proposal : proposals) commitTactics(cycle, proposal);
-                } finally {
-                  tacticsCommit.close();
-                }
-                if (composedCommunication && current(cycle)) announce(cycle);
-                var publish = ThinkFlight.section(flight(cycle, "publish"), active.size());
-                try {
-                  publishBoard(cycle, active, started);
-                } finally {
-                  publish.close();
-                }
-              });
+          .thenCompose(plans -> {
+            if (!current(cycle)) return CompletableFuture.completedFuture(List.<Proposal>of());
+            var teamCommit = ThinkFlight.section(flight(cycle, "team-commit"), plans.size());
+            try {
+              for (var plan : plans) {
+                plan.team().board = plan.board();
+                plan.team().admission = plan.admission();
+                plan.team().lastTick = plan.tick();
+              }
+            } finally {
+              teamCommit.close();
+            }
+            return batches.balanced(
+                flight(cycle, "tactics"),
+                selectTactics(cycle, active),
+                (batch, work) -> propose(cycle, work, workspaces.get(batch)));
+          })
+          .thenAccept(proposals -> {
+            var tacticsCommit =
+                ThinkFlight.section(flight(cycle, "tactics-commit"), proposals.size());
+            try {
+              for (var proposal : proposals) commitTactics(cycle, proposal);
+            } finally {
+              tacticsCommit.close();
+            }
+            if (composedCommunication && current(cycle)) announce(cycle);
+            var publish = ThinkFlight.section(flight(cycle, "publish"), active.size());
+            try {
+              publishBoard(cycle, active, started);
+            } finally {
+              publish.close();
+            }
+          });
     }
 
     private Prepared prepare(Match current, WorldSnapshot snapshot) {
@@ -797,9 +792,8 @@ public final class ThinkLoop {
           var report =
               reports.stream()
                   .min(
-                      Comparator.comparingDouble(
-                          (SharedSighting sighting) ->
-                              TeamCallouts.usefulness(sighting.pos(), humans)))
+                      Comparator.comparingDouble((SharedSighting sighting) ->
+                          TeamCallouts.usefulness(sighting.pos(), humans)))
                   .orElseThrow();
           ThinkLoop.this.reports.put(
               mind.profile.id(),
@@ -910,11 +904,10 @@ public final class ThinkLoop {
       if (team.admission.invalidated(snapshot)) return true;
       // newLife clears the decision before this cycle; never carry a reservation across epochs.
       return team.admission.admitted().keySet().stream()
-          .anyMatch(
-              id -> {
-                var mind = minds.get(id);
-                return mind == null || mind.decision == null;
-              });
+          .anyMatch(id -> {
+            var mind = minds.get(id);
+            return mind == null || mind.decision == null;
+          });
     }
 
     private void receiveReports(Cycle cycle) {
@@ -945,11 +938,10 @@ public final class ThinkLoop {
       var queries = new ArrayList<RoleRow>();
       for (var team : pending) {
         team.prepared()
-            .ifPresent(
-                prepared -> {
-                  for (var row = 0; row < prepared.distanceRows(); row++)
-                    queries.add(new RoleRow(prepared, row));
-                });
+            .ifPresent(prepared -> {
+              for (var row = 0; row < prepared.distanceRows(); row++)
+                queries.add(new RoleRow(prepared, row));
+            });
       }
       return batches
           .indexed(
@@ -1232,22 +1224,20 @@ public final class ThinkLoop {
       reports.add(new SharedSighting(seen.id(), seen.pos(), seen.vel(), tick, tick, reporter));
     }
     percept.state().memory().sightings().entrySet().stream()
-        .filter(
-            entry ->
-                !entry.getValue().direct()
-                    && entry.getValue().shareable()
-                    && tick - entry.getValue().tick() <= 30)
+        .filter(entry ->
+            !entry.getValue().direct()
+                && entry.getValue().shareable()
+                && tick - entry.getValue().tick() <= 30)
         .sorted(Map.Entry.comparingByKey())
-        .forEach(
-            entry ->
-                reports.add(
-                    new SharedSighting(
-                        entry.getKey(),
-                        entry.getValue().pos(),
-                        entry.getValue().vel(),
-                        entry.getValue().tick(),
-                        tick,
-                        reporter)));
+        .forEach(entry ->
+            reports.add(
+                new SharedSighting(
+                    entry.getKey(),
+                    entry.getValue().pos(),
+                    entry.getValue().vel(),
+                    entry.getValue().tick(),
+                    tick,
+                    reporter)));
     return reports;
   }
 }

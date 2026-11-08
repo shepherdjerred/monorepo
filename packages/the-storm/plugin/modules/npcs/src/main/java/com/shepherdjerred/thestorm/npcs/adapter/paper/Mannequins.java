@@ -119,14 +119,13 @@ final class Mannequins {
       case Skin.Default() -> Mannequin.defaultProfile();
       case Skin.Vanilla vanilla ->
           ResolvableProfile.resolvableProfile()
-              .skinPatch(
-                  patch ->
-                      patch
-                          .body(Key.key(Key.MINECRAFT_NAMESPACE, vanilla.texturePath()))
-                          .model(
-                              vanilla.model() == Skin.Model.SLIM
-                                  ? PlayerTextures.SkinModel.SLIM
-                                  : PlayerTextures.SkinModel.CLASSIC))
+              .skinPatch(patch ->
+                  patch
+                      .body(Key.key(Key.MINECRAFT_NAMESPACE, vanilla.texturePath()))
+                      .model(
+                          vanilla.model() == Skin.Model.SLIM
+                              ? PlayerTextures.SkinModel.SLIM
+                              : PlayerTextures.SkinModel.CLASSIC))
               .build();
       case Skin.Signed(var id, var value, var signature) ->
           ResolvableProfile.resolvableProfile()

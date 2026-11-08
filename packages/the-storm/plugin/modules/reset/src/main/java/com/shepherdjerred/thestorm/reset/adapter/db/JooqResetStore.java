@@ -22,48 +22,38 @@ public final class JooqResetStore implements ResetStore {
   @Override
   public CompletableFuture<Void> begin(UUID player, Instant startedAt) {
     return database
-        .write(
-            dsl ->
-                dsl.insertInto(RESET_PENDING)
-                    .set(RESET_PENDING.PLAYER, player.toString())
-                    .set(RESET_PENDING.STARTED_AT, startedAt.toEpochMilli())
-                    .onConflict(RESET_PENDING.PLAYER)
-                    .doNothing()
-                    .execute())
+        .write(dsl ->
+            dsl.insertInto(RESET_PENDING)
+                .set(RESET_PENDING.PLAYER, player.toString())
+                .set(RESET_PENDING.STARTED_AT, startedAt.toEpochMilli())
+                .onConflict(RESET_PENDING.PLAYER)
+                .doNothing()
+                .execute())
         .thenAccept(rows -> {});
   }
 
   @Override
   public CompletableFuture<Set<UUID>> pending() {
-    return database.read(
-        dsl ->
-            dsl
-                .select(RESET_PENDING.PLAYER)
-                .from(RESET_PENDING)
-                .fetch(RESET_PENDING.PLAYER)
-                .stream()
-                .map(UUID::fromString)
-                .collect(Collectors.toUnmodifiableSet()));
+    return database.read(dsl ->
+        dsl.select(RESET_PENDING.PLAYER).from(RESET_PENDING).fetch(RESET_PENDING.PLAYER).stream()
+            .map(UUID::fromString)
+            .collect(Collectors.toUnmodifiableSet()));
   }
 
   @Override
   public CompletableFuture<Boolean> isPending(UUID player) {
-    return database.read(
-        dsl ->
-            dsl.fetchExists(
-                dsl.selectOne()
-                    .from(RESET_PENDING)
-                    .where(RESET_PENDING.PLAYER.eq(player.toString()))));
+    return database.read(dsl ->
+        dsl.fetchExists(
+            dsl.selectOne().from(RESET_PENDING).where(RESET_PENDING.PLAYER.eq(player.toString()))));
   }
 
   @Override
   public CompletableFuture<Void> finish(UUID player) {
     return database
-        .write(
-            dsl ->
-                dsl.deleteFrom(RESET_PENDING)
-                    .where(RESET_PENDING.PLAYER.eq(player.toString()))
-                    .execute())
+        .write(dsl ->
+            dsl.deleteFrom(RESET_PENDING)
+                .where(RESET_PENDING.PLAYER.eq(player.toString()))
+                .execute())
         .thenAccept(rows -> {});
   }
 }

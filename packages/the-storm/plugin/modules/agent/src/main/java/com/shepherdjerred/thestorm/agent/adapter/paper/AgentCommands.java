@@ -73,10 +73,8 @@ public final class AgentCommands {
                 .executes(context -> decisions(context, null))
                 .then(
                     Commands.argument("player", StringArgumentType.word())
-                        .executes(
-                            context ->
-                                decisions(
-                                    context, StringArgumentType.getString(context, "player")))))
+                        .executes(context ->
+                            decisions(context, StringArgumentType.getString(context, "player")))))
         .then(Commands.literal("sweep").executes(this::sweepNow))
         .then(
             Commands.literal("overturn")
@@ -98,12 +96,11 @@ public final class AgentCommands {
                             context -> faq(context, LongArgumentType.getLong(context, "id"), null))
                         .then(
                             Commands.argument("entry", StringArgumentType.word())
-                                .executes(
-                                    context ->
-                                        faq(
-                                            context,
-                                            LongArgumentType.getLong(context, "id"),
-                                            StringArgumentType.getString(context, "entry"))))))
+                                .executes(context ->
+                                    faq(
+                                        context,
+                                        LongArgumentType.getLong(context, "id"),
+                                        StringArgumentType.getString(context, "entry"))))))
         .then(
             Commands.literal("case")
                 .then(
@@ -164,15 +161,14 @@ public final class AgentCommands {
             ? CompletableFuture.completedFuture(Optional.empty())
             : players.byName(playerName).thenApply(found -> found.map(KnownPlayer::uuid));
     CompletableFuture<Optional<List<Named>>> rows =
-        target.thenCompose(
-            uuid -> {
-              if (playerName != null && uuid.isEmpty()) {
-                return CompletableFuture.completedFuture(Optional.<List<Named>>empty());
-              }
-              CompletableFuture<List<AgentDecision>> found =
-                  uuid.map(id -> log.recentBy(id, LIMIT)).orElseGet(() -> log.recent(LIMIT));
-              return found.thenCompose(this::named).thenApply(Optional::of);
-            });
+        target.thenCompose(uuid -> {
+          if (playerName != null && uuid.isEmpty()) {
+            return CompletableFuture.completedFuture(Optional.<List<Named>>empty());
+          }
+          CompletableFuture<List<AgentDecision>> found =
+              uuid.map(id -> log.recentBy(id, LIMIT)).orElseGet(() -> log.recent(LIMIT));
+          return found.thenCompose(this::named).thenApply(Optional::of);
+        });
     runtime.onMain(
         rows,
         "reading decisions",
@@ -248,25 +244,23 @@ public final class AgentCommands {
       case EndorseFlow.Outcome.AlreadyOverturned(var decision, var by) ->
           players
               .byId(by)
-              .thenApply(
-                  found ->
-                      Component.text(
-                          "Decision #"
-                              + decision.id()
-                              + " was already overturned by "
-                              + found.map(KnownPlayer::lastName).orElseGet(() -> shortId(by))
-                              + "."));
+              .thenApply(found ->
+                  Component.text(
+                      "Decision #"
+                          + decision.id()
+                          + " was already overturned by "
+                          + found.map(KnownPlayer::lastName).orElseGet(() -> shortId(by))
+                          + "."));
       case EndorseFlow.Outcome.AlreadyEndorsed(var decision, var by) ->
           players
               .byId(by)
-              .thenApply(
-                  found ->
-                      Component.text(
-                          "Decision #"
-                              + decision.id()
-                              + " was already endorsed by "
-                              + found.map(KnownPlayer::lastName).orElseGet(() -> shortId(by))
-                              + "."));
+              .thenApply(found ->
+                  Component.text(
+                      "Decision #"
+                          + decision.id()
+                          + " was already endorsed by "
+                          + found.map(KnownPlayer::lastName).orElseGet(() -> shortId(by))
+                          + "."));
       case EndorseFlow.Outcome.Endorsed(var decision) ->
           CompletableFuture.completedFuture(
               Component.text("Decision #" + decision.id() + " endorsed and cleared from review."));
@@ -301,14 +295,13 @@ public final class AgentCommands {
       case OverturnFlow.Outcome.AlreadyOverturned(var decision, var by) ->
           players
               .byId(by)
-              .thenApply(
-                  found ->
-                      Component.text(
-                          "Decision #"
-                              + decision.id()
-                              + " was already overturned by "
-                              + found.map(KnownPlayer::lastName).orElseGet(() -> shortId(by))
-                              + "."));
+              .thenApply(found ->
+                  Component.text(
+                      "Decision #"
+                          + decision.id()
+                          + " was already overturned by "
+                          + found.map(KnownPlayer::lastName).orElseGet(() -> shortId(by))
+                          + "."));
       case OverturnFlow.Outcome.Overturned(var decision, var lifted) ->
           CompletableFuture.completedFuture(Component.text(overturnedMessage(decision, lifted)));
     };
@@ -330,20 +323,17 @@ public final class AgentCommands {
         flows
             .cases()
             .assemble(id)
-            .thenCompose(
-                found -> {
-                  if (found.isEmpty()) {
-                    return CompletableFuture.completedFuture(Optional.<CasePayload>empty());
-                  }
-                  var view = found.orElseThrow();
-                  return players
-                      .byId(view.ticket().reporter())
-                      .thenApply(
-                          reporter ->
-                              Optional.of(
-                                  new CasePayload(
-                                      view, reporter.map(KnownPlayer::lastName).orElse("?"))));
-                });
+            .thenCompose(found -> {
+              if (found.isEmpty()) {
+                return CompletableFuture.completedFuture(Optional.<CasePayload>empty());
+              }
+              var view = found.orElseThrow();
+              return players
+                  .byId(view.ticket().reporter())
+                  .thenApply(reporter ->
+                      Optional.of(
+                          new CasePayload(view, reporter.map(KnownPlayer::lastName).orElse("?"))));
+            });
     runtime.onMain(
         assembled,
         "assembling case " + id,
@@ -373,10 +363,9 @@ public final class AgentCommands {
                 + ticket.summary()));
     ticket
         .triage()
-        .ifPresent(
-            triage ->
-                sender.sendMessage(
-                    Component.text("Triage [" + triage.priorityId() + "]: " + triage.evidence())));
+        .ifPresent(triage ->
+            sender.sendMessage(
+                Component.text("Triage [" + triage.priorityId() + "]: " + triage.evidence())));
     var standing = view.standing();
     var history =
         standing.history().isEmpty()
@@ -427,17 +416,15 @@ public final class AgentCommands {
   private CompletableFuture<List<Named>> named(List<AgentDecision> rows) {
     var lookups =
         rows.stream()
-            .map(
-                row ->
-                    players
-                        .byId(row.player())
-                        .thenApply(
-                            found ->
-                                new Named(
-                                    row,
-                                    found
-                                        .map(KnownPlayer::lastName)
-                                        .orElseGet(() -> shortId(row.player())))))
+            .map(row ->
+                players
+                    .byId(row.player())
+                    .thenApply(found ->
+                        new Named(
+                            row,
+                            found
+                                .map(KnownPlayer::lastName)
+                                .orElseGet(() -> shortId(row.player())))))
             .toList();
     return CompletableFuture.allOf(lookups.toArray(CompletableFuture[]::new))
         .thenApply(done -> lookups.stream().map(CompletableFuture::join).toList());

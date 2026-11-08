@@ -258,11 +258,10 @@ final class MovementSafetyTest {
     var result = move(terrain, START.plus(3, 0, 0), Hop.WALK);
     assertThat(result.reason()).isEqualTo(MovementSafety.Reason.REDIRECTED);
     assertThat(result.destination())
-        .hasValueSatisfying(
-            point -> {
-              assertThat(point.x()).isLessThan(1);
-              assertThat(point.z()).isGreaterThanOrEqualTo(0);
-            });
+        .hasValueSatisfying(point -> {
+          assertThat(point.x()).isLessThan(1);
+          assertThat(point.z()).isGreaterThanOrEqualTo(0);
+        });
   }
 
   @Test

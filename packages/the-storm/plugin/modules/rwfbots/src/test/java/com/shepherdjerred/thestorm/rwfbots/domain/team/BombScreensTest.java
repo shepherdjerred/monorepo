@@ -52,10 +52,9 @@ final class BombScreensTest {
     var closed = nav.grid().withDoorState(door, false);
     assertThat(ApproachNodes.canInteract(nav.graph(), closed, node, site.cell())).isFalse();
     assertThat(nav.withGrid(closed).bombScreens()).isSameAs(nav.bombScreens());
-    assertThatThrownBy(
-            () ->
-                nav.bombScreens()
-                    .validateCertification(nav.graph(), closed, nav.sites(), nav.distanceFields()))
+    assertThatThrownBy(() ->
+            nav.bombScreens()
+                .validateCertification(nav.graph(), closed, nav.sites(), nav.distanceFields()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("interaction ray");
   }
@@ -97,12 +96,11 @@ final class BombScreensTest {
       assertThat(layout.spaciousScreens()).isGreaterThan(0);
       var field = java.util.Objects.requireNonNull(nav.distanceFields().get(site.name()));
       assertThat(layout.workers())
-          .allSatisfy(
-              node -> {
-                assertThat(field.reachable(node)).isTrue();
-                assertThat(ApproachNodes.canInteract(nav.graph(), nav.grid(), node, site.cell()))
-                    .isTrue();
-              });
+          .allSatisfy(node -> {
+            assertThat(field.reachable(node)).isTrue();
+            assertThat(ApproachNodes.canInteract(nav.graph(), nav.grid(), node, site.cell()))
+                .isTrue();
+          });
       assertThat(layout.screens()).doesNotHaveDuplicates();
     }
   }
@@ -117,15 +115,13 @@ final class BombScreensTest {
         nav.sites().bombs().getFirst().name(), new BombScreens.Layout(List.of(), List.of(), 0));
     var unplayable = new BombScreens(diagnostic);
     unplayable.validate(nav.graph(), nav.sites(), nav.distanceFields());
-    assertThatThrownBy(
-            () ->
-                unplayable.validateCertification(
-                    nav.graph(), nav.grid(), nav.sites(), nav.distanceFields()))
+    assertThatThrownBy(() ->
+            unplayable.validateCertification(
+                nav.graph(), nav.grid(), nav.sites(), nav.distanceFields()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("no reachable certified fuse worker");
-    assertThatThrownBy(
-            () ->
-                new BombScreens(Map.of()).validate(nav.graph(), nav.sites(), nav.distanceFields()))
+    assertThatThrownBy(() ->
+            new BombScreens(Map.of()).validate(nav.graph(), nav.sites(), nav.distanceFields()))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> BombScreens.bake(nav.graph(), nav.grid(), nav.sites(), Map.of()))
         .isInstanceOf(IllegalArgumentException.class)

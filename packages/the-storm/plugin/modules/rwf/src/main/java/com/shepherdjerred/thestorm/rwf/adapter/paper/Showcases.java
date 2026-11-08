@@ -136,11 +136,10 @@ final class Showcases {
       return;
     }
     fill()
-        .ifPresent(
-            error -> {
-              context.logger().error("rwf showcase start failed: {}", error);
-              runner.handle(new MatchEvent.Stop());
-            });
+        .ifPresent(error -> {
+          context.logger().error("rwf showcase start failed: {}", error);
+          runner.handle(new MatchEvent.Stop());
+        });
   }
 
   private Optional<String> fill() {

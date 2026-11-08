@@ -70,13 +70,10 @@ final class Fakes {
       saves++;
       return deferredSave
           .orElseGet(() -> CompletableFuture.completedFuture(null))
-          .thenRun(
-              () -> {
-                saved.put(state.player(), state);
-                pending
-                    .computeIfAbsent(state.player(), ignored -> new ArrayList<>())
-                    .addAll(effects);
-              });
+          .thenRun(() -> {
+            saved.put(state.player(), state);
+            pending.computeIfAbsent(state.player(), ignored -> new ArrayList<>()).addAll(effects);
+          });
     }
 
     @Override
@@ -131,10 +128,9 @@ final class Fakes {
     public CompletableFuture<Void> acknowledge(UUID effect) {
       var removed =
           pending.values().stream()
-              .anyMatch(
-                  effects ->
-                      effects.removeIf(
-                          found -> found.id().equals(effect) && found.status() == Status.IN_DOUBT));
+              .anyMatch(effects ->
+                  effects.removeIf(
+                      found -> found.id().equals(effect) && found.status() == Status.IN_DOUBT));
       return removed
           ? CompletableFuture.completedFuture(null)
           : CompletableFuture.failedFuture(
@@ -146,10 +142,9 @@ final class Fakes {
       return CompletableFuture.completedFuture(
           saved.values().stream()
               .filter(state -> state.points() > 0)
-              .filter(
-                  state ->
-                      pending.getOrDefault(state.player(), List.of()).stream()
-                          .noneMatch(effect -> effect.action() instanceof Action.Take))
+              .filter(state ->
+                  pending.getOrDefault(state.player(), List.of()).stream()
+                      .noneMatch(effect -> effect.action() instanceof Action.Take))
               .sorted((a, b) -> Long.compare(b.points(), a.points()))
               .limit(limit)
               .map(state -> new Standing(state.player(), state.points()))

@@ -73,11 +73,10 @@ final class ChatServiceTest {
                 .isOk())
         .isFalse();
     service.unmute(ALICE);
-    service.storedIdentities(
-        id ->
-            id.equals(BOB)
-                ? com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages()
-                : com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
+    service.storedIdentities(id ->
+        id.equals(BOB)
+            ? com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages()
+            : com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
     assertThat(service.letter(attempt).isOk()).isFalse();
   }
 
@@ -237,20 +236,16 @@ final class ChatServiceTest {
     try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
       var attempts =
           IntStream.range(0, 32)
-              .mapToObj(
-                  index ->
-                      executor.submit(
-                          () -> {
-                            start.await();
-                            return index % 2 == 0
-                                ? service
-                                    .prepare(ALICE_SPEAKS, ChannelKey.GLOBAL, "same text")
-                                    .isOk()
-                                : service
-                                    .preparePrivate(
-                                        ALICE_SPEAKS, new Correspondent(BOB, "Bob"), "same text")
-                                    .isOk();
-                          }))
+              .mapToObj(index ->
+                  executor.submit(() -> {
+                    start.await();
+                    return index % 2 == 0
+                        ? service.prepare(ALICE_SPEAKS, ChannelKey.GLOBAL, "same text").isOk()
+                        : service
+                            .preparePrivate(
+                                ALICE_SPEAKS, new Correspondent(BOB, "Bob"), "same text")
+                            .isOk();
+                  }))
               .toList();
       start.countDown();
 

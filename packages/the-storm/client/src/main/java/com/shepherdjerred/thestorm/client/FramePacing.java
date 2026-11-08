@@ -273,20 +273,19 @@ final class FramePacing implements AutoCloseable {
             current.runtime,
             current.clock.observations(),
             current.clock.frames() < 2 ? null : current.clock.quantiles());
-    io.execute(
-        () -> {
-          try {
-            Files.writeString(
-                current.file,
-                Protocol.JSON.writeValueAsString(receipt) + "\n",
-                StandardOpenOption.CREATE_NEW);
-            current.error = receipt.error();
-            current.state = receipt.complete() ? "COMPLETE" : "FAILED";
-          } catch (IOException | RuntimeException writeFailure) {
-            current.error = writeFailure.toString();
-            current.state = "FAILED";
-          }
-        });
+    io.execute(() -> {
+      try {
+        Files.writeString(
+            current.file,
+            Protocol.JSON.writeValueAsString(receipt) + "\n",
+            StandardOpenOption.CREATE_NEW);
+        current.error = receipt.error();
+        current.state = receipt.complete() ? "COMPLETE" : "FAILED";
+      } catch (IOException | RuntimeException writeFailure) {
+        current.error = writeFailure.toString();
+        current.state = "FAILED";
+      }
+    });
   }
 
   @Override

@@ -57,11 +57,10 @@ final class SnapshotMigrationTest {
               new Vitals(new Vitals.Condition(20, 20, 5, 0), "CREATIVE"),
               new Vitals(new Vitals.Condition(20, 20, 5, 0), "SPECTATOR"));
       assertThat(snapshots)
-          .allSatisfy(
-              snapshot -> {
-                assertThat(snapshot.vitals().formatVersion()).isEqualTo(1);
-                assertThat(snapshot.vitals().maximumNoDamageTicks()).isEqualTo(20);
-              });
+          .allSatisfy(snapshot -> {
+            assertThat(snapshot.vitals().formatVersion()).isEqualTo(1);
+            assertThat(snapshot.vitals().maximumNoDamageTicks()).isEqualTo(20);
+          });
     }
   }
 

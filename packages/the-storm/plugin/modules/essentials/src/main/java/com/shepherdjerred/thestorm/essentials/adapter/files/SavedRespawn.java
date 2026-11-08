@@ -49,17 +49,16 @@ public final class SavedRespawn {
 
   /** All directory discovery and reading run on the compute pool. */
   public static CompletableFuture<Scan> load(Path level, ComputePool compute) {
-    return compute.submit(
-        () -> {
-          try {
-            var files =
-                PlayerDataFiles.locate(level)
-                    .orElseThrow(() -> new IOException("No player-data folder under " + level));
-            return readAll(files.directory());
-          } catch (IOException failure) {
-            throw new UncheckedIOException(failure);
-          }
-        });
+    return compute.submit(() -> {
+      try {
+        var files =
+            PlayerDataFiles.locate(level)
+                .orElseThrow(() -> new IOException("No player-data folder under " + level));
+        return readAll(files.directory());
+      } catch (IOException failure) {
+        throw new UncheckedIOException(failure);
+      }
+    });
   }
 
   static Scan readAll(Path directory) throws IOException {

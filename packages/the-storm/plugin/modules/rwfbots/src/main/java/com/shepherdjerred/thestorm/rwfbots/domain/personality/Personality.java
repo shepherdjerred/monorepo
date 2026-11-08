@@ -103,14 +103,13 @@ public record Personality(
       throw new IllegalArgumentException(id + ": at least one " + what + " weight is required");
     }
     var copy = new EnumMap<K, Double>(type);
-    weights.forEach(
-        (key, weight) -> {
-          if (!(weight > 0) || !Double.isFinite(weight)) {
-            throw new IllegalArgumentException(
-                id + ": " + what + " weight for " + key + " must be positive: " + weight);
-          }
-          copy.put(key, weight);
-        });
+    weights.forEach((key, weight) -> {
+      if (!(weight > 0) || !Double.isFinite(weight)) {
+        throw new IllegalArgumentException(
+            id + ": " + what + " weight for " + key + " must be positive: " + weight);
+      }
+      copy.put(key, weight);
+    });
     return Map.copyOf(copy);
   }
 }

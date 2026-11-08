@@ -11,7 +11,7 @@ jspecify = "1.0.1"
 errorprone = "2.50.0"
 nullaway = "0.14.2"
 errorprone-support = "0.30.0"
-google-java-format = "1.36.1"
+google-java-format = "2.0.0"
 pmd = "7.27.0"
 jacoco = "0.8.15"
 jackson = "3.2.3"
@@ -88,6 +88,6 @@ onnxruntime = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }
-spotless = { id = "com.diffplug.spotless", version = "8.10.2" }
+spotless = { id = "com.diffplug.spotless", version = "8.11.0" }
 shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
 run-paper = { id = "xyz.jpenilla.run-paper", version = "3.1.0" }

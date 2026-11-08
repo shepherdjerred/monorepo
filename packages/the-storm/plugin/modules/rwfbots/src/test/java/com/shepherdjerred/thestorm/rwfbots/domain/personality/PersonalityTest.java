@@ -115,10 +115,9 @@ final class PersonalityTest {
     assertThat(Lines.placeholdersOf("{victim} vs {team}"))
         .containsExactlyInAnyOrder(Lines.Placeholder.VICTIM, Lines.Placeholder.TEAM);
 
-    assertThatThrownBy(
-            () ->
-                new Lines(
-                    List.of("hi {victim}", "yo"), two, two, two, two, two, two, two, two, lobby()))
+    assertThatThrownBy(() ->
+            new Lines(
+                List.of("hi {victim}", "yo"), two, two, two, two, two, two, two, two, lobby()))
         .hasMessageContaining("greet lines may not use {victim}");
     assertThatThrownBy(
             () -> new Lines(two, two, two, two, two, two, two, two, List.of("{me}", "x"), lobby()))

@@ -65,21 +65,20 @@ final class MechanicsConfigTest {
   void structuresWaitAtLeastASecond() {
     var valid = TestConfigs.mechanics();
 
-    assertThatThrownBy(
-            () ->
-                new MechanicsConfig(
-                    valid.hiddenSwitch(),
-                    valid.lightSwitch(),
-                    valid.cookingPot(),
-                    valid.blockDrops(),
-                    valid.elevator(),
-                    valid.bridge(),
-                    valid.gate(),
-                    valid.door(),
-                    valid.signCopier(),
-                    valid.paintingSwitcher(),
-                    valid.pistons(),
-                    19))
+    assertThatThrownBy(() ->
+            new MechanicsConfig(
+                valid.hiddenSwitch(),
+                valid.lightSwitch(),
+                valid.cookingPot(),
+                valid.blockDrops(),
+                valid.elevator(),
+                valid.bridge(),
+                valid.gate(),
+                valid.door(),
+                valid.signCopier(),
+                valid.paintingSwitcher(),
+                valid.pistons(),
+                19))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

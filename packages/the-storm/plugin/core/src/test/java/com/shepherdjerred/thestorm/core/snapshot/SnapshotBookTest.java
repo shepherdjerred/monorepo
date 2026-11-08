@@ -124,9 +124,8 @@ final class SnapshotBookTest {
 
   @Test
   void aPlayerIsNeverHeldAndCleaningAtOnce() {
-    assertThatThrownBy(
-            () ->
-                new SnapshotBook(Map.of(ALICE, snapshot(ALICE, "colosseum")), Set.of(ALICE), true))
+    assertThatThrownBy(() ->
+            new SnapshotBook(Map.of(ALICE, snapshot(ALICE, "colosseum")), Set.of(ALICE), true))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

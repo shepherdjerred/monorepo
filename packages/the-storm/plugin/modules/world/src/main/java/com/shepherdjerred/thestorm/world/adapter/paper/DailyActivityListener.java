@@ -66,11 +66,10 @@ public final class DailyActivityListener implements Listener {
 
   private void observe(CompletableFuture<Void> saved, String event) {
     var _ =
-        saved.whenComplete(
-            (ignored, error) -> {
-              if (error != null) {
-                logger.error("Could not record main-world {}", event, error);
-              }
-            });
+        saved.whenComplete((ignored, error) -> {
+          if (error != null) {
+            logger.error("Could not record main-world {}", event, error);
+          }
+        });
   }
 }

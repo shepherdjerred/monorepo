@@ -102,20 +102,18 @@ final class RwfKitPrefsTest {
     editor.setItem(29, sword);
     alice.closeInventory();
 
-    harness.until(
-        () ->
-            new JooqKitStore(harness.database)
-                .prefs(alice.getUniqueId())
-                .join()
-                .layout("trooper")
-                .isPresent());
+    harness.until(() ->
+        new JooqKitStore(harness.database)
+            .prefs(alice.getUniqueId())
+            .join()
+            .layout("trooper")
+            .isPresent());
     assertThat(
             new JooqKitStore(harness.database).prefs(alice.getUniqueId()).join().layout("trooper"))
         .contains(new KitLayout(Map.of(0, 0, 1, 2, 2, 1)));
-    harness.until(
-        () ->
-            RwfHarness.messages(alice).stream()
-                .anyMatch(message -> message.contains("Saved your Trooper layout")));
+    harness.until(() ->
+        RwfHarness.messages(alice).stream()
+            .anyMatch(message -> message.contains("Saved your Trooper layout")));
     alice.performCommand("rwf kit trooper");
     assertThat(at(alice, 1)).isEqualTo(Material.GOLDEN_APPLE);
     assertThat(at(alice, 2)).isEqualTo(Material.IRON_SWORD);
@@ -131,11 +129,10 @@ final class RwfKitPrefsTest {
         .join();
     harness
         .database
-        .write(
-            dsl ->
-                dsl.execute(
-                    "UPDATE rwf_player_prefs SET last_kit = 'longbow' WHERE player = ?",
-                    alice.getUniqueId().toString()))
+        .write(dsl ->
+            dsl.execute(
+                "UPDATE rwf_player_prefs SET last_kit = 'longbow' WHERE player = ?",
+                alice.getUniqueId().toString()))
         .join();
 
     harness.enter(alice);
@@ -151,18 +148,16 @@ final class RwfKitPrefsTest {
     harness.enter(alice);
     harness
         .database
-        .write(
-            dsl ->
-                dsl.execute(
-                    "CREATE TRIGGER reject_layout BEFORE INSERT ON rwf_player_prefs "
-                        + "BEGIN SELECT RAISE(ABORT, 'layout unavailable'); END"))
+        .write(dsl ->
+            dsl.execute(
+                "CREATE TRIGGER reject_layout BEFORE INSERT ON rwf_player_prefs "
+                    + "BEGIN SELECT RAISE(ABORT, 'layout unavailable'); END"))
         .join();
 
     swapSwordAndApples(harness, alice);
-    harness.until(
-        () ->
-            RwfHarness.messages(alice).stream()
-                .anyMatch(message -> message.contains("layout could not be saved; try again")));
+    harness.until(() ->
+        RwfHarness.messages(alice).stream()
+            .anyMatch(message -> message.contains("layout could not be saved; try again")));
     assertThat(
             new JooqKitStore(harness.database).prefs(alice.getUniqueId()).join().layout("trooper"))
         .isEmpty();
@@ -172,10 +167,9 @@ final class RwfKitPrefsTest {
     harness.database.write(dsl -> dsl.execute("DROP TRIGGER reject_layout")).join();
 
     swapSwordAndApples(harness, alice);
-    harness.until(
-        () ->
-            RwfHarness.messages(alice).stream()
-                .anyMatch(message -> message.contains("Saved your Trooper layout")));
+    harness.until(() ->
+        RwfHarness.messages(alice).stream()
+            .anyMatch(message -> message.contains("Saved your Trooper layout")));
     alice.performCommand("rwf kit trooper");
     assertThat(at(alice, 1)).isEqualTo(Material.GOLDEN_APPLE);
     assertThat(at(alice, 2)).isEqualTo(Material.IRON_SWORD);

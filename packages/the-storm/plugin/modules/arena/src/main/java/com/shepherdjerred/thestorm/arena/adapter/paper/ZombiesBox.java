@@ -187,9 +187,8 @@ final class ZombiesBox {
                   () ->
                       box.roll()
                           .filter(current -> current.equals(roll))
-                          .filter(
-                              current ->
-                                  runner.context().time().instant().isBefore(current.expires()))
+                          .filter(current ->
+                              runner.context().time().instant().isBefore(current.expires()))
                           .isPresent(),
                   () -> finishClaim(player, roll),
                   -1));
@@ -214,13 +213,12 @@ final class ZombiesBox {
       beams();
       runner
           .online()
-          .forEach(
-              p ->
-                  Texts.info(
-                      p,
-                      "The runic cache moved to "
-                          + site().zone()
-                          + ". Follow the magenta beacon; open its route if needed."));
+          .forEach(p ->
+              Texts.info(
+                  p,
+                  "The runic cache moved to "
+                      + site().zone()
+                      + ". Follow the magenta beacon; open its route if needed."));
     }
   }
 
@@ -242,13 +240,12 @@ final class ZombiesBox {
         + " · "
         + reward
             .effect()
-            .map(
-                id ->
-                    runner.map().content().legendaries().stream()
-                        .filter(r -> r.id() == id)
-                        .findFirst()
-                        .orElseThrow()
-                        .name())
+            .map(id ->
+                runner.map().content().legendaries().stream()
+                    .filter(r -> r.id() == id)
+                    .findFirst()
+                    .orElseThrow()
+                    .name())
             .orElseGet(() -> SurvivalItems.name(SurvivalItems.material(reward.material())));
   }
 
@@ -301,16 +298,12 @@ final class ZombiesBox {
 
   void tick() {
     box.expire(runner.context().time().instant())
-        .ifPresent(
-            roll -> {
-              runner
-                  .items()
-                  .commit(java.util.Objects.requireNonNull(payments.remove(roll.owner())));
-              var player = runner.context().server().getPlayer(roll.owner());
-              if (player != null)
-                Texts.info(player, "Unclaimed box expired. The roll cost is spent.");
-              clearDisplay();
-            });
+        .ifPresent(roll -> {
+          runner.items().commit(java.util.Objects.requireNonNull(payments.remove(roll.owner())));
+          var player = runner.context().server().getPlayer(roll.owner());
+          if (player != null) Texts.info(player, "Unclaimed box expired. The roll cost is spent.");
+          clearDisplay();
+        });
   }
 
   private void refund(UUID id) {
@@ -358,11 +351,10 @@ final class ZombiesBox {
 
   void leave(UUID id) {
     box.cancel(id)
-        .ifPresent(
-            roll -> {
-              runner.items().commit(java.util.Objects.requireNonNull(payments.remove(id)));
-              clearDisplay();
-            });
+        .ifPresent(roll -> {
+          runner.items().commit(java.util.Objects.requireNonNull(payments.remove(id)));
+          clearDisplay();
+        });
   }
 
   void reset() {

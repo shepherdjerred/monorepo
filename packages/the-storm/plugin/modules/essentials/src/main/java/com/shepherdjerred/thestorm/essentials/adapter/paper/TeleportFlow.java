@@ -245,25 +245,23 @@ final class TeleportFlow implements TeleportTravel {
     var firstSeen = java.util.Objects.requireNonNull(rtpFirstSeen, "RTP policy is required");
     return legacyRecovery
         .thenCompose(ready -> firstSeen.apply(player.getUniqueId()))
-        .thenApply(
-            seen ->
-                new Exemptions(
-                    permissions.free()
-                        || runtime
-                            .time()
-                            .instant()
-                            .isBefore(seen.plus(services.payments().pricing().rtpFreeFor())),
-                    permissions.ignoresCooldown()));
+        .thenApply(seen ->
+            new Exemptions(
+                permissions.free()
+                    || runtime
+                        .time()
+                        .instant()
+                        .isBefore(seen.plus(services.payments().pricing().rtpFreeFor())),
+                permissions.ignoresCooldown()));
   }
 
   private CompletableFuture<Check> check(Player payer, TeleportKind kind) {
     return exemptionsFor(payer, kind)
-        .thenCompose(
-            exemptions ->
-                services
-                    .payments()
-                    .quote(payer.getUniqueId(), kind, exemptions)
-                    .thenApply(quote -> new Check(exemptions, quote)));
+        .thenCompose(exemptions ->
+            services
+                .payments()
+                .quote(payer.getUniqueId(), kind, exemptions)
+                .thenApply(quote -> new Check(exemptions, quote)));
   }
 
   @Override
@@ -848,16 +846,15 @@ final class TeleportFlow implements TeleportTravel {
   private static void notifyAcceptor(Ticket ticket, boolean arrived) {
     ticket
         .acceptor()
-        .ifPresent(
-            player -> {
-              if (player.isOnline()) {
-                if (arrived) {
-                  Say.success(player, Say.TELEPORT, "The teleport request completed.");
-                } else {
-                  Say.error(player, Say.TELEPORT, "The teleport request was cancelled.");
-                }
-              }
-            });
+        .ifPresent(player -> {
+          if (player.isOnline()) {
+            if (arrived) {
+              Say.success(player, Say.TELEPORT, "The teleport request completed.");
+            } else {
+              Say.error(player, Say.TELEPORT, "The teleport request was cancelled.");
+            }
+          }
+        });
   }
 
   private static boolean involves(Ticket ticket, UUID player) {

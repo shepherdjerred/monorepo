@@ -100,11 +100,10 @@ final class BombGuard {
         .state()
         .memory()
         .sightings()
-        .forEach(
-            (id, sighting) -> {
-              if (remembered(situation, id, sighting, now))
-                tracks.add(new Track(id, sighting.predictedPos(now), sighting.vel()));
-            });
+        .forEach((id, sighting) -> {
+          if (remembered(situation, id, sighting, now))
+            tracks.add(new Track(id, sighting.predictedPos(now), sighting.vel()));
+        });
     tracks.sort(comparing(Track::id));
     return tracks;
   }
@@ -140,12 +139,11 @@ final class BombGuard {
    */
   static boolean stillAnswering(Plan plan, Situation situation) {
     return plan.answer()
-        .map(
-            answer ->
-                guards(situation)
-                    && approaching(answer, situation)
-                    && situation.board().chasers(answer.enemy(), situation.self().id())
-                        < Situation.MAX_CHASERS)
+        .map(answer ->
+            guards(situation)
+                && approaching(answer, situation)
+                && situation.board().chasers(answer.enemy(), situation.self().id())
+                    < Situation.MAX_CHASERS)
         .orElse(true);
   }
 

@@ -58,11 +58,10 @@ public final class ChatModule implements StormModule {
             player ->
                 reset
                     .reset(player)
-                    .thenRun(
-                        () -> {
-                          service.forget(player);
-                          identities.forget(player);
-                        }));
+                    .thenRun(() -> {
+                      service.forget(player);
+                      identities.forget(player);
+                    }));
     context
         .services()
         .provide(com.shepherdjerred.thestorm.chat.app.IdentityService.class, identities);
@@ -124,10 +123,9 @@ public final class ChatModule implements StormModule {
     context
         .services()
         .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
-        .ifPresent(
-            safety ->
-                com.shepherdjerred.thestorm.chat.adapter.paper.SafetyChatRoutes.install(
-                    safety, service, context));
+        .ifPresent(safety ->
+            com.shepherdjerred.thestorm.chat.adapter.paper.SafetyChatRoutes.install(
+                safety, service, context));
     server.getPluginManager().registerEvents(identityCommands, context.plugin());
     identityRefresh =
         context

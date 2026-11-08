@@ -202,25 +202,23 @@ final class BoardQuestsTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new Template.Target("X", 1, 1, 2, 1, Double.POSITIVE_INFINITY))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                BoardQuests.priced(BOUNTY, new Template.Target("X", 1, 1, 2, Long.MAX_VALUE, 1), 2))
+    assertThatThrownBy(() ->
+            BoardQuests.priced(BOUNTY, new Template.Target("X", 1, 1, 2, Long.MAX_VALUE, 1), 2))
         .isInstanceOf(ArithmeticException.class);
     assertThatThrownBy(() -> BoardQuests.minutes(new Template.Target("X", 1, 1, 2, 1, 1.0e12), 2))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Template(
-                    "t",
-                    Template.Period.DAILY,
-                    Template.Kind.KILL,
-                    "n",
-                    "o",
-                    "a",
-                    "d",
-                    "f",
-                    1,
-                    List.of()))
+    assertThatThrownBy(() ->
+            new Template(
+                "t",
+                Template.Period.DAILY,
+                Template.Kind.KILL,
+                "n",
+                "o",
+                "a",
+                "d",
+                "f",
+                1,
+                List.of()))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

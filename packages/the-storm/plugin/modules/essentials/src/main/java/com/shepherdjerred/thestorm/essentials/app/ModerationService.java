@@ -32,11 +32,10 @@ public final class ModerationService {
     this.time = time;
     this.loaded =
         log.all()
-            .thenAccept(
-                entries -> {
-                  entries.forEach(this::apply);
-                  ready = true;
-                });
+            .thenAccept(entries -> {
+              entries.forEach(this::apply);
+              ready = true;
+            });
   }
 
   /**
@@ -86,17 +85,15 @@ public final class ModerationService {
 
   /** Every ban in force once the log has loaded, newest first. For {@code /banlist}. */
   public CompletableFuture<List<ActiveBan>> activeBans() {
-    return loaded.thenApply(
-        ready -> {
-          var now = time.instant();
-          return standings.entrySet().stream()
-              .flatMap(
-                  entry ->
-                      entry.getValue().activeBan(now).stream()
-                          .map(ban -> new ActiveBan(entry.getKey(), ban)))
-              .sorted(comparing((ActiveBan active) -> active.ban().at()).reversed())
-              .toList();
-        });
+    return loaded.thenApply(ready -> {
+      var now = time.instant();
+      return standings.entrySet().stream()
+          .flatMap(entry ->
+              entry.getValue().activeBan(now).stream()
+                  .map(ban -> new ActiveBan(entry.getKey(), ban)))
+          .sorted(comparing((ActiveBan active) -> active.ban().at()).reversed())
+          .toList();
+    });
   }
 
   /** {@code player}'s newest {@code limit} audit entries, newest first. */
@@ -107,19 +104,17 @@ public final class ModerationService {
   /** A boundary-safe view of {@code player}'s newest audit entries, newest first. */
   public CompletableFuture<List<ModerationHistory>> historyView(UUID player, int limit) {
     return log.history(player, limit)
-        .thenApply(
-            entries ->
-                entries.stream()
-                    .map(
-                        entry ->
-                            new ModerationHistory(
-                                entry.action().id(),
-                                entry.actor().uuid(),
-                                entry.actor().name(),
-                                entry.reason(),
-                                entry.at(),
-                                entry.expiresAt()))
-                    .toList());
+        .thenApply(entries ->
+            entries.stream()
+                .map(entry ->
+                    new ModerationHistory(
+                        entry.action().id(),
+                        entry.actor().uuid(),
+                        entry.actor().name(),
+                        entry.reason(),
+                        entry.at(),
+                        entry.expiresAt()))
+                .toList());
   }
 
   /** Evicts a reset account's replayed standing. */

@@ -124,12 +124,11 @@ final class Spectating implements Listener {
         Optional.ofNullable(killers.remove(id))
             .flatMap(uuid -> Optional.ofNullable(context.server().getPlayer(uuid)))
             .filter(p -> runner.fighting(p.getUniqueId()));
-    killer.ifPresent(
-        target -> {
-          ghost.setGameMode(GameMode.SPECTATOR);
-          runner.move(ghost, Places.at(target)).setSpectatorTarget(target);
-          killerView.put(id, runner.now().plus(KILLER_VIEW));
-        });
+    killer.ifPresent(target -> {
+      ghost.setGameMode(GameMode.SPECTATOR);
+      runner.move(ghost, Places.at(target)).setSpectatorTarget(target);
+      killerView.put(id, runner.now().plus(KILLER_VIEW));
+    });
     return true;
   }
 
@@ -178,16 +177,15 @@ final class Spectating implements Listener {
   /** GameManager's spectator compass, word for word. */
   private ItemStack compass() {
     var stack = new ItemStack(Material.COMPASS);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text("Spectator Compass", NamedTextColor.GRAY)
-                  .decoration(TextDecoration.ITALIC, false));
-          meta.lore(
-              List.of(
-                  clickLore("LEFT-CLICK ", "to teleport to nearby player"),
-                  clickLore("RIGHT-CLICK ", "to open a menu")));
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text("Spectator Compass", NamedTextColor.GRAY)
+              .decoration(TextDecoration.ITALIC, false));
+      meta.lore(
+          List.of(
+              clickLore("LEFT-CLICK ", "to teleport to nearby player"),
+              clickLore("RIGHT-CLICK ", "to open a menu")));
+    });
     keys.tagCompass(stack);
     return stack;
   }
@@ -201,11 +199,10 @@ final class Spectating implements Listener {
   /** GameManager's "Join next game" quartz. */
   private ItemStack nextGameItem() {
     var stack = new ItemStack(Material.QUARTZ);
-    stack.editMeta(
-        meta ->
-            meta.displayName(
-                Component.text("Join next game", NamedTextColor.BLUE)
-                    .decoration(TextDecoration.ITALIC, false)));
+    stack.editMeta(meta ->
+        meta.displayName(
+            Component.text("Join next game", NamedTextColor.BLUE)
+                .decoration(TextDecoration.ITALIC, false)));
     keys.tagNextGame(stack);
     return stack;
   }
@@ -213,17 +210,16 @@ final class Spectating implements Listener {
   /** GameManager's "Change kit layout" star. */
   private ItemStack kitLayoutItem() {
     var stack = new ItemStack(Material.NETHER_STAR);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text("Change kit layout", NamedTextColor.DARK_GREEN)
-                  .decoration(TextDecoration.ITALIC, false));
-          meta.lore(
-              List.of(
-                  Component.text(
-                          "Right click with this to change the kit layouts!", NamedTextColor.GREEN)
-                      .decoration(TextDecoration.ITALIC, false)));
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text("Change kit layout", NamedTextColor.DARK_GREEN)
+              .decoration(TextDecoration.ITALIC, false));
+      meta.lore(
+          List.of(
+              Component.text(
+                      "Right click with this to change the kit layouts!", NamedTextColor.GREEN)
+                  .decoration(TextDecoration.ITALIC, false)));
+    });
     keys.tagKitLayout(stack);
     return stack;
   }
@@ -277,21 +273,20 @@ final class Spectating implements Listener {
     }
     runner
         .entity(id)
-        .ifPresent(
-            player -> {
-              player.setInvulnerable(false);
-              player.setCollidable(true);
-              for (var viewer : context.server().getOnlinePlayers()) {
-                context
-                    .visibility()
-                    .set(
-                        viewer,
-                        player,
-                        com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason
-                            .SPECTATOR,
-                        false);
-              }
-            });
+        .ifPresent(player -> {
+          player.setInvulnerable(false);
+          player.setCollidable(true);
+          for (var viewer : context.server().getOnlinePlayers()) {
+            context
+                .visibility()
+                .set(
+                    viewer,
+                    player,
+                    com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason
+                        .SPECTATOR,
+                    false);
+          }
+        });
   }
 
   /** Whether {@code player} is a ghost. */
@@ -393,12 +388,11 @@ final class Spectating implements Listener {
       killerView.remove(player.getUniqueId());
       context
           .scheduler()
-          .runOnMainThread(
-              () -> {
-                if (ghosts.contains(player.getUniqueId()) && player.isOnline()) {
-                  ghost(player, Places.at(player));
-                }
-              });
+          .runOnMainThread(() -> {
+            if (ghosts.contains(player.getUniqueId()) && player.isOnline()) {
+              ghost(player, Places.at(player));
+            }
+          });
     }
   }
 
@@ -530,11 +524,10 @@ final class Spectating implements Listener {
     /** SpectatorInventory's team header: the team's hat, titled with its name in its colour. */
     private ItemStack header(TeamColor team) {
       var stack = new ItemStack(Hats.hat(team));
-      stack.editMeta(
-          meta ->
-              meta.displayName(
-                  Component.text(team.displayName(), Scoreboards.color(team))
-                      .decoration(TextDecoration.ITALIC, false)));
+      stack.editMeta(meta ->
+          meta.displayName(
+              Component.text(team.displayName(), Scoreboards.color(team))
+                  .decoration(TextDecoration.ITALIC, false)));
       return stack;
     }
 
@@ -545,25 +538,23 @@ final class Spectating implements Listener {
       var icon = Material.matchMaterial(kit.menu().icon());
       var stack = new ItemStack(icon == null ? Material.PLAYER_HEAD : icon);
       var team = fighter.team().orElseThrow();
-      stack.editMeta(
-          meta -> {
-            meta.displayName(
-                Component.text(fighter.name(), Scoreboards.color(team))
-                    .decoration(TextDecoration.ITALIC, false));
-            var lore = new ArrayList<Component>();
-            lore.add(
-                Component.text("Kit: ", NamedTextColor.BLUE)
-                    .append(Component.text(kit.name(), NamedTextColor.WHITE)));
-            lore.add(
-                Component.text("Kills: ", NamedTextColor.BLUE)
-                    .append(
-                        Component.text(
-                            String.valueOf(fighter.score().streak()), NamedTextColor.WHITE)));
-            lore.add(Component.empty());
-            lore.add(
-                Component.text("CLICK TO TELEPORT", NamedTextColor.GREEN, TextDecoration.BOLD));
-            meta.lore(lore);
-          });
+      stack.editMeta(meta -> {
+        meta.displayName(
+            Component.text(fighter.name(), Scoreboards.color(team))
+                .decoration(TextDecoration.ITALIC, false));
+        var lore = new ArrayList<Component>();
+        lore.add(
+            Component.text("Kit: ", NamedTextColor.BLUE)
+                .append(Component.text(kit.name(), NamedTextColor.WHITE)));
+        lore.add(
+            Component.text("Kills: ", NamedTextColor.BLUE)
+                .append(
+                    Component.text(
+                        String.valueOf(fighter.score().streak()), NamedTextColor.WHITE)));
+        lore.add(Component.empty());
+        lore.add(Component.text("CLICK TO TELEPORT", NamedTextColor.GREEN, TextDecoration.BOLD));
+        meta.lore(lore);
+      });
       return stack;
     }
 

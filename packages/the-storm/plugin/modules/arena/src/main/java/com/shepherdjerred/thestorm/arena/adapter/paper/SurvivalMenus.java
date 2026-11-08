@@ -116,22 +116,19 @@ final class SurvivalMenus {
     runner.map().content().recipes().stream()
         .filter(r -> r.station() == station.type())
         .filter(r -> tab(SurvivalItems.material(r.material())) == tab)
-        .forEach(
-            recipe ->
-                choices.add(
-                    new Choice(
-                        recipe.name()
-                            + " · "
-                            + recipe.ingredients().entrySet().stream()
-                                .map(
-                                    e ->
-                                        e.getValue()
-                                            + " "
-                                            + SurvivalItems.name(
-                                                SurvivalItems.material(e.getKey())))
-                                .collect(java.util.stream.Collectors.joining(", ")),
-                        SurvivalItems.material(recipe.material()),
-                        () -> runner.actions().craft(player, recipe))));
+        .forEach(recipe ->
+            choices.add(
+                new Choice(
+                    recipe.name()
+                        + " · "
+                        + recipe.ingredients().entrySet().stream()
+                            .map(e ->
+                                e.getValue()
+                                    + " "
+                                    + SurvivalItems.name(SurvivalItems.material(e.getKey())))
+                            .collect(java.util.stream.Collectors.joining(", ")),
+                    SurvivalItems.material(recipe.material()),
+                    () -> runner.actions().craft(player, recipe))));
     if (tab == Tab.WEAPONS) {
       choices.add(
           new Choice(
@@ -196,12 +193,10 @@ final class SurvivalMenus {
   }
 
   private static void describe(ItemStack icon, Choice choice) {
-    icon.editMeta(
-        meta -> {
-          meta.displayName(Component.text(choice.label()));
-          if (!choice.description().isEmpty())
-            meta.lore(List.of(Component.text(choice.description())));
-        });
+    icon.editMeta(meta -> {
+      meta.displayName(Component.text(choice.label()));
+      if (!choice.description().isEmpty()) meta.lore(List.of(Component.text(choice.description())));
+    });
   }
 
   private static Tab tab(Material material) {
@@ -282,12 +277,11 @@ final class SurvivalMenus {
     for (var i = 0; i < choices.size(); i++) {
       var choice = choices.get(i);
       var icon = ItemStack.of(choice.icon());
-      icon.editMeta(
-          meta -> {
-            meta.displayName(Component.text(choice.label()));
-            if (!choice.description().isEmpty())
-              meta.lore(List.of(Component.text(choice.description())));
-          });
+      icon.editMeta(meta -> {
+        meta.displayName(Component.text(choice.label()));
+        if (!choice.description().isEmpty())
+          meta.lore(List.of(Component.text(choice.description())));
+      });
       inventory.setItem(i, icon);
     }
   }

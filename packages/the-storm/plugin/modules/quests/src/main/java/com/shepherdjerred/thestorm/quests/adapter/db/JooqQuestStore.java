@@ -50,14 +50,13 @@ public final class JooqQuestStore implements QuestStore {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(QUESTS_PENDING_WORLD)
-                  .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(id))
-                  .execute();
-              dsl.deleteFrom(QUESTS_PLAYER).where(QUESTS_PLAYER.PLAYER_ID.eq(id)).execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(QUESTS_PENDING_WORLD)
+              .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(id))
+              .execute();
+          dsl.deleteFrom(QUESTS_PLAYER).where(QUESTS_PLAYER.PLAYER_ID.eq(id)).execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 
@@ -69,114 +68,106 @@ public final class JooqQuestStore implements QuestStore {
   @Override
   public CompletableFuture<Void> save(PlayerQuests state, List<PendingWorld> effects) {
     return database
-        .write(
-            dsl -> {
-              store(dsl, state);
-              for (var effect : effects) {
-                if (!effect.player().equals(state.player())) {
-                  throw new IllegalArgumentException("pending effect belongs to another player");
-                }
-                dsl.insertInto(QUESTS_PENDING_WORLD)
-                    .set(QUESTS_PENDING_WORLD.ID, effect.id().toString())
-                    .set(QUESTS_PENDING_WORLD.PLAYER_ID, effect.player().toString())
-                    .set(QUESTS_PENDING_WORLD.QUEST_ID, effect.quest())
-                    .set(QUESTS_PENDING_WORLD.ACTION_KIND, WorldActionCodec.kind(effect.action()))
-                    .set(QUESTS_PENDING_WORLD.PAYLOAD, WorldActionCodec.payload(effect.action()))
-                    .execute();
-              }
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          store(dsl, state);
+          for (var effect : effects) {
+            if (!effect.player().equals(state.player())) {
+              throw new IllegalArgumentException("pending effect belongs to another player");
+            }
+            dsl.insertInto(QUESTS_PENDING_WORLD)
+                .set(QUESTS_PENDING_WORLD.ID, effect.id().toString())
+                .set(QUESTS_PENDING_WORLD.PLAYER_ID, effect.player().toString())
+                .set(QUESTS_PENDING_WORLD.QUEST_ID, effect.quest())
+                .set(QUESTS_PENDING_WORLD.ACTION_KIND, WorldActionCodec.kind(effect.action()))
+                .set(QUESTS_PENDING_WORLD.PAYLOAD, WorldActionCodec.payload(effect.action()))
+                .execute();
+          }
+          return Boolean.TRUE;
+        })
         .thenAccept(stored -> {});
   }
 
   @Override
   public CompletableFuture<List<PendingWorld>> pending(UUID player) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(QUESTS_PENDING_WORLD)
-                .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
-                .orderBy(QUESTS_PENDING_WORLD.SEQUENCE.asc())
-                .fetch(
-                    row ->
-                        new PendingWorld(
-                            UUID.fromString(row.getId()),
-                            player,
-                            row.getQuestId(),
-                            WorldActionCodec.decode(row.getActionKind(), row.getPayload()),
-                            Status.valueOf(row.getStatus()))));
+    return database.read(dsl ->
+        dsl.selectFrom(QUESTS_PENDING_WORLD)
+            .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
+            .orderBy(QUESTS_PENDING_WORLD.SEQUENCE.asc())
+            .fetch(row ->
+                new PendingWorld(
+                    UUID.fromString(row.getId()),
+                    player,
+                    row.getQuestId(),
+                    WorldActionCodec.decode(row.getActionKind(), row.getPayload()),
+                    Status.valueOf(row.getStatus()))));
   }
 
   @Override
   public CompletableFuture<Boolean> claim(UUID effect) {
-    return database.write(
-        dsl ->
-            dsl.update(QUESTS_PENDING_WORLD)
-                    .set(QUESTS_PENDING_WORLD.STATUS, Status.IN_DOUBT.name())
-                    .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
-                    .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.PENDING.name()))
-                    .execute()
-                == 1);
+    return database.write(dsl ->
+        dsl.update(QUESTS_PENDING_WORLD)
+                .set(QUESTS_PENDING_WORLD.STATUS, Status.IN_DOUBT.name())
+                .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.PENDING.name()))
+                .execute()
+            == 1);
   }
 
   @Override
   public CompletableFuture<Boolean> retry(UUID player, UUID effect) {
-    return database.write(
-        dsl ->
-            dsl.update(QUESTS_PENDING_WORLD)
-                    .set(QUESTS_PENDING_WORLD.STATUS, Status.PENDING.name())
-                    .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
-                    .and(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
-                    .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
-                    .execute()
-                == 1);
+    return database.write(dsl ->
+        dsl.update(QUESTS_PENDING_WORLD)
+                .set(QUESTS_PENDING_WORLD.STATUS, Status.PENDING.name())
+                .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                .and(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
+                .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
+                .execute()
+            == 1);
   }
 
   @Override
   public CompletableFuture<Boolean> complete(UUID player, UUID effect) {
-    return database.write(
-        dsl ->
-            dsl.deleteFrom(QUESTS_PENDING_WORLD)
-                    .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
-                    .and(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
-                    .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
-                    .execute()
-                == 1);
+    return database.write(dsl ->
+        dsl.deleteFrom(QUESTS_PENDING_WORLD)
+                .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                .and(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
+                .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
+                .execute()
+            == 1);
   }
 
   @Override
   public CompletableFuture<Void> acknowledge(UUID effect) {
     return database
-        .write(
-            dsl -> {
-              var deleted =
-                  dsl.deleteFrom(QUESTS_PENDING_WORLD)
-                      .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
-                      .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
-                      .execute();
-              if (deleted != 1) {
-                throw new IllegalStateException("claimed quest action disappeared: " + effect);
-              }
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          var deleted =
+              dsl.deleteFrom(QUESTS_PENDING_WORLD)
+                  .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                  .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
+                  .execute();
+          if (deleted != 1) {
+            throw new IllegalStateException("claimed quest action disappeared: " + effect);
+          }
+          return Boolean.TRUE;
+        })
         .thenAccept(deleted -> {});
   }
 
   @Override
   public CompletableFuture<List<Standing>> top(int limit) {
-    return database.read(
-        dsl ->
-            dsl.select(QUESTS_PLAYER.PLAYER_ID, QUESTS_PLAYER.POINTS)
-                .from(QUESTS_PLAYER)
-                .where(QUESTS_PLAYER.POINTS.gt(0L))
-                .and(
-                    DSL.notExists(
-                        DSL.selectOne()
-                            .from(QUESTS_PENDING_WORLD)
-                            .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(QUESTS_PLAYER.PLAYER_ID))
-                            .and(QUESTS_PENDING_WORLD.ACTION_KIND.eq("take"))))
-                .orderBy(QUESTS_PLAYER.POINTS.desc(), QUESTS_PLAYER.PLAYER_ID.asc())
-                .limit(limit)
-                .fetch(row -> new Standing(UUID.fromString(row.value1()), row.value2())));
+    return database.read(dsl ->
+        dsl.select(QUESTS_PLAYER.PLAYER_ID, QUESTS_PLAYER.POINTS)
+            .from(QUESTS_PLAYER)
+            .where(QUESTS_PLAYER.POINTS.gt(0L))
+            .and(
+                DSL.notExists(
+                    DSL.selectOne()
+                        .from(QUESTS_PENDING_WORLD)
+                        .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(QUESTS_PLAYER.PLAYER_ID))
+                        .and(QUESTS_PENDING_WORLD.ACTION_KIND.eq("take"))))
+            .orderBy(QUESTS_PLAYER.POINTS.desc(), QUESTS_PLAYER.PLAYER_ID.asc())
+            .limit(limit)
+            .fetch(row -> new Standing(UUID.fromString(row.value1()), row.value2())));
   }
 
   static PlayerQuests fetch(DSLContext dsl, UUID player) {
@@ -208,18 +199,17 @@ public final class JooqQuestStore implements QuestStore {
             dsl.selectFrom(QUESTS_BOARD)
                 .where(QUESTS_BOARD.PLAYER_ID.eq(id))
                 .orderBy(QUESTS_BOARD.SLOT.asc())
-                .fetch(
-                    entry ->
-                        new Board.Entry(
-                            entry.getSlot(),
-                            entry.getTemplate(),
-                            Template.Period.valueOf(entry.getPeriod().toUpperCase(Locale.ROOT)),
-                            Template.Kind.valueOf(entry.getKind().toUpperCase(Locale.ROOT)),
-                            entry.getTarget(),
-                            entry.getAmount(),
-                            entry.getStars(),
-                            entry.getReward(),
-                            entry.getMinutes()))),
+                .fetch(entry ->
+                    new Board.Entry(
+                        entry.getSlot(),
+                        entry.getTemplate(),
+                        Template.Period.valueOf(entry.getPeriod().toUpperCase(Locale.ROOT)),
+                        Template.Kind.valueOf(entry.getKind().toUpperCase(Locale.ROOT)),
+                        entry.getTarget(),
+                        entry.getAmount(),
+                        entry.getStars(),
+                        entry.getReward(),
+                        entry.getMinutes()))),
         marks(dsl, id),
         discoveries(dsl, id));
   }
@@ -229,29 +219,27 @@ public final class JooqQuestStore implements QuestStore {
     dsl.selectFrom(QUESTS_OBJECTIVE)
         .where(QUESTS_OBJECTIVE.PLAYER_ID.eq(id))
         .orderBy(QUESTS_OBJECTIVE.QUEST_ID.asc(), QUESTS_OBJECTIVE.POSITION.asc())
-        .forEach(
-            row -> {
-              var list = counts.computeIfAbsent(row.getQuestId(), quest -> new ArrayList<>());
-              if (row.getPosition() != list.size()) {
-                throw new IllegalStateException(
-                    "objective rows for " + row.getQuestId() + " skip a position");
-              }
-              list.add(row.getProgress());
-            });
+        .forEach(row -> {
+          var list = counts.computeIfAbsent(row.getQuestId(), quest -> new ArrayList<>());
+          if (row.getPosition() != list.size()) {
+            throw new IllegalStateException(
+                "objective rows for " + row.getQuestId() + " skip a position");
+          }
+          list.add(row.getProgress());
+        });
     var active = new TreeMap<String, ActiveQuest>();
     dsl.selectFrom(QUESTS_ACTIVE)
         .where(QUESTS_ACTIVE.PLAYER_ID.eq(id))
-        .forEach(
-            row ->
-                active.put(
+        .forEach(row ->
+            active.put(
+                row.getQuestId(),
+                new ActiveQuest(
                     row.getQuestId(),
-                    new ActiveQuest(
-                        row.getQuestId(),
-                        row.getStage(),
-                        counts.getOrDefault(row.getQuestId(), List.of()),
-                        Phase.valueOf(row.getPhase().toUpperCase(Locale.ROOT)),
-                        Instant.ofEpochMilli(row.getStartedAt()),
-                        Instant.ofEpochMilli(row.getStageStartedAt()))));
+                    row.getStage(),
+                    counts.getOrDefault(row.getQuestId(), List.of()),
+                    Phase.valueOf(row.getPhase().toUpperCase(Locale.ROOT)),
+                    Instant.ofEpochMilli(row.getStartedAt()),
+                    Instant.ofEpochMilli(row.getStageStartedAt()))));
     return active;
   }
 
@@ -259,11 +247,10 @@ public final class JooqQuestStore implements QuestStore {
     var completions = new TreeMap<String, Completion>();
     dsl.selectFrom(QUESTS_COMPLETION)
         .where(QUESTS_COMPLETION.PLAYER_ID.eq(id))
-        .forEach(
-            row ->
-                completions.put(
-                    row.getQuestId(),
-                    new Completion(row.getTimes(), Instant.ofEpochMilli(row.getLastAt()))));
+        .forEach(row ->
+            completions.put(
+                row.getQuestId(),
+                new Completion(row.getTimes(), Instant.ofEpochMilli(row.getLastAt()))));
     return completions;
   }
 
@@ -271,9 +258,8 @@ public final class JooqQuestStore implements QuestStore {
     var marks = new TreeMap<String, NpcMark>();
     dsl.selectFrom(QUESTS_MARKER)
         .where(QUESTS_MARKER.PLAYER_ID.eq(id))
-        .forEach(
-            row ->
-                marks.put(row.getNpc(), NpcMark.valueOf(row.getMark().toUpperCase(Locale.ROOT))));
+        .forEach(row ->
+            marks.put(row.getNpc(), NpcMark.valueOf(row.getMark().toUpperCase(Locale.ROOT))));
     return marks;
   }
 
@@ -321,32 +307,29 @@ public final class JooqQuestStore implements QuestStore {
     }
     state
         .completions()
-        .forEach(
-            (quest, completion) ->
-                dsl.insertInto(QUESTS_COMPLETION)
-                    .set(QUESTS_COMPLETION.PLAYER_ID, id)
-                    .set(QUESTS_COMPLETION.QUEST_ID, quest)
-                    .set(QUESTS_COMPLETION.TIMES, completion.times())
-                    .set(QUESTS_COMPLETION.LAST_AT, completion.last().toEpochMilli())
-                    .execute());
+        .forEach((quest, completion) ->
+            dsl.insertInto(QUESTS_COMPLETION)
+                .set(QUESTS_COMPLETION.PLAYER_ID, id)
+                .set(QUESTS_COMPLETION.QUEST_ID, quest)
+                .set(QUESTS_COMPLETION.TIMES, completion.times())
+                .set(QUESTS_COMPLETION.LAST_AT, completion.last().toEpochMilli())
+                .execute());
     state
         .variables()
-        .forEach(
-            (name, value) ->
-                dsl.insertInto(QUESTS_VARIABLE)
-                    .set(QUESTS_VARIABLE.PLAYER_ID, id)
-                    .set(QUESTS_VARIABLE.NAME, name)
-                    .set(QUESTS_VARIABLE.VALUE, value)
-                    .execute());
+        .forEach((name, value) ->
+            dsl.insertInto(QUESTS_VARIABLE)
+                .set(QUESTS_VARIABLE.PLAYER_ID, id)
+                .set(QUESTS_VARIABLE.NAME, name)
+                .set(QUESTS_VARIABLE.VALUE, value)
+                .execute());
     state
         .reputation()
-        .forEach(
-            (faction, value) ->
-                dsl.insertInto(QUESTS_REPUTATION)
-                    .set(QUESTS_REPUTATION.PLAYER_ID, id)
-                    .set(QUESTS_REPUTATION.FACTION, faction)
-                    .set(QUESTS_REPUTATION.VALUE, value)
-                    .execute());
+        .forEach((faction, value) ->
+            dsl.insertInto(QUESTS_REPUTATION)
+                .set(QUESTS_REPUTATION.PLAYER_ID, id)
+                .set(QUESTS_REPUTATION.FACTION, faction)
+                .set(QUESTS_REPUTATION.VALUE, value)
+                .execute());
     for (var entry : state.board().entries()) {
       dsl.insertInto(QUESTS_BOARD)
           .set(QUESTS_BOARD.PLAYER_ID, id)
@@ -363,21 +346,19 @@ public final class JooqQuestStore implements QuestStore {
     }
     state
         .marks()
-        .forEach(
-            (npc, mark) ->
-                dsl.insertInto(QUESTS_MARKER)
-                    .set(QUESTS_MARKER.PLAYER_ID, id)
-                    .set(QUESTS_MARKER.NPC, npc)
-                    .set(QUESTS_MARKER.MARK, mark.name().toLowerCase(Locale.ROOT))
-                    .execute());
+        .forEach((npc, mark) ->
+            dsl.insertInto(QUESTS_MARKER)
+                .set(QUESTS_MARKER.PLAYER_ID, id)
+                .set(QUESTS_MARKER.NPC, npc)
+                .set(QUESTS_MARKER.MARK, mark.name().toLowerCase(Locale.ROOT))
+                .execute());
     state
         .discoveries()
-        .forEach(
-            (collection, first) ->
-                dsl.insertInto(QUESTS_DISCOVERY)
-                    .set(QUESTS_DISCOVERY.PLAYER_ID, id)
-                    .set(QUESTS_DISCOVERY.COLLECTION, collection)
-                    .set(QUESTS_DISCOVERY.FIRST_AT, first.toEpochMilli())
-                    .execute());
+        .forEach((collection, first) ->
+            dsl.insertInto(QUESTS_DISCOVERY)
+                .set(QUESTS_DISCOVERY.PLAYER_ID, id)
+                .set(QUESTS_DISCOVERY.COLLECTION, collection)
+                .set(QUESTS_DISCOVERY.FIRST_AT, first.toEpochMilli())
+                .execute());
   }
 }

@@ -11,13 +11,11 @@ public record Identity(
       Set.of("admin", "administrator", "moderator", "staff", "owner", "console", "thestorm");
 
   public Identity {
-    nickname.ifPresent(
-        name -> {
-          if (!name.matches("[A-Za-z0-9_]{3,16}")
-              || RESERVED.contains(name.toLowerCase(Locale.ROOT)))
-            throw new IllegalArgumentException(
-                "Use 3–16 letters, digits or underscores; staff titles are reserved.");
-        });
+    nickname.ifPresent(name -> {
+      if (!name.matches("[A-Za-z0-9_]{3,16}") || RESERVED.contains(name.toLowerCase(Locale.ROOT)))
+        throw new IllegalArgumentException(
+            "Use 3–16 letters, digits or underscores; staff titles are reserved.");
+    });
   }
 
   public static Identity fresh() {

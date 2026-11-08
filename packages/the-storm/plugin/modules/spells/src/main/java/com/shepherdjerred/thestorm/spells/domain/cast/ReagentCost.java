@@ -42,13 +42,12 @@ public record ReagentCost(Map<String, Integer> amounts) {
    */
   public Map<String, Integer> shortfall(Map<String, Integer> held) {
     var missing = new TreeMap<String, Integer>();
-    amounts.forEach(
-        (material, amount) -> {
-          var have = held.getOrDefault(material, 0);
-          if (have < amount) {
-            missing.put(material, amount - have);
-          }
-        });
+    amounts.forEach((material, amount) -> {
+      var have = held.getOrDefault(material, 0);
+      if (have < amount) {
+        missing.put(material, amount - have);
+      }
+    });
     return missing;
   }
 

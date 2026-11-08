@@ -178,13 +178,12 @@ final class AnalyticsDeliveryTest {
       var first = write();
       var events =
           java.util.stream.IntStream.range(0, 201)
-              .mapToObj(
-                  index ->
-                      new AnalyticsEvent(
-                          UUID.randomUUID(),
-                          "storm_feature_interacted",
-                          first.connection().started(),
-                          Map.<String, Object>of("action", "cast", "feature", "spells")))
+              .mapToObj(index ->
+                  new AnalyticsEvent(
+                      UUID.randomUUID(),
+                      "storm_feature_interacted",
+                      first.connection().started(),
+                      Map.<String, Object>of("action", "cast", "feature", "spells")))
               .toList();
       store.save(new AnalyticsWrite(first.connection(), events)).get(5, TimeUnit.SECONDS);
       var sizes = new ArrayList<Integer>();

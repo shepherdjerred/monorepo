@@ -165,17 +165,15 @@ public final class CatalogTrades {
     var limit = order.entry().dailyLimit();
     return usage
         .used(order.customer().id(), key(order))
-        .thenApply(
-            used -> {
-              if (limit.isEmpty()) {
-                return Optional.empty();
-              }
-              var allowance = new DailyAllowance(limit.getAsInt(), used);
-              return allowance.permits(quantity)
-                  ? Optional.empty()
-                  : Optional.of(
-                      new TradeProblem.DailyLimitReached(allowance.remaining(), quantity));
-            });
+        .thenApply(used -> {
+          if (limit.isEmpty()) {
+            return Optional.empty();
+          }
+          var allowance = new DailyAllowance(limit.getAsInt(), used);
+          return allowance.permits(quantity)
+              ? Optional.empty()
+              : Optional.of(new TradeProblem.DailyLimitReached(allowance.remaining(), quantity));
+        });
   }
 
   private CompletableFuture<DailyAllowance> allowance(

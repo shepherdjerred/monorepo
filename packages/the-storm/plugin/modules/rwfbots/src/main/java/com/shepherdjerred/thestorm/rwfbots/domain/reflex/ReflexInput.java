@@ -101,11 +101,8 @@ public record ReflexInput(
         percept
             .state()
             .grudgeAt(percept.tick())
-            .flatMap(
-                grudge ->
-                    near.stream()
-                        .filter(enemy -> enemy.id().equals(grudge.attacker()))
-                        .findFirst());
+            .flatMap(grudge ->
+                near.stream().filter(enemy -> enemy.id().equals(grudge.attacker())).findFirst());
     return attacker.or(() -> near.stream().findFirst());
   }
 
@@ -131,10 +128,9 @@ public record ReflexInput(
       // A bot fights an enemy in its face before one the think step chose further off: it would
       // otherwise turn its back on a blow to chase the other.
       return decided
-          .filter(
-              chosen ->
-                  decision.stance() == Stance.EVASIVE
-                      || chosen.pos().distance(self.pos()) <= Reflex.MELEE_ALERT)
+          .filter(chosen ->
+              decision.stance() == Stance.EVASIVE
+                  || chosen.pos().distance(self.pos()) <= Reflex.MELEE_ALERT)
           .or(() -> inFace(self, percept))
           .or(() -> decided);
     }
@@ -185,11 +181,10 @@ public record ReflexInput(
         percept
             .state()
             .grudgeAt(percept.tick())
-            .flatMap(
-                grudge ->
-                    fightable.stream()
-                        .filter(summon -> summon.id().equals(grudge.attacker()))
-                        .findFirst());
+            .flatMap(grudge ->
+                fightable.stream()
+                    .filter(summon -> summon.id().equals(grudge.attacker()))
+                    .findFirst());
     return attacker.or(() -> fightable.stream().findFirst());
   }
 

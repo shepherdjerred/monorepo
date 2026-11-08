@@ -196,17 +196,16 @@ final class Recordings {
       services
           .find(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class)
           .flatMap(source -> source.capture(player.getUniqueId()))
-          .ifPresent(
-              sample -> {
-                current.observation(
-                    new com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame(
-                        tick, pseudonym, sample.contract(), sample.values()));
-                player.sendPluginMessage(
-                    plugin,
-                    com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL,
-                    com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.encode(
-                        plugin.getServer().getCurrentTick(), sample.values()));
-              });
+          .ifPresent(sample -> {
+            current.observation(
+                new com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame(
+                    tick, pseudonym, sample.contract(), sample.values()));
+            player.sendPluginMessage(
+                plugin,
+                com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL,
+                com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.encode(
+                    plugin.getServer().getCurrentTick(), sample.values()));
+          });
     }
   }
 
@@ -227,18 +226,17 @@ final class Recordings {
 
   /** {@code shooter} launched a projectile of {@code kind} from {@code at} at {@code velocity}. */
   void projectile(CombatantId shooter, String kind, Vec3 at, Vec3 velocity) {
-    occur(
-        tick ->
-            new Occurrence.Projectile(
-                tick,
-                name(shooter),
-                kind,
-                at.x(),
-                at.y(),
-                at.z(),
-                velocity.x(),
-                velocity.y(),
-                velocity.z()));
+    occur(tick ->
+        new Occurrence.Projectile(
+            tick,
+            name(shooter),
+            kind,
+            at.x(),
+            at.y(),
+            at.z(),
+            velocity.x(),
+            velocity.y(),
+            velocity.z()));
   }
 
   /** {@code user} used {@code ability}, aimed at another combatant. */
@@ -253,9 +251,8 @@ final class Recordings {
 
   /** {@code subject} was given {@code effect} at {@code amplifier} for {@code durationTicks}. */
   void effect(CombatantId subject, String effect, int amplifier, int durationTicks) {
-    occur(
-        tick ->
-            new Occurrence.EffectApplied(tick, name(subject), effect, amplifier, durationTicks));
+    occur(tick ->
+        new Occurrence.EffectApplied(tick, name(subject), effect, amplifier, durationTicks));
   }
 
   /** {@code earner} earned the {@code streak} reward at {@code kills}. */
@@ -272,13 +269,12 @@ final class Recordings {
     if (text.isEmpty()) {
       return;
     }
-    occur(
-        tick -> {
-          var pseudonym = name(speaker);
-          var bot = speaker.isBot() && rosteredBots.contains(pseudonym);
-          return new Occurrence.Chat(
-              tick, pseudonym, channel, text.length(), bot ? Optional.of(text) : Optional.empty());
-        });
+    occur(tick -> {
+      var pseudonym = name(speaker);
+      var bot = speaker.isBot() && rosteredBots.contains(pseudonym);
+      return new Occurrence.Chat(
+          tick, pseudonym, channel, text.length(), bot ? Optional.of(text) : Optional.empty());
+    });
   }
 
   /**
@@ -309,19 +305,18 @@ final class Recordings {
 
   /** A combatant died; see {@link Death}. */
   void kill(Death death) {
-    occur(
-        tick -> {
-          var shares = new TreeMap<String, Double>();
-          death.assists().forEach((who, share) -> shares.put(name(who), share));
-          return new Occurrence.Kill(
-              tick,
-              name(death.victim()),
-              death.killer().map(this::name),
-              death.cause(),
-              death.weapon(),
-              death.distance(),
-              shares);
-        });
+    occur(tick -> {
+      var shares = new TreeMap<String, Double>();
+      death.assists().forEach((who, share) -> shares.put(name(who), share));
+      return new Occurrence.Kill(
+          tick,
+          name(death.victim()),
+          death.killer().map(this::name),
+          death.cause(),
+          death.weapon(),
+          death.distance(),
+          shares);
+    });
   }
 
   /** Whether a {@link #pulse} is due now: every five seconds of the live match, once. */
@@ -334,11 +329,10 @@ final class Recordings {
       Map<TeamColor, Integer> alive,
       Map<String, Occurrence.Pulse.BombStatus> bombs,
       PoisonClock.Stage poison) {
-    occur(
-        tick -> {
-          lastPulse = tick;
-          return new Occurrence.Pulse(tick, alive, bombs, poison);
-        });
+    occur(tick -> {
+      lastPulse = tick;
+      return new Occurrence.Pulse(tick, alive, bombs, poison);
+    });
   }
 
   private void occur(java.util.function.LongFunction<Occurrence> row) {

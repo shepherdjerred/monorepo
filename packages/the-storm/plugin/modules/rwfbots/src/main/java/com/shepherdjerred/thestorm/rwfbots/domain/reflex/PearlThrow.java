@@ -157,11 +157,10 @@ public final class PearlThrow {
     return input
         .target()
         .filter(enemy -> enemy.pos().distance(self.pos()) > SWORD_RANGE)
-        .filter(
-            enemy ->
-                enemy.kit().hasBow()
-                    || fleeing(self, enemy)
-                    || enemy.pos().distance(self.pos()) >= LONG_RUN);
+        .filter(enemy ->
+            enemy.kit().hasBow()
+                || fleeing(self, enemy)
+                || enemy.pos().distance(self.pos()) >= LONG_RUN);
   }
 
   /** The nearest enemy in sight a hurt bot breaking away wants out of reach of, if any. */

@@ -216,15 +216,12 @@ final class ShippedPersonalitiesTest {
   @Test
   void everyPersonalityLeansOnAShippedKitAndPrefersARole() {
     assertThat(catalog.all())
-        .allSatisfy(
-            (Personality personality) -> {
-              assertThat(personality.kits().entrySet())
-                  .as(personality.id())
-                  .anyMatch(
-                      kit ->
-                          shippedKits.contains(kit.getKey())
-                              && kit.getValue() >= MEANINGFUL_WEIGHT);
-              assertThat(personality.roles()).isNotEmpty();
-            });
+        .allSatisfy((Personality personality) -> {
+          assertThat(personality.kits().entrySet())
+              .as(personality.id())
+              .anyMatch(
+                  kit -> shippedKits.contains(kit.getKey()) && kit.getValue() >= MEANINGFUL_WEIGHT);
+          assertThat(personality.roles()).isNotEmpty();
+        });
   }
 }

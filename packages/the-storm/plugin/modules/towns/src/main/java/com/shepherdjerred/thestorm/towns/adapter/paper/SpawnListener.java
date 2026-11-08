@@ -49,11 +49,10 @@ final class SpawnListener implements Listener {
     var unknown = new TreeSet<String>();
     config
         .regions()
-        .forEach(
-            region ->
-                region.mobSpawns().allow().stream()
-                    .filter(reason -> !known.contains(reason))
-                    .forEach(unknown::add));
+        .forEach(region ->
+            region.mobSpawns().allow().stream()
+                .filter(reason -> !known.contains(reason))
+                .forEach(unknown::add));
     if (!unknown.isEmpty()) {
       throw new IllegalStateException(
           "towns.yml names spawn reasons Paper does not have: " + String.join(", ", unknown));

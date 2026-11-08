@@ -23,16 +23,15 @@ public final class JooqPvpStore implements PvpStore {
   /** Read on the writer thread, so a reload sees every write queued before it. */
   @Override
   public CompletableFuture<Map<UUID, PvpSetting>> loadAll() {
-    return database.write(
-        dsl -> {
-          var settings = new HashMap<UUID, PvpSetting>();
-          for (var row : dsl.selectFrom(TOWNS_PVP).fetch()) {
-            settings.put(
-                UUID.fromString(row.getPlayerId()),
-                new PvpSetting(row.getPvpOn() == 1, Instant.ofEpochMilli(row.getChangedAt())));
-          }
-          return Map.copyOf(settings);
-        });
+    return database.write(dsl -> {
+      var settings = new HashMap<UUID, PvpSetting>();
+      for (var row : dsl.selectFrom(TOWNS_PVP).fetch()) {
+        settings.put(
+            UUID.fromString(row.getPlayerId()),
+            new PvpSetting(row.getPvpOn() == 1, Instant.ofEpochMilli(row.getChangedAt())));
+      }
+      return Map.copyOf(settings);
+    });
   }
 
   @Override
@@ -40,17 +39,16 @@ public final class JooqPvpStore implements PvpStore {
     var on = setting.on() ? 1 : 0;
     var at = setting.changedAt().toEpochMilli();
     return database
-        .write(
-            dsl ->
-                dsl.insertInto(TOWNS_PVP)
-                    .set(TOWNS_PVP.PLAYER_ID, player.toString())
-                    .set(TOWNS_PVP.PVP_ON, on)
-                    .set(TOWNS_PVP.CHANGED_AT, at)
-                    .onConflict(TOWNS_PVP.PLAYER_ID)
-                    .doUpdate()
-                    .set(TOWNS_PVP.PVP_ON, on)
-                    .set(TOWNS_PVP.CHANGED_AT, at)
-                    .execute())
+        .write(dsl ->
+            dsl.insertInto(TOWNS_PVP)
+                .set(TOWNS_PVP.PLAYER_ID, player.toString())
+                .set(TOWNS_PVP.PVP_ON, on)
+                .set(TOWNS_PVP.CHANGED_AT, at)
+                .onConflict(TOWNS_PVP.PLAYER_ID)
+                .doUpdate()
+                .set(TOWNS_PVP.PVP_ON, on)
+                .set(TOWNS_PVP.CHANGED_AT, at)
+                .execute())
         .thenAccept(rows -> {});
   }
 }

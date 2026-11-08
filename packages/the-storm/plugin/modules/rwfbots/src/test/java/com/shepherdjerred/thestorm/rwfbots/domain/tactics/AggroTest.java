@@ -162,11 +162,10 @@ final class AggroTest {
 
   private static Optional<CombatantId> fighting(Thought thought) {
     return thought.state().plan().map(Plan::current).stream()
-        .flatMap(
-            step ->
-                step instanceof PlanStep.Fight(var target)
-                    ? java.util.stream.Stream.of(target)
-                    : java.util.stream.Stream.empty())
+        .flatMap(step ->
+            step instanceof PlanStep.Fight(var target)
+                ? java.util.stream.Stream.of(target)
+                : java.util.stream.Stream.empty())
         .findFirst();
   }
 

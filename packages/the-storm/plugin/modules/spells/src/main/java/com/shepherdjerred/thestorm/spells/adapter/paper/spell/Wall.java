@@ -51,35 +51,31 @@ final class Wall implements Spell {
     var positions = Shapes.wall(base, facing, settings.width(), settings.height());
     return Aim.buildable(
             tools, caster, Aim.blocks(caster.getWorld(), positions), Replaceability.Mode.OPEN_SPACE)
-        .map(
-            blocks ->
-                new Effect() {
-                  @Override
-                  public void beforeCommit(Runnable commit, Runnable failed) {
-                    tools
-                        .blocks()
-                        .place(
-                            blocks,
-                            material.createBlockData(),
-                            Duration.ofSeconds(settings.durationSeconds()),
-                            saved -> {
-                              if (saved) {
-                                commit.run();
-                              } else {
-                                failed.run();
-                              }
-                            });
-                  }
+        .map(blocks ->
+            new Effect() {
+              @Override
+              public void beforeCommit(Runnable commit, Runnable failed) {
+                tools
+                    .blocks()
+                    .place(
+                        blocks,
+                        material.createBlockData(),
+                        Duration.ofSeconds(settings.durationSeconds()),
+                        saved -> {
+                          if (saved) {
+                            commit.run();
+                          } else {
+                            failed.run();
+                          }
+                        });
+              }
 
-                  @Override
-                  public void apply() {
-                    blocks.forEach(
-                        wallBlock ->
-                            tools
-                                .fx()
-                                .burst(kind(), wallBlock.getLocation().add(0.5, 0.5, 0.5), 4, 0.3));
-                    tools.fx().sound(kind(), block.getLocation());
-                  }
-                });
+              @Override
+              public void apply() {
+                blocks.forEach(wallBlock ->
+                    tools.fx().burst(kind(), wallBlock.getLocation().add(0.5, 0.5, 0.5), 4, 0.3));
+                tools.fx().sound(kind(), block.getLocation());
+              }
+            });
   }
 }

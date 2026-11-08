@@ -40,9 +40,8 @@ final class ContentRulesTest {
     var text = "a".repeat(3998) + "😀" + "b".repeat(8000);
     var windows = ContentRules.windows(text);
     assertThat(windows)
-        .allSatisfy(
-            window ->
-                assertThat(window.codePointCount(0, window.length())).isLessThanOrEqualTo(4000));
+        .allSatisfy(window ->
+            assertThat(window.codePointCount(0, window.length())).isLessThanOrEqualTo(4000));
     assertThat(windows.get(0)).contains("😀");
     assertThat(windows.get(1)).contains("😀");
     assertThat(windows.getLast()).endsWith("b".repeat(100));

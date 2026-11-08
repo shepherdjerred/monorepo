@@ -92,10 +92,9 @@ final class ShippedChatTest {
       var waiting =
           new ChatScene(
               members.stream()
-                  .map(
-                      member ->
-                          new ChatScene.Member(
-                              member.uuid(), member.name(), member.bot(), Optional.empty(), false))
+                  .map(member ->
+                      new ChatScene.Member(
+                          member.uuid(), member.name(), member.bot(), Optional.empty(), false))
                   .toList());
       for (var member : members) {
         lines.addAll(director.on(new ChatMoment.Arrived(member.uuid()), waiting, now));

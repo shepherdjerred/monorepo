@@ -69,11 +69,8 @@ final class CreditsCurrencyMigrationTest {
 
   private List<List<Object>> rows(String query) throws Exception {
     return await(
-        database.read(
-            dsl ->
-                dsl.fetch(query).stream()
-                    .map(record -> Arrays.asList(record.intoArray()))
-                    .toList()));
+        database.read(dsl ->
+            dsl.fetch(query).stream().map(record -> Arrays.asList(record.intoArray())).toList()));
   }
 
   @Test

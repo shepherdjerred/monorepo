@@ -18,13 +18,11 @@ public final class KnownItemsRule implements CatalogRule {
   @Override
   public List<CatalogProblem> check(List<CatalogFile> files) {
     return files.stream()
-        .flatMap(
-            file ->
-                file.catalog().entries().stream()
-                    .filter(entry -> !isItem.test(entry.itemKey()))
-                    .<CatalogProblem>map(
-                        entry ->
-                            new CatalogProblem.UnknownItem(file.catalog().id(), entry.itemKey())))
+        .flatMap(file ->
+            file.catalog().entries().stream()
+                .filter(entry -> !isItem.test(entry.itemKey()))
+                .<CatalogProblem>map(
+                    entry -> new CatalogProblem.UnknownItem(file.catalog().id(), entry.itemKey())))
         .toList();
   }
 }

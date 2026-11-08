@@ -54,32 +54,28 @@ public final class PrivateCommands {
         .requires(source -> service.ready() && source.getSender() instanceof Player)
         .then(
             Commands.argument(PLAYER, StringArgumentType.word())
-                .suggests(
-                    (context, builder) -> {
-                      var prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
-                      for (var player : server.getOnlinePlayers()) {
-                        if (player.getName().toLowerCase(Locale.ROOT).startsWith(prefix)) {
-                          builder.suggest(player.getName());
-                        }
-                      }
-                      return builder.buildFuture();
-                    })
+                .suggests((context, builder) -> {
+                  var prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
+                  for (var player : server.getOnlinePlayers()) {
+                    if (player.getName().toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                      builder.suggest(player.getName());
+                    }
+                  }
+                  return builder.buildFuture();
+                })
                 .then(
                     Commands.argument(MESSAGE, StringArgumentType.greedyString())
-                        .executes(
-                            context -> {
-                              var sender = sender(context);
-                              var name = StringArgumentType.getString(context, PLAYER);
-                              var recipient = PlayerHandles.online(server, name).orElse(null);
-                              if (recipient == null) {
-                                sender.sendMessage(Feedback.error(name + " is not online."));
-                                return Command.SINGLE_SUCCESS;
-                              }
-                              return send(
-                                  sender,
-                                  recipient,
-                                  StringArgumentType.getString(context, MESSAGE));
-                            })))
+                        .executes(context -> {
+                          var sender = sender(context);
+                          var name = StringArgumentType.getString(context, PLAYER);
+                          var recipient = PlayerHandles.online(server, name).orElse(null);
+                          if (recipient == null) {
+                            sender.sendMessage(Feedback.error(name + " is not online."));
+                            return Command.SINGLE_SUCCESS;
+                          }
+                          return send(
+                              sender, recipient, StringArgumentType.getString(context, MESSAGE));
+                        })))
         .build();
   }
 
@@ -88,9 +84,8 @@ public final class PrivateCommands {
         .requires(source -> service.ready() && source.getSender() instanceof Player)
         .then(
             Commands.argument(MESSAGE, StringArgumentType.greedyString())
-                .executes(
-                    context ->
-                        reply(sender(context), StringArgumentType.getString(context, MESSAGE))))
+                .executes(context ->
+                    reply(sender(context), StringArgumentType.getString(context, MESSAGE))))
         .build();
   }
 

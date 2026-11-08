@@ -45,11 +45,10 @@ final class SpellEffectsListener implements Listener {
   void onAttack(EntityDamageByEntityEvent event) {
     attacker(event.getDamager())
         .filter(player -> state.stealth().stop(player.getUniqueId(), time.instant()))
-        .ifPresent(
-            player -> {
-              player.removePotionEffect(PotionEffectType.INVISIBILITY);
-              player.sendActionBar(Component.text("Your stealth breaks."));
-            });
+        .ifPresent(player -> {
+          player.removePotionEffect(PotionEffectType.INVISIBILITY);
+          player.sendActionBar(Component.text("Your stealth breaks."));
+        });
   }
 
   private static Optional<Player> attacker(Entity damager) {
@@ -118,17 +117,13 @@ final class SpellEffectsListener implements Listener {
     var point = new Vec3(where.getX(), where.getY(), where.getZ());
     return state.wards().active(time.instant()).stream()
         .filter(ward -> ward.contains(where.getWorld().getKey().asString(), point))
-        .anyMatch(
-            ward ->
-                guard
-                    .harmDenial(
-                        ward.owner(),
-                        new Location(
-                            where.getWorld(),
-                            ward.centre().x(),
-                            ward.centre().y(),
-                            ward.centre().z()),
-                        affected)
-                    .isEmpty());
+        .anyMatch(ward ->
+            guard
+                .harmDenial(
+                    ward.owner(),
+                    new Location(
+                        where.getWorld(), ward.centre().x(), ward.centre().y(), ward.centre().z()),
+                    affected)
+                .isEmpty());
   }
 }

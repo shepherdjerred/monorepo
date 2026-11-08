@@ -97,13 +97,10 @@ final class RetakeFormation {
         previous
             .slotOf(bot.id())
             .map(Slot::pos)
-            .flatMap(
-                pos -> {
-                  var node = graph.nearestNodeWithin(pos, 3);
-                  return node.isPresent()
-                      ? Optional.of(graph.feet(node.getAsInt()))
-                      : Optional.empty();
-                });
+            .flatMap(pos -> {
+              var node = graph.nearestNodeWithin(pos, 3);
+              return node.isPresent() ? Optional.of(graph.feet(node.getAsInt())) : Optional.empty();
+            });
     if (held.isPresent()) return held.orElseThrow();
     var standing = graph.nearestNodeWithin(bot.pos(), 2);
     if (standing.isPresent()) return graph.feet(standing.getAsInt());

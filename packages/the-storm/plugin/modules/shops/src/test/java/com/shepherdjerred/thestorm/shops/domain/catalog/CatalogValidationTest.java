@@ -109,11 +109,10 @@ final class CatalogValidationTest {
 
     assertThat(problems)
         .singleElement()
-        .satisfies(
-            problem -> {
-              assertThat(problem.path()).isEqualTo("entries[0]");
-              assertThat(problem.message()).contains("must not be above");
-            });
+        .satisfies(problem -> {
+          assertThat(problem.path()).isEqualTo("entries[0]");
+          assertThat(problem.message()).contains("must not be above");
+        });
   }
 
   @ParameterizedTest
@@ -131,9 +130,8 @@ final class CatalogValidationTest {
     assertThatThrownBy(() -> entry("coal", 1, null, -1L)).hasMessageContaining("prices");
     assertThatThrownBy(() -> entry("coal", 1, null, null)).hasMessageContaining("buy price");
     assertThatThrownBy(() -> entry("coal", 1, 4L, 5L)).hasMessageContaining("must not be above");
-    assertThatThrownBy(
-            () ->
-                new CatalogEntry("coal", 16, Optional.of(1L), Optional.empty(), OptionalInt.of(15)))
+    assertThatThrownBy(() ->
+            new CatalogEntry("coal", 16, Optional.of(1L), Optional.empty(), OptionalInt.of(15)))
         .hasMessageContaining("at least one trade");
   }
 

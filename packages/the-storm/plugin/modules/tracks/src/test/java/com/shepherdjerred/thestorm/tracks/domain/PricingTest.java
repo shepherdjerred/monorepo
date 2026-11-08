@@ -85,16 +85,15 @@ final class PricingTest {
     var multipliers = DEFAULT_PRICING.orderMultipliers();
     assertThatThrownBy(() -> new Pricing(List.of(0L, 2L, 3L, 4L, 5L), multipliers))
         .hasMessageContaining("at least 1");
-    assertThatThrownBy(
-            () ->
-                new Pricing(
-                    DEFAULT_PRICING.baseCosts(),
-                    List.of(
-                        BigDecimal.ONE,
-                        new BigDecimal("0.99"),
-                        BigDecimal.TWO,
-                        BigDecimal.TWO,
-                        BigDecimal.TWO)))
+    assertThatThrownBy(() ->
+            new Pricing(
+                DEFAULT_PRICING.baseCosts(),
+                List.of(
+                    BigDecimal.ONE,
+                    new BigDecimal("0.99"),
+                    BigDecimal.TWO,
+                    BigDecimal.TWO,
+                    BigDecimal.TWO)))
         .hasMessageContaining("at least 1");
   }
 }

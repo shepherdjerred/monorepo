@@ -193,17 +193,16 @@ final class MatchReplayTest {
         new ArrayList<Occurrence>(
             List.of(new Occurrence.Chat(0, "p1", "global", 2, Optional.of("hi"))));
 
-    assertThatThrownBy(
-            () ->
-                new MatchRecord(
-                    record.header(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    human,
-                    record.end()))
+    assertThatThrownBy(() ->
+            new MatchRecord(
+                record.header(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                human,
+                record.end()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("bot");
     assertThatThrownBy(() -> new Occurrence.Chat(0, "p2", "global", 3, Optional.of("hi")))
@@ -213,17 +212,16 @@ final class MatchReplayTest {
   @Test
   void olderSchemasCannotCarryOccurrencesAndStillRead() {
     var record = fullMatch();
-    assertThatThrownBy(
-            () ->
-                new MatchRecord(
-                    header(3),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    everyOccurrence(),
-                    record.end()))
+    assertThatThrownBy(() ->
+            new MatchRecord(
+                header(3),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                everyOccurrence(),
+                record.end()))
         .isInstanceOf(IllegalArgumentException.class);
 
     var schema3 = RecordCodec.encode(record).replaceFirst("^H\t4\t", "H\t3\t");
@@ -247,50 +245,45 @@ final class MatchReplayTest {
 
   @Test
   void occurrencesValidateThemselves() {
-    assertThatThrownBy(
-            () ->
-                new Occurrence.Kill(
-                    1,
-                    "p1",
-                    Optional.of("p2"),
-                    "Melee",
-                    Optional.empty(),
-                    OptionalDouble.empty(),
-                    Map.of("p2", 0.5)))
+    assertThatThrownBy(() ->
+            new Occurrence.Kill(
+                1,
+                "p1",
+                Optional.of("p2"),
+                "Melee",
+                Optional.empty(),
+                OptionalDouble.empty(),
+                Map.of("p2", 0.5)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Occurrence.Kill(
-                    1,
-                    "p1",
-                    Optional.empty(),
-                    "Melee",
-                    Optional.empty(),
-                    OptionalDouble.of(-1),
-                    Map.of()))
+    assertThatThrownBy(() ->
+            new Occurrence.Kill(
+                1,
+                "p1",
+                Optional.empty(),
+                "Melee",
+                Optional.empty(),
+                OptionalDouble.of(-1),
+                Map.of()))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Occurrence.Kill(
-                    1,
-                    "p1",
-                    Optional.empty(),
-                    "Melee",
-                    Optional.empty(),
-                    OptionalDouble.empty(),
-                    Map.of("p3", 1.5)))
+    assertThatThrownBy(() ->
+            new Occurrence.Kill(
+                1,
+                "p1",
+                Optional.empty(),
+                "Melee",
+                Optional.empty(),
+                OptionalDouble.empty(),
+                Map.of("p3", 1.5)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Occurrence.Ballot(
-                    0, List.of(new Occurrence.Ballot.Candidate("harbour", 1)), "saigon"))
+    assertThatThrownBy(() ->
+            new Occurrence.Ballot(
+                0, List.of(new Occurrence.Ballot.Candidate("harbour", 1)), "saigon"))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new Occurrence.Pulse(0, Map.of(), Map.of(), PoisonClock.Stage.WAITING))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new Occurrence.BlockChange(
-                    0, 0, 0, 0, "two words", Occurrence.BlockChange.Reason.CRATER))
+    assertThatThrownBy(() ->
+            new Occurrence.BlockChange(
+                0, 0, 0, 0, "two words", Occurrence.BlockChange.Reason.CRATER))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new Occurrence.Killstreak(0, "p1", "compass", 0))
         .isInstanceOf(IllegalArgumentException.class);

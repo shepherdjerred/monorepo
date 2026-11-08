@@ -64,23 +64,22 @@ final class KitSkins {
     var member = runner.member(victim);
     runner
         .entity(victim)
-        .ifPresent(
-            player -> {
-              var armour = new EnumMap<EquipmentSlot, ItemStack>(EquipmentSlot.class);
-              var kit = member.flatMap(Combatant::kit);
-              if (kit.filter(HIDDEN_ARMOUR::contains).isPresent()) {
-                for (var spec : KitBook.TROOPER.armor()) {
-                  armour.put(
-                      KitFactory.equipmentSlot(spec.slot().orElseThrow()),
-                      kits.kitItem(spec, Optional.empty()));
-                }
-              } else {
-                for (var slot : ARMOUR) {
-                  armour.put(slot, player.getInventory().getItem(slot).clone());
-                }
-              }
-              looks.put(victim, new Look(textures(player), armour));
-            });
+        .ifPresent(player -> {
+          var armour = new EnumMap<EquipmentSlot, ItemStack>(EquipmentSlot.class);
+          var kit = member.flatMap(Combatant::kit);
+          if (kit.filter(HIDDEN_ARMOUR::contains).isPresent()) {
+            for (var spec : KitBook.TROOPER.armor()) {
+              armour.put(
+                  KitFactory.equipmentSlot(spec.slot().orElseThrow()),
+                  kits.kitItem(spec, Optional.empty()));
+            }
+          } else {
+            for (var slot : ARMOUR) {
+              armour.put(slot, player.getInventory().getItem(slot).clone());
+            }
+          }
+          looks.put(victim, new Look(textures(player), armour));
+        });
   }
 
   /** {@code skinner} wears how {@code of} looked, or its own look again when empty. */

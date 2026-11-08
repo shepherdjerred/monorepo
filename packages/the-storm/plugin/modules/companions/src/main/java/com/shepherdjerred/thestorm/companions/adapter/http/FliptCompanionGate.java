@@ -40,16 +40,15 @@ public final class FliptCompanionGate implements CompanionGate {
             .build();
     return client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(
-            response -> {
-              if (response.statusCode() != 200)
-                throw new IllegalStateException(
-                    "companion flag returned HTTP " + response.statusCode());
-              var enabled = JsonMapper.builder().build().readTree(response.body()).get("enabled");
-              if (enabled == null || !enabled.isBoolean())
-                throw new IllegalStateException("companion flag lacks a boolean value");
-              return enabled.booleanValue();
-            });
+        .thenApply(response -> {
+          if (response.statusCode() != 200)
+            throw new IllegalStateException(
+                "companion flag returned HTTP " + response.statusCode());
+          var enabled = JsonMapper.builder().build().readTree(response.body()).get("enabled");
+          if (enabled == null || !enabled.isBoolean())
+            throw new IllegalStateException("companion flag lacks a boolean value");
+          return enabled.booleanValue();
+        });
   }
 
   @Override

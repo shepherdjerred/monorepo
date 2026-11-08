@@ -179,18 +179,17 @@ public final class ShopBlocks {
   public List<SignShop> shopsOnContainer(Block block) {
     for (var position : containerBlocks(block)) {
       block(position)
-          .ifPresent(
-              container -> {
-                for (var face :
-                    List.of(
-                        BlockFace.UP,
-                        BlockFace.NORTH,
-                        BlockFace.EAST,
-                        BlockFace.SOUTH,
-                        BlockFace.WEST)) {
-                  shopAtSign(container.getRelative(face));
-                }
-              });
+          .ifPresent(container -> {
+            for (var face :
+                List.of(
+                    BlockFace.UP,
+                    BlockFace.NORTH,
+                    BlockFace.EAST,
+                    BlockFace.SOUTH,
+                    BlockFace.WEST)) {
+              shopAtSign(container.getRelative(face));
+            }
+          });
     }
     return containerBlocks(block).stream()
         .flatMap(pos -> registry.tradingFrom(pos).stream())
@@ -246,13 +245,12 @@ public final class ShopBlocks {
     var found =
         worldData
             .read(sign, lines, connectedContainer(block).map(ShopBlocks::pos))
-            .filter(
-                shop ->
-                    shop.container().isEmpty()
-                        || shop.container()
-                            .flatMap(this::block)
-                            .filter(this::isShopContainer)
-                            .isPresent());
+            .filter(shop ->
+                shop.container().isEmpty()
+                    || shop.container()
+                        .flatMap(this::block)
+                        .filter(this::isShopContainer)
+                        .isPresent());
     if (found.isEmpty()) {
       previous.ifPresent(shop -> registry.evict(shop.id()));
       if (registry.isReady() && !worldData.identified(sign)) discover.accept(block);
@@ -343,13 +341,12 @@ public final class ShopBlocks {
     if (!(block.getState() instanceof Sign sign)) {
       throw new IllegalStateException("shop " + shop.id() + " has no sign at " + pos(block));
     }
-    lines.ifPresent(
-        text -> {
-          var front = sign.getSide(Side.FRONT);
-          for (var index = 0; index < text.lines().size(); index++) {
-            front.line(index, Component.text(text.lines().get(index)));
-          }
-        });
+    lines.ifPresent(text -> {
+      var front = sign.getSide(Side.FRONT);
+      for (var index = 0; index < text.lines().size(); index++) {
+        front.line(index, Component.text(text.lines().get(index)));
+      }
+    });
     var data = sign.getPersistentDataContainer();
     data.set(shopIdKey, PersistentDataType.LONG, shop.id());
     shop.item()

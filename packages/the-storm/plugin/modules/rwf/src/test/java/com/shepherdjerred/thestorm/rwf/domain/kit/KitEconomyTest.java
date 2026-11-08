@@ -311,10 +311,9 @@ final class KitEconomyTest {
 
     @Test
     void tooFewKitsToRotateFailLoudly() {
-      assertThatThrownBy(
-              () ->
-                  KitRotation.of(
-                      new KitRotation.Week(KitRotation.EPOCH), List.of(KitBook.NINJA, KitBook.SPY)))
+      assertThatThrownBy(() ->
+              KitRotation.of(
+                  new KitRotation.Week(KitRotation.EPOCH), List.of(KitBook.NINJA, KitBook.SPY)))
           .isInstanceOf(IllegalStateException.class);
       assertThatThrownBy(() -> new KitRotation.Week(LocalDate.of(2026, 10, 13)))
           .hasMessageContaining("Monday");

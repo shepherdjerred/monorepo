@@ -66,29 +66,19 @@ final class TicketViews {
     lines.add(Component.text(ticket.summary()));
     ticket
         .location()
-        .ifPresent(
-            place ->
-                lines.add(
-                    Component.text(
-                        "At "
-                            + place.world()
-                            + " "
-                            + place.x()
-                            + " "
-                            + place.y()
-                            + " "
-                            + place.z())));
+        .ifPresent(place ->
+            lines.add(
+                Component.text(
+                    "At " + place.world() + " " + place.x() + " " + place.y() + " " + place.z())));
     ticket
         .claimer()
         .ifPresent(owner -> lines.add(Component.text("Claimed by " + names.apply(owner))));
     if (staff) {
       ticket
           .triage()
-          .ifPresent(
-              triage ->
-                  lines.add(
-                      Component.text(
-                          "Triage [" + triage.priority().id() + "]: " + triage.evidence())));
+          .ifPresent(triage ->
+              lines.add(
+                  Component.text("Triage [" + triage.priority().id() + "]: " + triage.evidence())));
     }
     for (var comment : comments) {
       if (comment.staffOnly() && !staff) {

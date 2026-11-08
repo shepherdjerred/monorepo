@@ -221,16 +221,15 @@ final class KitFactory {
         picked
             ? plain("Your kit", NamedTextColor.GREEN)
             : plain("Click to choose", NamedTextColor.YELLOW));
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text(kit.name(), NamedTextColor.GOLD)
-                  .decoration(TextDecoration.ITALIC, false)
-                  .decoration(TextDecoration.BOLD, true));
-          meta.lore(lore);
-          meta.setEnchantmentGlintOverride(picked);
-          meta.addItemFlags(ItemFlag.values());
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text(kit.name(), NamedTextColor.GOLD)
+              .decoration(TextDecoration.ITALIC, false)
+              .decoration(TextDecoration.BOLD, true));
+      meta.lore(lore);
+      meta.setEnchantmentGlintOverride(picked);
+      meta.addItemFlags(ItemFlag.values());
+    });
     return stack;
   }
 
@@ -285,22 +284,20 @@ final class KitFactory {
       lore = LoreLines.add(lore, "§e" + line);
     }
     var lines = lore.stream().map(KitFactory::legacy).toList();
-    stack.editMeta(
-        meta -> {
-          meta.displayName(legacy("§6" + kit.name()));
-          meta.lore(lines);
-          meta.addItemFlags(BUILDER_FLAGS);
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(legacy("§6" + kit.name()));
+      meta.lore(lines);
+      meta.addItemFlags(BUILDER_FLAGS);
+    });
     return stack;
   }
 
   private static ItemStack named(Material material, Component name, String hint) {
     var stack = ItemStack.of(material);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(name.decoration(TextDecoration.ITALIC, false));
-          meta.lore(List.of(plain(hint, NamedTextColor.GRAY)));
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(name.decoration(TextDecoration.ITALIC, false));
+      meta.lore(List.of(plain(hint, NamedTextColor.GRAY)));
+    });
     return stack;
   }
 
@@ -333,18 +330,17 @@ final class KitFactory {
    */
   ItemStack fuse(Optional<FuseBonus> bonus) {
     var stack = template(KitSpec.FUSE).clone();
-    bonus.ifPresent(
-        b -> {
-          var current = stack.lore();
-          var lore = new ArrayList<Component>(current == null ? List.of() : current);
-          lore.add(Component.empty());
-          lore.add(
-              Component.text(b.type().loreName() + " " + roman(b.level()))
-                  .color(NamedTextColor.GRAY)
-                  .decoration(TextDecoration.ITALIC, false));
-          stack.lore(lore);
-          stack.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
-        });
+    bonus.ifPresent(b -> {
+      var current = stack.lore();
+      var lore = new ArrayList<Component>(current == null ? List.of() : current);
+      lore.add(Component.empty());
+      lore.add(
+          Component.text(b.type().loreName() + " " + roman(b.level()))
+              .color(NamedTextColor.GRAY)
+              .decoration(TextDecoration.ITALIC, false));
+      stack.lore(lore);
+      stack.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
+    });
     keys.tagFuse(stack);
     return stack;
   }
@@ -420,16 +416,15 @@ final class KitFactory {
 
   /** Colours leather, a firework star or a potion; anything else is left as it is. */
   private static void dye(ItemStack stack, Color color) {
-    stack.editMeta(
-        meta -> {
-          switch (meta) {
-            case LeatherArmorMeta leather -> leather.setColor(color);
-            case FireworkEffectMeta star ->
-                star.setEffect(FireworkEffect.builder().withColor(color).build());
-            case PotionMeta potion -> potion.setColor(color);
-            default -> {}
-          }
-        });
+    stack.editMeta(meta -> {
+      switch (meta) {
+        case LeatherArmorMeta leather -> leather.setColor(color);
+        case FireworkEffectMeta star ->
+            star.setEffect(FireworkEffect.builder().withColor(color).build());
+        case PotionMeta potion -> potion.setColor(color);
+        default -> {}
+      }
+    });
   }
 
   /** {@code spec}'s stack, built at enable as one item and given {@code spec}'s amount. */
@@ -512,23 +507,21 @@ final class KitFactory {
             || spec.look().glint()
             || spec.look().dye().isPresent();
     if (spec.slot().isPresent()) {
-      stack.editMeta(
-          meta -> {
-            meta.setUnbreakable(true);
-            if (built) {
-              meta.addItemFlags(BUILDER_FLAGS);
-            }
-          });
+      stack.editMeta(meta -> {
+        meta.setUnbreakable(true);
+        if (built) {
+          meta.addItemFlags(BUILDER_FLAGS);
+        }
+      });
       return;
     }
     if (material.getMaxDurability() > 16) {
-      stack.editMeta(
-          meta -> {
-            meta.setUnbreakable(true);
-            meta.removeItemFlags(ItemFlag.values());
-            meta.addItemFlags(
-                weaponDamage(material) > 1 ? ItemFlag.HIDE_ATTRIBUTES : ItemFlag.HIDE_UNBREAKABLE);
-          });
+      stack.editMeta(meta -> {
+        meta.setUnbreakable(true);
+        meta.removeItemFlags(ItemFlag.values());
+        meta.addItemFlags(
+            weaponDamage(material) > 1 ? ItemFlag.HIDE_ATTRIBUTES : ItemFlag.HIDE_UNBREAKABLE);
+      });
       return;
     }
     if (built) {
@@ -599,17 +592,13 @@ final class KitFactory {
     var look = spec.look();
     // Red Warfare's ItemBuilder.setTitle coloured an uncoloured title gray.
     spec.name()
-        .ifPresent(
-            name ->
-                stack.editMeta(
-                    meta ->
-                        meta.displayName(
-                            Component.text(
-                                    name,
-                                    look.nameColor()
-                                        .map(KitFactory::color)
-                                        .orElse(NamedTextColor.GRAY))
-                                .decoration(TextDecoration.ITALIC, false))));
+        .ifPresent(name ->
+            stack.editMeta(meta ->
+                meta.displayName(
+                    Component.text(
+                            name,
+                            look.nameColor().map(KitFactory::color).orElse(NamedTextColor.GRAY))
+                        .decoration(TextDecoration.ITALIC, false))));
     if (!look.lore().isEmpty()) {
       var code = legacyCode(look.loreColor().orElseThrow());
       var lines = new ArrayList<String>();
@@ -626,15 +615,14 @@ final class KitFactory {
         .ifPresent(dye -> dye(stack, Color.fromRGB(ItemLook.rgb(dye))));
     var registry = enchantments();
     spec.enchantments()
-        .forEach(
-            (key, level) -> {
-              var enchantment = registry.get(Key.key(key));
-              if (enchantment == null) {
-                problems.add("unknown enchantment " + key + " on " + spec.material());
-              } else {
-                stack.addUnsafeEnchantment(enchantment, level);
-              }
-            });
+        .forEach((key, level) -> {
+          var enchantment = registry.get(Key.key(key));
+          if (enchantment == null) {
+            problems.add("unknown enchantment " + key + " on " + spec.material());
+          } else {
+            stack.addUnsafeEnchantment(enchantment, level);
+          }
+        });
     potionContents(stack, spec, problems);
     flag(stack, spec, material);
     if (spec.amount() > material.getMaxStackSize()) {

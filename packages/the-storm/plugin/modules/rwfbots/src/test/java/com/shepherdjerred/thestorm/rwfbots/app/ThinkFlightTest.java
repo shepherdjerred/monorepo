@@ -69,16 +69,14 @@ final class ThinkFlightTest {
             .toList();
     assertThat(spans).hasSize(2);
     assertThat(spans)
-        .allSatisfy(
-            event -> {
-              assertThat(event.getString("stage")).isEqualTo("tactics");
-              assertThat(event.getInt("generation")).isEqualTo(7);
-              assertThat(event.getLong("tick")).isEqualTo(42);
-              assertThat(event.getInt("botId")).isEqualTo(-1);
-              assertThat(event.getLong("workerNanos"))
-                  .isEqualTo(event.getInt("inputs") * 7_000_000L);
-              assertThat(event.getLong("cpuNanos")).isGreaterThanOrEqualTo(-1);
-            });
+        .allSatisfy(event -> {
+          assertThat(event.getString("stage")).isEqualTo("tactics");
+          assertThat(event.getInt("generation")).isEqualTo(7);
+          assertThat(event.getLong("tick")).isEqualTo(42);
+          assertThat(event.getInt("botId")).isEqualTo(-1);
+          assertThat(event.getLong("workerNanos")).isEqualTo(event.getInt("inputs") * 7_000_000L);
+          assertThat(event.getLong("cpuNanos")).isGreaterThanOrEqualTo(-1);
+        });
     assertThat(spans.stream().map(event -> event.getLong("queueNanos")))
         .containsExactlyInAnyOrder(15_000_000L, 22_000_000L);
     assertThat(spans.stream().map(event -> event.getInt("inputs")))
@@ -117,15 +115,14 @@ final class ThinkFlightTest {
             .toList();
     assertThat(spans).hasSize(2);
     assertThat(spans)
-        .allSatisfy(
-            event -> {
-              assertThat(event.getString("stage")).isEqualTo("tactics-bot");
-              assertThat(event.getInt("generation")).isEqualTo(7);
-              assertThat(event.getLong("tick")).isEqualTo(42);
-              assertThat(event.getInt("inputs")).isEqualTo(1);
-              assertThat(event.getLong("queueNanos")).isZero();
-              assertThat(event.getLong("cpuNanos")).isGreaterThanOrEqualTo(-1);
-            });
+        .allSatisfy(event -> {
+          assertThat(event.getString("stage")).isEqualTo("tactics-bot");
+          assertThat(event.getInt("generation")).isEqualTo(7);
+          assertThat(event.getLong("tick")).isEqualTo(42);
+          assertThat(event.getInt("inputs")).isEqualTo(1);
+          assertThat(event.getLong("queueNanos")).isZero();
+          assertThat(event.getLong("cpuNanos")).isGreaterThanOrEqualTo(-1);
+        });
     assertThat(spans.stream().map(event -> event.getInt("botId"))).containsExactlyInAnyOrder(3, 8);
     assertThat(spans.stream().map(event -> event.getLong("workerNanos")))
         .containsExactlyInAnyOrder(7_000_000L, 9_000_000L);

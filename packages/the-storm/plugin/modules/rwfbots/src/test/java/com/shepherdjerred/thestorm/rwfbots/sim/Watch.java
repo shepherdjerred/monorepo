@@ -71,13 +71,11 @@ final class Watch {
       cover(body, tick);
       engagement(body);
     }
-    world.boards.forEach(
-        (team, board) ->
-            board.plan().assignment().values().stream()
-                .flatMap(key -> board.plan().slot(key).stream())
-                .filter(slot -> slot.lane() >= 0)
-                .forEach(
-                    slot -> lanes.computeIfAbsent(team, t -> new HashSet<>()).add(slot.lane())));
+    world.boards.forEach((team, board) ->
+        board.plan().assignment().values().stream()
+            .flatMap(key -> board.plan().slot(key).stream())
+            .filter(slot -> slot.lane() >= 0)
+            .forEach(slot -> lanes.computeIfAbsent(team, t -> new HashSet<>()).add(slot.lane())));
     return false;
   }
 

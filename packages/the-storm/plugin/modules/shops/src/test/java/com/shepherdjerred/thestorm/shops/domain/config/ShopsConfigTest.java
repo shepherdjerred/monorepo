@@ -62,35 +62,25 @@ final class ShopsConfigTest {
         .hasMessageContaining("material names");
     assertThatThrownBy(() -> settings(ChestShopSettings.Click.RIGHT, 1, List.of("CHEST", "CHEST")))
         .hasMessageContaining("twice");
-    assertThatThrownBy(
-            () ->
-                ChestShopSettings.untaxed(
-                    new ChestShopSettings.Basics(
-                        ChestShopSettings.Click.RIGHT, 1, " ", List.of("CHEST"), LIMITS, 5, 250)))
+    assertThatThrownBy(() ->
+            ChestShopSettings.untaxed(
+                new ChestShopSettings.Basics(
+                    ChestShopSettings.Click.RIGHT, 1, " ", List.of("CHEST"), LIMITS, 5, 250)))
         .hasMessageContaining("adminShopLabel");
-    assertThatThrownBy(
-            () ->
-                ChestShopSettings.untaxed(
-                    new ChestShopSettings.Basics(
-                        ChestShopSettings.Click.RIGHT,
-                        1,
-                        "A",
-                        List.of("CHEST"),
-                        Map.of(1, 1),
-                        5,
-                        250)))
+    assertThatThrownBy(() ->
+            ChestShopSettings.untaxed(
+                new ChestShopSettings.Basics(
+                    ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), Map.of(1, 1), 5, 250)))
         .hasMessageContaining("level 2");
-    assertThatThrownBy(
-            () ->
-                ChestShopSettings.untaxed(
-                    new ChestShopSettings.Basics(
-                        ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 0, 250)))
+    assertThatThrownBy(() ->
+            ChestShopSettings.untaxed(
+                new ChestShopSettings.Basics(
+                    ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 0, 250)))
         .hasMessageContaining("summaryLines");
-    assertThatThrownBy(
-            () ->
-                ChestShopSettings.untaxed(
-                    new ChestShopSettings.Basics(
-                        ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 5, -1)))
+    assertThatThrownBy(() ->
+            ChestShopSettings.untaxed(
+                new ChestShopSettings.Basics(
+                    ChestShopSettings.Click.RIGHT, 1, "A", List.of("CHEST"), LIMITS, 5, -1)))
         .hasMessageContaining("clickCooldownMillis");
   }
 

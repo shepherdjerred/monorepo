@@ -95,18 +95,17 @@ public final class ContentCompiler {
     var merged = new LinkedHashMap<String, Located<T>>();
     for (var file : files) {
       read.apply(file.file())
-          .forEach(
-              (id, entry) -> {
-                var located = new Located<>(file.source(), section, id, entry);
-                if (!Ids.valid(id)) {
-                  problems.add(located, "", Ids.RULE);
-                  return;
-                }
-                var previous = merged.putIfAbsent(id, located);
-                if (previous != null) {
-                  problems.add(located, "", "duplicate id; also defined in " + previous.source());
-                }
-              });
+          .forEach((id, entry) -> {
+            var located = new Located<>(file.source(), section, id, entry);
+            if (!Ids.valid(id)) {
+              problems.add(located, "", Ids.RULE);
+              return;
+            }
+            var previous = merged.putIfAbsent(id, located);
+            if (previous != null) {
+              problems.add(located, "", "duplicate id; also defined in " + previous.source());
+            }
+          });
     }
     return merged;
   }

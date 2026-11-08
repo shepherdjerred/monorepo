@@ -186,11 +186,10 @@ final class SurvivalTalents {
       }
       case ALCHEMIST ->
           enemies(player, 10)
-              .forEach(
-                  e -> {
-                    effect(e, PotionEffectType.SLOWNESS, build.utilitySeconds(6), 1);
-                    effect(e, PotionEffectType.WEAKNESS, build.utilitySeconds(6), 0);
-                  });
+              .forEach(e -> {
+                effect(e, PotionEffectType.SLOWNESS, build.utilitySeconds(6), 1);
+                effect(e, PotionEffectType.WEAKNESS, build.utilitySeconds(6), 0);
+              });
       case BEASTMASTER -> companions(player, 1, build);
     }
     return true;
@@ -241,10 +240,8 @@ final class SurvivalTalents {
     var target =
         runner.online().stream()
             .filter(p -> runner.downed(p.getUniqueId()))
-            .filter(
-                p ->
-                    Places.at(p).distanceSquared(Places.at(player)) <= 25
-                        && player.hasLineOfSight(p))
+            .filter(p ->
+                Places.at(p).distanceSquared(Places.at(player)) <= 25 && player.hasLineOfSight(p))
             .min(
                 java.util.Comparator.comparingDouble(
                     p -> Places.at(p).distanceSquared(Places.at(player))));
@@ -255,54 +252,48 @@ final class SurvivalTalents {
 
   private List<Player> allies(Player player, int radius) {
     return runner.fighters().stream()
-        .filter(
-            p ->
-                Places.at(p).distanceSquared(Places.at(player)) <= radius * radius
-                    && player.hasLineOfSight(p))
+        .filter(p ->
+            Places.at(p).distanceSquared(Places.at(player)) <= radius * radius
+                && player.hasLineOfSight(p))
         .toList();
   }
 
   private List<LivingEntity> enemies(Player player, int radius) {
     return runner.world().enemies().stream()
-        .filter(
-            e ->
-                e.getLocation().distanceSquared(Places.at(player)) <= radius * radius
-                    && player.hasLineOfSight(e))
+        .filter(e ->
+            e.getLocation().distanceSquared(Places.at(player)) <= radius * radius
+                && player.hasLineOfSight(e))
         .limit(8)
         .toList();
   }
 
   private void sweep(Player player, double damage) {
     enemies(player, 5)
-        .forEach(
-            e -> {
-              runner.combat().damage(e, player, damage);
-              var push = e.getLocation().toVector().subtract(Places.at(player).toVector());
-              if (push.lengthSquared() > .01) e.setVelocity(push.normalize().multiply(.8).setY(.3));
-            });
+        .forEach(e -> {
+          runner.combat().damage(e, player, damage);
+          var push = e.getLocation().toVector().subtract(Places.at(player).toVector());
+          if (push.lengthSquared() > .01) e.setVelocity(push.normalize().multiply(.8).setY(.3));
+        });
   }
 
   private boolean repair(Player player, int limit) {
     var defenses =
         runner.map().open().stream()
             .flatMap(z -> z.defenses().stream())
-            .filter(
-                d ->
-                    d.type()
-                        == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent
-                            .DefenseType.BARRICADE)
-            .filter(
-                d ->
-                    Places.location(player.getWorld(), d.block().center())
-                            .distanceSquared(Places.at(player))
-                        <= 64)
+            .filter(d ->
+                d.type()
+                    == com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent.DefenseType
+                        .BARRICADE)
+            .filter(d ->
+                Places.location(player.getWorld(), d.block().center())
+                        .distanceSquared(Places.at(player))
+                    <= 64)
             .limit(limit)
             .toList();
-    defenses.forEach(
-        d -> {
-          runner.map().state().repair(d.id());
-          runner.map().barricade(d, org.bukkit.Material.OAK_FENCE);
-        });
+    defenses.forEach(d -> {
+      runner.map().state().repair(d.id());
+      runner.map().barricade(d, org.bukkit.Material.OAK_FENCE);
+    });
     return !defenses.isEmpty();
   }
 
@@ -336,14 +327,12 @@ final class SurvivalTalents {
     runner.world().enemies().stream()
         .filter(e -> e.getLocation().distanceSquared(trap.at()) <= 25 && player.hasLineOfSight(e))
         .limit(8)
-        .forEach(
-            e -> {
-              runner.combat().damage(e, player, trap.damage());
-              if (!runner.combat().bossEntity(e))
-                e.addPotionEffect(
-                    new PotionEffect(
-                        PotionEffectType.SLOWNESS, build(id).utilitySeconds(4) * 20, 1));
-            });
+        .forEach(e -> {
+          runner.combat().damage(e, player, trap.damage());
+          if (!runner.combat().bossEntity(e))
+            e.addPotionEffect(
+                new PotionEffect(PotionEffectType.SLOWNESS, build(id).utilitySeconds(4) * 20, 1));
+        });
   }
 
   private void tickCorrosion(UUID id, Corrosion dot, Instant now) {

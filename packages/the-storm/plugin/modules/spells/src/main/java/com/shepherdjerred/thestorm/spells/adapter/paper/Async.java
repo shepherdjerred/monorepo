@@ -48,12 +48,11 @@ public final class Async {
   /** Logs {@code future}'s failure, if any. For writes nobody waits on. */
   void logFailure(CompletableFuture<?> future, String what) {
     var _ =
-        future.whenComplete(
-            (value, failure) -> {
-              if (failure != null) {
-                logger.error("Failed {}", what, failure);
-              }
-            });
+        future.whenComplete((value, failure) -> {
+          if (failure != null) {
+            logger.error("Failed {}", what, failure);
+          }
+        });
   }
 
   ComponentLogger logger() {

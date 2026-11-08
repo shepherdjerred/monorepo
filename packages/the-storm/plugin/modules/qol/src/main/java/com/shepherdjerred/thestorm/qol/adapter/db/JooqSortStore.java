@@ -23,56 +23,51 @@ public final class JooqSortStore implements SortStore {
 
   @Override
   public CompletableFuture<Map<UUID, SortSwitches>> loadAll() {
-    return database.read(
-        dsl -> {
-          var loaded = new HashMap<UUID, SortSwitches>();
-          for (var row : dsl.selectFrom(QOL_SORT_PLAYER)) {
-            loaded.put(
-                UUID.fromString(row.getPlayer()),
-                new SortSwitches(
-                    on(row.getContainers()),
-                    on(row.getInventory()),
-                    on(row.getMiddleClick()),
-                    on(row.getShiftClick()),
-                    on(row.getDoubleClick()),
-                    on(row.getShiftRightClick()),
-                    on(row.getDump()),
-                    on(row.getTake()),
-                    on(row.getLeftClickBlock())));
-          }
-          return loaded;
-        });
+    return database.read(dsl -> {
+      var loaded = new HashMap<UUID, SortSwitches>();
+      for (var row : dsl.selectFrom(QOL_SORT_PLAYER)) {
+        loaded.put(
+            UUID.fromString(row.getPlayer()),
+            new SortSwitches(
+                on(row.getContainers()),
+                on(row.getInventory()),
+                on(row.getMiddleClick()),
+                on(row.getShiftClick()),
+                on(row.getDoubleClick()),
+                on(row.getShiftRightClick()),
+                on(row.getDump()),
+                on(row.getTake()),
+                on(row.getLeftClickBlock())));
+      }
+      return loaded;
+    });
   }
 
   @Override
   public CompletableFuture<Void> save(UUID player, SortSwitches switches) {
-    return done(
-        dsl -> {
-          dsl.deleteFrom(QOL_SORT_PLAYER)
-              .where(QOL_SORT_PLAYER.PLAYER.eq(player.toString()))
-              .execute();
-          dsl.insertInto(QOL_SORT_PLAYER)
-              .set(QOL_SORT_PLAYER.PLAYER, player.toString())
-              .set(QOL_SORT_PLAYER.CONTAINERS, bit(switches.containers()))
-              .set(QOL_SORT_PLAYER.INVENTORY, bit(switches.inventory()))
-              .set(QOL_SORT_PLAYER.MIDDLE_CLICK, bit(switches.middleClick()))
-              .set(QOL_SORT_PLAYER.SHIFT_CLICK, bit(switches.shiftClick()))
-              .set(QOL_SORT_PLAYER.DOUBLE_CLICK, bit(switches.doubleClick()))
-              .set(QOL_SORT_PLAYER.SHIFT_RIGHT_CLICK, bit(switches.shiftRightClick()))
-              .set(QOL_SORT_PLAYER.DUMP, bit(switches.dump()))
-              .set(QOL_SORT_PLAYER.TAKE, bit(switches.take()))
-              .set(QOL_SORT_PLAYER.LEFT_CLICK_BLOCK, bit(switches.leftClickBlock()))
-              .execute();
-        });
+    return done(dsl -> {
+      dsl.deleteFrom(QOL_SORT_PLAYER).where(QOL_SORT_PLAYER.PLAYER.eq(player.toString())).execute();
+      dsl.insertInto(QOL_SORT_PLAYER)
+          .set(QOL_SORT_PLAYER.PLAYER, player.toString())
+          .set(QOL_SORT_PLAYER.CONTAINERS, bit(switches.containers()))
+          .set(QOL_SORT_PLAYER.INVENTORY, bit(switches.inventory()))
+          .set(QOL_SORT_PLAYER.MIDDLE_CLICK, bit(switches.middleClick()))
+          .set(QOL_SORT_PLAYER.SHIFT_CLICK, bit(switches.shiftClick()))
+          .set(QOL_SORT_PLAYER.DOUBLE_CLICK, bit(switches.doubleClick()))
+          .set(QOL_SORT_PLAYER.SHIFT_RIGHT_CLICK, bit(switches.shiftRightClick()))
+          .set(QOL_SORT_PLAYER.DUMP, bit(switches.dump()))
+          .set(QOL_SORT_PLAYER.TAKE, bit(switches.take()))
+          .set(QOL_SORT_PLAYER.LEFT_CLICK_BLOCK, bit(switches.leftClickBlock()))
+          .execute();
+    });
   }
 
   private CompletableFuture<Void> done(Consumer<DSLContext> work) {
     return database
-        .write(
-            dsl -> {
-              work.accept(dsl);
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          work.accept(dsl);
+          return Boolean.TRUE;
+        })
         .thenAccept(ignored -> {});
   }
 

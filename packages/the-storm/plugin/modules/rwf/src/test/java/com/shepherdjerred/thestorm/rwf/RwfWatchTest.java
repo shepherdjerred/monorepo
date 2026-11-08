@@ -85,11 +85,10 @@ final class RwfWatchTest {
     player.performCommand(command);
     var seen = new ArrayList<String>();
     harness()
-        .until(
-            () -> {
-              seen.addAll(RwfHarness.messages(player));
-              return seen.stream().anyMatch(m -> m.contains(text));
-            });
+        .until(() -> {
+          seen.addAll(RwfHarness.messages(player));
+          return seen.stream().anyMatch(m -> m.contains(text));
+        });
     return seen;
   }
 
@@ -136,11 +135,10 @@ final class RwfWatchTest {
         .isNotEqualTo(harness.server.getScoreboardManager().getMainScoreboard());
     assertThat(stored())
         .singleElement()
-        .satisfies(
-            s -> {
-              assertThat(s.player()).isEqualTo(bob.getUniqueId());
-              assertThat(s.scope()).isEqualTo("rwf_watch");
-            });
+        .satisfies(s -> {
+          assertThat(s.player()).isEqualTo(bob.getUniqueId());
+          assertThat(s.scope()).isEqualTo("rwf_watch");
+        });
     assertThat(harness.snapshot().combatants()).isEmpty();
 
     bob.performCommand("rwf leave");
@@ -275,13 +273,12 @@ final class RwfWatchTest {
 
     var fallen = harness.bots.spawned().getFirst();
     fallen.setHealth(0);
-    harness.until(
-        () ->
-            !harness
-                .snapshot()
-                .combatant(harness.bots.idOf(fallen).orElseThrow())
-                .orElseThrow()
-                .alive());
+    harness.until(() ->
+        !harness
+            .snapshot()
+            .combatant(harness.bots.idOf(fallen).orElseThrow())
+            .orElseThrow()
+            .alive());
     var living = followed(bob, 7);
     assertThat(living).hasSize(7).doesNotContain(fallen.getUniqueId());
   }

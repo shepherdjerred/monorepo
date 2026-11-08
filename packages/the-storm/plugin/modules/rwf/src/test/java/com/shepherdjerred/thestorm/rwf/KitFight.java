@@ -65,21 +65,19 @@ public final class KitFight implements AutoCloseable {
     own(harness, alice.getUniqueId(), kit);
     harness.enter(alice);
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
-    harness.until(
-        () -> {
-          alice.performCommand("rwf kit " + kit);
-          return harness.combatant(alice).kit().filter(kit::equals).isPresent();
-        });
+    harness.until(() -> {
+      alice.performCommand("rwf kit " + kit);
+      return harness.combatant(alice).kit().filter(kit::equals).isPresent();
+    });
     harness.letBotsArrive();
-    botKit.ifPresent(
-        each -> {
-          for (var bot : harness.bots.spawned()) {
-            var id = harness.bots.idOf(bot).orElseThrow();
-            if (harness.actions().pickKit(id, each).isPresent()) {
-              throw new AssertionError("a bot could not pick " + each);
-            }
-          }
-        });
+    botKit.ifPresent(each -> {
+      for (var bot : harness.bots.spawned()) {
+        var id = harness.bots.idOf(bot).orElseThrow();
+        if (harness.actions().pickKit(id, each).isPresent()) {
+          throw new AssertionError("a bot could not pick " + each);
+        }
+      }
+    });
     harness.tick(Duration.ofSeconds(36));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LIVE);
     harness.lookAround(alice);

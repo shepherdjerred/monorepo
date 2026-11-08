@@ -72,75 +72,67 @@ public final class LockRules {
   public static Result<Lock, List<LockProblem>> trust(
       UUID player, Optional<Lock> lock, PlayerRef target, Optional<LockGrant> grant) {
     return editable(player, lock)
-        .flatMap(
-            found -> {
-              if (found.ownedByPlayer(target.id())) {
-                return err(new LockProblem.NotYourself());
-              }
-              var current = Optional.ofNullable(found.trusted().get(target.id()));
-              if (grant.isEmpty()) {
-                return current.isPresent()
-                    ? Result.ok(found.withoutTrust(target.id()))
-                    : err(new LockProblem.NotTrusted(target.name()));
-              }
-              return current.equals(grant)
-                  ? err(new LockProblem.AlreadyTrusted(target.name()))
-                  : Result.ok(found.withTrust(target.id(), grant.get()));
-            });
+        .flatMap(found -> {
+          if (found.ownedByPlayer(target.id())) {
+            return err(new LockProblem.NotYourself());
+          }
+          var current = Optional.ofNullable(found.trusted().get(target.id()));
+          if (grant.isEmpty()) {
+            return current.isPresent()
+                ? Result.ok(found.withoutTrust(target.id()))
+                : err(new LockProblem.NotTrusted(target.name()));
+          }
+          return current.equals(grant)
+              ? err(new LockProblem.AlreadyTrusted(target.name()))
+              : Result.ok(found.withTrust(target.id(), grant.get()));
+        });
   }
 
   /** The lock shared with the owner's town (opening only), or no longer shared. Owner only. */
   public static Result<Lock, List<LockProblem>> shareWithTown(
       UUID player, Optional<Lock> lock, boolean on) {
     return owned(player, lock)
-        .flatMap(
-            found ->
-                found.options().sharedWithTown() == on
-                    ? err(new LockProblem.Unchanged("town sharing", on))
-                    : Result.ok(found.withOptions(found.options().withShared(on))));
+        .flatMap(found ->
+            found.options().sharedWithTown() == on
+                ? err(new LockProblem.Unchanged("town sharing", on))
+                : Result.ok(found.withOptions(found.options().withShared(on))));
   }
 
   /** The lock letting redstone dispense or craft from it, or not. Owner only. */
   public static Result<Lock, List<LockProblem>> redstone(
       UUID player, Optional<Lock> lock, boolean on) {
     return owned(player, lock)
-        .flatMap(
-            found ->
-                found.options().redstone() == on
-                    ? err(new LockProblem.Unchanged("redstone", on))
-                    : Result.ok(found.withOptions(found.options().withRedstone(on))));
+        .flatMap(found ->
+            found.options().redstone() == on
+                ? err(new LockProblem.Unchanged("redstone", on))
+                : Result.ok(found.withOptions(found.options().withRedstone(on))));
   }
 
   /** The lock switched to {@code type}. A password lock keeps {@code password}. Owner only. */
   public static Result<Lock, List<LockProblem>> type(
       UUID player, Optional<Lock> lock, LockType type, String password) {
     return owned(player, lock)
-        .flatMap(
-            found -> {
-              if (type == LockType.PASSWORD && password.isBlank()) {
-                return err(new LockProblem.PasswordMissing());
-              }
-              var word = type == LockType.PASSWORD ? password : "";
-              if (found.options().type() == type && found.options().password().equals(word)) {
-                return err(
-                    new LockProblem.Unchanged(
-                        type.name().toLowerCase(java.util.Locale.ROOT), true));
-              }
-              return Result.ok(found.withType(type, word));
-            });
+        .flatMap(found -> {
+          if (type == LockType.PASSWORD && password.isBlank()) {
+            return err(new LockProblem.PasswordMissing());
+          }
+          var word = type == LockType.PASSWORD ? password : "";
+          if (found.options().type() == type && found.options().password().equals(word)) {
+            return err(
+                new LockProblem.Unchanged(type.name().toLowerCase(java.util.Locale.ROOT), true));
+          }
+          return Result.ok(found.withType(type, word));
+        });
   }
 
   /** The lock with {@code flag} set to {@code on}. Owner only. */
   public static Result<Lock, List<LockProblem>> flag(
       UUID player, Optional<Lock> lock, LockFlag flag, boolean on) {
     return owned(player, lock)
-        .flatMap(
-            found ->
-                flag.isOn(found.options().flags()) == on
-                    ? err(
-                        new LockProblem.Unchanged(
-                            flag.name().toLowerCase(java.util.Locale.ROOT), on))
-                    : Result.ok(found.withFlag(flag, on)));
+        .flatMap(found ->
+            flag.isOn(found.options().flags()) == on
+                ? err(new LockProblem.Unchanged(flag.name().toLowerCase(java.util.Locale.ROOT), on))
+                : Result.ok(found.withFlag(flag, on)));
   }
 
   /**
@@ -154,20 +146,19 @@ public final class LockRules {
       return err(new LockProblem.BadEntry(name));
     }
     return editable(player, lock)
-        .flatMap(
-            found -> {
-              var has = found.options().groups().contains(normalized);
-              if (has == on) {
-                return err(new LockProblem.Unchanged("group " + normalized, on));
-              }
-              var next = new HashSet<>(found.options().groups());
-              if (on) {
-                next.add(normalized);
-              } else {
-                next.remove(normalized);
-              }
-              return Result.ok(found.withOptions(found.options().withGroups(next)));
-            });
+        .flatMap(found -> {
+          var has = found.options().groups().contains(normalized);
+          if (has == on) {
+            return err(new LockProblem.Unchanged("group " + normalized, on));
+          }
+          var next = new HashSet<>(found.options().groups());
+          if (on) {
+            next.add(normalized);
+          } else {
+            next.remove(normalized);
+          }
+          return Result.ok(found.withOptions(found.options().withGroups(next)));
+        });
   }
 
   /**
@@ -177,20 +168,19 @@ public final class LockRules {
   public static Result<Lock, List<LockProblem>> town(
       UUID player, Optional<Lock> lock, UUID town, boolean on) {
     return editable(player, lock)
-        .flatMap(
-            found -> {
-              var has = found.options().towns().contains(town);
-              if (has == on) {
-                return err(new LockProblem.Unchanged("town", on));
-              }
-              var next = new HashSet<>(found.options().towns());
-              if (on) {
-                next.add(town);
-              } else {
-                next.remove(town);
-              }
-              return Result.ok(found.withOptions(found.options().withTowns(next)));
-            });
+        .flatMap(found -> {
+          var has = found.options().towns().contains(town);
+          if (has == on) {
+            return err(new LockProblem.Unchanged("town", on));
+          }
+          var next = new HashSet<>(found.options().towns());
+          if (on) {
+            next.add(town);
+          } else {
+            next.remove(town);
+          }
+          return Result.ok(found.withOptions(found.options().withTowns(next)));
+        });
   }
 
   /**

@@ -45,63 +45,54 @@ public final class JooqBankStore implements BankStore {
 
   private CompletableFuture<Void> done(java.util.function.Consumer<DSLContext> work) {
     return database
-        .write(
-            dsl -> {
-              work.accept(dsl);
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          work.accept(dsl);
+          return Boolean.TRUE;
+        })
         .thenAccept(ignored -> {});
   }
 
   private List<StoredBank> readAll(DSLContext dsl) {
     var grants = new HashMap<String, HashMap<UUID, BankRole>>();
     dsl.selectFrom(QOL_BANK_GRANT)
-        .forEach(
-            row ->
-                grants
-                    .computeIfAbsent(row.getBank(), id -> new HashMap<>())
-                    .put(UUID.fromString(row.getPlayer()), BankRole.valueOf(row.getRole())));
+        .forEach(row ->
+            grants
+                .computeIfAbsent(row.getBank(), id -> new HashMap<>())
+                .put(UUID.fromString(row.getPlayer()), BankRole.valueOf(row.getRole())));
     var materials = new HashMap<String, HashSet<String>>();
     dsl.selectFrom(QOL_SHELF_MATERIAL)
-        .forEach(
-            row ->
-                materials
-                    .computeIfAbsent(row.getShelf(), id -> new HashSet<>())
-                    .add(row.getMaterial()));
+        .forEach(row ->
+            materials
+                .computeIfAbsent(row.getShelf(), id -> new HashSet<>())
+                .add(row.getMaterial()));
     var shelves = new HashMap<String, List<StoredShelf>>();
     dsl.selectFrom(QOL_SHELF)
         .orderBy(QOL_SHELF.ID)
-        .forEach(
-            row ->
-                shelves
-                    .computeIfAbsent(row.getBank(), id -> new ArrayList<>())
-                    .add(
-                        new StoredShelf(
-                            row.getId(),
-                            new Spot(
-                                row.getWorld(), row.getSignX(), row.getSignY(), row.getSignZ()),
-                            new Spot(
-                                row.getWorld(),
-                                row.getContainerX(),
-                                row.getContainerY(),
-                                row.getContainerZ()),
-                            row.getRestack() != 0,
-                            materials.getOrDefault(row.getId(), new HashSet<>()))));
+        .forEach(row ->
+            shelves
+                .computeIfAbsent(row.getBank(), id -> new ArrayList<>())
+                .add(
+                    new StoredShelf(
+                        row.getId(),
+                        new Spot(row.getWorld(), row.getSignX(), row.getSignY(), row.getSignZ()),
+                        new Spot(
+                            row.getWorld(),
+                            row.getContainerX(),
+                            row.getContainerY(),
+                            row.getContainerZ()),
+                        row.getRestack() != 0,
+                        materials.getOrDefault(row.getId(), new HashSet<>()))));
     return dsl.selectFrom(QOL_BANK)
         .orderBy(QOL_BANK.ID)
-        .fetch(
-            row ->
-                new StoredBank(
-                    row.getId(),
-                    UUID.fromString(row.getOwner()),
-                    new Spot(row.getWorld(), row.getSignX(), row.getSignY(), row.getSignZ()),
-                    new Spot(
-                        row.getWorld(),
-                        row.getContainerX(),
-                        row.getContainerY(),
-                        row.getContainerZ()),
-                    grants.getOrDefault(row.getId(), new HashMap<>()),
-                    shelves.getOrDefault(row.getId(), List.of())));
+        .fetch(row ->
+            new StoredBank(
+                row.getId(),
+                UUID.fromString(row.getOwner()),
+                new Spot(row.getWorld(), row.getSignX(), row.getSignY(), row.getSignZ()),
+                new Spot(
+                    row.getWorld(), row.getContainerX(), row.getContainerY(), row.getContainerZ()),
+                grants.getOrDefault(row.getId(), new HashMap<>()),
+                shelves.getOrDefault(row.getId(), List.of())));
   }
 
   private static void writeBank(DSLContext dsl, StoredBank bank) {

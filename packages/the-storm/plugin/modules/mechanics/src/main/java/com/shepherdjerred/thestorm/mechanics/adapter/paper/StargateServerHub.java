@@ -510,13 +510,11 @@ final class StargateServerHub implements Listener {
     var chunk = event.getChunk();
     context
         .scheduler()
-        .runOnMainThread(
-            () ->
-                hubs.stream()
-                    .filter(hub -> hub.gate().worldId().equals(chunk.getWorld().getUID()))
-                    .filter(
-                        hub -> chunks(hub.gate()).contains(new Chunk(chunk.getX(), chunk.getZ())))
-                    .forEach(this::recover));
+        .runOnMainThread(() ->
+            hubs.stream()
+                .filter(hub -> hub.gate().worldId().equals(chunk.getWorld().getUID()))
+                .filter(hub -> chunks(hub.gate()).contains(new Chunk(chunk.getX(), chunk.getZ())))
+                .forEach(this::recover));
   }
 
   void reconcileLoaded() {
@@ -594,30 +592,27 @@ final class StargateServerHub implements Listener {
   private Optional<Hub> atControl(Block block) {
     var pos = PaperGrid.pos(block);
     return hubs.stream()
-        .filter(
-            hub ->
-                hub.gate().worldId().equals(block.getWorld().getUID())
-                    && (hub.gate().sign().equals(pos) || hub.gate().button().equals(pos)))
+        .filter(hub ->
+            hub.gate().worldId().equals(block.getWorld().getUID())
+                && (hub.gate().sign().equals(pos) || hub.gate().button().equals(pos)))
         .findFirst();
   }
 
   private Optional<Hub> atInterior(Location location) {
     var pos = PaperGrid.pos(location);
     return hubs.stream()
-        .filter(
-            hub ->
-                hub.gate().worldId().equals(location.getWorld().getUID())
-                    && hub.gate().frame().interior().contains(pos))
+        .filter(hub ->
+            hub.gate().worldId().equals(location.getWorld().getUID())
+                && hub.gate().frame().interior().contains(pos))
         .findFirst();
   }
 
   private boolean occupied(Block block) {
     var pos = PaperGrid.pos(block);
     return hubs.stream()
-        .anyMatch(
-            hub ->
-                hub.gate().worldId().equals(block.getWorld().getUID())
-                    && cells(hub.gate()).contains(pos));
+        .anyMatch(hub ->
+            hub.gate().worldId().equals(block.getWorld().getUID())
+                && cells(hub.gate()).contains(pos));
   }
 
   private World world(Hub hub) {

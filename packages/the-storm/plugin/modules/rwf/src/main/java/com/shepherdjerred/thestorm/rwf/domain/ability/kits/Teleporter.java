@@ -143,11 +143,8 @@ public final class Teleporter implements Ability {
    */
   public static boolean nearBomb(BlockPos block, List<BlockPos> bombs) {
     return bombs.stream()
-        .anyMatch(
-            bomb ->
-                bomb.x() == block.x()
-                    && bomb.z() == block.z()
-                    && Math.abs(bomb.y() - block.y()) <= 1);
+        .anyMatch(bomb ->
+            bomb.x() == block.x() && bomb.z() == block.z() && Math.abs(bomb.y() - block.y()) <= 1);
   }
 
   private static void destroy(Fighter self, AbilityInput.DestroyTeleporters destroy, Arena arena) {

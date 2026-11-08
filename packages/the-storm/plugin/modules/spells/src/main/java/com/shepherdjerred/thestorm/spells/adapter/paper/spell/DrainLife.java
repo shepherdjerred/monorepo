@@ -29,21 +29,20 @@ final class DrainLife implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creature(tools, caster, settings.range())
-        .map(
-            target ->
-                () -> {
-                  var before = target.getHealth();
-                  var blow = Harm.Blow.none().withDamage(settings.damage());
-                  if (!tools.harm().strike(caster, target, blow)) {
-                    return;
-                  }
-                  var dealt = Math.max(0, before - target.getHealth());
-                  if (dealt > 0 && settings.healRatio() > 0) {
-                    caster.heal(
-                        dealt * settings.healRatio(), EntityRegainHealthEvent.RegainReason.MAGIC);
-                  }
-                  tools.fx().line(kind(), Magic.chest(target), Magic.chest(caster));
-                  tools.fx().sound(kind(), Magic.at(caster));
-                });
+        .map(target ->
+            () -> {
+              var before = target.getHealth();
+              var blow = Harm.Blow.none().withDamage(settings.damage());
+              if (!tools.harm().strike(caster, target, blow)) {
+                return;
+              }
+              var dealt = Math.max(0, before - target.getHealth());
+              if (dealt > 0 && settings.healRatio() > 0) {
+                caster.heal(
+                    dealt * settings.healRatio(), EntityRegainHealthEvent.RegainReason.MAGIC);
+              }
+              tools.fx().line(kind(), Magic.chest(target), Magic.chest(caster));
+              tools.fx().sound(kind(), Magic.at(caster));
+            });
   }
 }

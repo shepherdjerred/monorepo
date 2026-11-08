@@ -74,14 +74,13 @@ final class TownsModuleTest {
     Files.copy(SHIPPED, directory.resolve("towns.yml"));
     database.migrate("towns", TownsModuleTest.class.getClassLoader());
     database
-        .write(
-            dsl -> {
-              // A town nobody owns breaks the one-owner invariant.
-              dsl.execute(
-                  "INSERT INTO towns_town (id, name, created_at) VALUES ('00000000-0000-4000-8000-00000000000a',"
-                      + " 'Aegis', 0)");
-              return 0;
-            })
+        .write(dsl -> {
+          // A town nobody owns breaks the one-owner invariant.
+          dsl.execute(
+              "INSERT INTO towns_town (id, name, created_at) VALUES ('00000000-0000-4000-8000-00000000000a',"
+                  + " 'Aegis', 0)");
+          return 0;
+        })
         .get(10, TimeUnit.SECONDS);
 
     assertThatThrownBy(() -> new TownsModule().enable(context()))

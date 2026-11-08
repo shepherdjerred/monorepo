@@ -102,16 +102,15 @@ public final class KitBrowser {
       var filtered =
           kits.stream()
               .filter(kit -> category.isEmpty() || category.orElseThrow() == kit.category())
-              .filter(
-                  kit ->
-                      switch (access) {
-                        case ALL -> true;
-                        case AVAILABLE -> allowed.allows(kit);
-                        case OWNED ->
-                            kit.availability() == KitAvailability.FREE
-                                || allowed.owned().contains(kit.id());
-                        case ROTATION -> allowed.freeThisWeek().contains(kit.id());
-                      });
+              .filter(kit ->
+                  switch (access) {
+                    case ALL -> true;
+                    case AVAILABLE -> allowed.allows(kit);
+                    case OWNED ->
+                        kit.availability() == KitAvailability.FREE
+                            || allowed.owned().contains(kit.id());
+                    case ROTATION -> allowed.freeThisWeek().contains(kit.id());
+                  });
       var names =
           comparing(KitSpec::name, String.CASE_INSENSITIVE_ORDER).thenComparing(KitSpec::id);
       return switch (sort) {

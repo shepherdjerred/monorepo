@@ -24,11 +24,10 @@ final class NpcBridge {
   private NpcBridge() {}
 
   static void install(NpcDialogs dialogs, NpcActions actions, QuestService service) {
-    dialogs.register(
-        (player, npc) ->
-            service
-                .dialogue(player.getUniqueId(), npc.id())
-                .map(dialogue -> DialogueBridge.graph(npc.id(), dialogue)));
+    dialogs.register((player, npc) ->
+        service
+            .dialogue(player.getUniqueId(), npc.id())
+            .map(dialogue -> DialogueBridge.graph(npc.id(), dialogue)));
     actions.register(
         DialogueBridge.ACCEPT,
         (player, npc) -> service.acceptFirst(player.getUniqueId(), npc.id()));

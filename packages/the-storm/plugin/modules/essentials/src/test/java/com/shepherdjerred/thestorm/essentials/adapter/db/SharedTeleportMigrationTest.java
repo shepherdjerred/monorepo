@@ -27,24 +27,23 @@ final class SharedTeleportMigrationTest {
         apply(database, name);
       }
       database
-          .write(
-              dsl -> {
-                dsl.execute(
-                    "INSERT INTO essentials_teleport_usage VALUES (?, ?, ?, ?, ?)",
-                    player.toString(),
-                    "home",
-                    350,
-                    t0.toEpochMilli(),
-                    t0.plusSeconds(120).toEpochMilli());
-                dsl.execute(
-                    "INSERT INTO essentials_teleport_usage VALUES (?, ?, ?, ?, ?)",
-                    player.toString(),
-                    "spawn",
-                    200,
-                    t0.toEpochMilli(),
-                    t0.plusSeconds(30).toEpochMilli());
-                return Boolean.TRUE;
-              })
+          .write(dsl -> {
+            dsl.execute(
+                "INSERT INTO essentials_teleport_usage VALUES (?, ?, ?, ?, ?)",
+                player.toString(),
+                "home",
+                350,
+                t0.toEpochMilli(),
+                t0.plusSeconds(120).toEpochMilli());
+            dsl.execute(
+                "INSERT INTO essentials_teleport_usage VALUES (?, ?, ?, ?, ?)",
+                player.toString(),
+                "spawn",
+                200,
+                t0.toEpochMilli(),
+                t0.plusSeconds(30).toEpochMilli());
+            return Boolean.TRUE;
+          })
           .join();
       var attempts = new JooqTeleportAttemptStore(database);
       attempts.insert(pending).join();
@@ -67,15 +66,14 @@ final class SharedTeleportMigrationTest {
   private static void apply(StormDatabase database, String name) throws Exception {
     var sql = Files.readString(Path.of("src/main/resources/db/migration/essentials", name));
     database
-        .write(
-            dsl -> {
-              for (var statement : sql.split(";", -1)) {
-                if (!statement.isBlank()) {
-                  dsl.execute(statement);
-                }
-              }
-              return Boolean.TRUE;
-            })
+        .write(dsl -> {
+          for (var statement : sql.split(";", -1)) {
+            if (!statement.isBlank()) {
+              dsl.execute(statement);
+            }
+          }
+          return Boolean.TRUE;
+        })
         .join();
   }
 }

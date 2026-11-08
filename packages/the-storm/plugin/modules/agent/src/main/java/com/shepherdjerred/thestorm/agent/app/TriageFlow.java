@@ -71,20 +71,17 @@ public final class TriageFlow {
             .orElseGet(() -> CompletableFuture.completedFuture(false));
     var chat = recents.lastBy(reporter, CHAT_LINES).stream().map(TriageFlow::sample).toList();
     return CompletableFuture.allOf(comments, history, banned)
-        .thenCompose(
-            done ->
-                services
-                    .brain()
-                    .triage(
-                        new TriageCase(
-                            ticket, comments.join(), history.join(), banned.join(), chat))
-                    .thenCompose(proposal -> settle(ticket, proposal))
-                    // A switched-off flow is steady state: the ticket stays unworked.
-                    .exceptionallyCompose(
-                        failure ->
-                            BrainDisabledException.isCauseOf(failure)
-                                ? CompletableFuture.completedFuture(null)
-                                : CompletableFuture.failedFuture(failure)));
+        .thenCompose(done ->
+            services
+                .brain()
+                .triage(
+                    new TriageCase(ticket, comments.join(), history.join(), banned.join(), chat))
+                .thenCompose(proposal -> settle(ticket, proposal))
+                // A switched-off flow is steady state: the ticket stays unworked.
+                .exceptionallyCompose(failure ->
+                    BrainDisabledException.isCauseOf(failure)
+                        ? CompletableFuture.completedFuture(null)
+                        : CompletableFuture.failedFuture(failure)));
   }
 
   private CompletableFuture<Void> settle(TicketSnapshot ticket, TriageProposal proposal) {
@@ -100,18 +97,16 @@ public final class TriageFlow {
               + (wouldResolve ? "would-resolve" : "open"));
     }
     return attach(ticket, proposal)
-        .thenCompose(
-            attachOutcome ->
-                resolve(ticket, proposal)
-                    .thenCompose(
-                        resolveOutcome ->
-                            record(
-                                ticket,
-                                proposal,
-                                resolveOutcome.equals("resolved")
-                                    ? DecisionAction.ALLOW
-                                    : DecisionAction.ESCALATE,
-                                attachOutcome + " " + resolveOutcome)));
+        .thenCompose(attachOutcome ->
+            resolve(ticket, proposal)
+                .thenCompose(resolveOutcome ->
+                    record(
+                        ticket,
+                        proposal,
+                        resolveOutcome.equals("resolved")
+                            ? DecisionAction.ALLOW
+                            : DecisionAction.ESCALATE,
+                        attachOutcome + " " + resolveOutcome)));
   }
 
   private CompletableFuture<String> attach(TicketSnapshot ticket, TriageProposal proposal) {
@@ -121,11 +116,8 @@ public final class TriageFlow {
     return services
         .tickets()
         .attachAgentTriage(ticket.id(), agentTriage(proposal))
-        .thenApply(
-            result ->
-                result instanceof Result.Ok<TicketSnapshot, TicketFailure>
-                    ? "attached"
-                    : "rejected");
+        .thenApply(result ->
+            result instanceof Result.Ok<TicketSnapshot, TicketFailure> ? "attached" : "rejected");
   }
 
   private CompletableFuture<String> resolve(TicketSnapshot ticket, TriageProposal proposal) {
@@ -136,11 +128,10 @@ public final class TriageFlow {
         .tickets()
         .resolveAgentTicket(
             ticket.id(), Notes.clip(proposal.resolutionNote(), TicketService.MAX_AGENT_COMMENT))
-        .thenApply(
-            result ->
-                result instanceof Result.Ok<TicketSnapshot, TicketFailure>
-                    ? "resolved"
-                    : "resolve-rejected");
+        .thenApply(result ->
+            result instanceof Result.Ok<TicketSnapshot, TicketFailure>
+                ? "resolved"
+                : "resolve-rejected");
   }
 
   private CompletableFuture<Void> record(

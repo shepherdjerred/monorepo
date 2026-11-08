@@ -151,17 +151,16 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
     }
     if (held.contains(map)) releaseHeld(map);
     held.add(map);
-    map.prepareVisit(
-        ok -> {
-          if (closed || request != generation) return;
-          if (!ok) {
-            // The owner evacuates before explicitly cancelling and releasing the other candidates.
-            releaseHeld(map);
-            done.accept(false);
-          } else {
-            prepareCandidate(index + 1, request, done);
-          }
-        });
+    map.prepareVisit(ok -> {
+      if (closed || request != generation) return;
+      if (!ok) {
+        // The owner evacuates before explicitly cancelling and releasing the other candidates.
+        releaseHeld(map);
+        done.accept(false);
+      } else {
+        prepareCandidate(index + 1, request, done);
+      }
+    });
   }
 
   /** Whether this map belongs to the current visit ballot and its terrain is ready. */

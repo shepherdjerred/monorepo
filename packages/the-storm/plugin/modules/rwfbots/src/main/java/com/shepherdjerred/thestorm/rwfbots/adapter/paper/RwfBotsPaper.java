@@ -251,20 +251,18 @@ public final class RwfBotsPaper {
                         module.time(),
                         module.logger())))
             : Optional.<BotChat>empty();
-    chat.ifPresent(
-        talk -> {
-          talk.compose(loop, module.plugin());
-          ticker.communication(talk);
-          driver.communication(talk);
-          lobby.communication(talk);
-          talk.start(events);
-        });
+    chat.ifPresent(talk -> {
+      talk.compose(loop, module.plugin());
+      ticker.communication(talk);
+      driver.communication(talk);
+      lobby.communication(talk);
+      talk.start(events);
+    });
     var heard =
-        chat.map(
-            talk ->
-                services
-                    .require(com.shepherdjerred.thestorm.chat.app.ChannelRegistry.class)
-                    .registerTap(new HeardLines(talk, module.scheduler())));
+        chat.map(talk ->
+            services
+                .require(com.shepherdjerred.thestorm.chat.app.ChannelRegistry.class)
+                .registerTap(new HeardLines(talk, module.scheduler())));
     services.provide(BotRoster.class, BotRoster.of(roster));
     services.provide(com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.class, roster.harness());
     services.provide(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class, observations);
@@ -317,19 +315,15 @@ public final class RwfBotsPaper {
     command.unregisterPermission(context.plugin().getServer().getPluginManager());
     loop.close();
     roster.clear();
-    traces.ifPresent(
-        files -> {
-          var _ =
-              files
-                  .end()
-                  .whenComplete(
-                      (dropped, failure) -> {
-                        if (failure != null) {
-                          context
-                              .logger()
-                              .error("rwfbots: could not close the trace file", failure);
-                        }
-                      });
-        });
+    traces.ifPresent(files -> {
+      var _ =
+          files
+              .end()
+              .whenComplete((dropped, failure) -> {
+                if (failure != null) {
+                  context.logger().error("rwfbots: could not close the trace file", failure);
+                }
+              });
+    });
   }
 }

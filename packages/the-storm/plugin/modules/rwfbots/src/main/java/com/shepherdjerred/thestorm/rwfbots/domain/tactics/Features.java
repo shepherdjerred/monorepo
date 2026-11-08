@@ -90,12 +90,10 @@ public record Features(
         ownBomb.map(bomb -> bomb.pos().distance(self.pos())).orElse(Double.POSITIVE_INFINITY);
     var threatened =
         situation.ownBombs().stream()
-            .anyMatch(
-                bomb ->
-                    enemies.stream()
-                            .anyMatch(
-                                enemy -> enemy.pos().distance(bomb.pos()) <= BOMB_THREAT_RANGE)
-                        || bomb.state() instanceof BombState.Arming);
+            .anyMatch(bomb ->
+                enemies.stream()
+                        .anyMatch(enemy -> enemy.pos().distance(bomb.pos()) <= BOMB_THREAT_RANGE)
+                    || bomb.state() instanceof BombState.Arming);
     return new Features(
         self.effectiveHealth() / self.traversal().maxHealth(),
         nearest == null ? Double.POSITIVE_INFINITY : nearest.pos().distance(self.pos()),

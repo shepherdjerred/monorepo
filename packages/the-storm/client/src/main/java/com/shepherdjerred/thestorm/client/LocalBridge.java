@@ -115,11 +115,9 @@ final class LocalBridge implements AutoCloseable {
       io.execute(() -> complete(channel, request, result));
     } catch (RuntimeException e) {
       pending.release();
-      io.execute(
-          () ->
-              reply(
-                  channel,
-                  new Protocol.Failure(Protocol.VERSION, request.id(), false, e.toString())));
+      io.execute(() ->
+          reply(
+              channel, new Protocol.Failure(Protocol.VERSION, request.id(), false, e.toString())));
     }
   }
 

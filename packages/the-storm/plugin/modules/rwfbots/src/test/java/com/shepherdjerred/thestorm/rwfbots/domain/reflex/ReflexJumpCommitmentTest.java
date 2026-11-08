@@ -66,15 +66,13 @@ final class ReflexJumpCommitmentTest {
     for (var decision : List.of(route(Option.HUNT, changedGoal), route(Option.RETAKE, GOAL))) {
       var step = tick(self, active(ORIGINAL, ActiveJump.Stage.BACKUP), decision, 10);
       assertThat(step.state().activeJump())
-          .hasValueSatisfying(
-              next -> {
-                assertThat(next.waypoint()).isEqualTo(REPLANNED);
-                assertThat(next.intent())
-                    .isEqualTo(
-                        new ActiveJump.Intent(
-                            decision.option(), decision.waypoints().getLast().pos()));
-                assertThat(next.startedTick()).isEqualTo(10);
-              });
+          .hasValueSatisfying(next -> {
+            assertThat(next.waypoint()).isEqualTo(REPLANNED);
+            assertThat(next.intent())
+                .isEqualTo(
+                    new ActiveJump.Intent(decision.option(), decision.waypoints().getLast().pos()));
+            assertThat(next.startedTick()).isEqualTo(10);
+          });
       assertThat(step.commands())
           .doesNotContain(
               new BodyCommand.MoveToward(ORIGINAL.launch().orElseThrow().runUpStart(), true));
@@ -89,13 +87,12 @@ final class ReflexJumpCommitmentTest {
     var decision = route(Option.HUNT, moved).withWaypoints(List.of(ORIGINAL, moved));
     var step = tick(self, active(ORIGINAL, ActiveJump.Stage.RUN_UP), decision, 10);
     assertThat(step.state().activeJump())
-        .hasValueSatisfying(
-            next -> {
-              assertThat(next.waypoint()).isEqualTo(ORIGINAL);
-              assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
-              assertThat(next.startedTick()).isEqualTo(1);
-              assertThat(next.intent()).isEqualTo(new ActiveJump.Intent(Option.HUNT, moved.pos()));
-            });
+        .hasValueSatisfying(next -> {
+          assertThat(next.waypoint()).isEqualTo(ORIGINAL);
+          assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
+          assertThat(next.startedTick()).isEqualTo(1);
+          assertThat(next.intent()).isEqualTo(new ActiveJump.Intent(Option.HUNT, moved.pos()));
+        });
     assertThat(step.commands())
         .contains(new BodyCommand.MoveToward(ORIGINAL.launch().orElseThrow().takeoff(), true));
   }
@@ -126,11 +123,10 @@ final class ReflexJumpCommitmentTest {
             new SplittableRandom(196));
     assertThat(step.state().waypointIndex()).isEqualTo(1);
     assertThat(step.state().activeJump())
-        .hasValueSatisfying(
-            next -> {
-              assertThat(next.waypoint()).isEqualTo(ORIGINAL);
-              assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
-            });
+        .hasValueSatisfying(next -> {
+          assertThat(next.waypoint()).isEqualTo(ORIGINAL);
+          assertThat(next.stage()).isEqualTo(ActiveJump.Stage.RUN_UP);
+        });
     assertThat(step.commands())
         .contains(new BodyCommand.MoveToward(ORIGINAL.launch().orElseThrow().takeoff(), true));
   }
@@ -324,9 +320,8 @@ final class ReflexJumpCommitmentTest {
       assertThat(step.commands().indexOf(new BodyCommand.CancelUse()))
           .isLessThan(step.commands().indexOf(move));
       assertThat(step.commands())
-          .noneMatch(
-              command ->
-                  command instanceof BodyCommand.Attack || command instanceof BodyCommand.StartUse);
+          .noneMatch(command ->
+              command instanceof BodyCommand.Attack || command instanceof BodyCommand.StartUse);
       assertThat(step.state().isEating()).isFalse();
     }
   }

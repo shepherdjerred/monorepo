@@ -67,14 +67,13 @@ public final class PurchaseRules {
   /** Every track, in {@link Track} order, with its level, next price and what blocks buying it. */
   public List<TrackStanding> overview(TrackProgress progress, Instant now, long balance) {
     return Arrays.stream(Track.values())
-        .map(
-            track ->
-                new TrackStanding(
-                    track,
-                    progress.level(track),
-                    progress.isPrimary(track),
-                    nextLevel(progress, track),
-                    problems(PurchaseAttempt.next(progress, track, now, balance))))
+        .map(track ->
+            new TrackStanding(
+                track,
+                progress.level(track),
+                progress.isPrimary(track),
+                nextLevel(progress, track),
+                problems(PurchaseAttempt.next(progress, track, now, balance))))
         .toList();
   }
 

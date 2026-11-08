@@ -168,11 +168,10 @@ public final class SurvivalGame {
     }
     round++;
     phase = Phase.FIGHTING;
-    players.replaceAll(
-        (_, player) ->
-            player.status() == Survivor.Status.LOBBY || player.status() == Survivor.Status.WAITING
-                ? player.status(Survivor.Status.STANDING)
-                : player);
+    players.replaceAll((_, player) ->
+        player.status() == Survivor.Status.LOBBY || player.status() == Survivor.Status.WAITING
+            ? player.status(Survivor.Status.STANDING)
+            : player);
     return true;
   }
 
@@ -198,11 +197,10 @@ public final class SurvivalGame {
   }
 
   public void expire(Instant now) {
-    players.replaceAll(
-        (_, player) ->
-            player.bleedout().filter(at -> !now.isBefore(at)).isPresent()
-                ? player.status(Survivor.Status.WAITING)
-                : player);
+    players.replaceAll((_, player) ->
+        player.bleedout().filter(at -> !now.isBefore(at)).isPresent()
+            ? player.status(Survivor.Status.WAITING)
+            : player);
   }
 
   public boolean revive(UUID id) {
@@ -221,10 +219,9 @@ public final class SurvivalGame {
 
   public List<Survivor> participants() {
     return players.values().stream()
-        .filter(
-            p ->
-                p.status() != Survivor.Status.SPECTATOR
-                    && !(p.status() == Survivor.Status.JOINING && !p.selfRevive()))
+        .filter(p ->
+            p.status() != Survivor.Status.SPECTATOR
+                && !(p.status() == Survivor.Status.JOINING && !p.selfRevive()))
         .toList();
   }
 

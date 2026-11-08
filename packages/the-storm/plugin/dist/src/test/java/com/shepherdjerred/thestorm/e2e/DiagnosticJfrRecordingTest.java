@@ -48,10 +48,9 @@ final class DiagnosticJfrRecordingTest {
       var events = RecordingFile.readAllEvents(destination);
       assertTrue(
           events.stream()
-              .anyMatch(
-                  event ->
-                      event.getEventType().getName().equals("storm.FixtureJfrLifecycleTest")
-                          && event.getInt("value") == 42));
+              .anyMatch(event ->
+                  event.getEventType().getName().equals("storm.FixtureJfrLifecycleTest")
+                      && event.getInt("value") == 42));
       assertThrows(IOException.class, () -> recording.dump(directory.resolve("invalid.jfr")));
     }
     assertEquals(RecordingState.CLOSED, recording.getState());

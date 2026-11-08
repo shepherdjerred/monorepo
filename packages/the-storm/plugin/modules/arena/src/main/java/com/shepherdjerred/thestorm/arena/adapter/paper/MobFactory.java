@@ -158,11 +158,10 @@ final class MobFactory {
     }
     archetype
         .name()
-        .ifPresent(
-            name -> {
-              mob.customName(Component.text(name));
-              mob.setCustomNameVisible(true);
-            });
+        .ifPresent(name -> {
+          mob.customName(Component.text(name));
+          mob.setCustomNameVisible(true);
+        });
     var maxHealth = mob.getAttribute(Attribute.MAX_HEALTH);
     if (maxHealth != null) {
       var health =

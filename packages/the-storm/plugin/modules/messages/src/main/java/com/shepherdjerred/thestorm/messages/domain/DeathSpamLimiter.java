@@ -41,13 +41,12 @@ public record DeathSpamLimiter(int maxDeaths, Duration window, Map<UUID, Streak>
   public Verdict record(UUID player, Instant at) {
     var cutoff = at.minus(window);
     var next = new HashMap<UUID, Streak>();
-    players.forEach(
-        (id, streak) -> {
-          var kept = streak.deaths().stream().filter(death -> death.isAfter(cutoff)).toList();
-          if (!kept.isEmpty()) {
-            next.put(id, new Streak(kept, streak.hidden()));
-          }
-        });
+    players.forEach((id, streak) -> {
+      var kept = streak.deaths().stream().filter(death -> death.isAfter(cutoff)).toList();
+      if (!kept.isEmpty()) {
+        next.put(id, new Streak(kept, streak.hidden()));
+      }
+    });
     // Absent means quiet for a full window, which also ends any hiding.
     var previous = next.getOrDefault(player, new Streak(List.of(), false));
     var deaths = new ArrayList<>(previous.deaths());

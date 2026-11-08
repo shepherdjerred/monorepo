@@ -209,12 +209,11 @@ final class HttpBrainClientTest {
   @Test
   void mapsDisabledFlows() throws Exception {
     try (var brain = scripted(new ArrayList<>(), new Script(503, "flow disabled\n"))) {
-      assertThatThrownBy(
-              () ->
-                  brain
-                      .client()
-                      .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
-                      .get(10, TimeUnit.SECONDS))
+      assertThatThrownBy(() ->
+              brain
+                  .client()
+                  .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
+                  .get(10, TimeUnit.SECONDS))
           .hasRootCauseInstanceOf(BrainDisabledException.class);
     }
   }
@@ -222,12 +221,11 @@ final class HttpBrainClientTest {
   @Test
   void mapsServiceErrors() throws Exception {
     try (var brain = scripted(new ArrayList<>(), new Script(502, "upstream error\n"))) {
-      assertThatThrownBy(
-              () ->
-                  brain
-                      .client()
-                      .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
-                      .get(10, TimeUnit.SECONDS))
+      assertThatThrownBy(() ->
+              brain
+                  .client()
+                  .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
+                  .get(10, TimeUnit.SECONDS))
           .hasRootCauseInstanceOf(BrainException.class)
           .hasRootCauseMessage("storm-brain classify answered 502: upstream error");
     }
@@ -241,12 +239,11 @@ final class HttpBrainClientTest {
         "costMicros":0,"surprise":"skew"}\
         """;
     try (var brain = scripted(new ArrayList<>(), new Script(200, script))) {
-      assertThatThrownBy(
-              () ->
-                  brain
-                      .client()
-                      .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
-                      .get(10, TimeUnit.SECONDS))
+      assertThatThrownBy(() ->
+              brain
+                  .client()
+                  .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
+                  .get(10, TimeUnit.SECONDS))
           .cause()
           .isInstanceOf(BrainException.class)
           .hasMessageContaining("outside the contract");
@@ -261,11 +258,10 @@ final class HttpBrainClientTest {
     server.stop(0);
     try (var brain =
         new HttpBrainClient(URI.create("http://127.0.0.1:" + port), "t", Duration.ofSeconds(5))) {
-      assertThatThrownBy(
-              () ->
-                  brain
-                      .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
-                      .get(10, TimeUnit.SECONDS))
+      assertThatThrownBy(() ->
+              brain
+                  .classify(new ClassifyCase(ALICE, "Alice", List.of(sample("hello"))))
+                  .get(10, TimeUnit.SECONDS))
           .cause()
           .isInstanceOf(BrainException.class)
           .hasMessageContaining("call failed");

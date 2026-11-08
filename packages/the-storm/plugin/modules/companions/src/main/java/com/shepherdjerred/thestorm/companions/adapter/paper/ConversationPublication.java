@@ -56,13 +56,12 @@ final class ConversationPublication {
                   var _ =
                       screening
                           .finish(id, outcome)
-                          .exceptionally(
-                              error -> {
-                                context
-                                    .logger()
-                                    .error("Companion publication receipt failed: {}", id, error);
-                                return null;
-                              });
+                          .exceptionally(error -> {
+                            context
+                                .logger()
+                                .error("Companion publication receipt failed: {}", id, error);
+                            return null;
+                          });
                 },
                 context.scheduler().mainThread());
   }

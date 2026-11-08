@@ -48,11 +48,10 @@ public final class Places {
     var grouped = new TreeMap<String, List<Vec3>>();
     for (var site : sites.spawns()) {
       site.team()
-          .ifPresent(
-              team ->
-                  grouped
-                      .computeIfAbsent(color(team), ignored -> new ArrayList<>())
-                      .add(site.cell().feet()));
+          .ifPresent(team ->
+              grouped
+                  .computeIfAbsent(color(team), ignored -> new ArrayList<>())
+                  .add(site.cell().feet()));
     }
     var homes = new TreeMap<String, Vec3>();
     grouped.forEach((team, points) -> homes.put(team, centroid(points)));

@@ -58,20 +58,18 @@ public final class PaperResetOperations implements ResetOperations {
   private void eraseNextTick(UUID player, CompletableFuture<Void> erased) {
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              var _ =
-                  vanilla
-                      .erase(player)
-                      .whenComplete(
-                          (ignored, failure) -> {
-                            if (failure != null) {
-                              erased.completeExceptionally(failure);
-                            } else {
-                              verifyNextTick(player, erased);
-                            }
-                          });
-            });
+        .runOnMainThread(() -> {
+          var _ =
+              vanilla
+                  .erase(player)
+                  .whenComplete((ignored, failure) -> {
+                    if (failure != null) {
+                      erased.completeExceptionally(failure);
+                    } else {
+                      verifyNextTick(player, erased);
+                    }
+                  });
+        });
   }
 
   private void verifyNextTick(UUID player, CompletableFuture<Void> erased) {
@@ -79,26 +77,23 @@ public final class PaperResetOperations implements ResetOperations {
     // later tick, so hasPlayedBefore() and the first-join grants see the same fresh account.
     context
         .scheduler()
-        .runOnMainThread(
-            () -> {
-              var _ =
-                  vanilla
-                      .missing(player)
-                      .whenComplete(
-                          (missing, failure) -> {
-                            if (failure != null) {
-                              erased.completeExceptionally(failure);
-                            } else if (Boolean.TRUE.equals(missing)) {
-                              erased.complete(null);
-                            } else {
-                              context
-                                  .logger()
-                                  .info(
-                                      "Vanilla player data reappeared during reset for {}", player);
-                              eraseNextTick(player, erased);
-                            }
-                          });
-            });
+        .runOnMainThread(() -> {
+          var _ =
+              vanilla
+                  .missing(player)
+                  .whenComplete((missing, failure) -> {
+                    if (failure != null) {
+                      erased.completeExceptionally(failure);
+                    } else if (Boolean.TRUE.equals(missing)) {
+                      erased.complete(null);
+                    } else {
+                      context
+                          .logger()
+                          .info("Vanilla player data reappeared during reset for {}", player);
+                      eraseNextTick(player, erased);
+                    }
+                  });
+        });
   }
 
   @Override

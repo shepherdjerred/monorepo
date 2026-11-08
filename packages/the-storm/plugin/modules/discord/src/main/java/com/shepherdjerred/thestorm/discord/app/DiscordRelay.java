@@ -130,18 +130,17 @@ public final class DiscordRelay {
       var _ =
           screening
               .check(submission)
-              .whenComplete(
-                  (review, failure) -> {
-                    if (failure != null || !review.allowed()) {
-                      pendingContent.remove(discordKey(message), id);
-                      finishEvidence(
-                          screening,
-                          id,
-                          failure != null ? "discord-unavailable" : "discord-" + review.decision());
-                      return;
-                    }
-                    relayApproved(message, screening, id);
-                  });
+              .whenComplete((review, failure) -> {
+                if (failure != null || !review.allowed()) {
+                  pendingContent.remove(discordKey(message), id);
+                  finishEvidence(
+                      screening,
+                      id,
+                      failure != null ? "discord-unavailable" : "discord-" + review.decision());
+                  return;
+                }
+                relayApproved(message, screening, id);
+              });
       return;
     }
     relayApproved(message, screening, new UUID(0, 0));
@@ -206,12 +205,11 @@ public final class DiscordRelay {
     var _ =
         screening
             .observe(submission, "discord-deleted")
-            .exceptionally(
-                failure -> {
-                  System.getLogger(DiscordRelay.class.getName())
-                      .log(System.Logger.Level.ERROR, "Discord deletion evidence failed", failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              System.getLogger(DiscordRelay.class.getName())
+                  .log(System.Logger.Level.ERROR, "Discord deletion evidence failed", failure);
+              return null;
+            });
   }
 
   private void finishEvidence(
@@ -219,12 +217,11 @@ public final class DiscordRelay {
     var _ =
         screening
             .finish(id, outcome)
-            .exceptionally(
-                failure -> {
-                  System.getLogger(DiscordRelay.class.getName())
-                      .log(System.Logger.Level.ERROR, "Discord evidence write failed", failure);
-                  return null;
-                });
+            .exceptionally(failure -> {
+              System.getLogger(DiscordRelay.class.getName())
+                  .log(System.Logger.Level.ERROR, "Discord evidence write failed", failure);
+              return null;
+            });
   }
 
   /** Posts that {@code player} joined. Main thread. */
@@ -510,34 +507,27 @@ public final class DiscordRelay {
     var text =
         result
             .winningTeam()
-            .map(
-                team ->
-                    config
-                        .messages()
-                        .rwfWonTemplate()
-                        .render(
-                            Map.of(
-                                "map",
-                                map,
-                                "team",
-                                DiscordText.forDiscord(team),
-                                "winners",
-                                names(result.winners()),
-                                "duration",
-                                length)))
-            .orElseGet(
-                () ->
-                    config
-                        .messages()
-                        .rwfDrawTemplate()
-                        .render(
-                            Map.of(
-                                "map",
-                                map,
-                                "players",
-                                names(result.players()),
-                                "duration",
-                                length)));
+            .map(team ->
+                config
+                    .messages()
+                    .rwfWonTemplate()
+                    .render(
+                        Map.of(
+                            "map",
+                            map,
+                            "team",
+                            DiscordText.forDiscord(team),
+                            "winners",
+                            names(result.winners()),
+                            "duration",
+                            length)))
+            .orElseGet(() ->
+                config
+                    .messages()
+                    .rwfDrawTemplate()
+                    .render(
+                        Map.of(
+                            "map", map, "players", names(result.players()), "duration", length)));
     post(text);
     directMessage(result.humans(), text);
   }
@@ -637,11 +627,10 @@ public final class DiscordRelay {
     var actor =
         request
             .player()
-            .orElseGet(
-                () ->
-                    UUID.nameUUIDFromBytes(
-                        ("discord-user:" + discordUser)
-                            .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            .orElseGet(() ->
+                UUID.nameUUIDFromBytes(
+                    ("discord-user:" + discordUser)
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     var id =
         UUID.nameUUIDFromBytes(
             ("discord-command:"
@@ -666,23 +655,22 @@ public final class DiscordRelay {
     var _ =
         screening
             .check(submission)
-            .whenComplete(
-                (review, failure) -> {
-                  if (failure != null || !review.allowed()) {
-                    reply.accept("This was not submitted. Reference " + id);
-                    if (failure == null)
-                      finishEvidence(screening, id, "discord-command-" + review.decision());
-                    return;
-                  }
-                  command
-                      .handler()
-                      .answer(
-                          request,
-                          text -> {
-                            finishEvidence(screening, id, "discord-command-completed");
-                            reply.accept(text);
-                          });
-                });
+            .whenComplete((review, failure) -> {
+              if (failure != null || !review.allowed()) {
+                reply.accept("This was not submitted. Reference " + id);
+                if (failure == null)
+                  finishEvidence(screening, id, "discord-command-" + review.decision());
+                return;
+              }
+              command
+                  .handler()
+                  .answer(
+                      request,
+                      text -> {
+                        finishEvidence(screening, id, "discord-command-completed");
+                        reply.accept(text);
+                      });
+            });
   }
 
   /** Called by the bridge once connected, to register commands added later. */
@@ -752,20 +740,18 @@ public final class DiscordRelay {
       return;
     }
     game.scheduler()
-        .runOnMainThread(
-            () -> {
-              var lines = new java.util.ArrayList<String>();
-              lines.add(
-                  PlayerList.format(
-                      game.players().names(),
-                      config.messages().listTemplate(),
-                      config.messages().listEmptyTemplate()));
-              new java.util.TreeMap<>(activities)
-                  .values()
-                  .forEach(activity -> lines.add("• " + DiscordText.forDiscord(activity)));
-              reply.accept(
-                  DiscordText.truncate(String.join("\n", lines), DiscordText.DISCORD_LIMIT));
-            });
+        .runOnMainThread(() -> {
+          var lines = new java.util.ArrayList<String>();
+          lines.add(
+              PlayerList.format(
+                  game.players().names(),
+                  config.messages().listTemplate(),
+                  config.messages().listEmptyTemplate()));
+          new java.util.TreeMap<>(activities)
+              .values()
+              .forEach(activity -> lines.add("• " + DiscordText.forDiscord(activity)));
+          reply.accept(DiscordText.truncate(String.join("\n", lines), DiscordText.DISCORD_LIMIT));
+        });
   }
 
   /** The message to post as the server goes to sleep. */
@@ -789,13 +775,12 @@ public final class DiscordRelay {
       return;
     }
     game.scheduler()
-        .runOnMainThread(
-            () ->
-                reply.accept(
-                    PlayerList.format(
-                        game.players().names(),
-                        config.messages().listTemplate(),
-                        config.messages().listEmptyTemplate())));
+        .runOnMainThread(() ->
+            reply.accept(
+                PlayerList.format(
+                    game.players().names(),
+                    config.messages().listTemplate(),
+                    config.messages().listEmptyTemplate())));
   }
 
   private void post(String text) {

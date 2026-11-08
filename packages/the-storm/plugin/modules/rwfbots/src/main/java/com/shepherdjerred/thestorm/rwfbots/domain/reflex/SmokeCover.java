@@ -69,11 +69,10 @@ public final class SmokeCover {
     return fusing
         && atBomb
         && input.perceived().stream()
-            .anyMatch(
-                enemy -> {
-                  var distance = enemy.pos().distance(self.pos());
-                  return distance > FUSE_WATCHER_NEAREST && distance <= FUSE_WATCHER_FARTHEST;
-                });
+            .anyMatch(enemy -> {
+              var distance = enemy.pos().distance(self.pos());
+              return distance > FUSE_WATCHER_NEAREST && distance <= FUSE_WATCHER_FARTHEST;
+            });
   }
 
   /** More enemies in sight within {@code reach} than teammates there, and at least two. */

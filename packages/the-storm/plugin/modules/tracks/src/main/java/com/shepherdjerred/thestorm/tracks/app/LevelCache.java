@@ -60,11 +60,8 @@ public final class LevelCache implements TrackLevels {
   /** {@code player}'s progress once it has loaded. */
   public Optional<TrackProgress> progress(UUID player) {
     return state(player)
-        .flatMap(
-            state ->
-                state instanceof State.Loaded(var progress)
-                    ? Optional.of(progress)
-                    : Optional.empty());
+        .flatMap(state ->
+            state instanceof State.Loaded(var progress) ? Optional.of(progress) : Optional.empty());
   }
 
   /** {@code player}'s state, empty when they are offline. */

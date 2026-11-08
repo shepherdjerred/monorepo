@@ -160,9 +160,8 @@ public final class Planner {
    */
   static Plan recovery(Situation situation, TacticsContext context) {
     return RecoverySteps.step(situation, context)
-        .map(
-            step ->
-                Plan.of(Option.RECOVER, situation.now(), new PlanStep.Route(step, Stance.CAUTIOUS)))
+        .map(step ->
+            Plan.of(Option.RECOVER, situation.now(), new PlanStep.Route(step, Stance.CAUTIOUS)))
         .orElseGet(() -> holdHere(Option.HOLD_ANGLE, situation, context));
   }
 
@@ -226,27 +225,24 @@ public final class Planner {
       case HUNT ->
           situation
               .nearestEnemy()
-              .map(
-                  enemy ->
-                      Plan.of(
-                          option,
-                          now,
-                          new PlanStep.Route(
-                              around(situation, context, enemy.pos(), HUNT_RING),
-                              stanceFor(situation, context))))
-              .orElseGet(
-                  () ->
-                      situation
-                          .sensorPosition()
-                          .map(
-                              position ->
-                                  Plan.of(
-                                      option,
-                                      now,
-                                      new PlanStep.Route(
-                                          around(situation, context, position, HUNT_RING),
-                                          Stance.CAUTIOUS)))
-                          .orElseGet(() -> holdHere(option, situation, context)));
+              .map(enemy ->
+                  Plan.of(
+                      option,
+                      now,
+                      new PlanStep.Route(
+                          around(situation, context, enemy.pos(), HUNT_RING),
+                          stanceFor(situation, context))))
+              .orElseGet(() ->
+                  situation
+                      .sensorPosition()
+                      .map(position ->
+                          Plan.of(
+                              option,
+                              now,
+                              new PlanStep.Route(
+                                  around(situation, context, position, HUNT_RING),
+                                  Stance.CAUTIOUS)))
+                      .orElseGet(() -> holdHere(option, situation, context)));
       case ESCAPE_POISON ->
           Plan.of(option, now, new PlanStep.Route(poisonExit(situation, context), Stance.CAUTIOUS));
       case RECOVER -> recovery(situation, context);
@@ -325,10 +321,9 @@ public final class Planner {
     var threat =
         situation
             .nearestEnemy()
-            .filter(
-                enemy ->
-                    enemy.pos().distance(bomb.orElseThrow().pos()) <= Features.BOMB_THREAT_RANGE
-                        || enemy.pos().distance(self) <= Utilities.MELEE_ENGAGE);
+            .filter(enemy ->
+                enemy.pos().distance(bomb.orElseThrow().pos()) <= Features.BOMB_THREAT_RANGE
+                    || enemy.pos().distance(self) <= Utilities.MELEE_ENGAGE);
     if (threat.isPresent() && !context.keep().ranged()) {
       return Plan.of(Option.RETAKE, situation.now(), new PlanStep.Fight(threat.orElseThrow().id()));
     }
@@ -458,37 +453,33 @@ public final class Planner {
     }
     var cover =
         heldCover(situation, context, goal, threat.orElseThrow())
-            .or(
-                () ->
-                    coverWhere(
-                        situation,
-                        context,
-                        new CoverSearch(goal, threat.orElseThrow(), HOLD_SEARCH),
-                        feet -> holdsGround(situation, goal, threat.orElseThrow(), feet)))
-            .or(
-                () ->
-                    coverWhere(
-                        situation,
-                        context,
-                        new CoverSearch(situation.self().pos(), threat.orElseThrow(), BOUND_REACH),
-                        feet -> holdsGround(situation, goal, threat.orElseThrow(), feet)));
+            .or(() ->
+                coverWhere(
+                    situation,
+                    context,
+                    new CoverSearch(goal, threat.orElseThrow(), HOLD_SEARCH),
+                    feet -> holdsGround(situation, goal, threat.orElseThrow(), feet)))
+            .or(() ->
+                coverWhere(
+                    situation,
+                    context,
+                    new CoverSearch(situation.self().pos(), threat.orElseThrow(), BOUND_REACH),
+                    feet -> holdsGround(situation, goal, threat.orElseThrow(), feet)));
     return cover
-        .map(
-            point ->
-                Plan.of(
-                    Option.HOLD_SLOT,
-                    now,
-                    new PlanStep.Cover(
-                        Optional.of(point.node()),
-                        point.pos(),
-                        threat.orElseThrow(),
-                        now + HOLD_COVER_TICKS)))
-        .orElseGet(
-            () ->
-                Plan.of(
-                    Option.HOLD_SLOT,
-                    now,
-                    new PlanStep.Hold(goal, threat.orElseThrow(), Stance.CAUTIOUS)));
+        .map(point ->
+            Plan.of(
+                Option.HOLD_SLOT,
+                now,
+                new PlanStep.Cover(
+                    Optional.of(point.node()),
+                    point.pos(),
+                    threat.orElseThrow(),
+                    now + HOLD_COVER_TICKS)))
+        .orElseGet(() ->
+            Plan.of(
+                Option.HOLD_SLOT,
+                now,
+                new PlanStep.Hold(goal, threat.orElseThrow(), Stance.CAUTIOUS)));
   }
 
   /** A distant sighting does not justify abandoning the assigned line for rearward cover. */
@@ -544,9 +535,8 @@ public final class Planner {
       return Plan.of(
           Option.TAKE_SLOT,
           now,
-          here.map(
-                  point ->
-                      new PlanStep.Cover(Optional.of(point.node()), point.pos(), threat, until))
+          here.map(point ->
+                  new PlanStep.Cover(Optional.of(point.node()), point.pos(), threat, until))
               .orElseGet(() -> new PlanStep.Cover(Optional.empty(), self, threat, until)));
     }
     var toGoal = goal.minus(self).horizontal();
@@ -721,12 +711,11 @@ public final class Planner {
     situation
         .board()
         .claimedCover()
-        .forEach(
-            (bot, node) -> {
-              if (!bot.equals(self)) {
-                taken.add(graph.feet(node));
-              }
-            });
+        .forEach((bot, node) -> {
+          if (!bot.equals(self)) {
+            taken.add(graph.feet(node));
+          }
+        });
     return taken;
   }
 
@@ -756,15 +745,14 @@ public final class Planner {
             feet ->
                 (feet.horizontalDistance(goal) < remaining - 1.5 || remaining < 2)
                     && clearOfSpawn(situation, feet))
-        .or(
-            () ->
-                coverWhere(
-                    situation,
-                    context,
-                    new CoverSearch(self, threat, BOUND_REACH),
-                    feet ->
-                        feet.horizontalDistance(goal) < remaining - 1.5
-                            && clearOfSpawn(situation, feet)));
+        .or(() ->
+            coverWhere(
+                situation,
+                context,
+                new CoverSearch(self, threat, BOUND_REACH),
+                feet ->
+                    feet.horizontalDistance(goal) < remaining - 1.5
+                        && clearOfSpawn(situation, feet)));
   }
 
   /**
@@ -1317,14 +1305,13 @@ public final class Planner {
       return slotPoint(situation, context)
           .filter(goal -> goal.horizontalDistance(self()) > ROUTE_REACHED)
           .filter(goal -> goal.distance(enemy) >= keep.min() && goal.distance(enemy) <= keep.max())
-          .map(
-              goal ->
-                  new Engagement(
-                      shoot,
-                      pathTo(situation, context, goal, new Way(Stance.AGGRESSIVE, true)),
-                      Stance.AGGRESSIVE,
-                      Optional.of(enemy),
-                      label + "-support"))
+          .map(goal ->
+              new Engagement(
+                  shoot,
+                  pathTo(situation, context, goal, new Way(Stance.AGGRESSIVE, true)),
+                  Stance.AGGRESSIVE,
+                  Optional.of(enemy),
+                  label + "-support"))
           .filter(engagement -> engagement.route() instanceof RouteResult.Path);
     }
 
@@ -1332,13 +1319,11 @@ public final class Planner {
     Optional<Engagement> room() {
       return nearestAlly(situation)
           .filter(ally -> ally.distance(self()) < ARCHER_ROOM)
-          .map(
-              ally -> {
-                var across = new Vec3(-outward().z(), 0, outward().x());
-                var side =
-                    across.dot(self().minus(ally).horizontal()) >= 0 ? across : across.scale(-1);
-                return move(self().plus(side.scale(ARCHER_ROOM + 1)), Stance.CAUTIOUS, "-room");
-              });
+          .map(ally -> {
+            var across = new Vec3(-outward().z(), 0, outward().x());
+            var side = across.dot(self().minus(ally).horizontal()) >= 0 ? across : across.scale(-1);
+            return move(self().plus(side.scale(ARCHER_ROOM + 1)), Stance.CAUTIOUS, "-room");
+          });
     }
   }
 
@@ -1406,11 +1391,10 @@ public final class Planner {
     return situation.knownEnemies().stream()
         .filter(enemy -> enemy.id().equals(target) && enemy.visible())
         .findFirst()
-        .flatMap(
-            enemy ->
-                enemy.pos().distance(situation.self().pos()) <= keep.max()
-                    ? peekSpot(situation, context, enemy.pos())
-                    : approachCover(situation, context, enemy.pos()))
+        .flatMap(enemy ->
+            enemy.pos().distance(situation.self().pos()) <= keep.max()
+                ? peekSpot(situation, context, enemy.pos())
+                : approachCover(situation, context, enemy.pos()))
         .map(CoverSpot::node);
   }
 
@@ -1467,15 +1451,14 @@ public final class Planner {
     var label = plan.option().name().toLowerCase(Locale.ROOT) + ":" + plan.current().label();
     var route =
         view.filter(b -> b.pos().distance(situation.self().eye()) > Reflex.BOMB_REACH - 0.5)
-            .<RouteResult>map(
-                b ->
-                    pathTo(
-                        situation,
-                        context,
-                        plan.option() == Option.DEFUSE
-                            ? defusePoint(situation, context.nav(), b)
-                            : approach(context.nav(), b),
-                        new Way(Stance.CAUTIOUS, false)))
+            .<RouteResult>map(b ->
+                pathTo(
+                    situation,
+                    context,
+                    plan.option() == Option.DEFUSE
+                        ? defusePoint(situation, context.nav(), b)
+                        : approach(context.nav(), b),
+                    new Way(Stance.CAUTIOUS, false)))
             .orElseGet(RouteResult.Arrived::new);
     return decision(
         situation,
@@ -1526,12 +1509,11 @@ public final class Planner {
         .litOwnBomb()
         .filter(bomb -> bomb.pos().distance(worker.watch()) < 0.01)
         .filter(bomb -> bomb.pos().distance(self.eye()) <= Reflex.BOMB_REACH)
-        .map(
-            bomb -> {
-              var hit =
-                  context.nav().grid().raycast(self.eye(), bomb.pos(), VoxelGrid.Layer.PROJECTILE);
-              return hit.isEmpty() || hit.orElseThrow().equals(BlockPos.of(bomb.pos()));
-            })
+        .map(bomb -> {
+          var hit =
+              context.nav().grid().raycast(self.eye(), bomb.pos(), VoxelGrid.Layer.PROJECTILE);
+          return hit.isEmpty() || hit.orElseThrow().equals(BlockPos.of(bomb.pos()));
+        })
         .orElse(false);
   }
 

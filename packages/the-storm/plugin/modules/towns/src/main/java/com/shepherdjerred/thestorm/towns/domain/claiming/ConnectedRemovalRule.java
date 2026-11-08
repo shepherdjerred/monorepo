@@ -29,13 +29,12 @@ final class ConnectedRemovalRule implements ClaimRule {
   private static Optional<ChunkPos> firstNeighbor(ClaimAttempt attempt) {
     var town = attempt.town().id();
     return attempt.chunk().edgeNeighbours().stream()
-        .filter(
-            neighbour ->
-                attempt
-                    .map()
-                    .claimAt(neighbour)
-                    .filter(claim -> claim.townId().equals(town))
-                    .isPresent())
+        .filter(neighbour ->
+            attempt
+                .map()
+                .claimAt(neighbour)
+                .filter(claim -> claim.townId().equals(town))
+                .isPresent())
         .findFirst();
   }
 

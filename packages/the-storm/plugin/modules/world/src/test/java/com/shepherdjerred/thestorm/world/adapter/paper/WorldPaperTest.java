@@ -46,10 +46,9 @@ final class WorldPaperTest {
       assertThat(world.getWorldBorder().getCenter().getZ()).isEqualTo(spec.centerZ());
     }
     assertThat(server.getWorlds())
-        .allSatisfy(
-            world ->
-                assertThat(world.getGameRuleValue(GameRules.PLAYERS_SLEEPING_PERCENTAGE))
-                    .isEqualTo(50));
+        .allSatisfy(world ->
+            assertThat(world.getGameRuleValue(GameRules.PLAYERS_SLEEPING_PERCENTAGE))
+                .isEqualTo(50));
   }
 
   @Test

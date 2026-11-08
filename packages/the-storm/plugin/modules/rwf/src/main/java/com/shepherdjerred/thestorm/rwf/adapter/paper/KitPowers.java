@@ -418,10 +418,9 @@ final class KitPowers {
           }
           runner
               .entity(member.id())
-              .ifPresent(
-                  enemy -> {
-                    from.add(enemy.getUniqueId());
-                  });
+              .ifPresent(enemy -> {
+                from.add(enemy.getUniqueId());
+              });
         }
         hiddenFrom.put(id, from);
         refreshVisibility();
@@ -937,11 +936,10 @@ final class KitPowers {
     }
     var other =
         abilities.placed().stream()
-            .filter(
-                p ->
-                    p instanceof com.shepherdjerred.thestorm.rwf.domain.ability.Placed.Teleporter t
-                        && t.owner().equals(teleporter.owner())
-                        && !t.equals(teleporter))
+            .filter(p ->
+                p instanceof com.shepherdjerred.thestorm.rwf.domain.ability.Placed.Teleporter t
+                    && t.owner().equals(teleporter.owner())
+                    && !t.equals(teleporter))
             .findFirst();
     var clear =
         other

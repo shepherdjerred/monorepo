@@ -76,13 +76,12 @@ final class HighGround {
     return situation.knownEnemies().stream()
         .filter(Situation.KnownEnemy::visible)
         .filter(enemy -> enemy.pos().horizontalDistance(self) <= CHASE_RANGE)
-        .filter(
-            enemy ->
-                situation
-                    .snapshot()
-                    .combatant(enemy.id())
-                    .map(view -> !view.kit().hasBow())
-                    .orElse(false))
+        .filter(enemy ->
+            situation
+                .snapshot()
+                .combatant(enemy.id())
+                .map(view -> !view.kit().hasBow())
+                .orElse(false))
         .findFirst();
   }
 
@@ -139,11 +138,10 @@ final class HighGround {
         for (var x = base.x() - SEARCH; x <= base.x() + SEARCH; x++) {
           graph
               .nodeAt(new BlockPos(x, y, z))
-              .ifPresent(
-                  node -> {
-                    if (!graph.climbable(node) && graph.feet(node).y() - chaser.y() >= RISE)
-                      out.add(node);
-                  });
+              .ifPresent(node -> {
+                if (!graph.climbable(node) && graph.feet(node).y() - chaser.y() >= RISE)
+                  out.add(node);
+              });
         }
       }
     }

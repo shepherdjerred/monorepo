@@ -47,25 +47,22 @@ final class MapDetailsTest {
         .validate(blocks.schematic());
     assertThatThrownBy(() -> MapDetails.empty("0".repeat(64)).validate(blocks.schematic()))
         .hasMessageContaining("hash mismatch");
-    assertThatThrownBy(
-            () ->
-                new MapDetails(
-                        1,
-                        blocks.schematic().sha256(),
-                        List.of(new MapDetails.Container(at, "minecraft:furnace", "AA==")),
-                        List.of())
-                    .validate(blocks.schematic()))
+    assertThatThrownBy(() ->
+            new MapDetails(
+                    1,
+                    blocks.schematic().sha256(),
+                    List.of(new MapDetails.Container(at, "minecraft:furnace", "AA==")),
+                    List.of())
+                .validate(blocks.schematic()))
         .hasMessageContaining("material differs");
-    assertThatThrownBy(
-            () ->
-                new MapDetails(
-                        1,
-                        blocks.schematic().sha256(),
-                        List.of(
-                            new MapDetails.Container(
-                                new BlockPos(1, 0, 0), "minecraft:chest", "AA==")),
-                        List.of())
-                    .validate(blocks.schematic()))
+    assertThatThrownBy(() ->
+            new MapDetails(
+                    1,
+                    blocks.schematic().sha256(),
+                    List.of(
+                        new MapDetails.Container(new BlockPos(1, 0, 0), "minecraft:chest", "AA==")),
+                    List.of())
+                .validate(blocks.schematic()))
         .hasMessageContaining("outside the schematic");
   }
 

@@ -128,18 +128,17 @@ public final class CombatHarness {
     match = Optional.of(matchId);
     return Optional.of(
         identities.stream()
-            .map(
-                p ->
-                    new Director.Drafted(
-                        p,
-                        Kit.TROOPER,
-                        seededBaseline
-                            ? MatchCompetence.levers(
-                                p,
-                                com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT,
-                                seed.orElseThrow())
-                            : LeverCurves.at(1),
-                        Rating.DEFAULT))
+            .map(p ->
+                new Director.Drafted(
+                    p,
+                    Kit.TROOPER,
+                    seededBaseline
+                        ? MatchCompetence.levers(
+                            p,
+                            com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT,
+                            seed.orElseThrow())
+                        : LeverCurves.at(1),
+                    Rating.DEFAULT))
             .toList());
   }
 

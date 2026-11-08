@@ -36,13 +36,12 @@ public final class GateFinder {
     var found = columnTops(grid, sign, config);
     var stops = Set.copyOf(found.keySet());
     var tops = new HashMap<Pos, String>();
-    found.forEach(
-        (top, material) -> {
-          var limits = new ColumnLimits(config.maxHeight(), stops);
-          if (!column(grid, top, material, limits).isEmpty()) {
-            tops.put(top, material);
-          }
-        });
+    found.forEach((top, material) -> {
+      var limits = new ColumnLimits(config.maxHeight(), stops);
+      if (!column(grid, top, material, limits).isEmpty()) {
+        tops.put(top, material);
+      }
+    });
     if (tops.isEmpty()) {
       return Result.err(new StructureProblem.NoGate(config.searchRadius()));
     }

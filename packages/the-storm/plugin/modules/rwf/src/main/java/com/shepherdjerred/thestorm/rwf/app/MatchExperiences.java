@@ -46,10 +46,7 @@ public final class MatchExperiences {
   /** Only the guarded, empty showcase lobby may be reseeded after its map ballot exists. */
   public void reseedEmptyLobby(UUID matchId, long seed) {
     current =
-        current.map(
-            value ->
-                value.matchId().equals(matchId)
-                    ? new Frozen(matchId, seed, value.settings())
-                    : value);
+        current.map(value ->
+            value.matchId().equals(matchId) ? new Frozen(matchId, seed, value.settings()) : value);
   }
 }

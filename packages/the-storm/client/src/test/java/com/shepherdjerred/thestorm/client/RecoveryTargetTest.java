@@ -13,12 +13,11 @@ class RecoveryTargetTest {
     var args =
         Protocol.JSON.readTree(
             "{\"expectedWorld\":\"minecraft:overworld\",\"expectedBlock\":[1,2,3]}");
-    assertDoesNotThrow(
-        () ->
-            RecoveryTarget.verify(
-                args,
-                new RecoveryTarget.Observed(
-                    "minecraft:overworld", List.of(1, 2, 3), true, Set.of("sneak"))));
+    assertDoesNotThrow(() ->
+        RecoveryTarget.verify(
+            args,
+            new RecoveryTarget.Observed(
+                "minecraft:overworld", List.of(1, 2, 3), true, Set.of("sneak"))));
     assertThrows(
         IllegalStateException.class,
         () ->

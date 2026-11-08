@@ -91,26 +91,24 @@ final class SettlementFixtures {
         .forEach(p -> absolute(p.x(), p.y(), p.z(), zone.emeralds() == 0 ? "AIR" : "IRON_BARS"));
     zone.purchaseSigns().forEach(p -> fixture(p, "OAK_SIGN"));
     zone.stations()
-        .forEach(
-            s ->
-                fixture(
-                    s.block(),
-                    switch (s.type()) {
-                      case WORKBENCH -> "CRAFTING_TABLE";
-                      case FORGE -> "SMITHING_TABLE";
-                      case INFIRMARY -> "CAULDRON";
-                      case ALCHEMY -> "ENCHANTING_TABLE";
-                      case BANK -> "ENDER_CHEST";
-                    }));
+        .forEach(s ->
+            fixture(
+                s.block(),
+                switch (s.type()) {
+                  case WORKBENCH -> "CRAFTING_TABLE";
+                  case FORGE -> "SMITHING_TABLE";
+                  case INFIRMARY -> "CAULDRON";
+                  case ALCHEMY -> "ENCHANTING_TABLE";
+                  case BANK -> "ENDER_CHEST";
+                }));
     zone.resources().forEach(r -> fixture(r.block(), ResourceKind.valueOf(r.material()).fixture()));
     zone.defenses()
-        .forEach(
-            d ->
-                fixture(
-                    d.block(),
-                    d.type() == SurvivalContent.DefenseType.BARRICADE
-                        ? "OAK_FENCE"
-                        : "STONE_PRESSURE_PLATE"));
+        .forEach(d ->
+            fixture(
+                d.block(),
+                d.type() == SurvivalContent.DefenseType.BARRICADE
+                    ? "OAK_FENCE"
+                    : "STONE_PRESSURE_PLATE"));
   }
 
   private void fixture(BlockPos pos, String type) {

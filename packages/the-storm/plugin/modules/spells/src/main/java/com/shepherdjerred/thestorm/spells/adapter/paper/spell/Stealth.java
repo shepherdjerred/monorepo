@@ -34,35 +34,34 @@ final class Stealth implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Result.ok(
-        () -> {
-          tools.fx().cast(kind(), Magic.chest(caster));
-          caster.addPotionEffect(
-              new PotionEffect(
-                  PotionEffectType.INVISIBILITY,
-                  Magic.ticks(settings.durationSeconds()),
-                  0,
-                  false,
-                  false,
-                  true));
-          tools
-              .state()
-              .stealth()
-              .start(
-                  caster.getUniqueId(),
-                  Duration.ofSeconds(settings.durationSeconds()),
-                  tools.time().instant());
-          for (var mob :
-              caster
-                  .getWorld()
-                  .getNearbyEntitiesByType(Mob.class, Magic.at(caster), TARGET_CLEAR_RADIUS)) {
-            if (mob instanceof Enemy
-                && Objects.equals(mob.getTarget(), caster)
-                && !tools.targets().isImmune(mob)
-                && tools.guard().harmDenial(caster, mob).isEmpty()) {
-              mob.setTarget(null);
-            }
-          }
-        });
+    return Result.ok(() -> {
+      tools.fx().cast(kind(), Magic.chest(caster));
+      caster.addPotionEffect(
+          new PotionEffect(
+              PotionEffectType.INVISIBILITY,
+              Magic.ticks(settings.durationSeconds()),
+              0,
+              false,
+              false,
+              true));
+      tools
+          .state()
+          .stealth()
+          .start(
+              caster.getUniqueId(),
+              Duration.ofSeconds(settings.durationSeconds()),
+              tools.time().instant());
+      for (var mob :
+          caster
+              .getWorld()
+              .getNearbyEntitiesByType(Mob.class, Magic.at(caster), TARGET_CLEAR_RADIUS)) {
+        if (mob instanceof Enemy
+            && Objects.equals(mob.getTarget(), caster)
+            && !tools.targets().isImmune(mob)
+            && tools.guard().harmDenial(caster, mob).isEmpty()) {
+          mob.setTarget(null);
+        }
+      }
+    });
   }
 }

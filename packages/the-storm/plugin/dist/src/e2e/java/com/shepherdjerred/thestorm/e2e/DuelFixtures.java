@@ -145,9 +145,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
               .sendMessage(
                   Component.text(
                       JSON.writeValueAsString(
-                          setup.orElseThrow(
-                              () ->
-                                  new IllegalStateException("Original duel setup is not ready")))));
+                          setup.orElseThrow(() ->
+                              new IllegalStateException("Original duel setup is not ready")))));
           return;
         }
         case "act" -> submit(args);
@@ -337,21 +336,20 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     if (from.isEmpty() || to.isEmpty()) return idle;
     return nav.graph()
         .path(from.getAsInt(), to.getAsInt(), node -> 0)
-        .map(
-            path ->
-                new Decision(
-                    input.self().id(),
-                    Option.HUNT,
-                    Optional.empty(),
-                    path.toFollow(),
-                    Stance.AGGRESSIVE,
-                    Optional.empty(),
-                    Optional.of(remembered.plus(0, 1.3, 0)),
-                    Optional.empty(),
-                    "duel:last-seen",
-                    input.snapshot().tick(),
-                    input.decision().lifeEpoch(),
-                    java.util.Optional.empty()))
+        .map(path ->
+            new Decision(
+                input.self().id(),
+                Option.HUNT,
+                Optional.empty(),
+                path.toFollow(),
+                Stance.AGGRESSIVE,
+                Optional.empty(),
+                Optional.of(remembered.plus(0, 1.3, 0)),
+                Optional.empty(),
+                "duel:last-seen",
+                input.snapshot().tick(),
+                input.decision().lifeEpoch(),
+                java.util.Optional.empty()))
         .orElse(idle);
   }
 
@@ -397,14 +395,13 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       CombatHarness.Frame frame) {
     return frame
         .observation()
-        .map(
-            observation ->
-                new com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest(
-                    new com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest.Identity(
-                        frame.matchId(), frame.body(), frame.life(), frame.input().self().kit()),
-                    frame.input().snapshot().tick(),
-                    frame.input().self().yaw(),
-                    observation.values()));
+        .map(observation ->
+            new com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest(
+                new com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest.Identity(
+                    frame.matchId(), frame.body(), frame.life(), frame.input().self().kit()),
+                frame.input().snapshot().tick(),
+                frame.input().self().yaw(),
+                observation.values()));
   }
 
   /** Frozen movement variants retain authored aim, click timing, healing and item use. */
@@ -414,11 +411,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
         || !CombatCommands.eligible(frame.controls())
         || frame.input().target().isEmpty()) return commands;
     return commands.stream()
-        .map(
-            command -> {
-              if (!(command instanceof BodyCommand.MoveToward movement)) return command;
-              return (BodyCommand) styledMovement(frame, movement);
-            })
+        .map(command -> {
+          if (!(command instanceof BodyCommand.MoveToward movement)) return command;
+          return (BodyCommand) styledMovement(frame, movement);
+        })
         .toList();
   }
 
@@ -562,11 +558,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       state.put("opponentFrame", historical.fields(result.equals("live")));
     primary
         .latest()
-        .ifPresent(
-            frame -> {
-              state.put("elapsed", frame.input().snapshot().tick() - started);
-              state.put("hp", frame.input().self().health());
-            });
+        .ifPresent(frame -> {
+          state.put("elapsed", frame.input().snapshot().tick() - started);
+          state.put("hp", frame.input().self().health());
+        });
     PROTOCOL.validate(state);
     return Map.copyOf(state);
   }

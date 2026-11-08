@@ -140,18 +140,17 @@ final class StaffEffects {
         tools.build(request, point);
         positions.add(point);
       }
-    positions.forEach(
-        point ->
-            point
-                .getWorld()
-                .spawn(
-                    point,
-                    TNTPrimed.class,
-                    tnt -> {
-                      tnt.setSource(request.self());
-                      tnt.setYield(2);
-                      tnt.setFuseTicks(40);
-                    }));
+    positions.forEach(point ->
+        point
+            .getWorld()
+            .spawn(
+                point,
+                TNTPrimed.class,
+                tnt -> {
+                  tnt.setSource(request.self());
+                  tnt.setYield(2);
+                  tnt.setFuseTicks(40);
+                }));
     request.say("Nine bounded charges spawned.");
   }
 

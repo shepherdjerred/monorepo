@@ -30,85 +30,80 @@ final class AnalyticsStore {
 
   CompletableFuture<Void> save(AnalyticsWrite write) {
     return database
-        .write(
-            dsl -> {
-              saveSession(dsl, write.connection());
-              for (var event : write.events()) enqueue(dsl, write.connection(), event);
-              return true;
-            })
+        .write(dsl -> {
+          saveSession(dsl, write.connection());
+          for (var event : write.events()) enqueue(dsl, write.connection(), event);
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
   CompletableFuture<Void> recover() {
     return database
-        .write(
-            dsl -> {
-              var open =
-                  dsl.select(
-                          field("session_id", String.class),
-                          field("player_uuid", String.class),
-                          field("player_name", String.class),
-                          field("started_at", Long.class),
-                          field("checkpoint_at", Long.class),
-                          field("connected_ms", Long.class),
-                          field("active_ms", Long.class))
-                      .from(table("core_analytics_session"))
-                      .where(
-                          field("ended", Integer.class)
-                              .eq(0)
-                              .and(field("stage", String.class).eq(stage)))
-                      .fetch();
-              for (var row : open) {
-                var connection = connection(row);
-                var event =
-                    new AnalyticsEvent(
-                        UUID.randomUUID(),
-                        "storm_session_ended",
-                        connection.checkpoint(),
-                        Map.of(
-                            "connected_ms",
-                            connection.connectedMillis(),
-                            "active_ms",
-                            connection.activeMillis(),
-                            "end_reason",
-                            "interrupted"));
-                enqueue(dsl, connection, event);
-                dsl.update(table("core_analytics_session"))
-                    .set(field("ended", Integer.class), 1)
-                    .where(field("session_id", String.class).eq(connection.id().toString()))
-                    .execute();
-              }
-              return true;
-            })
+        .write(dsl -> {
+          var open =
+              dsl.select(
+                      field("session_id", String.class),
+                      field("player_uuid", String.class),
+                      field("player_name", String.class),
+                      field("started_at", Long.class),
+                      field("checkpoint_at", Long.class),
+                      field("connected_ms", Long.class),
+                      field("active_ms", Long.class))
+                  .from(table("core_analytics_session"))
+                  .where(
+                      field("ended", Integer.class)
+                          .eq(0)
+                          .and(field("stage", String.class).eq(stage)))
+                  .fetch();
+          for (var row : open) {
+            var connection = connection(row);
+            var event =
+                new AnalyticsEvent(
+                    UUID.randomUUID(),
+                    "storm_session_ended",
+                    connection.checkpoint(),
+                    Map.of(
+                        "connected_ms",
+                        connection.connectedMillis(),
+                        "active_ms",
+                        connection.activeMillis(),
+                        "end_reason",
+                        "interrupted"));
+            enqueue(dsl, connection, event);
+            dsl.update(table("core_analytics_session"))
+                .set(field("ended", Integer.class), 1)
+                .where(field("session_id", String.class).eq(connection.id().toString()))
+                .execute();
+          }
+          return true;
+        })
         .thenAccept(done -> {});
   }
 
   CompletableFuture<List<Pending>> pending() {
-    return database.read(
-        dsl ->
-            dsl.select(field("event_id", String.class), field("payload", String.class))
-                .from(table("core_analytics_outbox"))
-                .where(field("stage", String.class).eq(stage))
-                .orderBy(field("occurred_at"), field("event_id"))
-                .limit(100)
-                .fetch(
-                    row ->
-                        new Pending(
-                            UUID.fromString(requireNonNull(row.get("event_id", String.class))),
-                            requireNonNull(row.get("payload", String.class)))));
+    return database.read(dsl ->
+        dsl.select(field("event_id", String.class), field("payload", String.class))
+            .from(table("core_analytics_outbox"))
+            .where(field("stage", String.class).eq(stage))
+            .orderBy(field("occurred_at"), field("event_id"))
+            .limit(100)
+            .fetch(row ->
+                new Pending(
+                    UUID.fromString(requireNonNull(row.get("event_id", String.class))),
+                    requireNonNull(row.get("payload", String.class)))));
   }
 
   CompletableFuture<Void> acknowledge(List<Pending> batch) {
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(table("core_analytics_outbox"))
-                  .where(
-                      field("event_id", String.class)
-                          .in(batch.stream().map(event -> event.id().toString()).toList()))
-                  .execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(table("core_analytics_outbox"))
+              .where(
+                  field("event_id", String.class)
+                      .in(batch.stream().map(event -> event.id().toString()).toList()))
+              .execute();
+          return true;
+        })
         .thenAccept(done -> {});
   }
 

@@ -122,11 +122,10 @@ public final class RunHop {
       return new Launch(destination, step ? Optional.of(new BodyCommand.Jump()) : Optional.empty());
     }
     return line(context, run)
-        .map(
-            direction ->
-                new Launch(
-                    self.pos().plus(direction.scale(STEER_AHEAD)),
-                    Optional.of(new BodyCommand.Jump(true))))
+        .map(direction ->
+            new Launch(
+                self.pos().plus(direction.scale(STEER_AHEAD)),
+                Optional.of(new BodyCommand.Jump(true))))
         .orElseGet(() -> new Launch(destination, Optional.empty()));
   }
 

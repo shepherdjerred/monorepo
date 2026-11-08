@@ -42,10 +42,9 @@ final class SavePacerTest {
   @Test
   void aFailingWriteDoesNotStopTheOnesAfterIt() {
     pacer.submit(() -> written.add("before"));
-    pacer.submit(
-        () -> {
-          throw new IllegalStateException("disk full");
-        });
+    pacer.submit(() -> {
+      throw new IllegalStateException("disk full");
+    });
     pacer.submit(() -> written.add("after"));
 
     // The failure surfaces in the tick that ran it; the queue carries on.

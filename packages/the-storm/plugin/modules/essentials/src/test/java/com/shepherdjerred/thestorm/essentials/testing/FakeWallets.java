@@ -90,14 +90,13 @@ public class FakeWallets implements Wallets {
       return completedFuture(Result.ok(keyedReceipts.get(request.key())));
     }
     return transfer(request.from(), request.to(), request.amount(), request.reason())
-        .thenApply(
-            result -> {
-              if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
-                keyedRequests.put(request.key(), request);
-                keyedReceipts.put(request.key(), receipt);
-              }
-              return result;
-            });
+        .thenApply(result -> {
+          if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
+            keyedRequests.put(request.key(), request);
+            keyedReceipts.put(request.key(), receipt);
+          }
+          return result;
+        });
   }
 
   @Override
@@ -111,10 +110,8 @@ public class FakeWallets implements Wallets {
     return completedFuture(
         balances.entrySet().stream()
             .filter(entry -> entry.getKey() instanceof AccountId.Player)
-            .map(
-                entry ->
-                    new Standing(
-                        (AccountId.Player) entry.getKey(), Money.crystals(entry.getValue())))
+            .map(entry ->
+                new Standing((AccountId.Player) entry.getKey(), Money.crystals(entry.getValue())))
             .sorted(comparingLong((Standing standing) -> standing.balance().amount()).reversed())
             .limit(limit)
             .toList());

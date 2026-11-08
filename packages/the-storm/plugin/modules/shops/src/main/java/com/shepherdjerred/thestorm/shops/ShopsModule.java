@@ -54,13 +54,9 @@ public final class ShopsModule implements StormModule {
             area -> {
               if (!registry.isReady()) throw new IllegalStateException("Shops are loading");
               return registry.all().stream()
-                  .filter(
-                      shop ->
-                          area.contains(
-                              shop.sign().world(),
-                              shop.sign().x(),
-                              shop.sign().y(),
-                              shop.sign().z()))
+                  .filter(shop ->
+                      area.contains(
+                          shop.sign().world(), shop.sign().x(), shop.sign().y(), shop.sign().z()))
                   .map(shop -> Long.toString(shop.id()))
                   .sorted()
                   .collect(java.util.stream.Collectors.joining(","));

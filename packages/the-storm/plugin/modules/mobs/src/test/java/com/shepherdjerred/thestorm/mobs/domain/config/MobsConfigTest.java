@@ -122,14 +122,12 @@ final class MobsConfigTest {
     assertThatThrownBy(
             () -> new Nameplate(true, false, List.of(new Nameplate.ColorBand(2, "#FFFFFF"))))
         .hasMessageContaining("level 1");
-    assertThatThrownBy(
-            () ->
-                new Nameplate(
-                    true,
-                    false,
-                    List.of(
-                        new Nameplate.ColorBand(1, "#FFFFFF"),
-                        new Nameplate.ColorBand(1, "#000000"))))
+    assertThatThrownBy(() ->
+            new Nameplate(
+                true,
+                false,
+                List.of(
+                    new Nameplate.ColorBand(1, "#FFFFFF"), new Nameplate.ColorBand(1, "#000000"))))
         .hasMessageContaining("ordered");
     assertThatThrownBy(() -> new Nameplate.ColorBand(0, "#FFFFFF")).hasMessageContaining("level");
     assertThatThrownBy(() -> new Nameplate.ColorBand(1, "#FFF")).hasMessageContaining("#RRGGBB");

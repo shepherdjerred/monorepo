@@ -25,15 +25,13 @@ public final class RtpPaper {
       ModuleContext context, QolStore store, QolConfig config, TravelConfig travel) {
     var recovered = LegacyRtpRecovery.start(store, context.services().require(Wallets.class));
     var _ =
-        recovered.whenComplete(
-            (done, failure) -> {
-              if (failure != null) {
-                context
-                    .logger()
-                    .error(
-                        "Could not reconcile legacy RTP charges; travel is unavailable", failure);
-              }
-            });
+        recovered.whenComplete((done, failure) -> {
+          if (failure != null) {
+            context
+                .logger()
+                .error("Could not reconcile legacy RTP charges; travel is unavailable", failure);
+          }
+        });
     context
         .services()
         .require(TeleportTravel.class)

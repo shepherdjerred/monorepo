@@ -95,9 +95,8 @@ final class EconomyCommands {
         .executes(context -> ownBalance(context.getSource().getSender()))
         .then(
             playerArgument()
-                .executes(
-                    context ->
-                        otherBalance(context.getSource().getSender(), getString(context, PLAYER))))
+                .executes(context ->
+                    otherBalance(context.getSource().getSender(), getString(context, PLAYER))))
         .build();
   }
 
@@ -107,12 +106,11 @@ final class EconomyCommands {
             playerArgument()
                 .then(
                     Commands.argument(AMOUNT, longArg(1, MAX_AMOUNT))
-                        .executes(
-                            context ->
-                                pay(
-                                    context.getSource().getSender(),
-                                    getString(context, PLAYER),
-                                    Money.crystals(getLong(context, AMOUNT))))))
+                        .executes(context ->
+                            pay(
+                                context.getSource().getSender(),
+                                getString(context, PLAYER),
+                                Money.crystals(getLong(context, AMOUNT))))))
         .build();
   }
 
@@ -121,11 +119,9 @@ final class EconomyCommands {
         .executes(context -> baltop(context.getSource().getSender(), CurrencyId.CRYSTALS))
         .then(
             currencyArgument()
-                .executes(
-                    context ->
-                        withCurrency(
-                            context,
-                            currency -> baltop(context.getSource().getSender(), currency))))
+                .executes(context ->
+                    withCurrency(
+                        context, currency -> baltop(context.getSource().getSender(), currency))))
         .build();
   }
 
@@ -154,10 +150,8 @@ final class EconomyCommands {
             .executes(context -> runAdmin(context, CurrencyId.CRYSTALS, action))
             .then(
                 currencyArgument()
-                    .executes(
-                        context ->
-                            withCurrency(
-                                context, currency -> runAdmin(context, currency, action))));
+                    .executes(context ->
+                        withCurrency(context, currency -> runAdmin(context, currency, action))));
     return playerArgument().then(amount);
   }
 

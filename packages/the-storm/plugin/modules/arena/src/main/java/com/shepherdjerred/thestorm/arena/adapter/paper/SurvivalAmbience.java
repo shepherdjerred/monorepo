@@ -85,23 +85,19 @@ final class SurvivalAmbience {
   private void music(Player player) {
     var closest =
         runner.map().content().machines().stream()
-            .filter(
-                m ->
-                    switch (m.type()) {
-                      case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> true;
-                      case FOOD, POWER, RUNEFORGE, MYSTERY_BOX -> false;
-                    })
-            .filter(
-                m ->
-                    Places.at(player)
-                            .distanceSquared(Places.location(player.getWorld(), m.block().center()))
-                        <= 144)
+            .filter(m ->
+                switch (m.type()) {
+                  case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> true;
+                  case FOOD, POWER, RUNEFORGE, MYSTERY_BOX -> false;
+                })
+            .filter(m ->
+                Places.at(player)
+                        .distanceSquared(Places.location(player.getWorld(), m.block().center()))
+                    <= 144)
             .min(
-                java.util.Comparator.comparingDouble(
-                    m ->
-                        Places.at(player)
-                            .distanceSquared(
-                                Places.location(player.getWorld(), m.block().center()))));
+                java.util.Comparator.comparingDouble(m ->
+                    Places.at(player)
+                        .distanceSquared(Places.location(player.getWorld(), m.block().center()))));
     var prior = music.get(player.getUniqueId());
     if (!runner.machines().powered()
         || !runner.isFighter(player.getUniqueId())

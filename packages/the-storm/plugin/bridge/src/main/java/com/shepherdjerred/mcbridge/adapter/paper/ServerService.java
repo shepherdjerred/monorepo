@@ -198,12 +198,11 @@ public final class ServerService {
             throw new BridgeException(ErrorCode.UNSUPPORTED, "Capture recovery is unavailable");
           return access
               .cleanup(player.getUniqueId(), resource, id)
-              .thenApply(
-                  _ -> {
-                    var result = new JsonObject();
-                    result.addProperty("removed", true);
-                    return result;
-                  });
+              .thenApply(_ -> {
+                var result = new JsonObject();
+                result.addProperty("removed", true);
+                return result;
+              });
         },
         MainThread.DEFAULT_TIMEOUT);
   }
@@ -385,11 +384,8 @@ public final class ServerService {
   private static byte[] inventoryBytes(Player player) {
     var items =
         java.util.Arrays.stream(player.getInventory().getContents())
-            .map(
-                item ->
-                    item == null
-                        ? new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR)
-                        : item)
+            .map(item ->
+                item == null ? new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR) : item)
             .toArray(org.bukkit.inventory.ItemStack[]::new);
     return org.bukkit.inventory.ItemStack.serializeItemsAsBytes(items);
   }

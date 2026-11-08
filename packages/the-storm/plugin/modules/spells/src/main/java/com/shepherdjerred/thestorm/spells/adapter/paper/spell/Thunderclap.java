@@ -31,22 +31,19 @@ final class Thunderclap implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creaturesAround(tools, caster, settings.radius())
-        .map(
-            victims ->
-                () -> {
-                  var centre = Magic.vec(Magic.at(caster));
-                  for (var victim : victims) {
-                    var push =
-                        Knockback.away(
-                            centre, Magic.vec(victim.getLocation()), settings.knockback(), LIFT);
-                    var blow =
-                        Harm.Blow.none()
-                            .withDamage(settings.damage())
-                            .withVelocity(Magic.vector(push));
-                    tools.harm().strike(caster, victim, blow);
-                  }
-                  tools.fx().cast(kind(), Magic.at(caster));
-                  tools.fx().ring(kind(), Magic.at(caster), settings.radius());
-                });
+        .map(victims ->
+            () -> {
+              var centre = Magic.vec(Magic.at(caster));
+              for (var victim : victims) {
+                var push =
+                    Knockback.away(
+                        centre, Magic.vec(victim.getLocation()), settings.knockback(), LIFT);
+                var blow =
+                    Harm.Blow.none().withDamage(settings.damage()).withVelocity(Magic.vector(push));
+                tools.harm().strike(caster, victim, blow);
+              }
+              tools.fx().cast(kind(), Magic.at(caster));
+              tools.fx().ring(kind(), Magic.at(caster), settings.radius());
+            });
   }
 }

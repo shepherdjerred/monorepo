@@ -228,17 +228,16 @@ final class RecordCodecTest {
     assertThatThrownBy(() -> new RosterEntry("Alice", TeamColor.RED, "trooper", false))
         .isInstanceOf(IllegalArgumentException.class);
     var header = tinyMatch().header();
-    assertThatThrownBy(
-            () ->
-                new MatchRecord(
-                    header,
-                    List.of(new RecordEvent(5, "a", "b", ""), new RecordEvent(4, "a", "b", "")),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    tinyMatch().end()))
+    assertThatThrownBy(() ->
+            new MatchRecord(
+                header,
+                List.of(new RecordEvent(5, "a", "b", ""), new RecordEvent(4, "a", "b", "")),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                tinyMatch().end()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("events must be in tick order");
   }

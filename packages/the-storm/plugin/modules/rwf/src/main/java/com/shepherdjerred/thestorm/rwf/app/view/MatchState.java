@@ -176,9 +176,8 @@ public record MatchState(
         snapshot.bombs().stream().map(MatchState::bomb).toList(),
         snapshot
             .poison()
-            .map(
-                poison ->
-                    new Poison(poison.untilDamage().isZero(), poison.untilDamage().toMillis())),
+            .map(poison ->
+                new Poison(poison.untilDamage().isZero(), poison.untilDamage().toMillis())),
         snapshot.outcome().flatMap(outcome -> outcome.winner()).map(MatchState::teamName),
         snapshot.startsAt());
   }

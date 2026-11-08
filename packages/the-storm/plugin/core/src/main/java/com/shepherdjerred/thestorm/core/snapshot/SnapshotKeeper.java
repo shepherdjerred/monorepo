@@ -526,11 +526,10 @@ public final class SnapshotKeeper {
 
   private void logFailure(CompletableFuture<?> future, String what) {
     var _ =
-        future.whenComplete(
-            (value, failure) -> {
-              if (failure != null) {
-                logger().error("Could not {}", what, failure);
-              }
-            });
+        future.whenComplete((value, failure) -> {
+          if (failure != null) {
+            logger().error("Could not {}", what, failure);
+          }
+        });
   }
 }

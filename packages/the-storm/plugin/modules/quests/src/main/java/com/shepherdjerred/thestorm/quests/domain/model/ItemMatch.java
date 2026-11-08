@@ -38,18 +38,16 @@ public record ItemMatch(
             "enchantments are key:level with level >= 1: " + entry.getKey());
       }
     }
-    potion.ifPresent(
-        key -> {
-          if (!KEY.matcher(key).matches()) {
-            throw new IllegalArgumentException("potion types are lower-case keys: " + key);
-          }
-        });
-    name.ifPresent(
-        text -> {
-          if (text.isBlank()) {
-            throw new IllegalArgumentException("an item name must not be blank");
-          }
-        });
+    potion.ifPresent(key -> {
+      if (!KEY.matcher(key).matches()) {
+        throw new IllegalArgumentException("potion types are lower-case keys: " + key);
+      }
+    });
+    name.ifPresent(text -> {
+      if (text.isBlank()) {
+        throw new IllegalArgumentException("an item name must not be blank");
+      }
+    });
   }
 
   /** Any item of {@code material}. */

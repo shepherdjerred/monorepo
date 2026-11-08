@@ -167,11 +167,10 @@ final class TeleporterMenus implements Listener {
       lore.add(Component.empty());
       lore.add(line(KitText.GREEN + "§lClick to establish teleporter"));
       var icon = kits.icon(kit, false);
-      icon.editMeta(
-          meta -> {
-            meta.displayName(line(KitText.team(team) + mate.getName()));
-            meta.lore(lore);
-          });
+      icon.editMeta(meta -> {
+        meta.displayName(line(KitText.team(team) + mate.getName()));
+        meta.lore(lore);
+      });
       menu.inventory.setItem(i, icon);
       menu.slots.put(i, member.id());
     }

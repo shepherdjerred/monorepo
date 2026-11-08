@@ -150,11 +150,10 @@ final class KitShopTest {
     fund(800);
     var buying = shop();
     database
-        .write(
-            dsl ->
-                dsl.execute(
-                    "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
-                        + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
+        .write(dsl ->
+            dsl.execute(
+                "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
+                    + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
         .join();
 
     assertThatThrownBy(() -> buying.buy(ALICE, KitPool.ALL, KitBook.BERSERKER, T0).join())

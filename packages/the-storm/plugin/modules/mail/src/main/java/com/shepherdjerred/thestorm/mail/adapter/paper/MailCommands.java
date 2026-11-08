@@ -57,12 +57,11 @@ public final class MailCommands implements Listener {
                         Commands.argument("id", word())
                             .then(
                                 Commands.argument("option", word())
-                                    .executes(
-                                        command ->
-                                            claim(
-                                                (Player) command.getSource().getSender(),
-                                                getString(command, "id"),
-                                                getString(command, "option"))))));
+                                    .executes(command ->
+                                        claim(
+                                            (Player) command.getSource().getSender(),
+                                            getString(command, "id"),
+                                            getString(command, "option"))))));
     letters.decorate(root);
     commands.register(root.build(), "Read and collect your non-expiring mail");
   }
@@ -122,11 +121,10 @@ public final class MailCommands implements Listener {
                     var response =
                         selected
                             .filter(value -> !value.equals(option))
-                            .map(
-                                value ->
-                                    "You already chose "
-                                        + value
-                                        + ". The other option is no longer available.")
+                            .map(value ->
+                                "You already chose "
+                                    + value
+                                    + ". The other option is no longer available.")
                             .orElse(
                                 "Reconnect before collecting more mail so your last delivery can be saved safely.");
                     player.sendMessage(Component.text(response));

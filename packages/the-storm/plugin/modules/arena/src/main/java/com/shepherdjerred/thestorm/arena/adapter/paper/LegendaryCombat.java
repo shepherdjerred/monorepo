@@ -55,48 +55,45 @@ final class LegendaryCombat {
     }
     var nearby =
         runner.world().enemies().stream()
-            .filter(
-                e ->
-                    !e.equals(target)
-                        && e.getLocation().distanceSquared(target.getLocation()) <= 16
-                        && target.hasLineOfSight(e)
-                        && player.hasLineOfSight(e))
+            .filter(e ->
+                !e.equals(target)
+                    && e.getLocation().distanceSquared(target.getLocation()) <= 16
+                    && target.hasLineOfSight(e)
+                    && player.hasLineOfSight(e))
             .sorted(
                 java.util.Comparator.comparingDouble(
                     e -> e.getLocation().distanceSquared(target.getLocation())));
     if (shot.type() == LegendaryWeapon.STORMCALLER || shot.type() == LegendaryWeapon.TIDEBREAKER) {
       nearby
           .limit(2)
-          .forEach(
-              e -> {
-                e.getWorld()
-                    .spawnParticle(
-                        shot.type() == LegendaryWeapon.TIDEBREAKER
-                            ? Particle.BUBBLE_POP
-                            : Particle.ELECTRIC_SPARK,
-                        e.getLocation().add(0, 1, 0),
-                        12,
-                        .3,
-                        .4,
-                        .3,
-                        .02);
-                runner.combat().damage(e, player, 4 * multiplier(shot.tier()));
-              });
+          .forEach(e -> {
+            e.getWorld()
+                .spawnParticle(
+                    shot.type() == LegendaryWeapon.TIDEBREAKER
+                        ? Particle.BUBBLE_POP
+                        : Particle.ELECTRIC_SPARK,
+                    e.getLocation().add(0, 1, 0),
+                    12,
+                    .3,
+                    .4,
+                    .3,
+                    .02);
+            runner.combat().damage(e, player, 4 * multiplier(shot.tier()));
+          });
     } else if (shot.type() == LegendaryWeapon.FROSTBITE) {
       java.util.stream.Stream.concat(java.util.stream.Stream.of(target), nearby)
           .filter(e -> !runner.combat().bossEntity(e))
           .limit(4)
-          .forEach(
-              e -> {
-                e.addPotionEffect(
-                    new org.bukkit.potion.PotionEffect(
-                        org.bukkit.potion.PotionEffectType.SLOWNESS,
-                        (int) Math.round(60 * multiplier(shot.tier())),
-                        1));
-                e.getWorld()
-                    .spawnParticle(
-                        Particle.SNOWFLAKE, e.getLocation().add(0, 1, 0), 10, .3, .4, .3, .01);
-              });
+          .forEach(e -> {
+            e.addPotionEffect(
+                new org.bukkit.potion.PotionEffect(
+                    org.bukkit.potion.PotionEffectType.SLOWNESS,
+                    (int) Math.round(60 * multiplier(shot.tier())),
+                    1));
+            e.getWorld()
+                .spawnParticle(
+                    Particle.SNOWFLAKE, e.getLocation().add(0, 1, 0), 10, .3, .4, .3, .01);
+          });
     }
   }
 
@@ -120,33 +117,29 @@ final class LegendaryCombat {
     if (now.isBefore(meleeReady.getOrDefault(player.getUniqueId(), Instant.MIN))) return;
     meleeReady.put(player.getUniqueId(), now.plusSeconds(2));
     runner.world().enemies().stream()
-        .filter(
-            enemy ->
-                !enemy.equals(target)
-                    && enemy.getLocation().distanceSquared(target.getLocation()) <= 9
-                    && player.hasLineOfSight(enemy)
-                    && target.hasLineOfSight(enemy))
+        .filter(enemy ->
+            !enemy.equals(target)
+                && enemy.getLocation().distanceSquared(target.getLocation()) <= 9
+                && player.hasLineOfSight(enemy)
+                && target.hasLineOfSight(enemy))
         .sorted(
             java.util.Comparator.comparingDouble(
                 enemy -> enemy.getLocation().distanceSquared(target.getLocation())))
         .limit(2)
-        .forEach(
-            enemy ->
-                runner
-                    .combat()
-                    .damage(
-                        enemy, player, (whirlwind ? 4 : 2) * runner.items().multiplier(weapon)));
+        .forEach(enemy ->
+            runner
+                .combat()
+                .damage(enemy, player, (whirlwind ? 4 : 2) * runner.items().multiplier(weapon)));
     player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 1, 0), 1);
   }
 
   private void shock(Player player, LivingEntity target, double damage) {
     runner.world().enemies().stream()
-        .filter(
-            enemy ->
-                !enemy.equals(target)
-                    && enemy.getLocation().distanceSquared(target.getLocation()) <= 16
-                    && player.hasLineOfSight(enemy)
-                    && target.hasLineOfSight(enemy))
+        .filter(enemy ->
+            !enemy.equals(target)
+                && enemy.getLocation().distanceSquared(target.getLocation()) <= 16
+                && player.hasLineOfSight(enemy)
+                && target.hasLineOfSight(enemy))
         .sorted(
             java.util.Comparator.comparingDouble(
                 enemy -> enemy.getLocation().distanceSquared(target.getLocation())))
@@ -224,20 +217,17 @@ final class LegendaryCombat {
     staffReady.put(player.getUniqueId(), now.plusSeconds(5));
     var radius = 4 + runner.items().tier(weapon);
     runner.world().enemies().stream()
-        .filter(
-            e ->
-                !runner.combat().bossEntity(e)
-                    && e.getLocation().distanceSquared(aim) <= radius * radius
-                    && player.hasLineOfSight(e))
+        .filter(e ->
+            !runner.combat().bossEntity(e)
+                && e.getLocation().distanceSquared(aim) <= radius * radius
+                && player.hasLineOfSight(e))
         .sorted(java.util.Comparator.comparingDouble(e -> e.getLocation().distanceSquared(aim)))
         .limit(5)
-        .forEach(
-            e -> {
-              var pull = aim.toVector().subtract(e.getLocation().toVector());
-              if (pull.lengthSquared() > .01)
-                e.setVelocity(pull.normalize().multiply(1.1).setY(.2));
-              runner.combat().hit(e, player);
-            });
+        .forEach(e -> {
+          var pull = aim.toVector().subtract(e.getLocation().toVector());
+          if (pull.lengthSquared() > .01) e.setVelocity(pull.normalize().multiply(1.1).setY(.2));
+          runner.combat().hit(e, player);
+        });
     player.getWorld().spawnParticle(Particle.PORTAL, aim, 50, .8, .5, .8, .1);
     runner.feedback().play(player, SurvivalFeedback.Cue.ABILITY);
     return true;

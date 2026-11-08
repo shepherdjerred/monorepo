@@ -25,19 +25,18 @@ final class Geyser implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     return Aim.creature(tools, caster, settings.range())
-        .map(
-            target ->
-                () -> {
-                  var launch = target.getVelocity().setY(settings.lift());
-                  var blow = Harm.Blow.none().withDamage(settings.damage()).withVelocity(launch);
-                  if (!tools.harm().strike(caster, target, blow)) {
-                    return;
-                  }
-                  var base = target.getLocation();
-                  for (var up = 0; up < 3; up++) {
-                    tools.fx().burst(kind(), base.clone().add(0, up, 0), 12, 0.3);
-                  }
-                  tools.fx().sound(kind(), base);
-                });
+        .map(target ->
+            () -> {
+              var launch = target.getVelocity().setY(settings.lift());
+              var blow = Harm.Blow.none().withDamage(settings.damage()).withVelocity(launch);
+              if (!tools.harm().strike(caster, target, blow)) {
+                return;
+              }
+              var base = target.getLocation();
+              for (var up = 0; up < 3; up++) {
+                tools.fx().burst(kind(), base.clone().add(0, up, 0), 12, 0.3);
+              }
+              tools.fx().sound(kind(), base);
+            });
   }
 }

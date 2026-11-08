@@ -72,12 +72,11 @@ public record PaperRuntime(
   /** Logs {@code future}'s failure, if any. For writes nobody waits on. */
   void logFailure(CompletableFuture<?> future, String what) {
     var _ =
-        future.whenComplete(
-            (value, failure) -> {
-              if (failure != null) {
-                report(what, failure);
-              }
-            });
+        future.whenComplete((value, failure) -> {
+          if (failure != null) {
+            report(what, failure);
+          }
+        });
   }
 
   /** Logs a failed background task. */

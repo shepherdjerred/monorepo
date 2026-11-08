@@ -111,16 +111,15 @@ final class KitWorldListener implements Listener {
       }
       runner
           .entity(member.id())
-          .ifPresent(
-              enemy -> {
-                var toward = enemy.getEyeLocation().toVector().subtract(eye.toVector());
-                if (toward.length() <= Spotter.RANGE
-                    && toward.length() > 0
-                    && Math.toDegrees(toward.angle(look)) <= 60
-                    && hooks.lineOfSight().test(spotter, enemy)) {
-                  seen.add(member.id());
-                }
-              });
+          .ifPresent(enemy -> {
+            var toward = enemy.getEyeLocation().toVector().subtract(eye.toVector());
+            if (toward.length() <= Spotter.RANGE
+                && toward.length() > 0
+                && Math.toDegrees(toward.angle(look)) <= 60
+                && hooks.lineOfSight().test(spotter, enemy)) {
+              seen.add(member.id());
+            }
+          });
     }
     return seen;
   }

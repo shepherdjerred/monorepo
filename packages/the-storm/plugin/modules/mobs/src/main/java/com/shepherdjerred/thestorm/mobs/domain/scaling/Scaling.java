@@ -24,13 +24,12 @@ public record Scaling(Map<Stat, Double> atCap, Map<String, Map<Stat, Double>> by
       throw new IllegalArgumentException("atCap is missing " + missing);
     }
     atCap.forEach(Scaling::requireValid);
-    byType.forEach(
-        (type, stats) -> {
-          if (type.isBlank() || !type.equals(type.toLowerCase(Locale.ROOT))) {
-            throw new IllegalArgumentException("mob types are lowercase keys: '" + type + "'");
-          }
-          stats.forEach(Scaling::requireValid);
-        });
+    byType.forEach((type, stats) -> {
+      if (type.isBlank() || !type.equals(type.toLowerCase(Locale.ROOT))) {
+        throw new IllegalArgumentException("mob types are lowercase keys: '" + type + "'");
+      }
+      stats.forEach(Scaling::requireValid);
+    });
   }
 
   private static Map<String, Map<Stat, Double>> copy(Map<String, Map<Stat, Double>> byType) {

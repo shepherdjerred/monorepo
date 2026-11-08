@@ -103,11 +103,10 @@ final class ArenaPaperTest {
    */
   private void enter(PlayerMock player, String command) {
     harness()
-        .until(
-            () -> {
-              player.performCommand(command);
-              return presence().arenaOf(player.getUniqueId()).isPresent();
-            });
+        .until(() -> {
+          player.performCommand(command);
+          return presence().arenaOf(player.getUniqueId()).isPresent();
+        });
   }
 
   private void assertRestored(PlayerMock player) {
@@ -198,13 +197,12 @@ final class ArenaPaperTest {
             Arrays.stream(alice.getInventory().getContents())
                 .filter(Objects::nonNull)
                 .filter(i -> !i.isEmpty()))
-        .allSatisfy(
-            item ->
-                assertThat(
-                        item.getItemMeta()
-                            .getPersistentDataContainer()
-                            .has(tag, PersistentDataType.BOOLEAN))
-                    .isTrue());
+        .allSatisfy(item ->
+            assertThat(
+                    item.getItemMeta()
+                        .getPersistentDataContainer()
+                        .has(tag, PersistentDataType.BOOLEAN))
+                .isTrue());
     assertThat(messages(alice)).anyMatch(m -> m.contains("You are a Knight"));
   }
 
@@ -253,12 +251,10 @@ final class ArenaPaperTest {
     harness.until(() -> inLobby(alice));
     alice.performCommand("arena class knight");
 
-    harness.until(
-        () -> {
-          harness.server.dispatchCommand(
-              harness.server.getConsoleSender(), "arena start colosseum");
-          return alice.getLocation().getX() == 1030.5;
-        });
+    harness.until(() -> {
+      harness.server.dispatchCommand(harness.server.getConsoleSender(), "arena start colosseum");
+      return alice.getLocation().getX() == 1030.5;
+    });
 
     assertThat(alice.getLocation().getX()).isEqualTo(1030.5);
     assertThat(alice.getLocation().getZ()).isEqualTo(1025.5);

@@ -421,10 +421,9 @@ final class DiscordRelayTest {
     assertThat(changes).containsExactly("changed");
     org.assertj.core.api.Assertions.assertThatThrownBy(() -> relay.addCommand(top))
         .isInstanceOf(IllegalArgumentException.class);
-    org.assertj.core.api.Assertions.assertThatThrownBy(
-            () ->
-                relay.addCommand(
-                    new DiscordCommand("list", "x", List.of(), Duration.ZERO, (o, r) -> {})))
+    org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            relay.addCommand(
+                new DiscordCommand("list", "x", List.of(), Duration.ZERO, (o, r) -> {})))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

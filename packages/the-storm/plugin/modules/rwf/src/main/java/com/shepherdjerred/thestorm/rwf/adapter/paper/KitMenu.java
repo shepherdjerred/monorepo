@@ -221,19 +221,17 @@ final class KitMenu implements InventoryHolder {
 
   private static ItemStack control(Material material, String name, List<String> lore) {
     var stack = ItemStack.of(material);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text(name, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
-          meta.lore(
-              lore.stream()
-                  .map(
-                      line ->
-                          Component.text(line, NamedTextColor.GRAY)
-                              .decoration(TextDecoration.ITALIC, false))
-                  .map(Component.class::cast)
-                  .toList());
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text(name, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
+      meta.lore(
+          lore.stream()
+              .map(line ->
+                  Component.text(line, NamedTextColor.GRAY)
+                      .decoration(TextDecoration.ITALIC, false))
+              .map(Component.class::cast)
+              .toList());
+    });
     return stack;
   }
 

@@ -222,9 +222,8 @@ final class GraveOpening {
         drops -> {
           var found =
               drops.stream()
-                  .filter(
-                      drop ->
-                          drop.grave().equals(key.grave()) && drop.item().index() == key.index())
+                  .filter(drop ->
+                      drop.grave().equals(key.grave()) && drop.item().index() == key.index())
                   .findFirst();
           if (found.isEmpty()) {
             entity.remove();

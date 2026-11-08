@@ -32,13 +32,12 @@ final class CircuitGrowth {
     var planned = stage(visit, plant, type.orElseThrow());
     if (planned.isEmpty()
         || planned.stream()
-            .anyMatch(
-                state ->
-                    !access.may(
-                        visit,
-                        state.getBlock(),
-                        ProtectedAction.AUTOMATIC_BUILD,
-                        ProtectedAction.AUTOMATIC_BREAK))) return false;
+            .anyMatch(state ->
+                !access.may(
+                    visit,
+                    state.getBlock(),
+                    ProtectedAction.AUTOMATIC_BUILD,
+                    ProtectedAction.AUTOMATIC_BREAK))) return false;
     consume.run();
     for (var state : planned) access.set(visit, state.getBlock(), state.getBlockData());
     return true;

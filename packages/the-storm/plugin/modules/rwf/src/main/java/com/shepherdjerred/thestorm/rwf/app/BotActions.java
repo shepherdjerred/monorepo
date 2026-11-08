@@ -57,12 +57,11 @@ public interface BotActions {
     return new BotActions() {
       private Optional<CombatantId> resolve(UUID uuid) {
         return view.current()
-            .flatMap(
-                snapshot ->
-                    snapshot.combatants().stream()
-                        .map(combatant -> combatant.id())
-                        .filter(id -> id.uuid().equals(uuid))
-                        .findFirst());
+            .flatMap(snapshot ->
+                snapshot.combatants().stream()
+                    .map(combatant -> combatant.id())
+                    .filter(id -> id.uuid().equals(uuid))
+                    .findFirst());
       }
 
       private Optional<ActionRefusal> as(

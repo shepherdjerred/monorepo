@@ -41,11 +41,10 @@ final class LockFee {
                 new AccountId.Server(),
                 Money.crystals(cost),
                 "lock:" + lock.id())
-            .whenComplete(
-                (result, failure) ->
-                    bill.scheduler()
-                        .runOnMainThread(
-                            () -> refused(bill, new Outcome(lock, cost, result, failure))));
+            .whenComplete((result, failure) ->
+                bill.scheduler()
+                    .runOnMainThread(
+                        () -> refused(bill, new Outcome(lock, cost, result, failure))));
   }
 
   private static void refused(Bill bill, Outcome outcome) {

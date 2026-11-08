@@ -25,17 +25,16 @@ final class SurvivalEquipment {
             : List.of(EquipmentSlot.HAND, EquipmentSlot.OFF_HAND);
     var damaged =
         candidates.stream()
-            .filter(
-                slot -> {
-                  var item = inventory.getItem(slot);
-                  return item != null
-                      && runner.items().owns(item)
-                      && (armor
-                          || runner.items().weapon(item)
-                          || item.getType() == org.bukkit.Material.SHIELD)
-                      && item.getItemMeta() instanceof Damageable meta
-                      && meta.getDamage() > 0;
-                })
+            .filter(slot -> {
+              var item = inventory.getItem(slot);
+              return item != null
+                  && runner.items().owns(item)
+                  && (armor
+                      || runner.items().weapon(item)
+                      || item.getType() == org.bukkit.Material.SHIELD)
+                  && item.getItemMeta() instanceof Damageable meta
+                  && meta.getDamage() > 0;
+            })
             .toList();
     if (damaged.isEmpty()) {
       Texts.info(player, "Nothing needs repairing.");
@@ -43,12 +42,11 @@ final class SurvivalEquipment {
     }
     var cost = armor ? 4 : 2;
     if (!runner.items().spend(player, Map.of("IRON_INGOT", cost, "EMERALD", cost))) return;
-    damaged.forEach(
-        slot -> {
-          var item = java.util.Objects.requireNonNull(inventory.getItem(slot));
-          item.editMeta(meta -> ((Damageable) meta).setDamage(0));
-          inventory.setItem(slot, item);
-        });
+    damaged.forEach(slot -> {
+      var item = java.util.Objects.requireNonNull(inventory.getItem(slot));
+      item.editMeta(meta -> ((Damageable) meta).setDamage(0));
+      inventory.setItem(slot, item);
+    });
     runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
     runner.hud().hint(player, "Equipment repaired", 2);
   }

@@ -304,9 +304,8 @@ public final class SnapshotCapture {
         var ticks = armed.remainingSeconds() * 20L;
         yield armed
             .defusing()
-            .<BombState>map(
-                defusing ->
-                    new BombState.Defusing(defusing.progress(), defusing.clickers().size(), ticks))
+            .<BombState>map(defusing ->
+                new BombState.Defusing(defusing.progress(), defusing.clickers().size(), ticks))
             .orElseGet(() -> new BombState.Armed(ticks));
       }
       case MatchState.Status.Destroyed _ -> new BombState.Destroyed();

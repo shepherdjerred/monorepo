@@ -56,36 +56,33 @@ public final class InkDialogue implements QuestTextRenderer {
     content
         .quests()
         .values()
-        .forEach(
-            quest -> {
-              dialogue.check(quest.text().offer());
-              dialogue.check(quest.text().accept());
-              dialogue.check(quest.text().decline());
-              dialogue.check(quest.text().finish());
-              quest.text().questions().forEach(question -> dialogue.check(question.answer()));
-              quest
-                  .stages()
-                  .values()
-                  .forEach(
-                      stage -> {
-                        stage.waiting().ifPresent(dialogue::check);
-                        stage.complete().ifPresent(dialogue::check);
-                      });
-            });
+        .forEach(quest -> {
+          dialogue.check(quest.text().offer());
+          dialogue.check(quest.text().accept());
+          dialogue.check(quest.text().decline());
+          dialogue.check(quest.text().finish());
+          quest.text().questions().forEach(question -> dialogue.check(question.answer()));
+          quest
+              .stages()
+              .values()
+              .forEach(stage -> {
+                stage.waiting().ifPresent(dialogue::check);
+                stage.complete().ifPresent(dialogue::check);
+              });
+        });
     content
         .templates()
         .values()
-        .forEach(
-            template -> {
-              if (template.offer().startsWith(PREFIX)) {
-                throw new IllegalStateException(
-                    "Ink board offer is unsupported because board amount and target are interpolated: "
-                        + template.id());
-              }
-              dialogue.check(template.accept());
-              dialogue.check(template.decline());
-              dialogue.check(template.finish());
-            });
+        .forEach(template -> {
+          if (template.offer().startsWith(PREFIX)) {
+            throw new IllegalStateException(
+                "Ink board offer is unsupported because board amount and target are interpolated: "
+                    + template.id());
+          }
+          dialogue.check(template.accept());
+          dialogue.check(template.decline());
+          dialogue.check(template.finish());
+        });
     return dialogue;
   }
 
@@ -206,10 +203,9 @@ public final class InkDialogue implements QuestTextRenderer {
             context
                 .catalog()
                 .quest(argument(args))
-                .map(
-                    quest ->
-                        QuestEngine.availability(state, quest, context)
-                            == QuestEngine.Availability.OFFERABLE)
+                .map(quest ->
+                    QuestEngine.availability(state, quest, context)
+                        == QuestEngine.Availability.OFFERABLE)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown quest in Ink dialogue")),
         true);
   }

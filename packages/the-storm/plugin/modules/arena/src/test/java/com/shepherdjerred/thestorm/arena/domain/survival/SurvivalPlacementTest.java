@@ -32,11 +32,10 @@ final class SurvivalPlacementTest {
     var digest = java.security.MessageDigest.getInstance("SHA-256");
     var blocks = SurvivalBlueprint.blocks(content);
     assertThat(blocks.get(content.lobbyGuide())).isEqualTo("LECTERN");
-    blocks.forEach(
-        (at, material) ->
-            digest.update(
-                (placement.block(at).describe() + "=" + material + "\n")
-                    .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    blocks.forEach((at, material) ->
+        digest.update(
+            (placement.block(at).describe() + "=" + material + "\n")
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     return java.util.HexFormat.of().formatHex(digest.digest());
   }
 }

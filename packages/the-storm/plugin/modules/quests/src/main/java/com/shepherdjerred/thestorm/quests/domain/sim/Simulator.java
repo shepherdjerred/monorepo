@@ -294,12 +294,11 @@ public final class Simulator {
   private static Path paid(Path path, Outcome outcome) {
     var crystals =
         outcome.effects().stream()
-            .mapToLong(
-                effect ->
-                    effect instanceof Effect.World(var quest, Action.Crystals(var amount))
-                            && quest.equals(path.quest().id())
-                        ? amount
-                        : 0)
+            .mapToLong(effect ->
+                effect instanceof Effect.World(var quest, Action.Crystals(var amount))
+                        && quest.equals(path.quest().id())
+                    ? amount
+                    : 0)
             .sum();
     return path.paid(crystals);
   }

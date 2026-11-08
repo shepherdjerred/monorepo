@@ -42,15 +42,12 @@ public final class HistoricalShopOperations {
                     .register(
                         Commands.literal("shoprestore")
                             .requires(source -> mayRestore(source.getSender()))
-                            .executes(
-                                command ->
-                                    operations.prepare(command.getSource().getSender(), false))
+                            .executes(command ->
+                                operations.prepare(command.getSource().getSender(), false))
                             .then(
                                 Commands.literal("apply")
-                                    .executes(
-                                        command ->
-                                            operations.prepare(
-                                                command.getSource().getSender(), true)))
+                                    .executes(command ->
+                                        operations.prepare(command.getSource().getSender(), true)))
                             .build(),
                         "Previews or applies the reviewed legacy shop conversion"));
   }

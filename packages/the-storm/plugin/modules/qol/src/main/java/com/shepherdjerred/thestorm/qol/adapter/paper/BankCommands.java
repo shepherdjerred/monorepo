@@ -36,28 +36,26 @@ final class BankCommands {
                                 context -> player(context, actor -> grant(context, actor, null)))
                             .then(
                                 Commands.argument(ROLE, word())
-                                    .executes(
-                                        context ->
-                                            player(
-                                                context,
-                                                actor ->
-                                                    grant(
-                                                        context,
-                                                        actor,
-                                                        StringArgumentType.getString(
-                                                            context, ROLE)))))))
+                                    .executes(context ->
+                                        player(
+                                            context,
+                                            actor ->
+                                                grant(
+                                                    context,
+                                                    actor,
+                                                    StringArgumentType.getString(
+                                                        context, ROLE)))))))
             .then(
                 Commands.literal("remove")
                     .then(
                         Commands.argument(PLAYER, word())
-                            .executes(
-                                context ->
-                                    player(
-                                        context,
-                                        actor ->
-                                            banks.revoke(
-                                                actor,
-                                                StringArgumentType.getString(context, PLAYER))))));
+                            .executes(context ->
+                                player(
+                                    context,
+                                    actor ->
+                                        banks.revoke(
+                                            actor,
+                                            StringArgumentType.getString(context, PLAYER))))));
     var root =
         Commands.literal("bank")
             .executes(context -> player(context, banks::describe))
@@ -66,14 +64,12 @@ final class BankCommands {
                 Commands.literal("find")
                     .then(
                         Commands.argument(ITEM, word())
-                            .executes(
-                                context ->
-                                    player(
-                                        context,
-                                        actor ->
-                                            banks.find(
-                                                actor,
-                                                StringArgumentType.getString(context, ITEM))))))
+                            .executes(context ->
+                                player(
+                                    context,
+                                    actor ->
+                                        banks.find(
+                                            actor, StringArgumentType.getString(context, ITEM))))))
             .then(Commands.literal("list").executes(context -> player(context, banks::list)))
             .then(Commands.literal("quit").executes(context -> player(context, banks::quit)))
             .then(Commands.literal("check").executes(context -> player(context, banks::check)))

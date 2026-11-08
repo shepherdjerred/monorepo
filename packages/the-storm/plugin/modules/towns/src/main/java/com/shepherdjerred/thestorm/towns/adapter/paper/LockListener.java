@@ -381,12 +381,11 @@ final class LockListener implements Listener {
         extended
             .get()
             .saved()
-            .whenComplete(
-                (saved, failure) -> {
-                  if (failure != null) {
-                    revokeUnstoredPlacement(player, block, position);
-                  }
-                });
+            .whenComplete((saved, failure) -> {
+              if (failure != null) {
+                revokeUnstoredPlacement(player, block, position);
+              }
+            });
     return true;
   }
 
@@ -411,12 +410,11 @@ final class LockListener implements Listener {
         extended
             .get()
             .saved()
-            .whenComplete(
-                (saved, failure) -> {
-                  if (failure != null) {
-                    revokeUnstoredPlacement(player, block, position);
-                  }
-                });
+            .whenComplete((saved, failure) -> {
+              if (failure != null) {
+                revokeUnstoredPlacement(player, block, position);
+              }
+            });
     return true;
   }
 
@@ -432,18 +430,17 @@ final class LockListener implements Listener {
         var _ =
             change
                 .saved()
-                .whenComplete(
-                    (saved, failure) -> {
-                      if (!pendingAutoLocks.remove(position, token)) {
-                        return;
-                      }
-                      if (failure != null) {
-                        revokeUnstoredPlacement(player, block, position);
-                        return;
-                      }
-                      LockFee.charge(
-                          new LockFee.Bill(wallets, scheduler, service, player), change.value());
-                    });
+                .whenComplete((saved, failure) -> {
+                  if (!pendingAutoLocks.remove(position, token)) {
+                    return;
+                  }
+                  if (failure != null) {
+                    revokeUnstoredPlacement(player, block, position);
+                    return;
+                  }
+                  LockFee.charge(
+                      new LockFee.Bill(wallets, scheduler, service, player), change.value());
+                });
       }
       case Result.Err<Change<Lock>, List<LockProblem>>(var _) -> {
         pendingAutoLocks.remove(position, token);

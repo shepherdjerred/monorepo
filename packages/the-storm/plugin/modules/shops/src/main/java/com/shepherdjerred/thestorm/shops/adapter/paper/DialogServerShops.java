@@ -110,28 +110,26 @@ final class DialogServerShops implements ServerShops {
     var catalog = visit.catalog();
     var buttons =
         catalog.entries().stream()
-            .map(
-                entry ->
-                    ActionButton.builder(Component.text(ShopTexts.entryLabel(entry)))
-                        .tooltip(Component.text(replies.texts().entryPrices(entry)))
-                        .width(BUTTON_WIDTH)
-                        .action(onClick(visit, player -> showEntry(player, visit, entry)))
-                        .build())
+            .map(entry ->
+                ActionButton.builder(Component.text(ShopTexts.entryLabel(entry)))
+                    .tooltip(Component.text(replies.texts().entryPrices(entry)))
+                    .width(BUTTON_WIDTH)
+                    .action(onClick(visit, player -> showEntry(player, visit, entry)))
+                    .build())
             .toList();
-    return Dialog.create(
-        factory ->
-            factory
-                .empty()
-                .base(
-                    DialogBase.builder(Component.text(catalog.name()))
-                        .canCloseWithEscape(true)
-                        .body(List.of(DialogBody.plainMessage(Component.text(catalog.greeting()))))
-                        .build())
-                .type(
-                    DialogType.multiAction(buttons)
-                        .columns(2)
-                        .exitAction(ActionButton.builder(Component.text("Close")).build())
-                        .build()));
+    return Dialog.create(factory ->
+        factory
+            .empty()
+            .base(
+                DialogBase.builder(Component.text(catalog.name()))
+                    .canCloseWithEscape(true)
+                    .body(List.of(DialogBody.plainMessage(Component.text(catalog.greeting()))))
+                    .build())
+            .type(
+                DialogType.multiAction(buttons)
+                    .columns(2)
+                    .exitAction(ActionButton.builder(Component.text("Close")).build())
+                    .build()));
   }
 
   /** Looks up today's allowances, then shows the item's dialog. */
@@ -176,24 +174,23 @@ final class DialogServerShops implements ServerShops {
     var buttons = new ArrayList<ActionButton>(2);
     entry.buy().ifPresent(price -> buttons.add(tradeButton(visit, entry, Direction.BUY)));
     entry.sell().ifPresent(price -> buttons.add(tradeButton(visit, entry, Direction.SELL)));
-    return Dialog.create(
-        factory ->
-            factory
-                .empty()
-                .base(
-                    DialogBase.builder(Component.text(visit.catalog().name() + ": " + name))
-                        .canCloseWithEscape(true)
-                        .body(body)
-                        .inputs(inputs)
-                        .build())
-                .type(
-                    DialogType.multiAction(buttons)
-                        .columns(buttons.size())
-                        .exitAction(
-                            ActionButton.builder(Component.text("Back"))
-                                .action(onClick(visit, player -> player.showDialog(menu(visit))))
-                                .build())
-                        .build()));
+    return Dialog.create(factory ->
+        factory
+            .empty()
+            .base(
+                DialogBase.builder(Component.text(visit.catalog().name() + ": " + name))
+                    .canCloseWithEscape(true)
+                    .body(body)
+                    .inputs(inputs)
+                    .build())
+            .type(
+                DialogType.multiAction(buttons)
+                    .columns(buttons.size())
+                    .exitAction(
+                        ActionButton.builder(Component.text("Back"))
+                            .action(onClick(visit, player -> player.showDialog(menu(visit))))
+                            .build())
+                    .build()));
   }
 
   private String details(CatalogEntry entry, Allowances allowances) {
@@ -303,15 +300,14 @@ final class DialogServerShops implements ServerShops {
     if (!(audience instanceof Player player)) {
       return;
     }
-    scheduler.runOnMainThread(
-        () -> {
-          if (near(player, visit)) {
-            action.accept(player);
-          } else {
-            player.sendMessage(
-                Replies.error("You are too far from " + visit.catalog().name() + " to trade."));
-          }
-        });
+    scheduler.runOnMainThread(() -> {
+      if (near(player, visit)) {
+        action.accept(player);
+      } else {
+        player.sendMessage(
+            Replies.error("You are too far from " + visit.catalog().name() + " to trade."));
+      }
+    });
   }
 
   private boolean near(Player player, Visit visit) {

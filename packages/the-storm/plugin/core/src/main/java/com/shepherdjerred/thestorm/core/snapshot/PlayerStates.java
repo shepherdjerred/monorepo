@@ -34,15 +34,14 @@ public final class PlayerStates {
             .toArray(ItemStack[]::new);
     var effects =
         player.getActivePotionEffects().stream()
-            .map(
-                effect ->
-                    new EffectRecord(
-                        effect.getType().getKey().asString(),
-                        effect.getAmplifier(),
-                        effect.getDuration(),
-                        effect.isAmbient(),
-                        effect.hasParticles(),
-                        effect.hasIcon()))
+            .map(effect ->
+                new EffectRecord(
+                    effect.getType().getKey().asString(),
+                    effect.getAmplifier(),
+                    effect.getDuration(),
+                    effect.isAmbient(),
+                    effect.hasParticles(),
+                    effect.hasIcon()))
             .toList();
     return new Snapshot(
         player.getUniqueId(),
@@ -178,15 +177,14 @@ public final class PlayerStates {
     for (var record : records) {
       Optional<PotionEffect> effect =
           effectType(record.type())
-              .map(
-                  type ->
-                      new PotionEffect(
-                          type,
-                          record.duration(),
-                          record.amplifier(),
-                          record.ambient(),
-                          record.particles(),
-                          record.icon()));
+              .map(type ->
+                  new PotionEffect(
+                      type,
+                      record.duration(),
+                      record.amplifier(),
+                      record.ambient(),
+                      record.particles(),
+                      record.icon()));
       // An effect removed from the game since the snapshot was taken cannot be restored.
       effect.ifPresent(effects::add);
     }

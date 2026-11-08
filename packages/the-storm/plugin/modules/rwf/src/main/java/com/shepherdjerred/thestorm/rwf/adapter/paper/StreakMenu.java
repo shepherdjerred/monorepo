@@ -92,20 +92,18 @@ final class StreakMenu implements InventoryHolder {
   private static ItemStack icon(
       Material material, String name, List<String> lore, boolean selected) {
     var stack = ItemStack.of(material);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(
-              Component.text(name, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
-          meta.lore(
-              lore.stream()
-                  .map(
-                      line ->
-                          (Component)
-                              Component.text(line, NamedTextColor.GRAY)
-                                  .decoration(TextDecoration.ITALIC, false))
-                  .toList());
-          meta.setEnchantmentGlintOverride(selected);
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(
+          Component.text(name, NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
+      meta.lore(
+          lore.stream()
+              .map(line ->
+                  (Component)
+                      Component.text(line, NamedTextColor.GRAY)
+                          .decoration(TextDecoration.ITALIC, false))
+              .toList());
+      meta.setEnchantmentGlintOverride(selected);
+    });
     return stack;
   }
 

@@ -46,39 +46,33 @@ public final class DiscordReadCommands {
     var _ =
         leaderboard
             .leaderboard(CurrencyId.CRYSTALS, PAGE_SIZE)
-            .whenComplete(
-                (ranked, failure) -> {
-                  if (relay.isStopping()) {
-                    reply.accept(relay.stopMessage());
-                  } else if (failure != null) {
-                    logger.error("Could not load Discord /baltop", failure);
-                    reply.accept("Could not read crystal standings right now.");
-                  } else {
-                    reply.accept(DiscordCommandReplies.baltop(ranked, formatter));
-                  }
-                });
+            .whenComplete((ranked, failure) -> {
+              if (relay.isStopping()) {
+                reply.accept(relay.stopMessage());
+              } else if (failure != null) {
+                logger.error("Could not load Discord /baltop", failure);
+                reply.accept("Could not read crystal standings right now.");
+              } else {
+                reply.accept(DiscordCommandReplies.baltop(ranked, formatter));
+              }
+            });
   }
 
   /** Reads the bounded public town snapshot on Paper's main thread. */
   public void towns(int page, Optional<String> name, Consumer<String> reply) {
-    scheduler.runOnMainThread(
-        () -> {
-          if (relay.isStopping()) {
-            reply.accept(relay.stopMessage());
-          } else {
-            reply.accept(
-                name.map(
-                        requested ->
-                            towns
-                                .info(requested)
-                                .map(DiscordCommandReplies::town)
-                                .orElse(
-                                    "That town or historic site is not in the public directory."))
-                    .orElseGet(
-                        () ->
-                            DiscordCommandReplies.towns(
-                                towns.page(page, PAGE_SIZE), page, PAGE_SIZE)));
-          }
-        });
+    scheduler.runOnMainThread(() -> {
+      if (relay.isStopping()) {
+        reply.accept(relay.stopMessage());
+      } else {
+        reply.accept(
+            name.map(requested ->
+                    towns
+                        .info(requested)
+                        .map(DiscordCommandReplies::town)
+                        .orElse("That town or historic site is not in the public directory."))
+                .orElseGet(() ->
+                    DiscordCommandReplies.towns(towns.page(page, PAGE_SIZE), page, PAGE_SIZE)));
+      }
+    });
   }
 }

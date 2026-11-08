@@ -116,10 +116,9 @@ final class RwfBotsFlowTest {
     var actions = harness.match.actions();
     assertThat(actions).hasSize(3).allMatch(action -> action.startsWith("kit "));
     assertThat(actions)
-        .allMatch(
-            action ->
-                List.of("trooper", "longbow", "shortbow", "rewind")
-                    .contains(action.substring(action.lastIndexOf(' ') + 1)));
+        .allMatch(action ->
+            List.of("trooper", "longbow", "shortbow", "rewind")
+                .contains(action.substring(action.lastIndexOf(' ') + 1)));
     assertThat(harness.paper().roster().live()).extracting(BotBody::name).doesNotContain("Alice");
   }
 
@@ -356,12 +355,11 @@ final class RwfBotsFlowTest {
     harness.bodies.orders();
 
     // A bot's order is a killing blow: rwf ends the match before the ticker returns.
-    harness.bodies.afterNextOrder(
-        () -> {
-          harness.match.phase(MatchSnapshot.PhaseKind.ENDED);
-          harness.match.outcome(new Outcome.Winner(TeamColor.RED));
-          harness.match.fireTick();
-        });
+    harness.bodies.afterNextOrder(() -> {
+      harness.match.phase(MatchSnapshot.PhaseKind.ENDED);
+      harness.match.outcome(new Outcome.Winner(TeamColor.RED));
+      harness.match.fireTick();
+    });
     harness.tick();
 
     assertThat(harness.paper().loop().inMatch()).isFalse();
@@ -394,17 +392,16 @@ final class RwfBotsFlowTest {
     var victimBody = harness.paper().roster().live().getLast();
     var victim =
         bots.stream().filter(bot -> bot.uuid().equals(victimBody.uuid())).findFirst().orElseThrow();
-    harness.bodies.afterNextOrder(
-        () -> {
-          harness.match.kill(victim.uuid());
-          harness.match.fire(
-              new MatchEvent.Died(
-                  victim,
-                  Optional.of(new CombatantId.Human(alice.getUniqueId())),
-                  AttackType.MELEE,
-                  FakeMatch.T0),
-              List.of(new MatchEffect.Spectate(victim, harness.match.map().spectatorPoint())));
-        });
+    harness.bodies.afterNextOrder(() -> {
+      harness.match.kill(victim.uuid());
+      harness.match.fire(
+          new MatchEvent.Died(
+              victim,
+              Optional.of(new CombatantId.Human(alice.getUniqueId())),
+              AttackType.MELEE,
+              FakeMatch.T0),
+          List.of(new MatchEffect.Spectate(victim, harness.match.map().spectatorPoint())));
+    });
     harness.tick();
 
     assertThat(harness.paper().loop().inMatch()).isTrue();

@@ -189,13 +189,12 @@ final class GraveUpkeep {
           if (drops.stream().anyMatch(drop -> drop.grave().equals(grave))) {
             registry
                 .get(grave)
-                .ifPresent(
-                    contents -> {
-                      if (!expired.contains(grave)
-                          && policy.isExpired(contents.grave(), runtime.time().instant())) {
-                        expire(contents.grave());
-                      }
-                    });
+                .ifPresent(contents -> {
+                  if (!expired.contains(grave)
+                      && policy.isExpired(contents.grave(), runtime.time().instant())) {
+                    expire(contents.grave());
+                  }
+                });
           } else if (registry.tryLock(grave)) {
             remove(grave);
           }
@@ -333,13 +332,12 @@ final class GraveUpkeep {
         drops -> {
           registry
               .get(grave.id())
-              .ifPresent(
-                  contents ->
-                      registry.put(
-                          contents.without(
-                              drops.stream()
-                                  .map(drop -> drop.item().index())
-                                  .collect(toUnmodifiableSet()))));
+              .ifPresent(contents ->
+                  registry.put(
+                      contents.without(
+                          drops.stream()
+                              .map(drop -> drop.item().index())
+                              .collect(toUnmodifiableSet()))));
           clear(grave);
           expired.add(grave.id());
           reconcile(chunk);

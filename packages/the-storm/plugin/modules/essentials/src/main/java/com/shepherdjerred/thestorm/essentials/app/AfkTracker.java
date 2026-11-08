@@ -94,16 +94,15 @@ public final class AfkTracker implements AfkStatus, ActivityFeed {
   public List<UUID> sweep() {
     var now = time.instant();
     var newlyAway = new ConcurrentLinkedQueue<UUID>();
-    states.replaceAll(
-        (id, state) -> {
-          var next = state.idleCheck(timeout, now);
-          if (next.afk() && !state.afk()) {
-            analytics.afk(id, true);
-            newlyAway.add(id);
-          }
-          checkpoint(id, !next.afk());
-          return next;
-        });
+    states.replaceAll((id, state) -> {
+      var next = state.idleCheck(timeout, now);
+      if (next.afk() && !state.afk()) {
+        analytics.afk(id, true);
+        newlyAway.add(id);
+      }
+      checkpoint(id, !next.afk());
+      return next;
+    });
     return List.copyOf(newlyAway);
   }
 

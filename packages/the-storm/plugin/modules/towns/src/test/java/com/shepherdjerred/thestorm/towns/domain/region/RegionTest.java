@@ -95,15 +95,14 @@ final class RegionTest {
   void regionIdsAndNamesAreValidated() {
     assertThatThrownBy(() -> region("Spawn!", SPAWN_CHUNKS))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () ->
-                new AdminRegion(
-                    "spawn",
-                    " ",
-                    new RegionAreas(List.of(SPAWN_CHUNKS), List.of()),
-                    List.of(),
-                    RegionSpawns.unlimited(),
-                    com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE))
+    assertThatThrownBy(() ->
+            new AdminRegion(
+                "spawn",
+                " ",
+                new RegionAreas(List.of(SPAWN_CHUNKS), List.of()),
+                List.of(),
+                RegionSpawns.unlimited(),
+                com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

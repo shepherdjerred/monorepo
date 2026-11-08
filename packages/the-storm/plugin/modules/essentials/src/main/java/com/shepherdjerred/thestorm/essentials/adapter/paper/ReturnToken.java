@@ -35,19 +35,18 @@ final class ReturnToken {
 
   static ItemStack item(Player player, Location death, int shown) {
     var stack = new ItemStack(Material.RECOVERY_COMPASS);
-    stack.editMeta(
-        meta -> {
-          meta.displayName(Component.text("Return"));
-          meta.lore(List.of(Component.text(shown + " left.")));
-          var data = meta.getPersistentDataContainer();
-          data.set(OWNER, PersistentDataType.STRING, player.getUniqueId().toString());
-          data.set(WORLD, PersistentDataType.STRING, death.getWorld().getName());
-          data.set(X, PersistentDataType.DOUBLE, death.getX());
-          data.set(Y, PersistentDataType.DOUBLE, death.getY());
-          data.set(Z, PersistentDataType.DOUBLE, death.getZ());
-          data.set(YAW, PersistentDataType.FLOAT, death.getYaw());
-          data.set(PITCH, PersistentDataType.FLOAT, death.getPitch());
-        });
+    stack.editMeta(meta -> {
+      meta.displayName(Component.text("Return"));
+      meta.lore(List.of(Component.text(shown + " left.")));
+      var data = meta.getPersistentDataContainer();
+      data.set(OWNER, PersistentDataType.STRING, player.getUniqueId().toString());
+      data.set(WORLD, PersistentDataType.STRING, death.getWorld().getName());
+      data.set(X, PersistentDataType.DOUBLE, death.getX());
+      data.set(Y, PersistentDataType.DOUBLE, death.getY());
+      data.set(Z, PersistentDataType.DOUBLE, death.getZ());
+      data.set(YAW, PersistentDataType.FLOAT, death.getYaw());
+      data.set(PITCH, PersistentDataType.FLOAT, death.getPitch());
+    });
     return stack;
   }
 

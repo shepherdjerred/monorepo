@@ -60,14 +60,13 @@ final class SafeLocations {
     var world = target.getWorld();
     var at = BlockPos.of(Positions.of(target));
     return SafeSpots.find(view(world, at), range(world), at)
-        .map(
-            spot -> {
-              var safe = target.clone();
-              if (spot.x() != target.getBlockX()) safe.setX(spot.x() + 0.5);
-              if (spot.z() != target.getBlockZ()) safe.setZ(spot.z() + 0.5);
-              safe.setY(spot.y());
-              return safe;
-            });
+        .map(spot -> {
+          var safe = target.clone();
+          if (spot.x() != target.getBlockX()) safe.setX(spot.x() + 0.5);
+          if (spot.z() != target.getBlockZ()) safe.setZ(spot.z() + 0.5);
+          safe.setY(spot.y());
+          return safe;
+        });
   }
 
   /** Whether the chunk holding {@code location} is loaded, so its blocks can be read at once. */

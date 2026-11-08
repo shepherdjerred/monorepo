@@ -188,11 +188,10 @@ public final class PurchaseService implements TrackPurchases {
           runtime
               .store()
               .load(player)
-              .thenCompose(
-                  progress ->
-                      wallets
-                          .balance(account(player), CurrencyId.CRYSTALS)
-                          .thenCompose(balance -> charge(player, quote, progress, balance)));
+              .thenCompose(progress ->
+                  wallets
+                      .balance(account(player), CurrencyId.CRYSTALS)
+                      .thenCompose(balance -> charge(player, quote, progress, balance)));
     } catch (RuntimeException e) {
       finished(player, done);
       throw e;
@@ -257,95 +256,89 @@ public final class PurchaseService implements TrackPurchases {
                 current.equals(before)
                     ? Result.<TrackProgress, TrackProgress>ok(after)
                     : Result.<TrackProgress, TrackProgress>err(current))
-        .<SaveOutcome>thenApply(
-            saved ->
-                switch (saved) {
-                  case Result.Ok<TrackProgress, TrackProgress>(var stored) -> new Saved(stored);
-                  case Result.Err<TrackProgress, TrackProgress>(var current) ->
-                      new Conflict(current);
-                })
+        .<SaveOutcome>thenApply(saved ->
+            switch (saved) {
+              case Result.Ok<TrackProgress, TrackProgress>(var stored) -> new Saved(stored);
+              case Result.Err<TrackProgress, TrackProgress>(var current) -> new Conflict(current);
+            })
         .exceptionally(Failed::new)
-        .thenCompose(
-            outcome ->
-                switch (outcome) {
-                  case Saved(var stored) ->
-                      completedFuture(Result.ok(new Recorded(stored, purchase)));
-                  case Conflict(var current) -> {
-                    runtime
-                        .logger()
-                        .error(
-                            "Charged {} for {} (ledger #{}) but their tracks changed to {}"
-                                + " meanwhile; refunding",
-                            player,
-                            quote,
-                            receipt.transactionId(),
-                            current);
-                    yield refund(player, quote, receipt);
-                  }
-                  case Failed(var failure) -> {
-                    runtime
-                        .logger()
-                        .error(
-                            "Charged {} for {} (ledger #{}) but could not save the level;"
-                                + " refunding",
-                            player,
-                            quote,
-                            receipt.transactionId(),
-                            failure);
-                    yield refund(player, quote, receipt);
-                  }
-                });
+        .thenCompose(outcome ->
+            switch (outcome) {
+              case Saved(var stored) -> completedFuture(Result.ok(new Recorded(stored, purchase)));
+              case Conflict(var current) -> {
+                runtime
+                    .logger()
+                    .error(
+                        "Charged {} for {} (ledger #{}) but their tracks changed to {}"
+                            + " meanwhile; refunding",
+                        player,
+                        quote,
+                        receipt.transactionId(),
+                        current);
+                yield refund(player, quote, receipt);
+              }
+              case Failed(var failure) -> {
+                runtime
+                    .logger()
+                    .error(
+                        "Charged {} for {} (ledger #{}) but could not save the level;"
+                            + " refunding",
+                        player,
+                        quote,
+                        receipt.transactionId(),
+                        failure);
+                yield refund(player, quote, receipt);
+              }
+            });
   }
 
   private CompletableFuture<Result<Recorded, List<PurchaseProblem>>> refund(
       UUID player, Quote quote, Receipt charge) {
     return wallets
         .transfer(SERVER, account(player), Money.crystals(quote.cost()), refundReason(quote))
-        .handle(
-            (refunded, failure) -> {
-              if (failure != null) {
-                runtime
-                    .logger()
-                    .error(
-                        "REFUND FAILED: {} paid {} for {} (ledger #{}) and did not get the level"
-                            + " or their crystals back; refund them by hand",
-                        player,
-                        quote.cost(),
-                        quote,
-                        charge.transactionId(),
-                        failure);
-                throw new IllegalStateException("refund failed for " + player, failure);
-              }
-              return switch (refunded) {
-                case Result.Ok<Receipt, EconomyError>(var receipt) -> {
-                  runtime
-                      .logger()
-                      .warn(
-                          "Refunded {} crystals to {} for {} (ledger #{})",
-                          quote.cost(),
-                          player,
-                          quote,
-                          receipt.transactionId());
-                  yield Result.<Recorded, List<PurchaseProblem>>err(
-                      List.of(new PurchaseProblem.NotRecorded(quote)));
-                }
-                case Result.Err<Receipt, EconomyError>(var error) ->
-                    throw new IllegalStateException(
-                        "the economy refused to refund " + player + " for " + quote + ": " + error);
-              };
-            });
+        .handle((refunded, failure) -> {
+          if (failure != null) {
+            runtime
+                .logger()
+                .error(
+                    "REFUND FAILED: {} paid {} for {} (ledger #{}) and did not get the level"
+                        + " or their crystals back; refund them by hand",
+                    player,
+                    quote.cost(),
+                    quote,
+                    charge.transactionId(),
+                    failure);
+            throw new IllegalStateException("refund failed for " + player, failure);
+          }
+          return switch (refunded) {
+            case Result.Ok<Receipt, EconomyError>(var receipt) -> {
+              runtime
+                  .logger()
+                  .warn(
+                      "Refunded {} crystals to {} for {} (ledger #{})",
+                      quote.cost(),
+                      player,
+                      quote,
+                      receipt.transactionId());
+              yield Result.<Recorded, List<PurchaseProblem>>err(
+                  List.of(new PurchaseProblem.NotRecorded(quote)));
+            }
+            case Result.Err<Receipt, EconomyError>(var error) ->
+                throw new IllegalStateException(
+                    "the economy refused to refund " + player + " for " + quote + ": " + error);
+          };
+        });
   }
 
   /** On the main thread: publish a stored purchase to the cache and permissions. */
   private Result<Purchase, List<PurchaseProblem>> finish(
       UUID player, Result<Recorded, List<PurchaseProblem>> recorded) {
-    return recorded.map(
-        stored -> {
-          runtime.changed(player, stored.progress());
-          var quote = stored.purchase().quote();
-          signals.purchased(player, quote.track(), quote.level());
-          return stored.purchase();
-        });
+    return recorded.map(stored -> {
+      runtime.changed(player, stored.progress());
+      var quote = stored.purchase().quote();
+      signals.purchased(player, quote.track(), quote.level());
+      return stored.purchase();
+    });
   }
 
   private static AccountId account(UUID player) {

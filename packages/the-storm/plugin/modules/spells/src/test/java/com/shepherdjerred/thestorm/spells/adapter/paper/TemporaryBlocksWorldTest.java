@@ -35,9 +35,8 @@ final class TemporaryBlocksWorldTest {
             store,
             new TemporaryBlocks.Dependencies(
                 harness.server, harness.clock, harness.async, harness.protection, harness.changes))
-        .withLoader(
-            (world, key) ->
-                CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
+        .withLoader((world, key) ->
+            CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
   }
 
   @AfterEach
@@ -73,18 +72,17 @@ final class TemporaryBlocksWorldTest {
 
     @Override
     public CompletableFuture<List<BlockKey>> saveTemporaryBlocks(List<TemporaryBlock> blocks) {
-      return gate.thenApply(
-          ignored -> {
-            var saved = new ArrayList<BlockKey>();
-            for (var block : blocks) {
-              var existing = rows.get(block.key());
-              if (existing == null) {
-                rows.put(block.key(), new Row(block, false));
-                saved.add(block.key());
-              }
-            }
-            return saved;
-          });
+      return gate.thenApply(ignored -> {
+        var saved = new ArrayList<BlockKey>();
+        for (var block : blocks) {
+          var existing = rows.get(block.key());
+          if (existing == null) {
+            rows.put(block.key(), new Row(block, false));
+            saved.add(block.key());
+          }
+        }
+        return saved;
+      });
     }
 
     @Override

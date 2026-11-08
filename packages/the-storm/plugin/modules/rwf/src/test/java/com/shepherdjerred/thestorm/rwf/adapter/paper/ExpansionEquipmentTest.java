@@ -65,11 +65,10 @@ final class ExpansionEquipmentTest {
     assertThat(arrows.getData(DataComponentTypes.POTION_DURATION_SCALE)).isEqualTo(1.0f);
     assertThat(((PotionMeta) arrows.getItemMeta()).getCustomEffects())
         .singleElement()
-        .satisfies(
-            effect -> {
-              assertThat(effect.getType()).isEqualTo(PotionEffectType.SLOWNESS);
-              assertThat(effect.getDuration()).isEqualTo(60);
-            });
+        .satisfies(effect -> {
+          assertThat(effect.getType()).isEqualTo(PotionEffectType.SLOWNESS);
+          assertThat(effect.getDuration()).isEqualTo(60);
+        });
   }
 
   @Test

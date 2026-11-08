@@ -100,12 +100,11 @@ final class SettlementRulesTest {
         assertThat(content.recipes()).anyMatch(r -> r.material().equals(tier + "_" + slot));
     }
     assertThat(content.recipes())
-        .allSatisfy(
-            r ->
-                assertThat(
-                        r.ingredients().keySet().stream()
-                            .filter(material -> !material.equals("EMERALD")))
-                    .hasSizeLessThanOrEqualTo(3));
+        .allSatisfy(r ->
+            assertThat(
+                    r.ingredients().keySet().stream()
+                        .filter(material -> !material.equals("EMERALD")))
+                .hasSizeLessThanOrEqualTo(3));
     assertThat(content.recipes().stream().map(SurvivalContent.Recipe::potion).distinct())
         .containsExactlyInAnyOrder(SurvivalContent.PotionKind.values());
   }
@@ -122,15 +121,14 @@ final class SettlementRulesTest {
         .isLessThanOrEqualTo(SettlementBlueprint.BLOCK_BUDGET);
     var exit = content.arena().exit().point().block();
     assertThat(blueprint.keySet())
-        .allSatisfy(
-            pos ->
-                assertThat(
-                        content.arena().region().contains(pos)
-                            || (pos.x() == exit.x()
-                                && pos.z() == exit.z()
-                                && Math.abs(pos.y() - exit.y()) <= 1))
-                    .as("Reviewed footprint at %s", pos)
-                    .isTrue());
+        .allSatisfy(pos ->
+            assertThat(
+                    content.arena().region().contains(pos)
+                        || (pos.x() == exit.x()
+                            && pos.z() == exit.z()
+                            && Math.abs(pos.y() - exit.y()) <= 1))
+                .as("Reviewed footprint at %s", pos)
+                .isTrue());
     for (var zone : content.zones()) {
       var spawn = zone.entrance().block();
       assertThat(blueprint.get(spawn)).isEqualTo("AIR");
@@ -192,17 +190,15 @@ final class SettlementRulesTest {
     for (var zone : content.zones()) {
       assertThat(reachable).contains(zone.entrance().block());
       assertThat(zone.spawns())
-          .allSatisfy(
-              point ->
-                  assertThat(reachable)
-                      .as("Spawn in %s at %s", zone.id(), point)
-                      .contains(point.block()));
+          .allSatisfy(point ->
+              assertThat(reachable)
+                  .as("Spawn in %s at %s", zone.id(), point)
+                  .contains(point.block()));
       assertThat(zone.safePoints())
-          .allSatisfy(
-              point ->
-                  assertThat(reachable)
-                      .as("Rescue in %s at %s", zone.id(), point)
-                      .contains(point.block()));
+          .allSatisfy(point ->
+              assertThat(reachable)
+                  .as("Rescue in %s at %s", zone.id(), point)
+                  .contains(point.block()));
       for (var station : zone.stations()) {
         assertThat(neighbors(station.block()).stream().anyMatch(reachable::contains))
             .as("Reach station in %s", zone.id())
@@ -213,11 +209,10 @@ final class SettlementRulesTest {
     assertThat(reachable).contains(new BlockPos(8, 77, 4));
     assertThat(reachable).contains(new BlockPos(-5, 101, -4));
     assertThat(content.boxSites())
-        .allSatisfy(
-            site ->
-                assertThat(neighbors(site.block()).stream().anyMatch(reachable::contains))
-                    .as("Reach box %s", site.id())
-                    .isTrue());
+        .allSatisfy(site ->
+            assertThat(neighbors(site.block()).stream().anyMatch(reachable::contains))
+                .as("Reach box %s", site.id())
+                .isTrue());
   }
 
   @Test

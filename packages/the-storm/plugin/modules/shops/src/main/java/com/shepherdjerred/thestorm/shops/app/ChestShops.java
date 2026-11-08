@@ -259,14 +259,13 @@ public final class ChestShops {
     }
     var mine =
         where.containerBlocks().stream()
-            .allMatch(
-                block ->
-                    switch (owner) {
-                      case ShopOwner.Player(var id, _) -> registry.ownsAllOn(id, block);
-                      case ShopOwner.Town(var id, _) -> registry.ownsAllOn(id, block);
-                      case ShopOwner.Admin(_) ->
-                          registry.tradingFrom(block).stream().allMatch(SignShop::isAdmin);
-                    });
+            .allMatch(block ->
+                switch (owner) {
+                  case ShopOwner.Player(var id, _) -> registry.ownsAllOn(id, block);
+                  case ShopOwner.Town(var id, _) -> registry.ownsAllOn(id, block);
+                  case ShopOwner.Admin(_) ->
+                      registry.tradingFrom(block).stream().allMatch(SignShop::isAdmin);
+                });
     return mine ? CreationAttempt.Container.FREE : CreationAttempt.Container.TAKEN;
   }
 

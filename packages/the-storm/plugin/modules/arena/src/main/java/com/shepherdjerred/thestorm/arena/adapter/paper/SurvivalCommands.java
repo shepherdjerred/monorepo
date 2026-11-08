@@ -22,73 +22,63 @@ final class SurvivalCommands {
                 Commands.literal("tips")
                     .then(
                         Commands.literal("on")
-                            .executes(
-                                c ->
-                                    player(
-                                        c.getSource().getSender(),
-                                        p -> runner(p, r -> r.tips().setting(p, "on")))))
+                            .executes(c ->
+                                player(
+                                    c.getSource().getSender(),
+                                    p -> runner(p, r -> r.tips().setting(p, "on")))))
                     .then(
                         Commands.literal("off")
-                            .executes(
-                                c ->
-                                    player(
-                                        c.getSource().getSender(),
-                                        p -> runner(p, r -> r.tips().setting(p, "off")))))
+                            .executes(c ->
+                                player(
+                                    c.getSource().getSender(),
+                                    p -> runner(p, r -> r.tips().setting(p, "off")))))
                     .then(
                         Commands.literal("reset")
-                            .executes(
-                                c ->
-                                    player(
-                                        c.getSource().getSender(),
-                                        p -> runner(p, r -> r.tips().setting(p, "reset"))))))
+                            .executes(c ->
+                                player(
+                                    c.getSource().getSender(),
+                                    p -> runner(p, r -> r.tips().setting(p, "reset"))))))
             .then(
                 Commands.literal("guide")
-                    .executes(
-                        c ->
-                            player(
-                                c.getSource().getSender(), p -> runner(p, r -> r.guide().open(p)))))
+                    .executes(c ->
+                        player(c.getSource().getSender(), p -> runner(p, r -> r.guide().open(p)))))
             .then(
                 Commands.literal("classes")
-                    .executes(
-                        c ->
-                            player(
-                                c.getSource().getSender(),
-                                p -> runner(p, r -> r.classMenus().classes(p)))))
+                    .executes(c ->
+                        player(
+                            c.getSource().getSender(),
+                            p -> runner(p, r -> r.classMenus().classes(p)))))
             .then(
                 Commands.literal("upgrades")
-                    .executes(
-                        c ->
-                            player(
-                                c.getSource().getSender(),
-                                p -> runner(p, r -> r.classMenus().upgrades(p)))))
+                    .executes(c ->
+                        player(
+                            c.getSource().getSender(),
+                            p -> runner(p, r -> r.classMenus().upgrades(p)))))
             .then(
                 Commands.literal("ability")
-                    .executes(
-                        c ->
-                            player(
-                                c.getSource().getSender(),
-                                p -> runner(p, r -> r.actions().ability(p)))))
+                    .executes(c ->
+                        player(
+                            c.getSource().getSender(),
+                            p -> runner(p, r -> r.actions().ability(p)))))
             .then(
                 Commands.literal("status")
-                    .executes(
-                        c ->
-                            player(
-                                c.getSource().getSender(),
-                                p ->
-                                    runner(
-                                        p,
-                                        r ->
-                                            Texts.info(
-                                                p,
-                                                "Round "
-                                                    + r.game().round()
-                                                    + " | XP "
-                                                    + r.xp(p.getUniqueId())
-                                                    + " | Emeralds "
-                                                    + r.items()
-                                                        .count(p, org.bukkit.Material.EMERALD)
-                                                    + " | Open routes "
-                                                    + r.map().state().open())))))
+                    .executes(c ->
+                        player(
+                            c.getSource().getSender(),
+                            p ->
+                                runner(
+                                    p,
+                                    r ->
+                                        Texts.info(
+                                            p,
+                                            "Round "
+                                                + r.game().round()
+                                                + " | XP "
+                                                + r.xp(p.getUniqueId())
+                                                + " | Emeralds "
+                                                + r.items().count(p, org.bukkit.Material.EMERALD)
+                                                + " | Open routes "
+                                                + r.map().state().open())))))
             .then(
                 Commands.literal("give")
                     .then(
@@ -98,51 +88,45 @@ final class SurvivalCommands {
                                     .then(
                                         Commands.argument(
                                                 "amount", IntegerArgumentType.integer(1, 64))
-                                            .executes(
-                                                c ->
-                                                    player(
-                                                        c.getSource().getSender(),
-                                                        p ->
-                                                            runner(
-                                                                p,
-                                                                r -> {
-                                                                  var target =
-                                                                      com.shepherdjerred.thestorm
-                                                                          .core.players
-                                                                          .PlayerHandles.online(
-                                                                              p.getServer(),
-                                                                              StringArgumentType
-                                                                                  .getString(
-                                                                                      c, "player"))
-                                                                          .orElse(null);
-                                                                  if (target == null) {
-                                                                    Texts.error(
-                                                                        p,
-                                                                        "That teammate is offline.");
-                                                                    return;
-                                                                  }
-                                                                  org.bukkit.Material item;
-                                                                  try {
-                                                                    item =
-                                                                        SurvivalItems.material(
-                                                                            StringArgumentType
-                                                                                .getString(
-                                                                                    c, "item"));
-                                                                  } catch (
-                                                                      IllegalArgumentException
-                                                                          error) {
-                                                                    Texts.error(p, "Unknown item.");
-                                                                    return;
-                                                                  }
-                                                                  r.actions()
-                                                                      .donate(
-                                                                          p,
-                                                                          target,
-                                                                          item,
-                                                                          IntegerArgumentType
-                                                                              .getInteger(
-                                                                                  c, "amount"));
-                                                                })))))))
+                                            .executes(c ->
+                                                player(
+                                                    c.getSource().getSender(),
+                                                    p ->
+                                                        runner(
+                                                            p,
+                                                            r -> {
+                                                              var target =
+                                                                  com.shepherdjerred.thestorm.core
+                                                                      .players.PlayerHandles.online(
+                                                                          p.getServer(),
+                                                                          StringArgumentType
+                                                                              .getString(
+                                                                                  c, "player"))
+                                                                      .orElse(null);
+                                                              if (target == null) {
+                                                                Texts.error(
+                                                                    p, "That teammate is offline.");
+                                                                return;
+                                                              }
+                                                              org.bukkit.Material item;
+                                                              try {
+                                                                item =
+                                                                    SurvivalItems.material(
+                                                                        StringArgumentType
+                                                                            .getString(c, "item"));
+                                                              } catch (
+                                                                  IllegalArgumentException error) {
+                                                                Texts.error(p, "Unknown item.");
+                                                                return;
+                                                              }
+                                                              r.actions()
+                                                                  .donate(
+                                                                      p,
+                                                                      target,
+                                                                      item,
+                                                                      IntegerArgumentType
+                                                                          .getInteger(c, "amount"));
+                                                            })))))))
             .build(),
         "Survival arenas: classes, upgrades, ability, status, give <player> <item> <amount>");
   }

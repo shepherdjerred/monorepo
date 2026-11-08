@@ -44,26 +44,25 @@ final class Shadowstep implements Spell {
     return tools
         .teleports()
         .arrival(caster, behind(target), SEARCH_RADIUS, spot -> Teleports.clearPath(eyes, spot))
-        .map(
-            destination ->
-                new Effect() {
-                  @Override
-                  public void beforeCommit(Runnable commit, Runnable failed) {
-                    if (tools.harm().denial(caster, target).isPresent()
-                        || !Teleports.teleport(caster, destination)) {
-                      failed.run();
-                      return;
-                    }
-                    tools.harm().breakStealth(caster);
-                    commit.run();
-                  }
+        .map(destination ->
+            new Effect() {
+              @Override
+              public void beforeCommit(Runnable commit, Runnable failed) {
+                if (tools.harm().denial(caster, target).isPresent()
+                    || !Teleports.teleport(caster, destination)) {
+                  failed.run();
+                  return;
+                }
+                tools.harm().breakStealth(caster);
+                commit.run();
+              }
 
-                  @Override
-                  public void apply() {
-                    tools.fx().cast(kind(), from);
-                    tools.fx().cast(kind(), destination);
-                  }
-                });
+              @Override
+              public void apply() {
+                tools.fx().cast(kind(), from);
+                tools.fx().cast(kind(), destination);
+              }
+            });
   }
 
   private static Location behind(LivingEntity target) {

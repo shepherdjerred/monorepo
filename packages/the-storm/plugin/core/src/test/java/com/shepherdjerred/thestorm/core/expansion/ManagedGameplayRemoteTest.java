@@ -68,12 +68,10 @@ final class ManagedGameplayRemoteTest {
         status,
         "broken flag contract",
         flags -> {
-          assertThatThrownBy(
-                  () ->
-                      flags
-                          .enabledOrDefault(
-                              ManagedGameplay.CONTENT_SAFETY, ACTOR, false, failure -> {})
-                          .join())
+          assertThatThrownBy(() ->
+                  flags
+                      .enabledOrDefault(ManagedGameplay.CONTENT_SAFETY, ACTOR, false, failure -> {})
+                      .join())
               .hasRootCauseMessage("rollout returned HTTP %s", status);
           assertThat(flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, ACTOR)).isEmpty();
         });
@@ -87,15 +85,14 @@ final class ManagedGameplayRemoteTest {
         body,
         flags -> {
           var observed = new AtomicBoolean();
-          assertThatThrownBy(
-                  () ->
-                      flags
-                          .enabledOrDefault(
-                              ManagedGameplay.CONTENT_SAFETY,
-                              ACTOR,
-                              false,
-                              failure -> observed.set(true))
-                          .join())
+          assertThatThrownBy(() ->
+                  flags
+                      .enabledOrDefault(
+                          ManagedGameplay.CONTENT_SAFETY,
+                          ACTOR,
+                          false,
+                          failure -> observed.set(true))
+                      .join())
               .isInstanceOf(java.util.concurrent.CompletionException.class);
           assertThat(observed.get()).isFalse();
           assertThat(flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, ACTOR)).isEmpty();

@@ -54,37 +54,34 @@ final class QuestsMigrationTest {
         var database = StormDatabase.open(file)) {
       database.migrate("quests", loader);
       database
-          .write(
-              dsl ->
-                  dsl.execute(
-                      "INSERT INTO quests_player (player_id, points, board_day, board_week) VALUES (?, ?, ?, ?)",
-                      "69aef4f7-91d0-4f09-aef1-c721307aa45c",
-                      12,
-                      "2026-10-06",
-                      "2026-10-05"))
+          .write(dsl ->
+              dsl.execute(
+                  "INSERT INTO quests_player (player_id, points, board_day, board_week) VALUES (?, ?, ?, ?)",
+                  "69aef4f7-91d0-4f09-aef1-c721307aa45c",
+                  12,
+                  "2026-10-06",
+                  "2026-10-05"))
           .join();
     }
     try (var database = StormDatabase.open(file)) {
       database.migrate("quests", getClass().getClassLoader());
       assertThat(
               database
-                  .read(
-                      dsl ->
-                          dsl.select(field("points", Long.class))
-                              .from(table("quests_player"))
-                              .fetchSingle()
-                              .value1())
+                  .read(dsl ->
+                      dsl.select(field("points", Long.class))
+                          .from(table("quests_player"))
+                          .fetchSingle()
+                          .value1())
                   .join())
           .isEqualTo(12);
       assertThat(
               database
-                  .read(
-                      dsl ->
-                          dsl.select(field("version", String.class))
-                              .from(table("flyway_quests_history"))
-                              .where(field("version").isNotNull())
-                              .orderBy(field("installed_rank"))
-                              .fetch(field("version", String.class)))
+                  .read(dsl ->
+                      dsl.select(field("version", String.class))
+                          .from(table("flyway_quests_history"))
+                          .where(field("version").isNotNull())
+                          .orderBy(field("installed_rank"))
+                          .fetch(field("version", String.class)))
                   .join())
           .containsExactly("1", "2", "3", "4");
     }

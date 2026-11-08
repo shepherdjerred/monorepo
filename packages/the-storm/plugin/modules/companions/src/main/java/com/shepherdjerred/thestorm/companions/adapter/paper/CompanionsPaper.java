@@ -94,11 +94,10 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
     conversation = parts.conversation();
     var lines = context.services().require(GlobalChat.class);
     chatSubscription =
-        lines.subscribe(
-            line -> {
-              if (line.author() instanceof ChatAuthor.InGame human)
-                context.scheduler().runOnMainThread(() -> converse(human.id(), line.text()));
-            });
+        lines.subscribe(line -> {
+          if (line.author() instanceof ChatAuthor.InGame human)
+            context.scheduler().runOnMainThread(() -> converse(human.id(), line.text()));
+        });
     availability =
         new Availability(
             ZoneId.of(config.timeZone()),
@@ -216,16 +215,14 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
     var state =
         saved
             .map(CompanionStore.Stored::state)
-            .orElseGet(
-                () ->
-                    CompanionBody.initial(
-                        npc,
-                        world.getSpawnLocation(),
-                        context
-                            .services()
-                            .require(
-                                com.shepherdjerred.thestorm.essentials.app.StarterSupplies.class),
-                        context.plugin().getServer()));
+            .orElseGet(() ->
+                CompanionBody.initial(
+                    npc,
+                    world.getSpawnLocation(),
+                    context
+                        .services()
+                        .require(com.shepherdjerred.thestorm.essentials.app.StarterSupplies.class),
+                    context.plugin().getServer()));
     var persisted =
         saved.isEmpty()
             ? store.save(identity.id(), state)
@@ -388,60 +385,50 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
                 Commands.literal("status")
                     .requires(
                         source -> source.getSender().hasPermission("thestorm.companions.admin"))
-                    .executes(
-                        command -> {
-                          command
-                              .getSource()
-                              .getSender()
-                              .sendMessage(
-                                  Component.text(
-                                      "Companions active="
-                                          + active()
-                                          + ", spawned="
-                                          + actors.size()
-                                          + ", paused="
-                                          + paused));
-                          return 1;
-                        }))
+                    .executes(command -> {
+                      command
+                          .getSource()
+                          .getSender()
+                          .sendMessage(
+                              Component.text(
+                                  "Companions active="
+                                      + active()
+                                      + ", spawned="
+                                      + actors.size()
+                                      + ", paused="
+                                      + paused));
+                      return 1;
+                    }))
             .then(
                 Commands.literal("reconcile")
                     .requires(
                         source -> source.getSender().hasPermission("thestorm.companions.admin"))
-                    .executes(
-                        command -> {
-                          reconcile();
-                          command
-                              .getSource()
-                              .getSender()
-                              .sendMessage(Component.text("Companion reconciliation requested"));
-                          return 1;
-                        }));
+                    .executes(command -> {
+                      reconcile();
+                      command
+                          .getSource()
+                          .getSender()
+                          .sendMessage(Component.text("Companion reconciliation requested"));
+                      return 1;
+                    }));
     for (var identity : config.identities()) {
       root.then(
           Commands.literal(identity.id())
               .requires(source -> source.getSender() instanceof Player)
               .then(
                   Commands.literal("follow")
-                      .executes(
-                          command ->
-                              direct(
-                                  identity.id(),
-                                  (Player) command.getSource().getSender(),
-                                  "follow")))
+                      .executes(command ->
+                          direct(
+                              identity.id(), (Player) command.getSource().getSender(), "follow")))
               .then(
                   Commands.literal("stop")
-                      .executes(
-                          command ->
-                              direct(
-                                  identity.id(), (Player) command.getSource().getSender(), "stop")))
+                      .executes(command ->
+                          direct(identity.id(), (Player) command.getSource().getSender(), "stop")))
               .then(
                   Commands.literal("resume")
-                      .executes(
-                          command ->
-                              direct(
-                                  identity.id(),
-                                  (Player) command.getSource().getSender(),
-                                  "resume"))));
+                      .executes(command ->
+                          direct(
+                              identity.id(), (Player) command.getSource().getSender(), "resume"))));
     }
     commands.register(root.build(), "Companion status and nearby survival instructions");
   }
@@ -545,13 +532,12 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
           var _ =
               store
                   .save(actor.id(), actor.snapshot())
-                  .whenComplete(
-                      (ignored, error) -> {
-                        if (error != null)
-                          context
-                              .logger()
-                              .error("Failed to save companion {} on shutdown", actor.id(), error);
-                      });
+                  .whenComplete((ignored, error) -> {
+                    if (error != null)
+                      context
+                          .logger()
+                          .error("Failed to save companion {} on shutdown", actor.id(), error);
+                  });
         }
         actor.npc().despawn();
       }

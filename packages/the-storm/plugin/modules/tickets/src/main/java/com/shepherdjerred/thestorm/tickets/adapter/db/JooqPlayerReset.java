@@ -21,24 +21,23 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              var tickets = dsl.select(TICKET.ID).from(TICKET).where(TICKET.REPORTER.eq(id));
-              dsl.deleteFrom(TICKET_TRIAGE_DUPLICATE)
-                  .where(
-                      TICKET_TRIAGE_DUPLICATE
-                          .TICKET_ID
-                          .in(tickets)
-                          .or(TICKET_TRIAGE_DUPLICATE.DUPLICATE_ID.in(tickets)))
-                  .execute();
-              dsl.deleteFrom(TICKET_TRIAGE).where(TICKET_TRIAGE.TICKET_ID.in(tickets)).execute();
-              dsl.deleteFrom(TICKET_COMMENT)
-                  .where(TICKET_COMMENT.AUTHOR.eq(id).or(TICKET_COMMENT.TICKET_ID.in(tickets)))
-                  .execute();
-              dsl.update(TICKET).setNull(TICKET.CLAIMER).where(TICKET.CLAIMER.eq(id)).execute();
-              dsl.deleteFrom(TICKET).where(TICKET.REPORTER.eq(id)).execute();
-              return true;
-            })
+        .write(dsl -> {
+          var tickets = dsl.select(TICKET.ID).from(TICKET).where(TICKET.REPORTER.eq(id));
+          dsl.deleteFrom(TICKET_TRIAGE_DUPLICATE)
+              .where(
+                  TICKET_TRIAGE_DUPLICATE
+                      .TICKET_ID
+                      .in(tickets)
+                      .or(TICKET_TRIAGE_DUPLICATE.DUPLICATE_ID.in(tickets)))
+              .execute();
+          dsl.deleteFrom(TICKET_TRIAGE).where(TICKET_TRIAGE.TICKET_ID.in(tickets)).execute();
+          dsl.deleteFrom(TICKET_COMMENT)
+              .where(TICKET_COMMENT.AUTHOR.eq(id).or(TICKET_COMMENT.TICKET_ID.in(tickets)))
+              .execute();
+          dsl.update(TICKET).setNull(TICKET.CLAIMER).where(TICKET.CLAIMER.eq(id)).execute();
+          dsl.deleteFrom(TICKET).where(TICKET.REPORTER.eq(id)).execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

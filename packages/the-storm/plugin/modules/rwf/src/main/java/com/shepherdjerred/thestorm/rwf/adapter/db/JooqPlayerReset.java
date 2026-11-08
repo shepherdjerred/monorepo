@@ -27,24 +27,21 @@ public final class JooqPlayerReset {
   public CompletableFuture<Void> reset(UUID player) {
     var id = player.toString();
     return database
-        .write(
-            dsl -> {
-              dsl.deleteFrom(RWF_SNAPSHOTS).where(RWF_SNAPSHOTS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_MATCH_PLAYER).where(RWF_MATCH_PLAYER.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_MATCH_EVENT)
-                  .where(RWF_MATCH_EVENT.ACTOR.eq(id).or(RWF_MATCH_EVENT.TARGET.eq(id)))
-                  .execute();
-              dsl.deleteFrom(RWF_PLAYER_STATS).where(RWF_PLAYER_STATS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_PLAYER_KIT_STATS)
-                  .where(RWF_PLAYER_KIT_STATS.PLAYER.eq(id))
-                  .execute();
-              dsl.deleteFrom(RWF_PLAYER_PREFS).where(RWF_PLAYER_PREFS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_STREAK_PREFS).where(RWF_STREAK_PREFS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_DAILY_EARNINGS).where(RWF_DAILY_EARNINGS.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_KIT_OWNED).where(RWF_KIT_OWNED.PLAYER.eq(id)).execute();
-              dsl.deleteFrom(RWF_KIT_PURCHASE).where(RWF_KIT_PURCHASE.PLAYER.eq(id)).execute();
-              return true;
-            })
+        .write(dsl -> {
+          dsl.deleteFrom(RWF_SNAPSHOTS).where(RWF_SNAPSHOTS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_MATCH_PLAYER).where(RWF_MATCH_PLAYER.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_MATCH_EVENT)
+              .where(RWF_MATCH_EVENT.ACTOR.eq(id).or(RWF_MATCH_EVENT.TARGET.eq(id)))
+              .execute();
+          dsl.deleteFrom(RWF_PLAYER_STATS).where(RWF_PLAYER_STATS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_PLAYER_KIT_STATS).where(RWF_PLAYER_KIT_STATS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_PLAYER_PREFS).where(RWF_PLAYER_PREFS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_STREAK_PREFS).where(RWF_STREAK_PREFS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_DAILY_EARNINGS).where(RWF_DAILY_EARNINGS.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_KIT_OWNED).where(RWF_KIT_OWNED.PLAYER.eq(id)).execute();
+          dsl.deleteFrom(RWF_KIT_PURCHASE).where(RWF_KIT_PURCHASE.PLAYER.eq(id)).execute();
+          return true;
+        })
         .thenAccept(ignored -> {});
   }
 }

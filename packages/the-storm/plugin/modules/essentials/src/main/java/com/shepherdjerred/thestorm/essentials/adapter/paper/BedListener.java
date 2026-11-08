@@ -46,10 +46,9 @@ final class BedListener implements Listener {
             found.stream()
                 .filter(home -> home.name().equals(HomeRules.BED))
                 .findFirst()
-                .ifPresent(
-                    home -> {
-                      if (player.isOnline()) beds.keep(player, home.position());
-                    }));
+                .ifPresent(home -> {
+                  if (player.isOnline()) beds.keep(player, home.position());
+                }));
   }
 
   @EventHandler(priority = EventPriority.HIGH)
