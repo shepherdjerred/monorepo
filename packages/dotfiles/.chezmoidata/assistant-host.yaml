@@ -23,6 +23,8 @@ assistantHost:
     - starship
     - atuin
     - rsteube/tap/carapace
+    # LS_COLORS in fish's theme-env.fish, rewritten by sync-theme.sh.
+    - vivid
     # The git config's pager and external diff.
     - git-delta
     - difftastic
