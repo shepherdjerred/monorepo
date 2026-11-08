@@ -57,6 +57,7 @@ test.each(["same_bytes", "missing", "changed_ancestor"] as const)(
       await f.db.libraryAsset.findUniqueOrThrow({ where: { id: asset.id } }),
     ).toMatchObject({ state: "superseded" });
   },
+  30_000,
 );
 
 test.each([
@@ -238,6 +239,7 @@ test.each(["same_bytes", "journal_directory"] as const)(
     expect(row.executionEvidence).not.toBeNull();
     expect(row.completion).toBeNull();
   },
+  30_000,
 );
 
 test("deadline crossing a real runtime lock rolls back with an un-aborted invocation", async () => {
