@@ -33,8 +33,8 @@ export default [
       },
       {
         kind: "label",
-        from: [0.08, 0.12],
-        to: [0.08, 0.12],
+        from: [0.08, 0.42],
+        to: [0.08, 0.42],
         text: "Walk through to Skylands",
         atStep: "travel-start",
         startMs: 0,
