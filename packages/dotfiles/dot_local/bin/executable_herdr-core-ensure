@@ -25,7 +25,8 @@ pid=$(/usr/bin/jq -er '.pid' <<<"$started")
 
 # The core keeps the environment it was started with; an SSH login's marks
 # identify an SSH-started core even after its parent `hc connect` has exited.
-if ps -E -ww -o command= -p "$pid" | tr ' ' '\n' | grep -q '^SSH_CONNECTION='; then
+# grep reads all input (no -q): an early exit would break the pipe under pipefail.
+if ps -E -ww -o command= -p "$pid" | tr ' ' '\n' | grep '^SSH_CONNECTION=' >/dev/null; then
     echo "$(date '+%Y-%m-%dT%H:%M:%S%z') core $pid was started from SSH; restarting it under launchd"
     "$hc" server restart --json
 fi
