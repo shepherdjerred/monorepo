@@ -87,6 +87,13 @@ export type StreamObserver = {
   /** Periodic transcode progress parsed from ffmpeg's progress protocol. */
   onProgress?: (progress: FfmpegProgress) => void;
   /**
+   * Every ffmpeg stderr line, already passed through `redactMediaUrls`, including the
+   * progress-protocol `key=value` lines. The crash error keeps a bounded tail of its own; this
+   * hook exists for failures that are not exits — a live process that stopped producing output
+   * is otherwise diagnosed with no ffmpeg evidence at all.
+   */
+  onStderrLine?: (line: string) => void;
+  /**
    * Encoded packet timing at the NUT demux boundary, before sender pacing and
    * RTP transport. High volume — correlate or aggregate downstream.
    */

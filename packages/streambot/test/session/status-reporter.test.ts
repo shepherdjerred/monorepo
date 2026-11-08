@@ -305,6 +305,25 @@ describe("StatusReporter crash notices", () => {
     ]);
   });
 
+  test("a stall at the end of the media gives up without claiming retries", () => {
+    const { reporter, messages } = collector();
+    reporter.handle({
+      ...streaming("Big Poppa"),
+      crashNotice: crashNotice({
+        title: "Big Poppa",
+        kind: "gave-up",
+        reason: "stall",
+        positionSeconds: 249,
+        attempt: 0,
+        pipelineMode: "sw",
+        atEndOfMedia: true,
+      }),
+    });
+    expect(messages.filter((m) => m.startsWith("🛑"))).toEqual([
+      "🛑 **Big Poppa** stalled at 4:09, at its end, with nothing left to retry. Skipping it.",
+    ]);
+  });
+
   test("software retry announces as software", () => {
     const { reporter, messages } = collector();
     reporter.handle({

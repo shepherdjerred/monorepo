@@ -303,6 +303,27 @@ describe("prepareStream realtime latency opt-ins", () => {
 // Defaults OFF; the regression lock at the end of this block is what protects the rawvideo bots
 // (discord-plays-pokemon, discord-plays-mario-kart), whose command line must not move at all.
 describe("prepareStream audioOnly", () => {
+  test("resumes a dropped HTTP file input but lets a clean end of file end ffmpeg", () => {
+    const { command, output, promise } = prepareStream(
+      "https://media.example/song.webm",
+      { audioOnly: true },
+    );
+    promise.catch(() => {});
+    try {
+      const args = ffmpegArgs(command);
+      const inputIndex = args.indexOf("-i");
+      const inputOptions = args.slice(0, inputIndex);
+      // A reconnect at EOF re-requests past the last byte of a finished file, so ffmpeg never
+      // exits and the track never ends: the stall watchdog fires instead of a natural end.
+      expect(args).not.toContain("-reconnect_at_eof");
+      expect(inputOptions.join(" ")).toContain("-reconnect 1");
+      expect(inputOptions.join(" ")).toContain("-reconnect_streamed 1");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
   test("emits an audio-only command with a REQUIRED audio mapping", () => {
     const { command, output, promise } = prepareStream("song.webm", {
       audioOnly: true,

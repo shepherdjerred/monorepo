@@ -741,6 +741,71 @@ describe("crash recovery ladder", () => {
     expect(notice?.kind).toBe("retry");
   });
 
+  test("PRODUCER_STALLED at the end of a known-length item drops it instead of seeking past the end", async () => {
+    const { actor, stream } = await startFilePlayback(["song", "next"], {
+      resolveSource: (input) => {
+        const title = input.source.kind === "file" ? input.source.title : "?";
+        return Promise.resolve({
+          title,
+          ffmpegInput: `resolved:${title}`,
+          mediaKind: "music",
+          chapters: [],
+          durationSeconds: 249.6,
+        });
+      },
+    });
+
+    actor.send({
+      type: "PRODUCER_STALLED",
+      reason: "ffmpeg produced no output for 20s",
+      positionSeconds: 249.58,
+    });
+    await waitForCurrentFile(actor, "next");
+
+    // No seek-retry of "song" from its last frame: "next" is the second invocation.
+    expect(stream.invocationCount()).toBe(2);
+    expect(stream.inputs[1]?.seekSeconds).toBe(0);
+    const context = actor.getSnapshot().context;
+    expect(context.crashRetries).toBe(0);
+    expect(context.crashNotice).toMatchObject({
+      kind: "gave-up",
+      reason: "stall",
+      attempt: 0,
+      atEndOfMedia: true,
+      pipelineMode: "sw",
+    });
+  });
+
+  test("a mid-track music stall retries and names the software pipeline it actually runs", async () => {
+    const { actor, stream } = await startFilePlayback(["song"], {
+      resolveSource: () =>
+        Promise.resolve({
+          title: "song",
+          ffmpegInput: "resolved:song",
+          mediaKind: "music",
+          chapters: [],
+          durationSeconds: 249.6,
+        }),
+    });
+
+    actor.send({
+      type: "PRODUCER_STALLED",
+      reason: "ffmpeg produced no output for 20s",
+      positionSeconds: 120,
+    });
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    expect(stream.inputs[1]?.seekSeconds).toBe(120);
+    expect(actor.getSnapshot().context.crashNotice).toMatchObject({
+      kind: "retry",
+      attempt: 1,
+      pipelineMode: "sw",
+    });
+  });
+
   test("a non-crash stream error still drops the item without retrying", async () => {
     const { actor, stream } = await startFilePlayback(["a", "b"]);
     const errorKinds: (string | null)[] = [];

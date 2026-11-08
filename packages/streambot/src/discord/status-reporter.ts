@@ -202,8 +202,14 @@ export class StatusReporter {
       );
       return;
     }
+    if (notice.atEndOfMedia === true) {
+      void this.announce(
+        `🛑 **${notice.title}** ${what} at ${at}, at its end, with nothing left to retry. Skipping it.`,
+      );
+      return;
+    }
     void this.announce(
-      `🛑 Gave up on **${notice.title}** after ${String(notice.maxAttempts)} retries ` +
+      `🛑 Gave up on **${notice.title}** after ${String(notice.attempt)} retries ` +
         `(last ${what} at ${at}). Skipping it.`,
     );
   }

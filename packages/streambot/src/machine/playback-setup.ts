@@ -6,6 +6,7 @@ import {
   moveVoiceTargetUpdates,
   playNowWhileJoiningUpdates,
   queuedItem,
+  stalledAtEndOfMedia,
 } from "@shepherdjerred/streambot/machine/playback-helpers.ts";
 import type {
   JoinVoiceInput,
@@ -71,6 +72,10 @@ export function playbackSetup(actors: PlaybackActors) {
       // A mid-stream death with retry budget left and an item to replay.
       isCrashRetryable: ({ context }) =>
         context.crashRetries < MAX_CRASH_RETRIES && context.current !== null,
+      // A stall at the end of a known-length item: retrying would seek past the last frame.
+      isStalledAtEndOfMedia: ({ context, event }) =>
+        event.type === "PRODUCER_STALLED" &&
+        stalledAtEndOfMedia(context, event.positionSeconds),
       shouldStartPaused: ({ context }) =>
         context.startPaused && context.queue.length > 0,
     },

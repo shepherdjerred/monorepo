@@ -41,6 +41,41 @@ export function pipelineForAttempt(crashRetries: number): PipelineMode {
   return crashRetries === 2 ? "hw-upload" : "sw";
 }
 
+/**
+ * Pipeline a recovery notice names. Music has no video encoder, so its segments always run "sw"
+ * (pinned in `runStreamWithFallback`); reporting the video ladder's "hw" for a song would tell the
+ * listener and the operator about a hardware attempt that never happened.
+ */
+function noticePipelineMode(
+  context: PlaybackContext,
+  crashRetries: number,
+): PipelineMode {
+  return context.resolved?.mediaKind === "music"
+    ? "sw"
+    : pipelineForAttempt(crashRetries);
+}
+
+/**
+ * A stall this close to the probed duration has no media left to recover: a seek-retry would
+ * restart ffmpeg at the end of the file and stall again. One second covers the gap between
+ * ffmpeg's last output timemark and the container duration.
+ */
+const END_OF_MEDIA_TOLERANCE_SECONDS = 1;
+
+/** Whether a stall at `positionSeconds` leaves nothing of a known-length item to replay. */
+export function stalledAtEndOfMedia(
+  context: PlaybackContext,
+  positionSeconds: number | undefined,
+): boolean {
+  const duration = context.resolved?.durationSeconds;
+  return (
+    duration !== undefined &&
+    duration > 0 &&
+    positionSeconds !== undefined &&
+    positionSeconds >= duration - END_OF_MEDIA_TOLERANCE_SECONDS
+  );
+}
+
 // Wedge guards: no invoked actor may hold its state forever. The state-exit AbortSignal fired by
 // these `after` transitions also cancels the hung work (yt-dlp subprocess, voice handshake).
 export const JOIN_TIMEOUT_MS = 30_000;
@@ -228,7 +263,7 @@ export function queueCrashRetryUpdates(
       positionSeconds: info.positionSeconds,
       attempt,
       maxAttempts: MAX_CRASH_RETRIES,
-      pipelineMode: pipelineForAttempt(attempt),
+      pipelineMode: noticePipelineMode(context, attempt),
     },
   };
 }
@@ -236,7 +271,12 @@ export function queueCrashRetryUpdates(
 /** Context updates for abandoning a crashing item after the retry budget is spent. */
 export function crashGiveUpUpdates(
   context: PlaybackContext,
-  info: { reason: CrashReason; positionSeconds: number; lastError: string },
+  info: {
+    reason: CrashReason;
+    positionSeconds: number;
+    lastError: string;
+    atEndOfMedia?: boolean;
+  },
 ): Partial<PlaybackContext> {
   return {
     lastError: info.lastError,
@@ -248,9 +288,10 @@ export function crashGiveUpUpdates(
       reason: info.reason,
       title: context.resolved?.title ?? "unknown",
       positionSeconds: info.positionSeconds,
+      ...(info.atEndOfMedia === true ? { atEndOfMedia: true } : {}),
       attempt: context.crashRetries,
       maxAttempts: MAX_CRASH_RETRIES,
-      pipelineMode: pipelineForAttempt(context.crashRetries),
+      pipelineMode: noticePipelineMode(context, context.crashRetries),
     },
   };
 }

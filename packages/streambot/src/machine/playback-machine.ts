@@ -276,8 +276,20 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             target: "leaving",
             actions: ["clearQueue", "resetCrashRetries"],
           },
-          // Treat a stalled producer like a bounded crash retry.
+          // Treat a stalled producer like a bounded crash retry, unless no media is left to retry.
           PRODUCER_STALLED: [
+            {
+              guard: "isStalledAtEndOfMedia",
+              target: "failed",
+              actions: assign(({ context, event }) =>
+                crashGiveUpUpdates(context, {
+                  reason: "stall",
+                  positionSeconds: event.positionSeconds ?? 0,
+                  lastError: `stream stalled at the end of the media: ${event.reason}`,
+                  atEndOfMedia: true,
+                }),
+              ),
+            },
             {
               guard: "isCrashRetryable",
               target: "skipped",

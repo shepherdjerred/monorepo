@@ -223,10 +223,13 @@ deadline even when the other provider times out; a timeout with no games still
 reports an error. Future events are informational and are never
 queued; TVSportsLive posts without a kickoff time are marked unconfirmed and
 validated when selected. Playback uses the stable provider page as the source
-identity and resolves the live HLS input at play time through PinchTab. The
-resolver opens the approved embedded player, captures its successful HLS request,
-and has ffprobe select a rendition with real video dimensions and audio before
-FFmpeg sends it to Discord. HLS URLs are not written to media history. Live sports
+identity and resolves the live HLS input at play time through PinchTab. StreamEast
+pages carry their playlist inline, encoded in the first-party player script; the
+resolver decodes it and keeps only an approved playlist host. Other providers'
+approved embedded players are opened and their successful HLS request captured.
+Either way, ffprobe selects a rendition with real video dimensions and audio before
+FFmpeg sends it to Discord. A resolve failure is logged with its redacted cause
+under the `sports` module; the listener sees only a generic provider message. HLS URLs are not written to media history. Live sports
 offer play, skip/stop, and volume controls only. The bot needs PinchTab's
 `PINCHTAB_BASE_URL` and `PINCHTAB_TOKEN`; the homelab deployment supplies the
 service address and the shared 1Password-backed token. See

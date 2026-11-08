@@ -83,6 +83,12 @@ export const STALL_AFTER_SECONDS = 20;
 /** Cadence of the progress-age watchdog tick. Injectable so tests can drive it deterministically. */
 export const PROGRESS_TICK_MS = 1000;
 
+/** ffmpeg diagnostic stderr lines kept per segment for the stall report. */
+const STALL_STDERR_TAIL_LINES = 15;
+
+/** ffmpeg's `-progress` protocol: one bare `key=value` per line, reported through `onProgress`. */
+const PROGRESS_PROTOCOL_LINE = /^[a-z_0-9]+=/u;
+
 export type StreamObserverOptions = {
   /** Watchdog cadence. Defaults to {@link PROGRESS_TICK_MS}. */
   readonly progressTickMs?: number;
@@ -131,6 +137,11 @@ export function createStreamObserver(
   let lastProgressWallMs: number | undefined;
   let progressAgeTimer: ReturnType<typeof setInterval> | undefined;
   let stallFired = false;
+  // ffmpeg's own account of a stall — reconnect attempts, HTTP errors, demux resyncs — is the only
+  // evidence of why a live process stopped producing. A crash carries its tail in the error; a
+  // stall has no error, so the observer keeps one. Progress-protocol lines are excluded: they are
+  // already metrics and would push every diagnostic out of a bounded tail.
+  let stderrTail: string[] = [];
 
   // Drive the progress-age gauge on a 1s tick: a deadlocked subprocess (stdout+stderr both backed
   // up, ffmpeg blocked on write) stops emitting progress entirely, so the only way the gauge can
@@ -146,6 +157,7 @@ export function createStreamObserver(
         log.warn("ffmpeg progress stalled", {
           ageSeconds,
           lastMediaSeconds: prevMediaSeconds,
+          stderrTail: [...stderrTail],
         });
         // Pass the last delivered media position (the frozen timemark), NOT the wall-clock age, so
         // the caller resumes from what ffmpeg actually produced even if it was running below realtime.
@@ -190,11 +202,17 @@ export function createStreamObserver(
       prevMediaSeconds = undefined;
       prevWallMs = undefined;
       stallFired = false;
+      stderrTail = [];
       // Treat command start as the initial progress sample so the age gauge is meaningful before
       // the first onProgress callback (which can be > 1s out on a cold ffmpeg startup).
       lastProgressWallMs = now();
       ffmpegProgressAgeSeconds.set(0);
       startProgressAgeTimer();
+    },
+    onStderrLine: (line) => {
+      if (PROGRESS_PROTOCOL_LINE.test(line)) return;
+      stderrTail.push(line);
+      if (stderrTail.length > STALL_STDERR_TAIL_LINES) stderrTail.shift();
     },
     onProcessStart: (pid) => {
       log.info("ffmpeg subprocess started", { pid });

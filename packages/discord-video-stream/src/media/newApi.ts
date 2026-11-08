@@ -574,8 +574,10 @@ function createFfmpegStderrHandler(
   };
 
   return (line: string) => {
-    stderrTail.push(redactMediaUrls(line));
+    const redacted = redactMediaUrls(line);
+    stderrTail.push(redacted);
     if (stderrTail.length > 50) stderrTail.shift();
+    observer?.onStderrLine?.(redacted);
 
     const inputMatch = /^\s*Input #0,\s*([^,]+(?:,[^,]+)*),\s*from /u.exec(
       line,
@@ -953,11 +955,14 @@ export function prepareStream(
         .map(([k, v]) => `${k}: ${v}`)
         .join("\r\n"),
     );
+    // Resume a connection that drops mid-file, but never at a clean end of file. With
+    // `-reconnect_at_eof`, ffmpeg treats the server's normal EOF as a dropped connection and
+    // re-requests past the last byte for up to `reconnect_delay_max`: stdout never closes, so a
+    // finished file never finishes. A WebM/Matroska primary input (YouTube's `bestaudio`) reads
+    // to the HTTP EOF and hangs there; an indexed MP4 stopped at its last sample and hid it.
     if (!isHls) {
       commandBuilder.inputOptions([
         "-reconnect",
-        "1",
-        "-reconnect_at_eof",
         "1",
         "-reconnect_streamed",
         "1",

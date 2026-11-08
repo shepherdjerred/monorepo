@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
   ChannelIdSchema,
@@ -175,6 +175,36 @@ describe("sports playback boundary errors", () => {
     await expect(request).rejects.toThrow(
       "I couldn't start the streameast stream right now. Please try again later.",
     );
+  });
+
+  it("logs the real resolve cause, with signed stream URLs redacted, behind the generic reply", async () => {
+    const write = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+    try {
+      await expect(
+        selectDirectRequestUrl({
+          query: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+          spoken: false,
+          source: "auto",
+          scope,
+          enabled: async () => true,
+          signal,
+          resolve: async () => {
+            throw new Error(
+              "ffprobe rejected https://cdn.example/t/0123/index.m3u8?sig=secret123",
+            );
+          },
+        }),
+      ).rejects.toThrow("I couldn't start the streameast stream");
+      const output = write.mock.calls.map(([chunk]) => String(chunk)).join("");
+      expect(output).toContain("sports stream resolve failed");
+      expect(output).toContain("ffprobe rejected");
+      expect(output).toContain("bears-vs-packers");
+      expect(output).not.toContain("secret123");
+    } finally {
+      write.mockRestore();
+    }
   });
 
   it("reports a sports deadline without swallowing caller cancellation", async () => {

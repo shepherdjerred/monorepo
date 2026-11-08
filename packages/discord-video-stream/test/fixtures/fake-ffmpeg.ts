@@ -10,6 +10,12 @@ if (process.argv.includes("/discord-video-stream-close-stdin")) {
   process.exit(0);
 }
 
+const signedInput = process.argv.find((arg) => arg.includes("?token="));
+if (signedInput !== undefined) {
+  console.error(`[in#0 @ 0x1] Error opening input ${signedInput}: Server returned 403 Forbidden`);
+  process.exit(1);
+}
+
 if (process.argv.includes(missingInput)) {
   console.error(`${missingInput}: No such file or directory`);
   process.exit(2);

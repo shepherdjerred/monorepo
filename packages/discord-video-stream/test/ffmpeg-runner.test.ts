@@ -88,4 +88,26 @@ describe("direct ffmpeg runner", () => {
       expect(error.stderrTail.join("\n")).toContain("No such file or directory");
     }
   });
+
+  test("streams every redacted stderr line to the observer", async () => {
+    const lines: string[] = [];
+    const prepared = prepareStream(
+      "https://cdn.example/missing.webm?token=secret123",
+      {
+        includeAudio: false,
+        noTranscoding: true,
+        ffmpegPath: fakeFfmpegPath,
+        observer: {
+          onStderrLine: (line) => {
+            lines.push(line);
+          },
+        },
+      },
+    );
+    prepared.output.resume();
+
+    await expect(prepared.promise).rejects.toBeInstanceOf(FfmpegExitError);
+    expect(lines.join("\n")).toContain("403 Forbidden");
+    expect(lines.join("\n")).not.toContain("secret123");
+  });
 });
