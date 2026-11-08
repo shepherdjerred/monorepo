@@ -37,6 +37,8 @@ final class WorldShopSignsTest extends ShopsFixture {
     var registry = new ShopRegistry(List.of(shop), 7);
     var blocks = new ShopBlocks(plugin, registry, Set.of(Material.CHEST));
     blocks.rewrite(sign, shop, shop.lines("Admin Shop"));
+    // A second, still-loaded chest must never replace the chosen chest during unloading.
+    world.getBlockAt(15, 63, 0).setType(Material.CHEST);
     registry.close(7, "interrupted import");
     blocks.discovery(
         ignored -> {
@@ -49,6 +51,9 @@ final class WorldShopSignsTest extends ShopsFixture {
     world.loadChunk(1, 0);
     assertThat(blocks.shopAtSign(sign)).contains(shop);
     assertThat(registry.closure(7)).contains("interrupted import");
+    chest.setType(Material.AIR);
+    assertThat(blocks.shopAtSign(sign)).isEmpty();
+    assertThat(world.isChunkLoaded(1, 0)).isTrue();
   }
 
   @Test

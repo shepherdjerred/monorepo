@@ -70,14 +70,29 @@ final class WorldBanks {
   }
 
   void write(StoredBank bank) {
+    write(bank, List.of());
+  }
+
+  void grant(StoredBank bank, UUID player) {
+    if (!bank.grants().containsKey(player))
+      throw new IllegalArgumentException("authorized player has no bank grant");
+    write(bank, List.of(player));
+  }
+
+  private void write(StoredBank bank, List<UUID> renewed) {
     var container =
         block(bank.container())
             .orElseThrow(() -> new IllegalStateException("bank container is not loaded"));
     if (!(container.getState() instanceof TileState state))
       throw new IllegalStateException("bank has no container");
-    var identities = new java.util.HashSet<>(bank.grants().keySet());
-    identities.add(bank.owner());
-    accounts.stamp(state.getPersistentDataContainer(), identities);
+    var previous = definition(state);
+    if (previous.isEmpty() || !previous.orElseThrow().bank().id().equals(bank.id())) {
+      var identities = new java.util.HashSet<>(bank.grants().keySet());
+      identities.add(bank.owner());
+      accounts.stamp(state.getPersistentDataContainer(), identities);
+    } else {
+      accounts.renew(state.getPersistentDataContainer(), renewed);
+    }
     var visible = new ArrayList<VisibleShelf>();
     for (var shelf : bank.shelves()) {
       block(shelf.sign())
@@ -99,21 +114,9 @@ final class WorldBanks {
   Optional<StoredBank> read(Block container) {
     if (!BankBlocks.isContainer(container)) return Optional.empty();
     if (!(container.getState(false) instanceof TileState state)) return Optional.empty();
-    var encoded = state.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
-    if (encoded == null) {
-      if (state.getPersistentDataContainer().has(KEY))
-        throw new IllegalStateException("invalid world bank metadata type");
-      return Optional.empty();
-    }
-    var parsed =
-        StrictYaml.parseJson("world bank " + container.getLocation(), encoded, Definition.class);
-    var definition =
-        switch (parsed) {
-          case Result.Ok<Definition, List<Problem>>(var value) -> value;
-          case Result.Err<Definition, List<Problem>>(var problems) ->
-              throw new IllegalStateException("invalid world bank: " + problems);
-        };
-    if (definition.version() != 1) throw new IllegalStateException("unknown world bank version");
+    var saved = definition(state);
+    if (saved.isEmpty()) return Optional.empty();
+    var definition = saved.orElseThrow();
     var bank = definition.bank();
     var data = state.getPersistentDataContainer();
     if (!accounts.permits(data, bank.owner())) return Optional.empty();
@@ -143,6 +146,25 @@ final class WorldBanks {
     return Optional.of(
         new StoredBank(
             id, bank.owner(), move(bank.sign(), origin, actual), actual, grants, shelves));
+  }
+
+  private static Optional<Definition> definition(TileState state) {
+    var encoded = state.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
+    if (encoded == null) {
+      if (state.getPersistentDataContainer().has(KEY))
+        throw new IllegalStateException("invalid world bank metadata type");
+      return Optional.empty();
+    }
+    var parsed =
+        StrictYaml.parseJson("world bank " + state.getLocation(), encoded, Definition.class);
+    var definition =
+        switch (parsed) {
+          case Result.Ok<Definition, List<Problem>>(var value) -> value;
+          case Result.Err<Definition, List<Problem>>(var problems) ->
+              throw new IllegalStateException("invalid world bank: " + problems);
+        };
+    if (definition.version() != 1) throw new IllegalStateException("unknown world bank version");
+    return Optional.of(definition);
   }
 
   private Optional<StoredShelf> locatedShelf(

@@ -1484,6 +1484,8 @@ Full account resets retain a durable revocation generation in core storage.
 Ownership and grants in world metadata carry the generation at authoring time;
 an old definition cannot revive a reset account when its chunk later loads or
 its search index is rebuilt. Explicit new authoring uses the new generation.
+Editing a Shelf preserves existing grant generations; only an explicit new
+access grant reauthorizes that player after a reset.
 
 New chest shops use the classic ChestShop layout:
 
@@ -1498,8 +1500,9 @@ Leave the first line blank to use your own name. A fourth-line `?` identifies
 the first nonempty stack in the connected chest; an empty chest can be configured
 by right-clicking the sign with the traded item. Numeric legacy item IDs and
 metadata, such as `35:14`, resolve through the generated vanilla item registry.
-Stable owner UUIDs, exact item components, bundle contents and remote container
-links live in the sign's persistent world data. Ordinary quantity, price and
+Stable owner UUIDs, exact item components, bundle contents and the chosen container
+link live in the sign's persistent world data. Even an adjacent chest stays bound
+when its chunk unloads; another nearby chest cannot supply its stock. Ordinary quantity, price and
 item-label edits override the old index. True multi-item offers display
 `Bundle deal`; a transaction transfers every ingredient of a complete deal.
 

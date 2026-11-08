@@ -243,7 +243,16 @@ public final class ShopBlocks {
       previous.ifPresent(shop -> registry.evict(shop.id()));
       return Optional.empty();
     }
-    var found = worldData.read(sign, lines, connectedContainer(block).map(ShopBlocks::pos));
+    var found =
+        worldData
+            .read(sign, lines, connectedContainer(block).map(ShopBlocks::pos))
+            .filter(
+                shop ->
+                    shop.container().isEmpty()
+                        || shop.container()
+                            .flatMap(this::block)
+                            .filter(this::isShopContainer)
+                            .isPresent());
     if (found.isEmpty()) {
       previous.ifPresent(shop -> registry.evict(shop.id()));
       if (registry.isReady() && !worldData.identified(sign)) discover.accept(block);
@@ -286,8 +295,7 @@ public final class ShopBlocks {
     if (!legacyOwner(shop.owner())
         || shop.id() != savedId
         || !lines.owner().equals(shop.lines("Admin Shop").owner())) return;
-    worldData.write(
-        sign, shop, lines.owner(), connectedContainer(sign.getBlock()).map(ShopBlocks::pos));
+    worldData.write(sign, shop, lines.owner());
     if (!sign.update(false, false))
       throw new IllegalStateException("shop sign changed during identity upgrade");
   }
@@ -348,8 +356,7 @@ public final class ShopBlocks {
         .ifPresentOrElse(
             item -> data.set(itemKey, PersistentDataType.STRING, item.template()),
             () -> data.remove(itemKey));
-    worldData.write(
-        sign, shop, lines(sign).owner(), connectedContainer(block).map(ShopBlocks::pos));
+    worldData.write(sign, shop, lines(sign).owner());
     return sign.update();
   }
 

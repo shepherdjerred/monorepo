@@ -133,12 +133,12 @@ final class WorldShopData {
     return physical;
   }
 
-  void write(Sign sign, SignShop shop, String label, Optional<BlockPos> physicalContainer) {
+  void write(Sign sign, SignShop shop, String label) {
     var data = sign.getPersistentDataContainer();
     data.set(id, PersistentDataType.LONG, shop.id());
     data.set(created, PersistentDataType.LONG, shop.createdAt().toEpochMilli());
     data.set(ownerName, PersistentDataType.STRING, label);
-    if (shop.container().isPresent() && !shop.container().equals(physicalContainer)) {
+    if (shop.container().isPresent()) {
       var linked = shop.container().orElseThrow();
       if (!linked.world().equals(sign.getWorld().getUID()))
         throw new IllegalArgumentException("a shop container must share its sign's world");

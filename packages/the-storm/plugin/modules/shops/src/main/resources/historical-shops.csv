@@ -167,21 +167,22 @@
 2016-detern-name-tag,map2,-34,71,-125,-33,56,-121,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,name_tag,1,75,16,Name Tag,QUANTITY_ITEM_FOR_PRICE
 2016-detern-saddle,map2,-34,71,-126,-33,57,-120,5b1571a8-1eec-412f-999e-86f8a25f41eb,Detern,saddle,1,35,8,Saddle,QUANTITY_ITEM_FOR_PRICE
 # Dockozel's 2016 signs and owner are surveyed. The containers below are the
-# proposed new cellar stockroom, not original containers. Until that room is
-# installed the importer skips these rows without changing the existing stall.
-2016-dockozel-diamond,map2,-72,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,diamond,1,125,24,Diamond,QUANTITY_WITH_ITEM
-2016-dockozel-coal,map2,-71,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,coal,1,12,128,Coal,QUANTITY_WITH_ITEM
-2016-dockozel-gold,map2,-70,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,gold_ingot,1,30,32,Gold Ingot,QUANTITY_WITH_ITEM
-2016-dockozel-iron,map2,-69,69,-97,-70,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,iron_ingot,1,2,32,Iron Ingot,QUANTITY_WITH_ITEM
-2016-dockozel-ice,map2,-68,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,packed_ice,16,150,64,Packed Ice,QUANTITY_WITH_ITEM
-2016-dockozel-pumpkin,map2,-67,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,pumpkin,1,3,128,Pumpkin,QUANTITY_WITH_ITEM
-2016-dockozel-mutton,map2,-66,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,mutton,1,8,128,Mutton,QUANTITY_WITH_ITEM
-2016-dockozel-sea-lantern,map2,-65,69,-97,-70,64,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,sea_lantern,1,200,16,Sea Lantern,QUANTITY_WITH_ITEM
-2016-dockozel-cobweb,map2,-64,69,-97,-68,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cobweb,1,10,16,Cobweb,QUANTITY_WITH_ITEM
-2016-dockozel-steak,map2,-70,69,-93,-68,64,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cooked_beef,16,6,128,Steak,QUANTITY_WITH_ITEM
-2016-dockozel-netherrack,map2,-69,69,-93,-66,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,netherrack,32,2,512,Netherrack,QUANTITY_WITH_ITEM
-2016-dockozel-cobble,map2,-67,69,-93,-66,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cobblestone,32,2,1024,Cobble,QUANTITY_WITH_ITEM
-2016-dockozel-rails,map2,-68,69,-93,-64,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,rail,32,12,64,Rails,QUANTITY_WITH_ITEM
-2016-dockozel-stone,map2,-66,69,-93,-64,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,stone,32,4,512,Stone,QUANTITY_WITH_ITEM
-2016-dockozel-prismarine,map2,-65,69,-93,-64,64,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,prismarine,16,20,64,Prismarine,QUANTITY_WITH_ITEM
-2016-dockozel-prismarine-bricks,map2,-64,69,-93,-70,64,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,prismarine_bricks,16,25,64,Prismarine,QUANTITY_WITH_BRICKS
+# proposed new cellar stockroom, not original containers. The surveyed floor is
+# at Y=62; chests at Y=63 have lid clearance below the Y=65 ceiling. Until the
+# chests are placed, the importer leaves these listings untouched.
+2016-dockozel-diamond,map2,-72,69,-97,-70,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,diamond,1,125,24,Diamond,QUANTITY_WITH_ITEM
+2016-dockozel-coal,map2,-71,69,-97,-70,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,coal,1,12,128,Coal,QUANTITY_WITH_ITEM
+2016-dockozel-gold,map2,-70,69,-97,-70,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,gold_ingot,1,30,32,Gold Ingot,QUANTITY_WITH_ITEM
+2016-dockozel-iron,map2,-69,69,-97,-70,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,iron_ingot,1,2,32,Iron Ingot,QUANTITY_WITH_ITEM
+2016-dockozel-ice,map2,-68,69,-97,-68,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,packed_ice,16,150,63,Packed Ice,QUANTITY_WITH_ITEM
+2016-dockozel-pumpkin,map2,-67,69,-97,-68,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,pumpkin,1,3,128,Pumpkin,QUANTITY_WITH_ITEM
+2016-dockozel-mutton,map2,-66,69,-97,-68,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,mutton,1,8,128,Mutton,QUANTITY_WITH_ITEM
+2016-dockozel-sea-lantern,map2,-65,69,-97,-70,63,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,sea_lantern,1,200,16,Sea Lantern,QUANTITY_WITH_ITEM
+2016-dockozel-cobweb,map2,-64,69,-97,-68,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cobweb,1,10,16,Cobweb,QUANTITY_WITH_ITEM
+2016-dockozel-steak,map2,-70,69,-93,-68,63,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cooked_beef,16,6,128,Steak,QUANTITY_WITH_ITEM
+2016-dockozel-netherrack,map2,-69,69,-93,-66,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,netherrack,32,2,512,Netherrack,QUANTITY_WITH_ITEM
+2016-dockozel-cobble,map2,-67,69,-93,-66,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,cobblestone,32,2,1024,Cobble,QUANTITY_WITH_ITEM
+2016-dockozel-rails,map2,-68,69,-93,-64,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,rail,32,12,63,Rails,QUANTITY_WITH_ITEM
+2016-dockozel-stone,map2,-66,69,-93,-64,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,stone,32,4,512,Stone,QUANTITY_WITH_ITEM
+2016-dockozel-prismarine,map2,-65,69,-93,-64,63,-96,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,prismarine,16,20,63,Prismarine,QUANTITY_WITH_ITEM
+2016-dockozel-prismarine-bricks,map2,-64,69,-93,-70,63,-94,654daa41-f84b-49ae-b539-e99885eb8a5c,dockozel,prismarine_bricks,16,25,63,Prismarine,QUANTITY_WITH_BRICKS

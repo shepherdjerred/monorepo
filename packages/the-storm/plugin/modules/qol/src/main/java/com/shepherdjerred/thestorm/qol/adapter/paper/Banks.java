@@ -431,12 +431,19 @@ final class Banks implements Listener {
     resolve(
         name,
         id -> {
+          if (!can(player, target, BankRole.MANAGE)) {
+            Say.error(player, LABEL, "You can no longer manage that bank.");
+            return;
+          }
           if (id.equals(target.owner())) {
             Say.error(player, LABEL, "The owner is always allowed.");
             return;
           }
           var current = book.get(target.id()).orElse(target);
-          remember(current.withGrant(id, chosen));
+          var granted = current.withGrant(id, chosen);
+          worldBanks.grant(granted, id);
+          book.put(granted);
+          runtime.onMain(store.save(granted), "save bank grant", saved -> {}, failed -> {});
           Say.success(player, LABEL, name + " may " + chosen + ".");
         },
         () -> Say.error(player, LABEL, "No player named " + name + "."));

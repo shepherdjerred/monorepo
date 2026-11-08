@@ -93,6 +93,7 @@ final class HistoricalShopCatalogTest {
             entry -> {
               assertThat(entry.expectedLines()).containsExactly("[Buy]", "1 Diamond", "", "125");
               assertThat(entry.stockTarget()).isEqualTo(24);
+              assertThat(entry.container().y()).isEqualTo(63);
             });
     assertThat(
             entries.stream().filter(entry -> entry.id().equals("2016-dockozel-prismarine-bricks")))

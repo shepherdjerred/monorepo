@@ -88,7 +88,14 @@ final class BankPaperTest {
     assertThat(world.read(bank).orElseThrow().grants()).containsKey(bob.getUniqueId());
     harness.epochs.retire(bob.getUniqueId()).join();
     assertThat(world.read(bank).orElseThrow().grants()).isEmpty();
+    // A shelf edit may still hold the pre-reset bank after the cache was refreshed.
+    world.write(stored);
+    assertThat(world.read(bank).orElseThrow().grants()).isEmpty();
+    world.grant(stored, bob.getUniqueId());
+    assertThat(world.read(bank).orElseThrow().grants()).containsKey(bob.getUniqueId());
     harness.epochs.retire(alice.getUniqueId()).join();
+    assertThat(world.read(bank)).isEmpty();
+    world.write(stored);
     assertThat(world.read(bank)).isEmpty();
     assertThat(world.legacy(stored)).isEmpty();
   }

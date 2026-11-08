@@ -43,6 +43,18 @@ public final class WorldAccountEpochs {
     data.set(key, PersistentDataType.TAG_CONTAINER, saved);
   }
 
+  /** Reauthorizes only explicit new grants, preserving every other identity's generation. */
+  public void renew(PersistentDataContainer data, Collection<UUID> players) {
+    var saved = data.get(key, PersistentDataType.TAG_CONTAINER);
+    if (saved == null) {
+      if (data.has(key)) throw new IllegalStateException("Invalid account generation metadata");
+      saved = data.getAdapterContext().newPersistentDataContainer();
+    }
+    for (var player : players)
+      saved.set(playerKey(player), PersistentDataType.LONG, epochs.current(player));
+    data.set(key, PersistentDataType.TAG_CONTAINER, saved);
+  }
+
   private static NamespacedKey playerKey(UUID player) {
     return new NamespacedKey("thestorm", player.toString());
   }

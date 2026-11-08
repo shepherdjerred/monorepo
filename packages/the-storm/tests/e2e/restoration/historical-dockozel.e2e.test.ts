@@ -70,7 +70,7 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "dockozel")(
       ] as const;
       for (const [x, z, item, quantity] of stock) {
         await rcon.command(
-          `execute in minecraft:map2 store result score #stock historical_stock if items block ${x.toString()} 64 ${z.toString()} container.* minecraft:${item}`,
+          `execute in minecraft:map2 store result score #stock historical_stock if items block ${x.toString()} 63 ${z.toString()} container.* minecraft:${item}`,
         );
         const result = await rcon.command(
           "scoreboard players get #stock historical_stock",
