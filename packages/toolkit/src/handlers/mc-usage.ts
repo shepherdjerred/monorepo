@@ -45,6 +45,7 @@ Actors (Citizens player NPCs; profiles paper and storm-dev):
 Real client (a rendered Minecraft client the daemon runs against a sandbox; offline
 mode in sandboxes, authenticated Prism on live; needs a desktop session and Java 25):
   toolkit mc client start [--target <id>] [--name HarnessClient] [--op] [--game-mode creative] [--json]
+  toolkit mc client start --target live --reason "<why>"   Dedicated restricted Prism control
   toolkit mc client start --target live --account XiguaJerred --reason <why> [--json]
   toolkit mc client ls | status [--name n] [--json]
   toolkit mc client look <yaw> <pitch>   Yaw 0 south, 90 west, 180 north, 270 east; pitch 90 is down

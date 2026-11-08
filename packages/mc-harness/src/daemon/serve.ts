@@ -11,7 +11,8 @@ import {
   STATE_PATH,
 } from "#protocol/paths.ts";
 import { PROTOCOL_VERSION } from "#protocol/version.ts";
-import { ClientManager, gradleLauncher } from "./clients.ts";
+import { ClientManager } from "./clients.ts";
+import { gradleLauncher } from "./client-launch.ts";
 import { DaemonError } from "./http.ts";
 import { type DaemonContext, routeRequest } from "./router.ts";
 import { LIVE_TARGET_ID } from "#protocol/live.ts";

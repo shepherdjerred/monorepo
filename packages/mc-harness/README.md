@@ -190,7 +190,11 @@ sandbox stops its clients, and so does stopping the daemon. Each session writes
 out. Verify world effects with `toolkit mc region read` rather than trusting a
 screenshot alone.
 
-Live capture uses the existing signed-in Prism account on macOS:
+Ordinary `toolkit mc client start --target live --reason "Inspect spawn"`
+uses the dedicated StormControl Prism instance and its restricted control surface.
+Adding `--account XiguaJerred` explicitly selects the documentation capture
+launcher, which uses an isolated temporary Prism instance and the guarded capture
+routes. Both use the existing signed-in account on macOS:
 
 ```bash
 toolkit mc client start --target live --account XiguaJerred --reason "TSMC documentation capture" --json

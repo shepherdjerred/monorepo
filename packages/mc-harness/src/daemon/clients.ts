@@ -16,7 +16,6 @@ import {
   ClientStateSchema,
   type ClientSummary,
 } from "#protocol/client.ts";
-import { CLIENT_PROJECT } from "#protocol/paths.ts";
 import { ClientRefusedError } from "#protocol/client-socket.ts";
 import { clientRequest } from "./client-socket.ts";
 import { DaemonError } from "./http.ts";
@@ -36,46 +35,6 @@ import type {
   ClientLauncher,
   LaunchedClient,
 } from "./client-launch.ts";
-
-/** `mise exec -- gradle -p packages/the-storm/client runClient …` from the repo. */
-export const gradleLauncher: ClientLauncher = (spec) => {
-  const log = Bun.file(spec.logPath);
-  const child = Bun.spawn(
-    [
-      "mise",
-      "exec",
-      "--",
-      "gradle",
-      "-p",
-      path.join(spec.repoRoot, CLIENT_PROJECT),
-      "runClient",
-      `-PpreviewSession=${spec.bootstrapPath}`,
-      `-PpreviewGameDir=${spec.gameDir}`,
-      `-PpreviewUsername=${spec.username}`,
-      "--console=plain",
-      "--no-daemon",
-    ],
-    {
-      cwd: spec.repoRoot,
-      stdout: log,
-      stderr: log,
-      stdin: "ignore",
-      env: {
-        ...Bun.env,
-        OP_SERVICE_ACCOUNT_TOKEN: undefined,
-        MC_BRIDGE_TOKEN: undefined,
-      },
-    },
-  );
-  return {
-    pid: child.pid,
-    exited: child.exited,
-    exitCode: () => child.exitCode,
-    kill: (signal) => {
-      child.kill(signal);
-    },
-  };
-};
 
 type Session = {
   summary: ClientSummary;
@@ -147,7 +106,10 @@ export class ClientManager {
   }): Promise<ClientSummary> {
     const { name, target, game } = request;
     const existing = this.sessions.get(name);
-    if (existing?.summary.target === target) {
+    if (
+      existing?.summary.target === target &&
+      existing.summary.server === `${game.host}:${game.port.toString()}`
+    ) {
       await this.status(name);
       return existing.summary;
     }
@@ -294,6 +256,7 @@ export class ClientManager {
       socket: path.join(privateDir, "client.sock"),
       artifacts,
       server: `${game.host}:${game.port.toString()}`,
+      ...(target === "live" ? { target: "capture" as const } : {}),
     };
     const bootstrapPath = path.join(privateDir, "bootstrap.json");
     await Bun.write(bootstrapPath, JSON.stringify(bootstrap));

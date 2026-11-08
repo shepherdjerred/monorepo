@@ -333,7 +333,7 @@ describe("actor routes", () => {
   });
 });
 
-describe("client routes", () => {
+describe("bounded client interactions", () => {
   it("refuses bounded live interactions before dispatching any input", async () => {
     const { ctx, fake } = context();
     await ctx.clients.start({
@@ -370,6 +370,9 @@ describe("client routes", () => {
       await ctx.clients.stop("XiguaJerred");
     }
   });
+});
+
+describe("client routes", () => {
   it("starts a real client, ops it and reports its state", async () => {
     const { ctx, bridge, fake } = context();
     const started = await call(ctx, "POST", "/clients", {

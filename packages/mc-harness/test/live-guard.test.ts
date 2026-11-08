@@ -15,8 +15,8 @@ import {
   authorizeLiveWrite,
   classifyCommand,
   type LiveGuardConfig,
-  LiveGuardRefusal,
 } from "#src/live/guard.ts";
+import { LiveGuardRefusal } from "#src/live/guard-errors.ts";
 import { distanceToBox } from "#src/box.ts";
 import { LiveJournal, undoBlocker } from "#src/live/journal.ts";
 import { pasteBoxFor } from "#src/live/paste-box.ts";

@@ -60,7 +60,8 @@ async function start(values: {
 }): Promise<void> {
   const target = await resolveTarget(values.target);
   if (
-    target === LIVE_TARGET_ID && values.account !== undefined &&
+    target === LIVE_TARGET_ID &&
+    values.account !== undefined &&
     (values.account !== "XiguaJerred" ||
       values.reason?.trim() === undefined ||
       values.reason.trim().length === 0)
@@ -68,7 +69,8 @@ async function start(values: {
     throw new Error(
       "Live client start requires --account XiguaJerred and --reason <why>",
     );
-  if (target === LIVE_TARGET_ID) await resolveCredentials(["MC_BRIDGE_TOKEN"]);
+  if (target === LIVE_TARGET_ID && values.account !== undefined)
+    await resolveCredentials(["MC_BRIDGE_TOKEN"]);
   const gameMode = values["game-mode"]?.toUpperCase();
   await mcClientStartCommand(
     ClientStartRequestSchema.parse({
@@ -78,11 +80,17 @@ async function start(values: {
         values.name ??
         (target === LIVE_TARGET_ID ? "XiguaJerred" : DEFAULT_CLIENT_NAME),
       op: values.op,
-      ...(target === LIVE_TARGET_ID && values.account !== undefined ? { capture: true } : {}),
+      ...(target === LIVE_TARGET_ID && values.account !== undefined
+        ? { capture: true }
+        : {}),
       ...(gameMode === undefined ? {} : { gameMode }),
     }),
     values.json,
-    { reason: values.reason, allowPlayers: values["allow-players"], allowProtected: values["allow-protected"] },
+    {
+      reason: values.reason,
+      allowPlayers: values["allow-players"],
+      allowProtected: values["allow-protected"],
+    },
   );
 }
 

@@ -73,10 +73,53 @@ function fixture() {
       "Tester",
       action,
     );
-  return { request, status, write, call, response };
+  return {
+    request,
+    status,
+    write,
+    call,
+    response,
+    ctx: { ...ctx, target: async () => target },
+    bridge,
+  };
 }
 
 describe("live rendered client actions", () => {
+  it("keeps ordinary Prism starts separate from explicit documentation capture", async () => {
+    const f = fixture();
+    const prism = vi
+      .spyOn(f.ctx.clients, "startLive")
+      .mockResolvedValue(f.response.client);
+    const capture = vi
+      .spyOn(f.ctx.clients, "start")
+      .mockResolvedValue(f.response.client);
+    vi.spyOn(f.bridge, "players").mockResolvedValue({ players: [] });
+    vi.spyOn(f.ctx.clients, "list").mockReturnValue([]);
+    const start = (body: unknown) =>
+      dispatchClients(
+        f.ctx,
+        new Request("http://daemon/clients", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-mc-reason": "Inspect%20spawn",
+          },
+          body: JSON.stringify(body),
+        }),
+        undefined,
+        undefined,
+      );
+    await start({ target: "live", name: "Tester" });
+    expect(prism).toHaveBeenCalledWith("Tester");
+    expect(capture).not.toHaveBeenCalled();
+    await start({ target: "live", name: "XiguaJerred", capture: true });
+    expect(capture).toHaveBeenCalledWith({
+      name: "XiguaJerred",
+      target: "live",
+      game: { host: "mc.ts-mc.net", port: 30_000 },
+    });
+    expect(prism).toHaveBeenCalledTimes(1);
+  });
   it("stops and records a reason without contacting the live server", async () => {
     const f = fixture();
     const { ctx } = liveContext({

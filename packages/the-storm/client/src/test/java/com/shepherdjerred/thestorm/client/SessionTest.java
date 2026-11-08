@@ -32,12 +32,17 @@ final class SessionTest {
   @Test
   void acceptsOnlyExplicitProductionAndSandboxLoopback() throws Exception {
     assertThat(read("127.0.0.1:25565", null).live()).isFalse();
+    assertThat(read("mc.ts-mc.net:30000", "capture").server()).isEqualTo("mc.ts-mc.net:30000");
+    assertThatThrownBy(() -> read("mc.ts-mc.net:30000", null))
+        .isInstanceOf(IllegalArgumentException.class);
     assertThat(read("ts-mc.net:25565", "live").live()).isTrue();
     assertThatThrownBy(() -> read("ts-mc.net:25565", null))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> read("example.com:25565", "live"))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> read("127.0.0.1:25565", "live"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> read("127.0.0.1:65536", null))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

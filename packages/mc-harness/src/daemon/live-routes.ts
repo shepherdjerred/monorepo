@@ -9,7 +9,8 @@ import {
   LiveUndoResponseSchema,
   readLiveWriteFlags,
 } from "#protocol/live.ts";
-import { LiveGuardRefusal, type LiveWriteOp } from "#src/live/guard.ts";
+import type { LiveWriteOp } from "#src/live/guard.ts";
+import { LiveGuardRefusal } from "#src/live/guard-errors.ts";
 import { LiveError, type LiveService } from "#src/live/service.ts";
 import type { Target } from "#src/target.ts";
 import { body, DaemonError, reply } from "./http.ts";

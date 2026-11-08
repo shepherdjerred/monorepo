@@ -6,7 +6,8 @@ import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
 import { createFileSource } from "@shepherdjerred/config/sources/file.ts";
 import { BoxSchema, BRIDGE_LIMITS } from "#protocol/bridge.ts";
 import { DEFAULT_KUBE_CONTEXT } from "#protocol/cluster.ts";
-import type { LiveGuardConfig, ProtectedRegion } from "#src/live/guard.ts";
+import type { LiveGuardConfig } from "#src/live/guard.ts";
+import type { ProtectedRegion } from "#src/live/guard-proximity.ts";
 
 const BooleanSettingSchema = z.union([z.boolean(), z.stringbool()]);
 const WorldListSchema = z.union([

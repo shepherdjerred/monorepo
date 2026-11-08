@@ -2,6 +2,7 @@ import {
   CLIENT_ACTION_REQUEST_SCHEMAS,
   type ClientAction,
   type ClientStartRequest,
+  type ClientSummary,
   ClientActionResponseSchema,
   ClientActionSchema,
   ClientCaptureRequestSchema,
@@ -16,7 +17,6 @@ import type { SandboxBackend } from "#sandbox/provider.ts";
 import type { Target } from "#src/target.ts";
 import { LIVE_TARGET_ID, readLiveWriteFlags } from "#protocol/live.ts";
 import type { LiveService } from "#src/live/service.ts";
-import { z } from "zod";
 import type { ClientManager } from "./clients.ts";
 import { body, DaemonError, reply } from "./http.ts";
 import { guarded } from "./live-routes.ts";
@@ -41,19 +41,32 @@ function detail(result: unknown): string {
   return typeof result === "string" ? result : JSON.stringify(result);
 }
 
+function isRestrictedPrism(client: ClientSummary): boolean {
+  return (
+    client.target === LIVE_TARGET_ID && client.server === "ts-mc.net:25565"
+  );
+}
+
 async function startClient(
   ctx: ClientRouteContext,
   request: Request,
 ): Promise<Response> {
   const start = await body(request, ClientStartRequestSchema);
-  if (start.target === LIVE_TARGET_ID && start.capture !== true) {
-    if (ctx.live === undefined) throw new DaemonError("Live service unavailable", 503);
+  if (
+    start.target === LIVE_TARGET_ID &&
+    !("capture" in start && start.capture === true)
+  ) {
+    if (ctx.live === undefined)
+      throw new DaemonError("Live service unavailable", 503);
     const summary = await ctx.live.write(
       { kind: "client-action", name: start.name, action: "start" },
       readLiveWriteFlags(request.headers),
       () => ctx.clients.startLive(start.name),
     );
-    return reply(ClientStatusResponseSchema, await ctx.clients.status(summary.name));
+    return reply(
+      ClientStatusResponseSchema,
+      await ctx.clients.status(summary.name),
+    );
   }
   return start.target === "live"
     ? startLiveClient(ctx, request, start)
@@ -259,7 +272,7 @@ async function clientAction(
   }
   const args = await body(request, CLIENT_ACTION_REQUEST_SCHEMAS[parsed.data]);
   const current = await ctx.clients.status(client);
-  if (current.client.target === LIVE_TARGET_ID && current.client.server === "ts-mc.net:25565") {
+  if (isRestrictedPrism(current.client)) {
     return liveClientAction({
       ctx,
       request,
@@ -330,7 +343,8 @@ async function liveClientAction(input: {
   args: Record<string, unknown>;
 }): Promise<Response> {
   const { ctx, request, client, action, args } = input;
-  if (ctx.live === undefined) throw new DaemonError("Live service unavailable", 503);
+  if (ctx.live === undefined)
+    throw new DaemonError("Live service unavailable", 503);
   if (action === "command" || action === "attack" || action === "use")
     throw new DaemonError(
       "Commands and interactions are unavailable for live clients",
