@@ -145,8 +145,9 @@ export async function localSession(input: {
         if (
           state.connected &&
           state.world === world &&
+          state["terrainReady"] === true &&
           Math.abs(state.position[0] - (x - 2.5)) < 0.5 &&
-          Math.abs(state.position[1] - y) < 0.5 &&
+          Math.abs(state.position[1] - y) < 0.001 &&
           Math.abs(state.position[2] - (zz - 2.5)) < 0.5
         )
           break;

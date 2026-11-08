@@ -1,6 +1,62 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 import type { CaptureContext } from "@shepherdjerred/mc-harness/capture/define.ts";
 import { pad, wallSign, camera, waitBlock, inspectors } from "./fixtures.ts";
+import { CaptureTransport } from "@shepherdjerred/mc-harness/capture/transport.ts";
+import { CommandResponseSchema } from "@shepherdjerred/mc-harness/protocol/bridge.ts";
+import { z } from "zod";
+
+async function collectCrushedPlank(context: CaptureContext) {
+  const transport = new CaptureTransport(
+    context.target,
+    "Locate the natural Crush drop",
+    undefined,
+    context.name,
+  );
+  const [x, y, zz] = context.at(0, -1, 0);
+  const response = await transport.world(CommandResponseSchema, "command", {
+    command: `minecraft:execute in minecraft:overworld as @e[type=minecraft:item,nbt={Item:{id:"minecraft:oak_planks",count:1}},x=${x.toString()},y=${y.toString()},z=${zz.toString()},dx=12,dy=5,dz=8] run minecraft:data get entity @s Pos`,
+  });
+  const coordinates = /\[([^\]]+)\]$/u.exec(response.output[0] ?? "")?.[1];
+  if (
+    coordinates === undefined ||
+    !response.success ||
+    response.output.length !== 1
+  )
+    throw new Error(
+      `Crush did not produce exactly one loose plank: ${JSON.stringify(response.output)}`,
+    );
+  const position = z
+    .tuple([
+      z.number().min(context.box.min.x).max(context.box.max.x),
+      z.number().min(context.box.min.y).max(context.box.max.y),
+      z.number().min(context.box.min.z).max(context.box.max.z),
+    ])
+    .parse(
+      coordinates.split(",").map((value) =>
+        Number(
+          z
+            .string()
+            .regex(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?d$/u)
+            .parse(value.trim())
+            .slice(0, -1),
+        ),
+      ),
+    );
+  // Extension ejects drops beyond the crushed cell; collect at the observed X/Z.
+  await context.teleport(
+    [position[0], context.at(0, 0, 0)[1], position[2]],
+    0,
+    0,
+  );
+  await context.waitFor(
+    "crushed plank collected",
+    (state) =>
+      state.connected &&
+      state.inventory.some(
+        (item) => item.type === "minecraft:oak_planks" && item.count === 1,
+      ),
+  );
+}
 
 async function fixture(
   context: CaptureContext,
@@ -75,21 +131,12 @@ export default defineCaptureScene({
       "crush-after",
       "Crush breaks the plank instead of pushing it ahead of the extended head.",
     );
-    // Retract the head before standing on the crushed block's actual drop cell.
-    // Standing beside the extended head can miss a naturally scattered item.
+    // Retract the head before approaching the ejected drop.
     await power(context, false);
     await waitBlock(context, [3, 0, 6], (block) =>
       block.includes("extended=false"),
     );
-    await camera(context, [4.5, 0, 6.5], [5.5, 0.5, 6.5]);
-    await context.waitFor(
-      "crushed plank collected",
-      (state) =>
-        state.connected &&
-        state.inventory.some(
-          (item) => item.type === "minecraft:oak_planks" && item.count === 1,
-        ),
-    );
+    await collectCrushedPlank(context);
 
     await fixture(context, "[SuperPush]");
     await context.set(
