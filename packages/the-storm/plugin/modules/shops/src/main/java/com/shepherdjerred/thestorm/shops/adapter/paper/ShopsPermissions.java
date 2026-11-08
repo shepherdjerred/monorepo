@@ -27,6 +27,9 @@ public final class ShopsPermissions {
   /** Admin shops and the shop-lock bypass. A gameplay capability: never granted to ops. */
   public static final String ADMIN = "thestorm.shops.admin";
 
+  /** Operator automation may restore reviewed shops; this never grants a player admin powers. */
+  public static final String RESTORE = "thestorm.shops.restore";
+
   /** The staff command that opens any NPC shop without its NPC, for testing. */
   public static final String OPEN_CATALOG = "thestorm.shops.command.open";
 
@@ -65,6 +68,10 @@ public final class ShopsPermissions {
         plugins,
         new Permission(
             ADMIN, "Make admin shops and open or break any shop", PermissionDefault.FALSE));
+    addIfAbsent(
+        plugins,
+        new Permission(
+            RESTORE, "Run reviewed shop restoration as a server operator", PermissionDefault.OP));
     addIfAbsent(
         plugins,
         new Permission(

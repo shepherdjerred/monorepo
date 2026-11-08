@@ -127,7 +127,7 @@ final class HistoricalShopCatalogTest {
   void recoveredShopsRetainTheExactOriginalTextAndFiniteCustody() {
     var restored =
         HistoricalShopCatalog.load().stream().filter(e -> e.details().rewrite()).toList();
-    assertThat(restored).hasSize(479);
+    assertThat(restored).hasSize(482);
     assertThat(restored).allSatisfy(e -> assertThat(e.details().originalLines()).hasSize(4));
     assertThat(restored.stream().filter(e -> e.item().equals("diamond")))
         .allSatisfy(e -> assertThat(e.stockTarget()).isBetween(16, 32));
