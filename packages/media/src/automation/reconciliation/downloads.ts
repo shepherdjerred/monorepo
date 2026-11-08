@@ -52,7 +52,9 @@ async function sweepDownloadAttempts(
       state: { notIn: ["completed", "obsolete", "rejected"] },
     },
     orderBy: { id: "asc" },
-    take: 25,
+    // A movie's identity, uncertain-add reconciliation and terminal recovery
+    // share this Activity's 100-record allowance. Continue before the next attempt.
+    take: 1,
     include: { torrent: true },
   });
   const runtime = await requireActiveRuntime(context.db);
@@ -60,7 +62,7 @@ async function sweepDownloadAttempts(
     await sweepDownloadAttempt(context, attempt, runtime);
   return {
     processed: attempts.length,
-    nextCursor: attempts.length === 25 ? (attempts.at(-1)?.id ?? null) : null,
+    nextCursor: attempts.length === 1 ? (attempts.at(-1)?.id ?? null) : null,
   };
 }
 

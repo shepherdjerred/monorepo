@@ -8,6 +8,17 @@ import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 
 const { database, context, fixture } = automationTestHarness();
 
+async function sweepAllDownloads(ctx: Parameters<typeof sweepDownloads>[0]) {
+  const pages = (await ctx.db.acquisitionAttempt.count()) + 1;
+  let cursor: string | null = null;
+  for (let page = 0; page < pages; page++) {
+    const result = await sweepDownloads(ctx, cursor);
+    if (result.nextCursor === null) return;
+    cursor = result.nextCursor;
+  }
+  throw new Error("Download sweep did not finish its actual fixture attempts");
+}
+
 test("terminated coordinator after reservation commit is recovered once and adopts the same acquisition", async () => {
   const f = await fixture();
   const ctx = context();
@@ -21,8 +32,8 @@ test("terminated coordinator after reservation commit is recovered once and adop
       : id === `media-acquire-${attemptId}`
         ? null
         : { status: "RUNNING", runId: "other" };
-  await sweepDownloads(ctx, null);
-  await sweepDownloads(ctx, null);
+  await sweepAllDownloads(ctx);
+  await sweepAllDownloads(ctx);
   const recovery = await database().operation.findMany({
     where: { idempotencyKey: { startsWith: `recover:${attemptId}:` } },
   });
@@ -61,7 +72,7 @@ test("running child, unknown Temporal history, and old recovery epochs cannot au
     id === `media-operation-${f.input.operationId}`
       ? { status: "FAILED", runId: "failed-root" }
       : { status: "RUNNING", runId: "active-child" };
-  await sweepDownloads(ctx, null);
+  await sweepAllDownloads(ctx);
   expect(
     await database().operation.count({
       where: { idempotencyKey: { startsWith: `recover:${attemptId}:` } },
@@ -75,7 +86,7 @@ test("running child, unknown Temporal history, and old recovery epochs cannot au
     id === `media-operation-${f.input.operationId}`
       ? { status: "TERMINATED", runId: "failed-root" }
       : null;
-  await sweepDownloads(ctx, null);
+  await sweepAllDownloads(ctx);
   expect(
     await database().operation.count({
       where: { idempotencyKey: { startsWith: `recover:${attemptId}:` } },
@@ -89,7 +100,7 @@ test("running child, unknown Temporal history, and old recovery epochs cannot au
   ctx.describeWorkflow = async () => {
     throw new Error("Observe mode must not query Temporal for takeover");
   };
-  await sweepDownloads(ctx, null);
+  await sweepAllDownloads(ctx);
   expect(
     await database().acquisitionAttempt.findUniqueOrThrow({
       where: { id: attemptId },
