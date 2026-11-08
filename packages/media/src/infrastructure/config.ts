@@ -144,6 +144,7 @@ export function mediaBehaviorConfig(
         targetingKey: "media",
         attributes: { stage },
         kinds: {
+          personalDiscordEnabled: "boolean",
           sharedAnnouncementsEnabled: "boolean",
           sharedAnnouncementsUpgrades: "boolean",
           sharedDiscordChannelId: "string",

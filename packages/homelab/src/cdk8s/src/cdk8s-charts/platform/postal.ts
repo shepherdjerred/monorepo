@@ -117,6 +117,18 @@ export function createPostalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
         },
+        // Media's Network worker submits notifications through Postal's API.
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: { matchLabels: { component: "media-network" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
+        },
       ],
       egress: [
         // Allow DNS

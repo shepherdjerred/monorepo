@@ -10,6 +10,21 @@ afterEach(async () => {
   await shutdownFeatureFlags();
 });
 
+test.each([true, false])(
+  "personal Discord uses the resolved %s flag value",
+  async (value) => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        "media-personal-discord-enabled": value,
+      }),
+    });
+    await expect(
+      mediaBehaviorConfig("production").get("personalDiscordEnabled"),
+    ).resolves.toEqual({ value, source: "flag" });
+  },
+);
+
 test.each(["", "wrong", "-1", "1,2"])(
   "invalid shared Discord channel %s fails closed",
   async (value) => {
