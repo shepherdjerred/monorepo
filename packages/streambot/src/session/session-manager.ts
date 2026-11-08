@@ -335,6 +335,7 @@ export class SessionManager {
         await this.numbered.leases.release(session.entry);
     }
     await this.numbered.leases.drain();
+    await this.numbered.persistence.drain();
     this.sessions.clear();
   }
 
