@@ -888,6 +888,12 @@ It shares Plex and qBittorrent, uses its own `media` torrent category and
 and transfers unowned. Publication retains its per-item ownership and overwrite
 checks. Existing-library ownership handoff remains a separate operation.
 
+Maintainerr can remove items directly through Plex, independently of Media's
+ownership records. To limit its cleanup to the old stack, add a final AND
+condition requiring a positive Radarr movie file size or Sonarr show disk size
+to the corresponding cleanup rules. This also protects existing items whose
+Plex identities cannot resolve to their old-manager files.
+
 The authenticated owner API exposes `GET /api/v1/admin/runtime` and
 `PUT /api/v1/admin/runtime`. PUT requires CSRF, an `Idempotency-Key`, and
 `{ "mode": "active" | "observe", "expectedVersion": <current version> }`.
