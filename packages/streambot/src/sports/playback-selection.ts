@@ -22,9 +22,22 @@ import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 const log = logger.child("sports");
 
 /**
+ * A watch page identified by origin and path only. A pasted provider URL can carry userinfo,
+ * query values, or a fragment that are the requester's, not the provider's.
+ */
+function loggablePage(pageUrl: string): string {
+  try {
+    const url = new URL(pageUrl);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return "[unparseable page URL]";
+  }
+}
+
+/**
  * The listener sees one generic sentence for every resolve failure, so the operator log is the
  * only place the real cause (an upstream page redesign, an unapproved CDN host, a probe 403)
- * survives. Signed stream URLs are redacted; the watch page itself is public.
+ * survives. Signed stream URLs are redacted, and the page is reduced to origin and path.
  */
 function logSportsResolveFailure(
   event: { readonly provider: string; readonly pageUrl: string },
@@ -32,7 +45,7 @@ function logSportsResolveFailure(
 ): void {
   log.warn("sports stream resolve failed", {
     provider: event.provider,
-    pageUrl: event.pageUrl,
+    page: loggablePage(event.pageUrl),
     error: redactMediaUrls(getErrorMessage(error)),
   });
 }

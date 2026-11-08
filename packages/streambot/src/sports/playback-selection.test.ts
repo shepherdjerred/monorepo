@@ -207,6 +207,46 @@ describe("sports playback boundary errors", () => {
     }
   });
 
+  it("logs a pasted watch page by origin and path only", async () => {
+    // Assembled at runtime: the requester-owned parts a pasted URL can carry.
+    const pasted = new URL("https://v2.streameast.ga/nfl/bears-vs-packers/");
+    pasted.username = "viewer";
+    pasted.password = "hunter2";
+    pasted.search = "?session=private42";
+    pasted.hash = "#private-fragment";
+    const write = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+    try {
+      await expect(
+        selectDirectRequestUrl({
+          query: pasted.toString(),
+          spoken: false,
+          source: "auto",
+          scope,
+          enabled: async () => true,
+          signal,
+          resolve: async () => {
+            throw new Error("No supported live HLS stream");
+          },
+        }),
+      ).rejects.toThrow("I couldn't start the streameast stream");
+      const output = write.mock.calls.map(([chunk]) => String(chunk)).join("");
+      expect(output).toContain(
+        "https://v2.streameast.ga/nfl/bears-vs-packers/",
+      );
+      for (const secret of [
+        "hunter2",
+        "viewer",
+        "private42",
+        "private-fragment",
+      ])
+        expect(output).not.toContain(secret);
+    } finally {
+      write.mockRestore();
+    }
+  });
+
   it("reports a sports deadline without swallowing caller cancellation", async () => {
     const deadline = new AbortController();
     deadline.abort(new DOMException("deadline", "TimeoutError"));
