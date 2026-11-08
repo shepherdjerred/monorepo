@@ -373,6 +373,8 @@
         "tests/e2e/prepare-sidecar.ts",
         "tools/maps/authored/*.ts",
         "tools/maps/lobby/annex.ts",
+        // author-towers.py copies this into externally compiled build workspaces.
+        "tools/skylands/towers/beacon.ts",
         "tools/captures/suite.ts",
         "tools/captures/scenes/*.ts",
         "playtests/**/*.playtest.ts"
