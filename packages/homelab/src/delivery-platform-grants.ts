@@ -44,8 +44,6 @@ export const DELIVERY_PLATFORM_ITEMS = {
   },
   "discord-scout-beta-credentials": { itemId: "rtu44pohnp5ixdp2njuv5f6t2e" },
   "discord-scout-prod-credentials": { itemId: "pacrc4wfbtct4y3qazkvazop5a" },
-  // Prior worker images still create Jobs against the original key contract.
-  "discord-minecraft-credentials": { itemId: "q37vet77dfggoqbvu4bqle3gje" },
   "discord-minecraft-tsmc-credentials": {
     itemId: "yqp25gif2grm5gkg6l44e6vmxy",
   },
