@@ -1034,6 +1034,13 @@ repository's existing setup from its root:
 swift scripts/onepassword/enroll-service-account.swift
 ```
 
+If it instead reports that the process cannot see the login Keychain, the
+enrollment is intact; do not re-enroll. The process is outside the GUI login
+session (`launchctl managername` prints `Background`, and
+`security list-keychains` shows only the System keychain), typically because
+an SSH login that has since ended started it, such as an SSH-started herdr
+holder. Run the command from the GUI login session or replace that process.
+
 Commands outside toolkit reuse the same Keychain credential by wrapping
 `op run` or `op read` with `scripts/onepassword/with-service-account.sh`, so
 homelab-vault references never wait for 1Password desktop approval. Packages

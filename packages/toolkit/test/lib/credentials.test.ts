@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   requiredCredentialsFor,
+  resolveCredentialValues,
   resolveCredentials,
 } from "#lib/credentials.ts";
 import type { CredentialRun } from "#lib/credentials.ts";
@@ -348,6 +349,71 @@ describe("credential resolver backends", () => {
         kind: "op",
         ref: "op://v64ocnykdqju4ui6j6pua56xw4/2x4fpii5zq4jbw3l2p2qkvjtiy/api-token",
       },
+    });
+  });
+});
+
+describe("credential resolver keychain visibility", () => {
+  test("an unreachable login keychain is named instead of enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      const missing = await configPath(null);
+      const calls: string[][] = [];
+      const run = stubRun((argv) => {
+        if (argv[0] === "security" && argv[1] === "list-keychains") {
+          return {
+            exit: 0,
+            stdout: '    "/Library/Keychains/System.keychain"\n',
+            stderr: "",
+          };
+        }
+        return argv[0] === "launchctl"
+          ? { exit: 0, stdout: "Background\n", stderr: "" }
+          : { exit: 44, stdout: "", stderr: "could not be found" };
+      }, calls);
+      const deps = { run, configPath: `${missing}.absent` };
+      for (const name of ["ARGOCD_AUTH_TOKEN", "DISCORD_BOT_TOKEN"]) {
+        const failure: unknown = await resolveCredentialValues(
+          [name],
+          deps,
+        ).then(
+          () => null,
+          (error: unknown) => error,
+        );
+        expect(failure).toBeInstanceOf(Error);
+        const message = failure instanceof Error ? failure.message : "";
+        expect(message).toContain(
+          "cannot see the login Keychain (launchd session: Background; search list: /Library/Keychains/System.keychain)",
+        );
+        expect(message).not.toMatch(/Enroll|enroll-/);
+      }
+      expect(calls.map((argv) => argv[0])).not.toContain("op");
+    });
+  });
+
+  test("a missing item with the login keychain visible still names enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      const missing = await configPath(null);
+      const calls: string[][] = [];
+      const run = stubRun((argv) => {
+        if (argv[0] === "security" && argv[1] === "list-keychains") {
+          return {
+            exit: 0,
+            stdout:
+              '    "/Users/someone/Library/Keychains/login.keychain-db"\n',
+            stderr: "",
+          };
+        }
+        return { exit: 44, stdout: "", stderr: "could not be found" };
+      }, calls);
+      await expect(
+        resolveCredentialValues(["ARGOCD_AUTH_TOKEN"], {
+          run,
+          configPath: `${missing}.absent`,
+        }),
+      ).rejects.toThrow(
+        "no homelab 1Password service account token is available in Keychain. Enroll it with: swift scripts/onepassword/enroll-service-account.swift",
+      );
+      expect(calls.map((argv) => argv[0])).not.toContain("launchctl");
     });
   });
 });
