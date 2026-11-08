@@ -43,6 +43,17 @@ started_from_ssh() {
     ps -E -ww -o command= -p "$1" | tr ' ' '\n' | grep '^SSH_CONNECTION=' >/dev/null
 }
 
+# A holder this run has stopped and not yet resumed or ended. If the run is
+# interrupted (launchctl bootout sends SIGTERM), resume it on the way out.
+frozen=""
+resume_frozen() {
+    if [ -n "$frozen" ]; then
+        kill -CONT "$frozen"
+    fi
+}
+trap resume_frozen EXIT
+trap 'exit 1' HUP INT TERM
+
 status=$("$hc" server start --json)
 pid=$(/usr/bin/jq -er '.pid' <<<"$status")
 if started_from_ssh "$pid"; then
@@ -60,12 +71,15 @@ while read -r holder terminals instance; do
         if ! kill -STOP "$holder"; then
             continue # it exited after the status read
         fi
+        frozen="$holder"
         if pgrep -P "$holder" >/dev/null; then
             kill -CONT "$holder"
+            frozen=""
             continue # it gained a terminal; the next run reports it
         fi
         log "holder $holder was started from SSH and holds no terminals; ending it"
         kill -KILL "$holder"
+        frozen=""
         continue
     fi
     # Report each holder once, not every minute. The instance id is unique per
