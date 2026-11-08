@@ -35,7 +35,7 @@ Provision the existing Riot Sign On client before enabling new account links.
 5. Use the typed `riot_account_linking_enabled` rollout for new links. The
    managed inventory targets beta; production defaults off. Disabling this
    flag preserves existing account toggles and notification enforcement.
-6. Sign in with Discord and open **Account → Settings**. Link an account,
+6. Sign in with Discord and open **Account → Privacy settings**. Link an account,
    finish Riot sign-in, and confirm that the correct Riot ID appears with
    notifications enabled. Link another account to confirm independent controls.
    Verify that a second Discord identity cannot claim the first account.

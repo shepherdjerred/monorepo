@@ -19,11 +19,12 @@ install unrelated toolchains. Resolving it through mise keeps Vite's HTTP server
 on Node when Playwright runs under Bun; the Bun server can abort concurrent
 browser requests with `ERR_STREAM_WRITE_AFTER_END`.
 
-## Personal notification settings
+## Privacy settings
 
-The account menu opens `/app/settings`. A Discord login can verify multiple
-League accounts with Riot and choose each account's game-start and game-end
-notifications globally. No server membership or manager permission is needed.
+The account menu's **Privacy settings** entry opens `/app/settings`. A Discord
+login can verify multiple League accounts with Riot and choose each account's
+game-start and game-end notifications globally. No server membership or manager
+permission is needed.
 Compact account rows share one panel with a match-notification toggle for each
 account and a brief confirmation after saving.
 Existing toggles work even when new linking is disabled or unconfigured.
