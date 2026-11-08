@@ -49,6 +49,30 @@ export type FixtureSource = {
   metadata: (worlds: string[]) => Promise<string[]>;
   read: (file: string) => Promise<Uint8Array>;
 };
+
+function canonicalPatches(values: TerrainPatch[]): string {
+  return JSON.stringify(
+    values
+      .map((p) => JSON.stringify([p.world, p.min, p.max, p.paddingChunks]))
+      .sort(),
+  );
+}
+
+/** An explicit replay fixture must cover exactly the currently authored terrain. */
+export async function verifyFixturePatches(
+  store: BlobStore,
+  cache: string,
+  fixtureHash: string,
+  patches: TerrainPatch[],
+): Promise<void> {
+  const fixture = FixtureSchema.parse(
+    await Bun.file(await cachedBlob(store, cache, fixtureHash)).json(),
+  );
+  if (canonicalPatches(fixture.patches) !== canonicalPatches(patches))
+    throw new Error(
+      "Pinned terrain patches differ from the suite; capture a fresh fixture",
+    );
+}
 export function worldFolder(world: string): string {
   return world === "world" ? "overworld" : world;
 }

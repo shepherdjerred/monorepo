@@ -86,7 +86,7 @@ export default defineCaptureScene({
               s.screen === "",
           );
         });
-        await context.lookAt([-14, 115, -30]);
+        await context.lookAt([0, 82, 0]);
       },
       4,
     );

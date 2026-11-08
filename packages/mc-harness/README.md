@@ -271,13 +271,18 @@ toolkit mc capture suite list tsmc
 toolkit mc capture suite check tsmc --shot cooking-pot
 toolkit mc capture suite check tsmc --docs ts-mc-docs
 toolkit mc capture suite run tsmc --runtime worktree --scenario cooking
+toolkit mc capture suite run tsmc --runtime worktree --fixture <sha256>
 toolkit mc capture suite run tsmc --runtime saved:<run-id> --shot cooking-pot
 toolkit mc capture suite replay <run-id>
 toolkit mc capture suite render <run-id> --shot cooking-pot
 ```
 
-`run` always flushes saved live terrain, takes a CSI snapshot, and reads a
-read-only disposable clone. It crops native region, entity and POI records to
+By default, `run` flushes saved live terrain, takes a CSI snapshot, and reads a
+read-only disposable clone. An explicit `--fixture <sha256>` reuses an already
+retained private S3 fixture and requires its terrain patches to match the suite
+exactly. This supports editing recipes against a fixed map without live-server
+or Kubernetes access. Both paths retain the selected runtime and verify every
+restored blob. A fresh export crops native region, entity and POI records to
 the suite's padded patches. Every required terrain column must already exist;
 missing terrain, corrupt NBT and mismatched chunk coordinates fail the export.
 

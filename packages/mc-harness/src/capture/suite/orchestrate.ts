@@ -7,7 +7,11 @@ import { MC_DIR } from "#protocol/paths.ts";
 import { exportMedia } from "#src/capture/export.ts";
 import { renderMedia } from "#src/capture/media.ts";
 import { verifyLiveFixtureClass, withLiveFixture } from "./csi.ts";
-import { retainFixture, restoreFixture } from "./fixture.ts";
+import {
+  retainFixture,
+  restoreFixture,
+  verifyFixturePatches,
+} from "./fixture.ts";
 import { retainRuntime, restoreRuntime } from "./runtime.ts";
 import { verifyRuntimeInputs } from "./runtime-sources.ts";
 import { localSession } from "./session.ts";
@@ -46,6 +50,7 @@ export type SuiteOptions = {
   repoRoot: string;
   suiteFile: string;
   runtime: string;
+  fixture?: string | undefined;
   scenario?: string | undefined;
   shot?: string | undefined;
 };
@@ -101,7 +106,7 @@ async function runtimeRoot(
   return { sourceDirectory, hash: previous.runtime };
 }
 
-/** Refresh is mandatory here; replay has an explicit separate entry point. */
+/** Refresh by default; an explicit content-addressed fixture reuses verified terrain. */
 export async function runSuite(options: SuiteOptions) {
   const id = randomUUID(),
     directory = path.join(MC_DIR, "suites", id),
@@ -112,7 +117,7 @@ export async function runSuite(options: SuiteOptions) {
   selectScenarios(suite, options);
   if (options.runtime === "worktree")
     await verifyRuntimeInputs(options.repoRoot, options.suiteFile);
-  await verifyLiveFixtureClass();
+  if (options.fixture === undefined) await verifyLiveFixtureClass();
   const store = awsStore("the-storm-capture-fixtures");
   const runtime = await runtimeRoot({ ...options, store }, directory, cache);
   const recordedSuite = await loadSuite(
@@ -122,9 +127,16 @@ export async function runSuite(options: SuiteOptions) {
     ),
   );
   selectScenarios(recordedSuite, options);
-  const fixture = await withLiveFixture(options.repoRoot, (source) =>
-    retainFixture(source, recordedSuite.patches, store),
-  );
+  const fixture =
+    options.fixture === undefined
+      ? await withLiveFixture(options.repoRoot, (source) =>
+          retainFixture(source, recordedSuite.patches, store),
+        )
+      : z
+          .string()
+          .regex(/^[a-f0-9]{64}$/u)
+          .parse(options.fixture);
+  await verifyFixturePatches(store, cache, fixture, recordedSuite.patches);
   return dispatchCapture({
     ...options,
     store,

@@ -15,11 +15,52 @@ import {
   presentScene,
   selectScenarios,
   type SuiteScenario,
+  type TerrainPatch,
 } from "#src/capture/suite/define.ts";
 import type { CaptureContext } from "#src/capture/define.ts";
-import { integer } from "./suite-fixtures.ts";
+import { integer, memoryStore } from "./suite-fixtures.ts";
+import { verifyFixturePatches } from "#src/capture/suite/fixture.ts";
 
 const compound = Buffer.from([10, 0, 0, 0]);
+
+it("reuses a verified terrain fixture only when every requested padded patch matches", async () => {
+  const cache = await mkdtemp(path.join(os.tmpdir(), "pinned-fixture-test-"));
+  const store = memoryStore();
+  const patches: TerrainPatch[] = [
+    { world: "world", min: [-16, -16], max: [16, 16], paddingChunks: 2 },
+    { world: "creative", min: [0, 0], max: [32, 32], paddingChunks: 2 },
+  ];
+  try {
+    const fixture = await retainBlob(
+      store,
+      new TextEncoder().encode(
+        JSON.stringify({
+          schema: 1,
+          source: "accepted-csi-export",
+          capturedAt: "2026-11-01T00:00:00.000Z",
+          patches,
+          files: [{ path: "level.dat", sha256: "a".repeat(64) }],
+        }),
+      ),
+    );
+    await expect(
+      verifyFixturePatches(store, cache, fixture, patches.toReversed()),
+    ).resolves.toBeUndefined();
+    await expect(
+      verifyFixturePatches(store, cache, fixture, patches.slice(1)),
+    ).rejects.toThrow("Pinned terrain patches differ");
+    await expect(
+      verifyFixturePatches(
+        store,
+        cache,
+        fixture,
+        patches.map((p) => ({ ...p, paddingChunks: 3 })),
+      ),
+    ).rejects.toThrow("Pinned terrain patches differ");
+  } finally {
+    await rm(cache, { recursive: true, force: true });
+  }
+});
 const unexpected = (): never => {
   throw new Error("Unexpected scene operation");
 };
