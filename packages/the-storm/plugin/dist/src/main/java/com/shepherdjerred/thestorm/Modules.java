@@ -27,6 +27,7 @@ import com.shepherdjerred.thestorm.shards.ShardsModule;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
 import com.shepherdjerred.thestorm.skills.SkillsModule;
 import com.shepherdjerred.thestorm.skylands.SkylandsModule;
+import com.shepherdjerred.thestorm.skytravel.SkytravelModule;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
 import com.shepherdjerred.thestorm.tickets.TicketsModule;
 import com.shepherdjerred.thestorm.towns.TownsModule;
@@ -80,6 +81,7 @@ final class Modules {
         new SeasonalModule(),
         new WorldModule(),
         new QolModule(),
+        new SkytravelModule(),
         new CompanionsModule(),
         new ResetModule(),
         new AdvancementsModule());

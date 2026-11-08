@@ -75,6 +75,9 @@ COPY server/assets/server-icon.png /opt/the-storm/server-icon.png
 COPY server/archive-progression.py /opt/the-storm/archive-progression.py
 COPY server/maintenance/startup.py /opt/the-storm/world-retirement.py
 COPY server/maintenance/skylands.py /opt/the-storm/skylands-startup.py
+COPY server/maintenance/files.py server/maintenance/skylands.py /opt/the-storm/maintenance/
+COPY server/maintenance/skylands_transfer.py /opt/the-storm/skylands-transfer.py
+COPY server/skylands-transfer.json /bundle/skylands-transfer.json
 COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 
 # PAPER_CUSTOM_JAR + bundlerRepoDir: run the pre-patched Paper, no download.

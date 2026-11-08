@@ -267,7 +267,7 @@ export class ClientManager {
     await mkdir(gameDir, { recursive: true, mode: 0o700 });
     await Bun.write(
       path.join(gameDir, "options.txt"),
-      "onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\npauseOnLostFocus:false\n",
+      "onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\nmaxFps:30\npauseOnLostFocus:false\n",
     );
     const logPath = path.join(artifacts, "client.log");
     const launcher = target === "live" ? prismLauncher : this.options.launcher;

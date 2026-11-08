@@ -407,6 +407,7 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-survival-enabled",
   "the-storm-merchant-enabled",
   "the-storm-shop-rentals-enabled",
+  "the-storm-skylands-launch-enabled",
   "the-storm-rwf-enabled",
   "the-storm-rwf-kits-enabled",
   "the-storm-rwf-killstreaks-enabled",

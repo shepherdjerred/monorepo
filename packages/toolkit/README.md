@@ -653,7 +653,7 @@ repo-built MCBridge plugin, so build it first:
 ```bash
 mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble
 toolkit mc daemon start [--ttl 4h]
-toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep]
+toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--world-dir /absolute/saved/world] [--ttl 2h] [--keep]
 toolkit mc info
 toolkit mc we --world world --pos1 0,-60,0 --pos2 4,-56,4 "//set stone"
 toolkit mc region read --world world 0,-60,0 4,-56,4
@@ -661,6 +661,18 @@ toolkit mc we-undo
 toolkit mc sandbox down --all
 toolkit mc daemon stop
 ```
+
+For concurrent worktrees, set `TOOLKIT_MC_INSTANCE=skylands-towers` (or another
+lowercase label) consistently for every command in a session. This bootstrap
+setting selects a private socket, sandbox store and journal without stopping
+another worktree's daemon; artifact downloads remain shared. Labels allow 1–32
+lowercase letters, digits and hyphens, starting with a letter. Omit it for the
+original default instance. `--world-dir` copies a native saved world into a
+stopped local Docker sandbox before its first boot; it never changes the source
+and is unavailable for cluster or published-image profiles.
+
+`toolkit mc client close` closes a native client's current screen, including
+the first-join welcome dialog, before ordinary movement or button interaction.
 
 A sandbox is Paper 26.3 with WorldEdit and MCBridge in a local container, or
 with `--provider kubernetes` (the default for the `storm-prod` and

@@ -430,13 +430,14 @@ describe("client routes", () => {
       ticks: 10,
     });
     await call(ctx, "POST", "/clients/Mover/use", {});
+    await call(ctx, "POST", "/clients/Mover/close", {});
     await call(ctx, "POST", "/clients/Mover/hotbar", { slot: 3 });
     await call(ctx, "POST", "/clients/Mover/command", { text: "time set day" });
     expect(
       fake.requests
         .map((request) => request.action)
         .filter((action) => action !== "status"),
-    ).toEqual(["look", "input", "use", "hotbar", "command"]);
+    ).toEqual(["look", "input", "use", "close", "hotbar", "command"]);
     expect(
       fake.requests.find((request) => request.action === "input")?.arguments,
     ).toEqual({

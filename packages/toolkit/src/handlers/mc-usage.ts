@@ -14,7 +14,7 @@ Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
 Sandboxes (Paper 26.3 + WorldEdit + MCBridge; build MCBridge first). Profiles:
 paper, storm-dev (Docker by default); storm-prod, storm-candidate (the published
 image; cluster by default, ttl ≤ 8h):
-  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void|real-map] [--map-directory saved-map --map-spawn '[x,y,z]'] [--capture-feature stargates|quests|shards|arena|rwf|advancements] [--rollout-url <https-url> --rollout-environment prod|beta] [--ttl 2h] [--keep] [--artifact-file original-artifact.json] [--json]
+  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void|real-map] [--world-dir /absolute/saved/world] [--map-directory saved-map --map-spawn '[x,y,z]'] [--capture-feature stargates|quests|shards|arena|rwf|advancements] [--rollout-url <https-url> --rollout-environment prod|beta] [--ttl 2h] [--keep] [--artifact-file original-artifact.json] [--json]
   toolkit mc sandbox ls [--json]
   toolkit mc sandbox down <id…> | --all
 

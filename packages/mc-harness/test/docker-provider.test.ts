@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { dockerCreateArgs } from "#providers/docker/provider.ts";
 import {
-  dockerCreateArgs,
+  currentDockerEndpoints,
   LABELS,
   parseSandboxRows,
-} from "#providers/docker/provider.ts";
+} from "#providers/docker/rows.ts";
 import { newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
@@ -11,7 +12,35 @@ import { publishedStorm } from "#test/fixtures/published-storm.ts";
 
 const secrets = { bridgeToken: "b".repeat(48), rconPassword: "c".repeat(48) };
 
+function mounts(instance: string): string[] {
+  vi.stubEnv("TOOLKIT_MC_INSTANCE", instance);
+  return dockerCreateArgs({
+    id: "sbx-abc123",
+    profileName: "paper",
+    profile: resolveProfile({ profile: "paper", world: "flat" }, secrets),
+    pluginsDir: "/tmp/plugins",
+    cacheDir: "/tmp/cache",
+    expiresAt: "2026-10-04T00:00:00.000Z",
+    owner: "me@host",
+    keep: false,
+  }).filter((arg) => arg.includes(":/data/"));
+}
+
 describe("docker sandbox argv", () => {
+  it("keeps writable Paperclip mounts disjoint between named instances", () => {
+    try {
+      const first = mounts("skylands");
+      const second = mounts("other-task");
+      expect(first).toHaveLength(3);
+      expect(first).toContain(
+        "/tmp/cache/instances/skylands/paperclip/cache:/data/cache",
+      );
+      expect(first.every((mount) => !second.includes(mount))).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("publishes every port on loopback only and labels the container", () => {
     const profile = resolveProfile(
       { profile: "paper", world: "flat" },
@@ -88,6 +117,7 @@ describe("docker sandbox argv", () => {
         keep: false,
         running: true,
         stale: false,
+        ports: "",
       },
       {
         containerId: "fff123def456",
@@ -96,6 +126,7 @@ describe("docker sandbox argv", () => {
         keep: true,
         running: false,
         stale: true,
+        ports: "",
       },
     ]);
   });
@@ -109,6 +140,20 @@ describe("docker sandbox argv", () => {
 
   it("generates ids the IPC schema accepts", () => {
     expect(newSandboxId()).toMatch(/^sbx-[0-9a-f]{6}$/u);
+  });
+
+  it("resolves all current published ports after Docker changes their allocation", () => {
+    const endpoints = currentDockerEndpoints(
+      "127.0.0.1:32916->25565/tcp, 127.0.0.1:32917->25575/tcp, 127.0.0.1:32918->25580/tcp",
+    );
+    expect(endpoints).toEqual({
+      game: { host: "127.0.0.1", port: 32_916 },
+      rcon: { host: "127.0.0.1", port: 32_917 },
+      bridge: { host: "127.0.0.1", port: 32_918 },
+    });
+    expect(() => currentDockerEndpoints("0.0.0.0:32916->25565/tcp")).toThrow(
+      "loopback",
+    );
   });
 });
 

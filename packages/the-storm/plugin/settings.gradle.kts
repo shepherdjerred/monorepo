@@ -103,6 +103,7 @@ val modules =
         "skills",
         "seasonal",
         "skylands",
+        "skytravel",
         "world",
         "tickets",
         "agent",

@@ -5,6 +5,7 @@
  * here may carry a secret: tokens and RCON passwords stay in sandbox records.
  */
 import { z } from "zod";
+import path from "node:path";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import type { BlockPos } from "./bridge.ts";
 
@@ -89,6 +90,12 @@ const SandboxCreateInputSchema = z.strictObject({
   profile: ProfileSchema,
   world: WorldKindSchema,
   mapDirectory: z.string().min(1).optional(),
+  /** Raw saved-world authoring input, without real-map capture overlays or its proxy. */
+  worldDirectory: z
+    .string()
+    .min(1)
+    .refine(path.isAbsolute, "World directory must be absolute")
+    .optional(),
   sourceDirectory: z.string().regex(/^\//u).optional(),
   rollout: RolloutBootstrapSchema.optional(),
   captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
@@ -128,6 +135,18 @@ function invalidMapRequest(
   );
 }
 
+function invalidSavedWorld(
+  input: z.infer<typeof SandboxCreateInputSchema>,
+): boolean {
+  return (
+    input.worldDirectory !== undefined &&
+    (input.profile === "storm-prod" ||
+      input.profile === "storm-candidate" ||
+      input.provider === "kubernetes" ||
+      input.world === "real-map")
+  );
+}
+
 export const SandboxCreateRequestSchema = SandboxCreateInputSchema.superRefine(
   (input, context) => {
     if (
@@ -148,6 +167,12 @@ export const SandboxCreateRequestSchema = SandboxCreateInputSchema.superRefine(
     const published =
       input.profile === "storm-prod" || input.profile === "storm-candidate";
     const selected = input.publishedArtifact;
+    if (invalidSavedWorld(input))
+      context.addIssue({
+        code: "custom",
+        message:
+          "Saved-world input requires a local paper or storm-dev Docker sandbox without real-map capture",
+      });
     if (
       published &&
       (selected === undefined ||

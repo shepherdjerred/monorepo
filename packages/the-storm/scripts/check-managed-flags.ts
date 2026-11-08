@@ -31,6 +31,12 @@ const world = `${REMOTE}/world/src/main/java/com/shepherdjerred/thestorm/world/a
 
 export const MANAGED_FLAG_GATES: readonly ManagedFlagGate[] = [
   {
+    flagSource: "the-storm-skylands-launch",
+    keyFile: `${REMOTE}/skytravel/src/main/java/com/shepherdjerred/thestorm/skytravel/adapter/paper/LaunchFlights.java`,
+    namespaceFile:
+      "plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+  },
+  {
     flagSource: "the-storm-stargates",
     keyFile: `${REMOTE}/mechanics/src/main/java/com/shepherdjerred/thestorm/mechanics/adapter/remote/FliptStargatesGate.java`,
   },

@@ -21,6 +21,7 @@ import {
   requireDigestPinned,
   SANDBOX_LABEL,
   sandboxPodName,
+  OWNER_ANNOTATION,
   type SandboxPod,
 } from "#providers/kubernetes/pod-manifest.ts";
 import {
@@ -395,6 +396,7 @@ function clusterPod(options: {
       name: sandboxPodName(options.id),
       labels: { [MANAGED_BY_LABEL]: "mc-harness", [SANDBOX_LABEL]: options.id },
       annotations: {
+        [OWNER_ANNOTATION]: "me@host",
         [EXPIRES_AT_ANNOTATION]:
           options.expiresAt ?? "2099-01-01T00:00:00.000Z",
         "mc-harness.sjer.red/keep": String(options.keep ?? false),
@@ -637,6 +639,25 @@ describe("KubernetesSandboxProvider (scripted cluster)", () => {
     const reaped = await provider().reap(new Date());
     expect(reaped.toSorted()).toEqual([first.id, second.id].toSorted());
     expect(await store.listFor("kubernetes")).toEqual([]);
+  });
+
+  it("leaves another instance's expired sandbox alone", async () => {
+    const current = provider();
+    await current.create(request, quiet);
+    const id = "sbx-ffeedd";
+    const foreign = clusterPod({
+      id,
+      phase: "Running",
+      expiresAt: "2000-01-01T00:00:00.000Z",
+    });
+    foreign.metadata.annotations = {
+      ...foreign.metadata.annotations,
+      [OWNER_ANNOTATION]: "another-instance",
+    };
+    cluster.pods.set(id, foreign);
+    expect(await current.reap(new Date())).toEqual([]);
+    await expect(current.destroy(id)).rejects.toThrow("in this instance");
+    expect(cluster.pods.has(id)).toBe(true);
   });
 
   it("does not touch the cluster when it has no sandboxes there", async () => {

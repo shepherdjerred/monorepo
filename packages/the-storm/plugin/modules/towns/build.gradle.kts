@@ -4,10 +4,12 @@ val libs = the<VersionCatalogsExtension>().named("libs")
 
 // Catalog tests read these shipped files directly, outside the test classpath.
 tasks.test {
-  for (name in listOf("towns.yml", "heritage.yml", "parcels.yml")) {
+  for (name in listOf("towns.yml", "heritage.yml", "parcels.yml", "skytravel.json")) {
     inputs.file(rootProject.file("../server/owned/plugins/TheStorm/$name"))
         .withPathSensitivity(PathSensitivity.RELATIVE)
   }
+  inputs.file(rootProject.file("../tools/skylands/towers/approaches.json"))
+      .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 dependencies {

@@ -175,6 +175,9 @@ function actionRequest(
     case "release": {
       return { action, body: {} };
     }
+    case "close": {
+      return { action, body: {} };
+    }
   }
   const parsed = ClientActionSchema.safeParse(action);
   if (parsed.success)
@@ -183,6 +186,6 @@ function actionRequest(
       body: CLIENT_ACTION_REQUEST_SCHEMAS[parsed.data].parse({}),
     };
   throw new Error(
-    `Error: unknown client action "${action}"; use start, ls, status, look, move, hotbar, use, attack, release, command, capture or stop`,
+    `Error: unknown client action "${action}"; use start, ls, status, look, move, hotbar, use, attack, release, close, command, capture or stop`,
   );
 }

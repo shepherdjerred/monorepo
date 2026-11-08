@@ -3,6 +3,30 @@
 Runtime behind `toolkit mc`: disposable Minecraft sandboxes, the typed client
 for the MCBridge Paper plugin, and the session daemon that holds them.
 
+Set the non-secret bootstrap variable `TOOLKIT_MC_INSTANCE` to a lowercase label
+such as `skylands-towers` when another worktree owns the default daemon. Use the
+same value for every command in that session. Each named instance has its own
+socket, daemon state, sandbox records, runs and journal under
+`~/.toolkit/mc/instances/<label>/`; downloaded artifacts remain shared in
+`~/.toolkit/mc/cache`. Names accept 1–32 lowercase letters, digits and hyphens,
+starting with a letter. Empty or absent selects the original default instance;
+invalid names fail before connecting. A stop or sandbox cleanup reaches only
+the selected instance. Worktree identity checks still apply within each instance.
+
+Local `paper` and `storm-dev` sandboxes accept `--world-dir /absolute/saved/world`.
+The source must contain native `level.dat` and no links or special files. The
+provider copies it into the stopped Docker container before the first boot;
+the source remains untouched. Existing saved terrain takes precedence over the
+`--world` choice. Cluster and published-image profiles reject host world inputs.
+
+Kept sandboxes survive daemon shutdown and TTL expiry. A stopped Docker
+container is still reaped as unavailable, so export private saves while Paper
+is running with saving held, or copy them before stopping the container.
+For a local Docker restart, stop the owning daemon first; after restart the
+provider discovers the current loopback port bindings instead of using stale
+published ports. Native automated clients use VSync off and a 30 FPS cap so
+an occluded macOS display cannot stall their first rendered frame.
+
 ## Layout
 
 | Path                        | What it is                                                                                      |
@@ -48,7 +72,10 @@ and seeded into the container, which runs the jar as `TYPE=CUSTOM`; the
 `PAPER` type would call the PaperMC API on every boot. Once Paperclip's warm
 cache under `~/.toolkit/mc/cache/paperclip` holds the patched Mojang jar,
 server bootstrap needs no downloads. Plugins such as Citizens may still
-download their declared runtime libraries. Worlds are
+download their declared runtime libraries. Named instances share verified jar
+downloads, but keep writable Paperclip directories under
+`~/.toolkit/mc/cache/instances/<instance>/paperclip` so concurrent daemons
+cannot extract into one another's boot files. Worlds are
 `flat` or `void`. Game (25565), RCON (25575), and bridge (25580) ports are
 published on `127.0.0.1` only. The per-sandbox bridge token and RCON password
 are generated at create time and stored only in
@@ -169,6 +196,7 @@ owns each client: it spawns `mise exec -- gradle runClient` from the
 repository with a private bootstrap (control socket, artifacts dir, server
 address) and a throwaway game dir, waits until the player is in the world,
 then speaks the client's newline-delimited JSON protocol for `status`, `look`,
+`close` (dismiss the current screen),
 `move` (the protocol's `input`), `hotbar`, `use`, `attack`, `release`,
 `command`, and `capture`. The harness never imports the-storm; it only starts
 the process.
