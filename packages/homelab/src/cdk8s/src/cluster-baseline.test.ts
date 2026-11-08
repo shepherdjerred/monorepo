@@ -1,6 +1,8 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
+import launcherPublication from "@shepherdjerred/glitter-boys-launcher/published-release.json";
+import { parsePublicationRecord } from "@shepherdjerred/glitter-boys-launcher/publication";
 import { setupCharts } from "./setup-charts.ts";
 import { transitionRendering } from "./release-configuration.ts";
 import { APPLICATION_SOURCE_POLICY } from "./resources/argocd-application-admission.ts";
@@ -143,6 +145,13 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["prometheus", "llm"],
   ["prometheus", "ops-snapshot"],
   ["prometheus", "storm-brain"],
+  // Release-expiry alerts exist only while a launcher release is published.
+  ...(parsePublicationRecord(launcherPublication).release === null
+    ? []
+    : ([["prometheus", "glitter-launcher-release"]] satisfies [
+        string,
+        string,
+      ][])),
 ];
 
 const nodeExporters = [
