@@ -105,7 +105,7 @@ export default defineCaptureScene({
       "RWF kit picker",
       (s) => s.connected && s.screen === "Pick a kit",
     );
-    await hoverItem(context, "minecraft:iron_sword");
+    await hoverItem(context, "minecraft:iron_sword", "Pick a kit");
     await context.capture(presentation(shots, "rwf-kit-menu"));
     await context.action("close");
     await context.playerCommand("rwf admin start", "Started.");

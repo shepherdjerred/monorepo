@@ -7,12 +7,18 @@ const View = z.object({
   slots: z.array(z.object({ slot: z.number(), type: z.string() })),
 });
 /** Reinspect only the native protocol's explicit stale-container rejection. */
-export async function hoverItem(context: CaptureContext, type: string) {
+export async function hoverItem(
+  context: CaptureContext,
+  type: string,
+  screen = "Crafting",
+) {
   const deadline = performance.now() + 10_000;
   while (performance.now() < deadline) {
     const state = await context.status();
-    if (!state.connected || state.screen !== "Crafting")
-      throw new Error("Item tooltip requires the open player inventory");
+    if (!state.connected || state.screen !== screen)
+      throw new Error(
+        `Item tooltip requires the expected open container: ${screen}`,
+      );
     const view = View.parse(state);
     const item = view.slots.find((i) => i.type === type);
     if (!item) throw new Error(`Missing tooltip item ${type}`);
