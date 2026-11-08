@@ -1,32 +1,70 @@
 #!/bin/bash
 #
-# Keeps this Mac's herdr-core (hc) daemon owned by launchd rather than by
-# whichever client happened to start it.
+# Keeps this Mac's herdr-core (hc) daemon and its terminal holders owned by
+# launchd rather than by whichever client happened to start them.
 #
 # hc starts its core on demand. From a local login it hands the core to a
 # one-shot launchd job, so the core and its terminal holder outlive the client.
 # From an SSH login (another machine's `hc connect`) it deliberately starts the
-# core as a child of that SSH session instead, and the agents it holds can die
-# with the session. The com.jerred.herdr-core LaunchAgent runs this at login and
-# every minute through a login fish shell, so the core gets the same environment
-# an interactive login has, without SSH_CONNECTION:
+# core as a child of that SSH session instead, and the core starts its holder
+# there too. Once that login ends, both are left in a launchd Background
+# session: the agents in those terminals cannot see the login Keychain, and
+# they can die with the session. The com.jerred.herdr-core LaunchAgent runs
+# this at login and every minute through a login fish shell, so a core it
+# starts gets the same environment an interactive login has, without
+# SSH_CONNECTION:
 #
 # - no core running: `hc server start` starts one through launchd;
 # - a core started from SSH: `hc server restart` replaces it with a launchd one.
-#   A planned restart keeps every running terminal in its existing holder.
+#   A planned restart keeps every running terminal in its existing holder, so
+#   it does not fix the holder;
+# - an SSH-born holder with no terminals is ended, and the launchd core starts
+#   a fresh one for the next terminal;
+# - an SSH-born holder with live terminals is reported once, in the log and as
+#   a macOS notification, but never ended here: that ends its terminals.
 #
-# It prints only when it changes something.
+# It prints only when it changes or reports something.
 
 set -euo pipefail
 
 hc="$HOME/.local/bin/herdr-core"
-started=$("$hc" server start --json)
-pid=$(/usr/bin/jq -er '.pid' <<<"$started")
+state="$HOME/.local/state/herdr-core-ensure"
 
-# The core keeps the environment it was started with; an SSH login's marks
-# identify an SSH-started core even after its parent `hc connect` has exited.
-# grep reads all input (no -q): an early exit would break the pipe under pipefail.
-if ps -E -ww -o command= -p "$pid" | tr ' ' '\n' | grep '^SSH_CONNECTION=' >/dev/null; then
-    echo "$(date '+%Y-%m-%dT%H:%M:%S%z') core $pid was started from SSH; restarting it under launchd"
+log() {
+    echo "$(date '+%Y-%m-%dT%H:%M:%S%z') $*"
+}
+
+# A process keeps the environment it was started with; an SSH login's marks
+# identify an SSH-born core or holder even after its parent `hc connect` has
+# exited. grep reads all input (no -q): an early exit would break the pipe
+# under pipefail and hide a match.
+started_from_ssh() {
+    ps -E -ww -o command= -p "$1" | tr ' ' '\n' | grep '^SSH_CONNECTION=' >/dev/null
+}
+
+status=$("$hc" server start --json)
+pid=$(/usr/bin/jq -er '.pid' <<<"$status")
+if started_from_ssh "$pid"; then
+    log "core $pid was started from SSH; restarting it under launchd"
     "$hc" server restart --json
+    status=$("$hc" server status --json)
 fi
+
+while read -r holder terminals; do
+    started_from_ssh "$holder" || continue
+    if [ "$terminals" -eq 0 ]; then
+        log "holder $holder was started from SSH and holds no terminals; ending it"
+        kill "$holder"
+        continue
+    fi
+    # Report each holder once, not every minute.
+    mkdir -p "$state"
+    marker="$state/reported-holder-$holder"
+    [ -e "$marker" ] && continue
+    log "WARNING: holder $holder was started from SSH and still runs $terminals terminals." \
+        "Its agents cannot see the login Keychain and can die with the session." \
+        "Replace it with 'kill $holder' from outside its terminals: that ends them," \
+        "and kept terminals come back as shells in a new launchd holder."
+    /usr/bin/osascript -e "display notification \"Holder $holder runs $terminals terminals from an SSH login. Replacing it ends them; see ~/Library/Logs/herdr-core-ensure.log.\" with title \"Herdr holder needs replacing\""
+    touch "$marker"
+done < <(/usr/bin/jq -r '.holders[] | "\(.pid) \(.terminals)"' <<<"$status")
