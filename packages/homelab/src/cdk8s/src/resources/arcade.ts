@@ -31,11 +31,15 @@ const ARCADE_NODE_SELECTOR = { "kubernetes.io/hostname": "torvalds" };
 
 export function createArcadeDeployment(
   chart: Chart,
-  { controllerActive = true }: { controllerActive?: boolean } = {},
+  {
+    controllerActive = true,
+    suspended = false,
+  }: { controllerActive?: boolean; suspended?: boolean } = {},
 ) {
   // Arcade owns the command bot and both streaming accounts after migration.
+  // A suspended controller keeps its configuration and storage and runs no pod.
   const deployment = createBurstDeployment(chart, "arcade", {
-    replicas: controllerActive ? 1 : 0,
+    replicas: controllerActive && !suspended ? 1 : 0,
     strategy: DeploymentStrategy.recreate(),
     // Emerald's goal worker and save retries use the same budget as its legacy pod.
     terminationGracePeriod: Duration.seconds(120),

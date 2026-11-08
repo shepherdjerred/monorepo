@@ -219,3 +219,22 @@ test("Arcade owns one credential item and keeps limits and goal grants outside i
     emeraldGoal: { enabled: true, model: "gpt-5.6-sol" },
   });
 });
+
+test("a suspended controller keeps its storage and runs no pod", () => {
+  const chart = new Chart(new App(), "test", {
+    namespace: "arcade",
+    disableResourceNameHashes: true,
+  });
+  createArcadeDeployment(chart, { suspended: true });
+  const resources = Testing.synth(chart);
+  expect(
+    DeploymentSchema.parse(
+      resources.find(
+        (resource) => KindSchema.parse(resource).kind === "Deployment",
+      ),
+    ),
+  ).toMatchObject({ spec: { replicas: 0 } });
+  expect(
+    resources.some((resource) => KindSchema.parse(resource).kind === "Job"),
+  ).toBe(false);
+});

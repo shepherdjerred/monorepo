@@ -7,6 +7,8 @@ export function createArcadeChart(app: App) {
     namespace: "arcade",
     disableResourceNameHashes: true,
   });
-  createArcadeDeployment(chart);
+  // Suspended to free torvalds CPU until drained Temporal worker hosts can be
+  // retired (AI-415); restore by removing the option.
+  createArcadeDeployment(chart, { suspended: true });
   createArcadeEdge(chart);
 }
