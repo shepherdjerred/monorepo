@@ -80,9 +80,10 @@ test("ChartMuseum server and CI share one owning 1Password item", () => {
   );
   expect(ci?.spec.itemPath).toBe(server?.spec.itemPath);
   expect(
-    bindings.find((item) => item.metadata.name === "ci-chartmuseum-credentials")
-      ?.spec.itemPath,
-  ).toBe("vaults/v64ocnykdqju4ui6j6pua56xw4/items/cnutkdwa7uka5hk3wx5gimyfom");
+    bindings.find(
+      (item) => item.metadata.name === "ci-chartmuseum-credentials",
+    ),
+  ).toBeUndefined();
 });
 
 test("Minecraft provider and runtime retain the same bot identity and field", () => {

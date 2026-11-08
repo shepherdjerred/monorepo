@@ -90,11 +90,6 @@ const CI_CREDENTIAL_ITEMS = [
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
   },
   {
-    // Existing pipelines retain this key contract until their jobs drain.
-    secretName: "ci-chartmuseum-credentials",
-    itemId: "cnutkdwa7uka5hk3wx5gimyfom",
-  },
-  {
     secretName: "ci-chartmuseum-basic-auth",
     itemId: "wwoism5fsvmbisv4ef47yxqy2i",
   },

@@ -71,7 +71,7 @@ function requestOf(info: z.infer<typeof InfoSchema>, name: string) {
  */
 export function requireRenderedSource(
   raw: unknown,
-  desired: RenderedApplication,
+  desired: Pick<RenderedApplication, "name" | "environmentId" | "source">,
 ) {
   const observed = ObservedSchema.parse(raw);
   if (

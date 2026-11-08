@@ -553,8 +553,22 @@ describe("agent chat ambiguous provider admissions", () => {
   });
 
   test("admits only one of two overlapping activity attempts", async () => {
-    const baseDirectory = await temporaryDirectories.create();
+    // Worker pods have independent runtime filesystems and share the durable store.
+    const [firstRuntime, secondRuntime] = await Promise.all([
+      temporaryDirectories.create(),
+      temporaryDirectories.create(),
+    ]);
     const store = memoryAgentChatStore();
+    const create = store.create;
+    const bothClaims = Promise.withResolvers<undefined>();
+    let claims = 0;
+    store.create = async (key, body) => {
+      const admitted = await create(key, body);
+      claims += 1;
+      if (claims === 2) bothClaims.resolve(undefined);
+      await bothClaims.promise;
+      return admitted;
+    };
     const provider = vi.fn<typeof runAgentTurn>(() =>
       Promise.reject(new Error("provider result lost")),
     );
@@ -578,7 +592,7 @@ describe("agent chat ambiguous provider admissions", () => {
     };
     const dependencies = {
       ...providerMustNotRunDependencies(
-        baseDirectory,
+        firstRuntime,
         () => new Date("2026-09-14T20:01:00.000Z"),
       ),
       store,
@@ -588,9 +602,13 @@ describe("agent chat ambiguous provider admissions", () => {
 
     const results = await Promise.allSettled([
       runAgentChatTurnWithDependencies(input, dependencies),
-      runAgentChatTurnWithDependencies(input, dependencies),
+      runAgentChatTurnWithDependencies(input, {
+        ...dependencies,
+        baseDirectory: secondRuntime,
+      }),
     ]);
 
+    expect(claims).toBe(2);
     expect(provider).toHaveBeenCalledOnce();
     expect(
       results.some(

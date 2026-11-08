@@ -5,6 +5,19 @@ import {
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
 
+/** Identity metadata shared by native owned-resource proofs. */
+export const ArgoResourceSchema = z.object({
+  apiVersion: z.string().min(1),
+  kind: z.string().min(1),
+  metadata: z.object({
+    name: z.string().min(1),
+    namespace: z.string().optional(),
+    uid: z.string().min(1).optional(),
+    deletionTimestamp: z.string().optional(),
+    annotations: z.record(z.string(), z.string()).optional(),
+  }),
+});
+
 const SourceSchema = DeliveryArgoSourceSchema.refine(
   (source) =>
     source.helm?.parameters?.every(

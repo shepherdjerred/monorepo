@@ -46,6 +46,24 @@ function selectWithReasons(
   );
 }
 
+test("rebuilds Temporal for every homelab source shipped in its runtime", async () => {
+  const dockerfile = await Bun.file(
+    nodePath.join(REPO_ROOT, "packages/temporal/Dockerfile"),
+  ).text();
+  const runtime = dockerfile
+    .split("# Scoped source closure")[1]
+    ?.split("# Built artifacts")[0];
+  if (runtime === undefined)
+    throw new Error("Temporal runtime COPY section is missing");
+  const sources = [...runtime.matchAll(/^ {2}(packages\/homelab\/\S+) \\$/gmu)];
+  expect(sources.length).toBeGreaterThan(0);
+  for (const match of sources) {
+    const source = match[1];
+    if (source === undefined) throw new Error("Runtime source is missing");
+    expect(await select([source]), source).toContain("temporal-worker");
+  }
+});
+
 test("rebuilds the bundled review policy when its source or library changes", async () => {
   for (const path of [
     "scripts/review/bundled-review-gate.ts",
