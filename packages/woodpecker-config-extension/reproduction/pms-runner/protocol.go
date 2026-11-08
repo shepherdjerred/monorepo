@@ -91,7 +91,7 @@ func loadPlan(path, yamlPath string) (Plan, []byte, string, error) {
 	if len(y) > 1<<20 || digest(y) != p.YAMLSHA256 {
 		return p, nil, "", errors.New("YAML digest mismatch")
 	}
-	for i, name := range []string{"clone", "media-pms-wire", "media-pms-native"} {
+	for i, name := range []string{"clear-golden", "clone", "media-pms-wire", "media-pms-native"} {
 		if p.Steps[i].Name != name || p.Steps[i].UUID != fmt.Sprintf("%s-%d", p.RequestID, i) {
 			return p, nil, "", errors.New("step identity/order mismatch")
 		}

@@ -87,7 +87,10 @@ export function renderPmsReproduction(
   })}`;
   const emitted = z
     .object({
-      clone: z.tuple([emittedContainer]),
+      clone: z.tuple([
+        emittedContainer.extend({ name: z.literal("clear-golden") }),
+        emittedContainer.extend({ name: z.literal("clone") }),
+      ]),
       steps: z.tuple([emittedContainer, emittedContainer]),
     })
     .parse(parse(yaml));
@@ -104,10 +107,10 @@ export function renderPmsReproduction(
       name: command.name,
       uuid: `${identity.requestId}-${index.toString()}`,
       image: command.image,
-      // emitWorkflow escapes every dollar for Woodpecker substitution. The
-      // reviewed plan records the exact commands the runtime will execute.
+      // emitWorkflow doubles dollars and backslashes for Woodpecker
+      // substitution. The plan records the exact runtime commands.
       commands: (command.commands ?? []).map((value) =>
-        value.replaceAll("$$", "$"),
+        value.replaceAll("$$", "$").replaceAll("\\\\", "\\"),
       ),
       resources: command.backend_options.kubernetes.resources,
       volumes: command.volumes ?? [],

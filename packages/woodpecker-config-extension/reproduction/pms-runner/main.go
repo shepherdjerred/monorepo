@@ -38,7 +38,7 @@ func compilePlan(p Plan, yaml []byte) (*backend.Config, error) {
 	b := builder.PipelineBuilder{
 		Yamls:               []*builder.YamlFile{{Name: "media-pms-wire", Data: yaml}},
 		RepoTrusted:         &metadata.TrustedConfiguration{Volumes: true},
-		TrustedClonePlugins: []string{p.Steps[0].Image},
+		TrustedClonePlugins: []string{p.Steps[0].Image, p.Steps[1].Image},
 		CompilerOptions:     []compiler.Option{compiler.WithPrefix("pms-" + p.RequestID), compiler.WithLocal(false), compiler.WithWorkspace("/woodpecker", "src")},
 		GetWorkflowMetadata: func(*builder.Workflow) metadata.Metadata { return m },
 	}
@@ -68,20 +68,20 @@ func compilePlan(p Plan, yaml []byte) (*backend.Config, error) {
 			expected := p.Steps[index]
 			index++
 			if err = validateStep(p, expected, step); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("compiled step %s: %w", expected.Name, err)
 			}
 			step.UUID = expected.UUID
 			step.WorkflowLabels = items[0].Labels
 		}
 	}
-	if index != 3 {
+	if index != len(p.Steps) {
 		return nil, errors.New("missing compiled step")
 	}
 	return config, nil
 }
 func validateStep(p Plan, expected PlannedStep, s *backend.Step) error {
 	expectedType := backend.StepTypeCommands
-	if expected.Name == "clone" {
+	if expected.Name == "clear-golden" || expected.Name == "clone" {
 		expectedType = backend.StepTypeClone
 	}
 	if s.Type != expectedType {
@@ -102,6 +102,9 @@ func validateStep(p Plan, expected PlannedStep, s *backend.Step) error {
 			ServiceAccountName string                       `json:"serviceAccountName"`
 			Labels             map[string]string            `json:"labels"`
 			Annotations        map[string]string            `json:"annotations"`
+			SecurityContext    *struct {
+				AllowPrivilegeEscalation *bool `json:"allowPrivilegeEscalation"`
+			} `json:"securityContext"`
 		} `json:"kubernetes"`
 	}
 	b, err := json.Marshal(s.BackendOptions)
@@ -114,6 +117,13 @@ func validateStep(p Plan, expected PlannedStep, s *backend.Step) error {
 		return err
 	}
 	o := options.Kubernetes
+	if expected.Name == "clear-golden" {
+		if o.SecurityContext == nil || o.SecurityContext.AllowPrivilegeEscalation == nil || *o.SecurityContext.AllowPrivilegeEscalation {
+			return errors.New("golden cleanup security context differs")
+		}
+	} else if o.SecurityContext != nil {
+		return errors.New("unexpected compiled security context")
+	}
 	if !reflect.DeepEqual(o.Resources, expected.Resources) || !reflect.DeepEqual(o.NodeSelector, map[string]string{"kubernetes.io/hostname": "liskov"}) || o.ServiceAccountName != "woodpecker-job" || !reflect.DeepEqual(o.Tolerations, []map[string]string{{"key": "ci", "operator": "Equal", "value": "only", "effect": "NoSchedule"}}) {
 		return errors.New("compiled resource/placement/tokenless policy differs")
 	}

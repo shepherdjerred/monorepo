@@ -94,7 +94,7 @@ func (b *ownedBackend) SetupWorkflow(ctx context.Context, config *backend.Config
 	err := b.Backend.SetupWorkflow(ctx, config, task)
 	readCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 20*time.Second)
 	defer cancel()
-	return b.capture(readCtx, b.plan.resources(b.hash)[3:], err)
+	return b.capture(readCtx, b.plan.resources(b.hash)[len(b.plan.Steps):], err)
 }
 func (b *ownedBackend) StartStep(ctx context.Context, step *backend.Step, task string) error {
 	if task != b.plan.RequestID {
@@ -179,13 +179,13 @@ func (b *ownedBackend) DestroyWorkflow(ctx context.Context, _ *backend.Config, t
 	}
 	var podErr, otherErr error
 	resources := b.plan.resources(b.hash)
-	for _, r := range resources[:3] {
+	for _, r := range resources[:len(b.plan.Steps)] {
 		podErr = errors.Join(podErr, b.remove(ctx, r))
 	}
-	otherErr = errors.Join(otherErr, b.remove(ctx, resources[3]))
+	otherErr = errors.Join(otherErr, b.remove(ctx, resources[len(b.plan.Steps)]))
 	// A workspace is not deleted until every owned pod is confirmed absent.
 	if podErr == nil {
-		otherErr = errors.Join(otherErr, b.remove(ctx, resources[4]))
+		otherErr = errors.Join(otherErr, b.remove(ctx, resources[len(b.plan.Steps)+1]))
 	}
 	for _, r := range b.ledger.records {
 		if r.State == "shared" {

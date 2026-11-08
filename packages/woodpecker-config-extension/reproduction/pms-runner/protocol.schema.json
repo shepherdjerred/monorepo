@@ -29,8 +29,15 @@
       "additionalProperties": false,
       "required": ["name", "uuid", "image", "commands", "volumes", "resources"],
       "properties": {
-        "name": { "enum": ["clone", "media-pms-wire", "media-pms-native"] },
-        "uuid": { "type": "string", "pattern": "^[a-f0-9-]{36}-[012]$" },
+        "name": {
+          "enum": [
+            "clear-golden",
+            "clone",
+            "media-pms-wire",
+            "media-pms-native"
+          ]
+        },
+        "uuid": { "type": "string", "pattern": "^[a-f0-9-]{36}-[0123]$" },
         "image": { "$ref": "#/definitions/image" },
         "commands": {
           "type": "array",
@@ -89,10 +96,16 @@
         },
         "steps": {
           "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
+          "minItems": 4,
+          "maxItems": 4,
           "additionalItems": false,
           "items": [
+            {
+              "allOf": [
+                { "$ref": "#/definitions/step" },
+                { "properties": { "name": { "const": "clear-golden" } } }
+              ]
+            },
             {
               "allOf": [
                 { "$ref": "#/definitions/step" },

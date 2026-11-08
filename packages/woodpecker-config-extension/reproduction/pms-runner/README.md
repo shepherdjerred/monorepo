@@ -65,7 +65,8 @@ the YAML digest and compiled command/placement policy. The shared
 requires a new review and matching build.
 
 The standalone workflow admits only manual events. Its YAML retains Woodpecker
-dollar escaping; the plan records the exact commands after that substitution.
+dollar and backslash escaping; the plan records the exact commands after that
+substitution.
 
 Only launch after reviewing the exact artifacts and obtaining the intended
 operator execution window. Run outside Kubernetes with existing operator
@@ -92,7 +93,8 @@ Do not retry `run` with a new ledger against existing resources.
 
 ## Ownership and credential boundary
 
-The plan fixes all three pod names, the headless service and the workspace PVC
+The plan fixes all four pod names (`clear-golden`, the native Git clone, the
+wire test and the native PMS test), the headless service and the workspace PVC
 before creation. Exact names must be absent, shared cache UIDs are recorded,
 and the exclusive-create ledger fsyncs intents before setup. Observed ownership
 requires the reviewed object shape and a durably recorded UID. A create conflict

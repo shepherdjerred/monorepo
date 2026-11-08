@@ -66,7 +66,7 @@ func (f *fakeBackend) WaitStep(context.Context, *backend.Step, string) (*backend
 }
 func testPlan() Plan {
 	p := Plan{Kind: "pms-plan", SchemaVersion: 1, Source: strings.Repeat("a", 40), Branch: "feature/media", RequestID: "d10ddcc4-2245-4774-b49a-a4a51abcfaf8", JobImagePullSecrets: []string{"dockerhub-pull-woodpecker-ci"}}
-	for i, name := range []string{"clone", "media-pms-wire", "media-pms-native"} {
+	for i, name := range []string{"clear-golden", "clone", "media-pms-wire", "media-pms-native"} {
 		p.Steps = append(p.Steps, PlannedStep{Name: name, UUID: p.RequestID + "-" + string(rune('0'+i))})
 	}
 	return p
@@ -93,7 +93,7 @@ func TestPartialSetupBeforePodIsOwnedAndCleaned(t *testing.T) {
 	if err := b.reserve(ctx); err != nil {
 		t.Fatal(err)
 	}
-	pvc := b.plan.resources(b.hash)[4]
+	pvc := b.plan.resources(b.hash)[len(b.plan.Steps)+1]
 	failure := errors.New("service create failed")
 	b.Backend = &fakeBackend{setup: func() error { a.uids[key(pvc)] = "workspace-original"; return failure }}
 	if err := b.SetupWorkflow(ctx, &backend.Config{}, b.plan.RequestID); !errors.Is(err, failure) {
@@ -112,7 +112,7 @@ func TestUncertainReadbackNeverAdoptsAnUnknownUID(t *testing.T) {
 	if err := b.reserve(ctx); err != nil {
 		t.Fatal(err)
 	}
-	pvc := b.plan.resources(b.hash)[4]
+	pvc := b.plan.resources(b.hash)[len(b.plan.Steps)+1]
 	b.Backend = &fakeBackend{setup: func() error { a.uids[key(pvc)] = "unknown"; a.readErr[key(pvc)] = brokenRead; return brokenRead }}
 	if err := b.SetupWorkflow(ctx, nil, b.plan.RequestID); !errors.Is(err, brokenRead) {
 		t.Fatal(err)
@@ -126,25 +126,29 @@ func TestUncertainReadbackNeverAdoptsAnUnknownUID(t *testing.T) {
 	}
 }
 func TestChangedPodUIDProtectsReplacementAndWorkspace(t *testing.T) {
-	b, a, _ := harness(t)
-	ctx := context.Background()
-	if err := b.reserve(ctx); err != nil {
-		t.Fatal(err)
-	}
-	resources := b.plan.resources(b.hash)
-	pod, pvc := resources[0], resources[4]
-	for _, r := range []Record{pod, pvc} {
-		a.uids[key(r)] = "original"
-		if err := b.capture(ctx, []Record{r}, nil); err != nil {
-			t.Fatal(err)
-		}
-	}
-	a.uids[key(pod)] = "replacement"
-	if err := b.DestroyWorkflow(ctx, nil, b.plan.RequestID); err == nil {
-		t.Fatal("changed UID passed")
-	}
-	if len(a.deleted) != 0 {
-		t.Fatal("deleted replacement or mounted workspace")
+	for index, step := range testPlan().Steps {
+		t.Run(step.Name, func(t *testing.T) {
+			b, a, _ := harness(t)
+			ctx := context.Background()
+			if err := b.reserve(ctx); err != nil {
+				t.Fatal(err)
+			}
+			resources := b.plan.resources(b.hash)
+			pod, pvc := resources[index], resources[len(b.plan.Steps)+1]
+			for _, r := range []Record{pod, pvc} {
+				a.uids[key(r)] = "original"
+				if err := b.capture(ctx, []Record{r}, nil); err != nil {
+					t.Fatal(err)
+				}
+			}
+			a.uids[key(pod)] = "replacement"
+			if err := b.DestroyWorkflow(ctx, nil, b.plan.RequestID); err == nil {
+				t.Fatal("changed UID passed")
+			}
+			if len(a.deleted) != 0 {
+				t.Fatal("deleted replacement or mounted workspace")
+			}
+		})
 	}
 }
 func TestCleanupFailureIsJoinedAndDoesNotSkipIndependentResources(t *testing.T) {
@@ -154,13 +158,13 @@ func TestCleanupFailureIsJoinedAndDoesNotSkipIndependentResources(t *testing.T) 
 		t.Fatal(err)
 	}
 	resources := b.plan.resources(b.hash)
-	for _, r := range resources[3:] {
+	for _, r := range resources[len(b.plan.Steps):] {
 		a.uids[key(r)] = r.Name
 		if err := b.capture(ctx, []Record{r}, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
-	a.deleteErr[key(resources[3])] = brokenDelete
+	a.deleteErr[key(resources[len(b.plan.Steps)])] = brokenDelete
 	err := b.DestroyWorkflow(ctx, nil, b.plan.RequestID)
 	if !errors.Is(err, brokenDelete) || !errors.Is(errors.Join(nil, b.cleanupErr), brokenDelete) {
 		t.Fatal("cleanup failure lost")
@@ -172,7 +176,7 @@ func TestCleanupFailureIsJoinedAndDoesNotSkipIndependentResources(t *testing.T) 
 func TestExistingNameAndCreateConflictDoNotGrantOwnership(t *testing.T) {
 	b, a, _ := harness(t)
 	ctx := context.Background()
-	r := b.plan.resources(b.hash)[4]
+	r := b.plan.resources(b.hash)[len(b.plan.Steps)+1]
 	a.uids[key(r)] = "foreign"
 	if err := b.reserve(ctx); err == nil {
 		t.Fatal("preexisting resource accepted")
@@ -193,12 +197,12 @@ func TestExistingNameAndCreateConflictDoNotGrantOwnership(t *testing.T) {
 func TestLedgerRestartCleansOnlyOriginalUIDAndNeverSharedCaches(t *testing.T) {
 	b, a, path := harness(t)
 	ctx := context.Background()
-	b.plan.Steps[1].Volumes = []string{"woodpecker-bun-cache:/cache/bun"}
+	b.plan.Steps[2].Volumes = []string{"woodpecker-bun-cache:/cache/bun"}
 	a.uids["persistentvolumeclaims/woodpecker-bun-cache"] = "shared-original"
 	if err := b.reserve(ctx); err != nil {
 		t.Fatal(err)
 	}
-	r := b.plan.resources(b.hash)[4]
+	r := b.plan.resources(b.hash)[len(b.plan.Steps)+1]
 	a.uids[key(r)] = "owned-original"
 	if err := b.capture(ctx, []Record{r}, nil); err != nil {
 		t.Fatal(err)
@@ -229,7 +233,7 @@ func TestDisappearedStepCannotBecomeSuccess(t *testing.T) {
 }
 func TestActualKubernetesDeleteCarriesExactUIDPrecondition(t *testing.T) {
 	p := testPlan()
-	r := p.resources(strings.Repeat("b", 64))[4]
+	r := p.resources(strings.Repeat("b", 64))[len(p.Steps)+1]
 	r.State = "owned"
 	r.UID = "owned-workspace-uid"
 	client := fake.NewSimpleClientset(&core.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: r.Name, Namespace: namespace, UID: types.UID(r.UID)}})
@@ -257,7 +261,7 @@ func TestActualKubernetesDeleteCarriesExactUIDPrecondition(t *testing.T) {
 }
 func TestCompiledPolicyRejectsCredentialPlacementAndResourceDrift(t *testing.T) {
 	p := testPlan()
-	e := p.Steps[1]
+	e := p.Steps[2]
 	e.Image = "image@sha256:" + strings.Repeat("c", 64)
 	e.Commands = []string{"exact reviewed command"}
 	e.Resources = map[string]map[string]string{"requests": {"cpu": "1", "memory": "2Gi", "ephemeral-storage": "1Gi"}, "limits": {"cpu": "2", "memory": "4Gi", "ephemeral-storage": "4Gi"}}
@@ -297,7 +301,7 @@ func TestCompiledPolicyRejectsCredentialPlacementAndResourceDrift(t *testing.T) 
 			t.Fatalf("missing policy %s", want)
 		}
 	}
-	if !reflect.DeepEqual(p.resources("x")[4].Name, "pms-"+p.RequestID+"-default") {
+	if !reflect.DeepEqual(p.resources("x")[len(p.Steps)+1].Name, "pms-"+p.RequestID+"-default") {
 		t.Fatal("workspace identity differs")
 	}
 }
@@ -306,7 +310,7 @@ func TestCompiledPolicyRejectsCredentialPlacementAndResourceDrift(t *testing.T) 
 // pull refs into the pod. No pull credential value or service-account token is mounted.
 func defaultedJobPod() (Plan, *core.ServiceAccount, *core.Pod) {
 	p := testPlan()
-	step := &p.Steps[1]
+	step := &p.Steps[2]
 	step.Image = "image@sha256:" + strings.Repeat("c", 64)
 	step.Resources = map[string]map[string]string{
 		"requests": {"cpu": "1", "memory": "2Gi", "ephemeral-storage": "1Gi"},
@@ -367,14 +371,14 @@ func TestDefaultedJobPullSecretIsOwnedAndCleaned(t *testing.T) {
 	}
 	client := fake.NewSimpleClientset(pod)
 	b.api = &kubeResources{client: client, plan: p}
-	r := p.resources(b.hash)[1]
+	r := p.resources(b.hash)[2]
 	if err := b.capture(ctx, []Record{r}, nil); err != nil {
 		t.Fatal(err)
 	}
 	if got := b.ledger.records[key(r)]; got.State != "owned" || got.UID != string(pod.UID) {
 		t.Fatalf("defaulted pod did not retain its exact owned UID: %+v", got)
 	}
-	if err := b.DestroyStep(ctx, &backend.Step{UUID: p.Steps[1].UUID}, p.RequestID); err != nil {
+	if err := b.DestroyStep(ctx, &backend.Step{UUID: p.Steps[2].UUID}, p.RequestID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := client.CoreV1().Pods(namespace).Get(ctx, pod.Name, metav1.GetOptions{}); !apierrors.IsNotFound(err) {
@@ -430,10 +434,56 @@ func TestAdmittedPodRejectsUnapprovedPullReferencesAndMountedCredentials(t *test
 			changed := pod.DeepCopy()
 			change(changed)
 			k := &kubeResources{client: fake.NewSimpleClientset(changed), plan: p}
-			uid, err := k.UID(context.Background(), p.resources(strings.Repeat("b", 64))[1])
+			uid, err := k.UID(context.Background(), p.resources(strings.Repeat("b", 64))[2])
 			if err == nil || uid != "" {
 				t.Fatalf("unreviewed pod granted ownership: %q, %v", uid, err)
 			}
 		})
+	}
+}
+
+func TestGoldenCleanupPodRequiresPrivilegeEscalationDisabled(t *testing.T) {
+	p, _, pod := defaultedJobPod()
+	p.Steps[0].Image = p.Steps[2].Image
+	p.Steps[0].Resources = p.Steps[2].Resources
+	pod.Name = "wp-" + p.Steps[0].UUID
+	disabled := false
+	pod.Spec.Containers[0].SecurityContext = &core.SecurityContext{AllowPrivilegeEscalation: &disabled}
+	k := &kubeResources{plan: p}
+	if err := k.validPod(pod); err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"missing context", "missing value", "enabled"} {
+		t.Run(field, func(t *testing.T) {
+			changed := pod.DeepCopy()
+			switch field {
+			case "missing context":
+				changed.Spec.Containers[0].SecurityContext = nil
+			case "missing value":
+				changed.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation = nil
+			case "enabled":
+				enabled := true
+				changed.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation = &enabled
+			}
+			if err := k.validPod(changed); err == nil {
+				t.Fatal("golden cleanup privilege escalation policy changed")
+			}
+		})
+	}
+}
+
+func TestPlanReservesEveryPodBeforeServiceAndWorkspace(t *testing.T) {
+	p := testPlan()
+	resources := p.resources(strings.Repeat("b", 64))
+	if len(resources) != 6 {
+		t.Fatalf("expected four pods, one service and one workspace, got %d resources", len(resources))
+	}
+	for i, step := range p.Steps {
+		if resources[i].Resource != "pods" || resources[i].Name != "wp-"+step.UUID {
+			t.Fatal("step lost its separate resource ownership")
+		}
+	}
+	if resources[4].Resource != "services" || resources[5].Resource != "persistentvolumeclaims" {
+		t.Fatal("workflow resource ordering changed")
 	}
 }

@@ -7,6 +7,10 @@ import {
   PmsReproductionProtocol,
 } from "#src/reproduction/media-pms.ts";
 import { TEST_IMAGES } from "#test-identity";
+import {
+  ORDINARY_CLONE_IMAGE,
+  SOURCE_CACHE_PREPARATION_IMAGE,
+} from "#src/pipeline/source-cache.ts";
 
 test("PMS preview retains both actual containers and requires separate execution ownership", () => {
   const result = renderPmsReproduction(
@@ -44,15 +48,32 @@ test("PMS preview retains both actual containers and requires separate execution
     "dockerhub-pull-woodpecker-ci",
   ]);
   expect(result.plan.steps.map((step) => step.name)).toEqual([
+    "clear-golden",
     "clone",
     "media-pms-wire",
     "media-pms-native",
   ]);
   expect(result.plan.steps.map((step) => step.uuid)).toEqual(
-    [0, 1, 2].map(
+    [0, 1, 2, 3].map(
       (index) => `d10ddcc4-2245-4774-b49a-a4a51abcfaf8-${index.toString()}`,
     ),
   );
+  expect(result.plan.steps.slice(0, 2)).toMatchObject([
+    {
+      name: "clear-golden",
+      image: SOURCE_CACHE_PREPARATION_IMAGE,
+      commands: [
+        "if [ -e .ci-golden ]; then find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +; fi",
+      ],
+    },
+    { name: "clone", image: ORDINARY_CLONE_IMAGE, commands: [] },
+  ]);
+  expect(
+    PmsReproductionProtocol.safeParse({
+      ...result.plan,
+      steps: result.plan.steps.slice(1),
+    }).success,
+  ).toBe(false);
   expect(
     PmsReproductionProtocol.safeParse({ ...result.plan, secret: "forbidden" })
       .success,

@@ -171,6 +171,9 @@ func (k *kubeResources) validPod(p *core.Pod) error {
 	if container.SecurityContext != nil && container.SecurityContext.Privileged != nil && *container.SecurityContext.Privileged {
 		return errors.New("privileged pod")
 	}
+	if expected.Name == "clear-golden" && (container.SecurityContext == nil || container.SecurityContext.AllowPrivilegeEscalation == nil || *container.SecurityContext.AllowPrivilegeEscalation) {
+		return errors.New("golden cleanup pod security context differs")
+	}
 	for name, expectedValues := range expected.Resources {
 		actual := container.Resources.Requests
 		if name == "limits" {
