@@ -26,6 +26,8 @@ import {
   exec,
   readTextFile,
   home,
+  knownAgents,
+  window,
 } from "herdr";
 import {
   CLAUDE_MODELS,
@@ -85,7 +87,22 @@ const NO_CHOICE = { mode: null, model: null, effort: null };
 // Agents to start, as `brim --json` ranks them: least used first, then other windows;
 // unavailable ones (no usable quota data) last, with Brim's reason, and still startable.
 // One starts the way `brim --provider` does (its agent-bin wrapper, on the
-// space's machine); Shell starts none.
+// space's machine); Shell starts none. Windows has no Brim: there the list is
+// Herdr's installed agents, unranked, and one starts through its PowerShell
+// profile wrapper.
+// Brim's provider ids, by Herdr's program key.
+const PROVIDER = {
+  claude: "claude-code",
+  codex: "codex",
+  agy: "antigravity",
+  gemini: "antigravity",
+  cursor: "cursor",
+  "cursor-agent": "cursor",
+  grok: "grok",
+  "grok-build": "grok",
+  kimi: "kimi",
+  muse: "muse",
+};
 // One-color icons, the same as my-status's quota chips.
 const ICON = {
   "claude-code": "mods/my-status/icons/claude.svg",
@@ -404,31 +421,9 @@ export default class Worktree extends View {
     this.picking = props()?.action === "new" && !props()?.argv;
     this.agents = undefined; // { choices, ranked, other, unavailable (counts) } once read
     this.pick = 0;
-    if (this.picking)
-      cx.spawn(async (cx) => {
-        try {
-          const r = await exec("brim", ["--json"]);
-          if (r.code !== 0)
-            throw new Error(r.stderr.trim() || `brim --json exited ${r.code}.`);
-          const b = JSON.parse(r.stdout);
-          this.agents = {
-            choices: [...b.ranked, ...b.other, ...b.unavailable, SHELL],
-            ranked: b.ranked.length,
-            other: b.other.length,
-            unavailable: b.unavailable.length,
-          };
-          this.loadCatalog(this.provider(), cx);
-        } catch (error) {
-          this.agents = {
-            choices: [SHELL],
-            ranked: 0,
-            other: 0,
-            unavailable: 0,
-            error: String(error),
-          };
-        }
-        cx.notify();
-      });
+    // Whether the space's machine is Windows: no Brim, agents start through
+    // the PowerShell profile. Known before the agents are listed.
+    this.windowsTarget = !this.on && window()?.platform === "windows";
     cx.spawn(async (cx) => {
       try {
         if (this.on) {
@@ -438,16 +433,19 @@ export default class Worktree extends View {
               on: this.on,
             });
           } catch {}
-          if (!result || result.code !== 0 || !result.stdout.trim())
+          if (!result || result.code !== 0 || !result.stdout.trim()) {
             result = await exec(
               "powershell.exe",
               ["-NoProfile", "-Command", "[Console]::Write($HOME)"],
               { on: this.on },
             );
+            this.windowsTarget = true;
+          }
           if (result.code !== 0 || !result.stdout.trim())
             throw new Error("Could not find the remote home folder.");
           this.userHome = result.stdout.trim().replace(/\\/g, "/");
         }
+        if (this.picking) cx.spawn(async (cx) => this.loadAgents(cx));
         this.folder = props()?.folder || place(this.space()) || this.userHome;
         // The repo is set last: Enter does nothing until the warnings it consents to are known.
         const repo = await repoOf(this.folder, this.on);
@@ -480,6 +478,60 @@ export default class Worktree extends View {
         cx.notify();
       }
     });
+  }
+
+  // The agents to pick from: Brim's ranking, or on Windows the installed ones.
+  async loadAgents(cx) {
+    try {
+      if (this.windowsTarget) {
+        const seen = new Set();
+        const installed = [];
+        for (const a of await knownAgents({ on: this.on ?? null })) {
+          const provider = PROVIDER[a.key];
+          if (!a.installed || !provider || seen.has(provider)) continue;
+          seen.add(provider);
+          installed.push({
+            provider,
+            displayName: a.name,
+            accountLabel: null,
+            planName: null,
+            unranked: true,
+          });
+        }
+        this.agents = {
+          choices: [...installed, SHELL],
+          ranked: 0,
+          other: 0,
+          unavailable: 0,
+          unranked: true,
+        };
+      } else {
+        // Brim's quota cache lives on the Macs: from Windows, ask the space's machine.
+        const r = await exec("brim", ["--json"], {
+          on: window()?.platform === "windows" ? this.on : null,
+        });
+        if (r.code !== 0)
+          throw new Error(r.stderr.trim() || `brim --json exited ${r.code}.`);
+        const b = JSON.parse(r.stdout);
+        this.agents = {
+          choices: [...b.ranked, ...b.other, ...b.unavailable, SHELL],
+          ranked: b.ranked.length,
+          other: b.other.length,
+          unavailable: b.unavailable.length,
+        };
+      }
+      this.loadCatalog(this.provider(), cx);
+    } catch (error) {
+      this.agents = {
+        choices: [SHELL],
+        ranked: 0,
+        other: 0,
+        unavailable: 0,
+        unranked: this.windowsTarget,
+        error: String(error),
+      };
+    }
+    cx.notify();
   }
 
   space() {
@@ -564,19 +616,34 @@ export default class Worktree extends View {
       root: `${ROOT(this.userHome)}/${this.repo.name}`,
       agentArgs: args,
       safe,
+      launcher: this.windowsTarget ? "profile" : "brim",
       // A caller's own program and tab, when it gave them instead of a pick.
       argv: this.picking ? null : (props().argv ?? null),
       tab: props().tab ?? null,
     };
     // The dialog closes now and its tasks with it; a process it started keeps
     // running. Results: ~/.local/state/herdr-worktree/events.jsonl, the unified
-    // log, and a notification when it fails.
-    exec("sh", [
-      "-c",
-      'nohup "$0" "$1" >/dev/null 2>&1 &',
-      `${home()}/bin/herdr-new-worktree`,
-      JSON.stringify(request),
-    ]);
+    // log (macOS), and a notification when it fails.
+    if (window()?.platform === "windows") {
+      // Start-Process does not quote arguments, so the request travels in a
+      // variable, single-quoted for PowerShell.
+      const quoted = (s) => `'${s.replaceAll("'", "''")}'`;
+      exec("powershell.exe", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        [
+          `$env:HERDR_WORKTREE_REQUEST = ${quoted(JSON.stringify(request))}`,
+          `Start-Process -WindowStyle Hidden -WorkingDirectory ${quoted(home())} -FilePath bun -ArgumentList ${quoted(`"${home()}/bin/herdr-new-worktree.ts"`)}, '--request-env'`,
+        ].join("; "),
+      ]);
+    } else
+      exec("sh", [
+        "-c",
+        'nohup "$0" "$1" >/dev/null 2>&1 &',
+        `${home()}/bin/herdr-new-worktree`,
+        JSON.stringify(request),
+      ]);
     return "";
   }
 
@@ -925,7 +992,10 @@ export default class Worktree extends View {
   // The agent list under the branch name: brim's sections, the pick highlighted.
   renderAgents(t) {
     const a = this.agents;
-    if (!a) return div().text_color(t.dim).child("Asking Brim…");
+    if (!a)
+      return div()
+        .text_color(t.dim)
+        .child(this.windowsTarget ? "Finding agents…" : "Asking Brim…");
     const heading = (text) =>
       div()
         .flex_none()
@@ -1005,7 +1075,7 @@ export default class Worktree extends View {
               ),
           ),
         )
-        .when(Boolean(e.provider) && !off, (el) =>
+        .when(Boolean(e.provider) && !off && !e.unranked, (el) =>
           el.child(
             div()
               .flex_none()
@@ -1028,7 +1098,7 @@ export default class Worktree extends View {
           ),
         );
     };
-    const rows = [heading("Sorted by usage")];
+    const rows = [heading(a.unranked ? "Installed" : "Sorted by usage")];
     a.choices.forEach((e, i) => {
       if (a.other && i === a.ranked) rows.push(heading("Other windows"));
       if (a.unavailable && i === a.ranked + a.other)
@@ -1045,7 +1115,7 @@ export default class Worktree extends View {
           .py(4)
           .text_size(11.5)
           .text_color(t.blocked)
-          .child(`Brim: ${a.error}`),
+          .child(`${a.unranked ? "Agents" : "Brim"}: ${a.error}`),
       );
     return div()
       .relative()

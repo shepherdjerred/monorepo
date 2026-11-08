@@ -44,7 +44,10 @@ a wrapper when it is installed. The wrapper removes provider API keys and
 homelab tokens, adds the agent's approval and sandbox bypass flags (none with
 `AGENT_SAFE=1`), and points the editor at Git's `true.exe` with `cat` as the
 pager. `codex` also gets `--no-daemon` and a theme matching the Windows light or
-dark setting. `agent` is left alone because on this PC it is Grok's. fish
+dark setting. `agent` is left alone because on this PC it is Grok's.
+`agent-safe <agent> [args]` runs one agent with `AGENT_SAFE=1`, because
+Herdr's argv cannot set a variable; the new-worktree dialog uses it for plan
+modes. fish
 defines the same wrappers with `__agent_exec`; change both together. The
 agent git and `gh` identity used on the Macs is not set up here.
 
@@ -75,6 +78,13 @@ folder but not its SVG icons. Edit the macOS source, then copy each changed
 folder here. `packages/dotfiles/scripts/herdr-windows-copy.test.ts` fails when
 a copy differs. `herdr-app check` writes `gpui-kit.d.ts` and `jsconfig.json`
 into a mod folder; they are generated and never committed.
+
+The `my-worktree` dialog's New worktree runs the shared worker
+`~/bin/herdr-new-worktree.ts`, a symlink into
+`../dotfiles/bin/executable_herdr_new_worktree.ts` that needs `bun` on PATH.
+The first naming call asks 1Password to approve reading the OpenAI key; a
+failure posts a Windows toast. See
+[New worktree dialog](../dotfiles/README.md#new-worktree-dialog).
 
 ## Changing a managed file
 

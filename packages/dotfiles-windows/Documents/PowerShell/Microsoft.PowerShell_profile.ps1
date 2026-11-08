@@ -80,3 +80,18 @@ foreach ($agent in $agentBypass.Keys) {
     Set-Item -Path "function:global:$agent" -Value $body
 }
 Remove-Variable agentBypass, agent, bypass, body -ErrorAction SilentlyContinue
+
+# `agent-safe <agent> [args...]`: the counterpart of `env AGENT_SAFE=1 <agent>`,
+# which Herdr's argv cannot express here. The new-worktree dialog starts
+# plan-style modes this way.
+function agent-safe {
+    $command = $args[0]
+    $rest = @($args | Select-Object -Skip 1)
+    $saved = $env:AGENT_SAFE
+    $env:AGENT_SAFE = '1'
+    try {
+        & $command @rest
+    } finally {
+        $env:AGENT_SAFE = $saved
+    }
+}

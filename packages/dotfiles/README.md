@@ -73,6 +73,15 @@ exits non-zero when the latest failed:
 /usr/bin/log show --last 1d --style compact --predicate 'eventMessage CONTAINS "herdr-worktree"'
 ```
 
+Windows has no Brim. When the space's machine is Windows, the dialog lists
+Herdr's installed agents, unranked. The worker starts the agent through its
+PowerShell profile wrapper, and through `agent-safe` for plan modes, instead of
+`brim --provider`. On a Windows PC, the dialog starts `bun
+~/bin/herdr-new-worktree.ts --request-env` with `Start-Process`, passing the
+request in `HERDR_WORKTREE_REQUEST`. A failure there posts a Windows toast and
+writes no unified log. [`../dotfiles-windows`](../dotfiles-windows/README.md)
+links the script into `~/bin`.
+
 ## Codex appearance changes
 
 macOS switches between light and dark at local sunrise and sunset. Herdr and
