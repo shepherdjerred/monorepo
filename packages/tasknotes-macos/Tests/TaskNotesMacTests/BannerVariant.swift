@@ -45,7 +45,7 @@ enum BannerVariant: String, CaseIterable, Sendable {
             SyncMessage.of(
                 status: SyncStatus(
                     state: .authError,
-                    lastError: .Api(message: "Unauthorized", status: 401),
+                    lastError: .Api(detail: "Unauthorized", status: 401),
                     nextRetryAt: nil
                 ),
                 pendingCount: 0,
@@ -56,7 +56,7 @@ enum BannerVariant: String, CaseIterable, Sendable {
                 status: SyncStatus(
                     state: .backoff,
                     lastError: .Connection(
-                        message: "Could not reach the server at tasknotes.local."),
+                        detail: "Could not reach the server at tasknotes.local."),
                     nextRetryAt: nil
                 ),
                 pendingCount: 1,
@@ -87,7 +87,7 @@ enum BannerVariant: String, CaseIterable, Sendable {
                 status: SyncStatus(state: .idle, lastError: nil, nextRetryAt: nil),
                 pendingCount: 0,
                 storeError: .Validation(
-                    message: "“next fridayy” is not a date this shell can read.")
+                    detail: "“next fridayy” is not a date this shell can read.")
             )
         case .parked:
             // The engine is `.idle` and reports nothing wrong, which is the
@@ -104,13 +104,13 @@ enum BannerVariant: String, CaseIterable, Sendable {
             SyncMessage.of(
                 status: SyncStatus(
                     state: .authError,
-                    lastError: .Api(message: "Unauthorized", status: 401),
+                    lastError: .Api(detail: "Unauthorized", status: 401),
                     nextRetryAt: nil
                 ),
                 pendingCount: 0,
                 storeError: nil,
                 credentialError: .Invariant(
-                    message: "could not read the stored server token (Keychain status -25308)")
+                    detail: "could not read the stored server token (Keychain status -25308)")
             )
         }
     }

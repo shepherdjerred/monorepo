@@ -1,0 +1,8647 @@
+[
+  {
+    "id": "dependency.0001",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0002",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0003",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0004",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0005",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0006",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0007",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0008",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0009",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0010",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0011",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0012",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0013",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0014",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0015",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0016",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0017",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0018",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0019",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0020",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0021",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0022",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0023",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0024",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0025",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0026",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0027",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0028",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0029",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0030",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0031",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0032",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0033",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0034",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0035",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0036",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0037",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0038",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0039",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0040",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0041",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0042",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[task-a]]",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0043",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0044",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0045",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0046",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0047",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0048",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0049",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0050",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0051",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0052",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0053",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0054",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0055",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0056",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0057",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0058",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0059",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0060",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0061",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0062",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0063",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0064",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0065",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0066",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0067",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0068",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0069",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0070",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0071",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0072",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0073",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0074",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0075",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0076",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0077",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0078",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0079",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0080",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0081",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0082",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0083",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0084",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "task-a",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0085",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0086",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0087",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0088",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0089",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0090",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0091",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0092",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0093",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0094",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0095",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0096",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0097",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0098",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0099",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0100",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0101",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0102",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0103",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0104",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0105",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0106",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0107",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0108",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0109",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0110",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0111",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0112",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0113",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0114",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0115",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0116",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0117",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0118",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0119",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0120",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0121",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0122",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0123",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0124",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0125",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0126",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "./task-a.md",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0127",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0128",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0129",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0130",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0131",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0132",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0133",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0134",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0135",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0136",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0137",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0138",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0139",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0140",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0141",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0142",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0143",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0144",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0145",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0146",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0147",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0148",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0149",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0150",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0151",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0152",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0153",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0154",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0155",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0156",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0157",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0158",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0159",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0160",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0161",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0162",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0163",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0164",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0165",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0166",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0167",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0168",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "../tasks/task-a.md",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0169",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0170",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0171",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0172",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0173",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0174",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0175",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0176",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0177",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0178",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0179",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0180",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0181",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0182",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0183",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0184",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0185",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0186",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0187",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0188",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0189",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0190",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0191",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0192",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0193",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0194",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0195",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0196",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0197",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0198",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0199",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0200",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0201",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0202",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0203",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0204",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0205",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0206",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0207",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0208",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0209",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0210",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "/tasks/task-a.md",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0211",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0212",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0213",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0214",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0215",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0216",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0217",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0218",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0219",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0220",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0221",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0222",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0223",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0224",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0225",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0226",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0227",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0228",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0229",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0230",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0231",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0232",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0233",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0234",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0235",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0236",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0237",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0238",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0239",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0240",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0241",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0242",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0243",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0244",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0245",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0246",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0247",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0248",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0249",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0250",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0251",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0252",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[Task A](tasks/task-a.md)",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0253",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0254",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0255",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0256",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0257",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0258",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0259",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0260",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0261",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0262",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0263",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0264",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0265",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0266",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0267",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0268",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0269",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0270",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0271",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0272",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0273",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0274",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0275",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0276",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0277",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0278",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0279",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0280",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0281",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0282",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0283",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0284",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0285",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0286",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0287",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0288",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0289",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0290",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0291",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0292",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0293",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0294",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0295",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0296",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0297",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0298",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0299",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0300",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0301",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0302",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0303",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0304",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0305",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0306",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0307",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0308",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0309",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0310",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0311",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0312",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0313",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0314",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0315",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0316",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0317",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0318",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0319",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0320",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0321",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0322",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0323",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0324",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0325",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0326",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0327",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0328",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0329",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0330",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0331",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0332",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0333",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0334",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0335",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0336",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": " ",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0337",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0338",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0339",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0340",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0341",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0342",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0343",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0344",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0345",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0346",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0347",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0348",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0349",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0350",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOSTART",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0351",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0352",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0353",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0354",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0355",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0356",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0357",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "FINISHTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0358",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0359",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0360",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0361",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0362",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0363",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0364",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "STARTTOFINISH",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0365",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0366",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0367",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0368",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0369",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0370",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0371",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "BLOCKS",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0372",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": ""
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0373",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "",
+        "gap": "PT1H"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0374",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "",
+        "gap": "-PT15M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0375",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "",
+        "gap": "PT0M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0376",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "",
+        "gap": "P1D"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0377",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "",
+        "gap": "P2W"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0378",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[bad](",
+        "reltype": "",
+        "gap": "bad-gap"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|duplicate|self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0379",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_set",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "taskUid": "task-a",
+      "entries": [
+        {
+          "uid": "[[task-b]]",
+          "reltype": "FINISHTOSTART"
+        },
+        {
+          "uid": "[[task-c]]",
+          "reltype": "STARTTOSTART"
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid_set"
+      }
+    }
+  },
+  {
+    "id": "dependency.0380",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_set",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "taskUid": "task-a",
+      "entries": [
+        {
+          "uid": "[[task-b]]",
+          "reltype": "FINISHTOSTART"
+        },
+        {
+          "uid": "task-b",
+          "reltype": "FINISHTOSTART"
+        }
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "duplicate|dependency_uid"
+      }
+    }
+  },
+  {
+    "id": "dependency.0381",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_set",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "taskUid": "task-a",
+      "entries": [
+        {
+          "uid": "task-a",
+          "reltype": "FINISHTOSTART"
+        }
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "self|dependency"
+      }
+    }
+  },
+  {
+    "id": "dependency.0382",
+    "section": "§10",
+    "profile": "extended",
+    "operation": "dependency.validate_set",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "taskUid": "task-a",
+      "entries": [
+        {
+          "uid": "[[task-b]]",
+          "reltype": "BLOCKS"
+        }
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid|reltype"
+      }
+    }
+  },
+  {
+    "id": "dependency.0383",
+    "section": "§10.2.6",
+    "profile": "extended",
+    "operation": "dependency.missing_target_behavior",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[missing-task]]",
+        "reltype": "FINISHTOSTART"
+      },
+      "unresolvedTargetSeverity": "warning",
+      "treatMissingTargetAsBlocked": true,
+      "requireResolvedUidOnWrite": false,
+      "onWrite": false,
+      "expect": {
+        "ok": true,
+        "result": {
+          "blocked": true,
+          "issue": "unresolved_dependency_target",
+          "severity": "warning"
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "blocked": true,
+        "issue": "unresolved_dependency_target",
+        "severity": "warning"
+      }
+    }
+  },
+  {
+    "id": "dependency.0384",
+    "section": "§10.2.6",
+    "profile": "extended",
+    "operation": "dependency.missing_target_behavior",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[missing-task]]",
+        "reltype": "FINISHTOSTART"
+      },
+      "unresolvedTargetSeverity": "error",
+      "treatMissingTargetAsBlocked": true,
+      "requireResolvedUidOnWrite": false,
+      "onWrite": false,
+      "expect": {
+        "ok": true,
+        "result": {
+          "blocked": true,
+          "issue": "unresolved_dependency_target",
+          "severity": "error"
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "blocked": true,
+        "issue": "unresolved_dependency_target",
+        "severity": "error"
+      }
+    }
+  },
+  {
+    "id": "dependency.0385",
+    "section": "§10.2.6",
+    "profile": "extended",
+    "operation": "dependency.missing_target_behavior",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[missing-task]]",
+        "reltype": "FINISHTOSTART"
+      },
+      "unresolvedTargetSeverity": "warning",
+      "treatMissingTargetAsBlocked": false,
+      "requireResolvedUidOnWrite": false,
+      "onWrite": false,
+      "expect": {
+        "ok": true,
+        "result": {
+          "blocked": false,
+          "issue": "unresolved_dependency_target",
+          "severity": "warning"
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "blocked": false,
+        "issue": "unresolved_dependency_target",
+        "severity": "warning"
+      }
+    }
+  },
+  {
+    "id": "dependency.0386",
+    "section": "§10.2.6",
+    "profile": "extended",
+    "operation": "dependency.missing_target_behavior",
+    "assertion": "envelope_error",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "entry": {
+        "uid": "[[missing-task]]",
+        "reltype": "FINISHTOSTART"
+      },
+      "unresolvedTargetSeverity": "warning",
+      "treatMissingTargetAsBlocked": true,
+      "requireResolvedUidOnWrite": true,
+      "onWrite": true,
+      "expectError": "unresolved_dependency_target|require_resolved_uid_on_write"
+    },
+    "expect": {
+      "error": {
+        "$regex": "unresolved_dependency_target|require_resolved_uid_on_write"
+      }
+    }
+  }
+]

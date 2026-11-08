@@ -8,6 +8,36 @@ produce identical results.
 The package holds data only — no code, no dependencies — so the Rust crate can
 consume it without the React Native app package existing.
 
+`e2e/local-vault/` is a synthetic Markdown vault for native app smoke journeys.
+It includes explicit title/detection settings, an existing task with opaque
+custom/historical metadata, and a plain reference note. Launchers copy it into
+disposable platform storage and verify those original bytes after task capture,
+editing, completion and application relaunch. It is separate from the unchanged
+upstream conformance corpus and historical server-backed sync scenarios.
+
+The standalone engine contract is `schema/facet-engine.schema.json`, with shared
+positive/negative boundary cases in `vault/facet-contract.json`. Occurrence shape
+cases additionally live in `vault/facet-occurrence-contract.json`.
+The separate `vault/facet-agenda-contract.json` corpus covers explicit mobile
+agenda queries, projected date reasons, selected-day filtering, date sorting,
+and rejection of unknown agenda values. Rust exercises its actual query seam
+and typed row decoder; native boundaries validate the same shapes.
+That closed corpus declares every covered definition and unique case identity;
+validators execute every case and reject unknown sections or definitions. It
+covers generation requests, concrete and deferred outcomes, repair actions,
+rolling plans and cursor/page boundaries. Positive pages come from actual runtime
+outputs; explicit shape variants exercise the remaining closed state couplings.
+Ajv and native schema validators check these shapes. Rust separately exercises
+the actual request decoder and real-runtime producers; schema acceptance does not
+establish semantic cursor bindings or vault eligibility.
+
+Direct Sync
+checkpoint/metadata schemas are in `schema/obsidian-sync.schema.json`.
+The complete pinned TaskNotes specification corpus lives under `vault/upstream`,
+alongside its original manifest and per-file SHA-256 provenance. Importing and
+checking the 4,980 oracle cases does not claim that an implementation executes
+or passes them all.
+
 ```
 schema/scenario.schema.json   # JSON Schema (draft 2020-12) for the sync format
 scenarios/<id>.json           # one sync scenario per file; file name === `id`

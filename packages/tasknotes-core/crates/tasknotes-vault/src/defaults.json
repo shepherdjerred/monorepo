@@ -1,0 +1,135 @@
+{
+  "fieldMapping": {
+    "title": "title",
+    "status": "status",
+    "priority": "priority",
+    "due": "due",
+    "scheduled": "scheduled",
+    "contexts": "contexts",
+    "projects": "projects",
+    "attachments": "attachments",
+    "completedDate": "completedDate",
+    "dateCreated": "dateCreated",
+    "dateModified": "dateModified",
+    "recurrence": "recurrence",
+    "recurrenceAnchor": "recurrence_anchor",
+    "recurrenceParent": "recurrence_parent",
+    "occurrenceDate": "occurrence_date",
+    "occurrenceMaterialization": "occurrence_materialization",
+    "occurrenceNextTrigger": "occurrence_next_trigger",
+    "occurrenceTemplate": "occurrence_template",
+    "occurrencePastHorizon": "occurrence_past_horizon",
+    "occurrenceFutureHorizon": "occurrence_future_horizon",
+    "archiveTag": "archived",
+    "completeInstances": "complete_instances",
+    "skippedInstances": "skipped_instances",
+    "blockedBy": "blockedBy",
+    "icsEventId": "icsEventId",
+    "icsEventTag": "ics_event",
+    "googleCalendarEventId": "googleCalendarEventId",
+    "googleCalendarExceptionEventId": "googleCalendarExceptionEventId",
+    "googleCalendarExceptionOriginalScheduled": "googleCalendarExceptionOriginalScheduled",
+    "googleCalendarMovedOriginalDates": "googleCalendarMovedOriginalDates",
+    "reminders": "reminders",
+    "sortOrder": "tasknotes_manual_order"
+  },
+  "statuses": [
+    {
+      "id": "none",
+      "value": "none",
+      "label": "None",
+      "color": "#cccccc",
+      "isCompleted": false,
+      "excludeFromCycle": false,
+      "order": 0,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    },
+    {
+      "id": "open",
+      "value": "open",
+      "label": "Open",
+      "color": "#808080",
+      "isCompleted": false,
+      "excludeFromCycle": false,
+      "order": 1,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    },
+    {
+      "id": "in-progress",
+      "value": "in-progress",
+      "label": "In progress",
+      "color": "#0066cc",
+      "isCompleted": false,
+      "excludeFromCycle": false,
+      "order": 2,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    },
+    {
+      "id": "done",
+      "value": "done",
+      "label": "Done",
+      "color": "#00aa00",
+      "isCompleted": true,
+      "excludeFromCycle": false,
+      "order": 3,
+      "autoArchive": false,
+      "autoArchiveDelay": 5
+    }
+  ],
+  "priorities": [
+    {
+      "id": "none",
+      "value": "none",
+      "label": "None",
+      "color": "#cccccc",
+      "weight": 0
+    },
+    {
+      "id": "low",
+      "value": "low",
+      "label": "Low",
+      "color": "#00aa00",
+      "weight": 1
+    },
+    {
+      "id": "normal",
+      "value": "normal",
+      "label": "Normal",
+      "color": "#ffaa00",
+      "weight": 2
+    },
+    {
+      "id": "high",
+      "value": "high",
+      "label": "High",
+      "color": "#ff0000",
+      "weight": 3
+    }
+  ],
+  "defaults": {
+    "status": "open",
+    "priority": "normal",
+    "taskTag": "task"
+  },
+  "taskIdentification": {
+    "method": "tag",
+    "tag": "task",
+    "propertyName": "isTask",
+    "propertyValue": "true"
+  },
+  "storeTitleInFilename": false,
+  "userFields": [],
+  "recurrence": {
+    "maintainDueDateOffset": true,
+    "resetCheckboxesOnRecurrence": false
+  },
+  "occurrences": {
+    "defaultMaterialization": "manual",
+    "defaultNextTrigger": "completion",
+    "pastHorizon": "P0D",
+    "futureHorizon": "P14D"
+  }
+}

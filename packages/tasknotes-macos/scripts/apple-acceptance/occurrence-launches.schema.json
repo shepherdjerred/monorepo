@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uid", "ruid", "startSeconds", "startMicroseconds"],
+      "properties": {
+        "uid": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "ruid": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "startSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "startMicroseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999
+        }
+      }
+    },
+    "launch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "identity", "state"],
+      "properties": {
+        "pid": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "identity": { "$ref": "#/$defs/identity" },
+        "state": { "enum": ["running", "closed"] }
+      }
+    },
+    "journal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runID",
+        "descriptor",
+        "executable",
+        "launches"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "descriptor": { "type": "string", "pattern": "^/", "maxLength": 4096 },
+        "executable": { "type": "string", "pattern": "^/", "maxLength": 4096 },
+        "launches": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/launch" }
+        }
+      }
+    }
+  }
+}

@@ -9,6 +9,8 @@ namespace TaskNotes.Windows.Presentation
     /// <summary>Portable state and commands for the main TaskNotes shell.</summary>
     public sealed partial class ShellViewModel : ObservableObject, IDisposable
     {
+        /// <summary>Every configured workflow value remains a real board column.</summary>
+        public ObservableCollection<BoardColumn> BoardColumns { get; } = [];
         private readonly ITaskNotesStore _store;
         private readonly IUiDispatcher _dispatcher;
         private readonly ILogger<ShellViewModel> _logger;
@@ -52,10 +54,16 @@ namespace TaskNotes.Windows.Presentation
                 if (SetProperty(ref _state, value))
                 {
                     OnPropertyChanged(nameof(VisibleTasks));
+                    OnPropertyChanged(nameof(TaskGroups));
+                    OnPropertyChanged(nameof(TaskCountLabel));
+                    OnPropertyChanged(nameof(EmptyTitle));
+                    OnPropertyChanged(nameof(EmptyDescription));
                     OnPropertyChanged(nameof(SavedViews));
                     OnPropertyChanged(nameof(ParkedChanges));
                     OnPropertyChanged(nameof(StatusMessage));
                     OnPropertyChanged(nameof(StatusSeverity));
+                    OnPropertyChanged(nameof(SavedNotice));
+                    OnPropertyChanged(nameof(SavedMaintenance));
                     UndoCompletionCommand.NotifyCanExecuteChanged();
                 }
             }
@@ -80,11 +88,82 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Gets visible task rows.</summary>
         public IReadOnlyList<TaskItem> VisibleTasks => State.VisibleTasks;
 
+        /// <summary>Core-derived group membership with configured workflow display names.</summary>
+        public IReadOnlyList<TaskRowGroup> TaskGroups =>
+            State
+                .VisibleTasks.Select(task => new TaskRowPresentation(
+                    task,
+                    State.Query,
+                    DateOnly.FromDateTime(DateTime.Today)
+                ))
+                .GroupBy(row => row.Task.GroupLabel, StringComparer.Ordinal)
+                .Select(group => new TaskRowGroup(GroupTitle(group.Key), group))
+                .ToArray();
+
+        /// <summary>Count is scoped to the visible query, never invented from a page.</summary>
+        public string TaskCountLabel =>
+            $"{VisibleTasks.Count} {(VisibleTasks.Count == 1 ? "task" : "tasks")}";
+
+        /// <summary>Empty, loading and configuration states retain distinct meanings.</summary>
+        public string EmptyTitle =>
+            State.SyncState switch
+            {
+                TaskNotesSyncState.Unconfigured => "Connect your vault",
+                TaskNotesSyncState.Loading => "Loading your tasks…",
+                _ when State.Query.Search.Length > 0 => "No matching tasks",
+                _ => State.Query.Kind == TaskListKind.Today
+                    ? "You’re all caught up"
+                    : "No tasks here yet",
+            };
+
+        /// <summary>Actionable empty copy without treating an offline vault as empty success.</summary>
+        public string EmptyDescription =>
+            State.SyncState switch
+            {
+                TaskNotesSyncState.Unconfigured =>
+                    "Open Settings to connect Obsidian Sync or select a vault.",
+                TaskNotesSyncState.Loading => "Reading the saved vault on this device.",
+                TaskNotesSyncState.AuthenticationFailure =>
+                    "Reconnect your account in Settings. Your saved vault remains on this device.",
+                TaskNotesSyncState.SynchronizationError => State.UserFacingError
+                    ?? "Refresh or review recovery actions in Settings.",
+                TaskNotesSyncState.CachedOffline =>
+                    "You’re viewing the saved vault offline. New changes will sync when connected.",
+                _ when State.Query.Search.Length > 0 =>
+                    "Try a different search or clear the filters.",
+                _ => "Add a task below, or use Ctrl+N for Quick Add.",
+            };
+
+        private string GroupTitle(string key) =>
+            State.Query.Group switch
+            {
+                TaskGroupChoice.Status => State
+                    .StatusChoices.FirstOrDefault(choice => choice.Value == key)
+                    ?.Label
+                    ?? key,
+                TaskGroupChoice.Priority => State
+                    .PriorityChoices.FirstOrDefault(choice => choice.Value == key)
+                    ?.Label
+                    ?? key,
+                _ => key,
+            };
+
         /// <summary>Gets saved-view navigation entries.</summary>
         public IReadOnlyList<SavedViewDefinition> SavedViews => State.SavedViews;
 
         /// <summary>Gets parked mutations.</summary>
         public IReadOnlyList<ParkedChange> ParkedChanges => State.ParkedChanges;
+
+        /// <summary>Gets fixed Saved copy only for the complete current owner fence.</summary>
+        public FacetSavedNotice? SavedNotice =>
+            State.SavedNotice is { } notice
+            && State.SavedNoticeOwner is { } owner
+            && notice.BelongsTo(owner)
+                ? notice
+                : null;
+
+        /// <summary>Gets cleanup information without replacing the applied Saved outcome.</summary>
+        public string? SavedMaintenance => State.SavedMaintenance;
 
         /// <summary>Gets Open board rows.</summary>
         public ObservableCollection<TaskItem> OpenBoardTasks { get; } = [];
@@ -168,6 +247,19 @@ namespace TaskNotes.Windows.Presentation
 
         /// <summary>Moves a task between board columns.</summary>
         public Task MoveBoardTaskAsync(
+            TaskItem task,
+            string status,
+            CancellationToken cancellationToken = default
+        )
+        {
+            ArgumentNullException.ThrowIfNull(task);
+            return _store is FacetTaskNotesStore facet
+                ? facet.SetRowStatusAsync(task, status, cancellationToken)
+                : _store.SetStatusAsync(task.Id, status, cancellationToken);
+        }
+
+        /// <summary>Moves a legacy task between board columns.</summary>
+        public Task MoveBoardTaskAsync(
             string taskId,
             string status,
             CancellationToken cancellationToken = default
@@ -228,7 +320,17 @@ namespace TaskNotes.Windows.Presentation
 
         private void ApplyState()
         {
+            if (_disposed)
+                return;
             State = _store.State;
+            Replace(
+                BoardColumns,
+                State.StatusChoices.Select(choice => new BoardColumn(
+                    choice.Value,
+                    choice.Label,
+                    State.AllTasks.Where(task => task.Status == choice.Value).ToArray()
+                ))
+            );
             Replace(OpenBoardTasks, State.AllTasks.Where(task => task.Status == "open"));
             Replace(
                 InProgressBoardTasks,
@@ -264,5 +366,12 @@ namespace TaskNotes.Windows.Presentation
 
         /// <summary>Authentication or synchronization failure.</summary>
         Error,
+    }
+
+    /// <summary>A board column displays one open configured workflow string.</summary>
+    public sealed record BoardColumn(string Value, string Label, IReadOnlyList<TaskItem> Tasks)
+    {
+        /// <summary>Stable automation identity retains the exact configured workflow value.</summary>
+        public string AutomationId => AutomationIds.BoardColumn(Value);
     }
 }

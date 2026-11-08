@@ -283,6 +283,45 @@ impl Recurrence {
         }
     }
 
+    /// Expand a complete finite window, rejecting resource exhaustion rather
+    /// than returning a truncated answer. Work includes every walked period and
+    /// candidate instant, including candidates before the requested window, so
+    /// `COUNT` retains its original start-relative meaning. Returned identities
+    /// are unique civil days even for sub-daily rules.
+    ///
+    /// # Errors
+    /// Rejects invalid rules, unsupported calendar bounds and exhausted work.
+    pub fn bounded_occurrences(
+        &self,
+        window: DateWindow,
+        work_limit: usize,
+    ) -> Result<Vec<NaiveDate>> {
+        use chrono::Datelike;
+        if work_limit == 0 || window.start().year() < 1 || window.end().year() > 9999 {
+            return Err(Error::invariant(
+                "recurrence expansion bounds are unsupported",
+            ));
+        }
+        let Behaviour::Rule(options) = &self.behaviour else {
+            return Err(Error::invariant(
+                "bounded expansion requires a valid seeded recurrence",
+            ));
+        };
+        let (min, max) = window.bounds();
+        let instants = expand::expand_bounded(options, min, max, work_limit)
+            .ok_or_else(|| Error::invariant("recurrence expansion resource limit exceeded"))?;
+        let mut dates = instants
+            .into_iter()
+            .map(|instant| {
+                date_of(instant)
+                    .ok_or_else(|| Error::invariant("recurrence expansion date overflow"))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        dates.sort_unstable();
+        dates.dedup();
+        Ok(dates)
+    }
+
     /// The rule's frequency, or `None` when it did not parse.
     #[must_use]
     pub fn frequency(&self) -> Option<Frequency> {
@@ -391,6 +430,57 @@ impl Recurrence {
             }
         }
         None
+    }
+
+    /// Production progression with the same instant ordering, completion floor
+    /// and COUNT semantics as the reference, but bounded preparation and work.
+    ///
+    /// # Errors
+    /// Rejects invalid/rootless rules and exhausted work instead of returning
+    /// a guessed or partial next occurrence.
+    pub fn bounded_next_uncompleted_occurrence(
+        &self,
+        today: NaiveDate,
+        anchor: RecurrenceAnchor,
+        complete: &[NaiveDate],
+        skipped: &[NaiveDate],
+        work_limit: usize,
+    ) -> Result<Option<NaiveDate>> {
+        let Behaviour::Rule(options) = &self.behaviour else {
+            return Err(Error::invariant(
+                "bounded progression requires a valid seeded recurrence",
+            ));
+        };
+        let today_ms = instant::ordinal_of(today) * MS_PER_DAY;
+        let horizon = i64::from(look_ahead_days(&self.text)) * MS_PER_DAY;
+        let embedded = embedded_dtstart(&self.text);
+        let (from, to, floor) = match anchor {
+            RecurrenceAnchor::Scheduled => {
+                let from = embedded
+                    .filter(|start| *start < today_ms)
+                    .unwrap_or(today_ms);
+                (from, today_ms + horizon, None)
+            }
+            RecurrenceAnchor::Completion => {
+                let from = embedded.unwrap_or(today_ms);
+                (from, from + horizon, Some(embedded.unwrap_or(0)))
+            }
+        };
+        let min = from.div_euclid(MS_PER_DAY) * MS_PER_DAY;
+        let max = to.div_euclid(MS_PER_DAY) * MS_PER_DAY + MS_PER_DAY_END;
+        let generated = expand::expand_bounded(options, min, max, work_limit)
+            .ok_or_else(|| Error::invariant("recurrence expansion resource limit exceeded"))?;
+        for occurrence in generated {
+            if occurrence < today_ms || floor.is_some_and(|floor| occurrence <= floor) {
+                continue;
+            }
+            let date = date_of(occurrence)
+                .ok_or_else(|| Error::invariant("recurrence expansion date overflow"))?;
+            if !skipped.contains(&date) && (floor.is_some() || !complete.contains(&date)) {
+                return Ok(Some(date));
+            }
+        }
+        Ok(None)
     }
 
     /// `generateRecurringInstances`: the reference's *other* expansion entry

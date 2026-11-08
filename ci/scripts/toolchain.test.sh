@@ -66,6 +66,34 @@ if ! rg -wq 'libxml2' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -Fq 'COPY ci/scripts/android-sdk.sh' "$CI_IMAGE" ||
+  ! rg -Fq '"${TARGETARCH}" = amd64' "$CI_IMAGE" ||
+  ! rg -Fq 'bash ci/scripts/android-sdk.sh' "$TOOLCHAIN"; then
+  echo "CI Android bootstrap must be shared and scoped to supported x86_64 hosts" >&2
+  exit 1
+fi
+if ! awk '
+  /^  runtime\)/ { scope = "runtime" }
+  /^  postgres\)/ { scope = "postgres" }
+  /^  full\)/ { scope = "full" }
+  /android-sdk.sh/ { if (scope != "full") exit 1; count++ }
+  END { if (count != 1) exit 1 }
+' "$TOOLCHAIN"; then
+  echo "Android SDK bootstrap must preserve runtime/postgres toolchain scopes" >&2
+  exit 1
+fi
+bash "${SCRIPT_DIR}/android-sdk.test.sh"
+
+if ! rg -Fq 'bash ci/scripts/swiftlint/bootstrap.sh' "$TOOLCHAIN" ||
+  rg -Fq 'swiftlint-static' "$CI_IMAGE"; then
+  echo "CI must bootstrap capability-checked SwiftLint instead of a SourceKit-disabled binary" >&2
+  exit 1
+fi
+bash "${SCRIPT_DIR}/swiftlint/verify-capabilities.test.sh"
+bash "${SCRIPT_DIR}/swiftlint/install-runtime.test.sh"
+bash "${SCRIPT_DIR}/swiftlint/extract-source.test.sh"
+python3 "${SCRIPT_DIR}/swiftlint/validate-inputs.py" "${SCRIPT_DIR}/../.."
+
 if rg -q 'playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||
@@ -179,7 +207,8 @@ mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/cache/data" "$TEST_ROOT/control"
 
 # Execute each narrow profile with recorded external commands. This catches
 # accidental fallthrough to the full toolchain without downloading anything.
-mkdir -p "$TEST_ROOT/profiles" "$TEST_ROOT/profile-home/.local/bin"
+mkdir -p "$TEST_ROOT/profiles" "$TEST_ROOT/profile-home/.local/bin" \
+  "$TEST_ROOT/profile-workspace/.git/ci-gradle-seed/modules-2"
 cat >"$TEST_ROOT/profiles/mise" <<'EOF'
 #!/usr/bin/env bash
 # The fixture is always newer than the bootstrap minimum, so this unit test
@@ -209,13 +238,14 @@ chmod +x "$TEST_ROOT/profiles/"*
 # toolchain.sh puts HOME/.local/bin ahead of the inherited PATH. Keep that
 # location inside the fixture too, rather than selecting the host's real mise.
 ln -s "$TEST_ROOT/profiles/mise" "$TEST_ROOT/profile-home/.local/bin/mise"
-for profile in automation deployment tofu; do
+for profile in automation deployment tofu minecraft; do
   profile_log="$TEST_ROOT/$profile.log"
   HOME="$TEST_ROOT/profile-home" PATH="$TEST_ROOT/profiles:$PATH" \
     CI_WORKSPACE=/woodpecker/src/test CI_PROFILE_COMMAND_LOG="$profile_log" \
     GRADLE_USER_HOME=/woodpecker/gradle-home \
     CI_COMMIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
     MISE_TOOLCHAIN_SCOPE="$profile" bash -c '
+      cd "$2"
       # Exercise the real Woodpecker preamble without writing to /woodpecker
       # on the test host. Other filesystem operations retain their behavior.
       mkdir() {
@@ -226,13 +256,15 @@ for profile in automation deployment tofu; do
       }
       . "$1"
       test "$GRADLE_USER_HOME" = /woodpecker/gradle
+      test "$GRADLE_RO_DEP_CACHE" = "$PWD/.git/ci-gradle-seed"
       test "$TMPDIR" = /woodpecker/tmp
-    ' _ "$TOOLCHAIN" >"$profile_log.stdout"
+    ' _ "$TOOLCHAIN" "$TEST_ROOT/profile-workspace" >"$profile_log.stdout"
   rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"a{40}","scope":"'"$profile"'","elapsedSeconds":[0-9]+\}$' "$profile_log.stdout"
   case "$profile" in
     automation) expected_tools='install --yes bun gh jq' ;;
     deployment) expected_tools='install --yes bun node gh jq helm argocd awscli' ;;
     tofu) expected_tools='install --yes bun opentofu' ;;
+    minecraft) expected_tools='install --yes bun java gradle' ;;
   esac
   actual_tools=$(rg '^install ' "$profile_log")
   if [ "$actual_tools" != "$expected_tools" ]; then

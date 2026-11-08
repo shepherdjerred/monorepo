@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "assertionList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "scenarioManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "scenarios"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "scenarios": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "standalone-production",
+            "accessibility-keyboard",
+            "visual-modes"
+          ],
+          "properties": {
+            "standalone-production": { "$ref": "#/$defs/assertionList" },
+            "accessibility-keyboard": { "$ref": "#/$defs/assertionList" },
+            "visual-modes": { "$ref": "#/$defs/assertionList" }
+          }
+        }
+      }
+    },
+    "runtimeEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runId",
+        "scenario",
+        "composition",
+        "completed",
+        "assertions"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "scenario": {
+          "enum": [
+            "standalone-production",
+            "accessibility-keyboard",
+            "visual-modes"
+          ]
+        },
+        "composition": { "const": "FacetTaskNotesStore" },
+        "completed": { "const": true },
+        "assertions": { "$ref": "#/$defs/assertionList" }
+      }
+    },
+    "seedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runId",
+        "packageFamilyName",
+        "profileId",
+        "stateDirectory",
+        "seedFiles"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "packageFamilyName": {
+          "type": "string",
+          "pattern": "^red\\.sjer\\.TaskNotes\\.E2E_[a-z0-9]{13}$"
+        },
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "stateDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "seedFiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/seedFile" }
+        }
+      }
+    },
+    "bootstrapReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "profileId", "descriptorSha256"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "descriptorSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

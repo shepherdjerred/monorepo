@@ -343,7 +343,7 @@ public struct TaskListGroup: Sendable, Equatable, Identifiable {
         for row in ungrouped {
             guard let date = row.displayDate else {
                 throw CoreError.Invariant(
-                    message: "\(row.id) reached a grouped list with no date to group it under"
+                    detail: "\(row.id) reached a grouped list with no date to group it under"
                 )
             }
             let label = dateGroupHeading(group: date.group) ?? date.text

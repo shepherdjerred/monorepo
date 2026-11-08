@@ -46,7 +46,7 @@ use crate::error::CoreError;
 /// `YYYY-MM-DD` date.
 pub(crate) fn parse_iso_date(raw: &str) -> Result<NaiveDate, CoreError> {
     NaiveDate::parse_from_str(raw, "%Y-%m-%d").map_err(|error| CoreError::Validation {
-        message: format!("{raw:?} is not a YYYY-MM-DD calendar date: {error}"),
+        detail: format!("{raw:?} is not a YYYY-MM-DD calendar date: {error}"),
     })
 }
 
@@ -93,7 +93,7 @@ pub fn date_parse_local(
 ) -> Result<Option<String>, CoreError> {
     let offset =
         FixedOffset::east_opt(viewer_utc_offset_seconds).ok_or_else(|| CoreError::Validation {
-            message: format!(
+            detail: format!(
                 "{viewer_utc_offset_seconds} is not a usable UTC offset in seconds; \
                  the range is -86400..=86400 exclusive"
             ),
@@ -292,7 +292,7 @@ mod tests {
         ] {
             let error = parse_iso_date(raw).unwrap_err();
             assert!(
-                matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+                matches!(error, CoreError::Validation { detail: ref message } if message.contains("YYYY-MM-DD")),
                 "unexpected error for {raw:?}: {error:?}"
             );
         }
@@ -377,7 +377,7 @@ mod tests {
 
         let error = date_add_days("08/08/2026", 1).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("YYYY-MM-DD")),
             "unexpected error: {error:?}"
         );
     }
@@ -450,7 +450,7 @@ mod tests {
     fn an_impossible_utc_offset_is_reported_rather_than_clamped() {
         let error = date_parse_local("2026-07-10", 200_000).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("UTC offset")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("UTC offset")),
             "unexpected error: {error:?}"
         );
     }

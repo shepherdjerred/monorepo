@@ -14,7 +14,6 @@ export type Stats = {
   active: number;
   overdue: number;
   archived: number;
-  withTimeTracking: number;
 };
 
 export function computeStats(
@@ -26,7 +25,6 @@ export function computeStats(
   let active = 0;
   let overdue = 0;
   let archived = 0;
-  let withTimeTracking = 0;
   for (const task of tasks) {
     const isDone = isCompletedStatus(task.status, config.statuses);
     if (task.archived) archived += 1;
@@ -36,7 +34,6 @@ export function computeStats(
       const due = task.due?.slice(0, 10);
       if (due !== undefined && due < today) overdue += 1;
     }
-    if ((task.timeEntries ?? []).length > 0) withTimeTracking += 1;
   }
   return {
     total: tasks.length,
@@ -44,7 +41,6 @@ export function computeStats(
     active,
     overdue,
     archived,
-    withTimeTracking,
   };
 }
 

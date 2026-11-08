@@ -5,3 +5,9 @@ xcuserdata/
 
 # Xcode Cloud logs pulled by scripts/xcode-cloud-logs.ts
 xcode-cloud-logs/
+
+# Native build products and local acceptance evidence.
+artifacts/
+ios/build-bounded-v2/
+ios/TasksForObsidian.xcodeproj/project.xcworkspace/
+ios/TasksWidget/Info.plist

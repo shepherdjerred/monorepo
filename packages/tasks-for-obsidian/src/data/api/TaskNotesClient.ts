@@ -6,13 +6,10 @@ import type {
   FilterOptions,
   HealthStatus,
   NlpParseResult,
-  PomodoroStatus,
   Task,
   TaskId,
   TaskQueryFilter,
   TaskStats,
-  TaskTime,
-  TimeSummary,
   UpdateTaskRequest,
 } from "../../domain/types";
 import type { TaskStatus } from "../../domain/status";
@@ -28,7 +25,6 @@ import {
   ApiResponseSchema,
   HealthStatusSchema,
   NlpParseResultSchema,
-  PomodoroStatusSchema,
   TaskStatsSchema,
 } from "../../domain/schemas";
 import {
@@ -39,8 +35,6 @@ import {
   WireQueryResponseSchema,
   WireTaskListSchema,
   WireTaskSchema,
-  WireTaskTimeSchema,
-  WireTimeSummarySchema,
   toWireTaskFields,
   wireNlpParseSchema,
 } from "../../domain/wire";
@@ -353,60 +347,6 @@ export class TaskNotesClient {
     return this.request("POST", PATHS.NLP_CREATE, WireNlpCreateSchema, {
       body: { text },
     });
-  }
-
-  async startTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
-    // v2 returns the updated task; the app only needs success.
-    const result = await this.request(
-      "POST",
-      PATHS.TIME_START(id),
-      WireTaskSchema,
-    );
-    return result.ok ? OK_VOID : result;
-  }
-
-  async stopTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request(
-      "POST",
-      PATHS.TIME_STOP(id),
-      WireTaskSchema,
-    );
-    return result.ok ? OK_VOID : result;
-  }
-
-  async getTaskTime(id: TaskId): Promise<Result<TaskTime, AppError>> {
-    return this.request("GET", PATHS.TASK_TIME(id), WireTaskTimeSchema);
-  }
-
-  async getTimeSummary(period = "all"): Promise<Result<TimeSummary, AppError>> {
-    return this.request(
-      "GET",
-      `${PATHS.TIME_SUMMARY}?period=${encodeURIComponent(period)}`,
-      WireTimeSummarySchema,
-    );
-  }
-
-  async startPomodoro(
-    pomodoroTaskId?: TaskId,
-  ): Promise<Result<PomodoroStatus, AppError>> {
-    return this.request(
-      "POST",
-      PATHS.POMODORO_START,
-      PomodoroStatusSchema,
-      pomodoroTaskId ? { body: { taskId: pomodoroTaskId } } : undefined,
-    );
-  }
-
-  async stopPomodoro(): Promise<Result<PomodoroStatus, AppError>> {
-    return this.request("POST", PATHS.POMODORO_STOP, PomodoroStatusSchema);
-  }
-
-  async pausePomodoro(): Promise<Result<PomodoroStatus, AppError>> {
-    return this.request("POST", PATHS.POMODORO_PAUSE, PomodoroStatusSchema);
-  }
-
-  async getPomodoroStatus(): Promise<Result<PomodoroStatus, AppError>> {
-    return this.request("GET", PATHS.POMODORO_STATUS, PomodoroStatusSchema);
   }
 
   async getCalendarEvents(

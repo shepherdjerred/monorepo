@@ -4,7 +4,6 @@ import { TaskSchema } from "../../domain/schemas";
 import {
   buildTaskDetailPatch,
   createTaskDetailDraft,
-  formatTaskMinutes,
   rebaseTaskDetailDraft,
   taskDetailDraftIsDirty,
 } from "./task-detail-draft";
@@ -23,8 +22,6 @@ function makeTask() {
     tags: ["launch"],
     recurrence: "DTSTART:20260810;FREQ=WEEKLY;BYDAY=MO",
     recurrenceAnchor: "completion",
-    timeEstimate: 90,
-    totalTrackedTime: 35,
     details: "Keep **Markdown** intact.",
   });
 }
@@ -45,7 +42,6 @@ describe("task detail draft", () => {
       title: "Plan public launch",
       scheduled: null,
       contexts: ["desk", "calls"],
-      timeEstimate: "120",
     };
 
     expect(buildTaskDetailPatch(task, draft)).toEqual({
@@ -54,7 +50,6 @@ describe("task detail draft", () => {
         title: "Plan public launch",
         scheduled: null,
         contexts: ["desk", "calls"],
-        timeEstimate: 120,
       },
     });
     expect(taskDetailDraftIsDirty(task, draft)).toBe(true);
@@ -66,7 +61,6 @@ describe("task detail draft", () => {
       ...createTaskDetailDraft(task),
       details: "",
       recurrence: "",
-      timeEstimate: "",
     };
 
     expect(buildTaskDetailPatch(task, draft)).toEqual({
@@ -75,7 +69,6 @@ describe("task detail draft", () => {
         details: null,
         recurrence: null,
         recurrenceAnchor: null,
-        timeEstimate: null,
       },
     });
   });
@@ -109,17 +102,6 @@ describe("task detail draft", () => {
       ok: false,
       field: "title",
       message: "Title is required",
-    });
-
-    expect(
-      buildTaskDetailPatch(task, {
-        ...createTaskDetailDraft(task),
-        timeEstimate: "later",
-      }),
-    ).toEqual({
-      ok: false,
-      field: "timeEstimate",
-      message: "Estimate must be a non-negative number of minutes",
     });
 
     expect(
@@ -161,31 +143,17 @@ describe("task detail draft", () => {
     });
   });
 
-  test("preserves empty optional values and a zero-minute estimate", () => {
+  test("preserves empty optional values", () => {
     const task = TaskSchema.parse({
       id: "empty.md",
       title: "Keep empty values",
       details: "",
       recurrence: "",
-      timeEstimate: 0,
     });
 
     expect(buildTaskDetailPatch(task, createTaskDetailDraft(task))).toEqual({
       ok: true,
       patch: {},
     });
-  });
-});
-
-describe("formatTaskMinutes", () => {
-  test("formats minute and hour durations for direct metadata rows", () => {
-    expect(formatTaskMinutes(35)).toBe("35m");
-    expect(formatTaskMinutes(60)).toBe("1h");
-    expect(formatTaskMinutes(95)).toBe("1h 35m");
-  });
-
-  test("fails loudly for invalid task data", () => {
-    expect(() => formatTaskMinutes(Number.NaN)).toThrow();
-    expect(() => formatTaskMinutes(-1)).toThrow();
   });
 });

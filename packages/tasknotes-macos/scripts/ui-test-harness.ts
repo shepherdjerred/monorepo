@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { runAcceptanceUiTests } from "./run-acceptance-ui-tests.ts";
 
 /**
  * The environment the UI suite needs in order to run at all.
@@ -34,6 +35,24 @@ function localCivilDate(now: Date): string {
 }
 
 export async function runUiTests(run: UiTestRun): Promise<number> {
+  const standalone = "-only-testing:TaskNotesUITests/StandaloneVaultUITests";
+  const requested = run.testSelectors ?? [];
+  if (
+    requested.length === 0 ||
+    requested.some(
+      (selector) =>
+        selector === "-only-testing:TaskNotesUITests" ||
+        selector.startsWith(standalone),
+    )
+  ) {
+    await runAcceptanceUiTests();
+  }
+  const legacySelectors = requested.filter(
+    (selector) => !selector.startsWith(standalone),
+  );
+  if (requested.length > 0 && legacySelectors.length === 0) {
+    return 0;
+  }
   const vault = await mkdtemp(path.join(tmpdir(), "tasknotes-ui-tests-"));
   const fixtureFile = path.resolve(packageRoot, ".build/ui-test-fixture.json");
 
@@ -127,9 +146,9 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
     await seedTask("Selection target", today, "Second note.");
 
     const selectors =
-      run.testSelectors === undefined || run.testSelectors.length === 0
+      legacySelectors.length === 0
         ? ["-only-testing:TaskNotesUITests"]
-        : run.testSelectors;
+        : legacySelectors;
 
     const tests = Bun.spawn(
       [

@@ -79,7 +79,7 @@ mod tests {
     fn a_malformed_today_is_a_caller_bug_and_says_so() {
         let error = parse_task_input("Anything", "08/08/2026").unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("YYYY-MM-DD")),
             "unexpected error: {error:?}"
         );
     }

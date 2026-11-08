@@ -31,7 +31,7 @@
 //! | hand-written mirrors | only where UniFFI cannot express the core type | [`update`], [`error`], [`command`], [`engine`] |
 //! | `#[uniffi::export(with_foreign)]` | the traits the *host* implements | [`host`], [`net`] |
 //! | `#[derive(uniffi::Object)]` | the one stateful handle, the sync engine | [`engine`] |
-//! | `#[uniffi::export]` | the callable surface | [`api`], [`engine`], [`net`], [`recurrence`], [`dates`], [`calendar`], [`nlp`], [`elapsed`] |
+//! | `#[uniffi::export]` | the callable surface | [`api`], [`engine`], [`net`], [`recurrence`], [`dates`], [`calendar`], [`nlp`] |
 //!
 //! Preferring `#[uniffi::remote(...)]` over mirrored structs is deliberate: a
 //! remote derive re-states the core type's fields *in this crate*, so the ABI
@@ -60,15 +60,19 @@ pub mod calendar;
 pub mod command;
 pub mod convert;
 pub mod dates;
-pub mod elapsed;
 pub mod engine;
 pub mod error;
+pub mod facet;
+pub mod facet_payload;
 pub mod host;
 pub mod net;
 pub mod nlp;
+pub mod obsidian;
+mod obsidian_runtime;
 pub mod recurrence;
 pub mod types;
 pub mod update;
+pub mod vault;
 
 pub use api::core_version;
 pub use command::{Command, CommandInput, DeadLetterEntry};
@@ -78,4 +82,4 @@ pub use host::{
     Clock, MigrationStorage, QueueStorage, Randomness, RetryScheduler, TaskCacheStorage,
 };
 pub use net::{HttpClient, TaskNotesApi, TransportError};
-pub use update::{MinutesUpdate, RecurrenceAnchorUpdate, TextUpdate, UpdateTaskRequest};
+pub use update::{RecurrenceAnchorUpdate, TextUpdate, UpdateTaskRequest};

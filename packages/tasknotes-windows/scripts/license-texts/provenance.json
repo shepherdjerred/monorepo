@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "licenses": [
+    {
+      "repository": "https://github.com/dotnet/dotnet",
+      "commit": "95017c711e6afc1085133d440e42b4bd78155701",
+      "source": "https://raw.githubusercontent.com/dotnet/dotnet/95017c711e6afc1085133d440e42b4bd78155701/LICENSE.TXT",
+      "file": "upstream-0.txt",
+      "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b"
+    },
+    {
+      "repository": "https://github.com/microsoft/vs-threading",
+      "commit": "adf10d816ce09a6abec7b6c3156b0b8597d0bc99",
+      "source": "https://raw.githubusercontent.com/microsoft/vs-threading/adf10d816ce09a6abec7b6c3156b0b8597d0bc99/LICENSE",
+      "file": "upstream-1.txt",
+      "sha256": "492ad816c18066132e6153dbecb698d97ee54f916b24908f3346b6118bd8c4eb"
+    },
+    {
+      "repository": "https://github.com/microsoft/vs-validation",
+      "commit": "fd7027e236db97b472614237b1453022e24ef146",
+      "source": "https://raw.githubusercontent.com/microsoft/vs-validation/fd7027e236db97b472614237b1453022e24ef146/LICENSE",
+      "file": "upstream-2.txt",
+      "sha256": "141df76637e66c7778cbeba736fa0d05baba044431e26bc46764ff2e5caea193"
+    },
+    {
+      "repository": "https://github.com/microsoft/WinAppCli.git",
+      "commit": "d9a8d0f8ef192fa3ce07febdbe178606ea5fb4f5",
+      "source": "https://raw.githubusercontent.com/microsoft/WinAppCli/d9a8d0f8ef192fa3ce07febdbe178606ea5fb4f5/LICENSE",
+      "file": "upstream-3.txt",
+      "sha256": "c421b2a5e0ee627bb1c5d859bbca37d7654c02f63d626e753644484a9054c2d1"
+    }
+  ],
+  "publisherLicenses": [
+    {
+      "dependency": "Microsoft.Windows.SDK.BuildTools/10.0.28000.2526",
+      "packageSha512": "voeXXRC5EKuvnUCkPxkEhCbNuv/FM1RzjCQ3lj58Ju5AlVzh/9Lg+a7hqy57mh/00BH/9YNZCJRUjIZJrzTJ4w==",
+      "nuspecSha256": "ddc6d5120c90741ed1383a21fba5f5c8788fc9fc3c3bfd6f893df3959bf0e06c",
+      "licenseUrl": "https://aka.ms/WinSDKLicenseURL",
+      "source": "https://download.microsoft.com/download/0/F/F/0FF2B061-47DD-4F55-89B6-FD1D8C44F14D/sdk_license.rtf",
+      "sourceSha256": "dd07eb178e00c6bba4148457fc00ff77cd4887eb521d504186fe59c9ec8bbe62",
+      "file": "publisher-windows-sdk-buildtools.txt",
+      "sha256": "b51ec2350d938f5b6c8d6207ee5a3e10effbf8a134e432aa393577d41d3dae06",
+      "sourceFile": "publisher-windows-sdk-buildtools.rtf"
+    }
+  ]
+}

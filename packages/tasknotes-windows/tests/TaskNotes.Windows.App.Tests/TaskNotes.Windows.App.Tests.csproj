@@ -10,6 +10,7 @@
     <MSTestParallelizeScope>None</MSTestParallelizeScope>
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSdkBootstrapInitialize>true</WindowsAppSdkBootstrapInitialize>
@@ -17,6 +18,26 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/PresentationResources.cs"
+      Link="WindowsAdapters/PresentationResources.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/ConfiguredColorConverter.cs"
+      Link="WindowsAdapters/ConfiguredColorConverter.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/NativeFeedbackAccessibility.cs"
+      Link="WindowsAdapters/NativeFeedbackAccessibility.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/NativeTaskFeedback.cs"
+      Link="WindowsAdapters/NativeTaskFeedback.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/TaskListWorkspaceView.Feedback.cs"
+      Link="Views/TaskListWorkspaceView.Feedback.cs"
+    />
     <Page Remove="TestApplication.xaml" />
     <ApplicationDefinition Include="TestApplication.xaml" />
     <ProjectCapability Include="TestContainer" />

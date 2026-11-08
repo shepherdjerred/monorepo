@@ -21,6 +21,8 @@ rust = "1.99.0"
 # shared object store so verify stops rebuilding ~4 GB of target/ per run.
 # renovate: datasource=github-releases depName=mozilla/sccache
 sccache = "0.18.0"
+# renovate: datasource=github-releases depName=yonaskolb/XcodeGen
+"aqua:yonaskolb/XcodeGen" = { version = "2.46.0", os = ["macos"] }
 # renovate: datasource=crate depName=cargo-packager
 "cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk

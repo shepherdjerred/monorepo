@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "license": "GPL-3.0-only",
+  "provenance": "first-party-procedural-integer-synthesis",
+  "sampleRate": 48000,
+  "channels": 1,
+  "bitsPerSample": 16,
+  "maximumMilliseconds": 220,
+  "maximumPeakDbFS": -9,
+  "cues": {
+    "create": {
+      "file": "create.wav",
+      "milliseconds": 104,
+      "sha256": "fcb8b31eaff8b5b9e9142a866208600d4f9c7806f51fef0977dfcce0d272316b"
+    },
+    "complete": {
+      "file": "complete.wav",
+      "milliseconds": 176,
+      "sha256": "973a1d35446b3185393a203ae1892358f787e6eab54cf7aa31b930069dc04acb"
+    },
+    "delete": {
+      "file": "delete.wav",
+      "milliseconds": 120,
+      "sha256": "2173d9e6896604a27b1f094b294e2759a66e259731029f8492c74d9367cc6f56"
+    },
+    "reverse": {
+      "file": "reverse.wav",
+      "milliseconds": 88,
+      "sha256": "12d23e31a2a25c0a6bbe63e31a335c267623157b67ac04852c095657dd6e861e"
+    }
+  }
+}

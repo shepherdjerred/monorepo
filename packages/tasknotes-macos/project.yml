@@ -117,6 +117,12 @@ targets:
           - "*.entitlements"
       - path: Resources/AppIcon.icns
         buildPhase: resources
+      - path: Resources/macos/ThirdPartyNotices.txt
+        buildPhase: resources
+      - path: Resources/macos/FirstPartyLicense.txt
+        buildPhase: resources
+      - path: Resources/macos/native-license-inventory.json
+        buildPhase: resources
 
     dependencies:
       - package: TaskNotesPackage
@@ -192,6 +198,74 @@ targets:
             CFBundleURLSchemes:
               - tasknotes
 
+  # Dedicated sandbox and default-preference identity. No release URL scheme
+  # or store product is registered by this local acceptance application.
+  TaskNotesAcceptance:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/TaskNotesApp.swift
+      - path: ../tasks-for-obsidian/scripts/ios-account/account-input.schema.json
+        buildPhase: resources
+    dependencies:
+      - package: TaskNotesPackage
+        product: TaskNotesMac
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.acceptance
+        PRODUCT_NAME: FacetAcceptance
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        CODE_SIGN_ENTITLEMENTS: App/TaskNotes.entitlements
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: NO
+        SKIP_INSTALL: YES
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+    info:
+      path: App/AcceptanceInfo.plist
+      properties:
+        CFBundleName: Facet Acceptance
+        CFBundleDisplayName: Facet Acceptance
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        LSUIElement: false
+        NSSupportsAutomaticTermination: true
+        NSSupportsSuddenTermination: false
+
+  TaskNotesAcceptanceUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: UITests/StandaloneVaultUITests.swift
+      - path: UITests/Dependencies/DependencyEditorUITests.swift
+      - path: UITests/OccurrenceVaultUITests.swift
+      - path: UITests/CaptureReadinessUITests.swift
+      - path: UITests/OccurrenceVaultContext.swift
+      - path: UITests/OccurrenceLaunchOwnership.swift
+      - path: UITests/MacAcceptanceOwnership.swift
+      - path: UITests/MacAcceptanceCapture.swift
+      - path: UITests/MacAcceptanceCaptureDiagnostics.swift
+      - path: UITests/MacAcceptanceWorkspace.swift
+      - path: UITests/LiveSyncVaultUITests.swift
+      - path: UITests/LiveSyncConflictUITests.swift
+      - path: UITests/LiveSyncLifecycleUITests.swift
+    dependencies:
+      - target: TaskNotesAcceptance
+      - package: TaskNotesPackage
+        product: TaskNotesKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.acceptance.uitests
+        CODE_SIGN_ENTITLEMENTS: UITests/AcceptanceRunner.entitlements
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"
+        GENERATE_INFOPLIST_FILE: YES
+
   # ─── End-to-end UI tests ────────────────────────────────────────────────────
   #
   # XCUITest cannot run from SwiftPM — it needs a test *bundle* hosted by a real
@@ -208,6 +282,18 @@ targets:
     platform: macOS
     sources:
       - path: UITests
+        excludes:
+          # The dedicated acceptance identity runs this same required journey;
+          # the local and CI launchers run both schemes.
+          - StandaloneVaultUITests.swift
+          - Dependencies
+          - OccurrenceVaultUITests.swift
+          - CaptureReadinessUITests.swift
+          - OccurrenceVaultContext.swift
+          - OccurrenceLaunchOwnership.swift
+          - LiveSyncVaultUITests.swift
+          - LiveSyncConflictUITests.swift
+          - LiveSyncLifecycleUITests.swift
     dependencies:
       - target: TaskNotes
       - package: TaskNotesPackage
@@ -265,6 +351,19 @@ targets:
         CFBundlePackageType: BNDL
 
 schemes:
+  TaskNotesAcceptance:
+    build:
+      targets:
+        TaskNotesAcceptance: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - TaskNotesAcceptanceUITests
+      gatherCoverageData: false
+    analyze:
+      config: Debug
   TaskNotes:
     build:
       targets:

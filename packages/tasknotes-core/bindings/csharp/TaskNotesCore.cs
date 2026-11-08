@@ -704,6 +704,54 @@ static class _UniFFILib {
         ulong @callbackData,_UniFFILib.UniffiForeignFutureResultVoid @result
     );
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod0(
+        ulong @uniffiHandle,RustBuffer @profileId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod1(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @path,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod2(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @backupId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod3(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @snapshotId,ulong @offset,uint @length,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod4(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @snapshotId,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod5(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @operationId,RustBuffer @path,RustBuffer @expectedRevision,ulong @size,RustBuffer @revision,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod6(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @stageId,ulong @offset,RustBuffer @bytes,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod7(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @stageId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod8(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @operationId,RustBuffer @path,RustBuffer @expectedRevision,RustBuffer @stageId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod9(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @stageId,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod10(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @afterId,uint @limit,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void UniffiCallbackInterfaceFacetVaultFilesMethod11(
+        ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @id,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
+    );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void UniffiCallbackInterfaceClockMethod0(
         ulong @uniffiHandle,IntPtr /*long*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
     );
@@ -811,6 +859,24 @@ static class _UniFFILib {
     public delegate void UniffiCallbackInterfaceHttpClientMethod1(
         ulong @uniffiHandle,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err
     );
+    [StructLayout(LayoutKind.Sequential)]
+    public struct UniffiVTableCallbackInterfaceFacetVaultFiles
+    {
+        public IntPtr @uniffiFree;
+        public IntPtr @uniffiClone;
+        public IntPtr @listFiles;
+        public IntPtr @openFileSnapshot;
+        public IntPtr @openDisplacedSnapshot;
+        public IntPtr @readSnapshotChunk;
+        public IntPtr @closeSnapshot;
+        public IntPtr @beginReplacement;
+        public IntPtr @writeReplacementChunk;
+        public IntPtr @sealReplacement;
+        public IntPtr @compareExchangeStaged;
+        public IntPtr @discardReplacement;
+        public IntPtr @displacedMetadata;
+        public IntPtr @acknowledgeDisplaced;
+    }
     [StructLayout(LayoutKind.Sequential)]
     public struct UniffiVTableCallbackInterfaceClock
     {
@@ -1214,12 +1280,156 @@ static class _UniFFILib {
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     static _UniFFILib() {
         _UniFFILib.uniffiCheckContractApiVersion();
         _UniFFILib.uniffiCheckApiChecksums();
         
         UniffiCallbackInterfaceClock.Register();
+        UniffiCallbackInterfaceFacetVaultFiles.Register();
         UniffiCallbackInterfaceHttpClient.Register();
         UniffiCallbackInterfaceMigrationStorage.Register();
         UniffiCallbackInterfaceQueueStorage.Register();
@@ -1413,6 +1623,512 @@ static class _UniFFILib {
     public static extern
 #endif
      void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_sync_now(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_facetvaultfiles(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_facetvaultfiles(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_facetvaultfiles(IntPtr /*_UniFFILib.UniffiVTableCallbackInterfaceFacetVaultFiles*/ @vtable
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_list_files(ulong @ptr,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_file_snapshot(ulong @ptr,RustBuffer @profileId,RustBuffer @path,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_displaced_snapshot(ulong @ptr,RustBuffer @profileId,RustBuffer @backupId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_read_snapshot_chunk(ulong @ptr,RustBuffer @profileId,RustBuffer @snapshotId,ulong @offset,uint @length,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_close_snapshot(ulong @ptr,RustBuffer @profileId,RustBuffer @snapshotId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_begin_replacement(ulong @ptr,RustBuffer @profileId,RustBuffer @operationId,RustBuffer @path,RustBuffer @expectedRevision,ulong @size,RustBuffer @revision,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_write_replacement_chunk(ulong @ptr,RustBuffer @profileId,RustBuffer @stageId,ulong @offset,RustBuffer @bytes,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_seal_replacement(ulong @ptr,RustBuffer @profileId,RustBuffer @stageId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_compare_exchange_staged(ulong @ptr,RustBuffer @profileId,RustBuffer @operationId,RustBuffer @path,RustBuffer @expectedRevision,RustBuffer @stageId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_discard_replacement(ulong @ptr,RustBuffer @profileId,RustBuffer @stageId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_displaced_metadata(ulong @ptr,RustBuffer @profileId,RustBuffer @afterId,uint @limit,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_acknowledge_displaced(ulong @ptr,RustBuffer @profileId,RustBuffer @id,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffifacetengine(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffifacetengine(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffifacetengine_new(RustBuffer @databasePath,ulong @files,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_acknowledge_upload(ulong @ptr,RustBuffer @profileId,RustBuffer @mutationId,RustBuffer @revision,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_apply_sync_checkpoint_delta(ulong @ptr,RustBuffer @profileId,RustBuffer @deltaJson,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_close_runtime(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_json(ulong @ptr,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_page_json(ulong @ptr,RustBuffer @profileId,RustBuffer @afterId,uint @limit,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute(ulong @ptr,RustBuffer @profileId,RustBuffer @commandJson,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute_payload_id_json(ulong @ptr,RustBuffer @profileId,RustBuffer @mutationJson,RustBuffer @payload,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_features_json(ulong @ptr,RustBuffer @profileId,RustBuffer @requestJson,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_identity(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_load_checkpoint(ulong @ptr,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_pending_uploads_json(ulong @ptr,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_profiles_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_refresh(ulong @ptr,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_register_profile(ulong @ptr,RustBuffer @profileJson,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_remove_profile(ulong @ptr,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_save_checkpoint(ulong @ptr,RustBuffer @profileId,RustBuffer @checkpointJson,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_snapshot_json(ulong @ptr,RustBuffer @profileId,RustBuffer @queryJson,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_begin_payload(ulong @ptr,RustBuffer @profileId,RustBuffer @payloadId,ulong @size,RustBuffer @revision,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflict_payload(ulong @ptr,RustBuffer @profileId,RustBuffer @conflictId,RustBuffer @version,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_open_payload(ulong @ptr,RustBuffer @profileId,RustBuffer @payloadId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffifacetpayload(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffifacetpayload(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_close_handle(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_discard(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_info_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_read_chunk(ulong @ptr,ulong @offset,uint @length,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_seal(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_write_chunk(ulong @ptr,ulong @offset,RustBuffer @bytes,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2006,7 +2722,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2017,7 +2733,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+     void uniffi_tasknotes_core_ffi_fn_free_ffiobsidianaccount(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2028,7 +2744,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidianaccount_new(ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2039,7 +2755,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
+     void uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_cancel_request(ulong @ptr,ulong @requestId,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2050,7 +2766,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_list_vaults(ulong @ptr,RustBuffer @token,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2061,7 +2777,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_prepare_vault(ulong @ptr,RustBuffer @vaultId,RustBuffer @password,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2072,7 +2788,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_response(ulong @ptr,ulong @requestId,ushort @status,RustBuffer @body,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2083,7 +2799,381 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(ulong @ptr,RustBuffer @period,ref UniffiRustCallStatus _uniffi_out_err
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_in(ulong @ptr,RustBuffer @email,RustBuffer @password,RustBuffer @mfa,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_out(ulong @ptr,RustBuffer @token,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_user_info(ulong @ptr,RustBuffer @token,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_vault_access(ulong @ptr,RustBuffer @token,RustBuffer @vaultId,RustBuffer @keyBytes,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffiobsidiansession(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffiobsidiansession(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidiansession_new(RustBuffer @options,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_apply_download(ulong @ptr,RustBuffer @transferId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_begin(ulong @ptr,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_bind_runtime(ulong @ptr,ulong @engine,RustBuffer @profileId,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_cancel(ulong @ptr,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_persisted(ulong @ptr,ulong @revision,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_complete_remote(ulong @ptr,ulong @uid,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_disconnected(ulong @ptr,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_opened(ulong @ptr,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_download(ulong @ptr,ulong @uid,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_durable_upload(ulong @ptr,RustBuffer @operationId,RustBuffer @nonce,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_binary(ulong @ptr,RustBuffer @bytes,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_text(ulong @ptr,RustBuffer @text,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_tick(ulong @ptr,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_unbind_runtime(ulong @ptr,ulong @nowMs,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffivaultconfiguration(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffivaultconfiguration(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffivaultconfiguration_new(RustBuffer @plugin,RustBuffer @portable,sbyte @approveStandard,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_configuration_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     sbyte uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_is_completed(ulong @ptr,RustBuffer @status,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_next_status(ulong @ptr,RustBuffer @status,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_clone_ffivaultdocument(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     void uniffi_tasknotes_core_ffi_fn_free_ffivaultdocument(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ulong uniffi_tasknotes_core_ffi_fn_constructor_ffivaultdocument_new(RustBuffer @path,RustBuffer @bytes,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_body(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_plan(ulong @ptr,RustBuffer @editsJson,RustBuffer @body,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_properties_json(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_revision(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -2732,28 +3822,6 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_func_elapsed_format(ulong @seconds,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ulong uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(RustBuffer @start,RustBuffer @now,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
      uint uniffi_tasknotes_core_ffi_fn_func_migration_current_schema_version(ref UniffiRustCallStatus _uniffi_out_err
     );
 
@@ -2788,6 +3856,17 @@ static class _UniFFILib {
     public static extern
 #endif
      RustBuffer uniffi_tasknotes_core_ffi_fn_func_parse_task_input(RustBuffer @input,RustBuffer @today,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_func_obsidian_transport_limits(ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -4129,28 +5208,6 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_func_elapsed_format(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
      ushort uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version(
     );
 
@@ -4185,6 +5242,17 @@ static class _UniFFILib {
     public static extern
 #endif
      ushort uniffi_tasknotes_core_ffi_checksum_func_parse_task_input(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_func_obsidian_transport_limits(
     );
 
     #if NET8_0_OR_GREATER
@@ -4460,6 +5528,424 @@ static class _UniFFILib {
     public static extern
 #endif
      ushort uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_list_files(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_file_snapshot(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_displaced_snapshot(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_read_snapshot_chunk(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_close_snapshot(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_begin_replacement(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_write_replacement_chunk(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_seal_replacement(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_compare_exchange_staged(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_discard_replacement(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_displaced_metadata(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_acknowledge_displaced(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_acknowledge_upload(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_apply_sync_checkpoint_delta(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_close_runtime(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_page_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute_payload_id_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_features_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_identity(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_load_checkpoint(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_pending_uploads_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_profiles_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_refresh(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_register_profile(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_remove_profile(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_save_checkpoint(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_snapshot_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_begin_payload(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflict_payload(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_open_payload(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_close_handle(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_discard(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_info_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_read_chunk(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_seal(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_write_chunk(
     );
 
     #if NET8_0_OR_GREATER
@@ -4789,7 +6275,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request(
     );
 
     #if NET8_0_OR_GREATER
@@ -4800,7 +6286,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_list_vaults(
     );
 
     #if NET8_0_OR_GREATER
@@ -4811,7 +6297,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_prepare_vault(
     );
 
     #if NET8_0_OR_GREATER
@@ -4822,7 +6308,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_response(
     );
 
     #if NET8_0_OR_GREATER
@@ -4833,7 +6319,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_in(
     );
 
     #if NET8_0_OR_GREATER
@@ -4844,7 +6330,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_out(
     );
 
     #if NET8_0_OR_GREATER
@@ -4855,7 +6341,7 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_user_info(
     );
 
     #if NET8_0_OR_GREATER
@@ -4866,7 +6352,249 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary(
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_vault_access(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_apply_download(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_begin(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_bind_runtime(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_cancel(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_persisted(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_complete_remote(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_disconnected(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_opened(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_download(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_durable_upload(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_binary(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_text(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_tick(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_unbind_runtime(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision(
     );
 
     #if NET8_0_OR_GREATER
@@ -4888,7 +6616,62 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffifacetengine_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
      ushort uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidianaccount_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidiansession_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new(
     );
 
     #if NET8_0_OR_GREATER
@@ -5260,18 +7043,6 @@ static class _UniFFILib {
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_format();
-            if (checksum != 49010) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_format` checksum `49010`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since();
-            if (checksum != 23598) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since` checksum `23598`, library returned `{checksum}`");
-            }
-        }
-        {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version();
             if (checksum != 13709) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version` checksum `13709`, library returned `{checksum}`");
@@ -5293,6 +7064,12 @@ static class _UniFFILib {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_parse_task_input();
             if (checksum != 63614) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_parse_task_input` checksum `63614`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_obsidian_transport_limits();
+            if (checksum != 11202) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_obsidian_transport_limits` checksum `11202`, library returned `{checksum}`");
             }
         }
         {
@@ -5443,6 +7220,234 @@ static class _UniFFILib {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now();
             if (checksum != 53642) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now` checksum `53642`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_list_files();
+            if (checksum != 51532) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_list_files` checksum `51532`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_file_snapshot();
+            if (checksum != 38214) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_file_snapshot` checksum `38214`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_displaced_snapshot();
+            if (checksum != 18249) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_displaced_snapshot` checksum `18249`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_read_snapshot_chunk();
+            if (checksum != 30733) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_read_snapshot_chunk` checksum `30733`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_close_snapshot();
+            if (checksum != 17187) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_close_snapshot` checksum `17187`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_begin_replacement();
+            if (checksum != 4564) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_begin_replacement` checksum `4564`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_write_replacement_chunk();
+            if (checksum != 11198) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_write_replacement_chunk` checksum `11198`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_seal_replacement();
+            if (checksum != 25728) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_seal_replacement` checksum `25728`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_compare_exchange_staged();
+            if (checksum != 40697) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_compare_exchange_staged` checksum `40697`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_discard_replacement();
+            if (checksum != 42242) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_discard_replacement` checksum `42242`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_displaced_metadata();
+            if (checksum != 57896) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_displaced_metadata` checksum `57896`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_acknowledge_displaced();
+            if (checksum != 39503) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_acknowledge_displaced` checksum `39503`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_acknowledge_upload();
+            if (checksum != 46419) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_acknowledge_upload` checksum `46419`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_apply_sync_checkpoint_delta();
+            if (checksum != 62061) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_apply_sync_checkpoint_delta` checksum `62061`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_close_runtime();
+            if (checksum != 60446) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_close_runtime` checksum `60446`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_json();
+            if (checksum != 3014) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_json` checksum `3014`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_page_json();
+            if (checksum != 54053) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_page_json` checksum `54053`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute();
+            if (checksum != 17115) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute` checksum `17115`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute_payload_id_json();
+            if (checksum != 31345) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute_payload_id_json` checksum `31345`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_features_json();
+            if (checksum != 46671) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_features_json` checksum `46671`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_identity();
+            if (checksum != 23365) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_identity` checksum `23365`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_load_checkpoint();
+            if (checksum != 10592) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_load_checkpoint` checksum `10592`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_pending_uploads_json();
+            if (checksum != 53416) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_pending_uploads_json` checksum `53416`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_profiles_json();
+            if (checksum != 32937) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_profiles_json` checksum `32937`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_refresh();
+            if (checksum != 43230) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_refresh` checksum `43230`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_register_profile();
+            if (checksum != 11566) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_register_profile` checksum `11566`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_remove_profile();
+            if (checksum != 31981) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_remove_profile` checksum `31981`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_save_checkpoint();
+            if (checksum != 39607) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_save_checkpoint` checksum `39607`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_snapshot_json();
+            if (checksum != 44877) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_snapshot_json` checksum `44877`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_begin_payload();
+            if (checksum != 32033) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_begin_payload` checksum `32033`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflict_payload();
+            if (checksum != 29379) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflict_payload` checksum `29379`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_open_payload();
+            if (checksum != 64968) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_open_payload` checksum `64968`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_close_handle();
+            if (checksum != 53344) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_close_handle` checksum `53344`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_discard();
+            if (checksum != 46465) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_discard` checksum `46465`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_info_json();
+            if (checksum != 6626) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_info_json` checksum `6626`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_read_chunk();
+            if (checksum != 57249) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_read_chunk` checksum `57249`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_seal();
+            if (checksum != 25391) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_seal` checksum `25391`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_write_chunk();
+            if (checksum != 5745) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_write_chunk` checksum `5745`, library returned `{checksum}`");
             }
         }
         {
@@ -5620,51 +7625,183 @@ static class _UniFFILib {
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro();
-            if (checksum != 58341) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro` checksum `58341`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request();
+            if (checksum != 1389) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request` checksum `1389`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status();
-            if (checksum != 54685) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status` checksum `54685`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_list_vaults();
+            if (checksum != 50649) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_list_vaults` checksum `50649`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro();
-            if (checksum != 52891) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro` checksum `52891`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_prepare_vault();
+            if (checksum != 4718) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_prepare_vault` checksum `4718`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking();
-            if (checksum != 7312) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking` checksum `7312`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_response();
+            if (checksum != 29430) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_response` checksum `29430`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro();
-            if (checksum != 34297) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro` checksum `34297`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_in();
+            if (checksum != 61691) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_in` checksum `61691`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking();
-            if (checksum != 23374) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking` checksum `23374`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_out();
+            if (checksum != 47888) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_out` checksum `47888`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time();
-            if (checksum != 12914) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time` checksum `12914`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_user_info();
+            if (checksum != 47281) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_user_info` checksum `47281`, library returned `{checksum}`");
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary();
-            if (checksum != 8961) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary` checksum `8961`, library returned `{checksum}`");
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_vault_access();
+            if (checksum != 50660) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_vault_access` checksum `50660`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_apply_download();
+            if (checksum != 31820) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_apply_download` checksum `31820`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_begin();
+            if (checksum != 10328) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_begin` checksum `10328`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_bind_runtime();
+            if (checksum != 59765) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_bind_runtime` checksum `59765`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_cancel();
+            if (checksum != 28370) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_cancel` checksum `28370`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_json();
+            if (checksum != 40477) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_json` checksum `40477`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_persisted();
+            if (checksum != 40394) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_persisted` checksum `40394`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_complete_remote();
+            if (checksum != 34050) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_complete_remote` checksum `34050`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_disconnected();
+            if (checksum != 42337) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_disconnected` checksum `42337`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_opened();
+            if (checksum != 8305) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_opened` checksum `8305`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_download();
+            if (checksum != 25380) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_download` checksum `25380`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_durable_upload();
+            if (checksum != 31365) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_durable_upload` checksum `31365`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_binary();
+            if (checksum != 65356) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_binary` checksum `65356`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_text();
+            if (checksum != 21315) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_text` checksum `21315`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_tick();
+            if (checksum != 31077) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_tick` checksum `31077`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_unbind_runtime();
+            if (checksum != 20593) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_unbind_runtime` checksum `20593`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json();
+            if (checksum != 54722) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json` checksum `54722`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed();
+            if (checksum != 49549) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed` checksum `49549`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status();
+            if (checksum != 58547) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_next_status` checksum `58547`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body();
+            if (checksum != 13793) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_body` checksum `13793`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan();
+            if (checksum != 9460) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_plan` checksum `9460`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json();
+            if (checksum != 27226) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_properties_json` checksum `27226`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision();
+            if (checksum != 59888) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_ffivaultdocument_revision` checksum `59888`, library returned `{checksum}`");
             }
         }
         {
@@ -5674,9 +7811,39 @@ static class _UniFFILib {
             }
         }
         {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffifacetengine_new();
+            if (checksum != 11879) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffifacetengine_new` checksum `11879`, library returned `{checksum}`");
+            }
+        }
+        {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new();
             if (checksum != 55934) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new` checksum `55934`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidianaccount_new();
+            if (checksum != 31117) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidianaccount_new` checksum `31117`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidiansession_new();
+            if (checksum != 16463) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidiansession_new` checksum `16463`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new();
+            if (checksum != 16189) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new` checksum `16189`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new();
+            if (checksum != 14230) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultdocument_new` checksum `14230`, library returned `{checksum}`");
             }
         }
     }
@@ -6260,6 +8427,2588 @@ class FfiConverterTypeClock: FfiConverter<Clock, ulong> {
 
 
 /// <summary>
+/// Platform folder/replica capabilities; callbacks run outside SQLite locks.
+/// </summary>
+internal interface FacetVaultFiles {
+    /// <summary>
+    /// Return logical paths, excluding private host backup/application directories.
+    ///
+    /// # Errors
+    /// Returns capability, permission, or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    string[] ListFiles(string @profileId);
+    /// <summary>
+    /// Capture an immutable read image, or return absence for a missing regular file.
+    ///
+    /// # Errors
+    /// Returns capability, permission, or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetFileSnapshot? OpenFileSnapshot(string @profileId, string @path);
+    /// <summary>
+    /// Open one exact retained predecessor without loading its bytes.
+    ///
+    /// # Errors
+    /// Returns wrong-owner, missing, changed or inaccessible backup failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetFileSnapshot OpenDisplacedSnapshot(string @profileId, string @backupId);
+    /// <summary>
+    /// Read one exact immutable range of at most one MiB.
+    ///
+    /// # Errors
+    /// Returns wrong-owner, stale handle, invalid range or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    byte[] ReadSnapshotChunk(string @profileId, string @snapshotId, ulong @offset, uint @length);
+    /// <summary>
+    /// Release only a temporary image; never acknowledge a durable predecessor.
+    ///
+    /// # Errors
+    /// Returns unknown/wrong-owner handles or durable cleanup failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    void CloseSnapshot(string @profileId, string @snapshotId);
+    /// <summary>
+    /// Persist or resume an exact staged intent, retaining its contiguous prefix.
+    ///
+    /// # Errors
+    /// Returns changed intent, unsupported durability or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetReplacementStage BeginReplacement(string @profileId, string @operationId, string @path, string? @expectedRevision, ulong @size, string @revision);
+    /// <summary>
+    /// Commit at most one MiB or verify an exact already-committed prefix retry.
+    ///
+    /// # Errors
+    /// Returns changed/gapped/overlapping chunks or durable provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetReplacementStage WriteReplacementChunk(string @profileId, string @stageId, ulong @offset, byte[] @bytes);
+    /// <summary>
+    /// Verify the exact declared size/hash and retain an immutable sealed source.
+    ///
+    /// # Errors
+    /// Returns incomplete/corrupt/unknown stages or durable provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetReplacementStage SealReplacement(string @profileId, string @stageId);
+    /// <summary>
+    /// Exchange a sealed stage/tombstone or replay its original durable outcome.
+    ///
+    /// # Errors
+    /// Returns unsupported atomic capabilities or durable I/O failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetStagedExchange CompareExchangeStaged(string @profileId, string @operationId, string @path, string? @expectedRevision, string? @stageId);
+    /// <summary>
+    /// Retire source/slot bytes after durable disposition, retaining exact receipts.
+    ///
+    /// # Errors
+    /// Returns unknown/wrong-owner stages or unresolved predecessor/durability failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    void DiscardReplacement(string @profileId, string @stageId);
+    /// <summary>
+    /// Recover unacknowledged captured versions after process relaunch.
+    ///
+    /// # Errors
+    /// Returns unavailable/corrupt backup storage failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    FacetDisplacedMetadata[] DisplacedMetadata(string @profileId, string? @afterId, uint @limit);
+    /// <summary>
+    /// Remove a backup only after Rust has retained/committed it durably.
+    ///
+    /// # Errors
+    /// Returns backup permission, identity, or durable I/O failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    void AcknowledgeDisplaced(string @profileId, string @id);
+}
+/// <summary>
+/// Platform folder/replica capabilities; callbacks run outside SQLite locks.
+/// </summary>
+internal class FacetVaultFilesImpl : FacetVaultFiles, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FacetVaultFilesImpl(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FacetVaultFilesImpl() {
+        Destroy();
+    }
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_facetvaultfiles(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_facetvaultfiles(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Return logical paths, excluding private host backup/application directories.
+    ///
+    /// # Errors
+    /// Returns capability, permission, or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public string[] ListFiles(string @profileId) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_list_files(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Capture an immutable read image, or return absence for a missing regular file.
+    ///
+    /// # Errors
+    /// Returns capability, permission, or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetFileSnapshot? OpenFileSnapshot(string @profileId, string @path) {
+        return CallWithPointer(thisPtr => FfiConverterOptionalTypeFacetFileSnapshot.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_file_snapshot(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@path), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Open one exact retained predecessor without loading its bytes.
+    ///
+    /// # Errors
+    /// Returns wrong-owner, missing, changed or inaccessible backup failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetFileSnapshot OpenDisplacedSnapshot(string @profileId, string @backupId) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFacetFileSnapshot.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_displaced_snapshot(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@backupId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Read one exact immutable range of at most one MiB.
+    ///
+    /// # Errors
+    /// Returns wrong-owner, stale handle, invalid range or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public byte[] ReadSnapshotChunk(string @profileId, string @snapshotId, ulong @offset, uint @length) {
+        return CallWithPointer(thisPtr => FfiConverterByteArray.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_read_snapshot_chunk(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@snapshotId), FfiConverterUInt64.INSTANCE.Lower(@offset), FfiConverterUInt32.INSTANCE.Lower(@length), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Release only a temporary image; never acknowledge a durable predecessor.
+    ///
+    /// # Errors
+    /// Returns unknown/wrong-owner handles or durable cleanup failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public void CloseSnapshot(string @profileId, string @snapshotId) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_close_snapshot(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@snapshotId), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Persist or resume an exact staged intent, retaining its contiguous prefix.
+    ///
+    /// # Errors
+    /// Returns changed intent, unsupported durability or provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetReplacementStage BeginReplacement(string @profileId, string @operationId, string @path, string? @expectedRevision, ulong @size, string @revision) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFacetReplacementStage.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_begin_replacement(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@operationId), FfiConverterString.INSTANCE.Lower(@path), FfiConverterOptionalString.INSTANCE.Lower(@expectedRevision), FfiConverterUInt64.INSTANCE.Lower(@size), FfiConverterString.INSTANCE.Lower(@revision), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Commit at most one MiB or verify an exact already-committed prefix retry.
+    ///
+    /// # Errors
+    /// Returns changed/gapped/overlapping chunks or durable provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetReplacementStage WriteReplacementChunk(string @profileId, string @stageId, ulong @offset, byte[] @bytes) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFacetReplacementStage.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_write_replacement_chunk(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@stageId), FfiConverterUInt64.INSTANCE.Lower(@offset), FfiConverterByteArray.INSTANCE.Lower(@bytes), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Verify the exact declared size/hash and retain an immutable sealed source.
+    ///
+    /// # Errors
+    /// Returns incomplete/corrupt/unknown stages or durable provider failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetReplacementStage SealReplacement(string @profileId, string @stageId) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFacetReplacementStage.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_seal_replacement(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@stageId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Exchange a sealed stage/tombstone or replay its original durable outcome.
+    ///
+    /// # Errors
+    /// Returns unsupported atomic capabilities or durable I/O failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetStagedExchange CompareExchangeStaged(string @profileId, string @operationId, string @path, string? @expectedRevision, string? @stageId) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFacetStagedExchange.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_compare_exchange_staged(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@operationId), FfiConverterString.INSTANCE.Lower(@path), FfiConverterOptionalString.INSTANCE.Lower(@expectedRevision), FfiConverterOptionalString.INSTANCE.Lower(@stageId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Retire source/slot bytes after durable disposition, retaining exact receipts.
+    ///
+    /// # Errors
+    /// Returns unknown/wrong-owner stages or unresolved predecessor/durability failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public void DiscardReplacement(string @profileId, string @stageId) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_discard_replacement(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@stageId), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Recover unacknowledged captured versions after process relaunch.
+    ///
+    /// # Errors
+    /// Returns unavailable/corrupt backup storage failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public FacetDisplacedMetadata[] DisplacedMetadata(string @profileId, string? @afterId, uint @limit) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeFacetDisplacedMetadata.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_displaced_metadata(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterOptionalString.INSTANCE.Lower(@afterId), FfiConverterUInt32.INSTANCE.Lower(@limit), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Remove a backup only after Rust has retained/committed it durably.
+    ///
+    /// # Errors
+    /// Returns backup permission, identity, or durable I/O failures.
+    /// </summary>
+    /// <exception cref="FacetHostException"></exception>
+    public void AcknowledgeDisplaced(string @profileId, string @id) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetHostError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_acknowledge_displaced(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@id), ref _status)
+));
+    }
+    
+    
+    
+
+    
+}
+class UniffiCallbackInterfaceFacetVaultFiles {
+    static void ListFiles(ulong @uniffiHandle,RustBuffer @profileId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.ListFiles(
+                FfiConverterString.INSTANCE.Lift(@profileId));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterSequenceString.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void OpenFileSnapshot(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @path,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.OpenFileSnapshot(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@path));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterOptionalTypeFacetFileSnapshot.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void OpenDisplacedSnapshot(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @backupId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.OpenDisplacedSnapshot(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@backupId));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterTypeFacetFileSnapshot.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void ReadSnapshotChunk(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @snapshotId,ulong @offset,uint @length,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.ReadSnapshotChunk(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@snapshotId), 
+                FfiConverterUInt64.INSTANCE.Lift(@offset), 
+                FfiConverterUInt32.INSTANCE.Lift(@length));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterByteArray.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void CloseSnapshot(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @snapshotId,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            uniffiObject.CloseSnapshot(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@snapshotId));
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void BeginReplacement(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @operationId,RustBuffer @path,RustBuffer @expectedRevision,ulong @size,RustBuffer @revision,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.BeginReplacement(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@operationId), 
+                FfiConverterString.INSTANCE.Lift(@path), 
+                FfiConverterOptionalString.INSTANCE.Lift(@expectedRevision), 
+                FfiConverterUInt64.INSTANCE.Lift(@size), 
+                FfiConverterString.INSTANCE.Lift(@revision));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterTypeFacetReplacementStage.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void WriteReplacementChunk(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @stageId,ulong @offset,RustBuffer @bytes,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.WriteReplacementChunk(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@stageId), 
+                FfiConverterUInt64.INSTANCE.Lift(@offset), 
+                FfiConverterByteArray.INSTANCE.Lift(@bytes));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterTypeFacetReplacementStage.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void SealReplacement(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @stageId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.SealReplacement(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@stageId));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterTypeFacetReplacementStage.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void CompareExchangeStaged(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @operationId,RustBuffer @path,RustBuffer @expectedRevision,RustBuffer @stageId,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.CompareExchangeStaged(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@operationId), 
+                FfiConverterString.INSTANCE.Lift(@path), 
+                FfiConverterOptionalString.INSTANCE.Lift(@expectedRevision), 
+                FfiConverterOptionalString.INSTANCE.Lift(@stageId));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterTypeFacetStagedExchange.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void DiscardReplacement(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @stageId,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            uniffiObject.DiscardReplacement(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@stageId));
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void DisplacedMetadata(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @afterId,uint @limit,IntPtr /*RustBuffer*/ @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            var result =
+            uniffiObject.DisplacedMetadata(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterOptionalString.INSTANCE.Lift(@afterId), 
+                FfiConverterUInt32.INSTANCE.Lift(@limit));
+            unsafe {
+                *(RustBuffer*)uniffiOutReturn = FfiConverterSequenceTypeFacetDisplacedMetadata.INSTANCE.Lower(result);
+            }
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+    static void AcknowledgeDisplaced(ulong @uniffiHandle,RustBuffer @profileId,RustBuffer @id,IntPtr @uniffiOutReturn,ref UniffiRustCallStatus _uniffi_out_err) {
+        var handle = @uniffiHandle;
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(handle, out var uniffiObject)) {
+                throw new InternalException($"No callback in handlemap '{handle}'");
+            }
+            uniffiObject.AcknowledgeDisplaced(
+                FfiConverterString.INSTANCE.Lift(@profileId), 
+                FfiConverterString.INSTANCE.Lift(@id));
+
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.SUCCESS;
+        }
+        catch (FacetHostException e) {
+            try {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.ERROR;
+                _uniffi_out_err.error_buf = FfiConverterTypeFacetHostError.INSTANCE.Lower(e);
+            } catch {
+                _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            }
+        }
+        catch (System.Exception e){
+            _uniffi_out_err.code = UniffiCallbackResponseStatus.UNEXPECTED_ERROR;
+            try {
+                _uniffi_out_err.error_buf = FfiConverterString.INSTANCE.Lower(e.Message);
+            }
+            catch {
+            }
+        }
+    }
+
+    static void UniffiFree(ulong @handle) {
+        FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.Remove(@handle);
+    }
+
+    static ulong UniffiClone(ulong @handle) {
+        try {
+            if (!FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.TryGet(@handle, out var obj)) {
+                throw new InternalException($"No callback in handlemap '{@handle}'");
+            }
+            return FfiConverterTypeFacetVaultFiles.INSTANCE.handleMap.Insert(obj);
+        } catch (System.Exception) {
+            return 0; // 0 is never a valid handle; ConcurrentHandleMap starts at 1
+        }
+    }
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod0 _m0 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod0(ListFiles);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod1 _m1 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod1(OpenFileSnapshot);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod2 _m2 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod2(OpenDisplacedSnapshot);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod3 _m3 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod3(ReadSnapshotChunk);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod4 _m4 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod4(CloseSnapshot);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod5 _m5 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod5(BeginReplacement);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod6 _m6 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod6(WriteReplacementChunk);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod7 _m7 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod7(SealReplacement);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod8 _m8 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod8(CompareExchangeStaged);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod9 _m9 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod9(DiscardReplacement);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod10 _m10 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod10(DisplacedMetadata);
+    static _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod11 _m11 = new _UniFFILib.UniffiCallbackInterfaceFacetVaultFilesMethod11(AcknowledgeDisplaced);
+    static _UniFFILib.UniffiCallbackInterfaceFree _callback_interface_free = new _UniFFILib.UniffiCallbackInterfaceFree(UniffiFree);
+    static _UniFFILib.UniffiCallbackInterfaceClone _callback_interface_clone = new _UniFFILib.UniffiCallbackInterfaceClone(UniffiClone);
+
+    private static GCHandle? _vtablePin;
+
+    public static void Register() {
+        if (_vtablePin.HasValue) return;
+        _UniFFILib.UniffiVTableCallbackInterfaceFacetVaultFiles _vtable = new _UniFFILib.UniffiVTableCallbackInterfaceFacetVaultFiles {
+            @listFiles = Marshal.GetFunctionPointerForDelegate(_m0),
+            @openFileSnapshot = Marshal.GetFunctionPointerForDelegate(_m1),
+            @openDisplacedSnapshot = Marshal.GetFunctionPointerForDelegate(_m2),
+            @readSnapshotChunk = Marshal.GetFunctionPointerForDelegate(_m3),
+            @closeSnapshot = Marshal.GetFunctionPointerForDelegate(_m4),
+            @beginReplacement = Marshal.GetFunctionPointerForDelegate(_m5),
+            @writeReplacementChunk = Marshal.GetFunctionPointerForDelegate(_m6),
+            @sealReplacement = Marshal.GetFunctionPointerForDelegate(_m7),
+            @compareExchangeStaged = Marshal.GetFunctionPointerForDelegate(_m8),
+            @discardReplacement = Marshal.GetFunctionPointerForDelegate(_m9),
+            @displacedMetadata = Marshal.GetFunctionPointerForDelegate(_m10),
+            @acknowledgeDisplaced = Marshal.GetFunctionPointerForDelegate(_m11),
+            @uniffiFree = Marshal.GetFunctionPointerForDelegate(_callback_interface_free),
+            @uniffiClone = Marshal.GetFunctionPointerForDelegate(_callback_interface_clone),
+        };
+
+        // Pin the vtable so the GC never moves it. The GCHandle is intentionally never freed —
+        // this pin must remain valid for the process lifetime.
+        _vtablePin = GCHandle.Alloc(_vtable, GCHandleType.Pinned);
+        _UniFFILib.uniffi_tasknotes_core_ffi_fn_init_callback_vtable_facetvaultfiles(_vtablePin.Value.AddrOfPinnedObject());
+    }
+}
+
+
+
+
+class FfiConverterTypeFacetVaultFiles: FfiConverter<FacetVaultFiles, ulong> {
+    public ConcurrentHandleMap<FacetVaultFiles> handleMap = new ConcurrentHandleMap<FacetVaultFiles>();
+    
+    public static FfiConverterTypeFacetVaultFiles INSTANCE = new FfiConverterTypeFacetVaultFiles();
+
+    static FfiConverterTypeFacetVaultFiles() {
+        UniffiCallbackInterfaceFacetVaultFiles.Register();
+    }
+
+    public override ulong Lower(FacetVaultFiles value) {
+        if (value is FacetVaultFilesImpl rustObj) {
+            // Rust-implemented object. Clone the handle and return it.
+            return rustObj.CallWithPointer(thisPtr => thisPtr);
+        } else {
+            // C# object, generate a new handle map entry and return it.
+            return handleMap.Insert(value);
+        }
+    }
+
+    public override FacetVaultFiles Lift(ulong value) {
+        if ((value & 1UL) == 0UL) {
+            // Rust-generated handle, construct a new wrapper.
+            return new FacetVaultFilesImpl(value);
+        } else {
+            // C#-generated handle, retrieve and remove from the handle map.
+            if (handleMap.Remove(value, out var obj)) {
+                return obj;
+            } else {
+                throw new InternalException($"No callback in handlemap '{value}'");
+            }
+        }
+    }
+
+    public override FacetVaultFiles Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FacetVaultFiles value) {
+        return 8;
+    }
+
+    public override void Write(FacetVaultFiles value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Rust-owned durable standalone engine. Hosts call it on their serial worker.
+/// </summary>
+internal interface IFfiFacetEngine {
+    /// <summary>
+    /// Commit an exact service acknowledgement without replacing newer edits.
+    ///
+    /// # Errors
+    /// Rejects unknown receipts and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    void AcknowledgeUpload(string @profileId, string @mutationId, string @revision);
+    /// <summary>
+    /// Persist a normalized protocol delta before acknowledging its barrier.
+    ///
+    /// # Errors
+    /// Rejects invalid/cursor-regressing deltas and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    void ApplySyncCheckpointDelta(string @profileId, string @deltaJson);
+    /// <summary>
+    /// Reject new operations and wait for active callbacks before retiring this engine.
+    /// Durable journals and staged recovery receipts remain for the next engine.
+    ///
+    /// # Errors
+    /// Returns coordinator/storage failures; shutdown never discards pending state.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    void CloseRuntime();
+    /// <summary>
+    /// Return conflict versions stored outside TaskNotes indexing.
+    ///
+    /// # Errors
+    /// Returns profile/storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string ConflictsJson(string @profileId);
+    /// <summary>
+    /// Read bounded conflict metadata without binary JSON expansion.
+    ///
+    /// # Errors
+    /// Returns invalid page, profile, and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string ConflictsPageJson(string @profileId, string? @afterId, uint @limit);
+    /// <summary>
+    /// Execute an idempotent command and return its durable receipt.
+    ///
+    /// # Errors
+    /// Returns validation, conflict, capability, or storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string Execute(string @profileId, string @commandJson);
+    /// <summary>
+    /// Execute an immutable command using a sealed owner-scoped payload handle.
+    ///
+    /// # Errors
+    /// Rejects missing/misplaced payloads, reused identities and stale revisions.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string ExecutePayloadIdJson(string @profileId, string @mutationJson, FfiFacetPayload? @payload);
+    /// <summary>
+    /// Read shared capture, timing and configuration projections.
+    ///
+    /// # Errors
+    /// Returns validation, configuration, capability and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string FeaturesJson(string @profileId, string @requestJson);
+    /// <summary>
+    /// Return the nonsecret durable SQLite owner namespace before opening capabilities.
+    ///
+    /// # Errors
+    /// Returns Closed after engine shutdown begins.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string Identity();
+    /// <summary>
+    /// Read the last durable protocol cursor document.
+    ///
+    /// # Errors
+    /// Returns profile/storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string? LoadCheckpoint(string @profileId);
+    /// <summary>
+    /// Return immutable upload receipts, omitting paths with conflicts.
+    ///
+    /// # Errors
+    /// Returns profile/storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string PendingUploadsJson(string @profileId);
+    /// <summary>
+    /// Return registered profiles as JSON.
+    ///
+    /// # Errors
+    /// Returns storage/corrupt-state failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string ProfilesJson();
+    /// <summary>
+    /// Recover interrupted writes and index provider changes.
+    ///
+    /// # Errors
+    /// Returns provider, configuration, or durable-state failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string Refresh(string @profileId);
+    /// <summary>
+    /// Register a versioned profile JSON document.
+    ///
+    /// # Errors
+    /// Rejects malformed identities, unsupported schemas, or category changes.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string RegisterProfile(string @profileJson);
+    /// <summary>
+    /// Remove an empty profile without deleting user-owned vault files.
+    ///
+    /// # Errors
+    /// Rejects pending work or unresolved conflicts.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    void RemoveProfile(string @profileId);
+    /// <summary>
+    /// Persist a full protocol cursor before acknowledging its barrier.
+    ///
+    /// # Errors
+    /// Rejects invalid JSON and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    void SaveCheckpoint(string @profileId, string @checkpointJson);
+    /// <summary>
+    /// Return a paged durable snapshot with shared filter/sort/group semantics.
+    ///
+    /// # Errors
+    /// Rejects invalid query/schema values or unavailable index state.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string SnapshotJson(string @profileId, string @queryJson);
+    /// <summary>
+    /// Begin/resume an immutable incoming image. No complete file crosses FFI.
+    ///
+    /// # Errors
+    /// Rejects changed/reserved IDs, size/hash bounds or unavailable profiles.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    FfiFacetPayload BeginPayload(string @profileId, string @payloadId, ulong @size, string @revision);
+    /// <summary>
+    /// Open one retained conflict/archive image for bounded lazy reads. A null
+    /// result denotes an actual tombstone, distinct from a sealed empty image.
+    ///
+    /// # Errors
+    /// Rejects unknown roles, missing conflicts or invalid retained metadata.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    FfiFacetPayload? ConflictPayload(string @profileId, string @conflictId, string @version);
+    /// <summary>
+    /// Restore one caller-owned incoming handle after process restart.
+    ///
+    /// # Errors
+    /// Rejects runtime-owned identities, absent profiles/images or stale storage.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    FfiFacetPayload OpenPayload(string @profileId, string @payloadId);
+}
+/// <summary>
+/// Rust-owned durable standalone engine. Hosts call it on their serial worker.
+/// </summary>
+internal class FfiFacetEngine : IFfiFacetEngine, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiFacetEngine(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiFacetEngine() {
+        Destroy();
+    }
+    /// <summary>
+    /// Open/create the app-private SQLite database.
+    ///
+    /// # Errors
+    /// Returns storage failures; vault capabilities are checked when opened.
+    /// </summary>
+    public FfiFacetEngine(string @databasePath, FacetVaultFiles @files) :
+        this(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffifacetengine_new(FfiConverterString.INSTANCE.Lower(@databasePath), FfiConverterTypeFacetVaultFiles.INSTANCE.Lower(@files), ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffifacetengine(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffifacetengine(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Commit an exact service acknowledgement without replacing newer edits.
+    ///
+    /// # Errors
+    /// Rejects unknown receipts and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public void AcknowledgeUpload(string @profileId, string @mutationId, string @revision) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_acknowledge_upload(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@mutationId), FfiConverterString.INSTANCE.Lower(@revision), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Persist a normalized protocol delta before acknowledging its barrier.
+    ///
+    /// # Errors
+    /// Rejects invalid/cursor-regressing deltas and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public void ApplySyncCheckpointDelta(string @profileId, string @deltaJson) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_apply_sync_checkpoint_delta(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@deltaJson), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Reject new operations and wait for active callbacks before retiring this engine.
+    /// Durable journals and staged recovery receipts remain for the next engine.
+    ///
+    /// # Errors
+    /// Returns coordinator/storage failures; shutdown never discards pending state.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public void CloseRuntime() {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_close_runtime(thisPtr,  ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Return conflict versions stored outside TaskNotes indexing.
+    ///
+    /// # Errors
+    /// Returns profile/storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string ConflictsJson(string @profileId) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_json(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Read bounded conflict metadata without binary JSON expansion.
+    ///
+    /// # Errors
+    /// Returns invalid page, profile, and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string ConflictsPageJson(string @profileId, string? @afterId, uint @limit) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_page_json(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterOptionalString.INSTANCE.Lower(@afterId), FfiConverterUInt32.INSTANCE.Lower(@limit), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Execute an idempotent command and return its durable receipt.
+    ///
+    /// # Errors
+    /// Returns validation, conflict, capability, or storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string Execute(string @profileId, string @commandJson) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@commandJson), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Execute an immutable command using a sealed owner-scoped payload handle.
+    ///
+    /// # Errors
+    /// Rejects missing/misplaced payloads, reused identities and stale revisions.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string ExecutePayloadIdJson(string @profileId, string @mutationJson, FfiFacetPayload? @payload) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute_payload_id_json(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@mutationJson), FfiConverterOptionalTypeFfiFacetPayload.INSTANCE.Lower(@payload), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Read shared capture, timing and configuration projections.
+    ///
+    /// # Errors
+    /// Returns validation, configuration, capability and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string FeaturesJson(string @profileId, string @requestJson) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_features_json(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@requestJson), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Return the nonsecret durable SQLite owner namespace before opening capabilities.
+    ///
+    /// # Errors
+    /// Returns Closed after engine shutdown begins.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string Identity() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_identity(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Read the last durable protocol cursor document.
+    ///
+    /// # Errors
+    /// Returns profile/storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string? LoadCheckpoint(string @profileId) {
+        return CallWithPointer(thisPtr => FfiConverterOptionalString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_load_checkpoint(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Return immutable upload receipts, omitting paths with conflicts.
+    ///
+    /// # Errors
+    /// Returns profile/storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string PendingUploadsJson(string @profileId) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_pending_uploads_json(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Return registered profiles as JSON.
+    ///
+    /// # Errors
+    /// Returns storage/corrupt-state failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string ProfilesJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_profiles_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Recover interrupted writes and index provider changes.
+    ///
+    /// # Errors
+    /// Returns provider, configuration, or durable-state failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string Refresh(string @profileId) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_refresh(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Register a versioned profile JSON document.
+    ///
+    /// # Errors
+    /// Rejects malformed identities, unsupported schemas, or category changes.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string RegisterProfile(string @profileJson) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_register_profile(thisPtr, FfiConverterString.INSTANCE.Lower(@profileJson), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Remove an empty profile without deleting user-owned vault files.
+    ///
+    /// # Errors
+    /// Rejects pending work or unresolved conflicts.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public void RemoveProfile(string @profileId) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_remove_profile(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Persist a full protocol cursor before acknowledging its barrier.
+    ///
+    /// # Errors
+    /// Rejects invalid JSON and storage failures.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public void SaveCheckpoint(string @profileId, string @checkpointJson) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_save_checkpoint(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@checkpointJson), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Return a paged durable snapshot with shared filter/sort/group semantics.
+    ///
+    /// # Errors
+    /// Rejects invalid query/schema values or unavailable index state.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string SnapshotJson(string @profileId, string @queryJson) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_snapshot_json(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@queryJson), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Begin/resume an immutable incoming image. No complete file crosses FFI.
+    ///
+    /// # Errors
+    /// Rejects changed/reserved IDs, size/hash bounds or unavailable profiles.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public FfiFacetPayload BeginPayload(string @profileId, string @payloadId, ulong @size, string @revision) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFfiFacetPayload.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_begin_payload(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@payloadId), FfiConverterUInt64.INSTANCE.Lower(@size), FfiConverterString.INSTANCE.Lower(@revision), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Open one retained conflict/archive image for bounded lazy reads. A null
+    /// result denotes an actual tombstone, distinct from a sealed empty image.
+    ///
+    /// # Errors
+    /// Rejects unknown roles, missing conflicts or invalid retained metadata.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public FfiFacetPayload? ConflictPayload(string @profileId, string @conflictId, string @version) {
+        return CallWithPointer(thisPtr => FfiConverterOptionalTypeFfiFacetPayload.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflict_payload(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@conflictId), FfiConverterString.INSTANCE.Lower(@version), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Restore one caller-owned incoming handle after process restart.
+    ///
+    /// # Errors
+    /// Rejects runtime-owned identities, absent profiles/images or stale storage.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public FfiFacetPayload OpenPayload(string @profileId, string @payloadId) {
+        return CallWithPointer(thisPtr => FfiConverterTypeFfiFacetPayload.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_open_payload(thisPtr, FfiConverterString.INSTANCE.Lower(@profileId), FfiConverterString.INSTANCE.Lower(@payloadId), ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiFacetEngine: FfiConverter<FfiFacetEngine, ulong> {
+    public static FfiConverterTypeFfiFacetEngine INSTANCE = new FfiConverterTypeFfiFacetEngine();
+
+
+    public override ulong Lower(FfiFacetEngine value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiFacetEngine Lift(ulong value) {
+        return new FfiFacetEngine(value);
+    }
+
+    public override FfiFacetEngine Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiFacetEngine value) {
+        return 8;
+    }
+
+    public override void Write(FfiFacetEngine value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// One opaque owner-scoped SQLite image. Close drops only this handle; explicit
+/// discard releases incoming bytes only when no durable owner references them.
+/// </summary>
+internal interface IFfiFacetPayload {
+    /// <summary>
+    /// Retire this transient handle without deleting any durable bytes.
+    /// </summary>
+    void CloseHandle();
+    /// <summary>
+    /// Release only unreferenced incoming image bytes. The retired immutable ID
+    /// remains, so changed/repeated operations cannot revive its former payload.
+    ///
+    /// # Errors
+    /// Rejects retained/durable references and expired owners/handles.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    void Discard();
+    /// <summary>
+    /// Return metadata only, including the exact durable staging prefix.
+    ///
+    /// # Errors
+    /// Rejects expired owners/handles or corrupt retained metadata.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string InfoJson();
+    /// <summary>
+    /// Read an exact immutable range at most one MiB, including zero at EOF.
+    ///
+    /// # Errors
+    /// Rejects invalid ranges, unsealed bytes or expired owners/handles.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    byte[] ReadChunk(ulong @offset, uint @length);
+    /// <summary>
+    /// Verify the complete digest and durably make this image immutable.
+    ///
+    /// # Errors
+    /// Rejects incomplete/mismatched data, retained images or expired owners.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string Seal();
+    /// <summary>
+    /// Write a contiguous durable prefix or verify an exact bounded retry.
+    ///
+    /// # Errors
+    /// Rejects retained images, changed chunks, invalid bounds or stale owners.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    string WriteChunk(ulong @offset, byte[] @bytes);
+}
+/// <summary>
+/// One opaque owner-scoped SQLite image. Close drops only this handle; explicit
+/// discard releases incoming bytes only when no durable owner references them.
+/// </summary>
+internal class FfiFacetPayload : IFfiFacetPayload, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiFacetPayload(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiFacetPayload() {
+        Destroy();
+    }
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffifacetpayload(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffifacetpayload(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Retire this transient handle without deleting any durable bytes.
+    /// </summary>
+    public void CloseHandle() {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_close_handle(thisPtr,  ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Release only unreferenced incoming image bytes. The retired immutable ID
+    /// remains, so changed/repeated operations cannot revive its former payload.
+    ///
+    /// # Errors
+    /// Rejects retained/durable references and expired owners/handles.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public void Discard() {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_discard(thisPtr,  ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Return metadata only, including the exact durable staging prefix.
+    ///
+    /// # Errors
+    /// Rejects expired owners/handles or corrupt retained metadata.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string InfoJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_info_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Read an exact immutable range at most one MiB, including zero at EOF.
+    ///
+    /// # Errors
+    /// Rejects invalid ranges, unsealed bytes or expired owners/handles.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public byte[] ReadChunk(ulong @offset, uint @length) {
+        return CallWithPointer(thisPtr => FfiConverterByteArray.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_read_chunk(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@offset), FfiConverterUInt32.INSTANCE.Lower(@length), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Verify the complete digest and durably make this image immutable.
+    ///
+    /// # Errors
+    /// Rejects incomplete/mismatched data, retained images or expired owners.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string Seal() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_seal(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Write a contiguous durable prefix or verify an exact bounded retry.
+    ///
+    /// # Errors
+    /// Rejects retained images, changed chunks, invalid bounds or stale owners.
+    /// </summary>
+    /// <exception cref="FacetEngineException"></exception>
+    public string WriteChunk(ulong @offset, byte[] @bytes) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeFacetEngineError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_write_chunk(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@offset), FfiConverterByteArray.INSTANCE.Lower(@bytes), ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiFacetPayload: FfiConverter<FfiFacetPayload, ulong> {
+    public static FfiConverterTypeFfiFacetPayload INSTANCE = new FfiConverterTypeFfiFacetPayload();
+
+
+    public override ulong Lower(FfiFacetPayload value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiFacetPayload Lift(ulong value) {
+        return new FfiFacetPayload(value);
+    }
+
+    public override FfiFacetPayload Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiFacetPayload value) {
+        return 8;
+    }
+
+    public override void Write(FfiFacetPayload value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Account request/response correlation and opaque managed-password ownership.
+/// Native code performs HTTP requests outside this handle's lock.
+/// </summary>
+internal interface IFfiObsidianAccount {
+    /// <summary>
+    /// Cancel/release an HTTP request after native cancellation/transport error.
+    ///
+    /// # Errors
+    /// Rejects a poisoned boundary lock. Removal is idempotent for a response
+    /// already consumed or invalidated by an account switch.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    void CancelRequest(ulong @requestId);
+    /// <summary>
+    /// Prepare owned/shared vault discovery with version-3 negotiation.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianHttpRequest ListVaults(string @token);
+    /// <summary>
+    /// Derive a selected vault key on the background runner. Managed vaults
+    /// require no user password; E2E vaults require one. Store returned bytes
+    /// only after `vault_access` succeeds.
+    ///
+    /// # Errors
+    /// Rejects an unknown vault, absent password, or key derivation failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianPreparedVault PrepareVault(string @vaultId, string? @password);
+    /// <summary>
+    /// Decode the matching response; no network operation runs under the lock.
+    ///
+    /// # Errors
+    /// Rejects stale IDs, malformed schemas and service failures with redaction.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianAccountResponse Response(ulong @requestId, ushort @status, string @body);
+    /// <summary>
+    /// Prepare sign-in; native UI collects the optional one-time MFA code.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error without including credentials.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianHttpRequest SignIn(string @email, string @password, string @mfa);
+    /// <summary>
+    /// Prepare remote sign-out. Native code also removes its secure token.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianHttpRequest SignOut(string @token);
+    /// <summary>
+    /// Validate a secure-storage token against current account metadata.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianHttpRequest UserInfo(string @token);
+    /// <summary>
+    /// Prepare service key validation before storing the derived profile key.
+    ///
+    /// # Errors
+    /// Rejects unknown vaults or invalid key lengths.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianHttpRequest VaultAccess(string @token, string @vaultId, byte[] @keyBytes);
+}
+/// <summary>
+/// Account request/response correlation and opaque managed-password ownership.
+/// Native code performs HTTP requests outside this handle's lock.
+/// </summary>
+internal class FfiObsidianAccount : IFfiObsidianAccount, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiObsidianAccount(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiObsidianAccount() {
+        Destroy();
+    }
+    /// <summary>
+    /// Create an account boundary with no stored credentials.
+    /// </summary>
+    public FfiObsidianAccount() :
+        this(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidianaccount_new( ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffiobsidianaccount(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Cancel/release an HTTP request after native cancellation/transport error.
+    ///
+    /// # Errors
+    /// Rejects a poisoned boundary lock. Removal is idempotent for a response
+    /// already consumed or invalidated by an account switch.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public void CancelRequest(ulong @requestId) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_cancel_request(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@requestId), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Prepare owned/shared vault discovery with version-3 negotiation.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianHttpRequest ListVaults(string @token) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianHttpRequest.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_list_vaults(thisPtr, FfiConverterString.INSTANCE.Lower(@token), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Derive a selected vault key on the background runner. Managed vaults
+    /// require no user password; E2E vaults require one. Store returned bytes
+    /// only after `vault_access` succeeds.
+    ///
+    /// # Errors
+    /// Rejects an unknown vault, absent password, or key derivation failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianPreparedVault PrepareVault(string @vaultId, string? @password) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianPreparedVault.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_prepare_vault(thisPtr, FfiConverterString.INSTANCE.Lower(@vaultId), FfiConverterOptionalString.INSTANCE.Lower(@password), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Decode the matching response; no network operation runs under the lock.
+    ///
+    /// # Errors
+    /// Rejects stale IDs, malformed schemas and service failures with redaction.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianAccountResponse Response(ulong @requestId, ushort @status, string @body) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianAccountResponse.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_response(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@requestId), FfiConverterUInt16.INSTANCE.Lower(@status), FfiConverterString.INSTANCE.Lower(@body), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Prepare sign-in; native UI collects the optional one-time MFA code.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error without including credentials.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianHttpRequest SignIn(string @email, string @password, string @mfa) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianHttpRequest.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_in(thisPtr, FfiConverterString.INSTANCE.Lower(@email), FfiConverterString.INSTANCE.Lower(@password), FfiConverterString.INSTANCE.Lower(@mfa), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Prepare remote sign-out. Native code also removes its secure token.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianHttpRequest SignOut(string @token) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianHttpRequest.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_out(thisPtr, FfiConverterString.INSTANCE.Lower(@token), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Validate a secure-storage token against current account metadata.
+    ///
+    /// # Errors
+    /// Returns a typed lock/queue error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianHttpRequest UserInfo(string @token) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianHttpRequest.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_user_info(thisPtr, FfiConverterString.INSTANCE.Lower(@token), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Prepare service key validation before storing the derived profile key.
+    ///
+    /// # Errors
+    /// Rejects unknown vaults or invalid key lengths.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianHttpRequest VaultAccess(string @token, string @vaultId, byte[] @keyBytes) {
+        return CallWithPointer(thisPtr => FfiConverterTypeObsidianHttpRequest.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_vault_access(thisPtr, FfiConverterString.INSTANCE.Lower(@token), FfiConverterString.INSTANCE.Lower(@vaultId), FfiConverterByteArray.INSTANCE.Lower(@keyBytes), ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiObsidianAccount: FfiConverter<FfiObsidianAccount, ulong> {
+    public static FfiConverterTypeFfiObsidianAccount INSTANCE = new FfiConverterTypeFfiObsidianAccount();
+
+
+    public override ulong Lower(FfiObsidianAccount value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiObsidianAccount Lift(ulong value) {
+        return new FfiObsidianAccount(value);
+    }
+
+    public override FfiObsidianAccount Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiObsidianAccount value) {
+        return 8;
+    }
+
+    public override void Write(FfiObsidianAccount value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Serial native session wrapper. The host owns socket epochs, secure storage,
+/// monotonic timers and DB transactions, with no callbacks under this lock.
+/// </summary>
+internal interface IFfiObsidianSession {
+    /// <summary>
+    /// Apply one authenticated opaque download using its original pending
+    /// metadata. Exact retry reuses staged bytes and the durable remote journal.
+    /// `complete_remote` remains separate and fails before this succeeds.
+    ///
+    /// # Errors
+    /// Rejects stale/wrong-epoch handles, changed owners or application failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    void ApplyDownload(string @transferId);
+    /// <summary>
+    /// Begin opening the socket and replay committed pending notices.
+    ///
+    /// # Errors
+    /// Rejects an already active session.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] Begin(ulong @nowMs);
+    /// <summary>
+    /// Bind one actual remote vault to its private runtime profile. The session
+    /// holds a Weak engine reference, and creates no engine/callback cycle.
+    /// Exact same-owner rebind is idempotent; a different owner requires unbind.
+    ///
+    /// # Errors
+    /// Rejects local profiles, closed engines or changed durable vault ownership.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    void BindRuntime(FfiFacetEngine @engine, string @profileId);
+    /// <summary>
+    /// Cancel transport work and return all pending receipt identifiers.
+    ///
+    /// # Errors
+    /// Returns a typed lock failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] Cancel(ulong @nowMs);
+    /// <summary>
+    /// Non-secret crash-recovery envelope, for explicit lifecycle persistence.
+    ///
+    /// # Errors
+    /// Returns a typed lock/serialization error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    string CheckpointJson();
+    /// <summary>
+    /// Confirm the exact checkpoint snapshot has committed to profile storage.
+    ///
+    /// # Errors
+    /// Rejects unknown/out-of-order barrier revisions.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] CheckpointPersisted(ulong @revision, ulong @nowMs);
+    /// <summary>
+    /// Mark a remote revision durably applied or parked in the conflict inbox.
+    ///
+    /// # Errors
+    /// Rejects notices not yet delivered behind the durability barrier.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] CompleteRemote(ulong @uid);
+    /// <summary>
+    /// Report current-socket loss; queued upload snapshots remain immutable.
+    ///
+    /// # Errors
+    /// Returns a typed lock failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] Disconnected(ulong @nowMs);
+    /// <summary>
+    /// Report successful socket opening for the current socket epoch.
+    ///
+    /// # Errors
+    /// Rejects an unexpected lifecycle callback.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] Opened(ulong @nowMs);
+    /// <summary>
+    /// Queue a service revision download once metadata is durably available.
+    ///
+    /// # Errors
+    /// Rejects invalid revision identifiers or queue exhaustion.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] QueueDownload(ulong @uid, ulong @nowMs);
+    /// <summary>
+    /// Queue the exact durable outbox head with its original clocks and bytes.
+    /// Admission precedes the single Rust encrypted-frame allocation.
+    ///
+    /// # Errors
+    /// Rejects wrong/closed owners, changed receipts, nonce or memory admission.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] QueueDurableUpload(string @operationId, byte[] @nonce, ulong @nowMs);
+    /// <summary>
+    /// Report a complete encrypted binary frame.
+    ///
+    /// # Errors
+    /// Returns a typed lock/lifecycle failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] ReceiveBinary(byte[] @bytes, ulong @nowMs);
+    /// <summary>
+    /// Report a complete text frame without persisting/logging it.
+    ///
+    /// # Errors
+    /// Returns a typed lock/lifecycle failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] ReceiveText(string @text, ulong @nowMs);
+    /// <summary>
+    /// Wake heartbeat, timeout and reconnect work using a monotonic clock.
+    ///
+    /// # Errors
+    /// Returns a typed lock failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] Tick(ulong @nowMs);
+    /// <summary>
+    /// Stop socket work, drop transient completions and invalidate this binding.
+    /// Durable incoming images, outbox and pending notices remain for replay.
+    ///
+    /// # Errors
+    /// Returns a poisoned serialization lock or protocol state failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    ObsidianSessionEffect[] UnbindRuntime(ulong @nowMs);
+}
+/// <summary>
+/// Serial native session wrapper. The host owns socket epochs, secure storage,
+/// monotonic timers and DB transactions, with no callbacks under this lock.
+/// </summary>
+internal class FfiObsidianSession : IFfiObsidianSession, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiObsidianSession(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiObsidianSession() {
+        Destroy();
+    }
+    /// <summary>
+    /// Restore one private-replica session from secure-storage key/token and
+    /// durable checkpoint. Empty checkpoint JSON means first setup only.
+    ///
+    /// # Errors
+    /// Rejects invalid configuration, key, version, or restored state.
+    /// </summary>
+    public FfiObsidianSession(ObsidianSessionOptions @options) :
+        this(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidiansession_new(FfiConverterTypeObsidianSessionOptions.INSTANCE.Lower(@options), ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffiobsidiansession(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffiobsidiansession(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Apply one authenticated opaque download using its original pending
+    /// metadata. Exact retry reuses staged bytes and the durable remote journal.
+    /// `complete_remote` remains separate and fails before this succeeds.
+    ///
+    /// # Errors
+    /// Rejects stale/wrong-epoch handles, changed owners or application failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public void ApplyDownload(string @transferId) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_apply_download(thisPtr, FfiConverterString.INSTANCE.Lower(@transferId), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Begin opening the socket and replay committed pending notices.
+    ///
+    /// # Errors
+    /// Rejects an already active session.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] Begin(ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_begin(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Bind one actual remote vault to its private runtime profile. The session
+    /// holds a Weak engine reference, and creates no engine/callback cycle.
+    /// Exact same-owner rebind is idempotent; a different owner requires unbind.
+    ///
+    /// # Errors
+    /// Rejects local profiles, closed engines or changed durable vault ownership.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public void BindRuntime(FfiFacetEngine @engine, string @profileId) {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_bind_runtime(thisPtr, FfiConverterTypeFfiFacetEngine.INSTANCE.Lower(@engine), FfiConverterString.INSTANCE.Lower(@profileId), ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
+    /// Cancel transport work and return all pending receipt identifiers.
+    ///
+    /// # Errors
+    /// Returns a typed lock failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] Cancel(ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_cancel(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Non-secret crash-recovery envelope, for explicit lifecycle persistence.
+    ///
+    /// # Errors
+    /// Returns a typed lock/serialization error.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public string CheckpointJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Confirm the exact checkpoint snapshot has committed to profile storage.
+    ///
+    /// # Errors
+    /// Rejects unknown/out-of-order barrier revisions.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] CheckpointPersisted(ulong @revision, ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_persisted(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@revision), FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Mark a remote revision durably applied or parked in the conflict inbox.
+    ///
+    /// # Errors
+    /// Rejects notices not yet delivered behind the durability barrier.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] CompleteRemote(ulong @uid) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_complete_remote(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@uid), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Report current-socket loss; queued upload snapshots remain immutable.
+    ///
+    /// # Errors
+    /// Returns a typed lock failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] Disconnected(ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_disconnected(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Report successful socket opening for the current socket epoch.
+    ///
+    /// # Errors
+    /// Rejects an unexpected lifecycle callback.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] Opened(ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_opened(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Queue a service revision download once metadata is durably available.
+    ///
+    /// # Errors
+    /// Rejects invalid revision identifiers or queue exhaustion.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] QueueDownload(ulong @uid, ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_download(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@uid), FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Queue the exact durable outbox head with its original clocks and bytes.
+    /// Admission precedes the single Rust encrypted-frame allocation.
+    ///
+    /// # Errors
+    /// Rejects wrong/closed owners, changed receipts, nonce or memory admission.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] QueueDurableUpload(string @operationId, byte[] @nonce, ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_durable_upload(thisPtr, FfiConverterString.INSTANCE.Lower(@operationId), FfiConverterByteArray.INSTANCE.Lower(@nonce), FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Report a complete encrypted binary frame.
+    ///
+    /// # Errors
+    /// Returns a typed lock/lifecycle failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] ReceiveBinary(byte[] @bytes, ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_binary(thisPtr, FfiConverterByteArray.INSTANCE.Lower(@bytes), FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Report a complete text frame without persisting/logging it.
+    ///
+    /// # Errors
+    /// Returns a typed lock/lifecycle failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] ReceiveText(string @text, ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_text(thisPtr, FfiConverterString.INSTANCE.Lower(@text), FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Wake heartbeat, timeout and reconnect work using a monotonic clock.
+    ///
+    /// # Errors
+    /// Returns a typed lock failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] Tick(ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_tick(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Stop socket work, drop transient completions and invalidate this binding.
+    /// Durable incoming images, outbox and pending notices remain for replay.
+    ///
+    /// # Errors
+    /// Returns a poisoned serialization lock or protocol state failure.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public ObsidianSessionEffect[] UnbindRuntime(ulong @nowMs) {
+        return CallWithPointer(thisPtr => FfiConverterSequenceTypeObsidianSessionEffect.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_unbind_runtime(thisPtr, FfiConverterUInt64.INSTANCE.Lower(@nowMs), ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiObsidianSession: FfiConverter<FfiObsidianSession, ulong> {
+    public static FfiConverterTypeFfiObsidianSession INSTANCE = new FfiConverterTypeFfiObsidianSession();
+
+
+    public override ulong Lower(FfiObsidianSession value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiObsidianSession Lift(ulong value) {
+        return new FfiObsidianSession(value);
+    }
+
+    public override FfiObsidianSession Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiObsidianSession value) {
+        return 8;
+    }
+
+    public override void Write(FfiObsidianSession value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
 /// The offline-first sync engine, as the host holds it.
 ///
 /// One object owns the queue, the store and the drain loop. Construct exactly
@@ -6832,6 +11581,429 @@ class FfiConverterTypeFfiSyncEngine: FfiConverter<FfiSyncEngine, ulong> {
     }
 
     public override void Write(FfiSyncEngine value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Immutable Rust-owned configuration for a selected vault profile.
+/// </summary>
+internal interface IFfiVaultConfiguration {
+    /// <summary>
+    /// Validated effective settings as JSON, including mapped field names.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    string ConfigurationJson();
+    /// <summary>
+    /// Resolve completion using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects status values absent from the workflow.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    bool IsCompleted(string @status);
+    /// <summary>
+    /// Resolve the next status using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects unknown values and workflows with no cycling participants.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    string NextStatus(string @status);
+}
+/// <summary>
+/// Immutable Rust-owned configuration for a selected vault profile.
+/// </summary>
+internal class FfiVaultConfiguration : IFfiVaultConfiguration, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiVaultConfiguration(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiVaultConfiguration() {
+        Destroy();
+    }
+    /// <summary>
+    /// Resolve the selected vault's settings using the documented precedence.
+    ///
+    /// # Errors
+    /// Rejects invalid configuration and unapproved configuration-free vaults.
+    /// </summary>
+    public FfiVaultConfiguration(byte[]? @plugin, byte[]? @portable, bool @approveStandard) :
+        this(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffivaultconfiguration_new(FfiConverterOptionalByteArray.INSTANCE.Lower(@plugin), FfiConverterOptionalByteArray.INSTANCE.Lower(@portable), FfiConverterBoolean.INSTANCE.Lower(@approveStandard), ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffivaultconfiguration(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffivaultconfiguration(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Validated effective settings as JSON, including mapped field names.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public string ConfigurationJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_configuration_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Resolve completion using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects status values absent from the workflow.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public bool IsCompleted(string @status) {
+        return CallWithPointer(thisPtr => FfiConverterBoolean.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_is_completed(thisPtr, FfiConverterString.INSTANCE.Lower(@status), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Resolve the next status using the configured workflow.
+    ///
+    /// # Errors
+    /// Rejects unknown values and workflows with no cycling participants.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public string NextStatus(string @status) {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultconfiguration_next_status(thisPtr, FfiConverterString.INSTANCE.Lower(@status), ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiVaultConfiguration: FfiConverter<FfiVaultConfiguration, ulong> {
+    public static FfiConverterTypeFfiVaultConfiguration INSTANCE = new FfiConverterTypeFfiVaultConfiguration();
+
+
+    public override ulong Lower(FfiVaultConfiguration value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiVaultConfiguration Lift(ulong value) {
+        return new FfiVaultConfiguration(value);
+    }
+
+    public override FfiVaultConfiguration Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiVaultConfiguration value) {
+        return 8;
+    }
+
+    public override void Write(FfiVaultConfiguration value, BigEndianStream stream) {
+        stream.WriteULong(Lower(value));
+    }
+}
+
+
+
+/// <summary>
+/// Immutable Rust-owned parsed document, with no filesystem access.
+/// </summary>
+internal interface IFfiVaultDocument {
+    /// <summary>
+    /// Exact original Markdown body.
+    /// </summary>
+    string Body();
+    /// <summary>
+    /// Plan physical property edits and an optional body replacement.
+    /// `edits_json` is a list of tagged `set`/`remove` property edits.
+    ///
+    /// # Errors
+    /// Rejects malformed edits and changes affecting properties outside the plan.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    VaultDocumentWrite Plan(string @editsJson, string? @body);
+    /// <summary>
+    /// Properties as an ordered JSON object, including unknown keys.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    string PropertiesJson();
+    /// <summary>
+    /// Exact content hash to use as a concurrency precondition.
+    /// </summary>
+    string Revision();
+}
+/// <summary>
+/// Immutable Rust-owned parsed document, with no filesystem access.
+/// </summary>
+internal class FfiVaultDocument : IFfiVaultDocument, IDisposable {
+    protected ulong pointer;
+    private int _wasDestroyed = 0;
+    private long _callCounter = 1;
+
+    public FfiVaultDocument(ulong pointer) {
+        this.pointer = pointer;
+    }
+
+    ~FfiVaultDocument() {
+        Destroy();
+    }
+    /// <summary>
+    /// Parse a logical path and complete document bytes.
+    ///
+    /// # Errors
+    /// Rejects unsafe paths and malformed Markdown/frontmatter.
+    /// </summary>
+    public FfiVaultDocument(string @path, byte[] @bytes) :
+        this(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_constructor_ffivaultdocument_new(FfiConverterString.INSTANCE.Lower(@path), FfiConverterByteArray.INSTANCE.Lower(@bytes), ref _status)
+)) {}
+
+    protected void FreeRustArcPtr() {
+        _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            _UniFFILib.uniffi_tasknotes_core_ffi_fn_free_ffivaultdocument(this.pointer, ref status);
+        });
+    }
+
+    protected ulong CloneRustArcPtr() {
+        return _UniffiHelpers.RustCall((ref UniffiRustCallStatus status) => {
+            return _UniFFILib.uniffi_tasknotes_core_ffi_fn_clone_ffivaultdocument(this.pointer, ref status);
+        });
+    }
+
+    public void Destroy()
+    {
+        // Only allow a single call to this method.
+        if (Interlocked.CompareExchange(ref _wasDestroyed, 1, 0) == 0)
+        {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (Interlocked.Decrement(ref _callCounter) == 0)
+            {
+                FreeRustArcPtr();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Destroy();
+        GC.SuppressFinalize(this); // Suppress finalization to avoid unnecessary GC overhead.
+    }
+
+    private void IncrementCallCounter() 
+    {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        long count;
+        do
+        {
+            count = Interlocked.Read(ref _callCounter);
+            if (count == 0L) throw new System.ObjectDisposedException(String.Format("'{0}' object has already been destroyed", this.GetType().Name));
+            if (count == long.MaxValue) throw new System.OverflowException(String.Format("'{0}' call counter would overflow", this.GetType().Name));
+
+        } while (Interlocked.CompareExchange(ref _callCounter, count + 1, count) != count);
+    }
+
+    private void DecrementCallCounter() 
+    {
+        // This decrement always matches the increment we performed above.
+        if (Interlocked.Decrement(ref _callCounter) == 0) {
+            FreeRustArcPtr();
+        }
+    }
+
+    internal void CallWithPointer(Action<ulong> action)
+    {
+        IncrementCallCounter();
+        try {
+            action(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    internal T CallWithPointer<T>(Func<ulong, T> func)
+    {   
+        IncrementCallCounter();
+        try {
+            return func(CloneRustArcPtr());
+        }
+        finally {
+            DecrementCallCounter();
+        }
+    }
+
+    
+    /// <summary>
+    /// Exact original Markdown body.
+    /// </summary>
+    public string Body() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_body(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Plan physical property edits and an optional body replacement.
+    /// `edits_json` is a list of tagged `set`/`remove` property edits.
+    ///
+    /// # Errors
+    /// Rejects malformed edits and changes affecting properties outside the plan.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public VaultDocumentWrite Plan(string @editsJson, string? @body) {
+        return CallWithPointer(thisPtr => FfiConverterTypeVaultDocumentWrite.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_plan(thisPtr, FfiConverterString.INSTANCE.Lower(@editsJson), FfiConverterOptionalString.INSTANCE.Lower(@body), ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Properties as an ordered JSON object, including unknown keys.
+    ///
+    /// # Errors
+    /// Returns a typed boundary error if serialization fails.
+    /// </summary>
+    /// <exception cref="VaultBoundaryException"></exception>
+    public string PropertiesJson() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeVaultBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_properties_json(thisPtr,  ref _status)
+)));
+    }
+    
+    
+    /// <summary>
+    /// Exact content hash to use as a concurrency precondition.
+    /// </summary>
+    public string Revision() {
+        return CallWithPointer(thisPtr => FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_ffivaultdocument_revision(thisPtr,  ref _status)
+)));
+    }
+    
+    
+
+    
+}
+class FfiConverterTypeFfiVaultDocument: FfiConverter<FfiVaultDocument, ulong> {
+    public static FfiConverterTypeFfiVaultDocument INSTANCE = new FfiConverterTypeFfiVaultDocument();
+
+
+    public override ulong Lower(FfiVaultDocument value) {
+        return value.CallWithPointer(thisPtr => thisPtr);
+    }
+
+    public override FfiVaultDocument Lift(ulong value) {
+        return new FfiVaultDocument(value);
+    }
+
+    public override FfiVaultDocument Read(BigEndianStream stream) {
+        return Lift(stream.ReadULong());
+    }
+
+    public override int AllocationSize(FfiVaultDocument value) {
+        return 8;
+    }
+
+    public override void Write(FfiVaultDocument value, BigEndianStream stream) {
         stream.WriteULong(Lower(value));
     }
 }
@@ -9466,78 +14638,6 @@ internal interface ITaskNotesApi {
     /// the app is quitting mid-request.
     /// </summary>
     void CancelAll();
-    /// <summary>
-    /// Toggle the current interval between running and paused.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus PausePomodoro();
-    /// <summary>
-    /// Read the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus PomodoroStatus();
-    /// <summary>
-    /// Start a server-backed focus interval, optionally assigned to a task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus StartPomodoro(TaskId? @taskId);
-    /// <summary>
-    /// Start tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    Task StartTimeTracking(TaskId @taskId);
-    /// <summary>
-    /// Stop the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus StopPomodoro();
-    /// <summary>
-    /// Stop tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    Task StopTimeTracking(TaskId @taskId);
-    /// <summary>
-    /// Read tracked-time totals for one task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    TaskTime TaskTime(TaskId @taskId);
-    /// <summary>
-    /// Read the aggregate time report for a named server period.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    TimeSummary TimeSummary(string @period);
 }
 /// <summary>
 /// The TaskNotes `/v2` API, over a host transport.
@@ -9685,134 +14785,6 @@ internal class TaskNotesApi : ITaskNotesApi, IDisposable {
 ));
     }
     
-    
-    
-    /// <summary>
-    /// Toggle the current interval between running and paused.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus PausePomodoro() {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(thisPtr,  ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Read the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus PomodoroStatus() {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(thisPtr,  ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Start a server-backed focus interval, optionally assigned to a task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus StartPomodoro(TaskId? @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(thisPtr, FfiConverterOptionalTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Start tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public Task StartTimeTracking(TaskId @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTask.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(thisPtr, FfiConverterTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Stop the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus StopPomodoro() {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(thisPtr,  ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Stop tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public Task StopTimeTracking(TaskId @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTask.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(thisPtr, FfiConverterTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Read tracked-time totals for one task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public TaskTime TaskTime(TaskId @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTaskTime.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(thisPtr, FfiConverterTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Read the aggregate time report for a named server period.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public TimeSummary TimeSummary(string @period) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTimeSummary.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(thisPtr, FfiConverterString.INSTANCE.Lower(@period), ref _status)
-)));
-    }
     
     
 
@@ -10194,9 +15166,6 @@ class FfiConverterTypeCommonRecurrenceDraft: FfiConverterRustBuffer<CommonRecurr
 /// <param name="RecurrenceAnchor">
 /// What the recurrence is measured from.
 /// </param>
-/// <param name="TimeEstimate">
-/// The estimate in whole minutes.
-/// </param>
 /// <param name="ExtraFields">
 /// Extra frontmatter keys to write, as a JSON object string.
 /// </param>
@@ -10246,10 +15215,6 @@ internal record CreateTaskRequest (
     /// </summary>
     RecurrenceAnchor? RecurrenceAnchor, 
     /// <summary>
-    /// The estimate in whole minutes.
-    /// </summary>
-    uint? TimeEstimate, 
-    /// <summary>
     /// Extra frontmatter keys to write, as a JSON object string.
     /// </summary>
     ExtraFields? ExtraFields
@@ -10272,7 +15237,6 @@ class FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTaskReques
             Tags: FfiConverterOptionalSequenceTypeTagName.INSTANCE.Read(stream),
             Recurrence: FfiConverterOptionalString.INSTANCE.Read(stream),
             RecurrenceAnchor: FfiConverterOptionalTypeRecurrenceAnchor.INSTANCE.Read(stream),
-            TimeEstimate: FfiConverterOptionalUInt32.INSTANCE.Read(stream),
             ExtraFields: FfiConverterOptionalTypeExtraFields.INSTANCE.Read(stream)
         );
     }
@@ -10290,7 +15254,6 @@ class FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTaskReques
             + FfiConverterOptionalSequenceTypeTagName.INSTANCE.AllocationSize(value.Tags)
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.Recurrence)
             + FfiConverterOptionalTypeRecurrenceAnchor.INSTANCE.AllocationSize(value.RecurrenceAnchor)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.TimeEstimate)
             + FfiConverterOptionalTypeExtraFields.INSTANCE.AllocationSize(value.ExtraFields);
     }
 
@@ -10306,7 +15269,6 @@ class FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTaskReques
             FfiConverterOptionalSequenceTypeTagName.INSTANCE.Write(value.Tags, stream);
             FfiConverterOptionalString.INSTANCE.Write(value.Recurrence, stream);
             FfiConverterOptionalTypeRecurrenceAnchor.INSTANCE.Write(value.RecurrenceAnchor, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.TimeEstimate, stream);
             FfiConverterOptionalTypeExtraFields.INSTANCE.Write(value.ExtraFields, stream);
     }
 }
@@ -10425,6 +15387,266 @@ class FfiConverterTypeDeadLetterError: FfiConverterRustBuffer<DeadLetterError> {
             FfiConverterString.INSTANCE.Write(value.Name, stream);
             FfiConverterString.INSTANCE.Write(value.Message, stream);
             FfiConverterOptionalUInt16.INSTANCE.Write(value.Status, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Durable captured provider version surviving process termination.
+/// </summary>
+/// <param name="Id">
+/// Stable host backup identity.
+/// </param>
+/// <param name="Path">
+/// Logical vault-relative source.
+/// </param>
+/// <param name="Size">
+/// Exact retained byte count.
+/// </param>
+/// <param name="Revision">
+/// Immutable SHA256 payload revision.
+/// </param>
+internal record FacetDisplacedMetadata (
+    /// <summary>
+    /// Stable host backup identity.
+    /// </summary>
+    string Id, 
+    /// <summary>
+    /// Logical vault-relative source.
+    /// </summary>
+    string Path, 
+    /// <summary>
+    /// Exact retained byte count.
+    /// </summary>
+    ulong Size, 
+    /// <summary>
+    /// Immutable SHA256 payload revision.
+    /// </summary>
+    string Revision
+) {
+}
+
+class FfiConverterTypeFacetDisplacedMetadata: FfiConverterRustBuffer<FacetDisplacedMetadata> {
+    public static FfiConverterTypeFacetDisplacedMetadata INSTANCE = new FfiConverterTypeFacetDisplacedMetadata();
+
+    public override FacetDisplacedMetadata Read(BigEndianStream stream) {
+        return new FacetDisplacedMetadata(
+            Id: FfiConverterString.INSTANCE.Read(stream),
+            Path: FfiConverterString.INSTANCE.Read(stream),
+            Size: FfiConverterUInt64.INSTANCE.Read(stream),
+            Revision: FfiConverterString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(FacetDisplacedMetadata value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Id)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Path)
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.Size)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Revision);
+    }
+
+    public override void Write(FacetDisplacedMetadata value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Id, stream);
+            FfiConverterString.INSTANCE.Write(value.Path, stream);
+            FfiConverterUInt64.INSTANCE.Write(value.Size, stream);
+            FfiConverterString.INSTANCE.Write(value.Revision, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Profile/lifetime-owned immutable read image; bytes use bounded chunks.
+/// </summary>
+/// <param name="Id">
+/// Opaque owner-checked image identity, never a path.
+/// </param>
+/// <param name="Size">
+/// Exact immutable byte count.
+/// </param>
+/// <param name="Revision">
+/// Lowercase SHA256 of the complete image.
+/// </param>
+internal record FacetFileSnapshot (
+    /// <summary>
+    /// Opaque owner-checked image identity, never a path.
+    /// </summary>
+    string Id, 
+    /// <summary>
+    /// Exact immutable byte count.
+    /// </summary>
+    ulong Size, 
+    /// <summary>
+    /// Lowercase SHA256 of the complete image.
+    /// </summary>
+    string Revision
+) {
+}
+
+class FfiConverterTypeFacetFileSnapshot: FfiConverterRustBuffer<FacetFileSnapshot> {
+    public static FfiConverterTypeFacetFileSnapshot INSTANCE = new FfiConverterTypeFacetFileSnapshot();
+
+    public override FacetFileSnapshot Read(BigEndianStream stream) {
+        return new FacetFileSnapshot(
+            Id: FfiConverterString.INSTANCE.Read(stream),
+            Size: FfiConverterUInt64.INSTANCE.Read(stream),
+            Revision: FfiConverterString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(FacetFileSnapshot value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Id)
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.Size)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Revision);
+    }
+
+    public override void Write(FacetFileSnapshot value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Id, stream);
+            FfiConverterUInt64.INSTANCE.Write(value.Size, stream);
+            FfiConverterString.INSTANCE.Write(value.Revision, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Durable immutable replacement intent and committed byte prefix.
+/// </summary>
+/// <param name="Id">
+/// Opaque durable host stage identity.
+/// </param>
+/// <param name="OperationId">
+/// Exact original facet-write operation identity.
+/// </param>
+/// <param name="Path">
+/// Logical vault-relative destination.
+/// </param>
+/// <param name="Size">
+/// Exact declared replacement byte count.
+/// </param>
+/// <param name="Revision">
+/// Exact lowercase SHA256 target digest.
+/// </param>
+/// <param name="Written">
+/// Durably committed contiguous prefix length.
+/// </param>
+/// <param name="Sealed">
+/// Source is verified, immutable and ready for exchange.
+/// </param>
+internal record FacetReplacementStage (
+    /// <summary>
+    /// Opaque durable host stage identity.
+    /// </summary>
+    string Id, 
+    /// <summary>
+    /// Exact original facet-write operation identity.
+    /// </summary>
+    string OperationId, 
+    /// <summary>
+    /// Logical vault-relative destination.
+    /// </summary>
+    string Path, 
+    /// <summary>
+    /// Exact declared replacement byte count.
+    /// </summary>
+    ulong Size, 
+    /// <summary>
+    /// Exact lowercase SHA256 target digest.
+    /// </summary>
+    string Revision, 
+    /// <summary>
+    /// Durably committed contiguous prefix length.
+    /// </summary>
+    ulong Written, 
+    /// <summary>
+    /// Source is verified, immutable and ready for exchange.
+    /// </summary>
+    bool Sealed
+) {
+}
+
+class FfiConverterTypeFacetReplacementStage: FfiConverterRustBuffer<FacetReplacementStage> {
+    public static FfiConverterTypeFacetReplacementStage INSTANCE = new FfiConverterTypeFacetReplacementStage();
+
+    public override FacetReplacementStage Read(BigEndianStream stream) {
+        return new FacetReplacementStage(
+            Id: FfiConverterString.INSTANCE.Read(stream),
+            OperationId: FfiConverterString.INSTANCE.Read(stream),
+            Path: FfiConverterString.INSTANCE.Read(stream),
+            Size: FfiConverterUInt64.INSTANCE.Read(stream),
+            Revision: FfiConverterString.INSTANCE.Read(stream),
+            Written: FfiConverterUInt64.INSTANCE.Read(stream),
+            Sealed: FfiConverterBoolean.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(FacetReplacementStage value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Id)
+            + FfiConverterString.INSTANCE.AllocationSize(value.OperationId)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Path)
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.Size)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Revision)
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.Written)
+            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Sealed);
+    }
+
+    public override void Write(FacetReplacementStage value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Id, stream);
+            FfiConverterString.INSTANCE.Write(value.OperationId, stream);
+            FfiConverterString.INSTANCE.Write(value.Path, stream);
+            FfiConverterUInt64.INSTANCE.Write(value.Size, stream);
+            FfiConverterString.INSTANCE.Write(value.Revision, stream);
+            FfiConverterUInt64.INSTANCE.Write(value.Written, stream);
+            FfiConverterBoolean.INSTANCE.Write(value.Sealed, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Original recorded atomic outcome with metadata-only retained predecessor.
+/// </summary>
+/// <param name="Applied">
+/// Whether replacement/deletion actually occurred.
+/// </param>
+/// <param name="Displaced">
+/// Exact durable captured predecessor, including competing writer effects.
+/// </param>
+internal record FacetStagedExchange (
+    /// <summary>
+    /// Whether replacement/deletion actually occurred.
+    /// </summary>
+    bool Applied, 
+    /// <summary>
+    /// Exact durable captured predecessor, including competing writer effects.
+    /// </summary>
+    FacetDisplacedMetadata? Displaced
+) {
+}
+
+class FfiConverterTypeFacetStagedExchange: FfiConverterRustBuffer<FacetStagedExchange> {
+    public static FfiConverterTypeFacetStagedExchange INSTANCE = new FfiConverterTypeFacetStagedExchange();
+
+    public override FacetStagedExchange Read(BigEndianStream stream) {
+        return new FacetStagedExchange(
+            Applied: FfiConverterBoolean.INSTANCE.Read(stream),
+            Displaced: FfiConverterOptionalTypeFacetDisplacedMetadata.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(FacetStagedExchange value) {
+        return 0
+            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Applied)
+            + FfiConverterOptionalTypeFacetDisplacedMetadata.INSTANCE.AllocationSize(value.Displaced);
+    }
+
+    public override void Write(FacetStagedExchange value, BigEndianStream stream) {
+            FfiConverterBoolean.INSTANCE.Write(value.Applied, stream);
+            FfiConverterOptionalTypeFacetDisplacedMetadata.INSTANCE.Write(value.Displaced, stream);
     }
 }
 
@@ -10911,61 +16133,6 @@ class FfiConverterTypeHttpResponse: FfiConverterRustBuffer<HttpResponse> {
 
 
 /// <summary>
-/// See [`tasknotes_core::domain::InlineTimeEntry`].
-/// </summary>
-/// <param name="StartTime">
-/// When tracking started.
-/// </param>
-/// <param name="EndTime">
-/// When tracking stopped; absent while a session is running.
-/// </param>
-/// <param name="Duration">
-/// The interval's length in whole minutes.
-/// </param>
-internal record InlineTimeEntry (
-    /// <summary>
-    /// When tracking started.
-    /// </summary>
-    string StartTime, 
-    /// <summary>
-    /// When tracking stopped; absent while a session is running.
-    /// </summary>
-    string? EndTime, 
-    /// <summary>
-    /// The interval's length in whole minutes.
-    /// </summary>
-    uint? Duration
-) {
-}
-
-class FfiConverterTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTimeEntry> {
-    public static FfiConverterTypeInlineTimeEntry INSTANCE = new FfiConverterTypeInlineTimeEntry();
-
-    public override InlineTimeEntry Read(BigEndianStream stream) {
-        return new InlineTimeEntry(
-            StartTime: FfiConverterString.INSTANCE.Read(stream),
-            EndTime: FfiConverterOptionalString.INSTANCE.Read(stream),
-            Duration: FfiConverterOptionalUInt32.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(InlineTimeEntry value) {
-        return 0
-            + FfiConverterString.INSTANCE.AllocationSize(value.StartTime)
-            + FfiConverterOptionalString.INSTANCE.AllocationSize(value.EndTime)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.Duration);
-    }
-
-    public override void Write(InlineTimeEntry value, BigEndianStream stream) {
-            FfiConverterString.INSTANCE.Write(value.StartTime, stream);
-            FfiConverterOptionalString.INSTANCE.Write(value.EndTime, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.Duration, stream);
-    }
-}
-
-
-
-/// <summary>
 /// See [`tasknotes_core::net::InstanceCompletion`].
 /// </summary>
 /// <param name="Date">
@@ -11181,6 +16348,448 @@ class FfiConverterTypeNlpParseResult: FfiConverterRustBuffer<NlpParseResult> {
 
 
 /// <summary>
+/// One deterministic account-request HTTP header.
+/// </summary>
+/// <param name="Name">
+/// Header name.
+/// </param>
+/// <param name="Value">
+/// Header value. Tokens/passwords never use this field.
+/// </param>
+internal record ObsidianHttpHeader (
+    /// <summary>
+    /// Header name.
+    /// </summary>
+    string Name, 
+    /// <summary>
+    /// Header value. Tokens/passwords never use this field.
+    /// </summary>
+    string Value
+) {
+}
+
+class FfiConverterTypeObsidianHttpHeader: FfiConverterRustBuffer<ObsidianHttpHeader> {
+    public static FfiConverterTypeObsidianHttpHeader INSTANCE = new FfiConverterTypeObsidianHttpHeader();
+
+    public override ObsidianHttpHeader Read(BigEndianStream stream) {
+        return new ObsidianHttpHeader(
+            Name: FfiConverterString.INSTANCE.Read(stream),
+            Value: FfiConverterString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(ObsidianHttpHeader value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Name)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Value);
+    }
+
+    public override void Write(ObsidianHttpHeader value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Name, stream);
+            FfiConverterString.INSTANCE.Write(value.Value, stream);
+    }
+}
+
+
+
+/// <summary>
+/// HTTP work for the native transport, not a persistent preference record.
+/// </summary>
+/// <param name="RequestId">
+/// Local request identifier; never sent to Obsidian.
+/// </param>
+/// <param name="Url">
+/// Fixed official account API destination.
+/// </param>
+/// <param name="Preflight">
+/// True: issue OPTIONS first with Origin, then the POST request.
+/// </param>
+/// <param name="Headers">
+/// POST headers (the OPTIONS preflight uses only Origin).
+/// </param>
+/// <param name="Body">
+/// Secret-bearing POST body; transport-only, never logged or stored.
+/// </param>
+internal record ObsidianHttpRequest (
+    /// <summary>
+    /// Local request identifier; never sent to Obsidian.
+    /// </summary>
+    ulong RequestId, 
+    /// <summary>
+    /// Fixed official account API destination.
+    /// </summary>
+    string Url, 
+    /// <summary>
+    /// True: issue OPTIONS first with Origin, then the POST request.
+    /// </summary>
+    bool Preflight, 
+    /// <summary>
+    /// POST headers (the OPTIONS preflight uses only Origin).
+    /// </summary>
+    ObsidianHttpHeader[] Headers, 
+    /// <summary>
+    /// Secret-bearing POST body; transport-only, never logged or stored.
+    /// </summary>
+    string Body
+) {
+}
+
+class FfiConverterTypeObsidianHttpRequest: FfiConverterRustBuffer<ObsidianHttpRequest> {
+    public static FfiConverterTypeObsidianHttpRequest INSTANCE = new FfiConverterTypeObsidianHttpRequest();
+
+    public override ObsidianHttpRequest Read(BigEndianStream stream) {
+        return new ObsidianHttpRequest(
+            RequestId: FfiConverterUInt64.INSTANCE.Read(stream),
+            Url: FfiConverterString.INSTANCE.Read(stream),
+            Preflight: FfiConverterBoolean.INSTANCE.Read(stream),
+            Headers: FfiConverterSequenceTypeObsidianHttpHeader.INSTANCE.Read(stream),
+            Body: FfiConverterString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(ObsidianHttpRequest value) {
+        return 0
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.RequestId)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Url)
+            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Preflight)
+            + FfiConverterSequenceTypeObsidianHttpHeader.INSTANCE.AllocationSize(value.Headers)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Body);
+    }
+
+    public override void Write(ObsidianHttpRequest value, BigEndianStream stream) {
+            FfiConverterUInt64.INSTANCE.Write(value.RequestId, stream);
+            FfiConverterString.INSTANCE.Write(value.Url, stream);
+            FfiConverterBoolean.INSTANCE.Write(value.Preflight, stream);
+            FfiConverterSequenceTypeObsidianHttpHeader.INSTANCE.Write(value.Headers, stream);
+            FfiConverterString.INSTANCE.Write(value.Body, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Derived profile secret. Copy key bytes into platform secure storage and
+/// release this transient record; never serialize it into the runtime DB.
+/// </summary>
+/// <param name="Vault">
+/// Non-secret selected-vault description.
+/// </param>
+/// <param name="KeyBytes">
+/// Exact 32-byte key for platform secure storage.
+/// </param>
+internal record ObsidianPreparedVault (
+    /// <summary>
+    /// Non-secret selected-vault description.
+    /// </summary>
+    ObsidianRemoteVault Vault, 
+    /// <summary>
+    /// Exact 32-byte key for platform secure storage.
+    /// </summary>
+    byte[] KeyBytes
+) {
+}
+
+class FfiConverterTypeObsidianPreparedVault: FfiConverterRustBuffer<ObsidianPreparedVault> {
+    public static FfiConverterTypeObsidianPreparedVault INSTANCE = new FfiConverterTypeObsidianPreparedVault();
+
+    public override ObsidianPreparedVault Read(BigEndianStream stream) {
+        return new ObsidianPreparedVault(
+            Vault: FfiConverterTypeObsidianRemoteVault.INSTANCE.Read(stream),
+            KeyBytes: FfiConverterByteArray.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(ObsidianPreparedVault value) {
+        return 0
+            + FfiConverterTypeObsidianRemoteVault.INSTANCE.AllocationSize(value.Vault)
+            + FfiConverterByteArray.INSTANCE.AllocationSize(value.KeyBytes);
+    }
+
+    public override void Write(ObsidianPreparedVault value, BigEndianStream stream) {
+            FfiConverterTypeObsidianRemoteVault.INSTANCE.Write(value.Vault, stream);
+            FfiConverterByteArray.INSTANCE.Write(value.KeyBytes, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Non-secret onboarding metadata for an owned or shared remote vault.
+/// </summary>
+/// <param name="Id">
+/// Stable service identifier.
+/// </param>
+/// <param name="Name">
+/// Display name.
+/// </param>
+/// <param name="Host">
+/// Validated regional hostname.
+/// </param>
+/// <param name="Region">
+/// Service region identifier.
+/// </param>
+/// <param name="Salt">
+/// Exact HKDF salt.
+/// </param>
+/// <param name="EncryptionVersion">
+/// Supported encryption version number.
+/// </param>
+/// <param name="Managed">
+/// Service-managed password (the password itself never leaves Rust).
+/// </param>
+/// <param name="Shared">
+/// Appeared in the account's shared-vault list.
+/// </param>
+internal record ObsidianRemoteVault (
+    /// <summary>
+    /// Stable service identifier.
+    /// </summary>
+    string Id, 
+    /// <summary>
+    /// Display name.
+    /// </summary>
+    string Name, 
+    /// <summary>
+    /// Validated regional hostname.
+    /// </summary>
+    string Host, 
+    /// <summary>
+    /// Service region identifier.
+    /// </summary>
+    string Region, 
+    /// <summary>
+    /// Exact HKDF salt.
+    /// </summary>
+    string Salt, 
+    /// <summary>
+    /// Supported encryption version number.
+    /// </summary>
+    byte EncryptionVersion, 
+    /// <summary>
+    /// Service-managed password (the password itself never leaves Rust).
+    /// </summary>
+    bool Managed, 
+    /// <summary>
+    /// Appeared in the account's shared-vault list.
+    /// </summary>
+    bool Shared
+) {
+}
+
+class FfiConverterTypeObsidianRemoteVault: FfiConverterRustBuffer<ObsidianRemoteVault> {
+    public static FfiConverterTypeObsidianRemoteVault INSTANCE = new FfiConverterTypeObsidianRemoteVault();
+
+    public override ObsidianRemoteVault Read(BigEndianStream stream) {
+        return new ObsidianRemoteVault(
+            Id: FfiConverterString.INSTANCE.Read(stream),
+            Name: FfiConverterString.INSTANCE.Read(stream),
+            Host: FfiConverterString.INSTANCE.Read(stream),
+            Region: FfiConverterString.INSTANCE.Read(stream),
+            Salt: FfiConverterString.INSTANCE.Read(stream),
+            EncryptionVersion: FfiConverterUInt8.INSTANCE.Read(stream),
+            Managed: FfiConverterBoolean.INSTANCE.Read(stream),
+            Shared: FfiConverterBoolean.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(ObsidianRemoteVault value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Id)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Name)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Host)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Region)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Salt)
+            + FfiConverterUInt8.INSTANCE.AllocationSize(value.EncryptionVersion)
+            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Managed)
+            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Shared);
+    }
+
+    public override void Write(ObsidianRemoteVault value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Id, stream);
+            FfiConverterString.INSTANCE.Write(value.Name, stream);
+            FfiConverterString.INSTANCE.Write(value.Host, stream);
+            FfiConverterString.INSTANCE.Write(value.Region, stream);
+            FfiConverterString.INSTANCE.Write(value.Salt, stream);
+            FfiConverterUInt8.INSTANCE.Write(value.EncryptionVersion, stream);
+            FfiConverterBoolean.INSTANCE.Write(value.Managed, stream);
+            FfiConverterBoolean.INSTANCE.Write(value.Shared, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Session bootstrap. Key/token fields are transient secure-storage reads;
+/// filter/checkpoint fields use the shared non-secret JSON contracts.
+/// </summary>
+/// <param name="Host">
+/// Validated official regional hostname.
+/// </param>
+/// <param name="Token">
+/// Transient secure-storage account token.
+/// </param>
+/// <param name="VaultId">
+/// Stable remote vault identifier.
+/// </param>
+/// <param name="DeviceName">
+/// Device label for service history.
+/// </param>
+/// <param name="EncryptionVersion">
+/// Exact negotiated cipher version.
+/// </param>
+/// <param name="Salt">
+/// Exact remote HKDF salt.
+/// </param>
+/// <param name="KeyBytes">
+/// Transient secure-storage 32-byte key.
+/// </param>
+/// <param name="CheckpointJson">
+/// Empty only on first setup; otherwise the saved versioned checkpoint.
+/// </param>
+/// <param name="FilterJson">
+/// Optional explicit `SyncFilter` JSON; absence enables all categories.
+/// </param>
+internal record ObsidianSessionOptions (
+    /// <summary>
+    /// Validated official regional hostname.
+    /// </summary>
+    string Host, 
+    /// <summary>
+    /// Transient secure-storage account token.
+    /// </summary>
+    string Token, 
+    /// <summary>
+    /// Stable remote vault identifier.
+    /// </summary>
+    string VaultId, 
+    /// <summary>
+    /// Device label for service history.
+    /// </summary>
+    string DeviceName, 
+    /// <summary>
+    /// Exact negotiated cipher version.
+    /// </summary>
+    byte EncryptionVersion, 
+    /// <summary>
+    /// Exact remote HKDF salt.
+    /// </summary>
+    string Salt, 
+    /// <summary>
+    /// Transient secure-storage 32-byte key.
+    /// </summary>
+    byte[] KeyBytes, 
+    /// <summary>
+    /// Empty only on first setup; otherwise the saved versioned checkpoint.
+    /// </summary>
+    string CheckpointJson, 
+    /// <summary>
+    /// Optional explicit `SyncFilter` JSON; absence enables all categories.
+    /// </summary>
+    string? FilterJson
+) {
+}
+
+class FfiConverterTypeObsidianSessionOptions: FfiConverterRustBuffer<ObsidianSessionOptions> {
+    public static FfiConverterTypeObsidianSessionOptions INSTANCE = new FfiConverterTypeObsidianSessionOptions();
+
+    public override ObsidianSessionOptions Read(BigEndianStream stream) {
+        return new ObsidianSessionOptions(
+            Host: FfiConverterString.INSTANCE.Read(stream),
+            Token: FfiConverterString.INSTANCE.Read(stream),
+            VaultId: FfiConverterString.INSTANCE.Read(stream),
+            DeviceName: FfiConverterString.INSTANCE.Read(stream),
+            EncryptionVersion: FfiConverterUInt8.INSTANCE.Read(stream),
+            Salt: FfiConverterString.INSTANCE.Read(stream),
+            KeyBytes: FfiConverterByteArray.INSTANCE.Read(stream),
+            CheckpointJson: FfiConverterString.INSTANCE.Read(stream),
+            FilterJson: FfiConverterOptionalString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(ObsidianSessionOptions value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Host)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Token)
+            + FfiConverterString.INSTANCE.AllocationSize(value.VaultId)
+            + FfiConverterString.INSTANCE.AllocationSize(value.DeviceName)
+            + FfiConverterUInt8.INSTANCE.AllocationSize(value.EncryptionVersion)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Salt)
+            + FfiConverterByteArray.INSTANCE.AllocationSize(value.KeyBytes)
+            + FfiConverterString.INSTANCE.AllocationSize(value.CheckpointJson)
+            + FfiConverterOptionalString.INSTANCE.AllocationSize(value.FilterJson);
+    }
+
+    public override void Write(ObsidianSessionOptions value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Host, stream);
+            FfiConverterString.INSTANCE.Write(value.Token, stream);
+            FfiConverterString.INSTANCE.Write(value.VaultId, stream);
+            FfiConverterString.INSTANCE.Write(value.DeviceName, stream);
+            FfiConverterUInt8.INSTANCE.Write(value.EncryptionVersion, stream);
+            FfiConverterString.INSTANCE.Write(value.Salt, stream);
+            FfiConverterByteArray.INSTANCE.Write(value.KeyBytes, stream);
+            FfiConverterString.INSTANCE.Write(value.CheckpointJson, stream);
+            FfiConverterOptionalString.INSTANCE.Write(value.FilterJson, stream);
+    }
+}
+
+
+
+/// <summary>
+/// Shared framing limits; host transports enforce these before message copying.
+/// </summary>
+/// <param name="TextMessageBytes">
+/// Maximum UTF-8 text message byte count.
+/// </param>
+/// <param name="BinaryMessageBytes">
+/// Maximum binary piece byte count.
+/// </param>
+/// <param name="DefaultFileBytes">
+/// Protocol's default full plaintext file limit, before service negotiation.
+/// </param>
+internal record ObsidianTransportLimits (
+    /// <summary>
+    /// Maximum UTF-8 text message byte count.
+    /// </summary>
+    ulong TextMessageBytes, 
+    /// <summary>
+    /// Maximum binary piece byte count.
+    /// </summary>
+    ulong BinaryMessageBytes, 
+    /// <summary>
+    /// Protocol's default full plaintext file limit, before service negotiation.
+    /// </summary>
+    ulong DefaultFileBytes
+) {
+}
+
+class FfiConverterTypeObsidianTransportLimits: FfiConverterRustBuffer<ObsidianTransportLimits> {
+    public static FfiConverterTypeObsidianTransportLimits INSTANCE = new FfiConverterTypeObsidianTransportLimits();
+
+    public override ObsidianTransportLimits Read(BigEndianStream stream) {
+        return new ObsidianTransportLimits(
+            TextMessageBytes: FfiConverterUInt64.INSTANCE.Read(stream),
+            BinaryMessageBytes: FfiConverterUInt64.INSTANCE.Read(stream),
+            DefaultFileBytes: FfiConverterUInt64.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(ObsidianTransportLimits value) {
+        return 0
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.TextMessageBytes)
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.BinaryMessageBytes)
+            + FfiConverterUInt64.INSTANCE.AllocationSize(value.DefaultFileBytes);
+    }
+
+    public override void Write(ObsidianTransportLimits value, BigEndianStream stream) {
+            FfiConverterUInt64.INSTANCE.Write(value.TextMessageBytes, stream);
+            FfiConverterUInt64.INSTANCE.Write(value.BinaryMessageBytes, stream);
+            FfiConverterUInt64.INSTANCE.Write(value.DefaultFileBytes, stream);
+    }
+}
+
+
+
+/// <summary>
 /// See [`tasknotes_core::domain::Pagination`].
 /// </summary>
 /// <param name="Total">
@@ -11240,71 +16849,6 @@ class FfiConverterTypePagination: FfiConverterRustBuffer<Pagination> {
             FfiConverterUInt32.INSTANCE.Write(value.Offset, stream);
             FfiConverterUInt32.INSTANCE.Write(value.Limit, stream);
             FfiConverterBoolean.INSTANCE.Write(value.HasMore, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::PomodoroStatus`].
-/// </summary>
-/// <param name="Active">
-/// Whether a session is running.
-/// </param>
-/// <param name="TaskId">
-/// The task being worked on.
-/// </param>
-/// <param name="TimeRemaining">
-/// Seconds left in the current phase.
-/// </param>
-/// <param name="Phase">
-/// Which phase is running.
-/// </param>
-internal record PomodoroStatus (
-    /// <summary>
-    /// Whether a session is running.
-    /// </summary>
-    bool Active, 
-    /// <summary>
-    /// The task being worked on.
-    /// </summary>
-    TaskId? TaskId, 
-    /// <summary>
-    /// Seconds left in the current phase.
-    /// </summary>
-    uint? TimeRemaining, 
-    /// <summary>
-    /// Which phase is running.
-    /// </summary>
-    PomodoroPhase? Phase
-) {
-}
-
-class FfiConverterTypePomodoroStatus: FfiConverterRustBuffer<PomodoroStatus> {
-    public static FfiConverterTypePomodoroStatus INSTANCE = new FfiConverterTypePomodoroStatus();
-
-    public override PomodoroStatus Read(BigEndianStream stream) {
-        return new PomodoroStatus(
-            Active: FfiConverterBoolean.INSTANCE.Read(stream),
-            TaskId: FfiConverterOptionalTypeTaskId.INSTANCE.Read(stream),
-            TimeRemaining: FfiConverterOptionalUInt32.INSTANCE.Read(stream),
-            Phase: FfiConverterOptionalTypePomodoroPhase.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(PomodoroStatus value) {
-        return 0
-            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Active)
-            + FfiConverterOptionalTypeTaskId.INSTANCE.AllocationSize(value.TaskId)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.TimeRemaining)
-            + FfiConverterOptionalTypePomodoroPhase.INSTANCE.AllocationSize(value.Phase);
-    }
-
-    public override void Write(PomodoroStatus value, BigEndianStream stream) {
-            FfiConverterBoolean.INSTANCE.Write(value.Active, stream);
-            FfiConverterOptionalTypeTaskId.INSTANCE.Write(value.TaskId, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.TimeRemaining, stream);
-            FfiConverterOptionalTypePomodoroPhase.INSTANCE.Write(value.Phase, stream);
     }
 }
 
@@ -11602,12 +17146,6 @@ class FfiConverterTypeSyncStatus: FfiConverterRustBuffer<SyncStatus> {
 /// <param name="DateModified">
 /// When the note was last modified.
 /// </param>
-/// <param name="TimeEstimate">
-/// The estimate in whole minutes.
-/// </param>
-/// <param name="TimeEntries">
-/// Tracked work intervals stored in the note's frontmatter.
-/// </param>
 /// <param name="BlockedBy">
 /// Tasks this one is blocked by.
 /// </param>
@@ -11616,9 +17154,6 @@ class FfiConverterTypeSyncStatus: FfiConverterRustBuffer<SyncStatus> {
 /// </param>
 /// <param name="Archived">
 /// Whether the task is archived.
-/// </param>
-/// <param name="TotalTrackedTime">
-/// Total tracked time in whole minutes, as the server computed it.
 /// </param>
 /// <param name="IsBlocked">
 /// Whether something else is blocking this task.
@@ -11702,14 +17237,6 @@ internal record Task (
     /// </summary>
     string? DateModified, 
     /// <summary>
-    /// The estimate in whole minutes.
-    /// </summary>
-    uint? TimeEstimate, 
-    /// <summary>
-    /// Tracked work intervals stored in the note's frontmatter.
-    /// </summary>
-    InlineTimeEntry[] TimeEntries, 
-    /// <summary>
     /// Tasks this one is blocked by.
     /// </summary>
     BlockedByEntry[] BlockedBy, 
@@ -11721,10 +17248,6 @@ internal record Task (
     /// Whether the task is archived.
     /// </summary>
     bool Archived, 
-    /// <summary>
-    /// Total tracked time in whole minutes, as the server computed it.
-    /// </summary>
-    uint TotalTrackedTime, 
     /// <summary>
     /// Whether something else is blocking this task.
     /// </summary>
@@ -11766,12 +17289,9 @@ class FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             CompletedDate: FfiConverterOptionalString.INSTANCE.Read(stream),
             DateCreated: FfiConverterOptionalString.INSTANCE.Read(stream),
             DateModified: FfiConverterOptionalString.INSTANCE.Read(stream),
-            TimeEstimate: FfiConverterOptionalUInt32.INSTANCE.Read(stream),
-            TimeEntries: FfiConverterSequenceTypeInlineTimeEntry.INSTANCE.Read(stream),
             BlockedBy: FfiConverterSequenceTypeBlockedByEntry.INSTANCE.Read(stream),
             Reminders: FfiConverterSequenceTypeReminder.INSTANCE.Read(stream),
             Archived: FfiConverterBoolean.INSTANCE.Read(stream),
-            TotalTrackedTime: FfiConverterUInt32.INSTANCE.Read(stream),
             IsBlocked: FfiConverterBoolean.INSTANCE.Read(stream),
             IsBlocking: FfiConverterBoolean.INSTANCE.Read(stream),
             ExtraFields: FfiConverterTypeExtraFields.INSTANCE.Read(stream),
@@ -11798,12 +17318,9 @@ class FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.CompletedDate)
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.DateCreated)
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.DateModified)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.TimeEstimate)
-            + FfiConverterSequenceTypeInlineTimeEntry.INSTANCE.AllocationSize(value.TimeEntries)
             + FfiConverterSequenceTypeBlockedByEntry.INSTANCE.AllocationSize(value.BlockedBy)
             + FfiConverterSequenceTypeReminder.INSTANCE.AllocationSize(value.Reminders)
             + FfiConverterBoolean.INSTANCE.AllocationSize(value.Archived)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.TotalTrackedTime)
             + FfiConverterBoolean.INSTANCE.AllocationSize(value.IsBlocked)
             + FfiConverterBoolean.INSTANCE.AllocationSize(value.IsBlocking)
             + FfiConverterTypeExtraFields.INSTANCE.AllocationSize(value.ExtraFields)
@@ -11828,12 +17345,9 @@ class FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             FfiConverterOptionalString.INSTANCE.Write(value.CompletedDate, stream);
             FfiConverterOptionalString.INSTANCE.Write(value.DateCreated, stream);
             FfiConverterOptionalString.INSTANCE.Write(value.DateModified, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.TimeEstimate, stream);
-            FfiConverterSequenceTypeInlineTimeEntry.INSTANCE.Write(value.TimeEntries, stream);
             FfiConverterSequenceTypeBlockedByEntry.INSTANCE.Write(value.BlockedBy, stream);
             FfiConverterSequenceTypeReminder.INSTANCE.Write(value.Reminders, stream);
             FfiConverterBoolean.INSTANCE.Write(value.Archived, stream);
-            FfiConverterUInt32.INSTANCE.Write(value.TotalTrackedTime, stream);
             FfiConverterBoolean.INSTANCE.Write(value.IsBlocked, stream);
             FfiConverterBoolean.INSTANCE.Write(value.IsBlocking, stream);
             FfiConverterTypeExtraFields.INSTANCE.Write(value.ExtraFields, stream);
@@ -12051,9 +17565,6 @@ class FfiConverterTypeTaskQueryFilter: FfiConverterRustBuffer<TaskQueryFilter> {
 /// <param name="Archived">
 /// Archived tasks.
 /// </param>
-/// <param name="WithTimeTracking">
-/// Tasks with at least one tracked interval.
-/// </param>
 internal record TaskStats (
     /// <summary>
     /// Every task in the vault.
@@ -12074,11 +17585,7 @@ internal record TaskStats (
     /// <summary>
     /// Archived tasks.
     /// </summary>
-    uint Archived, 
-    /// <summary>
-    /// Tasks with at least one tracked interval.
-    /// </summary>
-    uint WithTimeTracking
+    uint Archived
 ) {
 }
 
@@ -12091,8 +17598,7 @@ class FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             Completed: FfiConverterUInt32.INSTANCE.Read(stream),
             Active: FfiConverterUInt32.INSTANCE.Read(stream),
             Overdue: FfiConverterUInt32.INSTANCE.Read(stream),
-            Archived: FfiConverterUInt32.INSTANCE.Read(stream),
-            WithTimeTracking: FfiConverterUInt32.INSTANCE.Read(stream)
+            Archived: FfiConverterUInt32.INSTANCE.Read(stream)
         );
     }
 
@@ -12102,8 +17608,7 @@ class FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             + FfiConverterUInt32.INSTANCE.AllocationSize(value.Completed)
             + FfiConverterUInt32.INSTANCE.AllocationSize(value.Active)
             + FfiConverterUInt32.INSTANCE.AllocationSize(value.Overdue)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Archived)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.WithTimeTracking);
+            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Archived);
     }
 
     public override void Write(TaskStats value, BigEndianStream stream) {
@@ -12112,7 +17617,6 @@ class FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             FfiConverterUInt32.INSTANCE.Write(value.Active, stream);
             FfiConverterUInt32.INSTANCE.Write(value.Overdue, stream);
             FfiConverterUInt32.INSTANCE.Write(value.Archived, stream);
-            FfiConverterUInt32.INSTANCE.Write(value.WithTimeTracking, stream);
     }
 }
 
@@ -12201,216 +17705,6 @@ class FfiConverterTypeTaskStoreSnapshot: FfiConverterRustBuffer<TaskStoreSnapsho
 
 
 /// <summary>
-/// See [`tasknotes_core::domain::TaskTime`].
-/// </summary>
-/// <param name="TotalTime">
-/// Whole minutes tracked against one task.
-/// </param>
-/// <param name="HasActiveSession">
-/// Whether a session is running right now.
-/// </param>
-internal record TaskTime (
-    /// <summary>
-    /// Whole minutes tracked against one task.
-    /// </summary>
-    uint TotalTime, 
-    /// <summary>
-    /// Whether a session is running right now.
-    /// </summary>
-    bool HasActiveSession
-) {
-}
-
-class FfiConverterTypeTaskTime: FfiConverterRustBuffer<TaskTime> {
-    public static FfiConverterTypeTaskTime INSTANCE = new FfiConverterTypeTaskTime();
-
-    public override TaskTime Read(BigEndianStream stream) {
-        return new TaskTime(
-            TotalTime: FfiConverterUInt32.INSTANCE.Read(stream),
-            HasActiveSession: FfiConverterBoolean.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TaskTime value) {
-        return 0
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.TotalTime)
-            + FfiConverterBoolean.INSTANCE.AllocationSize(value.HasActiveSession);
-    }
-
-    public override void Write(TaskTime value, BigEndianStream stream) {
-            FfiConverterUInt32.INSTANCE.Write(value.TotalTime, stream);
-            FfiConverterBoolean.INSTANCE.Write(value.HasActiveSession, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::TimeEntry`].
-/// </summary>
-/// <param name="TaskId">
-/// The task the interval belongs to.
-/// </param>
-/// <param name="StartTime">
-/// When tracking started.
-/// </param>
-/// <param name="EndTime">
-/// When tracking stopped; absent while a session is running.
-/// </param>
-/// <param name="Duration">
-/// The interval's length in whole minutes.
-/// </param>
-internal record TimeEntry (
-    /// <summary>
-    /// The task the interval belongs to.
-    /// </summary>
-    TaskId TaskId, 
-    /// <summary>
-    /// When tracking started.
-    /// </summary>
-    string StartTime, 
-    /// <summary>
-    /// When tracking stopped; absent while a session is running.
-    /// </summary>
-    string? EndTime, 
-    /// <summary>
-    /// The interval's length in whole minutes.
-    /// </summary>
-    uint? Duration
-) {
-}
-
-class FfiConverterTypeTimeEntry: FfiConverterRustBuffer<TimeEntry> {
-    public static FfiConverterTypeTimeEntry INSTANCE = new FfiConverterTypeTimeEntry();
-
-    public override TimeEntry Read(BigEndianStream stream) {
-        return new TimeEntry(
-            TaskId: FfiConverterTypeTaskId.INSTANCE.Read(stream),
-            StartTime: FfiConverterString.INSTANCE.Read(stream),
-            EndTime: FfiConverterOptionalString.INSTANCE.Read(stream),
-            Duration: FfiConverterOptionalUInt32.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TimeEntry value) {
-        return 0
-            + FfiConverterTypeTaskId.INSTANCE.AllocationSize(value.TaskId)
-            + FfiConverterString.INSTANCE.AllocationSize(value.StartTime)
-            + FfiConverterOptionalString.INSTANCE.AllocationSize(value.EndTime)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.Duration);
-    }
-
-    public override void Write(TimeEntry value, BigEndianStream stream) {
-            FfiConverterTypeTaskId.INSTANCE.Write(value.TaskId, stream);
-            FfiConverterString.INSTANCE.Write(value.StartTime, stream);
-            FfiConverterOptionalString.INSTANCE.Write(value.EndTime, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.Duration, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::TimeSummary`].
-/// </summary>
-/// <param name="TotalTime">
-/// Whole minutes tracked across everything in scope.
-/// </param>
-/// <param name="TopTasks">
-/// The busiest tasks, in the server's order.
-/// </param>
-internal record TimeSummary (
-    /// <summary>
-    /// Whole minutes tracked across everything in scope.
-    /// </summary>
-    uint TotalTime, 
-    /// <summary>
-    /// The busiest tasks, in the server's order.
-    /// </summary>
-    TopTask[] TopTasks
-) {
-}
-
-class FfiConverterTypeTimeSummary: FfiConverterRustBuffer<TimeSummary> {
-    public static FfiConverterTypeTimeSummary INSTANCE = new FfiConverterTypeTimeSummary();
-
-    public override TimeSummary Read(BigEndianStream stream) {
-        return new TimeSummary(
-            TotalTime: FfiConverterUInt32.INSTANCE.Read(stream),
-            TopTasks: FfiConverterSequenceTypeTopTask.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TimeSummary value) {
-        return 0
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.TotalTime)
-            + FfiConverterSequenceTypeTopTask.INSTANCE.AllocationSize(value.TopTasks);
-    }
-
-    public override void Write(TimeSummary value, BigEndianStream stream) {
-            FfiConverterUInt32.INSTANCE.Write(value.TotalTime, stream);
-            FfiConverterSequenceTypeTopTask.INSTANCE.Write(value.TopTasks, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::TopTask`].
-/// </summary>
-/// <param name="TaskId">
-/// The task.
-/// </param>
-/// <param name="Title">
-/// Its title.
-/// </param>
-/// <param name="Minutes">
-/// Whole minutes tracked against it.
-/// </param>
-internal record TopTask (
-    /// <summary>
-    /// The task.
-    /// </summary>
-    TaskId TaskId, 
-    /// <summary>
-    /// Its title.
-    /// </summary>
-    string Title, 
-    /// <summary>
-    /// Whole minutes tracked against it.
-    /// </summary>
-    uint Minutes
-) {
-}
-
-class FfiConverterTypeTopTask: FfiConverterRustBuffer<TopTask> {
-    public static FfiConverterTypeTopTask INSTANCE = new FfiConverterTypeTopTask();
-
-    public override TopTask Read(BigEndianStream stream) {
-        return new TopTask(
-            TaskId: FfiConverterTypeTaskId.INSTANCE.Read(stream),
-            Title: FfiConverterString.INSTANCE.Read(stream),
-            Minutes: FfiConverterUInt32.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TopTask value) {
-        return 0
-            + FfiConverterTypeTaskId.INSTANCE.AllocationSize(value.TaskId)
-            + FfiConverterString.INSTANCE.AllocationSize(value.Title)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Minutes);
-    }
-
-    public override void Write(TopTask value, BigEndianStream stream) {
-            FfiConverterTypeTaskId.INSTANCE.Write(value.TaskId, stream);
-            FfiConverterString.INSTANCE.Write(value.Title, stream);
-            FfiConverterUInt32.INSTANCE.Write(value.Minutes, stream);
-    }
-}
-
-
-
-/// <summary>
 /// A partial update to a task.
 ///
 /// Mirrors [`tasknotes_core::domain::UpdateTaskRequest`] field for field, in
@@ -12449,9 +17743,6 @@ class FfiConverterTypeTopTask: FfiConverterRustBuffer<TopTask> {
 /// </param>
 /// <param name="RecurrenceAnchor">
 /// What the recurrence is measured from; `Clear` deletes it.
-/// </param>
-/// <param name="TimeEstimate">
-/// The estimate in whole minutes; `Clear` deletes it.
 /// </param>
 /// <param name="ExtraFields">
 /// The full replacement set of extra frontmatter keys, as a JSON object
@@ -12503,10 +17794,6 @@ internal record UpdateTaskRequest (
     /// </summary>
     RecurrenceAnchorUpdate RecurrenceAnchor, 
     /// <summary>
-    /// The estimate in whole minutes; `Clear` deletes it.
-    /// </summary>
-    MinutesUpdate TimeEstimate, 
-    /// <summary>
     /// The full replacement set of extra frontmatter keys, as a JSON object
     /// string.
     /// </summary>
@@ -12530,7 +17817,6 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
             Tags: FfiConverterOptionalSequenceTypeTagName.INSTANCE.Read(stream),
             Recurrence: FfiConverterTypeTextUpdate.INSTANCE.Read(stream),
             RecurrenceAnchor: FfiConverterTypeRecurrenceAnchorUpdate.INSTANCE.Read(stream),
-            TimeEstimate: FfiConverterTypeMinutesUpdate.INSTANCE.Read(stream),
             ExtraFields: FfiConverterOptionalTypeExtraFields.INSTANCE.Read(stream)
         );
     }
@@ -12548,7 +17834,6 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
             + FfiConverterOptionalSequenceTypeTagName.INSTANCE.AllocationSize(value.Tags)
             + FfiConverterTypeTextUpdate.INSTANCE.AllocationSize(value.Recurrence)
             + FfiConverterTypeRecurrenceAnchorUpdate.INSTANCE.AllocationSize(value.RecurrenceAnchor)
-            + FfiConverterTypeMinutesUpdate.INSTANCE.AllocationSize(value.TimeEstimate)
             + FfiConverterOptionalTypeExtraFields.INSTANCE.AllocationSize(value.ExtraFields);
     }
 
@@ -12564,8 +17849,72 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
             FfiConverterOptionalSequenceTypeTagName.INSTANCE.Write(value.Tags, stream);
             FfiConverterTypeTextUpdate.INSTANCE.Write(value.Recurrence, stream);
             FfiConverterTypeRecurrenceAnchorUpdate.INSTANCE.Write(value.RecurrenceAnchor, stream);
-            FfiConverterTypeMinutesUpdate.INSTANCE.Write(value.TimeEstimate, stream);
             FfiConverterOptionalTypeExtraFields.INSTANCE.Write(value.ExtraFields, stream);
+    }
+}
+
+
+
+/// <summary>
+/// A complete conditional write; hosts supply journaling and atomic file I/O.
+/// </summary>
+/// <param name="Path">
+/// Logical vault-relative target, validated by Rust.
+/// </param>
+/// <param name="ExpectedRevision">
+/// SHA-256 of the exact prior bytes.
+/// </param>
+/// <param name="Bytes">
+/// Complete replacement document bytes.
+/// </param>
+/// <param name="Revision">
+/// SHA-256 of the replacement bytes.
+/// </param>
+internal record VaultDocumentWrite (
+    /// <summary>
+    /// Logical vault-relative target, validated by Rust.
+    /// </summary>
+    string Path, 
+    /// <summary>
+    /// SHA-256 of the exact prior bytes.
+    /// </summary>
+    string ExpectedRevision, 
+    /// <summary>
+    /// Complete replacement document bytes.
+    /// </summary>
+    byte[] Bytes, 
+    /// <summary>
+    /// SHA-256 of the replacement bytes.
+    /// </summary>
+    string Revision
+) {
+}
+
+class FfiConverterTypeVaultDocumentWrite: FfiConverterRustBuffer<VaultDocumentWrite> {
+    public static FfiConverterTypeVaultDocumentWrite INSTANCE = new FfiConverterTypeVaultDocumentWrite();
+
+    public override VaultDocumentWrite Read(BigEndianStream stream) {
+        return new VaultDocumentWrite(
+            Path: FfiConverterString.INSTANCE.Read(stream),
+            ExpectedRevision: FfiConverterString.INSTANCE.Read(stream),
+            Bytes: FfiConverterByteArray.INSTANCE.Read(stream),
+            Revision: FfiConverterString.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(VaultDocumentWrite value) {
+        return 0
+            + FfiConverterString.INSTANCE.AllocationSize(value.Path)
+            + FfiConverterString.INSTANCE.AllocationSize(value.ExpectedRevision)
+            + FfiConverterByteArray.INSTANCE.AllocationSize(value.Bytes)
+            + FfiConverterString.INSTANCE.AllocationSize(value.Revision);
+    }
+
+    public override void Write(VaultDocumentWrite value, BigEndianStream stream) {
+            FfiConverterString.INSTANCE.Write(value.Path, stream);
+            FfiConverterString.INSTANCE.Write(value.ExpectedRevision, stream);
+            FfiConverterByteArray.INSTANCE.Write(value.Bytes, stream);
+            FfiConverterString.INSTANCE.Write(value.Revision, stream);
     }
 }
 
@@ -13332,7 +18681,7 @@ class FfiConverterTypeCommonWeekday: FfiConverterRustBuffer<CommonWeekday> {
 /// committed bindings diff.
 ///
 /// ⚠️ UniFFI keeps Rust's `PascalCase` for error cases, so this reads
-/// `.Invariant(message:)` in Swift while a plain `uniffi::Enum` reads
+/// `.Invariant(detail:)` in Swift while a plain `uniffi::Enum` reads
 /// `.inProgress`. That inconsistency is upstream and expected; the generated
 /// target is lint-exempt, so it will not fail a build.
 /// </summary>
@@ -13349,14 +18698,14 @@ internal class CoreException: UniffiException {
     
     public class Invariant : CoreException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Invariant(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -13366,14 +18715,14 @@ internal class CoreException: UniffiException {
     
     public class Network : CoreException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Network(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -13383,17 +18732,17 @@ internal class CoreException: UniffiException {
     
     public class Api : CoreException {
         // Members
-        public string @message;
+        public string @detail;
         public ushort @status;
 
         // Constructor
         public Api(
-                string @message, 
+                string @detail, 
                 ushort @status) : base(
-                "@message" + "=" + @message+ ", " +
+                "@detail" + "=" + @detail+ ", " +
                 "@status" + "=" + @status) {
 
-            this.@message = @message;
+            this.@detail = @detail;
 
             this.@status = @status;
         }
@@ -13405,14 +18754,14 @@ internal class CoreException: UniffiException {
     
     public class Validation : CoreException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Validation(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -13422,14 +18771,14 @@ internal class CoreException: UniffiException {
     
     public class NotFound : CoreException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public NotFound(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -13439,14 +18788,14 @@ internal class CoreException: UniffiException {
     
     public class Connection : CoreException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Connection(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -13489,28 +18838,28 @@ class FfiConverterTypeCoreError : FfiConverterRustBuffer<CoreException>, CallSta
 
             case CoreException.Invariant variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case CoreException.Network variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case CoreException.Api variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail)
                     + FfiConverterUInt16.INSTANCE.AllocationSize(variant_value.@status);
 
             case CoreException.Validation variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case CoreException.NotFound variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case CoreException.Connection variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
             default:
                 throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeCoreError.AllocationSize()", value));
         }
@@ -13520,28 +18869,28 @@ class FfiConverterTypeCoreError : FfiConverterRustBuffer<CoreException>, CallSta
         switch (value) {
             case CoreException.Invariant variant_value:
                 stream.WriteInt(1);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case CoreException.Network variant_value:
                 stream.WriteInt(2);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case CoreException.Api variant_value:
                 stream.WriteInt(3);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 FfiConverterUInt16.INSTANCE.Write(variant_value.@status, stream);
                 break;
             case CoreException.Validation variant_value:
                 stream.WriteInt(4);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case CoreException.NotFound variant_value:
                 stream.WriteInt(5);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case CoreException.Connection variant_value:
                 stream.WriteInt(6);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             default:
                 throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeCoreError.Write()", value));
@@ -13611,6 +18960,408 @@ class FfiConverterTypeDateGroup: FfiConverterRustBuffer<DateGroup> {
 }
 
 
+
+
+
+
+
+/// <summary>
+/// Standalone engine failures, independent of the retired server API.
+/// </summary>
+internal class FacetEngineException: UniffiException {
+    FacetEngineException() : base() {}
+    FacetEngineException(String @Message) : base(@Message) {}
+
+    // Each variant is a nested class
+    
+    /// <summary>
+    /// Private state cannot be read/written.
+    /// </summary>
+    
+    public class Storage : FacetEngineException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Storage(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Platform provider/capability failure.
+    /// </summary>
+    
+    public class Host : FacetEngineException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Host(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Permanent provider metadata/ownership/range contract failure.
+    /// </summary>
+    
+    public class HostContract : FacetEngineException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public HostContract(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Requested semantic operation is invalid.
+    /// </summary>
+    
+    public class Validation : FacetEngineException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Validation(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Selected configuration cannot be used.
+    /// </summary>
+    
+    public class Configuration : FacetEngineException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Configuration(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Reload or resolve a preserved overlap before saving.
+    /// </summary>
+    public class Conflict : FacetEngineException {
+        public Conflict() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// Profile, file, or conflict no longer exists.
+    /// </summary>
+    public class NotFound : FacetEngineException {
+        public NotFound() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// Explicitly retired engine handle.
+    /// </summary>
+    public class Closed : FacetEngineException {
+        public Closed() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// Nonblocking admission or callback reentry; preserve the exact draft.
+    /// </summary>
+    public class Busy : FacetEngineException {
+        public Busy() : base() {}
+    }
+    
+    
+
+    
+}
+
+class FfiConverterTypeFacetEngineError : FfiConverterRustBuffer<FacetEngineException>, CallStatusErrorHandler<FacetEngineException> {
+    public static FfiConverterTypeFacetEngineError INSTANCE = new FfiConverterTypeFacetEngineError();
+
+    public override FacetEngineException Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new FacetEngineException.Storage(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 2:
+                return new FacetEngineException.Host(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 3:
+                return new FacetEngineException.HostContract(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 4:
+                return new FacetEngineException.Validation(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 5:
+                return new FacetEngineException.Configuration(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 6:
+                return new FacetEngineException.Conflict();
+            case 7:
+                return new FacetEngineException.NotFound();
+            case 8:
+                return new FacetEngineException.Closed();
+            case 9:
+                return new FacetEngineException.Busy();
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeFacetEngineError.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(FacetEngineException value) {
+        switch (value) {
+
+            case FacetEngineException.Storage variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetEngineException.Host variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetEngineException.HostContract variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetEngineException.Validation variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetEngineException.Configuration variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetEngineException.Conflict variant_value:
+                return 4;
+
+            case FacetEngineException.NotFound variant_value:
+                return 4;
+
+            case FacetEngineException.Closed variant_value:
+                return 4;
+
+            case FacetEngineException.Busy variant_value:
+                return 4;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeFacetEngineError.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(FacetEngineException value, BigEndianStream stream) {
+        switch (value) {
+            case FacetEngineException.Storage variant_value:
+                stream.WriteInt(1);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetEngineException.Host variant_value:
+                stream.WriteInt(2);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetEngineException.HostContract variant_value:
+                stream.WriteInt(3);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetEngineException.Validation variant_value:
+                stream.WriteInt(4);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetEngineException.Configuration variant_value:
+                stream.WriteInt(5);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetEngineException.Conflict variant_value:
+                stream.WriteInt(6);
+                break;
+            case FacetEngineException.NotFound variant_value:
+                stream.WriteInt(7);
+                break;
+            case FacetEngineException.Closed variant_value:
+                stream.WriteInt(8);
+                break;
+            case FacetEngineException.Busy variant_value:
+                stream.WriteInt(9);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeFacetEngineError.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+/// <summary>
+/// Expected filesystem capability failure, without note contents or secrets.
+/// </summary>
+internal class FacetHostException: UniffiException {
+    FacetHostException() : base() {}
+    FacetHostException(String @Message) : base(@Message) {}
+
+    // Each variant is a nested class
+    
+    /// <summary>
+    /// A provider or persisted capability is temporarily unavailable.
+    /// </summary>
+    
+    public class Unavailable : FacetHostException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Unavailable(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// User must restore folder permission.
+    /// </summary>
+    
+    public class PermissionDenied : FacetHostException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public PermissionDenied(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Durable filesystem operation failed.
+    /// </summary>
+    
+    public class Io : FacetHostException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Io(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// Permanent owned-callback violation; no provider outage retry or fallback.
+    /// </summary>
+    
+    public class Contract : FacetHostException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Contract(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+
+    
+}
+
+class FfiConverterTypeFacetHostError : FfiConverterRustBuffer<FacetHostException>, CallStatusErrorHandler<FacetHostException> {
+    public static FfiConverterTypeFacetHostError INSTANCE = new FfiConverterTypeFacetHostError();
+
+    public override FacetHostException Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new FacetHostException.Unavailable(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 2:
+                return new FacetHostException.PermissionDenied(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 3:
+                return new FacetHostException.Io(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 4:
+                return new FacetHostException.Contract(
+                    FfiConverterString.INSTANCE.Read(stream));
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeFacetHostError.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(FacetHostException value) {
+        switch (value) {
+
+            case FacetHostException.Unavailable variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetHostException.PermissionDenied variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetHostException.Io variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case FacetHostException.Contract variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeFacetHostError.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(FacetHostException value, BigEndianStream stream) {
+        switch (value) {
+            case FacetHostException.Unavailable variant_value:
+                stream.WriteInt(1);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetHostException.PermissionDenied variant_value:
+                stream.WriteInt(2);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetHostException.Io variant_value:
+                stream.WriteInt(3);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case FacetHostException.Contract variant_value:
+                stream.WriteInt(4);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeFacetHostError.Write()", value));
+        }
+    }
+}
 
 
 
@@ -13794,95 +19545,6 @@ class FfiConverterTypeHttpMethod: FfiConverterRustBuffer<HttpMethod> {
 
 
 /// <summary>
-/// A clearable whole-minutes field.
-///
-/// The exported counterpart of [`tasknotes_core::domain::MinutesUpdate`].
-/// </summary>
-internal record MinutesUpdate {
-    
-    /// <summary>
-    /// The key is absent from the payload: leave the stored value alone.
-    /// </summary>
-    public record Unchanged: MinutesUpdate {}
-    
-    
-    /// <summary>
-    /// The key is present and `null`: delete the stored value.
-    /// </summary>
-    public record Clear: MinutesUpdate {}
-    
-    
-    /// <summary>
-    /// The key is present with a value: store it.
-    /// </summary>
-    public record Set (
-        uint Value
-    ) : MinutesUpdate {}
-    
-
-    
-}
-
-class FfiConverterTypeMinutesUpdate : FfiConverterRustBuffer<MinutesUpdate>{
-    public static FfiConverterRustBuffer<MinutesUpdate> INSTANCE = new FfiConverterTypeMinutesUpdate();
-
-    public override MinutesUpdate Read(BigEndianStream stream) {
-        var value = stream.ReadInt();
-        switch (value) {
-            case 1:
-                return new MinutesUpdate.Unchanged(
-                );
-            case 2:
-                return new MinutesUpdate.Clear(
-                );
-            case 3:
-                return new MinutesUpdate.Set(
-                    FfiConverterUInt32.INSTANCE.Read(stream)
-                );
-            default:
-                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.Read()", value));
-        }
-    }
-
-    public override int AllocationSize(MinutesUpdate value) {
-        switch (value) {
-            case MinutesUpdate.Unchanged variant_value:
-                return 4;
-            case MinutesUpdate.Clear variant_value:
-                return 4;
-            case MinutesUpdate.Set variant_value:
-                return 4
-                    + FfiConverterUInt32.INSTANCE.AllocationSize(variant_value.Value);
-            default:
-                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.AllocationSize()", value));
-        }
-    }
-
-    public override void Write(MinutesUpdate value, BigEndianStream stream) {
-        switch (value) {
-            case MinutesUpdate.Unchanged variant_value:
-                stream.WriteInt(1);
-                break;
-            case MinutesUpdate.Clear variant_value:
-                stream.WriteInt(2);
-                break;
-            case MinutesUpdate.Set variant_value:
-                stream.WriteInt(3);
-                FfiConverterUInt32.INSTANCE.Write(variant_value.Value, stream);
-                break;
-            default:
-                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.Write()", value));
-        }
-    }
-}
-
-
-
-
-
-
-
-/// <summary>
 /// See [`tasknotes_core::recurrence::MonthlyOrdinal`].
 /// </summary>
 internal enum MonthlyOrdinal: int {
@@ -13952,40 +19614,575 @@ class FfiConverterTypeMonthlyOrdinal: FfiConverterRustBuffer<MonthlyOrdinal> {
 
 
 /// <summary>
-/// See [`tasknotes_core::domain::PomodoroPhase`].
+/// Account responses. Credential-bearing tokens are secure-storage inputs only.
 /// </summary>
-internal enum PomodoroPhase: int {
+internal record ObsidianAccountResponse {
+    
     /// <summary>
-    /// A focus interval.
+    /// Repeat sign-in with a one-time code.
     /// </summary>
-    Work,
+    public record MfaRequired: ObsidianAccountResponse {}
+    
+    
     /// <summary>
-    /// A rest interval.
+    /// A new one-time code is required.
     /// </summary>
-    Break
+    public record MfaRejected: ObsidianAccountResponse {}
+    
+    
+    /// <summary>
+    /// Authenticated account session; immediately save token securely.
+    /// </summary>
+    public record SignedIn (
+        string Token,
+        string Name,
+        string Email
+    ) : ObsidianAccountResponse {}
+    
+    /// <summary>
+    /// Account service metadata, not a credential cache.
+    /// </summary>
+    public record UserInfo (
+        string MetadataJson
+    ) : ObsidianAccountResponse {}
+    
+    /// <summary>
+    /// Owned/shared vault choices with no managed passwords exposed.
+    /// </summary>
+    public record Vaults (
+        ObsidianRemoteVault[] VaultsValue
+    ) : ObsidianAccountResponse {}
+    
+    /// <summary>
+    /// The service accepted the prepared vault key proof.
+    /// </summary>
+    public record AccessGranted: ObsidianAccountResponse {}
+    
+    
+    /// <summary>
+    /// The service invalidated the account token.
+    /// </summary>
+    public record SignedOut: ObsidianAccountResponse {}
+    
+    
+
+    
 }
 
-class FfiConverterTypePomodoroPhase: FfiConverterRustBuffer<PomodoroPhase> {
-    public static FfiConverterTypePomodoroPhase INSTANCE = new FfiConverterTypePomodoroPhase();
+class FfiConverterTypeObsidianAccountResponse : FfiConverterRustBuffer<ObsidianAccountResponse>{
+    public static FfiConverterRustBuffer<ObsidianAccountResponse> INSTANCE = new FfiConverterTypeObsidianAccountResponse();
 
-    public override PomodoroPhase Read(BigEndianStream stream) {
+    public override ObsidianAccountResponse Read(BigEndianStream stream) {
         var value = stream.ReadInt();
         switch (value) {
-            case 1: return PomodoroPhase.Work;
-            case 2: return PomodoroPhase.Break;
-            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypePomodoroPhase.Read()", value));
+            case 1:
+                return new ObsidianAccountResponse.MfaRequired(
+                );
+            case 2:
+                return new ObsidianAccountResponse.MfaRejected(
+                );
+            case 3:
+                return new ObsidianAccountResponse.SignedIn(
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 4:
+                return new ObsidianAccountResponse.UserInfo(
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 5:
+                return new ObsidianAccountResponse.Vaults(
+                    FfiConverterSequenceTypeObsidianRemoteVault.INSTANCE.Read(stream)
+                );
+            case 6:
+                return new ObsidianAccountResponse.AccessGranted(
+                );
+            case 7:
+                return new ObsidianAccountResponse.SignedOut(
+                );
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianAccountResponse.Read()", value));
         }
     }
 
-    public override int AllocationSize(PomodoroPhase value) {
-        return 4;
+    public override int AllocationSize(ObsidianAccountResponse value) {
+        switch (value) {
+            case ObsidianAccountResponse.MfaRequired variant_value:
+                return 4;
+            case ObsidianAccountResponse.MfaRejected variant_value:
+                return 4;
+            case ObsidianAccountResponse.SignedIn variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Token)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Name)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Email);
+            case ObsidianAccountResponse.UserInfo variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.MetadataJson);
+            case ObsidianAccountResponse.Vaults variant_value:
+                return 4
+                    + FfiConverterSequenceTypeObsidianRemoteVault.INSTANCE.AllocationSize(variant_value.VaultsValue);
+            case ObsidianAccountResponse.AccessGranted variant_value:
+                return 4;
+            case ObsidianAccountResponse.SignedOut variant_value:
+                return 4;
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianAccountResponse.AllocationSize()", value));
+        }
     }
 
-    public override void Write(PomodoroPhase value, BigEndianStream stream) {
+    public override void Write(ObsidianAccountResponse value, BigEndianStream stream) {
         switch (value) {
-            case PomodoroPhase.Work: stream.WriteInt(1); break;
-            case PomodoroPhase.Break: stream.WriteInt(2); break;
-            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypePomodoroPhase.Write()", value));
+            case ObsidianAccountResponse.MfaRequired variant_value:
+                stream.WriteInt(1);
+                break;
+            case ObsidianAccountResponse.MfaRejected variant_value:
+                stream.WriteInt(2);
+                break;
+            case ObsidianAccountResponse.SignedIn variant_value:
+                stream.WriteInt(3);
+                FfiConverterString.INSTANCE.Write(variant_value.Token, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.Name, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.Email, stream);
+                break;
+            case ObsidianAccountResponse.UserInfo variant_value:
+                stream.WriteInt(4);
+                FfiConverterString.INSTANCE.Write(variant_value.MetadataJson, stream);
+                break;
+            case ObsidianAccountResponse.Vaults variant_value:
+                stream.WriteInt(5);
+                FfiConverterSequenceTypeObsidianRemoteVault.INSTANCE.Write(variant_value.VaultsValue, stream);
+                break;
+            case ObsidianAccountResponse.AccessGranted variant_value:
+                stream.WriteInt(6);
+                break;
+            case ObsidianAccountResponse.SignedOut variant_value:
+                stream.WriteInt(7);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianAccountResponse.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+
+
+/// <summary>
+/// Typed boundary failures never contain credentials or peer/file payloads.
+/// </summary>
+internal class ObsidianBoundaryException: UniffiException {
+    ObsidianBoundaryException() : base() {}
+    ObsidianBoundaryException(String @Message) : base(@Message) {}
+
+    // Each variant is a nested class
+    
+    /// <summary>
+    /// The engine handle's serialization lock was poisoned.
+    /// </summary>
+    public class Lock : ObsidianBoundaryException {
+        public Lock() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// A malformed local request or unmatched request identifier.
+    /// </summary>
+    public class Request : ObsidianBoundaryException {
+        public Request() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// Nonblocking admission; retain the exact operation and retry later.
+    /// </summary>
+    public class Busy : ObsidianBoundaryException {
+        public Busy() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// Account, crypto, transport, or protocol rejection, redacted upstream.
+    /// </summary>
+    
+    public class Boundary : ObsidianBoundaryException {
+        // Members
+        public string @code;
+        public string @detail;
+
+        // Constructor
+        public Boundary(
+                string @code, 
+                string @detail) : base(
+                "@code" + "=" + @code+ ", " +
+                "@detail" + "=" + @detail) {
+
+            this.@code = @code;
+
+            this.@detail = @detail;
+        }
+    }
+    
+
+    
+}
+
+class FfiConverterTypeObsidianBoundaryError : FfiConverterRustBuffer<ObsidianBoundaryException>, CallStatusErrorHandler<ObsidianBoundaryException> {
+    public static FfiConverterTypeObsidianBoundaryError INSTANCE = new FfiConverterTypeObsidianBoundaryError();
+
+    public override ObsidianBoundaryException Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new ObsidianBoundaryException.Lock();
+            case 2:
+                return new ObsidianBoundaryException.Request();
+            case 3:
+                return new ObsidianBoundaryException.Busy();
+            case 4:
+                return new ObsidianBoundaryException.Boundary(
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream));
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeObsidianBoundaryError.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(ObsidianBoundaryException value) {
+        switch (value) {
+
+            case ObsidianBoundaryException.Lock variant_value:
+                return 4;
+
+            case ObsidianBoundaryException.Request variant_value:
+                return 4;
+
+            case ObsidianBoundaryException.Busy variant_value:
+                return 4;
+
+            case ObsidianBoundaryException.Boundary variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@code)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeObsidianBoundaryError.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(ObsidianBoundaryException value, BigEndianStream stream) {
+        switch (value) {
+            case ObsidianBoundaryException.Lock variant_value:
+                stream.WriteInt(1);
+                break;
+            case ObsidianBoundaryException.Request variant_value:
+                stream.WriteInt(2);
+                break;
+            case ObsidianBoundaryException.Busy variant_value:
+                stream.WriteInt(3);
+                break;
+            case ObsidianBoundaryException.Boundary variant_value:
+                stream.WriteInt(4);
+                FfiConverterString.INSTANCE.Write(variant_value.@code, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeObsidianBoundaryError.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+/// <summary>
+/// Native projection of ordered protocol work. Native executors handle these
+/// after the Rust call returns; payloads/credentials are never diagnostic data.
+/// </summary>
+internal record ObsidianSessionEffect {
+    
+    /// <summary>
+    /// Open a new secure socket. Ignore callbacks from superseded socket epochs.
+    /// </summary>
+    public record Connect (
+        string Url
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Transient WebSocket JSON, including the login token/key proof.
+    /// </summary>
+    public record SendText (
+        string Text
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// An encrypted binary piece.
+    /// </summary>
+    public record SendBinary (
+        byte[] Bytes
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Close/cancel the current socket.
+    /// </summary>
+    public record Close: ObsidianSessionEffect {}
+    
+    
+    /// <summary>
+    /// Save atomically, then call `checkpoint_persisted(revision)`.
+    /// </summary>
+    public record PersistCheckpoint (
+        ulong Revision,
+        string CheckpointJson
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Apply the atomic delta through the runtime, then acknowledge its revision.
+    /// </summary>
+    public record PersistCheckpointDelta (
+        ulong Revision,
+        string DeltaJson
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Durable notice. Retain selected=false metadata without pulling content.
+    /// </summary>
+    public record RemoteChange (
+        string MetadataJson
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Initial stream and its cursor barrier are committed; uploads may start.
+    /// </summary>
+    public record Ready (
+        ulong Cursor
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Authenticated session-owned payload. Apply by handle before completion.
+    /// </summary>
+    public record DownloadedPayload (
+        ulong Uid,
+        string TransferId,
+        ulong PayloadSize,
+        bool Deleted,
+        string? ContentHash
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Exact immutable outbox receipt acknowledged remotely.
+    /// </summary>
+    public record Uploaded (
+        string OperationId,
+        string ContentHash
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Typed failure. Retryable cases reconnect on monotonic ticks.
+    /// </summary>
+    public record Failed (
+        string Code,
+        string Message,
+        bool Retryable,
+        string? OperationId
+    ) : ObsidianSessionEffect {}
+    
+    /// <summary>
+    /// Session cancellation did not acknowledge this receipt.
+    /// </summary>
+    public record Cancelled (
+        string OperationId
+    ) : ObsidianSessionEffect {}
+    
+
+    
+}
+
+class FfiConverterTypeObsidianSessionEffect : FfiConverterRustBuffer<ObsidianSessionEffect>{
+    public static FfiConverterRustBuffer<ObsidianSessionEffect> INSTANCE = new FfiConverterTypeObsidianSessionEffect();
+
+    public override ObsidianSessionEffect Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new ObsidianSessionEffect.Connect(
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 2:
+                return new ObsidianSessionEffect.SendText(
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 3:
+                return new ObsidianSessionEffect.SendBinary(
+                    FfiConverterByteArray.INSTANCE.Read(stream)
+                );
+            case 4:
+                return new ObsidianSessionEffect.Close(
+                );
+            case 5:
+                return new ObsidianSessionEffect.PersistCheckpoint(
+                    FfiConverterUInt64.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 6:
+                return new ObsidianSessionEffect.PersistCheckpointDelta(
+                    FfiConverterUInt64.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 7:
+                return new ObsidianSessionEffect.RemoteChange(
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 8:
+                return new ObsidianSessionEffect.Ready(
+                    FfiConverterUInt64.INSTANCE.Read(stream)
+                );
+            case 9:
+                return new ObsidianSessionEffect.DownloadedPayload(
+                    FfiConverterUInt64.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterUInt64.INSTANCE.Read(stream),
+                    FfiConverterBoolean.INSTANCE.Read(stream),
+                    FfiConverterOptionalString.INSTANCE.Read(stream)
+                );
+            case 10:
+                return new ObsidianSessionEffect.Uploaded(
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 11:
+                return new ObsidianSessionEffect.Failed(
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterString.INSTANCE.Read(stream),
+                    FfiConverterBoolean.INSTANCE.Read(stream),
+                    FfiConverterOptionalString.INSTANCE.Read(stream)
+                );
+            case 12:
+                return new ObsidianSessionEffect.Cancelled(
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianSessionEffect.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(ObsidianSessionEffect value) {
+        switch (value) {
+            case ObsidianSessionEffect.Connect variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Url);
+            case ObsidianSessionEffect.SendText variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Text);
+            case ObsidianSessionEffect.SendBinary variant_value:
+                return 4
+                    + FfiConverterByteArray.INSTANCE.AllocationSize(variant_value.Bytes);
+            case ObsidianSessionEffect.Close variant_value:
+                return 4;
+            case ObsidianSessionEffect.PersistCheckpoint variant_value:
+                return 4
+                    + FfiConverterUInt64.INSTANCE.AllocationSize(variant_value.Revision)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.CheckpointJson);
+            case ObsidianSessionEffect.PersistCheckpointDelta variant_value:
+                return 4
+                    + FfiConverterUInt64.INSTANCE.AllocationSize(variant_value.Revision)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.DeltaJson);
+            case ObsidianSessionEffect.RemoteChange variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.MetadataJson);
+            case ObsidianSessionEffect.Ready variant_value:
+                return 4
+                    + FfiConverterUInt64.INSTANCE.AllocationSize(variant_value.Cursor);
+            case ObsidianSessionEffect.DownloadedPayload variant_value:
+                return 4
+                    + FfiConverterUInt64.INSTANCE.AllocationSize(variant_value.Uid)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.TransferId)
+                    + FfiConverterUInt64.INSTANCE.AllocationSize(variant_value.PayloadSize)
+                    + FfiConverterBoolean.INSTANCE.AllocationSize(variant_value.Deleted)
+                    + FfiConverterOptionalString.INSTANCE.AllocationSize(variant_value.ContentHash);
+            case ObsidianSessionEffect.Uploaded variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.OperationId)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.ContentHash);
+            case ObsidianSessionEffect.Failed variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Code)
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.Message)
+                    + FfiConverterBoolean.INSTANCE.AllocationSize(variant_value.Retryable)
+                    + FfiConverterOptionalString.INSTANCE.AllocationSize(variant_value.OperationId);
+            case ObsidianSessionEffect.Cancelled variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.OperationId);
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianSessionEffect.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(ObsidianSessionEffect value, BigEndianStream stream) {
+        switch (value) {
+            case ObsidianSessionEffect.Connect variant_value:
+                stream.WriteInt(1);
+                FfiConverterString.INSTANCE.Write(variant_value.Url, stream);
+                break;
+            case ObsidianSessionEffect.SendText variant_value:
+                stream.WriteInt(2);
+                FfiConverterString.INSTANCE.Write(variant_value.Text, stream);
+                break;
+            case ObsidianSessionEffect.SendBinary variant_value:
+                stream.WriteInt(3);
+                FfiConverterByteArray.INSTANCE.Write(variant_value.Bytes, stream);
+                break;
+            case ObsidianSessionEffect.Close variant_value:
+                stream.WriteInt(4);
+                break;
+            case ObsidianSessionEffect.PersistCheckpoint variant_value:
+                stream.WriteInt(5);
+                FfiConverterUInt64.INSTANCE.Write(variant_value.Revision, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.CheckpointJson, stream);
+                break;
+            case ObsidianSessionEffect.PersistCheckpointDelta variant_value:
+                stream.WriteInt(6);
+                FfiConverterUInt64.INSTANCE.Write(variant_value.Revision, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.DeltaJson, stream);
+                break;
+            case ObsidianSessionEffect.RemoteChange variant_value:
+                stream.WriteInt(7);
+                FfiConverterString.INSTANCE.Write(variant_value.MetadataJson, stream);
+                break;
+            case ObsidianSessionEffect.Ready variant_value:
+                stream.WriteInt(8);
+                FfiConverterUInt64.INSTANCE.Write(variant_value.Cursor, stream);
+                break;
+            case ObsidianSessionEffect.DownloadedPayload variant_value:
+                stream.WriteInt(9);
+                FfiConverterUInt64.INSTANCE.Write(variant_value.Uid, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.TransferId, stream);
+                FfiConverterUInt64.INSTANCE.Write(variant_value.PayloadSize, stream);
+                FfiConverterBoolean.INSTANCE.Write(variant_value.Deleted, stream);
+                FfiConverterOptionalString.INSTANCE.Write(variant_value.ContentHash, stream);
+                break;
+            case ObsidianSessionEffect.Uploaded variant_value:
+                stream.WriteInt(10);
+                FfiConverterString.INSTANCE.Write(variant_value.OperationId, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.ContentHash, stream);
+                break;
+            case ObsidianSessionEffect.Failed variant_value:
+                stream.WriteInt(11);
+                FfiConverterString.INSTANCE.Write(variant_value.Code, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.Message, stream);
+                FfiConverterBoolean.INSTANCE.Write(variant_value.Retryable, stream);
+                FfiConverterOptionalString.INSTANCE.Write(variant_value.OperationId, stream);
+                break;
+            case ObsidianSessionEffect.Cancelled variant_value:
+                stream.WriteInt(12);
+                FfiConverterString.INSTANCE.Write(variant_value.OperationId, stream);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianSessionEffect.Write()", value));
         }
     }
 }
@@ -14599,14 +20796,14 @@ internal class TransportException: UniffiException {
     
     public class Timeout : TransportException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Timeout(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -14616,14 +20813,14 @@ internal class TransportException: UniffiException {
     
     public class Offline : TransportException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Offline(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -14633,14 +20830,14 @@ internal class TransportException: UniffiException {
     
     public class Tls : TransportException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Tls(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -14650,14 +20847,14 @@ internal class TransportException: UniffiException {
     
     public class Other : TransportException {
         // Members
-        public string @message;
+        public string @detail;
 
         // Constructor
         public Other(
-                string @message) : base(
-                "@message" + "=" + @message) {
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
 
-            this.@message = @message;
+            this.@detail = @detail;
         }
     }
     
@@ -14693,19 +20890,19 @@ class FfiConverterTypeTransportError : FfiConverterRustBuffer<TransportException
 
             case TransportException.Timeout variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case TransportException.Offline variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case TransportException.Tls variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
 
             case TransportException.Other variant_value:
                 return 4
-                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@message);
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
             default:
                 throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeTransportError.AllocationSize()", value));
         }
@@ -14715,19 +20912,19 @@ class FfiConverterTypeTransportError : FfiConverterRustBuffer<TransportException
         switch (value) {
             case TransportException.Timeout variant_value:
                 stream.WriteInt(1);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case TransportException.Offline variant_value:
                 stream.WriteInt(2);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case TransportException.Tls variant_value:
                 stream.WriteInt(3);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             case TransportException.Other variant_value:
                 stream.WriteInt(4);
-                FfiConverterString.INSTANCE.Write(variant_value.@message, stream);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
                 break;
             default:
                 throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeTransportError.Write()", value));
@@ -14807,6 +21004,137 @@ class FfiConverterTypeUpcomingHorizon : FfiConverterRustBuffer<UpcomingHorizon>{
 }
 
 
+
+
+
+
+
+/// <summary>
+/// Sanitized vault failures, distinct from the legacy server API errors.
+/// </summary>
+internal class VaultBoundaryException: UniffiException {
+    VaultBoundaryException() : base() {}
+    VaultBoundaryException(String @Message) : base(@Message) {}
+
+    // Each variant is a nested class
+    
+    /// <summary>
+    /// The selected configuration is invalid or needs explicit approval.
+    /// </summary>
+    
+    public class Configuration : VaultBoundaryException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Configuration(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// A document or requested edit is invalid.
+    /// </summary>
+    
+    public class Document : VaultBoundaryException {
+        // Members
+        public string @detail;
+
+        // Constructor
+        public Document(
+                string @detail) : base(
+                "@detail" + "=" + @detail) {
+
+            this.@detail = @detail;
+        }
+    }
+    
+    /// <summary>
+    /// A path is not a safe vault-relative identity.
+    /// </summary>
+    public class Path : VaultBoundaryException {
+        public Path() : base() {}
+    }
+    
+    
+    /// <summary>
+    /// The current file differs from the version used to plan its edit.
+    /// </summary>
+    public class Conflict : VaultBoundaryException {
+        public Conflict() : base() {}
+    }
+    
+    
+
+    
+}
+
+class FfiConverterTypeVaultBoundaryError : FfiConverterRustBuffer<VaultBoundaryException>, CallStatusErrorHandler<VaultBoundaryException> {
+    public static FfiConverterTypeVaultBoundaryError INSTANCE = new FfiConverterTypeVaultBoundaryError();
+
+    public override VaultBoundaryException Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new VaultBoundaryException.Configuration(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 2:
+                return new VaultBoundaryException.Document(
+                    FfiConverterString.INSTANCE.Read(stream));
+            case 3:
+                return new VaultBoundaryException.Path();
+            case 4:
+                return new VaultBoundaryException.Conflict();
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeVaultBoundaryError.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(VaultBoundaryException value) {
+        switch (value) {
+
+            case VaultBoundaryException.Configuration variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case VaultBoundaryException.Document variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.@detail);
+
+            case VaultBoundaryException.Path variant_value:
+                return 4;
+
+            case VaultBoundaryException.Conflict variant_value:
+                return 4;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeVaultBoundaryError.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(VaultBoundaryException value, BigEndianStream stream) {
+        switch (value) {
+            case VaultBoundaryException.Configuration variant_value:
+                stream.WriteInt(1);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case VaultBoundaryException.Document variant_value:
+                stream.WriteInt(2);
+                FfiConverterString.INSTANCE.Write(variant_value.@detail, stream);
+                break;
+            case VaultBoundaryException.Path variant_value:
+                stream.WriteInt(3);
+                break;
+            case VaultBoundaryException.Conflict variant_value:
+                stream.WriteInt(4);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid error value '{0}' in FfiConverterTypeVaultBoundaryError.Write()", value));
+        }
+    }
+}
 
 
 
@@ -15103,6 +21431,37 @@ class FfiConverterOptionalByteArray: FfiConverterRustBuffer<byte[]?> {
 
 
 
+class FfiConverterOptionalTypeFfiFacetPayload: FfiConverterRustBuffer<FfiFacetPayload?> {
+    public static FfiConverterOptionalTypeFfiFacetPayload INSTANCE = new FfiConverterOptionalTypeFfiFacetPayload();
+
+    public override FfiFacetPayload? Read(BigEndianStream stream) {
+        if (stream.ReadByte() == 0) {
+            return null;
+        }
+        return FfiConverterTypeFfiFacetPayload.INSTANCE.Read(stream);
+    }
+
+    public override int AllocationSize(FfiFacetPayload? value) {
+        if (value == null) {
+            return 1;
+        } else {
+            return 1 + FfiConverterTypeFfiFacetPayload.INSTANCE.AllocationSize((FfiFacetPayload)value);
+        }
+    }
+
+    public override void Write(FfiFacetPayload? value, BigEndianStream stream) {
+        if (value == null) {
+            stream.WriteByte(0);
+        } else {
+            stream.WriteByte(1);
+            FfiConverterTypeFfiFacetPayload.INSTANCE.Write((FfiFacetPayload)value, stream);
+        }
+    }
+}
+
+
+
+
 class FfiConverterOptionalTypeTaskNotesApi: FfiConverterRustBuffer<TaskNotesApi?> {
     public static FfiConverterOptionalTypeTaskNotesApi INSTANCE = new FfiConverterOptionalTypeTaskNotesApi();
 
@@ -15158,6 +21517,68 @@ class FfiConverterOptionalTypeCommonRecurrenceDraft: FfiConverterRustBuffer<Comm
         } else {
             stream.WriteByte(1);
             FfiConverterTypeCommonRecurrenceDraft.INSTANCE.Write((CommonRecurrenceDraft)value, stream);
+        }
+    }
+}
+
+
+
+
+class FfiConverterOptionalTypeFacetDisplacedMetadata: FfiConverterRustBuffer<FacetDisplacedMetadata?> {
+    public static FfiConverterOptionalTypeFacetDisplacedMetadata INSTANCE = new FfiConverterOptionalTypeFacetDisplacedMetadata();
+
+    public override FacetDisplacedMetadata? Read(BigEndianStream stream) {
+        if (stream.ReadByte() == 0) {
+            return null;
+        }
+        return FfiConverterTypeFacetDisplacedMetadata.INSTANCE.Read(stream);
+    }
+
+    public override int AllocationSize(FacetDisplacedMetadata? value) {
+        if (value == null) {
+            return 1;
+        } else {
+            return 1 + FfiConverterTypeFacetDisplacedMetadata.INSTANCE.AllocationSize((FacetDisplacedMetadata)value);
+        }
+    }
+
+    public override void Write(FacetDisplacedMetadata? value, BigEndianStream stream) {
+        if (value == null) {
+            stream.WriteByte(0);
+        } else {
+            stream.WriteByte(1);
+            FfiConverterTypeFacetDisplacedMetadata.INSTANCE.Write((FacetDisplacedMetadata)value, stream);
+        }
+    }
+}
+
+
+
+
+class FfiConverterOptionalTypeFacetFileSnapshot: FfiConverterRustBuffer<FacetFileSnapshot?> {
+    public static FfiConverterOptionalTypeFacetFileSnapshot INSTANCE = new FfiConverterOptionalTypeFacetFileSnapshot();
+
+    public override FacetFileSnapshot? Read(BigEndianStream stream) {
+        if (stream.ReadByte() == 0) {
+            return null;
+        }
+        return FfiConverterTypeFacetFileSnapshot.INSTANCE.Read(stream);
+    }
+
+    public override int AllocationSize(FacetFileSnapshot? value) {
+        if (value == null) {
+            return 1;
+        } else {
+            return 1 + FfiConverterTypeFacetFileSnapshot.INSTANCE.AllocationSize((FacetFileSnapshot)value);
+        }
+    }
+
+    public override void Write(FacetFileSnapshot? value, BigEndianStream stream) {
+        if (value == null) {
+            stream.WriteByte(0);
+        } else {
+            stream.WriteByte(1);
+            FfiConverterTypeFacetFileSnapshot.INSTANCE.Write((FacetFileSnapshot)value, stream);
         }
     }
 }
@@ -15313,37 +21734,6 @@ class FfiConverterOptionalTypeFrequency: FfiConverterRustBuffer<Frequency?> {
         } else {
             stream.WriteByte(1);
             FfiConverterTypeFrequency.INSTANCE.Write((Frequency)value, stream);
-        }
-    }
-}
-
-
-
-
-class FfiConverterOptionalTypePomodoroPhase: FfiConverterRustBuffer<PomodoroPhase?> {
-    public static FfiConverterOptionalTypePomodoroPhase INSTANCE = new FfiConverterOptionalTypePomodoroPhase();
-
-    public override PomodoroPhase? Read(BigEndianStream stream) {
-        if (stream.ReadByte() == 0) {
-            return null;
-        }
-        return FfiConverterTypePomodoroPhase.INSTANCE.Read(stream);
-    }
-
-    public override int AllocationSize(PomodoroPhase? value) {
-        if (value == null) {
-            return 1;
-        } else {
-            return 1 + FfiConverterTypePomodoroPhase.INSTANCE.AllocationSize((PomodoroPhase)value);
-        }
-    }
-
-    public override void Write(PomodoroPhase? value, BigEndianStream stream) {
-        if (value == null) {
-            stream.WriteByte(0);
-        } else {
-            stream.WriteByte(1);
-            FfiConverterTypePomodoroPhase.INSTANCE.Write((PomodoroPhase)value, stream);
         }
     }
 }
@@ -15953,6 +22343,52 @@ class FfiConverterSequenceTypeDeadLetterEntry: FfiConverterRustBuffer<DeadLetter
 
 
 
+class FfiConverterSequenceTypeFacetDisplacedMetadata: FfiConverterRustBuffer<FacetDisplacedMetadata[]> {
+    public static FfiConverterSequenceTypeFacetDisplacedMetadata INSTANCE = new FfiConverterSequenceTypeFacetDisplacedMetadata();
+
+    public override FacetDisplacedMetadata[]  Read(BigEndianStream stream) {
+        var length = stream.ReadInt();
+        if (length == 0) {
+            return [];
+        }
+
+        var result = new FacetDisplacedMetadata[length];
+        var readFn = FfiConverterTypeFacetDisplacedMetadata.INSTANCE.Read;
+        for (int i = 0; i < length; i++) {
+            result[i] = readFn(stream);
+        }
+        return result;
+    }
+
+    public override int AllocationSize(FacetDisplacedMetadata[]  value) {
+        var sizeForLength = 4;
+
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            return sizeForLength;
+        }
+
+        var allocationSizeFn = FfiConverterTypeFacetDisplacedMetadata.INSTANCE.AllocationSize;
+        var sizeForItems = value.Sum(item => allocationSizeFn(item));
+        return sizeForLength + sizeForItems;
+    }
+
+    public override void Write(FacetDisplacedMetadata[] value, BigEndianStream stream) {
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            stream.WriteInt(0);
+            return;
+        }
+
+        stream.WriteInt(value.Length);
+        var writerFn = FfiConverterTypeFacetDisplacedMetadata.INSTANCE.Write;
+        value.ForEach(item => writerFn(item, stream));
+    }
+}
+
+
+
+
 class FfiConverterSequenceTypeFilterConfig: FfiConverterRustBuffer<FilterConfig[]> {
     public static FfiConverterSequenceTypeFilterConfig INSTANCE = new FfiConverterSequenceTypeFilterConfig();
 
@@ -16045,24 +22481,24 @@ class FfiConverterSequenceTypeHttpHeader: FfiConverterRustBuffer<HttpHeader[]> {
 
 
 
-class FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTimeEntry[]> {
-    public static FfiConverterSequenceTypeInlineTimeEntry INSTANCE = new FfiConverterSequenceTypeInlineTimeEntry();
+class FfiConverterSequenceTypeObsidianHttpHeader: FfiConverterRustBuffer<ObsidianHttpHeader[]> {
+    public static FfiConverterSequenceTypeObsidianHttpHeader INSTANCE = new FfiConverterSequenceTypeObsidianHttpHeader();
 
-    public override InlineTimeEntry[]  Read(BigEndianStream stream) {
+    public override ObsidianHttpHeader[]  Read(BigEndianStream stream) {
         var length = stream.ReadInt();
         if (length == 0) {
             return [];
         }
 
-        var result = new InlineTimeEntry[length];
-        var readFn = FfiConverterTypeInlineTimeEntry.INSTANCE.Read;
+        var result = new ObsidianHttpHeader[length];
+        var readFn = FfiConverterTypeObsidianHttpHeader.INSTANCE.Read;
         for (int i = 0; i < length; i++) {
             result[i] = readFn(stream);
         }
         return result;
     }
 
-    public override int AllocationSize(InlineTimeEntry[]  value) {
+    public override int AllocationSize(ObsidianHttpHeader[]  value) {
         var sizeForLength = 4;
 
         // details/1-empty-list-as-default-method-parameter.md
@@ -16070,12 +22506,12 @@ class FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTime
             return sizeForLength;
         }
 
-        var allocationSizeFn = FfiConverterTypeInlineTimeEntry.INSTANCE.AllocationSize;
+        var allocationSizeFn = FfiConverterTypeObsidianHttpHeader.INSTANCE.AllocationSize;
         var sizeForItems = value.Sum(item => allocationSizeFn(item));
         return sizeForLength + sizeForItems;
     }
 
-    public override void Write(InlineTimeEntry[] value, BigEndianStream stream) {
+    public override void Write(ObsidianHttpHeader[] value, BigEndianStream stream) {
         // details/1-empty-list-as-default-method-parameter.md
         if (value == null) {
             stream.WriteInt(0);
@@ -16083,7 +22519,53 @@ class FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTime
         }
 
         stream.WriteInt(value.Length);
-        var writerFn = FfiConverterTypeInlineTimeEntry.INSTANCE.Write;
+        var writerFn = FfiConverterTypeObsidianHttpHeader.INSTANCE.Write;
+        value.ForEach(item => writerFn(item, stream));
+    }
+}
+
+
+
+
+class FfiConverterSequenceTypeObsidianRemoteVault: FfiConverterRustBuffer<ObsidianRemoteVault[]> {
+    public static FfiConverterSequenceTypeObsidianRemoteVault INSTANCE = new FfiConverterSequenceTypeObsidianRemoteVault();
+
+    public override ObsidianRemoteVault[]  Read(BigEndianStream stream) {
+        var length = stream.ReadInt();
+        if (length == 0) {
+            return [];
+        }
+
+        var result = new ObsidianRemoteVault[length];
+        var readFn = FfiConverterTypeObsidianRemoteVault.INSTANCE.Read;
+        for (int i = 0; i < length; i++) {
+            result[i] = readFn(stream);
+        }
+        return result;
+    }
+
+    public override int AllocationSize(ObsidianRemoteVault[]  value) {
+        var sizeForLength = 4;
+
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            return sizeForLength;
+        }
+
+        var allocationSizeFn = FfiConverterTypeObsidianRemoteVault.INSTANCE.AllocationSize;
+        var sizeForItems = value.Sum(item => allocationSizeFn(item));
+        return sizeForLength + sizeForItems;
+    }
+
+    public override void Write(ObsidianRemoteVault[] value, BigEndianStream stream) {
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            stream.WriteInt(0);
+            return;
+        }
+
+        stream.WriteInt(value.Length);
+        var writerFn = FfiConverterTypeObsidianRemoteVault.INSTANCE.Write;
         value.ForEach(item => writerFn(item, stream));
     }
 }
@@ -16183,52 +22665,6 @@ class FfiConverterSequenceTypeTask: FfiConverterRustBuffer<Task[]> {
 
 
 
-class FfiConverterSequenceTypeTopTask: FfiConverterRustBuffer<TopTask[]> {
-    public static FfiConverterSequenceTypeTopTask INSTANCE = new FfiConverterSequenceTypeTopTask();
-
-    public override TopTask[]  Read(BigEndianStream stream) {
-        var length = stream.ReadInt();
-        if (length == 0) {
-            return [];
-        }
-
-        var result = new TopTask[length];
-        var readFn = FfiConverterTypeTopTask.INSTANCE.Read;
-        for (int i = 0; i < length; i++) {
-            result[i] = readFn(stream);
-        }
-        return result;
-    }
-
-    public override int AllocationSize(TopTask[]  value) {
-        var sizeForLength = 4;
-
-        // details/1-empty-list-as-default-method-parameter.md
-        if (value == null) {
-            return sizeForLength;
-        }
-
-        var allocationSizeFn = FfiConverterTypeTopTask.INSTANCE.AllocationSize;
-        var sizeForItems = value.Sum(item => allocationSizeFn(item));
-        return sizeForLength + sizeForItems;
-    }
-
-    public override void Write(TopTask[] value, BigEndianStream stream) {
-        // details/1-empty-list-as-default-method-parameter.md
-        if (value == null) {
-            stream.WriteInt(0);
-            return;
-        }
-
-        stream.WriteInt(value.Length);
-        var writerFn = FfiConverterTypeTopTask.INSTANCE.Write;
-        value.ForEach(item => writerFn(item, stream));
-    }
-}
-
-
-
-
 class FfiConverterSequenceTypeWeekdayHeader: FfiConverterRustBuffer<WeekdayHeader[]> {
     public static FfiConverterSequenceTypeWeekdayHeader INSTANCE = new FfiConverterSequenceTypeWeekdayHeader();
 
@@ -16314,6 +22750,52 @@ class FfiConverterSequenceTypeCommonWeekday: FfiConverterRustBuffer<CommonWeekda
 
         stream.WriteInt(value.Length);
         var writerFn = FfiConverterTypeCommonWeekday.INSTANCE.Write;
+        value.ForEach(item => writerFn(item, stream));
+    }
+}
+
+
+
+
+class FfiConverterSequenceTypeObsidianSessionEffect: FfiConverterRustBuffer<ObsidianSessionEffect[]> {
+    public static FfiConverterSequenceTypeObsidianSessionEffect INSTANCE = new FfiConverterSequenceTypeObsidianSessionEffect();
+
+    public override ObsidianSessionEffect[]  Read(BigEndianStream stream) {
+        var length = stream.ReadInt();
+        if (length == 0) {
+            return [];
+        }
+
+        var result = new ObsidianSessionEffect[length];
+        var readFn = FfiConverterTypeObsidianSessionEffect.INSTANCE.Read;
+        for (int i = 0; i < length; i++) {
+            result[i] = readFn(stream);
+        }
+        return result;
+    }
+
+    public override int AllocationSize(ObsidianSessionEffect[]  value) {
+        var sizeForLength = 4;
+
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            return sizeForLength;
+        }
+
+        var allocationSizeFn = FfiConverterTypeObsidianSessionEffect.INSTANCE.AllocationSize;
+        var sizeForItems = value.Sum(item => allocationSizeFn(item));
+        return sizeForLength + sizeForItems;
+    }
+
+    public override void Write(ObsidianSessionEffect[] value, BigEndianStream stream) {
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            stream.WriteInt(0);
+            return;
+        }
+
+        stream.WriteInt(value.Length);
+        var writerFn = FfiConverterTypeObsidianSessionEffect.INSTANCE.Write;
         value.ForEach(item => writerFn(item, stream));
     }
 }
@@ -17634,50 +24116,6 @@ internal static class TaskNotesCoreMethods {
 
 
     /// <summary>
-    /// Format a duration as `H:MM:SS`, or `MM:SS` under an hour.
-    ///
-    /// Minutes and seconds are always two digits; hours are not padded, so ten
-    /// hours reads `10:00:00` and one reads `1:00:00`.
-    /// </summary>
-    public static string ElapsedFormat(ulong @seconds) {
-        return FfiConverterString.INSTANCE.Lift(
-    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_elapsed_format(FfiConverterUInt64.INSTANCE.Lower(@seconds), ref _status)
-));
-    }
-
-
-    /// <summary>
-    /// Whole seconds between a stored `startTime` and `now`.
-    ///
-    /// Both are RFC 3339 timestamps — the form the server writes, since every
-    /// `startTime` it emits comes from `Date.prototype.toISOString`. A zoneless
-    /// value is rejected rather than guessed at: without an offset there is no way
-    /// to place it on the timeline, and picking one would make a running timer's
-    /// reading depend on where the user happens to be sitting.
-    ///
-    /// A `start` after `now` yields `0` — clock skew between the host and whatever
-    /// wrote the entry, and a timer sitting at `00:00` until it catches up is the
-    /// correct rendering of "no time has elapsed yet".
-    ///
-    /// # Errors
-    ///
-    /// Returns [`CoreError::Validation`] when either argument is not a parseable
-    /// RFC 3339 timestamp. **This diverges from the TypeScript**, which returns `0`
-    /// for an unparseable value: a timer frozen at `00:00` is indistinguishable
-    /// from a session that just began, so a corrupt `timeEntries` row would be
-    /// invisible.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public static ulong ElapsedSecondsSince(string @start, string @now) {
-        return FfiConverterUInt64.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(FfiConverterString.INSTANCE.Lower(@start), FfiConverterString.INSTANCE.Lower(@now), ref _status)
-));
-    }
-
-
-    /// <summary>
     /// The schema version this release writes.
     ///
     /// Exported so a host can tell "never migrated" from "already current" without
@@ -17753,6 +24191,21 @@ internal static class TaskNotesCoreMethods {
         return FfiConverterTypeNlpParseResult.INSTANCE.Lift(
     _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
     _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_parse_task_input(FfiConverterString.INSTANCE.Lower(@input), FfiConverterString.INSTANCE.Lower(@today), ref _status)
+));
+    }
+
+
+    /// <summary>
+    /// Return the authoritative native transport resource policy.
+    ///
+    /// # Errors
+    /// Reports an unsupported platform integer width.
+    /// </summary>
+    /// <exception cref="ObsidianBoundaryException"></exception>
+    public static ObsidianTransportLimits ObsidianTransportLimits() {
+        return FfiConverterTypeObsidianTransportLimits.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeObsidianBoundaryError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_obsidian_transport_limits( ref _status)
 ));
     }
 

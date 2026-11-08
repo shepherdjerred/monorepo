@@ -125,7 +125,7 @@ namespace TaskNotes.Windows.App.Tests
                 Path.GetTempPath(),
                 $"tasknotes-views-{Guid.NewGuid():N}"
             );
-            TaskNotesStore store = new(directory);
+            FacetTaskNotesStore store = new(directory, new EmptySecrets());
             WinUiDispatcher dispatcher = new(
                 Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()
                     ?? throw new InvalidOperationException("The WinUI dispatcher is unavailable.")
@@ -135,7 +135,7 @@ namespace TaskNotes.Windows.App.Tests
                 dispatcher,
                 NullLogger<ShellViewModel>.Instance
             );
-            using SettingsViewModel settings = new(store, new EmptyConfiguration(), dispatcher);
+            using FacetSettingsViewModel settings = new(store, store, dispatcher);
             using TaskEditorViewModel editor = new(store, dispatcher);
             try
             {
@@ -184,16 +184,13 @@ namespace TaskNotes.Windows.App.Tests
                     [],
                     [],
                     [],
-                    null,
-                    0,
                     false,
                     false,
                     false,
                     false,
                     false,
                     null,
-                    string.Empty,
-                    false
+                    string.Empty
                 );
                 editorView.Load(task);
 
@@ -352,14 +349,18 @@ namespace TaskNotes.Windows.App.Tests
             }
         }
 
-        private sealed class EmptyConfiguration : IServerConfigurationStore
+        private sealed class EmptySecrets : IFacetSecretStore
         {
-            public ServerConfiguration Load() => new(null, null);
+            public string? Read(string identity) => null;
 
-            public void Save(string serverUrl, string? token)
+            public void Save(string identity, string value) =>
+                throw new InvalidOperationException(
+                    "This view attachment fixture has no account authorization."
+                );
+
+            public void Remove(string identity)
             {
-                _ = serverUrl;
-                _ = token;
+                _ = identity;
             }
         }
     }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Hono } from "hono";
@@ -14,6 +14,7 @@ const NOW = new Date("2026-07-03T12:00:00.000Z");
 
 let vault: string;
 let app: Hono;
+let repo: TaskRepository;
 
 const SEEDED = `---
 title: Seeded task
@@ -31,7 +32,7 @@ beforeEach(async () => {
   await mkdir(path.join(vault, "TaskNotes"), { recursive: true });
   await writeFile(path.join(vault, "TaskNotes/seeded.md"), SEEDED);
   const config = resolveModelConfig();
-  const repo = new TaskRepository(vault, "TaskNotes", config, () => NOW);
+  repo = new TaskRepository(vault, "TaskNotes", config, () => NOW);
   await repo.scan();
   app = new Hono();
   app.use("*", envelopeMiddleware);
@@ -65,6 +66,61 @@ function obj(value: unknown): Record<string, unknown> {
 }
 
 const SEEDED_ID = encodeURIComponent("TaskNotes/seeded.md");
+
+describe("retired feature boundaries", () => {
+  test("retired routes return 404", async () => {
+    for (const [method, route] of [
+      ["POST", `/api/tasks/${SEEDED_ID}/time/start`],
+      ["POST", `/api/tasks/${SEEDED_ID}/time/stop`],
+      ["GET", `/api/tasks/${SEEDED_ID}/time`],
+      ["GET", "/api/time/active"],
+      ["GET", "/api/time/summary"],
+      ["POST", "/api/pomodoro/start"],
+      ["POST", "/api/pomodoro/stop"],
+      ["POST", "/api/pomodoro/pause"],
+      ["GET", "/api/pomodoro/status"],
+    ] as const) {
+      const response = await app.request(route, { method });
+      expect(response.status).toBe(404);
+    }
+  });
+
+  test("retired request fields are rejected without changing the note", async () => {
+    for (const field of ["timeEstimate", "timeEntries", "totalTrackedTime"]) {
+      for (const [method, route] of [
+        ["POST", "/api/tasks"],
+        ["PUT", `/api/tasks/${SEEDED_ID}`],
+      ] as const) {
+        const response = await app.request(route, {
+          method,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ title: "Invalid", [field]: 10 }),
+        });
+        expect(response.status).toBe(400);
+      }
+    }
+    expect(
+      await readFile(path.join(vault, "TaskNotes/seeded.md"), "utf8"),
+    ).toBe(SEEDED);
+  });
+
+  test("legacy metadata is absent from responses and untouched by reading", async () => {
+    const markdown = SEEDED.replace(
+      "priority: normal",
+      "priority: normal\ntimeEstimate: broken\ntimeEntries: [opaque]\ntotalTrackedTime: vendor-value",
+    );
+    await writeFile(path.join(vault, "TaskNotes/seeded.md"), markdown);
+    await repo.refreshFile("TaskNotes/seeded.md");
+    const task = await unwrap(await app.request(`/api/tasks/${SEEDED_ID}`));
+    expect(task["title"]).toBe("Seeded task");
+    for (const field of ["timeEstimate", "timeEntries", "totalTrackedTime"]) {
+      expect(Object.hasOwn(task, field)).toBe(false);
+    }
+    expect(
+      await readFile(path.join(vault, "TaskNotes/seeded.md"), "utf8"),
+    ).toBe(markdown);
+  });
+});
 
 describe("v2 task routes", () => {
   test("GET /api/tasks — pagination defaults, vault info, envelope", async () => {
@@ -256,21 +312,6 @@ describe("v2 task routes", () => {
 
     const options = await unwrap(await app.request("/api/filter-options"));
     expect(Array.isArray(options["statuses"])).toBe(true);
-
-    const started = await app.request(`/api/tasks/${SEEDED_ID}/time/start`, {
-      method: "POST",
-    });
-    expect(started.status).toBe(200);
-    const active = await unwrap(await app.request("/api/time/active"));
-    expect(active["totalActiveSessions"]).toBe(1);
-
-    const summary = await unwrap(
-      await app.request("/api/time/summary?period=all"),
-    );
-    expect(summary["period"]).toBe("all");
-    // Upstream parity: a session with 0 elapsed minutes doesn't count yet
-    // (taskMinutes > 0 gate in upstream timeTrackingUtils).
-    expect(obj(summary["summary"])["tasksWithTime"]).toBe(0);
   });
 });
 
@@ -450,16 +491,6 @@ describe("v2 NLP + calendars", () => {
     const body = await envelope(res);
     expect(body.success).toBe(false);
     expect(body.error).toContain("not-a-date");
-  });
-
-  test("time/summary rejects a malformed `from`/`to` query param with 400, not 500", async () => {
-    const res = await app.request(
-      "/api/time/summary?period=custom&from=also-not-a-date",
-    );
-    expect(res.status).toBe(400);
-    const body = await envelope(res);
-    expect(body.success).toBe(false);
-    expect(body.error).toContain("also-not-a-date");
   });
 });
 

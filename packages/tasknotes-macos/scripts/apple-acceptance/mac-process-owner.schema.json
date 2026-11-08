@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "pid": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uid", "ruid", "startSeconds", "startMicroseconds"],
+      "properties": {
+        "uid": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "ruid": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "startSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "startMicroseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "pid",
+        "executable",
+        "expected"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "operation": { "enum": ["inspect", "terminate"] },
+        "pid": { "$ref": "#/$defs/pid" },
+        "executable": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "allOf": [
+            { "pattern": "^/" },
+            { "not": { "pattern": "[\u0000-\u001f\u007f]" } }
+          ]
+        },
+        "expected": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identity" }]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "operation": { "const": "inspect" } } },
+          "then": { "properties": { "expected": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "terminate" } } },
+          "then": {
+            "properties": { "expected": { "$ref": "#/$defs/identity" } }
+          }
+        }
+      ]
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "pid",
+        "outcome",
+        "identity",
+        "reason",
+        "signalSubmitted"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "operation": { "enum": ["inspect", "terminate", null] },
+        "pid": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/pid" }] },
+        "outcome": { "enum": ["inspected", "signal-submitted", "rejected"] },
+        "identity": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identity" }]
+        },
+        "reason": {
+          "enum": [
+            null,
+            "input",
+            "missing-process",
+            "uid",
+            "path",
+            "lifetime",
+            "signal"
+          ]
+        },
+        "signalSubmitted": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "outcome": { "const": "inspected" } } },
+          "then": {
+            "properties": {
+              "operation": { "const": "inspect" },
+              "pid": { "$ref": "#/$defs/pid" },
+              "identity": { "$ref": "#/$defs/identity" },
+              "reason": { "type": "null" },
+              "signalSubmitted": { "const": false }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "outcome": { "const": "signal-submitted" } }
+          },
+          "then": {
+            "properties": {
+              "operation": { "const": "terminate" },
+              "pid": { "$ref": "#/$defs/pid" },
+              "identity": { "$ref": "#/$defs/identity" },
+              "reason": { "type": "null" },
+              "signalSubmitted": { "const": true }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "outcome": { "const": "rejected" } } },
+          "then": {
+            "properties": {
+              "identity": { "type": "null" },
+              "reason": {
+                "enum": [
+                  "input",
+                  "missing-process",
+                  "uid",
+                  "path",
+                  "lifetime",
+                  "signal"
+                ]
+              },
+              "signalSubmitted": { "const": false }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

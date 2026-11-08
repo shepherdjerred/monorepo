@@ -1,0 +1,260 @@
+import assert from "node:assert/strict";
+import { z } from "zod";
+import { readManifest, save } from "../../platform.ts";
+import { assertUnchangedBuild } from "../../ledger.ts";
+import { requestGuest } from "../client.ts";
+import { UuidSchema } from "../fields.ts";
+import type { ExecutionOperation } from "./contract.ts";
+import { readHostCredentialItem } from "./credential-host.ts";
+import { PasswordManagerFailure } from "./credential-host.ts";
+import { credentialBackend } from "tasknotes-macos/scripts/mac-account-contract.ts";
+import type { CredentialBackend } from "tasknotes-macos/scripts/mac-account-contract.ts";
+import type { Manifest } from "../../model";
+import { runOfficialVerification } from "./official-verification-host";
+
+export function parseOfficialAccountArguments(args: string[]) {
+  const [run, mode, ...parameters] = args;
+  const runID = UuidSchema.parse(run);
+  const operation = z
+    .enum([
+      "launch",
+      "plugin",
+      "present",
+      "probe",
+      "credentials",
+      "verification-probe",
+      "verification",
+    ])
+    .parse(mode);
+  const options: Record<string, string> = {};
+  for (let index = 0; index < parameters.length; index += 2) {
+    const key = z
+      .enum([
+        "--account",
+        "--vault",
+        "--item",
+        "--plugin-export",
+        "--credential-backend",
+      ])
+      .parse(parameters[index]);
+    const value =
+      key === "--credential-backend"
+        ? z
+            .enum(["keychain", "service-account", "desktop"])
+            .parse(parameters[index + 1])
+        : key === "--plugin-export"
+          ? UuidSchema.parse(parameters[index + 1])
+          : z
+              .string()
+              .regex(/^[A-Za-z0-9]{20,32}$/u)
+              .parse(parameters[index + 1]);
+    assert.equal(options[key], undefined, "Duplicate credential locator");
+    options[key] = value;
+  }
+  const backend = credentialBackend(options["--credential-backend"]);
+  const credentialOperation =
+    operation === "credentials" || operation === "verification";
+  if (!credentialOperation)
+    assert.equal(options["--credential-backend"], undefined);
+  delete options["--credential-backend"];
+  assert.deepEqual(
+    Object.keys(options).sort(),
+    credentialOperation
+      ? ["--account", "--item", "--vault"]
+      : operation === "plugin"
+        ? ["--plugin-export"]
+        : [],
+  );
+  return { runID, operation, options, credentialBackend: backend };
+}
+
+async function invokeVerification(options: {
+  initial: Extract<Manifest, { schemaVersion: 3 }>;
+  operation: "verification-probe" | "verification";
+  backend: CredentialBackend;
+  locators: Record<string, string>;
+  fresh: () => Promise<unknown>;
+  markSubmitting: () => void;
+}) {
+  assert.equal(
+    options.backend,
+    "keychain",
+    "Official OTP verification supports only the enrolled local Keychain",
+  );
+  const operation =
+    options.operation === "verification-probe" ? "probe" : "verify";
+  const result = await runOfficialVerification(options.initial, operation, {
+    fresh: async () => {
+      await options.fresh();
+    },
+    ...(operation === "verify"
+      ? {
+          locators: {
+            "--account": options.locators["--account"] ?? "",
+            "--vault": options.locators["--vault"] ?? "",
+            "--item": options.locators["--item"] ?? "",
+          },
+        }
+      : {}),
+    markSubmitting: options.markSubmitting,
+  });
+  console.log(
+    JSON.stringify({
+      phase:
+        operation === "probe"
+          ? "official-verification-probed"
+          : "official-verification-submitted",
+      authenticationResult: "not-yet-inspected",
+      submitActionCount: result["submitActionCount"],
+    }),
+  );
+}
+/** Host-only private broker; source, run and native form are checked again after password-manager approval. */
+export async function runOfficialAccountCLI(args: string[]): Promise<number> {
+  let submitting = false;
+  try {
+    const {
+      runID,
+      operation,
+      options,
+      credentialBackend: backend,
+    } = parseOfficialAccountArguments(args);
+    const initial = await readManifest(runID);
+    if (initial.schemaVersion !== 3)
+      throw new Error("Official input requires a guest live run");
+    const fresh = async () => {
+      const manifest = await readManifest(runID);
+      assert.equal(manifest.schemaVersion, 3);
+      assert.deepEqual(manifest.execution, initial.execution);
+      assert.equal(manifest.round, initial.round);
+      assert.equal(manifest.stage, "owner-setup");
+      assert.equal(manifest.failures.length, 0);
+      assert.equal(manifest.allowedRemoteVaultID, initial.allowedRemoteVaultID);
+      await assertUnchangedBuild(manifest);
+      await save(manifest);
+      return manifest;
+    };
+    const invoke = async (
+      action: Extract<
+        ExecutionOperation,
+        { kind: "official-account" }
+      >["action"],
+    ) => {
+      const manifest = await fresh();
+      const result = await requestGuest(manifest, {
+        kind: "official-account",
+        action,
+      });
+      assert.equal(result.kind, "official-account");
+      if ("blocked" in result.receipt) {
+        console.log(JSON.stringify(result.receipt));
+        throw new Error("Official private helper rejected the current form");
+      }
+      return result.receipt;
+    };
+    if (operation === "launch" || operation === "plugin") {
+      const manifest = await fresh();
+      const result = await requestGuest(
+        manifest,
+        operation === "launch"
+          ? { kind: "official-launch" }
+          : {
+              kind: "official-plugin",
+              exportID: UuidSchema.parse(options["--plugin-export"]),
+            },
+      );
+      assert.equal(
+        result.kind,
+        operation === "launch" ? "official-launch" : "official-plugin",
+      );
+      console.log(JSON.stringify(result));
+      return 0;
+    }
+    if (operation === "verification-probe" || operation === "verification") {
+      await invokeVerification({
+        initial,
+        operation,
+        backend,
+        locators: options,
+        fresh,
+        markSubmitting: () => {
+          submitting = true;
+        },
+      });
+      return 0;
+    }
+    const inspected = await invoke({
+      mode: operation === "present" ? "present" : "inspect",
+    });
+    if (operation === "present") {
+      console.log(
+        JSON.stringify({
+          phase: "official-form-ready",
+          ready: inspected.ready,
+          submitActionCount: 0,
+        }),
+      );
+      return 0;
+    }
+    const lifetime = {
+      startSeconds: inspected.startSeconds,
+      startMicroseconds: inspected.startMicroseconds,
+      launchDate: inspected.launchDate,
+    };
+    if (operation === "probe") {
+      const proof = await invoke({ mode: "probe", lifetime });
+      assert.equal(proof.cleared, true);
+      assert.equal(proof.submitActionCount, 0);
+      console.log(JSON.stringify(proof));
+      return 0;
+    }
+    assert.equal(
+      inspected.probeReady,
+      true,
+      "Saved current integrated probe is required before reading1Password",
+    );
+    assert.equal(
+      inspected.submissionAttempted,
+      false,
+      "Inspect the retained prior submission before reading1Password again",
+    );
+    const credentials = readHostCredentialItem(
+      {
+        "--account": options["--account"] ?? "",
+        "--vault": options["--vault"] ?? "",
+        "--item": options["--item"] ?? "",
+      },
+      backend,
+    );
+    const filled = await invoke({ mode: "fill", ...credentials, lifetime });
+    assert.equal(filled.emailLength, credentials.email.length);
+    assert.equal(filled.passwordLength, credentials.password.length);
+    assert.equal(filled.focusedSecureField, true);
+    assert.equal(filled.loginEnabled, true);
+    assert.equal(filled.submitActionCount, 0);
+    submitting = true;
+    const submitted = await invoke({ mode: "submit", lifetime });
+    assert.equal(submitted.submitActionCount, 1);
+    console.log(
+      JSON.stringify({
+        phase: "official-signin-submitted",
+        authenticationResult: "not-yet-inspected",
+        submitActionCount: 1,
+      }),
+    );
+    return 0;
+  } catch (error) {
+    console.log(
+      JSON.stringify({
+        blocked:
+          error instanceof PasswordManagerFailure
+            ? error.classification
+            : "official-account-guard",
+        submissionStatus: submitting ? "unknown" : "not-attempted",
+      }),
+    );
+    return 3;
+  }
+}
+if (import.meta.main)
+  process.exitCode = await runOfficialAccountCLI(Bun.argv.slice(2));

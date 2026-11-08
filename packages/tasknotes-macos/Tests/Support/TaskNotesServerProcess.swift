@@ -50,9 +50,8 @@ public final class TaskNotesServerProcess {
     public let authToken: String
 
     private let process: Process
-    // A Pipe can keep Process.waitUntilExit() blocked after the child exits if
-    // nobody drains it. A file preserves startup diagnostics without coupling
-    // server shutdown to a reader.
+    private let termination: TaskNotesProcessTermination
+    // A file preserves startup diagnostics without an output-reader lifetime.
     private let output: FileHandle
     private let outputURL: URL
 
@@ -96,6 +95,7 @@ public final class TaskNotesServerProcess {
 
         let bun = try Self.locateBun()
         process = Process()
+        termination = TaskNotesProcessTermination(process: process)
         process.executableURL = bun
         process.arguments = ["run", "src/index.ts"]
         process.currentDirectoryURL = Self.serverPackage
@@ -139,9 +139,12 @@ public final class TaskNotesServerProcess {
 
     /// Stop the server and drop its vault.
     public func stop() {
-        if process.isRunning {
-            process.terminate()
-            process.waitUntilExit()
+        do {
+            try termination.stop()
+        } catch {
+            // A defer cannot throw. A shutdown failure must fail the test
+            // process, rather than report a passing test or wait forever.
+            preconditionFailure("tasknotes-server shutdown failed: \(error)")
         }
         _ = Result { try output.close() }
     }

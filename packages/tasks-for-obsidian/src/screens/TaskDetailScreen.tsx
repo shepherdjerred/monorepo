@@ -35,7 +35,6 @@ import {
 } from "../lib/feedback";
 import { showResultError } from "../lib/errors";
 import type { RootStackParamList } from "../navigation/types";
-import { useTimeTrackingContext } from "../state/TimeTrackingContext";
 import { UndoProvider } from "../state/UndoContext";
 import { typography } from "../styles/typography";
 
@@ -96,7 +95,6 @@ function TaskDetailRoute({
     contextNames,
     tagNames,
   } = useTasks();
-  const { activeEntry, startTracking, stopTracking } = useTimeTrackingContext();
   const [draft, setDraft] = useState<TaskDetailDraft>(() =>
     createTaskDetailDraft(task),
   );
@@ -121,7 +119,6 @@ function TaskDetailRoute({
   );
   const validationField = patchResult.ok ? null : patchResult.field;
   const validationMessage = patchResult.ok ? null : patchResult.message;
-  const isTracking = activeEntry?.taskId === task.id;
 
   useEffect(() => {
     if (draftBaseTask === task) return;
@@ -233,21 +230,6 @@ function TaskDetailRoute({
     })();
   }, [task, toggleTask]);
 
-  const handleToggleTracking = useCallback(() => {
-    feedbackButtonPress();
-    setIsWorking(true);
-    void (async () => {
-      const result = isTracking
-        ? await stopTracking(task.id)
-        : await startTracking(task.id);
-      showResultError(
-        result,
-        isTracking ? "Stop Tracking Failed" : "Start Tracking Failed",
-      );
-      setIsWorking(false);
-    })();
-  }, [isTracking, startTracking, stopTracking, task.id]);
-
   const handleDelete = useCallback(() => {
     Alert.alert(
       "Delete Task?",
@@ -285,10 +267,8 @@ function TaskDetailRoute({
       validationField={validationField}
       validationMessage={validationMessage}
       isWorking={isWorking}
-      isTracking={isTracking}
       onChange={setDraft}
       onToggleCompletion={handleToggleCompletion}
-      onToggleTracking={handleToggleTracking}
       onDelete={handleDelete}
     />
   );

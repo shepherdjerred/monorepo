@@ -29,7 +29,7 @@ struct ParkedChangeTests {
                     payload: CreateTaskRequest(
                         title: "Buy milk", details: nil, status: nil, priority: nil,
                         due: nil, scheduled: nil, contexts: nil, projects: nil, tags: nil,
-                        recurrence: nil, recurrenceAnchor: nil, timeEstimate: nil,
+                        recurrence: nil, recurrenceAnchor: nil,
                         extraFields: nil)),
                 failedAt: 5),
             entry(

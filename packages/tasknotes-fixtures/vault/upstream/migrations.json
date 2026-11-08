@@ -1,0 +1,668 @@
+[
+  {
+    "id": "migration.0001",
+    "section": "§8.2",
+    "profile": "core-lite",
+    "operation": "migration.compat_mode",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "mode": "legacy-aliases",
+      "enabled": false,
+      "defaultsToEnabled": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "discoverable": true,
+        "defaultsToEnabled": false
+      }
+    }
+  },
+  {
+    "id": "migration.0002",
+    "section": "§8.2",
+    "profile": "core-lite",
+    "operation": "migration.compat_mode",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "mode": "legacy-aliases",
+      "enabled": true,
+      "defaultsToEnabled": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "discoverable": true
+      }
+    }
+  },
+  {
+    "id": "migration.0003",
+    "section": "§8.3",
+    "profile": "core-lite",
+    "operation": "migration.plan",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "dryRun": true,
+      "rollbackGuidance": true,
+      "deterministic": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "deterministic": true,
+        "dryRunSupported": true,
+        "rollbackSafeGuidance": true
+      }
+    }
+  },
+  {
+    "id": "migration.0004",
+    "section": "§8.4",
+    "profile": "core-lite",
+    "operation": "migration.normalize_aliases",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "frontmatter": {
+        "recurrenceAnchor": "scheduled",
+        "recurrence_anchor": "completion"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "$contains": {
+            "recurrenceAnchor": "scheduled"
+          }
+        },
+        "issues": {
+          "$contains": [
+            {
+              "code": "alias_conflict_ignored"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0005",
+    "section": "§8.4",
+    "profile": "core-lite",
+    "operation": "migration.normalize_aliases",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "frontmatter": {
+        "recurrence_anchor": "scheduled"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "$contains": {
+            "recurrenceAnchor": "scheduled"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0006",
+    "section": "§8.5",
+    "profile": "core-lite",
+    "operation": "migration.normalize_temporal",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "frontmatter": {
+        "dateCreated": "2026-02-20 10:00:00+00:00"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "$contains": {
+            "dateCreated": "2026-02-20T10:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0007",
+    "section": "§8.5",
+    "profile": "core-lite",
+    "operation": "migration.normalize_temporal",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "frontmatter": {
+        "dateCreated": "2026-02-20T10:00:00Z",
+        "dateModified": "2026-02-20T11:00:00Z"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "$contains": {
+            "dateCreated": "2026-02-20T10:00:00Z",
+            "dateModified": "2026-02-20T11:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0008",
+    "section": "§8.5",
+    "profile": "core-lite",
+    "operation": "migration.normalize_temporal",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "frontmatter": {
+        "dateCreated": "2026-02-20 10:00:00+00:00",
+        "dateModified": "2026-02-20 11:00:00+00:00"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "frontmatter": {
+          "$contains": {
+            "dateCreated": "2026-02-20T10:00:00Z",
+            "dateModified": "2026-02-20T11:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0009",
+    "section": "§8.6",
+    "profile": "recurrence",
+    "operation": "migration.resolve_instance_overlap",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": [
+        "2026-02-20"
+      ],
+      "policy": "prefer_complete"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": {
+          "$contains": [
+            "2026-02-20",
+            "2026-02-21"
+          ]
+        },
+        "skippedInstances": []
+      }
+    }
+  },
+  {
+    "id": "migration.0010",
+    "section": "§8.6",
+    "profile": "recurrence",
+    "operation": "migration.resolve_instance_overlap",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": [
+        "2026-02-20"
+      ],
+      "policy": "prefer_skip"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": {
+          "$contains": [
+            "2026-02-21"
+          ]
+        },
+        "skippedInstances": {
+          "$contains": [
+            "2026-02-20"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0011",
+    "section": "§8.6",
+    "profile": "recurrence",
+    "operation": "migration.resolve_instance_overlap",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21"
+      ],
+      "policy": "prefer_complete"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": {
+          "$contains": [
+            "2026-02-20"
+          ]
+        },
+        "skippedInstances": {
+          "$contains": [
+            "2026-02-21"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0012",
+    "section": "§8.7",
+    "profile": "extended",
+    "operation": "migration.normalize_dependencies",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "dependencies"
+    ],
+    "input": {
+      "blockedBy": [
+        {
+          "uid": "[[a]]"
+        },
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        },
+        {
+          "uid": "[[b]]",
+          "reltype": "STARTTOSTART"
+        }
+      ],
+      "defaultReltype": "FINISHTOSTART"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "blockedBy": {
+          "$contains": [
+            {
+              "uid": "[[a]]",
+              "reltype": "FINISHTOSTART"
+            },
+            {
+              "uid": "[[b]]",
+              "reltype": "STARTTOSTART"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0013",
+    "section": "§8.7",
+    "profile": "extended",
+    "operation": "migration.normalize_dependencies",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "dependencies"
+    ],
+    "input": {
+      "blockedBy": [],
+      "defaultReltype": "FINISHTOSTART"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "blockedBy": []
+      }
+    }
+  },
+  {
+    "id": "migration.0014",
+    "section": "§8.7",
+    "profile": "extended",
+    "operation": "migration.normalize_dependencies",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "dependencies"
+    ],
+    "input": {
+      "blockedBy": [
+        {
+          "uid": "[[a]]"
+        },
+        {
+          "uid": "[[b]]",
+          "reltype": "STARTTOSTART"
+        }
+      ],
+      "defaultReltype": "FINISHTOSTART"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "blockedBy": {
+          "$contains": [
+            {
+              "uid": "[[a]]",
+              "reltype": "FINISHTOSTART"
+            },
+            {
+              "uid": "[[b]]",
+              "reltype": "STARTTOSTART"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0015",
+    "section": "§8.8",
+    "profile": "extended",
+    "operation": "migration.normalize_reminders",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "reminders"
+    ],
+    "input": {
+      "reminders": [
+        {
+          "type": "relative",
+          "relatedTo": "due",
+          "offset": "-P1D"
+        },
+        {
+          "id": "x",
+          "type": "absolute",
+          "absoluteTime": "2026-02-20 09:00:00+00:00"
+        }
+      ],
+      "generateIds": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "generated_ids": {
+          "$regex": "^[0-9]+$"
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0016",
+    "section": "§8.8",
+    "profile": "extended",
+    "operation": "migration.normalize_reminders",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "reminders"
+    ],
+    "input": {
+      "reminders": [
+        {
+          "id": "r1",
+          "type": "relative",
+          "relatedTo": "due",
+          "offset": "-P1D"
+        },
+        {
+          "id": "r2",
+          "type": "absolute",
+          "absoluteTime": "2026-02-20 09:00:00+00:00"
+        }
+      ],
+      "generateIds": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "reminders": {
+          "$contains": [
+            {
+              "id": "r1"
+            },
+            {
+              "id": "r2",
+              "absoluteTime": "2026-02-20T09:00:00Z"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0017",
+    "section": "§8.9",
+    "profile": "extended",
+    "operation": "migration.normalize_links",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "links"
+    ],
+    "input": {
+      "links": [
+        "[[task-001|Task]]",
+        "[Doc](docs/doc.md)",
+        "docs/doc.md"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": [
+            "[[task-001|Task]]"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0018",
+    "section": "§8.9",
+    "profile": "extended",
+    "operation": "migration.normalize_links",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration",
+      "links"
+    ],
+    "input": {
+      "links": [
+        "[[task-001]]",
+        "[[task-002|Alias]]"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": [
+            "[[task-001]]",
+            "[[task-002|Alias]]"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0019",
+    "section": "§8.13",
+    "profile": "core-lite",
+    "operation": "migration.report_summary",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {
+      "files_scanned": 214,
+      "files_changed": 67,
+      "warnings": {
+        "alias_conflict_ignored": 3
+      },
+      "changes": {
+        "normalized_datetime_fields": 41
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "spec_version_from": {
+          "$regex": ".+"
+        },
+        "spec_version_to": {
+          "$regex": ".+"
+        },
+        "files_scanned": 214,
+        "files_changed": 67
+      }
+    }
+  },
+  {
+    "id": "migration.0020",
+    "section": "§8.10",
+    "profile": "core-lite",
+    "operation": "migration.divergence_register",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "columns": {
+          "$contains": [
+            "section",
+            "current_behavior",
+            "target_behavior",
+            "migration_strategy",
+            "deprecation_timeline"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0021",
+    "section": "§8.11",
+    "profile": "core-lite",
+    "operation": "migration.deprecation_policy",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "includes": {
+          "$contains": [
+            "release_notes",
+            "warning_period",
+            "migration_tooling",
+            "versioned_removal"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0022",
+    "section": "§8.12",
+    "profile": "core-lite",
+    "operation": "migration.safety_guards",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "prevents": {
+          "$contains": [
+            "drop_unknown_fields",
+            "date_to_datetime_silent_conversion",
+            "silent_link_retarget"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "migration.0023",
+    "section": "§8.14",
+    "profile": "core-lite",
+    "operation": "migration.compat_statement",
+    "assertion": "envelope_equals",
+    "requires": [
+      "migration"
+    ],
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$regex": "Compatibility mode|legacy|Migration command"
+        }
+      }
+    }
+  }
+]

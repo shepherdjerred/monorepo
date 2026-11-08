@@ -7,6 +7,7 @@ tap "dsully/tap"
 tap "jdx/tap", trusted: true
 tap "lightpanda-io/browser"
 tap "mobile-dev-inc/tap"
+tap "openai/tools", trusted: { formulae: ["softnet"] }
 tap "pinchtab/tap"
 tap "rsteube/tap"
 tap "schpet/tap"
@@ -184,6 +185,8 @@ brew "dsully/tap/macos-defaults", trusted: true
 brew "lightpanda-io/browser/lightpanda", trusted: true
 # The easiest way to automate UI testing for your mobile app
 brew "mobile-dev-inc/tap/maestro", trusted: true
+# Run macOS and Linux VMs on Apple Hardware
+brew "openai/tools/tart", trusted: true
 # High-performance browser automation bridge and multi-instance orchestrator for AI agents
 brew "pinchtab/tap/pinchtab", trusted: true
 # A multi-shell completion binary
@@ -196,6 +199,8 @@ cask "1password"
 cask "1password-cli"
 # Image editing and design software
 cask "affinity"
+# Command-line tools for building and debugging Android apps
+cask "android-commandlinetools"
 # Memory training application
 cask "anki"
 # CLI for the Claude Platform

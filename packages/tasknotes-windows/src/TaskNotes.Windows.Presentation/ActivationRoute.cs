@@ -34,8 +34,6 @@ namespace TaskNotes.Windows.Presentation
                 "SETTINGS" => new ActivationRoute("settings", value, query),
                 "SEARCH" => new ActivationRoute("search", value, query),
                 "QUICK-ADD" => new ActivationRoute("quick-add", value, query),
-                "POMODORO" => new ActivationRoute("pomodoro", value, query),
-                "TIME-REPORT" => new ActivationRoute("time-report", value, query),
                 // The singular hosts are the cross-client vocabulary the macOS and
                 // iOS clients emit (TaskNotesKit/TaskNotesURL.swift: task, project,
                 // context, tag, view), so links they hand off must resolve here for

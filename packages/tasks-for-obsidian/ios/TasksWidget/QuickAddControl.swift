@@ -18,8 +18,8 @@ struct QuickAddTaskControl: ControlWidget {
 
 @available(iOS 18.0, *)
 struct QuickAddControlIntent: ControlConfigurationIntent {
-  static var title: LocalizedStringResource = "Quick Add Task"
-  static var isDiscoverable: Bool = true
+  static let title: LocalizedStringResource = "Quick Add Task"
+  static let isDiscoverable: Bool = true
 
   func perform() async throws -> some IntentResult & OpensIntent {
     guard let url = URL(string: "tasknotes://quick-add") else {

@@ -101,31 +101,6 @@ pub struct BlockedByEntry {
     pub gap: Option<String>,
 }
 
-/// A tracked work interval stored inline on the task.
-///
-/// Distinct from [`super::report::TimeEntry`], which names its task because it
-/// comes back from the time-reporting endpoints rather than from frontmatter.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct InlineTimeEntry {
-    /// When tracking started.
-    pub start_time: String,
-    /// When tracking stopped; absent while a session is running.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub end_time: Option<String>,
-    /// The interval's length in whole minutes.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub duration: Option<u32>,
-}
-
 /// Frontmatter keys the client does not model, preserved verbatim.
 ///
 /// Backed by an [`IndexMap`] rather than a `HashMap` so iteration follows
@@ -306,16 +281,6 @@ pub struct Task {
         skip_serializing_if = "Option::is_none"
     )]
     pub date_modified: Option<String>,
-    /// The estimate in whole minutes.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub time_estimate: Option<u32>,
-    /// Tracked work intervals stored in the note's frontmatter.
-    #[serde(default)]
-    pub time_entries: Vec<InlineTimeEntry>,
     /// Tasks this one is blocked by.
     #[serde(default)]
     pub blocked_by: Vec<BlockedByEntry>,
@@ -325,9 +290,6 @@ pub struct Task {
     /// Whether the task is archived.
     #[serde(default)]
     pub archived: bool,
-    /// Total tracked time in whole minutes, as the server computed it.
-    #[serde(default)]
-    pub total_tracked_time: u32,
     /// Whether something else is blocking this task, as the server computed it.
     #[serde(default)]
     pub is_blocked: bool,
@@ -377,10 +339,7 @@ mod tests {
     use indexmap::IndexMap;
     use serde_json::{Value, json};
 
-    use super::{
-        BlockedByEntry, ExtraFields, InlineTimeEntry, RecurrenceAnchor, Reminder, ReminderKind,
-        Task,
-    };
+    use super::{BlockedByEntry, ExtraFields, RecurrenceAnchor, Reminder, ReminderKind, Task};
     use crate::domain::{ids::TaskId, priority::Priority, status::TaskStatus};
 
     fn minimal_json() -> Value {
@@ -394,7 +353,6 @@ mod tests {
         assert_eq!(task.path, "");
         assert_eq!(task.status, TaskStatus::Open);
         assert_eq!(task.priority, Priority::Normal);
-        assert_eq!(task.total_tracked_time, 0);
         assert!(!task.archived);
         assert_eq!(task.contexts.len(), 0);
         assert!(task.extra_fields.is_empty());
@@ -442,12 +400,6 @@ mod tests {
             completed_date: None,
             date_created: Some("2026-07-01T00:00:00Z".to_owned()),
             date_modified: Some("2026-07-02T00:00:00Z".to_owned()),
-            time_estimate: Some(30),
-            time_entries: vec![InlineTimeEntry {
-                start_time: "2026-07-01T09:00:00Z".to_owned(),
-                end_time: Some("2026-07-01T09:30:00Z".to_owned()),
-                duration: Some(30),
-            }],
             blocked_by: vec![BlockedByEntry {
                 uid: "Tasks/b.md".to_owned(),
                 reltype: Some("FINISHTOSTART".to_owned()),
@@ -460,7 +412,6 @@ mod tests {
                 absolute_time: None,
             }],
             archived: false,
-            total_tracked_time: 30,
             is_blocked: true,
             is_blocking: false,
             extra_fields: ExtraFields::new(IndexMap::from([(

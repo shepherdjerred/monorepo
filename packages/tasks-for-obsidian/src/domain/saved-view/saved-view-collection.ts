@@ -74,8 +74,6 @@ function hasMissingField(
       return task.due === undefined;
     case "recurrence":
       return task.recurrence === undefined;
-    case "estimate":
-      return task.timeEstimate === undefined;
   }
 }
 

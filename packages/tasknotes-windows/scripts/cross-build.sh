@@ -13,6 +13,8 @@ projects=(
 for project in "${projects[@]}"; do
   dotnet restore "$project" --locked-mode
 done
+export FacetPreparedNotices=true
+dotnet msbuild "${projects[0]}" -target:VerifyPreparedFacetNotices -property:FacetPreparedNotices=true
 for project in "${projects[@]:1}"; do
   dotnet build "$project" --configuration Release --no-restore
 done

@@ -126,12 +126,9 @@ pub fn default_task() -> Task {
         completed_date: None,
         date_created: None,
         date_modified: None,
-        time_estimate: None,
-        time_entries: Vec::new(),
         blocked_by: Vec::new(),
         reminders: Vec::new(),
         archived: false,
-        total_tracked_time: 0,
         is_blocked: false,
         is_blocking: false,
         extra_fields: ExtraFields::default(),
@@ -175,9 +172,6 @@ fn write_create_fields(task: &mut Task, request: &CreateTaskRequest) {
     if let Some(anchor) = request.recurrence_anchor {
         task.recurrence_anchor = Some(anchor);
     }
-    if let Some(estimate) = request.time_estimate {
-        task.time_estimate = Some(estimate);
-    }
     if let Some(ref extra) = request.extra_fields {
         task.extra_fields = extra.clone();
     }
@@ -217,9 +211,6 @@ fn write_update_fields(task: &mut Task, request: &UpdateTaskRequest) {
     }
     if !request.recurrence_anchor.is_unchanged() {
         task.recurrence_anchor = request.recurrence_anchor.value().copied();
-    }
-    if !request.time_estimate.is_unchanged() {
-        task.time_estimate = request.time_estimate.value().copied();
     }
     if let Some(ref extra) = request.extra_fields {
         task.extra_fields = extra.clone();

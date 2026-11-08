@@ -28,6 +28,11 @@ crate-type = ["staticlib", "cdylib", "lib"]
 cli = ["uniffi/cli"]
 
 [[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["cli"]
+
+[[bin]]
 name = "uniffi-bindgen-swift"
 path = "src/bin/uniffi-bindgen-swift.rs"
 required-features = ["cli"]
@@ -38,9 +43,18 @@ required-features = ["cli"]
 # workspace pin as the core; no new dependency enters the lockfile.
 chrono = { workspace = true }
 serde_json = { workspace = true }
+serde = { workspace = true }
+zeroize = { workspace = true }
 tasknotes-core = { path = "../tasknotes-core" }
+tasknotes-vault = { path = "../tasknotes-vault" }
+tasknotes-runtime = { path = "../tasknotes-runtime" }
+obsidian-sync = { path = "../obsidian-sync" }
 thiserror = { workspace = true }
 uniffi = { workspace = true }
+
+[dev-dependencies]
+tempfile.workspace = true
+stats_alloc.workspace = true
 
 [lints]
 workspace = true

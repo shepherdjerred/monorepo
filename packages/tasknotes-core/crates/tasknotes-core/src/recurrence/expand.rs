@@ -40,9 +40,28 @@ enum Flow {
 /// Expand `options` and return every occurrence instant inside the inclusive
 /// millisecond window `[min, max]`, in generation order.
 pub(super) fn expand(options: &Options, min: i64, max: i64) -> Vec<i64> {
+    expand_with_budget(options, min, max, None).0
+}
+
+pub(super) fn expand_bounded(
+    options: &Options,
+    min: i64,
+    max: i64,
+    budget: usize,
+) -> Option<Vec<i64>> {
+    let (found, exhausted) = expand_with_budget(options, min, max, Some(budget));
+    (!exhausted).then_some(found)
+}
+
+fn expand_with_budget(
+    options: &Options,
+    min: i64,
+    max: i64,
+    budget: Option<usize>,
+) -> (Vec<i64>, bool) {
     let mut found = Vec::new();
     if options.count == CountLimit::Zero || options.interval == 0 {
-        return found;
+        return (found, false);
     }
     let mut walk = Walk {
         options,
@@ -53,9 +72,11 @@ pub(super) fn expand(options: &Options, min: i64, max: i64) -> Vec<i64> {
         year: None,
         month: None,
         easter_day: None,
+        budget,
+        exhausted: false,
     };
     walk.run(&mut found);
-    found
+    (found, walk.exhausted)
 }
 
 struct Walk<'a> {
@@ -67,6 +88,8 @@ struct Walk<'a> {
     year: Option<YearInfo>,
     month: Option<MonthInfo>,
     easter_day: Option<i64>,
+    budget: Option<usize>,
+    exhausted: bool,
 }
 
 impl Walk<'_> {
@@ -78,6 +101,9 @@ impl Walk<'_> {
             return;
         };
         loop {
+            if !self.consume_work() {
+                return;
+            }
             let Some(year) = self.year.as_ref() else {
                 return;
             };
@@ -95,6 +121,9 @@ impl Walk<'_> {
                 return;
             }
             if !self.options.freq.is_daily_or_greater() {
+                if !self.reserve_timeset() {
+                    return;
+                }
                 let Some(next) = time_set_for(self.options, &self.counter, 0) else {
                     return;
                 };
@@ -108,6 +137,43 @@ impl Walk<'_> {
                 return;
             }
         }
+    }
+
+    fn consume_work(&mut self) -> bool {
+        self.consume_work_units(Some(1))
+    }
+
+    /// Charge eager preparation before allocation, including duplicates that
+    /// COUNT or BYSETPOS might later discard. The reference path is unchanged.
+    fn consume_work_units(&mut self, units: Option<usize>) -> bool {
+        if let Some(remaining) = &mut self.budget {
+            let Some(next) = units.and_then(|units| remaining.checked_sub(units)) else {
+                self.exhausted = true;
+                return false;
+            };
+            *remaining = next;
+        }
+        true
+    }
+
+    fn reserve_timeset(&mut self) -> bool {
+        if self.budget.is_none() {
+            return true;
+        }
+        let options = self.options;
+        let size = match options.freq {
+            Frequency::Yearly | Frequency::Monthly | Frequency::Weekly | Frequency::Daily => {
+                options
+                    .hour
+                    .len()
+                    .checked_mul(options.minute.len())
+                    .and_then(|size| size.checked_mul(options.second.len()))
+            }
+            Frequency::Hourly => options.minute.len().checked_mul(options.second.len()),
+            Frequency::Minutely => Some(options.second.len()),
+            Frequency::Secondly => Some(1),
+        };
+        self.consume_work_units(size)
     }
 
     /// `Iterinfo.rebuild`, plus the easter day index that hangs off the year.
@@ -134,9 +200,12 @@ impl Walk<'_> {
         Some(())
     }
 
-    fn initial_timeset(&self) -> Option<Vec<i64>> {
+    fn initial_timeset(&mut self) -> Option<Vec<i64>> {
         let options = self.options;
         if options.freq.is_daily_or_greater() {
+            if !self.reserve_timeset() {
+                return None;
+            }
             return Some(build_timeset(options));
         }
         let clock_rejected = (options.freq >= Frequency::Hourly
@@ -150,6 +219,9 @@ impl Walk<'_> {
                 && !options.second.contains(&self.counter.second));
         if clock_rejected {
             return Some(Vec::new());
+        }
+        if !self.reserve_timeset() {
+            return None;
         }
         time_set_for(options, &self.counter, self.counter.millisecond)
     }
@@ -239,6 +311,15 @@ impl Walk<'_> {
                 }
             }
         } else {
+            // build_poslist eagerly collects present days and every requested
+            // position before COUNT is evaluated. Reserve both bounded sizes
+            // before either allocation; never return a truncated selection.
+            let preparation = usize::try_from(end - start)
+                .ok()
+                .and_then(|days| days.checked_add(self.options.setpos.len()));
+            if !self.consume_work_units(preparation) {
+                return Flow::Stop;
+            }
             for res in build_poslist(self.options, timeset, days, start, end, yearordinal) {
                 if self.accept(res, found) == Flow::Stop {
                     return Flow::Stop;
@@ -251,6 +332,9 @@ impl Walk<'_> {
     /// The reference's `until` guard, `res >= dtstart` guard, and
     /// `IterResult.accept` for a `between` query, in that order.
     fn accept(&mut self, res: i64, found: &mut Vec<i64>) -> Flow {
+        if !self.consume_work() {
+            return Flow::Stop;
+        }
         if self.options.until.is_some_and(|until| res > until) {
             return Flow::Stop;
         }

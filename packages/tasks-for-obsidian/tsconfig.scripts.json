@@ -4,5 +4,5 @@
     "noEmit": true,
     "types": ["bun"]
   },
-  "include": ["scripts/*.ts"]
+  "include": ["scripts/*.ts", "scripts/sync-fixture/**/*.ts"]
 }

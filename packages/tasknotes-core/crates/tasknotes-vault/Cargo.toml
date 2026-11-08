@@ -1,0 +1,31 @@
+[package]
+name = "tasknotes-vault"
+description = "Sans-I/O TaskNotes vault configuration, lossless documents, and conditional edit plans."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+chrono.workspace = true
+chrono-tz.workspace = true
+regex.workspace = true
+tasknotes-core = { path = "../tasknotes-core" }
+semver.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+yaml-edit.workspace = true
+serde-saphyr.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+tasknotes-runtime = { path = "../tasknotes-runtime" }
+tempfile.workspace = true
+
+[lints]
+workspace = true

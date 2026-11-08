@@ -4,7 +4,7 @@ import TaskNotesUniFFI
 /// A task carrying the fields the inspector cares about.
 ///
 /// Separate from `TestSupport`'s `coreTask`, which was shaped for list rows and
-/// exposes neither `tags`, `timeEstimate` nor `details` — the three fields the
+/// exposes neither `tags` nor `details` — the two fields the
 /// detail panel exists to edit. Widening the shared one would mean every list
 /// test grew three parameters it does not use.
 func detailTask(
@@ -21,7 +21,6 @@ func detailTask(
     projects: [ProjectName] = [],
     contexts: [ContextName] = [],
     tags: [TagName] = [],
-    timeEstimate: UInt32? = nil,
     details: String? = nil,
     dateCreated: String? = nil
 ) -> CoreTask {
@@ -43,12 +42,9 @@ func detailTask(
         completedDate: nil,
         dateCreated: dateCreated,
         dateModified: nil,
-        timeEstimate: timeEstimate,
-        timeEntries: [],
         blockedBy: [],
         reminders: [],
         archived: false,
-        totalTrackedTime: 0,
         isBlocked: false,
         isBlocking: false,
         extraFields: "{}",

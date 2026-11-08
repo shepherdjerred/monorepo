@@ -399,6 +399,10 @@ Helm/GitOps publication uses `deployment` (Bun, Node, GitHub CLI, jq, Helm,
 ArgoCD, AWS CLI). OpenTofu containers use `tofu` (Bun and OpenTofu). These
 profiles resolve the checked-out `.mise.toml` pins even when the base image is
 older. Docker/buildx and Git remain prerequisites supplied by that image.
+Paper smoke uses `minecraft` (Bun, Java and Gradle), preserving its plugin build,
+sidecar preparation, smoke tests and ten-minute bound without bootstrapping
+Android or SwiftLint. Its Gradle dependency seed and workflow-local cache paths
+use the same preamble as exhaustive verification.
 Adding a command to a lane also requires checking its toolchain profile.
 
 ## Pipeline authorization

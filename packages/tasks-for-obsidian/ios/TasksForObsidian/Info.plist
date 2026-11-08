@@ -69,8 +69,6 @@
 			<string>com.tasksforobsidian</string>
 		</dict>
 	</array>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

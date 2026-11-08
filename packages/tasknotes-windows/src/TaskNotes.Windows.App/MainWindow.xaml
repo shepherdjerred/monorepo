@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:TaskNotes.Windows.App.Views"
-    Title="TaskNotes"
+    Title="Facet"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -30,21 +30,13 @@
                 Key="Z"
                 Invoked="UndoAccelerator_Invoked"
                 Modifiers="Control" />
-            <KeyboardAccelerator
-                Key="P"
-                Invoked="PomodoroAccelerator_Invoked"
-                Modifiers="Control,Shift" />
-            <KeyboardAccelerator
-                Key="T"
-                Invoked="TimeReportAccelerator_Invoked"
-                Modifiers="Control,Shift" />
         </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar x:Name="AppTitleBar" Title="TaskNotes">
+        <TitleBar x:Name="AppTitleBar" Title="Facet">
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="Assets/AppIcon.ico" />
             </TitleBar.IconSource>
@@ -54,10 +46,15 @@
             x:Name="Navigation"
             Grid.Row="1"
             AutomationProperties.AutomationId="TaskNotes.Navigation"
+            CompactModeThresholdWidth="800"
+            CompactPaneLength="48"
+            ExpandedModeThresholdWidth="1080"
             IsBackButtonVisible="Collapsed"
+            IsPaneOpen="True"
             IsSettingsVisible="False"
             ItemInvoked="Navigation_ItemInvoked"
-            PaneDisplayMode="LeftCompact">
+            OpenPaneLength="220"
+            PaneDisplayMode="Auto">
             <NavigationView.MenuItems>
                 <NavigationViewItem
                     x:Name="InboxNavigationItem"
@@ -143,16 +140,6 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="Pomodoro" Tag="pomodoro">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Clock" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Time Report" Tag="time-report">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Document" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="Settings" Tag="settings">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Setting" />
@@ -160,7 +147,7 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
             <NavigationView.Content>
-                <Grid Padding="24,18">
+                <Grid Padding="16,12">
                     <views:TaskListWorkspaceView
                         x:Name="TaskWorkspace"
                         EditorViewModel="{x:Bind _taskEditor, Mode=OneWay}"

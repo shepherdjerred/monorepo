@@ -79,7 +79,7 @@ public struct DateBadge: Sendable, Equatable {
     ) throws(CoreError) -> DateBadge {
         guard let badge = try of(stored: occurrence, calendar: calendar, text: formatter) else {
             throw CoreError.Invariant(
-                message: "the completion target \(occurrence) did not read back as a date"
+                detail: "the completion target \(occurrence) did not read back as a date"
             )
         }
         return badge
@@ -116,7 +116,7 @@ public struct DateBadge: Sendable, Equatable {
             // reporting it.
             guard let heading = dateGroupHeading(group: group) else {
                 throw CoreError.Invariant(
-                    message: "the core supplied no heading for \(group), which only Later lacks"
+                    detail: "the core supplied no heading for \(group), which only Later lacks"
                 )
             }
             return heading

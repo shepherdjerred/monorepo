@@ -60,13 +60,7 @@ if (actualName !== requested) {
 }
 
 const e2e = Bun.spawn(
-  [
-    process.execPath,
-    "scripts/e2e.ts",
-    "--scenario",
-    "visual-modes",
-    "--keep-artifacts",
-  ],
+  [process.execPath, "scripts/e2e.ts", "--scenario", "visual-modes"],
   {
     cwd: packageRoot,
     env: {

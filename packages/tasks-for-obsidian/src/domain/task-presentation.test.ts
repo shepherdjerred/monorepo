@@ -19,11 +19,9 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     tags: [],
     completeInstances: [],
     skippedInstances: [],
-    timeEntries: [],
     blockedBy: [],
     reminders: [],
     archived: false,
-    totalTrackedTime: 0,
     isBlocked: false,
     isBlocking: false,
     extraFields: {},
@@ -297,12 +295,10 @@ describe("deriveTaskPresentation indicators", () => {
     expect(present(makeTask({ priority: "none" })).indicators).toEqual([]);
   });
 
-  test("orders recurrence, estimate, tracked time, and supplied sync state", () => {
+  test("orders recurrence and supplied sync state", () => {
     const presentation = present(
       makeTask({
         recurrence: "FREQ=WEEKLY;BYDAY=FR",
-        timeEstimate: 90,
-        totalTrackedTime: 45,
       }),
       true,
     );
@@ -313,18 +309,6 @@ describe("deriveTaskPresentation indicators", () => {
         value: "FREQ=WEEKLY;BYDAY=FR",
         label: "Repeats",
         accessibilityLabel: "Recurring task",
-      },
-      {
-        kind: "estimate",
-        minutes: 90,
-        label: "Est. 1h 30m",
-        accessibilityLabel: "Estimated time 1 hour 30 minutes",
-      },
-      {
-        kind: "tracked",
-        minutes: 45,
-        label: "45m tracked",
-        accessibilityLabel: "45 minutes tracked",
       },
       {
         kind: "pending-sync",
@@ -364,18 +348,16 @@ describe("deriveTaskPresentation accessibility and validation", () => {
         recurrence: "FREQ=DAILY",
         isBlocked: true,
         blockedBy: [{ uid: "dependency" }],
-        timeEstimate: 60,
-        totalTrackedTime: 1,
       }),
       true,
     );
 
     expect(presentation.accessibilityLabel).toBe(
-      "Task: Prepare launch, Planned for today, Deadline tomorrow, Projects Work, Launch, Context office, Tag urgent, High priority (P2), Blocked by 1 task, Recurring task, Estimated time 1 hour, 1 minute tracked, Waiting to sync",
+      "Task: Prepare launch, Planned for today, Deadline tomorrow, Projects Work, Launch, Context office, Tag urgent, High priority (P2), Blocked by 1 task, Recurring task, Waiting to sync",
     );
   });
 
-  test("fails loudly for invalid dates and durations", () => {
+  test("fails loudly for invalid dates", () => {
     expect(() =>
       deriveTaskPresentation(makeTask(), {
         referenceDate: new Date("invalid"),
@@ -384,12 +366,6 @@ describe("deriveTaskPresentation accessibility and validation", () => {
     ).toThrow("Invalid reference date");
     expect(() => present(makeTask({ due: "2026-02-31" }))).toThrow(
       "Invalid task date: 2026-02-31",
-    );
-    expect(() => present(makeTask({ timeEstimate: -1 }))).toThrow(
-      "Invalid time estimate: -1",
-    );
-    expect(() => present(makeTask({ totalTrackedTime: Number.NaN }))).toThrow(
-      "Invalid total tracked time: NaN",
     );
   });
 });

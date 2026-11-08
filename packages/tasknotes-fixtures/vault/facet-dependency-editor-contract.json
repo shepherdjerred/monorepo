@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "dependency-editor-minimal-request",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": { "kind": "dependency_editor" }
+    },
+    {
+      "id": "dependency-editor-versioned-request",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": { "schemaVersion": 1, "kind": "dependency_editor" }
+    },
+    {
+      "id": "dependency-editor-request-extra-field",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": { "kind": "dependency_editor", "path": "Tasks/private.md" }
+    },
+    {
+      "id": "dependency-editor-request-future-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": { "schemaVersion": 2, "kind": "dependency_editor" }
+    },
+    {
+      "id": "dependency-editor-request-unknown-kind",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": { "kind": "guess_dependency_editor" }
+    },
+    {
+      "id": "dependency-editor-response-without-default",
+      "definition": "dependencyEditor",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "STARTTOFINISH"
+        ],
+        "defaultReltype": null
+      }
+    },
+    {
+      "id": "dependency-editor-response-configured-default",
+      "definition": "dependencyEditor",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "STARTTOFINISH"
+        ],
+        "defaultReltype": "STARTTOSTART"
+      }
+    },
+    {
+      "id": "dependency-editor-response-unknown-choice",
+      "definition": "dependencyEditor",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "BLOCKS"
+        ],
+        "defaultReltype": null
+      }
+    },
+    {
+      "id": "dependency-editor-response-duplicate-choice",
+      "definition": "dependencyEditor",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "FINISHTOSTART"
+        ],
+        "defaultReltype": null
+      }
+    },
+    {
+      "id": "dependency-editor-response-missing-default",
+      "definition": "dependencyEditor",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "STARTTOFINISH"
+        ]
+      }
+    },
+    {
+      "id": "dependency-editor-response-unknown-default",
+      "definition": "dependencyEditor",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "STARTTOFINISH"
+        ],
+        "defaultReltype": "BLOCKS"
+      }
+    },
+    {
+      "id": "dependency-editor-response-missing-choice",
+      "definition": "dependencyEditor",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH"
+        ],
+        "defaultReltype": null
+      }
+    },
+    {
+      "id": "dependency-editor-response-extra-field",
+      "definition": "dependencyEditor",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "relationshipTypes": [
+          "FINISHTOSTART",
+          "STARTTOSTART",
+          "FINISHTOFINISH",
+          "STARTTOFINISH"
+        ],
+        "defaultReltype": null,
+        "guessedDefault": "FINISHTOSTART"
+      }
+    }
+  ]
+}

@@ -14,6 +14,10 @@
   ],
   "steps": [
     {
+      "runner": "vitest",
+      "args": ["scripts"]
+    },
+    {
       "runner": "dotnet",
       "args": [
         "tests/TaskNotes.Windows.Tests/TaskNotes.Windows.Tests.csproj",

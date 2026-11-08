@@ -48,6 +48,7 @@ const BootstrapSchema = z.object({
   scope: z.enum([
     "preflight",
     "runtime",
+    "minecraft",
     "tofu",
     "automation",
     "deployment",
