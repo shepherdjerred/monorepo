@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { ApplicationFailure } from "@temporalio/common";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
 import { argoApplication } from "#lib/delivery/model/step-testing.ts";
 import { forumDetail } from "#lib/delivery/model/forum-testing.ts";
@@ -11,7 +12,18 @@ import type * as Stages from "./stages.ts";
 const calls = vi.hoisted(() => {
   const events: string[] = [];
   const reads: unknown[] = [];
-  return { events, reads, prune: false, lapsed: false };
+  const updates: unknown[] = [];
+  const stages: { key: string; status: string; receipt: unknown }[] = [];
+  return {
+    events,
+    reads,
+    updates,
+    stages,
+    prune: false,
+    lapsed: false,
+    refuse: false,
+    failRestore: false,
+  };
 });
 vi.mock("@temporalio/activity", async (importOriginal) => ({
   ...(await importOriginal<typeof Activity>()),
@@ -41,18 +53,46 @@ vi.mock("#lib/delivery/argo-client.ts", async (importOriginal) => ({
     calls.events.push("write");
     return Promise.resolve();
   },
-}));
-vi.mock("#activities/delivery/argocd.ts", async (importOriginal) => ({
-  ...(await importOriginal<typeof Argocd>()),
-  argoRequest: () => Promise.resolve(null),
-  runGuardedArgoCommand: (args: string[]) => {
-    calls.events.push(args.join(" "));
+  updateArgoApplication: (_name: string, body: unknown) => {
+    calls.events.push("update");
+    if (calls.failRestore && calls.updates.length > 0)
+      return Promise.reject(new Error("Argo API returned HTTP 409"));
+    calls.updates.push(body);
     return Promise.resolve();
   },
+  deleteArgoApplication: (_name: string, input: { cascade: boolean }) => {
+    calls.events.push(`delete cascade=${String(input.cascade)}`);
+    return Promise.resolve({ deleted: true });
+  },
 }));
+vi.mock("#activities/delivery/argocd.ts", async (importOriginal) => {
+  const original = await importOriginal<typeof Argocd>();
+  return {
+    ...original,
+    argoRequest: () => Promise.resolve(null),
+    runGuardedArgoCommand: (args: string[]) => {
+      calls.events.push(args.join(" "));
+      return calls.refuse && args[0] === "assert-apply-safe"
+        ? Promise.reject(
+            new original.GuardedArgoCommandError(
+              "assert-apply-safe",
+              1,
+              "Refusing storm-forum sync because the read-only apply-safety preflight found:\n- batch/Job storm-forum/migrate changes immutable /spec/template",
+            ),
+          )
+        : Promise.resolve();
+    },
+  };
+});
 vi.mock("./stages.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof Stages>()),
-  recordStage: (_current: unknown, key: string, status: string) => {
+  recordStage: (
+    _current: unknown,
+    key: string,
+    status: string,
+    receipt: unknown,
+  ) => {
+    calls.stages.push({ key, status, receipt });
     // The server refuses any stage write once the lease has lapsed (D7).
     if (calls.lapsed)
       return Promise.reject(
@@ -101,6 +141,10 @@ afterEach(() => {
   calls.reads = [];
   calls.prune = false;
   calls.lapsed = false;
+  calls.updates = [];
+  calls.stages = [];
+  calls.refuse = false;
+  calls.failRestore = false;
 });
 
 describe("Kubernetes steps of a forum release", () => {
@@ -181,5 +225,98 @@ describe("Kubernetes steps of a forum release", () => {
       /lease lapsed/u,
     );
     expect(calls.events).toEqual(["read"]);
+  });
+});
+
+/** An existing Application whose last sync was `synced`. */
+const synced = { chart: "storm-forum", targetRevision: "1.0.0" };
+function existingApplication() {
+  return {
+    metadata: { name: "storm-forum", resourceVersion: "7" },
+    spec: { source: synced },
+    status: {
+      history: [
+        { id: 4, source: { chart: "storm-forum", targetRevision: "0.9.0" } },
+        { id: 5, source: synced },
+      ],
+    },
+  };
+}
+
+async function refusal(run: Promise<unknown>) {
+  try {
+    await run;
+  } catch (error) {
+    return error;
+  }
+  throw new Error("expected apply-safety to fail");
+}
+
+/**
+ * temporal/prod c0025f42 (2026-11-07): assert-apply-safe refused after the
+ * candidate body was written, the stage stayed running, and the stale body
+ * stalled the next release. A refusal now undoes the write and settles.
+ */
+describe("a refused apply-safety", () => {
+  test("restores the source Argo last synced and settles a failed stage with the findings", async () => {
+    const { current, recipe } = fixture();
+    calls.reads = [existingApplication()];
+    calls.refuse = true;
+    const error = await refusal(
+      applySafety(current, recipe, "step-apply-safety"),
+    );
+    expect(error).toBeInstanceOf(ApplicationFailure);
+    expect(error).toMatchObject({
+      type: "DeliveryApplySafetyRefused",
+      nonRetryable: true,
+    });
+    // The candidate body, then the restore of the latest history source.
+    expect(calls.updates).toHaveLength(2);
+    expect(calls.updates[1]).toMatchObject({
+      metadata: { resourceVersion: "7" },
+      spec: { source: synced },
+    });
+    expect(calls.stages.map(({ status }) => status)).toEqual([
+      "running",
+      "failed",
+    ]);
+    expect(calls.stages[1]?.receipt).toMatchObject({
+      evidence: [
+        {
+          kind: "preflight",
+          summary: expect.stringContaining("changes immutable /spec/template"),
+        },
+      ],
+    });
+  });
+
+  test("removes an Application it created, without cascading", async () => {
+    const { current, recipe } = fixture();
+    calls.reads = [null];
+    calls.refuse = true;
+    const error = await refusal(
+      applySafety(current, recipe, "step-apply-safety"),
+    );
+    expect(error).toMatchObject({ type: "DeliveryApplySafetyRefused" });
+    expect(calls.events).toContain("write");
+    // The write is undone before the stage settles.
+    expect(calls.events.slice(-2)).toEqual([
+      "delete cascade=false",
+      "step-apply-safety failed",
+    ]);
+    expect(calls.stages.at(-1)?.status).toBe("failed");
+  });
+
+  test("keeps the stage running for recovery when the restore itself fails", async () => {
+    const { current, recipe } = fixture();
+    calls.reads = [existingApplication()];
+    calls.refuse = true;
+    calls.failRestore = true;
+    const error = await refusal(
+      applySafety(current, recipe, "step-apply-safety"),
+    );
+    expect(error).not.toBeInstanceOf(ApplicationFailure);
+    expect(error).toMatchObject({ name: "GuardedArgoCommandError" });
+    expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
   });
 });

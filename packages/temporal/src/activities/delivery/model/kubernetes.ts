@@ -15,6 +15,7 @@ import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { verifyOciChart } from "./oci-chart.ts";
 import {
   createArgoApplication,
+  deleteArgoApplication,
   getArgoApplication,
   setArgoSelfHeal,
   updateArgoApplication,
@@ -28,6 +29,7 @@ import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts"
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import {
   argoRequest,
+  GuardedArgoCommandError,
   runGuardedArgoCommand,
 } from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned, stageOf } from "./stages.ts";
@@ -98,7 +100,9 @@ const OperationPhaseSchema = z
   .loose();
 
 /** Create when absent; otherwise replace the whole body under CAS and ownership (T2). */
-async function writeBody(rendered: RenderedApplication) {
+async function writeBody(
+  rendered: RenderedApplication,
+): Promise<"created" | "updated"> {
   const current = await getArgoApplication(rendered.name, {
     signal: signal(),
     project: rendered.body.spec.project,
@@ -131,6 +135,123 @@ async function writeBody(rendered: RenderedApplication) {
   return "updated";
 }
 
+/** The Application's history: the source of each sync Argo performed. */
+const SyncedHistorySchema = z
+  .object({
+    metadata: z.object({ resourceVersion: z.string().min(1) }),
+    status: z
+      .object({
+        history: z
+          .array(
+            z.object({
+              id: z.number(),
+              source: z.record(z.string(), z.unknown()),
+            }),
+          )
+          .optional(),
+      })
+      .optional(),
+  })
+  .loose();
+
+/**
+ * Undoes the apply-safety step's only effect, the body it wrote: a created
+ * Application is removed without touching resources (nothing was synced), and
+ * an updated one gets back the source Argo last synced. Automation stays off;
+ * the next release writes its own body. Resolves what was done.
+ */
+async function restoreWrittenBody(
+  rendered: RenderedApplication,
+  written: "created" | "updated",
+): Promise<string> {
+  if (written === "created") {
+    await deleteArgoApplication(
+      rendered.name,
+      { environmentId: rendered.environmentId, cascade: false },
+      { signal: signal() },
+    );
+    return "removed the Application it had created";
+  }
+  const current = SyncedHistorySchema.parse(
+    await getArgoApplication(rendered.name, {
+      signal: signal(),
+      project: rendered.body.spec.project,
+    }),
+  );
+  const history = current.status?.history ?? [];
+  if (history.length === 0)
+    throw new Error(
+      `Application ${rendered.name} has no synced source to restore`,
+    );
+  const latest = history.reduce((left, right) =>
+    left.id > right.id ? left : right,
+  );
+  await updateArgoApplication(
+    rendered.name,
+    {
+      ...rendered.body,
+      metadata: {
+        ...rendered.body.metadata,
+        resourceVersion: current.metadata.resourceVersion,
+      },
+      spec: { ...rendered.body.spec, source: latest.source },
+    },
+    { environmentId: rendered.environmentId },
+    { signal: signal() },
+  );
+  return `restored the source Argo last synced (history ${latest.id.toString()})`;
+}
+
+const EVIDENCE_SUMMARY_LIMIT = 4000;
+
+/**
+ * The read-only assert refused (or could not run) after the body was written.
+ * Nothing was synced, so the step undoes the write and records a settled,
+ * failed stage with the command's own explanation: the deployment then ends
+ * without an unsettled stage and holds nothing (AI-446, AI-439). Only when the
+ * undo itself fails does the stage stay running for recovery.
+ */
+async function refuseApplySafety(
+  step: {
+    current: DeploymentDetail;
+    rendered: RenderedApplication;
+    key: string;
+    operationId: string;
+  },
+  written: "created" | "updated",
+  error: unknown,
+): Promise<never> {
+  const { current, rendered, key, operationId } = step;
+  let undone: string;
+  try {
+    undone = await restoreWrittenBody(rendered, written);
+  } catch {
+    throw error;
+  }
+  const reason =
+    error instanceof GuardedArgoCommandError
+      ? error.output
+      : error instanceof Error
+        ? error.message
+        : "the apply-safety preflight failed";
+  const summary = `Apply-safety refused ${rendered.name} at ${rendered.revision} before any sync; ${undone}. ${reason}`;
+  await recordStage(current, key, "failed", {
+    operationId,
+    message: `${key}: refused before sync; ${undone}`,
+    evidence: [
+      {
+        kind: "preflight",
+        operationId,
+        summary: summary.slice(0, EVIDENCE_SUMMARY_LIMIT),
+      },
+    ],
+  });
+  throw ApplicationFailure.nonRetryable(
+    `Apply safety refused ${rendered.name}; ${undone}, and nothing was synced`,
+    "DeliveryApplySafetyRefused",
+  );
+}
+
 /**
  * The apply-safety step: verify the source, write the full body with
  * automation off, then prove the managed resources at the exact revision
@@ -154,10 +275,18 @@ export async function applySafety(
     await forumBaselineFence(current, recipe);
   await recordStage(current, key, "running", { operationId });
   const written = await writeBody(rendered);
-  await runGuardedArgoCommand(
-    ["assert-apply-safe", rendered.name, "--revision", rendered.revision],
-    { operationId, application: rendered.name },
-  );
+  try {
+    await runGuardedArgoCommand(
+      ["assert-apply-safe", rendered.name, "--revision", rendered.revision],
+      { operationId, application: rendered.name },
+    );
+  } catch (error) {
+    await refuseApplySafety(
+      { current, rendered, key, operationId },
+      written,
+      error,
+    );
+  }
   await recordStage(current, key, "succeeded", {
     operationId,
     evidence: [

@@ -100,7 +100,8 @@ function guardedCommand(program: "sleep" | "false", started?: () => void) {
     const child = spawn(program === "sleep" ? ["sleep", "60"] : ["false"], {
       stdin: "ignore",
       stdout: "ignore",
-      stderr: "ignore",
+      // As the real guarded command does: its stderr is the failure evidence.
+      stderr: "pipe",
     });
     if (started !== undefined) setTimeout(started, 50);
     return child;

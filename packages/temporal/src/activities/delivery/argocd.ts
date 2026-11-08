@@ -6,6 +6,7 @@ import { verifyArgoRelease as verifyOwnedArgoRelease } from "#lib/delivery/argoc
 import { observePendingArgoRelease } from "#lib/delivery/argocd-proof.ts";
 import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
 import { arcadeSyncPrunes } from "#lib/delivery/arcade/prune.ts";
+import { redactSecrets } from "#shared/redact.ts";
 import {
   deliverySelectionPatch,
   type DeliverySelection,
@@ -50,6 +51,42 @@ export async function syncArgoRelease(
   );
 }
 
+/** The tail of a guarded command's stderr kept as its failure evidence. */
+export const GUARDED_ARGO_OUTPUT_LIMIT = 3500;
+
+/**
+ * A guarded Argo command exited non-zero. `output` is the redacted tail of
+ * its stderr, where the command explains a refusal (such as apply-safety
+ * findings), so the reason survives into Workflow history and evidence.
+ */
+export class GuardedArgoCommandError extends Error {
+  override readonly name = "GuardedArgoCommandError";
+  readonly command: string;
+  readonly exitCode: number;
+  readonly output: string;
+
+  constructor(command: string, exitCode: number, output: string) {
+    super(
+      `Guarded Argo ${command} failed; inspect the recorded request before retrying${
+        output === "" ? "" : `\n${output}`
+      }`,
+    );
+    this.command = command;
+    this.exitCode = exitCode;
+    this.output = output;
+  }
+}
+
+async function stderrTail(stream: ReadableStream<Uint8Array>) {
+  const decoder = new TextDecoder();
+  let text = "";
+  for await (const chunk of stream)
+    text = (text + decoder.decode(chunk, { stream: true })).slice(
+      -GUARDED_ARGO_OUTPUT_LIMIT,
+    );
+  return text + decoder.decode();
+}
+
 /**
  * Runs one subcommand of the guarded Argo CLI bundled into the worker image,
  * heartbeating with `details` and killing it on cancellation or when a model
@@ -76,7 +113,7 @@ export async function runGuardedArgoCommand(
     cwd: new URL("../../../../../", import.meta.url).pathname,
     stdin: "ignore",
     stdout: "ignore",
-    stderr: "ignore",
+    stderr: "pipe",
     env: {
       PATH: Bun.env["PATH"],
       ARGOCD_SERVER_URL: Bun.env["ARGOCD_SERVER_URL"],
@@ -90,11 +127,17 @@ export async function runGuardedArgoCommand(
   const heartbeat = setInterval(() => {
     context.heartbeat(details);
   }, 10_000);
+  const output = stderrTail(process.stderr);
   try {
     if (signal.aborted) cancel();
-    if ((await process.exited) !== 0)
-      throw new Error(
-        `Guarded Argo ${args[0] ?? "command"} failed; inspect the recorded request before retrying`,
+    const exitCode = await process.exited;
+    const stderr = await output;
+    const explanation = redactSecrets(stderr.trim(), [Bun.env["ARGOCD_TOKEN"]]);
+    if (exitCode !== 0)
+      throw new GuardedArgoCommandError(
+        args[0] ?? "command",
+        exitCode,
+        explanation,
       );
   } finally {
     clearInterval(heartbeat);
