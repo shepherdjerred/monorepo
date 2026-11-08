@@ -1,0 +1,94 @@
+{
+  "scope": "Browser regression: real decoder with diagnostic endTime override; not FPS evidence",
+  "first": {
+    "status": "Ready · 10 champions · 10 towers · 38 minions · experimental particles",
+    "error": "",
+    "disabled": false,
+    "loadDisabled": false,
+    "seekDisabled": false,
+    "time": 45,
+    "endTime": 120
+  },
+  "beforeReplacement": {
+    "status": "Ready · 10 champions · 10 towers · 38 minions · experimental particles",
+    "error": "",
+    "disabled": false,
+    "loadDisabled": false,
+    "seekDisabled": false,
+    "time": 110,
+    "endTime": 120
+  },
+  "held": {
+    "status": "Binding decoded buildings to installed map objects…",
+    "error": "",
+    "disabled": true,
+    "loadDisabled": true,
+    "seekDisabled": true,
+    "time": 110,
+    "endTime": 120
+  },
+  "afterFrames": {
+    "status": "Binding decoded buildings to installed map objects…",
+    "error": "",
+    "disabled": true,
+    "loadDisabled": true,
+    "seekDisabled": true,
+    "time": 110,
+    "endTime": 120
+  },
+  "replacement": {
+    "status": "Ready · 10 champions · 10 towers · 12 minions · experimental particles",
+    "error": "",
+    "disabled": false,
+    "loadDisabled": false,
+    "seekDisabled": false,
+    "time": 45,
+    "endTime": 60
+  },
+  "minionJumps": [
+    {
+      "previousTime": 46,
+      "previous": {
+        "time": 46,
+        "cameraWorld": [
+          1, 0, 0, 0, 0, 0.3476293924061562, -0.9376320203231792, 0, 0,
+          0.9376320203231792, 0.3476293924061562, 0, 6581, 15000,
+          -624.0999999999985, 1
+        ]
+      },
+      "time": 60,
+      "cameraWorld": [
+        1, 0, 0, 0, 0, 0.6139406135149205, -0.7893522173763263, 0, 0,
+        0.7893522173763263, 0.6139406135149205, 0, 4270.461249254414,
+        1621.6904754638674, -3238.071697114525, 1
+      ],
+      "cameraProjection": [
+        1.4653625988902634, 0, 0, 0, 0, 2.6050890646938014, 0, 0, 0, 0,
+        -1.000166680556713, -1, 0, 0, -10.000833402783565, 0
+      ]
+    },
+    {
+      "previousTime": 58,
+      "previous": {
+        "time": 58,
+        "cameraWorld": [
+          1, 0, 0, 0, 0, 0.6139406135149205, -0.7893522173763263, 0, 0,
+          0.7893522173763263, 0.6139406135149205, 0, 4270.461249254414,
+          1621.6904754638674, -3238.071697114525, 1
+        ]
+      },
+      "time": 60,
+      "cameraWorld": [
+        1, 0, 0, 0, 0, 0.6139406135149205, -0.7893522173763263, 0, 0,
+        0.7893522173763263, 0.6139406135149205, 0, 4270.461249254414,
+        1621.6904754638674, -3238.071697114525, 1
+      ],
+      "cameraProjection": [
+        1.4653625988902634, 0, 0, 0, 0, 2.6050890646938014, 0, 0, 0, 0,
+        -1.000166680556713, -1, 0, 0, -10.000833402783565, 0
+      ]
+    }
+  ],
+  "pass": true,
+  "events": []
+}

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Latest-build decoder research</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font: 16px/1.5 system-ui;
+      background: #10161f;
+      color: #e5edf6;
+    }
+    body {
+      max-width: 1050px;
+      margin: 64px auto;
+      padding: 0 24px;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .eyebrow {
+      color: #91b8e8;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-size: 12px;
+    }
+    p {
+      max-width: 840px;
+      color: #aebed1;
+    }
+    button {
+      font: inherit;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid #6086b4;
+      background: #253f5f;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+    .metrics {
+      display: flex;
+      gap: 48px;
+      margin: 32px 0;
+    }
+    .metrics strong {
+      font-size: 44px;
+      display: block;
+    }
+    .metrics span {
+      color: #aebed1;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 6px;
+      margin: 24px 0;
+    }
+    #grid span {
+      padding: 7px;
+      text-align: center;
+      border-radius: 4px;
+      font: 13px ui-monospace;
+      background: #263547;
+    }
+    #grid .matched {
+      background: #164f42;
+      color: #bdf5df;
+    }
+    #grid .unresolved {
+      background: #655025;
+      color: #ffe2a5;
+    }
+    #grid .mismatch {
+      background: #702f3b;
+      color: #ffd7df;
+    }
+    pre {
+      white-space: pre-wrap;
+      color: #ffe2a5;
+      font: 13px/1.6 ui-monospace;
+    }
+    #status {
+      color: #d9e6f6;
+    }
+  </style>
+  <body>
+    <div class="eyebrow">Scout replay spike · execution evidence</div>
+    <h1>Latest-build decoder research</h1>
+    <p>
+      Build 16.21.829.8620 · Windows replay samples decoded with matching macOS
+      packet functions in a browser worker. Each result compares the complete
+      decoded object and allocation arena against native Unicorn execution.
+    </p>
+    <p>
+      This checks decoder execution. Gameplay field meanings, presentation
+      fidelity, and support for arbitrary matches remain unverified.
+    </p>
+    <button id="run">Run browser comparison</button>
+    <p id="status" role="status">
+      Ready. Build-pinned packet samples; no match is uploaded.
+    </p>
+    <div class="metrics">
+      <div><strong id="matched">—</strong><span>exact byte matches</span></div>
+      <div>
+        <strong id="unresolved">—</strong><span>unresolved samples</span>
+      </div>
+      <div>
+        <strong id="mismatches">—</strong><span>unexpected differences</span>
+      </div>
+    </div>
+    <h2>Original replay reconstruction</h2>
+    <button id="decode">Decode original ROFL</button>
+    <p id="reconstruction-status" role="status">
+      Reads the configured local replay in a browser worker. Candidate champion
+      identities and movement only; map origin and presentation remain
+      unresolved.
+    </p>
+    <div id="hero-identities"></div>
+    <h2>Packet coverage</h2>
+    <p>One tile per opcode. Hover for the number of tested samples.</p>
+    <div id="grid" aria-label="Packet results"></div>
+    <pre id="details"></pre>
+    <script type="module">
+      const button = document.querySelector("#run"),
+        status = document.querySelector("#status"),
+        grid = document.querySelector("#grid"),
+        details = document.querySelector("#details");
+      button.addEventListener("click", () => {
+        button.disabled = true;
+        grid.replaceChildren();
+        details.textContent = "";
+        status.textContent =
+          "Loading exact-build package and starting WASM worker…";
+        const worker = new Worker("./structural-check-worker.mjs", {
+          type: "module",
+        });
+        const cells = new Map(),
+          severity = { matched: 0, unresolved: 1, mismatch: 2 };
+        let total = 0,
+          completed = 0;
+        worker.onmessage = ({ data }) => {
+          if (data.type === "ready") total = data.total;
+          else if (data.type === "packet") {
+            let cell = cells.get(data.result.opcode);
+            if (!cell) {
+              cell = document.createElement("span");
+              cell.className = "matched";
+              cell.dataset.count = "0";
+              cell.textContent = data.result.opcode;
+              cells.set(data.result.opcode, cell);
+              grid.append(cell);
+            }
+            cell.dataset.count = String(Number(cell.dataset.count) + 1);
+            if (severity[data.result.status] > severity[cell.className])
+              cell.className = data.result.status;
+            cell.title = `Opcode ${data.result.opcode}: ${cell.dataset.count} samples, ${cell.className}`;
+            status.textContent = `Compared ${++completed} / ${total} packet samples`;
+          } else if (data.type === "complete") {
+            window.structuralResearch = data.report;
+            for (const key of ["matched", "unresolved", "mismatches"])
+              document.querySelector(`#${key}`).textContent = data.report[key];
+            status.textContent =
+              "Comparison finished. Green = identical object and arena bytes; amber = unresolved native and WASM execution.";
+            details.textContent = data.report.results
+              .filter((r) => r.status !== "matched")
+              .map(
+                (r) =>
+                  `Opcode ${r.opcode}: ${r.status}\n${r.error ?? "Object or arena mismatch"}`,
+              )
+              .join("\n\n");
+            worker.terminate();
+            button.disabled = false;
+          } else if (data.type === "error") {
+            status.textContent = data.error;
+            worker.terminate();
+            button.disabled = false;
+          }
+        };
+        worker.onerror = (event) => {
+          status.textContent = event.message;
+          worker.terminate();
+          button.disabled = false;
+        };
+        worker.postMessage({ type: "run" });
+      });
+      document.querySelector("#decode").addEventListener("click", () => {
+        const button = document.querySelector("#decode"),
+          status = document.querySelector("#reconstruction-status");
+        button.disabled = true;
+        status.textContent =
+          "Reading original replay and decoding its first 120 seconds in a WASM worker…";
+        const worker = new Worker("./structural-check-worker.mjs", {
+          type: "module",
+        });
+        worker.onmessage = ({ data }) => {
+          if (data.type === "reconstruction") {
+            const report = data.report;
+            window.latestReconstruction = report;
+            status.textContent = `ROFL decoded: ${report.summary.heroes} champions; ${report.summary.heroMovementRecords.toLocaleString()} champion path records; first ${report.endTime} seconds. Map origin unresolved; ${Object.keys(report.unhandledOpcodes).length} event types remain unhandled.`;
+            const table = document.createElement("table");
+            table.style.cssText =
+              "width:100%;text-align:left;font-family:Consolas,monospace;font-size:14px;line-height:1.8;color:#bcd4ed";
+            const header = table.createTHead().insertRow();
+            for (const label of ["Champion", "Team", "Decoded network ID"]) {
+              const cell = document.createElement("th");
+              cell.scope = "col";
+              cell.textContent = label;
+              header.append(cell);
+            }
+            const body = table.createTBody();
+            for (const hero of report.heroes) {
+              const row = body.insertRow();
+              for (const value of [
+                hero.champion,
+                hero.team,
+                `0x${hero.entityId.toString(16)}`,
+              ])
+                row.insertCell().textContent = value;
+            }
+            document.querySelector("#hero-identities").replaceChildren(table);
+          } else if (data.type === "error") status.textContent = data.error;
+          else return;
+          worker.terminate();
+          button.disabled = false;
+        };
+        worker.onerror = (event) => {
+          status.textContent = event.message;
+          worker.terminate();
+          button.disabled = false;
+        };
+        worker.postMessage({ type: "reconstruct" });
+      });
+    </script>
+  </body>
+</html>

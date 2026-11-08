@@ -1,0 +1,110 @@
+{
+  "ksante": {
+    "locomotion": {
+      "idle": "Idle1_Base",
+      "run": "Run_Base"
+    },
+    "clips": [
+      "Channel",
+      "Idle1_Base",
+      "Run_Base",
+      "Spell3_Base",
+      "Spell2_Dash",
+      "Spell3_Short",
+      "Spell3_Long",
+      "Spell3_Med"
+    ]
+  },
+  "belveth": {
+    "locomotion": {
+      "idle": "Idle1_Base",
+      "run": "{440f8252}"
+    },
+    "clips": ["Idle1_Base", "{440f8252}", "Spell4", "Channel_Wndup"]
+  },
+  "katarina": {
+    "locomotion": {
+      "idle": "Idle1",
+      "run": "Run1"
+    },
+    "clips": [
+      "Channel_Wndup",
+      "Idle1",
+      "Run1",
+      "Spell2",
+      "Attack1",
+      "Attack2",
+      "Spell4",
+      "Spell2_Throw"
+    ]
+  },
+  "drmundo": {
+    "locomotion": {
+      "idle": "{144760fe}",
+      "run": "{50d288ad}"
+    },
+    "clips": ["Channel", "{50d288ad}", "Spell2Run", "{144760fe}"]
+  },
+  "shen": {
+    "locomotion": {
+      "idle": "Idle1",
+      "run": "Run1"
+    },
+    "clips": ["Idle1", "Spell1", "Spell2", "Spell3", "Run1"]
+  },
+  "vayne": {
+    "locomotion": {
+      "idle": "Idle1",
+      "run": "Run"
+    },
+    "clips": ["Idle1", "Run", "Spell1"]
+  },
+  "talon": {
+    "locomotion": {
+      "idle": "Idle1",
+      "run": "Run"
+    },
+    "clips": [
+      "Idle1",
+      "Run",
+      "Spell3",
+      "Spell4",
+      "Spell3_Long",
+      "Spell3_Medium",
+      "Spell1_Leap"
+    ]
+  },
+  "ryze": {
+    "locomotion": {
+      "idle": "Idle1",
+      "run": "Run_Normal"
+    },
+    "clips": ["Idle1", "Run_Normal"]
+  },
+  "sylas": {
+    "locomotion": {
+      "idle": "{eff39437}",
+      "run": "RunBase"
+    },
+    "clips": [
+      "Channel",
+      "Death",
+      "RunBase",
+      "Spell3_Bhit",
+      "Spell2_B",
+      "Spell3_Bdash",
+      "Spell3_Dash",
+      "Spell4_INTO_Run",
+      "Spell4_INTO_Idle",
+      "Spell3_BHit_Close",
+      "{eff39437}"
+    ]
+  },
+  "nautilus": {
+    "locomotion": {
+      "idle": "Idle1",
+      "run": "Run"
+    },
+    "clips": ["Idle1", "Run", "Spell1_Idle", "Spell1_Dash", "Channel", "Crit"]
+  }
+}

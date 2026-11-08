@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Scout · Latest replay research</title>
+    <script type="importmap">
+      { "imports": { "three": "/assets/vendor/three.module.js" } }
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #09131d;
+        color: #dae6ef;
+        font:
+          14px system-ui,
+          sans-serif;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+      }
+      button,
+      select {
+        background: #142a3c;
+        color: #e4edf4;
+        border: 1px solid #30495d;
+        border-radius: 7px;
+        padding: 8px 12px;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      header {
+        height: 78px;
+        padding: 14px 22px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border-bottom: 1px solid #233647;
+      }
+      h1 {
+        font-size: 19px;
+        margin: 0 0 4px;
+      }
+      header p {
+        color: #91a9ba;
+        margin: 0;
+        font-size: 12px;
+      }
+      .badge {
+        color: #e9c37c;
+        background: #30291c;
+        border: 1px solid #635133;
+        border-radius: 20px;
+        padding: 5px 10px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 290px;
+        height: calc(100vh - 78px);
+      }
+      #viewport {
+        position: relative;
+        min-width: 0;
+        overflow: hidden;
+        background: #101c28;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #overlay {
+        position: absolute;
+        left: 20px;
+        top: 18px;
+        padding: 12px 15px;
+        background: #09131de3;
+        border: 1px solid #2a4356;
+        border-radius: 8px;
+        max-width: 520px;
+      }
+      #status {
+        color: #c9dce9;
+        margin: 0 0 7px;
+        font-size: 13px;
+      }
+      #render-status,
+      #camera-status {
+        color: #8fa8bb;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      #controls {
+        position: absolute;
+        bottom: 16px;
+        left: 18px;
+        right: 18px;
+        background: #09131def;
+        border: 1px solid #2b465b;
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      #seek {
+        flex: 1;
+        accent-color: #75cce8;
+        min-width: 50px;
+      }
+      #clock {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      aside {
+        padding: 20px;
+        border-left: 1px solid #233647;
+        overflow: auto;
+      }
+      h2 {
+        font-size: 11px;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: #8eacbf;
+        margin: 0 0 12px;
+      }
+      #load {
+        width: 100%;
+        background: #246479;
+        margin-bottom: 10px;
+      }
+      #file {
+        max-width: 100%;
+        font-size: 11px;
+        color: #9db2c0;
+      }
+      #roster {
+        display: grid;
+        gap: 5px;
+        margin: 15px 0 22px;
+      }
+      #roster button {
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        padding: 9px 10px;
+        border-left: 3px solid #64c2e2;
+      }
+      #roster button.red {
+        border-left-color: #e49b87;
+      }
+      #roster small {
+        color: #9eb3c2;
+      }
+      p.note {
+        font-size: 12px;
+        line-height: 1.6;
+        color: #9db1c0;
+        margin: 9px 0;
+      }
+      #evidence {
+        font-size: 12px;
+        line-height: 1.7;
+        color: #92b6c9;
+      }
+      a {
+        color: #81cce6;
+      }
+      #error {
+        color: #ffab9c;
+        white-space: pre-wrap;
+        font-size: 12px;
+      }
+      #overview {
+        margin-left: auto;
+      }
+      #unresolved {
+        color: #e8c487;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      #legend {
+        position: absolute;
+        bottom: 88px;
+        right: 20px;
+        color: #adc3d2;
+        font-size: 11px;
+        background: #0b1620d9;
+        padding: 7px 10px;
+        border-radius: 5px;
+      }
+      #unit-panel {
+        position: absolute;
+        bottom: 88px;
+        left: 18px;
+        width: min(360px, calc(100% - 36px));
+        height: auto;
+        pointer-events: auto;
+      }
+      #unit-panel[hidden] {
+        display: none;
+      }
+      @media (max-width: 850px) {
+        main {
+          grid-template-columns: minmax(0, 1fr) 220px;
+        }
+        header {
+          gap: 10px;
+        }
+        aside {
+          padding: 12px;
+        }
+        .badge {
+          display: none;
+        }
+        #legend {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Scout replay lab</h1>
+        <p>16.21.829.8620 · original ROFL → browser WASM → WebGL</p>
+      </div>
+      <span class="badge">RESEARCH · APPROXIMATE PRESENTATION</span
+      ><button id="overview">Map overview</button>
+    </header>
+    <main>
+      <section id="viewport" aria-label="3D replay viewer">
+        <canvas id="scene"></canvas>
+        <div id="overlay">
+          <p id="status">Loading installed map assets…</p>
+          <div id="render-status"></div>
+          <div
+            id="performance-status"
+            style="font-size: 12px; margin-top: 5px"
+          ></div>
+          <div id="camera-status">
+            Drag to orbit · right drag to pan · scroll to zoom
+          </div>
+          <div id="world-status" style="font-size: 12px; margin-top: 8px"></div>
+          <div
+            id="action-status"
+            style="font-size: 12px; color: #e8c487; margin-top: 8px"
+          ></div>
+          <div
+            id="particle-status"
+            style="font-size: 12px; color: #e8c487; margin-top: 5px"
+          ></div>
+          <div
+            id="effect-pipeline-status"
+            style="font-size: 11px; color: #a6b9cc; margin-top: 5px"
+          ></div>
+        </div>
+        <div id="legend">Map12 base · approximate materials</div>
+        <canvas
+          id="unit-panel"
+          hidden
+          role="img"
+          aria-label="Selected unit"
+        ></canvas>
+        <div id="controls">
+          <button id="play" disabled>Play</button
+          ><span id="clock">00:00 / 02:00</span
+          ><input
+            id="seek"
+            type="range"
+            min="0"
+            max="120"
+            step="0.05"
+            value="0"
+            disabled
+            aria-label="Replay time"
+          /><select id="speed" aria-label="Playback speed">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+      </section>
+      <aside>
+        <h2>Latest build experiment</h2>
+        <button id="load" disabled>Decode local replay</button
+        ><input
+          id="file"
+          type="file"
+          accept=".rofl"
+          disabled
+          aria-label="Open matching replay"
+        />
+        <p class="note">
+          First 120 seconds. Per-match decoding runs in a browser worker. This
+          package selects Howling Abyss base and requires a matching replay
+          build and recorded map.
+        </p>
+        <div id="roster"></div>
+        <h2>Decoded evidence</h2>
+        <div id="evidence">Waiting for replay.</div>
+        <h2 style="margin-top: 22px">Unresolved fidelity</h2>
+        <div id="unresolved">
+          Champion HP, levels and primary resource values use decoded
+          replication. Player names come from replay participant metadata.
+          Overhead UI hides on recorded death. Minion/tower HP uses separate
+          native class layouts. Select a unit or roster entry to inspect HP,
+          level, resources, current gold and accumulated XP at the current time.
+          Inventory shows observed slots and stacks using installed icons;
+          counter meanings and full item behavior remain unresolved. Combat
+          stats now include AD, AP, defenses, movement, range, crit and haste.
+          Attack speed and XP progress remain unavailable. Fonts, bar
+          colors/geometry, special-resource rules and shields remain incomplete.
+          Skin IDs are candidates. Recorded motion paths include dash speeds;
+          acceleration, vertical arcs and collision remain unresolved. Idle/run
+          clips remain preview selections. Recorded names drive a partial
+          animation graph; timing, looping, blending, interruption and graph
+          events are incomplete. Death submesh visibility uses native event
+          rules with a preview clock. Attack/cast asset bindings use candidate
+          timing; attack speed, damage, death variants and corpse cleanup,
+          building state, complete projectile/particle presentation, fog of war
+          and audio remain unresolved. A small experimental particle subset is
+          available through Inspect missile effect; its appearance is
+          unverified.
+        </div>
+        <button id="action-jump" disabled style="width: 100%; margin-top: 12px">
+          Jump to recorded action
+        </button>
+        <button
+          id="smooth-effect"
+          disabled
+          hidden
+          style="width: 100%; margin-top: 8px"
+        >
+          Watch effect smoothly
+        </button>
+        <p id="smooth-effect-status" class="note" aria-live="polite" hidden>
+          Prepare a short effect sequence, then watch it at normal speed. Orbit
+          or seek outside the sequence to return to live inspection.
+        </p>
+        <details
+          id="unit-more-stats"
+          hidden
+          style="margin-top: 12px; font-size: 12px"
+        >
+          <summary>More selected-unit stats</summary>
+          <pre
+            id="unit-more-stat-values"
+            style="white-space: pre-wrap; line-height: 1.7"
+          ></pre>
+          <p class="note">
+            Scalar values retain native units. Penetration and vamp HUD
+            conversions are not verified.
+          </p>
+        </details>
+        <button id="attack-jump" disabled style="width: 100%; margin-top: 8px">
+          Jump to recorded attack
+        </button>
+        <button id="motion-jump" disabled style="width: 100%; margin-top: 8px">
+          Jump to dash
+        </button>
+        <button id="world-jump" disabled style="width: 100%; margin-top: 8px">
+          Inspect a tower
+        </button>
+        <button id="minion-jump" disabled style="width: 100%; margin-top: 8px">
+          Inspect minion wave
+        </button>
+        <button
+          id="minion-attack-jump"
+          disabled
+          style="width: 100%; margin-top: 8px"
+        >
+          Inspect minion attack
+        </button>
+        <button id="death-jump" disabled style="width: 100%; margin-top: 8px">
+          Jump to recorded death
+        </button>
+        <button id="missile-jump" disabled style="width: 100%; margin-top: 8px">
+          Inspect missile effect
+        </button>
+        <label class="note" style="display: block; margin-top: 10px"
+          ><input id="particles" type="checkbox" checked /> Experimental
+          particles (partial)</label
+        >
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>Particle preview gaps</summary>
+          <pre
+            id="particle-gaps"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>Animation coverage gaps</summary>
+          <pre
+            id="animation-gaps"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>Combat binding gaps</summary>
+          <pre
+            id="combat-gaps"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>World object decoding</summary>
+          <pre
+            id="world-evidence"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>Lifecycle evidence and gaps</summary>
+          <pre
+            id="lifecycle-evidence"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>Missile decoding</summary>
+          <pre
+            id="missile-evidence"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <details style="margin-top: 12px; font-size: 12px">
+          <summary>Shared effect pipeline and coverage</summary>
+          <pre
+            id="effect-pipeline-evidence"
+            style="white-space: pre-wrap; line-height: 1.5; color: #b5a584"
+          ></pre>
+        </details>
+        <p class="note" id="asset-gaps"></p>
+        <pre id="error"></pre>
+        <p class="note">
+          <a href="/structural-check.html">Packet execution evidence</a>
+          ·
+          <a href="/assets/evidence/latest-world-state.png"
+            >World health bar evidence</a
+          >
+          ·
+          <a href="/assets/evidence/latest-experience.png"
+            >Unit inspection evidence</a
+          >
+          ·
+          <a href="/assets/evidence/latest-inventory.png">Inventory evidence</a>
+          ·
+          <a href="/assets/evidence/latest-combat-stats.png"
+            >Combat stat evidence</a
+          >
+          ·
+          <a href="/assets/evidence/latest-submesh-visibility.png"
+            >Death mesh evidence</a
+          >
+          ·
+          <a href="/assets/evidence/latest-corpse-policy.png"
+            >Corpse evidence</a
+          >
+        </p>
+      </aside>
+    </main>
+    <script type="module" src="./latest-viewer.mjs"></script>
+  </body>
+</html>

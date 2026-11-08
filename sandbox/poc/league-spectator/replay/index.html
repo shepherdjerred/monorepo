@@ -1,0 +1,205 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <link rel="icon" href="data:," />
+
+    <title>Scout · Replay research</title>
+
+    <link rel="stylesheet" href="/style.css" />
+
+    <script type="importmap">
+      { "imports": { "three": "/assets/vendor/three.module.js" } }
+    </script>
+  </head>
+
+  <body>
+    <header>
+      <div class="brand">
+        <span class="mark">S</span><strong>SCOUT</strong
+        ><span class="divider"></span><span>Replay research</span>
+      </div>
+
+      <span class="pill amber">TECHNICAL SPIKE · 01</span>
+    </header>
+
+    <main>
+      <section class="stage">
+        <div class="stage-heading">
+          <div>
+            <div class="eyebrow">BROWSER-NATIVE ROFL PLAYBACK</div>
+
+            <h1>Inside the replay.</h1>
+
+            <p id="subtitle">
+              An exact-build experiment in reconstructing League.
+            </p>
+          </div>
+
+          <div class="actions">
+            <button id="load">Open research replay</button
+            ><label class="button secondary"
+              >Choose .rofl<input id="file" type="file" accept=".rofl" hidden
+            /></label>
+          </div>
+        </div>
+
+        <div id="viewport">
+          <canvas id="scene"></canvas>
+
+          <div class="viewport-top">
+            <span class="pill" id="render-status">Preparing 3D assets</span
+            ><span class="pill"
+              >Drag to orbit · right-drag to pan · scroll to zoom</span
+            >
+          </div>
+
+          <div id="loading">Loading Summoner’s Rift geometry…</div>
+
+          <div class="viewport-bottom">
+            <span id="camera-status">Free camera</span
+            ><button id="reset">Map overview</button
+            ><button id="focus">Focus action</button>
+          </div>
+        </div>
+
+        <div class="transport">
+          <button id="play" disabled aria-label="Play replay">▶</button
+          ><strong id="time">00:00</strong
+          ><input
+            id="seek"
+            type="range"
+            min="0"
+            max="1193"
+            step="0.01"
+            value="0"
+            disabled
+            aria-label="Replay time"
+          /><span id="duration">19:53</span
+          ><select id="speed" aria-label="Playback speed">
+            <option value="0.25">0.25×</option>
+
+            <option value="0.5">0.5×</option>
+
+            <option value="1" selected>1×</option>
+
+            <option value="2">2×</option>
+
+            <option value="4">4×</option></select
+          ><button id="clip">30s activity window</button>
+          <button id="audio" disabled>Enable sound</button>
+        </div>
+
+        <div class="note">
+          <span class="dot"></span
+          ><span
+            >Recorded attacks, casts, deaths, respawns, and NPC spawns drive
+            this scene. Animation selection is approximate. Gold missile lines
+            are unsupported trajectories. Supported missiles use actual particle
+            assets with an incomplete emitter interpreter. Team vision is
+            missing.</span
+          >
+        </div>
+      </section>
+
+      <aside>
+        <div class="eyebrow">DECODING EVIDENCE</div>
+
+        <h2>From bytes to gameplay</h2>
+
+        <p class="muted">
+          The browser reads the original replay. No video, game process, or
+          per-match server conversion.
+        </p>
+
+        <div id="metrics">
+          <div><span>Supported build</span><strong>16.14.794.5912</strong></div>
+
+          <div><span>Gameplay blocks</span><strong id="blocks">—</strong></div>
+
+          <div>
+            <span>Movement packets</span><strong id="packets">—</strong>
+          </div>
+
+          <div>
+            <span>Movement records</span><strong id="records">—</strong>
+          </div>
+
+          <div>
+            <span>Animation events</span><strong id="animation-count">—</strong>
+          </div>
+
+          <div><span>Browser decode</span><strong id="decode">—</strong></div>
+        </div>
+
+        <div id="status" role="status">Ready to open the research fixture.</div>
+
+        <p id="world-count" class="muted"></p>
+
+        <h3>CHAMPION CAMERA</h3>
+
+        <div id="roster"></div>
+
+        <h3>RECORDED STATUS</h3>
+
+        <div id="unit-state" class="muted"></div>
+
+        <h3>GAMEPLAY EXAMPLES</h3>
+
+        <div class="examples">
+          <button id="demo-lane">Minion wave</button>
+
+          <button id="demo-death">Death & corpse</button>
+
+          <button id="demo-jungle">Jungle camp</button>
+
+          <button id="demo-spell">Ryze Q effect</button>
+
+          <button id="demo-effects">More spell effects</button>
+
+          <button id="demo-ward">Ward placement</button>
+        </div>
+
+        <details>
+          <summary>Known gaps & evidence</summary>
+
+          <p id="clip-coverage"></p>
+
+          <p>
+            Movement byte decoding is compared with RoflLens running the exact
+            executable offline. Position interpolation, relative waypoint
+            interpretation, map variant, and champion facing still need
+            reference playback validation.
+          </p>
+
+          <p>
+            Attack and spell packets select real animation clips. Graph
+            variants, blending, attack speed, and cancellation remain
+            approximate. Champion corpses persist until the recorded respawn;
+            NPC corpses currently last four seconds. Minion teams use the
+            recorded spawn side. Champion health and shields use observed
+            values. NPC health, visibility, full spell effects, and equipped
+            skins remain open work.
+          </p>
+
+          <p>
+            Missile effects include textured meshes, billboards, and trails.
+            Wards, plants, Shen’s sword, and Bel’Veth summons use recorded
+            spawns. Inhibitor/nexus state remains missing. Buffs use recorded
+            adds/removals; natural expiry and some counter semantics remain
+            unresolved. Diagnostics list unsupported objects and effect
+            features.
+          </p>
+
+          <button id="diagnostics">Download diagnostics</button>
+        </details>
+      </aside>
+    </main>
+
+    <script type="module" src="/viewer.mjs"></script>
+  </body>
+</html>

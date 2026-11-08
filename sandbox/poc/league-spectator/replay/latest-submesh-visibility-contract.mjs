@@ -1,0 +1,2 @@
+export const SUBMESH_VISIBILITY_SHA =
+  "d302a910e7c6ad65d70024c1e6d5ab1f99dd3465a04406a1acebfa1c1cc20660";

@@ -1,0 +1,462 @@
+{
+  "schema": 1,
+  "kind": "authored-research-source-provenance",
+  "scope": {
+    "sourceIdentityOnly": true,
+    "nativeAlgorithmApproval": false,
+    "historicalReportsRemainPinnedToOriginalSource": true,
+    "localDataIncluded": false
+  },
+  "newControls": [
+    {
+      "file": "cdp-initialization-gate.mjs",
+      "origin": "authored directly in the research tree",
+      "purpose": "Hold shared effect resource initialization and verify Play and seeking remain disabled until readiness."
+    },
+    {
+      "file": "cdp-replay-replacement.mjs",
+      "origin": "authored directly in the research tree",
+      "purpose": "Decode a shorter replacement using the existing endTime input, hold model loading across browser frames, and compare destination camera matrices for minion-wave jumps."
+    }
+  ],
+  "helpers": [
+    {
+      "file": "analyze-no-alpha-bound-association-v40.py",
+      "originalSource": ".cache/replay-spike/research/analyze-no-alpha-bound-association-v40.py",
+      "originalSha256": "1de0dca4480438a8944c87d98279bef40c9cc7bd1e3aea00594a6f0b0ff898bb",
+      "sourceAdaptations": ["repository-root-depth"],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "analyze-no-alpha-bound-retained-delta-v40-r2.py",
+      "originalSource": ".cache/replay-spike/research/analyze-no-alpha-bound-retained-delta-v40-r2.py",
+      "originalSha256": "0f23e9554ab956eb43cae0e005694b97f0e473e21f17e61eda8effd5850aa3b0",
+      "sourceAdaptations": ["repository-root-depth"],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "analyze-no-alpha-bound-retained-delta-v40.py",
+      "originalSource": ".cache/replay-spike/research/analyze-no-alpha-bound-retained-delta-v40.py",
+      "originalSha256": "6aad15ff2b8e4be8ae2b5bc314ff995fef428685d0fab220430278d07dc210c7",
+      "sourceAdaptations": ["repository-root-depth"],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "analyze-v38-gpu-hotspots.mjs",
+      "originalSource": ".cache/replay-spike/research/analyze-v38-gpu-hotspots.mjs",
+      "originalSha256": "4cc59ab46c383da24e6025006ea0e9c45102b2b271d57775ab7932a1e4f10276",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "analyze-v39-r2-latency.mjs",
+      "originalSource": ".cache/replay-spike/research/analyze-v39-r2-latency.mjs",
+      "originalSha256": "9cd3806838723594b4b8e70b457d493e01209321638cba888250c027b71ea1a4",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "analyze-worker-message-trace-v38.mjs",
+      "originalSource": ".cache/replay-spike/research/analyze-worker-message-trace-v38.mjs",
+      "originalSha256": "4f8ddc428a607b6a4e6c9bc2e909e6bca20200b3e6093d6675df459f11335a0b",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "archive-v37.mjs",
+      "originalSource": ".cache/replay-spike/research/archive-v37.mjs",
+      "originalSha256": "fa1e2892a79e2b5998297fafbb6d98b637d0ad50bff8a4ad5b536c0db90c9d8b",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "archive-v38.mjs",
+      "originalSource": ".cache/replay-spike/research/archive-v38.mjs",
+      "originalSha256": "817bffcb0e5adc2fa811a75e88f3519a915fbedc41ef052ceee881408d189b6d",
+      "sourceAdaptations": ["current-replay-source-root"],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "archive-v39-r2.mjs",
+      "originalSource": ".cache/replay-spike/research/archive-v39-r2.mjs",
+      "originalSha256": "0d9856caf43bfba45f6e8ee9bdf1d93de850d2d837de54131a42ec5e982fdba7",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "cdp-active-play-interaction.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-active-play-interaction.mjs",
+      "originalSha256": "7182ba00b3cfd8b771208fffbfa57e2e0fb9da63f2a052645981e314a9e86895",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-archive-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-archive-check.mjs",
+      "originalSha256": "723bd3cc9d5036947e71c6fba6703b312c6a4e92c7b8c3ce038e69eebf0d7171",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-build-capture-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-build-capture-check.mjs",
+      "originalSha256": "3d2842920bc3b787fb3290c25f55f27abdb8f4efd02da0a87c61206901410a30",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-build-evidence-index.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-build-evidence-index.mjs",
+      "originalSha256": "73a80eb4cec51de77bf38a527c0d0e520b05b42727013889e125208a306c0387",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "cdp-capture-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-capture-check.mjs",
+      "originalSha256": "c4bf8e47904bb17e07409a4fb406c3708338c2cec2694d371a0ac93be37f1cf1",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-capture-sync-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-capture-sync-check.mjs",
+      "originalSha256": "f07970a52db402cdfab550753c26562a3d023ebdfc68ca61ab332a10afd60f16",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-client.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-client.mjs",
+      "originalSha256": "04a3f90513301c2bf0fc460f4963da83ddc586f266c84f1ff2385a8ab2ab1647",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-current.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-current.mjs",
+      "originalSha256": "91b48083dfb0b747c3488665a95447550d144b67fc1e3c43ef62f911dbeaae40",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-display.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-display.mjs",
+      "originalSha256": "05c52b51a0b581e97c14176f634ec29654b1747c5270a0d58ce2df9529f6fde1",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-environment.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-environment.mjs",
+      "originalSha256": "14dd522791773750844d0ea72c10f9e7b2b2b5b253967cdcfa5dacc4e5b91d07",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-final-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-final-check.mjs",
+      "originalSha256": "487083c9abac925a64daaa36c39407b794496d28e0fb0a1a08962c35327de818",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-finalize-evidence-index.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-finalize-evidence-index.mjs",
+      "originalSha256": "b9502c5c7e920f03d4b67d99b30654ebb52146bdb842673b2e3e45659d4ad35c",
+      "sourceAdaptations": [],
+      "category": "P1-analysis-evidence-archives"
+    },
+    {
+      "file": "cdp-harvest-v39-r2-interaction.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-harvest-v39-r2-interaction.mjs",
+      "originalSha256": "e12e2bf6bfff96baaa21a83aa206ba4bba95c4ba76d45e0fdf4eeb1de32c6f0d",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-interaction.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-interaction.mjs",
+      "originalSha256": "27c38e008680b2e3ee90ef6e861fc40ca7da0179d30a0e284ccaf67f0e461fba",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-interleave-difference.py",
+      "originalSource": ".cache/replay-spike/research/cdp-interleave-difference.py",
+      "originalSha256": "3b47229b34bc905578ad1edc42317ee87fa48011069948005c6e2530bf98a729",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-interleave-world-fx.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-interleave-world-fx.mjs",
+      "originalSha256": "537fd6e672b00fc821860629972bdd0ccdbf0e1560f6c294d5c42605a5433685",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-playback-1080p.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-playback-1080p.mjs",
+      "originalSha256": "59780175d9cd46dbe74ce05beb7a1397f6efaed647965f229d529fd5ea907d23",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-playback.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-playback.mjs",
+      "originalSha256": "20d168317f995d6bb5b9fa32968950f910cd4bb2094595c5aca8b129aa828f73",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-projectile-screencast.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-projectile-screencast.mjs",
+      "originalSha256": "ba30353ade2177194472a43bc17ea2cfdda320d67aa7398d62a698d2fdc86165",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-record-playback-webm.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-record-playback-webm.mjs",
+      "originalSha256": "fe9e88ca1ee250c3f297cd5857b334b7656d4f8ec97513101f7e5b2f1abe155f",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-recording-debug.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-recording-debug.mjs",
+      "originalSha256": "806c2f32f2cd70ec664314d4f0d55222c1d11106b4693558ca3268e075889f38",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-repeat-seek.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-repeat-seek.mjs",
+      "originalSha256": "ca561f5fd6cefdcd026332ddbed02211e443514b026c2b8d50f74834a8ec0fc0",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-replay-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-replay-check.mjs",
+      "originalSha256": "a41cff63876df6f9134817a74cd8cc4761339f13f9afb5119c05b84165aaef52",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-replay-decode.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-replay-decode.mjs",
+      "originalSha256": "5e359f6552b66d6db9810ab8614718df8968577427d98e977542f95faf63c21c",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-screencast-gif.py",
+      "originalSource": ".cache/replay-spike/research/cdp-screencast-gif.py",
+      "originalSha256": "c760b04fab57eb73bd5021c40b3c17373bb98525355595b0359b2efbfc7b13c3",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-seek-crop.py",
+      "originalSource": ".cache/replay-spike/research/cdp-seek-crop.py",
+      "originalSha256": "f5e92f7376bb8fcf3a998c513b0e87ab237626efde1d58265bbdabb780288757",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-seek-isolation.py",
+      "originalSource": ".cache/replay-spike/research/cdp-seek-isolation.py",
+      "originalSha256": "59851b46e07f9b1f34d504e5d77887a36e245bc26d2cb94e1c18e39c20604c7a",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-seek-pixel-difference.py",
+      "originalSource": ".cache/replay-spike/research/cdp-seek-pixel-difference.py",
+      "originalSha256": "96a86cadcc464a52ab93d0b0ea3fd4f28c514fdaae08a80e92f7137bd73c49ee",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-status-v39-r2.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-status-v39-r2.mjs",
+      "originalSha256": "9895ec5be3ce65bfa906493ef5331363247ce5682746d416adfbf7d84777544f",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-v38-akshan-visual.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-v38-akshan-visual.mjs",
+      "originalSha256": "cee3c8d67317ae940f48a302df77d153f93b0e9f4bc76a6285483059ca22ec8d",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-v38-visual-gif.py",
+      "originalSource": ".cache/replay-spike/research/cdp-v38-visual-gif.py",
+      "originalSha256": "c954be9765c17d091df330b41de301d8c8c15f478515394f68cb5de2657bf3c0",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-v39-final-check.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-v39-final-check.mjs",
+      "originalSha256": "2065d3d87ccc51d3244e15688333b02356c632ef4701d7b72658e357649254ff",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-v39-smoke.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-v39-smoke.mjs",
+      "originalSha256": "4f42c3c0fe8d23fb3554b923fb26b74de0e3e44f77ddcccb17c1be27c5ab6e68",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "cdp-visible-times.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-visible-times.mjs",
+      "originalSha256": "35635caab36659298f1e5645ef2328a334e5078dae731625c439993351a1152a",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-visual-gif.py",
+      "originalSource": ".cache/replay-spike/research/cdp-visual-gif.py",
+      "originalSha256": "59f54dab362f30586e3d504190cea35dcf64160ed699e101c99e64a96a43b1c4",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-visual.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-visual.mjs",
+      "originalSha256": "f987a1474a08cc65947a74eb85cb8169e8812855018dc51cecafb84572f21024",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "cdp-worker-latency-trace-v38.mjs",
+      "originalSource": ".cache/replay-spike/research/cdp-worker-latency-trace-v38.mjs",
+      "originalSha256": "669702be68b22473176bcc0fdf5a5559c47710a0d46f8619ac020796b9404292",
+      "sourceAdaptations": [],
+      "category": "P1-browser-functional-performance-capture"
+    },
+    {
+      "file": "check-v39-final-source.mjs",
+      "originalSource": ".cache/replay-spike/research/check-v39-final-source.mjs",
+      "originalSha256": "c483d1a60ea84b546fd41f365c29147f284c10f12d75970a7ab5d78b6c3ac25c",
+      "sourceAdaptations": ["current-replay-source-root"],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "check-v39-r2-final-source.mjs",
+      "originalSource": ".cache/replay-spike/research/check-v39-r2-final-source.mjs",
+      "originalSha256": "5bf568a72dc7a211be0ee34426e49058dba2c21a5eeacb9b9efc902f4d92af6d",
+      "sourceAdaptations": ["current-replay-source-root"],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "compare-no-alpha-mult-stream-v40-r2.mjs",
+      "originalSource": ".cache/replay-spike/research/compare-no-alpha-mult-stream-v40-r2.mjs",
+      "originalSha256": "8e07832dfb83d3e8f39eefbcc3d5ebecafe8126bcf2f147c78d99b63e3ca8fc0",
+      "sourceAdaptations": [
+        "relative-tool-module-import",
+        "relative-runtime-module-import"
+      ],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "compare-no-alpha-mult-stream-v40.mjs",
+      "originalSource": ".cache/replay-spike/research/compare-no-alpha-mult-stream-v40.mjs",
+      "originalSha256": "1d3bf59350202ff458fa1f67b1dba306dd82ed88d540b654729cf22ccba5bf5b",
+      "sourceAdaptations": [
+        "relative-tool-module-import",
+        "relative-runtime-module-import"
+      ],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "inspect-native-bind-blocks-v40.py",
+      "originalSource": ".cache/replay-spike/research/inspect-native-bind-blocks-v40.py",
+      "originalSha256": "9c009137e125e60277b91bc80e9d87198bec21e3feb0bd5595607aa9e6ce8841",
+      "sourceAdaptations": ["repository-root-depth"],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "inspect-v39-material-frontier.mjs",
+      "originalSource": ".cache/replay-spike/research/inspect-v39-material-frontier.mjs",
+      "originalSha256": "c80d1cdfbeb28b10f4dd7bf2d68d00a44166c90bfca9fd41f5bf601eda9d64ca",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "inspect-v39-r2-review.py",
+      "originalSource": ".cache/replay-spike/research/inspect-v39-r2-review.py",
+      "originalSha256": "ac6ba2b521b254d278f183d45bf18f6ab8d19a1927488ad35dbfb997f71773c9",
+      "sourceAdaptations": [
+        "current-replay-source-root",
+        "historical-archive-source-key-mapping"
+      ],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "lint-master-fidelity-doc.mjs",
+      "originalSource": ".cache/replay-spike/research/lint-master-fidelity-doc.mjs",
+      "originalSha256": "35b3a7730901e1996ddeebc8c5a726725257a73d3f239f6c53bdb278bcab9fac",
+      "sourceAdaptations": ["current-replay-source-root"],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "observe-no-alpha-mult-unit-context-v40.py",
+      "originalSource": ".cache/replay-spike/research/observe-no-alpha-mult-unit-context-v40.py",
+      "originalSha256": "5b6b837ea12684fd2baf80fdecf457a921702d7338fa86552cf0479c4aa9133d",
+      "sourceAdaptations": [
+        "current-replay-source-root",
+        "repository-root-depth"
+      ],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "probe-no-alpha-mult-stream-raster-v40.py",
+      "originalSource": ".cache/replay-spike/research/probe-no-alpha-mult-stream-raster-v40.py",
+      "originalSha256": "d02655648a8dcb9ecbdefc32e54b39a02adf6e71220b27a3f7022f434113c7a1",
+      "sourceAdaptations": [
+        "current-replay-source-root",
+        "repository-root-depth"
+      ],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "probe-no-alpha-mult-v39.py",
+      "originalSource": ".cache/replay-spike/research/probe-no-alpha-mult-v39.py",
+      "originalSha256": "e4fe61416b01566855c8552ada065d89f51ec0e9a5f9ae5a0eccfb37619c3b25",
+      "sourceAdaptations": [
+        "current-replay-source-root",
+        "repository-root-depth"
+      ],
+      "category": "P1-native-material-state-proof"
+    },
+    {
+      "file": "v38-inspect-increment.mjs",
+      "originalSource": ".cache/replay-spike/research/v38-inspect-increment.mjs",
+      "originalSha256": "e26a28c428b013a7c8bcba33ab04af1a9a4a9c41ab549a4bf49fb8810de808e5",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "v38-inspect-times.mjs",
+      "originalSource": ".cache/replay-spike/research/v38-inspect-times.mjs",
+      "originalSha256": "a8f296dda605430c9758369d6e2c5d6fb6e633855e90235611e2b057200e0886",
+      "sourceAdaptations": [],
+      "category": "P2-supporting-historical-control"
+    },
+    {
+      "file": "validate-master-fidelity-doc.mjs",
+      "originalSource": ".cache/replay-spike/research/validate-master-fidelity-doc.mjs",
+      "originalSha256": "8a73b8233fc358c7a4bf8305128044002badd7accc1b9b9b41d4244b7d504081",
+      "sourceAdaptations": ["current-replay-source-root"],
+      "category": "P2-supporting-historical-control"
+    }
+  ]
+}
