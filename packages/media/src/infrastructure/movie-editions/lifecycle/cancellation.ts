@@ -1,4 +1,9 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import { z } from "zod";
+import type {
+  AcquisitionAttempt,
+  MediaRequest,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { readMovieAttemptIdentityV4 } from "./attempt-identity.ts";
@@ -49,11 +54,7 @@ export async function releaseCancelledMovieReservationV4(
       where: { id: requestId },
     });
     if (
-      request.active &&
-      !request.excluded &&
-      request.direct &&
-      request.movieEditionChoiceId === attempt.movieEditionChoiceId &&
-      request.movieEditionChoiceRevision === attempt.movieEditionChoiceRevision
+      await requestedReservationCurrent(tx, { request, attempt }, scope, budget)
     )
       return;
   }
@@ -71,6 +72,39 @@ export async function releaseCancelledMovieReservationV4(
       edition: scope.edition,
     },
   });
+}
+
+/** Only a reservation with no possible add may retire for changed policy. */
+async function requestedReservationCurrent(
+  tx: Prisma.TransactionClient,
+  current: { request: MediaRequest; attempt: AcquisitionAttempt },
+  scope: MovieEditionScope,
+  budget: PublicationAuthorityReadBudget | undefined,
+) {
+  const { request, attempt } = current;
+  if (
+    !request.active ||
+    request.excluded ||
+    !request.direct ||
+    request.movieEditionChoiceId !== attempt.movieEditionChoiceId ||
+    request.movieEditionChoiceRevision !== attempt.movieEditionChoiceRevision
+  )
+    return false;
+  if (attempt.state !== "reserved" || attempt.torrentId !== null) return true;
+  const captured = z
+    .object({ profileId: z.uuid(), profileVersion: z.int().nonnegative() })
+    .parse(attempt.failure);
+  const target = await tx.mediaIntent.findUniqueOrThrow({
+    where: {
+      mediaId_edition: { mediaId: scope.mediaId, edition: scope.edition },
+    },
+    include: { profile: true },
+  });
+  budget?.consume(target.profile === null ? 1 : 2);
+  return (
+    target.profileId === captured.profileId &&
+    target.profile?.version === captured.profileVersion
+  );
 }
 
 async function managedReservationCurrent(

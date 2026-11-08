@@ -5,6 +5,7 @@ import { createMovieWorkflowFixture } from "#testing/movie-workflow/fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { createMovieNetworkFacetV4 } from "#automation/movie-editions/activities.ts";
+import { submitMovieTorrentV4 } from "#automation/movie-editions/submission.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
 import { PirateBayProvider } from "#integrations/providers.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -16,6 +17,8 @@ import {
 } from "#shared/movie-editions/registry.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { CancelMovieRequestV4Schema } from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
+import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisition-v2.ts";
+import { QualityRulesSchema } from "#shared/api.ts";
 import { LIBRARY_MOVIE_DUE_CURSOR } from "./library-movies.ts";
 import { PERSONAL_MOVIE_DUE_CURSOR } from "./personal-movie-due.ts";
 
@@ -234,6 +237,170 @@ test("the actual due phase protects the original99-spent allowance without queui
     await h.f.close();
   }
 }, 60_000);
+
+test.each(["version", "replacement", "after_claim"] as const)(
+  "a %s profile change retires an unsubmitted due attempt and admits a fresh same-bucket outbox with new policy evidence",
+  async (change) => {
+    const h = await fixture("directors_cut");
+    const { f, db } = h;
+    try {
+      await f.finishMediaOperation({
+        operationId: f.input.operationId,
+        status: "completed",
+        reason: "no_acceptable_release",
+      });
+      h.show();
+      const movie = createMovieNetworkFacetV4(h.context);
+      await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`);
+      const [originalDue] = await h.pending();
+      if (originalDue === undefined) throw new Error("Original due was absent");
+      const input = MovieOperationV4Schema.parse(
+        z.object(MovieOperationV4Schema.shape).parse(originalDue.payload),
+      );
+      const first = await movie.reconcileMovieIntentV4(
+        input,
+        testPlexBindingExecution(),
+      );
+      expect(first.status).toBe("acquire");
+      const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: z.uuid().parse(first.attemptId) },
+      });
+      const before = await h.source();
+      const operation = await db.operation.findUniqueOrThrow({
+        where: { id: originalDue.id },
+      });
+      let expectedProfile = {
+        profileId: f.source.profile.id,
+        profileVersion: 1,
+      };
+      const changeProfile = async () => {
+        const rules = QualityRulesSchema.parse(f.source.profile.rules);
+        if (change === "replacement") {
+          const replacement = await db.qualityProfile.create({
+            data: {
+              name: "Replacement policy",
+              rules,
+              versions: { create: { version: 0, rules } },
+            },
+          });
+          await db.mediaIntent.update({
+            where: {
+              mediaId_edition: {
+                mediaId: input.mediaId,
+                edition: input.scope.edition,
+              },
+            },
+            data: { profileId: replacement.id },
+          });
+          expectedProfile = { profileId: replacement.id, profileVersion: 0 };
+        } else {
+          await db.qualityProfileVersion.create({
+            data: { profileId: f.source.profile.id, version: 1, rules },
+          });
+          await db.qualityProfile.update({
+            where: { id: f.source.profile.id },
+            data: { version: 1, rules },
+          });
+        }
+      };
+      if (change === "after_claim") {
+        const sections = h.context.permittedSections;
+        let reads = 0;
+        h.context.permittedSections = async () => {
+          if (++reads === 2) {
+            expect(
+              await db.acquisitionAttempt.findUniqueOrThrow({
+                where: { id: attempt.id },
+              }),
+            ).toMatchObject({ state: "submitting", torrentId: null });
+            await changeProfile();
+          }
+          return sections();
+        };
+      } else await changeProfile();
+      expect(
+        await submitMovieTorrentV4(h.context, {
+          schemaVersion: 4,
+          operationId: input.operationId,
+          scope: input.scope,
+          attemptId: attempt.id,
+        }),
+      ).toEqual({ status: "obsolete", reason: "intent_changed" });
+      const retired = await db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: attempt.id },
+      });
+      expect(retired).toEqual({
+        ...attempt,
+        state: "cancelled",
+        updatedAt: retired.updatedAt,
+      });
+      expect(
+        await db.acquisitionReservation.count({
+          where: { attemptId: attempt.id },
+        }),
+      ).toBe(0);
+      expect(f.source.wire.additions()).toBe(0);
+      expect(f.source.wire.control.deletes).toBe(0);
+      await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`);
+      await h.sweep(`${PERSONAL_MOVIE_DUE_CURSOR}start`);
+      const queued = await h.pending();
+      expect(queued).toHaveLength(2);
+      const next = queued.find((value) => value.id !== originalDue.id);
+      if (next === undefined) throw new Error("Fresh profile due was absent");
+      expect(z.string().parse(next.idempotencyKey).split(":").at(-1)).toBe(
+        z.string().parse(originalDue.idempotencyKey).split(":").at(-1),
+      );
+      expect(next.outbox).toMatchObject({
+        operationId: next.id,
+        payload: next.payload,
+      });
+      const freshInput = MovieOperationV4Schema.parse(
+        z.object(MovieOperationV4Schema.shape).parse(next.payload),
+      );
+      const fresh = await movie.reconcileMovieIntentV4(
+        freshInput,
+        testPlexBindingExecution(),
+      );
+      expect(fresh.status).toBe("acquire");
+      const admitted = await db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: z.uuid().parse(fresh.attemptId) },
+      });
+      expect(admitted).toMatchObject({
+        state: "reserved",
+        operationId: next.id,
+        failure: expectedProfile,
+      });
+      const oldIdentity = MovieAcquisitionIdentityV2Schema.parse(
+        attempt.identityEvidence,
+      );
+      const newIdentity = MovieAcquisitionIdentityV2Schema.parse(
+        admitted.identityEvidence,
+      );
+      expect(newIdentity.assessment).not.toEqual(oldIdentity.assessment);
+      expect(
+        await db.movieReleaseAssessment.findUniqueOrThrow({
+          where: { id: newIdentity.assessment.id },
+        }),
+      ).toMatchObject(expectedProfile);
+      expect(
+        await db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: attempt.id },
+        }),
+      ).toEqual(retired);
+      expect(
+        await db.operation.findUniqueOrThrow({ where: { id: originalDue.id } }),
+      ).toEqual(operation);
+      const after = await h.source();
+      expect(after.requests).toEqual(before.requests);
+      expect(after.choices).toEqual(before.choices);
+      expect(after.original).toEqual(before.original);
+      expect(f.source.wire.additions()).toBe(0);
+    } finally {
+      await f.close();
+    }
+  },
+  60_000,
+);
 
 test("actual self cancellation removes scheduled personal search authority without changing its historical choice", async () => {
   const h = await fixture("directors_cut");

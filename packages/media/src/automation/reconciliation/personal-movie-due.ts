@@ -51,6 +51,11 @@ async function queuePersonalMovieDueV4(
       where: { mediaId: scope.mediaId, edition: scope.edition },
     });
     if (reserved !== 0) return;
+    const profile = await tx.qualityProfile.findUniqueOrThrow({
+      where: { id: target.profileId },
+      select: { id: true, version: true },
+    });
+    budget.consume(1);
     const sponsors = await eligibleAcquisitionSponsors(tx, {
       scope,
       access,
@@ -74,7 +79,7 @@ async function queuePersonalMovieDueV4(
     await bindPlexTransactionDeadline(tx, freshness);
     const bucket = Math.floor(execution.observed.wall / 21_600_000);
     await queueOperation(tx, {
-      key: `personal-movie-due-v4:${scope.mediaId}:${scope.edition}:${String(target.generation)}:${String(bucket)}`,
+      key: `personal-movie-due-v4:${scope.mediaId}:${scope.edition}:${String(target.generation)}:${profile.id}:${String(profile.version)}:${String(bucket)}`,
       kind: "reconcile_movie_edition_v4",
       targetId: scope.mediaId,
       userId: sponsor.choice.actorId,

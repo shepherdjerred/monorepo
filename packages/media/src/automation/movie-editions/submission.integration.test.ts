@@ -6,7 +6,7 @@ import type { FetchTransport } from "#integrations/http.ts";
 import { retainedMovieCandidate } from "#infrastructure/movie-editions/lifecycle/candidate.test-support.ts";
 import { storeMovieCandidateV4 } from "./candidates.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
-import { submitMovieTorrentV4 } from "./submission.ts";
+import { submitMovieTorrentV4, validMovieAttemptV4 } from "./submission.ts";
 import { observeMovieAcquisitionV4 } from "./observation.ts";
 import { reconcileUnconfirmedSubmission } from "#automation/acquisition-management/recovery.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
@@ -672,6 +672,65 @@ test("feature gate, original profile version and recovery epoch block new transf
   expect(f.wire.state.calls).toEqual([]);
   expect(f.wire.state.adds).toBe(0);
 });
+
+test.each(["downloading", "submission_unknown"] as const)(
+  "a changed profile retains an already-added %s transfer and its reservation",
+  async (state) => {
+    const f = await fixture();
+    f.wire.state.loseReply = state === "submission_unknown";
+    await submitMovieTorrentV4(f.context, f.input);
+    const attempt = await f.db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: f.attempt.id },
+    });
+    expect(attempt.state).toBe(state);
+    const reservation = await f.db.acquisitionReservation.findUniqueOrThrow({
+      where: {
+        mediaId_edition: {
+          mediaId: f.media.id,
+          edition: f.input.scope.edition,
+        },
+      },
+    });
+    const rules = QualityRulesSchema.parse(f.profile.rules);
+    await f.db.qualityProfileVersion.create({
+      data: { profileId: f.profile.id, version: 1, rules },
+    });
+    await f.db.qualityProfile.update({
+      where: { id: f.profile.id },
+      data: { version: 1, rules },
+    });
+    expect(await validMovieAttemptV4(f.context, f.input)).toBe(false);
+    expect(
+      await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: f.attempt.id },
+      }),
+    ).toEqual(attempt);
+    expect(
+      await f.db.acquisitionReservation.findUniqueOrThrow({
+        where: {
+          mediaId_edition: {
+            mediaId: f.media.id,
+            edition: f.input.scope.edition,
+          },
+        },
+      }),
+    ).toEqual(reservation);
+    if (state === "submission_unknown") {
+      f.wire.state.visible = false;
+      expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+        status: "blocked",
+        reason: "submission_outcome_unknown",
+      });
+    } else {
+      expect(
+        await f.db.operation.count({
+          where: { idempotencyKey: `seed:${String(attempt.torrentId)}` },
+        }),
+      ).toBe(1);
+    }
+    expect(f.wire.state.adds).toBe(1);
+  },
+);
 
 test("the original writer lease expiry is rechecked immediately before qBit mutation", async () => {
   const f = await fixture();
