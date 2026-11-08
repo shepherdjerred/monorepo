@@ -40,6 +40,15 @@ toolkit deploy recovery --pending --json
    workstation ArgoCD token and
    `bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>`.
 
+4. A worker sync that failed with `exceeded its progress deadline` is usually
+   capacity: look for a Pending `*-wf-retained-*` pod in the Application's
+   namespace and `Insufficient cpu` on torvalds. The worker reader then
+   refuses, because it needs a Healthy Application with a Succeeded sync.
+   Free capacity with `toolkit deploy workers retire <ENV> <WORKER_ID>` for
+   Temporal-`drained`, non-current hosts of another environment (Scout beta
+   first), one at a time. If the failed deployment still holds the lock that
+   retirement needs, it is a section 5 case.
+
 Fix a defective check or chart in source first (a false positive must not be
 worked around), then settle the deployment.
 
