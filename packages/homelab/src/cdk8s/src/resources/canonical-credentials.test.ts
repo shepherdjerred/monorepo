@@ -97,7 +97,7 @@ test("Minecraft provider and runtime retain the same bot identity and field", ()
     key: bot.vault_field,
   });
   expect(bot.expected_application_id).toBe("1119453338468089868");
-  expect(DELIVERY_PLATFORM_ITEMS["discord-minecraft-credentials"].itemId).toBe(
+  expect(JSON.stringify(DELIVERY_PLATFORM_ITEMS)).not.toContain(
     "q37vet77dfggoqbvu4bqle3gje",
   );
 });
