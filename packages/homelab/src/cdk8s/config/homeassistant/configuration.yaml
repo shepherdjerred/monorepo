@@ -1,5 +1,14 @@
 default_config:
 
+# The public Cloudflare Tunnel hostname. Remote OAuth clients (the MCP Server
+# integration's ChatGPT and Claude connectors) read
+# /.well-known/oauth-authorization-server, which returns an issuer and absolute
+# endpoints only when the request host matches a configured URL. internal_url
+# stays unset so LAN media players (Sonos, Cast, TTS) keep the detected LAN
+# address; they cannot resolve tailnet or public names through the tunnel.
+homeassistant:
+  external_url: https://homeassistant.sjer.red
+
 # custom-brand-icons (HACS "plugin" category) is now pinned via
 # ha-custom-components.ts instead of installed through HACS, which used to
 # register this as a Lovelace resource at /hacsfiles/custom-brand-icons/...
