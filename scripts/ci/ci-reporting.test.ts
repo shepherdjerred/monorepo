@@ -504,6 +504,7 @@ describe("CI reporting manifest", () => {
           "scripts/tofu/adopt-application-secrets.test.ts",
           "src/talos/catalog-pins.test.ts",
           "scripts/homelab-build-inputs.test.ts",
+          "scripts/minecraft/capture-resources.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
         ],
       },
