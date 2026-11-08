@@ -203,7 +203,7 @@ export async function captureSuite(options: CaptureOptions) {
     session = await localSession({
       mapDirectory,
       sourceDirectory: options.runtime.sourceDirectory,
-      spawn: [68.5, 69, 66.5],
+      spawn: suite.bootstrap,
       helpers,
       ...(suite.features === undefined ? {} : { features: suite.features }),
       ...(rollout === undefined ? {} : { rollout: rollout.bootstrap }),

@@ -254,6 +254,9 @@ missing terrain, corrupt NBT and mismatched chunk coordinates fail the export.
 Native world settings and datapacks accompany the crop. Player files, plugin
 databases, session locks and credentials stay outside the fixture.
 
+Suites declare a verified main-world `bootstrap` landing point inside the retained
+padded terrain. The disposable server uses it for returning and first-time players.
+
 Prerequisites are an awake live server, a token-enabled interactive harness for
 the guarded save command, operator Kubernetes access, Docker, Java/Gradle,
 the native client prerequisites below, `gitleaks`, and the authenticated

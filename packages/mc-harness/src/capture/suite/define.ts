@@ -40,6 +40,8 @@ export type SuiteScenario = {
 };
 export type CaptureSuite = {
   id: string;
+  /** Verified first-join landing point in the imported main world. */
+  bootstrap: [number, number, number];
   patches: TerrainPatch[];
   scenarios: SuiteScenario[];
   features?: z.infer<typeof CaptureFeatureSchema>[] | undefined;
@@ -61,6 +63,7 @@ const SceneSchema = z.object({
 });
 export const SuiteSchema = z.strictObject({
   id: MediaName,
+  bootstrap: z.tuple([z.number(), z.number(), z.number()]),
   patches: z.array(PatchSchema).min(1),
   features: z.array(CaptureFeatureSchema).optional(),
   rollout: z
@@ -126,6 +129,18 @@ export function defineCaptureSuite(suite: CaptureSuite): CaptureSuite {
   SuiteSchema.parse(suite);
   MediaName.parse(suite.id);
   suite.patches.forEach((p) => PatchSchema.parse(p));
+  const [x, , zz] = suite.bootstrap;
+  if (
+    !suite.patches.some(
+      (p) =>
+        p.world === "world" &&
+        Math.floor(x / 16) >= Math.floor(p.min[0] / 16) - p.paddingChunks &&
+        Math.floor(x / 16) <= Math.floor(p.max[0] / 16) + p.paddingChunks &&
+        Math.floor(zz / 16) >= Math.floor(p.min[1] / 16) - p.paddingChunks &&
+        Math.floor(zz / 16) <= Math.floor(p.max[1] / 16) + p.paddingChunks,
+    )
+  )
+    throw new Error("Suite bootstrap is outside retained main-world terrain");
   const ids = new Set<string>();
   const shots = new Set<string>();
   for (const scenario of suite.scenarios) {

@@ -36,6 +36,7 @@ import townShots from "./presentations/town.ts";
 
 export default defineCaptureSuite({
   id: "tsmc",
+  bootstrap: [68.5, 69, 66.5],
   patches: [
     { world: "world", min: [64, 160], max: [160, 256], paddingChunks: 12 },
     { world: "creative", min: [-16, -16], max: [92, 92], paddingChunks: 12 },

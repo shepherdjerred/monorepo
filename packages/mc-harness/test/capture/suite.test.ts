@@ -169,12 +169,20 @@ const scenario: SuiteScenario = {
 it("validates output identity and rejects empty selections", () => {
   const suite = defineCaptureSuite({
     id: "example",
+    bootstrap: [0.5, 64, 0.5],
     patches: [
       { world: "world", min: [-16, -16], max: [16, 16], paddingChunks: 2 },
     ],
     scenarios: [scenario],
   });
   expect(selectScenarios(suite, { shot: "pot" })).toEqual([scenario]);
+  expect(() =>
+    defineCaptureSuite({ ...suite, bootstrap: [1000, 64, 1000] }),
+  ).toThrow("bootstrap");
+  expect(() =>
+    defineCaptureSuite({ ...suite, bootstrap: [-16 * 3 - 0.5, 64, 0] }),
+  ).toThrow("bootstrap");
+  defineCaptureSuite({ ...suite, bootstrap: [16 * 3 + 0.5, 64, 0] });
   expect(() => selectScenarios(suite, { shot: "missing" })).toThrow();
   expect(() =>
     defineCaptureSuite({

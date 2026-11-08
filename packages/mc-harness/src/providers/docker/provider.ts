@@ -441,26 +441,29 @@ export class DockerSandboxProvider implements SandboxProvider {
 
   async reap(now: Date): Promise<string[]> {
     const reaped: string[] = [];
+    const records = await this.options.store.listFor("docker");
     const rows = await this.rows();
-    for (const row of rows) {
-      const expired = !row.keep && Date.parse(row.expiresAt) <= now.getTime();
-      // An exited sandbox is unusable whether or not it was kept.
-      if ((expired || row.stale) && !reaped.includes(row.id)) {
-        await this.destroy(row.id);
-        reaped.push(row.id);
-      }
-    }
-    // Docker records whose container vanished (docker restart, manual rm).
-    const remaining = await this.rows();
-    const known = new Set(remaining.map((row) => row.id));
-    for (const record of await this.options.store.listFor("docker")) {
-      if (!known.has(record.id) && !reaped.includes(record.id)) {
-        await this.lifecycle.run(record.id, async () => {
-          const current = await this.options.store.read(record.id);
-          if (current !== null) await this.destroyNow(record.id);
-        });
-        reaped.push(record.id);
-      }
+    const candidates = new Set([
+      ...records.map((record) => record.id),
+      ...rows.map((row) => row.id),
+    ]);
+    for (const id of candidates) {
+      const removed = await this.lifecycle.run(id, async () => {
+        // Read the record before a fresh Docker inventory. A newly published
+        // creation cannot become a missing-container candidate from an old scan.
+        const record = await this.options.store.read(id);
+        const inventory = await this.rows();
+        const current = inventory.filter((row) => row.id === id);
+        const expired = current.some(
+          (row) => !row.keep && Date.parse(row.expiresAt) <= now.getTime(),
+        );
+        const stale = current.some((row) => row.stale);
+        if (!expired && !stale && !(record !== null && current.length === 0))
+          return false;
+        await this.destroyNow(id);
+        return true;
+      });
+      if (removed) reaped.push(id);
     }
     return reaped;
   }

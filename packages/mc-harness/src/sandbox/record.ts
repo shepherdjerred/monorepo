@@ -4,6 +4,7 @@ import path from "node:path";
 import { z } from "zod";
 import {
   SandboxSummarySchema,
+  SandboxIdSchema,
   type ProviderKind,
   type SandboxSummary,
 } from "#protocol/ipc.ts";
@@ -106,7 +107,7 @@ export class SandboxStore {
   constructor(private readonly root = SANDBOXES_DIR) {}
 
   dir(id: string): string {
-    return path.join(this.root, id);
+    return path.join(this.root, SandboxIdSchema.parse(id));
   }
 
   async write(record: SandboxRecord): Promise<void> {

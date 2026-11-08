@@ -36,6 +36,7 @@ async function fixture() {
   const address = backend.address();
   if (address === null || typeof address === "string")
     throw new Error("No backend");
+  let visible = true;
   let pause:
     | {
         operation: string;
@@ -52,8 +53,9 @@ async function fixture() {
     }
     if (argv[0] === "ps")
       return {
-        stdout:
-          "abcdef123456\tsbx-abc123\t2099-01-01T00:00:00.000Z\ttrue\trunning\n",
+        stdout: visible
+          ? "abcdef123456\tsbx-abc123\t2099-01-01T00:00:00.000Z\ttrue\trunning\n"
+          : "",
         stderr: "",
       };
     if (argv[0] === "port")
@@ -71,6 +73,9 @@ async function fixture() {
     first,
     second,
     docker,
+    setVisible(value: boolean) {
+      visible = value;
+    },
     hold(operation: string) {
       const held = {
         operation,
@@ -167,6 +172,8 @@ it("finishes pending adoption before removal and leaves no record or listener", 
 it("keeps complete private records visible during concurrent endpoint updates", async () => {
   const f = await fixture();
   try {
+    for (const id of ["", "..", "sbx-../../"])
+      expect(() => f.store.dir(id)).toThrow();
     const writing = (async () => {
       for (let i = 0; i < 20; i++)
         await f.store.write({
@@ -185,6 +192,37 @@ it("keeps complete private records visible during concurrent endpoint updates", 
     );
     expect(metadata.mode & 0o777).toBe(0o600);
   } finally {
+    await f.cleanup();
+  }
+});
+
+it("does not reap a container published after an earlier inventory", async () => {
+  const f = await fixture();
+  const entered = Promise.withResolvers<null>();
+  const release = Promise.withResolvers<null>();
+  const listFor = f.store.listFor.bind(f.store);
+  const inventory = vi
+    .spyOn(f.store, "listFor")
+    .mockImplementationOnce(async (provider) => {
+      entered.resolve(null);
+      await release.promise;
+      return listFor(provider);
+    });
+  try {
+    await f.store.remove(record.id);
+    f.setVisible(false);
+    const reaping = f.second.reap(new Date("2026-01-01T00:00:00.000Z"));
+    await entered.promise;
+    f.setVisible(true);
+    await f.store.write(record);
+    release.resolve(null);
+    expect(await reaping).toEqual([]);
+    expect(f.docker.mock.calls.some(([argv]) => argv[0] === "rm")).toBe(false);
+    expect(await f.store.read(record.id)).toEqual(record);
+  } finally {
+    release.resolve(null);
+    inventory.mockRestore();
+    f.setVisible(true);
     await f.cleanup();
   }
 });
