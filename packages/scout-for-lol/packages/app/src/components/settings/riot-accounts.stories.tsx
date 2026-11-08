@@ -56,6 +56,7 @@ export const MultipleAccounts: Story = {
 };
 export const NotificationsOff: Story = {
   args: {
+    notice: "Match notifications off.",
     data: {
       ...meta.args.data,
       accounts: [{ ...account, matchNotificationsEnabled: false }],

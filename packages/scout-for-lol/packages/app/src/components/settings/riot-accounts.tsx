@@ -32,7 +32,7 @@ export function RiotAccountsSettings(props: {
         </Button>
       </div>
       <p className="text-sm text-scout-subtle">
-        Game-start and game-end posts across all Scout servers.
+        Turn off match notifications across all Scout servers.
       </p>
       {!canLink && (
         <p className="text-sm text-scout-subtle">
@@ -90,31 +90,6 @@ export function RiotAccountsSettings(props: {
           ))}
         </ul>
       )}
-      <p className="text-sm text-scout-subtle">
-        Tracking, stats, and history continue. Shared reports may still include
-        your name and Discord mentions.
-      </p>
-      <details className="text-sm text-scout-subtle">
-        <summary className="w-fit cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-scout-focus">
-          How notifications work
-        </summary>
-        <div className="mt-3 space-y-2">
-          <p>
-            Turning notifications off stops posts triggered by this account
-            across all Scout servers.
-          </p>
-          <p>
-            Existing posts stay in Discord. Posts already being sent may still
-            arrive. Turning notifications back on won’t post missed games.
-          </p>
-          <p>
-            <Link className="underline" to="/feedback">
-              Contact support
-            </Link>{" "}
-            for help with a linked account.
-          </p>
-        </div>
-      </details>
     </section>
   );
 }

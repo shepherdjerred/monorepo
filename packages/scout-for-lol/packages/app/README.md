@@ -24,8 +24,8 @@ browser requests with `ERR_STREAM_WRITE_AFTER_END`.
 The account menu opens `/app/settings`. A Discord login can verify multiple
 League accounts with Riot and choose each account's game-start and game-end
 notifications globally. No server membership or manager permission is needed.
-Compact account rows share one panel. The tracking and shared-report notice
-stays visible; delivery details and support sit under “How notifications work.”
+Compact account rows share one panel with a match-notification toggle for each
+account and a brief confirmation after saving.
 Existing toggles work even when new linking is disabled or unconfigured.
 An account already owned by another Discord login links to support instead of
 transferring ownership. Settings stories cover enabled, disabled, empty,
