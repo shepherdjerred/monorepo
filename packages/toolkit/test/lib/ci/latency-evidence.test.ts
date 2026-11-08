@@ -170,50 +170,65 @@ test("missing header and later gate restarts cannot look fresh", () => {
   ).toBe("unknown");
 });
 
-test("structured checkout and toolchain measurements retain units and validate identity", () => {
-  const checkout = {
-    schemaVersion: 1,
-    sourceSha: head,
-    cache: "hit",
-    downloadedObjectBytes: 0,
-    downloadMs: 0,
-    materializationMs: 4000,
-    totalMs: 20_000,
-  };
-  const bootstrap = {
-    schemaVersion: 1,
-    sourceSha: head,
-    scope: "automation",
-    elapsedSeconds: 2,
-  };
-  const evidence = stepEvidence(
-    [
-      `CI_CHECKOUT_DIAGNOSTIC ${JSON.stringify(checkout)}`,
-      `CI_BOOTSTRAP_DIAGNOSTIC ${JSON.stringify(bootstrap)}`,
-      config.token,
-    ],
-    pipeline,
-  );
-  expect(evidence).toEqual({ checkout, bootstrap: [bootstrap], installs: [] });
-  expect(JSON.stringify(evidence)).not.toContain(config.token);
-  expect(() =>
-    stepEvidence(
+test.each(["automation", "minecraft"])(
+  "%s checkout and toolchain measurements retain units and validate identity",
+  (scope) => {
+    const checkout = {
+      schemaVersion: 1,
+      sourceSha: head,
+      cache: "hit",
+      downloadedObjectBytes: 0,
+      downloadMs: 0,
+      materializationMs: 4000,
+      totalMs: 20_000,
+    };
+    const bootstrap = {
+      schemaVersion: 1,
+      sourceSha: head,
+      scope,
+      elapsedSeconds: 2,
+    };
+    const evidence = stepEvidence(
       [
-        `CI_CHECKOUT_DIAGNOSTIC ${JSON.stringify({ ...checkout, sourceSha: "b".repeat(40) })}`,
+        `CI_CHECKOUT_DIAGNOSTIC ${JSON.stringify(checkout)}`,
+        `CI_BOOTSTRAP_DIAGNOSTIC ${JSON.stringify(bootstrap)}`,
+        config.token,
       ],
       pipeline,
-    ),
-  ).toThrow("identity");
-  expect(() =>
-    stepEvidence(
-      Array.from(
-        { length: 2 },
-        () => `CI_CHECKOUT_DIAGNOSTIC ${JSON.stringify(checkout)}`,
+    );
+    expect(evidence).toEqual({
+      checkout,
+      bootstrap: [bootstrap],
+      installs: [],
+    });
+    expect(JSON.stringify(evidence)).not.toContain(config.token);
+    expect(() =>
+      stepEvidence(
+        [
+          `CI_BOOTSTRAP_DIAGNOSTIC ${JSON.stringify({ ...bootstrap, scope: "unknown-profile" })}`,
+        ],
+        pipeline,
       ),
-      pipeline,
-    ),
-  ).toThrow("uniqueness");
-});
+    ).toThrow();
+    expect(() =>
+      stepEvidence(
+        [
+          `CI_CHECKOUT_DIAGNOSTIC ${JSON.stringify({ ...checkout, sourceSha: "b".repeat(40) })}`,
+        ],
+        pipeline,
+      ),
+    ).toThrow("identity");
+    expect(() =>
+      stepEvidence(
+        Array.from(
+          { length: 2 },
+          () => `CI_CHECKOUT_DIAGNOSTIC ${JSON.stringify(checkout)}`,
+        ),
+        pipeline,
+      ),
+    ).toThrow("uniqueness");
+  },
+);
 
 test("install timing remains separate and failed installs are not successful latency samples", () => {
   const installs = [

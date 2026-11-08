@@ -123,6 +123,12 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     mise_ci install --yes bun
     mise_ci reshim
     ;;
+  minecraft)
+    # Paper smoke builds Java plugins and runs the Bun sidecar/client harness.
+    # Unrelated Android and SwiftLint producers do not belong in its budget.
+    mise_ci install --yes bun java gradle
+    mise_ci reshim
+    ;;
   tofu)
     # Grouped PR plan containers share installed workspace dependencies, but
     # each container still resolves its own pinned runtime from the CI image.

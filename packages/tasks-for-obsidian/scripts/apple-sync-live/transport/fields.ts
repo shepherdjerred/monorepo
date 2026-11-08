@@ -2,6 +2,12 @@ import { z } from "zod";
 
 export const UuidSchema = z.uuid();
 export const SHA256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
+export const ProcessLifetimeFields = {
+  pid: z.number().int().positive(),
+  startSeconds: z.number().int().nonnegative(),
+  startMicroseconds: z.number().int().min(0).max(999_999),
+  launchDate: z.number().positive(),
+};
 export const maximumFileBytes = 8 * 1024 * 1024;
 export const maximumTotalBytes = 64 * 1024 * 1024;
 export const maximumChunkBytes = 1024 * 1024;

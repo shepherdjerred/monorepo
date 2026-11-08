@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 import definition from "tasknotes-macos/scripts/native/mac-account/mac-account.protocol.json";
 import timingDefinition from "../../../../ios-account/account-input.schema.json";
-import { SHA256Schema, UuidSchema } from "../../fields";
+import { SHA256Schema, UuidSchema, ProcessLifetimeFields } from "../../fields";
 
 export const MacInputOperationSchema = z.enum([
   "credentials-probe",
@@ -18,12 +18,7 @@ const absolute = z
   .startsWith("/")
   .max(4096)
   .regex(/^\P{Cc}+$/u);
-const lifetime = {
-  pid: z.number().int().positive(),
-  startSeconds: z.number().int().nonnegative(),
-  startMicroseconds: z.number().int().min(0).max(999_999),
-  launchDate: z.number().positive(),
-};
+const lifetime = ProcessLifetimeFields;
 const envelope = {
   schemaVersion: z.literal(1),
   sessionID: UuidSchema,

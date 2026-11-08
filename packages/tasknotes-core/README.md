@@ -503,8 +503,11 @@ raises a typed error, so hosts retain prior OS schedules until a valid plan.
 
 The projection resolves mapped roles, configured date-only local anchor time
 (default `00:00`), offset-qualified instants, and completion/archive/recurring
-instance eligibility. It follows the current stored due/scheduled anchor;
-recurrence progression changes that anchor. Stable opaque notification IDs
+instance eligibility. It follows the current stored due/scheduled trigger anchor;
+recurrence progression changes that anchor. Recurring occurrence identity uses
+the written scheduled day, then due day, independently of the firing instant or
+delivery timezone. A materialized child owns that day for relative and absolute
+reminders alike. Stable opaque notification IDs
 include the profile, task path, reminder ID, firing instant, and occurrence.
 Relative offsets preserve exact nanoseconds. Year/month durations use fixed
 365/30 days, matching the pinned [plugin notification service](https://raw.githubusercontent.com/callumalpass/tasknotes/4.13.8/src/ui/NotificationService.ts).

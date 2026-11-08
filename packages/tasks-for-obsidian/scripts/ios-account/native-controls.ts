@@ -12,9 +12,12 @@ import {
 import { createConnection } from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { z } from "zod";
 import { boundaryCheck } from "./contract";
-import { inspectInputOwner, inputBinary } from "./app-input-artifacts";
+import {
+  inspectInputOwner,
+  inputBinary,
+  HelperDiagnosticSchema,
+} from "./app-input-artifacts";
 import { childEnvironment } from "tasknotes-macos/scripts/mac-account-contract.ts";
 
 // Explicit Mac-only controls: no simulator, application or credential operation.
@@ -23,20 +26,7 @@ const root = await realpath(
   await mkdtemp(path.join(os.tmpdir(), "facet-ios-bridge-controls-")),
 );
 const executable = path.join(root, "bridge");
-const diagnostic = z.strictObject({
-  kind: z.literal("rejected"),
-  phase: z.enum([
-    "bootstrap",
-    "stdio",
-    "directory",
-    "socket",
-    "peer",
-    "authorization",
-    "pump",
-  ]),
-  reason: z.enum(["boundary", "peer", "deadline", "frame", "io"]),
-  errno: z.number().int(),
-});
+const diagnostic = HelperDiagnosticSchema;
 const compile = Bun.spawn(
   [
     "/usr/bin/xcrun",

@@ -189,6 +189,7 @@ export async function demux(
     format,
     bufferSize: 8192,
   });
+  const packetIterator = demuxer.packets();
 
   // Natural EOF ends the pipes (graceful stream end downstream). A demux error instead destroys
   // them WITH the error so consumers can tell a mid-stream failure from a completed source —
@@ -199,7 +200,18 @@ export async function demux(
     stopped = true;
     vPipe.removeAllListeners("drain");
     aPipe.removeAllListeners("drain");
+    // Stop and join the packet generator before releasing its format/AVIO
+    // context. Closing while its native reader is active races av_read_frame.
+    demuxer.interrupt();
     input.destroy();
+    try {
+      await packetIterator.return(undefined);
+    } catch (stopError) {
+      err =
+        err === undefined
+          ? stopError
+          : new AggregateError([err, stopError], "Demux reader teardown failed");
+    }
     for (const filter of [...vbsf].reverse()) filter.close();
     try {
       await demuxer.close();
@@ -331,7 +343,6 @@ export async function demux(
           : undefined,
       )
     : undefined;
-  const packetIterator = demuxer.packets();
   const applyBitStreamFilters = async (
     input: Packet | null,
     filters: BitStreamFilterAPI[],

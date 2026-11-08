@@ -25,6 +25,7 @@ import {
 } from "./protocol";
 import { captureMacFileDescriptors } from "./collect";
 import { waitMacCredentialsStatus } from "./readiness";
+import { ownedDirectory } from "./private-directory";
 
 class MacPreparationRejected extends Error {
   constructor(readonly reason: string) {
@@ -54,17 +55,6 @@ const NativeSchema = z.strictObject({
 export type MacLifecycle = z.infer<typeof MacInputInitSchema>["lifecycle"];
 export const accountInputRoot = (runtime: GuestRuntime) =>
   path.join(runtime.paths.evidenceDirectory, "account-input");
-export async function privateDirectory(directory: string) {
-  await mkdir(directory, { recursive: true, mode: 0o700 });
-  const stat = await lstat(directory);
-  assert.ok(
-    stat.isDirectory() &&
-      !stat.isSymbolicLink() &&
-      stat.uid === process.getuid?.(),
-  );
-  assert.equal(stat.mode & 0o777, 0o700);
-  assert.equal(await realpath(directory), directory);
-}
 async function absent(file: string) {
   try {
     await lstat(file);
@@ -81,7 +71,7 @@ export async function prepareMacInputNative(
 ) {
   const directory = path.join(accountInputRoot(runtime), "native"),
     record = path.join(directory, "prepared.json");
-  await privateDirectory(directory);
+  await ownedDirectory(directory, true);
   if (await absent(record)) {
     assert.ok(probe, "Mac privacy probe must prepare the private helper first");
     const sources = [];
@@ -255,7 +245,7 @@ export async function prepareGuestMacInput(
   const native = await prepareMacInputNative(runtime, selected.probe);
   const root = accountInputRoot(runtime),
     evidenceDirectory = path.join(root, "sessions", sessionID);
-  await privateDirectory(path.join(root, "sessions"));
+  await ownedDirectory(path.join(root, "sessions"), true);
   await mkdir(evidenceDirectory, { recursive: false, mode: 0o700 });
   const binding = legacyMacBinding(runtime, remoteID, lifecycle);
   if (selected.probe) {

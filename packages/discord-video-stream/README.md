@@ -52,3 +52,7 @@ system executable used by hosted consumers. CI provisions it in the toolchain
 image. The `ffmpeg-static` Linux build crashes when opening this MPEG-TS HLS
 fixture, so it cannot exercise the timestamp normalization path. The other
 native demux fixtures continue to use the pinned static executable.
+
+Demux teardown interrupts the native reader and waits for the packet iterator
+to finish before closing its filters and format context. This keeps extraction
+errors from releasing FFmpeg resources while a background read still uses them.

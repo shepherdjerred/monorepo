@@ -6,6 +6,7 @@ import {
   openPinnedSocket,
   pinnedV3,
   privateDirectory,
+  type FixtureSocket,
 } from "./fixture.test-support";
 
 async function multipart() {
@@ -29,6 +30,26 @@ async function multipart() {
   };
 }
 
+async function startMultipart(
+  sender: FixtureSocket,
+  header: Record<string, unknown>,
+  content: Uint8Array,
+) {
+  expect(await sender.json()).toEqual({ op: "ready", version: 5 });
+  sender.send(header);
+  expect(await sender.json()).toEqual({ res: "ready" });
+  sender.binary(content.slice(0, 2_097_152));
+  expect(await sender.json()).toEqual({ res: "continue" });
+}
+
+async function expectPiece(receiver: FixtureSocket, expected: Uint8Array) {
+  const actual = await receiver.next();
+  assert.ok(actual instanceof Uint8Array);
+  // Compare every byte in native code rather than allocating millions of
+  // per-element matcher entries for a two-megabyte transport frame.
+  expect(Buffer.from(actual).equals(Buffer.from(expected))).toBe(true);
+}
+
 test("two-piece transfer acknowledges each piece and returns the exact opaque ciphertext", async () => {
   const directory = await privateDirectory();
   const fixture = await startSyncFixture({
@@ -38,12 +59,8 @@ test("two-piece transfer acknowledges each piece and returns the exact opaque ci
   });
   try {
     const sender = await openPinnedSocket(fixture, "Multipart sender");
-    expect(await sender.json()).toEqual({ op: "ready", version: 5 });
     const { header, content } = await multipart();
-    sender.send(header);
-    expect(await sender.json()).toEqual({ res: "ready" });
-    sender.binary(content.slice(0, 2_097_152));
-    expect(await sender.json()).toEqual({ res: "continue" });
+    await startMultipart(sender, header, content);
     expect(fixture.snapshot().files).toEqual([]);
     sender.binary(content.slice(2_097_152));
     expect(await sender.json()).toMatchObject({
@@ -58,8 +75,8 @@ test("two-piece transfer acknowledges each piece and returns the exact opaque ci
     expect(await receiver.json()).toEqual({ op: "ready", version: 6 });
     receiver.send({ op: "pull", uid: 6 });
     expect(await receiver.json()).toEqual({ size: content.length, pieces: 2 });
-    expect(await receiver.next()).toEqual(content.slice(0, 2_097_152));
-    expect(await receiver.next()).toEqual(content.slice(2_097_152));
+    await expectPiece(receiver, content.slice(0, 2_097_152));
+    await expectPiece(receiver, content.slice(2_097_152));
     expect(fixture.snapshot().counters.committedUploads).toBe(1);
     await sender.close();
     await receiver.close();
@@ -83,12 +100,8 @@ test.each(["truncated", "overrun"] as const)(
         fixture,
         "Invalid multipart sender",
       );
-      expect(await sender.json()).toEqual({ op: "ready", version: 5 });
       const { header, content } = await multipart();
-      sender.send(header);
-      expect(await sender.json()).toEqual({ res: "ready" });
-      sender.binary(content.slice(0, 2_097_152));
-      expect(await sender.json()).toEqual({ res: "continue" });
+      await startMultipart(sender, header, content);
       const tail = content.slice(2_097_152);
       sender.binary(
         mode === "truncated"

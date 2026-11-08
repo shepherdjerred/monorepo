@@ -20,6 +20,11 @@ import {
 import type { MacJourneyCommand } from "./mac-journey.ts";
 import { installMacVMRunner } from "./mac-vm-runner.ts";
 
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, lstat: vi.fn(actual.lstat) };
+});
+
 const roots: string[] = [];
 const runID = "12345678-1234-1234-1234-123456789abc";
 const nextID = "22345678-1234-1234-1234-123456789abc";
@@ -38,6 +43,23 @@ const capabilities = {
 };
 
 async function fixture() {
+  // The portable CI worker runs as root. Model a real unprivileged guest's
+  // identity consistently across process and owned-file metadata, preserving
+  // actual filesystem modes, inodes, links, bytes and every production gate.
+  const ownerUID = process.getuid?.();
+  expect(ownerUID).toBeDefined();
+  const fixtureUID = ownerUID === 501 ? 502 : 501;
+  const { lstat: actualLstat } =
+    await vi.importActual<typeof import("node:fs/promises")>(
+      "node:fs/promises",
+    );
+  vi.spyOn(process, "getuid").mockReturnValue(fixtureUID);
+  vi.mocked(lstat).mockImplementation(async (...args) => {
+    const metadata = await actualLstat(...args);
+    if (metadata.uid === ownerUID)
+      Object.defineProperty(metadata, "uid", { value: fixtureUID });
+    return metadata;
+  });
   const root = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "facet-stable-runner-")),
   );
@@ -103,8 +125,44 @@ async function fixture() {
 
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.mocked(lstat).mockReset();
   for (const root of roots.splice(0))
     await rm(root, { recursive: true, force: true });
+});
+
+test("a root caller is rejected before any installation or policy command", async () => {
+  const context = await fixture();
+  vi.mocked(process.getuid).mockReturnValue(0);
+  await expect(
+    installMacVMRunner(
+      context.artifact,
+      context.products,
+      runID,
+      context.command,
+    ),
+  ).rejects.toThrow();
+  expect(context.calls).toEqual([]);
+  await expect(lstat(context.namespace)).rejects.toThrow();
+});
+
+test("a foreign-owned namespace is rejected before any policy command", async () => {
+  const context = await fixture();
+  const { lstat: actualLstat } =
+    await vi.importActual<typeof import("node:fs/promises")>(
+      "node:fs/promises",
+    );
+  expect((await actualLstat(context.root)).uid).not.toBe(process.getuid?.());
+  vi.mocked(lstat).mockImplementationOnce(actualLstat);
+  await expect(
+    installMacVMRunner(
+      context.artifact,
+      context.products,
+      runID,
+      context.command,
+    ),
+  ).rejects.toThrow();
+  expect(context.calls).toEqual([]);
+  await expect(lstat(context.namespace)).rejects.toThrow();
 });
 
 test("installs only exact Runner bytes and relative links, retaining a run-owned lease", async () => {

@@ -305,6 +305,61 @@ fn reminder_ids_are_profile_qualified_and_problem_metadata_is_bounded() -> Resul
 }
 
 #[test]
+fn reminder_plan_materialized_child_owns_scheduled_day_for_deadline_and_absolute_triggers()
+-> Result<()> {
+    let files = Arc::new(Memory::default());
+    let entries = json!([
+        {"id":"deadline","type":"relative","relatedTo":"due","offset":"PT0S"},
+        {"id":"absolute","type":"absolute","absoluteTime":"2026-11-02T12:00:00Z"}
+    ]);
+    seed(
+        &files,
+        "a",
+        "Tasks/parent.md",
+        json!({
+            "scheduled":"2026-11-01T00:30:00+02:00", "due":"2026-11-02",
+            "recurrence":"DTSTART:20261101;FREQ=DAILY", "reminders":entries
+        }),
+    )?;
+    seed(
+        &files,
+        "a",
+        "Tasks/child.md",
+        json!({
+            "recurrence_parent":"[[/Tasks/parent.md]]", "occurrence_date":"2026-11-01",
+            "scheduled":"2026-11-01T00:30:00+02:00", "due":"2026-11-02", "reminders":entries
+        }),
+    )?;
+    let engine = Engine::open(":memory:", files.clone())?;
+    engine.register_profile(profile(ProfileKind::LocalFolder))?;
+    engine.refresh("a")?;
+    let before = files.get("a", "Tasks/parent.md")?;
+    let mut query = request();
+    query["to"] = json!("2026-11-03T00:00:00Z");
+    let projection = plan(&engine, "a", &query)?;
+    assert_eq!(projection.get("problemCount"), Some(&json!(0)));
+    assert_eq!(projection.get("totalCount"), Some(&json!(2)));
+    let rows = projection
+        .get("rows")
+        .and_then(Value::as_array)
+        .ok_or(RuntimeError::NotFound)?;
+    for row in rows {
+        assert_eq!(row.get("taskPath"), Some(&json!("Tasks/child.md")));
+        assert_eq!(row.get("occurrenceDate"), Some(&json!("2026-11-01")));
+    }
+    assert_eq!(
+        projection.pointer("/rows/0/fireAt"),
+        Some(&json!("2026-11-02T08:00:00Z"))
+    );
+    assert_eq!(
+        projection.pointer("/rows/1/fireAt"),
+        Some(&json!("2026-11-02T12:00:00Z"))
+    );
+    assert_eq!(files.get("a", "Tasks/parent.md")?, before);
+    Ok(())
+}
+
+#[test]
 fn wrong_type_existing_recurrence_never_becomes_a_nonrecurring_notification() -> Result<()> {
     let files = Arc::new(Memory::default());
     for (name, recurrence) in [

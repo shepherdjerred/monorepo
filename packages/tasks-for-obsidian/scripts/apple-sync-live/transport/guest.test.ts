@@ -84,9 +84,9 @@ test("private account failures and mutation journals never expose input or a pas
     throw new Error(secret);
   };
   const input = request({
-    kind: "account",
+    kind: "official-account",
     action: {
-      mode: "fill_credentials",
+      mode: "fill",
       email: "test@example.invalid",
       password: secret,
       lifetime: { startSeconds: 1, startMicroseconds: 1, launchDate: 1 },
@@ -118,6 +118,30 @@ test("private account failures and mutation journals never expose input or a pas
   expect(await readdir(paths.evidenceDirectory)).not.toContain(
     "transport-lease",
   );
+});
+
+test("retired direct credential requests cannot execute or create a journal", async () => {
+  const { options, paths } = await fixture();
+  let called = false;
+  options.execute = async () => {
+    called = true;
+    throw new Error("Retired credential operation must not execute");
+  };
+  expect(
+    await createGuestDispatcher(options)(
+      request({
+        kind: "account",
+        action: {
+          mode: "fill_credentials",
+          email: "test@example.invalid",
+          password: "private-account-sentinel",
+          lifetime: { startSeconds: 1, startMicroseconds: 1, launchDate: 1 },
+        },
+      }),
+    ),
+  ).toMatchObject({ outcome: "rejected", reason: "request" });
+  expect(called).toBe(false);
+  expect(await readdir(paths.evidenceDirectory)).toEqual([]);
 });
 
 test("preflight refusal cannot execute a hook or create a request journal", async () => {

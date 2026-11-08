@@ -13,6 +13,7 @@ import {
   SHA256Schema,
   RelativePathSchema,
   UuidSchema,
+  ProcessLifetimeFields,
 } from "../fields.ts";
 
 export const NativeSelectorSchema = z.enum([
@@ -47,11 +48,7 @@ const remoteID = z
   .regex(/^\P{Cc}+$/u);
 const relative = RelativePathSchema.max(512);
 const deadline = z.number().int().positive().max(600_000);
-const lifetime = z.strictObject({
-  startSeconds: z.number().int().nonnegative(),
-  startMicroseconds: z.number().int().min(0).max(999_999),
-  launchDate: z.number().positive(),
-});
+const lifetime = z.strictObject(ProcessLifetimeFields).omit({ pid: true });
 export const OfficialAccountActionSchema = z.discriminatedUnion("mode", [
   z.strictObject({ mode: z.literal("present") }),
   z.strictObject({ mode: z.literal("inspect") }),
@@ -68,10 +65,7 @@ export const OfficialAccountActionSchema = z.discriminatedUnion("mode", [
 ]);
 export const OfficialAccountReceiptSchema = z.strictObject({
   ready: z.literal(true),
-  pid: z.number().int().positive(),
-  startSeconds: z.number().int().nonnegative(),
-  startMicroseconds: z.number().int().min(0).max(999_999),
-  launchDate: z.number().positive(),
+  ...ProcessLifetimeFields,
   secureField: z.literal(true),
   submitActionCount: z.number().int().min(0).max(1),
   loginEnabled: z.boolean(),

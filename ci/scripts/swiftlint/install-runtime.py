@@ -98,6 +98,11 @@ def install(export: Path, pins_path: Path, destination: Path) -> Path:
         if files_seen != manifest.keys():
             raise ValueError("SwiftLint archive is missing a pinned file")
         staged = stage / "opt/swiftlint"
+        # mkdir's implicit parents inherit the caller's umask. Tighten only
+        # this private new tree before publishing it; existing runtimes must
+        # still fail their ownership and permission checks without repair.
+        for directory in [staged, *(path for path in staged.rglob("*") if path.is_dir())]:
+            directory.chmod(directory.stat().st_mode & 0o755)
         for executable in (staged / "bin/swiftlint", staged / "swiftlint"):
             if executable.stat().st_mode & 0o111 != 0o111:
                 raise ValueError("SwiftLint producer launcher or binary is not executable")

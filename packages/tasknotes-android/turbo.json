@@ -63,7 +63,7 @@
         "JAVA_HOME",
         "MISE_DATA_DIR"
       ],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build"],
       "outputs": []
     },
     "test": {
@@ -95,7 +95,7 @@
         "JAVA_HOME",
         "MISE_DATA_DIR"
       ],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "lint"],
       "outputs": []
     },
     "test:ci": {
@@ -127,7 +127,7 @@
         "JAVA_HOME",
         "MISE_DATA_DIR"
       ],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "lint"],
       "outputs": []
     },
     "lint": {
@@ -159,7 +159,7 @@
         "JAVA_HOME",
         "MISE_DATA_DIR"
       ],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "typecheck"],
       "outputs": []
     }
   }

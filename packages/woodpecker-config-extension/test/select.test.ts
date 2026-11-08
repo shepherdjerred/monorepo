@@ -8,7 +8,7 @@ import {
 } from "#src/pipeline/steps.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
+import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { TEST_IDENTITY } from "./identity.ts";
 
 function step(key: string, overrides: Partial<CiStep> = {}): CiStep {
@@ -445,17 +445,32 @@ describe("Paper smoke lane", () => {
     expect(paperSteps.map((candidate) => candidate.key)).toEqual([
       "paper-smoke-pr",
     ]);
+    expect(
+      steps
+        .filter((candidate) =>
+          candidate.commands.some((command) =>
+            command.includes("MISE_TOOLCHAIN_SCOPE=minecraft"),
+          ),
+        )
+        .map((candidate) => candidate.key),
+    ).toEqual(["paper-smoke-pr"]);
     const paperStep = paperSteps[0];
     expect(paperStep?.concurrency).toEqual({
       limit: 6,
       group: "paper-smoke-pr",
     });
     expect(paperStep?.timeoutMinutes).toBe(10);
-    expect(paperStep?.commands).toContain(
+    expect(paperStep?.resources).toEqual(MEDIUM_TIER);
+    expect(paperStep?.commands).toEqual([
+      "MISE_TOOLCHAIN_SCOPE=minecraft . ci/scripts/toolchain.sh",
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/the-storm'",
       "bun --no-install run --cwd packages/the-storm build:plugin",
-    );
-    expect(paperStep?.commands.at(-1)).toBe(
+      "bun --no-install packages/the-storm/tests/e2e/prepare-sidecar.ts",
       "bun --no-install run --cwd packages/the-storm test:smoke",
+    ]);
+    if (paperStep === undefined) throw new Error("Missing Paper smoke lane");
+    expect(wrapCommands(paperStep)[0]).toMatch(
+      /^timeout -k 30s 600s bash -euo pipefail -c /u,
     );
   });
 

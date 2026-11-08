@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { UuidSchema, SHA256Schema } from "../fields.ts";
+import { UuidSchema, SHA256Schema, ProcessLifetimeFields } from "../fields.ts";
 import { readOwnedMacVMJSON } from "tasknotes-macos/scripts/apple-acceptance/mac-vm-export.ts";
 import { OfficialAccountReceiptSchema } from "./contract.ts";
 import type { GuestRuntime } from "./runtime.ts";
@@ -81,10 +81,7 @@ const SubmissionSchema = z.strictObject({
   schemaVersion: z.literal(1),
   kind: z.literal("official-private-submit-attempt"),
   identity: OfficialProbeIdentitySchema,
-  pid: z.number().int().positive(),
-  startSeconds: z.number().int().nonnegative(),
-  startMicroseconds: z.number().int().min(0).max(999_999),
-  launchDate: z.number().positive(),
+  ...ProcessLifetimeFields,
 });
 
 const ProbeSchema = z.strictObject({

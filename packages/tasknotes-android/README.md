@@ -163,6 +163,12 @@ without invalidating the foreground lifecycle lease.
 Run root setup first. SDK requirements: platform37, build-tools37.0.0,
 NDK28.2.13676358 and CMake3.31.6. Java/Gradle come from root mise; no wrapper.
 
+Turbo orders this package's shared Gradle writers: build, typecheck, lint, then
+`test` for local checking or `test:ci` for CI reporting. These invocations share
+Kotlin incremental caches and module outputs. Run direct Gradle invocations one
+at a time in the same checkout. The task-graph tests use bounded Gradle clients
+and retire them before their test deadlines.
+
 Direct Gradle/Android Studio native consumers also run the live
 `verifyNativeArtifacts` guard before merging JNI, packaging, installation or
 connected instrumentation. It compares retained stamps/manifests with the

@@ -38,10 +38,7 @@ const compile = spawnSync(
   { env: childEnvironment(Bun.env), timeout: 60_000, maxBuffer: 1_048_576 },
 );
 
-async function control(
-  mode: "fixed" | "nonzero" | "diagnostic" | "trailing-output",
-  extraInput = false,
-) {
+function terminalSession() {
   const child = Bun.spawn(macAccountControlArguments(program), {
     env: childEnvironment(Bun.env),
     stdin: "pipe",
@@ -52,6 +49,14 @@ async function control(
   const io = createMacPrivateIO(child, true, performance.now() + 5000, () => {
     process.kill(-child.pid, "SIGKILL");
   });
+  return { child, io };
+}
+
+async function control(
+  mode: "fixed" | "nonzero" | "diagnostic" | "trailing-output",
+  extraInput = false,
+) {
+  const { child, io } = terminalSession();
   let passed = false;
   try {
     await child.stdin.write(JSON.stringify({ mode }) + "\n");
@@ -101,16 +106,7 @@ async function control(
 }
 
 async function deadlineControl(mode: "native-deadline" | "long-deadline") {
-  const child = Bun.spawn(macAccountControlArguments(program), {
-    env: childEnvironment(Bun.env),
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "pipe",
-    detached: true,
-  });
-  const io = createMacPrivateIO(child, true, performance.now() + 5000, () => {
-    process.kill(-child.pid, "SIGKILL");
-  });
+  const { child, io } = terminalSession();
   try {
     await child.stdin.write(JSON.stringify({ mode }) + "\n");
     await child.stdin.flush();

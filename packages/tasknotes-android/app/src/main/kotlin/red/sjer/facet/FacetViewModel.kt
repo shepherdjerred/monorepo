@@ -685,7 +685,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         reserveNoticeRequest()
         if (!preserveAccountResources) {
             FacetReminders.fence()
-            FacetBackgroundSync.cancel(getApplication())
+            foregroundLease = FacetBackgroundSync.cancel(getApplication())
         }
         sessionGeneration++
         sessions.values.forEach { it.requestStop() }

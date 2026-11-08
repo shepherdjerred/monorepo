@@ -27,7 +27,11 @@ import {
 
 export async function runMacDependencyAcceptance(): Promise<void> {
   assert.equal(process.platform, "darwin");
-  assert.equal(Bun.argv.length, 2, "The dependency runner takes no arguments");
+  assert.deepEqual(
+    Bun.argv.slice(2),
+    ["--host-ui"],
+    "Manual foreground dependency acceptance requires explicit --host-ui",
+  );
   const packageRoot = path.resolve(import.meta.dir, "../..");
   const workspace = path.resolve(packageRoot, "../..");
   const runID = crypto.randomUUID();
@@ -152,4 +156,8 @@ export async function runMacDependencyAcceptance(): Promise<void> {
   console.log(`Native dependency editor proof passed: ${evidence}`);
 }
 
-if (import.meta.main) await runMacDependencyAcceptance();
+if (import.meta.main) {
+  if (Bun.argv.slice(2).length === 1 && Bun.argv[2] === "--help")
+    console.log("Usage: mac:dependencies:e2e --host-ui (manual foreground UI)");
+  else await runMacDependencyAcceptance();
+}

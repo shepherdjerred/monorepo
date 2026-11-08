@@ -15,6 +15,50 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FacetSyncOwnershipTest {
+    @Test fun explicitAuthorizationDisableKeepsTheActiveForegroundLeaseForReconnectAndReminders() {
+        val ownership = FacetSyncOwnership()
+        val foreground = ownership.resumeForeground()
+        ownership.disable()
+        assertFalse(ownership.pauseForeground(foreground))
+        assertNull(ownership.begin(Job()))
+        // Reconnect or local-reminder scheduling authorizes the same UI owner.
+        ownership.authorize()
+        assertTrue(ownership.pauseForeground(foreground))
+        assertNotNull(ownership.begin(Job()))
+    }
+
+    @Test fun accountWorkCancellationReturnsThePauseLeaseAndPreservesSurvivingProfileAuthorization() {
+        val ownership = FacetSyncOwnership()
+        val oldForeground = ownership.resumeForeground()
+        val currentForeground = ownership.cancelWork()
+        assertNotEquals(oldForeground, currentForeground)
+        assertFalse(ownership.pauseForeground(oldForeground))
+        assertNull(ownership.begin(Job()))
+        assertTrue(ownership.pauseForeground(currentForeground))
+        assertNotNull(ownership.begin(Job()))
+    }
+
+    @Test fun disablingBackgroundAuthorizationStillCancelsAndFencesTheExactWorker() {
+        val ownership = FacetSyncOwnership()
+        val worker = Job()
+        val old = requireNotNull(ownership.begin(worker))
+        var stopped = 0
+        assertTrue(ownership.retain(old) { stopped++ })
+        ownership.disable()
+        assertTrue(worker.isCancelled)
+        assertEquals(1, stopped)
+        assertFalse(ownership.retain(old) { stopped++ })
+        assertEquals(2, stopped)
+        assertNull(ownership.begin(Job()))
+        ownership.authorize()
+        assertTrue(ownership.pauseForeground())
+        val current = requireNotNull(ownership.begin(Job()))
+        ownership.end(old)
+        assertNull(ownership.begin(Job()))
+        ownership.end(current)
+        assertNotNull(ownership.begin(Job()))
+    }
+
     @Test fun verifiedOwnerReplacementCanConnectAndPauseUsingOriginalForegroundLease() {
         val ownership = FacetSyncOwnership()
         val foreground = ownership.resumeForeground()

@@ -88,7 +88,7 @@ describe("native video demux filter chain", () => {
       import { Readable } from "node:stream";
       import { demux } from ${JSON.stringify(source)};
       const bytes = await Bun.stdin.bytes();
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 100; i++) {
         const { video } = await demux(Readable.from([bytes]), {
           format: "nut",
           observer: { onPacketReady() { throw new Error("injected extraction failure"); } },

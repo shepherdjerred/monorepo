@@ -19,6 +19,12 @@ machine = 62 if platform.machine() == 'x86_64' else 183
 header = bytearray(64)
 header[:6] = b'\x7fELF\x02\x01'
 struct.pack_into('<H', header, 18, machine)
+checks = 0
+
+def execute(command, *, umask=0o002):
+    global checks
+    checks += 1
+    return subprocess.run(command, capture_output=True, text=True, timeout=5, check=False, umask=umask)
 
 def write_export(root, mode):
     export = root / 'export'
@@ -94,23 +100,35 @@ with tempfile.TemporaryDirectory(prefix='swiftlint-installer-test-') as temporar
         root.mkdir()
         export, expected = write_export(root, mode)
         command = [sys.executable, str(installer), str(export), str(expected), str(root / 'installed')]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=5, check=False)
+        result = execute(command)
         if expected_error is None:
             if result.returncode != 0:
                 raise SystemExit(f'Valid runtime rejected: {result.stderr}')
             installed = pathlib.Path(result.stdout.strip())
             if (installed / 'bin/swiftlint').read_bytes() != bytes(header):
                 raise SystemExit('Installer changed the producer bytes')
-            repeated = subprocess.run(command, capture_output=True, text=True, timeout=5, check=False)
+            repeated = execute(command)
             if repeated.returncode != 0 or repeated.stdout != result.stdout:
-                raise SystemExit('Exact existing runtime was not verified and reused')
+                raise SystemExit(f'Exact existing runtime was not verified and reused: {repeated.stderr}')
+            restricted = execute(command, umask=0o077)
+            if restricted.returncode != 0 or restricted.stdout != result.stdout:
+                raise SystemExit(f'Existing runtime reuse depended on the caller umask: {restricted.stderr}')
+            directory = installed / 'bin'
+            original_mode = directory.stat().st_mode & 0o7777
+            directory.chmod(original_mode | 0o022)
+            unsafe = execute(command)
+            if unsafe.returncode == 0 or 'unsafe ownership or permissions' not in unsafe.stderr:
+                raise SystemExit('Unsafe existing runtime was accepted or silently repaired')
+            if directory.stat().st_mode & 0o7777 != original_mode | 0o022:
+                raise SystemExit('Existing runtime permissions changed during failed verification')
+            directory.chmod(original_mode)
             (installed / 'swiftlint').write_bytes(b'corrupt fixture')
-            corrupt = subprocess.run(command, capture_output=True, text=True, timeout=5, check=False)
+            corrupt = execute(command)
             if corrupt.returncode == 0 or 'does not match its producer manifest' not in corrupt.stderr:
                 raise SystemExit('Corrupt existing runtime was accepted or silently replaced')
         elif result.returncode == 0 or expected_error not in result.stderr:
             raise SystemExit(f'Wrong rejection for {mode}: {result.stderr}')
         if (base / 'outside').exists():
             raise SystemExit('Archive wrote outside the owned fixture')
-print('SwiftLint installer boundary controls passed: fifteen cases')
+print(f'SwiftLint installer boundary controls passed: {checks} cases')
 PY

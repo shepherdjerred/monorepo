@@ -284,10 +284,14 @@ test("Apple account parsers default to local Keychain while vault passwords reta
       parseArguments([runID, "credentials", ...locatorArgs, ...flag])
         .parameters["--credential-backend"],
     ).toBe(expected);
-    expect(
-      parseArguments([runID, "verification", ...locatorArgs, ...flag])
-        .parameters["--credential-backend"],
-    ).toBe(expected);
+    const verification = () =>
+      parseArguments([runID, "verification", ...locatorArgs, ...flag]);
+    if (expected === "keychain")
+      expect(verification().parameters["--credential-backend"]).toBe(expected);
+    else
+      expect(verification).toThrow(
+        "Mac verification requires cached expiry-bearing OTP",
+      );
     expect(
       parseIosCredentialOptions([
         ...locatorArgs,
@@ -310,14 +314,15 @@ test("Apple account parsers default to local Keychain while vault passwords reta
         ...vaultFlag,
       ]).parameters["--vault-password-backend"],
     ).toBe(vaultBackend ?? "service-account");
-    expect(
+    const iosVaultOptions = () =>
       parseIosCredentialOptions([
         ...locatorArgs,
         "--vault-password-ref",
         reference,
         ...vaultFlag,
-      ]).vaultPasswordBackend,
-    ).toBe(vaultBackend ?? "service-account");
+      ]);
+    if (vaultBackend === "desktop") expect(iosVaultOptions).toThrow();
+    else expect(iosVaultOptions().vaultPasswordBackend).toBe("service-account");
   }
   expect(() =>
     parseArguments([

@@ -509,6 +509,12 @@ missing or broader write access stops the run before app UI.
 
 Foreground manual testing requires explicit opt-in:
 `bun scripts/occurrence-acceptance/run-macos.ts --host-ui`.
+The separate dependency-editor checkpoint is also manual:
+`bun run mac:dependencies:e2e --host-ui`. It runs
+`DependencyEditorUITests/testDependencyOptionsAndEditsSurviveColdLaunch` against
+a synthetic vault and verifies dependency edits, unrelated fields and Markdown
+after cold launch. It requires the same signed-runner permissions and does not
+participate in the automated headless VM suite.
 The four ordinary workflows and their fixture remain a separate required gate.
 Series repair controls match the core's current canonical `sourceTaskPaths`.
 An explicit empty array excludes historical child paths; older responses without

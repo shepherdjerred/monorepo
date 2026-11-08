@@ -1,19 +1,18 @@
 import { expect, test } from "vitest";
 import { resolve } from "node:path";
+import { boundedCommand } from "./bounded-command";
 
 async function graph(...tasks: string[]): Promise<string> {
-  const child = Bun.spawn(
+  const result = await boundedCommand(
     ["gradle", "--console=plain", "--max-workers=2", "--dry-run", ...tasks],
-    { cwd: resolve(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" },
+    {
+      cwd: resolve(import.meta.dir, ".."),
+      logs: resolve(import.meta.dir, "../build/native-consumer-graphs"),
+      // Retire and await the owned client before the unchanged 60-second test budget.
+      timeoutMS: 55_000,
+    },
   );
-  const [stdout, stderr, exit] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  if (exit !== 0)
-    throw new Error(`Gradle task-graph verification failed: ${stderr}`);
-  return stdout;
+  return result.stdout.toString("utf8");
 }
 test.each([
   ":bindings:mergeDebugJniLibFolders",

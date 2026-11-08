@@ -66,7 +66,7 @@ function stormSmokeStep(images: CiImages): CiStep {
     label: "Paper 26.3 + The Storm smoke",
     image: images.base,
     commands: [
-      ". ci/scripts/toolchain.sh",
+      "MISE_TOOLCHAIN_SCOPE=minecraft . ci/scripts/toolchain.sh",
       "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/the-storm'",
       "bun --no-install run --cwd packages/the-storm build:plugin",
       "bun --no-install packages/the-storm/tests/e2e/prepare-sidecar.ts",

@@ -72,9 +72,10 @@ object FacetBackgroundSync {
             .enqueueUniquePeriodicWork(WORK, ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
-    fun cancel(context: Context) {
-        ownership.disable()
+    fun cancel(context: Context): Long {
+        val lease = ownership.cancelWork()
         WorkManager.getInstance(context.applicationContext).cancelUniqueWork(WORK)
+        return lease
     }
 
     internal fun authorize(context: Context) {
@@ -82,7 +83,8 @@ object FacetBackgroundSync {
         ownership.authorize()
     }
     internal fun disableAuthorization(context: Context) {
-        cancel(context)
+        ownership.disable()
+        WorkManager.getInstance(context.applicationContext).cancelUniqueWork(WORK)
         check(context.getSharedPreferences("facet.background", Context.MODE_PRIVATE).edit().putBoolean("authorized", false).commit())
     }
     internal fun authorized(context: Context): Boolean =
@@ -124,7 +126,13 @@ internal class FacetSyncOwnership {
         owner.invokeOnCompletion { synchronized(this) { retired.remove(owner) } }
     }
     @Synchronized fun authorize() { authorized = true }
-    @Synchronized fun disable() { resumeForeground(); authorized = false }
+    /** Cancel account work without revoking an account that still owns surviving profiles. */
+    @Synchronized fun cancelWork(): Long = resumeForeground()
+    @Synchronized fun disable() {
+        // An active UI already owns the writer fence; sign-out must not invalidate its pause lease.
+        if (!foreground) resumeForeground()
+        authorized = false
+    }
     /** Preserve OS scheduling and the foreground lease while authentication is unproven. */
     @Synchronized fun suspendAccountTransition(): Long {
         val token = ++nextSuspension

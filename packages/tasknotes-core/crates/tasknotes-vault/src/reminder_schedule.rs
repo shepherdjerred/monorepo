@@ -53,7 +53,7 @@ pub fn project(
     {
         return Err(invalid("mixed_reminder_fields"));
     }
-    let (at, occurrence) = if kind == "absolute" {
+    let (at, trigger_day) = if kind == "absolute" {
         let at = temporal::parse_instant(text(entry, "absoluteTime")?)
             .map_err(|_| invalid("invalid_reminder_absolute_time"))?;
         (at, at.with_timezone(&zone).date_naive())
@@ -85,6 +85,14 @@ pub fn project(
     {
         return Err(invalid("invalid_recurrence_rule"));
     }
+    // The trigger can be relative to a deadline or an unrelated absolute
+    // instant. Occurrence ownership follows the task's written scheduled/due
+    // day, just like completion, independently of the delivery timezone.
+    let occurrence = if recurring {
+        occurrence_day(properties)?.unwrap_or(trigger_day)
+    } else {
+        trigger_day
+    };
     if properties.get("archiveTag") == Some(&Value::Bool(true))
         || (!recurring && completed)
         || (recurring
@@ -108,6 +116,26 @@ pub fn project(
         occurrence_date: recurring.then(|| occurrence.to_string()),
         description,
     }))
+}
+
+fn occurrence_day(properties: &Map<String, Value>) -> Result<Option<chrono::NaiveDate>> {
+    ["scheduled", "due"]
+        .into_iter()
+        .find_map(|key| {
+            properties.get(key).filter(|value| {
+                !value.is_null() && value.as_str().is_none_or(|raw| !raw.trim().is_empty())
+            })
+        })
+        .map(|value| {
+            let raw = value
+                .as_str()
+                .ok_or_else(|| invalid("invalid_reminder_occurrence"))?;
+            if raw.len() != 10 {
+                temporal::parse_instant(raw)?;
+            }
+            temporal::date_part(raw)
+        })
+        .transpose()
 }
 
 fn contains_day(
@@ -273,6 +301,87 @@ mod tests {
             "PT1Hjunk",
         ] {
             assert!(offset(raw).is_err(), "{raw}");
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn reminder_occurrence_identity_uses_written_task_day_independently_of_trigger() -> Result<()> {
+        let zone = timezone("America/Los_Angeles")?;
+        for scheduled in ["2026-11-01", "2026-11-01T00:30:00+02:00"] {
+            for entry in [
+                json!({"id":"deadline","type":"relative","relatedTo":"due","offset":"-PT1H"}),
+                json!({"id":"absolute","type":"absolute","absoluteTime":"2026-11-02T12:00:00Z"}),
+            ] {
+                let mut properties = json!({"scheduled":scheduled,"due":"2026-11-02","recurrence":"DTSTART:20261101;FREQ=DAILY"})
+                    .as_object().cloned().ok_or_else(|| invalid("test_properties"))?;
+                let fire = project(&entry, &properties, &Value::Null, zone, false)?
+                    .ok_or_else(|| invalid("test_fire"))?;
+                assert_eq!(fire.occurrence_date.as_deref(), Some("2026-11-01"));
+                let expected = if entry.get("type") == Some(&json!("absolute")) {
+                    "2026-11-02T12:00:00Z"
+                } else {
+                    "2026-11-02T07:00:00Z"
+                };
+                assert_eq!(fire.at, temporal::parse_instant(expected)?);
+                for key in ["completeInstances", "skippedInstances"] {
+                    properties.insert(key.into(), json!(["2026-11-01"]));
+                    assert!(project(&entry, &properties, &Value::Null, zone, false)?.is_none());
+                    properties.remove(key);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn reminder_occurrence_identity_uses_due_fallback_without_hiding_corrupt_preferred_dates()
+    -> Result<()> {
+        let zone = timezone("UTC")?;
+        let entry =
+            json!({"id":"absolute","type":"absolute","absoluteTime":"2026-11-03T12:00:00Z"});
+        let mut properties =
+            json!({"due":"2026-11-02T00:30:00+02:00","recurrence":"DTSTART:20261101;FREQ=DAILY"})
+                .as_object()
+                .cloned()
+                .ok_or_else(|| invalid("test_properties"))?;
+        assert_eq!(
+            project(&entry, &properties, &Value::Null, zone, false)?
+                .ok_or_else(|| invalid("test_fire"))?
+                .occurrence_date
+                .as_deref(),
+            Some("2026-11-02")
+        );
+        for invalid_date in [json!(true), json!("2026-11-01Tbad"), json!("2026-02-30")] {
+            properties.insert("scheduled".into(), invalid_date);
+            assert!(project(&entry, &properties, &Value::Null, zone, false).is_err());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn reminder_occurrence_identity_skips_blank_optional_dates() -> Result<()> {
+        let zone = timezone("UTC")?;
+        let entry =
+            json!({"id":"absolute","type":"absolute","absoluteTime":"2026-11-03T12:00:00Z"});
+        for blank in [Value::Null, json!(""), json!(" \t\n")] {
+            for (due, expected) in [
+                (json!("2026-11-02"), "2026-11-02"),
+                (blank.clone(), "2026-11-03"),
+            ] {
+                let properties =
+                    json!({"scheduled":blank,"due":due,"recurrence":"DTSTART:20261101;FREQ=DAILY"})
+                        .as_object()
+                        .cloned()
+                        .ok_or_else(|| invalid("test_properties"))?;
+                assert_eq!(
+                    project(&entry, &properties, &Value::Null, zone, false)?
+                        .ok_or_else(|| invalid("test_fire"))?
+                        .occurrence_date
+                        .as_deref(),
+                    Some(expected)
+                );
+            }
         }
         Ok(())
     }

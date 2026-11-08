@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { z } from "zod";
+import { ProcessLifetimeFields } from "../../fields";
 
 const credentialsStatus = z.object({
   runID: z.uuid().transform((value) => value.toLowerCase()),
@@ -11,10 +12,7 @@ const credentialsStatus = z.object({
 const normalOwner = z.object({
   ready: z.literal(true),
   runID: z.uuid().transform((value) => value.toLowerCase()),
-  pid: z.number().int().positive(),
-  startSeconds: z.number().int().nonnegative(),
-  startMicroseconds: z.number().int().min(0).max(999_999),
-  launchDate: z.number().positive(),
+  ...ProcessLifetimeFields,
 });
 
 export function freshMacCredentialsStatus(
