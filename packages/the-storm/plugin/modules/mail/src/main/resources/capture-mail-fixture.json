@@ -1,0 +1,8 @@
+{
+  "resource": "mail-reward",
+  "title": "Documentation reward delivery",
+  "choices": [
+    { "id": "iron", "material": "IRON_INGOT", "amount": 8 },
+    { "id": "gold", "material": "GOLD_INGOT", "amount": 4 }
+  ]
+}

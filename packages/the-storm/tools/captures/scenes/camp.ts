@@ -31,6 +31,12 @@ export default defineCaptureScene({
   run: async (context) => {
     for (const shot of [
       [
+        "claim-info",
+        "claim info",
+        "Flags:",
+        "Claim information names the camp that owns this chunk and lists every protection flag.",
+      ],
+      [
         "camp-overview",
         "camp",
         "Your camp has",

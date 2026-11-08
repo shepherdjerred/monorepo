@@ -12,6 +12,29 @@ public final class CaptureInspection {
   private final Map<
           String,
           java.util.function.BiFunction<
+              java.util.UUID, java.util.UUID, java.util.concurrent.CompletableFuture<Void>>>
+      preparations = new LinkedHashMap<>();
+
+  public void registerPreparation(
+      String resource,
+      java.util.function.BiFunction<
+              java.util.UUID, java.util.UUID, java.util.concurrent.CompletableFuture<Void>>
+          prepare) {
+    if (preparations.putIfAbsent(resource, prepare) != null)
+      throw new IllegalStateException("Duplicate capture preparation " + resource);
+  }
+
+  public java.util.concurrent.CompletableFuture<Void> prepare(
+      java.util.UUID player, String resource, java.util.UUID id) {
+    var prepare = preparations.get(resource);
+    if (prepare == null)
+      throw new IllegalArgumentException("Unknown capture preparation " + resource);
+    return prepare.apply(player, id);
+  }
+
+  private final Map<
+          String,
+          java.util.function.BiFunction<
               java.util.UUID, String, java.util.concurrent.CompletableFuture<Void>>>
       cleanup = new LinkedHashMap<>();
 

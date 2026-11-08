@@ -3,6 +3,22 @@ import type { Presentation } from "@shepherdjerred/mc-harness/protocol/media.ts"
 export default [
   {
     schema: 1,
+    name: "crystal-balance",
+    alt: "The wallet command shows crystals and the separate Credits balance.",
+    caption:
+      "The wallet command shows crystals and the separate Credits balance.",
+    annotations: [],
+  },
+  {
+    schema: 1,
+    name: "skill-mining",
+    alt: "The Mining detail shows the player's level and experience progress.",
+    caption:
+      "Use /skills mining to see your Mining level and progress toward the next level.",
+    annotations: [],
+  },
+  {
+    schema: 1,
     name: "perks-overview",
     alt: "The perks overview shows your level and the next price for every track.",
     caption:

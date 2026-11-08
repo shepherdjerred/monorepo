@@ -27,6 +27,8 @@ const modules: Record<Feature, readonly string[]> = {
   shards: ["shards"],
   arena: ["arena"],
   rwf: ["rwf"],
+  "public-hub": ["creative", "stargates"],
+  stormnight: [],
   advancements: [
     "mobs",
     "npcs",
@@ -43,6 +45,16 @@ export function captureModules(
   features: readonly Feature[] | undefined,
   source: z.infer<typeof MapSourceSchema>,
 ): string[] {
+  if (features?.includes("public-hub") === true) {
+    for (const world of [
+      "minecraft:frontier",
+      "minecraft:map2",
+      "minecraft:skylands",
+      "minecraft:creative",
+    ])
+      if (source.dimensions?.includes(world) !== true)
+        throw new Error(`Public hub capture requires imported ${world}`);
+  }
   const selected = [
     ...new Set((features ?? []).flatMap((feature) => modules[feature])),
   ];

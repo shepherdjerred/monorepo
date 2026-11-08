@@ -90,5 +90,12 @@ export default defineCaptureScene({
     await context.action("clear-overlays");
     await context.capture(presentation(presentations, "sorting-after"));
     await context.action("close");
+    await context.action("command", { text: "sort" });
+    await context.waitFor(
+      "sorting preferences",
+      (state) => state.connected && state.screen === "Sorting",
+    );
+    await context.capture(presentation(presentations, "sorting-settings"));
+    await context.action("close");
   },
 });

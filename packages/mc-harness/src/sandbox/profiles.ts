@@ -55,10 +55,12 @@ export type StagedEntry =
         | "stargates"
         | "multiverse"
         | "arena-survival"
-        | "shards";
+        | "shards"
+        | "seasonal";
       spawn: [number, number, number];
       sha256: string;
       additionalWorlds?: readonly string[];
+      publicHub?: boolean;
     }
   | { kind: "repo-file"; source: string; target: string; build?: string }
   | { kind: "repo-dir"; source: string; target: string }
@@ -457,11 +459,24 @@ export function resolveProfile(
           source: path.join(STORM_PATHS.ownedConfigDir, `${content}.yml`),
           target: `TheStorm/${content}.yml`,
           content,
+          publicHub: request.captureFeatures?.includes("public-hub") === true,
           spawn,
           sha256: mapSource.sha256,
           additionalWorlds,
         }),
       ),
+      ...(request.captureFeatures?.includes("stormnight") === true
+        ? [
+            {
+              kind: "capture-content" as const,
+              source: path.join(STORM_PATHS.ownedConfigDir, "seasonal.yml"),
+              target: "TheStorm/seasonal.yml",
+              content: "seasonal" as const,
+              spawn,
+              sha256: mapSource.sha256,
+            },
+          ]
+        : []),
       ...["survival", "rustworks"].map((arena) => ({
         kind: "capture-content" as const,
         source: path.join(STORM_PATHS.ownedConfigDir, "arena", `${arena}.yml`),

@@ -66,6 +66,8 @@ export const CaptureFeatureSchema = z.enum([
   "arena",
   "rwf",
   "advancements",
+  "public-hub",
+  "stormnight",
 ]);
 
 const RolloutBootstrapSchema = z.strictObject({
@@ -98,7 +100,11 @@ const SandboxCreateInputSchema = z.strictObject({
     .optional(),
   sourceDirectory: z.string().regex(/^\//u).optional(),
   rollout: RolloutBootstrapSchema.optional(),
-  captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
+  captureFeatures: z
+    .array(CaptureFeatureSchema)
+    .min(1)
+    .max(CaptureFeatureSchema.options.length)
+    .optional(),
   mapSpawn: z
     .tuple([z.number(), z.number().min(-63).max(318), z.number()])
     .optional(),
@@ -218,7 +224,11 @@ export const SandboxSummarySchema = z.strictObject({
   sourceDirectory: z.string().optional(),
   mapSource: MapSourceSchema.optional(),
   rollout: RolloutBootstrapSchema.optional(),
-  captureFeatures: z.array(CaptureFeatureSchema).min(1).max(6).optional(),
+  captureFeatures: z
+    .array(CaptureFeatureSchema)
+    .min(1)
+    .max(CaptureFeatureSchema.options.length)
+    .optional(),
   status: z.enum(["ready", "stopped"]),
   createdAt: z.string(),
   expiresAt: z.string(),

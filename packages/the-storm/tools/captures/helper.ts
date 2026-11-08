@@ -6,12 +6,15 @@ import {
 } from "@shepherdjerred/mc-harness/protocol/client.ts";
 import type { CaptureContext } from "@shepherdjerred/mc-harness/capture/define.ts";
 import { PlayerCheckpointSchema } from "@shepherdjerred/mc-harness/protocol/capture.ts";
+import { createLookAt } from "@shepherdjerred/mc-harness/capture/camera.ts";
 
 /** A second genuine session created for this disposable map, never a Citizens actor. */
-export async function localHelper(context: CaptureContext) {
+export async function localHelper(
+  context: CaptureContext,
+  name = "TsmcDemoHelper",
+) {
   if (context.target === "live")
     throw new Error("Demo helper commands require an isolated map copy");
-  const name = "TsmcDemoHelper";
   const transport = new CaptureTransport(
     context.target,
     "Documentation helper on isolated real map",
@@ -65,5 +68,30 @@ export async function localHelper(context: CaptureContext) {
     }
     throw new Error("Helper track did not reach its requested level");
   };
-  return { name, status, action, track, ...createMessageControls(action) };
+  const state = async () => {
+    const response = await status();
+    return response.state;
+  };
+  const waitFor: CaptureContext["waitFor"] = async (
+    description,
+    predicate,
+    timeoutMs = 30_000,
+  ) => {
+    const deadline = performance.now() + timeoutMs;
+    while (performance.now() < deadline) {
+      const value = await state();
+      if (predicate(value)) return value;
+      await Bun.sleep(100);
+    }
+    throw new Error(`Helper timed out waiting for ${description}`);
+  };
+  return {
+    name,
+    status,
+    action,
+    track,
+    waitFor,
+    lookAt: createLookAt(state, action, waitFor),
+    ...createMessageControls(action),
+  };
 }

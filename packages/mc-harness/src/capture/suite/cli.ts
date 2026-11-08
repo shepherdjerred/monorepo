@@ -5,6 +5,29 @@ import { z } from "zod";
 import { defineCaptureSuite, selectScenarios, SuiteSchema } from "./define.ts";
 import { runSuite, replaySuite, renderSuite } from "./orchestrate.ts";
 import { recoverExport } from "./csi.ts";
+import { docsCoverage } from "./docs-coverage.ts";
+import type { CaptureSuite } from "./define.ts";
+
+async function checkDocs(
+  action: string,
+  docs: string | undefined,
+  suite: CaptureSuite,
+  root: string,
+) {
+  if (docs === undefined) return;
+  if (action !== "check" || docs !== "ts-mc-docs")
+    throw new Error("--docs ts-mc-docs is supported only by suite check");
+  const coverage = await docsCoverage(
+    suite,
+    path.join(root, "packages/ts-mc-docs/public"),
+    path.join(root, "packages/ts-mc-docs/src/content/docs"),
+  );
+  if (coverage.missing.length > 0)
+    throw new Error(
+      `Missing capture producers:\n${coverage.missing.join("\n")}`,
+    );
+  process.stdout.write(JSON.stringify(coverage) + "\n");
+}
 
 export async function suiteMain(args: string[]): Promise<void> {
   const parsed = parseArgs({
@@ -14,13 +37,14 @@ export async function suiteMain(args: string[]): Promise<void> {
       scenario: { type: "string" },
       shot: { type: "string" },
       runtime: { type: "string" },
+      docs: { type: "string" },
       help: { type: "boolean" },
     },
   });
   const [action, identifier] = parsed.positionals;
   if (action === undefined || parsed.values.help === true) {
     process.stdout.write(
-      "toolkit mc capture suite check|list <suite.ts|tsmc> [--scenario ID|--shot ID]\ntoolkit mc capture suite run <suite.ts|tsmc> --runtime worktree|saved:<run-id> [--scenario ID|--shot ID]\ntoolkit mc capture suite replay|render <run-id> [--scenario ID|--shot ID]\ntoolkit mc capture suite recover-export <export-id>\n",
+      "toolkit mc capture suite check|list <suite.ts|tsmc> [--scenario ID|--shot ID]\ntoolkit mc capture suite check <suite.ts|tsmc> --docs ts-mc-docs\ntoolkit mc capture suite run <suite.ts|tsmc> --runtime worktree|saved:<run-id> [--scenario ID|--shot ID]\ntoolkit mc capture suite replay|render <run-id> [--scenario ID|--shot ID]\ntoolkit mc capture suite recover-export <export-id>\n",
     );
     return;
   }
@@ -47,6 +71,7 @@ export async function suiteMain(args: string[]): Promise<void> {
   const imported: unknown = await import(pathToFileURL(file).href);
   const module = z.object({ default: SuiteSchema }).parse(imported);
   const suite = defineCaptureSuite(module.default);
+  await checkDocs(action, parsed.values.docs, suite, root);
   const selected = selectScenarios(suite, {
     ...(parsed.values.scenario === undefined
       ? {}

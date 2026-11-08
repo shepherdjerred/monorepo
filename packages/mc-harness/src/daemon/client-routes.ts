@@ -21,7 +21,7 @@ import type { ClientManager } from "./clients.ts";
 import { body, DaemonError, reply } from "./http.ts";
 import { guarded } from "./live-routes.ts";
 import { CaptureBoundedActionSchema } from "#protocol/capture.ts";
-import { isLocalPaintingUse } from "./painting-target.ts";
+import { isLocalPaintingUse, isLocalEntityUse } from "./painting-target.ts";
 import path from "node:path";
 import { z } from "zod";
 import { MC_DIR } from "#protocol/paths.ts";
@@ -140,6 +140,12 @@ async function boundedAction(
     operation.action !== "screen-activate" &&
     operation.action !== "screen-type" &&
     !isLocalPaintingUse(
+      summary.target,
+      operation.action,
+      state.target,
+      operation.box,
+    ) &&
+    !isLocalEntityUse(
       summary.target,
       operation.action,
       state.target,

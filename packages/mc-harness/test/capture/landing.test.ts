@@ -56,6 +56,28 @@ it("requires ground unless restoring a flying origin", async () => {
   ).resolves.toBeUndefined();
 });
 
+it("admits the real lobby's smooth stone but refuses partial or hazardous surfaces", async () => {
+  await expect(
+    assertLanding(
+      terrain(["minecraft:smooth_stone", "minecraft:air", "minecraft:air"]),
+      "rwf_lobby",
+      [31.5, 70, 31.5],
+    ),
+  ).resolves.toBeUndefined();
+  for (const floor of [
+    "minecraft:smooth_stone_slab[type=bottom,waterlogged=false]",
+    "minecraft:magma_block",
+    "minecraft:lava[level=0]",
+  ])
+    await expect(
+      assertLanding(
+        terrain([floor, "minecraft:air", "minecraft:air"]),
+        "rwf_lobby",
+        [31.5, 70, 31.5],
+      ),
+    ).rejects.toThrow("safe ground");
+});
+
 it("rejects foliage intersecting a player even when flight is allowed", async () => {
   await expect(
     assertLanding(

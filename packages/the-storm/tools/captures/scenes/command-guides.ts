@@ -14,10 +14,22 @@ export default defineCaptureScene({
       kind: "command",
       command: `minecraft:op ${context.name}`,
     });
-    await camera(context, [-2.5, 0, -2.5], [0, 1, 0]);
+    await camera(context, [2.5, 0, 2.5], [12, 1, 12]);
   },
   run: async (context) => {
     for (const [name, command, feedback, caption] of [
+      [
+        "crystal-balance",
+        "balance",
+        "Balance:",
+        "The wallet command shows crystals and the separate Credits balance.",
+      ],
+      [
+        "skill-mining",
+        "skills mining",
+        "Mining: level",
+        "Use /skills mining to see your Mining level and progress toward the next level.",
+      ],
       [
         "perks-overview",
         "perks",

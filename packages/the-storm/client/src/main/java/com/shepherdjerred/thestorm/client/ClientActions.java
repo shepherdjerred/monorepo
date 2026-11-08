@@ -204,6 +204,7 @@ final class ClientActions {
       case "inventory" -> inventory(client, args);
       case "chat-open", "advancements" -> ClientScreens.open(client, request.action(), args);
       case "hover-slot" -> ClientScreens.hover(client, args);
+      case "gui-scale" -> ClientScreens.scale(client, args);
       case "close" -> close(client, args);
       case "click" -> click(client, args);
       case "command" -> command(client, args);

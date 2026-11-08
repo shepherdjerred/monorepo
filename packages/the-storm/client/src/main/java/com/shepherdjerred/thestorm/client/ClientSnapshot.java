@@ -23,7 +23,11 @@ final class ClientSnapshot {
     var player = client.player;
     if (player == null || client.level == null) {
       return Map.of(
-          "connected", false, "screen", screen == null ? "" : screen.getTitle().getString());
+          "connected", false,
+          "screen", screen == null ? "" : screen.getTitle().getString(),
+          "renderedFrames", RenderCapture.renderedFrames(),
+          "fps", client.getFps(),
+          "servers", servers(client));
     }
     var inventory = new ArrayList<Item>();
     for (var i = 0; i < player.getInventory().getContainerSize(); i++) {
@@ -63,6 +67,28 @@ final class ClientSnapshot {
         Map.entry("slots", slots),
         Map.entry("target", target(client)),
         Map.entry("fps", client.getFps()));
+  }
+
+  private static List<Object> servers(Minecraft client) {
+    var result = new ArrayList<Object>();
+    if (client.gui.screen()
+        instanceof net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen screen) {
+      var servers = screen.getServers();
+      for (var i = 0; i < servers.size(); i++) {
+        var server = servers.get(i);
+        result.add(
+            Map.of(
+                "name",
+                server.name,
+                "address",
+                server.ip,
+                "state",
+                server.state().name(),
+                "ping",
+                server.ping));
+      }
+    }
+    return result;
   }
 
   private static boolean terrainLoaded(Minecraft client) {

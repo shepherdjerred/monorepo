@@ -7,6 +7,7 @@ import { runScene } from "#src/capture/runner.ts";
 import { renderMedia, sha256 } from "#src/capture/media.ts";
 import { exportMedia } from "#src/capture/export.ts";
 import { presentScene, type SuiteScenario } from "./define.ts";
+import { captureServerList } from "./client-ui.ts";
 
 export async function executeScenario(input: {
   scenario: SuiteScenario;
@@ -16,9 +17,17 @@ export async function executeScenario(input: {
   docsPublic: string;
   shot?: string;
   publish?: boolean;
+  ownedFreshTarget?: string | undefined;
 }) {
   if (input.target === "live")
     throw new Error("Suite scenarios run only on disposable real-map servers");
+  const venue = input.scenario.siteMode === "preserve";
+  if (
+    (venue || input.scenario.clientUi !== undefined) &&
+    (input.scenario.isolation !== "fresh" ||
+      input.ownedFreshTarget !== input.target)
+  )
+    throw new Error("Preserved venue requires its owned fresh target");
   const scene = presentScene(input.scenario, input.shot);
   const anchor = input.scenario.anchor;
   const point = (offset: [number, number, number]) => ({
@@ -31,6 +40,14 @@ export async function executeScenario(input: {
   await mkdir(path.dirname(directory), { recursive: true, mode: 0o700 });
   const run = RunSchema.parse({
     schema: 1,
+    ...(input.scenario.clientUi === undefined
+      ? venue
+        ? { mode: "venue" }
+        : {}
+      : { mode: "client-ui" }),
+    ...(input.scenario.interactionSites === undefined
+      ? {}
+      : { interactionSites: input.scenario.interactionSites }),
     id,
     target: input.target,
     name: input.account,
@@ -57,7 +74,16 @@ export async function executeScenario(input: {
     error: "",
   });
   await initializeRun(directory, run);
-  await runScene(directory, scene, run);
+  if (input.scenario.clientUi === undefined) {
+    await runScene(directory, scene, run, {
+      recovery: false,
+      ownedVenue: venue,
+    });
+  } else {
+    const shot = input.scenario.shots[0];
+    if (shot === undefined) throw new Error("Missing client UI presentation");
+    await captureServerList(directory, run, shot);
+  }
   if (run.state !== "complete") throw new Error(`${run.id}: ${run.error}`);
   const expected = input.scenario.shots
     .filter((s) => input.shot === undefined || s.name === input.shot)

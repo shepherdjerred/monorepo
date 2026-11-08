@@ -16,11 +16,13 @@ import { SandboxListResponseSchema } from "#protocol/ipc.ts";
 import { isImportedWorld } from "#sandbox/map-provenance.ts";
 import { assertLanding, assertOriginWorld } from "./landing.ts";
 
+type ExecutionOptions = { recovery: boolean; ownedVenue: boolean };
+
 export async function runScene(
   directory: string,
   scene: CaptureScene,
   run: CaptureRun,
-  recovery = false,
+  options: boolean | ExecutionOptions = false,
 ): Promise<CaptureRun> {
   const lock = path.join(
     path.dirname(directory),
@@ -29,7 +31,14 @@ export async function runScene(
   );
   await mkdir(lock, { recursive: true, mode: 0o700 });
   return withPublicationLock(lock, () =>
-    executeScene(directory, scene, run, recovery),
+    executeScene(
+      directory,
+      scene,
+      run,
+      typeof options === "boolean"
+        ? { recovery: options, ownedVenue: false }
+        : options,
+    ),
   );
 }
 
@@ -37,7 +46,7 @@ async function executeScene(
   directory: string,
   scene: CaptureScene,
   run: CaptureRun,
-  recovery: boolean,
+  { recovery, ownedVenue }: ExecutionOptions,
 ): Promise<CaptureRun> {
   let driver: Awaited<ReturnType<typeof createDriver>>;
   try {
@@ -59,7 +68,8 @@ async function executeScene(
     await restoreScene(directory, scene, run, driver);
   };
   try {
-    if (!recovery) await captureScene(directory, scene, run, driver);
+    if (!recovery)
+      await captureScene({ directory, scene, run, driver, ownedVenue });
     await restore();
     run.state = run.error === "" ? "complete" : "failed";
   } catch (error) {
@@ -106,7 +116,9 @@ async function admitMap(
       run.mapSource = target.mapSource;
     if (
       run.mapSource !== undefined &&
-      !isImportedWorld(run.mapSource, run.box.world, run.server)
+      ![run.box, ...(run.interactionSites ?? [])].every((site) =>
+        isImportedWorld(run.mapSource, site.world, run.server),
+      )
     )
       throw new Error(
         "The selected world is not covered by the imported map provenance",
@@ -114,14 +126,12 @@ async function admitMap(
   }
 }
 
-async function captureScene(
-  directory: string,
-  scene: CaptureScene,
-  run: CaptureRun,
+async function inspectTerrain(
   driver: Awaited<ReturnType<typeof createDriver>>,
-): Promise<void> {
-  const { transport, context, status } = driver;
-  await admitMap(run, driver);
+  run: CaptureRun,
+  scene: CaptureScene,
+) {
+  const { transport } = driver;
   const region = await transport.world(
     RegionReadResponseSchema,
     "region-read",
@@ -146,6 +156,26 @@ async function captureScene(
     )
       throw new Error(`Site has existing or unavailable ${key} state`);
   run.inspection = inspection;
+}
+
+async function captureScene({
+  directory,
+  scene,
+  run,
+  driver,
+  ownedVenue,
+}: {
+  directory: string;
+  scene: CaptureScene;
+  run: CaptureRun;
+  driver: Awaited<ReturnType<typeof createDriver>>;
+  ownedVenue: boolean;
+}): Promise<void> {
+  const { transport, context, status } = driver;
+  await admitMap(run, driver);
+  if (ownedVenue && (run.mode !== "venue" || run.mapSource === undefined))
+    throw new Error("Venue capture requires an owned imported map");
+  if (!ownedVenue) await inspectTerrain(driver, run, scene);
   const player = await status();
   if (!player.connected) throw new Error("Client disconnected");
   assertOriginWorld(player, driver.world.key);
@@ -170,15 +200,17 @@ async function captureScene(
   run.state = "checkpoint";
   await save(directory, run);
   await context.teleport(context.at(...scene.staging), 0, 0);
-  const snapshot = await transport.world(SnapshotSchema, "snapshot", {
-    box: run.box,
-    label: run.id,
-  });
-  run.snapshot = snapshot.id;
+  if (!ownedVenue) {
+    const snapshot = await transport.world(SnapshotSchema, "snapshot", {
+      box: run.box,
+      label: run.id,
+    });
+    run.snapshot = snapshot.id;
+  }
   run.state = "setup";
   await save(directory, run);
   // The original inventory is durable before any temporary demo items are introduced.
-  await context.command(`minecraft:clear ${run.name}`);
+  if (!ownedVenue) await context.command(`minecraft:clear ${run.name}`);
   await scene.setup(context);
   run.state = "capture";
   await save(directory, run);

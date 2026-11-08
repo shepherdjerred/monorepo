@@ -33,13 +33,13 @@ export async function assertLanding(
   );
   const groundState = states[0];
   const harmless =
-    /^minecraft:(?:stone|dirt|grass_block|sand|gravel|deepslate|cobblestone|(?:oak|spruce|birch|jungle|acacia|dark_oak|mangrove|cherry)_planks|stone_bricks)(?:\[|$)/u;
+    /^minecraft:(?:stone|smooth_stone|dirt|grass_block|sand|gravel|deepslate|cobblestone|(?:oak|spruce|birch|jungle|acacia|dark_oak|mangrove|cherry)_planks|stone_bricks)(?:\[|$)/u;
   if (
     groundState === undefined ||
     (!airborne && !harmless.test(groundState)) ||
     states.slice(1).some((block) => block !== "minecraft:air")
   )
     throw new Error(
-      "Destination does not have verified safe ground and clearance",
+      `Destination ${world} ${position.join(",")} does not have verified safe ground and clearance: ${states.join(",")}`,
     );
 }

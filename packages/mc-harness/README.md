@@ -269,6 +269,7 @@ authored outputs before choosing a full run or a narrow selection:
 ```bash
 toolkit mc capture suite list tsmc
 toolkit mc capture suite check tsmc --shot cooking-pot
+toolkit mc capture suite check tsmc --docs ts-mc-docs
 toolkit mc capture suite run tsmc --runtime worktree --scenario cooking
 toolkit mc capture suite run tsmc --runtime saved:<run-id> --shot cooking-pot
 toolkit mc capture suite replay <run-id>
@@ -279,6 +280,15 @@ toolkit mc capture suite render <run-id> --shot cooking-pot
 read-only disposable clone. It crops native region, entity and POI records to
 the suite's padded patches. Every required terrain column must already exist;
 missing terrain, corrupt NBT and mismatched chunk coordinates fail the export.
+
+`check --docs ts-mc-docs` reconciles the complete suite with the public media
+inventory, including legacy screenshots and demos that are no longer embedded.
+It fails with the exact URLs that still lack a producer; a filtered shot does
+not hide gaps elsewhere in the catalog. Optional `legacyOutputs` entries map
+`{ shot, path }` to an existing `/screenshots/<name>.webp` or `/demos/<name>.mp4`
+URL. Successful runs and annotation rerenders update aliases only for selected
+shots, using the verified plain image/video derivative. Previous legacy bytes
+are retained privately under `legacy-before`; unrelated files remain untouched.
 Native world settings and datapacks accompany the crop. Player files, plugin
 databases, session locks and credentials stay outside the fixture.
 
@@ -298,9 +308,40 @@ owns a disposable real-map server and genuine local clients. The camera is
 `TOOLKIT_MC_DIRECTORY` bootstrap gives the worker a private socket, state,
 cache and Docker ownership scope. Interactive daemons and their sandboxes
 remain independently owned.
+
+Ordinary scenarios share a server and use the restored demonstration bench.
+Use `isolation: "fresh"` for progression, inventory-body transitions, or other
+state that belongs to a new database. Each fresh scenario gets a new server and
+only its declared helpers. `siteMode: "preserve"` retains the imported venue
+instead of clearing a bench; it requires fresh isolation. The suite stops every
+owned server successfully before archiving or publishing any result.
+
+An optional `arrivalCommand`, such as `creative` or `rwf join`, enters the
+scenario's world through its normal player command before camera placement.
+Preserved venues may declare `interactionSites` for additional worlds visited
+during the flow. Each site must fit a retained terrain patch; interactions use
+the current world's declared box and still enforce the native crosshair bounds.
+Local right-clicks on NPC player bodies and armed TNT entities require their
+complete bounding box to fit the fixture. Live entity interactions remain refused.
+
+`clientUi: "server-list"` is a separate fresh scenario with one still. It verifies
+the connected camera's identity and real-map origin, opens Minecraft's multiplayer
+screen, waits for fresh rendered frames and a successful ping to that exact server,
+then captures the menu. It does not require terrain readiness after disconnecting.
+
+Module-owned documentation data can be prepared through `capture-prepare` for an
+owned connected local client; the daemon refuses live targets. Mail's neutral
+`capture-mail-fixture.json` supplies both the recipe and the module's durable
+delivery producer. Its screenshots claim a real queued reward through `/mail`,
+and the assertions verify the selected items and exclusive choice. This data stays
+in the fresh sandbox database and never enters the map fixture or public media.
+
 Preview clients size their physical framebuffer from the neutral docs-video
 contract, keeping screenshots and clips at 1280×720 on ordinary and Retina
-displays.
+displays. Scenes can set native `gui-scale` from 1 through 4 to keep longer
+dialogs readable; the neutral client UI contract validates the same bounds in
+the harness and native client. Imported world registration disables Multiverse
+spawn adjustment, preserving authored offsets such as seasonal reward doors.
 
 `worktree` builds and retains the current server, bridge and client artifacts,
 Git revision, source patch, untracked source, and pinned Paper/plugin jars.

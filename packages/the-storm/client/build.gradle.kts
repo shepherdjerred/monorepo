@@ -103,6 +103,7 @@ fabricApi {
 }
 
 tasks.processResources {
+  from("../../mc-harness/src/protocol/client-ui.json") { rename { "storm-docs-ui.json" } }
   inputs.property("version", project.version)
   filesMatching("fabric.mod.json") { expand("version" to project.version) }
 }

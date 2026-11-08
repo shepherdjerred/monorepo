@@ -187,6 +187,106 @@ it("validates output identity and rejects empty selections", () => {
   expect(() =>
     defineCaptureSuite({
       ...suite,
+      scenarios: [{ ...scenario, arrivalCommand: "creative" }],
+    }),
+  ).toThrow("requires fresh isolation");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, clientUi: "server-list" }],
+    }),
+  ).toThrow("requires fresh isolation");
+  const venue: SuiteScenario = {
+    ...scenario,
+    isolation: "fresh",
+    siteMode: "preserve",
+    interactionSites: [
+      {
+        world: "creative",
+        min: { x: 0, y: 64, z: 0 },
+        max: { x: 8, y: 72, z: 8 },
+      },
+    ],
+  };
+  expect(() => defineCaptureSuite({ ...suite, scenarios: [venue] })).toThrow(
+    "lacks covering real terrain",
+  );
+  const patches = [
+    ...suite.patches,
+    {
+      world: "creative",
+      min: [-16, -16],
+      max: [16, 16],
+      paddingChunks: 2,
+    } satisfies (typeof suite.patches)[number],
+  ];
+  defineCaptureSuite({ ...suite, patches, scenarios: [venue] });
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      patches,
+      scenarios: [{ ...venue, isolation: undefined }],
+    }),
+  ).toThrow("requires fresh isolation");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      patches,
+      scenarios: [
+        {
+          ...venue,
+          interactionSites: [
+            {
+              world: "world",
+              min: { x: 0, y: 64, z: 0 },
+              max: { x: 8, y: 72, z: 8 },
+            },
+          ],
+        },
+      ],
+    }),
+  ).toThrow("Duplicate interaction world");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, siteMode: "preserve" }],
+    }),
+  ).toThrow("requires fresh isolation");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      scenarios: [{ ...scenario, features: ["quests"] }],
+    }),
+  ).toThrow("require fresh isolation");
+  defineCaptureSuite({
+    ...suite,
+    scenarios: [
+      {
+        ...scenario,
+        isolation: "fresh",
+        siteMode: "preserve",
+        features: ["quests"],
+      },
+    ],
+  });
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      legacyOutputs: [{ shot: "missing", path: "/screenshots/old.webp" }],
+    }),
+  ).toThrow("Unknown legacy shot");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
+      legacyOutputs: [
+        { shot: "pot", path: "/screenshots/old.webp" },
+        { shot: "pot", path: "/screenshots/old.webp" },
+      ],
+    }),
+  ).toThrow("Duplicate legacy destination");
+  expect(() =>
+    defineCaptureSuite({
+      ...suite,
       scenarios: [scenario, { ...scenario, id: "another" }],
     }),
   ).toThrow("Duplicate shot");

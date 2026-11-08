@@ -17,6 +17,7 @@ import {
   SuiteSchema,
   selectScenarios,
   type CaptureSuite,
+  type SuiteScenario,
 } from "./define.ts";
 import {
   archiveCapture,
@@ -32,6 +33,8 @@ import { localRollout } from "./rollout.ts";
 import { syncEmbeds } from "./embeds.ts";
 import { SuiteRunSchema } from "./archive.ts";
 import { awsStore } from "./aws-store.ts";
+import { publishLegacy } from "./legacy.ts";
+import { runScenarioSessions } from "./sessions.ts";
 
 export async function loadSuite(file: string): Promise<CaptureSuite> {
   const imported: unknown = await import(pathToFileURL(file).href);
@@ -194,34 +197,42 @@ export async function captureSuite(options: CaptureOptions) {
     options.fixture,
     mapDirectory,
   );
-  const helpers = [...new Set(selected.flatMap((s) => s.helpers))];
+  const helpers = [
+    ...new Set(
+      selected.filter((s) => s.isolation !== "fresh").flatMap((s) => s.helpers),
+    ),
+  ];
   const rollout = await startRollout(options, suite);
-  let session: Awaited<ReturnType<typeof localSession>> | undefined;
-  const results = [];
   const docsPublic = path.join(options.repoRoot, "packages/ts-mc-docs/public");
-  try {
-    session = await localSession({
+  const startSession = (scenario: SuiteScenario) =>
+    localSession({
       mapDirectory,
       sourceDirectory: options.runtime.sourceDirectory,
       spawn: suite.bootstrap,
-      helpers,
-      ...(suite.features === undefined ? {} : { features: suite.features }),
+      helpers: scenario.isolation === "fresh" ? scenario.helpers : helpers,
+      features: [
+        ...new Set([...(suite.features ?? []), ...(scenario.features ?? [])]),
+      ],
       ...(rollout === undefined ? {} : { rollout: rollout.bootstrap }),
     });
-    for (const scenario of selected) {
-      await session.prepare(scenario);
-      results.push(
-        await executeScenario({
+  try {
+    const results = await runScenarioSessions(
+      selected,
+      startSession,
+      (scenario, session) =>
+        executeScenario({
           scenario,
           suiteFile,
           target: session.target,
           account: "XiguaJerred",
           docsPublic,
           publish: false,
+          ...(scenario.isolation === "fresh"
+            ? { ownedFreshTarget: session.target }
+            : {}),
           ...(options.shot === undefined ? {} : { shot: options.shot }),
         }),
-      );
-    }
+    );
     const scenarios = [];
     for (const result of results)
       scenarios.push({
@@ -247,6 +258,12 @@ export async function captureSuite(options: CaptureOptions) {
     await retainSuiteRun(options.store, run);
     for (const result of results)
       await exportMedia(result.run, result.rendered, docsPublic);
+    await publishLegacy(
+      suite.legacyOutputs ?? [],
+      results.flatMap((result) => result.shots),
+      docsPublic,
+      path.join(options.directory, "legacy-before"),
+    );
     await syncEmbeds(
       options.repoRoot,
       results.flatMap((result) => result.shots),
@@ -257,11 +274,7 @@ export async function captureSuite(options: CaptureOptions) {
     );
     return run;
   } finally {
-    try {
-      await session?.stop();
-    } finally {
-      await rollout?.stop();
-    }
+    await rollout?.stop();
   }
 }
 
@@ -354,6 +367,12 @@ export async function renderSuite(
       capture,
       rendered,
       path.join(options.repoRoot, "packages/ts-mc-docs/public"),
+    );
+    await publishLegacy(
+      suite.legacyOutputs ?? [],
+      capture.captures.map((c) => c.name),
+      path.join(options.repoRoot, "packages/ts-mc-docs/public"),
+      path.join(directory, "legacy-before"),
     );
     await syncEmbeds(
       options.repoRoot,

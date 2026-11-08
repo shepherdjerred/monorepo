@@ -5,13 +5,43 @@ import {
   SandboxSummarySchema,
   SandboxDownResponseSchema,
 } from "#protocol/ipc.ts";
-import { ClientStatusResponseSchema } from "#protocol/client.ts";
+import {
+  ClientStatusResponseSchema,
+  ClientActionResponseSchema,
+} from "#protocol/client.ts";
 import {
   CommandResponseSchema,
   WeRunResponseSchema,
 } from "#protocol/bridge.ts";
 import type { SuiteScenario } from "./define.ts";
 import { worldFolder } from "./fixture.ts";
+
+async function enterWorld(
+  transport: CaptureTransport,
+  command: string,
+  world: string,
+) {
+  await transport.request(
+    ClientActionResponseSchema,
+    "POST",
+    "/clients/XiguaJerred/command",
+    { text: command },
+  );
+  const deadline = performance.now() + 30_000;
+  for (;;) {
+    const { state } = await transport.request(
+      ClientStatusResponseSchema,
+      "GET",
+      "/clients/XiguaJerred",
+    );
+    if (state.connected && state.world === world) return;
+    if (performance.now() > deadline)
+      throw new Error(
+        "Native camera did not enter the scenario's world through its entry command",
+      );
+    await Bun.sleep(100);
+  }
+}
 
 /** Own only a newly created target. No global down/stop operations. */
 export async function localSession(input: {
@@ -78,25 +108,30 @@ export async function localSession(input: {
     target: server.id,
     prepare: async (scenario: SuiteScenario) => {
       const [x, y, zz] = scenario.anchor;
-      const result = await transport.world(WeRunResponseSchema, "we", {
-        world: scenario.world,
-        session: "suite-bench",
-        ops: [
-          {
-            command: "//set minecraft:air",
-            pos1: { x: x - 5, y, z: zz - 12 },
-            pos2: { x: x + 20, y: y + 12, z: zz + 20 },
-          },
-          {
-            command: "//set minecraft:stone_bricks",
-            pos1: { x: x - 5, y: y - 1, z: zz - 12 },
-            pos2: { x: x + 20, y: y - 1, z: zz + 20 },
-          },
-        ],
-      });
-      if (result.results.some((op) => !op.ok))
-        throw new Error("Demo bench preparation failed");
+      if (scenario.siteMode !== "preserve") {
+        const result = await transport.world(WeRunResponseSchema, "we", {
+          world: scenario.world,
+          session: "suite-bench",
+          ops: [
+            {
+              command: "//set minecraft:air",
+              pos1: { x: x - 5, y, z: zz - 12 },
+              pos2: { x: x + 20, y: y + 12, z: zz + 20 },
+            },
+            {
+              command: "//set minecraft:stone_bricks",
+              pos1: { x: x - 5, y: y - 1, z: zz - 12 },
+              pos2: { x: x + 20, y: y - 1, z: zz + 20 },
+            },
+          ],
+        });
+        if (result.results.some((op) => !op.ok))
+          throw new Error("Demo bench preparation failed");
+      }
       const world = `minecraft:${worldFolder(scenario.world)}`;
+      if (scenario.arrivalCommand !== undefined) {
+        await enterWorld(transport, scenario.arrivalCommand, world);
+      }
       await consoleCommand(
         `minecraft:execute in ${world} run minecraft:tp XiguaJerred ${(x - 2.5).toString()} ${y.toString()} ${(zz - 2.5).toString()}`,
       );

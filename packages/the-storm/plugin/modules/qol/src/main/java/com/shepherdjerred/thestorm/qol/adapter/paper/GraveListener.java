@@ -86,6 +86,7 @@ final class GraveListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onMove(PlayerMoveEvent event) {
     if (event.hasChangedBlock()) {
+      safe.sample(event.getPlayer());
       upkeep.expireNear(event.getPlayer());
       opening.nearby(event.getPlayer());
     }

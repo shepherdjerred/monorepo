@@ -28,6 +28,7 @@ import type { CaptureContext } from "./define.ts";
 import { save, type CaptureRun } from "./model.ts";
 import { createLookAt } from "./camera.ts";
 import { createInteractions, createSceneActions } from "./interactions.ts";
+import { isImportedWorld } from "#sandbox/map-provenance.ts";
 
 function decimal(value: number): string {
   return Number.isInteger(value) ? value.toFixed(1) : value.toString();
@@ -63,18 +64,43 @@ export async function createDriver(directory: string, run: CaptureRun) {
     );
     return response.result;
   };
-  const bounded = async (action: string, args: Record<string, unknown> = {}) =>
-    transport.request(
+  const bounded = async (
+    action: string,
+    args: Record<string, unknown> = {},
+  ) => {
+    let box = run.box;
+    if (run.interactionSites !== undefined) {
+      if (run.mode !== "venue")
+        throw new Error(
+          "Additional interaction worlds require a preserved venue",
+        );
+      const state = await status();
+      if (!state.connected) throw new Error("Interaction camera disconnected");
+      const world = worldInfo.worlds.find((w) => w.key === state.world);
+      const site = [run.box, ...run.interactionSites].find(
+        (s) => s.world === world?.name,
+      );
+      if (
+        site === undefined ||
+        !isImportedWorld(run.mapSource, site.world, worldInfo)
+      )
+        throw new Error(
+          "Interaction world is outside the admitted real-map sites",
+        );
+      box = site;
+    }
+    return transport.request(
       z.strictObject({ result: z.unknown() }),
       "POST",
       `${clientRoute}/bounded`,
       {
-        box: run.box,
+        box,
         action,
         arguments: args,
         ...(cleaning ? { recovery: run.id } : {}),
       },
     );
+  };
   let cleaning = false;
   const waitFor: CaptureContext["waitFor"] = async (
     description,
@@ -89,7 +115,10 @@ export async function createDriver(directory: string, run: CaptureRun) {
       if (predicate(state)) return state;
       await Bun.sleep(100);
     }
-    throw new Error(`Timed out waiting for ${description}`);
+    const observed = await status();
+    throw new Error(
+      `Timed out waiting for ${description}: ${JSON.stringify(observed.connected ? { world: observed.world, position: observed.position, screen: observed.screen, target: observed.target } : observed)}`,
+    );
   };
   const command = async (text: string) => {
     await log({ kind: "command-intent", text });
@@ -335,9 +364,17 @@ export async function createDriver(directory: string, run: CaptureRun) {
       });
     },
     capture: async (presentation) => {
-      const before = z
-        .object({ renderedFrames: z.number() })
-        .parse(await status());
+      const camera = await status();
+      const cameraWorld = camera.connected
+        ? worldInfo.worlds.find((candidate) => candidate.key === camera.world)
+        : undefined;
+      if (
+        run.mode === "venue" &&
+        (cameraWorld === undefined ||
+          !isImportedWorld(run.mapSource, cameraWorld.name, worldInfo))
+      )
+        throw new Error("Venue camera left the imported worlds");
+      const before = z.object({ renderedFrames: z.number() }).parse(camera);
       await waitFor(
         "rendered scene",
         (state) =>

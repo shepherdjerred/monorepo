@@ -25,6 +25,8 @@ public final class MailModule implements StormModule {
         .register(id(), reset::reset);
     var mail = new JooqMail(context.database());
     context.services().provide(Mail.class, mail);
+    com.shepherdjerred.thestorm.mail.adapter.paper.MailCapture.install(
+        context, mail, captureFixture());
     var letters = new com.shepherdjerred.thestorm.mail.adapter.db.JooqLetters(context.database());
     context.services().provide(com.shepherdjerred.thestorm.mail.app.Letters.class, letters);
     var commands =
@@ -38,5 +40,19 @@ public final class MailModule implements StormModule {
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
+  }
+
+  private static com.shepherdjerred.thestorm.mail.adapter.paper.MailCapture.Fixture
+      captureFixture() {
+    try (var input =
+        java.util.Objects.requireNonNull(
+            MailModule.class.getResourceAsStream("/capture-mail-fixture.json"))) {
+      return tools.jackson.databind.json.JsonMapper.builder()
+          .build()
+          .readValue(
+              input, com.shepherdjerred.thestorm.mail.adapter.paper.MailCapture.Fixture.class);
+    } catch (java.io.IOException failure) {
+      throw new IllegalStateException("Cannot load mail capture fixture", failure);
+    }
   }
 }

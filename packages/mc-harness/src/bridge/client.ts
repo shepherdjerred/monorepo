@@ -1,5 +1,7 @@
 import type { z } from "zod";
 import {
+  CapturePreparationResponseSchema,
+  type CapturePreparationSchema,
   CaptureInspectionSchema,
   PlayerCheckpointSchema,
   type PlayerRestoreSchema,
@@ -102,6 +104,14 @@ export class BridgeClient {
     return this.json(PlayerCheckpointSchema, "POST", "/v1/capture/player", {
       name,
     });
+  }
+  capturePrepare(input: z.infer<typeof CapturePreparationSchema>) {
+    return this.json(
+      CapturePreparationResponseSchema,
+      "POST",
+      "/v1/capture/prepare",
+      input,
+    );
   }
 
   captureCleanup(input: { name: string; resource: string; id: string }) {
