@@ -26,6 +26,7 @@ storm-media figcaption {
   color: var(--sl-color-gray-2);
   font-size: 0.8125rem;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 .storm-media-overlay {
   position: absolute;
@@ -47,6 +48,7 @@ storm-media .storm-media-open {
   border-radius: 0;
   background: transparent;
   cursor: zoom-in;
+  touch-action: manipulation;
 }
 storm-media :is(.storm-media-toggle, .storm-media-close) {
   position: absolute;
@@ -57,7 +59,8 @@ storm-media :is(.storm-media-toggle, .storm-media-close) {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   margin: 0;
   padding: 0.4rem 0.65rem;
   border: 1px solid rgb(255 255 255 / 30%);
@@ -70,6 +73,7 @@ storm-media :is(.storm-media-toggle, .storm-media-close) {
   line-height: 1.4;
   cursor: pointer;
   backdrop-filter: blur(8px);
+  touch-action: manipulation;
 }
 .storm-media-toggle {
   opacity: 0;
@@ -101,6 +105,7 @@ storm-media .storm-media-lightbox {
   margin: auto;
   padding: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--sl-color-gray-4);
   border-radius: 0.625rem;
   background: var(--sl-color-bg);
@@ -119,7 +124,7 @@ storm-media .storm-media-lightbox .storm-media-stage {
 storm-media .storm-media-lightbox .storm-media-stage img {
   width: auto;
   max-width: 100%;
-  max-height: calc(100dvh - 8rem);
+  max-height: max(8rem, calc(100dvh - 8rem));
 }
 .storm-media-lightbox .storm-media-open {
   display: none;
@@ -129,7 +134,7 @@ storm-media .storm-media-stage:has(img) .storm-media-toggle {
   bottom: 0.75rem;
 }
 storm-media .storm-media-close {
-  width: 2.5rem;
+  width: 2.75rem;
   padding: 0;
   font-size: 1.5rem;
   font-weight: 400;

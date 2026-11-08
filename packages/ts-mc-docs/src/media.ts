@@ -46,16 +46,19 @@ function imageLightbox(
   stage: HTMLElement,
   media: HTMLImageElement,
   signal: AbortSignal,
+  descriptionId: string | undefined,
 ): () => void {
   const open = document.createElement("button");
   open.type = "button";
   open.className = "storm-media-open";
   open.setAttribute("aria-label", `Enlarge screenshot: ${media.alt}`);
   open.setAttribute("aria-haspopup", "dialog");
+  if (descriptionId) open.setAttribute("aria-describedby", descriptionId);
   stage.append(open);
   const dialog = document.createElement("dialog");
   dialog.className = "storm-media-lightbox";
   dialog.setAttribute("aria-label", media.alt || "Enlarged screenshot");
+  if (descriptionId) dialog.setAttribute("aria-describedby", descriptionId);
   const figure = document.createElement("figure");
   const caption = root.querySelector("figcaption");
   if (caption) figure.append(caption.cloneNode(true));
@@ -166,6 +169,7 @@ class StormMedia extends HTMLElement {
     if (!response.ok)
       throw new Error(`Media manifest HTTP ${response.status.toString()}`);
     const manifest = PublicMediaSchema.parse(await response.json());
+    signal.throwIfAborted();
     const media = this.querySelector("img, video");
     if (!(
       media instanceof HTMLImageElement || media instanceof HTMLVideoElement
@@ -179,9 +183,11 @@ class StormMedia extends HTMLElement {
     stage.append(media);
     const overlay = document.createElement("div");
     overlay.className = "storm-media-overlay";
+    overlay.id = `storm-media-${crypto.randomUUID()}`;
     overlay.setAttribute("aria-hidden", "true");
     stage.append(overlay);
     const toggle = annotationToggle();
+    toggle.setAttribute("aria-controls", overlay.id);
     if (manifest.annotations.length > 0) stage.append(toggle);
     toggle.addEventListener(
       "click",
@@ -190,18 +196,29 @@ class StormMedia extends HTMLElement {
         toggle.setAttribute("aria-pressed", String(!overlay.hidden));
         const state = toggle.querySelector("span");
         if (state) state.textContent = overlay.hidden ? "Off" : "On";
+        draw();
       },
       { signal },
     );
     const description = document.createElement("p");
     description.className = "storm-media-description";
+    description.id = `${overlay.id}-description`;
     description.textContent = manifest.annotations
       .map((cue) => cue.text)
       .join(". ");
-    if (manifest.annotations.length > 0) this.append(description);
+    const originalDescription = media.getAttribute("aria-describedby");
+    const descriptionId =
+      manifest.annotations.length > 0 ? description.id : undefined;
+    if (descriptionId) {
+      stage.append(description);
+      media.setAttribute(
+        "aria-describedby",
+        [originalDescription, descriptionId].filter(Boolean).join(" "),
+      );
+    }
     const restoreLightbox =
       media instanceof HTMLImageElement
-        ? imageLightbox(this, stage, media, signal)
+        ? imageLightbox(this, stage, media, signal, descriptionId)
         : undefined;
     const restoreDownload = replaceDownloadFallback(
       this,
@@ -209,6 +226,7 @@ class StormMedia extends HTMLElement {
     );
     let previous = "";
     const draw = () => {
+      if (overlay.hidden) return;
       const time =
         media instanceof HTMLVideoElement ? media.currentTime * 1000 : 0;
       const active =
@@ -238,6 +256,9 @@ class StormMedia extends HTMLElement {
       stage.before(media);
       stage.remove();
       description.remove();
+      if (originalDescription === null)
+        media.removeAttribute("aria-describedby");
+      else media.setAttribute("aria-describedby", originalDescription);
       restoreDownload();
     };
     draw();
