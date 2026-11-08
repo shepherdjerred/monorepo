@@ -30,6 +30,11 @@ export type ModelWorkerRecovery = {
   synced: boolean;
   /** Apply-safety may have written the body; no sync was requested. */
   written: boolean;
+  /**
+   * The sync was requested but never settled, and no step after it ran: no
+   * routing change can have started (the worker-rollout step owns routing).
+   */
+  failedSync: boolean;
   /** The routing plan the worker preflight recorded, once it settled. */
   plan: WorkerRolloutPlan | undefined;
   /** The request identity every step of the deployment carries. */
@@ -80,6 +85,7 @@ export function modelWorkerRecovery(
     application: target.application,
     synced,
     written: !synced && recorded("step-apply-safety"),
+    failedSync: stoppedInSync(detail, prefix),
     plan: detail.stages.some(
       (stage) =>
         stage.key === "worker-preflight" && stage.status === "succeeded",
@@ -88,6 +94,94 @@ export function modelWorkerRecovery(
       : undefined,
     requestId: deliveryOperationId(detail.deployment.id),
     selection: () => modelWorkerChartSelection(detail).selection,
+  };
+}
+
+/** Read-only work, or the body write, that may precede the worker sub-recipe's sync. */
+const BEFORE_SYNC = new Set([
+  "worker-prior-source",
+  "worker-image-provenance",
+  "step-apply-safety",
+]);
+
+/**
+ * The worker sub-recipe recorded its sync without settling it, and nothing
+ * after it: every other stage of its own is read-only work or the body write,
+ * and succeeded. Other sub-recipes' steps were already required settled.
+ */
+function stoppedInSync(detail: DeploymentDetail, prefix: string): boolean {
+  const own = (key: string) =>
+    WORKER_SUBSTAGES.has(key)
+      ? key
+      : key.startsWith(prefix)
+        ? key.slice(prefix.length)
+        : null;
+  const sync = detail.stages.find((stage) => own(stage.key) === "step-sync");
+  return (
+    sync !== undefined &&
+    sync.status !== "succeeded" &&
+    detail.stages.every((stage) => {
+      const key = own(stage.key);
+      return (
+        key === null ||
+        key === "step-sync" ||
+        (BEFORE_SYNC.has(key) && stage.status === "succeeded")
+      );
+    })
+  );
+}
+
+const FailedSyncSchema = z.object({
+  operation: z.null().optional(),
+  spec: z.object({ source: z.unknown() }),
+  status: z.object({
+    sync: z.object({ status: z.enum(["Synced", "OutOfSync"]) }),
+    operationState: z.object({
+      phase: z.enum(["Failed", "Error"]),
+      operation: z.object({
+        info: z.array(z.object({ name: z.string(), value: z.string() })),
+      }),
+    }),
+  }),
+});
+
+/**
+ * This deployment's own sync ended terminally without succeeding: nothing is
+ * in flight, the operation carries exactly this deployment's request, and the
+ * Application holds exactly the body it rendered. Returns the Argo operation
+ * receipt and the observed sync status.
+ */
+export function requireFailedOwnedSync(
+  observed: unknown,
+  detail: DeploymentDetail,
+  model: ModelWorkerRecovery,
+): { receipt: string; sync: "Synced" | "OutOfSync" } {
+  const application = FailedSyncSchema.parse(observed);
+  const info = application.status.operationState.operation.info;
+  const requests = info.filter(
+    (entry) => entry.name === "ci.sjer.red/request-id",
+  );
+  if (requests.length !== 1 || requests[0]?.value !== model.requestId)
+    throw new Error(
+      "The failed worker sync is not owned by this frozen deployment",
+    );
+  const recipe = stepRecipeOf(detail.pipeline.definition, "worker-rollout");
+  if (
+    recipe === null ||
+    canonicalJson(application.spec.source) !==
+      canonicalJson(renderApplication(detail, recipe).body.spec.source)
+  )
+    throw new Error(
+      "The worker Application no longer holds the body this deployment synced",
+    );
+  const receipts = info.filter(
+    (entry) => entry.name === "ci.sjer.red/operation-id",
+  );
+  if (receipts.length !== 1)
+    throw new Error("Argo operation receipt has no unique operation identity");
+  return {
+    receipt: z.uuid().parse(receipts[0]?.value),
+    sync: application.status.sync.status,
   };
 }
 

@@ -57,12 +57,12 @@ worked around), then settle the deployment.
 Never release a lock because a stage looks read-only: each reader proves its
 target independently (model D5, I2).
 
-| Deployment                                | Command (admin `--machine` credential)                                                                                                                  |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Worker rollout (temporal, scout)          | `toolkit deploy workers recover <ID> --machine --expected-generation <N> --reason "<why>"`. It also proves a written but never-synced Application body. |
-| Ordinary Application with a recorded sync | `toolkit deploy recover <ID> --expected-generation <N> --operation-id <ARGO_OPERATION_UUID> --reason "<why>" --machine`                                 |
-| OpenTofu or platform                      | `toolkit deploy platform recover <ID> --machine --expected-generation <N> --reason "<why>"`                                                             |
-| Static site or Forum                      | `toolkit deploy sites recover` or `toolkit deploy forum recover`, as the release how-to describes                                                       |
+| Deployment                                | Command (admin `--machine` credential)                                                                                                                                                                |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worker rollout (temporal, scout)          | `toolkit deploy workers recover <ID> --machine --expected-generation <N> --reason "<why>"`. It also proves a written but never-synced Application body, and an owned sync that failed before routing. |
+| Ordinary Application with a recorded sync | `toolkit deploy recover <ID> --expected-generation <N> --operation-id <ARGO_OPERATION_UUID> --reason "<why>" --machine`                                                                               |
+| OpenTofu or platform                      | `toolkit deploy platform recover <ID> --machine --expected-generation <N> --reason "<why>"`                                                                                                           |
+| Static site or Forum                      | `toolkit deploy sites recover` or `toolkit deploy forum recover`, as the release how-to describes                                                                                                     |
 
 Read `<N>` from `environment.generation`. The Argo operation UUID is the
 `ci.sjer.red/operation-id` entry of the Application's

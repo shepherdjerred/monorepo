@@ -553,8 +553,12 @@ A model worker deployment is classified by its frozen recipe: its step keys,
 `subN-` prefixed in a compound recipe, and the fixed sub-stages of the worker
 Jobs. A requested sync is proved against the recipe's chart selection, an
 unsynced apply-safety must leave the original hosts serving, and routing must
-follow the plan the worker preflight recorded. Any other stage, or an unsettled
-step of another sub-recipe, fails closed.
+follow the plan the worker preflight recorded. A sync this deployment owns that
+Argo ended `Failed` or `Error`, with no later step recorded, settles when the
+Application still holds the rendered body, no route serves the candidate, no
+execution references it, and every retained host runs its exact image. The
+candidate host may exist; the next deployment replaces it. Any other stage, or
+an unsettled step of another sub-recipe, fails closed.
 `scripts/rollout/worker-delivery-recovery.ts` runs the same verifier through
 brokered operator credentials when Activity workers are unavailable; it never
 resumes effects or accepts the failed release.

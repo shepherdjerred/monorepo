@@ -19,6 +19,11 @@ import {
 } from "./worker-hosts.ts";
 import { workerSourceFingerprint } from "./worker-source.ts";
 import {
+  classifyFailedSync,
+  failedOperation,
+  settledNote,
+} from "./worker-recovery-failed-sync.ts";
+import {
   modelWorkerRecovery,
   requirePlannedRecoveryRoutes,
   requireUnsyncedModelSource,
@@ -297,8 +302,8 @@ function requireStableRecoveryRoutes(
 
 /**
  * Which ownership the recorded stages prove, after checking the hosts that
- * classification implies: an owned sync, an unapplied or unsynced source,
- * or a v1 bootstrap intent.
+ * classification implies: an owned sync, a failed owned sync before routing,
+ * an unapplied or unsynced source, or a v1 bootstrap intent.
  */
 async function classifyRecovery(
   context: WorkerRecoveryContext,
@@ -308,6 +313,22 @@ async function classifyRecovery(
 ) {
   const { model, name, before } = target;
   const detail = context.deployment;
+  // Only a terminally failed operation takes this path; a sync that succeeded
+  // after its executor stopped still settles as an owned sync below.
+  if (model?.failedSync === true && failedOperation(before)) {
+    const failed = await classifyFailedSync(context, pool, effects, {
+      model,
+      name,
+      before,
+    });
+    return {
+      ...failed,
+      checkRoutes: (routes: CompleteWorkerRecovery["routes"]) => {
+        requireRecoveryRoutes(pool, routes, undefined);
+        failed.checkRoutes(routes);
+      },
+    };
+  }
   const unappliedBootstrap =
     model === null && unappliedBootstrapIntent(detail, before);
   const operated =
@@ -318,7 +339,7 @@ async function classifyRecovery(
       ));
   recoverySync(before, operated);
   const owned = operated ? ownedRecoveryArgo(before, detail, model) : undefined;
-  let source: "prior" | "written" = "prior";
+  let source: "prior" | "written" | "failed-sync" = "prior";
   if (owned !== undefined) {
     requireLegacyWorkerCoverage(
       await effects.resources(name, "Deployment"),
@@ -331,7 +352,17 @@ async function classifyRecovery(
     source = requireUnsyncedModelSource(before, detail, model);
     await requireOriginalHosts(context, pool, effects, name);
   }
-  return { unappliedBootstrap, operated, owned, source };
+  return {
+    unappliedBootstrap,
+    operated,
+    owned,
+    source,
+    receipt: owned?.receipt,
+    checkRoutes: (routes: CompleteWorkerRecovery["routes"]) => {
+      requireRecoveryRoutes(pool, routes, model?.plan);
+    },
+    sync: (raw: unknown) => recoverySync(raw, operated),
+  };
 }
 
 /** Stable routing to retained hosts, and to a model rollout's recorded plan. */
@@ -369,9 +400,13 @@ export async function proveSettledWorkerRecovery(
     model?.application ?? deliverySelection(detail).selection.application;
   const application = encodeURIComponent(name);
   const before = await effects.readApplication(application);
-  const { unappliedBootstrap, operated, owned, source } =
-    await classifyRecovery(context, pool, effects, { model, name, before });
-  const beforeSync = recoverySync(before, operated);
+  const classified = await classifyRecovery(context, pool, effects, {
+    model,
+    name,
+    before,
+  });
+  const { unappliedBootstrap, operated, owned, source } = classified;
+  const beforeSync = classified.sync(before);
   const observed =
     operated || pool.workerOperation === "baseline"
       ? pool
@@ -386,9 +421,9 @@ export async function proveSettledWorkerRecovery(
   const routes = await effects.routes(pool);
   if (JSON.stringify(routes) !== JSON.stringify(await effects.routes(pool)))
     throw new Error("Recovery routing changed during proof");
-  requireRecoveryRoutes(pool, routes, model?.plan);
+  classified.checkRoutes(routes);
   const after = await effects.readApplication(application);
-  const afterSync = recoverySync(after, operated);
+  const afterSync = classified.sync(after);
   if (workerSourceFingerprint(before) !== workerSourceFingerprint(after))
     throw new Error("Application changed during recovery proof");
   if (unappliedBootstrap) {
@@ -406,7 +441,7 @@ export async function proveSettledWorkerRecovery(
       owned.receipt
   )
     throw new Error("Owned operation changed during recovery proof");
-  const receipt = owned?.receipt ?? workflowId;
+  const receipt = classified.receipt ?? workflowId;
   return CompleteWorkerRecoverySchema.parse({
     expectedEnvironmentGeneration: context.intent.expectedEnvironmentGeneration,
     snapshotFingerprint: context.intent.snapshotFingerprint,
@@ -430,7 +465,7 @@ export async function proveSettledWorkerRecovery(
       {
         kind: "reconciliation",
         operationId: receipt,
-        summary: `Independently settled failed release; source Workflow ${workflowId} closed, Argo comparison ${beforeSync}/${afterSync}, no acceptance inferred${source === "written" ? "; the unsynced candidate body stays for the next deployment to replace" : ""}`,
+        summary: `Independently settled failed release; source Workflow ${workflowId} closed, Argo comparison ${beforeSync}/${afterSync}, no acceptance inferred${settledNote(source)}`,
       },
       {
         kind: "runtime",
