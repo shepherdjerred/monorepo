@@ -1,8 +1,8 @@
 import {
-  WorkerRolloutSnapshotSchema,
   WorkerRolloutPlanSchema,
   WorkerRolloutActionSchema,
 } from "@shepherdjerred/delivery/contract";
+import type { WorkerRolloutSnapshot } from "@shepherdjerred/delivery/contract";
 import { z } from "zod";
 import {
   DeliveryJobRequestSchema,
@@ -15,6 +15,7 @@ import {
 import { renderControlPlaneTemplates } from "#lib/delivery/workers/worker-control-plane.ts";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-target.ts";
+import { WorkerRoutingInputSchema } from "#lib/delivery/workers/worker-acceptance.ts";
 import { runTestStage } from "./test-stage.ts";
 
 const ConnectionSchema = z.object({
@@ -82,9 +83,7 @@ async function main() {
     );
   const toplevel = await command(["git", "rev-parse", "--show-toplevel"]);
   // Worker candidates reuse or share this prepared checkout's objects and cache.
-  const candidateCheckout = (
-    snapshot: z.infer<typeof WorkerRolloutSnapshotSchema>,
-  ) => ({
+  const candidateCheckout = (snapshot: WorkerRolloutSnapshot) => ({
     sourceRevision: snapshot.deployment.workerSnapshot?.candidateBuildId,
     target: WorkerDeploymentRolloutTargetSchema.parse(
       snapshot.deployment.workerSnapshot?.target,
@@ -111,13 +110,9 @@ async function main() {
     case "worker-preflight": {
       const { prepareDeliveryWorkerRollout } =
         await import("#lib/delivery/workers/worker-rollout.ts");
-      const input = z
-        .object({
-          detail: WorkerRolloutSnapshotSchema,
-          connection: ConnectionSchema,
-        })
-        .strict()
-        .parse(request.input);
+      const input = WorkerRoutingInputSchema.extend({
+        connection: ConnectionSchema,
+      }).parse(request.input);
       result = await withWorkerCandidateCheckout(
         candidateCheckout(input.detail),
         (candidate) =>
@@ -125,7 +120,7 @@ async function main() {
             input.detail,
             input.connection,
             command,
-            candidate,
+            { candidate, restored: input.restored },
           ),
       );
       break;
@@ -133,15 +128,11 @@ async function main() {
     case "worker-step": {
       const { stepDeliveryWorkerRollout } =
         await import("#lib/delivery/workers/worker-rollout.ts");
-      const input = z
-        .object({
-          detail: WorkerRolloutSnapshotSchema,
-          connection: ConnectionSchema,
-          plan: WorkerRolloutPlanSchema,
-          action: WorkerRolloutActionSchema,
-        })
-        .strict()
-        .parse(request.input);
+      const input = WorkerRoutingInputSchema.extend({
+        connection: ConnectionSchema,
+        plan: WorkerRolloutPlanSchema,
+        action: WorkerRolloutActionSchema,
+      }).parse(request.input);
       result = await withWorkerCandidateCheckout(
         candidateCheckout(input.detail),
         (candidate) => stepDeliveryWorkerRollout(input, command, candidate),

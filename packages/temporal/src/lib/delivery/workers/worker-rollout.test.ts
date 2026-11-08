@@ -6,7 +6,10 @@ import {
   stepDeliveryWorkerRollout,
 } from "./worker-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
-import { centralRolloutPool } from "./worker-pool-fixture.ts";
+import {
+  centralRolloutPool,
+  workerProofCommand,
+} from "./worker-pool-fixture.ts";
 
 const CANDIDATE = "b".repeat(40);
 const STABLE = "a".repeat(40);
@@ -158,17 +161,8 @@ function fixture(overrides: Partial<State> = {}) {
   const run: RolloutCommandRunner = async (argv) => {
     const command = [...argv];
     commands.push(command);
-    if (command[0] === "docker")
-      return json({
-        os: "linux",
-        architecture: "amd64",
-        config: { Env: [`GIT_SHA=${CANDIDATE}`] },
-      });
-    if (command[0] === "git")
-      return {
-        stdout: command[1] === "rev-parse" ? state.checkout : "",
-        stderr: "",
-      };
+    const proof = workerProofCommand(command, CANDIDATE, state.checkout);
+    if (proof !== undefined) return proof;
     if (command[0] === "bun")
       return { stdout: "canary/replay passed", stderr: "" };
     if (command[1] === "prom") {
@@ -231,7 +225,7 @@ describe("PostgreSQL-owned worker rollout routing", () => {
       detail(),
       connection,
       controller.run,
-      candidate.run,
+      { candidate: candidate.run, restored: null },
     );
     expect(prepared.candidateBuildId).toBe(CANDIDATE);
     await stepDeliveryWorkerRollout(
@@ -267,12 +261,10 @@ describe("PostgreSQL-owned worker rollout routing", () => {
     const controller = fixture();
     const candidate = fixture({ checkout: STABLE });
     await expect(
-      prepareDeliveryWorkerRollout(
-        detail(),
-        connection,
-        controller.run,
-        candidate.run,
-      ),
+      prepareDeliveryWorkerRollout(detail(), connection, controller.run, {
+        candidate: candidate.run,
+        restored: null,
+      }),
     ).rejects.toThrow("does not match candidate");
     expect(candidate.commands.some((argv) => argv[0] === "bun")).toBe(false);
     await expect(

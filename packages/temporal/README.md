@@ -991,6 +991,14 @@ Replay and canaries run in a separate clean checkout at the candidate image's
 original source revision, with its frozen dependencies and build prerequisites.
 Upgrading the controller does not reinterpret a reused candidate image as a new
 build or replay the controller's Workflow code as the candidate.
+For a rollback, the executor reads the exact restored deployment from Delivery
+and freezes its successful acceptance, selection and retained worker artifact
+into each routing Job. That proof must match the request's environment, service,
+version set, recipe, configuration, image and build. It supplies the prior
+production acceptance even after beta advances. New promotions still require
+the candidate to be current in beta. Both paths retain image provenance, live
+pollers, candidate replay, pinned canaries, stable-route checks and final
+normally routed verification.
 The candidate's locked Node toolchain also runs its Workflow unit tests. Replay
 selects one exact retained execution per exported Workflow type in the target
 namespace and worker queues, preferring the latest open run and otherwise the
