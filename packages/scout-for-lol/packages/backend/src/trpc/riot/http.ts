@@ -226,6 +226,10 @@ export async function handleRiotAuthRoutes(
       ? await start(request)
       : await callback(request);
   } catch (error) {
+    if (expectedMethod === "GET") {
+      logger.error("Riot account linking callback failed");
+      return landing("failed", true);
+    }
     if (error instanceof TRPCError) {
       return Response.json(
         { message: error.message },

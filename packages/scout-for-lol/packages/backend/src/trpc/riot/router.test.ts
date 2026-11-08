@@ -284,6 +284,44 @@ describe("Riot HTTP handshake", () => {
     expect(secondCallback.headers.get("Location")).toContain("riot=expired");
     expect(stubs.verify).toHaveBeenCalledTimes(1);
   });
+  test.each(["unconfigured", "save-failed"] as const)(
+    "returns to privacy settings after a claimed callback fails: %s",
+    async (kind) => {
+      const flow = await startFlow();
+      const failure =
+        kind === "unconfigured"
+          ? vi
+              .spyOn(configuration, "riotRsoClientId", "get")
+              .mockReturnValue(undefined)
+          : vi
+              .spyOn(db.riotOAuthLinkAttempt, "update")
+              .mockRejectedValueOnce(
+                new Error("Synthetic proof write failure"),
+              );
+      try {
+        const response = await route(
+          new Request(
+            `${appOrigin}/api/auth/riot/callback?state=${flow.state ?? ""}&code=test-code`,
+            { headers: { Cookie: flow.cookieHeader } },
+          ),
+        );
+        expect(response.status).toBe(303);
+        expect(response.headers.get("Location")).toBe(
+          `${appOrigin}/app/settings?riot=failed`,
+        );
+        expect(response.headers.get("Set-Cookie")).toContain("Max-Age=0");
+        expect(response.headers.get("Cache-Control")).toBe("no-store");
+        expect(
+          await db.riotOAuthLinkAttempt.count({
+            where: { claimedAt: { not: null }, verifiedAt: null },
+          }),
+        ).toBe(1);
+        expect(await db.riotAccountPreference.count()).toBe(0);
+      } finally {
+        failure.mockRestore();
+      }
+    },
+  );
   test.each(["wrong-state", "cancelled"])(
     "does not verify a denied or mismatched flow: %s",
     async (kind) => {
