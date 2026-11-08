@@ -141,6 +141,42 @@ are reported without force-killing or blindly retrying continuation prompts.
 Failed or skipped terminals require inspection and an explicit manual retry;
 duplicate appearance events do not replay partial restarts.
 
+## Herdr core daemon
+
+[Herdr](https://herdr.dev)'s `hc` daemon owns every terminal and agent, and it
+starts on demand. Started from a local login, it moves itself into a one-shot
+launchd job and outlives whatever started it. Started from an SSH login — another
+machine's `hc connect` — it runs as a child of that SSH session, and so does the
+holder process that owns its terminals. Once that login ends, both are left in a
+launchd Background session: agents in those terminals cannot see the login
+Keychain, so Keychain-backed credentials such as the homelab 1Password service
+account fail, and the terminals can die with the session. On a Mac that others
+reach as a Herdr machine, that SSH client usually reconnects first after the
+core goes away, so nothing else would move the core back to launchd.
+
+On macOS the `com.jerred.herdr-core` LaunchAgent runs `~/.local/bin/herdr-core-ensure`
+through a login fish shell at login and every minute:
+
+- It starts a missing core through launchd, with an interactive login's
+  environment.
+- It replaces a core started from SSH with `hc server restart`. A planned
+  restart keeps every running terminal in its existing holder, so a restart
+  alone does not fix an SSH-born holder.
+- It ends an SSH-born holder that has no terminals; the launchd core starts a
+  fresh one for the next terminal.
+- It never ends an SSH-born holder with live terminals, because that ends them.
+  It reports that holder once, in the log and as a macOS notification. Replace
+  it with `kill <holder pid>` from outside its terminals; kept terminals come
+  back as shells in a new launchd holder, and agents need resuming.
+
+The script logs only what it changes or reports, to
+`~/Library/Logs/herdr-core-ensure.log`.
+
+Check ownership with `hc server status --json`: for the core `pid` and each
+`holders[].pid`, `ps -E -ww -o command= -p <pid>` must not contain
+`SSH_CONNECTION=`. A launchd-owned core has parent 1 and runs as
+`hc --hc-launchd …`.
+
 ## Taildrop inbox
 
 On the workstation profile, the `com.jerred.taildrop` LaunchAgent keeps

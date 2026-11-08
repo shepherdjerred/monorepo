@@ -57,7 +57,12 @@ mods, generated `.d.ts` files, and state files (`view.json`, `shared.json`,
 be. The app also rewrites `keys.json` and `settings.json` from its UI, so after
 changing them there, run `chezmoi add` on the path to capture it; applying the
 stale source would revert the change. The Codex theme-restart automation under
-`packages/dotfiles/bin/` drives Codex terminals through `hc`. Use
+`packages/dotfiles/bin/` drives Codex terminals through `hc`. On macOS the
+`com.jerred.herdr-core` LaunchAgent (`~/.local/bin/herdr-core-ensure`) keeps the
+core owned by launchd and restarts one started from SSH. A core restart keeps
+the existing holder, so an SSH-born holder with live terminals stays until it is
+replaced, which ends them; the agent only reports it. Inside such a holder the
+login Keychain is invisible. The dotfiles README explains this. Use
 `chezmoi-helper` for deployment.
 
 ## Docs
