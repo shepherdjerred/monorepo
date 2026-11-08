@@ -51,11 +51,11 @@ const TimedEventSchema = z.object({
   droppedAttributesCount: z.number().int().nonnegative().optional(),
 });
 
-const WorkflowSpanSchema = z.object({
+const WorkflowSpanSchema = z.strictObject({
   name: z.string().min(1),
   kind: z.number().int().min(0).max(4),
   spanContext: SpanContextSchema,
-  parentSpanId: HexSchema(16).optional(),
+  parentSpanContext: SpanContextSchema.optional(),
   startTime: HrTimeSchema,
   endTime: HrTimeSchema,
   status: z.object({
@@ -70,7 +70,7 @@ const WorkflowSpanSchema = z.object({
   droppedAttributesCount: z.number().int().nonnegative(),
   droppedLinksCount: z.number().int().nonnegative(),
   droppedEventsCount: z.number().int().nonnegative(),
-  instrumentationLibrary: z.object({
+  instrumentationScope: z.object({
     name: z.string().min(1),
     version: z.string().optional(),
     schemaUrl: z.string().optional(),
@@ -180,7 +180,7 @@ function workflowAttributes(info: WorkflowSpanInfo): Attributes {
 }
 
 function instrumentationScope(
-  value: ValidatedWorkflowSpan["instrumentationLibrary"],
+  value: ValidatedWorkflowSpan["instrumentationScope"],
 ): { name: string; version?: string; schemaUrl?: string } {
   return {
     name: value.name,
@@ -196,19 +196,9 @@ function toReadableSpan(
 ): ReadableSpan {
   const spanContext = toSpanContext(span.spanContext);
   const parentSpanContext =
-    span.parentSpanId === undefined
+    span.parentSpanContext === undefined
       ? undefined
-      : {
-          traceId: span.spanContext.traceId,
-          spanId: span.parentSpanId,
-          traceFlags: span.spanContext.traceFlags,
-          ...(span.spanContext.traceState === undefined
-            ? {}
-            : {
-                traceState: createTraceState(span.spanContext.traceState),
-              }),
-          isRemote: false,
-        };
+      : toSpanContext(span.parentSpanContext);
   return {
     name: span.name,
     kind: toSpanKind(span.kind),
@@ -226,7 +216,7 @@ function toReadableSpan(
     duration: span.duration,
     ended: span.ended,
     resource,
-    instrumentationScope: instrumentationScope(span.instrumentationLibrary),
+    instrumentationScope: instrumentationScope(span.instrumentationScope),
     droppedAttributesCount: span.droppedAttributesCount,
     droppedLinksCount: span.droppedLinksCount,
     droppedEventsCount: span.droppedEventsCount,

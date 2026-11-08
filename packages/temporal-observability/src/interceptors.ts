@@ -54,7 +54,7 @@ function createActivityInterceptors(
 export function temporalWorkflowTracingModulePath(): string {
   return new URL(
     import.meta
-      .resolve("@temporalio/interceptors-opentelemetry-v2/lib/workflow"),
+      .resolve("@shepherdjerred/temporal-observability/workflow-interceptors"),
   ).pathname;
 }
 
