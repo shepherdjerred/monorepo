@@ -18,18 +18,57 @@ set -gx POSTHOG_CLI_PROJECT_ID '549883'
 
 abbr grep rg
 abbr gs git-spice
-# Coding agents use their subscription auth, so direct provider API keys are
-# removed along with the 1Password vault token, and they run without permission
-# prompts or a sandbox.
-abbr claude "env -u OP_SERVICE_ACCOUNT_TOKEN -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --dangerously-skip-permissions"
+# Coding-agent wrappers, mirroring Invoke-AgentCli in the PowerShell profile
+# (agent-exec on macOS): provider API keys and homelab tokens are removed, the
+# agent runs with approvals and sandboxing bypassed unless AGENT_SAFE=1, and it
+# never waits on an editor or pager. Usage: __agent_exec <name> [bypass...] -- [args...]
+set -g __agent_scrubbed {ANTHROPIC,OPENAI,CODEX,GEMINI,GOOGLE,XAI,GROK,MOONSHOT,KIMI,CURSOR,GRAFANA,POSTHOG_CLI}(string join "" _API _KEY) \
+  OP_SERVICE_ACCOUNT_TOKEN BUGSINK_TOKEN DISCORD_USER_TOKEN DISCORD_BOT_TOKEN \
+  ARGOCD_AUTH_TOKEN WOODPECKER_TOKEN CF_API_TOKEN CLOUDFLARE_API_TOKEN
+
+function __agent_exec
+  set -l name $argv[1]
+  set -l bypass
+  set -l rest
+  set -l after 0
+  for arg in $argv[2..-1]
+    # Arguments are data, never `test` operands: `-c` would read as an operator.
+    if test $after = 1
+      set -a rest $arg
+    else if string match -q -- -- $arg
+      set after 1
+    else
+      set -a bypass $arg
+    end
+  end
+  test "$AGENT_SAFE" = 1; and set bypass
+  set -l unset
+  for var in $__agent_scrubbed
+    set -a unset -u $var
+  end
+  env $unset EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
+    (command -s $name) $bypass $rest
+end
+
+# Defined only where the agent is installed. `agent` stays unwrapped: here it is Grok's.
+command -q claude; and function claude --wraps claude; __agent_exec claude --dangerously-skip-permissions -- $argv; end
+command -q agy; and function agy --wraps agy; __agent_exec agy --dangerously-skip-permissions -- $argv; end
+command -q cursor-agent; and function cursor-agent --wraps cursor-agent; __agent_exec cursor-agent --yolo --sandbox disabled -- $argv; end
+command -q grok; and function grok --wraps grok; __agent_exec grok --always-approve -- $argv; end
+command -q kimi; and function kimi --wraps kimi; __agent_exec kimi --auto -- $argv; end
+command -q muse; and function muse --wraps muse; __agent_exec muse --yolo --disable-sandbox -- $argv; end
+# Herdr requires --no-daemon, and a running Codex never follows the light/dark
+# switch (openai/codex#45163), so each launch picks the matching theme. Neither
+# is a bypass flag, so both survive AGENT_SAFE=1.
+command -q codex; and function codex --wraps codex
+  set -l theme catppuccin-latte
+  test (od -An -tu4 /proc/registry/HKEY_CURRENT_USER/Software/Microsoft/Windows/CurrentVersion/Themes/Personalize/AppsUseLightTheme | string trim) = 0
+  and set theme catppuccin-mocha
+  set -l no_daemon --no-daemon
+  contains -- --no-daemon $argv; and set no_daemon
+  __agent_exec codex --dangerously-bypass-approvals-and-sandbox -- $no_daemon -c "tui.theme=\"$theme\"" $argv
+end
 
 if status is-interactive
-  function codex --wraps codex -d "Run Codex without API keys, approvals, or sandbox"
-      env -u OP_SERVICE_ACCOUNT_TOKEN \
-          -u (string join "" OPENAI _API_KEY) \
-          -u (string join "" CODEX _API_KEY) \
-          -u (string join "" ANTHROPIC _API_KEY) \
-          (command -s codex) --dangerously-bypass-approvals-and-sandbox $argv
-  end
   fish_vi_key_bindings
 end
