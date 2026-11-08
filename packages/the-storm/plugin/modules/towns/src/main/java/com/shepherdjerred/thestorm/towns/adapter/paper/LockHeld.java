@@ -214,13 +214,7 @@ final class LockHeld implements Listener {
     if (host.service().book().lockAt(position).isPresent() || host.service().isSettling()) {
       return;
     }
-    if (host.service().book().countOf(player.getUniqueId())
-        >= host.service().policy().maxPerPlayer()) {
-      entity.remove();
-      player.sendMessage(
-          Notices.error("Your lock limit is full; unlock a container before placing another."));
-      return;
-    }
+    // At the lock limit the frame or stand stays, unlocked, and its placer is told why.
     host.autoLockPlaced(player, block, position);
   }
 }

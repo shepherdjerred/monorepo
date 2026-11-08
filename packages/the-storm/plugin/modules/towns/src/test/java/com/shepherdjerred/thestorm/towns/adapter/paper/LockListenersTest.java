@@ -56,8 +56,9 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /**
  * Locks on MockBukkit, wired as on the server: locks stored before the plugin starts are loaded and
- * every listener answers for them. Carol owns a chest in the wilderness, the hopper under it and a
- * dispenser; Dave owns the hopper beside hers; Bob is a stranger to all of them.
+ * every listener answers for them. Carol owns a chest in the wilderness, the hopper under it, a
+ * dispenser with redstone off and one she let redstone drive; Dave owns the hopper beside hers; Bob
+ * is a stranger to all of them.
  */
 final class LockListenersTest extends AegisServer {
 
@@ -81,6 +82,7 @@ final class LockListenersTest extends AegisServer {
               lock(CAROL, CHEST_X, Y - 1, Z),
               lock(DAVE, CHEST_X + 1, Y - 1, Z),
               lock(CAROL, 145, Y, Z),
+              lock(CAROL, 157, Y, Z).withOptions(new Lock.Options(false, true)),
               lock(CAROL, CLAIM_X + 10, Y, Z),
               lock(CAROL, 147, Y, Z).withType(LockType.PUBLIC, ""),
               lock(CAROL, 148, Y, Z).withType(LockType.PASSWORD, "gate"),
@@ -112,6 +114,7 @@ final class LockListenersTest extends AegisServer {
     block(CHEST_X + 1, Y - 1, Z).setType(Material.HOPPER);
     block(CHEST_X - 1, Y - 1, Z).setType(Material.HOPPER);
     block(145, Y, Z).setType(Material.DISPENSER);
+    block(157, Y, Z).setType(Material.DISPENSER);
     block(CLAIM_X + 10, Y, Z).setType(Material.CHEST);
     block(147, Y, Z).setType(Material.CHEST);
     block(148, Y, Z).setType(Material.CHEST);
@@ -380,7 +383,96 @@ final class LockListenersTest extends AegisServer {
   }
 
   @Test
-  void poweredLockedMachinesCannotDispenseOrCraftEvenWithExistingWiring() {
+  void strangersCannotWireBesideAMachineRedstoneMayDrive() {
+    var lever = block(157, Y + 1, Z);
+    lever.setType(Material.LEVER);
+
+    assertThat(placed(bob, lever, Material.LEVER)).isFalse();
+    assertThat(placed(carol, lever, Material.LEVER)).isTrue();
+  }
+
+  @Test
+  void aMachineWhoseOwnerAllowsRedstoneDispenses() {
+    var machine = block(157, Y, Z);
+
+    assertThat(
+            call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isFalse();
+  }
+
+  @Test
+  void aMachineOnItsOwnersPrivateClaimRunsFromRedstone() {
+    var machine = block(CLAIM_X + 3, Y, Z);
+    machine.setType(Material.DISPENSER);
+
+    assertThat(placed(alice, machine, Material.DISPENSER)).isTrue();
+
+    assertThat(
+            call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isFalse();
+  }
+
+  @Test
+  void aMachineStopsRunningFromRedstoneOnceItsClaimsSwitchesArePublic()
+      throws InterruptedException {
+    var machine = block(CLAIM_X + 3, Y, Z);
+    machine.setType(Material.DISPENSER);
+    assertThat(placed(alice, machine, Material.DISPENSER)).isTrue();
+
+    alice.setLocation(new Location(world, CLAIM_X + 3, Y, Z));
+    server.dispatchCommand(alice, "claim flag public-switches true");
+    awaitLine(alice, "public-switches is now on here.");
+
+    assertThat(
+            call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isTrue();
+  }
+
+  @Test
+  void aPrivateClaimsMachineIgnoresPowerFromOtherLand() {
+    var machine = block(CLAIM_X, Y, Z);
+    machine.setType(Material.DISPENSER);
+    assertThat(placed(alice, machine, Material.DISPENSER)).isTrue();
+    block(WILD_X, Y, Z).setType(Material.LEVER);
+
+    assertThat(
+            call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isTrue();
+  }
+
+  @Test
+  void anUnlockedHopperItsOwnerPlacedStillCannotDrainTheirLock() {
+    var placers = new Placers(new NamespacedKey(plugin, "placed_by"));
+    var claimChest = container(CLAIM_X + 10, Y, null);
+    var chest = container(CHEST_X, Y, null);
+    block(CLAIM_X + 10, Y - 1, Z).setType(Material.HOPPER);
+    block(CHEST_X - 2, Y - 1, Z).setType(Material.HOPPER);
+    assertThat(placers.record(block(CLAIM_X + 10, Y - 1, Z), CAROL)).isTrue();
+    assertThat(placers.record(block(CHEST_X - 2, Y - 1, Z), CAROL)).isTrue();
+
+    assertThat(moved(claimChest, container(CLAIM_X + 10, Y - 1, null))).isFalse();
+    assertThat(moved(chest, container(CHEST_X - 2, Y - 1, null))).isFalse();
+  }
+
+  @Test
+  void aNewMachineInTheOpenKeepsRedstoneOffSoStrangersCannotWorkItsControls() {
+    var open = block(CHEST_X - 6, Y, Z);
+    open.setType(Material.DISPENSER);
+
+    assertThat(placed(carol, open, Material.DISPENSER)).isTrue();
+
+    assertThat(
+            call(new BlockDispenseEvent(open, new ItemStack(Material.DIAMOND), new Vector()))
+                .isCancelled())
+        .isTrue();
+  }
+
+  @Test
+  void lockedMachinesWithRedstoneOffCannotDispenseOrCraftEvenWithExistingWiring() {
     var machine = block(145, Y, Z);
     assertThat(
             call(new BlockDispenseEvent(machine, new ItemStack(Material.DIAMOND), new Vector()))

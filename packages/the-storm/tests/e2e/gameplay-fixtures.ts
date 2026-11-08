@@ -136,6 +136,7 @@ export async function gameplayFixtures(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "stargatesConfig"
+    | "townsConfig"
     | "companionsE2eJar"
     | "rwf"
     | "rwfMap"
@@ -169,6 +170,7 @@ async function profileFixtures(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "stargatesConfig"
+    | "townsConfig"
     | "rwf"
     | "survivalConfig"
     | "computeConfig"
@@ -211,6 +213,12 @@ async function profileFixtures(
         stargatesConfig: await Bun.file(
           path.join(packageRoot, "tests/e2e/fixture-stargates.yml"),
         ).text(),
+        // A lock limit below the 70 imported historical locks, so the
+        // historical-locks case proves imports do not spend the quota.
+        townsConfig: withLockLimit(
+          await Bun.file(path.join(content, "towns.yml")).text(),
+          64,
+        ),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
         rwf: { kits: [], ...fullRwfTestSettings, maps: suiteMaps },
@@ -295,4 +303,15 @@ async function capacityBotsConfig(packageRoot: string): Promise<string> {
     throw new Error("The capacity fixture could not find the LOS budget");
   }
   return overlaid;
+}
+
+/** The owned towns.yml with a different locks.maxPerPlayer. */
+function withLockLimit(towns: string, limit: number): string {
+  const limited = towns.replace(
+    /^ {2}maxPerPlayer: \d+$/mu,
+    `  maxPerPlayer: ${limit.toString()}`,
+  );
+  if (limited === towns)
+    throw new Error("towns.yml has no locks.maxPerPlayer to override");
+  return limited;
 }

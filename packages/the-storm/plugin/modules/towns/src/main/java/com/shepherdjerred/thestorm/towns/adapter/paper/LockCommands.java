@@ -494,6 +494,8 @@ final class LockCommands {
       player.sendMessage(Notices.info("That is not locked; anyone may open it."));
       return;
     }
+    // Judged here, on the main thread, before the name lookup completes elsewhere.
+    var privateClaim = locks.onOwnersPrivateClaim(found, block);
     var people = new ArrayList<UUID>();
     people.addAll(
         found.owners().stream()
@@ -511,11 +513,11 @@ final class LockCommands {
               }
               var resolved = new java.util.HashMap<>(found.restoration().owners());
               resolved.putAll(names);
-              player.sendMessage(Notices.info(describe(found, resolved)));
+              player.sendMessage(Notices.info(describe(found, resolved, privateClaim)));
             });
   }
 
-  private String describe(Lock lock, Map<UUID, String> names) {
+  private String describe(Lock lock, Map<UUID, String> names, boolean privateClaim) {
     Function<UUID, String> nameOf = id -> requireNonNull(names.get(id), "a name for " + id);
     var trusted =
         lock.trusted().isEmpty()
@@ -534,10 +536,17 @@ final class LockCommands {
         + (lock.options().sharedWithTown() ? "; their town may open it" : "")
         + "; trusted: "
         + trusted
-        + (lock.options().redstone() ? "; redstone allowed" : "; redstone blocked")
+        + redstone(lock, privateClaim)
         + "; "
         + lock.options().type().name().toLowerCase(java.util.Locale.ROOT)
         + ".";
+  }
+
+  private static String redstone(Lock lock, boolean privateClaim) {
+    if (lock.options().redstone()) {
+      return "; redstone allowed";
+    }
+    return privateClaim ? "; redstone allowed on this private claim" : "; redstone blocked";
   }
 
   /** The position of the locked block of the container at {@code block}, or {@code block}. */

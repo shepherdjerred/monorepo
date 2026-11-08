@@ -12,7 +12,7 @@ Look at the block or object while using these commands:
 - `/lock share on` shares it with your town; `/lock share off` turns that sharing off.
 - `/unlock` removes your lock. Claim rules still apply on claimed land.
 
-Only share access with people you trust. If someone cannot open a chest on shared land, check both the land access and the chest's lock. A double chest counts as one lock; each player can hold up to 64 locks.
+Only share access with people you trust. If someone cannot open a chest on shared land, check both the land access and the chest's lock. A double chest counts as one lock; each player can hold up to 1024 locks. Past that limit, new containers are placed unlocked until you `/unlock` some.
 
 For example, to share a supply chest with a friend, make sure they can access its chunk, then look at the chest and use `/lock trust <player>`. Ask them to try opening it. If it still fails, inspect the chunk with `/claim info` and the chest with `/lock info`.
 

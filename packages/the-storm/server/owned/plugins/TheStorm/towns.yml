@@ -42,7 +42,7 @@ membership:
 
 locks:
   # The most locks one player may hold; a double chest counts once.
-  maxPerPlayer: 64
+  maxPerPlayer: 1024
   # Lock newly placed containers, doors, trapdoors, fence gates, item frames
   # and armor stands for their placer. Signs can be locked with /lock and are
   # not locked just by placing them. /unlock removes the lock. /lock public, password, donation, supply

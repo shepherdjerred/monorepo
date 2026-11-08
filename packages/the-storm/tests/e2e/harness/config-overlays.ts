@@ -22,6 +22,8 @@ export type ModuleConfigOverrides = {
   survivalConfig?: string;
   /** Disposable server-owned Stargate fixture; the shipped configuration stays untouched. */
   stargatesConfig?: string;
+  /** Disposable towns.yml contents, such as a lock limit a suite can reach. */
+  townsConfig?: string;
 };
 
 /** Write explicit module overrides only after copying the owned configuration. */
@@ -33,6 +35,7 @@ export async function stageModuleConfigs(
     ["compute.yml", options.computeConfig],
     ["rwfbots.yml", options.rwfbotsConfig],
     ["stargates.yml", options.stargatesConfig],
+    ["towns.yml", options.townsConfig],
     [path.join("arena", "survival.yml"), options.survivalConfig],
   ] as const) {
     if (content !== undefined)
