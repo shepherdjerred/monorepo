@@ -1,5 +1,6 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 import { pad, camera, inspectors } from "./fixtures.ts";
+import { localHelper } from "#captures/helper.ts";
 
 export default defineCaptureScene({
   name: "container-locks",
@@ -11,6 +12,7 @@ export default defineCaptureScene({
   setup: async (context) => {
     if (context.target === "live")
       throw new Error("Lock examples require an isolated map copy");
+    await localHelper(context);
     await pad(context, [7, 3, 6]);
     await context.set(
       context.at(3, 0, 3),

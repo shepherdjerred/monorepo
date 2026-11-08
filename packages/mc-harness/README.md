@@ -277,7 +277,7 @@ toolkit mc capture suite replay <run-id>
 toolkit mc capture suite render <run-id> --shot cooking-pot
 ```
 
-`--scenario` also accepts comma-separated IDs, such as `cooking,pipes`.
+`--scenario` also accepts comma-separated IDs, such as `cooking,sorting`.
 The selection retains authored order and refuses duplicate or unknown IDs.
 
 For the entire TSMC catalog, use the resumable driver with an existing fixture:

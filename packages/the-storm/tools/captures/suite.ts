@@ -374,7 +374,7 @@ export default defineCaptureSuite({
         shots: locksShots,
         anchor: [105, 81, 217],
         world: "world",
-        helpers: [],
+        helpers: ["TsmcDemoHelper"],
       },
       {
         id: "painting",
