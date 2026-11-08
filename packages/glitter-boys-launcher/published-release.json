@@ -1,4 +1,12 @@
 {
   "schema": 1,
-  "release": null
+  "release": {
+    "version": "0.1.9",
+    "expires": 1801885500,
+    "installer": {
+      "url": "https://glitter-boys.com/launcher/releases/0.1.9/glitter-boys_0.1.9_x64-setup.exe",
+      "bytes": 6391216,
+      "sha256": "4ddf2eaf7e30a2eec8c7e84f5d80776a1fe559223d67bac48c1104db8a9b7a99"
+    }
+  }
 }
