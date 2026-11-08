@@ -85,11 +85,6 @@ describe("agreement with the v1 definition sources", () => {
   test("every v1 environment has its catalog successor and keeps its promotion source", () => {
     for (const v1 of v1Environments) {
       if (V1_RETIRED_ENVIRONMENTS.includes(v1.id)) continue;
-      // The launcher's prepared chart renders no Application yet.
-      if (v1.id === "glitter-boys-launcher/prod") {
-        expect(environments.has(v1.id)).toBe(false);
-        continue;
-      }
       const successor = environments.get(catalogEnvironmentOf(v1.id));
       expect(successor, v1.id).toBeDefined();
       expect(successor?.promotionSourceEnvironmentId).toBe(

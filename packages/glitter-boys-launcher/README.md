@@ -248,30 +248,24 @@ symbolicated stacks are not implemented.
 
 Edge/proxy access logs have their own retention outside this event contract.
 
-Its Dockerfile belongs to this package; build, smoke-test, and publish the image
-manually from the repository root. Use a unique release tag:
-Authenticate Docker with the scoped publisher identity before pushing.
+Its Dockerfile belongs to this package. Main-branch CI builds it in the `infra`
+image group (`docker-bake.hcl`, with this package as the build context) whenever
+the Cargo workspace or Dockerfile changes, runs its `smoke` target
+(`glitter-boys-service --smoke`), pushes it to the private Docker Hub
+repository, and registers the build with Delivery. To reproduce the build
+locally from the repository root:
 
 ```sh
-docker build --target smoke -f packages/glitter-boys-launcher/Dockerfile .
-docker build --target image -f packages/glitter-boys-launcher/Dockerfile -t docker.io/shepherdjerred/glitter-boys-launcher:<release-tag> .
-docker push docker.io/shepherdjerred/glitter-boys-launcher:<release-tag>
+docker build --target smoke packages/glitter-boys-launcher
 ```
 
-The repository stays private. Switch Docker to the scoped reader identity and
-verify the published immutable digest with
-`docker buildx imagetools inspect docker.io/shepherdjerred/glitter-boys-launcher@sha256:<published-digest>`.
-Record that digest in the version catalog before activation. Shared CI does not build or publish it.
-Its catalog entry declares `imagePublisher: "local"`; CI release handoffs preserve
-that source-owned pin and reject CI publication candidates for it. Omitted
-`imagePublisher` means CI publication. This ownership is separate from the
-catalog's `management` field, which controls Renovate updates.
-The homelab chart owns the tunnel, secret reference, private ServiceMonitor, alerts,
-and Grafana dashboard. Its checked-in release stage is `prepared`, which renders
-only an inactive chart marker and creates no ArgoCD Application or workload.
-Activation requires a real published image digest and a granted
-`glitter-boys-launcher-credentials` 1Password item. Change those through the
-normal homelab GitOps release path; never activate the unpublished digest marker.
+The homelab chart owns the tunnel, secret reference, private ServiceMonitor,
+alerts, and Grafana dashboard. Its checked-in release stage is `active`, and
+Delivery owns the `glitter-boys-launcher` Application through the
+`glitter-boys-launcher/prod` environment, which deploys each verified image
+automatically. The `prepared` stage renders only an inactive chart marker and
+no Application. The workload reads `BUGSINK_DSN` from the
+`glitter-boys-launcher-credentials` 1Password item.
 
 ## Download speed limit
 
@@ -314,9 +308,10 @@ provisioning script refuses to overwrite an existing public trust configuration.
 
 ### One-time Windows setup
 
-Use a normal Windows x64 PowerShell 7 terminal. Glitter Boys builds, tests,
-signing, site deployment, and telemetry image publication are manual operations.
-The site and launcher packages are excluded from shared CI. There is no unattended
+Use a normal Windows x64 PowerShell 7 terminal. Glitter Boys launcher builds,
+tests, signing, and site deployment are manual operations; only the Linux
+telemetry service image is built by CI.
+The site and launcher packages are excluded from shared CI verification. There is no unattended
 Windows signing runner. Homelab infrastructure still follows its GitOps release path.
 
 1. Install Git, mise, Azure CLI, 1Password CLI with desktop integration, PowerShell

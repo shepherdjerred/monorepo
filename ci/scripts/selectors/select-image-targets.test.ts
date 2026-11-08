@@ -99,6 +99,19 @@ test.each(["json", "ts"])(
   },
 );
 
+test("rebuilds infra for the launcher service's Cargo workspace only", async () => {
+  for (const path of [
+    "packages/glitter-boys-launcher/Cargo.lock",
+    "packages/glitter-boys-launcher/Dockerfile",
+    "packages/glitter-boys-launcher/crates/launcher-service/src/main.rs",
+  ]) {
+    expect(await select([path])).toEqual(["infra"]);
+  }
+  expect(
+    await select(["packages/glitter-boys-launcher/published-release.json"]),
+  ).toEqual([]);
+});
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([

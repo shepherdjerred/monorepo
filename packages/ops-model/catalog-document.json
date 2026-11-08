@@ -1001,13 +1001,18 @@
       "ops": {
         "kind": "product",
         "namespaces": ["glitter-boys-launcher"],
-        "grafanaDashboards": ["glitter-boys-launcher"]
+        "grafanaDashboards": ["glitter-boys-launcher"],
+        "argoApps": ["glitter-boys-launcher"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "glitter-boys-launcher": "inactive"
-        },
-        "charts": ["glitter-boys-launcher"]
+        "charts": ["glitter-boys-launcher"],
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/glitter-boys-launcher",
+            "argoApp": "glitter-boys-launcher"
+          }
+        ]
       }
     },
     {
@@ -3086,6 +3091,14 @@
       "configurationRevisionId": "trmnl-dashboard/prod/1"
     },
     {
+      "id": "glitter-boys-launcher/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "glitter-boys-launcher/prod/2",
+      "configurationRevisionId": "glitter-boys-launcher/prod/1"
+    },
+    {
       "id": "ops-dashboard/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -4083,6 +4096,31 @@
     },
     {
       "dependent": "gickup/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys-launcher/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys-launcher/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys-launcher/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys-launcher/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys-launcher/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },
@@ -5243,6 +5281,11 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "glitter-boys-launcher/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "home/prod",
       "rule": "any-accepted"
     },
@@ -5487,7 +5530,8 @@
       "scout-beta": "scout-for-lol/beta",
       "scout-prod": "scout-for-lol/prod",
       "storm-forum": "storm-forum/prod",
-      "minecraft-tsmc": "minecraft/tsmc"
+      "minecraft-tsmc": "minecraft/tsmc",
+      "glitter-boys-launcher": "glitter-boys-launcher/prod"
     },
     "platformDeliveryDelegated": true
   }

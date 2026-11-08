@@ -228,6 +228,7 @@ test("resolves Bake with the production image environment", () => {
 test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).toContain("caddy-s3proxy");
   expect(expandTargets(["infra"])).toContain("the-storm-server");
+  expect(expandTargets(["infra"])).toContain("glitter-boys-launcher");
   expect(expandTargets(["infra"])).not.toContain("infra");
 });
 

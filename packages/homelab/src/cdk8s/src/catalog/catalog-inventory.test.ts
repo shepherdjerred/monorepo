@@ -200,12 +200,8 @@ describe("catalog revisions", () => {
       ...ORDINARY_DELIVERY_ENVIRONMENTS,
       ...SPECIALIZED_DELIVERY_ENVIRONMENTS,
     })) {
-      // Neither renders an Application today: the launcher's chart is
-      // prepared and the forum's beta chart is inactive.
-      if (
-        application === "glitter-boys-launcher" ||
-        application === "storm-forum-beta"
-      ) {
+      // The forum's beta chart is inactive and renders no Application.
+      if (application === "storm-forum-beta") {
         expect(owners.has(application), application).toBe(false);
         continue;
       }

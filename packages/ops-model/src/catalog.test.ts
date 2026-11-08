@@ -268,18 +268,17 @@ describe("ServiceIndex", () => {
     expect(index.byId("obsidian-headless")?.deploy).toEqual([]);
   });
 
-  test("owns the prepared launcher inventory without an active Application", () => {
+  test("delegates the active launcher service Application to Delivery", () => {
     const launcher = index.requireById("glitter-boys-launcher");
     expect(index.byNamespace("glitter-boys-launcher")).toBe(launcher);
-    expect(index.byArgoApp("glitter-boys-launcher")).toBeUndefined();
-    expect(launcher.argoApps).toEqual([]);
-    expect(launcher.rootReleaseExclusions).toEqual({
-      "glitter-boys-launcher": "inactive",
-    });
-    expect(SERVICE_CATALOG.deliveryDelegations).not.toHaveProperty(
+    expect(index.byArgoApp("glitter-boys-launcher")).toBe(launcher);
+    expect(launcher.argoApps).toEqual(["glitter-boys-launcher"]);
+    expect(launcher.rootReleaseExclusions).toBeUndefined();
+    expect(SERVICE_CATALOG.deliveryDelegations).toHaveProperty(
       "glitter-boys-launcher",
+      "glitter-boys-launcher/prod",
     );
-    expect(launcher.deploy).toEqual([]);
+    expect(launcher.deploy).toHaveLength(1);
   });
 
   test("unknown names resolve to undefined, and require throws", () => {
