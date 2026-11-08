@@ -312,6 +312,74 @@ describe("PostgreSQL delivery invariants 1.2", () => {
     expect(overview.environments[0]?.acceptedVersionSetRevisionId).toBeNull();
   });
 });
+/** The automatic request, failed after recording one settled stage. */
+async function failedAutomatically(stage: { key: string; status: "failed" }) {
+  const automatic = await context.delivery.reconcile(
+    [context.fixture.environment.id],
+    testExecutor,
+  );
+  const selected = automatic.deployments[0];
+  if (selected === undefined) throw new Error("Automatic request missing");
+  await context.delivery.claim(selected, testExecutor);
+  await context.delivery.stage(
+    selected,
+    {
+      ...stage,
+      operationId: crypto.randomUUID(),
+      message: `${stage.key}: failed`,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(
+    selected,
+    {
+      status: "failed",
+      message: `${stage.key} failed`,
+      evidence: [],
+      recoveryRequired: false,
+    },
+    testExecutor,
+  );
+}
+async function newerRevision() {
+  const changed = await context.delivery.publish(
+    testPublication(2),
+    testPublisher,
+    { repositoryId: 1, pipelineNumber: 2 },
+  );
+  await context.delivery.qualify(changed.buildId, "verified", testExecutor);
+}
+
+describe("automatic selection after a failure without effect (D2)", () => {
+  test.each(["worker-image-provenance", "step-apply-safety"])(
+    "a failure settled in %s changed nothing and blocks only its own revision (D2)",
+    async (key) => {
+      await failedAutomatically({ key, status: "failed" });
+      const same = await context.delivery.reconcile(
+        [context.fixture.environment.id],
+        testExecutor,
+      );
+      expect(same.deployments).toEqual([]);
+      await newerRevision();
+      const next = await context.delivery.reconcile(
+        [context.fixture.environment.id],
+        testExecutor,
+      );
+      expect(next.deployments).toHaveLength(1);
+    },
+  );
+  test("a failure in an effect stage still blocks every automatic successor (D2)", async () => {
+    await failedAutomatically({ key: "reconcile", status: "failed" });
+    await newerRevision();
+    const next = await context.delivery.reconcile(
+      [context.fixture.environment.id],
+      testExecutor,
+    );
+    expect(next.deployments).toEqual([]);
+  });
+});
+
 describe("automatic composition compares digests and admits sibling CI builds", () => {
   test("a new artifact whose bytes equal the base creates no set revision; changed bytes do", async () => {
     const { delivery, cluster } = context;
