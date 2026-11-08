@@ -38,6 +38,62 @@ final class BankPaperTest {
   }
 
   @Test
+  void aLegacyBankUpgradesWhenItsChunkArrivesAfterStartup() {
+    var alice = harness.playerAt("Alice", 32, 0);
+    harness.world.loadChunk(2, 0);
+    var bank = chest(32);
+    write(alice, signOn(bank), "[Bank]", "", "", "");
+    var shelf = chest(35);
+    write(alice, signOn(shelf), "[Shelf]", "stone", "", "");
+    var state = (org.bukkit.block.TileState) bank.getState();
+    var key = new org.bukkit.NamespacedKey("thestorm", "bank_definition");
+    state.getPersistentDataContainer().remove(key);
+    state.update();
+    harness.world.unloadChunk(2, 0);
+    harness.world.loadChunk(2, 0);
+    assertThat(((org.bukkit.block.TileState) bank.getState()).getPersistentDataContainer().has(key))
+        .isFalse();
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(
+            new org.bukkit.event.world.ChunkLoadEvent(harness.world.getChunkAt(2, 0), false));
+    assertThat(new WorldBanks(harness.server, harness.epochs).read(bank)).isPresent();
+    var incoming = ((Container) bank.getState()).getInventory();
+    incoming.addItem(ItemStack.of(Material.STONE, 10));
+    alice.openInventory(incoming);
+    alice.closeInventory();
+    assertThat(count(bank, Material.STONE)).isZero();
+    assertThat(count(shelf, Material.STONE)).isEqualTo(10);
+  }
+
+  @Test
+  void signlessLegacyBanksAndRevokedGrantsUseWorldPolicy() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var bob = harness.playerAt("Bob", 0, 0);
+    var bank = chest(0);
+    var spot = BankBlocks.spot(bank);
+    var stored =
+        new com.shepherdjerred.thestorm.qol.domain.bank.StoredBank(
+            "legacy",
+            alice.getUniqueId(),
+            spot,
+            spot,
+            java.util.Map.of(
+                bob.getUniqueId(), com.shepherdjerred.thestorm.qol.domain.bank.BankRole.MANAGE),
+            List.of());
+    var world = new WorldBanks(harness.server, harness.epochs);
+    assertThat(world.hasMasterSign(stored)).isTrue();
+    world.write(world.legacy(stored).orElseThrow());
+    assertThat(world.read(bank).orElseThrow().grants()).containsKey(bob.getUniqueId());
+    harness.epochs.retire(bob.getUniqueId()).join();
+    assertThat(world.read(bank).orElseThrow().grants()).isEmpty();
+    harness.epochs.retire(alice.getUniqueId()).join();
+    assertThat(world.read(bank)).isEmpty();
+    assertThat(world.legacy(stored)).isEmpty();
+  }
+
+  @Test
   void aBankShelvesWhatItsShelfAccepts() {
     var alice = harness.playerAt("Alice", 0, 0);
     var bank = chest(0);
@@ -172,7 +228,7 @@ final class BankPaperTest {
     assertThat(write(alice, signOn(bank), "[Bank]", "", "", "").isCancelled()).isTrue();
 
     assertThat(requireNonNull(harness.paper, "qol").banks().all()).isEmpty();
-    assertThat(new WorldBanks(harness.server).read(bank)).isEmpty();
+    assertThat(new WorldBanks(harness.server, harness.epochs).read(bank)).isEmpty();
     assertThat(
             new com.shepherdjerred.thestorm.qol.adapter.db.JooqBankStore(harness.database)
                 .loadAll()

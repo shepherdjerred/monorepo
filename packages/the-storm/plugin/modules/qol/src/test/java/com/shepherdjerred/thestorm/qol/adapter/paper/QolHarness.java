@@ -146,6 +146,8 @@ final class QolHarness implements AutoCloseable {
   final WorldMock world;
   final StormDatabase database;
   final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
+  final com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs =
+      com.shepherdjerred.thestorm.core.reset.AccountEpochs.inMemory();
 
   /** Worlds the test seals; graves must ignore deaths there. */
   final SealedWorlds sealed = new SealedWorlds();
@@ -208,6 +210,9 @@ final class QolHarness implements AutoCloseable {
     enabling =
         plugin -> {
           var services = new Services();
+          services.provide(
+              com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class,
+              new com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry(harness.epochs));
           // Chunk discovery is exercised on Paper; MockBukkit cannot enumerate block entities.
           services.provide(
               com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,

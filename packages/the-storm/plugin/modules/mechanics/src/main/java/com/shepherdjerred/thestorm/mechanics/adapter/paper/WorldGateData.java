@@ -28,6 +28,7 @@ public final class WorldGateData {
   private static final NamespacedKey REMOVED = new NamespacedKey("thestorm", "stargate_removed");
   private static final JsonMapper JSON = JsonMapper.builder().build();
   private final Server server;
+  private final com.shepherdjerred.thestorm.core.world.WorldAccountEpochs accounts;
 
   enum Policy {
     PUBLIC,
@@ -50,7 +51,12 @@ public final class WorldGateData {
   record Stored(int version, Identity gate, String networkName, Policy policy) {}
 
   public WorldGateData(Server server) {
+    this(server, com.shepherdjerred.thestorm.core.reset.AccountEpochs.inMemory());
+  }
+
+  WorldGateData(Server server, com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs) {
     this.server = server;
+    accounts = new com.shepherdjerred.thestorm.core.world.WorldAccountEpochs(epochs, "stargate");
   }
 
   static boolean removed(Sign sign) {
@@ -71,6 +77,12 @@ public final class WorldGateData {
             || sign.getPersistentDataContainer().has(REMOVED));
   }
 
+  boolean hasDefinition(Block block) {
+    return block.getState(false) instanceof Sign sign
+        && sign.getPersistentDataContainer().has(DEFINITION)
+        && !sign.getPersistentDataContainer().has(REMOVED);
+  }
+
   public void write(Stargate gate, StargateNetwork network) {
     if (!gate.networkId().equals(network.id()))
       throw new IllegalArgumentException("gate network differs");
@@ -83,6 +95,10 @@ public final class WorldGateData {
           case NetworkAccess.Private _ -> Policy.PRIVATE;
           case NetworkAccess.Town _ -> Policy.TOWN;
         };
+    var identities = new java.util.HashSet<UUID>();
+    identities.add(gate.ownerId());
+    if (network.access() instanceof NetworkAccess.Private(var owner, _)) identities.add(owner);
+    accounts.stamp(sign.getPersistentDataContainer(), identities);
     sign.getPersistentDataContainer()
         .set(
             DEFINITION,
@@ -134,6 +150,8 @@ public final class WorldGateData {
               throw new IllegalStateException("invalid world gate: " + problems);
         };
     if (definition.version() != 1) throw new IllegalStateException("unknown world gate version");
+    if (!accounts.permits(data, definition.gate().ownerId()) || !accounts.permitsAll(data))
+      return Optional.empty();
     return fromWorld(block, definition);
   }
 

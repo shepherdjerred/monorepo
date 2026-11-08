@@ -21,6 +21,8 @@ import org.bukkit.plugin.Plugin;
 
 /** Only non-visible identity and exact item components live in sign metadata. */
 final class WorldShopData {
+  private final com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs;
+  private final com.shepherdjerred.thestorm.core.world.WorldAccountEpochs accounts;
   private final NamespacedKey id;
   private final NamespacedKey ownerKind;
   private final NamespacedKey ownerId;
@@ -32,7 +34,9 @@ final class WorldShopData {
   private final ShopSignParser parser = new ShopSignParser(999_999_999, "Admin Shop");
   private final ItemTemplates templates = new ItemTemplates();
 
-  WorldShopData(Plugin plugin) {
+  WorldShopData(Plugin plugin, com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs) {
+    this.epochs = epochs;
+    accounts = new com.shepherdjerred.thestorm.core.world.WorldAccountEpochs(epochs, "shop");
     id = new NamespacedKey(plugin, "shop_id");
     ownerKind = new NamespacedKey(plugin, "shop_owner_kind");
     ownerId = new NamespacedKey(plugin, "shop_owner_id");
@@ -47,9 +51,21 @@ final class WorldShopData {
     return world.getPersistentDataContainer().getOrDefault(sequence, PersistentDataType.LONG, 0L);
   }
 
+  boolean legacyOwner(ShopOwner owner) {
+    return !(owner instanceof ShopOwner.Player(var player, _)) || epochs.current(player) == 0;
+  }
+
+  boolean revoked(Sign sign) {
+    var data = sign.getPersistentDataContainer();
+    return data.has(ownerKind)
+        && (!accounts.permitsAll(data)
+            || (require(sign, ownerKind).equals("player")
+                && !accounts.permits(data, UUID.fromString(require(sign, ownerId)))));
+  }
+
   Optional<SignShop> read(Sign sign, SignLines lines, Optional<BlockPos> physicalContainer) {
     var data = sign.getPersistentDataContainer();
-    if (!data.has(ownerKind)) return Optional.empty();
+    if (!data.has(ownerKind) || revoked(sign)) return Optional.empty();
     var name = require(sign, ownerName);
     if (!lines.owner().equals(name)) return Optional.empty();
     var owner = owner(sign, name);
@@ -130,6 +146,9 @@ final class WorldShopData {
       data.remove(remoteContainer);
     }
     data.remove(ownerId);
+    accounts.stamp(
+        data,
+        shop.owner() instanceof ShopOwner.Player(var player, _) ? List.of(player) : List.of());
     switch (shop.owner()) {
       case ShopOwner.Player(var uuid, _) -> {
         data.set(ownerKind, PersistentDataType.STRING, "player");

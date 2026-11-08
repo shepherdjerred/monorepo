@@ -70,85 +70,214 @@ public final class WorldGatePaperProof {
   }
 
   private CompletableFuture<Void> run() {
-    return new WorldStargateStore(context, index)
-        .load()
+    return lateChunkUpgrade(false)
+        .thenComposeAsync(ignored -> lateChunkUpgrade(true), context.scheduler().mainThread())
         .thenComposeAsync(
-            first -> {
-              require(
-                  first.gates().equals(List.of(gate)),
-                  "legacy database gate upgraded to world metadata");
-              index.empty();
-              return new WorldStargateStore(context, index).load();
-            },
+            ignored ->
+                new WorldStargateStore(context, index)
+                    .load()
+                    .thenComposeAsync(
+                        first -> {
+                          require(
+                              first.gates().equals(List.of(gate)),
+                              "legacy database gate upgraded to world metadata");
+                          index.empty();
+                          return new WorldStargateStore(context, index).load();
+                        },
+                        context.scheduler().mainThread())
+                    .thenComposeAsync(
+                        rebuilt -> {
+                          require(
+                              rebuilt.gates().equals(List.of(gate)),
+                              "owner and gate survived deleting the index");
+                          require(
+                              rebuilt.networks().equals(List.of(network)),
+                              "public network reconstructed from world");
+                          var sign = (Sign) signBlock.getState();
+                          sign.getSide(Side.FRONT).line(0, Component.text("-Renamed-"));
+                          require(sign.update(false, false), "edit native sign");
+                          return new WorldStargateStore(context, index).load();
+                        },
+                        context.scheduler().mainThread())
+                    .thenComposeAsync(
+                        renamed -> {
+                          var current = renamed.gates().getFirst();
+                          require(
+                              current.name().equals("Renamed")
+                                  && current.ownerId().equals(gate.ownerId()),
+                              "world name overrides stale index");
+                          new WorldGateData(context.plugin().getServer()).write(gate, network);
+                          index.snapshot =
+                              new StargateStore.Snapshot(List.of(network), List.of(gate));
+                          var store = new WorldStargateStore(context, index);
+                          return store
+                              .load()
+                              .thenComposeAsync(
+                                  _ -> store.deleteGate(gate.id()),
+                                  context.scheduler().mainThread());
+                        },
+                        context.scheduler().mainThread())
+                    .thenComposeAsync(
+                        _ -> {
+                          // Simulate a failed deletion that left the old cache row behind.
+                          index.snapshot =
+                              new StargateStore.Snapshot(List.of(network), List.of(gate));
+                          return new WorldStargateStore(context, index).load();
+                        },
+                        context.scheduler().mainThread())
+                    .thenComposeAsync(
+                        removed -> {
+                          require(
+                              removed.gates().isEmpty(),
+                              "world deletion overrides stale cache row");
+                          var privateNetwork =
+                              new StargateNetwork(
+                                  network.id(),
+                                  network.name(),
+                                  new NetworkAccess.Private(gate.ownerId(), Set.of()));
+                          new WorldGateData(context.plugin().getServer())
+                              .write(gate, privateNetwork);
+                          index.empty();
+                          return new WorldStargateStore(context, index).load();
+                        },
+                        context.scheduler().mainThread())
+                    .thenComposeAsync(
+                        privateMissing -> {
+                          require(
+                              privateMissing.gates().isEmpty()
+                                  && privateMissing.networks().isEmpty(),
+                              "missing private membership never becomes public");
+                          new WorldGateData(context.plugin().getServer()).write(gate, network);
+                          index.empty();
+                          index.failWrites = true;
+                          return new WorldStargateStore(context, index).load();
+                        },
+                        context.scheduler().mainThread())
+                    .thenComposeAsync(
+                        failedIndex -> {
+                          require(
+                              failedIndex.gates().equals(List.of(gate)),
+                              "failed cache write retains world definition");
+                          return resetUnloadedDefinition();
+                        },
+                        context.scheduler().mainThread()),
             context.scheduler().mainThread())
+        .thenRunAsync(
+            () -> context.logger().info("WORLD_STARGATE_PAPER_PASS"),
+            context.scheduler().mainThread());
+  }
+
+  private CompletableFuture<Void> lateChunkUpgrade(boolean worldOnly) {
+    var world = signBlock.getWorld();
+    if (worldOnly) index.empty();
+    return unloadProofChunks()
         .thenComposeAsync(
-            rebuilt -> {
-              require(
-                  rebuilt.gates().equals(List.of(gate)),
-                  "owner and gate survived deleting the index");
-              require(
-                  rebuilt.networks().equals(List.of(network)),
-                  "public network reconstructed from world");
-              var sign = (Sign) signBlock.getState();
-              sign.getSide(Side.FRONT).line(0, Component.text("-Renamed-"));
-              require(sign.update(false, false), "edit native sign");
-              return new WorldStargateStore(context, index).load();
-            },
-            context.scheduler().mainThread())
-        .thenComposeAsync(
-            renamed -> {
-              var current = renamed.gates().getFirst();
-              require(
-                  current.name().equals("Renamed") && current.ownerId().equals(gate.ownerId()),
-                  "world name overrides stale index");
-              new WorldGateData(context.plugin().getServer()).write(gate, network);
-              index.snapshot = new StargateStore.Snapshot(List.of(network), List.of(gate));
+            ignored -> {
+              // A full force-load ticket also keeps its neighboring chunks resident. Load just
+              // the sign chunk with a transient read ticket to exercise the partial frame.
+              world.getChunkAt(43, 0);
               var store = new WorldStargateStore(context, index);
-              return store
-                  .load()
-                  .thenComposeAsync(
-                      _ -> store.deleteGate(gate.id()), context.scheduler().mainThread());
-            },
-            context.scheduler().mainThread())
-        .thenComposeAsync(
-            _ -> {
-              // Simulate a failed deletion that left the old cache row behind.
-              index.snapshot = new StargateStore.Snapshot(List.of(network), List.of(gate));
-              return new WorldStargateStore(context, index).load();
-            },
-            context.scheduler().mainThread())
-        .thenComposeAsync(
-            removed -> {
-              require(removed.gates().isEmpty(), "world deletion overrides stale cache row");
-              var privateNetwork =
-                  new StargateNetwork(
-                      network.id(),
-                      network.name(),
-                      new NetworkAccess.Private(gate.ownerId(), Set.of()));
-              new WorldGateData(context.plugin().getServer()).write(gate, privateNetwork);
-              index.empty();
-              return new WorldStargateStore(context, index).load();
-            },
-            context.scheduler().mainThread())
-        .thenComposeAsync(
-            privateMissing -> {
-              require(
-                  privateMissing.gates().isEmpty() && privateMissing.networks().isEmpty(),
-                  "missing private membership never becomes public");
-              new WorldGateData(context.plugin().getServer()).write(gate, network);
-              index.empty();
-              index.failWrites = true;
-              return new WorldStargateStore(context, index).load();
-            },
-            context.scheduler().mainThread())
-        .thenAcceptAsync(
-            failedIndex -> {
-              require(
-                  failedIndex.gates().equals(List.of(gate)),
-                  "failed cache write retains world definition");
-              context.logger().info("WORLD_STARGATE_PAPER_PASS");
+              var book =
+                  new com.shepherdjerred.thestorm.mechanics.app.StargateBook(
+                      store, context.scheduler().mainThread());
+              store.attach(book);
+              context
+                  .plugin()
+                  .getServer()
+                  .getPluginManager()
+                  .registerEvents(store, context.plugin());
+              return book.load()
+                  .thenRunAsync(
+                      () -> {
+                        require(
+                            !world.isChunkLoaded(44, 0),
+                            "startup did not force-load the frame neighbor");
+                        var chunk = world.getChunkAt(44, 0);
+                        chunk.setForceLoaded(true);
+                        context
+                            .plugin()
+                            .getServer()
+                            .getPluginManager()
+                            .callEvent(new org.bukkit.event.world.ChunkLoadEvent(chunk, false));
+                        require(
+                            ((Sign) signBlock.getState(false))
+                                .getPersistentDataContainer()
+                                .has(
+                                    new org.bukkit.NamespacedKey(
+                                        "thestorm", "stargate_definition")),
+                            "late frame chunk upgraded its legacy gate sign");
+                        require(
+                            book.registry().gate(gate.id()).filter(gate::equals).isPresent(),
+                            "late frame chunk publishes the gate with or without its index");
+                      },
+                      context.scheduler().mainThread());
             },
             context.scheduler().mainThread());
+  }
+
+  private CompletableFuture<Void> resetUnloadedDefinition() {
+    var world = signBlock.getWorld();
+    index.empty();
+    var epochs =
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+            .epochs();
+    return unloadProofChunks()
+        .thenCompose(ignored -> epochs.retire(gate.ownerId()))
+        .thenComposeAsync(
+            ignored -> {
+              world.getChunkAt(43, 0).setForceLoaded(true);
+              world.getChunkAt(44, 0).setForceLoaded(true);
+              return new WorldStargateStore(context, index).load();
+            },
+            context.scheduler().mainThread())
+        .thenComposeAsync(
+            reset -> {
+              require(
+                  reset.gates().isEmpty(),
+                  "reset revokes an unloaded world gate absent from the index");
+              var fresh = new WorldStargateStore(context, index);
+              return fresh
+                  .createNetworkAndGate(network, gate)
+                  .thenComposeAsync(
+                      ignored -> new WorldStargateStore(context, index).load(),
+                      context.scheduler().mainThread())
+                  .thenAcceptAsync(
+                      authored ->
+                          require(
+                              authored.gates().equals(List.of(gate)),
+                              "explicit new authoring after reset is permitted"),
+                      context.scheduler().mainThread());
+            },
+            context.scheduler().mainThread());
+  }
+
+  private CompletableFuture<Void> unloadProofChunks() {
+    var world = signBlock.getWorld();
+    world.getChunkAt(43, 0).setForceLoaded(false);
+    world.getChunkAt(44, 0).setForceLoaded(false);
+    // unloadChunk() itself reads the native chunk and refreshes a temporary ticket.
+    // Request once, then observe residency without refreshing that ticket each tick.
+    world.unloadChunkRequest(43, 0);
+    world.unloadChunkRequest(44, 0);
+    var completed = new CompletableFuture<Void>();
+    unloadAttempt(completed, 0);
+    return completed;
+  }
+
+  private void unloadAttempt(CompletableFuture<Void> completed, int attempt) {
+    var world = signBlock.getWorld();
+    if (!world.isChunkLoaded(43, 0) && !world.isChunkLoaded(44, 0)) {
+      completed.complete(null);
+    } else if (attempt >= 400) {
+      completed.completeExceptionally(
+          new IllegalStateException("Proof chunks retained a native load ticket"));
+    } else
+      context
+          .scheduler()
+          .runOnMainThreadLater(
+              java.time.Duration.ofMillis(50), () -> unloadAttempt(completed, attempt + 1));
   }
 
   private static void require(boolean value, String assertion) {

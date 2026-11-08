@@ -75,6 +75,22 @@ final class JooqStoresTest {
   }
 
   @Test
+  void aFailedArchiveImportUnblocksNormalHomeReadsWritesAndDeletes() {
+    new JooqHomeStore(database).set(ALICE, home("base", 9), 3).join();
+    var importAttempt = new java.util.concurrent.CompletableFuture<Void>();
+    var store = new JooqHomeStore(database, importAttempt);
+    var reading = store.homes(ALICE);
+    var writing = store.set(BOB, home("new", 12), 3);
+    assertThat(reading).isNotDone();
+    assertThat(writing).isNotDone();
+    importAttempt.completeExceptionally(new IllegalStateException("unreadable player respawn"));
+    assertThat(reading.join()).containsExactly(home("base", 9));
+    assertThat(writing.join().isOk()).isTrue();
+    assertThat(store.homes(BOB).join()).containsExactly(home("new", 12));
+    assertThat(store.delete(ALICE, new PlaceName("base")).join()).isTrue();
+  }
+
+  @Test
   void migratingTwiceIsHarmless() {
     database.migrate("essentials", JooqStoresTest.class.getClassLoader());
   }

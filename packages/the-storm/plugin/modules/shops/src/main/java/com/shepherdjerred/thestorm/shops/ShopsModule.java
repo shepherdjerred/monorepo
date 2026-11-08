@@ -79,14 +79,27 @@ public final class ShopsModule implements StormModule {
         .services()
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
         .register(
-            id(), player -> reset.reset(player).thenRun(() -> installed.forget().accept(player)));
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenRunAsync(
+                        () -> installed.forget().accept(player), context.scheduler().mainThread()));
     this.drain = installed.drain();
     this.logger = context.logger();
     var shops = store.loadShops();
     var lastId = store.lastShopId();
     var pending = store.pendingHistoricalShops();
     var _ =
-        CompletableFuture.allOf(shops, lastId, pending)
+        CompletableFuture.allOf(
+                shops,
+                lastId,
+                pending,
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                    .epochs()
+                    .loaded())
             .thenApply(ignored -> new Loaded(shops.join(), lastId.join(), pending.join()))
             .whenCompleteAsync(
                 (loaded, failure) -> {

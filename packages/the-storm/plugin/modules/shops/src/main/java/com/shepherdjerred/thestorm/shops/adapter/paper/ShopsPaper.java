@@ -51,7 +51,14 @@ public final class ShopsPaper {
       ModuleContext context, ShopsConfig config, HistoricalState state) {
     var plugin = context.plugin();
     var blocks =
-        new ShopBlocks(plugin, state.registry(), containers(config.chestShops().containers()));
+        new ShopBlocks(
+            plugin,
+            state.registry(),
+            containers(config.chestShops().containers()),
+            context
+                .services()
+                .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                .epochs());
     var importer =
         new HistoricalShops(
             new HistoricalShops.Services(
@@ -155,7 +162,14 @@ public final class ShopsPaper {
             context.logger());
     var settings = config.chestShops();
     var notices = new OwnerNoticesListener(server, state.store(), replies, settings.summaryLines());
-    var blocks = new ShopBlocks(plugin, state.registry(), containers(settings.containers()));
+    var blocks =
+        new ShopBlocks(
+            plugin,
+            state.registry(),
+            containers(settings.containers()),
+            services
+                .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                .epochs());
     services.provide(
         com.shepherdjerred.thestorm.core.protection.ReservedContainers.class,
         new ShopReservations(state.registry()));

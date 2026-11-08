@@ -58,6 +58,7 @@ abstract class ShopsFixture {
             new PluginDescriptionFile("TheStorm", "test", ShopsTestPlugin.class.getName()));
     // Ordinary shop tests do not operate on the production historical catalog.
     world = server.addSimpleWorld("shop-test-world");
+    world.loadChunk(0, 0);
     for (var attempt = 0; attempt < 400 && !plugin.shopsReady(); attempt++) {
       server.getScheduler().performOneTick();
       Thread.sleep(5);
@@ -90,6 +91,7 @@ abstract class ShopsFixture {
   }
 
   Block container(int x, Material type) {
+    world.loadChunk(x >> 4, 0);
     var block = world.getBlockAt(x, 64, 0);
     block.setType(type);
     return block;
@@ -110,6 +112,7 @@ abstract class ShopsFixture {
   }
 
   SignChangeEvent write(Player player, Block sign, String... lines) {
+    world.loadChunk(sign.getX() >> 4, sign.getZ() >> 4);
     var components = new ArrayList<Component>();
     for (var line : lines) {
       components.add(Component.text(line));

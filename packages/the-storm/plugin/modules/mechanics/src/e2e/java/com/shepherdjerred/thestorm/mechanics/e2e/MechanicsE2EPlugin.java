@@ -253,11 +253,17 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
 
     @Override
     public java.util.Optional<UUID> automationActor(Location location) {
+      if (location.getBlockX() == 532) return java.util.Optional.of(new UUID(0, 532));
+      if (location.getBlockX() == 536) return java.util.Optional.of(new UUID(0, 536));
       return java.util.Optional.of(Protection.SERVER_AUTOMATION);
     }
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
+      if (location.getBlockX() == 532
+          && action == ProtectedAction.USE_REDSTONE
+          && !player.equals(new UUID(0, 532)))
+        return new Decision.Denied(Component.text("Private wireless receiver fixture"));
       if (location.getBlockX() >= 606
           && location.getBlockX() <= 610
           && location.getBlockY() >= -37

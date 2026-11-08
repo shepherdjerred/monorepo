@@ -61,7 +61,8 @@ final class IntegratedCircuits implements Listener {
   private final Map<Key, Block> circuits = new HashMap<>();
   private final Set<Key> pending = new HashSet<>();
   private final Map<Key, String> problems = new HashMap<>();
-  private final WirelessBands wireless = new WirelessBands();
+  private final WirelessBands<Key> wireless = new WirelessBands<>();
+  private final Map<Key, UUID> transmitters = new HashMap<>();
   private final FarmCircuits farms;
 
   IntegratedCircuits(ModuleContext context, Kit kit, Protection protection) {
@@ -105,6 +106,8 @@ final class IntegratedCircuits implements Listener {
           circuits.remove(key);
           pending.remove(key);
           problems.remove(key);
+          wireless.forget(key);
+          transmitters.remove(key);
         });
   }
 
@@ -125,21 +128,24 @@ final class IntegratedCircuits implements Listener {
     var source = event.getBlock();
     if (kit.sealed(source.getWorld()) || (event.getOldCurrent() > 0) == (event.getNewCurrent() > 0))
       return;
-    for (var block : List.copyOf(circuits.values())) {
-      if (block.getWorld().equals(source.getWorld())
-          && Math.abs(block.getX() - source.getX()) <= 2
-          && Math.abs(block.getY() - source.getY()) <= 1
-          && Math.abs(block.getZ() - source.getZ()) <= 2) {
-        var key = key(block);
-        if (pending.add(key))
-          kit.scheduler()
-              .runOnMainThread(
-                  () -> {
-                    pending.remove(key);
-                    evaluate(block, false);
-                  });
-      }
-    }
+    for (var dx = -2; dx <= 2; dx++)
+      for (var dy = -1; dy <= 1; dy++)
+        for (var dz = -2; dz <= 2; dz++) {
+          var key =
+              new Key(
+                  source.getWorld().getUID(),
+                  source.getX() + dx,
+                  source.getY() + dy,
+                  source.getZ() + dz);
+          var block = circuits.get(key);
+          if (block != null && pending.add(key))
+            kit.scheduler()
+                .runOnMainThread(
+                    () -> {
+                      pending.remove(key);
+                      evaluate(block, false);
+                    });
+        }
   }
 
   private void remember(Block block) {
@@ -180,6 +186,8 @@ final class IntegratedCircuits implements Listener {
     if (found.isEmpty()) {
       circuits.remove(key(block));
       problems.remove(key(block));
+      wireless.forget(key(block));
+      transmitters.remove(key(block));
       return;
     }
     var circuit = found.orElseThrow();
@@ -196,7 +204,7 @@ final class IntegratedCircuits implements Listener {
     }
     if (circuit.tag().kind().farming())
       runFarm(circuit, owner.orElse(Protection.SERVER_AUTOMATION), poll);
-    else runLogic(circuit, poll);
+    else runLogic(circuit, owner.orElse(Protection.SERVER_AUTOMATION), poll);
   }
 
   private boolean authorized(Circuit circuit, Optional<UUID> owner) {
@@ -238,7 +246,7 @@ final class IntegratedCircuits implements Listener {
     }
   }
 
-  private void runLogic(Circuit circuit, boolean poll) {
+  private void runLogic(Circuit circuit, UUID actor, boolean poll) {
     var lines = PaperGrid.frontLines(circuit.sign());
     var kind = circuit.tag().kind();
     if ((kind == CircuitTag.Kind.TRANSMITTER || kind == CircuitTag.Kind.RECEIVER)
@@ -252,31 +260,68 @@ final class IntegratedCircuits implements Listener {
       return;
     }
     // A transmitter still updates its wireless band without an output lever, as CraftBook did.
-    desired(
-            circuit,
-            poll,
-            powered(circuit.inputs().getFirst()),
-            output.map(Switch::isPowered).orElse(false))
+    desired(circuit, actor, poll, output.map(Switch::isPowered).orElse(false))
         .ifPresent(value -> setOutput(circuit, value));
     if (kind != CircuitTag.Kind.CLOCK) problems.remove(key(circuit.block()));
   }
 
-  private Optional<Boolean> desired(Circuit circuit, boolean poll, boolean input, boolean output) {
+  private Optional<Boolean> desired(Circuit circuit, UUID actor, boolean poll, boolean output) {
     var lines = PaperGrid.frontLines(circuit.sign());
+    var input = powered(circuit.inputs().getFirst());
     return switch (circuit.tag().kind()) {
       case INVERTER -> Optional.of(!input);
       case AND -> {
         var wires = circuit.inputs().stream().filter(IntegratedCircuits::wire).toList();
         yield Optional.of(!wires.isEmpty() && wires.stream().allMatch(IntegratedCircuits::powered));
       }
-      case TRANSMITTER -> Optional.of(wireless.transmit(band(lines), input));
+      case TRANSMITTER -> {
+        transmitters.put(key(circuit.block()), actor);
+        yield Optional.of(wireless.transmit(band(lines), key(circuit.block()), input));
+      }
       case RECEIVER ->
           poll
-              ? wireless.receiveSelfTriggered(band(lines))
-              : input ? wireless.receive(band(lines), false, true) : Optional.empty();
+              ? wireless.receiveSelfTriggered(band(lines), source -> mayTransmit(source, circuit))
+              : input
+                  ? wireless.receive(
+                      band(lines), false, true, source -> mayTransmit(source, circuit))
+                  : Optional.empty();
       case CLOCK -> clock(circuit, input, output);
       default -> throw new IllegalStateException("farm circuit was not dispatched");
     };
+  }
+
+  private boolean mayTransmit(Key source, Circuit receiver) {
+    var block = circuits.get(source);
+    var actor = transmitters.get(source);
+    if (block == null || actor == null) return false;
+    var found = site(block);
+    if (found.isEmpty()) return false;
+    var sender = found.orElseThrow();
+    var currentActor =
+        kit.signs()
+            .owner(sender.sign())
+            .or(() -> protection.automationActor(block.getLocation()))
+            .orElse(Protection.SERVER_AUTOMATION);
+    if (sender.tag().kind() != CircuitTag.Kind.TRANSMITTER
+        || !actor.equals(currentActor)
+        || !band(PaperGrid.frontLines(sender.sign()))
+            .equals(band(PaperGrid.frontLines(receiver.sign())))
+        || sender.inputs().stream().anyMatch(pin -> !PaperGrid.loaded(pin))
+        || !PaperGrid.loaded(sender.output())
+        || !authorized(sender, Optional.of(actor))) return false;
+    if (protection.sameLand(block.getLocation(), receiver.block().getLocation())
+        && protection.mayOperateServerHistoricalCircuit(block.getLocation())
+        && protection.mayOperateServerHistoricalCircuit(receiver.block().getLocation()))
+      return true;
+    var pins = new java.util.ArrayList<>(receiver.inputs());
+    pins.add(receiver.block());
+    pins.add(receiver.output());
+    return pins.stream()
+        .allMatch(
+            pin ->
+                protection
+                    .check(actor, ProtectedAction.USE_REDSTONE, pin.getLocation())
+                    .isAllowed());
   }
 
   private static Optional<Switch> outputLever(Circuit circuit) {

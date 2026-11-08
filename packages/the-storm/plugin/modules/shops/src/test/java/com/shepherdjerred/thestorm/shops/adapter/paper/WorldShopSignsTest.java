@@ -34,6 +34,42 @@ final class WorldShopSignsTest extends ShopsFixture {
   }
 
   @Test
+  void resetRevokesWorldDefinitionsEvenWhenTheShopIndexIsEmpty() throws Exception {
+    var owner = player("Alice", 1);
+    var sign = shop(owner, chest(0), "", "16", "B 10", "coal");
+    var resets =
+        plugin.services.require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class);
+    resets.stateless("core");
+    resets.complete(Set.of("shops"));
+    var resetting = resets.reset(owner.getUniqueId());
+    for (var attempt = 0; attempt < 400 && !resetting.isDone(); attempt++) {
+      tick(1);
+      Thread.sleep(5);
+    }
+    resetting.get(5, TimeUnit.SECONDS);
+    var epochs = resets.epochs();
+    var blocks =
+        new ShopBlocks(plugin, new ShopRegistry(List.of(), 0), Set.of(Material.CHEST), epochs);
+    assertThat(blocks.shopAtSign(sign)).isEmpty();
+    // Returning players may explicitly author a fresh shop in the new account generation.
+    var fresh = shop(owner, chest(4), "", "16", "B 10", "coal");
+    assertThat(blocks.shopAtSign(fresh)).isPresent();
+  }
+
+  @Test
+  void containerDiscoveryDoesNotLoadANeighboringChunk() {
+    var chest = chest(16);
+    var sign = world.getBlockAt(15, 64, 0);
+    sign.setBlockData(server.createBlockData("minecraft:oak_wall_sign[facing=west]"));
+    world.unloadChunk(1, 0);
+    assertThat(world.isChunkLoaded(1, 0)).isFalse();
+    var blocks = new ShopBlocks(plugin, new ShopRegistry(List.of(), 0), Set.of(Material.CHEST));
+    assertThat(blocks.connectedContainer(sign)).isEmpty();
+    assertThat(world.isChunkLoaded(1, 0)).isFalse();
+    assertThat(chest.getX()).isEqualTo(16);
+  }
+
+  @Test
   void deletingTheDatabaseIndexDoesNotDeleteTheWorldShop() throws Exception {
     var owner = player("Alice", 1);
     var sign = shop(owner, chest(0), "", "16", "B 10", "coal");

@@ -97,7 +97,12 @@ final class Banks implements Listener {
     this.config = gear.config();
     this.protection = gear.protection();
     this.services = gear.services();
-    this.worldBanks = new WorldBanks(runtime.server());
+    this.worldBanks =
+        new WorldBanks(
+            runtime.server(),
+            services
+                .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+                .epochs());
   }
 
   BankBook book() {
@@ -677,6 +682,7 @@ final class Banks implements Listener {
     }
 
     private void shelve(UUID actor, StoredBank bank, @Nullable Player tell) {
+      upgrade(bank);
       var current = block(bank.container()).flatMap(worldBanks::read);
       if (current.isEmpty()) return;
       bank = current.orElseThrow();
@@ -821,7 +827,7 @@ final class Banks implements Listener {
         }
         var distance = dx * dx + dy * dy + dz * dz;
         if (distance < bestDistance) {
-          best = bank;
+          best = book.get(bank.id()).orElseThrow();
           bestDistance = distance;
         }
       }
@@ -1149,6 +1155,11 @@ final class Banks implements Listener {
   }
 
   private boolean can(Player player, StoredBank bank, BankRole needed) {
+    upgrade(bank);
+    var current = block(bank.container()).flatMap(worldBanks::read);
+    if (current.isEmpty()) return false;
+    bank = current.orElseThrow();
+    book.put(bank);
     return BankAccess.allowed(
         new BankAccess.Query(
             player.getUniqueId(),
@@ -1200,12 +1211,7 @@ final class Banks implements Listener {
   void discoverLoaded() {
     // Upgrade existing banks once from their old index before treating world metadata as
     // authoritative.
-    for (var bank : book.all()) {
-      block(bank.container())
-          .filter(
-              container -> !worldBanks.hasDefinition(container) && worldBanks.hasMasterSign(bank))
-          .ifPresent(container -> worldBanks.write(bank));
-    }
+    for (var bank : book.all()) upgrade(bank);
     for (var world : runtime.server().getWorlds()) {
       for (var chunk : world.getLoadedChunks()) discover(chunk);
     }
@@ -1213,7 +1219,26 @@ final class Banks implements Listener {
 
   @EventHandler
   void onChunkLoad(org.bukkit.event.world.ChunkLoadEvent event) {
-    if (book.isLoaded()) discover(event.getChunk());
+    if (book.isLoaded()) {
+      // Either the master sign or its container can arrive last across a chunk boundary.
+      for (var bank : book.all()) {
+        if (inChunk(bank.container(), event.getChunk()) || inChunk(bank.sign(), event.getChunk()))
+          upgrade(bank);
+      }
+      discover(event.getChunk());
+    }
+  }
+
+  private static boolean inChunk(Spot spot, org.bukkit.Chunk chunk) {
+    return spot.world().equals(chunk.getWorld().getName())
+        && spot.x() >> 4 == chunk.getX()
+        && spot.z() >> 4 == chunk.getZ();
+  }
+
+  private void upgrade(StoredBank bank) {
+    block(bank.container())
+        .filter(container -> !worldBanks.hasDefinition(container) && worldBanks.hasMasterSign(bank))
+        .ifPresent(container -> worldBanks.legacy(bank).ifPresent(worldBanks::write));
   }
 
   private void discover(org.bukkit.Chunk chunk) {

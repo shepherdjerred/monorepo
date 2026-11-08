@@ -27,13 +27,30 @@ final class WorldBanks {
   private static final NamespacedKey KEY = new NamespacedKey("thestorm", "bank_definition");
   private static final JsonMapper JSON = JsonMapper.builder().build();
   private final Server server;
+  private final com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs;
+  private final com.shepherdjerred.thestorm.core.world.WorldAccountEpochs accounts;
 
   record VisibleShelf(String id, List<String> lines) {}
 
   record Definition(int version, StoredBank bank, List<VisibleShelf> visible) {}
 
-  WorldBanks(Server server) {
+  WorldBanks(Server server, com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs) {
     this.server = server;
+    this.epochs = epochs;
+    accounts = new com.shepherdjerred.thestorm.core.world.WorldAccountEpochs(epochs, "bank");
+  }
+
+  Optional<StoredBank> legacy(StoredBank bank) {
+    if (epochs.current(bank.owner()) != 0) return Optional.empty();
+    var grants =
+        bank.grants().entrySet().stream()
+            .filter(entry -> epochs.current(entry.getKey()) == 0)
+            .collect(
+                java.util.stream.Collectors.toUnmodifiableMap(
+                    java.util.Map.Entry::getKey, java.util.Map.Entry::getValue));
+    return Optional.of(
+        new StoredBank(
+            bank.id(), bank.owner(), bank.sign(), bank.container(), grants, bank.shelves()));
   }
 
   boolean hasDefinition(Block container) {
@@ -42,6 +59,8 @@ final class WorldBanks {
   }
 
   boolean hasMasterSign(StoredBank bank) {
+    if (bank.sign().equals(bank.container()))
+      return block(bank.container()).filter(BankBlocks::isContainer).isPresent();
     return block(bank.sign())
         .filter(
             sign ->
@@ -56,6 +75,9 @@ final class WorldBanks {
             .orElseThrow(() -> new IllegalStateException("bank container is not loaded"));
     if (!(container.getState() instanceof TileState state))
       throw new IllegalStateException("bank has no container");
+    var identities = new java.util.HashSet<>(bank.grants().keySet());
+    identities.add(bank.owner());
+    accounts.stamp(state.getPersistentDataContainer(), identities);
     var visible = new ArrayList<VisibleShelf>();
     for (var shelf : bank.shelves()) {
       block(shelf.sign())
@@ -93,6 +115,14 @@ final class WorldBanks {
         };
     if (definition.version() != 1) throw new IllegalStateException("unknown world bank version");
     var bank = definition.bank();
+    var data = state.getPersistentDataContainer();
+    if (!accounts.permits(data, bank.owner())) return Optional.empty();
+    var grants =
+        bank.grants().entrySet().stream()
+            .filter(entry -> accounts.permits(data, entry.getKey()))
+            .collect(
+                java.util.stream.Collectors.toUnmodifiableMap(
+                    java.util.Map.Entry::getKey, java.util.Map.Entry::getValue));
     var actual = BankBlocks.spot(container);
     var origin = bank.container();
     var master = move(bank.sign(), origin, actual);
@@ -112,7 +142,7 @@ final class WorldBanks {
       locatedShelf(shelf, definition, actual).ifPresent(shelves::add);
     return Optional.of(
         new StoredBank(
-            id, bank.owner(), move(bank.sign(), origin, actual), actual, bank.grants(), shelves));
+            id, bank.owner(), move(bank.sign(), origin, actual), actual, grants, shelves));
   }
 
   private Optional<StoredShelf> locatedShelf(

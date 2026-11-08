@@ -131,7 +131,8 @@ public final class EssentialsModule implements StormModule {
                         scan -> {
                           if (!scan.problems().isEmpty())
                             throw new IllegalStateException(
-                                "Cannot restore homes with unreadable player respawns");
+                                "Cannot restore homes with unreadable player respawns: "
+                                    + scan.problems());
                           var nativeOwners =
                               scan.found().stream()
                                   .map(SavedRespawn.Found::player)

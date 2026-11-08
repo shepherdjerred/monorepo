@@ -231,7 +231,12 @@ public final class QolPaper {
                       opening.nearby(player);
                     }));
     runtime.onMain(
-        app.banks().loadAll(),
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+            .epochs()
+            .loaded()
+            .thenCompose(ignored -> app.banks().loadAll()),
         "load banks",
         loaded -> {
           if (!paper.stopped) {
@@ -262,6 +267,14 @@ public final class QolPaper {
 
   BankBook banks() {
     return banks;
+  }
+
+  /** Account epochs revoke unloaded definitions; remove their active cache entries as well. */
+  public void resetBanks(java.util.UUID player) {
+    for (var bank : java.util.List.copyOf(banks.all())) {
+      if (bank.owner().equals(player)) banks.remove(bank.id());
+      else banks.put(bank.withoutGrant(player));
+    }
   }
 
   SortBook sorts() {

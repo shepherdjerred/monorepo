@@ -134,6 +134,10 @@ final class WorldShopDiscovery implements Listener {
       ShopSignDraft draft,
       ShopOwner owner) {
     pending.remove(ShopBlocks.pos(block));
+    // Unstamped signs predate any full account reset. Only fresh, authorized authoring may
+    // create a definition in the account's new generation.
+    if (!blocks.legacyOwner(owner)) return;
+    if (!block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) return;
     if (!(block.getState(false) instanceof Sign sign) || !ShopBlocks.lines(sign).equals(expected))
       return;
     var container = blocks.connectedContainer(block);

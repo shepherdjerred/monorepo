@@ -36,6 +36,9 @@ final class CircuitFixtures {
     circuit(524, "[MC1111]s", "restoration", "");
     circuit(528, "[MC1421]", "5", "");
     set(528, Y, 2, "air");
+    circuit(532, "[MC1111]s", "protected-wireless", "");
+    circuit(536, "[MC1110]", "protected-wireless", "");
+    input(536);
 
     circuit(544, "[MC1234]S", "295", "0=0:1:2");
     chest(544, ItemStack.of(Material.WHEAT_SEEDS, 8));

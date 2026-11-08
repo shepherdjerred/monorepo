@@ -37,10 +37,16 @@ describe.skipIf(
     rcon,
   }) => {
     await rcon.command("stormworldsignproof");
-    await waitUntil("native Stargate recovery proof", async () => {
-      const logs = await serverLogs(server);
-      return logs.includes("WORLD_STARGATE_PAPER_PASS");
-    });
+    await waitUntil(
+      "native Stargate recovery proof",
+      async () => {
+        const logs = await serverLogs(server);
+        if (logs.includes("WORLD_STARGATE_PAPER_FAILED"))
+          throw new Error(logs.slice(-12_000));
+        return logs.includes("WORLD_STARGATE_PAPER_PASS");
+      },
+      50_000,
+    );
   });
   test("discovers unsigned logic and wireless signs without an import catalog", async ({
     rcon,
@@ -79,6 +85,12 @@ describe.skipIf(
       );
     }
     expect(await missingLeverWarnings()).toBe(warningsBefore);
+    expect(
+      await passes(rcon, "if block 536 -40 2 minecraft:lever[powered=true]"),
+    ).toBe(true);
+    expect(
+      await passes(rcon, "if block 532 -40 2 minecraft:lever[powered=false]"),
+    ).toBe(true);
   });
 
   test("plants numeric legacy seeds, fertilizes, harvests and cultivates with real stock", async ({

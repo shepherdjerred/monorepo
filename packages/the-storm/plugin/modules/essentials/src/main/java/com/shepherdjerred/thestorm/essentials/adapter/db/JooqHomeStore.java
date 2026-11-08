@@ -26,9 +26,13 @@ public final class JooqHomeStore implements HomeStore {
     this(database, CompletableFuture.completedFuture(null));
   }
 
+  /**
+   * Waits for the historical import attempt, whose failure is reported by its caller. A failed
+   * archive import must not disable ordinary home storage.
+   */
   public JooqHomeStore(StormDatabase database, CompletableFuture<Void> ready) {
     this.database = database;
-    this.ready = ready;
+    this.ready = ready.handle((ignored, failure) -> null);
   }
 
   private <T> CompletableFuture<T> read(java.util.function.Function<org.jooq.DSLContext, T> work) {

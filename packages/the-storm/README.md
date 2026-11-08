@@ -1480,6 +1480,11 @@ interactions until that index has loaded and loaded chunks have been reconciled.
 Definitions are rediscovered as chunks load, and each trade rechecks the current
 sign before committing its quoted price.
 
+Full account resets retain a durable revocation generation in core storage.
+Ownership and grants in world metadata carry the generation at authoring time;
+an old definition cannot revive a reset account when its chunk later loads or
+its search index is rebuilt. Explicit new authoring uses the new generation.
+
 New chest shops use the classic ChestShop layout:
 
 ```text

@@ -2,6 +2,7 @@ import { describe, expect, onTestFinished } from "vitest";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { publishedPort } from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
 import { test } from "#e2e/fixtures.ts";
+import { waitForHistoricalShop } from "./shop-assertions.ts";
 import { waitUntil } from "#e2e/harness/bot.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
@@ -41,16 +42,7 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double")(
       rcon,
     }) => {
       await rcon.command("forceload add 138 -97");
-      await waitUntil(
-        "historical shop registered",
-        async () => {
-          const data = await rcon.command(
-            'data get block 138 69 -97 PublicBukkitValues."thestorm:shop_id"',
-          );
-          return /data: [1-9]\d*L\b/u.test(data);
-        },
-        30_000,
-      );
+      await waitForHistoricalShop(rcon, 138, 69, -97);
       const first = await rcon.command("data get block 138 68 -97 Items");
       const second = await rcon.command("data get block 139 68 -97 Items");
       expect(first).not.toContain("minecraft:iron_ingot");
@@ -178,16 +170,7 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double-space")(
       rcon,
     }) => {
       await rcon.command("forceload add 138 -97");
-      await waitUntil(
-        "historical shop registered",
-        async () => {
-          const data = await rcon.command(
-            'data get block 138 69 -97 PublicBukkitValues."thestorm:shop_id"',
-          );
-          return /data: [1-9]\d*L\b/u.test(data);
-        },
-        30_000,
-      );
+      await waitForHistoricalShop(rcon, 138, 69, -97);
       const first = await rcon.command("data get block 138 68 -97 Items");
       const second = await rcon.command("data get block 139 68 -97 Items");
       const marker = await rcon.command(

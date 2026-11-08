@@ -2,7 +2,7 @@ import { describe, expect } from "vitest";
 import { Vec3 } from "vec3";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
-import { serverLogs } from "#e2e/harness/external/files.ts";
+import { shopMessages } from "./shop-assertions.ts";
 
 describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "dockozel")(
   "Pigrider's historical haste potions",
@@ -12,15 +12,7 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "dockozel")(
       rcon,
       server,
     }) => {
-      const messages: string[] = [];
-      bot.on("messagestr", (message) => {
-        messages.push(message);
-      });
-      await waitUntil(
-        "shop registry ready",
-        async () => /Indexed \d+ world shops/.test(await serverLogs(server)),
-        60_000,
-      );
+      const messages = await shopMessages(bot, server);
       await rcon.command("forceload add 141 -96");
       await waitUntil(
         "historical sign restored",

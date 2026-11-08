@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.qol.adapter.db;
 
+import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_BANK;
+import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_BANK_GRANT;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVE;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVES;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVE_CLAIMS;
@@ -37,6 +39,8 @@ public final class JooqPlayerReset {
               dsl.deleteFrom(QOL_NOTICES).where(QOL_NOTICES.PLAYER.eq(id)).execute();
               dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.PLAYER.eq(id)).execute();
               dsl.deleteFrom(QOL_PLAYER).where(QOL_PLAYER.PLAYER.eq(id)).execute();
+              dsl.deleteFrom(QOL_BANK_GRANT).where(QOL_BANK_GRANT.PLAYER.eq(id)).execute();
+              dsl.deleteFrom(QOL_BANK).where(QOL_BANK.OWNER.eq(id)).execute();
               return true;
             })
         .thenAccept(ignored -> {});

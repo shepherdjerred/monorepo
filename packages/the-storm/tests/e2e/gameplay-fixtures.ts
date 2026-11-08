@@ -271,7 +271,7 @@ async function profileFixtures(
               mechanicsConfig: await Bun.file(
                 path.join(content, "mechanics.yml"),
               ).text(),
-             }),
+            }),
       };
     }
   }

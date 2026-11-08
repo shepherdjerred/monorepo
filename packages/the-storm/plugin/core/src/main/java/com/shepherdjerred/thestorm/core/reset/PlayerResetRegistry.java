@@ -21,6 +21,19 @@ public final class PlayerResetRegistry {
   private final Set<String> stateless = new LinkedHashSet<>();
   private java.util.function.Consumer<String> diagnostics = message -> {};
   private boolean complete;
+  private final AccountEpochs epochs;
+
+  public PlayerResetRegistry() {
+    this(AccountEpochs.inMemory());
+  }
+
+  public PlayerResetRegistry(AccountEpochs epochs) {
+    this.epochs = epochs;
+  }
+
+  public AccountEpochs epochs() {
+    return epochs;
+  }
 
   /** Enables stage diagnostics for this registry. */
   public void diagnostics(java.util.function.Consumer<String> diagnostics) {
@@ -67,7 +80,7 @@ public final class PlayerResetRegistry {
     if (!complete) {
       throw new IllegalStateException("Player reset registry is not complete");
     }
-    var result = CompletableFuture.<Void>completedFuture(null);
+    var result = epochs.retire(player);
     var ordered =
         handlers.entrySet().stream()
             .sorted(java.util.Comparator.comparing(entry -> !early.contains(entry.getKey())))

@@ -28,16 +28,25 @@ public final class WorldStargateStore implements StargateStore, Listener {
   private final WorldGateData world;
   private final Map<UUID, Stargate> gates = new HashMap<>();
   private final Map<UUID, StargateNetwork> networks = new HashMap<>();
+  private final Map<UUID, Stargate> legacy = new HashMap<>();
+  private final com.shepherdjerred.thestorm.core.reset.AccountEpochs epochs;
   private @Nullable StargateBook book;
   private final Set<Chunk> pending = new HashSet<>();
+  private final Set<org.bukkit.block.Block> deferredDefinitions = new HashSet<>();
 
   public WorldStargateStore(ModuleContext context, StargateStore index) {
     this.context = context;
     this.index = index;
-    world = new WorldGateData(context.plugin().getServer());
+    epochs =
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+            .epochs();
+    world = new WorldGateData(context.plugin().getServer(), epochs);
   }
 
-  void attach(StargateBook book) {
+  /** Connects chunk discovery to the active gate registry. */
+  public void attach(StargateBook book) {
     this.book = book;
     context
         .scheduler()
@@ -55,23 +64,22 @@ public final class WorldStargateStore implements StargateStore, Listener {
 
   @Override
   public CompletableFuture<Snapshot> load() {
-    return index.load().thenApplyAsync(this::loadWorld, context.scheduler().mainThread());
+    return epochs
+        .loaded()
+        .thenCompose(ignored -> index.load())
+        .thenApplyAsync(this::loadWorld, context.scheduler().mainThread());
   }
 
   private Snapshot loadWorld(Snapshot cached) {
     cached.networks().forEach(network -> networks.put(network.id(), network));
     for (var gate : cached.gates()) {
+      legacy.put(gate.id(), gate);
       var block = world.block(gate);
       if (block.isEmpty()) {
-        gates.put(gate.id(), gate);
+        if (legacyAllowed(gate)) gates.put(gate.id(), gate);
         continue;
       }
-      if (!world.marked(block.orElseThrow())) {
-        var network = Optional.ofNullable(networks.get(gate.networkId())).orElseThrow();
-        var grid = new PaperGrid(block.orElseThrow().getWorld());
-        if (StargateIntegrity.valid(grid, gate, network, false)
-            || StargateIntegrity.recoverable(grid, gate, network)) world.write(gate, network);
-      }
+      upgrade(gate);
       world.read(block.orElseThrow()).ifPresent(this::accept);
     }
     for (var loadedWorld : context.plugin().getServer().getWorlds())
@@ -125,15 +133,57 @@ public final class WorldStargateStore implements StargateStore, Listener {
   }
 
   private List<WorldGateData.Definition> definitions(Chunk chunk) {
-    return java.util.Arrays.stream(
-            context.services().require(LoadedBlockEntities.class).inChunk(chunk))
-        .flatMap(state -> world.read(state.getBlock()).stream())
-        .toList();
+    // A frame or sign may straddle the arriving chunk. Retry incomplete legacy upgrades
+    // after either side loads, without loading their neighbors ourselves.
+    for (var gate : List.copyOf(legacy.values())) upgrade(gate);
+    for (var state : context.services().require(LoadedBlockEntities.class).inChunk(chunk))
+      if (world.hasDefinition(state.getBlock())) deferredDefinitions.add(state.getBlock());
+    var found = new java.util.ArrayList<WorldGateData.Definition>();
+    for (var block : Set.copyOf(deferredDefinitions)) {
+      if (!PaperGrid.loaded(block) || !world.hasDefinition(block)) {
+        deferredDefinitions.remove(block);
+      } else
+        world
+            .read(block)
+            .ifPresent(
+                definition -> {
+                  found.add(definition);
+                  deferredDefinitions.remove(block);
+                });
+    }
+    return List.copyOf(found);
+  }
+
+  private boolean legacyAllowed(Stargate gate) {
+    var network = Optional.ofNullable(networks.get(gate.networkId())).orElseThrow();
+    return epochs.current(gate.ownerId()) == 0
+        && (!(network.access() instanceof NetworkAccess.Private(var owner, _))
+            || epochs.current(owner) == 0);
+  }
+
+  private void upgrade(Stargate gate) {
+    var block = world.block(gate);
+    if (block.isEmpty()) return;
+    if (world.marked(block.orElseThrow()) || !legacyAllowed(gate)) {
+      legacy.remove(gate.id());
+      world.read(block.orElseThrow()).ifPresent(this::accept);
+      return;
+    }
+    var network = Optional.ofNullable(networks.get(gate.networkId())).orElseThrow();
+    var grid = new PaperGrid(block.orElseThrow().getWorld());
+    if (StargateIntegrity.valid(grid, gate, network, false)
+        || StargateIntegrity.recoverable(grid, gate, network)) {
+      world.write(gate, network);
+      legacy.remove(gate.id());
+      world.read(block.orElseThrow()).ifPresent(this::accept);
+    }
   }
 
   @EventHandler
   void onLoad(ChunkLoadEvent event) {
-    pending.add(event.getChunk());
+    var current = book;
+    if (current != null && current.ready()) definitions(event.getChunk()).forEach(this::accept);
+    else pending.add(event.getChunk());
   }
 
   @Override
@@ -185,8 +235,11 @@ public final class WorldStargateStore implements StargateStore, Listener {
       var privateOwner =
           network.access() instanceof NetworkAccess.Private(var owner, _) && owner.equals(player);
       if (gate.ownerId().equals(player) || privateOwner) {
-        world.remove(gate);
+        // The durable account epoch also revokes unloaded signs and definitions missing
+        // from the disposable index. Remove loaded signs immediately as well.
+        if (world.block(gate).isPresent()) world.remove(gate);
         gates.remove(gate.id());
+        legacy.remove(gate.id());
       }
     }
     return index

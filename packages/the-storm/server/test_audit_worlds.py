@@ -13,7 +13,8 @@ class WorldAuditTest(unittest.TestCase):
         signs = [{"id": "minecraft:sign", "front_text": {"messages": [tag]}} for tag in
                  ("[Buy]", "[MondoChest]", "[MondoSlave]", "[MC1111]S", "[Lift Up]")]
         chest = {"id": "minecraft:chest", "Items": [{"id": "minecraft:diamond", "count": 24}]}
-        self.assertEqual(list(entities({"block_entities": signs + [chest]})), signs + [chest])
+        expected = [*signs, chest]
+        self.assertEqual(list(entities({"block_entities": expected})), expected)
 
     def test_anvil_zlib_chunk_uses_the_allocated_sector(self):
         nbt = b"\x0a\x00\x00\x03\x00\x04xPos" + struct.pack(">i", -32) + b"\x00"
