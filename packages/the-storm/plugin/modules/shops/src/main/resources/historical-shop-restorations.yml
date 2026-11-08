@@ -4,6 +4,69 @@
 # Custom templates are copied from the recorded original slot, retaining item components.
 entries:
   - {
+      "id": "2016-reconstructed--21-67--124",
+      "world": "map2",
+      "sign": { "x": -21, "y": 67, "z": -124 },
+      "container": { "x": -21, "y": 66, "z": -124 },
+      "owner": "00000000-0000-0000-0000-000000000000",
+      "ownerName": "Staff custody",
+      "item": "cobblestone",
+      "quantity": 64,
+      "price": 15,
+      "stockTarget": 1024,
+      "historicalItemName": "Cobblestone",
+      "signFormat": "QUANTITY_ITEM",
+      "details":
+        {
+          "originalLines": ["[buy]", "64 cobblestone", "", "$15"],
+          "sourceSlot": -1,
+          "buysFromPlayer": false,
+          "rewrite": true,
+        },
+    }
+  - {
+      "id": "2016-reconstructed--26-67--123",
+      "world": "map2",
+      "sign": { "x": -26, "y": 67, "z": -123 },
+      "container": { "x": -26, "y": 66, "z": -123 },
+      "owner": "00000000-0000-0000-0000-000000000000",
+      "ownerName": "Staff custody",
+      "item": "coal",
+      "quantity": 10,
+      "price": 15,
+      "stockTarget": 256,
+      "historicalItemName": "Coal",
+      "signFormat": "QUANTITY_ITEM",
+      "details":
+        {
+          "originalLines": ["[buy]", "10 coal", "", "$15"],
+          "sourceSlot": -1,
+          "buysFromPlayer": false,
+          "rewrite": true,
+        },
+    }
+  - {
+      "id": "2016-reconstructed--26-67--124",
+      "world": "map2",
+      "sign": { "x": -26, "y": 67, "z": -124 },
+      "container": { "x": -24, "y": 66, "z": -124 },
+      "owner": "00000000-0000-0000-0000-000000000000",
+      "ownerName": "Staff custody",
+      "item": "emerald",
+      "quantity": 1,
+      "price": 74,
+      "stockTarget": 24,
+      "historicalItemName": "Emerald",
+      "signFormat": "QUANTITY_ITEM",
+      "details":
+        {
+          "originalLines": ["[buy]", "1 emerald", "", "$74"],
+          "sourceSlot": -1,
+          "buysFromPlayer": false,
+          "rewrite": true,
+        },
+    }
+  - {
       "id": "2015-recovered-101-64--97",
       "world": "world",
       "sign": { "x": 101, "y": 64, "z": -97 },

@@ -1,0 +1,15 @@
+name: TheStormNpcAdmissionE2E
+version: "1.0.0"
+main: com.shepherdjerred.thestorm.npcs.e2e.NpcAdmissionE2EPlugin
+api-version: "26.3"
+description: Disposable existing-Citizens admission proof; never ship to production
+dependencies:
+  server:
+    TheStorm:
+      load: AFTER
+      required: true
+      join-classpath: true
+    Citizens:
+      load: BEFORE
+      required: true
+      join-classpath: true

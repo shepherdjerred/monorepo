@@ -56,8 +56,13 @@ public final class HistoricalShopOperations {
   }
 
   static boolean mayRestore(CommandSender sender) {
+    if (sender instanceof org.bukkit.command.ProxiedCommandSender proxied)
+      return mayRestore(proxied.getCaller());
     return sender instanceof org.bukkit.command.ConsoleCommandSender
         || sender instanceof org.bukkit.command.RemoteConsoleCommandSender
+        || (!(sender instanceof org.bukkit.entity.Entity)
+            && !(sender instanceof org.bukkit.command.BlockCommandSender)
+            && sender.hasPermission(ShopsPermissions.RESTORE))
         || sender.hasPermission(ShopsPermissions.ADMIN);
   }
 
@@ -67,6 +72,8 @@ public final class HistoricalShopOperations {
       return 0;
     }
     running = true;
+    sender.sendMessage(
+        Replies.info("Preparing reviewed legacy shop " + (apply ? "conversion" : "preview") + "."));
     var entries = context.compute().submit(HistoricalShopCatalog::load);
     var completed = state.store().completedHistoricalShops();
     var _ =
@@ -82,6 +89,8 @@ public final class HistoricalShopOperations {
                     sender.sendMessage(
                         Replies.error(
                             "Shop restoration failed; inspect the server log before retrying."));
+                  } else if (!apply) {
+                    context.logger().info("Completed reviewed legacy shop preview");
                   }
                 },
                 context.scheduler().mainThread());
@@ -95,13 +104,14 @@ public final class HistoricalShopOperations {
         prepared.entries().stream()
             .filter(entry -> !prepared.completed().containsKey(entry.id()))
             .count();
-    sender.sendMessage(
-        Replies.info(
-            "Reviewed legacy shops: "
-                + prepared.entries().size()
-                + "; remaining conversion receipts: "
-                + remaining
-                + ". Existing stock is preserved; additions use the catalog's validated budgets."));
+    var summary =
+        "Reviewed legacy shops: "
+            + prepared.entries().size()
+            + "; remaining conversion receipts: "
+            + remaining
+            + ". Existing stock is preserved; additions use the catalog's validated budgets.";
+    context.logger().info(summary);
+    sender.sendMessage(Replies.info(summary));
     if (!apply) {
       sender.sendMessage(
           Replies.info(

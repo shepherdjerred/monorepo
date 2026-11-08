@@ -1514,6 +1514,12 @@ validation caps valuable additions and cheap stock. Missing containers and
 unresolved definitions are reported individually. These catalog operations do
 not run on ordinary server startup.
 
+Restoration accepts the server console, RCON and captured server operators with
+`thestorm.shops.restore`. Operator player accounts and command blocks do not gain
+restoration rights from that permission; players need explicit shop admin access.
+Saved Citizens bodies are admitted at their authored home when the NPC module
+adopts them, so a restarted server applies changed home coordinates as well.
+
 Bank ownership, permissions and Shelf links live on the master container.
 Current `[Shelf]` text supplies its filters; a blank filter samples the Shelf
 inventory, following MondoChest's original behavior. Deleting the database index

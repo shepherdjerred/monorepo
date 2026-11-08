@@ -228,6 +228,18 @@ final class NpcsPaperTest {
   }
 
   @Test
+  void adoptingASavedBodyWithoutHomeMetadataMovesItToTheAuthoredHome() throws IOException {
+    var saved = spawnTagged("nat", 17.5);
+    saved.setHealth(7);
+    writeContent(npc("nat", "Nat", 0.5, "hello"));
+    enable();
+    var adopted = mannequin("nat");
+    assertThat(adopted.getUniqueId()).isEqualTo(saved.getUniqueId());
+    assertThat(adopted.getLocation().getX()).isEqualTo(0.5);
+    assertThat(adopted.getHealth()).isEqualTo(7);
+  }
+
+  @Test
   void theOffHandClickIsIgnored() throws IOException {
     writeContent(npc("nat", "Nat", 0.5, "hello"));
     enable();

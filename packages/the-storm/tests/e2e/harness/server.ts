@@ -73,6 +73,8 @@ export type StartServerOptions = ModuleConfigOverrides & {
   warmCache: boolean;
   /** The built TheStorm.jar under test. */
   stormJar: string;
+  /** Additional committer-run proof plugins, including the authenticated operator bridge. */
+  extraPluginJars?: readonly string[];
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
   fixturesJar?: string;
@@ -197,6 +199,7 @@ export async function stagePlugins(
   options: Pick<
     StartServerOptions,
     | "stormJar"
+    | "extraPluginJars"
     | "stormConfig"
     | "mechanicsE2eJar"
     | "mechanicsConfig"
@@ -324,7 +327,20 @@ export async function stagePlugins(
       recursive: true,
     });
   }
+  await stageExtraPlugins(pluginsDir, options.extraPluginJars ?? []);
   return pluginsDir;
+}
+
+async function stageExtraPlugins(
+  pluginsDir: string,
+  sources: readonly string[],
+) {
+  for (const source of sources) {
+    const target = path.join(pluginsDir, path.basename(source));
+    if (!source.endsWith(".jar") || (await Bun.file(target).exists()))
+      throw new Error(`Invalid or conflicting native proof plugin: ${source}`);
+    await Bun.write(target, Bun.file(source));
+  }
 }
 
 // LuckPerms downloads its libraries (including the H2 driver) from Maven
