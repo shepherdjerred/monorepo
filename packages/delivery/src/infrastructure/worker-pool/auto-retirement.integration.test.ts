@@ -118,3 +118,14 @@ test("an environment whose releases require approval keeps retirement an operato
     await suite.delivery.retirementCandidates(testExecutor);
   expect(environments).toEqual([]);
 });
+
+test("an environment that no longer admits releases is never offered", async () => {
+  const { env } = await suite.fixture.acceptedPool();
+  await suite.cluster.database.environment.update({
+    where: { id: env.id },
+    data: { lifecycle: "retired" },
+  });
+  const { environments } =
+    await suite.delivery.retirementCandidates(testExecutor);
+  expect(environments).toEqual([]);
+});

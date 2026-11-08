@@ -50,30 +50,51 @@ export async function proposeDrainedRetirements<Pool>(
   request: (workerId: string, body: unknown) => Promise<void>,
 ): Promise<AutoRetirementResult> {
   const result: AutoRetirementResult = { requested: [], skipped: [] };
+  const refused: unknown[] = [];
   for (const environment of candidates.environments) {
-    for (const worker of environment.workers) {
-      try {
-        await prove(environment.pool, worker.id);
-      } catch (error) {
-        result.skipped.push({
-          environmentId: environment.environmentId,
-          workerId: worker.id,
-          reason: error instanceof Error ? error.message : String(error),
-        });
-        continue;
-      }
-      await request(worker.id, {
+    const proved = await firstProved(environment, prove, result);
+    if (proved === undefined) continue;
+    try {
+      await request(proved.id, {
         expectedEnvironmentGeneration: environment.generation,
-        expectedWorkerGeneration: worker.generation,
+        expectedWorkerGeneration: proved.generation,
       });
       result.requested.push({
         environmentId: environment.environmentId,
-        workerId: worker.id,
+        workerId: proved.id,
       });
-      break;
+    } catch (error) {
+      // One environment's refusal never stops the others' proposals.
+      refused.push(error);
     }
   }
+  if (refused.length > 0) throw refused[0];
   return result;
+}
+
+/** The environment's first host whose proof passes; failures are recorded as skipped. */
+async function firstProved<Pool>(
+  environment: {
+    environmentId: string;
+    pool: Pool;
+    workers: { id: string; generation: number }[];
+  },
+  prove: (pool: Pool, workerId: string) => Promise<unknown>,
+  result: AutoRetirementResult,
+) {
+  for (const worker of environment.workers) {
+    try {
+      await prove(environment.pool, worker.id);
+      return worker;
+    } catch (error) {
+      result.skipped.push({
+        environmentId: environment.environmentId,
+        workerId: worker.id,
+        reason: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return;
 }
 
 export async function retireDrainedWorkerHosts(): Promise<AutoRetirementResult> {

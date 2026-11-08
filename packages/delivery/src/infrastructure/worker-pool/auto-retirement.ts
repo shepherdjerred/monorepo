@@ -49,6 +49,8 @@ async function idleWorkerEnvironments(database: Delivery["database"]) {
   const environments = await database.environment.findMany({
     // An approval-gated environment's retirement stays an operator decision.
     where: {
+      // Only an admitting environment accepts the retirement request.
+      lifecycle: "active",
       activeDeploymentId: null,
       acceptedDeploymentId: { not: null },
       approvalPolicy: { not: "required" },
@@ -146,7 +148,7 @@ async function environmentCandidates(
 }
 
 /**
- * Idle worker environments and their retained hosts that an operator could
+ * Idle, active worker environments and their retained hosts that an operator could
  * retire now: live, not the accepted candidate, unreferenced, and never
  * refused before. The pool carries the current host rows so the executor
  * proves the exact host it proposes.

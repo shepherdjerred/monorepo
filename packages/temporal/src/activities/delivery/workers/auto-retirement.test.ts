@@ -68,17 +68,22 @@ describe("proposeDrainedRetirements", () => {
     });
   });
 
-  it("lets a refused request fail the tick instead of hiding it", async () => {
+  it("still proposes for later environments when one refuses, then fails the tick", async () => {
+    const requested: string[] = [];
     await expect(
       proposeDrainedRetirements(
         candidates,
         () => Promise.resolve(),
-        async () => {
-          throw new Error(
-            "Worker pool cannot change while a deployment is pending or active",
-          );
+        (workerId) => {
+          requested.push(workerId);
+          return workerId === "serving"
+            ? Promise.reject(
+                new Error("Environment temporal/prod is not active"),
+              )
+            : Promise.resolve();
         },
       ),
-    ).rejects.toThrow("pending or active");
+    ).rejects.toThrow("not active");
+    expect(requested).toEqual(["serving", "pinned"]);
   });
 });
