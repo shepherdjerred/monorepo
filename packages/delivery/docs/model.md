@@ -644,7 +644,13 @@ selection and that the recipe's oracle passed.
 ### 4.15 Recovery intent
 
 **Definition.** An operator-authorised inspection of one `recovery-required`
-deployment, settled by an independent reader.
+deployment, settled by an independent reader. Delivery authorises one itself:
+each dispatch tick opens an intent for a recovery-required deployment that has
+none (`src/infrastructure/execution/auto-recovery.ts`), except a content or
+compound target, which an operator opens. Opening releases nothing; the
+kind's independent reader still decides, and an `argo` intent settles only
+when the API's own Application reader proves the deployment's operation
+finished.
 
 **Identity.** Deployment id plus sequence.
 

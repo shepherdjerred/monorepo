@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { serveStatic } from "hono/bun";
 import { secureHeaders } from "hono/secure-headers";
 import { bodyLimit } from "hono/body-limit";
@@ -69,6 +70,8 @@ type Options = {
   ciOrigin: string;
   ciRepositoryId: number;
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
+  /** The API's own Application reader, for automatic argo settlement. */
+  readApplication?: ApplicationReader;
   /** Independent readers that observe a pending worker recovery (D5, I2). */
   workerRecoveryReaders?: WorkerRecoveryReaders;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
@@ -357,12 +360,22 @@ export function createApp(options: Options) {
   });
   app.post("/api/v1/reconcile", async (c) => {
     requireScope(c.get("principal"), "execute");
-    return c.json(
-      await delivery.reconcile(
-        await activeEnvironmentIds(delivery.database),
-        c.get("principal"),
-      ),
+    const result = await delivery.reconcile(
+      await activeEnvironmentIds(delivery.database),
+      c.get("principal"),
     );
+    const recoverySettled =
+      options.inspectRecovery === undefined ||
+      options.readApplication === undefined
+        ? []
+        : await delivery.settleAutomaticArgoIntents(
+            options.inspectRecovery,
+            options.readApplication,
+          );
+    return c.json({
+      ...result,
+      ...(recoverySettled.length === 0 ? {} : { recoverySettled }),
+    });
   });
   app.post("/api/v1/dispatch/:id/submitted", async (c) => {
     requireScope(c.get("principal"), "execute");
