@@ -203,8 +203,9 @@ describe("web live sports", () => {
   test("StreamEast search returns opaque events; queue, next and now use the shared sports resolver", async () => {
     fixture = webFixture();
     const today = await sports();
-    expect(today).toHaveLength(2);
+    expect(today).toHaveLength(3);
     expect(today.every((event) => event.provider === "streameast")).toBe(true);
+    expect(today.filter((event) => event.proOnly === true)).toHaveLength(1);
     expect(JSON.stringify(today)).not.toContain("pageUrl");
     expect(fixture.allocations()).toBe(0);
     const matches = await sports("Seattle Seahawks");
@@ -274,6 +275,27 @@ describe("web live sports", () => {
       }),
     );
     expect(denied.status).toBe(409);
+    expect(fixture.events).toHaveLength(0);
+  });
+
+  test("Pro-only games are listed as such and cannot allocate a userbot", async () => {
+    fixture = webFixture();
+    const listing = await sports();
+    const pro = listing.find((event) => event.proOnly === true);
+    expect(pro).toMatchObject({
+      title: "Fiji Women vs Australia Women",
+      status: "live",
+    });
+    const response = await fixture.handler(
+      fixture.command({
+        action: "play",
+        placement: "queue",
+        selection: { kind: "sports", id: pro!.id },
+      }),
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "sports_pro_only" });
+    expect(fixture.allocations()).toBe(0);
     expect(fixture.events).toHaveLength(0);
   });
 });

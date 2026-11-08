@@ -124,31 +124,28 @@ export function parseStreamEastEvents(
     const pageUrl = toPageUrl(STREAMEAST_HOME, href);
     if (pageUrl === null) return [];
 
-    const rawStart = attribute(card.slice(0, card.indexOf(link)), "data-time");
+    const cardTag = card.slice(0, card.indexOf(link));
+    const rawStart = attribute(cardTag, "data-time");
     const epochSeconds = rawStart === undefined ? Number.NaN : Number(rawStart);
     const startsAt = Number.isFinite(epochSeconds)
       ? new Date(epochSeconds * 1000).toISOString()
       : null;
-    const id =
-      attribute(card.slice(0, card.indexOf(link)), "data-match-id") ??
-      new URL(pageUrl).pathname;
-
-    return SportsEventSchema.safeParse({
+    const id = attribute(cardTag, "data-match-id") ?? new URL(pageUrl).pathname;
+    const fields = {
       id: `streameast:${id}`,
       provider: "streameast",
       title: decodeHtml(title).trim(),
       status: /m-card--live\b/i.test(card) ? "live" : "scheduled",
       startsAt,
       pageUrl,
-    }).success
+      // StreamEast Pro cards carry this flag; their watch pages offer only subscriber streams.
+      ...(attribute(cardTag, "data-pro-only") === "1" ? { proOnly: true } : {}),
+    };
+
+    return SportsEventSchema.safeParse(fields).success
       ? [
           SportsEventSchema.parse({
-            id: `streameast:${id}`,
-            provider: "streameast",
-            title: decodeHtml(title).trim(),
-            status: /m-card--live\b/i.test(card) ? "live" : "scheduled",
-            startsAt,
-            pageUrl,
+            ...fields,
             ...(artwork === undefined ? {} : { artwork }),
           }),
         ]

@@ -147,6 +147,23 @@ describe("sports Discord picker", () => {
     });
   });
 
+  it("shows Pro-only games but leaves them out of the play dropdown", () => {
+    const pro: SportsEvent = {
+      ...LIVE,
+      id: "streameast:pro",
+      title: "Fiji vs Australia",
+      proOnly: true,
+    };
+    const payload = sportsMenuPage([pro, LIVE], 0);
+    expect(payload.embeds[0]!.toJSON().fields?.[0]?.value).toContain(
+      "Pro only, can't play",
+    );
+    expect(payload.components[0]!.toJSON().components[0]).toMatchObject({
+      options: [{ label: "Bears vs Packers", value: "1" }],
+    });
+    expect(sportsMenuPage([pro], 0).components).toEqual([]);
+  });
+
   it("renders empty and future-only listings without a play dropdown", () => {
     expect(sportsMenuPage([], 0).components).toEqual([]);
     expect(sportsMenuPage([UPCOMING], 0).components).toEqual([]);

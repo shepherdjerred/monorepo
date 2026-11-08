@@ -131,6 +131,29 @@ function hlsUrls(html: string, pageUrl: string): URL[] {
   });
 }
 
+/**
+ * The event page offers streams only to the provider's paid subscribers. Streambot holds no
+ * subscription, so this is an expected, user-facing outcome rather than a resolver fault.
+ */
+export class SportsProOnlyError extends Error {
+  constructor() {
+    super("The event page offers only StreamEast Pro subscriber streams");
+    this.name = "SportsProOnlyError";
+  }
+}
+
+/** One selectable stream on a StreamEast watch page; the share control has no stream index. */
+const STREAMEAST_STREAM_ITEM = /<li\s[^>]*?data-stream-i="\d+"[^>]*>/gi;
+
+/** Every stream listed on a StreamEast watch page is a Pro (subscriber) stream. */
+function streamEastProOnly(html: string): boolean {
+  const streams = html.match(STREAMEAST_STREAM_ITEM) ?? [];
+  return (
+    streams.length > 0 &&
+    streams.every((stream) => /\bclass="[^"]*\bis-pro\b/i.test(stream))
+  );
+}
+
 function iframeUrls(html: string, pageUrl: string): URL[] {
   const tags = html.match(/<iframe\b[^>]*>/gi) ?? [];
   return tags.flatMap((tag) => {
@@ -206,6 +229,8 @@ export class BrowserSportsResolver implements SportsResolver {
       sourceHtml,
     });
     if (result === null) {
+      if (page.hostname === "v2.streameast.ga" && streamEastProOnly(sourceHtml))
+        throw new SportsProOnlyError();
       throw new Error(
         "No supported live HLS stream was available on this event page",
       );

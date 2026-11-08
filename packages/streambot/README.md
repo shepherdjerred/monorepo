@@ -222,7 +222,11 @@ unless a provider is named. Listings keep games returned before the request
 deadline even when the other provider times out; a timeout with no games still
 reports an error. Future events are informational and are never
 queued; TVSportsLive posts without a kickoff time are marked unconfirmed and
-validated when selected. Playback uses the stable provider page as the source
+validated when selected. StreamEast Pro games (cards flagged `data-pro-only`)
+stream only to paid subscribers, so they are listed with a Pro label but
+cannot be selected in the web picker, the Discord menu, or a search; a watch
+page whose every stream is Pro gets the same Pro-only reply instead of the
+generic provider error. Playback uses the stable provider page as the source
 identity and resolves the live HLS input at play time through PinchTab. StreamEast
 pages carry their playlist inline, encoded in the first-party player script; the
 resolver decodes it and keeps only an approved playlist host. Other providers'

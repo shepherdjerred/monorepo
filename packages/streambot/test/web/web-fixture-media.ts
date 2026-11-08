@@ -64,6 +64,16 @@ export const FIXTURE_EVENTS: readonly SportsEvent[] = [
     startsAt: null,
     pageUrl: "https://tvsportslive.fr/seattle-seahawks-san-francisco-49ers/",
   },
+  {
+    id: "streameast:fiji-australia",
+    provider: "streameast",
+    title: "Fiji Women vs Australia Women",
+    status: "live",
+    startsAt: null,
+    pageUrl:
+      "https://v2.streameast.ga/other-events/fiji-women-vs-australia-women-1794117600/",
+    proOnly: true,
+  },
 ];
 export const fixtureSports: SportsCatalog = {
   listToday: () => Promise.resolve(FIXTURE_EVENTS),

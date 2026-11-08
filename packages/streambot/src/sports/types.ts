@@ -24,6 +24,11 @@ export const SportsEventSchema = z.strictObject({
   status: z.enum(["live", "scheduled", "unknown"]),
   startsAt: z.iso.datetime().nullable(),
   pageUrl: z.url(),
+  /**
+   * The provider streams this event only to its paid subscribers. Streambot holds no
+   * subscription, so the event is listed for information but cannot be played.
+   */
+  proOnly: z.literal(true).optional(),
   artwork: SportsArtworkSchema.optional(),
   lol: z
     .strictObject({

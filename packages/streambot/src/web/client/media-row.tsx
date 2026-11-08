@@ -31,7 +31,8 @@ export function MediaRow(
     sportsArtwork?: Matchup;
     landscape?: boolean;
     available?: boolean;
-    badge?: "Live" | "Upcoming";
+    unavailableReason?: string;
+    badge?: "Live" | "Upcoming" | "Pro only";
     preferredChannel?: number;
     onSchedule?: () => void;
   },
@@ -79,6 +80,7 @@ export function MediaActions(
     title: string;
     selection: Selection;
     available?: boolean;
+    unavailableReason?: string;
     preferredChannel?: number;
     onSchedule?: () => void;
   },
@@ -93,7 +95,8 @@ export function MediaActions(
           <button
             title={
               props.available === false
-                ? "This item is unavailable to play"
+                ? (props.unavailableReason ??
+                  "This item is unavailable to play")
                 : label === "Play"
                   ? "Start playback"
                   : "Add to queue"

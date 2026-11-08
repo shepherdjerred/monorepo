@@ -82,14 +82,15 @@ export function sportsMenuPage(
     embed.addFields(
       shown.map((event) => ({
         name: truncateGraphemes(escapeMarkdown(event.title), 200),
-        value: `${eventStatus(event)} · ${PROVIDER_NAMES[event.provider]}`,
+        value: `${eventStatus(event)} · ${PROVIDER_NAMES[event.provider]}${event.proOnly === true ? " · 🔒 Pro only, can't play" : ""}`,
       })),
     );
   }
   const components: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
   const options = shown.flatMap((event, index) =>
-    event.status === "scheduled" &&
-    !(allowSchedule && event.provider === "lolesports")
+    event.proOnly === true ||
+    (event.status === "scheduled" &&
+      !(allowSchedule && event.provider === "lolesports"))
       ? []
       : [
           {
