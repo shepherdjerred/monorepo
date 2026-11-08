@@ -372,6 +372,36 @@ function keychainSessionRun(
   }, calls);
 }
 
+describe("credential resolver failure reasons", () => {
+  test("an op read failure reports 1Password's reason, not enrollment", async () => {
+    await withIsolatedEnv(async () => {
+      Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "ambient-sa-token";
+      const missing = await configPath(null);
+      const run = stubRun(
+        () => ({
+          exit: 1,
+          stdout: "",
+          stderr:
+            "[ERROR] 2026/11/07 21:57:43 could not read secret 'op://v/i/f': Too many requests. Your client has been rate-limited.\n",
+        }),
+        [],
+      );
+      const failure: unknown = await resolveCredentialValues(
+        ["WOODPECKER_TOKEN"],
+        { run, configPath: `${missing}.absent` },
+      ).then(
+        () => null,
+        (error: unknown) => error,
+      );
+      const message = failure instanceof Error ? failure.message : "";
+      expect(message).toBe(
+        "toolkit: WOODPECKER_TOKEN (Woodpecker CI API token) could not be read from 1Password: could not read secret 'op://v/i/f': Too many requests. Your client has been rate-limited.",
+      );
+      expect(message).not.toContain("ambient-sa-token");
+    });
+  });
+});
+
 describe("credential resolver keychain visibility", () => {
   test("an unreachable login keychain is named instead of enrollment", async () => {
     await withIsolatedEnv(async () => {

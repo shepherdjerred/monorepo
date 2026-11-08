@@ -40,6 +40,9 @@ const KEYCHAIN_ENROLL_REFS: Record<string, string> = {
 const SERVICE_ACCOUNT_KEYCHAIN_SERVICE =
   "monorepo-homelab-1password-service-account";
 
+const SERVICE_ACCOUNT_ENROLLMENT =
+  "swift scripts/onepassword/enroll-service-account.swift";
+
 /**
  * Subprocess seam: argv and extra environment in, exit plus captured streams
  * out. `extraEnvironment` carries the service-account token to `op` only.
@@ -134,18 +137,20 @@ async function readKeychainValue(
 }
 
 /**
- * A process outside the user's login session, such as one left behind by an
- * SSH login that has since ended, resolves only the System keychain. Every
- * item lookup then fails although the item is enrolled, so name that instead
- * of sending the operator to re-enroll. Returns null when the login keychain
- * is on the search list or the search list cannot be read.
+ * The error for a Keychain item that could not be read. A process outside the
+ * user's login session, such as one left behind by an SSH login that has since
+ * ended, resolves only the System keychain, so every lookup fails although the
+ * item is enrolled; name that instead of sending the operator to re-enroll.
+ * Falls back to `enrollmentError` when the login keychain is on the search
+ * list or the search list cannot be read.
  */
-async function loginKeychainUnreachable(
+async function missingKeychainItemError(
   ctx: ResolutionContext,
-): Promise<string | null> {
+  enrollmentError: Error,
+): Promise<Error> {
   const list = await ctx.run(["security", "list-keychains"]);
   if (list.exit !== 0 || list.stdout.includes("login.keychain")) {
-    return null;
+    return enrollmentError;
   }
   const searchList = list.stdout
     .split("\n")
@@ -154,16 +159,9 @@ async function loginKeychainUnreachable(
     .join(", ");
   const session = await ctx.run(["launchctl", "managername"]);
   const sessionName = session.exit === 0 ? session.stdout.trim() : "unknown";
-  return `toolkit: this process cannot see the login Keychain (launchd session: ${sessionName}; search list: ${searchList.length > 0 ? searchList : "empty"}), so enrolled credentials look missing; do not re-enroll. Run the command from a process in the GUI login session. A process started by an SSH login that has since ended, such as an SSH-started herdr holder, stays this way until it is replaced.`;
-}
-
-/** The error for a Keychain item that could not be read. */
-async function missingKeychainItemError(
-  ctx: ResolutionContext,
-  enrollmentError: Error,
-): Promise<Error> {
-  const unreachable = await loginKeychainUnreachable(ctx);
-  return unreachable === null ? enrollmentError : new Error(unreachable);
+  return new Error(
+    `toolkit: this process cannot see the login Keychain (launchd session: ${sessionName}; search list: ${searchList.length > 0 ? searchList : "empty"}), so enrolled credentials look missing; do not re-enroll. Run the command from a process in the GUI login session. A process started by an SSH login that has since ended, such as an SSH-started herdr holder, stays this way until it is replaced.`,
+  );
 }
 
 async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
@@ -181,7 +179,7 @@ async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
   }
   const token = await readKeychainValue(SERVICE_ACCOUNT_KEYCHAIN_SERVICE, ctx);
   const enrollmentError = new Error(
-    "toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: swift scripts/onepassword/enroll-service-account.swift",
+    `toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: ${SERVICE_ACCOUNT_ENROLLMENT}`,
   );
   if (token === null) {
     throw await missingKeychainItemError(ctx, enrollmentError);
@@ -193,10 +191,24 @@ async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
   return token;
 }
 
+/**
+ * The first line of an `op` error without its log prefix: the reference and
+ * reason (rate limit, missing item, denied vault), never a value.
+ */
+function opFailureDetail(stderr: string): string | null {
+  const line = stderr
+    .split("\n")
+    .map((entry) => entry.replace(/^\[ERROR\]\s+\S+\s+\S+\s+/, "").trim())
+    .find((entry) => entry.length > 0);
+  return line === undefined ? null : line.slice(0, 300);
+}
+
 async function readServiceAccountRef(
+  name: string,
+  description: string,
   ref: string,
   ctx: ResolutionContext,
-): Promise<{ value: string; cached: boolean } | null> {
+): Promise<{ value: string; cached: boolean }> {
   const cached = await ctx.cache?.get(ref);
   if (cached !== undefined && cached !== null) {
     return { value: cached, cached: true };
@@ -205,12 +217,14 @@ async function readServiceAccountRef(
   const result = await ctx.run(["op", "read", ref], {
     OP_SERVICE_ACCOUNT_TOKEN: token,
   });
-  if (result.exit !== 0) {
-    return null;
-  }
-  const value = result.stdout.trim();
+  const value = result.exit === 0 ? result.stdout.trim() : "";
   if (value.length === 0) {
-    return null;
+    const detail = result.exit === 0 ? null : opFailureDetail(result.stderr);
+    throw detail === null
+      ? credentialError(name, description, SERVICE_ACCOUNT_ENROLLMENT)
+      : new Error(
+          `toolkit: ${name} (${description}) could not be read from 1Password: ${detail}`,
+        );
   }
   await ctx.cache?.set(ref, value);
   return { value, cached: false };
@@ -266,14 +280,7 @@ async function resolveOverrideValue(
 ): Promise<Resolved> {
   const description = CREDENTIAL_REGISTRY[name]?.description ?? "credential";
   if (override.startsWith("op://")) {
-    const read = await readServiceAccountRef(override, ctx);
-    if (read === null) {
-      throw credentialError(
-        name,
-        description,
-        "swift scripts/onepassword/enroll-service-account.swift",
-      );
-    }
+    const read = await readServiceAccountRef(name, description, override, ctx);
     return { value: read.value, backend: read.cached ? "cache" : "config" };
   }
   const prefix = "keychain:";
@@ -316,14 +323,12 @@ async function resolveRegistryValue(
     }
     return { value, backend: "keychain" };
   }
-  const read = await readServiceAccountRef(spec.source.ref, ctx);
-  if (read === null) {
-    throw credentialError(
-      name,
-      spec.description,
-      "swift scripts/onepassword/enroll-service-account.swift",
-    );
-  }
+  const read = await readServiceAccountRef(
+    name,
+    spec.description,
+    spec.source.ref,
+    ctx,
+  );
   return {
     value: read.value,
     backend: read.cached ? "cache" : "service-account",
