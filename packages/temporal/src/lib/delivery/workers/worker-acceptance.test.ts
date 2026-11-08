@@ -14,6 +14,7 @@ import {
   stepDeliveryWorkerRollout,
 } from "./worker-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
+import { workerProofCommand } from "./worker-pool-fixture.ts";
 
 const json = (value: unknown) => ({
   stdout: JSON.stringify(value),
@@ -164,17 +165,8 @@ describe("accepted worker restoration", () => {
     const run: RolloutCommandRunner = async (argv) => {
       const command = [...argv];
       commands.push(command);
-      if (command[0] === "docker")
-        return json({
-          os: "linux",
-          architecture: "amd64",
-          config: { Env: [`GIT_SHA=${CANDIDATE}`] },
-        });
-      if (command[0] === "git")
-        return {
-          stdout: command[1] === "rev-parse" ? CANDIDATE : "",
-          stderr: "",
-        };
+      const proof = workerProofCommand(command, CANDIDATE);
+      if (proof !== undefined) return proof;
       if (command[0] === "bun")
         return { stdout: "candidate proof passed", stderr: "" };
       if (command[1] === "prom")

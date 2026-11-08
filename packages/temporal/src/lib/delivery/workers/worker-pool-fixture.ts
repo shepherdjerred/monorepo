@@ -1,4 +1,28 @@
 import { workerHostSpecification } from "@shepherdjerred/delivery/contract";
+import type { RolloutCommandResult } from "#lib/worker-deployment-proofs.ts";
+
+/** Native OCI and checkout responses shared by the routing-proof fixtures. */
+export function workerProofCommand(
+  command: readonly string[],
+  imageBuildId: string,
+  checkoutBuildId = imageBuildId,
+): RolloutCommandResult | undefined {
+  if (command[0] === "docker")
+    return {
+      stdout: JSON.stringify({
+        os: "linux",
+        architecture: "amd64",
+        config: { Env: [`GIT_SHA=${imageBuildId}`] },
+      }),
+      stderr: "",
+    };
+  if (command[0] === "git")
+    return {
+      stdout: command[1] === "rev-parse" ? checkoutBuildId : "",
+      stderr: "",
+    };
+  return undefined;
+}
 
 /**
  * Test fixture: the central rollout pool of temporal/prod, a stable host
