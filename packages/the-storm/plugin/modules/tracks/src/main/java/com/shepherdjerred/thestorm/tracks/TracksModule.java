@@ -84,6 +84,20 @@ public final class TracksModule implements StormModule {
     service.watch(signals);
     purchases = service;
     context.services().provide(TrackLevels.class, cache);
+    var inspection =
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.core.capture.CaptureInspection.class);
+    for (var track : com.shepherdjerred.thestorm.tracks.app.Track.values()) {
+      inspection.registerPlayer(
+          "track." + track.name().toLowerCase(java.util.Locale.ROOT),
+          id -> {
+            var player = context.plugin().getServer().getPlayer(id);
+            if (player == null || !cache.isLoaded(id))
+              throw new IllegalStateException("Capture player tracks are loading");
+            return Integer.toString(cache.level(player, track));
+          });
+    }
     context.services().provide(TrackPurchases.class, service);
     context.services().provide(TrackSignals.class, signals);
     groups.start();

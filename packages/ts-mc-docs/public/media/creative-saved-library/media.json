@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "creative-saved-library",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/creative-saved-library/original.webp",
+  "poster": "/media/creative-saved-library/poster.webp",
+  "alt": "Save the plot as DocsGazebo, then list the genuine schematic library with /creative load.",
+  "caption": "Save the plot as DocsGazebo, then list the genuine schematic library with /creative load.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.63, 0.66],
+      "to": [0.19, 0.84],
+      "text": "Saved name",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

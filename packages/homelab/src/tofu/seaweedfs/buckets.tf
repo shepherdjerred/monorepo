@@ -1,5 +1,10 @@
 # Static site buckets (served via Caddy s3proxy)
 # Private buckets are intentionally absent from the Caddy public bucket inventory.
+resource "aws_s3_bucket" "the_storm_capture_fixtures" {
+  bucket = "the-storm-capture-fixtures"
+  lifecycle { prevent_destroy = true }
+}
+
 resource "aws_s3_bucket" "storm_forum_releases" {
   bucket = "storm-forum-releases"
   lifecycle { prevent_destroy = true }

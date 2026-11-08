@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "rwf-bomb-armed",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-bomb-armed/original.webp",
+  "poster": "/media/rwf-bomb-armed/poster.webp",
+  "alt": "The armed Red Team bomb shows its countdown; defend and defuse your own bomb with the fuse.",
+  "caption": "The armed Red Team bomb shows its countdown; defend and defuse your own bomb with the fuse.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.71, 0.23],
+      "to": [0.93, 0.54],
+      "text": "Countdown",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

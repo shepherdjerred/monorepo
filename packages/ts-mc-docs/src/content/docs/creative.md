@@ -18,6 +18,8 @@ Stand on an empty cell inside the world border and run `/creative claim`. When t
 
 `/creative auto` claims the nearest free cell that sits fully inside the border and takes you to its center. A road, a staff-held plot, and a plot someone else owns cannot be claimed.
 
+![A newly claimed creative plot, with the claim confirmation in chat.](/screenshots/creative-plot.webp)
+
 ## Name, trust, and visit
 
 Learn about roles, merging, maintenance, and plot copies in [managing creative plots](/creative-plots/).

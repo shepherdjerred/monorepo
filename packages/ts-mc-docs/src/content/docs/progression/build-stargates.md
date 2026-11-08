@@ -13,4 +13,8 @@ Build two Stargates on the same network to connect destinations. You need Mechan
 
 For example, create a public network named `HomeRoad`, then build gates named `Home` and `Mine` with `HomeRoad` on line 3 of each sign. Select `Mine` at Home to travel there, and select `Home` at Mine to return.
 
+<div><storm-media data-manifest="/media/stargate-frame/media.json"><figure><img alt="The two-wide, three-high opening of a player-built Stargate" src="/media/stargate-frame/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Leave the two-wide, three-high opening empty, with the sign and button on opposite sides.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/stargate-sign/media.json"><figure><img alt="A registered Home Stargate sign" src="/media/stargate-sign/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Name the gate on line 1 and the network on line 3; wait for the creation confirmation.</figcaption></figure></storm-media></div>
+
 Use `/stargate remove <network> <gate>` when authorized to remove a registered gate. Remove it before changing its blocks or sign. If travel fails, check your network access, the frame and the destination.

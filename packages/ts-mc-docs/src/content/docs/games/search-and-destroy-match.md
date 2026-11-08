@@ -7,6 +7,8 @@ Learn more about the lobby and matches in [Search and Destroy](/search-and-destr
 
 For choosing equipment, see [kits and the shop](/games/search-and-destroy-kits/). For arming and defusing, see [bombs](/games/search-and-destroy-bombs/).
 
+<div><storm-media data-manifest="/media/rwf-live-hud/media.json"><figure><img alt="The live round HUD shows each team's surviving players and bomb status" src="/media/rwf-live-hud/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The live round HUD shows your team, surviving players, and bomb state.</figcaption></figure></storm-media></div>
+
 ## The lobby
 
 Joining takes you to the lobby, a war room in a world of its own where
@@ -183,6 +185,15 @@ join it.
 | `/rwf spectate`               | Watch the round in spectator mode without playing  |
 | `/rwf spectate next/previous` | While watching, follow the next or previous player |
 | `/rwf goto <player>`          | While watching, follow that player                 |
+
+<details>
+<summary>Spectator overlook and round result</summary>
+
+<div><storm-media data-manifest="/media/rwf-spectator-view/media.json"><figure><img alt="Valley of Death seen from the spectator overlook between rounds" src="/media/rwf-spectator-view/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The spectator overlook keeps you outside the fight; this view shows Valley of Death between rounds.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/rwf-round-result/media.json"><figure><img alt="The completed round's winner and credit reward in chat" src="/media/rwf-round-result/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The completed round reports Blue Team as the winner and awards Red Warfare Credits.</figcaption></figure></storm-media></div>
+
+</details>
 
 ## Transparency
 

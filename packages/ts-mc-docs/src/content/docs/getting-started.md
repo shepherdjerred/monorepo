@@ -13,6 +13,10 @@ To use a command in this guide, open the in-game chat, type it exactly as shown 
 
 The welcome screen offers a choice of biome (a type of landscape). Select **Explore Spawn** for now so you can choose your safety settings before leaving town.
 
+![The first page of The Storm's in-game welcome book, with early survival tips.](/screenshots/welcome-guide.webp)
+
+You can reopen this book at any time with `/guide`.
+
 ## 2. Choose your safety settings
 
 Enter `/rules` and read the server rules. Player versus player combat (PvP) is disabled in Spawn Town but enabled outside it. If you do not want to fight other players, enter `/pvp off` before leaving. You can change this setting once a week. Monsters can still hurt you.

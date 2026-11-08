@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "crush-after",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/crush-after/original.webp",
+  "poster": "/media/crush-after/poster.webp",
+  "alt": "Crush breaks the plank instead of pushing it ahead of the extended head.",
+  "caption": "Crush breaks the plank instead of pushing it ahead of the extended head.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.35, 0.29],
+      "to": [0.6, 0.5],
+      "text": "Block removed",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

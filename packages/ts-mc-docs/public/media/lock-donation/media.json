@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "lock-donation",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/lock-donation/original.webp",
+  "poster": "/media/lock-donation/poster.webp",
+  "alt": "A donation lock lets visitors add items without taking them.",
+  "caption": "A donation lock lets visitors add items without taking them.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.59, 0.65],
+      "to": [0.32, 0.84],
+      "text": "Deposit only",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

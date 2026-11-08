@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "shop-customer-buy",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/shop-customer-buy/original.webp",
+  "poster": "/media/shop-customer-buy/poster.webp",
+  "alt": "A successful purchase transfers sixteen oak planks and charges fifty crystals",
+  "caption": "The customer receives sixteen planks and pays the shop owner fifty crystals.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.62, 0.65],
+      "to": [0.27, 0.845],
+      "text": "50 crystals paid",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

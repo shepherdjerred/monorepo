@@ -10,6 +10,12 @@ Talk to NPCs in the permanent main world to find and complete quests.
 3. When an objective asks for items, bring them to the named NPC. Partial item hand-ins count, so you can deliver what you have and return with the rest.
 4. Return to the appropriate NPC to report progress or finish the quest. A `?` marker can indicate a hand-in or report is available.
 
+<div><storm-media data-manifest="/media/quest-objectives/media.json"><figure><img src="/media/quest-objectives/original.webp" width="2560" height="1440" loading="lazy" alt="The accepted blacksmith quest lists the materials and remaining delivery objectives." /><figcaption>The accepted blacksmith quest lists the materials and remaining delivery objectives. <a href="/media/quest-objectives/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/quest-partial-delivery/media.json"><figure><img src="/media/quest-partial-delivery/original.webp" width="2560" height="1440" loading="lazy" alt="Thomas accepts 16 iron ingots toward the 32 required; the journal preserves the partial delivery." /><figcaption>Thomas accepts 16 iron ingots toward the 32 required; the journal preserves the partial delivery. <a href="/media/quest-partial-delivery/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
+<div><storm-media data-manifest="/media/quest-completion-reward/media.json"><figure><img src="/media/quest-completion-reward/original.webp" width="2560" height="1440" loading="lazy" alt="The completed blacksmith quest pays 750 crystals; the balance rises from 500 to 1,250." /><figcaption>The completed blacksmith quest pays 750 crystals; the balance rises from 500 to 1,250. <a href="/media/quest-completion-reward/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+
 If you want to stop a quest, use `/quests abandon <quest>`. See [Quests and NPCs](/adventures/quests-and-npcs/) for the journal and NPC conversations.
 
 ## If progress does not advance

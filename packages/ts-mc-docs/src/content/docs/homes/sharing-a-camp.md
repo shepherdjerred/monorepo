@@ -13,4 +13,10 @@ The owner runs `/camp invite <player>`, and the invited player joins with `/camp
 
 Stand in a claimed chunk and use `/claim personal` to reserve it for yourself. Other members, including the owner, cannot build, open containers, or use animals there. Use `/claim shared` to open it to the camp. A member's personal chunks return to shared land when they leave; personal chunks remain personal when the camp becomes a town.
 
+<div><storm-media data-manifest="/media/claim-personal/media.json"><figure><img alt="A personal chunk keeps building and container access with its holder." src="/media/claim-personal/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A personal chunk keeps building and container access with its holder.</figcaption></figure></storm-media></div>
+<p><a href="/media/claim-personal/annotated.webp" download>Download annotated image</a></p>
+
+<div><storm-media data-manifest="/media/claim-shared/media.json"><figure><img alt="Sharing the chunk restores access for the camp." src="/media/claim-shared/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Sharing the chunk restores access for the camp.</figcaption></figure></storm-media></div>
+<p><a href="/media/claim-shared/annotated.webp" download>Download annotated image</a></p>
+
 Sharing a chunk does not share its individual locks. See [Managing locks](/homes/managing-locks/) to grant access to a chest or door.

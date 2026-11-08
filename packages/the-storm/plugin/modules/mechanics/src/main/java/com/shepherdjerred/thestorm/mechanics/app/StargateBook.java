@@ -165,6 +165,37 @@ public final class StargateBook {
                     }));
   }
 
+  /** Removes only a private, unshared, empty capture fixture network. */
+  public CompletableFuture<Void> removeCaptureNetwork(UUID player, String name) {
+    if (!name.matches("cap-[a-f0-9]{10}"))
+      throw new IllegalArgumentException("Not a capture network name");
+    var current = current();
+    var found = registry().network(name);
+    if (found.isEmpty()) return CompletableFuture.completedFuture(null);
+    var network = found.orElseThrow();
+    if (!(network.access() instanceof NetworkAccess.Private(var owner, var invited))
+        || !owner.equals(player)
+        || !invited.isEmpty()
+        || current.gates().stream().anyMatch(gate -> gate.networkId().equals(network.id())))
+      throw new IllegalStateException(
+          "Capture network is shared, belongs to another player, or still has gates");
+    var networks =
+        current.networks().stream()
+            .filter(candidate -> !candidate.id().equals(network.id()))
+            .toList();
+    return save(
+        new StargateStore.Snapshot(networks, current.gates()),
+        () ->
+            store
+                .deleteEmptyNetwork(network.id())
+                .thenApply(
+                    removed -> {
+                      if (!removed)
+                        throw new IllegalStateException("Capture network disappeared from storage");
+                      return null;
+                    }));
+  }
+
   /** Remove an account's gates, invitations and owned private networks atomically. */
   public CompletableFuture<Void> resetPlayer(UUID player) {
     var current = current();

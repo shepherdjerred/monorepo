@@ -3,7 +3,10 @@ import {
   PVC_BACKUP_POLICY,
   pvcBackupPolicyKey,
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
-import { CI_WORKSPACE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  CI_WORKSPACE_STORAGE_CLASS,
+  MC_CAPTURE_STORAGE_CLASS,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 const INCLUDED_PVC_KEYS = PVC_BACKUP_POLICY.filter(
@@ -28,8 +31,9 @@ const POLICY_KEY_EXPRESSION =
  * by definition: the class deletes its volume with the claim.
  */
 const EPHEMERAL_CI_WORKSPACE_EXPRESSION = `object.metadata.namespace == '${WOODPECKER_CI_NAMESPACE}' && has(object.spec.storageClassName) && object.spec.storageClassName == '${CI_WORKSPACE_STORAGE_CLASS}'`;
+const EPHEMERAL_MC_CAPTURE_EXPRESSION = `object.metadata.namespace == 'minecraft-tsmc' && object.metadata.name.startsWith('mc-capture-') && has(object.spec.storageClassName) && object.spec.storageClassName == '${MC_CAPTURE_STORAGE_CLASS}'`;
 const INCLUDED_EXPRESSION = `${toCelList(INCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
-const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey) || (${EPHEMERAL_CI_WORKSPACE_EXPRESSION})`;
+const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey) || (${EPHEMERAL_CI_WORKSPACE_EXPRESSION}) || (${EPHEMERAL_MC_CAPTURE_EXPRESSION})`;
 export const PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE = "-30";
 export const PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE = "-29";
 

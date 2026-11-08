@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "creative-restored-build",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/creative-restored-build/original.webp",
+  "poster": "/media/creative-restored-build/poster.webp",
+  "alt": "The gazebo returns through /creative paste; its restored block states match the saved original.",
+  "caption": "The gazebo returns through /creative paste; its restored block states match the saved original.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.26],
+      "to": [0.49, 0.47],
+      "text": "Restored from save",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

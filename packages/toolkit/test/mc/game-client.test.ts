@@ -133,4 +133,16 @@ describe("toolkit mc client", () => {
     expect(stderr).not.toContain("Unknown option");
     expect(stderr).toContain("toolkit mc daemon start");
   });
+
+  test("empty-body inspection actions reach the daemon without requiring --args", async () => {
+    const result = await runMcCommand([
+      "client",
+      "screen-inspect",
+      "--name",
+      "XiguaJerred",
+    ]);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).not.toContain("unknown client action");
+    expect(result.stderr).toContain("toolkit mc daemon start");
+  });
 });

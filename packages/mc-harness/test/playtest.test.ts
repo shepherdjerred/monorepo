@@ -158,6 +158,8 @@ describe("published Storm image profiles", () => {
       );
       expect(config.moduleKeys).toContain("rwfbots");
       expect(config.enabledModules).toContain("companions");
+      expect(config.enabledModules).toContain("shops");
+      expect(config.enabledModules).toContain("mechanics");
       expect(config.enabledModules).not.toContain("rwf");
 
       const profile = resolveProfile(
@@ -200,6 +202,11 @@ describe("published Storm image profiles", () => {
       frozenConfig([...current, "skylands"]),
     );
     expect(after.enabledModules).toContain("skylands");
+    const withStargates = stormImageConfig(
+      image,
+      frozenConfig([...current, "skylands", "stargates"]),
+    );
+    expect(withStargates.enabledModules).not.toContain("stargates");
     expect(
       stormModuleConfig(
         frozenConfig([...current, "skylands"]).yaml,

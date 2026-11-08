@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "name": "player-stargate-travel",
+  "kind": "video",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/player-stargate-travel/clip.mp4",
+  "poster": "/media/player-stargate-travel/poster.webp",
+  "alt": "Opening and walking through a player-built Stargate",
+  "caption": "The private network connects Home and Mine.",
+  "annotations": [
+    {
+      "kind": "label",
+      "from": [0.65, 0.14],
+      "to": [0.65, 0.14],
+      "text": "Open the gate",
+      "startMs": 0,
+      "endMs": 600
+    },
+    {
+      "kind": "label",
+      "from": [0.65, 0.14],
+      "to": [0.65, 0.14],
+      "text": "Walk through",
+      "startMs": 600,
+      "endMs": 1200
+    },
+    {
+      "kind": "label",
+      "from": [0.65, 0.14],
+      "to": [0.65, 0.14],
+      "text": "Arrival",
+      "startMs": 1200,
+      "endMs": 4000
+    }
+  ]
+}

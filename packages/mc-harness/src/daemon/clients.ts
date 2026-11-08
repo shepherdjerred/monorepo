@@ -2,6 +2,7 @@ import {
   appendFile,
   chmod,
   copyFile,
+  constants,
   lstat,
   mkdir,
   mkdtemp,
@@ -15,12 +16,12 @@ import {
   ClientStateSchema,
   type ClientSummary,
 } from "#protocol/client.ts";
-import { CLIENT_PROJECT } from "#protocol/paths.ts";
 import { ClientRefusedError } from "#protocol/client-socket.ts";
 import { clientRequest } from "./client-socket.ts";
 import { DaemonError } from "./http.ts";
 import { stageAndLaunchPrism } from "./prism.ts";
 import { stopPrism } from "./prism-process.ts";
+import { prismLauncher } from "./prism-launcher.ts";
 
 /**
  * Real Minecraft clients (the-storm's Fabric preview mod) owned by the daemon.
@@ -29,61 +30,11 @@ import { stopPrism } from "./prism-process.ts";
  * mode. The harness never imports the-storm: it only spawns the client.
  */
 
-/** What the mod reads from `-Dstorm.client.session` (Session.java). */
-export type ClientBootstrap = {
-  socket: string;
-  artifacts: string;
-  server: string;
-  target?: "live";
-};
-
-export type LaunchSpec = {
-  repoRoot: string;
-  bootstrapPath: string;
-  bootstrap: ClientBootstrap;
-  gameDir: string;
-  username: string;
-  logPath: string;
-};
-
-export type LaunchedClient = {
-  pid: number;
-  exited: Promise<number>;
-  exitCode: () => number | null;
-  kill: (signal: NodeJS.Signals) => void;
-};
-
-export type ClientLauncher = (spec: LaunchSpec) => LaunchedClient;
-
-/** `mise exec -- gradle -p packages/the-storm/client runClient …` from the repo. */
-export const gradleLauncher: ClientLauncher = (spec) => {
-  const log = Bun.file(spec.logPath);
-  const child = Bun.spawn(
-    [
-      "mise",
-      "exec",
-      "--",
-      "gradle",
-      "-p",
-      path.join(spec.repoRoot, CLIENT_PROJECT),
-      "runClient",
-      `-PpreviewSession=${spec.bootstrapPath}`,
-      `-PpreviewGameDir=${spec.gameDir}`,
-      `-PpreviewUsername=${spec.username}`,
-      "--console=plain",
-      "--no-daemon",
-    ],
-    { cwd: spec.repoRoot, stdout: log, stderr: log, stdin: "ignore" },
-  );
-  return {
-    pid: child.pid,
-    exited: child.exited,
-    exitCode: () => child.exitCode,
-    kill: (signal) => {
-      child.kill(signal);
-    },
-  };
-};
+import type {
+  ClientBootstrap,
+  ClientLauncher,
+  LaunchedClient,
+} from "./client-launch.ts";
 
 type Session = {
   summary: ClientSummary;
@@ -151,12 +102,28 @@ export class ClientManager {
     name: string;
     target: string;
     game: { host: string; port: number };
+    sourceDirectory?: string;
   }): Promise<ClientSummary> {
     const { name, target, game } = request;
-    if (this.sessions.has(name) || this.starting.has(name)) {
+    const existing = this.sessions.get(name);
+    if (
+      existing?.summary.target === target &&
+      existing.summary.server === `${game.host}:${game.port.toString()}`
+    ) {
+      await this.status(name);
+      return existing.summary;
+    }
+    if (existing !== undefined || this.starting.has(name)) {
       throw new DaemonError(`Client ${name} is already running`, 409);
     }
-    if (game.host !== "127.0.0.1") {
+    if (
+      game.host !== "127.0.0.1" &&
+      !(
+        target === "live" &&
+        game.host === "mc.ts-mc.net" &&
+        game.port === 30_000
+      )
+    ) {
       throw new DaemonError(
         `Sandbox ${target} has no loopback game endpoint (${game.host}); the client joins 127.0.0.1 only`,
         409,
@@ -164,7 +131,7 @@ export class ClientManager {
     }
     this.starting.add(name);
     try {
-      return await this.launch(name, target, game.port);
+      return await this.launch(name, target, game, request.sourceDirectory);
     } finally {
       this.starting.delete(name);
     }
@@ -272,7 +239,8 @@ export class ClientManager {
   private async launch(
     name: string,
     target: string,
-    port: number,
+    game: { host: string; port: number },
+    sourceDirectory = this.options.repoRoot,
   ): Promise<ClientSummary> {
     const startedAt = new Date();
     // Socket paths are capped near 104 bytes on macOS, so the socket and
@@ -287,20 +255,36 @@ export class ClientManager {
     const bootstrap: ClientBootstrap = {
       socket: path.join(privateDir, "client.sock"),
       artifacts,
-      server: `127.0.0.1:${port.toString()}`,
+      server: `${game.host}:${game.port.toString()}`,
+      ...(target === "live" ? { target: "capture" as const } : {}),
     };
     const bootstrapPath = path.join(privateDir, "bootstrap.json");
     await Bun.write(bootstrapPath, JSON.stringify(bootstrap));
     await chmod(bootstrapPath, 0o600);
+    // This disposable automation profile has no human to answer Minecraft's
+    // first-run accessibility prompt, which otherwise prevents auto-join.
+    const gameDir = path.join(privateDir, "game");
+    await mkdir(gameDir, { recursive: true, mode: 0o700 });
+    await Bun.write(
+      path.join(gameDir, "options.txt"),
+      "onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\npauseOnLostFocus:false\n",
+    );
     const logPath = path.join(artifacts, "client.log");
-    const child = this.options.launcher({
-      repoRoot: this.options.repoRoot,
-      bootstrapPath,
-      bootstrap,
-      gameDir: path.join(privateDir, "game"),
-      username: name,
-      logPath,
-    });
+    const launcher = target === "live" ? prismLauncher : this.options.launcher;
+    let child: Awaited<ReturnType<ClientLauncher>>;
+    try {
+      child = await launcher({
+        repoRoot: sourceDirectory,
+        bootstrapPath,
+        bootstrap,
+        gameDir,
+        username: name,
+        logPath,
+      });
+    } catch (error) {
+      await rm(privateDir, { recursive: true, force: true });
+      throw error;
+    }
     const session: Session = {
       summary: {
         name,
@@ -430,7 +414,7 @@ export class ClientManager {
       return saved;
     }
     await mkdir(path.dirname(out), { recursive: true });
-    await copyFile(saved, out);
+    await copyFile(saved, out, constants.COPYFILE_EXCL);
     return out;
   }
 
@@ -494,9 +478,9 @@ export class ClientManager {
         // Not answering is what the signals below are for.
       }
       if (!(await exitWithin(child, grace))) {
-        child.kill("SIGTERM");
+        await child.kill("SIGTERM");
         if (!(await exitWithin(child, grace / 3))) {
-          child.kill("SIGKILL");
+          await child.kill("SIGKILL");
           await child.exited;
         }
       }

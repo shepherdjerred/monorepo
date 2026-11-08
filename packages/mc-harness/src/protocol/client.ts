@@ -38,6 +38,7 @@ export const ClientButtonSchema = z.enum(CLIENT_BUTTONS);
 export const ClientStartRequestSchema = z.union([
   z.strictObject({
     target: z.literal(LIVE_TARGET_ID),
+    capture: z.literal(true).optional(),
     name: ClientNameSchema,
     op: z.literal(false).default(false),
     gameMode: z.undefined().optional(),
@@ -120,6 +121,13 @@ export const ClientCaptureRequestSchema = z.strictObject({
 });
 
 export const ClientActionSchema = z.enum([
+  "pan",
+  "record-marker",
+  "video-ready",
+  "video-arm",
+  "video-start",
+  "video-status",
+  "video-cancel",
   "look",
   "move",
   "hotbar",
@@ -127,10 +135,43 @@ export const ClientActionSchema = z.enum([
   "use",
   "attack",
   "release",
+  "release-inputs",
+  "inventory",
+  "close",
+  "clear-overlays",
+  "chat-open",
+  "advancements",
+  "hover-slot",
+  "screen-type",
+  "respawn",
+  "sign-write",
+  "click",
+  "messages",
+  "screen-inspect",
+  "screen-activate",
+  "record-arm",
+  "record-start",
+  "record-status",
+  "record-cancel",
 ]);
 export type ClientAction = z.infer<typeof ClientActionSchema>;
 
 export const CLIENT_ACTION_REQUEST_SCHEMAS = {
+  "record-marker": z.strictObject({ name: z.string().min(1).max(80) }),
+  "video-ready": z.strictObject({}),
+  "video-arm": z.strictObject({
+    name: z.string().regex(/^[\w-]+$/u),
+    frames: z.number().int().min(1).max(1800),
+    fov: z.number().int().min(30).max(110),
+  }),
+  "video-start": z.strictObject({}),
+  "video-status": z.strictObject({}),
+  "video-cancel": z.strictObject({}),
+  pan: z.strictObject({
+    yaw: z.number().min(-360).max(360),
+    pitch: z.number().min(-90).max(90),
+    ticks: z.number().int().min(1).max(100),
+  }),
   look: ClientLookRequestSchema,
   move: ClientMoveRequestSchema,
   hotbar: ClientHotbarRequestSchema,
@@ -138,10 +179,64 @@ export const CLIENT_ACTION_REQUEST_SCHEMAS = {
   use: z.strictObject({}),
   attack: z.strictObject({}),
   release: z.strictObject({}),
+  "release-inputs": z.strictObject({}),
+  inventory: z.strictObject({ open: z.boolean() }),
+  close: z.strictObject({}),
+  "clear-overlays": z.strictObject({}),
+  "chat-open": z.strictObject({}),
+  advancements: z.strictObject({
+    tab: z
+      .string()
+      .regex(/^[a-z0-9_.-]+:[a-z0-9_./-]+$/u)
+      .optional(),
+  }),
+  "hover-slot": z.strictObject({
+    containerId: z.number().int(),
+    stateId: z.number().int(),
+    slot: z.number().int().nonnegative(),
+  }),
+  "screen-type": z.strictObject({
+    revision: z.string().min(1).max(100),
+    id: z.number().int().nonnegative(),
+    text: z
+      .string()
+      .max(200)
+      .regex(/^[^\r\n]*$/u),
+  }),
+  respawn: z.strictObject({}),
+  "sign-write": z.strictObject({
+    lines: z.tuple([
+      z.string().max(15),
+      z.string().max(15),
+      z.string().max(15),
+      z.string().max(15),
+    ]),
+  }),
+  click: z.strictObject({
+    containerId: z.number().int(),
+    stateId: z.number().int(),
+    slot: z.number().int().nonnegative(),
+    button: z.union([z.literal(0), z.literal(1)]),
+    mode: z.enum(["pickup", "quick_move"]),
+  }),
+  messages: z.strictObject({ since: z.number().int().nonnegative() }),
+  "screen-inspect": z.strictObject({}),
+  "screen-activate": z.strictObject({
+    revision: z.string().min(1).max(100),
+    id: z.number().int().nonnegative(),
+  }),
+  "record-arm": z.strictObject({
+    name: z.string().regex(/^[\w-]+$/u),
+    frames: z.number().int().min(1).max(1800),
+  }),
+  "record-start": z.strictObject({}),
+  "record-status": z.strictObject({}),
+  "record-cancel": z.strictObject({}),
 } as const satisfies Record<ClientAction, z.ZodType>;
 
 export const ClientActionResponseSchema = z.strictObject({
   detail: z.string(),
+  result: z.unknown().optional(),
 });
 export const ClientCaptureResponseSchema = z.strictObject({
   /** The PNG: `out` when given, otherwise the session's artifacts dir. */

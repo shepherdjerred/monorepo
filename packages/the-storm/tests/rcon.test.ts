@@ -223,6 +223,28 @@ it("closes TCP after rejected authentication", async () => {
   });
 });
 
+it("uses one abort deadline across connection, authentication, and later commands", async () => {
+  const port = await fakeServer(false, undefined, () => Promise.resolve());
+  const controller = new AbortController();
+  const rcon = await RconClient.connect({
+    host: "127.0.0.1",
+    port,
+    password: "test-only",
+    timeoutMs: 1000,
+    signal: controller.signal,
+  });
+  const pending = rcon.command("list");
+  controller.abort(new Error("boot deadline"));
+  await expect(pending).rejects.toThrow("boot deadline");
+  await new Promise<void>((resolve) => {
+    const check = () => {
+      if (servers[0]?.sockets.size === 0) resolve();
+      else setTimeout(check, 1);
+    };
+    check();
+  });
+});
+
 it("replays an already-lost RCON connection to a later session subscriber", async () => {
   const port = await fakeServer();
   const rcon = await RconClient.connect({

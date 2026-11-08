@@ -1,8 +1,10 @@
-import { chmod, mkdir, readdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import {
   SandboxSummarySchema,
+  SandboxIdSchema,
   type ProviderKind,
   type SandboxSummary,
 } from "#protocol/ipc.ts";
@@ -83,6 +85,14 @@ export function toSummary(record: SandboxRecord): SandboxSummary {
     provider: record.provider,
     profile: record.profile,
     world: record.world,
+    ...(record.sourceDirectory === undefined
+      ? {}
+      : { sourceDirectory: record.sourceDirectory }),
+    ...(record.mapSource === undefined ? {} : { mapSource: record.mapSource }),
+    ...(record.rollout === undefined ? {} : { rollout: record.rollout }),
+    ...(record.captureFeatures === undefined
+      ? {}
+      : { captureFeatures: record.captureFeatures }),
     status: record.status,
     createdAt: record.createdAt,
     expiresAt: record.expiresAt,
@@ -97,22 +107,38 @@ export class SandboxStore {
   constructor(private readonly root = SANDBOXES_DIR) {}
 
   dir(id: string): string {
-    return path.join(this.root, id);
+    return path.join(this.root, SandboxIdSchema.parse(id));
   }
 
   async write(record: SandboxRecord): Promise<void> {
     const dir = this.dir(record.id);
     await mkdir(dir, { recursive: true, mode: 0o700 });
     const file = path.join(dir, "record.json");
-    await Bun.write(file, JSON.stringify(SandboxRecordSchema.parse(record)));
-    await chmod(file, 0o600);
+    const temporary = path.join(dir, `.record-${randomUUID()}.json`);
+    try {
+      await writeFile(
+        temporary,
+        JSON.stringify(SandboxRecordSchema.parse(record)),
+        { mode: 0o600, flag: "wx" },
+      );
+      await rename(temporary, file);
+    } finally {
+      await rm(temporary, { force: true });
+    }
   }
 
   async read(id: string): Promise<SandboxRecord | null> {
-    const file = Bun.file(path.join(this.dir(id), "record.json"));
-    return (await file.exists())
-      ? SandboxRecordSchema.parse(JSON.parse(await file.text()))
-      : null;
+    try {
+      return SandboxRecordSchema.parse(
+        JSON.parse(
+          await Bun.file(path.join(this.dir(id), "record.json")).text(),
+        ),
+      );
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT")
+        return null;
+      throw error;
+    }
   }
 
   /** Records of one provider; the other provider's records are not its to touch. */

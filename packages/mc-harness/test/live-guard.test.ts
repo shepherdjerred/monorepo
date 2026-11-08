@@ -15,8 +15,8 @@ import {
   authorizeLiveWrite,
   classifyCommand,
   type LiveGuardConfig,
-  LiveGuardRefusal,
 } from "#src/live/guard.ts";
+import { LiveGuardRefusal } from "#src/live/guard-errors.ts";
 import { distanceToBox } from "#src/box.ts";
 import { LiveJournal, undoBlocker } from "#src/live/journal.ts";
 import { pasteBoxFor } from "#src/live/paste-box.ts";
@@ -420,6 +420,77 @@ describe("authorizeLiveWrite", () => {
     expect(() =>
       authorizeLiveWrite({ ...base, assessment: block, flags: {} }),
     ).toThrow(LiveGuardRefusal);
+  });
+});
+
+describe("native capture player protection", () => {
+  const base = {
+    flags: { reason: "native capture" },
+    players: [],
+    now: new Date("2026-10-04T20:00:00Z"),
+    config,
+  };
+  const block = assessLiveWrite(
+    { kind: "paste", world: "world", box: box([0, 60, 0], [4, 64, 4]) },
+    config,
+  );
+  it("exempts only the verified controller nearby and still refuses a world edit with that player inside", () => {
+    const controller = player("XiguaJerred", 20, 2);
+    expect(
+      authorizeLiveWrite({
+        ...base,
+        assessment: block,
+        players: [controller],
+        nearbyParticipant: controller.uuid,
+      }).humansOnline,
+    ).toEqual(["XiguaJerred"]);
+    expect(() =>
+      authorizeLiveWrite({
+        ...base,
+        assessment: block,
+        players: [controller, player("Alex", 21, 2)],
+        nearbyParticipant: controller.uuid,
+      }),
+    ).toThrow(/Alex.*--allow-players/u);
+    const inside = player("XiguaJerred", 2, 2);
+    expect(() =>
+      authorizeLiveWrite({
+        ...base,
+        assessment: block,
+        players: [inside],
+        nearbyParticipant: inside.uuid,
+      }),
+    ).toThrow(/inside/u);
+  });
+
+  it("permits the controlled native player inside a fixture while protecting every other human", () => {
+    const controller = player("XiguaJerred", 2, 2);
+    const assessment = assessLiveWrite(
+      {
+        kind: "client-act",
+        name: controller.name,
+        uuid: controller.uuid,
+        action: "use",
+        box: box([0, 60, 0], [4, 64, 4]),
+      },
+      config,
+    );
+    expect(
+      authorizeLiveWrite({
+        ...base,
+        assessment,
+        participant: controller.uuid,
+        players: [controller],
+      }).humansOnline,
+    ).toEqual(["XiguaJerred"]);
+    expect(() =>
+      authorizeLiveWrite({
+        ...base,
+        assessment,
+        participant: controller.uuid,
+        players: [controller, player("Alex", 3, 3)],
+      }),
+    ).toThrow(/Alex is inside/u);
   });
 });
 

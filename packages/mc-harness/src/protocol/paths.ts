@@ -1,10 +1,24 @@
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 
 // Filesystem layout for the session daemon. Everything is private to the user:
 // the socket is chmod 0600 and sandbox records (which hold the bridge token)
 // are written 0600.
-export const MC_DIR = path.join(os.homedir(), ".toolkit", "mc");
+/** Bootstrap path shared by one daemon and its clients; suite workers isolate their namespace. */
+export const McDirectorySchema = z
+  .string()
+  .min(1)
+  .refine(
+    (value) =>
+      path.isAbsolute(value) &&
+      path.normalize(value) === value &&
+      value !== path.parse(value).root,
+    "Minecraft directory must be a normalized absolute directory",
+  );
+export const MC_DIR = McDirectorySchema.parse(
+  Bun.env["TOOLKIT_MC_DIRECTORY"] ?? path.join(os.homedir(), ".toolkit", "mc"),
+);
 export const SOCKET_PATH = path.join(MC_DIR, "daemon.sock");
 export const STATE_PATH = path.join(MC_DIR, "state.json");
 export const LOGS_DIR = path.join(MC_DIR, "logs");
@@ -43,6 +57,14 @@ export const BUILD_ENTRY = path.join(
   "mc-harness",
   "src",
   "build",
+  "cli.ts",
+);
+
+export const CAPTURE_ENTRY = path.join(
+  "packages",
+  "mc-harness",
+  "src",
+  "capture",
   "cli.ts",
 );
 

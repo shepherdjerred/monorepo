@@ -2,6 +2,9 @@ import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
+import { copyRealMap } from "#sandbox/map-copy.ts";
+import { startCaptureProxy } from "./proxy.ts";
+import { SandboxLifecycle } from "./lifecycle.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BridgeClient } from "#bridge/client.ts";
 import {
@@ -43,18 +46,25 @@ export const LABELS = {
   keep: "mc-harness.keep",
 } as const;
 
+function isPublishedStorm(profileName: string): boolean {
+  return profileName === "storm-prod" || profileName === "storm-candidate";
+}
+
 /** `docker create` argv for a sandbox; pure so the label/port shape is tested. */
-export function dockerCreateArgs(options: {
-  id: string;
-  profileName: string;
-  profile: ResolvedProfile;
-  /** Null when the profile stages no plugins (the image keeps its own). */
-  pluginsDir: string | null;
-  cacheDir: string;
-  expiresAt: string;
-  owner: string;
-  keep: boolean;
-}): string[] {
+export function dockerCreateArgs(
+  options: {
+    id: string;
+    profileName: string;
+    profile: ResolvedProfile;
+    /** Null when the profile stages no plugins (the image keeps its own). */
+    pluginsDir: string | null;
+    cacheDir: string;
+    expiresAt: string;
+    owner: string;
+    keep: boolean;
+  },
+  platform: NodeJS.Platform = process.platform,
+): string[] {
   const pluginsDir = options.pluginsDir;
   return [
     "create",
@@ -70,6 +80,22 @@ export function dockerCreateArgs(options: {
     `${LABELS.owner}=${options.owner}`,
     "--label",
     `${LABELS.keep}=${options.keep.toString()}`,
+    ...(platform === "linux" &&
+    options.profile.env["FLIPT_URL"]?.startsWith(
+      "http://host.docker.internal:",
+    ) === true
+      ? ["--add-host", "host.docker.internal:host-gateway"]
+      : []),
+    ...(isPublishedStorm(options.profileName)
+      ? [
+          "--user",
+          "1000:3000",
+          "--group-add",
+          "2000",
+          "--mount",
+          "type=volume,destination=/data,volume-nocopy",
+        ]
+      : []),
     ...options.profile.ports.flatMap((port) => [
       "-p",
       `127.0.0.1::${port.toString()}`,
@@ -126,6 +152,11 @@ export const SANDBOX_ROW_FORMAT = `{{.ID}}\t{{.Label "${LABELS.sandbox}"}}\t{{.L
 export class DockerSandboxProvider implements SandboxProvider {
   readonly kind = "docker" as const;
   private queue: Promise<unknown> = Promise.resolve();
+  private readonly proxies = new Map<
+    string,
+    Awaited<ReturnType<typeof startCaptureProxy>>
+  >();
+  private readonly lifecycle = new SandboxLifecycle();
 
   constructor(
     private readonly options: {
@@ -177,15 +208,21 @@ export class DockerSandboxProvider implements SandboxProvider {
     const started = Date.now();
     const id = newSandboxId();
     const secrets = newSandboxSecrets();
-    const profile = resolveProfile(request, secrets);
-    // Fail on a missing build output before writing anything.
-    await requireStagedSources(this.options.repoRoot, profile.staged);
     const dir = this.options.store.dir(id);
+    await mkdir(dir, { recursive: true, mode: 0o700 });
+    const mapSource =
+      request.mapDirectory === undefined
+        ? undefined
+        : await copyRealMap(request.mapDirectory, path.join(dir, "world"));
+    const profile = resolveProfile(request, secrets, mapSource);
+    // Validate build outputs before creating a container.
+    const sourceDirectory = request.sourceDirectory ?? this.options.repoRoot;
+    await requireStagedSources(sourceDirectory, profile.staged);
     progress("staging plugins");
     const { pluginsDir, seedFiles } = await stageSandboxFiles({
       dir,
       cacheDir: this.cacheDir,
-      repoRoot: this.options.repoRoot,
+      repoRoot: sourceDirectory,
       profile,
     });
     if (profile.seedData) {
@@ -214,11 +251,57 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     const containerId = stdout.trim();
     try {
+      if (mapSource !== undefined)
+        await docker(["cp", path.join(dir, "world"), `${containerId}:/data/`]);
+      if (isPublishedStorm(request.profile)) {
+        // Match the server chart's fsGroup on a fresh volume, as boot-check.sh
+        // does. The server itself stays unprivileged; only these short-lived
+        // helpers touch the disposable volume before the first boot.
+        for (const [command, value] of [
+          ["chown", "1000:2000"],
+          ["chmod", "2775"],
+        ] as const) {
+          await docker([
+            "run",
+            "--rm",
+            "--user",
+            "0:0",
+            "--volumes-from",
+            containerId,
+            "--entrypoint",
+            command,
+            profile.image,
+            value,
+            "/data",
+          ]);
+        }
+      }
       for (const seed of seedFiles) {
         await docker([
           "cp",
           seed.source,
           `${containerId}:/data/${seed.target}`,
+        ]);
+      }
+      if (mapSource !== undefined) {
+        const config = path.join(dir, "config");
+        await mkdir(config, { mode: 0o777 });
+        await Bun.write(
+          path.join(config, "paper-global.yml"),
+          "_version: 31\nproxies:\n  proxy-protocol: true\n",
+        );
+        await docker(["cp", config, `${containerId}:/data/`]);
+        await docker([
+          "run",
+          "--rm",
+          "--volumes-from",
+          containerId,
+          "--entrypoint",
+          "chmod",
+          profile.image,
+          "-R",
+          "a+rwX",
+          "/data/config",
         ]);
       }
       progress("booting Paper");
@@ -240,17 +323,28 @@ export class DockerSandboxProvider implements SandboxProvider {
         ),
         deadline,
       );
+      const proxy =
+        mapSource === undefined ? undefined : await startCaptureProxy(game);
+      if (proxy !== undefined) this.proxies.set(id, proxy);
       const record: SandboxRecord = {
         id,
         provider: "docker",
         profile: request.profile,
         world: request.world,
+        ...(request.sourceDirectory === undefined
+          ? {}
+          : { sourceDirectory: request.sourceDirectory }),
+        ...(mapSource === undefined ? {} : { mapSource }),
+        ...(request.rollout === undefined ? {} : { rollout: request.rollout }),
+        ...(request.captureFeatures === undefined
+          ? {}
+          : { captureFeatures: request.captureFeatures }),
         status: "ready",
         createdAt,
         expiresAt,
         keep: request.keep,
         bootMs: Date.now() - started,
-        endpoints: { game, rcon, bridge },
+        endpoints: { game: proxy?.endpoint ?? game, rcon, bridge },
         providerRef: { kind: "docker", containerId },
         owner: this.owner,
         secrets,
@@ -258,6 +352,8 @@ export class DockerSandboxProvider implements SandboxProvider {
       await this.options.store.write(record);
       return record;
     } catch (error) {
+      this.proxies.get(id)?.close();
+      this.proxies.delete(id);
       const logs = await containerLogs(containerId).catch(() => "");
       await Bun.write(path.join(dir, "failed-boot.log"), logs);
       await docker(["rm", "-f", "-v", containerId]);
@@ -273,15 +369,52 @@ export class DockerSandboxProvider implements SandboxProvider {
         .filter((row) => row.running)
         .map((row) => row.containerId.slice(0, 12)),
     );
-    return records.map((record) => ({
+    const listed = await Promise.all(
+      records.map((record) =>
+        this.lifecycle.run(record.id, async () => {
+          const current = await this.options.store.read(record.id);
+          if (current === null) return;
+          if (!running.has(dockerContainerId(current).slice(0, 12)))
+            return { ...current, status: "stopped" as const };
+          const adopted =
+            current.world === "real-map" ? await this.adopt(current) : current;
+          return { ...adopted, status: "ready" as const };
+        }),
+      ),
+    );
+    return listed.filter((record) => record !== undefined);
+  }
+
+  private async adopt(record: SandboxRecord): Promise<SandboxRecord> {
+    const existing = this.proxies.get(record.id);
+    if (existing !== undefined)
+      return {
+        ...record,
+        endpoints: { ...record.endpoints, game: existing.endpoint },
+      };
+    const game = await publishedPort(dockerContainerId(record), GAME_PORT);
+    const proxy = await startCaptureProxy(game);
+    const adopted = {
       ...record,
-      status: running.has(dockerContainerId(record).slice(0, 12))
-        ? "ready"
-        : "stopped",
-    }));
+      endpoints: { ...record.endpoints, game: proxy.endpoint },
+    };
+    try {
+      await this.options.store.write(adopted);
+      this.proxies.set(record.id, proxy);
+      return adopted;
+    } catch (error) {
+      proxy.close();
+      throw error;
+    }
   }
 
   async destroy(id: string): Promise<void> {
+    return this.lifecycle.run(id, () => this.destroyNow(id));
+  }
+
+  private async destroyNow(id: string): Promise<void> {
+    this.proxies.get(id)?.close();
+    this.proxies.delete(id);
     const record = await this.options.store.read(id);
     const allRows = await this.rows();
     const rows = allRows.filter((row) => row.id === id);
@@ -308,23 +441,29 @@ export class DockerSandboxProvider implements SandboxProvider {
 
   async reap(now: Date): Promise<string[]> {
     const reaped: string[] = [];
+    const records = await this.options.store.listFor("docker");
     const rows = await this.rows();
-    for (const row of rows) {
-      const expired = !row.keep && Date.parse(row.expiresAt) <= now.getTime();
-      // An exited sandbox is unusable whether or not it was kept.
-      if ((expired || row.stale) && !reaped.includes(row.id)) {
-        await this.destroy(row.id);
-        reaped.push(row.id);
-      }
-    }
-    // Docker records whose container vanished (docker restart, manual rm).
-    const remaining = await this.rows();
-    const known = new Set(remaining.map((row) => row.id));
-    for (const record of await this.options.store.listFor("docker")) {
-      if (!known.has(record.id) && !reaped.includes(record.id)) {
-        await this.options.store.remove(record.id);
-        reaped.push(record.id);
-      }
+    const candidates = new Set([
+      ...records.map((record) => record.id),
+      ...rows.map((row) => row.id),
+    ]);
+    for (const id of candidates) {
+      const removed = await this.lifecycle.run(id, async () => {
+        // Read the record before a fresh Docker inventory. A newly published
+        // creation cannot become a missing-container candidate from an old scan.
+        const record = await this.options.store.read(id);
+        const inventory = await this.rows();
+        const current = inventory.filter((row) => row.id === id);
+        const expired = current.some(
+          (row) => !row.keep && Date.parse(row.expiresAt) <= now.getTime(),
+        );
+        const stale = current.some((row) => row.stale);
+        if (!expired && !stale && !(record !== null && current.length === 0))
+          return false;
+        await this.destroyNow(id);
+        return true;
+      });
+      if (removed) reaped.push(id);
     }
     return reaped;
   }
@@ -340,6 +479,8 @@ export class DockerSandboxProvider implements SandboxProvider {
       "-a",
       "--filter",
       `label=${LABELS.sandbox}`,
+      "--filter",
+      `label=${LABELS.owner}=${this.owner}`,
       "--format",
       SANDBOX_ROW_FORMAT,
     ]);

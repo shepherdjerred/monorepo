@@ -84,6 +84,35 @@ final class BridgeRoutes {
                       .getAsJsonObject());
             })
         .add("POST", "/v1/regions/read", this::readRegion)
+        .add(
+            "POST",
+            "/v1/capture/inspect",
+            request ->
+                Response.json(server.captureInspection(request.json(Set.of("box")).box("box"))))
+        .add(
+            "POST",
+            "/v1/capture/player",
+            request ->
+                Response.json(
+                    server.capturePlayer(request.json(Set.of("name")).nonEmptyString("name"))))
+        .add(
+            "POST",
+            "/v1/capture/cleanup",
+            request -> {
+              var fields = request.json(Set.of("name", "resource", "id"));
+              return Response.json(
+                  server.captureCleanup(
+                      fields.nonEmptyString("name"),
+                      fields.nonEmptyString("resource"),
+                      fields.nonEmptyString("id")));
+            })
+        .add(
+            "POST",
+            "/v1/capture/player/restore",
+            request ->
+                Response.json(
+                    server.restoreCapturePlayer(
+                        request.json(Set.of("checkpoint", "expectedInventory")))))
         .add("POST", "/v1/snapshots", this::createSnapshot)
         .add("GET", "/v1/snapshots", request -> Response.json(snapshots.list()))
         .add("GET", "/v1/snapshots/:id", this::snapshotBytes)
@@ -123,6 +152,7 @@ final class BridgeRoutes {
     response.addProperty("dataVersion", worldEdit.dataVersion());
     JsonArray capabilities = new JsonArray();
     capabilities.add("worldedit");
+    if (server.captureSupported()) capabilities.add("capture");
     if (actors.supported()) {
       capabilities.add("citizens");
     }

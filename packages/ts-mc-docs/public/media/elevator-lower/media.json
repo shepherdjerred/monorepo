@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "elevator-lower",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/elevator-lower/original.webp",
+  "poster": "/media/elevator-lower/poster.webp",
+  "alt": "The lower elevator sign in the wilderness",
+  "caption": "Right-click Lift Up to reach the aligned upper stop.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.7, 0.25],
+      "to": [0.5, 0.5],
+      "text": "Lower stop",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

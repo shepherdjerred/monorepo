@@ -4,7 +4,9 @@
  * must run from source because sandboxes stage the repo-built MCBridge.jar.
  */
 import path from "node:path";
-import { DEFAULT_DAEMON_TTL_SECONDS } from "#protocol/paths.ts";
+import { createHash } from "node:crypto";
+import os from "node:os";
+import { DEFAULT_DAEMON_TTL_SECONDS, MC_DIR } from "#protocol/paths.ts";
 import { DockerSandboxProvider } from "#providers/docker/provider.ts";
 import {
   MC_HARNESS_SERVICE_ACCOUNT,
@@ -43,7 +45,15 @@ try {
     live,
     provider: new SandboxProviders(
       {
-        docker: new DockerSandboxProvider({ repoRoot, store }),
+        docker: new DockerSandboxProvider({
+          repoRoot,
+          store,
+          ...(Bun.env["TOOLKIT_MC_DIRECTORY"] === undefined
+            ? {}
+            : {
+                owner: `${os.userInfo().username}@${os.hostname()}:${createHash("sha256").update(MC_DIR).digest("hex").slice(0, 16)}`,
+              }),
+        }),
         kubernetes: new KubernetesSandboxProvider({
           repoRoot,
           store,

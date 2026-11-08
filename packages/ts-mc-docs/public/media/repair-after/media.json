@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "repair-after",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/repair-after/original.webp",
+  "poster": "/media/repair-after/poster.webp",
+  "alt": "Right-clicking the iron block repairs durability and consumes one matching ingredient.",
+  "caption": "Right-clicking the iron block repairs durability and consumes one matching ingredient.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.25, 0.57],
+      "to": [0.39, 0.7],
+      "text": "Durability restored",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.68, 0.36],
+      "to": [0.5, 0.46],
+      "text": "Two remain",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

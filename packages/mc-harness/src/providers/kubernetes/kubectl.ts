@@ -7,7 +7,6 @@
 export const MC_SANDBOX_NAMESPACE = "mc-sandbox";
 export const MC_HARNESS_SERVICE_ACCOUNT =
   "system:serviceaccount:mc-sandbox:mc-harness";
-export const DEFAULT_KUBE_CONTEXT = "admin@torvalds";
 
 export type KubeTarget = {
   readonly context: string;

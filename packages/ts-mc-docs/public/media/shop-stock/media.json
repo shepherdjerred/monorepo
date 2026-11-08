@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "shop-stock",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/shop-stock/original.webp",
+  "poster": "/media/shop-stock/poster.webp",
+  "alt": "A barrel holds sixty-four oak planks available for shop trades",
+  "caption": "The shop trades the matching items stored in its container.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.69, 0.27],
+      "to": [0.38, 0.35],
+      "text": "Matching stock",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

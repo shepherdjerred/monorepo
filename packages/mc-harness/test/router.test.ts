@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { BridgeClient, BridgeRequestError } from "#bridge/client.ts";
 import { ClientManager } from "#daemon/clients.ts";
@@ -333,6 +333,45 @@ describe("actor routes", () => {
   });
 });
 
+describe("bounded client interactions", () => {
+  it("refuses bounded live interactions before dispatching any input", async () => {
+    const { ctx, fake } = context();
+    await ctx.clients.start({
+      name: "XiguaJerred",
+      target: record.id,
+      game: record.endpoints.game,
+    });
+    const observed = await ctx.clients.status("XiguaJerred");
+    const status = vi.spyOn(ctx.clients, "status").mockResolvedValue({
+      ...observed,
+      client: { ...observed.client, target: "live" },
+    });
+    try {
+      for (const action of ["use", "attack", "input", "sign-write", "click"]) {
+        const result = await call(ctx, "POST", "/clients/XiguaJerred/bounded", {
+          box: {
+            world: "world",
+            min: { x: 0, y: 0, z: 0 },
+            max: { x: 5, y: 5, z: 5 },
+          },
+          action,
+          arguments: { buttons: ["forward", "use"], ticks: 100 },
+        });
+        expect(result.status).toBe(409);
+        expect(result.json).toMatchObject({
+          error: expect.stringContaining("disposable real-map"),
+        });
+      }
+      expect(
+        fake.requests.every((request) => request.action === "status"),
+      ).toBe(true);
+    } finally {
+      status.mockRestore();
+      await ctx.clients.stop("XiguaJerred");
+    }
+  });
+});
+
 describe("client routes", () => {
   it("starts a real client, ops it and reports its state", async () => {
     const { ctx, bridge, fake } = context();
@@ -365,7 +404,8 @@ describe("client routes", () => {
       target: "sbx-abc123",
       name: "Tester",
     });
-    expect(again.status).toBe(409);
+    expect(again.status).toBe(200);
+    expect(fake.launches).toHaveLength(1);
     await call(ctx, "DELETE", "/clients/Tester");
   });
 
@@ -379,7 +419,10 @@ describe("client routes", () => {
       yaw: 90,
       pitch: -15,
     });
-    expect(look.json).toEqual({ detail: "Camera updated" });
+    expect(look.json).toEqual({
+      detail: "Camera updated",
+      result: "Camera updated",
+    });
     const status = await call(ctx, "GET", "/clients/Mover");
     expect(status.json).toMatchObject({ state: { yaw: 90, pitch: -15 } });
     await call(ctx, "POST", "/clients/Mover/move", {

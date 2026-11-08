@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "super-push-after",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/super-push-after/original.webp",
+  "poster": "/media/super-push-after/poster.webp",
+  "alt": "After normal extension, SuperPush moves the two planks four blocks farther.",
+  "caption": "After normal extension, SuperPush moves the two planks four blocks farther.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.2, 0.29],
+      "to": [0.24, 0.49],
+      "text": "Moved load",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.66, 0.27],
+      "to": [0.63, 0.49],
+      "text": "Extended head",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

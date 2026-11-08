@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "shop-both-sign",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/shop-both-sign/original.webp",
+  "poster": "/media/shop-both-sign/poster.webp",
+  "alt": "A combined sign offers both prices for the same quantity.",
+  "caption": "A combined sign offers both prices for the same quantity.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.19, 0.3],
+      "to": [0.48, 0.51],
+      "text": "Buy price",
+      "startMs": 0,
+      "endMs": 12000
+    },
+    {
+      "kind": "arrow",
+      "from": [0.7, 0.3],
+      "to": [0.53, 0.51],
+      "text": "Sell price",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

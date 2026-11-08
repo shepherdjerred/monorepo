@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "cooking-pot",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/cooking-pot/original.webp",
+  "poster": "/media/cooking-pot/poster.webp",
+  "alt": "A cooking-pot sign attached to stone with a magma block directly below the sign",
+  "caption": "Put the heat source one or two blocks directly below the sign.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.65, 0.25],
+      "to": [0.5, 0.5],
+      "text": "Cooking-pot sign",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

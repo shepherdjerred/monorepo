@@ -11,13 +11,14 @@
  */
 import type { BlockPos, Box, Player } from "#protocol/bridge.ts";
 import type { LiveTier, LiveWriteFlags } from "#protocol/live.ts";
+import { boxOf, boxVolume, describeBox } from "#src/box.ts";
+
 import {
-  boxesOverlap,
-  boxOf,
-  boxVolume,
-  describeBox,
-  distanceToBox,
-} from "#src/box.ts";
+  checkPlayers,
+  checkProtected,
+  type ProtectedRegion,
+} from "./guard-proximity.ts";
+import { LiveGuardRefusal } from "./guard-errors.ts";
 
 export type LiveGuardConfig = {
   /** Kill switch: false refuses every live write. */
@@ -36,15 +37,6 @@ export type LiveGuardConfig = {
    */
   protectedRegions: readonly ProtectedRegion[];
 };
-
-export type ProtectedRegion = { name: string; box: Box };
-
-export class LiveGuardRefusal extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "LiveGuardRefusal";
-  }
-}
 
 export type CommandClass = "read" | "write" | "dangerous" | "block";
 
@@ -202,6 +194,7 @@ export type LiveWeOp = {
 };
 
 export type LiveWriteOp =
+  | { kind: "client-act"; name: string; uuid: string; action: string; box: Box }
   | { kind: "command"; command: string }
   | { kind: "we"; world: string; ops: readonly LiveWeOp[] }
   | { kind: "paste"; world: string; box: Box }
@@ -316,6 +309,16 @@ export function assessLiveWrite(
   affects?: Box,
 ): LiveAssessment {
   switch (op.kind) {
+    case "client-act": {
+      return {
+        read: false,
+        tier: blockTier(config, op.box, false),
+        dangerous: false,
+        world: op.box.world,
+        box: op.box,
+        summary: `client ${op.name} ${op.action}`,
+      };
+    }
     case "command": {
       return { ...assessCommand(op.command), summary: op.command };
     }
@@ -436,6 +439,9 @@ function assessActorAct(
 }
 
 export type LiveAuthorizationInput = {
+  /** Verified controller for a native interaction; never applies to WorldEdit or restoration. */
+  participant?: string | undefined;
+  nearbyParticipant?: string | undefined;
   assessment: LiveAssessment;
   flags: LiveWriteFlags;
   players: readonly Player[];
@@ -447,49 +453,6 @@ export type LiveAuthorization = {
   reason: string;
   humansOnline: string[];
 };
-
-/** Refuses humans inside the box, and near it without --allow-players. NPCs never count. */
-function checkPlayers(
-  box: Box,
-  humans: readonly Player[],
-  allowPlayers: boolean,
-  radius: number,
-): void {
-  const nearby = humans.filter((player) => player.world === box.world);
-  const inside = nearby.filter(
-    (player) => distanceToBox(box, player.pos) === 0,
-  );
-  if (inside.length > 0) {
-    throw new LiveGuardRefusal(
-      `${inside.map((player) => player.name).join(", ")} ${inside.length === 1 ? "is" : "are"} inside ${describeBox(box)}; wait until they leave`,
-    );
-  }
-  const close = nearby.filter(
-    (player) => distanceToBox(box, player.pos) <= radius,
-  );
-  if (!allowPlayers && close.length > 0) {
-    throw new LiveGuardRefusal(
-      `${close.map((player) => player.name).join(", ")} within ${radius.toString()} blocks of ${describeBox(box)}; pass --allow-players to proceed anyway`,
-    );
-  }
-}
-
-/** Refuses a box that intersects a protected region unless --allow-protected. */
-function checkProtected(
-  box: Box,
-  regions: readonly ProtectedRegion[],
-  allowProtected: boolean,
-): void {
-  if (allowProtected) {
-    return;
-  }
-  const hit = regions.filter((region) => boxesOverlap(box, region.box));
-  if (hit.length > 0) {
-    throw new LiveGuardRefusal(
-      `${describeBox(box)} intersects protected ${hit.map((region) => `${region.name} (${describeBox(region.box)})`).join(", ")}; pass --allow-protected with a --reason only if the edit is meant for it`,
-    );
-  }
-}
 
 /** Throws LiveGuardRefusal unless the write may proceed. */
 export function authorizeLiveWrite(
@@ -516,9 +479,12 @@ export function authorizeLiveWrite(
     );
     checkPlayers(
       assessment.box,
-      humans,
-      flags.allowPlayers === true,
-      config.nearPlayerRadius,
+      humans.filter((player) => player.uuid !== input.participant),
+      {
+        allowPlayers: flags.allowPlayers === true,
+        radius: config.nearPlayerRadius,
+        nearbyParticipant: input.nearbyParticipant,
+      },
     );
   }
   if (assessment.dangerous && flags.confirmDangerous !== true) {

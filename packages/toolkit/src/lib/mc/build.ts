@@ -7,7 +7,10 @@ import {
   BUILD_FILES,
   type Op,
 } from "@shepherdjerred/mc-harness/protocol/build.ts";
-import { BUILD_ENTRY } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import {
+  BUILD_ENTRY,
+  CAPTURE_ENTRY,
+} from "@shepherdjerred/mc-harness/protocol/paths.ts";
 import { withPublicationLock } from "@shepherdjerred/mc-harness/protocol/publication-lock.ts";
 import { repoRoot } from "#lib/deployed/git.ts";
 
@@ -16,7 +19,10 @@ import { repoRoot } from "#lib/deployed/git.ts";
  * and lint need the registry, renderer and compile child, which stay out of
  * the compiled toolkit binary.
  */
-export async function runBuildCli(args: string[]): Promise<number> {
+export async function runBuildCli(
+  args: string[],
+  entry = BUILD_ENTRY,
+): Promise<number> {
   const root = await repoRoot();
   if (root === null) {
     throw new Error("toolkit mc build must run inside the monorepo checkout.");
@@ -25,8 +31,17 @@ export async function runBuildCli(args: string[]): Promise<number> {
   if (bun === null) {
     throw new Error("bun is required on PATH for toolkit mc build.");
   }
-  const child = spawn(bun, ["run", path.join(root, BUILD_ENTRY), ...args], {
+  const child = spawn(bun, ["run", path.join(root, entry), ...args], {
     stdio: "inherit",
+    ...(entry === CAPTURE_ENTRY
+      ? {
+          env: {
+            ...Bun.env,
+            OP_SERVICE_ACCOUNT_TOKEN: undefined,
+            MC_BRIDGE_TOKEN: undefined,
+          },
+        }
+      : {}),
   });
   return new Promise((resolve, reject) => {
     child.on("error", reject);

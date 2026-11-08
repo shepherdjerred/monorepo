@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.client;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 
 record Session(Path socket, Path artifacts, String server) {
@@ -21,11 +22,13 @@ record Session(Path socket, Path artifacts, String server) {
       throw new IllegalArgumentException("Session paths must be absolute");
     }
     if (live) {
-      if (!Protocol.text(node, "target", 16).equals("live") || !server.equals("ts-mc.net:25565")) {
+      var target = Protocol.text(node, "target", 16);
+      var expected = Map.of("live", "ts-mc.net:25565", "capture", "mc.ts-mc.net:30000").get(target);
+      if (!server.equals(expected)) {
         throw new IllegalArgumentException("Live sessions require the The Storm production server");
       }
     } else if (!server.matches("127\\.0\\.0\\.1:[0-9]{1,5}")) {
-      throw new IllegalArgumentException("Preview requires a loopback server");
+      throw new IllegalArgumentException("Client requires a loopback server or The Storm");
     }
     if (!live) {
       var port = Integer.parseInt(server.substring(server.lastIndexOf(':') + 1));

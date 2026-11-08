@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "bridge-retracted",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/bridge-retracted/original.webp",
+  "poster": "/media/bridge-retracted/poster.webp",
+  "alt": "The moving bridge is retracted, leaving a gap between its matching ends",
+  "caption": "Matching Bridge signs control the gap between the fixed ends.",
+  "annotations": []
+}

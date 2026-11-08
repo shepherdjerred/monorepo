@@ -90,6 +90,7 @@ const CLUSTER_PLATFORM_INVENTORY = [
   "storage.k8s.io/v1/StorageClass/argocd/zfs-ssd",
   "storage.k8s.io/v1/StorageClass/argocd/zfs-ssd-lz4",
   "storage.k8s.io/v1/StorageClass/argocd/ci-workspace",
+  "storage.k8s.io/v1/StorageClass/argocd/mc-capture-fixture",
   "storage.k8s.io/v1/StorageClass/argocd/zfs-hdd",
   "snapshot.storage.k8s.io/v1/VolumeSnapshotClass/argocd/host-zfs-snapshot",
   "scheduling.k8s.io/v1/PriorityClass/argocd/service-burst",

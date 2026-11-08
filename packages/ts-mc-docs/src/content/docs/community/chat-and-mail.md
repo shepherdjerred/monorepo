@@ -3,7 +3,9 @@ title: Chat, mail, and help
 description: Talk to players, read deliveries, and find help on The Storm.
 ---
 
-Chat channels let you talk to the whole server or a smaller group. Use `/channels` to see the channels available to you, and `/channels hide <channel>` or `/channels show <channel>` to control what you see. `/g` selects Global and `/war` selects War chat. Town members can use Town chat.
+Chat channels let you talk to the whole server or a smaller group. Use `/channels` to see the channels available to you, and `/channels hide <channel>` or `/channels show <channel>` to control what you see. `/g` selects Global and `/war` selects War chat. Town chat is available to town members when that channel is enabled; `/channels` explains any current restriction.
+
+<div><storm-media data-manifest="/media/chat-channels/media.json"><figure><img src="/media/chat-channels/original.webp" width="2560" height="1440" loading="lazy" alt="The channel list shows which conversations are visible and where you are speaking." /><figcaption>The channel list shows which conversations are visible and where you are speaking. <a href="/media/chat-channels/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
 
 Use `/msg <player> <message>` for a private message to an online player and `/r <message>` to reply. `/ignore <player>` hides a player's chat; `/unignore <player>` reverses it. Hiding a channel changes what you see, not which channel you send to.
 
@@ -12,6 +14,15 @@ Global chat is also relayed to [Discord](/discord/). Choose a private message wh
 ## Mail
 
 Use `/mail` to see your mail and collect deliveries. If a delivery cannot fit, make room and claim it again; excess items are kept in mail. Where letters are enabled, send one with `/mail send <player> <text>`, including to an offline player, and read or reply using the options shown in your mailbox. Linked players can also send letters from [Discord](/discord/). A full inbox refuses new letters.
+
+<div><storm-media data-manifest="/media/mail-reward-pending/media.json"><figure><img alt="A pending reward delivery and its claim command" src="/media/mail-reward-pending/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>A pending delivery lists its claim command; choose an option to collect it.</figcaption></figure></storm-media></div>
+
+<details>
+<summary>After collecting a delivery</summary>
+
+<div><storm-media data-manifest="/media/mail-reward-collected/media.json"><figure><img alt="The delivery confirmation and collected ingots" src="/media/mail-reward-collected/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The selected delivery is collected into the inventory; make room before claiming large deliveries.</figcaption></figure></storm-media></div>
+
+</details>
 
 ## Find help
 

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "rwf-bomb-safe",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-bomb-safe/original.webp",
+  "poster": "/media/rwf-bomb-safe/poster.webp",
+  "alt": "An unarmed team bomb is safe; only an enemy can arm it with the Bomb Fuse.",
+  "caption": "An unarmed team bomb is safe; only an enemy can arm it with the Bomb Fuse.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.26],
+      "to": [0.51, 0.46],
+      "text": "Safe bomb",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

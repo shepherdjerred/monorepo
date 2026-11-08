@@ -1,4 +1,5 @@
 import net from "node:net";
+import { addAbortSignal } from "node:stream";
 
 // Source RCON as implemented by the vanilla/Paper server:
 // Little-endian int32 length, id, type, then UTF-8 and two NUL bytes.
@@ -32,6 +33,7 @@ export type RconConnectOptions = {
   password: string;
   timeoutMs?: number;
   world?: string;
+  signal?: AbortSignal;
 };
 
 export class RconClient {
@@ -77,6 +79,8 @@ export class RconClient {
           resolve(connection);
         },
       );
+      if (options.signal !== undefined)
+        addAbortSignal(options.signal, connection);
       connection.once("error", reject);
       connection.setTimeout(timeoutMs, () => {
         connection.destroy(new Error("RCON connect timed out"));
@@ -84,6 +88,21 @@ export class RconClient {
     });
     socket.setTimeout(0);
     const client = new RconClient(socket, timeoutMs, options.world);
+    const signal = options.signal;
+    if (signal !== undefined) {
+      const abort = () => {
+        client.fail(
+          signal.reason instanceof Error
+            ? signal.reason
+            : new Error("RCON operation aborted"),
+        );
+      };
+      signal.addEventListener("abort", abort, { once: true });
+      socket.once("close", () => {
+        signal.removeEventListener("abort", abort);
+      });
+      if (signal.aborted) abort();
+    }
     try {
       await client.authenticate(options.password);
     } catch (error) {

@@ -12,7 +12,8 @@
     "./pins.ts": "./src/pins.ts",
     "./target.ts": "./src/target.ts",
     "./build/*": "./src/build/*",
-    "./playtest/*": "./src/playtest/*"
+    "./playtest/*": "./src/playtest/*",
+    "./capture/*": "./src/capture/*"
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
@@ -44,7 +45,8 @@
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/mc-build": "workspace:*",
     "@shepherdjerred/unix-socket-daemon": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "sharp": "0.35.4"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",

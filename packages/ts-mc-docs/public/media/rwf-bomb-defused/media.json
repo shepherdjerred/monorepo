@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "rwf-bomb-defused",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/rwf-bomb-defused/original.webp",
+  "poster": "/media/rwf-bomb-defused/poster.webp",
+  "alt": "After a successful defuse, the bomb returns to its safe state.",
+  "caption": "After a successful defuse, the bomb returns to its safe state.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.7, 0.25],
+      "to": [0.92, 0.53],
+      "text": "Safe again",
+      "startMs": 0,
+      "endMs": 15000
+    }
+  ]
+}

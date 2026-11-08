@@ -88,6 +88,7 @@ final class StargateBookTest {
   }
 
   private static final class FakeStore implements StargateStore {
+    private boolean removed = true;
     private CompletableFuture<Void> write = new CompletableFuture<>();
     private Snapshot snapshot = new Snapshot(List.of(), List.of());
 
@@ -122,8 +123,64 @@ final class StargateBookTest {
     }
 
     @Override
+    public CompletableFuture<Boolean> deleteEmptyNetwork(UUID id) {
+      return CompletableFuture.completedFuture(removed);
+    }
+
+    @Override
     public CompletableFuture<Void> resetPlayer(UUID player) {
       throw new UnsupportedOperationException();
     }
+  }
+
+  @Test
+  void captureCleanupIsIdempotentAndPreservesTheCacheWhenStorageRefusesDeletion() {
+    var owner = new UUID(0, 1);
+    var network =
+        new StargateNetwork(
+            new UUID(0, 2), "cap-0123456789", new NetworkAccess.Private(owner, Set.of()));
+    var store = new FakeStore();
+    store.snapshot = new StargateStore.Snapshot(List.of(network), List.of());
+    var book = new StargateBook(store, Runnable::run);
+    book.load().join();
+    store.removed = false;
+    assertThatThrownBy(() -> book.removeCaptureNetwork(owner, network.name()).join())
+        .isInstanceOf(CompletionException.class);
+    assertThat(book.registry().network(network.name())).contains(network);
+    store.removed = true;
+    book.removeCaptureNetwork(owner, network.name()).join();
+    assertThat(book.registry().network(network.name())).isEmpty();
+    book.removeCaptureNetwork(owner, network.name()).join();
+  }
+
+  @Test
+  void captureCleanupRefusesSharedForeignAndNonemptyNetworks() {
+    var owner = new UUID(0, 1);
+    var other = new UUID(0, 2);
+    var id = new UUID(0, 3);
+    for (var access :
+        List.of(
+            new NetworkAccess.Public(),
+            new NetworkAccess.Private(other, Set.of()),
+            new NetworkAccess.Private(owner, Set.of(other)))) {
+      var network = new StargateNetwork(id, "cap-0123456789", access);
+      var store = new FakeStore();
+      store.snapshot = new StargateStore.Snapshot(List.of(network), List.of());
+      var book = new StargateBook(store, Runnable::run);
+      book.load().join();
+      assertThatThrownBy(() -> book.removeCaptureNetwork(owner, network.name()))
+          .isInstanceOf(IllegalStateException.class);
+    }
+    var network =
+        new StargateNetwork(id, "cap-0123456789", new NetworkAccess.Private(owner, Set.of()));
+    var store = new FakeStore();
+    store.snapshot =
+        new StargateStore.Snapshot(List.of(network), List.of(gate(1, id, owner, false)));
+    var book = new StargateBook(store, Runnable::run);
+    book.load().join();
+    assertThatThrownBy(() -> book.removeCaptureNetwork(owner, network.name()))
+        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> book.removeCaptureNetwork(owner, "ordinary-network"))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

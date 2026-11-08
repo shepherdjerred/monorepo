@@ -12,6 +12,8 @@ Pick a kit from the kit menu (right-click the nether star in the lobby, or type
 nothing you play Trooper, and next time you join you start with the kit you
 last played.
 
+<div><storm-media data-manifest="/media/rwf-kit-menu/media.json"><figure><img alt="The kit browser shows Berserker's items, locked status, and credit price" src="/media/rwf-kit-menu/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Browse kit items and prices; bought kits stay unlocked for later rounds.</figcaption></figure></storm-media></div>
+
 Every kit carries the Bomb Fuse in the first hotbar slot. When the full kit
 selection is available, six kits are free: Trooper, Longbow, Shortbow, Rewind,
 Medic and Teleporter. The others are bought once with Red Warfare Credits and

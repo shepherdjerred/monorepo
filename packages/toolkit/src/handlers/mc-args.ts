@@ -18,3 +18,16 @@ export function parseMcArgs<
     strict: true,
   });
 }
+
+export function rolloutInput(
+  url: string | undefined,
+  environment: string | undefined,
+) {
+  return url === undefined && environment === undefined
+    ? {}
+    : { rollout: { url, environment } };
+}
+
+export function captureFeatureInput(features: string[] | undefined) {
+  return features === undefined ? {} : { captureFeatures: features };
+}

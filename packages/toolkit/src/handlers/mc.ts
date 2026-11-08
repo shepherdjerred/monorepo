@@ -1,4 +1,6 @@
 import type { ParseArgsOptionsConfig } from "node:util";
+import { CAPTURE_ENTRY } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import { runBuildCli } from "#lib/mc/build.ts";
 import { publishedProfileInputs } from "#lib/mc/published-profile.ts";
 import { mcBuildCommand } from "#commands/mc/build.ts";
 import {
@@ -33,7 +35,7 @@ import {
   liveWriteFlags,
   type LiveWriteValues,
 } from "#lib/mc/live.ts";
-import { parseMcArgs } from "./mc-args.ts";
+import { parseMcArgs, rolloutInput, captureFeatureInput } from "./mc-args.ts";
 import { handleMcClient } from "./mc-client.ts";
 import { handleMcFiles } from "./mc-files.ts";
 import { handleMcEvidence } from "./mc-evidence.ts";
@@ -150,12 +152,21 @@ async function handleDaemon(args: string[]): Promise<void> {
   fail(`unknown daemon action "${action}"`);
 }
 
+function mapSpawnInput(value: string | undefined): unknown {
+  return value === undefined ? undefined : JSON.parse(value);
+}
+
 async function handleSandbox(args: string[]): Promise<void> {
   const [action = "", ...rest] = args;
   const { values, positionals } = parse(rest, {
     profile: { type: "string", default: "paper" },
     "artifact-file": { type: "string" },
     world: { type: "string", default: "flat" },
+    "map-directory": { type: "string" },
+    "map-spawn": { type: "string" },
+    "rollout-url": { type: "string" },
+    "rollout-environment": { type: "string" },
+    "capture-feature": { type: "string", multiple: true },
     ttl: { type: "string" },
     keep: { type: "boolean", default: false },
     all: { type: "boolean", default: false },
@@ -164,10 +175,17 @@ async function handleSandbox(args: string[]): Promise<void> {
   switch (action) {
     case "up": {
       const profile = ProfileSchema.parse(values.profile);
+      const mapSpawn = mapSpawnInput(values["map-spawn"]);
       const request = SandboxCreateRequestSchema.parse({
         profile,
         ...(await publishedProfileInputs(profile, values["artifact-file"])),
         world: WorldKindSchema.parse(values.world),
+        ...(values["map-directory"] === undefined
+          ? {}
+          : { mapDirectory: values["map-directory"] }),
+        ...(mapSpawn === undefined ? {} : { mapSpawn }),
+        ...rolloutInput(values["rollout-url"], values["rollout-environment"]),
+        ...captureFeatureInput(values["capture-feature"]),
         ttlSeconds:
           values.ttl === undefined
             ? DEFAULT_SANDBOX_TTL_SECONDS
@@ -429,6 +447,10 @@ export async function handleMcCommand(
       }
       case "build": {
         await mcBuildCommand(args);
+        return;
+      }
+      case "capture": {
+        process.exitCode = await runBuildCli(args, CAPTURE_ENTRY);
         return;
       }
       case "actor": {

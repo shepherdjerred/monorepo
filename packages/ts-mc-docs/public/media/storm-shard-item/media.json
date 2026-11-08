@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "storm-shard-item",
+  "kind": "image",
+  "width": 2560,
+  "height": 1440,
+  "src": "/media/storm-shard-item/original.webp",
+  "poster": "/media/storm-shard-item/poster.webp",
+  "alt": "The genuine Storm Shard item has its own name, lore, and glint.",
+  "caption": "The genuine Storm Shard item has its own name, lore, and glint.",
+  "annotations": [
+    {
+      "kind": "arrow",
+      "from": [0.73, 0.35],
+      "to": [0.48, 0.65],
+      "text": "Storm Shard",
+      "startMs": 0,
+      "endMs": 12000
+    }
+  ]
+}

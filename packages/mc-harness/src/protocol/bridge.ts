@@ -71,7 +71,7 @@ export const InfoResponseSchema = z.strictObject({
       enabled: z.boolean(),
     }),
   ),
-  capabilities: z.array(z.enum(["worldedit", "citizens"])),
+  capabilities: z.array(z.enum(["worldedit", "citizens", "capture"])),
 });
 export type InfoResponse = z.infer<typeof InfoResponseSchema>;
 

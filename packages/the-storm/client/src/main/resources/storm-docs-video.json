@@ -1,0 +1,24 @@
+{
+  "version": 4,
+  "kind": "mc-docs-frames",
+  "source": "minecraft-framebuffer",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "maximumFrames": 1800,
+  "maximumMarkers": 200,
+  "receipt": [
+    "schema",
+    "kind",
+    "source",
+    "fps",
+    "requestedFrames",
+    "complete",
+    "error",
+    "frames",
+    "markers"
+  ],
+  "written": ["frame", "file", "sha256", "observation"],
+  "observation": ["world", "screen"],
+  "marker": ["name", "frame"]
+}

@@ -1,5 +1,6 @@
 import { cp, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { captureConfig } from "#sandbox/capture-config.ts";
 import { paper } from "#src/pins.ts";
 import {
   ensureArtifact,
@@ -94,6 +95,11 @@ export async function stageEntries(
     const target = path.join(pluginsDir, entry.target);
     await mkdir(path.dirname(target), { recursive: true, mode: 0o755 });
     switch (entry.kind) {
+      case "capture-content": {
+        const sourceConfig = await Bun.file(source).text();
+        await Bun.write(target, captureConfig(sourceConfig, entry));
+        break;
+      }
       case "repo-file": {
         await Bun.write(target, Bun.file(source));
         break;
