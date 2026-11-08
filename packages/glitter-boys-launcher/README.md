@@ -137,16 +137,23 @@ selected library before deleting anything.
 ## Client adapters
 
 - **IW4x:** installs the pinned official launcher (v1.1.8-b.24), runs
-  `--skip-launch --no-self-update` to update a new installation, then starts that
-  launcher with `--no-self-update` for Play; game files still update. Launchers
-  from v1.1.8 on refuse to run unless `iw4mp.exe` sits next to them, which the
-  MW2 archive does not ship, so keep the pin until the archive changes. Without
-  `--no-self-update` the pinned launcher replaces itself with the newest upstream
-  build and exits while the replacement keeps the staged folder as its working
-  directory, so promotion fails with a sharing violation (os error 32). Before any staged game is moved into the library,
-  setup also waits until no process runs from, or works inside, that folder.
-  When a final setup step fails, the unpacked files are kept for that launcher
-  session so Try again skips the extraction.
+  `--skip-launch --no-self-update --no-shortcuts --no-connect-protocol` to update
+  a new installation in its temporary folder, then starts that launcher with
+  `--no-self-update` for Play from the final folder, where it creates shortcuts,
+  Steam library entries, and the `iw4x://` handler with real paths; game files
+  still update. Launchers from v1.1.8 on refuse to run unless `iw4mp.exe` sits
+  next to them, which the MW2 archive does not ship, so keep the pin until the
+  archive changes. Without `--no-self-update` the pinned launcher replaces itself
+  with the newest upstream build and exits while the replacement keeps the staged
+  folder as its working directory (os error 32 on promotion). Without
+  `--no-shortcuts` it adds the temporary folder to Steam's library and restarts
+  Steam, which then holds the folder (os error 5 on promotion). Before a staged
+  game is moved into the library, setup waits until no process runs from or works
+  inside that folder, then retries the move for up to three minutes while Windows
+  reports it held (shown as "Waiting for antivirus to finish scanning"); on giving
+  up, the error names the files still held open. When a final setup step fails,
+  the unpacked files are kept for that launcher session so Try again skips the
+  extraction.
 - **Plutonium:** sets only `t5Path` or `t6Path` while its client is closed,
   preserves unrelated configuration, runs the official updater with
   `-update-only`, and opens the fixed `plutonium://play/` link for the selected

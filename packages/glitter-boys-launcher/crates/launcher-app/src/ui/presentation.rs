@@ -103,6 +103,7 @@ pub(super) fn step_label(g: &GameStatus) -> &'static str {
         Phase::Preparing => match g.progress.phase {
             "Updating IW4x" => "Updating MW2",
             "Finishing installation" => "Finishing installation",
+            "Waiting for a security scan" => "Waiting for antivirus to finish scanning",
             "Installing Microsoft components" => "Installing Windows components",
             _ => "Setting up the game launcher",
         },

@@ -99,6 +99,11 @@ fn io_guidance(
         _ => {}
     }
     match error.kind() {
+        // Promotion already retried while the files were held; something keeps scanning them.
+        std::io::ErrorKind::PermissionDenied if step == Some(Step::Promote) => Some((
+            "Another program is using the new game files",
+            "Antivirus or Windows Search may still be scanning them. Choose Try again in a minute; if it keeps happening, exclude the game folder from antivirus scanning.",
+        )),
         std::io::ErrorKind::StorageFull => Some((
             "There's not enough space",
             "Free some space on your game drive, then try again.",
@@ -170,6 +175,7 @@ mod tests {
             step: crate::Step::CopyClient,
             path: "iw4x-launcher.exe".into(),
             source: std::io::Error::from(std::io::ErrorKind::NotFound),
+            held: Vec::new(),
         };
         let problem = Problem::from_error(&missing, Activity::Installation);
         assert_eq!(problem.title, "A game launcher file went missing");
@@ -183,6 +189,7 @@ mod tests {
             step,
             path: std::path::PathBuf::from(r"C:\Games\.gb-stage-x\iw4x"),
             source: std::io::Error::from_raw_os_error(code),
+            held: Vec::new(),
         };
         let in_use = Problem::from_error(&step(32, crate::Step::Promote), Activity::Installation);
         assert_eq!(in_use.title, "A game file is in use");

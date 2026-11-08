@@ -76,12 +76,14 @@ pub enum Error {
     Invalid(String),
     #[error("Paused. Your downloaded files are saved; choose Resume to continue.")]
     Paused,
-    #[error("{step} failed for {}: {source}", path.display())]
+    #[error("{step} failed for {}: {source}{}", path.display(), held_suffix(held))]
     Step {
         step: Step,
         path: PathBuf,
         #[source]
         source: std::io::Error,
+        /// Files found held open by another program when the step gave up.
+        held: Vec<PathBuf>,
     },
     #[error("File operation failed: {0}")]
     Io(#[from] std::io::Error),
@@ -94,6 +96,14 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+fn held_suffix(held: &[PathBuf]) -> String {
+    if held.is_empty() {
+        return String::new();
+    }
+    let names: Vec<_> = held.iter().map(|p| p.display().to_string()).collect();
+    format!(" (held open by another program: {})", names.join(", "))
+}
 
 impl Error {
     /// The OS-level error behind a filesystem or process failure, when there is one.
@@ -122,6 +132,7 @@ impl<T> StepExt<T> for std::io::Result<T> {
             step,
             path: path.to_path_buf(),
             source,
+            held: Vec::new(),
         })
     }
 }
@@ -133,6 +144,7 @@ impl<T> StepExt<T> for Result<T> {
                 step,
                 path: path.to_path_buf(),
                 source,
+                held: Vec::new(),
             },
             other => other,
         })

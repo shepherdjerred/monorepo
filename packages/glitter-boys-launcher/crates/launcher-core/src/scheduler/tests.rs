@@ -589,6 +589,7 @@ fn failed_finish_keeps_unpacked_files_so_retry_skips_extraction() -> Result<()> 
             step: crate::Step::Promote,
             path: "iw4x".into(),
             source: std::io::Error::other("in use"),
+            held: Vec::new(),
         },
     )?;
     let kept = engine.staged[index(Game::Iw4x)]

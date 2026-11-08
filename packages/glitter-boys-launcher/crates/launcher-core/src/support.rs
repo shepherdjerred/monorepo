@@ -619,6 +619,7 @@ fn processes() -> serde_json::Value {
         "plutonium",
         "boiii",
         "blackops3",
+        "steam",
         "t5",
         "t6",
     ];

@@ -279,9 +279,11 @@ fn scan_files(
             Err(e) => return Err(e.into()),
         };
         if redirected(&metadata) {
-            return Err(Error::Invalid(
-                "Storage contains a link or junction. Choose a local folder without links.".into(),
-            ));
+            tracing::warn!(path = %path.display(), "storage scan found a link or junction");
+            return Err(Error::Invalid(format!(
+                "Storage contains a link or junction at {}. Choose a local folder without links.",
+                path.display()
+            )));
         }
         if metadata.is_file() {
             visit(&path, metadata.len())?;
@@ -359,16 +361,45 @@ fn add_app_usage(
             .filter(|other| *other != root && other.starts_with(root))
             .cloned()
             .collect();
-        scan_files(root, &excluded, &mut |path, size| {
+        let mut count = |path: &Path, size: u64| {
             if i == 3 || (i == 1 && path.starts_with(root.join("Clients"))) {
                 report.shared += size;
             } else {
                 report.launcher += size;
             }
             Ok(())
-        })?;
+        };
+        if i == 2 && root.is_dir() {
+            // The install folder can be shared with other software (for example a
+            // general Games folder), so count only what the launcher owns there.
+            for entry in fs::read_dir(root)? {
+                let entry = entry?;
+                if launcher_owned(&entry.file_name().to_string_lossy()) {
+                    scan_files(&entry.path(), &excluded, &mut count)?;
+                }
+            }
+        } else {
+            scan_files(root, &excluded, &mut count)?;
+        }
     }
     Ok(())
+}
+
+/// Entries the installer and updater create in the launcher's install folder.
+fn launcher_owned(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    matches!(
+        name.as_str(),
+        "versions"
+            | "update-cache"
+            | "licenses"
+            | "current.json"
+            | "failed-update.json"
+            | "activation.lock"
+            | "update.lock"
+            | "glitter-boys.exe"
+            | "uninstall.exe"
+    ) || name.starts_with(".update-")
 }
 fn reclaimable(path: &Path) -> Result<u64> {
     let total = bytes(path)?;
@@ -641,6 +672,41 @@ mod tests {
             files.iter().map(|(_, n)| *n as u64).sum::<u64>()
         );
         assert_eq!(report.reclaimable, 11); // Queued downloads are protected.
+        Ok(())
+    }
+
+    /// A launcher installed into a shared folder (such as a general Games folder that
+    /// also holds the library and other games with junctions) counts only its own files.
+    #[cfg(windows)]
+    #[test]
+    fn shared_install_folder_counts_only_launcher_files() -> Result<()> {
+        let temp = crate::test_tempdir()?;
+        let app = temp.path().join("Games");
+        let library = app.join("Glitter").join("GlitterBoys");
+        let data = temp.path().join("data");
+        let plutonium = temp.path().join("Plutonium");
+        for directory in [&library, &data, &plutonium, &app.join("versions/0.1.9")] {
+            fs::create_dir_all(directory)?;
+        }
+        fs::write(app.join("versions/0.1.9/glitter-boys.exe"), vec![0; 23])?;
+        fs::write(app.join("current.json"), vec![0; 7])?;
+        // Someone else's game folder with a junction, beside the launcher files.
+        let other = app.join("OtherGame");
+        fs::create_dir_all(other.join("real"))?;
+        fs::write(other.join("real").join("big.pak"), vec![0; 1000])?;
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(other.join("linked"))
+            .arg(other.join("real"))
+            .stdout(std::process::Stdio::null())
+            .status()?;
+        assert!(status.success(), "junction fixture");
+        let mut report = Report::default();
+        add_app_usage(&mut report, &library, &data, &app, &plutonium)?;
+        assert_eq!(report.launcher, 23 + 7);
+        // A link the launcher does own is still refused, and named.
+        let error = scan_files(&other, &[], &mut |_, _| Ok(()));
+        assert!(error.is_err_and(|e| e.to_string().contains("linked")));
         Ok(())
     }
 

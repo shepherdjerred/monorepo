@@ -277,9 +277,19 @@ pub(crate) fn finalize(
             // itself with the newest upstream build (which rejects this game folder), exits,
             // and leaves the replacement running with the staged folder as its working
             // directory, so the folder cannot be moved (os error 32).
+            //
+            // --no-shortcuts and --no-connect-protocol: this folder is temporary. Without them
+            // the launcher points desktop and menu shortcuts, the iw4x:// handler, and a
+            // Steam library entry at it, closing and reopening Steam to do so; the reopened
+            // Steam then holds the folder and Windows refuses to move it (os error 5). Play
+            // runs the launcher from the final folder, which creates them with real paths.
             let mut updater = launch::spawn_logged(
-                launch::command(&launcher, &staged_game)
-                    .args(["--skip-launch", "--no-self-update"]),
+                launch::command(&launcher, &staged_game).args([
+                    "--skip-launch",
+                    "--no-self-update",
+                    "--no-shortcuts",
+                    "--no-connect-protocol",
+                ]),
                 "iw4x-update",
             )
             .step(Step::SpawnUpdater, &launcher)?;
@@ -325,9 +335,170 @@ pub(crate) fn finalize(
             "The destination appeared during installation. Existing files were preserved.".into(),
         ));
     }
-    std::fs::rename(&staged_game, &destination).step(Step::Promote, &staged_game)?;
+    promote(&staged_game, &destination, cancel, PROMOTE_RETRY, progress)?;
     tracing::info!(game = game.id(), destination = %destination.display(), "game promoted");
     Ok(())
+}
+
+/// How long promotion keeps retrying while Windows reports the staged folder as briefly
+/// held, typically by antivirus or the search indexer scanning freshly written files.
+const PROMOTE_RETRY: std::time::Duration = std::time::Duration::from_secs(180);
+
+/// Move a staged game into the library. A folder whose files another program has open
+/// cannot be renamed (access denied or in use); retry while that is the failure, and on
+/// giving up name the files still held so the cause is visible.
+fn promote(
+    staged: &Path,
+    destination: &Path,
+    cancel: &Cancellation,
+    retry_for: std::time::Duration,
+    progress: &mut dyn FnMut(Progress),
+) -> Result<()> {
+    let started = std::time::Instant::now();
+    let mut delay = std::time::Duration::from_millis(100);
+    let mut attempts = 0_u32;
+    loop {
+        attempts += 1;
+        let error = match std::fs::rename(staged, destination) {
+            Ok(()) => {
+                if attempts > 1 {
+                    tracing::info!(
+                        attempts,
+                        elapsed_ms = started.elapsed().as_millis() as u64,
+                        "promotion succeeded after retrying"
+                    );
+                }
+                return Ok(());
+            }
+            Err(error) => error,
+        };
+        if held_briefly(&error) && started.elapsed() < retry_for {
+            if attempts == 1 {
+                progress(Progress {
+                    phase: "Waiting for a security scan",
+                    completed: 0,
+                    total: 0,
+                });
+            }
+            tracing::info!(attempts, %error, retry_in_ms = delay.as_millis() as u64, "staged folder is held; retrying promotion");
+            cancel.check()?;
+            std::thread::sleep(delay);
+            delay = (delay * 2).min(std::time::Duration::from_secs(5));
+            continue;
+        }
+        let held = if held_briefly(&error) {
+            held_files(staged, 5)
+        } else {
+            Vec::new()
+        };
+        tracing::warn!(attempts, %error, ?held, "promotion failed");
+        return Err(Error::Step {
+            step: Step::Promote,
+            path: staged.to_path_buf(),
+            source: error,
+            held,
+        });
+    }
+}
+
+/// Access denied and sharing or lock violations: what Windows reports while another
+/// program has a file in the folder open.
+fn held_briefly(error: &std::io::Error) -> bool {
+    error.kind() == std::io::ErrorKind::PermissionDenied
+        || (cfg!(windows) && matches!(error.raw_os_error(), Some(32 | 33)))
+}
+
+/// Up to `limit` files under `root` that cannot be opened exclusively right now.
+fn held_files(root: &Path, limit: usize) -> Vec<std::path::PathBuf> {
+    let mut held = Vec::new();
+    let mut pending = vec![root.to_path_buf()];
+    let mut visited = 0_usize;
+    while let Some(directory) = pending.pop() {
+        let Ok(entries) = std::fs::read_dir(&directory) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            visited += 1;
+            if held.len() >= limit || visited > 50_000 {
+                return held;
+            }
+            let Ok(kind) = entry.file_type() else {
+                continue;
+            };
+            if kind.is_dir() {
+                pending.push(entry.path());
+            } else if kind.is_file() && !opens_exclusively(&entry.path()) {
+                held.push(entry.path());
+            }
+        }
+    }
+    held
+}
+
+#[cfg(windows)]
+fn opens_exclusively(path: &Path) -> bool {
+    use std::os::windows::fs::OpenOptionsExt;
+    // No sharing: fails while any other handle to the file is open.
+    std::fs::OpenOptions::new()
+        .read(true)
+        .share_mode(0)
+        .open(path)
+        .is_ok()
+}
+#[cfg(not(windows))]
+fn opens_exclusively(_: &Path) -> bool {
+    true
+}
+
+#[cfg(all(test, windows))]
+mod promote_tests {
+    use super::*;
+
+    #[test]
+    fn promotion_waits_out_a_briefly_held_file_and_names_one_that_stays_held() -> Result<()> {
+        let root = crate::test_tempdir()?;
+        let staged = root.path().join(".gb-stage-x").join("iw4x");
+        std::fs::create_dir_all(staged.join("zone"))?;
+        let file = staged.join("zone").join("patch.ff");
+        std::fs::write(&file, b"data")?;
+        // Held for the whole retry window: fails and names the file.
+        let handle = std::fs::File::open(&file)?;
+        let error = promote(
+            &staged,
+            &root.path().join("iw4x"),
+            &Cancellation::default(),
+            std::time::Duration::from_millis(300),
+            &mut |_| {},
+        );
+        assert!(
+            matches!(&error, Err(Error::Step { step: Step::Promote, held, .. }) if held == &vec![file.clone()]),
+            "expected a promote failure naming the held file, got {error:?}"
+        );
+        assert!(error.is_err_and(|e| e.to_string().contains("held open by another program")));
+        // Released shortly after: promotion retries and succeeds.
+        let release = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            drop(handle);
+        });
+        promote(
+            &staged,
+            &root.path().join("iw4x"),
+            &Cancellation::default(),
+            std::time::Duration::from_secs(10),
+            &mut |_| {},
+        )?;
+        release
+            .join()
+            .map_err(|_| Error::Invalid("release thread panicked".into()))?;
+        assert!(
+            root.path()
+                .join("iw4x")
+                .join("zone")
+                .join("patch.ff")
+                .is_file()
+        );
+        Ok(())
+    }
 }
 
 /// Recheck Windows components before every launch; receipts are not system evidence.

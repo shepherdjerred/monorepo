@@ -715,6 +715,7 @@ mod tests {
             step: Step::Promote,
             path: "C:/Users/someone/private".into(),
             source: std::io::Error::from_raw_os_error(32),
+            held: Vec::new(),
         };
         let mut e = event(EventInput {
             job: Some(7),
