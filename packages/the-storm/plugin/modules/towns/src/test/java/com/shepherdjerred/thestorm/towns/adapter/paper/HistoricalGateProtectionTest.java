@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 final class HistoricalGateProtectionTest {
   @Test
-  void approvedArchiveGatesStopAtPrivateHoldingsAndRecoveryBoundaries() {
+  void approvedArchiveGatesOperateInHistoricalHoldingsButStopAtRecoveryBoundaries() {
     var area = new Cuboid("world", new BlockCorner(0, -64, 0), new BlockCorner(4, 319, 4));
     var site =
         new HeritageSite(
@@ -46,8 +46,18 @@ final class HistoricalGateProtectionTest {
       assertThat(
               PaperProtection.serverHistoricalGateLand(
                   new Land.HeritageLand(site, Set.of(), new Land.ParcelLand(holding))))
-          .isFalse();
+          .isEqualTo(phase == ProtectedParcel.Phase.ACTIVE);
     }
+    var rental =
+        new ParcelDefinition(
+            "rental", "Rental", ParcelKind.RENTAL_SHOP, area, Set.of(), "survey", 10);
+    var leased =
+        new ProtectedParcel(
+            rental, Set.of(owner), ProtectedParcel.Phase.ACTIVE, RegionProfile.SAFE);
+    assertThat(
+            PaperProtection.serverHistoricalGateLand(
+                new Land.HeritageLand(site, Set.of(), new Land.ParcelLand(leased))))
+        .isFalse();
     assertThat(
             PaperProtection.serverHistoricalGateLand(
                 new Land.HeritageLand(site, Set.of(), new Land.WorkLand(site.asRegion()))))

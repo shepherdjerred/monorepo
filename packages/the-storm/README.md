@@ -1617,12 +1617,14 @@ the stored sign remains intact. Private invitations and town membership require 
 durable access records; missing access data never makes a gate public.
 Archive circle frames retain their original button below and inward from the
 sign. Frame discovery recognizes that layout from the surviving button; it
-rejects a frame with both competing button layouts.
+rejects a frame with both competing button layouts. Recovery also reads the
+actual controls, so compatible `CIRCLE` world definitions need no hidden layout flag.
 An operator-approved public archive gate uses a dedicated server custodian in
 world metadata, bound to its original world and sign position. This permits its
-sign and portal cells to operate under archive preservation while keeping private
-holdings, recovery freezes and network access checks in force. Moving that
-definition cannot move its preservation authority.
+sign and portal cells to operate under archive preservation, including active
+historical shop holdings. Inventory and building permissions remain private;
+rental holdings, recovery freezes and network access checks still apply. Moving
+that definition cannot move its preservation authority.
 Server-owned gate locations and approved landings remain declared in owned
 configuration.
 

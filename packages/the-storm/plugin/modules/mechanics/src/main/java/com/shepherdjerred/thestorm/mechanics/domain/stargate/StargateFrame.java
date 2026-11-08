@@ -102,7 +102,7 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
     var matches =
         candidates.stream()
             .filter(frame -> frame.isClosed(grid))
-            .map(frame -> frame.observedLayout(grid, sign))
+            .map(frame -> frame.observedControls(grid, sign))
             .flatMap(Optional::stream)
             .toList();
     // Sharing a control block between frames is ambiguous and must not bind either one.
@@ -130,13 +130,15 @@ public record StargateFrame(Pos origin, Direction across, Shape shape) {
         .offset(facing);
   }
 
-  private Optional<StargateFrame> observedLayout(BlockGrid grid, Pos sign) {
-    if (shape != Shape.CIRCLE) return Optional.of(this);
+  /** The surviving controls choose the circle layout, including after an offline world edit. */
+  public Optional<StargateFrame> observedControls(BlockGrid grid, Pos sign) {
+    if (shape == Shape.PLAYER) return Optional.of(this);
+    var modern = new StargateFrame(origin, across, Shape.CIRCLE);
     var legacy = new StargateFrame(origin, across, Shape.LEGACY_CIRCLE);
     var originalButton = legacy.button(sign);
     if (!grid.contains(originalButton)
-        || !grid.cellAt(originalButton).material().endsWith("_button")) return Optional.of(this);
-    var oppositeButton = button(sign);
+        || !grid.cellAt(originalButton).material().endsWith("_button")) return Optional.of(modern);
+    var oppositeButton = modern.button(sign);
     return grid.contains(oppositeButton)
             && grid.cellAt(oppositeButton).material().endsWith("_button")
         ? Optional.empty()

@@ -41,7 +41,7 @@ public interface Protection {
     return false;
   }
 
-  /** Exact bound historical gate cells, respecting current ownership and recovery freezes. */
+  /** Exact bound historical gate cells, respecting holding lifecycles and recovery freezes. */
   default boolean mayOperateServerHistoricalGate(Location location) {
     return false;
   }

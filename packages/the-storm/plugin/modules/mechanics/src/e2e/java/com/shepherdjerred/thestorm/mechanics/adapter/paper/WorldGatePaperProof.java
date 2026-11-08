@@ -164,6 +164,7 @@ public final class WorldGatePaperProof {
             context.scheduler().mainThread())
         .thenComposeAsync(ignored -> networkCleanup(), context.scheduler().mainThread())
         .thenRunAsync(this::historicalAuthorityDoesNotMove, context.scheduler().mainThread())
+        .thenRunAsync(this::legacyControlsComeFromTheWorld, context.scheduler().mainThread())
         .thenRunAsync(
             () -> context.logger().info("WORLD_STARGATE_PAPER_PASS"),
             context.scheduler().mainThread());
@@ -211,6 +212,52 @@ public final class WorldGatePaperProof {
       copy.getSide(Side.FRONT).line(line, source.getSide(Side.FRONT).line(line));
     source.getPersistentDataContainer().copyTo(copy.getPersistentDataContainer(), true);
     require(copy.update(false, false), "copy native gate sign data");
+  }
+
+  private void legacyControlsComeFromTheWorld() {
+    var world = signBlock.getWorld();
+    world.getChunkAt(47, 0).setForceLoaded(true);
+    world.getChunkAt(48, 0).setForceLoaded(true);
+    var frame =
+        new StargateFrame(new Pos(770, 80, 3), Direction.EAST, StargateFrame.Shape.LEGACY_CIRCLE);
+    for (var cell : frame.frameBlocks())
+      world.getBlockAt(cell.x(), cell.y(), cell.z()).setType(Material.OBSIDIAN, false);
+    for (var cell : frame.interior())
+      world.getBlockAt(cell.x(), cell.y(), cell.z()).setType(Material.AIR, false);
+    var original =
+        new Stargate(
+            new UUID(0, 771),
+            network.id(),
+            "Archive",
+            com.shepherdjerred.thestorm.core.protection.Protection.SERVER_HISTORICAL_GATE,
+            world.getUID(),
+            new Pos(773, 82, 2),
+            frame,
+            null,
+            false);
+    var button = original.button();
+    world
+        .getBlockAt(button.x(), button.y(), button.z())
+        .setBlockData(
+            Bukkit.createBlockData("minecraft:stone_button[face=wall,facing=north]"), false);
+    var block = world.getBlockAt(773, 82, 2);
+    block.setBlockData(Bukkit.createBlockData("minecraft:oak_wall_sign[facing=north]"), false);
+    var data = new WorldGateData(context.plugin().getServer());
+    data.write(original, network);
+    var sign = (Sign) block.getState();
+    var key = new org.bukkit.NamespacedKey("thestorm", "stargate_definition");
+    var stored =
+        sign.getPersistentDataContainer()
+            .get(key, org.bukkit.persistence.PersistentDataType.STRING);
+    if (stored == null) throw new IllegalStateException("missing native archive definition");
+    sign.getPersistentDataContainer()
+        .set(
+            key,
+            org.bukkit.persistence.PersistentDataType.STRING,
+            stored.replace("LEGACY_CIRCLE", "CIRCLE"));
+    require(sign.update(false, false), "store the original compatible circle geometry");
+    require(
+        data.read(block).isPresent(), "world buttons override the stored circle control layout");
   }
 
   private CompletableFuture<Void> lateChunkUpgrade(boolean worldOnly) {

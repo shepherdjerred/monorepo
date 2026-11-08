@@ -171,6 +171,11 @@ final class PaperProtection implements Protection {
   static boolean serverHistoricalGateLand(Land land) {
     if (!(land instanceof Land.HeritageLand(var site, _, var underlying))) return false;
     return underlying instanceof Land.Wilderness
+        || (underlying instanceof Land.ParcelLand(var parcel)
+            && parcel.definition().kind()
+                != com.shepherdjerred.thestorm.towns.domain.parcel.ParcelKind.RENTAL_SHOP
+            && parcel.phase()
+                == com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase.ACTIVE)
         || (underlying instanceof Land.RegionLand(var region)
             && site.kind()
                 == com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Kind.SERVER
