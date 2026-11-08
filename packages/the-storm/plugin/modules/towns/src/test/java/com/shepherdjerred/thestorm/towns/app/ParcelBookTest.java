@@ -134,6 +134,10 @@ final class ParcelBookTest {
     var protection = new ProtectionEngine(state, player -> false);
     assertThat(protection.decide(Actor.player(owner), OPEN, master).isAllowed()).isTrue();
     assertThat(protection.decide(Actor.player(STRANGER), OPEN, master).isAllowed()).isFalse();
+    var masterPartner = state.landAt("world", 4376, 77, 215);
+    assertThat(protection.decide(Actor.player(owner), OPEN, masterPartner).isAllowed()).isTrue();
+    assertThat(protection.decide(Actor.player(STRANGER), OPEN, masterPartner).isAllowed())
+        .isFalse();
     assertThat(state.landAt("world", 4377, 76, 215)).isInstanceOf(Land.Wilderness.class);
     assertThat(state.landAt("world", 4378, 77, 215)).isInstanceOf(Land.Wilderness.class);
   }

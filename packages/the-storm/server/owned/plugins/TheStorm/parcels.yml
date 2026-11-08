@@ -8,7 +8,7 @@ parcels:
     kind: HERITAGE
     area:
       world: world
-      from: { x: 4377, y: 77, z: 215 }
+      from: { x: 4376, y: 77, z: 215 }
       to: { x: 4377, y: 77, z: 215 }
     owners: [455dad50-64e1-45ce-a45e-550b90c1d7b0]
     provenance: >-
