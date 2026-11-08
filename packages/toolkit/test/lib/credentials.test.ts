@@ -353,24 +353,38 @@ describe("credential resolver backends", () => {
   });
 });
 
+/**
+ * A `security`/`launchctl` stub where every item lookup fails, the keychain
+ * search list is `keychain`, and the launchd session is `session`.
+ */
+function keychainSessionRun(
+  keychain: string,
+  session: string,
+  calls: string[][],
+): RunFn {
+  return stubRun((argv) => {
+    if (argv[0] === "security" && argv[1] === "list-keychains") {
+      return { exit: 0, stdout: `    "${keychain}"\n`, stderr: "" };
+    }
+    return argv[0] === "launchctl"
+      ? { exit: 0, stdout: `${session}\n`, stderr: "" }
+      : { exit: 44, stdout: "", stderr: "could not be found" };
+  }, calls);
+}
+
 describe("credential resolver keychain visibility", () => {
   test("an unreachable login keychain is named instead of enrollment", async () => {
     await withIsolatedEnv(async () => {
       const missing = await configPath(null);
       const calls: string[][] = [];
-      const run = stubRun((argv) => {
-        if (argv[0] === "security" && argv[1] === "list-keychains") {
-          return {
-            exit: 0,
-            stdout: '    "/Library/Keychains/System.keychain"\n',
-            stderr: "",
-          };
-        }
-        return argv[0] === "launchctl"
-          ? { exit: 0, stdout: "Background\n", stderr: "" }
-          : { exit: 44, stdout: "", stderr: "could not be found" };
-      }, calls);
-      const deps = { run, configPath: `${missing}.absent` };
+      const deps = {
+        run: keychainSessionRun(
+          "/Library/Keychains/System.keychain",
+          "Background",
+          calls,
+        ),
+        configPath: `${missing}.absent`,
+      };
       for (const name of ["ARGOCD_AUTH_TOKEN", "DISCORD_BOT_TOKEN"]) {
         const failure: unknown = await resolveCredentialValues(
           [name],
@@ -394,20 +408,13 @@ describe("credential resolver keychain visibility", () => {
     await withIsolatedEnv(async () => {
       const missing = await configPath(null);
       const calls: string[][] = [];
-      const run = stubRun((argv) => {
-        if (argv[0] === "security" && argv[1] === "list-keychains") {
-          return {
-            exit: 0,
-            stdout:
-              '    "/Users/someone/Library/Keychains/login.keychain-db"\n',
-            stderr: "",
-          };
-        }
-        return { exit: 44, stdout: "", stderr: "could not be found" };
-      }, calls);
       await expect(
         resolveCredentialValues(["ARGOCD_AUTH_TOKEN"], {
-          run,
+          run: keychainSessionRun(
+            "/Users/someone/Library/Keychains/login.keychain-db",
+            "Aqua",
+            calls,
+          ),
           configPath: `${missing}.absent`,
         }),
       ).rejects.toThrow(
