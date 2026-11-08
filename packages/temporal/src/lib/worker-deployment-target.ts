@@ -22,6 +22,23 @@ export type WorkerDeploymentRolloutTargetConfiguration = {
   };
 };
 
+/**
+ * The acceptance prerequisite proves a new prod candidate is beta's current
+ * build. A restoration re-routes a build this environment already accepted:
+ * Delivery admits it only from a succeeded, monitor-settled earlier deployment
+ * whose frozen pool names the same candidate, and that acceptance passed this
+ * prerequisite. Beta may since have moved past the build, so the earlier
+ * acceptance is a restoration's proof and the beta check no longer applies.
+ */
+export function restorationAwareTarget(
+  target: WorkerDeploymentRolloutTargetConfiguration,
+  restoredFromDeploymentId: string | null,
+): WorkerDeploymentRolloutTargetConfiguration {
+  if (restoredFromDeploymentId === null) return target;
+  const { acceptancePrerequisite: _earlierAcceptance, ...restoration } = target;
+  return restoration;
+}
+
 export function resolveWorkerDeploymentRolloutTarget(
   rawTarget: string,
   address: string,

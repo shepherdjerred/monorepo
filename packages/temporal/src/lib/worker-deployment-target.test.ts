@@ -10,7 +10,10 @@ import {
   selectWorkerReplayTargets,
   workerReplayRoute,
 } from "#lib/delivery/workers/worker-replay-targets.ts";
-import { resolveWorkerDeploymentRolloutTarget } from "./worker-deployment-target.ts";
+import {
+  resolveWorkerDeploymentRolloutTarget,
+  restorationAwareTarget,
+} from "./worker-deployment-target.ts";
 import { temporalCommand } from "./worker-deployment-commands.ts";
 import {
   requireAcceptedWorkerDeployment,
@@ -646,5 +649,31 @@ describe("candidate checkout reuse", () => {
       MISE_LOCKED: "1",
       MISE_EXEC_AUTO_INSTALL: "false",
     });
+  });
+});
+
+describe("restorationAwareTarget", () => {
+  const prod = resolveWorkerDeploymentRolloutTarget(
+    "scout-prod",
+    "temporal.test:7233",
+  );
+  test("a new prod candidate keeps the beta acceptance prerequisite", () => {
+    expect(restorationAwareTarget(prod, null)).toBe(prod);
+    expect(prod.acceptancePrerequisite?.deploymentName).toBe(
+      "scout-beta-workflows",
+    );
+  });
+  /**
+   * scout-for-lol/prod 6cc6379e (2026-11-08): the monitor's rollback to the
+   * previously accepted build failed preflight because beta had moved on to the
+   * alarmed release, so no Scout prod rollback could ever pass.
+   */
+  test("a restoration of an accepted build drops only the beta prerequisite", () => {
+    const restored = restorationAwareTarget(prod, "deployment/accepted");
+    expect(restored.acceptancePrerequisite).toBeUndefined();
+    expect({
+      ...restored,
+      acceptancePrerequisite: prod.acceptancePrerequisite,
+    }).toEqual(prod);
   });
 });

@@ -54,7 +54,9 @@ ramp target. Both pods have only Temporal and DNS egress, expose SDK metrics to
 Prometheus, and carry no Discord, PostgreSQL, Riot, S3, or report-lake access.
 The embedded backend poller completes histories created before Workflow
 Deployment routing, but is not a rollback version. Scout production repeats
-the sequence only after beta acceptance.
+the sequence only after beta acceptance. A rollback restores a build production
+already accepted, so that earlier acceptance replaces the beta check
+([`worker-deployment-target.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/worker-deployment-target.ts)).
 
 Bootstrap configuration:
 
