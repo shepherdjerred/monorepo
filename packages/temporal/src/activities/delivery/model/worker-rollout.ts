@@ -160,6 +160,39 @@ export async function workerRolloutPreflight(
 }
 
 /**
+ * Plan the rollout. A read-only preflight Job the executor saw fail has settled
+ * its own stage `failed` (workers/worker-rollout.ts); everything before it here
+ * only reads, so the parent step settles `failed` too instead of staying
+ * `running` and holding the deployment for recovery.
+ */
+async function prepareOrSettle(
+  current: DeploymentDetail,
+  step: { key: string; operationId: string },
+  effects: WorkerRolloutEffects,
+): Promise<void> {
+  try {
+    await effects.prepare(current.deployment.id);
+  } catch (error) {
+    if (
+      !(error instanceof ApplicationFailure) ||
+      error.type !== "DeliveryReadOnlyStageFailed"
+    )
+      throw error;
+    await effects.record(current, step.key, "failed", {
+      operationId: step.operationId,
+      evidence: [
+        {
+          kind: "preflight",
+          operationId: step.operationId,
+          summary: `Read-only worker preflight failed before any routing change: ${error.message}`,
+        },
+      ],
+    });
+    throw error;
+  }
+}
+
+/**
  * The worker-rollout step (E5): with the retained hosts synced, prove every
  * host serves its exact image, derive and record the routing plan, promote
  * the candidate, then verify routing reads back on it. Each Job records its
@@ -184,7 +217,8 @@ export async function runWorkerRolloutStep(
   if (stageOf(current, key) === undefined)
     await effects.record(current, key, "running", { operationId });
   await effects.hosts(current);
-  if (!settled(current, "worker-preflight")) await effects.prepare(id);
+  if (!settled(current, "worker-preflight"))
+    await prepareOrSettle(current, { key, operationId }, effects);
   let fresh = await effects.load(id);
   const plan = recordedWorkerPlan(fresh);
   for (const action of ["promote", "verify"] as const) {
