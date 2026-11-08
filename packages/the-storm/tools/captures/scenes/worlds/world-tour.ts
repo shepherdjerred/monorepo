@@ -118,7 +118,8 @@ export default defineCaptureScene({
       "return to main map",
       (s) => s.connected && s.world === "minecraft:overworld",
     );
-    await context.teleport([67.5, 69, 66.5], 0, 0);
+    // Stay west of the trader and windmill porch so neither fills the town view.
+    await context.teleport([64.5, 69, 66.5], 0, 0);
     await context.lookAt([-15, 73, 30]);
     await context.capture(presentation(shots, "spawn-town"));
     await context.teleport([146.5, 68, -88.5], 0, 0);

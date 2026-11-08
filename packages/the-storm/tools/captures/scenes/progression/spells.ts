@@ -52,6 +52,7 @@ export default defineCaptureScene({
     );
   },
   run: async (context) => {
+    await context.lookAt(context.at(12, 1, 12));
     await commandShot(context, [
       "spell-mark-info",
       "spells info mark",

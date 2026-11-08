@@ -20,6 +20,7 @@ const View = z.object({
   ),
 });
 async function itemShot(context: CaptureContext, name: string, type: string) {
+  await context.action("clear-overlays");
   await context.action("inventory", { open: true });
   await context.waitFor(
     "gear inventory",

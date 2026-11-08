@@ -28,6 +28,7 @@ export default defineCaptureScene({
     await context.lookAt([220.5, 35.2, 2.5]);
     await context.capture(presentation(shots, "mob-arena-classes"));
     await context.playerCommand("arena class knight", "You are a Knight.");
+    await context.action("clear-overlays");
     await context.action("inventory", { open: true });
     await context.waitFor(
       "Knight equipment",

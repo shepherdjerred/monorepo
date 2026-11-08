@@ -102,3 +102,92 @@ it("does not return publishable results or start another session after failed di
   expect(started).toBe(1);
   expect(stopped).toBe(1);
 });
+
+const frameMiss =
+  "capture-214125f2-34e2-41ee-86cc-f3ca3c186903: java.lang.IllegalStateException: Rendered capture missed frame 22";
+
+it("disposes the failed real-time recording's world before one complete scenario retake", async () => {
+  let started = 0;
+  const events: string[] = [];
+  const results = await runScenarioSessions(
+    [scenario("lift"), scenario("next")],
+    async () => {
+      const owner = ++started;
+      events.push(`start ${owner.toString()}`);
+      return {
+        owner,
+        prepare: async (s: SuiteScenario) => {
+          events.push(`prepare ${owner.toString()} ${s.id}`);
+        },
+        stop: async () => {
+          events.push(`stop ${owner.toString()}`);
+        },
+      };
+    },
+    async (s, session) => {
+      events.push(`execute ${session.owner.toString()} ${s.id}`);
+      if (session.owner === 1) throw new Error(frameMiss);
+      return `${s.id}: strict complete recording`;
+    },
+  );
+  expect(results).toEqual([
+    "lift: strict complete recording",
+    "next: strict complete recording",
+  ]);
+  expect(events).toEqual([
+    "start 1",
+    "prepare 1 lift",
+    "execute 1 lift",
+    "stop 1",
+    "start 2",
+    "prepare 2 lift",
+    "execute 2 lift",
+    "prepare 2 next",
+    "execute 2 next",
+    "stop 2",
+  ]);
+});
+
+it("fails after a second missed recording frame and disposes both attempts", async () => {
+  let started = 0,
+    stopped = 0;
+  await expect(
+    runScenarioSessions(
+      [scenario("lift", "fresh")],
+      async () => {
+        started++;
+        return {
+          prepare: () => Promise.resolve(),
+          stop: async () => {
+            stopped++;
+          },
+        };
+      },
+      async () => {
+        throw new Error(frameMiss);
+      },
+    ),
+  ).rejects.toThrow(frameMiss);
+  expect(started).toBe(2);
+  expect(stopped).toBe(2);
+});
+
+it("refuses a recording retake when disposing its failed session fails", async () => {
+  let started = 0;
+  await expect(
+    runScenarioSessions(
+      [scenario("lift")],
+      async () => {
+        started++;
+        return {
+          prepare: () => Promise.resolve(),
+          stop: () => Promise.reject(new Error("disposal failed")),
+        };
+      },
+      async () => {
+        throw new Error(frameMiss);
+      },
+    ),
+  ).rejects.toThrow("disposal failed");
+  expect(started).toBe(1);
+});

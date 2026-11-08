@@ -97,10 +97,12 @@ export default defineCaptureScene({
           ),
         ),
     );
+    await context.teleport([64.5, 69, 66.5], 0, 0);
     await context.lookAt([-15, 73, 30]);
     await context.action("chat-open");
     await context.capture(presentation(shots, "stormnight-reward"));
     await context.action("close");
+    await context.teleport([67.5, 69, 66.5], 0, 0);
     await aimDoor(context);
     await context.use();
     await context.feedback("You already visited this door today.");

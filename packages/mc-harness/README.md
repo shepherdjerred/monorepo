@@ -382,6 +382,11 @@ are retained. Successful publication replaces the stable `public/media/<name>`
 assets and generated docs figures. Previous assets remain in the private run
 directory for recovery. Review the rendered results and repository diff before
 committing. A filtered shot still executes the scenario's complete gameplay.
+If the native recorder misses a real-time frame, the suite discards that owned
+session and retakes the entire scenario once on a pristine map. The rejected
+clip remains failed in its private journal, and the replacement must pass the
+same frame-completeness checks. Gameplay failures, disposal failures, and a
+second missed frame stop the campaign without publishing its assets.
 
 Exceptions clean up owned clients, the local server, the export pod, clone PVC
 and snapshot. Hard interruption leaves an export receipt under
