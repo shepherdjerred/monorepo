@@ -50,6 +50,8 @@ export type CrashNotice = {
   readonly positionSeconds: number;
   /** Reconnect at the live edge instead of resuming at the failed offset. */
   readonly live?: boolean;
+  /** A `gave-up` with no retry: the item stalled at its end, so there was nothing left to replay. */
+  readonly atEndOfMedia?: boolean;
   /** 1-based retry attempt this notice announces (for `retry`) or the total attempts spent. */
   readonly attempt: number;
   readonly maxAttempts: number;

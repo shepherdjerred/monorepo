@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import type { SportsPageRenderer } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 
+/** Encode a playlist URL the way StreamEast's player script stores it. */
+function streamEastEncoded(url: string): string {
+  const reversed = Array.from(
+    { length: url.length },
+    (_, index) => url[url.length - 1 - index],
+  ).join("");
+  return btoa(reversed);
+}
+
 describe("BrowserSportsResolver", () => {
   it("extracts HLS only from an approved HTTPS media host and keeps the public page referer", async () => {
     const browser: SportsPageRenderer = {
@@ -21,6 +30,53 @@ describe("BrowserSportsResolver", () => {
       input: "https://edgestream12.pro/live.m3u8?token=secret",
       headers: { Referer: "https://streame.center/embed/ch1.php" },
     });
+  });
+
+  it("decodes the StreamEast player's reversed-base64 playlist without a runtime capture", async () => {
+    const browser: SportsPageRenderer = {
+      html: async () =>
+        "<title>Bears vs Packers Live Stream Free - NFL</title>" +
+        '<iframe id="sso-silent-frame" src="https://auth.streamea.st/sso-frame.php"></iframe>' +
+        "<script>var streamUrl = (function(s){return atob(s).split('').reverse().join('')})('" +
+        streamEastEncoded("https://u.steast.io/ps/c283/index.m3u8") +
+        "');</script>",
+      runtimeStreams: async () => {
+        throw new Error("the inline playlist must not need a browser capture");
+      },
+    };
+    const result = await new BrowserSportsResolver(browser).resolve(
+      "https://v2.streameast.ga/nfl/bears-vs-packers/",
+      new AbortController().signal,
+    );
+    expect(result).toEqual({
+      title: "Bears vs Packers Live Stream Free - NFL",
+      input: "https://u.steast.io/ps/c283/index.m3u8",
+      // The playlist host answers 403 without the watch page as referer.
+      headers: { Referer: "https://v2.streameast.ga/nfl/bears-vs-packers/" },
+      // Its segments live on an image CDN with an `.image` suffix.
+      inputOptions: [
+        "-allowed_segment_extensions",
+        "none,ts,m4s,m3u8",
+        "-extension_picky",
+        "0",
+      ],
+    });
+  });
+
+  it("does not trust a decoded playlist on an unapproved host", async () => {
+    const browser: SportsPageRenderer = {
+      html: async () =>
+        "<script>var streamUrl = (function(s){return atob(s).split('').reverse().join('')})('" +
+        streamEastEncoded("https://untrusted.invalid/ps/c283/index.m3u8") +
+        "');</script>",
+      runtimeStreams: async () => ({ resources: [], headers: {} }),
+    };
+    await expect(
+      new BrowserSportsResolver(browser).resolve(
+        "https://v2.streameast.ga/nfl/bears-vs-packers/",
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow("No supported live HLS stream");
   });
 
   it("rejects non-provider pages and does not follow unapproved embed hosts", async () => {

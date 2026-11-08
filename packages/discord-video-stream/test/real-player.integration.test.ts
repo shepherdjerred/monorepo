@@ -22,4 +22,5 @@ test("real ffmpeg, demux, and paced audio/video survive playback, seeking, and r
   expect(stdout).toContain('"scenario":"avcc-copy"');
   expect(stdout).toContain('"scenario":"software-transcode"');
   expect(stdout).toContain('"scenario":"seek-stop-3"');
+  expect(stdout).toContain('"scenario":"voice-http-natural-end"');
 }, 90_000);

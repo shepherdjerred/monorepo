@@ -46,6 +46,30 @@ const generated = Bun.spawnSync([
 ]);
 assert.equal(generated.exitCode, 0, generated.stderr.toString());
 
+// Music reaches ffmpeg as a WebM/Opus file URL (YouTube `bestaudio`). Matroska reads to the HTTP
+// end of file, which is exactly where an at-EOF reconnect used to keep ffmpeg alive forever.
+const musicInput = path.join(directory, "music.webm");
+const generatedMusic = Bun.spawnSync([
+  ffmpegPath,
+  "-hide_banner",
+  "-loglevel",
+  "error",
+  "-f",
+  "lavfi",
+  "-i",
+  "sine=frequency=440:sample_rate=48000:duration=3",
+  "-c:a",
+  "libopus",
+  "-b:a",
+  "96k",
+  musicInput,
+]);
+assert.equal(
+  generatedMusic.exitCode,
+  0,
+  generatedMusic.stderr.toString(),
+);
+
 async function until(predicate: () => boolean) {
   const deadline = Date.now() + 15_000;
   while (!predicate()) {
@@ -116,13 +140,101 @@ function playback(noTranscoding: boolean) {
   return { player, sent, attributes };
 }
 
+/**
+ * Audio-only music over the borrowed voice connection, read from HTTP like a real source.
+ * `finished` must settle on the natural end of the file. A hang here is the production symptom:
+ * the track plays out, ffmpeg never exits, and the stall watchdog fires instead of advancing.
+ */
+async function voiceHttpNaturalEnd() {
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch: () => new Response(Bun.file(musicInput)),
+  });
+  let audio = 0;
+  const conn = {
+    setPacketizer() {
+      throw new Error("a voice segment must not configure the connection");
+    },
+    sendVideoFrame() {
+      throw new Error("a voice segment must not send video");
+    },
+    sendAudioFrame() {
+      throw new Error("a voice segment must write through its audio sink");
+    },
+    mediaConnection: {
+      setSpeaking() {},
+      setVideoAttributes() {},
+    },
+  };
+  const streamer = {
+    voiceConnection: { webRtcConn: conn },
+    createStream: () => {
+      throw new Error("a voice segment must not open Go Live");
+    },
+    stopStream() {},
+  };
+  const player = createSeekablePlayer(
+    streamer,
+    `http://127.0.0.1:${String(server.port)}/music.webm`,
+    {
+      prepare: { ffmpegPath, audioOnly: true, readrate: 2 },
+      play: {
+        type: "voice",
+        audioSink: {
+          sendAudioFrame(frame: Buffer, duration: number) {
+            assert(frame.length > 0);
+            assert.equal(duration, 20);
+            audio++;
+            return true;
+          },
+        },
+      },
+    },
+  );
+  void player.finished.catch(() => {});
+  const startedAt = Date.now();
+  try {
+    await player.start();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      player.finished,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(
+            new Error(
+              "voice playback of an HTTP file did not finish at its natural end",
+            ),
+          );
+        }, 12_000);
+      }),
+    ]).finally(() => {
+      clearTimeout(timer);
+    });
+    // 3 s of 20 ms Opus frames, minus encoder priming; all of it must reach the sink.
+    assert(audio > 120, `only ${String(audio)} music frames delivered`);
+    results.push({
+      scenario: "voice-http-natural-end",
+      video: 0,
+      audio,
+      bytes: 0,
+      elapsedMs: Date.now() - startedAt,
+    });
+  } finally {
+    player.stop();
+    await server.stop(true);
+  }
+}
+
 const results: {
   scenario: string;
   video: number;
   audio: number;
   bytes: number;
+  elapsedMs?: number;
 }[] = [];
 try {
+  await voiceHttpNaturalEnd();
   for (const noTranscoding of [true, false]) {
     const { player, sent, attributes } = playback(noTranscoding);
     try {

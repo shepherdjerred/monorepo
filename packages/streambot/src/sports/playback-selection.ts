@@ -15,6 +15,40 @@ import { isHttpUrl } from "@shepherdjerred/streambot/discord/resolve.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import { throwIfSportsRequestAborted } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { hasLolSportsCue } from "./lolesports.ts";
+import { redactMediaUrls } from "@shepherdjerred/discord-video-stream";
+import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+
+const log = logger.child("sports");
+
+/**
+ * A watch page identified by origin and path only. A pasted provider URL can carry userinfo,
+ * query values, or a fragment that are the requester's, not the provider's.
+ */
+function loggablePage(pageUrl: string): string {
+  try {
+    const url = new URL(pageUrl);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return "[unparseable page URL]";
+  }
+}
+
+/**
+ * The listener sees one generic sentence for every resolve failure, so the operator log is the
+ * only place the real cause (an upstream page redesign, an unapproved CDN host, a probe 403)
+ * survives. Signed stream URLs are redacted, and the page is reduced to origin and path.
+ */
+function logSportsResolveFailure(
+  event: { readonly provider: string; readonly pageUrl: string },
+  error: unknown,
+): void {
+  log.warn("sports stream resolve failed", {
+    provider: event.provider,
+    page: loggablePage(event.pageUrl),
+    error: redactMediaUrls(getErrorMessage(error)),
+  });
+}
 
 export type SportsPlaybackSelection = {
   readonly source: Source;
@@ -108,6 +142,7 @@ export async function selectDirectRequestUrl(input: {
     preResolved = await input.resolve(source, input.signal);
   } catch (error) {
     throwIfSportsRequestAborted(input.signal);
+    logSportsResolveFailure(event, error);
     throw new PlaybackCommandBoundaryError(
       `I couldn't start the ${event.provider} stream right now. Please try again later.`,
       { cause: error },
@@ -207,11 +242,13 @@ export async function selectSportsPlayback(input: {
         source,
         preResolved: await input.resolve(source, input.signal),
       };
-    } catch {
+    } catch (error) {
       input.signal.throwIfAborted();
+      logSportsResolveFailure(event, error);
       if (input.provider !== "auto") {
         throw new PlaybackCommandBoundaryError(
           `I couldn't start the ${event.provider} stream for ${event.title}.`,
+          { cause: error },
         );
       }
     }

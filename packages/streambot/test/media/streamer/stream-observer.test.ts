@@ -174,6 +174,41 @@ describe("createStreamObserver stall watchdog", () => {
     dispose();
   });
 
+  test("the stall report carries ffmpeg's own diagnostics, not its progress protocol", async () => {
+    const write = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
+    try {
+      // A line from the previous ffmpeg epoch must not be attributed to this one.
+      observer.onStderrLine?.("stale line from the previous segment");
+      observer.onCommand?.("ffmpeg -i in.webm out");
+      wall.value = 1000;
+      observer.onProgress?.({ timemark: "00:04:09.58" });
+      observer.onStderrLine?.("out_time=00:04:09.580000");
+      observer.onStderrLine?.("progress=continue");
+      observer.onStderrLine?.(
+        "[https @ 0x1] Will reconnect at 4123456 in 3 second(s), error=End of file.",
+      );
+      wall.value = 22_000;
+      await tick();
+
+      expect(stalls).toEqual([249.58]);
+      const output = write.mock.calls.map(([chunk]) => String(chunk)).join("");
+      const stallLine = output
+        .split("\n")
+        .find((line) => line.includes("ffmpeg progress stalled"));
+      expect(stallLine).toBeDefined();
+      expect(stallLine).toContain("Will reconnect at 4123456");
+      expect(stallLine).not.toContain("out_time=");
+      expect(stallLine).not.toContain("progress=continue");
+      expect(stallLine).not.toContain("stale line");
+    } finally {
+      dispose();
+      write.mockRestore();
+    }
+  });
+
   test("advancing media keeps the watchdog armed (no false stall)", async () => {
     const { observer, dispose, wall, stalls } = stallWatchdogHarness();
     // Media advances in lockstep with wall-clock across a span > STALL_AFTER_SECONDS.

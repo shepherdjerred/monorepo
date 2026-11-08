@@ -41,6 +41,7 @@ function allowedStreamHost(host: string): boolean {
   return (
     host === "streame.center" ||
     /^edgestream\d+\.pro$/.test(host) ||
+    host === STREAMEAST_PLAYLIST_HOST ||
     tvSportsStreamHost(host)
   );
 }
@@ -49,13 +50,55 @@ function tvSportsStreamHost(host: string): boolean {
   return /^lb\d+\.strmd\.st$/.test(host);
 }
 
-/** TvSportsLive's HLS CDN serves extensionless MPEG-TS segments. */
-const TVSPORTS_HLS_INPUT_OPTIONS = [
+/** StreamEast's first-party player playlist host (`/ps/<channel>/index.m3u8`). */
+const STREAMEAST_PLAYLIST_HOST = "u.steast.io";
+
+/**
+ * Playlists whose MPEG-TS segments ffmpeg's HLS demuxer would reject by extension: TvSportsLive's
+ * CDN serves them extensionless, and StreamEast's playlist points them at an image CDN with an
+ * `.image` suffix. Both are real MPEG-TS; ffprobe and ffmpeg need the extension check relaxed.
+ */
+function disguisedSegmentHost(host: string): boolean {
+  return tvSportsStreamHost(host) || host === STREAMEAST_PLAYLIST_HOST;
+}
+
+const DISGUISED_SEGMENT_HLS_INPUT_OPTIONS = [
   "-allowed_segment_extensions",
   "none,ts,m4s,m3u8",
   "-extension_picky",
   "0",
 ] as const;
+
+/**
+ * StreamEast's player page carries its playlist inline, base64-encoded and reversed:
+ * `var streamUrl = (function(s){return atob(s).split('').reverse().join('')})('<base64>')`.
+ * Only that exact transform is decoded; anything else is left to the other extractors.
+ */
+const REVERSED_BASE64_STREAM_URL =
+  /\bstreamUrl\s?=\s?\(function\(s\)\{return atob\(s\)\.split\(''\)\.reverse\(\)\.join\(''\)\}\)\('([A-Za-z0-9+/]+={0,2})'\)/g;
+
+/** A playlist URL is printable ASCII, so reversing by index cannot split a character. */
+const PRINTABLE_ASCII = /^[\u{21}-\u{7E}]+$/u;
+
+function reversedBase64StreamUrls(html: string): string[] {
+  return [...html.matchAll(REVERSED_BASE64_STREAM_URL)].flatMap((match) => {
+    const encoded = match[1];
+    if (encoded === undefined) return [];
+    let decoded: string;
+    try {
+      decoded = atob(encoded);
+    } catch {
+      return [];
+    }
+    if (!PRINTABLE_ASCII.test(decoded)) return [];
+    return [
+      Array.from(
+        { length: decoded.length },
+        (_, index) => decoded[decoded.length - 1 - index],
+      ).join(""),
+    ];
+  });
+}
 
 function normalizeEmbeddedHtml(html: string): string {
   return html
@@ -67,8 +110,10 @@ function normalizeEmbeddedHtml(html: string): string {
 
 function hlsUrls(html: string, pageUrl: string): URL[] {
   const normalized = normalizeEmbeddedHtml(html);
-  const candidates = [...normalized.matchAll(STREAM_URL)].map((match) => {
-    const raw = match[0];
+  const candidates = [
+    ...[...normalized.matchAll(STREAM_URL)].map((match) => match[0]),
+    ...reversedBase64StreamUrls(html),
+  ].map((raw) => {
     const withProtocol = raw.startsWith("//") ? `https:${raw}` : raw;
     try {
       return new URL(withProtocol, pageUrl);
@@ -169,8 +214,8 @@ export class BrowserSportsResolver implements SportsResolver {
       title: titleFromHtml(sourceHtml, sourceUrl),
       input: result.input.toString(),
       headers: result.headers,
-      ...(tvSportsStreamHost(result.input.hostname)
-        ? { inputOptions: TVSPORTS_HLS_INPUT_OPTIONS }
+      ...(disguisedSegmentHost(result.input.hostname)
+        ? { inputOptions: DISGUISED_SEGMENT_HLS_INPUT_OPTIONS }
         : {}),
     };
   }
