@@ -13,7 +13,10 @@ import {
   DeploymentDescriptionSchema,
   VersionDescriptionSchema,
 } from "#lib/worker-deployment-schemas.ts";
-import { resolveWorkerDeploymentRolloutTarget } from "#lib/worker-deployment-target.ts";
+import {
+  resolveWorkerDeploymentRolloutTarget,
+  restorationAwareTarget,
+} from "#lib/worker-deployment-target.ts";
 import {
   parseTemporalJson,
   setCurrentVersion,
@@ -55,9 +58,9 @@ function rolloutOptions(
     throw new Error(
       "Worker rollout requires its exact published image artifact",
     );
-  const target = resolveWorkerDeploymentRolloutTarget(
-    policy.target,
-    connection.address,
+  const target = restorationAwareTarget(
+    resolveWorkerDeploymentRolloutTarget(policy.target, connection.address),
+    pool.restoredFromDeploymentId,
   );
   if (artifact.uri !== target.imageRepository)
     throw new Error(
