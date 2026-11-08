@@ -65,7 +65,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     libtinfo6 libedit2 libsqlite3-0 libz3-4 util-linux ffmpeg procps \
     && flock --version \
     && ffmpeg -version && ffprobe -version \
-    && ps --version \
+    && command -v ps \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)

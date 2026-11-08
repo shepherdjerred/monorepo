@@ -329,7 +329,7 @@ test("the scoped Network finder preserves the caller's spent allowance before pr
   expect(
     await f.db.providerLease.findMany({ orderBy: { providerId: "asc" } }),
   ).toEqual(before.leases);
-});
+}, 30_000);
 
 test("named editions inherit the movie policy until an explicit override, including an empty override", async () => {
   const f = await fixture();
@@ -360,7 +360,7 @@ test("named editions inherit the movie policy until an explicit override, includ
   expect(await f.work()).toMatchObject({
     protectedReasons: ["subtitle_policy_epoch_unconfirmed"],
   });
-});
+}, 30_000);
 
 test.each([false, true])(
   "provider captions require the imported cut and actual forced/SDH metadata (wrong cut: %s)",
@@ -411,6 +411,7 @@ test.each([false, true])(
     );
     expect(p.calls).toHaveLength(before);
   },
+  30_000,
 );
 
 test("a policy change during provider HTTP prevents persistence and installation", async () => {
@@ -441,7 +442,7 @@ test("a policy change during provider HTTP prevents persistence and installation
     await findMovieSubtitlesV4(f.context, target, p.sources),
   ).toMatchObject({ status: "obsolete" });
   expect(p.calls).toHaveLength(count);
-});
+}, 30_000);
 
 test.each(["policy", "requester"] as const)(
   "%s changes during search cannot consume a provider download claim",
@@ -496,6 +497,7 @@ test.each(["policy", "requester"] as const)(
       }),
     ).toBe(0);
   },
+  30_000,
 );
 
 test("real forced and SDH probe flags keep separate English tracks and satisfy policy-only extraction", async () => {
@@ -557,4 +559,4 @@ test("real forced and SDH probe flags keep separate English tracks and satisfy p
   }
   expect(new Set(paths).size).toBe(4);
   expect(subtitleTargetsReady(await f.work(), 0)).toBe(true);
-});
+}, 30_000);

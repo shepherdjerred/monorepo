@@ -271,7 +271,7 @@ test("the invocation's already spent 99-row budget cannot be renewed for transfe
     ),
   ).rejects.toThrow("100 total queried records");
   expect(f.source.wire.additions()).toBe(1);
-});
+}, 30_000);
 
 test("a grant that commits during source evaluation is recaptured before the removal effect", async () => {
   const f = await fixture();

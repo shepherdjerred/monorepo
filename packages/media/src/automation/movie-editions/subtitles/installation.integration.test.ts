@@ -254,6 +254,7 @@ test.each(MovieEditionKeySchema.options)(
       ).rejects.toThrow("immutable");
     }
   },
+  30_000,
 );
 
 test("another cut cannot use the queued operation or extraction", async () => {

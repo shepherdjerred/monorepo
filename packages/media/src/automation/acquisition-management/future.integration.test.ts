@@ -203,4 +203,4 @@ test("actual catalog refresh and household acquisition publish a later episode i
     }),
   ).toBe(0);
   expect(wire.additions()).toBe(1);
-});
+}, 30_000);

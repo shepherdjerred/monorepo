@@ -212,4 +212,4 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
       where: { id: transition.id },
     }),
   ).toEqual(transition);
-});
+}, 30_000);

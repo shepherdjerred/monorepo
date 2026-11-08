@@ -55,12 +55,11 @@ async function fixture() {
         : { status: control.childStatus, runId: "child-run" },
     );
   };
-  const sweep = () =>
-    createSweepActivities(f.context).sweepMediaWork({
-      kind: "downloads",
-      cursor: null,
-      sweepId: crypto.randomUUID(),
-    });
+  const sweep = async () => {
+    const result = await sweepAttemptPage(f.context, command.attemptId);
+    expect(result).toEqual({ processed: 1, nextCursor: command.attemptId });
+    return result;
+  };
   const recoveries = () =>
     f.db.operation.findMany({
       where: {
@@ -68,6 +67,22 @@ async function fixture() {
       },
     });
   return { ...f, command, birth, control, sweep, recoveries };
+}
+
+async function sweepAttemptPage(
+  context: MediaAutomationContext,
+  attemptId: string,
+) {
+  const previous = await context.db.acquisitionAttempt.findFirst({
+    where: { id: { lt: attemptId } },
+    orderBy: { id: "desc" },
+    select: { id: true },
+  });
+  return createSweepActivities(context).sweepMediaWork({
+    kind: "downloads",
+    cursor: previous?.id ?? null,
+    sweepId: crypto.randomUUID(),
+  });
 }
 
 test.each(["reserved", "downloading", "prepared", "published"] as const)(
@@ -255,14 +270,13 @@ test("terminal recovery retains the sweep's original execution and one provenanc
   const budget = new PublicationAuthorityReadBudget();
   budget.consume(99);
   await expect(
-    createSweepActivities({
-      ...f.context,
-      movieManagement: { execution, budget },
-    }).sweepMediaWork({
-      kind: "downloads",
-      cursor: null,
-      sweepId: crypto.randomUUID(),
-    }),
+    sweepAttemptPage(
+      {
+        ...f.context,
+        movieManagement: { execution, budget },
+      },
+      f.command.attemptId,
+    ),
   ).rejects.toThrow("100 total queried records");
   expect(await f.recoveries()).toHaveLength(0);
   const after = await f.db.acquisitionAttempt.findUniqueOrThrow({
@@ -294,10 +308,16 @@ test("expiry during terminal history reads cannot renew the sweep's original SDK
   expect(f.wire.additions()).toBe(0);
 });
 
-test("two household recoveries in one sweep share the same 100-record allowance", async () => {
+test("household recovery pages retain a supplied exhausted allowance and advance only in a separate authorized Activity", async () => {
   const first = await fixture();
   const second = await fixture();
-  const scenarios = [first, second];
+  const scenarios = [first, second].sort((a, b) =>
+    a.command.attemptId.localeCompare(b.command.attemptId),
+  );
+  const earlier = scenarios[0];
+  const later = scenarios[1];
+  if (earlier === undefined || later === undefined)
+    throw new Error("Actual household recovery pages are missing");
   const execution = first.context.plexBindingExecution();
   first.context.describeWorkflow = (id) => {
     if (
@@ -312,20 +332,63 @@ test("two household recoveries in one sweep share the same 100-record allowance"
   };
   const budget = new PublicationAuthorityReadBudget();
   budget.consume(95);
+  const context = { ...first.context, movieManagement: { execution, budget } };
+  expect(await sweepAttemptPage(context, earlier.command.attemptId)).toEqual({
+    processed: 1,
+    nextCursor: earlier.command.attemptId,
+  });
+  expect(await earlier.recoveries()).toHaveLength(1);
+  expect(await later.recoveries()).toHaveLength(0);
+  budget.consume(budget.take - 1);
   await expect(
-    createSweepActivities({
-      ...first.context,
-      movieManagement: { execution, budget },
-    }).sweepMediaWork({
-      kind: "downloads",
-      cursor: null,
-      sweepId: crypto.randomUUID(),
-    }),
+    sweepAttemptPage(context, later.command.attemptId),
   ).rejects.toThrow("100 total queried records");
-  const recoveries = [
-    ...(await first.recoveries()),
-    ...(await second.recoveries()),
-  ];
-  expect(recoveries).toHaveLength(1);
+  expect(() => budget.consume(0)).toThrow("100 total queried records");
+  expect(await later.recoveries()).toHaveLength(0);
+  expect(
+    await later.db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: later.command.attemptId },
+    }),
+  ).toEqual(later.birth);
+  const nextExecution = first.context.plexBindingExecution();
+  const nextBudget = new PublicationAuthorityReadBudget();
+  const nextContext = {
+    ...first.context,
+    movieManagement: { execution: nextExecution, budget: nextBudget },
+  };
+  expect(await sweepAttemptPage(nextContext, later.command.attemptId)).toEqual({
+    processed: 1,
+    nextCursor: later.command.attemptId,
+  });
+  expect(() => nextBudget.consume(0)).not.toThrow();
+  expect(await earlier.recoveries()).toHaveLength(1);
+  const recovered = await later.recoveries();
+  expect(recovered).toHaveLength(1);
+  const operation = z.object({ id: z.uuid() }).parse(recovered[0]);
+  expect(
+    await later.db.outboxCommand.count({
+      where: {
+        operationId: operation.id,
+        kind: "reconcile_media",
+        dispatchedAt: null,
+      },
+    }),
+  ).toBe(1);
+  await sweepAttemptPage(
+    {
+      ...first.context,
+      movieManagement: {
+        execution: first.context.plexBindingExecution(),
+        budget: new PublicationAuthorityReadBudget(),
+      },
+    },
+    later.command.attemptId,
+  );
+  expect(await later.recoveries()).toHaveLength(1);
+  expect(
+    await later.db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: later.command.attemptId },
+    }),
+  ).toEqual(later.birth);
   expect(scenarios.map((f) => f.wire.additions())).toEqual([0, 0]);
 });

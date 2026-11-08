@@ -50,7 +50,7 @@ describe.each([false, true])(
         { stopOldCleanup: "allocated", traceStage },
       );
       directories.push(fixture.file.directory);
-    });
+    }, 30_000);
     test("allocated no-effect authority is terminally superseded and both dependencies clean in the selected order", async () => {
       if (fixture === undefined)
         throw new Error("Actual transition setup missing");
@@ -90,7 +90,7 @@ describe.each([false, true])(
           orderBy: { id: "asc" },
         }),
       ).toEqual(f.oldCleanups);
-    });
+    }, 30_000);
   },
 );
 

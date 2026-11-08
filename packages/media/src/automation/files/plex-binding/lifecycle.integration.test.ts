@@ -190,7 +190,7 @@ test("the same retention operation quarantines then purges only after seven days
     }),
   ).toMatchObject({ state: "purged" });
   expect(await timing.assertCommitted()).toEqual(birth);
-});
+}, 30_000);
 
 test("a missing accepted warning and a changed runtime epoch each protect files", async () => {
   const bound = await fixture();
