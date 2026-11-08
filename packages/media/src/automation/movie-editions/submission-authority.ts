@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
@@ -50,9 +51,7 @@ export async function authorizedMovieSubmissionV4(
       );
       if (authorized === null || !(await context.gates.acquisition()))
         return false;
-      const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
+      const lease = await readRuntimeProof(tx);
       const deadline = Math.min(
         lease.expiresAt.getTime(),
         execution.expiresAtMs,

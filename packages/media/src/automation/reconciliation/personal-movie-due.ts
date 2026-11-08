@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
@@ -65,9 +66,7 @@ async function queuePersonalMovieDueV4(
     });
     const sponsor = sponsors[0];
     if (sponsor === undefined) return;
-    const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
+    const lease = await readRuntimeProof(tx);
     const freshness = plexBindingFreshness({
       observed: execution.observed,
       expiresAtMs: Math.min(

@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
@@ -51,9 +52,7 @@ export async function beforePublicationRefresh(
     });
     // The common lock checks runtime, lease, records and the exact original parent.
     // Preserve its observed lease/choice deadlines through the immediate HTTP dispatch.
-    const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
+    const lease = await readRuntimeProof(tx);
     const guards: MovieChoiceFreshness[] = [];
     const movie = prepared.access.find(
       (access) => access.sectionType === "movie",

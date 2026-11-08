@@ -6,6 +6,7 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { isManagedStorage } from "./runtime-proof.ts";
 
 /** Only the injected trusted observer produces evidence; no HTTP endpoint accepts it. */
 export async function refreshWriterLease(
@@ -71,7 +72,13 @@ export async function refreshWriterLease(
       create: { id: "singleton", ...data },
       update: { ...data, version: { increment: 1 } },
     });
-    if (!clear && runtime.mode === "active") {
+    const storage = await tx.mediaStorageAuthority.findMany({
+      where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
+    });
+    const managed =
+      storage.length === 2 &&
+      storage.every((row) => isManagedStorage(row.evidence));
+    if (!clear && !managed && runtime.mode === "active") {
       const revoked = await tx.mediaRuntimeState.update({
         where: { id: "singleton" },
         data: {

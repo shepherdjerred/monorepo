@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import path from "node:path";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
@@ -331,9 +332,7 @@ export async function claimMovieTransferReuseV1(
       { observed: live, budget },
     );
     if (sourceFacts?.owner.id !== currentOrigin.id) return blocked;
-    const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
+    const writer = await readRuntimeProof(tx);
     budget.consume(1);
     const freshness = plexBindingFreshness({
       observed: execution.observed,

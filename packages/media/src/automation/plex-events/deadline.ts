@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
@@ -10,9 +11,7 @@ export async function watchDeadline(
   authority: WatchAuthority,
   execution: PlexBindingExecution,
 ) {
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   execution.assertActive();
   const rootPath =
     authority.media.kind === "movie" ? "/data/movies" : "/data/tv";

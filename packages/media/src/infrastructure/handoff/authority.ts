@@ -2,12 +2,15 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 
-type AuthorityDatabase = Pick<
-  Prisma.TransactionClient,
-  "mediaRuntimeState" | "legacyWriterLease"
->;
+import {
+  readRuntimeProof,
+  RuntimeProofError,
+  type RuntimeProofDatabase,
+} from "./runtime-proof.ts";
 
-/** Current runtime permission also requires a recent trusted observation of retired writers. */
+type AuthorityDatabase = RuntimeProofDatabase;
+
+/** Runtime permission requires current storage, or retired-writer proof for adopted storage. */
 export async function runtimeAuthority(
   db: AuthorityDatabase,
 ): Promise<{ active: boolean; epoch: number }> {
@@ -18,19 +21,23 @@ export async function runtimeAuthority(
     throw new Error("Invalid media runtime mode");
   if (runtime.mode !== "active" || !runtime.ownershipConfirmed)
     return { active: false, epoch: runtime.recoveryEpoch };
-  const lease = await db.legacyWriterLease.findUnique({
-    where: { id: "singleton" },
-  });
+  let lease;
+  try {
+    lease = await readRuntimeProof(db);
+  } catch (error) {
+    if (!(error instanceof RuntimeProofError)) throw error;
+    return { active: false, epoch: runtime.recoveryEpoch };
+  }
   const now = Date.now();
   return {
     epoch: runtime.recoveryEpoch,
     active:
-      lease !== null &&
       lease.revokedAt === null &&
       lease.recoveryEpoch === runtime.recoveryEpoch &&
-      lease.configurationDigest === snapshotHash(LEGACY_OBSERVER_CONFIG) &&
-      lease.targetsDigest ===
-        snapshotHash(LEGACY_OBSERVER_CONFIG.legacyDeployments) &&
+      (lease.kind === "canonical_storage" ||
+        (lease.configurationDigest === snapshotHash(LEGACY_OBSERVER_CONFIG) &&
+          lease.targetsDigest ===
+            snapshotHash(LEGACY_OBSERVER_CONFIG.legacyDeployments))) &&
       lease.observedAt.getTime() <= now &&
       lease.expiresAt.getTime() > now &&
       lease.expiresAt.getTime() - lease.observedAt.getTime() <= 120_000,
@@ -43,6 +50,7 @@ export async function lockRuntimeAuthority(
   epoch: number,
 ): Promise<boolean> {
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+  await tx.$queryRaw`SELECT "rootPath" FROM "MediaStorageAuthority" WHERE "rootPath" IN ('/data/movies', '/data/tv') FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;
   const authority = await runtimeAuthority(tx);
   return authority.active && authority.epoch === epoch;
@@ -53,6 +61,7 @@ export async function commandAutomationEpoch(
   tx: Prisma.TransactionClient,
 ): Promise<number> {
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+  await tx.$queryRaw`SELECT "rootPath" FROM "MediaStorageAuthority" WHERE "rootPath" IN ('/data/movies', '/data/tv') FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;
   const authority = await runtimeAuthority(tx);
   return authority.active ? authority.epoch : -1;

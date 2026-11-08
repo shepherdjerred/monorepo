@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import type { Operation } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
@@ -158,9 +159,7 @@ export async function reconcileMovieRetryV4(
         invocation,
         budget: invocation.budget,
       });
-      const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
+      const lease = await readRuntimeProof(tx);
       const freshness = plexBindingFreshness({
         observed: execution.observed,
         expiresAtMs: Math.min(

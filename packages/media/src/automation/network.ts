@@ -46,6 +46,7 @@ import {
 import { PlexMaintenanceClient } from "#integrations/plex-maintenance.ts";
 import { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
 import { refreshWriterLease } from "#infrastructure/handoff/lease.ts";
+import { refreshManagedStorage } from "#infrastructure/handoff/managed-storage.ts";
 import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-observer.ts";
 import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
 import { createHandoffNetworkActivities } from "./network/handoff.ts";
@@ -119,6 +120,7 @@ export async function createMediaNetworkContext(
     },
     refreshWriterLease: async () => {
       const observer = createLegacyObserver(environment);
+      if (await refreshManagedStorage(db, observer)) return;
       await refreshWriterLease(db, () => observer.observe());
       await refreshStorageAuthorities(db, observer);
     },

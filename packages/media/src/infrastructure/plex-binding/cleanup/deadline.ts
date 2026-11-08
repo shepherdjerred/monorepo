@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
@@ -11,9 +12,7 @@ export async function cleanupAuthorityDeadline(
   epoch: number,
   access: readonly PlexAccess[],
 ) {
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   if (
     lease.revokedAt !== null ||
     lease.recoveryEpoch !== epoch ||

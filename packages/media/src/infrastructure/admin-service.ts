@@ -28,6 +28,11 @@ import {
 } from "./manual-subtitle.ts";
 import { createManualReplacementCandidate } from "./manual-subtitle-replacement.ts";
 import { queueOperation } from "#automation/store.ts";
+import {
+  RuntimeStateSchema,
+  SetRuntimeSchema,
+} from "#shared/runtime/contract.ts";
+import { setManagedRuntime } from "#infrastructure/handoff/parallel-runtime.ts";
 
 const privateTrackers = new Set<AdminProviderId>([
   "privatehd",
@@ -138,6 +143,45 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
     private readonly cipher: CredentialCipher,
   ) {
     super(db, { keepDays: 30 });
+  }
+
+  async runtime(actor: MediaActor) {
+    requireOwner(actor);
+    const row = await this.db.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    return RuntimeStateSchema.parse({
+      mode: row.mode,
+      recoveryEpoch: row.recoveryEpoch,
+      ownershipConfirmed: row.ownershipConfirmed,
+      version: row.version,
+    });
+  }
+
+  setRuntime(
+    actor: MediaActor,
+    key: string,
+    raw: z.input<typeof SetRuntimeSchema>,
+  ) {
+    requireOwner(actor);
+    const input = SetRuntimeSchema.parse(raw);
+    return this.commandWithProtocol(
+      actor,
+      key,
+      {
+        command: { kind: "set_runtime", input },
+        decode: (value) => RuntimeStateSchema.parse(value),
+      },
+      async (tx) => {
+        const row = await setManagedRuntime(tx, input);
+        return {
+          mode: row.mode,
+          recoveryEpoch: row.recoveryEpoch,
+          ownershipConfirmed: row.ownershipConfirmed,
+          version: row.version,
+        };
+      },
+    );
   }
 
   async providers(actor: MediaActor) {

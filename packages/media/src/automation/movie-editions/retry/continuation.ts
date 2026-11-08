@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { Operation } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
@@ -148,9 +149,7 @@ export async function reconcileMovieContinuationV2(
       invocation,
       budget,
     });
-    const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
+    const writer = await readRuntimeProof(tx);
     const freshness = plexBindingFreshness({
       observed: execution.observed,
       expiresAtMs: Math.min(

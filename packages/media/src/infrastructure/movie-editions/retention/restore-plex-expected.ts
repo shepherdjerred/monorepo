@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { MovieQuarantinePlexReceiptV2Schema } from "#shared/movie-editions/quarantine-v2.ts";
@@ -125,9 +126,7 @@ export async function captureMovieRestorePlexExpectedV1(
     scope,
     command.scope.rootMediaId,
   );
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   const originalItem = await readMovieRestoreOriginalItem(
     tx,
     original,

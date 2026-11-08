@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { assertAttemptMovieChoice } from "#automation/editions/choice.ts";
@@ -107,12 +108,7 @@ export async function authorizedSubmission(
         !(await context.gates.acquisition())
       )
         return false;
-      const lease =
-        execution === undefined
-          ? null
-          : await tx.legacyWriterLease.findUniqueOrThrow({
-              where: { id: "singleton" },
-            });
+      const lease = execution === undefined ? null : await readRuntimeProof(tx);
       const signal =
         execution === undefined
           ? AbortSignal.timeout(10_000)

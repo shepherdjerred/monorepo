@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, expect, onTestFinished, test, vi } from "vitest";
 import { z } from "zod";
 import { rm, readFile } from "node:fs/promises";
 import { automationTestHarness } from "#testing/automation.ts";
@@ -20,6 +20,7 @@ import { findMoviePublicationReferenceV2 } from "#infrastructure/movie-editions/
 import { visibleMovieRequests } from "#infrastructure/visibility/movie-requests.ts";
 import { publishMoviePlexV4 } from "./plex-publication.ts";
 import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
+import { grantTestManagedStorage } from "#testing/managed-storage.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -43,6 +44,20 @@ async function fixture(edition: MovieEditionKey = "extended_cut") {
   directories.push(f.files.directory);
   return f;
 }
+
+test("Media-owned movie publishes and finalizes with canonical storage while no legacy writer lease exists", async () => {
+  const f = await fixture("default");
+  onTestFinished(await grantTestManagedStorage(h.database()));
+  await expect(
+    publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
+  ).resolves.toEqual({ status: "available", reason: null });
+  await finalizeMovieAcquisitionV4(
+    f.network,
+    f.input,
+    testPlexBindingExecution(),
+  );
+  expect(await h.database().legacyWriterLease.count()).toBe(0);
+});
 
 test.each(MovieEditionKeySchema.options)(
   "actual request-to-file %s pipeline records exact Plex availability and literal completion retry",

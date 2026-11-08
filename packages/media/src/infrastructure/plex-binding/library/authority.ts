@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import {
   LibraryPlexExpectedV2Schema,
@@ -83,9 +84,7 @@ export async function captureLibraryPlexExpectedV2(
   await assertNoPublicationCompensationFence(tx, {
     mediaIds: group.coverage.map((scope) => scope.mediaId),
   });
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   const canonical = await readPlexCanonicalTargets(tx, group.coverage);
   assertLibraryCanonicalBirth(input.birth, canonical);
   const first = canonical[0];

@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import {
   movieNoticeConfigurationError,
   assertMovieNoticeAccessUnchanged,
@@ -142,9 +143,7 @@ async function currentIntervention(
     throw new PlexBindingProtection("scope_changed");
   await assertCurrentMovieFailureV4(tx, payload, command, input.budget);
   const identity = await currentRecipient(tx, input);
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   return { identity, writerExpiresAtMs: writer.expiresAt.getTime() };
 }
 

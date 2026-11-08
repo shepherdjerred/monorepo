@@ -164,7 +164,11 @@ function activeChart(name: string): Chart {
   return chart;
 }
 
-async function render(chart: Chart, values: readonly string[]) {
+async function render(
+  chart: Chart,
+  values: readonly string[],
+  freezeDependencies = true,
+) {
   const directory = await mkdtemp(
     path.join(tmpdir(), "ordinary-delivery-helm-"),
   );
@@ -181,21 +185,24 @@ async function render(chart: Chart, values: readonly string[]) {
       path.join(directory, "values.yaml"),
       stringify({ delivery: { workerPool } }),
     );
+    const manifest = z
+      .array(z.unknown())
+      .parse(chart.toJson())
+      .map((object) => stringify(object))
+      .join("---\n");
     await Bun.write(
       path.join(directory, "templates/workloads.yaml"),
-      bindChartImageDependencies(
-        z
-          .array(z.unknown())
-          .parse(chart.toJson())
-          .map((object) => stringify(object))
-          .join("---\n"),
-        Object.fromEntries(
-          imageRegistry.images.map((image) => [
-            `shepherdjerred/${image.name}`,
-            `sha256:${"f".repeat(64)}`,
-          ]),
-        ),
-      ),
+      freezeDependencies
+        ? bindChartImageDependencies(
+            manifest,
+            Object.fromEntries(
+              imageRegistry.images.map((image) => [
+                `shepherdjerred/${image.name}`,
+                `sha256:${"f".repeat(64)}`,
+              ]),
+            ),
+          )
+        : manifest,
     );
     const child = Bun.spawn(
       [
@@ -225,16 +232,7 @@ async function render(chart: Chart, values: readonly string[]) {
 test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
   "%s renders every reviewed selected image, including init containers and private readers",
   async (name) => {
-    const input: unknown =
-      CATALOG_ONLY_BINDINGS[name] ??
-      (await Bun.file(
-        new URL(
-          name === "arcade"
-            ? "arcade.pipeline.json"
-            : `ordinary/${name}/pipeline.json`,
-          pipelines,
-        ),
-      ).json());
+    const input: unknown = await reviewedBindings(name);
     const pipeline = PipelineSchema.parse(input);
     const bindings = Object.entries(pipeline.artifactParameters);
     const selected = new Map(
@@ -252,6 +250,7 @@ test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
       [...selected.values()].map(
         (binding) => `${binding.parameter}=${binding.image}`,
       ),
+      name !== "media",
     );
     const containers: string[] = [];
     const dependencies = new Set<string>();
@@ -289,6 +288,47 @@ test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
     await expect(render(chart, [])).rejects.toThrow("Delivery requires image");
   },
 );
+
+async function reviewedBindings(name: string): Promise<unknown> {
+  if (name === "media") return mediaCatalogBindings();
+  return (
+    CATALOG_ONLY_BINDINGS[name] ??
+    Bun.file(
+      new URL(
+        name === "arcade"
+          ? "arcade.pipeline.json"
+          : `ordinary/${name}/pipeline.json`,
+        pipelines,
+      ),
+    ).json()
+  );
+}
+
+/** Media's parallel application is selected by its current v2 recipe. */
+async function mediaCatalogBindings() {
+  const recipe = z
+    .object({
+      definition: z.object({
+        artifactParameters: z.record(
+          z.string(),
+          z.object({ component: z.string() }),
+        ),
+      }),
+    })
+    .parse(
+      await Bun.file(
+        new URL("v2/streambot/prod/recipe.json", pipelines),
+      ).json(),
+    );
+  return {
+    namespace: "media",
+    artifactParameters: Object.fromEntries(
+      Object.entries(recipe.definition.artifactParameters).map(
+        ([parameter, binding]) => [parameter, binding.component],
+      ),
+    ),
+  };
+}
 
 test("central shared Activity roles and init containers use the selected image; retained hosts use the separate pool", async () => {
   const chart = activeChart("temporal");

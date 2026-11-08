@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { Prisma, type MediaIntent } from "#generated/prisma/client.ts";
 import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
@@ -162,9 +163,7 @@ export async function captureMovieRollbackPlexExpectedV1(
     canonical.canonicalRootId !== source.scope.rootMediaId
   )
     throw new PlexBindingProtection("scope_changed");
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   invocation.budget.consume(1);
   const expected = MovieRollbackPlexExpectedV1Schema.parse({
     schemaVersion: 4,

@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import { FileGuardError, type Transaction } from "#automation/files/types.ts";
 import { storedFilePath } from "#automation/files/paths/locations.ts";
@@ -25,9 +26,7 @@ export async function publicationAuthorityDeadline(
   input: { libraryKind: "movies" | "tv"; recoveryEpoch: number },
 ): Promise<{ assertActive: () => void; expiresAtMs: number }> {
   assertPublicationActive(context);
-  const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const lease = await readRuntimeProof(tx);
   const rootPath = `/data/${input.libraryKind}`;
   await tx.$queryRaw`SELECT "rootPath" FROM "MediaStorageAuthority" WHERE "rootPath"=${rootPath} FOR SHARE`;
   const storage = await tx.mediaStorageAuthority.findUnique({

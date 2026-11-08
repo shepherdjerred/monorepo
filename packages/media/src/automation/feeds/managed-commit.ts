@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation } from "#automation/store.ts";
@@ -137,9 +138,7 @@ async function bindManagedFeedDeadline(
   grant: PlexBindingFreshness,
 ) {
   const execution = context.movieManagement.execution;
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   const freshness = plexBindingFreshness({
     observed: execution.observed,
     expiresAtMs: Math.min(

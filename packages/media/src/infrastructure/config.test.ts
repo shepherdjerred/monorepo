@@ -40,12 +40,10 @@ test.each(["", "wrong", "-1", "1,2"])(
   },
 );
 
-test("unavailable flags keep every media effect gate closed", async () => {
+test("defaults enable requests and acquisition while destructive and optional gates stay closed", async () => {
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
   const config = mediaBehaviorConfig("production");
   for (const key of [
-    "requestsEnabled",
-    "acquisitionEnabled",
     "sourceCleanupEnabled",
     "quarantineEnabled",
     "purgeEnabled",
@@ -54,6 +52,9 @@ test("unavailable flags keep every media effect gate closed", async () => {
     "sharedAnnouncementsUpgrades",
   ] as const) {
     expect(await config.get(key)).toMatchObject({ value: false });
+  }
+  for (const key of ["requestsEnabled", "acquisitionEnabled"] as const) {
+    expect(await config.get(key)).toMatchObject({ value: true });
   }
   expect(await config.get("keepDays")).toMatchObject({ value: 30 });
   expect(await config.get("sharedDiscordChannelId")).toMatchObject({

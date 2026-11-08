@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import type { MovieRollbackOperationV1 } from "#shared/movie-editions/rollback/operation.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
@@ -148,9 +149,7 @@ export async function captureRequestedMovieRollbackPlexExpectedV1(
     profile.version !== parent.intent.authority.profileVersion
   )
     throw new PlexBindingProtection("scope_changed");
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   invocation.budget.consume(1);
   if (
     writer.revokedAt !== null ||

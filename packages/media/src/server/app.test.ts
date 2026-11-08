@@ -350,6 +350,22 @@ function fixture() {
     media,
     notifications,
     admin: {
+      async runtime() {
+        return {
+          mode: "observe",
+          recoveryEpoch: 0,
+          ownershipConfirmed: false,
+          version: 0,
+        };
+      },
+      async setRuntime(_actor, _key, input) {
+        return {
+          mode: input.mode,
+          recoveryEpoch: 0,
+          ownershipConfirmed: input.mode === "active",
+          version: input.expectedVersion + 1,
+        };
+      },
       async providers() {
         return [];
       },
@@ -471,6 +487,36 @@ test("capacity route is registered behind normal session authentication", async 
   expect(await response.json()).toMatchObject({
     schemaVersion: 1,
     samplingEnabled: false,
+  });
+});
+
+test("runtime changes require a session, CSRF, idempotency, and a reviewed version", async () => {
+  const { dependencies } = fixture();
+  const setRuntime = vi.fn(dependencies.admin.setRuntime);
+  dependencies.admin = { ...dependencies.admin, setRuntime };
+  const app = createMediaApp(dependencies);
+  const url = "/api/v1/admin/runtime";
+  const unauthenticated = await app.request(url);
+  expect(unauthenticated.status).toBe(401);
+  const body = JSON.stringify({ mode: "active", expectedVersion: 0 });
+  const csrfRejected = await app.request(url, {
+    method: "PUT",
+    headers: { ...headers, "X-CSRF-Token": "wrong" },
+    body,
+  });
+  expect(csrfRejected.status).toBe(403);
+  const invalid = await app.request(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ mode: "active" }),
+  });
+  expect(invalid.status).toBe(400);
+  expect(setRuntime).not.toHaveBeenCalled();
+  const response = await app.request(url, { method: "PUT", headers, body });
+  expect(response.status).toBe(200);
+  expect(setRuntime).toHaveBeenCalledExactlyOnceWith(actor, "request-key", {
+    mode: "active",
+    expectedVersion: 0,
   });
 });
 

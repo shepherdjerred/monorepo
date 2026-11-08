@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { MediaError } from "#application/errors.ts";
@@ -85,9 +86,7 @@ export async function queueTerminalMovieRetryV4(
           : {}),
       });
       await assertNoPendingMovieRetryV4(tx, current, budget);
-      const lease = await tx.legacyWriterLease.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
+      const lease = await readRuntimeProof(tx);
       const freshness = plexBindingFreshness({
         observed: execution.observed,
         expiresAtMs: Math.min(

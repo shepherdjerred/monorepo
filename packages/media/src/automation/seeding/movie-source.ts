@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import path from "node:path";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
@@ -241,9 +242,7 @@ export async function scopedMovieSeeding(
         );
         if (!final.eligible)
           return protect(CleanupReasonSchema.parse(final.reason));
-        const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-          where: { id: "singleton" },
-        });
+        const writer = await readRuntimeProof(tx);
         budget.consume(1);
         if (
           writer.revokedAt !== null ||

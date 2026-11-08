@@ -1,3 +1,4 @@
+import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { seedingObservation } from "#automation/seeding/observation.ts";
 import path from "node:path";
 import { z } from "zod";
@@ -373,9 +374,7 @@ async function removeNativeSourceV1(
     !(await sourceDirectoryExclusive(context, observed.hash, cohort.isolated))
   )
     return protect("source_directory_shared");
-  const writer = await tx.legacyWriterLease.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
+  const writer = await readRuntimeProof(tx);
   const roots = await tx.mediaStorageAuthority.findMany({
     where: {
       rootPath: {
