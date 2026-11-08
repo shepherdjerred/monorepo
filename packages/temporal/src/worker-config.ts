@@ -22,6 +22,27 @@ import { reconcileStreambotPlayback } from "./activities/streambot.ts";
 import type { WorkerRole } from "./shared/infra/worker-role.ts";
 import { deliveryActivities } from "./activities/delivery/index.ts";
 import { platformDeliveryActivities } from "./activities/delivery/platform/index.ts";
+import {
+  mediaNetworkWorkerActivities,
+  mediaFileWorkerActivities,
+} from "./activities/media.ts";
+import {
+  plexExclusionNetworkWorkerActivities,
+  plexExclusionFileWorkerActivities,
+} from "./activities/media-maintenance.ts";
+import {
+  capacityNetworkActivities,
+  capacityFileActivities,
+} from "./activities/media/capacity.ts";
+import { plexEventNetworkActivities } from "./activities/media/plex-events.ts";
+import {
+  nativeArchiveNetworkActivities,
+  nativeArchiveFileActivities,
+} from "./activities/media/native-archive.ts";
+import {
+  nativeCompensationNetworkActivities,
+  nativeCompensationFileActivities,
+} from "./activities/media/native-compensation.ts";
 
 export type QueueWorkerRole =
   | "streambot"
@@ -36,6 +57,8 @@ export type QueueWorkerRole =
   | "home"
   | "infra"
   | "maintenance"
+  | "media-network"
+  | "media-files"
   | "repo"
   | "reports"
   | "scout"
@@ -80,6 +103,33 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.DELIVERY,
     activities: deliveryActivities,
     maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "media-network",
+    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+    activities: {
+      ...mediaNetworkWorkerActivities,
+      ...capacityNetworkActivities,
+      ...plexEventNetworkActivities,
+      ...nativeArchiveNetworkActivities,
+      ...nativeCompensationNetworkActivities,
+      ...plexExclusionNetworkWorkerActivities,
+    },
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "media-files",
+    taskQueue: TASK_QUEUES.MEDIA_FILES,
+    activities: {
+      ...mediaFileWorkerActivities,
+      ...capacityFileActivities,
+      ...nativeArchiveFileActivities,
+      ...nativeCompensationFileActivities,
+      ...plexExclusionFileWorkerActivities,
+    },
+    maxConcurrentActivityTaskExecutions: 1,
   },
   {
     kind: "activity",

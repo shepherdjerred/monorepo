@@ -209,6 +209,17 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     fi
     ffmpeg -version >/dev/null
     ffprobe -version >/dev/null
+    # Media exercises real archive extraction and lock-helper process death.
+    # Prove both tools on stale images as well as newly baked ci-base images.
+    if ! command -v ps >/dev/null; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends procps
+    fi
+    # Media subprocesses intentionally omit mise shims from their credential-free
+    # PATH. Expose the exact pinned archive tool on that stable path, as for gh.
+    SEVEN_ZIP_EXECUTABLE=$(mise_ci which 7zz)
+    ln -sf "$SEVEN_ZIP_EXECUTABLE" /usr/local/bin/7zz
+    ps --version >/dev/null
+    7zz i >/dev/null
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
     fi

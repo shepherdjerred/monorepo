@@ -67,15 +67,42 @@ print(hours)
 METADATA_WAIT_SECONDS="${METADATA_WAIT_SECONDS:-300}"
 METADATA_POLL_INTERVAL_SECONDS="${METADATA_POLL_INTERVAL_SECONDS:-5}"
 
+# Routing only: these labels do not grant Media ownership or deletion authority.
+# New Media submissions carry all signals atomically. Adopting an old transfer
+# requires draining existing hook processes before changing its routing labels.
+is_media_transfer() {
+  jq -e '
+    length == 1 and (.[0] |
+      .category == "media" and .auto_tmm == false and
+      (.tags | type == "string") and (.save_path | type == "string") and
+      ([.tags | split(",")[] | gsub("^ +| +$"; "")] as $tags |
+       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" as $uuid |
+       (.save_path | capture("^/downloads/media/(?<id>" + $uuid + ")/?$")) as $path |
+       ($tags | map(select(test("^media-" + $uuid + "$"))) | length) == 1 and
+       ($tags | map(select(startswith("media-attempt-")))) == ["media-attempt-" + $path.id]))
+  ' >/dev/null
+}
+
+read_torrent() {
+  curl -fsS -b "$cookie_jar" "${QBT_URL}/api/v2/torrents/info?hashes=$1" |
+    jq -ce --arg hash "$1" '
+      if length == 1 and (.[0].hash | ascii_downcase) == ($hash | ascii_downcase)
+      then . else error("expected exactly the requested torrent") end
+    '
+}
+
 apply_limit() {
   local hash="$1"
   local info size_bytes size_gb name ratio_limit hours minutes status waited=0
 
   while :; do
-    info=$(curl -s -b "$cookie_jar" "${QBT_URL}/api/v2/torrents/info?hashes=${hash}")
-    if [ "$(echo "$info" | jq 'length')" -eq 0 ]; then
-      err "torrent ${hash} not found via torrents/info; skipping"
+    if ! info=$(read_torrent "$hash"); then
+      err "torrent ${hash} could not be identified via torrents/info; skipping"
       return 1
+    fi
+    if is_media_transfer <<<"$info"; then
+      log "hash=${hash} routed to Media; leaving share limits unchanged"
+      return 0
     fi
 
     size_bytes=$(echo "$info" | jq -r '.[0].size')
@@ -94,10 +121,21 @@ apply_limit() {
 
   # Pass the existing per-torrent ratio_limit straight through (Prowlarr/Sonarr/Radarr
   # already set this at grab time, e.g. 3.0) — we only add the seeding-time dimension.
-  ratio_limit=$(echo "$info" | jq -r '.[0].ratio_limit')
   size_gb=$(python3 -c "print(${size_bytes} / 1e9)")
   hours=$(required_hours "$size_gb")
   minutes=$(python3 -c "import math; print(math.ceil(${hours} * 60))")
+
+  # Re-observe after metadata waiting/calculation, immediately before mutation.
+  # This narrows the handoff race; it cannot replace draining old hook processes.
+  if ! info=$(read_torrent "$hash"); then
+    err "torrent ${hash} could not be revalidated; skipping"
+    return 1
+  fi
+  if is_media_transfer <<<"$info"; then
+    log "hash=${hash} now routed to Media; leaving share limits unchanged"
+    return 0
+  fi
+  ratio_limit=$(echo "$info" | jq -r '.[0].ratio_limit')
 
   status=$(curl -s -o /dev/null -w '%{http_code}' -b "$cookie_jar" \
     --data-urlencode "hashes=${hash}" \

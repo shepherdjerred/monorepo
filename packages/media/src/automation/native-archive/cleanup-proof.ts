@@ -1,0 +1,303 @@
+import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import { terminalFileEvidence } from "#automation/native-recovery/terminal-proof.ts";
+import { assertPublicationJournalIdentity } from "#filesystem/publication-proof/journal.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import { subtitleLineageReferences } from "#automation/publication-proof/subtitle-lineage.ts";
+import {
+  NativeArchiveExecutionSchema,
+  type NativeArchiveContinuation,
+  type NativeArchiveScope,
+} from "#shared/native-recovery/archive.ts";
+import { nativeLocalPath } from "#automation/native-recovery/files.ts";
+import { snapshotHash } from "#migration/profile-import.ts";
+import {
+  assertArchiveActive,
+  archiveAwait,
+  type ArchiveFileContext,
+} from "./execution.ts";
+import { archiveAllPaths } from "./paths.ts";
+import { assertArchiveNeighbors } from "./subtitle-proof.ts";
+import { archivePurgeManifest } from "./purge-manifest.ts";
+import { readArchiveManifest } from "./cleanup/content.ts";
+import type {
+  ArchiveExecution,
+  ArchiveParticipant,
+  ArchiveCleanupFacts,
+} from "./cleanup-types.ts";
+
+export function archiveCleanupSubtitleDependencies(
+  descriptor: NativeArchiveContinuation,
+) {
+  return (descriptor.fileEvidence.subtitleEvidence ?? []).map((item) => {
+    const file = descriptor.scope.files.find(
+      (candidate) => candidate.assetId === item.assetId,
+    );
+    if (file === undefined)
+      throw new Error("Archive subtitle dependency has no reviewed asset");
+    const lineage =
+      file.authority.kind === "rebaseline"
+        ? undefined
+        : file.authority.subtitleLineage;
+    if (
+      lineage === undefined ||
+      snapshotHash(nativeJson(lineage)) !== item.evidence.lineageHash
+    )
+      throw new Error("Archive subtitle dependency descriptor changed");
+    return {
+      ...item,
+      kind: file.libraryKind,
+      references: subtitleLineageReferences(file.libraryKind, lineage),
+      operationIds: [
+        ...lineage.journals,
+        ...lineage.installations.flatMap(
+          (installation) => installation.journals,
+        ),
+      ].map((journal) => journal.operationId),
+    };
+  });
+}
+
+function subtitleDependencyPaths(descriptor: NativeArchiveContinuation) {
+  return archiveCleanupSubtitleDependencies(descriptor).flatMap((item) => [
+    ...item.evidence.files.map((file) => file.canonicalPath),
+    ...item.references.map(
+      (reference) =>
+        `/data/${reference.libraryKind}/${reference.root === "control" ? ".media-control/" : ""}${reference.path}`,
+    ),
+    ...item.evidence.journals.map(
+      (journal) => `/data/${item.kind}/.media-control/${journal.path}`,
+    ),
+  ]);
+}
+
+async function assertSubtitleDependencies(
+  context: ArchiveFileContext,
+  proof: ArchiveCleanupFacts,
+) {
+  for (const item of archiveCleanupSubtitleDependencies(proof.descriptor)) {
+    for (const expected of item.evidence.files) {
+      const actual = await terminalFileEvidence(
+        {
+          content: proof.content,
+          resolvePath: (name) => nativeLocalPath(context, name),
+        },
+        {
+          canonicalPath: expected.canonicalPath,
+          expectedChecksum: expected.sha256,
+        },
+      );
+      if (
+        snapshotHash(nativeJson(actual)) !== snapshotHash(nativeJson(expected))
+      )
+        throw new FileOperationConflict(
+          "Archive subtitle dependency identity changed",
+        );
+    }
+    for (const journal of item.evidence.journals) {
+      const local = nativeLocalPath(
+        context,
+        `/data/${item.kind}/.media-control/${journal.path}`,
+      );
+      if ((await proof.content.digest(local)) !== journal.sha256)
+        throw new FileOperationConflict(
+          "Archive subtitle dependency journal changed",
+        );
+      await assertPublicationJournalIdentity(
+        context.files.roots[item.kind],
+        journal,
+      );
+    }
+  }
+}
+export function executionFor(
+  row: { id: string; descriptorHash: string; recoveryEpoch: number },
+  descriptor: NativeArchiveContinuation,
+): ArchiveExecution {
+  const edge = descriptor.scope.edges.find(
+    (item) => item.id === descriptor.selectedCleanupId && item.selected,
+  );
+  const file = descriptor.scope.files.find(
+    (item) => item.assetId === edge?.assetId,
+  );
+  const evidence = descriptor.fileEvidence.files.find(
+    (item) => item.assetId === file?.assetId,
+  );
+  if (edge === undefined || file === undefined || evidence === undefined)
+    throw new Error("Archive selected physical proof missing");
+  return NativeArchiveExecutionSchema.parse({
+    schemaVersion: 1,
+    continuationId: row.id,
+    descriptorHash: row.descriptorHash,
+    recoveryEpoch: row.recoveryEpoch,
+    participants: edge.derivedPlan.files.map((item) => {
+      const subtitle =
+        item.subtitleId === null
+          ? null
+          : evidence.subtitles.find((entry) => entry.id === item.subtitleId);
+      const identity =
+        subtitle === null ? evidence.identity : subtitle?.identity;
+      const sizeBytes =
+        subtitle === null ? evidence.sizeBytes : subtitle?.sizeBytes;
+      const canonicalPath =
+        subtitle === null ? evidence.canonicalPath : subtitle?.canonicalPath;
+      if (
+        identity == null ||
+        sizeBytes == null ||
+        canonicalPath !== item.path ||
+        item.checksum !==
+          (subtitle === null ? evidence.checksum : subtitle?.checksum)
+      )
+        throw new Error(
+          "Archive participant is not bound to reviewed physical evidence",
+        );
+      return {
+        assetId: file.assetId,
+        subtitleId: item.subtitleId,
+        libraryKind: edge.derivedPlan.libraryKind,
+        location: item.location,
+        id: item.id,
+        canonicalPath,
+        checksum: item.checksum,
+        sizeBytes,
+        identity,
+      };
+    }),
+  });
+}
+
+export function archiveCleanupPaths(
+  descriptor: NativeArchiveContinuation,
+  scope: NativeArchiveScope,
+) {
+  return [
+    ...new Set([
+      ...archiveAllPaths(descriptor.scope),
+      ...archiveAllPaths(scope),
+      ...subtitleDependencyPaths(descriptor),
+    ]),
+  ].sort();
+}
+
+async function assertParticipant(
+  context: ArchiveFileContext,
+  proof: ArchiveCleanupFacts,
+  item: ArchiveParticipant,
+) {
+  const local = nativeLocalPath(context, item.canonicalPath);
+  const digest = await proof.content.digest(local);
+  const expected = archivePurgeManifest(
+    context,
+    proof.execution.continuationId,
+    item,
+  );
+  const journal = await archiveAwait(
+    context.execution,
+    readArchiveManifest(context, item.libraryKind, expected.operationId),
+  );
+  if (
+    journal !== null &&
+    (!proof.executionCommitted ||
+      !["prepared", "complete"].includes(journal.phase) ||
+      snapshotHash({ ...journal, phase: "prepared" }) !==
+        snapshotHash(expected))
+  )
+    throw new FileOperationConflict(
+      "Archive effect journal lacks its exact persisted execution",
+    );
+  if (digest === null) {
+    if (journal === null || !proof.executionCommitted)
+      throw new FileOperationConflict(
+        "Archive missing bytes have no owned purge evidence",
+      );
+    const absence = await proof.content.reviewAbsence(local);
+    if (
+      snapshotHash(absence.ancestors) !== snapshotHash(item.identity.ancestors)
+    )
+      throw new FileOperationConflict("Archive absent path ancestor changed");
+  } else if (
+    digest !== item.checksum ||
+    journal?.phase === "complete" ||
+    snapshotHash(await proof.content.reviewIdentity(local)) !==
+      snapshotHash(item.identity)
+  )
+    throw new FileOperationConflict(
+      "Archive physical participant was replaced",
+    );
+}
+
+export async function assertCleanupContent(
+  context: ArchiveFileContext,
+  proof: ArchiveCleanupFacts,
+) {
+  assertArchiveActive(context.execution);
+  const selected = new Set(
+    proof.execution.participants.map((item) => item.canonicalPath),
+  );
+  for (const item of proof.execution.participants)
+    await assertParticipant(context, proof, item);
+  await assertRetainedContent(context, proof, selected);
+  await assertSubtitleDependencies(context, proof);
+  for (const terminal of proof.scope.terminalDependencies)
+    for (const item of terminal.dependency.files)
+      if (
+        (await proof.content.digest(
+          nativeLocalPath(context, item.canonicalPath),
+        )) !== item.expectedChecksum
+      )
+        throw new FileOperationConflict("Archive terminal dependency changed");
+  for (const item of proof.descriptor.fileEvidence.artifactAbsences) {
+    const absence = await proof.content.reviewAbsence(
+      nativeLocalPath(context, item.canonicalPath),
+    );
+    if (snapshotHash(absence.ancestors) !== snapshotHash(item.absentAncestors))
+      throw new FileOperationConflict("Archive artifact absence changed");
+  }
+  await assertArchiveNeighbors(context, proof.scope);
+  assertArchiveActive(context.execution);
+}
+
+async function assertRetainedContent(
+  context: ArchiveFileContext,
+  proof: ArchiveCleanupFacts,
+  selected: ReadonlySet<string>,
+) {
+  for (const file of proof.scope.files) {
+    const evidence = proof.descriptor.fileEvidence.files.find(
+      (item) => item.assetId === file.assetId,
+    );
+    if (evidence === undefined)
+      throw new Error(
+        "Archive current dependency lacks original physical evidence",
+      );
+    const participants = [
+      {
+        canonicalPath: file.canonicalPath,
+        checksum: file.checksum,
+        identity: evidence.identity,
+      },
+      ...evidence.subtitles.flatMap((item) =>
+        item.canonicalPath === null
+          ? []
+          : [
+              {
+                canonicalPath: item.canonicalPath,
+                checksum: item.checksum,
+                identity: item.identity,
+              },
+            ],
+      ),
+    ];
+    for (const item of participants) {
+      if (selected.has(item.canonicalPath)) continue;
+      const local = nativeLocalPath(context, item.canonicalPath);
+      if (
+        (await proof.content.digest(local)) !== item.checksum ||
+        snapshotHash(await proof.content.reviewIdentity(local)) !==
+          snapshotHash(item.identity)
+      )
+        throw new FileOperationConflict(
+          "Archive retained or playback physical identity changed",
+        );
+    }
+  }
+}

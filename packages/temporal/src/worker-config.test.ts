@@ -15,6 +15,18 @@ import {
   type QueueWorkerRole,
 } from "./worker-config.ts";
 
+const movieFileActivities = [
+  "prepareMovieRollbackV4",
+  "rollbackMoviePublicationV4",
+  "inspectAndStageMovieV4",
+  "prepareMoviePublicationV4",
+  "promoteMovieFilesV4",
+  "installMovieSubtitlesV4",
+  "quarantineMovieFilesV4",
+  "purgeMovieFilesV4",
+  "restoreMovieFilesV4",
+];
+
 const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
   (taskQueue) =>
     taskQueue !== TASK_QUEUES.WORKFLOWS &&
@@ -71,6 +83,48 @@ describe("Temporal worker role contracts", () => {
     ])
       expect(activityNamesFor("delivery")).not.toContain(platformOnly);
   });
+  it.each([
+    "reverifyPlexBinding",
+    "verifyLibraryPlexBinding",
+    "matchProviderFeedSource",
+    "reconcileMovieIntentV4",
+    "findMovieSubtitlesV4",
+    "submitMovieTorrentV4",
+    "observeMovieAcquisitionV4",
+    "publishMovieToPlexV4",
+    "publishMovieWithRollbackV4",
+    "verifyRolledBackMoviePlexV4",
+    "finalizeMovieAcquisitionV4",
+    "observeMoviePlexHintV4",
+    "evaluateMovieRetentionV4",
+    "publishRestoredMovieToPlexV4",
+    "finalizeMovieRestorationV4",
+    "completeMovieRemovalV4",
+  ])("registers %s only on the existing network worker", (activity) => {
+    const owners = QUEUE_WORKER_DEFINITIONS.filter(
+      (definition) =>
+        definition.kind === "activity" &&
+        Object.hasOwn(definition.activities, activity),
+    );
+    expect(owners.map((definition) => definition.role)).toEqual([
+      "media-network",
+    ]);
+    expect(activityNamesFor("media-files")).not.toContain(activity);
+  });
+  it.each(movieFileActivities)(
+    "registers %s only on the existing Files worker",
+    (activity) => {
+      const owners = QUEUE_WORKER_DEFINITIONS.filter(
+        (definition) =>
+          definition.kind === "activity" &&
+          Object.hasOwn(definition.activities, activity),
+      );
+      expect(owners.map((definition) => definition.role)).toEqual([
+        "media-files",
+      ]);
+      expect(activityNamesFor("media-network")).not.toContain(activity);
+    },
+  );
   it("leaves forum activities with the workers that mount each forum's files", () => {
     for (const taskQueue of [
       TASK_QUEUES.STORM_FORUM_BETA,

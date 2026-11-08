@@ -1,0 +1,355 @@
+import type {
+  MediaItem,
+  MediaRequest,
+  Prisma,
+} from "#generated/prisma/client.ts";
+import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
+import type { MediaAutomationContext } from "#automation/context.ts";
+import { queueOperation, serializable } from "#automation/store.ts";
+import { invalidateRetention } from "#infrastructure/action-guards.ts";
+import {
+  effectiveRequestWhere,
+  lockEffectiveRequests,
+} from "#infrastructure/request-claims.ts";
+import {
+  compensationGroupMedia,
+  assertCompensationGroupUnchanged,
+  pendingCompensationGroups,
+  queueHouseholdCompensations,
+} from "#infrastructure/native-compensation/routing.ts";
+import { needsRestore } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
+import type { MediaNetworkActivities } from "#shared/automation.ts";
+import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
+import {
+  personalRequestGenerationChange,
+  requestMonitoring,
+} from "#infrastructure/library-monitoring/intent.ts";
+
+/** Each transaction projects at most 25 episodes; its source version is durable. */
+export function createCoverageActivities(
+  context: Pick<MediaAutomationContext, "db">,
+): Pick<
+  MediaNetworkActivities,
+  "expandMediaRequest" | "expandCatalogRequests"
+> {
+  return {
+    async expandCatalogRequests(input) {
+      const roots = await context.db.mediaRequest.findMany({
+        where: {
+          edition: "default",
+          ...(input.cursor === null ? {} : { id: { gt: input.cursor } }),
+          active: true,
+          direct: true,
+          excluded: false,
+          OR: [
+            { mediaId: input.mediaId },
+            { media: { parentId: input.mediaId, kind: "season" } },
+          ],
+        },
+        orderBy: { id: "asc" },
+        take: 25,
+      });
+      for (const root of roots) {
+        if (!root.includeFutureEpisodes && root.coverageCompletedAt !== null)
+          continue;
+        await serializable(context.db, async (tx) => {
+          await queueOperation(tx, {
+            key: `catalog-expand:${input.operationId}:${root.id}:${String(root.version)}`,
+            kind: "expand_request",
+            targetId: root.mediaId,
+            userId: root.userId,
+            payload: {
+              requestId: root.id,
+              requestVersion: root.version,
+              cursor: null,
+            },
+          });
+        });
+      }
+      return {
+        processed: roots.length,
+        nextCursor: roots.length === 25 ? (roots.at(-1)?.id ?? null) : null,
+      };
+    },
+    async expandMediaRequest(input) {
+      return serializable(context.db, async (tx) => {
+        const root = await tx.mediaRequest.findUniqueOrThrow({
+          where: { id: input.requestId },
+          include: { media: { include: { parent: true } } },
+        });
+        assertDefaultEdition(root.edition);
+        if (root.version !== input.requestVersion)
+          return { processed: 0, nextCursor: null };
+        const priorRoot = await tx.mediaIntent.findUniqueOrThrow({
+          where: targetWhere(defaultScope(root.mediaId)),
+        });
+        const priorRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
+        if (
+          unapprovedRoot(
+            root,
+            priorRoot.automationEpoch,
+            priorRuntime.recoveryEpoch,
+          )
+        )
+          return { processed: 0, nextCursor: null };
+        const episodes = await tx.mediaItem.findMany({
+          where: {
+            kind: "episode",
+            ...(input.cursor === null ? {} : { id: { gt: input.cursor } }),
+            ...(root.media.kind === "series"
+              ? {
+                  OR: [
+                    { parentId: root.mediaId },
+                    { parent: { parentId: root.mediaId } },
+                  ],
+                }
+              : { parentId: root.mediaId }),
+          },
+          orderBy: { id: "asc" },
+          take: 25,
+        });
+        const initialIds = [root.mediaId, ...episodes.map((item) => item.id)];
+        const compensationGroup = await compensationGroupMedia(tx, initialIds);
+        const targets = await lockDefaultScopes(
+          tx,
+          compensationGroup.map((id) => defaultScope(id)),
+          { createMissing: true },
+        );
+        await assertCompensationGroupUnchanged(
+          tx,
+          initialIds,
+          compensationGroup,
+        );
+        await lockEffectiveRequests(tx, compensationGroup);
+        const current = await tx.mediaRequest.findUniqueOrThrow({
+          where: { id: root.id },
+        });
+        if (current.version !== input.requestVersion)
+          return { processed: 0, nextCursor: null };
+        const rootIntent = await tx.mediaIntent.findUniqueOrThrow({
+          where: targetWhere(defaultScope(root.mediaId)),
+        });
+        const epoch = await commandAutomationEpoch(tx);
+        const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
+        // Catalog activity is not a fresh household declaration after restore.
+        // Negative projection remains safe, but a live old root cannot renew leaves.
+        if (
+          unapprovedRoot(
+            current,
+            rootIntent.automationEpoch,
+            runtime.recoveryEpoch,
+          )
+        )
+          return { processed: 0, nextCursor: null };
+        const existingTargets = new Set(
+          targets
+            .filter((entry) => entry.existed)
+            .map((entry) => entry.target.mediaId),
+        );
+        for (const episode of episodes) {
+          const allowed = episodeIncluded(current, episode);
+          await projectEpisode(tx, {
+            root: current,
+            mediaId: episode.id,
+            active: allowed,
+            profileId: rootIntent.profileId,
+            automationEpoch: projectionEpoch(rootIntent.automationEpoch, epoch),
+            targetExisted: existingTargets.has(episode.id),
+          });
+        }
+        await queueHouseholdCompensations(tx, {
+          mediaIds: compensationGroup,
+          triggerKey: `coverage:${input.operationId}:${input.cursor ?? "first"}`,
+        });
+        if (
+          episodes.length < 25 &&
+          catalogReady(root.media) &&
+          current.coverageCompletedAt === null
+        )
+          await tx.mediaRequest.update({
+            where: { id: root.id },
+            data: { coverageCompletedAt: new Date() },
+          });
+        return {
+          processed: episodes.length,
+          nextCursor:
+            episodes.length === 25 ? (episodes.at(-1)?.id ?? null) : null,
+        };
+      });
+    },
+  };
+}
+
+function projectionEpoch(rootEpoch: number, authorizedEpoch: number) {
+  return rootEpoch === authorizedEpoch ? authorizedEpoch : -1;
+}
+
+function episodeIncluded(current: MediaRequest, episode: MediaItem) {
+  const inSnapshot =
+    current.includeFutureEpisodes ||
+    current.coverageCompletedAt === null ||
+    episode.createdAt <= current.coverageCompletedAt;
+  return (
+    current.active &&
+    !current.excluded &&
+    current.direct &&
+    inSnapshot &&
+    includesSeason(current.includeSpecials, episode.seasonNumber)
+  );
+}
+
+function includesSeason(includeSpecials: boolean, seasonNumber: number | null) {
+  return includeSpecials || seasonNumber !== 0;
+}
+
+function unapprovedRoot(
+  root: { active: boolean; excluded: boolean; direct: boolean },
+  rootEpoch: number,
+  runtimeEpoch: number,
+) {
+  return (
+    root.active &&
+    !root.excluded &&
+    root.direct &&
+    rootEpoch >= 0 &&
+    rootEpoch !== runtimeEpoch
+  );
+}
+
+function catalogReady(media: {
+  catalogState: string;
+  parent: { catalogState: string } | null;
+}): boolean {
+  return (
+    media.catalogState === "ready" && media.parent?.catalogState !== "pending"
+  );
+}
+
+async function projectEpisode(
+  tx: Prisma.TransactionClient,
+  input: {
+    root: {
+      id: string;
+      userId: string;
+      version: number;
+      subtitleLanguages: string[];
+    };
+    mediaId: string;
+    active: boolean;
+    profileId: string | null;
+    automationEpoch: number;
+    targetExisted: boolean;
+  },
+): Promise<void> {
+  const { root, mediaId, active } = input;
+  const previous = await tx.requestCoverage.findUnique({
+    where: { rootRequestId_mediaId: { rootRequestId: root.id, mediaId } },
+  });
+  if (!active && previous === null) return;
+  if (previous?.sourceVersion === root.version && previous.active === active)
+    return;
+  const claim = await tx.mediaRequest.upsert({
+    where: {
+      userId_mediaId_edition: { userId: root.userId, ...defaultScope(mediaId) },
+    },
+    create: {
+      userId: root.userId,
+      mediaId,
+      direct: false,
+      active,
+      sponsorRequestId: root.id,
+      subtitleLanguages: root.subtitleLanguages,
+    },
+    update: {},
+  });
+  await tx.requestCoverage.upsert({
+    where: { rootRequestId_mediaId: { rootRequestId: root.id, mediaId } },
+    create: {
+      rootRequestId: root.id,
+      requestId: claim.id,
+      mediaId,
+      active,
+      sourceVersion: root.version,
+    },
+    update: { active, sourceVersion: root.version },
+  });
+  const inherited = await tx.requestCoverage.count({
+    where: {
+      requestId: claim.id,
+      edition: "default",
+      active: true,
+      rootRequest: {
+        edition: "default",
+        active: true,
+        direct: true,
+        excluded: false,
+      },
+    },
+  });
+  const claimActive = !claim.excluded && (claim.direct || inherited > 0);
+  await tx.mediaRequest.update({
+    where: { id: claim.id },
+    data: {
+      active: claimActive,
+      subtitleLanguages: [
+        ...new Set([...claim.subtitleLanguages, ...root.subtitleLanguages]),
+      ],
+      version: { increment: 1 },
+    },
+  });
+  const count = await tx.mediaRequest.count({
+    where: { mediaId, ...effectiveRequestWhere },
+  });
+  const prior = await tx.mediaIntent.findUnique({
+    where: targetWhere(defaultScope(mediaId)),
+  });
+  // A cancelled container never resurrects intentionally removed episodes.
+  const wants = active && claimActive;
+  const monitoring = requestMonitoring(prior, count);
+  const intent = await tx.mediaIntent.upsert({
+    where: targetWhere(defaultScope(mediaId)),
+    create: {
+      mediaId,
+      profileId: input.profileId,
+      generation: 1,
+      automationEpoch: wants ? input.automationEpoch : -1,
+      desiredPresence: wants,
+      monitoring,
+    },
+    update: {
+      ...(wants && input.automationEpoch >= 0
+        ? { automationEpoch: input.automationEpoch }
+        : {}),
+      profileId: prior?.profileId ?? input.profileId,
+      ...personalRequestGenerationChange(prior, input.automationEpoch),
+      version: input.targetExisted ? { increment: 1 } : 0,
+      monitoring,
+      ...(wants ? { desiredPresence: true, intentionallyRemovedAt: null } : {}),
+    },
+  });
+  await tx.mediaItem.update({
+    where: { id: mediaId },
+    data: { version: { increment: 1 } },
+  });
+  await invalidateRetention(tx, mediaId);
+  const pending = await pendingCompensationGroups(tx, [mediaId]);
+  if (pending.length > 0) return;
+  await queueMediaSubtitleTargets(tx, mediaId);
+  await queueOperation(tx, {
+    key: `coverage:${root.id}:${String(root.version)}:${mediaId}`,
+    kind:
+      wants && (await needsRestore(tx, mediaId))
+        ? "restore_media"
+        : "reconcile_media",
+    targetId: mediaId,
+    userId: root.userId,
+    payload: { mediaId, generation: intent.generation },
+  });
+}

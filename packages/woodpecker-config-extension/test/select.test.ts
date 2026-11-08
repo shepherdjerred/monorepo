@@ -9,7 +9,7 @@ import {
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
-import { TEST_IDENTITY } from "./identity.ts";
+import { TEST_IDENTITY, TEST_IMAGES as IMAGES } from "./identity.ts";
 
 function step(key: string, overrides: Partial<CiStep> = {}): CiStep {
   return {
@@ -28,21 +28,6 @@ const CONTEXT = {
   branch: "feature",
   defaultBranch: "main",
   changedFiles: ["packages/scout-for-lol/src/index.ts"],
-};
-
-const IMAGES = {
-  base: "docker.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
-  playwright: "docker.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
-  catalog: {
-    "aquasec/trivy": "aquasec/trivy:0.72.0",
-    "semgrep/semgrep": "semgrep/semgrep:1.170.0",
-    "texlive/texlive": "texlive/texlive:TL2024-historic",
-    "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
-    "grafana/tempo": "grafana/tempo:3.0.3",
-    "mikefarah/yq": "mikefarah/yq:latest",
-    "minio/mc": "minio/mc:RELEASE",
-    "minio/minio": "minio/minio:RELEASE",
-  },
 };
 
 function keysFor(changedFiles: string[], branch = "feature") {

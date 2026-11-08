@@ -14,6 +14,8 @@ export const WorkerRoleSchema = z.enum([
   "home",
   "infra",
   "maintenance",
+  "media-network",
+  "media-files",
   "repo",
   "reports",
   "scout",

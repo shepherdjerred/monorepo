@@ -33,6 +33,7 @@ export const TEST_IMAGES: CiImages = {
     "mikefarah/yq": "mikefarah/yq:latest",
     "minio/mc": "minio/mc:RELEASE",
     "minio/minio": "minio/minio:RELEASE",
+    "plexinc/pms-docker": `plexinc/pms-docker:1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,
   },
 };
 

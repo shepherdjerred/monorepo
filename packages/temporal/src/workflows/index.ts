@@ -86,17 +86,7 @@ import type {
   CheckPrMergeConflictsInput,
 } from "#shared/schemas.ts";
 import type { AgentTaskInput } from "#shared/agent/agent-task.ts";
-import {
-  runGlitterCorpusBackfill as _runGlitterCorpusBackfill,
-  runGlitterCorpusChannelBackfill as _runGlitterCorpusChannelBackfill,
-  runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
-  runGlitterCorpusDaily as _runGlitterCorpusDaily,
-  runGlitterCorpusInventory as _runGlitterCorpusInventory,
-  type GlitterCorpusBackfillInput,
-  type GlitterCorpusChannelBackfillInput,
-  type GlitterCorpusChannelOverlapInput,
-  type GlitterCorpusSnapshotResult,
-} from "./glitter/glitter-corpus.ts";
+import * as glitterCorpus from "./glitter/glitter-corpus.ts";
 import type {
   ChannelStateResult,
   InventoryResult,
@@ -131,7 +121,6 @@ import {
 } from "./worker-deployment-canary.ts";
 
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
-import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
@@ -144,11 +133,10 @@ import type {
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
 import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
-import { photonConversationWorkflow as _photonConversationWorkflow } from "./photon/conversation.ts";
+import * as photonConversation from "./photon/conversation.ts";
 
-export const photonConversationWorkflow = (
-  ...args: Parameters<typeof _photonConversationWorkflow>
-) => _photonConversationWorkflow(...args);
+export const photonConversationWorkflow =
+  photonConversation.photonConversationWorkflow;
 export const photonAgentChatWorkflow = (
   ...args: Parameters<typeof _photonAgentChatWorkflow>
 ) => _photonAgentChatWorkflow(...args);
@@ -171,9 +159,8 @@ export function workerDeploymentCanaryWorkflow(
   return Promise.resolve();
 }
 
-export async function fetchSkillCappedManifest(): Promise<void> {
-  return _fetchSkillCappedManifest();
-}
+export const fetchSkillCappedManifest = (): Promise<void> =>
+  _fetchSkillCappedManifest();
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
@@ -373,7 +360,7 @@ export async function pollWorkflowFailuresWorkflow(): Promise<PollWorkflowFailur
 }
 
 export async function runGlitterCorpusInventory(): Promise<InventoryResult> {
-  return _runGlitterCorpusInventory();
+  return glitterCorpus.runGlitterCorpusInventory();
 }
 
 export async function runGlitterContextRefresh(
@@ -389,39 +376,34 @@ export async function runGlitterContextAudit(
 }
 
 export async function runGlitterCorpusBackfill(
-  input: GlitterCorpusBackfillInput,
-): Promise<GlitterCorpusSnapshotResult> {
-  return _runGlitterCorpusBackfill(input);
+  input: glitterCorpus.GlitterCorpusBackfillInput,
+): Promise<glitterCorpus.GlitterCorpusSnapshotResult> {
+  return glitterCorpus.runGlitterCorpusBackfill(input);
 }
 
 export async function runGlitterCorpusChannelBackfill(
-  input: GlitterCorpusChannelBackfillInput,
+  input: glitterCorpus.GlitterCorpusChannelBackfillInput,
 ): Promise<ChannelStateResult> {
-  return _runGlitterCorpusChannelBackfill(input);
+  return glitterCorpus.runGlitterCorpusChannelBackfill(input);
 }
 
 export async function runGlitterCorpusChannelOverlap(
-  input: GlitterCorpusChannelOverlapInput,
+  input: glitterCorpus.GlitterCorpusChannelOverlapInput,
 ): Promise<ChannelStateResult> {
-  return _runGlitterCorpusChannelOverlap(input);
+  return glitterCorpus.runGlitterCorpusChannelOverlap(input);
 }
 
-export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
-  return _runGlitterCorpusDaily();
-}
+export const runGlitterCorpusDaily = () =>
+  glitterCorpus.runGlitterCorpusDaily();
 
-export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
-  return _runLlmBilledCostReconciliation();
-}
-
+export const runLlmBilledCostReconciliation = () =>
+  _runLlmBilledCostReconciliation();
 export const runOpsSnapshot = () => _runOpsSnapshot();
-
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
 ): ReturnType<typeof _runOpsDigest> {
   return _runOpsDigest(input);
 }
-
 export const agentChatWorkflow = agentChat.agentChatWorkflow;
 export const agentChatTurnReceiptWorkflow =
   agentChat.agentChatTurnReceiptWorkflow;
@@ -444,3 +426,59 @@ export const deliveryPlatformRecoveryWorkflow =
 export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
+import * as mediaWorkflows from "./media/exports.ts";
+export const {
+  rollbackMovieEditionV1Workflow,
+  restoreMovieEditionV4Workflow,
+  retainMovieEditionV4Workflow,
+  observeMoviePlexHintV4Workflow,
+  acquireMovieSubtitlesV4Workflow,
+  reconcileMovieEditionV4Workflow,
+  acquireMovieEditionV4Workflow,
+  matchProviderFeedSourceWorkflow,
+  matchSeriesPackFeedSourceWorkflow,
+  prepareMediaHandoffWorkflow,
+  applyMediaHandoffWorkflow,
+  applyLibraryHandoffV3Workflow,
+  prepareNativeArchiveWorkflow,
+  applyNativeArchiveWorkflow,
+  cleanupNativeArchiveWorkflow,
+  prepareNativeQuarantineWorkflow,
+  applyNativeQuarantineWorkflow,
+  restoreNativeQuarantineWorkflow,
+  prepareNativeRecoveryWorkflow,
+  applyNativeRecoveryWorkflow,
+  preparePlexExclusionWorkflow,
+  executePlexExclusionWorkflow,
+  recoverPlexExclusionWorkflow,
+  reconcileMediaWorkflow,
+  acquireMediaReleaseWorkflow,
+  acquireMediaSubtitlesWorkflow,
+  installMediaSubtitleWorkflow,
+  cleanupMediaUpgradeWorkflow,
+  maintainMediaTorrentWorkflow,
+  retainMediaWorkflow,
+  restoreMediaWorkflow,
+  deliverMediaNotificationWorkflow,
+  dispatchMediaOutboxWorkflow,
+  sweepMediaWorkflow,
+  expandMediaRequestWorkflow,
+  refreshMediaCatalogWorkflow,
+  expandCatalogRequestsWorkflow,
+  prepareSubtitleReplacementWorkflow,
+  applySubtitleReplacementWorkflow,
+  reconcileSubtitleReplacementWorkflow,
+  cleanupSubtitleReplacementWorkflow,
+  observeMediaCapacityWorkflow,
+  verifyLibraryPlexBindingWorkflow,
+  reverifyPlexBindingWorkflow,
+  observePlexEventHintWorkflow,
+  prepareSeriesPackNativeCompensationV1Workflow,
+  applySeriesPackNativeCompensationV1Workflow,
+  compensateSeriesPackNativePublicationV1Workflow,
+  publishSeriesPackNativeCompensationV1Workflow,
+  prepareNativeCompensationWorkflow,
+  applyNativeCompensationWorkflow,
+  compensateNativePublicationWorkflow,
+  publishCompensatedMediaWorkflow,
+} = { ...mediaWorkflows };

@@ -36,7 +36,8 @@ export type CatalogImageName =
   | "grafana/tempo"
   | "mikefarah/yq"
   | "minio/mc"
-  | "minio/minio";
+  | "minio/minio"
+  | "plexinc/pms-docker";
 
 const DIGEST_PATHS = {
   base: "ci/ci-image/DIGEST",
@@ -153,6 +154,7 @@ export async function resolveCiImages(
       "mikefarah/yq": reference(catalog, "mikefarah/yq"),
       "minio/mc": reference(catalog, "minio/mc"),
       "minio/minio": reference(catalog, "minio/minio"),
+      "plexinc/pms-docker": reference(catalog, "plexinc/pms-docker"),
     },
   };
 }

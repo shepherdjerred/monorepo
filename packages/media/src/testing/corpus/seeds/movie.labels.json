@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "authoredBy": "synthetic-fixture-author",
+  "basis": "Fictional movie catalog. Exact title/year standard cuts qualify; UHD remux outranks web. Remake year and contradictory provider ID must reject, missing year is ambiguous, named cut cannot enter default. Plans independently follow the documented catalog naming convention.",
+  "candidates": [
+    {
+      "key": "web",
+      "disposition": "accept",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": [
+        {
+          "sourceName": "The.Paper.Lantern.2024.1080p.WEB-DL.HEVC.ENG.mkv",
+          "coverage": ["lantern"],
+          "libraryPath": "The Paper Lantern (2024) {tmdb-990001}/The Paper Lantern (2024) {tmdb-990001}.mkv"
+        }
+      ]
+    },
+    {
+      "key": "remux",
+      "disposition": "accept",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": [
+        {
+          "sourceName": "The.Paper.Lantern.2024.2160p.BluRay.REMUX.HEVC.ENG.mkv",
+          "coverage": ["lantern"],
+          "libraryPath": "The Paper Lantern (2024) {tmdb-990001}/The Paper Lantern (2024) {tmdb-990001}.mkv"
+        }
+      ]
+    },
+    {
+      "key": "wrong-year",
+      "disposition": "reject",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": null
+    },
+    {
+      "key": "missing-year",
+      "disposition": "ambiguous",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": null
+    },
+    {
+      "key": "conflicting-reference",
+      "disposition": "reject",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": null
+    },
+    {
+      "key": "named-cut",
+      "disposition": "reject",
+      "coverage": ["lantern"],
+      "edition": "named",
+      "plan": null
+    }
+  ],
+  "ranking": ["remux", "web"]
+}

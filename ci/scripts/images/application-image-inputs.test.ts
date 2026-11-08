@@ -123,9 +123,9 @@ describe("application image inputs", () => {
     );
   });
 
-  test("provisions Scout's throwaway database for its exact-digest smoke", async () => {
+  test("provisions Scout and Media throwaway databases for their exact-digest smokes", async () => {
     const dockerfile = await read("ci/application-image-smoke.Dockerfile");
-    expect(dockerfile).toContain("scout-for-lol)");
+    expect(dockerfile).toContain("scout-for-lol|media)");
     expect(dockerfile).toContain("postgresql postgresql-client");
   });
 

@@ -1,0 +1,145 @@
+.media-progress {
+  margin-bottom: 26px;
+}
+.latest-acquisition {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: baseline;
+}
+.playback-summary {
+  padding: 18px 20px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #1b211e;
+}
+.playback-summary strong {
+  color: #e7c79e;
+}
+.playback-ready {
+  background: #263527;
+  border-color: #435b42;
+}
+.playback-ready strong {
+  color: #d5e7c4;
+}
+.playback-summary p {
+  margin: 7px 0 0;
+}
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+  gap: 18px;
+}
+.download-card {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 20px;
+  min-width: 0;
+}
+.download-card p {
+  overflow-wrap: anywhere;
+}
+.download-stale {
+  border-style: dashed;
+}
+.download-meter {
+  margin: 18px 0 12px;
+}
+.download-meter > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+.download-meter strong {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.download-meter progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  appearance: none;
+  border: 0;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #343d36;
+  accent-color: var(--accent);
+}
+.download-meter progress::-webkit-progress-bar {
+  background: #343d36;
+}
+.download-meter progress::-webkit-progress-value {
+  background: var(--accent);
+}
+.download-meter progress::-moz-progress-bar {
+  background: var(--accent);
+}
+.download-stale progress::-webkit-progress-value {
+  background: #819086;
+}
+.download-stale progress::-moz-progress-bar {
+  background: #819086;
+}
+.download-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 20px 0;
+}
+.download-facts dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+.download-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.seed-diagnostics {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 18px;
+}
+.seed-diagnostics h4 {
+  margin: 0 0 8px;
+}
+.progress-protection {
+  color: #e0c6a3;
+  border-left: 2px solid #a58a62;
+  padding: 8px 12px;
+  background: #332c202e;
+}
+.progress-evaluation {
+  border-left: 2px solid #586953;
+  padding: 8px 12px;
+}
+.progress-protection p,
+.progress-evaluation p {
+  margin: 6px 0;
+}
+.acquisition-history {
+  margin-top: 22px;
+}
+.acquisition-history ol {
+  padding-left: 24px;
+}
+.acquisition-history li {
+  margin: 15px 0;
+}
+@media (max-width: 600px) {
+  .download-card {
+    padding: 16px;
+  }
+  .media-progress > .section-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .download-facts {
+    grid-template-columns: 1fr;
+  }
+}

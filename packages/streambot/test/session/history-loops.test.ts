@@ -10,6 +10,7 @@ import {
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import { markReplacedRequest } from "@shepherdjerred/streambot/commands/playback-recording.ts";
+import * as persistence from "@shepherdjerred/streambot/state/persistence.ts";
 
 test("natural track loops create individual history runs while pause, seek, and recovery reuse the open run", async () => {
   const history = new MediaHistoryStore(":memory:");
@@ -92,4 +93,49 @@ test("natural track loops create individual history runs while pause, seek, and 
   expect(runs().items.filter((run) => run.outcome === "skipped")).toHaveLength(
     2,
   );
+});
+
+test("shutdown drains a stopped numbered slot's pending state deletion before its directory can be removed", async () => {
+  const room = await harness(1);
+  const handle = room.play(2);
+  const file = persistence.stateFilePath(room.dir, guildId, voiceChannelId);
+  await vi.waitFor(async () => {
+    expect(handle.view().state).toBe("streaming");
+    expect(await Bun.file(file).exists()).toBe(true);
+  });
+  const entered = Promise.withResolvers<undefined>();
+  const release = Promise.withResolvers<undefined>();
+  const deleteState = persistence.deleteState;
+  const deletion = vi
+    .spyOn(persistence, "deleteState")
+    .mockImplementation(async (target) => {
+      entered.resolve(undefined);
+      await release.promise;
+      await deleteState(target);
+    });
+  let shutdown: Promise<void> | undefined;
+  try {
+    handle.dispatch({ type: "STOP" });
+    await entered.promise;
+    expect(
+      room.manager.getExisting(guildId, voiceChannelId, number(2)),
+    ).toBeNull();
+    let stopped = false;
+    shutdown = (async () => {
+      await room.manager.destroyAll();
+      stopped = true;
+    })();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(stopped).toBe(false);
+    expect(await Bun.file(file).exists()).toBe(true);
+    release.resolve(undefined);
+    await shutdown;
+    expect(stopped).toBe(true);
+    expect(await Bun.file(file).exists()).toBe(false);
+    expect(deletion).toHaveBeenCalledExactlyOnceWith(file);
+  } finally {
+    release.resolve(undefined);
+    await shutdown;
+    deletion.mockRestore();
+  }
 });

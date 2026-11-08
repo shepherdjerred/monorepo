@@ -62,9 +62,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
     build-essential pkg-config libssl-dev libxml2 libcurl4 libatomic1 \
-    libtinfo6 libedit2 libsqlite3-0 libz3-4 util-linux ffmpeg \
+    libtinfo6 libedit2 libsqlite3-0 libz3-4 util-linux ffmpeg procps \
     && flock --version \
     && ffmpeg -version && ffprobe -version \
+    && command -v ps \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
@@ -109,7 +110,9 @@ WORKDIR /workspace
 RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true \
     mise trust .mise.toml && mise install --locked && mise reshim \
     && ln -sf "$(mise which gh)" /usr/local/bin/gh \
-    && gh --version
+    && gh --version \
+    && ln -sf "$(mise which 7zz)" /usr/local/bin/7zz \
+    && 7zz i
 
 # Android build tools and NDK are published for Linux x86_64. Keep the ARM64
 # base image usable for every other workspace; Android actions fail explicitly

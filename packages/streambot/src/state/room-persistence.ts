@@ -162,6 +162,11 @@ export class RoomPersistence {
       : this.remove(guildId, channelId, number, slot.instanceId);
   }
 
+  /** Await queued checkpoints and removals after their playback actors stop. */
+  async drain(): Promise<void> {
+    await Promise.all(this.tails.values());
+  }
+
   private flush(file: string): Promise<void> {
     const previous = this.tails.get(file) ?? Promise.resolve();
     const next = (async () => {

@@ -28,7 +28,12 @@
       // dump-steps.ts is invoked as a subprocess by check-ci-env (see
       // scripts/lib/ci/generated-steps.ts), which knip cannot see.
       // The trusted clone container invokes checkout/main.ts through flock.
-      "entry": ["src/dump-steps.ts", "src/checkout/main.ts", "test/**/*.ts"],
+      "entry": [
+        "src/dump-steps.ts",
+        "src/checkout/main.ts",
+        "src/reproduction/render-media-pms.ts",
+        "test/**/*.ts"
+      ],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/birmel": {
@@ -64,6 +69,23 @@
       ],
       "project": [
         "src/**/*.{ts,tsx,css}",
+        "e2e/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
+    "packages/media": {
+      "entry": [
+        "architecture.config.ts",
+        "src/**/*.test.ts",
+        "scripts/**/*.ts",
+        "e2e/system/run-peer.ts",
+        "e2e/pms/prepare.ts",
+        "e2e/pms/run.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "scripts/**/*.ts",
         "e2e/**/*.ts",
         "prisma/**/*.prisma",
         "*.ts"
@@ -379,7 +401,12 @@
       ]
     },
     "packages/temporal": {
-      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
+      "entry": [
+        "src/**/*.test.ts",
+        "scripts/**/*.ts",
+        "src/workflows/media/fixtures/cleanup-before-input.ts",
+        "src/workflows/media/fixtures/cleanup-before-observation.ts"
+      ],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/trmnl-dashboard": {

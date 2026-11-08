@@ -7,6 +7,11 @@
       "description": "Deployment control plane activation and access policy."
     },
     {
+      "key": "media",
+      "name": "Media",
+      "description": "Unified household media automation controls."
+    },
+    {
       "key": "arcade",
       "name": "Arcade",
       "description": "Arcade game rollout controls."
@@ -237,6 +242,508 @@
       "purpose": "Seconds an owned Delivery deployment stays provably owned without a lease renewal (model D7); a lapsed lease ends recovery-required.",
       "type": "variant",
       "default": "900",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-personal-discord-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Enable personal Discord notifications after explicit operator provisioning.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Discord application provisioning and recipient-visible acceptance remain deferred by the owner; the deployed Media bootstrap omits Discord credentials.",
+          "issue": "AI-300",
+          "enableWhen": "The owner provisions the dedicated Discord application and credentials, verifies account linking and private recipient-visible delivery, and authorizes this environment's Discord rollout.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Discord application provisioning and recipient-visible acceptance remain deferred by the owner; the deployed Media bootstrap omits Discord credentials.",
+          "issue": "AI-300",
+          "enableWhen": "The owner provisions the dedicated Discord application and credentials, verifies account linking and private recipient-visible delivery, and authorizes this environment's Discord rollout.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-shared-announcements-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow optional shared Discord availability announcements only after explicit operator configuration.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The optional shared Discord channel and dedicated bot are not provisioned or accepted; personal notification acceptance does not authorize shared publication.",
+          "issue": "AI-300",
+          "enableWhen": "The owner provisions the bot and explicit shared channel, accepts a non-personal availability announcement in that channel, and authorizes this environment's shared announcements.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "The optional shared Discord channel and dedicated bot are not provisioned or accepted; personal notification acceptance does not authorize shared publication.",
+          "issue": "AI-300",
+          "enableWhen": "The owner provisions the bot and explicit shared channel, accepts a non-personal availability announcement in that channel, and authorizes this environment's shared announcements.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-shared-announcements-upgrades",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow shared Discord upgrade announcements independently of availability announcements.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Optional shared upgrade announcements require a separate owner decision and channel acceptance; neither availability announcements nor implementation completion supplies that decision.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts the configured shared channel and bot, explicitly opts into shared upgrade announcements, and verifies an upgrade announcement without personal information.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Optional shared upgrade announcements require a separate owner decision and channel acceptance; neither availability announcements nor implementation completion supplies that decision.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts the configured shared channel and bot, explicitly opts into shared upgrade announcements, and verifies an upgrade announcement without personal information.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-shared-discord-channel-id",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Explicit shared Discord channel snowflake; disabled leaves the optional channel unconfigured.",
+      "type": "variant",
+      "default": "disabled",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-requests-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Accept household requests after authentication and migration acceptance.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The complete Media replacement still requires separately authorized live authentication, application-schema and existing-library adoption acceptance before household request cutover.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts Plex sign-in and household permissions against the deployed schema and adopted library, then authorizes request activation for this environment.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "The complete Media replacement still requires separately authorized live authentication, application-schema and existing-library adoption acceptance before household request cutover.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts Plex sign-in and household permissions against the deployed schema and adopted library, then authorizes request activation for this environment.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-acquisition-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow torrent submissions only after acquisition ownership transfers.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Source implementation does not establish exclusive live acquisition ownership or retire competing controllers; production cutover remains separately authorized under AI-300.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts deployed writer and storage authority, excludes competing library controllers, verifies a Media-created transfer through Plex publication, and authorizes acquisition; existing torrents remain outside Media management.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Source implementation does not establish exclusive live acquisition ownership or retire competing controllers; production cutover remains separately authorized under AI-300.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts deployed writer and storage authority, excludes competing library controllers, verifies a Media-created transfer through Plex publication, and authorizes acquisition; existing torrents remain outside Media management.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-capacity-observation-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Collect informational filesystem capacity without granting storage or mutation authority.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The dedicated capacity schedule remains paused pending live verification of the actual worker mounts and informational observations; source availability is not mounted-worker acceptance.",
+          "issue": "AI-300",
+          "enableWhen": "The owner verifies capacity observations from the deployed Network and Files workers against their canonical mounts and enables the dedicated capacity schedule for this environment; observations grant no storage or mutation authority.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "The dedicated capacity schedule remains paused pending live verification of the actual worker mounts and informational observations; source availability is not mounted-worker acceptance.",
+          "issue": "AI-300",
+          "enableWhen": "The owner verifies capacity observations from the deployed Network and Files workers against their canonical mounts and enables the dedicated capacity schedule for this environment; observations grant no storage or mutation authority.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-plex-event-hints-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Accept authenticated Plex event hints for current scoped watch observation without granting deletion authority.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The deployed Plex event endpoint and authenticated server/library binding have not completed live watch-observation acceptance; implementation evidence does not establish that binding.",
+          "issue": "AI-300",
+          "enableWhen": "The owner verifies authenticated event ingress and exact current server/library and household identity mappings, confirms scoped watch observation, and authorizes event hints for this environment.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "The deployed Plex event endpoint and authenticated server/library binding have not completed live watch-observation acceptance; implementation evidence does not establish that binding.",
+          "issue": "AI-300",
+          "enableWhen": "The owner verifies authenticated event ingress and exact current server/library and household identity mappings, confirms scoped watch observation, and authorizes event hints for this environment.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-source-cleanup-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow source cleanup after verified seeding obligations and ownership checks.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Automatic source deletion awaits live acceptance of Media-created transfer ownership, tracker-specific seeding obligations and dependent publication coverage; existing torrents are explicitly excluded.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts a real compliant Media-created seed cycle and exact source/dependency checks before authorizing source cleanup; no existing torrent is adopted or cleaned up.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Automatic source deletion awaits live acceptance of Media-created transfer ownership, tracker-specific seeding obligations and dependent publication coverage; existing torrents are explicitly excluded.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts a real compliant Media-created seed cycle and exact source/dependency checks before authorizing source cleanup; no existing torrent is adopted or cleaned up.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-quarantine-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow reversible library removal after fresh retention and notification checks.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Live ownership, Plex exclusion, current household watch evidence and recipient-visible warning delivery have not completed the separately authorized quarantine acceptance.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts deployed ownership and Plex exclusion, fresh scoped watch and playback checks, personal warning/grace behavior and a real quarantine/restore journey, then authorizes quarantine.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Live ownership, Plex exclusion, current household watch evidence and recipient-visible warning delivery have not completed the separately authorized quarantine acceptance.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts deployed ownership and Plex exclusion, fresh scoped watch and playback checks, personal warning/grace behavior and a real quarantine/restore journey, then authorizes quarantine.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-purge-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow final quarantine purge after expiry and revalidation; independently disabled during recovery.",
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Irreversible purge remains gated until the separately authorized live recoverable-quarantine and restore-or-purge acceptance; source implementation is not deletion authorization.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts a real recoverable quarantine and restoration, verifies expiry plus fresh ownership/hold/watch/notification protections, and explicitly authorizes final purge for this environment.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Irreversible purge remains gated until the separately authorized live recoverable-quarantine and restore-or-purge acceptance; source implementation is not deletion authorization.",
+          "issue": "AI-300",
+          "enableWhen": "The owner accepts a real recoverable quarantine and restoration, verifies expiry plus fresh ownership/hold/watch/notification protections, and explicitly authorizes final purge for this environment.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-session-lifetime-ms",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Maximum session lifetime at login; Plex access is independently revalidated.",
+      "type": "variant",
+      "default": "604800000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-email-sender",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Verified sending address for household media notifications.",
+      "type": "variant",
+      "default": "media@sjer.red",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-permitted-movie-section-id",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Plex movie section whose scoped access and publication mapping must be verified.",
+      "type": "variant",
+      "default": "1",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-permitted-tv-section-id",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Plex television section whose scoped access and publication mapping must be verified.",
+      "type": "variant",
+      "default": "2",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-keep-days",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Days of retention protection granted by a household Keep action.",
+      "type": "variant",
+      "default": "30",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

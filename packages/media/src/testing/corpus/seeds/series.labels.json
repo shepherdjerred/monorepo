@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "authoredBy": "synthetic-fixture-author",
+  "basis": "Fictional two-episode season. Only the complete pack fulfills requested episode two. Member names determine each leaf; episode one alone and nonexistent episode three cannot fulfill it. Expected paths use catalog series and leaf titles.",
+  "candidates": [
+    {
+      "key": "season",
+      "disposition": "accept",
+      "coverage": ["harbor-e1", "harbor-e2"],
+      "edition": "standard_unmarked",
+      "plan": [
+        {
+          "sourceName": "Cloud.Harbor.S01E01.1080p.mkv",
+          "coverage": ["harbor-e1"],
+          "libraryPath": "Cloud Harbor (2025) {tmdb-990002}/Season 01/Cloud Harbor - S01E01 - Arrival.mkv"
+        },
+        {
+          "sourceName": "Cloud.Harbor.S01E02.1080p.mkv",
+          "coverage": ["harbor-e2"],
+          "libraryPath": "Cloud Harbor (2025) {tmdb-990002}/Season 01/Cloud Harbor - S01E02 - Signal.mkv"
+        }
+      ]
+    },
+    {
+      "key": "other-episode",
+      "disposition": "reject",
+      "coverage": ["harbor-e1"],
+      "edition": "standard_unmarked",
+      "plan": null
+    },
+    {
+      "key": "unknown-episode",
+      "disposition": "ambiguous",
+      "coverage": [],
+      "edition": "standard_unmarked",
+      "plan": null
+    }
+  ],
+  "ranking": ["season"]
+}

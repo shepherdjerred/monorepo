@@ -1,0 +1,59 @@
+{
+  "provenance": {
+    "image": "ghcr.io/linuxserver/qbittorrent:5.2.4@sha256:b522f9f4b769f8f36d49d22d5eb6a92e9aa18904c6a1830b1439df511ec21983",
+    "appVersion": "v5.2.4",
+    "webapiVersion": "2.15.1",
+    "capture": "Isolated internal-only Docker network; synthetic generated torrent metadata; no production mounts or peers. Fields intentionally restricted to protocol evidence."
+  },
+  "uploads": [
+    {
+      "kind": "v1",
+      "torrentBase64": "ZDQ6aW5mb2Q2Omxlbmd0aGkxZTQ6bmFtZTE0OnYxLWZpeHR1cmUudHh0MTI6cGllY2UgbGVuZ3RoaTE2Mzg0ZTY6cGllY2VzMjA6EfatjsUqKYSrqv18O1FlA3hcIHJlZQ==",
+      "hash": "8a8b13fc7191dc4995b6f733a426b29dd5efd67c",
+      "infohash_v1": "8a8b13fc7191dc4995b6f733a426b29dd5efd67c",
+      "infohash_v2": ""
+    },
+    {
+      "kind": "v2",
+      "torrentBase64": "ZDQ6aW5mb2Q5OmZpbGUgdHJlZWQxNDp2Mi1maXh0dXJlLnR4dGQwOmQ2Omxlbmd0aGkxZTExOnBpZWNlcyByb290MzI6LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIFlZWUxMjptZXRhIHZlcnNpb25pMmU0Om5hbWUxNDp2Mi1maXh0dXJlLnR4dDEyOnBpZWNlIGxlbmd0aGkxNjM4NGVlZQ==",
+      "hash": "7dc1530aa3fb06a12133b002943dbb8f7d863b7c",
+      "infohash_v1": "",
+      "infohash_v2": "7dc1530aa3fb06a12133b002943dbb8f7d863b7ccebce95b4b00bf1adcfe5527"
+    },
+    {
+      "kind": "hybrid",
+      "torrentBase64": "ZDQ6aW5mb2Q5OmZpbGUgdHJlZWQxODpoeWJyaWQtZml4dHVyZS50eHRkMDpkNjpsZW5ndGhpMWUxMTpwaWVjZXMgcm9vdDMyOi1xFkK3JrBEAWJ8qfusMvXIUw+xkDzE2wIlhxeSGkiBZWVlNjpsZW5ndGhpMWUxMjptZXRhIHZlcnNpb25pMmU0Om5hbWUxODpoeWJyaWQtZml4dHVyZS50eHQxMjpwaWVjZSBsZW5ndGhpMTYzODRlNjpwaWVjZXMyMDoR9q2OxSophKuq/Xw7UWUDeFwgcmVl",
+      "hash": "36c9f30985cc81d6d3264c29cba12b6a78e030de",
+      "infohash_v1": "c47466e19387fca86df757c0d43d31f0f69d83a7",
+      "infohash_v2": "36c9f30985cc81d6d3264c29cba12b6a78e030ded2267fc51ec89e99c3914ad9"
+    }
+  ],
+  "add": {
+    "added_torrent_ids": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
+    "failure_count": 0,
+    "pending_count": 0,
+    "success_count": 1
+  },
+  "unlimited": {
+    "ratio_limit": -1,
+    "seeding_time_limit": -1,
+    "inactive_seeding_time_limit": -1,
+    "max_ratio": -1,
+    "max_seeding_time": -1,
+    "max_inactive_seeding_time": -1,
+    "share_limit_action": "Stop",
+    "auto_tmm": false,
+    "force_start": false
+  },
+  "explicitMinutes": {
+    "ratio_limit": 2,
+    "seeding_time_limit": 123,
+    "inactive_seeding_time_limit": 456,
+    "max_ratio": 2,
+    "max_seeding_time": 123,
+    "max_inactive_seeding_time": 456,
+    "share_limit_action": "Stop",
+    "auto_tmm": false,
+    "force_start": false
+  }
+}

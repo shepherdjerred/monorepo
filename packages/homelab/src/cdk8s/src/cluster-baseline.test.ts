@@ -127,6 +127,7 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["prometheus", "nvme"],
   ["gickup", "gitckup"],
   ["media", "qbittorrent"],
+  ["media", "media"],
   ["s3-static-sites", "static-sites"],
   ["prometheus", "service-probes"],
   ["prometheus", "alert-dashboard"],

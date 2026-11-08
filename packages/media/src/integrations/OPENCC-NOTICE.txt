@@ -1,0 +1,18 @@
+chinese-script-data.json contains character-set data derived from OpenCC's
+STCharacters.txt and TSCharacters.txt dictionaries, licensed under Apache-2.0.
+The applicable license is included in OPENCC-LICENSE.txt.
+
+Upstream project: https://github.com/BYVoid/OpenCC
+Dictionary sources:
+https://github.com/BYVoid/OpenCC/blob/master/data/dictionary/STCharacters.txt
+https://github.com/BYVoid/OpenCC/blob/master/data/dictionary/TSCharacters.txt
+
+This application changes the dictionary representation into two sets containing
+script-exclusive characters. Shared characters are omitted. The data snapshot
+matches the existing repository chinese_script.py OpenCC-derived data; no Bazarr
+provider implementation code is included in the generated JSON.
+
+The JSON serialization and TypeScript validation implementation were authored
+for this application. Script evidence counts distinct characters, requires at
+least five Simplified-exclusive characters, and rejects Traditional-exclusive
+characters. It does not transliterate subtitle content.
