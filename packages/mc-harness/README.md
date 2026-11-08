@@ -293,11 +293,12 @@ batch per fresh scenario. Successful batches keep their private S3 run records a
 their selected outputs. An atomic local checkpoint under
 `$TOOLKIT_MC_DIRECTORY/campaigns` records each completed batch; a failed batch
 remains pending. Resume skips completed batches and reuses the first batch's
-immutable runtime and terrain. Source edits require a new campaign. Commit media
+immutable runtime and terrain. Capturing edited recipes requires a new campaign. Commit media
 only after the entire campaign and visual review pass.
 
 Complete campaign manifests are content-addressed and indexed privately in S3.
-Replay restores each batch's own saved rollout decisions; `--fresh` selects the
+Replay follows the retained catalog even if current recipes have changed, and
+restores each batch's own saved rollout decisions; `--fresh` selects the
 fresh scenarios, while omitting it replays every batch. The driver refuses
 concurrent runs of the same campaign. After an interrupted process, confirm it
 has stopped before removing its reported stale `.lock` directory. Partial

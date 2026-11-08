@@ -3,7 +3,6 @@ import { parseArgs } from "node:util";
 import { mkdir, rename, rmdir } from "node:fs/promises";
 import { z } from "zod";
 import { SuiteRunSchema } from "@shepherdjerred/mc-harness/capture/suite/archive.ts";
-import suite from "./suite.ts";
 import { MC_DIR } from "@shepherdjerred/mc-harness/protocol/paths.ts";
 import { awsStore } from "@shepherdjerred/mc-harness/capture/suite/aws-store.ts";
 import {
@@ -16,6 +15,7 @@ import {
   replayCampaign,
   validateCampaign,
   validatePlan,
+  validateReplayPlan,
   type Campaign,
 } from "@shepherdjerred/mc-harness/capture/campaign/state.ts";
 
@@ -31,6 +31,10 @@ const root = path.resolve(import.meta.dirname, "../../../..");
 const directory = path.join(MC_DIR, "campaigns");
 const store = awsStore("the-storm-capture-fixtures");
 const cache = path.join(MC_DIR, "suite-blobs");
+async function currentSuite() {
+  const module = await import("./suite.ts");
+  return module.default;
+}
 if (
   [values.fixture, values.resume, values.replay].filter((v) => v !== undefined)
     .length !== 1 ||
@@ -66,6 +70,7 @@ async function initial(): Promise<Campaign> {
   }
   if (values.replay !== undefined)
     return replayCampaign(await saved(values.replay), values.fresh === true);
+  const suite = await currentSuite();
   return validateCampaign({
     schema: 1,
     id: crypto.randomUUID(),
@@ -88,7 +93,9 @@ async function persist(next: Campaign) {
   await rename(temporary, file);
 }
 async function run(state: Campaign) {
-  validatePlan(state, suite);
+  if (state.suite !== "tsmc") throw new Error("This driver only captures TSMC");
+  if (state.replay === null) validatePlan(state, await currentSuite());
+  else validateReplayPlan(state, await saved(state.replay));
   await persist(state);
   console.error(
     JSON.stringify({

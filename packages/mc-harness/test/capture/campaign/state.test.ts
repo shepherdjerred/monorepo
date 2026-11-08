@@ -4,6 +4,7 @@ import {
   replayCampaign,
   validateCampaign,
   validatePlan,
+  validateReplayPlan,
   campaignPlan,
   type Campaign,
   type Batch,
@@ -166,4 +167,32 @@ it("does not silently drop a batch from an edited suite", () => {
       scenarios: [],
     }),
   ).toThrow("plan differs");
+});
+
+it("validates replay against retained batches and refuses an omitted or substituted source run", async () => {
+  const previous = await executeCampaign(
+    pending(),
+    () => Promise.resolve(),
+    (part) => Promise.resolve(result(part)),
+  );
+  const replay = replayCampaign(previous, true);
+  expect(() => validateReplayPlan(replay, previous)).not.toThrow();
+  expect(() =>
+    validateReplayPlan({ ...replay, fixture: "f".repeat(64) }, previous),
+  ).toThrow("retained campaign");
+  expect(() =>
+    validateReplayPlan({ ...replay, batches: [] }, previous),
+  ).toThrow("retained campaign");
+  expect(() =>
+    validateReplayPlan(
+      {
+        ...replay,
+        batches: replay.batches.map((b) => ({
+          ...b,
+          replayOf: crypto.randomUUID(),
+        })),
+      },
+      previous,
+    ),
+  ).toThrow("retained campaign");
 });

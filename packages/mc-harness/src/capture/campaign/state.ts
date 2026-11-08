@@ -167,3 +167,21 @@ export function validatePlan(state: Campaign, suite: CaptureSuite): void {
 function identity(parts: Batch[]) {
   return parts.map(({ ids, fresh }) => ({ ids, fresh }));
 }
+
+/** A saved replay follows its retained catalog, even after current recipes change. */
+export function validateReplayPlan(state: Campaign, previous: Campaign): void {
+  const expected = replayCampaign(previous, state.scope === "fresh");
+  if (
+    state.replay !== previous.id ||
+    state.suite !== previous.suite ||
+    state.fixture !== previous.fixture ||
+    state.runtime !== previous.runtime ||
+    JSON.stringify(replayIdentity(state.batches)) !==
+      JSON.stringify(replayIdentity(expected.batches))
+  )
+    throw new Error("Replay plan differs from the retained campaign");
+}
+
+function replayIdentity(parts: Batch[]) {
+  return parts.map(({ ids, fresh, replayOf }) => ({ ids, fresh, replayOf }));
+}
