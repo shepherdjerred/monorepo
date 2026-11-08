@@ -53,6 +53,7 @@ public final class LaunchFlights implements Listener {
   private final FlightChecks checks;
   private final Map<UUID, FlightLease> flights = new HashMap<>();
   private final Map<UUID, Pending> pending = new HashMap<>();
+  private final Map<UUID, Pending> committing = new HashMap<>();
   private @Nullable Cancellable task;
   private boolean ready;
   private boolean stopped;
@@ -115,7 +116,10 @@ public final class LaunchFlights implements Listener {
     event.setCancelled(true);
     var player = event.getPlayer();
     var id = player.getUniqueId();
-    if (!ready || pending.containsKey(id) || !canLaunch(player, tower.orElseThrow())) {
+    if (!ready
+        || pending.containsKey(id)
+        || committing.containsKey(id)
+        || !canLaunch(player, tower.orElseThrow())) {
       player.sendActionBar(
           Component.text("Stand on the launch pad, out of combat, to use this beacon."));
       return;
@@ -201,6 +205,7 @@ public final class LaunchFlights implements Listener {
     // Replacing the pending token prevents duplicate writes while SQLite commits the lease.
     var writing = new Pending(request.tower(), request.readyAt(), false, ++serial);
     pending.put(player.getUniqueId(), writing);
+    committing.put(player.getUniqueId(), writing);
     var until = now.plusSeconds(config.assistanceSeconds());
     var lease =
         new FlightLease(
@@ -214,6 +219,11 @@ public final class LaunchFlights implements Listener {
             .save(lease)
             .whenCompleteAsync(
                 (ignored, failure) -> {
+                  // A reset invalidates this completion before queuing its deletion. A cancelled
+                  // request otherwise holds the write slot until cleanup, so no newer launch can
+                  // be overwritten by its ENDED transition.
+                  if (!writing.equals(committing.get(player.getUniqueId()))) return;
+                  committing.remove(player.getUniqueId());
                   if (failure != null) {
                     context.logger().error("Skylands launch was not committed", failure);
                     if (writing.equals(pending.get(player.getUniqueId())))
@@ -410,6 +420,7 @@ public final class LaunchFlights implements Listener {
     var online = context.plugin().getServer().getPlayer(player);
     if (online != null) end(online);
     pending.remove(player);
+    committing.remove(player);
     flights.remove(player);
     return store.reset(player);
   }
@@ -417,6 +428,7 @@ public final class LaunchFlights implements Listener {
   public void stop() {
     stopped = true;
     pending.clear();
+    committing.clear();
     var repeating = task;
     if (repeating != null) repeating.cancel();
     HandlerList.unregisterAll(this);

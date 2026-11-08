@@ -72,7 +72,10 @@ and seeded into the container, which runs the jar as `TYPE=CUSTOM`; the
 `PAPER` type would call the PaperMC API on every boot. Once Paperclip's warm
 cache under `~/.toolkit/mc/cache/paperclip` holds the patched Mojang jar,
 server bootstrap needs no downloads. Plugins such as Citizens may still
-download their declared runtime libraries. Worlds are
+download their declared runtime libraries. Named instances share verified jar
+downloads, but keep writable Paperclip directories under
+`~/.toolkit/mc/cache/instances/<instance>/paperclip` so concurrent daemons
+cannot extract into one another's boot files. Worlds are
 `flat` or `void`. Game (25565), RCON (25575), and bridge (25580) ports are
 published on `127.0.0.1` only. The per-sandbox bridge token and RCON password
 are generated at create time and stored only in

@@ -205,6 +205,48 @@ final class LaunchFlightsTest {
   }
 
   @Test
+  void cancelledCommitKeepsItsWriteSlotUntilCleanup() {
+    store.saved = new CompletableFuture<>();
+    click(alice, EquipmentSlot.HAND);
+    advance(2);
+    flights.move(new PlayerMoveEvent(alice, alice.getLocation(), new Location(world, 5, 88, 0)));
+    click(alice, EquipmentSlot.HAND);
+    advance(2);
+    assertThat(store.writes).hasSize(1);
+    store.saved.complete(null);
+    main.settle();
+    assertThat(store.writes)
+        .extracting(FlightLease::phase)
+        .containsExactly(FlightLease.Phase.ASCENT, FlightLease.Phase.ENDED);
+    advance(15);
+    click(alice, EquipmentSlot.HAND);
+    advance(2);
+    assertThat(store.writes).hasSize(3);
+    assertThat(alice.getVelocity().getY()).isPositive();
+  }
+
+  @Test
+  void resetInvalidatesAnOldCompletionBeforeANewLaunch() {
+    var oldWrite = new CompletableFuture<Void>();
+    store.saved = oldWrite;
+    click(alice, EquipmentSlot.HAND);
+    advance(2);
+    flights.reset(alice.getUniqueId()).join();
+    assertThat(store.resets).containsExactly(alice.getUniqueId());
+    store.saved = CompletableFuture.completedFuture(null);
+    click(alice, EquipmentSlot.HAND);
+    advance(2);
+    oldWrite.complete(null);
+    main.settle();
+    assertThat(store.writes)
+        .extracting(FlightLease::phase)
+        .containsExactly(FlightLease.Phase.ASCENT, FlightLease.Phase.ASCENT);
+    var kick = kick(PlayerKickEvent.Cause.FLYING_PLAYER);
+    flights.vanillaFlight(kick);
+    assertThat(kick.isCancelled()).isTrue();
+  }
+
+  @Test
   void onlyActiveAssistanceExemptsTheVanillaFloatingKick() {
     var ordinary = kick(PlayerKickEvent.Cause.FLYING_PLAYER);
     flights.vanillaFlight(ordinary);
@@ -260,6 +302,7 @@ final class LaunchFlightsTest {
 
   private static final class MemoryStore implements FlightStore {
     final List<FlightLease> writes = new ArrayList<>();
+    final List<UUID> resets = new ArrayList<>();
     CompletableFuture<Void> saved = CompletableFuture.completedFuture(null);
 
     @Override
@@ -275,6 +318,7 @@ final class LaunchFlightsTest {
 
     @Override
     public CompletableFuture<Void> reset(UUID player) {
+      resets.add(player);
       return CompletableFuture.completedFuture(null);
     }
   }

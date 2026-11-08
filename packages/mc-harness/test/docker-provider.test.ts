@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { dockerCreateArgs } from "#providers/docker/provider.ts";
 import {
   currentDockerEndpoints,
@@ -12,7 +12,35 @@ import { publishedStorm } from "#test/fixtures/published-storm.ts";
 
 const secrets = { bridgeToken: "b".repeat(48), rconPassword: "c".repeat(48) };
 
+function mounts(instance: string): string[] {
+  vi.stubEnv("TOOLKIT_MC_INSTANCE", instance);
+  return dockerCreateArgs({
+    id: "sbx-abc123",
+    profileName: "paper",
+    profile: resolveProfile({ profile: "paper", world: "flat" }, secrets),
+    pluginsDir: "/tmp/plugins",
+    cacheDir: "/tmp/cache",
+    expiresAt: "2026-10-04T00:00:00.000Z",
+    owner: "me@host",
+    keep: false,
+  }).filter((arg) => arg.includes(":/data/"));
+}
+
 describe("docker sandbox argv", () => {
+  it("keeps writable Paperclip mounts disjoint between named instances", () => {
+    try {
+      const first = mounts("skylands");
+      const second = mounts("other-task");
+      expect(first).toHaveLength(3);
+      expect(first).toContain(
+        "/tmp/cache/instances/skylands/paperclip/cache:/data/cache",
+      );
+      expect(first.every((mount) => !second.includes(mount))).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("publishes every port on loopback only and labels the container", () => {
     const profile = resolveProfile(
       { profile: "paper", world: "flat" },

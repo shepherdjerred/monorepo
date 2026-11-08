@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
-import { instanceOwner } from "#protocol/instance.ts";
+import { instanceDirectory, instanceOwner } from "#protocol/instance.ts";
 import { stageWorldDirectory } from "#sandbox/world-source.ts";
 import { copyRealMap } from "#sandbox/map-copy.ts";
 import { startCaptureProxy } from "./proxy.ts";
@@ -108,7 +108,11 @@ export function dockerCreateArgs(
           "-v",
           `${path.join(pluginsDir, target)}:${path.posix.join("/plugins", target)}:ro`,
         ])),
-    ...(options.profile.seedData ? warmMountArgs(options.cacheDir) : []),
+    ...(options.profile.seedData
+      ? warmMountArgs(
+          instanceDirectory(options.cacheDir, Bun.env["TOOLKIT_MC_INSTANCE"]),
+        )
+      : []),
     ...envArgs(options.profile.env),
     options.profile.image,
   ];
@@ -139,6 +143,10 @@ export class DockerSandboxProvider implements SandboxProvider {
 
   private get cacheDir(): string {
     return this.options.cacheDir ?? CACHE_DIR;
+  }
+
+  private get warmCacheDir(): string {
+    return instanceDirectory(this.cacheDir, Bun.env["TOOLKIT_MC_INSTANCE"]);
   }
 
   private get owner(): string {
@@ -201,7 +209,7 @@ export class DockerSandboxProvider implements SandboxProvider {
     if (profile.seedData) {
       await Promise.all(
         warmMounts.map(async ([warm]) =>
-          mkdir(path.join(this.cacheDir, warm), { recursive: true }),
+          mkdir(path.join(this.warmCacheDir, warm), { recursive: true }),
         ),
       );
     }
