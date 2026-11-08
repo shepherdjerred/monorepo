@@ -20,6 +20,8 @@ const calls = vi.hoisted(() => {
     updates,
     stages,
     prune: false,
+    credentialPrune: false,
+    credentialFailure: false,
     lapsed: false,
     refuse: false,
     failRestore: false,
@@ -112,6 +114,13 @@ vi.mock("./forum-bundle.ts", () => ({
   },
   forumSyncPrune: () => Promise.resolve(calls.prune),
 }));
+vi.mock("#lib/delivery/credential-prune.ts", () => ({
+  credentialSyncPrunes: () => {
+    if (calls.credentialFailure)
+      throw new Error("Credential retirement proof failed");
+    return Promise.resolve(calls.credentialPrune);
+  },
+}));
 
 const { applySafety, sync } = await import("./kubernetes.ts");
 
@@ -140,6 +149,8 @@ afterEach(() => {
   calls.events = [];
   calls.reads = [];
   calls.prune = false;
+  calls.credentialPrune = false;
+  calls.credentialFailure = false;
   calls.lapsed = false;
   calls.updates = [];
   calls.stages = [];
@@ -213,6 +224,29 @@ describe("Kubernetes steps of a forum release", () => {
     );
     expect(intent).toBeGreaterThanOrEqual(0);
     expect(intent).toBeLessThan(effect);
+  });
+
+  test("the credential guard authorizes pruning through the owned sync", async () => {
+    const { current, recipe } = fixture();
+    calls.credentialPrune = true;
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    expect(
+      calls.events.find((event) => event.startsWith("sync-managed")),
+    ).toContain("--prune");
+    expect(calls.events.indexOf("step-sync running")).toBeLessThan(
+      calls.events.findIndex((event) => event.startsWith("sync-managed")),
+    );
+  });
+
+  test("failed credential proof prevents the native sync", async () => {
+    const { current, recipe } = fixture();
+    calls.credentialFailure = true;
+    calls.reads = [application(false)];
+    await expect(sync(current, recipe, "step-sync")).rejects.toThrow(
+      "Credential retirement proof failed",
+    );
+    expect(calls.events).toEqual(["read", "step-sync running"]);
   });
 
   test("a resumed sync whose lease lapsed is refused at its intent before any Argo sync (D7)", async () => {

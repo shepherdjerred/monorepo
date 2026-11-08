@@ -454,6 +454,7 @@ COPY --parents \
   scripts/lib \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
   packages/homelab/scripts/argocd/argocd-apply-safety.ts \
+  packages/homelab/scripts/argocd/argocd-rendered-targets.ts \
   packages/homelab/scripts/argocd/argocd-destructive-changes.ts \
   packages/homelab/scripts/argocd/argocd-hooks.ts \
   packages/homelab/scripts/argocd/argocd-json-path.ts \
@@ -469,6 +470,7 @@ COPY --parents \
   packages/homelab/scripts/helm/helm-release-core.ts \
   packages/homelab/src/application-release-contract.ts \
   packages/homelab/src/cdk8s/scripts/delivery/worker-pool-template.ts \
+  packages/homelab/src/cdk8s/scripts/onepassword/audit-consumption.ts \
   packages/homelab/src/cdk8s/src/argocd-application-readiness.ts \
   packages/homelab/src/cdk8s/src/scout-release-budgets.ts \
   packages/homelab/src/cdk8s/src/temporal-release-budgets.ts \

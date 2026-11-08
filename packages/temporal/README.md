@@ -25,6 +25,14 @@ using the guarded sync command. Any other obsolete resource, including a PVC,
 fails the release. Deploy this executor before selecting the hostname-removal
 chart; root reconciliation preserves delegated Arcade selection.
 
+Credential grooming uses the same guarded owned sync for the retired Recyclarr,
+ChartMuseum CI and Minecraft provider `OnePasswordItem` bindings. It requires
+their exact canonical replacements in the frozen chart and rechecks native
+UIDs, item paths, Argo ownership and the Application source. Other obsolete
+resources block pruning. Keep the 1Password items active until old consumers
+have drained and the bindings and their generated Kubernetes Secrets are gone;
+then archive the items without revoking credentials.
+
 The `delivery-dispatch` Schedule qualifies published builds against their exact
 terminal CI execution, reconciles automatic environment selections, and submits
 unacknowledged outbox rows. It starts paused until the service, executor
@@ -297,7 +305,13 @@ internal OTLP collector. Their exporter bootstrap and collector egress belong
 to the control-plane chart, so changing them uses the same independent upgrade
 path, including chart-only upgrades that retain the original Temporal image.
 
-An admin control-plane intent freezes the controller chart and original Temporal
+The current catalog's `delivery-control-plane/2` recipe uses an ordinary owned
+Application release. Its image tracks the original artifact accepted by
+`temporal/prod`, so a chart-only release can retain the previous worker image
+until that parent accepts its replacement. Verify the controller's actual image
+before relying on new executor behavior or provider grants.
+
+For a legacy `control-plane` recipe, an admin intent freezes the controller chart and original Temporal
 image independently, including chart-only upgrades that retain older image
 provenance. Its claim waits for every other Delivery execution and recovery to
 settle, then blocks new claims while the independent platform Job runs. That

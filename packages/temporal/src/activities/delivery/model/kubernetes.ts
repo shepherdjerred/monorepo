@@ -39,6 +39,7 @@ import {
 } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
 import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
+import { credentialSyncPrunes } from "#lib/delivery/credential-prune.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -382,7 +383,15 @@ async function syncOwned(
     // A preserved world switches images only with fresh preservation proof.
     minecraftSyncFence(current, recipe);
     // A forum release replaces the prior release's terminal migration Job.
-    const prune = await forumSyncPrune(current, recipe, argoRequest);
+    const prune =
+      (await forumSyncPrune(current, recipe, argoRequest)) ||
+      (await credentialSyncPrunes(
+        {
+          ...rendered,
+          namespace: rendered.body.spec.destination.namespace,
+        },
+        argoRequest,
+      ));
     await runGuardedArgoCommand(
       [
         "sync-managed",

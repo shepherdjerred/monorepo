@@ -94,7 +94,6 @@ test("CI mirrors minimal publication/handoff items and retains no deployment pro
       "ci-gradle-build-cache-credentials",
       "ci-npm-credentials",
       "ci-release-openai-credentials",
-      "ci-chartmuseum-credentials",
       "ci-chartmuseum-basic-auth",
     ].toSorted(),
   );

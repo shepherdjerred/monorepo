@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import { ArgoResourceSchema as Resource } from "#lib/delivery/argocd-proof.ts";
 import {
   deliverySelectionPatch,
   type DeliverySelection,
@@ -17,17 +18,6 @@ const RETIRED_ROUTES = new Set([
   "networking.cfargotunnel.com/TunnelBinding/arcade-mariokart-cf-tunnel",
   "networking.cfargotunnel.com/TunnelBinding/arcade-pokebot-cf-tunnel",
 ]);
-const Resource = z.object({
-  apiVersion: z.string().min(1),
-  kind: z.string().min(1),
-  metadata: z.object({
-    name: z.string().min(1),
-    namespace: z.string().optional(),
-    uid: z.string().min(1).optional(),
-    deletionTimestamp: z.string().optional(),
-    annotations: z.record(z.string(), z.string()).optional(),
-  }),
-});
 const Application = z.object({
   metadata: z.object({ uid: z.string().min(1) }),
   spec: z.object({ source: z.unknown() }).loose(),
