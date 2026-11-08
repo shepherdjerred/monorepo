@@ -137,7 +137,7 @@ function sourceQuality(name: string): string {
   if (resolution === null) return "unknown";
   const sources: readonly [string, RegExp][] = [
     ["Remux", /\bREMUX\b/iu],
-    ["Bluray", /\b(?:Blu[ ._-]?Ray|BDRip)\b/iu],
+    ["Bluray", /\b(?:Blu[ ._-]?Ray|BDRip|BRRip)\b/iu],
     ["WEB", /\bWEB[ ._-]?DL\b/iu],
     ["WEBrip", /\bWEB[ ._-]?Rip\b/iu],
     ["HDTV", /\bHDTV\b/iu],

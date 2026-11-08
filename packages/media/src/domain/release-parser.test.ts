@@ -10,6 +10,49 @@ const base: ReleaseMatchInput = {
   media: { id: "movie", kind: "movie", title: "The Film", year: 2026 },
 };
 
+describe("native Blu-ray rip source names", () => {
+  it.each([
+    [
+      "Harry Potter and the Philosopher's Stone (2001) 1080p BRRip 5.1 x264 -YTS",
+      "Bluray-1080p",
+    ],
+    [
+      "Harry Potter and the Philosopher's Stone (2001) 720p BRRip x264 -YTS",
+      "Bluray-720p",
+    ],
+    [
+      "Harry Potter and the Philosopher's Stone (2001) 2160p BRRip 5.1 10Bit x265 -YTS",
+      "Bluray-2160p",
+    ],
+  ])("recognizes the verified source of %s", (title, quality) => {
+    const result = matchRelease({
+      ...base,
+      title,
+      media: {
+        id: "movie",
+        kind: "movie",
+        title: "Harry Potter and the Philosopher's Stone",
+        year: 2001,
+      },
+    });
+    expect(result.attributes).toMatchObject({
+      identityConfidence: "exact",
+      mediaIds: ["movie"],
+      quality,
+      audioLanguages: [],
+    });
+  });
+
+  it.each(["UnknownRip", "BRRipish"])(
+    "keeps an unrecognized source %s unknown",
+    (source) => {
+      expect(
+        parseReleaseName(`The.Film.2026.1080p.${source}.x264`).quality,
+      ).toBe("unknown-1080p");
+    },
+  );
+});
+
 describe("release identity proof", () => {
   it("matches punctuation-normalized movie title and year", () => {
     const result = matchRelease(base);
