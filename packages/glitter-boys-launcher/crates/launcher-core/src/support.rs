@@ -297,24 +297,7 @@ fn add_everything<W: Write + Seek>(bundle: &mut Bundle<W>, input: &BundleInput<'
             "state/app/failed-update.json",
             &root.join("failed-update.json"),
         )?;
-        // The install folder can be shared with other software; list only the
-        // launcher's own entries in it.
-        let mut app = String::new();
-        let _ = writeln!(app, "# {}", root.display());
-        if let Ok(entries) = fs::read_dir(root) {
-            let mut owned: Vec<_> = entries
-                .flatten()
-                .filter(|e| crate::storage::launcher_owned(&e.file_name().to_string_lossy()))
-                .collect();
-            owned.sort_by_key(|e| e.file_name());
-            for entry in owned {
-                let _ = writeln!(app, "== {}", entry.file_name().to_string_lossy());
-                if entry.file_type().is_ok_and(|t| t.is_dir()) {
-                    app.push_str(&listing(&entry.path(), 2));
-                }
-            }
-        }
-        bundle.text("listings/app.txt", &app)?;
+        bundle.text("listings/app.txt", &app_listing(root))?;
     }
     if let Some(library) = input.library {
         for game in Game::ALL {
@@ -389,6 +372,31 @@ fn add_everything<W: Write + Seek>(bundle: &mut Bundle<W>, input: &BundleInput<'
         }
     }
     Ok(())
+}
+
+/// The launcher's own entries in its install folder, which can be shared with other
+/// software. Links and junctions are named but never followed.
+fn app_listing(root: &Path) -> String {
+    let mut app = String::new();
+    let _ = writeln!(app, "# {}", root.display());
+    if let Ok(entries) = fs::read_dir(root) {
+        let mut owned: Vec<_> = entries
+            .flatten()
+            .filter(|e| crate::storage::launcher_owned(&e.file_name().to_string_lossy()))
+            .collect();
+        owned.sort_by_key(|e| e.file_name());
+        for entry in owned {
+            let _ = writeln!(app, "== {}", entry.file_name().to_string_lossy());
+            match fs::symlink_metadata(entry.path()) {
+                Ok(m) if crate::storage::redirected(&m) => {
+                    let _ = writeln!(app, "# link or junction, not listed");
+                }
+                Ok(m) if m.is_dir() => app.push_str(&listing(&entry.path(), 2)),
+                _ => {}
+            }
+        }
+    }
+    app
 }
 
 /// IW4x files small enough and safe enough to include by name: launcher settings and
@@ -743,6 +751,36 @@ mod tests {
             .status()?;
         assert!(status.success(), "junction fixture");
         assert!(iw4x_files(&game).is_empty());
+        Ok(())
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn app_listing_names_owned_entries_without_following_junctions() -> Result<()> {
+        let temp = crate::test_tempdir()?;
+        let app = temp.path().join("Games");
+        let outside = temp.path().join("outside");
+        fs::create_dir_all(app.join("versions").join("0.1.10"))?;
+        fs::create_dir_all(app.join("OtherGame"))?;
+        fs::create_dir_all(&outside)?;
+        fs::write(
+            app.join("versions").join("0.1.10").join("glitter-boys.exe"),
+            b"x",
+        )?;
+        fs::write(app.join("OtherGame").join("theirs.pak"), b"x")?;
+        fs::write(outside.join("private.txt"), b"x")?;
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(app.join("update-cache"))
+            .arg(&outside)
+            .stdout(std::process::Stdio::null())
+            .status()?;
+        assert!(status.success(), "junction fixture");
+        let text = app_listing(&app);
+        assert!(text.contains("glitter-boys.exe"));
+        assert!(text.contains("== update-cache\n# link or junction, not listed"));
+        assert!(!text.contains("private.txt"), "junctions are not followed");
+        assert!(!text.contains("theirs.pak"), "other software is not listed");
         Ok(())
     }
 
