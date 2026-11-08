@@ -1256,14 +1256,15 @@ impl Engine {
                                 other.cancel.pause();
                             }
                         }
-                        // A finish that failed for a reason other than bad archive data keeps
-                        // its unpacked files, so Try again skips the multi-gigabyte extract.
+                        // Keep unpacked files only when the failure was outside them: an OS
+                        // error at a named step (a file in use, a blocked updater) or a step
+                        // waiting on the player. Missing files or bad data need a fresh unpack.
                         self.staged[index(game)] = match job.key {
                             Key::Finish(g)
                                 if g == game
-                                    && !matches!(
+                                    && matches!(
                                         error,
-                                        Error::Paused | Error::Archive(_) | Error::Json(_)
+                                        Error::Step { .. } | Error::ActionRequired { .. }
                                     ) =>
                             {
                                 retained.take()

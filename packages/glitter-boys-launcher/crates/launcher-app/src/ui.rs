@@ -202,7 +202,11 @@ impl Launcher {
                 let problem = self.problem.as_ref().or(snapshot.error.as_ref());
                 if self.closing {
                     ui.label(
-                        RichText::new(presentation::closing_text(snapshot))
+                        RichText::new(if self.export.is_some() {
+                            "Saving support bundle before closing…".to_string()
+                        } else {
+                            presentation::closing_text(snapshot)
+                        })
                             .small()
                             .color(LILAC),
                     );
@@ -323,7 +327,8 @@ impl eframe::App for Launcher {
             }
         }
         self.poll_export();
-        let busy = self.snapshot().is_ok_and(|s| s.busy);
+        // A support bundle being written also holds the window open until it is saved.
+        let busy = self.snapshot().is_ok_and(|s| s.busy) || self.export.is_some();
         if context.input(|i| i.viewport().close_requested()) && busy {
             context.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.closing = true;

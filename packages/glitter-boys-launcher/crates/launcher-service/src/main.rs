@@ -13,6 +13,8 @@ use std::{
 use tiny_http::{Header, Method, Response, Server, StatusCode};
 
 const BODY_LIMIT: u64 = 32 * 1024;
+/// Most distinct failure label combinations kept in memory and exported.
+const FAILURE_SERIES_LIMIT: usize = 512;
 const BUCKETS: [u64; 8] = [100, 500, 1000, 5000, 30000, 120000, 600000, 3600000];
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -54,6 +56,8 @@ struct Metrics {
     os_errors: BTreeSet<i32>,
     rejected: u64,
     report_failed: u64,
+    /// Failed events whose label combination arrived after the series cap.
+    failures_dropped: u64,
 }
 fn label<T: serde::Serialize>(value: &T) -> String {
     serde_json::to_value(value)
@@ -82,7 +86,13 @@ impl Metrics {
             label(&event.step),
             label(&event.io_kind),
         );
-        *self.failures.entry(key).or_default() += 1;
+        // Every label is caller-chosen, so the number of stored series is capped; later
+        // new combinations are only counted.
+        if self.failures.len() < FAILURE_SERIES_LIMIT || self.failures.contains_key(&key) {
+            *self.failures.entry(key).or_default() += 1;
+        } else {
+            self.failures_dropped += 1;
+        }
     }
     fn observe(&mut self, event: &Event) {
         self.observe_failure(event);
@@ -124,6 +134,10 @@ impl Metrics {
             format!(
                 "glitter_launcher_reporting_failures_total {}",
                 self.report_failed
+            ),
+            format!(
+                "glitter_launcher_failures_dropped_total {}",
+                self.failures_dropped
             ),
         ];
         for (labels, m) in &self.series {
@@ -414,6 +428,42 @@ mod tests {
             metrics.observe(&e);
         }
         assert_eq!(metrics.os_errors.len(), 32);
+        // Caller-chosen label combinations cannot grow memory without bound.
+        let steps = ["create_clients", "copy_client", "spawn_updater", "promote"];
+        let kinds = ["not_found", "permission_denied", "storage_full", "other"];
+        for failure in ["filesystem", "network", "data"] {
+            for game in ["iw4x", "t5", "t6", "t7"] {
+                for operation in ["download", "extract", "prepare", "launch"] {
+                    for step in steps {
+                        for io_kind in kinds {
+                            let text = NEW
+                                .replace(r#""game":"iw4x""#, &format!(r#""game":"{game}""#))
+                                .replace(
+                                    r#""operation":"prepare""#,
+                                    &format!(r#""operation":"{operation}""#),
+                                )
+                                .replace(r#""step":"promote""#, &format!(r#""step":"{step}""#))
+                                .replace(
+                                    r#""io_kind":"other""#,
+                                    &format!(r#""io_kind":"{io_kind}""#),
+                                )
+                                .replace(
+                                    r#""failure":"filesystem""#,
+                                    &format!(r#""failure":"{failure}""#),
+                                );
+                            metrics.observe(&serde_json::from_str(&text)?);
+                        }
+                    }
+                }
+            }
+        }
+        assert_eq!(metrics.failures.len(), FAILURE_SERIES_LIMIT);
+        assert!(metrics.failures_dropped > 0);
+        assert!(
+            metrics
+                .render()
+                .contains("glitter_launcher_failures_dropped_total")
+        );
         let report = bugsink_event(&event);
         assert_eq!(report["message"], "prepare failed at promote (os error 32)");
         assert_eq!(report["fingerprint"][2], "promote");

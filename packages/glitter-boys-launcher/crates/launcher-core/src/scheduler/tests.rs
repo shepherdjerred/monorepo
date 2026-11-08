@@ -628,6 +628,24 @@ fn failed_finish_keeps_unpacked_files_so_retry_skips_extraction() -> Result<()> 
     )?;
     assert!(engine.staged[index(Game::Iw4x)].is_none());
     assert!(kept.is_some_and(|path| !path.exists()));
+    // A required file missing after unpacking (for example removed by antivirus) cannot
+    // be restored by finishing again, so the next attempt unpacks the archive again.
+    finish(
+        &mut engine,
+        3,
+        Error::Invalid("Modern Warfare 2 is missing a required file after extraction".into()),
+    )?;
+    assert!(engine.staged[index(Game::Iw4x)].is_none());
+    // A step waiting on the player keeps the files.
+    finish(
+        &mut engine,
+        4,
+        Error::ActionRequired {
+            title: "A game updater is still running",
+            next_step: "Close any MW2 or IW4x windows, then choose Try again in Get help.",
+        },
+    )?;
+    assert!(engine.staged[index(Game::Iw4x)].is_some());
     Ok(())
 }
 #[test]
