@@ -40,7 +40,7 @@ export default defineCaptureScene({
     await context.feedback("Built.");
   },
   run: async (context) => {
-    await camera(context, [-2.5, 0, -2.5], [4.5, 2.5, 4.5]);
+    await camera(context, [1.5, 0, -2.5], [4.5, 2.5, 4.5]);
     await context.capture({
       schema: 1,
       name: "gate-closed",
@@ -54,7 +54,7 @@ export default defineCaptureScene({
       [4, 2, 4],
       (block) => block === "minecraft:air",
     );
-    await camera(context, [-2.5, 0, -2.5], [4.5, 2.5, 4.5]);
+    await camera(context, [1.5, 0, -2.5], [4.5, 2.5, 4.5]);
     await context.capture({
       schema: 1,
       name: "gate-open",
