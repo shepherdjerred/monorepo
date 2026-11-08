@@ -101,7 +101,7 @@ test("SQL canonical proof uses the same repository configuration digest as TypeS
   `;
   expect(definitions).toHaveLength(1);
   expect(definitions[0]?.definition).toContain(
-    `v_root.evidence->>'configurationDigest'='${snapshotHash(LEGACY_OBSERVER_CONFIG)}'`,
+    `v_evidence->>'configurationDigest'='${snapshotHash(LEGACY_OBSERVER_CONFIG)}'`,
   );
 });
 

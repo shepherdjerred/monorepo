@@ -5,14 +5,16 @@ import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import { CAPACITY_ROOTS } from "#shared/capacity/contract.ts";
 import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Storage and writer bounds use real clocks, independently of retention policy time. */
 export async function cleanupAuthorityDeadline(
   tx: Prisma.TransactionClient,
   epoch: number,
   access: readonly PlexAccess[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const lease = await readRuntimeProof(tx);
+  const lease = await readRuntimeProof(tx, budget);
   if (
     lease.revokedAt !== null ||
     lease.recoveryEpoch !== epoch ||

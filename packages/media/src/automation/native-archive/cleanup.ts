@@ -365,7 +365,7 @@ async function executeCleanup(
         assertArchiveCleanupFresh(current.network);
         current.beforeEffect();
       });
-      const authority = await runtimeAuthority(tx);
+      const authority = await runtimeAuthority(tx, plex.budget);
       if (!authority.active || authority.epoch !== input.recoveryEpoch)
         throw new Error("Archive authority expired before commit");
       assertArchiveCleanupFresh(current.network);

@@ -173,7 +173,7 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
         decode: (value) => RuntimeStateSchema.parse(value),
       },
       async (tx) => {
-        const row = await setManagedRuntime(tx, input);
+        const row = await setManagedRuntime(tx, input, actor.id);
         return {
           mode: row.mode,
           recoveryEpoch: row.recoveryEpoch,

@@ -133,7 +133,7 @@ export async function assertNativeQuarantineRestore(
     assetIds: descriptor.group.assetIds,
   });
   await lockEffectiveRequests(tx, descriptor.group.mediaIds);
-  if (!(await lockRuntimeAuthority(tx, initial.recoveryEpoch)))
+  if (!(await lockRuntimeAuthority(tx, initial.recoveryEpoch, budget)))
     throw new NativeQuarantineProtection("native_quarantine_runtime_protected");
   await assertNoSubtitleReplacement(tx, descriptor.group.assetIds);
   await tx.$queryRaw(

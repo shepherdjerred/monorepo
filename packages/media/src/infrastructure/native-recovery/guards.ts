@@ -94,7 +94,7 @@ export async function assertNativeSnapshot(
   });
   budget.consume(1);
   const mode = scope.request.activation === "activate" ? "observe" : "active";
-  const authority = await runtimeAuthority(tx);
+  const authority = await runtimeAuthority(tx, budget);
   if (
     runtime.mode !== mode ||
     runtime.recoveryEpoch !== plan.recoveryEpoch ||

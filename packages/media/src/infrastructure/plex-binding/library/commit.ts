@@ -45,7 +45,7 @@ export async function commitLibraryPlexBinding(
   budget: PublicationAuthorityReadBudget,
 ) {
   const { freshness, expected } = input;
-  await lockLibraryPlexScope(tx, expected, freshness);
+  await lockLibraryPlexScope(tx, expected, freshness, budget);
   await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${input.input.operationId} FOR UPDATE`;
   const prior = await readLibraryPlexCompletion(
     tx,

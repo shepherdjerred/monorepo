@@ -1,23 +1,48 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import { CanonicalMountEvidenceSchema } from "#shared/canonical-storage.ts";
+import {
+  CanonicalMountEvidenceSchema,
+  NativeStorageAuthoritySchema,
+} from "#shared/canonical-storage.ts";
+import { assertManagedStorageApprovals } from "./managed-storage-approval.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { z } from "zod";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
 
 export type RuntimeProofDatabase = Pick<
   Prisma.TransactionClient,
-  "mediaRuntimeState" | "mediaStorageAuthority" | "legacyWriterLease"
+  | "mediaRuntimeState"
+  | "mediaStorageAuthority"
+  | "legacyWriterLease"
+  | "applicationEvent"
 >;
 
 export class RuntimeProofError extends Error {}
 
 export function isManagedStorage(evidence: unknown): boolean {
-  return z.object({ kind: z.literal("canonical_storage") }).safeParse(evidence)
-    .success;
+  if (
+    z.object({ kind: z.literal("canonical_storage") }).safeParse(evidence)
+      .success
+  )
+    return true;
+  if (
+    !z.object({ kind: z.literal("native_restore") }).safeParse(evidence).success
+  )
+    return false;
+  const restored = NativeStorageAuthoritySchema.safeParse(evidence);
+  // Corrupt restored provenance must never silently acquire legacy authority.
+  return (
+    !restored.success ||
+    restored.data.approvedRoots.some((root) => root.receipt.kind === "managed")
+  );
 }
 
 /** New acquisitions need current storage, not retirement of unrelated applications. */
-export async function readRuntimeProof(db: RuntimeProofDatabase) {
+export async function readRuntimeProof(
+  db: RuntimeProofDatabase,
+  budget?: PublicationAuthorityReadBudget,
+) {
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
@@ -34,10 +59,39 @@ export async function readRuntimeProof(db: RuntimeProofDatabase) {
     return { kind: "legacy_writer" as const, ...legacy };
   }
   const now = Date.now();
+  const approvedRoots = [];
+  for (const root of roots) {
+    const restored = NativeStorageAuthoritySchema.safeParse(root.evidence);
+    if (restored.success) {
+      approvedRoots.push(...restored.data.approvedRoots);
+      const approved = restored.data.approvedRoots.find(
+        (item) => item.rootPath === root.rootPath,
+      );
+      if (
+        approved?.pvcUid !== root.pvcUid ||
+        approved.volumeName !== root.volumeName ||
+        approved.volumePath !== root.volumePath
+      )
+        throw new RuntimeProofError("Media restored storage identity changed");
+    }
+  }
+  if (approvedRoots.length > 0) {
+    await assertManagedStorageApprovals(db, approvedRoots, budget).catch(
+      (error: unknown) => {
+        if (error instanceof NativeArchiveScopeProtection) throw error;
+        throw new RuntimeProofError(
+          "Media restored storage owner approval changed",
+        );
+      },
+    );
+  }
   if (
     roots.length !== 2 ||
     roots.some((root) => {
-      const parsed = CanonicalMountEvidenceSchema.safeParse(root.evidence);
+      const restored = NativeStorageAuthoritySchema.safeParse(root.evidence);
+      const parsed = CanonicalMountEvidenceSchema.safeParse(
+        restored.success ? restored.data.mounts : root.evidence,
+      );
       if (!parsed.success) return true;
       const mount = parsed.data.mounts.find(
         (item) => item.root === root.rootPath,

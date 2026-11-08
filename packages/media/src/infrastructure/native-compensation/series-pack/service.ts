@@ -169,7 +169,7 @@ export class PrismaSeriesPackNativeCompensationV1 extends MediaCommandBase {
         const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
           where: { id: "singleton" },
         });
-        const authority = await runtimeAuthority(tx);
+        const authority = await runtimeAuthority(tx, budget);
         if (
           runtime.recoveryEpoch !== input.recoveryEpoch ||
           runtime.version !== input.runtimeVersion ||
@@ -260,7 +260,7 @@ export class PrismaSeriesPackNativeCompensationV1 extends MediaCommandBase {
         const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
           where: { id: "singleton" },
         });
-        const authority = await runtimeAuthority(tx);
+        const authority = await runtimeAuthority(tx, budget);
         if (
           plan.actorId !== actor.id ||
           plan.state !== "awaiting_review" ||

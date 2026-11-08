@@ -15,13 +15,15 @@ import {
 import { assertMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import type { preparePublicationBindingExpected } from "./binding.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function assertPublicationCommitAuthority(
   tx: Prisma.TransactionClient,
   input: { epoch: number; mediaIds: string[]; assetIds: string[] },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   if (
-    !(await lockRuntimeAuthority(tx, input.epoch)) ||
+    !(await lockRuntimeAuthority(tx, input.epoch, budget)) ||
     !(await recordsAuthorized(tx, input))
   )
     throw new Error("Publication ownership authority changed");
@@ -52,7 +54,7 @@ export async function beforePublicationRefresh(
     });
     // The common lock checks runtime, lease, records and the exact original parent.
     // Preserve its observed lease/choice deadlines through the immediate HTTP dispatch.
-    const lease = await readRuntimeProof(tx);
+    const lease = await readRuntimeProof(tx, budget);
     const guards: MovieChoiceFreshness[] = [];
     const movie = prepared.access.find(
       (access) => access.sectionType === "movie",

@@ -19,7 +19,10 @@ import { assertNativeStorageRoots } from "./storage-provenance.ts";
 
 export async function refreshNativeStorageAuthorities(input: {
   db: Database;
-  observer: ReturnType<typeof createLegacyObserver>;
+  observer: Pick<
+    ReturnType<typeof createLegacyObserver>,
+    "observeCanonicalMounts"
+  >;
   before: MediaRuntimeState;
   rows: MediaStorageAuthority[];
 }): Promise<void> {
@@ -36,7 +39,11 @@ export async function refreshNativeStorageAuthorities(input: {
     if (
       first === undefined ||
       input.rows.length !== 2 ||
-      input.rows.some((row) => row.revokedAt !== null) ||
+      input.rows.some(
+        (row) =>
+          row.revokedAt !== null &&
+          !first.approvedRoots.every((root) => root.receipt.kind === "managed"),
+      ) ||
       parsed.some(
         (item) =>
           snapshotHash(item.approvedRoots) !==
@@ -62,8 +69,9 @@ export async function refreshNativeStorageAuthorities(input: {
     if (
       runtime.version !== input.before.version ||
       runtime.recoveryEpoch !== input.before.recoveryEpoch ||
-      runtime.mode !== "active" ||
-      !runtime.ownershipConfirmed
+      (prior?.approvedRoots.every((root) => root.receipt.kind === "managed") !==
+        true &&
+        (runtime.mode !== "active" || !runtime.ownershipConfirmed))
     )
       return;
     await tx.$queryRaw`SELECT "rootPath" FROM "MediaStorageAuthority" WHERE "recoveryEpoch" = ${runtime.recoveryEpoch} ORDER BY "rootPath" FOR UPDATE`;
@@ -122,6 +130,11 @@ export async function refreshNativeStorageAuthorities(input: {
           },
           observedAt: new Date(proof.capturedAt),
           expiresAt: new Date(proof.expiresAt),
+          ...(approved.approvedRoots.every(
+            (root) => root.receipt.kind === "managed",
+          )
+            ? { revokedAt: null }
+            : {}),
           version: { increment: 1 },
         },
       });
@@ -142,7 +155,13 @@ async function verifyRenewal(
   });
   const leaseProof = QuiescenceEvidenceSchema.safeParse(lease?.observation);
   const authority = await runtimeAuthority(tx);
-  if (!authority.active || !leaseProof.success || !leaseProof.data.quiescent)
+  const managed = approved.approvedRoots.every(
+    (root) => root.receipt.kind === "managed",
+  );
+  if (
+    !managed &&
+    (!authority.active || !leaseProof.success || !leaseProof.data.quiescent)
+  )
     return false;
   try {
     const roots = await assertNativeStorageRoots(tx, approved.approvedRoots);

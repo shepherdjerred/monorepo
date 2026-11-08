@@ -107,6 +107,7 @@ export async function lockCleanupPlex(
     tx,
     proof.evidence.expected,
     proof.freshness,
+    proof.invocation.budget,
   );
   const cleanup = await tx.upgradeCleanup.findUniqueOrThrow({
     where: { id: proof.input.cleanupId },

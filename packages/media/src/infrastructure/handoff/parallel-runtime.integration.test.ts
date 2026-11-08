@@ -4,19 +4,33 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import type { CanonicalMountEvidence } from "#shared/canonical-storage.ts";
 import { refreshManagedStorage } from "./managed-storage.ts";
-import { setManagedRuntime } from "./parallel-runtime.ts";
+import { setManagedRuntime as activateRuntime } from "./parallel-runtime.ts";
 import { runtimeAuthority } from "./authority.ts";
 import { readRuntimeProof } from "./runtime-proof.ts";
 import { refreshWriterLease } from "./lease.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const ownerId = crypto.randomUUID();
+const setManagedRuntime = (
+  tx: Parameters<typeof activateRuntime>[0],
+  input: Parameters<typeof activateRuntime>[1],
+) => activateRuntime(tx, input, ownerId);
 beforeAll(async () => {
   cluster = await startMediaTestPostgres();
+  await cluster.database.mediaUser.create({
+    data: {
+      id: ownerId,
+      plexAccountId: ownerId,
+      displayName: "Owner",
+      role: "owner",
+    },
+  });
 }, 60_000);
 afterAll(async () => {
   await cluster.close();
 });
 beforeEach(async () => {
+  await cluster.database.$executeRaw`TRUNCATE TABLE "ApplicationEvent" CASCADE`;
   await cluster.database.mediaStorageAuthority.deleteMany();
   await cluster.database.legacyWriterLease.deleteMany();
   await cluster.database.mediaRuntimeState.update({
@@ -129,6 +143,36 @@ test("missing, partial and expired canonical proof cannot activate or fall back 
       setManagedRuntime(tx, { mode: "active", expectedVersion: 0 }),
     ),
   ).rejects.toThrow("fresh observation");
+});
+
+test("durable managed storage approval requires an actual owner and permits repeated activation", async () => {
+  const db = cluster.database;
+  await refreshManagedStorage(db, {
+    observeCanonicalMounts: async () => mounts(),
+  });
+  const member = await db.mediaUser.create({
+    data: {
+      plexAccountId: crypto.randomUUID(),
+      displayName: "Member",
+      role: "member",
+    },
+  });
+  await expect(
+    db.$transaction((tx) =>
+      activateRuntime(tx, { mode: "active", expectedVersion: 0 }, member.id),
+    ),
+  ).rejects.toThrow("exact current owner activation");
+  await db.$transaction((tx) =>
+    setManagedRuntime(tx, { mode: "active", expectedVersion: 0 }),
+  );
+  await db.$transaction((tx) =>
+    setManagedRuntime(tx, { mode: "active", expectedVersion: 1 }),
+  );
+  expect(
+    await db.applicationEvent.count({
+      where: { kind: "managed_storage_approval_v1" },
+    }),
+  ).toBe(2);
 });
 
 test("changed storage identity revokes active runtime instead of approving the replacement volume", async () => {

@@ -70,7 +70,7 @@ export async function captureLibraryPlexExpectedV2(
   const { command, parent, access } = input;
   const source = libraryPlexPhysicalGroup(parent);
   const { asset, group } = await readPlexPhysicalGroup(tx, command.assetId);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, budget);
   if (
     !runtime.active ||
     runtime.epoch !== command.recoveryEpoch ||
@@ -84,7 +84,7 @@ export async function captureLibraryPlexExpectedV2(
   await assertNoPublicationCompensationFence(tx, {
     mediaIds: group.coverage.map((scope) => scope.mediaId),
   });
-  const lease = await readRuntimeProof(tx);
+  const lease = await readRuntimeProof(tx, budget);
   const canonical = await readPlexCanonicalTargets(tx, group.coverage);
   assertLibraryCanonicalBirth(input.birth, canonical);
   const first = canonical[0];
@@ -195,6 +195,7 @@ export async function lockLibraryPlexScope(
   tx: Prisma.TransactionClient,
   expected: LibraryPlexExpectedV2,
   freshness: PlexBindingFreshness,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const ids = expected.targets.map((target) => target.scope.mediaId).sort();
   const assetId = expected.newGroups[0].assetId;
@@ -204,7 +205,7 @@ export async function lockLibraryPlexScope(
   await tx.$queryRaw(
     Prisma.sql`SELECT "mediaId",edition FROM "MediaIntent" WHERE "mediaId" IN (${Prisma.join(ids)}) ORDER BY "mediaId",edition FOR UPDATE`,
   );
-  if (!(await lockRuntimeAuthority(tx, expected.recoveryEpoch)))
+  if (!(await lockRuntimeAuthority(tx, expected.recoveryEpoch, budget)))
     throw new PlexBindingProtection("ownership_changed");
   await tx.$queryRaw`SELECT id FROM "UpgradeCleanup" WHERE "assetId"=${assetId} OR "successorAssetId"=${assetId} ORDER BY id FOR UPDATE`;
   await tx.$queryRaw`SELECT id FROM "LibraryAsset" WHERE id=${assetId} FOR UPDATE`;

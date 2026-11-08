@@ -26,7 +26,7 @@ export async function publicationAuthorityDeadline(
   input: { libraryKind: "movies" | "tv"; recoveryEpoch: number },
 ): Promise<{ assertActive: () => void; expiresAtMs: number }> {
   assertPublicationActive(context);
-  const lease = await readRuntimeProof(tx);
+  const lease = await readRuntimeProof(tx, context.libraryManagement?.budget);
   const rootPath = `/data/${input.libraryKind}`;
   await tx.$queryRaw`SELECT "rootPath" FROM "MediaStorageAuthority" WHERE "rootPath"=${rootPath} FOR SHARE`;
   const storage = await tx.mediaStorageAuthority.findUnique({

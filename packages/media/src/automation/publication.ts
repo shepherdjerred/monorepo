@@ -382,11 +382,15 @@ async function publishCoverageChecked(
           { compensationPhase, budget },
         ),
       );
-      await assertPublicationCommitAuthority(tx, {
-        epoch: runtime.epoch,
-        mediaIds,
-        assetIds: coverages.map((item) => item.assetId),
-      });
+      await assertPublicationCommitAuthority(
+        tx,
+        {
+          epoch: runtime.epoch,
+          mediaIds,
+          assetIds: coverages.map((item) => item.assetId),
+        },
+        budget,
+      );
       for (const snapshot of coverages) {
         const current = await tx.assetCoverage.findUniqueOrThrow({
           where: {

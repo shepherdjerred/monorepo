@@ -901,7 +901,12 @@ The response contains mode, version, recovery epoch, and ownership confirmation.
 Starting requires fresh trusted canonical storage observations from the workers;
 it does not require importing a migration bundle or stopping legacy controllers.
 Pausing stops Media automation while the existing stack continues operating.
-Legacy adoption and recovery retain their independent quiescence requirements.
+Owner activation preserves an immutable approval of the exact canonical storage
+identity. After a restore, native recovery can use that approval to reprove
+Media-created files without requiring a legacy migration bundle. Recovery retains
+its existing owner review and quiescence requirements; normal managed automation
+uses fresh storage observations after recovery. Legacy adoption keeps its separate
+quiescence requirements.
 
 Whole-media requests with exact current Plex account access can be adopted;
 whole-series requests retain future episode monitoring through bounded coverage

@@ -1,10 +1,12 @@
 import type { Database } from "#infrastructure/database.ts";
 import type { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
 import { CanonicalMountEvidenceSchema } from "#shared/canonical-storage.ts";
+import { refreshNativeStorageAuthorities } from "#infrastructure/native-recovery/storage-refresh.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { isManagedStorage } from "./runtime-proof.ts";
 import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { z } from "zod";
 
 /** A fresh installation observes its own ready file worker, independently of old apps. */
 export async function refreshManagedStorage(
@@ -19,7 +21,19 @@ export async function refreshManagedStorage(
   });
   const rows = await db.mediaStorageAuthority.findMany({
     where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
+    orderBy: { rootPath: "asc" },
   });
+  if (
+    rows.some(
+      (row) =>
+        z.object({ kind: z.literal("native_restore") }).safeParse(row.evidence)
+          .success,
+    )
+  ) {
+    if (!rows.every((row) => isManagedStorage(row.evidence))) return false;
+    await refreshNativeStorageAuthorities({ db, observer, before, rows });
+    return true;
+  }
   if (rows.length > 0 && !rows.some((row) => isManagedStorage(row.evidence)))
     return false;
   if ((await db.mediaHandoffReceipt.count()) !== 0) return false;

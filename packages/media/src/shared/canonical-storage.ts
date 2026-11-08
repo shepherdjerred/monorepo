@@ -35,7 +35,7 @@ export const ApprovedStorageRootSchema = z.strictObject({
   volumeName: z.string().min(1),
   volumePath: z.string().max(4096),
   receipt: z.strictObject({
-    kind: z.enum(["legacy", "native"]),
+    kind: z.enum(["legacy", "native", "managed"]),
     id: z.uuid(),
     planHash: digest,
   }),
@@ -57,3 +57,17 @@ export type ApprovedStorageRoot = z.infer<typeof ApprovedStorageRootSchema>;
 export type CanonicalMountEvidence = z.infer<
   typeof CanonicalMountEvidenceSchema
 >;
+
+/** The existing owner activation approves these exact physical roots. */
+export const ManagedStorageApprovalSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  actorId: z.uuid(),
+  recoveryEpoch: z.int().nonnegative(),
+  runtimeVersion: z.int().positive(),
+  mounts: CanonicalMountEvidenceSchema,
+});
+export const ManagedStorageApprovalEnvelopeSchema = z.strictObject({
+  approval: ManagedStorageApprovalSchema,
+  raw: z.string(),
+  approvalHash: digest,
+});

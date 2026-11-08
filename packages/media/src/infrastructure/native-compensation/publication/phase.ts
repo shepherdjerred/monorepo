@@ -117,7 +117,12 @@ export async function loadCompensationPublicationPhase(
     record.descriptor.scope.storageRoots,
     budget,
   );
-  const current = await assertPublicationCurrentRows(tx, record, timing);
+  const current = await assertPublicationCurrentRows(
+    tx,
+    record,
+    timing,
+    budget,
+  );
   const authority = publicationAuthority(
     record,
     chain,
@@ -220,10 +225,15 @@ export async function assertCompensationPublicationPhaseCurrent(
   budget: PublicationAuthorityReadBudget,
 ) {
   assertCompensationPublicationPhase(tx, phase, budget);
-  const current = await assertPublicationCurrentRows(tx, phase.record, {
-    ...phase.timing,
-    originalFreshness: phase.freshness,
-  });
+  const current = await assertPublicationCurrentRows(
+    tx,
+    phase.record,
+    {
+      ...phase.timing,
+      originalFreshness: phase.freshness,
+    },
+    budget,
+  );
   const authority = publicationAuthority(
     phase.record,
     phase.chain,
@@ -252,11 +262,12 @@ async function assertPublicationCurrentRows(
   tx: Prisma.TransactionClient,
   record: CompletedRecord,
   timing: CompensationPublicationTiming,
+  budget: PublicationAuthorityReadBudget,
 ) {
   const { row, descriptor, completion } = record;
   timing.originalFreshness.assertActive();
   await assertCompensationOwner(tx, row.receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, budget);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeCompensationProtection(
       "compensation_publication_runtime_changed",

@@ -6,6 +6,7 @@ import {
   ApprovedStorageRootSchema,
   CanonicalMountSchema,
   NativeStorageAuthoritySchema,
+  CanonicalMountEvidenceSchema,
   type ApprovedStorageRoot,
 } from "#shared/canonical-storage.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
@@ -20,6 +21,10 @@ import {
   CompensationPlexSelectionV3Schema,
 } from "#shared/plex-binding/native-version.ts";
 import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import {
+  managedStorageApproval,
+  MANAGED_STORAGE_APPROVAL,
+} from "#infrastructure/handoff/managed-storage-approval.ts";
 
 const CompensationSelection = z.union([
   NativeCompensationSelectionSchema,
@@ -72,14 +77,19 @@ function rowMatches(root: ApprovedStorageRoot, row: StorageRow) {
 }
 function assertStoredEvidence(row: StorageRow) {
   const native = NativeStorageAuthoritySchema.safeParse(row.evidence);
+  const canonical = CanonicalMountEvidenceSchema.safeParse(row.evidence);
   const evidence = native.success
     ? native.data.mounts
-    : MountEvidenceSchema.parse(row.evidence);
+    : canonical.success
+      ? canonical.data
+      : MountEvidenceSchema.parse(row.evidence);
   const mounts = native.success
     ? native.data.mounts.mounts
-    : MountEvidenceSchema.parse(row.evidence).bindings.map(
-        (binding) => binding.canonical,
-      );
+    : canonical.success
+      ? canonical.data.mounts
+      : MountEvidenceSchema.parse(row.evidence).bindings.map(
+          (binding) => binding.canonical,
+        );
   const matches = mounts.filter(
     (mount) =>
       mount.root === row.rootPath &&
@@ -157,7 +167,7 @@ function nativeStorageProof(receipt: {
 }
 
 type StorageProof = {
-  kind: "legacy" | "native";
+  kind: "legacy" | "native" | "managed";
   id: string;
   planHash: string;
   approved: boolean;
@@ -249,7 +259,7 @@ async function readStorageProofs(
   budget: PublicationAuthorityReadBudget,
   queried: StorageProof[] = [],
 ) {
-  const ids = (kind: "legacy" | "native") => [
+  const ids = (kind: "legacy" | "native" | "managed") => [
     ...new Set(
       roots
         .filter(
@@ -280,12 +290,21 @@ async function readStorageProofs(
           include: { plan: true },
         });
   budget.consume(native.length * 2);
+  const managedIds = ids("managed");
+  const managed =
+    managedIds.length === 0
+      ? []
+      : await tx.applicationEvent.findMany({
+          where: { id: { in: managedIds }, kind: MANAGED_STORAGE_APPROVAL },
+        });
+  budget.consume(managed.length);
   for (const receipt of native)
     await validateNativePlexReceipt(tx, receipt, budget);
   return [
     ...queried,
     ...legacy.map((row) => legacyStorageProof(row)),
     ...native.map((row) => queriedNativeStorageProof(row)),
+    ...managed.map((row) => managedStorageApproval(row)),
   ];
 }
 
@@ -307,11 +326,14 @@ export async function resolveNativeStorageRoots(
     );
   const pinned = new Map<string, ApprovedStorageRoot>();
   const legacyRows = [];
+  const managedRows = [];
   for (const row of rows) {
     assertStoredEvidence(row);
     const native = NativeStorageAuthoritySchema.safeParse(row.evidence);
     if (!native.success) {
-      legacyRows.push(row);
+      if (CanonicalMountEvidenceSchema.safeParse(row.evidence).success)
+        managedRows.push(row);
+      else legacyRows.push(row);
       continue;
     }
     const root = native.data.approvedRoots.find(
@@ -322,27 +344,54 @@ export async function resolveNativeStorageRoots(
     pinned.set(row.rootPath, root);
   }
   const legacy = await discoverLegacyStorageProofs(tx, legacyRows, budget);
+  const managed =
+    managedRows.length === 0
+      ? []
+      : await tx.applicationEvent.findMany({
+          where: {
+            kind: MANAGED_STORAGE_APPROVAL,
+            OR: managedRows.map((row) => ({
+              payload: {
+                path: ["approval", "mounts", "mounts"],
+                array_contains: [
+                  {
+                    root: row.rootPath,
+                    pvcUid: row.pvcUid,
+                    volumeName: row.volumeName,
+                    volumePath: row.volumePath,
+                  },
+                ],
+              },
+            })),
+          },
+          orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+          take: budget.take,
+        });
+  budget.consume(managed.length);
+  const managedProofs = managed.map((row) => managedStorageApproval(row));
   const roots = rows.map((row) => {
     const inherited = pinned.get(row.rootPath);
     if (inherited !== undefined) return inherited;
     const base = {
-      rootPath: row.rootPath,
+      rootPath: ApprovedStorageRootSchema.shape.rootPath.parse(row.rootPath),
       pvcUid: row.pvcUid,
       volumeName: row.volumeName,
       volumePath: row.volumePath,
     };
-    const candidate = legacy.find(
-      (entry) =>
-        entry.approved &&
-        legacySourceMatches(legacyStorageIdentity(row), entry.sourceBindings) &&
-        entry.mounts.some(
-          (mount) =>
-            mount.root === base.rootPath &&
-            mount.pvcUid === base.pvcUid &&
-            mount.volumeName === base.volumeName &&
-            mount.volumePath === base.volumePath,
-        ),
-    );
+    const candidate = CanonicalMountEvidenceSchema.safeParse(row.evidence)
+      .success
+      ? managedProofs.find((entry) =>
+          entry.mounts.some((mount) => sameStorage(base, mount)),
+        )
+      : legacy.find(
+          (entry) =>
+            entry.approved &&
+            legacySourceMatches(
+              legacyStorageIdentity(row),
+              entry.sourceBindings,
+            ) &&
+            entry.mounts.some((mount) => sameStorage(base, mount)),
+        );
     if (candidate === undefined)
       throw new Error(
         "Native recovery storage has no matching durable owner-approved receipt",
@@ -357,7 +406,10 @@ export async function resolveNativeStorageRoots(
     };
   });
   const parsed = ApprovedStorageRootsSchema.parse(roots);
-  const proofs = await readStorageProofs(tx, parsed, budget, legacy);
+  const proofs = await readStorageProofs(tx, parsed, budget, [
+    ...legacy,
+    ...managedProofs,
+  ]);
   return assertQueriedStorageRoots(parsed, rows, proofs);
 }
 

@@ -1,11 +1,18 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import { readRuntimeProof, RuntimeProofError } from "./runtime-proof.ts";
+import {
+  CanonicalMountEvidenceSchema,
+  ManagedStorageApprovalSchema,
+} from "#shared/canonical-storage.ts";
+import { canonicalJson, snapshotHash } from "#migration/profile-import.ts";
+import { MANAGED_STORAGE_APPROVAL } from "./managed-storage-approval.ts";
 
 /** Caller owns the authenticated idempotent command transaction. */
 export async function setManagedRuntime(
   tx: Prisma.TransactionClient,
   input: { mode: "active" | "observe"; expectedVersion: number },
+  actorId: string,
 ) {
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
   const current = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -43,7 +50,7 @@ export async function setManagedRuntime(
         409,
       );
   }
-  return tx.mediaRuntimeState.update({
+  const updated = await tx.mediaRuntimeState.update({
     where: { id: "singleton" },
     data: {
       mode: input.mode,
@@ -51,4 +58,36 @@ export async function setManagedRuntime(
       version: { increment: 1 },
     },
   });
+  if (input.mode === "active") {
+    const rows = await tx.mediaStorageAuthority.findMany({
+      orderBy: { rootPath: "asc" },
+    });
+    // Restored storage keeps its original approval; restarting never replaces it.
+    if (
+      rows.every(
+        (row) => CanonicalMountEvidenceSchema.safeParse(row.evidence).success,
+      )
+    ) {
+      const approval = ManagedStorageApprovalSchema.parse({
+        schemaVersion: 1,
+        actorId,
+        recoveryEpoch: updated.recoveryEpoch,
+        runtimeVersion: updated.version,
+        mounts: CanonicalMountEvidenceSchema.parse(rows[0]?.evidence),
+      });
+      await tx.applicationEvent.create({
+        data: {
+          actorId,
+          kind: MANAGED_STORAGE_APPROVAL,
+          dedupeKey: `managed-storage:${String(updated.recoveryEpoch)}:${String(updated.version)}`,
+          payload: {
+            approval,
+            raw: canonicalJson(approval),
+            approvalHash: snapshotHash(approval),
+          },
+        },
+      });
+    }
+  }
+  return updated;
 }

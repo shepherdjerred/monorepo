@@ -193,7 +193,7 @@ export async function assertNativeArchiveCleanupPhase(
   )
     throw new NativeArchiveProtection("archive_operation_changed");
   await assertCleanupOwner(tx, receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, budget);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeArchiveProtection("archive_runtime_protected");
   const ids = descriptor.scope.media.map((item) => item.id);
@@ -262,7 +262,7 @@ export async function assertArchivePhaseCurrent(
   const authority = assertArchivePhaseTransaction(tx, phase);
   const { row, descriptor, networkScope } = authority;
   await assertCleanupOwner(tx, row.receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, phase.budget);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeArchiveProtection("archive_runtime_protected");
   const mediaIds = descriptor.scope.media.map((item) => item.id);

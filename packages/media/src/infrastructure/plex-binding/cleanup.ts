@@ -52,7 +52,7 @@ export async function prepareUpgradeCleanupObservation(
     ),
     guards: [freshness],
   });
-  await lockUpgradeCleanupObservation(tx, expected, bounded);
+  await lockUpgradeCleanupObservation(tx, expected, bounded, invocation.budget);
   await assertUpgradeCleanupExpected(tx, expected, access, {
     ...invocation,
     freshness: bounded,
@@ -137,7 +137,7 @@ export async function commitUpgradeCleanupObservation(
     expiresAtMs: Date.parse(evidence.expiresAt),
     guards: [freshness, serving.freshness],
   });
-  await lockUpgradeCleanupObservation(tx, expected, bounded);
+  await lockUpgradeCleanupObservation(tx, expected, bounded, invocation.budget);
   await assertUpgradeCleanupExpected(tx, expected, expected.access, {
     ...invocation,
     freshness: bounded,

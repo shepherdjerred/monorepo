@@ -47,7 +47,7 @@ async function publicationContext(
       "compensation_physical_completion_required",
     );
   await assertCompensationOwner(tx, row.receipt.actorId);
-  const runtime = await runtimeAuthority(tx);
+  const runtime = await runtimeAuthority(tx, budget);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeCompensationProtection(
       "compensation_publication_runtime_changed",

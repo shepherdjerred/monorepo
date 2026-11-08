@@ -130,7 +130,7 @@ function matchedEpisodes(found: RegExpExecArray, name: string): number[] {
     : range(groups["first"], groups["last"]);
 }
 
-function sourceQuality(name: string): string {
+function sourceQuality(name: string, metadataStart: number): string {
   const resolution =
     /\b(2160|1080|720|576|480)[pi]\b/iu.exec(name)?.[1] ??
     (/\b4K\b/iu.test(name) ? "2160" : null);
@@ -142,7 +142,10 @@ function sourceQuality(name: string): string {
     ["WEBrip", /\bWEB[ ._-]?Rip\b/iu],
     ["HDTV", /\bHDTV\b/iu],
   ];
-  const source = sources.find((entry) => entry[1].test(name))?.[0] ?? "unknown";
+  const source =
+    sources.find(([kind, pattern]) =>
+      pattern.test(kind === "Bluray" ? name.slice(metadataStart) : name),
+    )?.[0] ?? "unknown";
   return `${source}-${resolution}p`;
 }
 
@@ -166,6 +169,22 @@ function tags(name: string): string[] {
   return result;
 }
 
+function ripMetadataStart(
+  identity: string,
+  lastYear: RegExpExecArray | undefined,
+  boundary: number,
+): number {
+  if (lastYear === undefined) return boundary;
+  const yearEnd = lastYear.index + lastYear[0].length;
+  const suffix = identity.slice(yearEnd);
+  const rip = /\b(?:BDRip|BRRip)\b/iu.exec(suffix);
+  // A rip tag may precede resolution; words before the final release year
+  // remain title text, including a genuine movie named "BRRip".
+  return rip !== null && normalizeMediaTitle(suffix) === rip[0].toLowerCase()
+    ? yearEnd + rip.index
+    : boundary;
+}
+
 export function parseReleaseName(value: string): ParsedReleaseName {
   const name = value
     .replace(/^\[[^\]]+\][ ._-]*/u, "")
@@ -174,13 +193,15 @@ export function parseReleaseName(value: string): ParsedReleaseName {
   const technicalIndex = name.search(
     /\b(?:2160|1080|720|576|480)[pi]\b|\b(?:Blu[ ._-]?Ray|WEB[ ._-]?(?:DL|Rip)|HDTV|REMUX)\b/iu,
   );
-  const end =
+  let end =
     [evidence.index, technicalIndex]
       .filter((index) => index >= 0)
       .sort((left, right) => left - right)[0] ?? name.length;
-  const identity = name.slice(0, end);
-  const years = [...identity.matchAll(/\b(?:19|20)\d{2}\b/gu)];
+  const beforeSource = name.slice(0, end);
+  const years = [...beforeSource.matchAll(/\b(?:19|20)\d{2}\b/gu)];
   const lastYear = years.at(-1);
+  end = ripMetadataStart(beforeSource, lastYear, end);
+  const identity = name.slice(0, end);
   const yearIsSuffix =
     lastYear !== undefined &&
     normalizeMediaTitle(identity.slice(lastYear.index + lastYear[0].length))
@@ -203,7 +224,7 @@ export function parseReleaseName(value: string): ParsedReleaseName {
     episodes: evidence.episodes,
     absoluteEpisodes: evidence.absoluteEpisodes,
     seasonPack: evidence.seasonPack,
-    quality: sourceQuality(name),
+    quality: sourceQuality(name, end),
     codec: /\b(?:HEVC|[hx][ ._-]?265)\b/iu.test(name)
       ? "HEVC"
       : /\b(?:AVC|[hx][ ._-]?264)\b/iu.test(name)

@@ -1,6 +1,7 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 import {
   readRuntimeProof,
@@ -13,6 +14,7 @@ type AuthorityDatabase = RuntimeProofDatabase;
 /** Runtime permission requires current storage, or retired-writer proof for adopted storage. */
 export async function runtimeAuthority(
   db: AuthorityDatabase,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<{ active: boolean; epoch: number }> {
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -23,7 +25,7 @@ export async function runtimeAuthority(
     return { active: false, epoch: runtime.recoveryEpoch };
   let lease;
   try {
-    lease = await readRuntimeProof(db);
+    lease = await readRuntimeProof(db, budget);
   } catch (error) {
     if (!(error instanceof RuntimeProofError)) throw error;
     return { active: false, epoch: runtime.recoveryEpoch };
@@ -48,11 +50,12 @@ export async function runtimeAuthority(
 export async function lockRuntimeAuthority(
   tx: Prisma.TransactionClient,
   epoch: number,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<boolean> {
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
   await tx.$queryRaw`SELECT "rootPath" FROM "MediaStorageAuthority" WHERE "rootPath" IN ('/data/movies', '/data/tv') FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;
-  const authority = await runtimeAuthority(tx);
+  const authority = await runtimeAuthority(tx, budget);
   return authority.active && authority.epoch === epoch;
 }
 
