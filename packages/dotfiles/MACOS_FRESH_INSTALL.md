@@ -104,8 +104,21 @@ At the console (or KVM) once:
 5. Sign in to the 1Password app for your own use. Set it to lock after one
    minute and on screen lock. Do not install the 1Password CLI or browser
    extension; no agent gets the vault.
-6. In Google Chrome, sign in to the sites a Dot should browse, and install the
-   Anti-Captcha extension with its API key.
+6. In Google Chrome, create a separate profile for the Dot and sign in to the
+   sites it should browse. Install the AntiCaptcha plugin in that profile only:
+   - Google removed it from the Chrome Web Store, so download the ZIP from
+     [antcpt.com](https://antcpt.com/eng/download/google-chrome-options/manual-zip.html)
+     (not the store's "Anti-Captcha Blocker Extension" or a mirror). Unzip it
+     to `~/Library/Application Support/anticaptcha-plugin`.
+   - In `chrome://extensions`, turn on **Developer mode**, choose **Load
+     unpacked**, and select that folder.
+   - Open the plugin's options, paste the anti-captcha.com API key next to
+     the lock icon, and choose **Save**.
+   - An unpacked plugin does not auto-update; replace the folder for a new
+     version.
+   - The plugin strips the `Content-Security-Policy` header from every site
+     in the profile so it can inject its solver. Keep it out of profiles
+     used for banking, primary email, or other high-stakes sites.
 7. Sign in to Obsidian Sync and open the vault.
 8. Sign in to ChatGPT. In the Dot's settings, under **Computers**, choose
    **Allow access** for this Mac, then grant the Accessibility, Screen
