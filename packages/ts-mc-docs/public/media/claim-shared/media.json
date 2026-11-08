@@ -8,14 +8,5 @@
   "poster": "/media/claim-shared/poster.webp",
   "alt": "Sharing the chunk restores access for the camp.",
   "caption": "Sharing the chunk restores access for the camp.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.58, 0.63],
-      "to": [0.32, 0.815],
-      "text": "Camp access",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

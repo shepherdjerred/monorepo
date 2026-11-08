@@ -8,14 +8,5 @@
   "poster": "/media/sorting-after/poster.webp",
   "alt": "Five organized stacks in the same barrel, with cobblestone and oak planks combined",
   "caption": "After sorting: duplicate stacks combine and items fill the first slots.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.23, 0.23],
-      "to": [0.415, 0.26],
-      "text": "Combined and organized",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

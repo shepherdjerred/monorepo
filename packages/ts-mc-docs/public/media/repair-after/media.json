@@ -8,22 +8,5 @@
   "poster": "/media/repair-after/poster.webp",
   "alt": "The repaired pickaxe has less damage and one iron ingot has been consumed.",
   "caption": "Right-clicking the iron block repairs durability and consumes one matching ingredient.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.15, 0.35],
-      "to": [0.49, 0.45],
-      "text": "One ingredient spent",
-      "startMs": 0,
-      "endMs": 12000
-    },
-    {
-      "kind": "arrow",
-      "from": [0.12, 0.65],
-      "to": [0.33, 0.8],
-      "text": "62 durability restored",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

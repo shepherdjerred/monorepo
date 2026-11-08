@@ -8,14 +8,5 @@
   "poster": "/media/perks-mechanic/poster.webp",
   "alt": "The Mechanic detail lists the builds unlocked at each level.",
   "caption": "The Mechanic detail lists the builds unlocked at each level.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.66, 0.42],
-      "to": [0.1, 0.365],
-      "text": "Mechanic II",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

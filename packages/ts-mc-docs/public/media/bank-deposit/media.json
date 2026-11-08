@@ -8,14 +8,5 @@
   "poster": "/media/bank-deposit/poster.webp",
   "alt": "Cobblestone, oak planks, and spruce logs placed in the deposit bank",
   "caption": "Put supplies in the bank, then close it to route matching items.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.23, 0.23],
-      "to": [0.373, 0.26],
-      "text": "Deposit all three types",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

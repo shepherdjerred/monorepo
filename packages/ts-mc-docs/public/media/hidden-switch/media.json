@@ -10,17 +10,17 @@
   "caption": "Click the opposite face of the supporting block to toggle the lever beside the sign.",
   "annotations": [
     {
-      "kind": "arrow",
-      "from": [0.73, 0.34],
-      "to": [0.55, 0.47],
+      "kind": "label",
+      "from": [0.51, 0.34],
+      "to": [0.51, 0.34],
       "text": "Hidden sign",
       "startMs": 0,
       "endMs": 12000
     },
     {
-      "kind": "arrow",
-      "from": [0.29, 0.36],
-      "to": [0.42, 0.57],
+      "kind": "box",
+      "from": [0.39, 0.53],
+      "to": [0.45, 0.62],
       "text": "Lever",
       "startMs": 0,
       "endMs": 12000

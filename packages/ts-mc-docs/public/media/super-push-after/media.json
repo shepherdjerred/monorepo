@@ -10,18 +10,18 @@
   "caption": "After normal extension, SuperPush moves the two planks four blocks farther.",
   "annotations": [
     {
-      "kind": "arrow",
+      "kind": "label",
       "from": [0.2, 0.29],
-      "to": [0.24, 0.49],
+      "to": [0.2, 0.29],
       "text": "Moved load",
       "startMs": 0,
       "endMs": 12000
     },
     {
-      "kind": "arrow",
+      "kind": "label",
       "from": [0.66, 0.27],
-      "to": [0.63, 0.49],
-      "text": "Extended head",
+      "to": [0.66, 0.27],
+      "text": "Piston head",
       "startMs": 0,
       "endMs": 12000
     }

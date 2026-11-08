@@ -8,14 +8,5 @@
   "poster": "/media/painting-before/poster.webp",
   "alt": "A two-by-two painting mounted on a stone wall",
   "caption": "Right-click to select another picture of the same size.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.76, 0.25],
-      "to": [0.59, 0.45],
-      "text": "Right-click",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

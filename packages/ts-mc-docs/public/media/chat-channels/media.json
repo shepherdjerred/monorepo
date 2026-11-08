@@ -8,14 +8,5 @@
   "poster": "/media/chat-channels/poster.webp",
   "alt": "The channel list shows which conversations are visible and where you are speaking.",
   "caption": "The channel list shows which conversations are visible and where you are speaking.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.65, 0.68],
-      "to": [0.25, 0.625],
-      "text": "Selected channel",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

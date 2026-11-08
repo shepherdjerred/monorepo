@@ -27,7 +27,7 @@ export default [
         kind: "arrow",
         from: [0.65, 0.43],
         to: [0.5, 0.49],
-        text: "Open section",
+        text: "Opening",
         startMs: 0,
         endMs: 12_000,
       },

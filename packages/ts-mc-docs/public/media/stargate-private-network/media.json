@@ -8,14 +8,5 @@
   "poster": "/media/stargate-private-network/poster.webp",
   "alt": "Creating a private Stargate network",
   "caption": "Create a private network before naming it on your gate signs.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.7, 0.72],
-      "to": [0.23, 0.815],
-      "text": "Network created",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

@@ -8,14 +8,5 @@
   "poster": "/media/shop-buy-sign/poster.webp",
   "alt": "B 50 lets a customer buy sixteen oak planks for fifty crystals.",
   "caption": "B 50 lets a customer buy sixteen oak planks for fifty crystals.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.7, 0.3],
-      "to": [0.5, 0.51],
-      "text": "16 for 50",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

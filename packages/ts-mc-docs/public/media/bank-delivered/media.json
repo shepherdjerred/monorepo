@@ -8,14 +8,5 @@
   "poster": "/media/bank-delivered/poster.webp",
   "alt": "Sixteen cobblestone and twelve oak planks have arrived in the linked shelf barrel",
   "caption": "The shelf receives both accepted item types.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.23, 0.23],
-      "to": [0.373, 0.26],
-      "text": "Accepted items arrive here",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

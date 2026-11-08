@@ -8,14 +8,5 @@
   "poster": "/media/lock-public/poster.webp",
   "alt": "A public lock allows anyone to use the container.",
   "caption": "A public lock allows anyone to use the container.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.59, 0.65],
-      "to": [0.27, 0.815],
-      "text": "Public",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

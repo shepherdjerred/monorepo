@@ -8,14 +8,5 @@
   "poster": "/media/bank-shelf-types/poster.webp",
   "alt": "A shelf sign accepts cobblestone and oak planks on separate lines",
   "caption": "Name one accepted item on each nonempty line below [Shelf].",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.63, 0.29],
-      "to": [0.51, 0.45],
-      "text": "One item type per line",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

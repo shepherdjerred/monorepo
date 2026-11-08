@@ -8,14 +8,5 @@
   "poster": "/media/shop-customer-buy/poster.webp",
   "alt": "A successful purchase transfers sixteen oak planks and charges fifty crystals",
   "caption": "The customer receives sixteen planks and pays the shop owner fifty crystals.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.62, 0.65],
-      "to": [0.14, 0.778],
-      "text": "50 crystals paid",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

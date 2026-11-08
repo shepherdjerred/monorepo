@@ -8,22 +8,5 @@
   "poster": "/media/repair-before/poster.webp",
   "alt": "A damaged iron pickaxe and iron ingots are ready at an iron repair block.",
   "caption": "Hold a damaged iron pickaxe in your main hand and iron ingots in your offhand.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.15, 0.35],
-      "to": [0.49, 0.45],
-      "text": "Two repair ingredients",
-      "startMs": 0,
-      "endMs": 12000
-    },
-    {
-      "kind": "arrow",
-      "from": [0.12, 0.65],
-      "to": [0.33, 0.8],
-      "text": "Damaged pickaxe",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

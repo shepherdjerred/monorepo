@@ -8,14 +8,5 @@
   "poster": "/media/lock-trusted/poster.webp",
   "alt": "Lock information lists TsmcDemoHelper with manage access",
   "caption": "Manage access lets a trusted player open and break the locked container.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.59, 0.65],
-      "to": [0.055, 0.815],
-      "text": "Manage access",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

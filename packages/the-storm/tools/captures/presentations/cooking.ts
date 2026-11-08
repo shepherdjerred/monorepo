@@ -6,16 +6,7 @@ export default [
     name: "cooking-pot",
     alt: "A cooking-pot sign attached to stone with a magma block directly below the sign",
     caption: "Put the heat source one or two blocks directly below the sign.",
-    annotations: [
-      {
-        kind: "arrow",
-        from: [0.65, 0.25],
-        to: [0.5, 0.5],
-        text: "Cooking-pot sign",
-        startMs: 0,
-        endMs: 12_000,
-      },
-    ],
+    annotations: [],
   },
   {
     schema: 1,

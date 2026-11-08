@@ -8,14 +8,5 @@
   "poster": "/media/lock-supply/poster.webp",
   "alt": "A supply lock lets visitors take items without adding them.",
   "caption": "A supply lock lets visitors take items without adding them.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.59, 0.65],
-      "to": [0.31, 0.815],
-      "text": "Take only",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

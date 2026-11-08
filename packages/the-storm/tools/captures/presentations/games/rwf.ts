@@ -51,9 +51,9 @@ export default [
       "Keep using your fuse on your team's armed bomb until the defuse finishes.",
     annotations: [
       {
-        kind: "arrow",
+        kind: "label",
         from: [0.08, 0.22],
-        to: [0.5, 0.065],
+        to: [0.08, 0.22],
         text: "Keep clicking to fill the bar",
         atStep: "defuse-start",
         startMs: 0,

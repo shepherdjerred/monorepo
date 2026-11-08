@@ -8,14 +8,5 @@
   "poster": "/media/bank-unmatched/poster.webp",
   "alt": "Four spruce logs remain in the deposit bank after the matching items moved",
   "caption": "Items without a matching shelf stay in the bank.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.23, 0.23],
-      "to": [0.415, 0.26],
-      "text": "Unmatched logs stay here",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

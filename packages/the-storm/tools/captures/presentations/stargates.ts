@@ -6,16 +6,7 @@ export default [
     name: "stargate-private-network",
     alt: "Creating a private Stargate network",
     caption: "Create a private network before naming it on your gate signs.",
-    annotations: [
-      {
-        kind: "arrow",
-        from: [0.7, 0.72],
-        to: [0.23, 0.815],
-        text: "Network created",
-        startMs: 0,
-        endMs: 12_000,
-      },
-    ],
+    annotations: [],
   },
   {
     schema: 1,
@@ -26,19 +17,19 @@ export default [
     annotations: [
       {
         kind: "arrow",
-        from: [0.72, 0.35],
+        from: [0.68, 0.2],
         to: [0.49, 0.48],
-        text: "Two-wide opening",
+        text: "2-wide opening",
         startMs: 0,
-        endMs: 12_000,
+        endMs: 12000,
       },
       {
-        kind: "arrow",
-        from: [0.18, 0.32],
-        to: [0.37, 0.45],
+        kind: "box",
+        from: [0.35, 0.42],
+        to: [0.39, 0.49],
         text: "Button",
         startMs: 0,
-        endMs: 12_000,
+        endMs: 12000,
       },
     ],
   },
@@ -48,24 +39,7 @@ export default [
     alt: "A registered Home Stargate sign",
     caption:
       "Name the gate on line 1 and the network on line 3; wait for the creation confirmation.",
-    annotations: [
-      {
-        kind: "arrow",
-        from: [0.73, 0.28],
-        to: [0.5, 0.42],
-        text: "Gate name",
-        startMs: 0,
-        endMs: 12_000,
-      },
-      {
-        kind: "arrow",
-        from: [0.75, 0.61],
-        to: [0.5, 0.53],
-        text: "Network",
-        startMs: 0,
-        endMs: 12_000,
-      },
-    ],
+    annotations: [],
   },
   {
     schema: 1,
@@ -73,16 +47,7 @@ export default [
     alt: "A player-built Stargate with a selected destination",
     caption:
       "Select a destination on the sign, then press the button to open the gate.",
-    annotations: [
-      {
-        kind: "arrow",
-        from: [0.73, 0.35],
-        to: [0.47, 0.47],
-        text: "Selected destination",
-        startMs: 0,
-        endMs: 12_000,
-      },
-    ],
+    annotations: [],
   },
   {
     schema: 1,

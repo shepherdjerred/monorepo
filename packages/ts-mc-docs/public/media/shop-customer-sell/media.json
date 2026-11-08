@@ -8,14 +8,5 @@
   "poster": "/media/shop-customer-sell/poster.webp",
   "alt": "Selling the sixteen oak planks back pays forty crystals",
   "caption": "Selling back pays the sign's S price, which can differ from its B price.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.62, 0.65],
-      "to": [0.14, 0.778],
-      "text": "40 crystals back",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }
