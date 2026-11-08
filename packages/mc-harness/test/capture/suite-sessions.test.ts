@@ -21,24 +21,27 @@ function scenario(id: string, isolation?: "fresh"): SuiteScenario {
     },
   };
 }
+function trackedSessions(events: string[]) {
+  let next = 0;
+  return async () => {
+    const owner = ++next;
+    events.push(`start ${owner.toString()}`);
+    return {
+      owner,
+      prepare: async (s: SuiteScenario) => {
+        events.push(`prepare ${owner.toString()} ${s.id}`);
+      },
+      stop: async () => {
+        events.push(`stop ${owner.toString()}`);
+      },
+    };
+  };
+}
 it("reuses ordinary sessions but brackets every isolated scene with its own fresh lifetime", async () => {
-  let id = 0;
   const events: string[] = [];
   const results = await runScenarioSessions(
     [scenario("a"), scenario("b"), scenario("c", "fresh"), scenario("d")],
-    async () => {
-      const owner = ++id;
-      events.push(`start ${owner.toString()}`);
-      return {
-        owner,
-        prepare: async (s: SuiteScenario) => {
-          events.push(`prepare ${owner.toString()} ${s.id}`);
-        },
-        stop: async () => {
-          events.push(`stop ${owner.toString()}`);
-        },
-      };
-    },
+    trackedSessions(events),
     async (s, session) => {
       events.push(`execute ${session.owner.toString()} ${s.id}`);
       return s.id;
@@ -107,23 +110,10 @@ const frameMiss =
   "capture-214125f2-34e2-41ee-86cc-f3ca3c186903: java.lang.IllegalStateException: Rendered capture missed frame 22";
 
 it("disposes the failed real-time recording's world before one complete scenario retake", async () => {
-  let started = 0;
   const events: string[] = [];
   const results = await runScenarioSessions(
     [scenario("lift"), scenario("next")],
-    async () => {
-      const owner = ++started;
-      events.push(`start ${owner.toString()}`);
-      return {
-        owner,
-        prepare: async (s: SuiteScenario) => {
-          events.push(`prepare ${owner.toString()} ${s.id}`);
-        },
-        stop: async () => {
-          events.push(`stop ${owner.toString()}`);
-        },
-      };
-    },
+    trackedSessions(events),
     async (s, session) => {
       events.push(`execute ${session.owner.toString()} ${s.id}`);
       if (session.owner === 1) throw new Error(frameMiss);

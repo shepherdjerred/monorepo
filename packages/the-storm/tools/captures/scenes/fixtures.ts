@@ -1,8 +1,19 @@
-import type { CaptureContext } from "@shepherdjerred/mc-harness/capture/define.ts";
+import type {
+  CaptureContext,
+  CaptureScene,
+} from "@shepherdjerred/mc-harness/capture/define.ts";
 import { z } from "zod";
 
 export type Point = [number, number, number];
 export const inspectors = ["wilderness", "shops", "banks"];
+export const chatVenue: Pick<
+  CaptureScene,
+  "bounds" | "staging" | "inspectors"
+> = {
+  bounds: { min: [0, -1, 0], max: [12, 4, 12] },
+  staging: [-3, 0, -3],
+  inspectors,
+};
 
 /** Capture a confirmed command reply with the chat open, then return to gameplay. */
 export async function commandShot(

@@ -5,7 +5,7 @@ import {
   CapturePreparationSchema,
   CapturePreparationResponseSchema,
 } from "@shepherdjerred/mc-harness/protocol/capture.ts";
-import { camera, inspectors } from "#captures/scenes/fixtures.ts";
+import { camera, chatVenue } from "#captures/scenes/fixtures.ts";
 import shots from "#captures/presentations/essentials/mail.ts";
 import { presentation } from "#captures/presentations/lookup.ts";
 
@@ -38,9 +38,7 @@ export default defineCaptureScene({
   name: "reward-mail-delivery",
   description:
     "Collect a real queued reward and verify that exactly one option is delivered",
-  bounds: { min: [0, -1, 0], max: [12, 4, 12] },
-  staging: [-3, 0, -3],
-  inspectors,
+  ...chatVenue,
   setup: async (context) => {
     await camera(context, [2.5, 0, 2.5], [12, 1, 12]);
     const transport = new CaptureTransport(

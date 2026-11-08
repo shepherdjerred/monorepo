@@ -1,15 +1,13 @@
 import { defineCaptureScene } from "@shepherdjerred/mc-harness/capture/define.ts";
 import { localHelper } from "#captures/helper.ts";
-import { camera, inspectors } from "#captures/scenes/fixtures.ts";
+import { camera, chatVenue } from "#captures/scenes/fixtures.ts";
 import shots from "#captures/presentations/essentials/travel.ts";
 import { presentation } from "#captures/presentations/lookup.ts";
 
 export default defineCaptureScene({
   name: "homes-and-requests",
   description: "Save a home and receive a request from a genuine second player",
-  bounds: { min: [0, -1, 0], max: [12, 4, 12] },
-  staging: [-3, 0, -3],
-  inspectors,
+  ...chatVenue,
   setup: async (context) => {
     await camera(context, [2.5, 0, 2.5], [12, 1, 12]);
     await context.defer({
