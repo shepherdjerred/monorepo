@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# Keeps this Mac's herdr-core (hc) daemon owned by launchd rather than by
+# whichever client happened to start it.
+#
+# hc starts its core on demand. From a local login it hands the core to a
+# one-shot launchd job, so the core and its terminal holder outlive the client.
+# From an SSH login (another machine's `hc connect`) it deliberately starts the
+# core as a child of that SSH session instead, and the agents it holds can die
+# with the session. The com.jerred.herdr-core LaunchAgent runs this at login and
+# every minute through a login fish shell, so the core gets the same environment
+# an interactive login has, without SSH_CONNECTION:
+#
+# - no core running: `hc server start` starts one through launchd;
+# - a core started from SSH: `hc server restart` replaces it with a launchd one.
+#   A planned restart keeps every running terminal in its existing holder.
+#
+# It prints only when it changes something.
+
+set -euo pipefail
+
+hc="$HOME/.local/bin/herdr-core"
+started=$("$hc" server start --json)
+pid=$(/usr/bin/jq -er '.pid' <<<"$started")
+
+# The core keeps the environment it was started with; an SSH login's marks
+# identify an SSH-started core even after its parent `hc connect` has exited.
+if ps -E -ww -o command= -p "$pid" | tr ' ' '\n' | grep -q '^SSH_CONNECTION='; then
+    echo "$(date '+%Y-%m-%dT%H:%M:%S%z') core $pid was started from SSH; restarting it under launchd"
+    "$hc" server restart --json
+fi

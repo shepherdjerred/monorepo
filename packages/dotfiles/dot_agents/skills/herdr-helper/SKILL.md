@@ -57,8 +57,10 @@ mods, generated `.d.ts` files, and state files (`view.json`, `shared.json`,
 be. The app also rewrites `keys.json` and `settings.json` from its UI, so after
 changing them there, run `chezmoi add` on the path to capture it; applying the
 stale source would revert the change. The Codex theme-restart automation under
-`packages/dotfiles/bin/` drives Codex terminals through `hc`. Use
-`chezmoi-helper` for deployment.
+`packages/dotfiles/bin/` drives Codex terminals through `hc`. On macOS the
+`com.jerred.herdr-core` LaunchAgent (`~/.local/bin/herdr-core-ensure`) keeps the
+core owned by launchd and restarts one started from SSH; the dotfiles README
+explains why. Use `chezmoi-helper` for deployment.
 
 ## Docs
 

@@ -18,6 +18,10 @@ reload_agent() {
 
 # {{ include "Library/LaunchAgents/com.jerred.dark-notify.plist" | sha256sum }}
 reload_agent com.jerred.dark-notify dark-notify
+
+# Keeps the herdr-core daemon owned by launchd, not by an SSH login.
+# {{ include "Library/LaunchAgents/com.jerred.herdr-core.plist" | sha256sum }}
+reload_agent com.jerred.herdr-core "$HOME/.local/bin/herdr-core"
 {{- if ne .profile "agent-host" }}
 
 # The Taildrop receiver runs only on the workstation.

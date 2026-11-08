@@ -141,6 +141,26 @@ are reported without force-killing or blindly retrying continuation prompts.
 Failed or skipped terminals require inspection and an explicit manual retry;
 duplicate appearance events do not replay partial restarts.
 
+## Herdr core daemon
+
+[Herdr](https://herdr.dev)'s `hc` daemon owns every terminal and agent, and it
+starts on demand. Started from a local login, it moves itself into a one-shot
+launchd job and outlives whatever started it. Started from an SSH login — another
+machine's `hc connect` — it runs as a child of that SSH session, and the agents
+it holds can die with the session. On a Mac that others reach as a Herdr machine,
+that SSH client usually reconnects first after the core goes away, so nothing
+else would move the core back to launchd.
+
+On macOS the `com.jerred.herdr-core` LaunchAgent runs `~/.local/bin/herdr-core-ensure`
+through a login fish shell at login and every minute. It starts a missing core
+through launchd, and replaces a core started from SSH with `hc server restart`,
+which keeps the running terminals. The core gets an interactive login's
+environment either way. The script logs only the changes it makes, to
+`~/Library/Logs/herdr-core-ensure.log`.
+
+Check the core's owner with `hc server status` and `ps -o ppid=,command= -p <pid>`:
+a launchd-owned core has parent 1 and runs as `hc --hc-launchd …`.
+
 ## Taildrop inbox
 
 On the workstation profile, the `com.jerred.taildrop` LaunchAgent keeps
