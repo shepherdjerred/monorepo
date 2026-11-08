@@ -4,6 +4,7 @@ import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
 import { copyRealMap } from "#sandbox/map-copy.ts";
 import { startCaptureProxy } from "./proxy.ts";
+import { SandboxLifecycle } from "./lifecycle.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BridgeClient } from "#bridge/client.ts";
 import {
@@ -155,7 +156,7 @@ export class DockerSandboxProvider implements SandboxProvider {
     string,
     Awaited<ReturnType<typeof startCaptureProxy>>
   >();
-  private readonly adoptions = new Map<string, Promise<SandboxRecord>>();
+  private readonly lifecycle = new SandboxLifecycle();
 
   constructor(
     private readonly options: {
@@ -368,47 +369,50 @@ export class DockerSandboxProvider implements SandboxProvider {
         .filter((row) => row.running)
         .map((row) => row.containerId.slice(0, 12)),
     );
-    return Promise.all(
-      records.map(async (record) => {
-        if (!running.has(dockerContainerId(record).slice(0, 12)))
-          return { ...record, status: "stopped" as const };
-        const adopted =
-          record.world === "real-map" && !this.proxies.has(record.id)
-            ? await this.adopt(record)
-            : record;
-        return { ...adopted, status: "ready" as const };
-      }),
+    const listed = await Promise.all(
+      records.map((record) =>
+        this.lifecycle.run(record.id, async () => {
+          const current = await this.options.store.read(record.id);
+          if (current === null) return;
+          if (!running.has(dockerContainerId(current).slice(0, 12)))
+            return { ...current, status: "stopped" as const };
+          const adopted =
+            current.world === "real-map" ? await this.adopt(current) : current;
+          return { ...adopted, status: "ready" as const };
+        }),
+      ),
     );
+    return listed.filter((record) => record !== undefined);
   }
 
   private async adopt(record: SandboxRecord): Promise<SandboxRecord> {
-    const pending = this.adoptions.get(record.id);
-    if (pending !== undefined) return pending;
-    const adoption = (async () => {
-      const game = await publishedPort(dockerContainerId(record), GAME_PORT);
-      const proxy = await startCaptureProxy(game);
-      const adopted = {
+    const existing = this.proxies.get(record.id);
+    if (existing !== undefined)
+      return {
         ...record,
-        endpoints: { ...record.endpoints, game: proxy.endpoint },
+        endpoints: { ...record.endpoints, game: existing.endpoint },
       };
-      try {
-        await this.options.store.write(adopted);
-        this.proxies.set(record.id, proxy);
-        return adopted;
-      } catch (error) {
-        proxy.close();
-        throw error;
-      }
-    })();
-    this.adoptions.set(record.id, adoption);
+    const game = await publishedPort(dockerContainerId(record), GAME_PORT);
+    const proxy = await startCaptureProxy(game);
+    const adopted = {
+      ...record,
+      endpoints: { ...record.endpoints, game: proxy.endpoint },
+    };
     try {
-      return await adoption;
-    } finally {
-      this.adoptions.delete(record.id);
+      await this.options.store.write(adopted);
+      this.proxies.set(record.id, proxy);
+      return adopted;
+    } catch (error) {
+      proxy.close();
+      throw error;
     }
   }
 
   async destroy(id: string): Promise<void> {
+    return this.lifecycle.run(id, () => this.destroyNow(id));
+  }
+
+  private async destroyNow(id: string): Promise<void> {
     this.proxies.get(id)?.close();
     this.proxies.delete(id);
     const record = await this.options.store.read(id);
@@ -451,7 +455,10 @@ export class DockerSandboxProvider implements SandboxProvider {
     const known = new Set(remaining.map((row) => row.id));
     for (const record of await this.options.store.listFor("docker")) {
       if (!known.has(record.id) && !reaped.includes(record.id)) {
-        await this.options.store.remove(record.id);
+        await this.lifecycle.run(record.id, async () => {
+          const current = await this.options.store.read(record.id);
+          if (current !== null) await this.destroyNow(record.id);
+        });
         reaped.push(record.id);
       }
     }

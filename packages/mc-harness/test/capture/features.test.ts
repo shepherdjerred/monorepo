@@ -4,6 +4,35 @@ import { resolveProfile } from "#sandbox/profiles.ts";
 import { captureConfig } from "#sandbox/capture-config.ts";
 import { SandboxCreateRequestSchema } from "#protocol/ipc.ts";
 
+it("places returning and first-time players at the imported map's selected landing point", () => {
+  const actual = Bun.YAML.parse(
+    captureConfig(
+      "spawn: {world: world, x: 6.5, y: 73, z: 118.5}\nnewcomerSpawn: {world: world, x: 6.5, y: 73, z: 118.5}\nhomeLimit: 4",
+      {
+        kind: "capture-content",
+        content: "essentials",
+        source: "unused",
+        target: "unused",
+        spawn: [201.5, 71, -401.5],
+        sha256: "a".repeat(64),
+      },
+    ),
+  );
+  const landing = {
+    world: "world",
+    x: 201.5,
+    y: 71,
+    z: -401.5,
+    yaw: 0,
+    pitch: 0,
+  };
+  expect(actual).toMatchObject({
+    spawn: landing,
+    newcomerSpawn: landing,
+    homeLimit: 4,
+  });
+});
+
 it("requires imported RWF terrain and resolves the full milestone service graph", () => {
   const source = {
     sha256: "a".repeat(64),

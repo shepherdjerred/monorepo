@@ -98,6 +98,7 @@ export function captureConfig(source: string, entry: Entry): string {
       return Bun.YAML.stringify({
         ...parsed,
         spawn: { world: "world", x, y, z: zz, yaw: 0, pitch: 0 },
+        newcomerSpawn: { world: "world", x, y, z: zz, yaw: 0, pitch: 0 },
       });
     case "parcels":
       return Bun.YAML.stringify({ ...parsed, parcels: [] });
