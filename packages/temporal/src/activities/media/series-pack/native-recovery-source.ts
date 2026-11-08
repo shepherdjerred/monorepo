@@ -112,10 +112,18 @@ export function createNativeSeriesPackSourceRoleV1(
         namespace: "dev",
         taskQueue: TASK_QUEUES.MEDIA_NETWORK,
         activities: {
-          evaluateMediaSeeding: (raw: Input) =>
-            nativeSeriesPackPaidV1("source_role_evaluate", charges, () =>
-              actual.evaluateMediaSeeding(raw),
-            ),
+          evaluateMediaSeeding: async (raw: Input) => {
+            const result = await nativeSeriesPackPaidV1(
+              "source_role_evaluate",
+              charges,
+              () => actual.evaluateMediaSeeding(raw),
+            );
+            expect(result).toEqual({
+              status: "removable",
+              reason: "obligations_satisfied",
+            });
+            return result;
+          },
           removeMediaTorrent: (raw: Input) =>
             nativeSeriesPackPaidV1("source_role_remove", charges, () =>
               actual.removeMediaTorrent(raw),
@@ -124,6 +132,7 @@ export function createNativeSeriesPackSourceRoleV1(
         },
       });
       running = worker.run();
+      await scenario.refreshSourceAuthority();
       const dispatched = await scenario.dispatch(async (start) => {
         if (start.input["operationId"] !== input.operationId)
           throw new Error("Unrelated original commands remain queued");
@@ -208,6 +217,7 @@ export async function assertNativeSeriesPackSourceHoldV1(
   input: Input,
   charges: { method: string; paid: number }[],
 ) {
+  await scenario.refreshSourceAuthority();
   scenario.sourceRatio(0);
   const worker = createSeedingWorkerActivities(() =>
     Promise.resolve({ seeding: scenario.seeding }),

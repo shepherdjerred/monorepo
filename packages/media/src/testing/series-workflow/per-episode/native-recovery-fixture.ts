@@ -33,6 +33,8 @@ import { SeriesPackNativeSeedCommandV1Schema } from "#shared/native-recovery/ser
 import { nativeSeriesPackRequesterWatchV1 } from "./native-requester-watch.ts";
 import { nativeSeriesPackRetryCommandsV1 } from "./native-retry.ts";
 import type { Database } from "#infrastructure/database.ts";
+import { refreshWriterLease } from "#infrastructure/handoff/lease.ts";
+import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-observer.ts";
 
 type Interrupted = { operationId: string; attemptId: string };
 /** Both imports, original acquisition/outbox and WAL are genuine. The Temporal
@@ -226,6 +228,7 @@ export async function createPerEpisodeNativeRecoveryFixtureV1(
         f.wire.control.ratio = ratio;
       },
       sourceRemovals: () => f.wire.removals(),
+      refreshSourceAuthority: () => refreshSource(db, context.observer),
       originalSeedInput: async (torrentId: string) => {
         const operation = await db.operation.findUniqueOrThrow({
           where: { idempotencyKey: `seed:${torrentId}` },
@@ -436,6 +439,16 @@ export async function createPerEpisodeNativeRecoveryFixtureV1(
     await close();
     throw error;
   }
+}
+
+/** Observe current platform authority for a new phase, retaining all original
+ * approval receipts and finite evidence lifetimes across cold worker startup. */
+async function refreshSource(
+  db: Database,
+  observer: ReturnType<typeof perEpisodeNativeObserverV1>,
+) {
+  await refreshWriterLease(db, () => observer.observe());
+  await refreshStorageAuthorities(db, observer);
 }
 
 /** Imports leave multiple scheduler pages; slow runs can make prior failed
