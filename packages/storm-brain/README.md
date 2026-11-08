@@ -86,7 +86,7 @@ it takes effect after the service restarts. It defaults to `gpt-5.6-luna`; the
 selected model must exist in `@shepherdjerred/llm-models` with a native route.
 
 Conversation is separately controlled by `storm-brain-conversation-enabled`,
-default off in production. Its typed model selection is `gpt-6-luna`.
+default on in production. An explicit false disables it. Its typed model selection is `gpt-6-luna`.
 `STORM_COMPANION_BUDGET_DB` is a required bootstrap path to the persistent
 SQLite ledger. The homelab mounts this at `/data/companion-budget.db` on a
 single-writer PVC and uses a recreate rollout strategy.

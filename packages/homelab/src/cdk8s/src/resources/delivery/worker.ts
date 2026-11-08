@@ -18,6 +18,10 @@ import { createDeliveryJobs } from "./jobs.ts";
 import { createDeliveryPlatformWorker } from "./platform-worker.ts";
 import { createPlayersOfflineGrant } from "./players-offline-grant.ts";
 import { deliveryTrmnlEnvironment } from "./trmnl-bootstrap.ts";
+import {
+  temporalTelemetryEnvironment,
+  temporalTelemetryEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 
 const tcp = (port: number) => ({
   port: IntOrString.fromNumber(port),
@@ -155,6 +159,7 @@ export function createDeliveryWorker(
       ? {}
       : { serviceAccount: account, automountServiceAccountToken: true }),
     envVariables: {
+      ...temporalTelemetryEnvironment("temporal-delivery-worker"),
       ...deliveryTrmnlEnvironment(chart, activation),
       ...staticStorageEnvironment,
       ...channelEnvironment,
@@ -192,6 +197,7 @@ export function createDeliveryWorker(
       ingress: [{ from: [ns("prometheus")], ports: [tcp(9464), tcp(9465)] }],
       egress: [
         dnsEgressRule(),
+        temporalTelemetryEgressRule(),
         externalHttpsEgressRule(),
         ...(activation.workerRegistryItemId === undefined
           ? []

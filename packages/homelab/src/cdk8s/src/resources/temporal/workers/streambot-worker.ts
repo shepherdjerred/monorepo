@@ -8,6 +8,10 @@ import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { streambotSchedulerSecret } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/scheduling.ts";
 import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { metricsIngress } from "./worker-network-policies.ts";
+import {
+  temporalTelemetryEnvironment,
+  temporalTelemetryEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 
 export function createStreambotWorker(chart: Chart, serverServiceName: string) {
   const secret = streambotSchedulerSecret(chart);
@@ -26,6 +30,7 @@ export function createStreambotWorker(chart: Chart, serverServiceName: string) {
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       FEATURE_FLAGS_MODE: EnvValue.fromValue("disabled"),
       ENVIRONMENT: EnvValue.fromValue("production"),
+      ...temporalTelemetryEnvironment("temporal-streambot-worker"),
       STREAMBOT_INTERNAL_URL: EnvValue.fromValue(
         "http://streambot-scheduler.media.svc.cluster.local:8081",
       ),
@@ -43,6 +48,7 @@ export function createStreambotWorker(chart: Chart, serverServiceName: string) {
       ingress: metricsIngress([9464, 9465]),
       egress: [
         dnsEgressRule(),
+        temporalTelemetryEgressRule(),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],

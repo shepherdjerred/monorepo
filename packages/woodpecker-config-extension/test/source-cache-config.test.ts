@@ -57,9 +57,16 @@ test("the Delivery v2 catalog flip requires a fresh explicit boolean and default
   expect(await deliveryCatalogV2Enabled("main")).toBe(false);
 });
 
-test("performance flags preserve explicit false, reject invalid values and default off on absence or outage", async () => {
+test("performance flags preserve explicit false, reject invalid values and use declared defaults on absence or outage", async () => {
+  const defaults = {
+    ...DISABLED_PERFORMANCE,
+    formatting: true,
+    gradle: true,
+    copyfile: true,
+    scratch: true,
+  };
   flag.mockResolvedValue(undefined);
-  expect(await performanceConfig("main")).toEqual(DISABLED_PERFORMANCE);
+  expect(await performanceConfig("main")).toEqual(defaults);
   flag.mockResolvedValue({ value: false });
   expect(await performanceConfig("ci-canary/performance")).toEqual(
     DISABLED_PERFORMANCE,
@@ -78,7 +85,7 @@ test("performance flags preserve explicit false, reject invalid values and defau
   flag.mockResolvedValue({ value: "true" });
   await expect(performanceConfig("main")).rejects.toThrow();
   flag.mockRejectedValue(new Error("unavailable"));
-  expect(await performanceConfig("main")).toEqual(DISABLED_PERFORMANCE);
+  expect(await performanceConfig("main")).toEqual(defaults);
 });
 
 test.each(["main", "feature/example", "ci-canary/cache"])(

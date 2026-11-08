@@ -103,11 +103,42 @@ targeting. A failed retirement or snapshot request does not
 resolve an existing alert; the workflow fails so the Temporal failure watcher
 can report the unavailable check separately.
 
-## 5. Change one namespace in one environment
+## 5. Apply a reviewed rollout
 
-Select both the intended environment and product namespace in the Flipt UI
-before editing a flag. The `beta` and `prod` repositories are independent, and
-each namespace has its own flag keyspace inside that repository.
+Update the managed declaration before changing an existing boolean rollout.
+Keep each non-global boolean's `defaultOffExceptions` scoped to its environment,
+with a reason, AI issue, enablement criteria, and review date.
+
+Preview only the selected flags. Inject the same operator credential used above:
+
+```bash
+bun run check-flipt-flag-inventory -- --plan-declared \
+  --environment prod --namespace streambot \
+  --flag streambot-lol-esports-enabled --flag streambot-lol-autoplay-enabled --json
+```
+
+Inspect the before and after behavior and current revision. Replace
+`--plan-declared` with `--apply-declared` to apply that declaration.
+Both modes require an explicit environment, namespace, and nonempty flag list.
+They reject variant flags and never edit unselected flags or segments.
+Every referenced shared segment must already match its declared audience.
+A missing or different segment blocks the complete selection before any write,
+including when the selected flag payloads are unchanged.
+
+The operator [command](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/check-flipt-flag-inventory.ts)
+preflights every selected resource before writing. Each write uses the current
+revision and verifies a fresh readback. A conflict or failed readback stops the
+remaining writes. Inspect the per-flag results and re-plan before retrying.
+
+Use the Feature flags Grafana dashboard to compare live configuration with
+consumer evaluations, provider identity, and snapshot freshness.
+A configured ON state alone does not prove a healthy consumer or successful flow.
+Verify the feature through its application and inspect required Temporal schedules.
+
+## 6. Check the complete matrix
+
+The `beta` and `prod` repositories are independent. Each namespace has its own
+flag keyspace. A beta flag copy does not imply a deployed beta application.
 
 After the edit, check that environment first:
 

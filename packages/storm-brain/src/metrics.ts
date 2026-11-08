@@ -1,9 +1,14 @@
 import {
   Counter,
   Histogram,
+  Gauge,
   Registry,
   collectDefaultMetrics,
 } from "prom-client";
+import {
+  createFlagMetricsRecorder,
+  createFlagMetricSet,
+} from "@shepherdjerred/feature-flags/observability.ts";
 
 export type BrainMetrics = ReturnType<typeof createBrainMetrics>;
 
@@ -45,6 +50,14 @@ export function createBrainMetrics(register: Registry = new Registry()) {
   });
 
   return {
+    featureFlags: createFlagMetricsRecorder(
+      createFlagMetricSet({
+        counter: (definition) =>
+          new Counter({ ...definition, registers: [register] }),
+        gauge: (definition) =>
+          new Gauge({ ...definition, registers: [register] }),
+      }),
+    ),
     costMicrosTotal,
     payloadBytes,
     register,

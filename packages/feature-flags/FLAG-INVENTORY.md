@@ -1,22 +1,25 @@
 # Monorepo feature-flag inventory
 
-This is the reviewed boundary for runtime configuration. A value is listed as
-“migrate now” only when the consumer can read a seeded snapshot or evaluate the
-flag per request without reconstructing a boot-time object. The initial Flipt
-value must match the current production value.
+The language-neutral [managed inventory](src/managed-flag-inventory.json) owns
+flag names, types, targeting, environment overrides, and default-off exceptions.
+New boolean features default on in production and beta. A non-global rollout
+requires an environment-scoped reason, AI issue, enablement criteria, and review
+date in `defaultOffExceptions`. A deferred owner decision is recorded as such.
 
-## Migrate now
+## Dynamic consumers
 
 Streambot's `streambot-web-ui-enabled` gate is evaluated per server and user on
 every authenticated media request in `src/config/media-features.ts`. It defaults
-off in production and is enabled in the beta environment. Web credential and
+on in production. Web credential and
 listener bootstrap stay outside Flipt.
 
 Competitive LoL uses `streambot-lol-esports-enabled` for official schedules and
 broadcasts, and `streambot-lol-autoplay-enabled` for one-time automatic playback.
-Both are Boolean gates evaluated per server/user, default off, and target the
-existing beta server initially. They also require `streambot-sports-streaming-enabled`.
+Both are Boolean gates evaluated per server/user and default on in production.
+They also require `streambot-sports-streaming-enabled`.
 Scheduler credentials and the internal listener are bootstrap, outside Flipt.
+Streambot and The Storm have one deployed production service each. Their beta
+Flipt copies preserve targeting for testing and do not represent beta services.
 
 | Consumer  | Flipt keys                                                                                                                                                                                                                                                      | Type and targeting                                          | Current source                                |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- |
@@ -46,11 +49,12 @@ Scheduler credentials and the internal listener are bootstrap, outside Flipt.
 
 ## Keep outside Flipt
 
-- Credentials, feature-flag bootstrap variables, telemetry/Bugsink, archive
-  retention, CI/review switches, one-shot CLI options, and infrastructure shape.
+- Credentials, feature-flag bootstrap variables, one-shot CLI options, and
+  infrastructure shape. Runtime telemetry and operational behavior use typed
+  flags; a flag cannot create a listener, worker, credential, or storage volume.
 - Birmel trusted-user grants, shell/browser/repository-editor capability, and
-  Streambot voice activation plus Streambot voice capture. Flipt has no
-  authentication and voice capture persists human audio.
+  Streambot voice activation plus Streambot voice capture. Evaluation access
+  does not authorize persisting human audio.
 
   Scout's voice assistant is deliberately **not** in this list. Its activation
   is `voice_assistant_enabled` and nothing else: the flag already decided which
@@ -70,7 +74,15 @@ Scheduler credentials and the internal listener are bootstrap, outside Flipt.
 
 Dynamic definitions are typed with Zod and resolve `flag → env → default`.
 Snapshot consumers are seeded from the existing production configuration, so a
-missing flag, unavailable provider, or first-read race keeps current behavior.
+provider outage or first-read race follows the declared consumer default.
+Missing declared keys and malformed successful responses fail loudly.
 Per-guild and per-user Scout policy decisions pass explicit context and default
 closed. Guild command reconciliation visits every connected guild and sends an
 empty replacement payload when a policy is disabled, removing stale commands.
+
+The inventory observer publishes one-hot live configuration state and scoped
+exception metadata. Consumer metrics separately report evaluations, readiness,
+snapshot age, and configured Flipt identity. Configured ON is not live acceptance.
+The [operator how-to](../docs/wiki/src/content/docs/how-to/check-flipt-flag-inventory.md)
+describes explicit, revision-guarded changes to existing booleans. Scheduled
+reconciliation creates missing declarations and never overwrites targeting.

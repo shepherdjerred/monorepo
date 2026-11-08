@@ -292,6 +292,11 @@ chart and reject historical archives that contain protected control-plane
 workloads. Image equality alone could not protect commands, probes, credentials
 or other template fields across application rollback.
 
+Both Flipt-consuming control-plane Activity roles export telemetry through the
+internal OTLP collector. Their exporter bootstrap and collector egress belong
+to the control-plane chart, so changing them uses the same independent upgrade
+path, including chart-only upgrades that retain the original Temporal image.
+
 An admin control-plane intent freezes the controller chart and original Temporal
 image independently, including chart-only upgrades that retain older image
 provenance. Its claim waits for every other Delivery execution and recovery to
@@ -691,7 +696,9 @@ schedule reconciliation.
 
 The `streambot-lol-playback` Schedule reconciles explicitly selected LoL series
 through the isolated `streambot` Activity queue. The worker receives only its
-internal Streambot endpoint and dedicated scheduler credential. Streambot owns
+internal Streambot endpoint and dedicated scheduler credential. Its tracing
+bootstrap sends spans to the internal OTLP collector on port 4318; it has no
+Flipt management access or media user credentials. Streambot owns
 the durable schedules, Discord authorization, media resolution, and playback
 effects. The Schedule starts paused until both consumers are deployed and healthy;
 its next execution reconciles uncertain prior effects from persisted playback
@@ -925,7 +932,7 @@ Postal credentials stay in 1Password; service endpoints and host routing are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.
 
 `temporal-daily-report-notifications-enabled` resolves per Activity and defaults
-off in production, with beta targeting declared for acceptance. When enabled,
+on in production; beta retains its declared targeting. When enabled,
 the homelab audit and Scout queue-window daily schedules, plus the explicit
 beta notification canary, use changed-condition mail.
 Each run keeps its full immutable report under

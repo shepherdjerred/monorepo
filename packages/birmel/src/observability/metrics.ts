@@ -11,7 +11,7 @@ collectDefaultMetrics({ register: metricsRegister, prefix: "birmel_" });
 export const featureFlagEvaluationsTotal = new Counter({
   name: FEATURE_FLAG_METRICS.evaluations,
   help: "Feature flag evaluations by flag and resolution reason",
-  labelNames: ["flag", "reason"] as const,
+  labelNames: ["flag", "reason", "value"] as const,
   registers: [metricsRegister],
 });
 
@@ -34,11 +34,19 @@ export const featureFlagSnapshotAgeSeconds = new Gauge({
   registers: [metricsRegister],
 });
 
+const featureFlagProviderInfo = new Gauge({
+  name: FEATURE_FLAG_METRICS.providerInfo,
+  help: "The Flipt environment and namespace consumed by this process",
+  labelNames: ["flipt_environment", "flipt_namespace"] as const,
+  registers: [metricsRegister],
+});
+
 export const featureFlagMetrics = createFlagMetricsRecorder({
   evaluations: featureFlagEvaluationsTotal,
   errors: featureFlagErrorsTotal,
   providerReady: featureFlagProviderReady,
   snapshotAge: featureFlagSnapshotAgeSeconds,
+  providerInfo: featureFlagProviderInfo,
 });
 
 export const admissionClassifierTotal = new Counter({

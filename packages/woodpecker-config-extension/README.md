@@ -124,10 +124,10 @@ measures a build without shared Gradle outputs.
 
 ### Experimental workspace reuse
 
-The `woodpecker-performance` flag declarations default off in production and
-target `ci-canary/` branches as beta. Each optimization resolves separately:
-incremental source fetch, prepared workspaces, formatter results, Gradle
-dependency seeds, small-check grouping, and Bun's explicit copyfile backend.
+Each performance optimization resolves separately. Production defaults enable
+formatter results, Gradle dependency seeds, Bun's explicit copyfile backend,
+and RAM scratch. Incremental source fetch, prepared workspaces, and small-check
+grouping retain their declared exceptions. Canary targeting remains explicit.
 Credentialless automation receives none of these caches.
 
 The production inventory enables the copyfile backend. Every credentialed

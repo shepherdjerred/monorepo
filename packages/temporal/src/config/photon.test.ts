@@ -9,10 +9,10 @@ beforeEach(() => {
   flag.mockResolvedValue(undefined);
 });
 describe("Photon admission configuration", () => {
-  test("absence safely defaults off without permitted senders", async () => {
+  test("defaults on without granting admission to any sender", async () => {
     expect(await photonIngressConfig()).toEqual({
       sourceAvailable: true,
-      enabled: false,
+      enabled: true,
       owners: [],
     });
   });
@@ -38,7 +38,7 @@ describe("Photon admission configuration", () => {
       flag.mockRejectedValue(new Error("unavailable"));
       expect(await photonIngressConfig()).toEqual({
         sourceAvailable: false,
-        enabled: false,
+        enabled: true,
         owners: [],
       });
       expect(warning).toHaveBeenCalled();

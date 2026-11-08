@@ -1,12 +1,13 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
+  ConfigMap,
   Cpu,
   EnvValue,
   Secret,
   type ISecret,
   type ServiceAccount,
-  type Volume,
+  Volume,
 } from "cdk8s-plus-31";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
@@ -72,6 +73,41 @@ export function createTemporalOperationsWorkers(
   chart: Chart,
   props: TemporalOperationsWorkerProps,
 ) {
+  // kubectl does not discover in-cluster credentials automatically. This is
+  // bootstrap configuration only; the projected token remains on the pod.
+  const kubeconfig = new ConfigMap(chart, "infra-worker-kubeconfig", {
+    data: {
+      config: JSON.stringify({
+        apiVersion: "v1",
+        kind: "Config",
+        clusters: [
+          {
+            name: "in-cluster",
+            cluster: {
+              server: "https://kubernetes.default.svc",
+              "certificate-authority":
+                "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+            },
+          },
+        ],
+        users: [
+          {
+            name: "service-account",
+            user: {
+              tokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+            },
+          },
+        ],
+        contexts: [
+          {
+            name: "in-cluster",
+            context: { cluster: "in-cluster", user: "service-account" },
+          },
+        ],
+        "current-context": "in-cluster",
+      }),
+    },
+  });
   const infraDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-infra-worker",
     component: "infra-worker",
@@ -92,6 +128,7 @@ export function createTemporalOperationsWorkers(
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
+      KUBECONFIG: EnvValue.fromValue("/etc/kubernetes/infra-worker/config"),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
       OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
@@ -106,6 +143,15 @@ export function createTemporalOperationsWorkers(
       ...rwfArchiveEnv(props.secret),
     },
     volumeMounts: [
+      {
+        path: "/etc/kubernetes/infra-worker",
+        volume: Volume.fromConfigMap(
+          chart,
+          "infra-worker-kubeconfig-volume",
+          kubeconfig,
+        ),
+        readOnly: true,
+      },
       {
         path: "/etc/talos",
         volume: props.talosConfigVolume,

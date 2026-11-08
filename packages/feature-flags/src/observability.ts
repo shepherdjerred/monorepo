@@ -17,6 +17,7 @@ export const FEATURE_FLAG_METRICS = {
   errors: "feature_flag_errors_total",
   providerReady: "feature_flag_provider_ready",
   snapshotAge: "feature_flag_snapshot_age_seconds",
+  providerInfo: "feature_flag_provider_info",
 } as const;
 
 /**
@@ -25,18 +26,26 @@ export const FEATURE_FLAG_METRICS = {
  * guild or user id, so it would be unbounded.
  */
 export const FEATURE_FLAG_METRIC_LABELS = {
-  evaluations: ["flag", "reason"],
+  evaluations: ["flag", "reason", "value"],
   errors: ["operation"],
   providerReady: [],
   snapshotAge: [],
+  providerInfo: ["flipt_environment", "flipt_namespace"],
 } as const;
 
 export type FlagOperation = "initialize" | "refresh" | "evaluate" | "shutdown";
+
+export type FlagEvaluationValue = "true" | "false" | "non_boolean" | "error";
+export type FlagProviderInfo = {
+  readonly flipt_environment: string;
+  readonly flipt_namespace: string;
+};
 
 export type EvaluationEvent = {
   readonly flag: string;
   readonly reason: FlagReason;
   readonly errorCode: FlagErrorCode | undefined;
+  readonly value: FlagEvaluationValue;
 };
 
 export type FlagMetricsRecorder = {
@@ -55,6 +64,7 @@ export type FlagMetricsRecorder = {
    * read and drown the actual signal.
    */
   readonly observeSnapshotAge: (seconds: number) => void;
+  readonly observeProviderInfo: (info: FlagProviderInfo | undefined) => void;
 };
 
 type CounterMetric<Labels> = {
@@ -65,19 +75,81 @@ type GaugeMetric = {
   readonly set: (value: number) => void;
 };
 
+type MetricDefinition<Label extends string> = {
+  readonly name: string;
+  readonly help: string;
+  readonly labelNames: readonly Label[];
+};
+
+/** Factories close over the application's own metrics client and registry. */
+export type FlagMetricFactory = {
+  readonly counter: <Label extends string>(
+    definition: MetricDefinition<Label>,
+  ) => CounterMetric<Readonly<Record<Label, string>>>;
+  readonly gauge: <Label extends string>(
+    definition: MetricDefinition<Label>,
+  ) => {
+    readonly reset: () => void;
+    readonly set: {
+      (value: number): void;
+      (labels: Readonly<Record<Label, string>>, value: number): void;
+    };
+  };
+};
+
+/** Registers the shared metric families without choosing a client or registry. */
+export function createFlagMetricSet(factory: FlagMetricFactory) {
+  return {
+    evaluations: factory.counter({
+      name: FEATURE_FLAG_METRICS.evaluations,
+      help: "Feature flag evaluations by bounded result",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.evaluations,
+    }),
+    errors: factory.counter({
+      name: FEATURE_FLAG_METRICS.errors,
+      help: "Feature flag errors by operation",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.errors,
+    }),
+    providerReady: factory.gauge({
+      name: FEATURE_FLAG_METRICS.providerReady,
+      help: "Feature flag provider readiness",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.providerReady,
+    }),
+    snapshotAge: factory.gauge({
+      name: FEATURE_FLAG_METRICS.snapshotAge,
+      help: "Feature flag snapshot age in seconds",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.snapshotAge,
+    }),
+    providerInfo: factory.gauge({
+      name: FEATURE_FLAG_METRICS.providerInfo,
+      help: "Configured Flipt environment and namespace",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.providerInfo,
+    }),
+  };
+}
+
 /** Adapts process-owned Prometheus metrics to the shared lifecycle contract. */
 export function createFlagMetricsRecorder(input: {
   readonly evaluations: CounterMetric<{
     readonly flag: string;
     readonly reason: FlagReason;
+    readonly value: FlagEvaluationValue;
   }>;
   readonly errors: CounterMetric<{ readonly operation: FlagOperation }>;
   readonly providerReady: GaugeMetric;
   readonly snapshotAge: GaugeMetric;
+  readonly providerInfo: {
+    readonly reset: () => void;
+    readonly set: (labels: FlagProviderInfo, value: number) => void;
+  };
 }): FlagMetricsRecorder {
   return {
     countEvaluation: (event) => {
-      input.evaluations.inc({ flag: event.flag, reason: event.reason });
+      input.evaluations.inc({
+        flag: event.flag,
+        reason: event.reason,
+        value: event.value,
+      });
     },
     countError: (operation) => {
       input.errors.inc({ operation });
@@ -87,6 +159,10 @@ export function createFlagMetricsRecorder(input: {
     },
     observeSnapshotAge: (seconds) => {
       input.snapshotAge.set(seconds);
+    },
+    observeProviderInfo: (info) => {
+      input.providerInfo.reset();
+      if (info !== undefined) input.providerInfo.set(info, 1);
     },
   };
 }

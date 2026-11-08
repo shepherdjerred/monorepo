@@ -20,6 +20,7 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
 
 const logger = createLogger("config-dynamic");
@@ -197,7 +198,19 @@ function buildSnapshot(
   flagSourceEnabled: boolean,
 ) {
   const resolver = defineConfig({
-    definition: DEFINITION,
+    definition: {
+      ...DEFINITION,
+      temporalCallGraphTracing: {
+        ...DEFINITION.temporalCallGraphTracing,
+        default: managedBooleanDefault(
+          "scout-temporal-call-graph-tracing",
+          (environment["FLIPT_ENVIRONMENT"] ?? environment["ENVIRONMENT"]) ===
+            "prod"
+            ? "prod"
+            : "beta",
+        ),
+      },
+    },
     sources: {
       ...(flagSourceEnabled
         ? {

@@ -9,13 +9,14 @@ describe("feature flag metrics", () => {
       flag: "trmnl-ha-presence-entities",
       reason: "STATIC",
       errorCode: undefined,
+      value: "non_boolean",
     });
     metrics.recorder.countError("refresh");
     metrics.recorder.observeProviderReady(true);
     metrics.recorder.observeSnapshotAge(42);
 
     await expect(metrics.render()).resolves.toContain(
-      'feature_flag_evaluations_total{flag="trmnl-ha-presence-entities",reason="STATIC"} 1',
+      'feature_flag_evaluations_total{flag="trmnl-ha-presence-entities",reason="STATIC",value="non_boolean"} 1',
     );
     await expect(metrics.render()).resolves.toContain(
       'feature_flag_errors_total{operation="refresh"} 1',

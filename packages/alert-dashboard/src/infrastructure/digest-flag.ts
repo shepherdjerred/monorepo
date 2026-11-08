@@ -79,17 +79,20 @@ export async function alertEmailConfig() {
 }
 
 export type FlagMetricSink = {
-  countEvaluation: (flag: string, reason: string) => void;
+  countEvaluation: (flag: string, reason: string, value: string) => void;
   countError: (operation: string) => void;
   providerReady: (ready: boolean) => void;
   snapshotAge: (seconds: number) => void;
+  providerInfo: (
+    info: { flipt_environment: string; flipt_namespace: string } | undefined,
+  ) => void;
 };
 
 export function flagMetricsRecorder(sink: FlagMetricSink): FlagMetricsRecorder {
   return createFlagMetricsRecorder({
     evaluations: {
-      inc: ({ flag, reason }) => {
-        sink.countEvaluation(flag, reason);
+      inc: ({ flag, reason, value }) => {
+        sink.countEvaluation(flag, reason, value);
       },
     },
     errors: {
@@ -105,6 +108,14 @@ export function flagMetricsRecorder(sink: FlagMetricSink): FlagMetricsRecorder {
     snapshotAge: {
       set: (value) => {
         sink.snapshotAge(value);
+      },
+    },
+    providerInfo: {
+      reset: () => {
+        sink.providerInfo(undefined);
+      },
+      set: (labels) => {
+        sink.providerInfo(labels);
       },
     },
   });

@@ -1,7 +1,18 @@
 import inventory from "@shepherdjerred/feature-flags/managed-flag-inventory.json" with { type: "json" };
 import { z } from "zod";
+import { classifyManagedBoolean } from "./rollout-state.ts";
+import type { ManagedBooleanFlagKey } from "./managed-flag-keys.generated.ts";
 
 export type ManagedFlagType = "boolean" | "variant";
+
+export const DefaultOffExceptionSchema = z.strictObject({
+  environment: z.string().min(1),
+  reason: z.string().trim().min(1),
+  issue: z.string().regex(/^AI-[1-9]\d*$/u),
+  enableWhen: z.string().trim().min(1),
+  reviewBy: z.iso.date(),
+});
+export type DefaultOffException = z.infer<typeof DefaultOffExceptionSchema>;
 
 const ManagedFlagConstraintSchema = z.object({
   type: z.string().min(1),
@@ -62,13 +73,19 @@ const ManagedFlagSchema = z.discriminatedUnion("type", [
     ...ManagedFlagMetadataFields,
     ...ManagedFlagBehaviorFields,
     type: z.literal("boolean"),
+    rules: ManagedFlagBehaviorFields.rules.max(
+      0,
+      "boolean flag cannot have variant rules",
+    ),
     default: z.boolean(),
+    defaultOffExceptions: z.array(DefaultOffExceptionSchema).optional(),
   }),
   z.object({
     ...ManagedFlagMetadataFields,
     ...ManagedFlagBehaviorFields,
     type: z.literal("variant"),
     default: z.string().min(1),
+    defaultOffExceptions: z.never().optional(),
   }),
 ]);
 
@@ -77,6 +94,10 @@ const ManagedFlagOverrideSchema = z.discriminatedUnion("type", [
     key: z.string().min(1),
     ...ManagedFlagBehaviorFields,
     type: z.literal("boolean"),
+    rules: ManagedFlagBehaviorFields.rules.max(
+      0,
+      "boolean flag cannot have variant rules",
+    ),
     default: z.boolean(),
   }),
   z.object({
@@ -257,11 +278,58 @@ function validateEnvironments(
   }
 }
 
+function validateFlagExceptions(
+  value: ManagedFlagInventoryValue,
+  flag: Extract<
+    ManagedFlagInventoryValue["flags"][number],
+    { type: "boolean" }
+  >,
+  flagIndex: number,
+  context: InventoryRefinementContext,
+): void {
+  const seen = new Set<string>();
+  for (const [index, exception] of (
+    flag.defaultOffExceptions ?? []
+  ).entries()) {
+    const path = ["flags", flagIndex, "defaultOffExceptions", index];
+    const environment = value.environments.find(
+      (e) => e.key === exception.environment,
+    );
+    if (environment === undefined) {
+      context.addIssue({
+        code: "custom",
+        message: "unknown exception environment",
+        path,
+      });
+      continue;
+    }
+    if (seen.has(exception.environment))
+      context.addIssue({
+        code: "custom",
+        message: "duplicate exception environment",
+        path,
+      });
+    seen.add(exception.environment);
+    const override = environment.overrides.find((o) => o.key === flag.key);
+    if (override !== undefined && override.type !== "boolean") continue;
+    if (classifyManagedBoolean({ ...flag, ...override }) === "on")
+      context.addIssue({
+        code: "custom",
+        message: "obsolete default-off exception for an always-on flag",
+        path,
+      });
+  }
+}
+
 export const ManagedFlagInventorySchema =
   ManagedFlagInventoryBaseSchema.superRefine((value, context) => {
     const namespaceKeys = validateNamespaces(value, context);
     const flagsByKey = validateFlags(value, namespaceKeys, context);
     validateEnvironments(value, flagsByKey, context);
+    for (const [flagIndex, flag] of value.flags.entries()) {
+      if (flag.type === "boolean")
+        validateFlagExceptions(value, flag, flagIndex, context);
+    }
   });
 
 export type ManagedFlag = z.infer<typeof ManagedFlagSchema>;
@@ -303,6 +371,49 @@ export function materializeManagedNamespaceEnvironment(
 }
 
 export const managedFlagInventory = ManagedFlagInventorySchema.parse(inventory);
+
+/** Policy is checked in CI; parsing fixtures and observing expired reviews stays deterministic. */
+export function defaultOnPolicyViolations(
+  value: ManagedFlagInventory,
+): string[] {
+  return value.environments.flatMap((environment) =>
+    value.namespaces.flatMap((namespace) =>
+      materializeManagedNamespaceEnvironment(
+        value,
+        environment.key,
+        namespace.key,
+      ).flatMap((flag) => {
+        if (flag.type !== "boolean" || classifyManagedBoolean(flag) === "on")
+          return [];
+        return flag.defaultOffExceptions?.some(
+          (e) => e.environment === environment.key,
+        ) === true
+          ? []
+          : [
+              `${environment.key}/${namespace.key}/${flag.key}: default-off behavior needs a tracked exception`,
+            ];
+      }),
+    ),
+  );
+}
+
+/** Keep typed consumer outage defaults aligned with the effective declaration. */
+export function managedBooleanDefault(
+  key: ManagedBooleanFlagKey,
+  environment = "prod",
+): boolean {
+  const flag = managedFlagInventory.flags.find((f) => f.key === key);
+  if (flag?.type !== "boolean")
+    throw new Error(`unknown managed boolean flag: ${key}`);
+  const resolved = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    environment,
+    flag.namespace,
+  ).find((f) => f.key === key);
+  if (resolved?.type !== "boolean")
+    throw new Error(`managed boolean flag missing: ${environment}/${key}`);
+  return resolved.default;
+}
 
 export const managedFlagNamespaces = managedFlagInventory.namespaces.map(
   (namespace) => namespace.key,

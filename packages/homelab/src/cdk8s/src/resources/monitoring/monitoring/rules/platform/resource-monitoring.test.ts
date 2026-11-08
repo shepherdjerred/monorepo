@@ -293,7 +293,9 @@ describe("feature flag provider readiness alert", () => {
     const alert = getFliptRuleGroups()
       .flatMap((group) => group.rules ?? [])
       .find((rule) => rule.alert === "FeatureFlagProviderInitFailing");
-    expect(alert?.expr.value).toBe("feature_flag_provider_ready == 0");
+    expect(alert?.expr.value).toBe(
+      "(feature_flag_provider_ready == 0) and on (job, instance) feature_flag_provider_info",
+    );
     expect(alert?.annotations?.["message"]).toContain(
       "retries in the background",
     );

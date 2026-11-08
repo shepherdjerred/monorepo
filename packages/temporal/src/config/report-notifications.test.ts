@@ -19,9 +19,9 @@ beforeEach(() => {
   source.mockImplementation(() => ({ name: "flag", get: flag }));
 });
 
-test("preserves cadence mail on absence and targets the activity namespace", async () => {
+test("defaults prod notifications on and targets the activity namespace", async () => {
   expect(await dailyReportNotificationsConfig("prod")).toMatchObject({
-    value: false,
+    value: true,
     source: "default",
   });
   expect(source).toHaveBeenCalledWith({
@@ -51,9 +51,16 @@ test.each([0, 1, "true", "false", null])(
   },
 );
 
-test("preserves cadence mail on source failure and observes its provenance", async () => {
+test("uses the declared prod default on source failure and observes its provenance", async () => {
   flag.mockRejectedValue(new Error("provider unavailable"));
   expect(await dailyReportNotificationsConfig("prod")).toMatchObject({
+    value: true,
+    source: "default",
+  });
+});
+
+test("retains the beta cadence-mail default", async () => {
+  expect(await dailyReportNotificationsConfig("beta")).toMatchObject({
     value: false,
     source: "default",
   });

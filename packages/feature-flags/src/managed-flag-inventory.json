@@ -98,7 +98,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The declared Delivery cutover gate is retained pending its owning rollout; live enablements must not be overwritten from this declaration.",
+          "issue": "AI-442",
+          "enableWhen": "The Delivery owner reconciles accepted cutover evidence and the declaration with the current live state.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-delivery-catalog-v2-enabled",
@@ -125,7 +134,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The declared Delivery cutover gate is retained pending its owning rollout; live enablements must not be overwritten from this declaration.",
+          "issue": "AI-442",
+          "enableWhen": "The Delivery owner reconciles accepted cutover evidence and the declaration with the current live state.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "delivery-writes-enabled",
@@ -152,7 +170,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The declared Delivery cutover gate is retained pending its owning rollout; live enablements must not be overwritten from this declaration.",
+          "issue": "AI-442",
+          "enableWhen": "The Delivery owner reconciles accepted cutover evidence and the declaration with the current live state.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "delivery-enabled-environments",
@@ -239,7 +266,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "arcade_mkwii_enabled",
@@ -266,7 +302,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "arcade_melee_enabled",
@@ -293,7 +338,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "arcade_brawl_enabled",
@@ -320,7 +374,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout_durable_orchestration_enabled",
@@ -374,7 +437,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "tracker-telemetry-enabled",
@@ -401,7 +473,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "tracker-attachment-max-bytes",
@@ -440,7 +521,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "ci-maintenance-dispatch-enabled",
@@ -452,7 +542,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "ci-workspace-seed-refresh-enabled",
@@ -464,7 +563,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "ci-workspace-golden-refresh-enabled",
@@ -476,7 +591,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-source-incremental-enabled",
@@ -503,7 +627,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-prepared-workspace-enabled",
@@ -530,7 +670,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-format-cache-enabled",
@@ -557,7 +713,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-gradle-seed-enabled",
@@ -584,7 +749,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-ram-scratch-enabled",
@@ -611,7 +785,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-small-check-grouping-enabled",
@@ -638,7 +821,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "This experimental cache or automatic seed publisher remains excluded from the selected reader rollout.",
+          "issue": "AI-269",
+          "enableWhen": "Owner accepts current fleet runtime, physical-write and resource evidence under AI-269 before production promotion.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-bun-copyfile-enabled",
@@ -665,7 +864,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-source-cache-enabled",
@@ -692,7 +900,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "storm-forum-registration-enabled",
@@ -704,7 +921,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "The beta forum is a restored rehearsal copy and must not admit registrations.",
+          "issue": "AI-442",
+          "enableWhen": "An isolated registration-capable beta service replaces the restored rehearsal and passes acceptance.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Existing targeting is retained outside the owner-approved production rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes broader availability and the feature passes acceptance in its intended consumer.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "storm-forum-season",
@@ -743,7 +976,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Existing targeting is retained outside the owner-approved production rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes broader availability and the feature passes acceptance in its intended consumer.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout_support_conversations_enabled",
@@ -767,7 +1016,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Owner retains ticket-scoped authorization for autonomous delivery.",
+          "issue": "AI-442",
+          "enableWhen": "Owner explicitly authorizes additional curated tickets and autonomous-delivery acceptance passes.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner retains ticket-scoped authorization for autonomous delivery.",
+          "issue": "AI-442",
+          "enableWhen": "Owner explicitly authorizes additional curated tickets and autonomous-delivery acceptance passes.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "ai_reports_enabled",
@@ -794,7 +1059,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "ai_reports_unlimited",
@@ -821,7 +1102,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Operator-only entitlement; global enablement would broaden privileged or unlimited behavior.",
+          "issue": "AI-442",
+          "enableWhen": "Owner explicitly changes the entitlement policy and access-boundary acceptance passes.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Operator-only entitlement; global enablement would broaden privileged or unlimited behavior.",
+          "issue": "AI-442",
+          "enableWhen": "Owner explicitly changes the entitlement policy and access-boundary acceptance passes.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "birmel-activity-tracking-enabled",
@@ -1088,7 +1385,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "challenge_runs_enabled",
@@ -1115,7 +1428,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "clash_surface",
@@ -1142,7 +1471,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "dare_notifications_enabled",
@@ -1154,7 +1499,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "debug",
@@ -1181,7 +1542,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Operator-only entitlement; global enablement would broaden privileged or unlimited behavior.",
+          "issue": "AI-442",
+          "enableWhen": "Owner explicitly changes the entitlement policy and access-boundary acceptance passes.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Operator-only entitlement; global enablement would broaden privileged or unlimited behavior.",
+          "issue": "AI-442",
+          "enableWhen": "Owner explicitly changes the entitlement policy and access-boundary acceptance passes.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "duels_enabled",
@@ -1208,7 +1585,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "explore-guild-allowlist",
@@ -1232,7 +1625,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "explore_on_demand_riot_enabled",
@@ -1244,7 +1646,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "feature_tips_enabled",
@@ -1271,7 +1689,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "hall_of_fame_enabled",
@@ -1298,7 +1732,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "initial_match_history_import_enabled",
@@ -1310,7 +1760,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "karma-admin-user-id",
@@ -1331,7 +1790,7 @@
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
-      "default": "⭐",
+      "default": "\u2b50",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1385,7 +1844,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "alert-dashboard-email-enabled",
@@ -1397,7 +1872,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Alertmanager remains the incident email sender; dashboard email would duplicate delivery.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes a single-sender routing migration and email-delivery acceptance passes.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Alertmanager remains the incident email sender; dashboard email would duplicate delivery.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes a single-sender routing migration and email-delivery acceptance passes.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "alert-dashboard-email-from",
@@ -1472,7 +1963,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "trmnl-ha-presence-entities",
@@ -1532,7 +2032,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout-explore-analysis-enabled",
@@ -1544,7 +2053,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout-explore-model",
@@ -1568,7 +2086,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout-explore-quota-limits",
@@ -1640,7 +2167,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout_client_ingestion",
@@ -1652,7 +2188,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout_client_result_recovery",
@@ -1664,7 +2209,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "scout_operations_console_enabled",
@@ -1676,7 +2230,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "storm-brain-conversation-enabled",
@@ -1767,7 +2337,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-automatic-channel-routing-enabled",
@@ -1808,7 +2387,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-history-enabled",
@@ -1863,7 +2451,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-idle-timeout-seconds",
@@ -1916,7 +2513,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-numbered-channels-enabled",
@@ -1943,7 +2549,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-music-catalog-enabled",
@@ -1970,7 +2585,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-spotify-links-enabled",
@@ -1997,7 +2621,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-playlists-enabled",
@@ -2024,7 +2657,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-player-card-repost-after-messages",
@@ -2166,7 +2808,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-lol-autoplay-enabled",
@@ -2193,7 +2844,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-sports-streaming-enabled",
@@ -2234,7 +2894,16 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "streambot-subtitle-languages",
@@ -2409,7 +3078,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "the-storm-beginners-luck-enabled",
@@ -2481,7 +3159,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Owner retains detection without corrective actions pending legitimate custom-gameplay qualification.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes correction and native movement, abilities and legitimate gameplay compatibility pass.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner retains detection without corrective actions pending legitimate custom-gameplay qualification.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes correction and native movement, abilities and legitimate gameplay compatibility pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "the-storm-letters-enabled",
@@ -2505,7 +3199,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Production client-IP enforcement remains deferred pending verified Java and Bedrock forwarding paths.",
+          "issue": "AI-442",
+          "enableWhen": "Real public client IPs are verified through both supported ingress paths without proxy or private-address lockout.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "the-storm-companions-enabled",
@@ -2577,7 +3280,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Owner explicitly excluded shop rentals; production shop reconciliation remains paused.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes rentals and provisioning plus interrupted-effect recovery pass live acceptance.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-log-retention-enabled",
@@ -2589,7 +3301,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Irreversible log deletion remains outside the approved rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner reviews the exact dry-run candidates and retention policy before authorizing deletion.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Irreversible log deletion remains outside the approved rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner reviews the exact dry-run candidates and retention policy before authorizing deletion.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "woodpecker-log-retention-days",
@@ -2613,7 +3341,16 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "the-storm-rwf-enabled",
@@ -2673,7 +3410,23 @@
       "default": false,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "No accepted learned Trooper model has passed the bounded pilot gates.",
+          "issue": "AI-287",
+          "enableWhen": "The frozen model passes genuine demonstrations, win-rate, blind preference, parity, regression and load gates.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "No accepted learned Trooper model has passed the bounded pilot gates.",
+          "issue": "AI-287",
+          "enableWhen": "The frozen model passes genuine demonstrations, win-rate, blind preference, parity, regression and load gates.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     },
     {
       "key": "the-storm-rwf-candidate-visits-enabled",
@@ -2808,7 +3561,23 @@
         }
       ],
       "rules": [],
-      "thresholdRollouts": []
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "beta",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "issue": "AI-442",
+          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
+          "reviewBy": "2026-12-07"
+        },
+        {
+          "environment": "prod",
+          "reason": "Owner deferred this Scout production feature; only Temporal tracing changes in this rollout.",
+          "issue": "AI-442",
+          "enableWhen": "Owner authorizes this feature and compatible artifacts plus its feature-specific production acceptance pass.",
+          "reviewBy": "2026-12-07"
+        }
+      ]
     }
   ],
   "exemptions": [
@@ -2821,29 +3590,17 @@
         "Birmel scheduler",
         "Streambot voice capture"
       ],
-      "reason": "These controls grant capabilities or persist human audio. Flipt has no authentication, so moving them would widen authorization without a lifecycle redesign."
+      "reason": "Remote flag evaluation is not an authorization boundary. Capability grants and audio persistence require their owning permission and lifecycle controls."
     },
     {
       "category": "boot-wired",
-      "controls": [
-        "Streambot voice assistant",
-        "Mario Kart driver feed",
-        "Alert Dashboard email"
-      ],
+      "controls": ["Streambot voice assistant", "Mario Kart driver feed"],
       "reason": "These controls select startup wiring or fatal asset and credential paths. Runtime evaluation cannot safely replace their boot lifecycle."
     },
     {
-      "category": "observability",
-      "controls": ["telemetry", "Bugsink", "LLM archive"],
-      "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
-    },
-    {
-      "category": "ci-automation",
-      "controls": [
-        "Temporal merge-conflict kill switch",
-        "Temporal merge-conflict dry run"
-      ],
-      "reason": "CI and automation deciders must remain explicit environment or workflow controls, not remotely mutable product flags."
+      "category": "observability-bootstrap",
+      "controls": ["OTLP endpoint", "Bugsink DSN", "LLM archive credentials"],
+      "reason": "Credentials and collector addresses bootstrap observability. Runtime telemetry and operational behavior use typed flags."
     },
     {
       "category": "bootstrap",
@@ -3619,16 +4376,10 @@
         {
           "key": "streambot-numbered-channels-enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [],
           "rules": [],
-          "thresholdRollouts": [
-            {
-              "rank": 1,
-              "percentage": 100,
-              "result": true
-            }
-          ]
+          "thresholdRollouts": []
         },
         {
           "key": "the-storm-crier-enabled",
@@ -3935,6 +4686,166 @@
               "result": true
             }
           ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "tracker-telemetry-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "woodpecker-format-cache-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "woodpecker-gradle-seed-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "temporal-daily-report-notifications-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-temporal-call-graph-tracing",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "storm-brain-conversation-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-assistant-v2-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-automatic-channel-routing-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-history-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-music-over-voice-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-music-catalog-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-spotify-links-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-playlists-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-plex-posters-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-lol-esports-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-lol-autoplay-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-sports-streaming-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "streambot-web-ui-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "temporal-agent-chat-photon-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "temporal-call-graph-tracing",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
         }

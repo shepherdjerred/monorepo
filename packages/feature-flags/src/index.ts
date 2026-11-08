@@ -27,10 +27,11 @@ const CLIENT_NAME = "shepherdjerred-feature-flags";
  *
  *   Config error      — malformed URL, unknown mode, missing required variable.
  *                       THROWS from `initFeatureFlags`. This is a deploy bug.
- *   Availability error — backend unreachable, flag not defined, provider not
+ *   Availability error — backend unreachable, provider not
  *                       ready. NEVER throws. Returns the call-site default
  *                       carrying a reason, so callers can tell "no opinion"
- *                       from "answered false".
+ *                       from "answered false". A missing key or malformed
+ *                       successful response throws as a broken contract.
  *
  * The carve-out is deliberate and documented in AGENTS.md so review does not
  * re-litigate it on every PR: a flag system that throws on an outage converts a
@@ -56,6 +57,20 @@ function providerFor(
         onSnapshotAge: (seconds) => metrics?.observeSnapshotAge(seconds),
       });
   }
+}
+
+function observeProviderIdentity(
+  configuration: FeatureFlagConfiguration,
+  metrics: FlagMetricsRecorder | undefined,
+): void {
+  metrics?.observeProviderInfo(
+    configuration.mode === "flipt"
+      ? {
+          flipt_environment: configuration.environment,
+          flipt_namespace: configuration.namespace,
+        }
+      : undefined,
+  );
 }
 
 export type InitFeatureFlagsOptions = {
@@ -266,7 +281,9 @@ export async function initFeatureFlags(
     throw new Error("Feature flag provider factory returned no provider");
   }
   evaluationObserver = options.onEvaluation;
+  metricsRecorder?.observeProviderInfo(undefined);
   metricsRecorder = options.metrics;
+  observeProviderIdentity(configuration, options.metrics);
   options.metrics?.observeProviderReady(false);
   try {
     await initializeProvider(provider);
@@ -338,6 +355,15 @@ function evaluateFlag<T>(
     flag: key,
     reason: result.reason,
     errorCode: result.errorCode,
+    value:
+      result.errorCode !== undefined &&
+      result.errorCode !== "PROVIDER_NOT_READY"
+        ? "error"
+        : typeof result.value === "boolean"
+          ? result.value
+            ? "true"
+            : "false"
+          : "non_boolean",
   });
   if (result.errorCode === "FLAG_NOT_FOUND") {
     throw new FlagNotFoundError(
@@ -397,6 +423,7 @@ export async function refreshFlagSnapshot(): Promise<boolean> {
 export async function shutdownFeatureFlags(): Promise<void> {
   await stopProviderRetry();
   metricsRecorder?.observeProviderReady(false);
+  metricsRecorder?.observeProviderInfo(undefined);
   evaluationObserver = undefined;
   metricsRecorder = undefined;
   await OpenFeature.close();

@@ -94,6 +94,8 @@ describe("Temporal feature-flag boundary", () => {
       expect(environment.get("FLIPT_ENVIRONMENT")).toBe(
         component === "gateway" ? "beta" : "prod",
       );
+      expect(environment.get("TELEMETRY_ENABLED")).toBe("true");
+      expect(environment.get("OTLP_ENDPOINT")).toBeDefined();
       configuredComponents.add(component);
     }
     expect(configuredComponents).toEqual(expectedComponents);

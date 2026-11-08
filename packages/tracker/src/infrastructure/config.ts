@@ -1,5 +1,6 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
 
 export const BootstrapSchema = z.object({
@@ -32,7 +33,10 @@ export function behaviorConfig(stage: string) {
       telemetryEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
-        default: false,
+        default: managedBooleanDefault(
+          "tracker-telemetry-enabled",
+          stage === "production" || stage === "prod" ? "prod" : "beta",
+        ),
         names: { flag: "tracker-telemetry-enabled" },
       },
       attachmentMaxBytes: {

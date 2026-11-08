@@ -9,19 +9,26 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Shared asynchronous rollout reader. Every command evaluates its actor; failures fail closed. */
+/** Shared asynchronous rollout reader. Every command evaluates its actor. */
 public final class ManagedGameplay implements AutoCloseable {
   private static final Duration CACHE_TTL = Duration.ofSeconds(30);
 
   private record EvaluationKey(String key, UUID actor) {}
 
   private record CachedEvaluation(boolean enabled, Instant expires) {}
+
+  record OutageDefaults(boolean ipEnforcement, Set<String> enabled) {
+    OutageDefaults {
+      enabled = Set.copyOf(enabled);
+    }
+  }
 
   public static final String STAFF = "the-storm-staff-tools-enabled";
   public static final String IDENTITY = "the-storm-identity-enabled";
@@ -33,9 +40,10 @@ public final class ManagedGameplay implements AutoCloseable {
   public static final String ANTICHEAT_CORRECTIONS = "the-storm-anticheat-corrections-enabled";
   private final BiFunction<String, UUID, CompletableFuture<Boolean>> reader;
   private final Runnable stop;
-  private final boolean ipEnforcementDefault;
   private final InstantSource time;
+  private final OutageDefaults outageDefaults;
   private final Map<EvaluationKey, CachedEvaluation> evaluations = new ConcurrentHashMap<>();
+  private final Map<EvaluationKey, Boolean> lastSuccessful = new ConcurrentHashMap<>();
 
   public ManagedGameplay(
       BiFunction<String, UUID, CompletableFuture<Boolean>> reader, Runnable stop) {
@@ -54,10 +62,18 @@ public final class ManagedGameplay implements AutoCloseable {
       Runnable stop,
       boolean ipEnforcementDefault,
       InstantSource time) {
+    this(reader, stop, time, new OutageDefaults(ipEnforcementDefault, Set.of()));
+  }
+
+  ManagedGameplay(
+      BiFunction<String, UUID, CompletableFuture<Boolean>> reader,
+      Runnable stop,
+      InstantSource time,
+      OutageDefaults outageDefaults) {
     this.reader = reader;
     this.stop = stop;
-    this.ipEnforcementDefault = ipEnforcementDefault;
     this.time = time;
+    this.outageDefaults = outageDefaults;
   }
 
   public static ManagedGameplay remote(String url, String environment) {
@@ -104,7 +120,10 @@ public final class ManagedGameplay implements AutoCloseable {
               .thenApply(response -> readEvaluation(response, json));
         },
         client::shutdownNow,
-        "beta".equals(environment));
+        InstantSource.system(),
+        new OutageDefaults(
+            "beta".equals(environment),
+            "prod".equals(environment) ? Set.of(STAFF, IDENTITY, LETTERS) : Set.of()));
   }
 
   private static boolean readEvaluation(HttpResponse<String> response, JsonMapper json) {
@@ -123,6 +142,25 @@ public final class ManagedGameplay implements AutoCloseable {
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
     return reader
         .apply(key, actor)
+        .thenApply(
+            enabled -> {
+              if (outageDefaults.enabled().contains(key))
+                lastSuccessful.put(new EvaluationKey(key, actor), enabled);
+              return enabled;
+            })
+        .exceptionally(
+            failure -> {
+              var cause = FlagProviderUnavailableException.unwrap(failure);
+              if (!outageDefaults.enabled().contains(key)
+                  || !(cause instanceof FlagProviderUnavailableException))
+                throw new java.util.concurrent.CompletionException(cause);
+              System.getLogger(ManagedGameplay.class.getName())
+                  .log(
+                      System.Logger.Level.WARNING,
+                      "Flag provider unavailable; retaining the last successful value or declared default for {0}",
+                      key);
+              return lastSuccessful.getOrDefault(new EvaluationKey(key, actor), true);
+            })
         .thenApply(
             enabled -> {
               var now = time.instant();
@@ -181,7 +219,7 @@ public final class ManagedGameplay implements AutoCloseable {
 
   /** The registered environment default used if the IP-enforcement flag cannot be read. */
   public boolean ipEnforcementDefault() {
-    return ipEnforcementDefault;
+    return outageDefaults.ipEnforcement();
   }
 
   @Override
