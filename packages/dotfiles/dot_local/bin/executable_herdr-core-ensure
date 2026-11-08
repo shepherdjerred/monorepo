@@ -68,10 +68,12 @@ while read -r holder terminals instance; do
         # The count above can be stale if a client opens a terminal meanwhile.
         # Freeze the holder so it cannot start a program, then end it only if
         # it runs none: its programs are its direct children.
+        # Register it before stopping, so a signal in between still resumes it.
+        frozen="$holder"
         if ! kill -STOP "$holder"; then
+            frozen=""
             continue # it exited after the status read
         fi
-        frozen="$holder"
         if pgrep -P "$holder" >/dev/null; then
             kill -CONT "$holder"
             frozen=""
@@ -91,6 +93,8 @@ while read -r holder terminals instance; do
         "Its agents cannot see the login Keychain and can die with the session." \
         "Replace it with 'kill $holder' from outside its terminals: that ends them," \
         "and kept terminals come back as shells in a new launchd holder."
-    /usr/bin/osascript -e "display notification \"Holder $holder runs $terminals terminals from an SSH login. Replacing it ends them; see ~/Library/Logs/herdr-core-ensure.log.\" with title \"Herdr holder needs replacing\""
     touch "$marker"
+    if ! /usr/bin/osascript -e "display notification \"Holder $holder runs $terminals terminals from an SSH login. Replacing it ends them; see ~/Library/Logs/herdr-core-ensure.log.\" with title \"Herdr holder needs replacing\""; then
+        log "could not post the macOS notification for holder $holder"
+    fi
 done < <(/usr/bin/jq -r '.holders[] | "\(.pid) \(.terminals) \(.instance)"' <<<"$status")
