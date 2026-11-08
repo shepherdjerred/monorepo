@@ -229,6 +229,22 @@ public final class WorldStargateStore implements StargateStore, Listener {
   }
 
   @Override
+  public CompletableFuture<Boolean> deleteEmptyNetwork(UUID id) {
+    // A failed index write must not make a network with known world gates look empty.
+    if (gates.values().stream().anyMatch(gate -> gate.networkId().equals(id)))
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("Network still has world gates"));
+    return index
+        .deleteEmptyNetwork(id)
+        .thenApplyAsync(
+            removed -> {
+              if (removed) networks.remove(id);
+              return removed;
+            },
+            context.scheduler().mainThread());
+  }
+
+  @Override
   public CompletableFuture<Void> resetPlayer(UUID player) {
     for (var gate : List.copyOf(gates.values())) {
       var network = Optional.ofNullable(networks.get(gate.networkId())).orElseThrow();

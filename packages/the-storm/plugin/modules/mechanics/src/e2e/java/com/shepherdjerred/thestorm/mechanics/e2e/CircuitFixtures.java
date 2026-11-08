@@ -28,7 +28,7 @@ final class CircuitFixtures {
   }
 
   private void prepare() {
-    for (var x = 510; x <= 611; x++) for (var z = -4; z <= 4; z++) set(x, Y - 1, z, "sea_lantern");
+    for (var x = 510; x <= 631; x++) for (var z = -4; z <= 4; z++) set(x, Y - 1, z, "sea_lantern");
     circuit(512, "[MC1001]", "", "");
     circuit(516, "[MC1421]", "5", "");
     circuit(520, "[MC1110]", "restoration", "");
@@ -116,6 +116,14 @@ final class CircuitFixtures {
     chest(608, ItemStack.of(Material.BONE_MEAL));
     set(608, Y, -1, "dirt");
     set(608, Y + 1, -1, "oak_sapling");
+    circuit(620, "[MC1219]S", "", "");
+    set(620, Y + 1, 1, "dispenser[facing=east]");
+    for (var slot : java.util.List.of(0, 1, 3, 4))
+      inventory(620, Y + 1, 1).setItem(slot, ItemStack.of(Material.HONEY_BOTTLE, 2));
+    set(621, Y + 1, 1, "chest");
+    circuit(624, "[MC1220]S", "", "");
+    set(624, Y + 1, 1, "shulker_box");
+    inventory(624, Y + 1, 1).setItem(0, ItemStack.of(Material.DIAMOND, 3));
     for (var dx = -1; dx <= 1; dx++)
       for (var dz = -1; dz <= 1; dz++) world.getChunkAt((600 >> 4) + dx, (-1 >> 4) + dz);
   }

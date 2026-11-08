@@ -162,6 +162,7 @@ public final class WorldGatePaperProof {
                         },
                         context.scheduler().mainThread()),
             context.scheduler().mainThread())
+        .thenComposeAsync(ignored -> networkCleanup(), context.scheduler().mainThread())
         .thenRunAsync(
             () -> context.logger().info("WORLD_STARGATE_PAPER_PASS"),
             context.scheduler().mainThread());
@@ -266,6 +267,46 @@ public final class WorldGatePaperProof {
     return completed;
   }
 
+  private CompletableFuture<Void> networkCleanup() {
+    index.failWrites = false;
+    var store = new WorldStargateStore(context, index);
+    var capture =
+        new StargateNetwork(
+            new UUID(0, 504),
+            "cap-1234567890",
+            new NetworkAccess.Private(gate.ownerId(), Set.of()));
+    return store
+        .load()
+        .thenComposeAsync(
+            ignored ->
+                store
+                    .deleteEmptyNetwork(network.id())
+                    .handle(
+                        (removed, failure) -> {
+                          require(
+                              failure != null,
+                              "a rebuildable index cannot hide existing world gates during cleanup");
+                          return null;
+                        }),
+            context.scheduler().mainThread())
+        .thenComposeAsync(ignored -> store.createNetwork(capture), context.scheduler().mainThread())
+        .thenComposeAsync(
+            ignored -> store.deleteEmptyNetwork(capture.id()), context.scheduler().mainThread())
+        .thenComposeAsync(
+            removed -> {
+              require(removed, "empty capture network is removed");
+              return store.load();
+            },
+            context.scheduler().mainThread())
+        .thenAcceptAsync(
+            remaining ->
+                require(
+                    remaining.networks().stream()
+                        .noneMatch(value -> value.id().equals(capture.id())),
+                    "capture cleanup removes its cached network policy"),
+            context.scheduler().mainThread());
+  }
+
   private void unloadAttempt(CompletableFuture<Void> completed, int attempt) {
     var world = signBlock.getWorld();
     if (!world.isChunkLoaded(43, 0) && !world.isChunkLoaded(44, 0)) {
@@ -314,7 +355,10 @@ public final class WorldGatePaperProof {
 
     @Override
     public CompletableFuture<Void> createNetwork(StargateNetwork network) {
-      throw new UnsupportedOperationException();
+      var networks = new java.util.ArrayList<>(snapshot.networks());
+      networks.add(network);
+      snapshot = new Snapshot(networks, snapshot.gates());
+      return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -330,6 +374,17 @@ public final class WorldGatePaperProof {
     @Override
     public CompletableFuture<Void> createNetworkAndGate(StargateNetwork network, Stargate gate) {
       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> deleteEmptyNetwork(UUID id) {
+      if (snapshot.gates().stream().anyMatch(value -> value.networkId().equals(id)))
+        return CompletableFuture.failedFuture(
+            new IllegalStateException("Network still has indexed gates"));
+      var remaining = snapshot.networks().stream().filter(value -> !value.id().equals(id)).toList();
+      var removed = remaining.size() != snapshot.networks().size();
+      snapshot = new Snapshot(remaining, snapshot.gates());
+      return CompletableFuture.completedFuture(removed);
     }
 
     @Override

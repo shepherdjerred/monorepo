@@ -41,17 +41,24 @@ final class ItemCircuits {
     if (target.getState(false) instanceof Container container) {
       if (!access.may(visit, target, ProtectedAction.OPEN_CONTAINER, ProtectedAction.REMOVE_ITEM))
         return false;
-      var inventory =
-          container instanceof org.bukkit.block.Chest chest
-              ? chest.getBlockInventory()
-              : container.getInventory();
-      for (var item : java.util.Objects.requireNonNull(inventory.getStorageContents())) {
-        if (item != null && !item.getType().isAir()) drops.add(item.clone());
-      }
+      drops.addAll(looseContents(container));
     }
     access.set(visit, target, Material.AIR.createBlockData());
     access.collect(visit, drops);
     return true;
+  }
+
+  private static List<ItemStack> looseContents(Container container) {
+    // Vanilla already packages this inventory in the dropped shulker-box item.
+    if (container instanceof org.bukkit.block.ShulkerBox) return List.of();
+    var inventory =
+        container instanceof org.bukkit.block.Chest chest
+            ? chest.getBlockInventory()
+            : container.getInventory();
+    return Arrays.stream(java.util.Objects.requireNonNull(inventory.getStorageContents()))
+        .filter(item -> item != null && !item.getType().isAir())
+        .map(ItemStack::clone)
+        .toList();
   }
 
   boolean craft(CircuitAccess.Visit visit) {
@@ -75,7 +82,10 @@ final class ItemCircuits {
     if (crafted.getResult().getType().isAir()) return false;
     inventory.setStorageContents(crafted.getResultingMatrix());
     var output = block.getRelative(((Directional) block.getBlockData()).getFacing());
-    access.emit(visit, output, List.of(crafted.getResult()));
+    var products = new ArrayList<ItemStack>();
+    products.add(crafted.getResult());
+    products.addAll(crafted.getOverflowItems());
+    access.emit(visit, output, products);
     return true;
   }
 
