@@ -7,6 +7,37 @@ import shots from "#captures/presentations/worlds/world-tour.ts";
 import { presentation } from "#captures/presentations/lookup.ts";
 import { assertLanding } from "@shepherdjerred/mc-harness/capture/landing.ts";
 import { CaptureTransport } from "@shepherdjerred/mc-harness/capture/transport.ts";
+import { z } from "zod";
+
+const gates = z
+  .object({
+    serverGates: z.array(
+      z.object({
+        id: z.string(),
+        destinations: z.array(z.object({ label: z.string() })).min(1),
+      }),
+    ),
+  })
+  .parse(
+    Bun.YAML.parse(
+      await Bun.file(
+        new URL(
+          "../../../../server/owned/plugins/TheStorm/stargates.yml",
+          import.meta.url,
+        ),
+      ).text(),
+    ),
+  );
+const gate = gates.serverGates.find(
+  (candidate) => candidate.id === "welcome-world-gate",
+);
+if (!gate) throw new Error("Missing authored welcome world gate");
+const skylands = gate.destinations.findIndex(
+  (destination) => destination.label === "Skylands",
+);
+if (skylands === -1)
+  throw new Error("The welcome gate has no Skylands destination");
+const destinations = gate.destinations.slice(0, skylands + 1);
 
 async function control(
   context: CaptureContext,
@@ -42,9 +73,9 @@ export default defineCaptureScene({
   },
   run: async (context) => {
     await control(context, [9, 75, 111], [9.5, 73, 113.5]);
-    for (const destination of ["2026", "2015", "Skylands"]) {
+    for (const destination of destinations) {
       await context.use();
-      await context.feedback(`Destination: ${destination}.`);
+      await context.feedback(`Destination: ${destination.label}.`);
     }
     await context.action("chat-open");
     await context.capture(presentation(shots, "welcome-gate-selection"));
