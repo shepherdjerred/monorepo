@@ -84,6 +84,71 @@ describe("countUnmintedLivePostmatchMatches", () => {
     expect(await unminted()).toBe(0);
   });
 
+  test("does not count an opted-out-only match, but still counts an eligible shared participant", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_9351");
+    const accountPuuid = testPuuid(matchId);
+    await seedOwedMatch(prisma, owed(matchId));
+    expect(await unminted()).toBe(1);
+    await prisma.riotAccountPreference.create({
+      data: {
+        puuid: accountPuuid,
+        gameName: "Local test",
+        tagLine: "TEST",
+        createdAt: new Date(NOW - 3 * HOUR_MS),
+        verifiedAt: new Date(NOW - 3 * HOUR_MS),
+        updatedAt: new Date(NOW - 2 * HOUR_MS),
+        matchNotificationsEnabled: false,
+      },
+    });
+    expect(await unminted()).toBe(0);
+    const account = await prisma.account.findFirstOrThrow({
+      where: { puuid: accountPuuid },
+    });
+    const sharedPuuid = testPuuid("NA1_9351-shared");
+    await prisma.account.create({
+      data: {
+        alias: "shared participant",
+        puuid: sharedPuuid,
+        region: account.region,
+        playerId: account.playerId,
+        serverId: account.serverId,
+        creatorDiscordId: account.creatorDiscordId,
+        createdTime: account.createdTime,
+        updatedTime: account.updatedTime,
+      },
+    });
+    await prisma.matchTrackedAccount.create({
+      data: {
+        riotMatchId: matchId,
+        puuid: sharedPuuid,
+        cursorAdvancedAt: new Date(NOW - HOUR_MS),
+      },
+    });
+    expect(await unminted()).toBe(1);
+    await prisma.riotAccountPreference.create({
+      data: {
+        puuid: sharedPuuid,
+        gameName: "Shared test",
+        tagLine: "TEST",
+        verifiedAt: new Date(NOW),
+        matchNotificationsEnabled: false,
+      },
+    });
+    expect(await unminted()).toBe(0);
+    await prisma.riotAccountPreference.update({
+      where: { puuid: accountPuuid },
+      data: { matchNotificationsEnabled: true },
+    });
+    // Re-enabling now cannot retroactively make this skipped match owed.
+    expect(await unminted()).toBe(0);
+    await prisma.riotAccountPreference.update({
+      where: { puuid: accountPuuid },
+      data: { updatedAt: new Date(NOW - 2 * HOUR_MS) },
+    });
+    // An enabled preference predating completion still detects missing work.
+    expect(await unminted()).toBe(1);
+  });
+
   test("a prematch intent is not a report", async () => {
     await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9312")));
     await seedIntent(prisma, {

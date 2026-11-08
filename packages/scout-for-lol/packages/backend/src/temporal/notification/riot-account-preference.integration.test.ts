@@ -252,6 +252,32 @@ describe("global match notification eligibility", () => {
       expect(
         await matchNotificationPreferenceSuppression(record, db, shared),
       ).toBeUndefined();
+      // A muted or differently filtered remaining participant cannot make
+      // this queued notice eligible again after the owner opts out.
+      await db.subscription.updateMany({ data: { isMuted: true } });
+      expect(
+        await matchNotificationPreferenceSuppression(record, db, shared),
+      ).toBe("recipient-preference");
+      await db.subscription.updateMany({
+        data: {
+          isMuted: false,
+          filters: JSON.stringify({
+            version: 1,
+            filters: [{ type: "queue", queues: ["arena"] }],
+          }),
+        },
+      });
+      const soloQueue = async () => ({
+        puuids: [puuid, alt],
+        queueType: "solo" as const,
+      });
+      expect(
+        await matchNotificationPreferenceSuppression(record, db, soloQueue),
+      ).toBe("recipient-preference");
+      await db.subscription.deleteMany();
+      expect(
+        await matchNotificationPreferenceSuppression(record, db, shared),
+      ).toBe("recipient-preference");
     },
   );
 });

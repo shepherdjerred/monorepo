@@ -32,7 +32,6 @@ export type SubscribedChannel = {
 export async function getChannelsSubscribedToPlayers(
   puuids: LeaguePuuid[],
   prismaClient: ExtendedPrismaClient = prisma,
-  options: { respectAccountPreferences?: boolean } = {},
 ): Promise<SubscribedChannel[]> {
   logger.info(
     `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`,
@@ -57,10 +56,7 @@ export async function getChannelsSubscribedToPlayers(
       },
     });
 
-    const optedOut =
-      options.respectAccountPreferences === false
-        ? new Set<string>()
-        : await notificationOptOuts(puuids, prismaClient);
+    const optedOut = await notificationOptOuts(puuids, prismaClient);
     const queryTime = Date.now() - startTime;
     logger.info(
       `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`,

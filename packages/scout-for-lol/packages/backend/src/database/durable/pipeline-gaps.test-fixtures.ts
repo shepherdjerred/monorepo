@@ -175,6 +175,7 @@ export async function seedReceipt(
 export async function clearGapTables(
   prisma: ExtendedPrismaClient,
 ): Promise<void> {
+  await prisma.riotAccountPreference.deleteMany();
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.matchRecoveryBatch.deleteMany();
   await prisma.matchProcessingReceipt.deleteMany();

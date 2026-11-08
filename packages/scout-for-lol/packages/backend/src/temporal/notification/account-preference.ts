@@ -80,14 +80,8 @@ export async function matchNotificationPreferenceSuppression(
   const optedOut = await notificationOptOuts(puuids, db);
   if (optedOut.size === 0) return undefined;
   const channelId = record.intent.target.channelId;
-  const baseline = channelsPassingQueueFilter(
-    await getChannelsSubscribedToPlayers(puuids, db, {
-      respectAccountPreferences: false,
-    }),
-    queueType,
-  );
-  if (!baseline.some((channel) => channel.channel === channelId))
-    return undefined;
+  // A queued notice still needs an eligible account in this channel. Muting,
+  // filtering, or deleting a subscription cannot restore an opted-out trigger.
   const eligible = channelsPassingQueueFilter(
     await getChannelsSubscribedToPlayers(puuids, db),
     queueType,
