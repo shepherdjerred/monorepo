@@ -75,9 +75,9 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "placed")(
         "historical sign registered",
         async () => {
           const sign = await rcon.command(
-            "data get block 138 69 -97 PublicBukkitValues",
+            'data get block 138 69 -97 PublicBukkitValues."thestorm:shop_id"',
           );
-          return sign.includes("shop_id");
+          return /data: [1-9]\d*L\b/u.test(sign);
         },
         30_000,
       );

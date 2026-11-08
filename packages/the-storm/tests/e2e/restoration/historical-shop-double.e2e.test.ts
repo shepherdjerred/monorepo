@@ -45,9 +45,9 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double")(
         "historical shop registered",
         async () => {
           const data = await rcon.command(
-            "data get block 138 69 -97 PublicBukkitValues",
+            'data get block 138 69 -97 PublicBukkitValues."thestorm:shop_id"',
           );
-          return data.includes("shop_id");
+          return /data: [1-9]\d*L\b/u.test(data);
         },
         30_000,
       );
@@ -72,9 +72,9 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double-split")(
         "historical shop registered",
         async () => {
           const data = await rcon.command(
-            "data get block 158 68 -126 PublicBukkitValues",
+            'data get block 158 68 -126 PublicBukkitValues."thestorm:shop_id"',
           );
-          return data.includes("shop_id");
+          return /data: [1-9]\d*L\b/u.test(data);
         },
         30_000,
       );
@@ -98,7 +98,7 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double-split")(
         "initial shop registry ready",
         async () => {
           const logs = await serverLogs(server);
-          return /Loaded \d+ shops/.test(logs);
+          return /Indexed \d+ world shops/.test(logs);
         },
         30_000,
       );
@@ -109,7 +109,7 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double-split")(
         "shop registry ready after restart",
         async () => {
           const logs = await serverLogs(server);
-          return (logs.match(/Loaded \d+ shops/g) ?? []).length >= 2;
+          return (logs.match(/Indexed \d+ world shops/g) ?? []).length >= 2;
         },
         30_000,
       );
@@ -134,24 +134,39 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double-split")(
       await restarted.command(
         "data remove block 159 67 -128 PublicBukkitValues",
       );
+      await restarted.command(
+        "item replace block 159 67 -128 container.23 with air",
+      );
       await restarted.command("save-all flush");
       const damaged = await restart(server);
       onTestFinished(() => damaged.close());
       await waitUntil(
-        "incomplete shop closed",
+        "world shop index ready after the second restart",
         async () => {
           const logs = await serverLogs(server);
-          return logs.includes(
-            "Historical shop 2015-pikachupals-arrows has incomplete saved world data",
-          );
+          return (logs.match(/Indexed \d+ world shops/g) ?? []).length >= 3;
         },
         30_000,
       );
       await damaged.command("forceload add 158 -128");
-      const after = await damaged.command(
-        "data get block 159 67 -128 Items[{Slot:23b}].count",
+      expect(await serverLogs(server)).not.toContain(
+        "Historical shop 2015-pikachupals-arrows has incomplete saved world data",
       );
-      expect(after).toMatch(/64/);
+      expect(
+        await damaged.command(
+          'data get block 158 68 -126 PublicBukkitValues."thestorm:shop_id"',
+        ),
+      ).toMatch(/data: [1-9]\d*L\b/u);
+      expect(
+        await damaged.command(
+          "execute unless data block 159 67 -128 Items[{Slot:23b}]",
+        ),
+      ).toContain("Test passed");
+      expect(
+        await damaged.command(
+          "data get block 159 67 -128 Items[{Slot:24b}].count",
+        ),
+      ).toMatch(/64/);
     }, 180_000);
   },
 );
@@ -167,9 +182,9 @@ describe.skipIf(Bun.env["STORM_E2E_HISTORICAL_SHOPS"] !== "double-space")(
         "historical shop registered",
         async () => {
           const data = await rcon.command(
-            "data get block 138 69 -97 PublicBukkitValues",
+            'data get block 138 69 -97 PublicBukkitValues."thestorm:shop_id"',
           );
-          return data.includes("shop_id");
+          return /data: [1-9]\d*L\b/u.test(data);
         },
         30_000,
       );
