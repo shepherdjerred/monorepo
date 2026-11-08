@@ -17,7 +17,7 @@ async function invokeWithCredentialSentinel(args: readonly string[]) {
   temporaryDirectories.push(directory);
   const credentialsPath = path.resolve(
     import.meta.dir,
-    "../../src/lib/credentials.ts",
+    "../../src/lib/credential-commands.ts",
   );
   const preloadPath = path.join(directory, "credential-sentinel.ts");
   // The actual command-to-credential mapping remains in use. Only the

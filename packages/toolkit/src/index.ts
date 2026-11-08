@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 
-import {
-  requiredCredentialsFor,
-  resolveCredentials,
-} from "#lib/credentials.ts";
+import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
 import {
   buildPassthroughInvocation,
   isCredentialFreePassthrough,

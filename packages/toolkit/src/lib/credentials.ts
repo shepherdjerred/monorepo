@@ -1,5 +1,4 @@
 import os from "node:os";
-import { z } from "zod";
 import {
   CREDENTIAL_REGISTRY,
   PRIVATE_VAULT_REF,
@@ -8,9 +7,18 @@ import type { CredentialSpec } from "#lib/credential-registry.ts";
 import { liveCredentialCache } from "#lib/credential-cache.ts";
 import type { CredentialCache } from "#lib/credential-cache.ts";
 import {
+  exhaustedBudget,
+  liveDelegate,
+  liveReadLog,
+  liveReferenceLock,
+  readDelegated,
+} from "#lib/credential-reads.ts";
+import type { ReadLog, ReferenceLock } from "#lib/credential-reads.ts";
+import {
   defaultToolkitConfigPath,
   loadToolkitConfig,
 } from "#lib/toolkit-config.ts";
+import { loadCredentialOverrides } from "#lib/credential-overrides.ts";
 
 /**
  * Credential broker: resolves service secrets into `Bun.env` just in time.
@@ -25,11 +33,9 @@ import {
  * reads a reference; it is never exported into this process's environment, so
  * passthrough children never inherit it. Service-account reads go through the
  * Keychain read cache (see credential-cache.ts) when this is the installed
- * toolkit binary.
+ * toolkit binary; other processes borrow that binary's cache, and every
+ * resolution is logged without its value (see credential-reads.ts).
  */
-
-export const TEMPORAL_IN_CLUSTER_ADDRESS =
-  "temporal-temporal-server-service:7233";
 
 /** Desktop-auth refs used only to spell the Keychain enrollment command. */
 const KEYCHAIN_ENROLL_REFS: Record<string, string> = {
@@ -62,6 +68,16 @@ export type CredentialDeps = {
    * cache for the installed binary and to none when `run` is injected.
    */
   readonly cache?: CredentialCache | null;
+  /**
+   * Installed toolkit whose cache an uncached process borrows. Defaults to
+   * `~/.local/bin/toolkit` for live source runs and to none when `run` is
+   * injected.
+   */
+  readonly installedToolkit?: string | null;
+  /** Per-reference read lock; defaults to a directory lock with the cache. */
+  readonly lock?: ReferenceLock | null;
+  /** Attribution log; defaults to `~/.toolkit/logs/credential-reads.jsonl`. */
+  readonly readLog?: ReadLog | null;
 };
 
 /** The environment every non-`op` child gets: never the service-account token. */
@@ -203,63 +219,86 @@ function opFailureDetail(stderr: string): string | null {
   return line === undefined ? null : line.slice(0, 300);
 }
 
-async function readServiceAccountRef(
+/** Where a service-account value came from; only "read" spent budget here. */
+type ReadSource = "cache" | "delegated" | "read";
+
+/** `op`'s reason, plus which budget is exhausted when it is a rate limit. */
+async function opFailureReason(
+  stderr: string,
+  token: string,
+  ctx: ResolutionContext,
+): Promise<string | null> {
+  const detail = opFailureDetail(stderr);
+  if (detail?.includes("Too many requests") !== true) return detail;
+  const table = await ctx.run(["op", "service-account", "ratelimit"], {
+    OP_SERVICE_ACCOUNT_TOKEN: token,
+  });
+  const budget = table.exit === 0 ? exhaustedBudget(table.stdout) : null;
+  return budget === null ? detail : `${detail} ${budget}`;
+}
+
+async function readFromOnePassword(
   name: string,
   description: string,
   ref: string,
   ctx: ResolutionContext,
-): Promise<{ value: string; cached: boolean }> {
-  const cached = await ctx.cache?.get(ref);
-  if (cached !== undefined && cached !== null) {
-    return { value: cached, cached: true };
-  }
+): Promise<{ value: string; source: ReadSource }> {
   const token = await serviceAccountToken(ctx);
   const result = await ctx.run(["op", "read", ref], {
     OP_SERVICE_ACCOUNT_TOKEN: token,
   });
   const value = result.exit === 0 ? result.stdout.trim() : "";
   if (value.length === 0) {
-    const detail = result.exit === 0 ? null : opFailureDetail(result.stderr);
-    throw detail === null
+    const reason =
+      result.exit === 0
+        ? null
+        : await opFailureReason(result.stderr, token, ctx);
+    throw reason === null
       ? credentialError(name, description, SERVICE_ACCOUNT_ENROLLMENT)
       : new Error(
-          `toolkit: ${name} (${description}) could not be read from 1Password: ${detail}`,
+          `toolkit: ${name} (${description}) could not be read from 1Password: ${reason}`,
         );
   }
   await ctx.cache?.set(ref, value);
-  return { value, cached: false };
+  return { value, source: "read" };
+}
+
+async function readServiceAccountRef(
+  name: string,
+  description: string,
+  ref: string,
+  ctx: ResolutionContext,
+): Promise<{ value: string; source: ReadSource }> {
+  const cached = await ctx.cache?.get(ref);
+  if (cached !== undefined && cached !== null) {
+    return { value: cached, source: "cache" };
+  }
+  if (ctx.cache === null && ctx.delegate !== null) {
+    const value = await readDelegated(name, ref, ctx.delegate, ctx.run);
+    if (value !== null) return { value, source: "delegated" };
+  }
+  if (ctx.cache === null && ctx.liveSubprocesses) {
+    console.error(
+      `toolkit: ${name} read without the credential cache; this spends the shared 1Password daily budget. Run \`bun run --cwd packages/toolkit install:local\` so source runs borrow the installed cache.`,
+    );
+  }
+  const lock = ctx.lock;
+  if (lock === null) return readFromOnePassword(name, description, ref, ctx);
+  return lock(ref, async () => {
+    // Another caller may have filled the entry while this one waited.
+    const filled = await ctx.cache?.get(ref);
+    return filled !== undefined && filled !== null
+      ? { value: filled, source: "cache" }
+      : readFromOnePassword(name, description, ref, ctx);
+  });
+}
+
+function backendFor(source: ReadSource, readBackend: string): string {
+  return source === "read" ? readBackend : source;
 }
 
 function logResolved(name: string, backend: string): void {
   console.error(`toolkit: ${name} via ${backend}`);
-}
-
-const CredentialOverridesFileSchema = z.looseObject({
-  credentials: z.record(z.string(), z.unknown()).optional(),
-});
-
-async function loadCredentialOverrides(
-  configPath: string,
-): Promise<Record<string, string>> {
-  if (!(await Bun.file(configPath).exists())) {
-    return {};
-  }
-  let document: unknown;
-  try {
-    document = Bun.TOML.parse(await Bun.file(configPath).text());
-  } catch {
-    throw new Error(
-      `toolkit: failed to parse config file ${configPath}; private diagnostics withheld`,
-    );
-  }
-  const table = CredentialOverridesFileSchema.parse(document).credentials ?? {};
-  const overrides: Record<string, string> = {};
-  for (const [key, entry] of Object.entries(table)) {
-    if (typeof entry === "string" && entry.length > 0) {
-      overrides[key] = entry;
-    }
-  }
-  return overrides;
 }
 
 type ResolutionContext = {
@@ -269,6 +308,9 @@ type ResolutionContext = {
   readonly configPath: string;
   readonly overrides: Record<string, string>;
   readonly cache: CredentialCache | null;
+  readonly delegate: string | null;
+  readonly lock: ReferenceLock | null;
+  readonly readLog: ReadLog | null;
 };
 
 type Resolved = { readonly value: string; readonly backend: string };
@@ -281,7 +323,7 @@ async function resolveOverrideValue(
   const description = CREDENTIAL_REGISTRY[name]?.description ?? "credential";
   if (override.startsWith("op://")) {
     const read = await readServiceAccountRef(name, description, override, ctx);
-    return { value: read.value, backend: read.cached ? "cache" : "config" };
+    return { value: read.value, backend: backendFor(read.source, "config") };
   }
   const prefix = "keychain:";
   if (override.startsWith(prefix) && override.length > prefix.length) {
@@ -331,7 +373,7 @@ async function resolveRegistryValue(
   );
   return {
     value: read.value,
-    backend: read.cached ? "cache" : "service-account",
+    backend: backendFor(read.source, "service-account"),
   };
 }
 
@@ -376,13 +418,55 @@ async function resolutionContext(
   } else if (liveSubprocesses) {
     cache = await defaultCache(configPath);
   }
+  const delegate =
+    deps?.installedToolkit === undefined
+      ? liveSubprocesses && cache === null
+        ? await liveDelegate()
+        : null
+      : deps.installedToolkit;
+  const lock =
+    deps?.lock === undefined
+      ? liveSubprocesses && cache !== null
+        ? liveReferenceLock()
+        : null
+      : deps.lock;
   return {
     run: deps?.run ?? defaultRun,
     liveSubprocesses,
     configPath,
     overrides: await loadCredentialOverrides(configPath),
     cache,
+    delegate,
+    lock,
+    readLog:
+      deps?.readLog === undefined
+        ? liveSubprocesses
+          ? liveReadLog()
+          : null
+        : deps.readLog,
   };
+}
+
+/** Resolve one credential and record the outcome in the read log. */
+async function resolveLogged(
+  name: string,
+  ctx: ResolutionContext,
+): Promise<Resolved> {
+  try {
+    const resolved = await resolveOneCredential(name, ctx);
+    if (resolved.backend !== "env") {
+      await ctx.readLog?.({ name, backend: resolved.backend, outcome: "ok" });
+    }
+    return resolved;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await ctx.readLog?.({
+      name,
+      backend: null,
+      outcome: message.includes("Too many requests") ? "rate-limited" : "error",
+    });
+    throw error;
+  }
 }
 
 /**
@@ -400,9 +484,10 @@ export async function resolveCredentialValues(
   }
   const ctx = await resolutionContext(deps);
   for (const name of names) {
-    const resolved = await resolveOneCredential(name, ctx);
-    // Cache hits are silent: a stderr line per kubectl call is noise.
-    if (resolved.backend !== "env" && resolved.backend !== "cache") {
+    const resolved = await resolveLogged(name, ctx);
+    // Cache hits are silent: a stderr line per kubectl call is noise. A
+    // delegated child already printed its own line if it read 1Password.
+    if (!["env", "cache", "delegated"].includes(resolved.backend)) {
       logResolved(name, resolved.backend);
     }
     values[name] = resolved.value;
@@ -419,138 +504,5 @@ export async function resolveCredentials(
   for (const [name, value] of Object.entries(values)) {
     Bun.env[name] = value;
     resolvedCredentials.add(name);
-  }
-}
-
-/** The `op://` reference a credential would be read from, if any. */
-async function credentialRef(
-  name: string,
-  configPath: string,
-): Promise<string | null> {
-  const overrides = await loadCredentialOverrides(configPath);
-  const override = overrides[name];
-  if (override !== undefined) {
-    return override.startsWith("op://") ? override : null;
-  }
-  const spec = CREDENTIAL_REGISTRY[name];
-  return spec?.source.kind === "op" ? spec.source.ref : null;
-}
-
-/** Effective locators only; never reads credentials, caches, or ambient values. */
-export async function credentialReferences(
-  configPath = defaultToolkitConfigPath(),
-) {
-  const overrides = await loadCredentialOverrides(configPath);
-  const names = [
-    ...new Set([
-      ...Object.keys(CREDENTIAL_REGISTRY),
-      ...Object.keys(overrides),
-    ]),
-  ].toSorted();
-  return names.flatMap((name) => {
-    const override = overrides[name];
-    const spec = CREDENTIAL_REGISTRY[name];
-    const ref =
-      override ?? (spec?.source.kind === "op" ? spec.source.ref : null);
-    return ref?.startsWith("op://") === true
-      ? [
-          {
-            name,
-            ref,
-            source: override === undefined ? "registry" : "override",
-          },
-        ]
-      : [];
-  });
-}
-
-/**
- * Drop cached service-account reads so the next use fetches from 1Password.
- * Without names, every registered credential is flushed. Returns the names
- * whose entries were removed.
- */
-export async function flushCredentialCache(
-  names: readonly string[],
-  deps: { readonly cache: CredentialCache; readonly configPath?: string },
-): Promise<string[]> {
-  const configPath = deps.configPath ?? defaultToolkitConfigPath();
-  const targets = names.length > 0 ? names : Object.keys(CREDENTIAL_REGISTRY);
-  const flushed: string[] = [];
-  for (const name of targets) {
-    if (names.length > 0 && CREDENTIAL_REGISTRY[name] === undefined) {
-      const overrides = await loadCredentialOverrides(configPath);
-      if (overrides[name] === undefined) {
-        throw new Error(`toolkit: unknown credential ${name}`);
-      }
-    }
-    const ref = await credentialRef(name, configPath);
-    if (ref !== null && (await deps.cache.delete(ref))) {
-      flushed.push(name);
-    }
-  }
-  return flushed;
-}
-
-function flagValue(args: readonly string[], flag: string): string | undefined {
-  const boundary = args.indexOf("--");
-  const candidates = boundary === -1 ? args : args.slice(0, boundary);
-  let value: string | undefined;
-  for (const [index, argument] of candidates.entries()) {
-    if (argument === flag) value = candidates[index + 1];
-    if (argument.startsWith(`${flag}=`)) {
-      value = argument.slice(flag.length + 1);
-    }
-  }
-  return value;
-}
-
-function temporalCredentialsFor(
-  environment: Readonly<Record<string, string | undefined>>,
-  args: readonly string[],
-): readonly string[] {
-  const address =
-    flagValue(args, "--address") ?? environment["TEMPORAL_ADDRESS"];
-  if (
-    address !== TEMPORAL_IN_CLUSTER_ADDRESS &&
-    flagValue(args, "--tls") === "false"
-  ) {
-    throw new Error(
-      "toolkit: refusing to resolve TEMPORAL_API_KEY with --tls=false",
-    );
-  }
-  return address === TEMPORAL_IN_CLUSTER_ADDRESS ? [] : ["TEMPORAL_API_KEY"];
-}
-
-export function requiredCredentialsFor(
-  command: string,
-  _subcommand: string | undefined,
-  environment: Readonly<Record<string, string | undefined>> = Bun.env,
-  args: readonly string[] = [],
-): readonly string[] {
-  switch (command) {
-    case "ci":
-    case "woodpecker":
-      return ["WOODPECKER_TOKEN"];
-    case "temporal":
-      return temporalCredentialsFor(environment, args);
-    case "posthog":
-      return ["POSTHOG_CLI_API_KEY"];
-    case "argocd":
-      return ["ARGOCD_AUTH_TOKEN"];
-    case "grafana":
-    case "prom":
-    case "loki":
-    case "tempo":
-      return ["GRAFANA_API_KEY"];
-    case "cf":
-      return ["CF_API_TOKEN"];
-    case "bugsink":
-      return ["BUGSINK_TOKEN"];
-    case "discord":
-      return ["DISCORD_BOT_TOKEN", "DISCORD_USER_TOKEN"];
-    case "pr":
-      return ["WOODPECKER_TOKEN"];
-    default:
-      return [];
   }
 }

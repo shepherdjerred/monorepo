@@ -7,6 +7,8 @@ import type { SecretStore } from "#lib/credential-cache.ts";
 import {
   flushCredentialCache,
   credentialReferences,
+} from "#lib/credential-overrides.ts";
+import {
   resolveCredentialValues,
   withoutServiceAccountToken,
 } from "#lib/credentials.ts";

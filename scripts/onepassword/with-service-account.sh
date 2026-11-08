@@ -35,4 +35,24 @@ if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
   unset service_token
 fi
 
+# Record the command in toolkit's credential read log (never a value) so
+# wrapper use shows up when attributing the shared 1Password daily budget.
+log_wrapper_use() {
+  local directory="$HOME/.toolkit/logs" command="${1##*/}" subcommand="${2:-}"
+  [[ "$command" =~ ^[A-Za-z0-9._-]+$ ]] || command="?"
+  [[ "$subcommand" =~ ^[a-z][a-z0-9-]*$ ]] || subcommand=""
+  # Same daily file and 14-day retention as toolkit's fileReadLog. The log is
+  # diagnostics: report a failure to write it, but run the command.
+  local file
+  file="$directory/credential-reads-$(date -u +%Y-%m-%d).jsonl"
+  if ! { mkdir -p "$directory" &&
+    printf '{"ts":"%s","host":"%s","runtime":"wrapper","command":"%s","ppid":%d,"name":"OP_SERVICE_ACCOUNT_TOKEN","backend":"wrapper","outcome":"ok"}\n' \
+      "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" "$(hostname)" "$command${subcommand:+ $subcommand}" "$PPID" \
+      >>"$file" &&
+    find "$directory" -maxdepth 1 -name 'credential-reads-*.jsonl' -mtime +14 -delete; }; then
+    echo "with-service-account.sh: could not write $file" >&2
+  fi
+}
+log_wrapper_use "$@"
+
 exec "$@"

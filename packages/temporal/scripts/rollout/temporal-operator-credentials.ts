@@ -1,7 +1,5 @@
-import {
-  resolveCredentials,
-  TEMPORAL_IN_CLUSTER_ADDRESS,
-} from "@shepherdjerred/toolkit/lib/credentials.ts";
+import { TEMPORAL_IN_CLUSTER_ADDRESS } from "@shepherdjerred/toolkit/lib/credential-commands.ts";
+import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import { Connection } from "@temporalio/client";
 import { KubeConfig } from "@kubernetes/client-node";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";

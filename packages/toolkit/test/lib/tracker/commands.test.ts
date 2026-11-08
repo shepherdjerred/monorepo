@@ -3,7 +3,7 @@ import { trackerClient, trackerUrl } from "#lib/tracker/client.ts";
 import { issueCommand } from "#commands/tracker/issues.ts";
 import { parseTrackerArgs, textInput } from "#commands/tracker/options.ts";
 import { catalogCommand } from "#commands/tracker/catalog.ts";
-import { requiredCredentialsFor } from "#lib/credentials.ts";
+import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 
 test("tracker commands never request Linear or other platform credentials", () => {
   for (const command of ["whoami", "issue", "api", "identity-hook"]) {
