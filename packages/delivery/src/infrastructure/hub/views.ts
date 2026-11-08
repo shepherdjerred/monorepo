@@ -10,7 +10,12 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { wire } from "#infrastructure/delivery-records.ts";
 import { index } from "#infrastructure/delivery-data.ts";
-import { buildLinks, serviceLinks } from "./links.ts";
+import {
+  CATALOG_CORE,
+  type CatalogCore,
+  catalogService,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import { buildLinks, opsLinks } from "./links.ts";
 
 type BuildRow = Prisma.BuildGetPayload<object>;
 type AuditRow = Prisma.AuditGetPayload<object>;
@@ -24,15 +29,36 @@ export function buildView(row: BuildRow): BuildView {
   };
 }
 
-export function serviceSummary(serviceId: string): ServiceSummary {
+/**
+ * A service's title, kind and ops links. A v1 service keeps its ops-model
+ * entry; a service only the v2 catalog declares reads its own ops attributes,
+ * taking its group's kind when it declares none.
+ */
+export function serviceSummary(
+  serviceId: string,
+  catalog: CatalogCore = CATALOG_CORE,
+): ServiceSummary {
   const service = index.byId(serviceId);
-  if (service?.id !== serviceId)
+  if (service?.id === serviceId)
+    return {
+      id: service.id,
+      title: service.title,
+      kind: service.kind,
+      links: opsLinks(service),
+    };
+  const declared = catalogService(serviceId, catalog);
+  if (declared === undefined)
     throw new DeliveryError("NOT_FOUND", "Service not found");
+  const group = catalog.groups.find((entry) => entry.id === declared.group);
+  if (group === undefined)
+    throw new Error(
+      `Catalog service ${serviceId} names unknown group ${declared.group}`,
+    );
   return {
-    id: service.id,
-    title: service.title,
-    kind: service.kind,
-    links: serviceLinks(service),
+    id: declared.id,
+    title: declared.title,
+    kind: declared.ops?.kind ?? group.kind,
+    links: declared.ops === undefined ? [] : opsLinks(declared.ops),
   };
 }
 

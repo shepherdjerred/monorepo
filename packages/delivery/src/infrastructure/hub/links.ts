@@ -23,11 +23,17 @@ export function toolLinks(): Link[] {
   ];
 }
 
-export function serviceLinks(service: Service): Link[] {
+/** The ops destinations both a v1 service and a v2 catalog service's ops attributes name. */
+export type OpsLinkSource = Pick<
+  Service,
+  "argoApps" | "grafanaDashboards" | "bugsinkProjects"
+>;
+
+export function opsLinks(source: OpsLinkSource): Link[] {
   return [
-    ...service.argoApps.map((app) => argocdApplicationLink(app)),
-    ...service.grafanaDashboards.map((uid) => grafanaDashboardLink(uid)),
-    ...(service.bugsinkProjects.length > 0 ? [bugsinkLink()] : []),
+    ...source.argoApps.map((app) => argocdApplicationLink(app)),
+    ...source.grafanaDashboards.map((uid) => grafanaDashboardLink(uid)),
+    ...(source.bugsinkProjects.length > 0 ? [bugsinkLink()] : []),
   ];
 }
 
