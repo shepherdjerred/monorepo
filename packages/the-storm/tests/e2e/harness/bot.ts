@@ -144,9 +144,18 @@ async function serverFacing(
   bot: Bot,
 ): Promise<{ yaw: number; pitch: number }> {
   const reply = await rcon.command(`data get entity ${bot.username} Rotation`);
-  const groups = /\[(?<yaw>-?[\d.]+)f, (?<pitch>-?[\d.]+)f\]$/u.exec(
-    reply.trim(),
-  )?.groups;
+  return parseServerFacing(reply);
+}
+
+/** Minecraft renders very small rotations in scientific notation. */
+export function parseServerFacing(reply: string): {
+  yaw: number;
+  pitch: number;
+} {
+  const groups =
+    /\[(?<yaw>-?\d+(?:\.\d+)?(?:[Ee][+-]?\d+)?)f, (?<pitch>-?\d+(?:\.\d+)?(?:[Ee][+-]?\d+)?)f\]$/u.exec(
+      reply.trim(),
+    )?.groups;
   const yaw = groups?.["yaw"];
   const pitch = groups?.["pitch"];
   if (yaw === undefined || pitch === undefined) {
