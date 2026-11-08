@@ -162,6 +162,23 @@ final class PaperProtection implements Protection {
         && parcel.owners().contains(owner);
   }
 
+  @Override
+  public boolean mayOperateServerHistoricalGate(Location location) {
+    requireMainThread();
+    return !guard.isSealed(Guard.world(location)) && serverHistoricalGateLand(guard.land(location));
+  }
+
+  static boolean serverHistoricalGateLand(Land land) {
+    if (!(land instanceof Land.HeritageLand(var site, _, var underlying))) return false;
+    return underlying instanceof Land.Wilderness
+        || (underlying instanceof Land.RegionLand(var region)
+            && site.kind()
+                == com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Kind.SERVER
+            && region.id().equals(site.id()))
+        || (underlying instanceof Land.TownLand(var claim)
+            && site.activeTownId().filter(claim.townId()::equals).isPresent());
+  }
+
   /**
    * Players: both players' own PvP must be on, and PvP must be on where the attacker stands and
    * where the victim stands. The port is not told who the victim is, so every player standing at

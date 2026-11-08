@@ -236,6 +236,8 @@ toolkit mc client messages --name XiguaJerred --args '{"since":0}' --json
 The daemon builds the client and owns an isolated temporary Prism instance,
 its display-awake lease, logs, and shutdown. The regular Prism instance and
 account store stay intact. It refuses to replace an already-connected account.
+The temporary instance uses the client's staged Minecraft, Fabric and mod pins;
+it does not require a pre-existing user instance named after the game version.
 Repeating start reuses a healthy owned session on the same target. Live start
 requires the explicit account and reason, resolves the registered MCBridge
 credential, and grants no permissions or game mode. Vault credentials never

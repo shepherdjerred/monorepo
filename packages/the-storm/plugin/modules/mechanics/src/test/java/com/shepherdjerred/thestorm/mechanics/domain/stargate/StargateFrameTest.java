@@ -39,7 +39,7 @@ final class StargateFrameTest {
   @Test
   void findsEitherControlFromTheSignFace() {
     for (var facing : Direction.HORIZONTAL) {
-      for (var shape : StargateFrame.Shape.values()) {
+      for (var shape : java.util.List.of(StargateFrame.Shape.PLAYER, StargateFrame.Shape.CIRCLE)) {
         var frame = new StargateFrame(new Pos(10, 64, 10), facing.clockwise(), shape);
         var grid = new TestGrid();
         frame.frameBlocks().forEach(pos -> grid.solid(pos, "minecraft:obsidian"));
@@ -48,6 +48,29 @@ final class StargateFrameTest {
           assertThat(StargateFrame.find(grid, sign, facing)).contains(frame);
         }
         assertThat(StargateFrame.find(grid, frame.controls().getFirst(), Direction.UP)).isEmpty();
+      }
+    }
+  }
+
+  @Test
+  void recognizesArchiveCircleButtonsOnEitherSideWithoutMovingThem() {
+    for (var facing : Direction.HORIZONTAL) {
+      var circle = new StargateFrame(new Pos(10, 64, 10), facing.clockwise());
+      var legacy =
+          new StargateFrame(circle.origin(), circle.across(), StargateFrame.Shape.LEGACY_CIRCLE);
+      for (var control : legacy.controls()) {
+        var grid = new TestGrid();
+        legacy.frameBlocks().forEach(pos -> grid.solid(pos, "minecraft:obsidian"));
+        var sign = control.offset(facing);
+        var inward = control.equals(legacy.controls().getFirst()) ? 1 : -1;
+        var button = sign.offset(Direction.DOWN).offset(legacy.across(), inward);
+        grid.solid(button, "minecraft:stone_button");
+        assertThat(legacy.button(sign)).isEqualTo(button);
+        assertThat(StargateFrame.find(grid, sign, facing)).contains(legacy);
+        var modern =
+            new StargateFrame(legacy.origin(), legacy.across(), StargateFrame.Shape.CIRCLE);
+        grid.solid(modern.button(sign), "minecraft:stone_button");
+        assertThat(StargateFrame.find(grid, sign, facing)).isEmpty();
       }
     }
   }

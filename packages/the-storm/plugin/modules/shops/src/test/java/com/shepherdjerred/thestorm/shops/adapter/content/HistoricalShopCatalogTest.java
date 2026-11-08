@@ -135,6 +135,27 @@ final class HistoricalShopCatalogTest {
   }
 
   @Test
+  void coloredLegacyOffersRetainTheirQuantityAndEquivalentFractionalPrice() {
+    var entries = HistoricalShopCatalog.load();
+    assertThat(entries.stream().filter(e -> e.id().equals("2015-recovered-2132-64--3572")))
+        .singleElement()
+        .satisfies(
+            entry -> {
+              assertThat(entry.expectedLines()).containsExactly("[Buy]", "64 Carrots", "for", "10");
+              assertThat(entry.quantity()).isEqualTo(64);
+              assertThat(entry.price()).isEqualTo(10);
+            });
+    assertThat(entries.stream().filter(e -> e.id().equals("2015-recovered-2151-81--3466")))
+        .singleElement()
+        .satisfies(
+            entry -> {
+              assertThat(entry.expectedLines()).containsExactly("[Sell]", "8 Wool", "for", ".5");
+              assertThat(entry.quantity()).isEqualTo(16);
+              assertThat(entry.price()).isEqualTo(1);
+            });
+  }
+
+  @Test
   void duplicateSignsAndOversizedUnknownItemsAreRejected() {
     assertThatThrownBy(
             () -> HistoricalShopCatalog.read(input(ROW + "\n" + ROW.replace("id,", "other,"))))

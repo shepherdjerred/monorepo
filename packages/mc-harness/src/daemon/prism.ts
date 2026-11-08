@@ -31,6 +31,7 @@ export async function preparePrismInstance(options: {
   root?: string;
   stagedMods: string;
   bootstrap: string;
+  instanceName?: string;
 }): Promise<boolean> {
   if (/\s/u.test(options.bootstrap)) {
     throw new Error("Prism bootstrap path must not contain whitespace");
@@ -38,7 +39,11 @@ export async function preparePrismInstance(options: {
   const root =
     options.root ??
     path.join(os.homedir(), "Library/Application Support/PrismLauncher");
-  const instance = path.join(root, "instances", INSTANCE);
+  const name = z
+    .string()
+    .regex(/^[\w-]+$/u)
+    .parse(options.instanceName ?? INSTANCE);
+  const instance = path.join(root, "instances", name);
   const marker = path.join(instance, MARKER);
   const created = !(await exists(instance));
   if (created) {

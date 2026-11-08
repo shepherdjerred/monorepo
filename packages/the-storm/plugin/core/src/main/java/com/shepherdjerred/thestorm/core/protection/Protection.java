@@ -16,6 +16,9 @@ public interface Protection {
   /** The same server identity used by historical public lifts. */
   UUID SERVER_HISTORICAL_LIFT = SERVER_AUTOMATION;
 
+  /** Operator-approved historical gates; distinct from ordinary world automation. */
+  UUID SERVER_HISTORICAL_GATE = new UUID(0, 1);
+
   Decision check(UUID player, ProtectedAction action, Location location);
 
   /** A proven land editor whose rights an unsigned imported mechanism may use. */
@@ -35,6 +38,11 @@ public interface Protection {
 
   /** Whether a specifically surveyed server-owned historical circuit may operate here. */
   default boolean mayOperateServerHistoricalCircuit(Location location) {
+    return false;
+  }
+
+  /** Exact bound historical gate cells, respecting current ownership and recovery freezes. */
+  default boolean mayOperateServerHistoricalGate(Location location) {
     return false;
   }
 

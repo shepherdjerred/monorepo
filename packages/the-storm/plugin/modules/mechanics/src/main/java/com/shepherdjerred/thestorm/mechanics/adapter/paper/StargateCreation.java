@@ -78,19 +78,13 @@ final class StargateCreation implements Listener {
       return;
     }
     if (!hasButton(grid, sign, facing, frame.orElseThrow())) {
-      reject(event, "Put a wall button on the other side of the Stargate frame.");
+      reject(event, "Put a wall button on the Stargate's control block.");
       return;
     }
     var cells = new java.util.ArrayList<>(frame.orElseThrow().frameBlocks());
     cells.addAll(frame.orElseThrow().interior());
     cells.add(sign);
-    var support = sign.offset(facing.opposite());
-    cells.add(
-        frame.orElseThrow().controls().stream()
-            .filter(pos -> !pos.equals(support))
-            .findFirst()
-            .orElseThrow()
-            .offset(facing));
+    cells.add(frame.orElseThrow().button(sign));
     var actor = event.getPlayer().getUniqueId();
     if (!mayBuild(actor, grid, sign, cells)) {
       reject(event, "You need permission to build across the whole Stargate.");
@@ -229,11 +223,9 @@ final class StargateCreation implements Listener {
 
   private static boolean hasButton(
       PaperGrid grid, Pos sign, Direction facing, StargateFrame frame) {
-    var support = sign.offset(facing.opposite());
-    var other =
-        frame.controls().stream().filter(pos -> !pos.equals(support)).findFirst().orElseThrow();
-    if (!grid.contains(other.offset(facing)) || !grid.loaded(other.offset(facing))) return false;
-    return StargateIntegrity.button(grid, other.offset(facing), facing);
+    var button = frame.button(sign);
+    if (!grid.contains(button) || !grid.loaded(button)) return false;
+    return StargateIntegrity.button(grid, button, facing);
   }
 
   private static void reject(SignChangeEvent event, String reason) {

@@ -163,9 +163,54 @@ public final class WorldGatePaperProof {
                         context.scheduler().mainThread()),
             context.scheduler().mainThread())
         .thenComposeAsync(ignored -> networkCleanup(), context.scheduler().mainThread())
+        .thenRunAsync(this::historicalAuthorityDoesNotMove, context.scheduler().mainThread())
         .thenRunAsync(
             () -> context.logger().info("WORLD_STARGATE_PAPER_PASS"),
             context.scheduler().mainThread());
+  }
+
+  private void historicalAuthorityDoesNotMove() {
+    var world = signBlock.getWorld();
+    var copyFrame = new StargateFrame(new Pos(718, 80, 3), Direction.EAST);
+    for (var cell : copyFrame.frameBlocks())
+      world.getBlockAt(cell.x(), cell.y(), cell.z()).setType(Material.OBSIDIAN, false);
+    for (var cell : copyFrame.interior())
+      world.getBlockAt(cell.x(), cell.y(), cell.z()).setType(Material.AIR, false);
+    world
+        .getBlockAt(720, 82, 2)
+        .setBlockData(
+            Bukkit.createBlockData("minecraft:stone_button[face=wall,facing=north]"), false);
+    var copiedBlock = world.getBlockAt(717, 82, 2);
+    copiedBlock.setBlockData(signBlock.getBlockData(), false);
+    var data = new WorldGateData(context.plugin().getServer());
+    data.write(gate, network);
+    copySign(copiedBlock);
+    require(data.read(copiedBlock).isPresent(), "ordinary copied gate retains world recovery");
+    var historical =
+        new Stargate(
+            gate.id(),
+            gate.networkId(),
+            gate.name(),
+            com.shepherdjerred.thestorm.core.protection.Protection.SERVER_HISTORICAL_GATE,
+            gate.worldId(),
+            gate.sign(),
+            gate.frame(),
+            null,
+            false);
+    data.write(historical, network);
+    require(
+        data.read(signBlock).isPresent(), "approved historical gate recovers at its bound site");
+    copySign(copiedBlock);
+    require(data.read(copiedBlock).isEmpty(), "copied historical gate cannot move its authority");
+  }
+
+  private void copySign(Block target) {
+    var source = (Sign) signBlock.getState();
+    var copy = (Sign) target.getState();
+    for (var line = 0; line < 4; line++)
+      copy.getSide(Side.FRONT).line(line, source.getSide(Side.FRONT).line(line));
+    source.getPersistentDataContainer().copyTo(copy.getPersistentDataContainer(), true);
+    require(copy.update(false, false), "copy native gate sign data");
   }
 
   private CompletableFuture<Void> lateChunkUpgrade(boolean worldOnly) {

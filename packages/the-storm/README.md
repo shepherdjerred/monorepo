@@ -1603,6 +1603,9 @@ Current `[Shelf]` text supplies its filters; a blank filter samples the Shelf
 inventory, following MondoChest's original behavior. Deleting the database index
 does not discard the bank. For the one-time MondoChest conversion, rewrite its
 headers to `[Bank]` and `[Shelf]` and retain the recovered links in world metadata.
+The restored MondoChest system has XiguaJerred as its new private custodian.
+Its custody parcels cover only the eleven containers and their double-chest
+halves. Normal private locks protect access; the surrounding land is not granted.
 
 Stargates keep their owners and options in their signs' world data and rebuild
 their gate index from loaded chunks. Their rendered signs use the old
@@ -1612,6 +1615,14 @@ from world definitions. Dialing shows the selected destination and neighboring
 choices on the sign for players viewing the gate, including on preserved land;
 the stored sign remains intact. Private invitations and town membership require their
 durable access records; missing access data never makes a gate public.
+Archive circle frames retain their original button below and inward from the
+sign. Frame discovery recognizes that layout from the surviving button; it
+rejects a frame with both competing button layouts.
+An operator-approved public archive gate uses a dedicated server custodian in
+world metadata, bound to its original world and sign position. This permits its
+sign and portal cells to operate under archive preservation while keeping private
+holdings, recovery freezes and network access checks in force. Moving that
+definition cannot move its preservation authority.
 Server-owned gate locations and approved landings remain declared in owned
 configuration.
 

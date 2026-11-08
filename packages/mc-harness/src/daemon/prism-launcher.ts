@@ -1,8 +1,10 @@
-import { copyFile, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import type { ClientLauncher } from "./client-launch.ts";
 import { ownPrismGame } from "./prism-lifetime.ts";
+import { preparePrismInstance } from "./prism.ts";
 
 /** Owns an isolated instance; account credentials stay inside Prism. */
 export const prismLauncher: ClientLauncher = async (spec) => {
@@ -12,7 +14,8 @@ export const prismLauncher: ClientLauncher = async (spec) => {
     os.homedir(),
     "Library/Application Support/PrismLauncher/instances",
   );
-  const instance = await mkdtemp(path.join(instances, "storm-capture-"));
+  const instanceName = `storm-capture-${randomUUID()}`;
+  const instance = path.join(instances, instanceName);
   const awake = Bun.spawn(["/usr/bin/caffeinate", "-du"], {
     stdout: "ignore",
     stderr: "ignore",
@@ -26,7 +29,7 @@ export const prismLauncher: ClientLauncher = async (spec) => {
         "gradle",
         "-p",
         path.join(spec.repoRoot, "packages/the-storm/client"),
-        "assemble",
+        "stagePrism",
         "--console=plain",
       ],
       {
@@ -41,27 +44,17 @@ export const prismLauncher: ClientLauncher = async (spec) => {
     );
     if ((await build.exited) !== 0)
       throw new Error(`Client build failed; inspect ${spec.logPath}`);
-    const fabricVersion = "0.165.0+26.3";
-    const cache = path.join(
-      os.homedir(),
-      ".gradle/caches/modules-2/files-2.1/net.fabricmc.fabric-api/fabric-api",
-      fabricVersion,
-    );
-    const jars = [
-      ...new Bun.Glob(`*/fabric-api-${fabricVersion}.jar`).scanSync({
-        cwd: cache,
-        absolute: true,
-      }),
-    ];
-    const [fabric] = jars;
-    if (fabric === undefined || jars.length !== 1)
-      throw new Error("Expected exactly one pinned Fabric API jar");
-    await copyFile(
-      path.join(instances, "26.3/mmc-pack.json"),
-      path.join(instance, "mmc-pack.json"),
-    );
+    await preparePrismInstance({
+      root: path.dirname(instances),
+      stagedMods: path.join(
+        spec.repoRoot,
+        "packages/the-storm/client/build/prism-mods",
+      ),
+      bootstrap: spec.bootstrapPath,
+      instanceName,
+    });
     const original = await readFile(
-      path.join(instances, "26.3/instance.cfg"),
+      path.join(instance, "instance.cfg"),
       "utf8",
     );
     const cfg = original
@@ -80,19 +73,9 @@ export const prismLauncher: ClientLauncher = async (spec) => {
         `[General]\nname=Storm Capture\nOverrideMemory=true\nMinMemAlloc=512\nMaxMemAlloc=2048\nLowMemWarning=false\nOverrideJavaArgs=true\nJvmArgs=-Dstorm.client.session=${spec.bootstrapPath}`,
       ),
     );
-    const mods = path.join(instance, "minecraft/mods");
-    await mkdir(mods, { recursive: true });
     await Bun.write(
       path.join(instance, "minecraft/options.txt"),
       "onboardAccessibility:false\ntutorialStep:none\n",
-    );
-    await copyFile(fabric, path.join(mods, "fabric-api.jar"));
-    await copyFile(
-      path.join(
-        spec.repoRoot,
-        "packages/the-storm/client/build/libs/the-storm-client-1.0.0.jar",
-      ),
-      path.join(mods, "storm-client.jar"),
     );
     const child = Bun.spawn(
       [
