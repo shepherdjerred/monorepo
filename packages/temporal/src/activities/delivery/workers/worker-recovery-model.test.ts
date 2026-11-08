@@ -202,6 +202,40 @@ const midRollout: Stages = [
   { key: "worker-promote", status: "succeeded" },
 ];
 
+/** Recorded through the sync request, with nothing after it. */
+const stoppedInSync: Stages = [
+  { key: "worker-prior-source", status: "succeeded" },
+  { key: "worker-image-provenance", status: "succeeded" },
+  { key: "step-apply-safety", status: "succeeded" },
+  { key: "step-sync", status: "running" },
+];
+
+/** The worker Application Argo left: this request's sync Failed, the rendered body in place. */
+function failedSync(
+  detail: DeploymentDetail,
+  overrides: { request?: string; source?: unknown } = {},
+) {
+  const recipe = stepRecipeOf(detail.pipeline.definition, "worker-rollout");
+  if (recipe === null) throw new Error("Fixture lacks its worker recipe");
+  const observed = application(detail, {
+    request: overrides.request ?? REQUEST,
+    source:
+      overrides.source ?? renderApplication(detail, recipe).body.spec.source,
+    sync: "OutOfSync",
+  });
+  return {
+    ...observed,
+    status: {
+      ...observed.status,
+      health: { status: "Degraded" },
+      operationState: {
+        ...observed.status.operationState,
+        phase: "Failed",
+      },
+    },
+  };
+}
+
 describe("model worker recovery (T3, E5)", () => {
   test("a deployment stopped mid-step-worker-rollout settles by its frozen selection and recorded plan", async () => {
     const detail = failed(midRollout, [plan()]);
@@ -353,5 +387,101 @@ describe("model worker recovery (T3, E5)", () => {
         }),
       ),
     ).rejects.toThrow(/sync request reached the worker Application/u);
+  });
+});
+
+describe("an owned sync that failed before any routing step", () => {
+  test("settles when routing never reached the unrouted, unreferenced candidate", async () => {
+    const detail = failed(stoppedInSync, [], { introduced: true });
+    const proof = await proveSettledWorkerRecovery(
+      context(detail),
+      boundary(detail, {
+        application: failedSync(detail),
+        hosts: [STABLE, CANDIDATE],
+        prod: STABLE,
+      }),
+    );
+    expect(proof.evidence).toContainEqual(
+      expect.objectContaining({
+        kind: "reconciliation",
+        operationId: OPERATION,
+        summary: expect.stringContaining("failed before any routing step"),
+      }),
+    );
+    expect(proof.routes.map((route) => route.currentBuildId)).toEqual([
+      STABLE,
+      STABLE,
+    ]);
+  });
+
+  test("a routed candidate, another request, or a changed body fails closed", async () => {
+    const detail = failed(stoppedInSync, [], { introduced: true });
+    await expect(
+      proveSettledWorkerRecovery(
+        context(detail),
+        boundary(detail, {
+          application: failedSync(detail),
+          hosts: [STABLE, CANDIDATE],
+          prod: CANDIDATE,
+        }),
+      ),
+    ).rejects.toThrow(/candidate owns current routing/u);
+    await expect(
+      proveSettledWorkerRecovery(
+        context(detail),
+        boundary(detail, {
+          application: failedSync(detail, { request: "another-request" }),
+          hosts: [STABLE],
+          prod: STABLE,
+        }),
+      ),
+    ).rejects.toThrow(/not owned by this frozen deployment/u);
+    await expect(
+      proveSettledWorkerRecovery(
+        context(detail),
+        boundary(detail, {
+          application: failedSync(detail, {
+            source: {
+              ...application(detail, { request: REQUEST }).spec.source,
+              targetRevision: "0.0.0-another-release",
+            },
+          }),
+          hosts: [STABLE],
+          prod: STABLE,
+        }),
+      ),
+    ).rejects.toThrow(/no longer holds the body/u);
+  });
+
+  test("a retained host that stopped serving fails closed", async () => {
+    const detail = failed(stoppedInSync, [], { introduced: true });
+    await expect(
+      proveSettledWorkerRecovery(
+        context(detail),
+        boundary(detail, {
+          application: failedSync(detail),
+          hosts: [CANDIDATE],
+          prod: STABLE,
+        }),
+      ),
+    ).rejects.toThrow(/no live host/u);
+  });
+
+  test("a stage after the sync keeps the strict owned-sync proof", async () => {
+    const detail = failed(
+      [...stoppedInSync, { key: "worker-preflight", status: "running" }],
+      [],
+      { introduced: true },
+    );
+    await expect(
+      proveSettledWorkerRecovery(
+        context(detail),
+        boundary(detail, {
+          application: failedSync(detail),
+          hosts: [STABLE, CANDIDATE],
+          prod: STABLE,
+        }),
+      ),
+    ).rejects.toThrow();
   });
 });
