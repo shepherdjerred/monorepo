@@ -24,8 +24,9 @@ toolkit deploy recovery --pending --json
   barrier: every other claim answers `BUSY`.
 - Each dispatch tick opens one intent itself for a recovery-required
   deployment (`requestedBy: delivery/auto-recovery`) and settles `argo`
-  intents its reader proves. Wait one tick before acting; act when the intent
-  is `failed`, or the deployment is content or compound and has none.
+  intents its reader proves. Wait one tick before acting. Act yourself when
+  the intent is `failed`, the deployment is content or compound, or no intent
+  appears after a tick (an older Delivery without auto-recovery).
 
 ## 2. Learn why it failed
 
@@ -87,17 +88,29 @@ the ArgoCD API, return to read-only, and audit `environment.break_glass`.
 
 ## 6. Operator-run releases
 
-`delivery-data`, `temporal-data` and `cluster-admission` are `operator-run`.
-After `toolkit deploy start`, apply with the `operator-run` ArgoCD account
-(token in 1Password item `delivery-argocd-operator-run-token`, read through
+`delivery-data`, `temporal-data` and `cluster-admission` are `operator-run`:
+after `toolkit deploy start`, an operator attests every stage the recipe
+lists, in order. Follow
+`packages/docs/wiki/src/content/docs/how-to/release-cluster-admission.md`
+exactly; for the data layers, substitute the Application name and skip its
+`admission-canary` stage, which only `cluster-admission` declares.
+
+The checked sequence, with the `operator-run` ArgoCD account (1Password item
+`delivery-argocd-operator-run-token`, read through
 `scripts/onepassword/with-service-account.sh`):
 
-```bash
-argocd app set <APP> --revision <CHART_VERSION>
-argocd app sync <APP> --revision <CHART_VERSION> --info ci.sjer.red/request-id=<DEPLOYMENT_ID>
-toolkit deploy attest <DEPLOYMENT_ID> --stage apply-safety --evidence <FILE> --machine
-toolkit deploy attest <DEPLOYMENT_ID> --stage sync --evidence <FILE> --machine
-```
+1. `argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>` before any
+   mutation; attest `apply-safety` only if it passes.
+2. `argocd app set <APP> --revision <CHART_VERSION>`, then
+   `argocd.ts sync-managed <APP> --revision <CHART_VERSION> --request-id <UUID>`,
+   which repeats the analysis and fails unless the sync finishes; then attest
+   `sync`.
+3. `cluster-admission` only: run the how-to's admission dry runs and attest
+   `admission-canary`.
+4. `toolkit deploy wait <DEPLOYMENT_ID>`.
+
+Never sync with plain `argocd app sync`, and never attest a stage you did not
+run or that failed; cancel the deployment instead.
 
 A data-layer sync restarts its single PostgreSQL pod; Delivery or Temporal
 drops for about 15 seconds. Diff the chart tarballs first.
