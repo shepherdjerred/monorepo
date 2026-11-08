@@ -81,6 +81,10 @@ import { reconcile } from "./delivery-selection.ts";
 import { registerWorker, workers } from "./worker-pool/registration.ts";
 import { retireWorker } from "./worker-pool/retirement.ts";
 import {
+  autoRetireWorker,
+  retirementCandidates,
+} from "./worker-pool/auto-retirement.ts";
+import {
   requestWorkerRecovery,
   workerRecovery,
   pendingWorkerRecovery,
@@ -223,6 +227,8 @@ export class Delivery {
   workers = workers;
   registerWorker = registerWorker;
   retireWorker = retireWorker;
+  retirementCandidates = retirementCandidates;
+  autoRetireWorker = autoRetireWorker;
   requestWorkerRecovery = requestWorkerRecovery;
   workerRecovery = workerRecovery;
   pendingWorkerRecovery = pendingWorkerRecovery;

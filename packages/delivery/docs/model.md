@@ -501,7 +501,9 @@ binds the authenticated actor and the exact inputs.
 - `rollback` selects a previously accepted selection in full.
 - `rebind` keeps the accepted set revision and changes the recipe or
   configuration revision.
-- `retire-host` removes one retained host after drainage proof.
+- `retire-host` removes one retained host after drainage proof. Delivery
+  requests it itself, once per host, for a host the executor proves drained
+  in an environment without required approval.
 - `carry` is recorded by the cutover's catalog reconcile, never requested: it
   freezes an accepted selection carried onto the catalog's identities
   (section 7), has no stages or effects, and is accepted in the same

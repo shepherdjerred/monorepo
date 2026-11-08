@@ -16,6 +16,7 @@ import {
   DELIVERY_WAIT_ROLLOVER_PATCH,
   admissionRolloverDue,
 } from "./delivery/admission.ts";
+import { proposeDrainedRetirements } from "./delivery/retirement.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
@@ -523,6 +524,7 @@ export async function deliveryDispatchWorkflow() {
   const observationFailures = patched(DELIVERY_DISPATCH_MODEL_PATCH)
     ? await observeAcceptedSelections()
     : [];
+  observationFailures.push(...(await proposeDrainedRetirements()));
   if (dispatched.status === "rejected") throw dispatched.reason;
   if (qualified.status === "rejected") throw qualified.reason;
   if (recovered.status === "rejected") throw recovered.reason;

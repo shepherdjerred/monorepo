@@ -63,6 +63,7 @@ function quietDispatchActivities() {
     observeDeliveryMonitors: () => ({ observed: 0 }),
     observeDeliveryDrift: () => ({ recorded: 0 }),
     removeDeliveryTargets: () => ({ removed: 0 }),
+    retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
   };
 }
 
@@ -215,6 +216,7 @@ describe("Delivery Workflow", () => {
         recovered = true;
       },
       dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+      retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
       dispatchDeliveryMinecraftRecoveries: () => {
         minecraftRecovered = true;
       },
@@ -345,6 +347,78 @@ describe("Delivery admission wait rollover", () => {
       await environment.teardown();
     }
   }, 180_000);
+});
+
+describe("Delivery automatic retirement", () => {
+  it("a new dispatch tick proposes drained hosts after its observations and replays", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      qualifyDeliveryBuilds: () => Promise.resolve(),
+      dispatchPendingDeliveries: () => ({ submitted: 0 }),
+      ...quietDispatchActivities(),
+      observeDeliveryMonitors: () => {
+        calls.push("observe");
+        return { observed: 0 };
+      },
+      retireDrainedWorkerHosts: () => {
+        calls.push("retire");
+        return { requested: [], skipped: [] };
+      },
+    });
+    try {
+      const workflowId = `dispatch-auto-retire-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryDispatchWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+          }),
+        ),
+      );
+      expect(calls).toEqual(["observe", "retire"]);
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("a failed proposal fails the tick only after dispatch ran", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    let dispatched = false;
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      qualifyDeliveryBuilds: () => Promise.resolve(),
+      dispatchPendingDeliveries: () => {
+        dispatched = true;
+        return { submitted: 0 };
+      },
+      ...quietDispatchActivities(),
+      retireDrainedWorkerHosts: () => {
+        throw ApplicationFailure.nonRetryable(
+          "Delivery refused",
+          "DeliveryApi:CONFLICT",
+        );
+      },
+    });
+    try {
+      await expect(
+        workflows.runUntil(
+          activities.runUntil(
+            environment.client.workflow.execute("deliveryDispatchWorkflow", {
+              workflowId: `dispatch-auto-retire-failure-${crypto.randomUUID()}`,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            }),
+          ),
+        ),
+      ).rejects.toThrow();
+      expect(dispatched).toBe(true);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
 });
 
 describe("Delivery replication retirement", () => {

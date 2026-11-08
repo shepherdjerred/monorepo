@@ -18,6 +18,7 @@ import {
   failDeliveryWorkerRecovery,
 } from "./workers/worker-recovery.ts";
 import { dispatchDeliveryWorkerRecoveries } from "./workers/worker-recovery-dispatch.ts";
+import { retireDrainedWorkerHosts } from "./workers/auto-retirement.ts";
 import { preserveDeliveryMinecraft } from "./minecraft.ts";
 import { applyDeliveryScoutSite } from "./scout-site.ts";
 import {
@@ -85,6 +86,7 @@ export const deliveryActivities = {
   inspectDeliveryWorkerRecovery,
   failDeliveryWorkerRecovery,
   dispatchDeliveryWorkerRecoveries,
+  retireDrainedWorkerHosts,
   inspectDeliveryWorkerImages,
   prepareDeliveryWorker,
   stepDeliveryWorker,
