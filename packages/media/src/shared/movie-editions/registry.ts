@@ -10,7 +10,6 @@ export const MovieEditionPolicySchema = z.enum([
   ...CutKindSchema.options,
 ]);
 export type MovieEditionKey = z.infer<typeof MovieEditionKeySchema>;
-export const MOVIE_EDITION_REGISTRY_VERSION = 1;
 export const MOVIE_EDITION_REGISTRY = {
   default: {
     policy: "standard_unmarked",
@@ -93,9 +92,6 @@ export const MovieEditionDefinitionRefSchema = z.strictObject({
 export type MovieEditionScope = z.infer<typeof MovieEditionScopeSchema>;
 export type MovieEditionDefinition = z.infer<
   typeof MovieEditionDefinitionSchema
->;
-export type MovieEditionDefinitionRef = z.infer<
-  typeof MovieEditionDefinitionRefSchema
 >;
 
 export function movieEditionDefinition(

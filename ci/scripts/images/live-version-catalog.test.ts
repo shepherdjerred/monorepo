@@ -135,9 +135,16 @@ function original(name: string) {
   });
 }
 
-test("all20 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
-  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(20);
-  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(20);
+test("all21 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(21);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(21);
+  expect(CANONICAL_IMAGE_TARGETS).toContain("media");
+  expect(imageIdentity("media")).toEqual({
+    serviceId: "streambot",
+    component: "image:media",
+    kind: "image",
+    uri: "docker.io/shepherdjerred/media",
+  });
   expect(CANONICAL_IMAGE_TARGETS).toContain("zfs-driver");
   expect(imageIdentity("zfs-driver")).toMatchObject({
     serviceId: "storage",

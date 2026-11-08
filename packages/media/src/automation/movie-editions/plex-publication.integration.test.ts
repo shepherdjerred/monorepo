@@ -260,46 +260,59 @@ test.each(["writer", "invocation"] as const)(
     expect(
       await publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
     ).toEqual({ status: "available", reason: null });
-    let execution = testPlexBindingExecution();
-    if (mode === "writer")
-      await h.database().legacyWriterLease.update({
-        where: { id: "singleton" },
-        data: { expiresAt: new Date(Date.now() - 1) },
+    const lease = await h.database().legacyWriterLease.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    try {
+      let execution = testPlexBindingExecution();
+      if (mode === "writer")
+        await h.database().legacyWriterLease.update({
+          where: { id: "singleton" },
+          data: { expiresAt: new Date(Date.now() - 1) },
+        });
+      else
+        execution = {
+          ...execution,
+          observed: {
+            wall: execution.observed.wall - 60_001,
+            monotonic: execution.observed.monotonic - 60_001,
+          },
+          expiresAtMs: execution.expiresAtMs - 60_001,
+        };
+      await expect(
+        finalizeMovieAcquisitionV4(f.network, f.input, execution),
+      ).rejects.toMatchObject({
+        reason:
+          mode === "writer" ? "ownership_changed" : "verification_expired",
       });
-    else
-      execution = {
-        ...execution,
-        observed: {
-          wall: execution.observed.wall - 60_001,
-          monotonic: execution.observed.monotonic - 60_001,
-        },
-        expiresAtMs: execution.expiresAtMs - 60_001,
-      };
-    await expect(
-      finalizeMovieAcquisitionV4(f.network, f.input, execution),
-    ).rejects.toMatchObject({
-      reason: mode === "writer" ? "ownership_changed" : "verification_expired",
-    });
-    const attempt = await h.database().acquisitionAttempt.findUniqueOrThrow({
-      where: { id: f.input.attemptId },
-    });
-    expect(attempt.state).toBe("imported");
-    expect(
-      await h
-        .database()
-        .acquisitionReservation.count({ where: { attemptId: attempt.id } }),
-    ).toBe(1);
-    expect(
-      await h.database().operation.findUniqueOrThrow({
-        where: { idempotencyKey: `seed:${String(attempt.torrentId)}` },
-      }),
-    ).toEqual(seeding);
-    expect(
-      await h.database().operation.count({
-        where: { kind: "acquire_movie_subtitles_v4", targetId: f.asset.id },
-      }),
-    ).toBe(0);
+      const attempt = await h.database().acquisitionAttempt.findUniqueOrThrow({
+        where: { id: f.input.attemptId },
+      });
+      expect(attempt.state).toBe("imported");
+      expect(
+        await h
+          .database()
+          .acquisitionReservation.count({ where: { attemptId: attempt.id } }),
+      ).toBe(1);
+      expect(
+        await h.database().operation.findUniqueOrThrow({
+          where: { idempotencyKey: `seed:${String(attempt.torrentId)}` },
+        }),
+      ).toEqual(seeding);
+      expect(
+        await h.database().operation.count({
+          where: { kind: "acquire_movie_subtitles_v4", targetId: f.asset.id },
+        }),
+      ).toBe(0);
+    } finally {
+      if (mode === "writer")
+        await h.database().legacyWriterLease.update({
+          where: { id: lease.id },
+          data: { expiresAt: lease.expiresAt },
+        });
+    }
   },
+  30_000,
 );
 
 test("wrong Plex edition preserves importing state and grants no completion or binding", async () => {
@@ -332,30 +345,40 @@ test("wrong Plex edition preserves importing state and grants no completion or b
 
 test("Plex availability cannot outlive the original writer observation during network verification", async () => {
   const f = await fixture();
-  const expiry = Date.now() + 1000;
-  await h.database().legacyWriterLease.update({
+  const lease = await h.database().legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
-    data: { expiresAt: new Date(expiry) },
   });
-  let machines = 0;
-  f.checkpoint((url) => {
-    if (url.pathname === "/identity" && ++machines === 2)
-      vi.spyOn(Date, "now").mockReturnValue(expiry + 1);
-    return Promise.resolve();
-  });
-  await expect(
-    publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
-  ).resolves.toEqual({ status: "waiting", reason: "verification_expired" });
-  expect(
-    await h
-      .database()
-      .plexBindingCurrent.count({ where: { mediaId: f.media.id } }),
-  ).toBe(0);
-  expect(
-    await h
-      .database()
-      .libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
-  ).toMatchObject({ plexPublishedAt: null });
+  try {
+    const expiry = Date.now() + 1000;
+    await h.database().legacyWriterLease.update({
+      where: { id: "singleton" },
+      data: { expiresAt: new Date(expiry) },
+    });
+    let machines = 0;
+    f.checkpoint((url) => {
+      if (url.pathname === "/identity" && ++machines === 2)
+        vi.spyOn(Date, "now").mockReturnValue(expiry + 1);
+      return Promise.resolve();
+    });
+    await expect(
+      publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
+    ).resolves.toEqual({ status: "waiting", reason: "verification_expired" });
+    expect(
+      await h
+        .database()
+        .plexBindingCurrent.count({ where: { mediaId: f.media.id } }),
+    ).toBe(0);
+    expect(
+      await h
+        .database()
+        .libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
+    ).toMatchObject({ plexPublishedAt: null });
+  } finally {
+    await h.database().legacyWriterLease.update({
+      where: { id: lease.id },
+      data: { expiresAt: lease.expiresAt },
+    });
+  }
 });
 
 test("concurrent actual Plex publication retries share one immutable completion and claim revision", async () => {

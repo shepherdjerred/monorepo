@@ -1,4 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { stubSessionStorage } from "#testing/browser-storage.ts";
 import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { identityPreviewOptions } from "./preview.ts";
 import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
@@ -64,16 +65,7 @@ test.each(["success", "failure"])(
       confirmationAllowed: true,
     };
     vi.stubGlobal("document", { cookie: "media-csrf=fixture" });
-    const values = new Map<string, string>();
-    vi.stubGlobal("sessionStorage", {
-      getItem: (key: string) => values.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        values.set(key, value);
-      },
-      removeItem: (key: string) => {
-        values.delete(key);
-      },
-    });
+    stubSessionStorage();
     vi.stubGlobal(
       "fetch",
       vi

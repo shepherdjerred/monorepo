@@ -86,7 +86,6 @@ export const CoordinateResolutionSchema = z.discriminatedUnion("status", [
     ]),
   }),
 ]);
-export type EpisodeCoordinate = z.infer<typeof EpisodeCoordinateSchema>;
 export type CoordinateSnapshot = z.infer<typeof CoordinateSnapshotSchema>;
 export type EpisodeCoordinateEvidence = z.infer<
   typeof EpisodeCoordinateEvidenceSchema

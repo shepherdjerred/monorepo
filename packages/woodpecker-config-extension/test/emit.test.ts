@@ -4,7 +4,7 @@ import { parse, parseDocument } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import { SOURCE_CACHE_PREPARATION_IMAGE } from "#src/pipeline/source-cache.ts";
-import type { CiCommandStep } from "#src/pipeline/model.ts";
+import type { CiCommandStep, CiStep } from "#src/pipeline/model.ts";
 import {
   WORKFLOW_TIMEOUT_MINUTES,
   emitWorkflow,
@@ -20,6 +20,18 @@ const EmittedCommand = z.object({
 const EmittedCommands = z.object({
   steps: z.tuple([EmittedCommand]).rest(EmittedCommand),
 });
+
+function assertEmittedCommandOrder(
+  step: CiStep,
+  emitted: readonly { name: string }[],
+) {
+  const commands = [step, ...(step.orderedSteps ?? [])];
+  expect(
+    emitted.map((command) => command.name),
+    step.key,
+  ).toEqual(commands.map((command) => command.key));
+  return commands;
+}
 
 const EmittedStep = z.object({
   steps: z.tuple([
@@ -69,11 +81,7 @@ describe("variable substitution", () => {
       const parsed = EmittedCommands.parse(
         parse(substitute(emitWorkflow(step, TEST_IDENTITY))),
       );
-      const commands = [step, ...(step.orderedSteps ?? [])];
-      expect(
-        parsed.steps.map((command) => command.name),
-        step.key,
-      ).toEqual(commands.map((command) => command.key));
+      const commands = assertEmittedCommandOrder(step, parsed.steps);
       for (const [index, command] of commands.entries())
         expect(parsed.steps[index]?.commands, command.key).toEqual(
           wrapCommands({
@@ -217,11 +225,7 @@ describe("Bun cache install mode", () => {
           ),
         })
         .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))));
-      const commands = [step, ...(step.orderedSteps ?? [])];
-      expect(
-        parsed.steps.map((command) => command.name),
-        step.key,
-      ).toEqual(commands.map((command) => command.key));
+      const commands = assertEmittedCommandOrder(step, parsed.steps);
       for (const [index, command] of commands.entries()) {
         assertBunCacheEnvironment(command, parsed.steps[index]?.environment);
       }

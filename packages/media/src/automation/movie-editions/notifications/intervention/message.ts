@@ -3,6 +3,7 @@ import type { NotificationContext } from "#automation/notifications/types.ts";
 import type { MovieNoticeDelivery } from "#automation/movie-editions/notifications/authority.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
+import { movieNoticeRecipient } from "#automation/movie-editions/notifications/recipient.ts";
 import {
   assertPreparedMovieInterventionV4,
   type PreparedMovieInterventionV4,
@@ -56,18 +57,7 @@ async function interventionRecipient(
   delivery: MovieNoticeDelivery,
 ): Promise<{ channel: "email" | "discord"; recipient: string } | null> {
   const preference = delivery.user.notificationPreference;
-  if (preference === null || delivery.user.restricted) return null;
-  if (delivery.channel === "email")
-    return preference.emailEnabled &&
-      delivery.user.emailVerifiedAt !== null &&
-      delivery.user.email !== null
-      ? { channel: "email", recipient: delivery.user.email }
-      : null;
-  if (delivery.channel === "discord")
-    return preference.discordEnabled &&
-      delivery.user.discordId !== null &&
-      (await context.personalDiscordAvailable?.()) === true
-      ? { channel: "discord", recipient: delivery.user.discordId }
-      : null;
-  return null;
+  return preference === null || delivery.user.restricted
+    ? null
+    : movieNoticeRecipient(context, delivery, preference);
 }

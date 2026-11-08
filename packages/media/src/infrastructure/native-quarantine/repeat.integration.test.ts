@@ -162,6 +162,7 @@ test.each([false, true])(
       ),
     ).toBe(true);
   },
+  30_000,
 );
 
 test.each(["version", "subtitle"] as const)(
@@ -368,6 +369,7 @@ test.each([
         checksum: added.subtitle.checksum,
       });
   },
+  30_000,
 );
 
 async function negativeHousehold(

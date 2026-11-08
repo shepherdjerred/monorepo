@@ -1,7 +1,7 @@
+import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
-import { expect } from "vitest";
 import { assertPrivateHistory } from "#activities/media/testing/history.ts";
 import { assertSeriesPackRoleBudgets } from "./history.ts";
 
@@ -43,21 +43,12 @@ export async function replaySeriesPackRoleHistories(input: {
     ]);
     const target = path.join(directory, `${execution.workflowId}.json`);
     await Bun.write(target, serialized);
-    const replay = Bun.spawn(
-      [node, "--experimental-strip-types", script, "replay", target],
-      {
-        env: childEnvironment,
-        stdin: "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      },
-    );
-    const [code, , error] = await Promise.all([
-      replay.exited,
-      new Response(replay.stdout).text(),
-      new Response(replay.stderr).text(),
-    ]);
-    expect(code, error).toBe(0);
+    await replayWorkflowFile({
+      node: node,
+      script: script,
+      filename: target,
+      childEnvironment: childEnvironment,
+    });
   }
   return prepared;
 }

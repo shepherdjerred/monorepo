@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { compensationInventoryItem } from "#infrastructure/native-compensation/inventory/item.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { NativeCompensationInventorySchema } from "#shared/native-recovery/compensation-runtime.ts";
@@ -107,16 +108,11 @@ export async function seriesPackNativeInventoryPageV1(
   return NativeCompensationInventorySchema.parse({
     items: [
       {
-        transitionId: row.id,
-        attemptId: row.attemptId,
-        birthEpoch: row.birthEpoch,
-        media,
-        predecessors: intent.entries.flatMap((item) =>
-          item.predecessor === null
-            ? []
-            : [{ assetId: item.predecessor.id, path: item.predecessor.path }],
-        ),
-        successorAssetIds: intent.entries.map((item) => item.entry.assetId),
+        ...compensationInventoryItem({
+          transition: row,
+          media,
+          entries: intent.entries,
+        }),
         selectable: reason === null,
         protection: reason,
       },

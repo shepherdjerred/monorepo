@@ -1198,6 +1198,16 @@ TPB and MagnetDownload provide title searches only and report
 bound to the current credential. Each invocation retains its own database lease
 and pacing; a deferred listing can reuse authentication on its next invocation.
 
+MagnetDownload title searches retain their encrypted search results and resolved
+hash prefix in a typed `ReconciliationScan` checkpoint for the exact query, kind
+and page. After pacing defers a resolution, another leased invocation resumes
+the next result instead of repeating the search. Only actually resolved sources
+can return as partial candidates; the checkpoint stays incomplete until all
+retained results resolve. Every checkpoint write fences the exact unexpired
+provider lease. Once complete, a later invocation starts a fresh search under
+normal pacing. This preserves progress even when the configured interval exceeds
+a lease without extending request, lease or acquisition-authority deadlines.
+
 Catalog adoption and refresh store a versioned `externalIds.catalogIdentity`
 snapshot with namespace-qualified TMDB/IMDb/TVDB references, original titles and
 alternative titles. Writes preserve unrelated Plex and owner-numbering keys.

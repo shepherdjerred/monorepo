@@ -12,6 +12,3 @@ export const LibraryAssetReferenceV1Schema = z.strictObject({
   bindingHash: EvidenceHashSchema,
   physicalEvidenceHash: EvidenceHashSchema,
 });
-export type LibraryAssetReferenceV1 = z.infer<
-  typeof LibraryAssetReferenceV1Schema
->;

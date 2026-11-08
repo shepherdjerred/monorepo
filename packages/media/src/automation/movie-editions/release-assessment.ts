@@ -1,6 +1,8 @@
+import {
+  readRetainedProviderSource,
+  retainedProviderSourceMatches,
+} from "#automation/acquisition-management/retained-source.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import { candidateSourceIdentity } from "#automation/candidate-evidence.ts";
-import { StoredCandidateSchema } from "#automation/providers.ts";
 import { serializable } from "#automation/store.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { matchMovieReleaseV4 } from "#domain/editions/release-v4.ts";
@@ -46,24 +48,12 @@ export async function prepareMovieAssessment(
       "Movie assessment requires its retained provider source",
       409,
     );
-  const source = StoredCandidateSchema.parse(
-    JSON.parse(
-      context.cipher.decrypt(
-        release.encryptedSource,
-        `release:${release.providerId}:${release.providerReleaseId}`,
-      ),
-    ),
+  const source = readRetainedProviderSource(
+    context.cipher,
+    release.encryptedSource,
+    release,
   );
-  if (
-    source.providerId !== release.providerId ||
-    source.providerReleaseId !== release.providerReleaseId ||
-    source.title !== release.title ||
-    source.sizeBytes !==
-      PublicReleaseAttributesSchema.parse(release.attributes).sizeBytes ||
-    (input.observedSource !== undefined &&
-      candidateSourceIdentity(source) !==
-        candidateSourceIdentity(input.observedSource))
-  )
+  if (!retainedProviderSourceMatches(source, release, input.observedSource))
     throw new MediaError(
       "identity_source_changed",
       "Observed provider source differs from its retained snapshot",

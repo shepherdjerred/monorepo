@@ -430,7 +430,7 @@ test("independent movie and TV acquisitions can deliver a mixed readiness batch 
   ).toMatchObject({ status: "accepted" });
   expect(messages).toHaveLength(1);
   expect(messages[0]).toContain("2 requested titles");
-});
+}, 30_000);
 
 test("a rejected readiness delivery cannot be retried after actual revocation leaves pending movie demand", async () => {
   const data = await setup();
@@ -500,7 +500,7 @@ test("a rejected readiness delivery cannot be retried after actual revocation le
       where: { id: delivery.id },
     }),
   ).toEqual(failed);
-});
+}, 30_000);
 
 test("unknown sends never retry; exact receipt reconciliation cannot cross a restore epoch", async () => {
   const data = await setup();

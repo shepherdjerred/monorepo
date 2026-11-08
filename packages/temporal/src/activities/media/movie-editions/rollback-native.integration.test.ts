@@ -1,29 +1,26 @@
 import { movieRollbackSdkEnvironment } from "./rollback-sdk.test-support.ts";
-import { afterEach, beforeAll, expect, test, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 import {
   createMovieRollbackFixture,
   movieRollbackEditions,
-  movieRollbackVideos,
 } from "@shepherdjerred/media/testing/movie-rollback-workflow";
 import {
   createMovieNetworkWorkerActivitiesV4,
   createMovieFileWorkerActivitiesV4,
 } from "#activities/media/movie-editions.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 test.each(movieRollbackEditions)(
   "actual %s failed Plex restores exact A and captions with SDK-owned durable phases",
   async (edition) => {
-    const f = await createMovieRollbackFixture(edition, videos);
-    closers.push(f.close);
+    const f = await createMovieRollbackFixture(
+      edition,
+      rollbackInputs.videos(),
+    );
+    rollbackInputs.closeAfterTest(f.close);
     const runId = crypto.randomUUID();
     const sdk = (activityId: string) =>
       movieRollbackSdkEnvironment({

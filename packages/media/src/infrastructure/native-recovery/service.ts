@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { nativeInventoryContext } from "./inventory-context.ts";
 import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import type { PrepareNativeArchiveSchema } from "#shared/native-recovery/archive.ts";
 import { PrismaNativeArchive } from "#infrastructure/native-archive/service.ts";
@@ -143,17 +144,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
     requireOwner(actor);
     return this.db.$transaction(async (tx) => {
       await assertNativeOwner(tx, actor.id);
-      const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
-      const restore = await tx.operation.findFirst({
-        where: {
-          kind: "restore_observe",
-          status: "completed",
-          result: { path: ["recoveryEpoch"], equals: runtime.recoveryEpoch },
-        },
-        orderBy: { createdAt: "desc" },
-      });
+      const { runtime, restore } = await nativeInventoryContext(tx);
       const assets = await tx.libraryAsset.findMany({
         where: {
           edition: "default",

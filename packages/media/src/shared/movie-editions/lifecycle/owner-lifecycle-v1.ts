@@ -23,5 +23,3 @@ export const MovieOwnerRestoreV1Schema = Source.refine(
   (source) => source.request.command.action === "restore",
   "Owner restoration must retain its actual restoration command",
 );
-export type MovieOwnerRemovalV1 = z.infer<typeof MovieOwnerRemovalV1Schema>;
-export type MovieOwnerRestoreV1 = z.infer<typeof MovieOwnerRestoreV1Schema>;

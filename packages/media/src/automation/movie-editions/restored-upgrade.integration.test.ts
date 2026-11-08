@@ -20,6 +20,9 @@ import { observeMediaUpgradeCleanup } from "#automation/plex-binding/cleanup.ts"
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { installMovieFixtureCaptions } from "#testing/movie-workflow/upgrade-fixture.ts";
 import { CAPACITY_ROOTS } from "#shared/capacity/contract.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { createMovieFileFacetV4 } from "#automation/files/movie-editions/activities.ts";
+import { assertRollbackHeldPredecessorGuards } from "#testing/movie-workflow/rollback/rollback-held-guards.ts";
 
 const closers: (() => Promise<void>)[] = [];
 let original: Uint8Array;
@@ -100,9 +103,24 @@ async function acquireUpgrade(f: Fixture) {
     where: { id: input.attemptId },
   });
   const plan = MovieFilePlanSchema.parse(attempt.filePlan);
-  expect(
-    await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
-  ).toEqual({ status: "published" });
+  const execution = testPublicationExecution();
+  const budget = new PublicationAuthorityReadBudget();
+  const publication = createMovieFileFacetV4({
+    ...f.source.files.context,
+    movieManagement: { execution, budget },
+    checkpoint: async (phase) => {
+      await f.source.files.context.checkpoint(phase);
+      if (
+        phase === "publication-intent-committed" &&
+        f.scope.edition === "default"
+      )
+        await assertRollbackHeldPredecessorGuards(f.db, input.attemptId);
+    },
+  });
+  expect(await publication.promoteMovieFilesV4(input, execution)).toEqual({
+    status: "published",
+  });
+  expect(budget.take).toBe(3); // 98 actual rows; the same-transaction capture avoids 11 duplicate reads.
   expect(
     await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
   ).toEqual({ status: "available", reason: null });

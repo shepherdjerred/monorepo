@@ -1,4 +1,4 @@
-import { defaultScope } from "#shared/editions/scope.ts";
+import { nativeAssetBinding } from "#infrastructure/native-recovery/asset-binding.ts";
 import { z } from "zod";
 import { FinishedQuarantinePlexV3Schema } from "#shared/plex-binding/native-version.ts";
 import {
@@ -6,8 +6,7 @@ import {
   nativeSelection,
   nativeSelectionProof,
 } from "#automation/native-recovery/plex-proof.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { Prisma } from "#generated/prisma/client.ts";
+import { unconfirmedRecoveryHoldWrite } from "#infrastructure/recovery/hold-write.ts";
 import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
 import {
   NativeQuarantineNetworkEvidenceSchema,
@@ -112,15 +111,9 @@ export async function applyPreparedQuarantine(
               runtime.recoveryEpoch,
               file.assetVersion + 1,
             );
-            bindings.push({
-              assetId: file.assetId,
-              beforeVersion: file.assetVersion,
-              assetVersion: file.assetVersion + 1,
-              checksum: file.checksum,
-              mediaIds: file.mediaIds,
-              ownershipEpoch: runtime.recoveryEpoch,
-              subtitles,
-            });
+            bindings.push(
+              nativeAssetBinding(file, runtime.recoveryEpoch, subtitles),
+            );
           }
           const policies = await appendNativeSubtitlePolicies(tx, {
             policies: prepared.scope.subtitlePolicies,
@@ -129,22 +122,9 @@ export async function applyPreparedQuarantine(
             planId: plan.id,
           });
           for (const media of prepared.scope.media)
-            await tx.recoveryHold.upsert({
-              where: targetWhere(defaultScope(media.id)),
-              create: {
-                mediaId: media.id,
-                recoveryEpoch: runtime.recoveryEpoch,
-                reason: "recovery_request_history_unconfirmed",
-              },
-              update: {
-                recoveryEpoch: runtime.recoveryEpoch,
-                reason: "recovery_request_history_unconfirmed",
-                releasedAt: null,
-                releasedById: null,
-                releaseEvidence: Prisma.DbNull,
-                version: { increment: 1 },
-              },
-            });
+            await tx.recoveryHold.upsert(
+              unconfirmedRecoveryHoldWrite(media.id, runtime.recoveryEpoch),
+            );
           await tx.mediaRuntimeState.update({
             where: { id: "singleton" },
             data: {

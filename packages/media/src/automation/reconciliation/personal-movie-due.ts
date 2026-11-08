@@ -6,6 +6,7 @@ import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { movieTargetAfter } from "./movie-cursor.ts";
 import {
   bindPlexTransactionDeadline,
   plexBindingFreshness,
@@ -118,14 +119,7 @@ export async function sweepPersonalMovieDueV4(
       monitoring: true,
       libraryMonitoring: false,
       media: { kind: "movie" },
-      ...(cursor === null
-        ? {}
-        : {
-            OR: [
-              { mediaId: { gt: cursor[0] } },
-              { mediaId: cursor[0], edition: { gt: cursor[1] } },
-            ],
-          }),
+      ...movieTargetAfter(cursor),
     },
     orderBy: [{ mediaId: "asc" }, { edition: "asc" }],
     take: 2,

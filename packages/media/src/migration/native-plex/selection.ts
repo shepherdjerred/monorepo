@@ -156,7 +156,3 @@ export async function selectNativeCatalog(
   }
   return selected;
 }
-
-export type NativeCatalogSelection = Awaited<
-  ReturnType<typeof selectNativeCatalog>
->;

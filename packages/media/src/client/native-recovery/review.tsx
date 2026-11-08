@@ -73,6 +73,19 @@ export function NativeRecoveryReview({
         error={result.error}
       />
     );
+  const approval = {
+    acknowledged,
+    onAcknowledge: setAcknowledged,
+    onApply: () => {
+      apply.mutate();
+    },
+    pending: apply.isPending,
+    error: apply.error ?? result.error,
+    onRefresh: () => {
+      void result.refetch();
+    },
+    refreshing: result.isFetching,
+  };
   const compensation = compensationSelection(review);
   if (compensation !== null)
     return (
@@ -80,17 +93,7 @@ export function NativeRecoveryReview({
         user={user}
         review={compensation.review}
         scope={compensation.scope}
-        acknowledged={acknowledged}
-        onAcknowledge={setAcknowledged}
-        onApply={() => {
-          apply.mutate();
-        }}
-        pending={apply.isPending}
-        error={apply.error ?? result.error}
-        onRefresh={() => {
-          void result.refetch();
-        }}
-        refreshing={result.isFetching}
+        {...approval}
       />
     );
   const subtitlePolicies = reviewSubtitlePolicies(review);
@@ -98,21 +101,7 @@ export function NativeRecoveryReview({
   const archiveScope = archiveSelection(review);
   if (archiveScope !== null && review !== undefined)
     return (
-      <NativeArchiveReview
-        review={review}
-        scope={archiveScope}
-        acknowledged={acknowledged}
-        onAcknowledge={setAcknowledged}
-        onApply={() => {
-          apply.mutate();
-        }}
-        pending={apply.isPending}
-        error={apply.error ?? result.error}
-        onRefresh={() => {
-          void result.refetch();
-        }}
-        refreshing={result.isFetching}
-      />
+      <NativeArchiveReview review={review} scope={archiveScope} {...approval} />
     );
   return (
     <>

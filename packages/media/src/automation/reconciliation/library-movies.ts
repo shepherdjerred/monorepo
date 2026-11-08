@@ -9,6 +9,7 @@ import {
 } from "#shared/movie-editions/registry.ts";
 import { MediaError } from "#application/errors.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
+import { movieTargetAfter } from "./movie-cursor.ts";
 
 export const LIBRARY_MOVIE_DUE_CURSOR = "library-movie-due:";
 const Cursor = z.tuple([z.uuid(), MovieEditionKeySchema]);
@@ -86,14 +87,7 @@ export async function sweepLibraryMovieDue(
       desiredPresence: true,
       monitoring: true,
       media: { kind: "movie" },
-      ...(cursor === null
-        ? {}
-        : {
-            OR: [
-              { mediaId: { gt: cursor[0] } },
-              { mediaId: cursor[0], edition: { gt: cursor[1] } },
-            ],
-          }),
+      ...movieTargetAfter(cursor),
     },
     orderBy: [{ mediaId: "asc" }, { edition: "asc" }],
     take: 25,

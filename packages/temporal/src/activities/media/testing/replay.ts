@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { replayWorkflowFile } from "./process.ts";
 import {
   assertPrivateHistory,
   assertScopedMovieActivityBudgets,
@@ -35,25 +36,5 @@ export async function verifyMovieHistory(
   ]);
   const target = path.join(options.directory, `${options.name}.json`);
   await Bun.write(target, serialized);
-  const replay = Bun.spawn(
-    [
-      options.node,
-      "--experimental-strip-types",
-      options.script,
-      "replay",
-      target,
-    ],
-    {
-      env: options.childEnvironment,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [exitCode, , error] = await Promise.all([
-    replay.exited,
-    new Response(replay.stdout).text(),
-    new Response(replay.stderr).text(),
-  ]);
-  assert.equal(exitCode, 0, error);
+  await replayWorkflowFile({ ...options, filename: target });
 }

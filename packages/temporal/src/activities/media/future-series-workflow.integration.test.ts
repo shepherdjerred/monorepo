@@ -1,20 +1,26 @@
+import {
+  plexRoleActivities,
+  createMediaActivityTestWorker,
+  createAcquisitionFileTestWorker,
+} from "#activities/media/testing/activity-workers.ts";
+import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { Worker } from "@temporalio/worker";
+import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
 import { expect, test } from "vitest";
 import { createFutureSeriesWorkflowFixture } from "@shepherdjerred/media/testing/future-series-workflow";
-import {
-  createAcquisitionNetworkWorkerActivities,
-  createAcquisitionFileWorkerActivities,
-} from "./acquisition.ts";
+import { createAcquisitionNetworkWorkerActivities } from "./acquisition.ts";
 import { createCatalogCoverageWorkerActivities } from "./catalog-coverage.ts";
-import { createPlexPublicationActivities } from "./plex-publication.ts";
-import { createPlexBoundConsumerActivities } from "./plex-consumers.ts";
+
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  mediaWorkflowWorkerScript,
+  movieWorkflowChildEnvironment,
+  createMovieRoleEnvironment,
+  closeMovieRoleFixture,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
 } from "./testing/role-worker.ts";
@@ -97,27 +103,12 @@ async function replayHistory(
   ]);
   const target = path.join(options.directory, `${id}.json`);
   await Bun.write(target, serialized);
-  const replay = Bun.spawn(
-    [
-      options.node,
-      "--experimental-strip-types",
-      options.script,
-      "replay",
-      target,
-    ],
-    {
-      env: options.childEnvironment,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [code, , error] = await Promise.all([
-    replay.exited,
-    new Response(replay.stdout).text(),
-    new Response(replay.stderr).text(),
-  ]);
-  expect(code, error).toBe(0);
+  await replayWorkflowFile({
+    node: options.node,
+    script: options.script,
+    filename: target,
+    childEnvironment: options.childEnvironment,
+  });
 }
 
 test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
@@ -127,14 +118,7 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
     const directory = await mkdtemp(
       path.join(tmpdir(), "media-future-series-role-"),
     );
-    const environment = await TestWorkflowEnvironment.createLocal({
-      server: {
-        executable: { type: "existing-path", path: temporal },
-        ip: "127.0.0.1",
-        namespace: "dev",
-        ui: false,
-      },
-    });
+    const environment = await createMovieRoleEnvironment(temporal);
     let fixture: Scenario | undefined;
     let workflow: Bun.Subprocess | undefined;
     const workers: Worker[] = [];
@@ -148,14 +132,8 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
       expect(initial.episode).toBeNull();
       expect(initial.attempts).toEqual([]);
       expect(initial.personalRequests).toBe(0);
-      const script = new URL(
-        "../../../scripts/media-system/workflow-worker.ts",
-        import.meta.url,
-      ).pathname;
-      const runtimePath = Bun.env["PATH"];
-      if (runtimePath === undefined || runtimePath.length === 0)
-        throw new Error("Pinned runtime PATH required");
-      const childEnvironment = { PATH: runtimePath };
+      const script = mediaWorkflowWorkerScript;
+      const childEnvironment = movieWorkflowChildEnvironment();
       workflow = await startMovieWorkflowWorker({
         node,
         script,
@@ -163,8 +141,7 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
         directory,
         childEnvironment,
       });
-      const network = await Worker.create({
-        connection: environment.nativeConnection,
+      const network = await createMediaActivityTestWorker(environment, {
         namespace: "dev",
         taskQueue: TASK_QUEUES.MEDIA_NETWORK,
         activities: {
@@ -172,22 +149,18 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
           ...createCatalogCoverageWorkerActivities(() =>
             Promise.resolve({ catalogCoverage: scenario.catalogCoverage }),
           ),
-          ...createPlexPublicationActivities(scenario.loadPublication),
-          ...createPlexBoundConsumerActivities(scenario.loadPublication),
+          ...plexRoleActivities(scenario.loadPublication),
           refreshMediaCatalog: scenario.refreshMediaCatalog,
           finishMediaOperation: scenario.finishMediaOperation,
         },
       });
       workers.push(network);
       running.push(network.run());
-      const files = await Worker.create({
-        connection: environment.nativeConnection,
-        namespace: "dev",
-        taskQueue: TASK_QUEUES.MEDIA_FILES,
-        activities: createAcquisitionFileWorkerActivities(() =>
-          Promise.resolve({ acquisition: scenario.fileAcquisition }),
-        ),
-      });
+      const files = await createAcquisitionFileTestWorker(
+        environment,
+        "dev",
+        () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
+      );
       workers.push(files);
       running.push(files.run());
       const started = await runStages(scenario, environment);
@@ -250,24 +223,14 @@ test.each([undefined, "Season 02/03.mkv", "Season02/E03.mkv"])(
           privateTitle: scenario.privateTitle,
         });
     } finally {
-      try {
-        try {
-          for (const worker of workers) worker.shutdown();
-          await Promise.all(running);
-        } finally {
-          if (workflow !== undefined) {
-            workflow.kill("SIGTERM");
-            await workflow.exited;
-          }
-        }
-      } finally {
-        try {
-          await fixture?.close();
-        } finally {
-          await environment.teardown();
-          await rm(directory, { recursive: true, force: true });
-        }
-      }
+      await closeMovieRoleFixture({
+        workers,
+        running,
+        workflow,
+        fixture,
+        environment,
+        directory,
+      });
     }
   },
   60_000,

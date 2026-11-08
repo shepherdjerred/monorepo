@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MovieCaptionMarkersSchema } from "#infrastructure/movie-editions/subtitle-replacement/markers.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { NativeSubtitleSnapshot } from "#shared/native-subtitles.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
@@ -31,16 +32,9 @@ export async function captureRequestedMovieRollbackCaptionParentV1(
   },
   budget: PublicationAuthorityReadBudget,
 ) {
-  const markers = z
-    .object({
-      movieReplacementV2: z
-        .strictObject({ schemaVersion: z.literal(2), replacementId: z.uuid() })
-        .optional(),
-      movieInstallationV4: z
-        .strictObject({ schemaVersion: z.literal(4), operationId: z.uuid() })
-        .optional(),
-    })
-    .parse(input.caption.matchingEvidence);
+  const markers = MovieCaptionMarkersSchema.parse(
+    input.caption.matchingEvidence,
+  );
   if (markers.movieReplacementV2 !== undefined)
     return readReplacement(
       tx,

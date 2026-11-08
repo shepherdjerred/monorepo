@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "vitest";
-import { spawn } from "node:child_process";
+import { runCorpusCommand } from "./command.ts";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -29,38 +29,12 @@ async function fixture() {
   };
 }
 async function command(manifest: string, output: string) {
-  return new Promise<{ code: number | null; stdout: string; stderr: string }>(
-    (resolve, reject) => {
-      const child = spawn(
-        "bun",
-        [
-          "--no-install",
-          "scripts/corpus/replay.ts",
-          "--manifest",
-          manifest,
-          "--output",
-          output,
-        ],
-        {
-          cwd: packageRoot,
-          stdio: ["ignore", "pipe", "pipe"],
-          signal: AbortSignal.timeout(3000),
-        },
-      );
-      let stdout = "",
-        stderr = "";
-      child.stdout.setEncoding("utf8").on("data", (value: string) => {
-        stdout += value;
-      });
-      child.stderr.setEncoding("utf8").on("data", (value: string) => {
-        stderr += value;
-      });
-      child.once("error", reject);
-      child.once("close", (code) => {
-        resolve({ code, stdout, stderr });
-      });
-    },
-  );
+  return runCorpusCommand(packageRoot, "scripts/corpus/replay.ts", [
+    "--manifest",
+    manifest,
+    "--output",
+    output,
+  ]);
 }
 
 test("actual local corpus CLI writes a labelled report and refuses to overwrite it", async () => {

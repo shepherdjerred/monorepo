@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MovieCaptionMarkersSchema } from "#infrastructure/movie-editions/subtitle-replacement/markers.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { currentMovieSubtitleWorkV4 } from "#automation/movie-editions/subtitles/authority.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
@@ -60,16 +61,7 @@ async function captureLiteralMovieReplacementSourceV2(
   budget: PublicationAuthorityReadBudget,
 ) {
   const { old, scope, asset } = input;
-  const markers = z
-    .object({
-      movieReplacementV2: z
-        .strictObject({ schemaVersion: z.literal(2), replacementId: z.uuid() })
-        .optional(),
-      movieInstallationV4: z
-        .strictObject({ schemaVersion: z.literal(4), operationId: z.uuid() })
-        .optional(),
-    })
-    .parse(old.matchingEvidence);
+  const markers = MovieCaptionMarkersSchema.parse(old.matchingEvidence);
   if (markers.movieReplacementV2 !== undefined) {
     const previous = await readMovieReplacementReceiptV2(
       tx,

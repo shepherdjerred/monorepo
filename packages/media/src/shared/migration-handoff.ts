@@ -101,21 +101,3 @@ export const BundleReviewListSchema = z
     }),
   )
   .max(100);
-/** Request references trusted stored live proof; callers cannot submit 'quiescent' or 'owned' booleans. */
-export const ApplyMigrationSelectionSchema = z.strictObject({
-  proposalId: z.uuid(),
-  reportHash: EvidenceHashSchema,
-  bundleHash: EvidenceHashSchema,
-  expectedRecoveryEpoch: z.number().int().nonnegative(),
-  expectedRuntimeVersion: z.number().int().nonnegative(),
-  liveProofId: z.uuid(),
-  selected: z
-    .array(
-      z.strictObject({
-        provenanceKey: EvidenceHashSchema,
-        evidenceHash: EvidenceHashSchema,
-      }),
-    )
-    .min(1)
-    .max(1000),
-});

@@ -179,5 +179,4 @@ export type CorpusManifest = z.infer<typeof CorpusManifestSchema>;
 export type CorpusCase = CorpusManifest["cases"][number];
 export type CorpusInput = z.infer<typeof CorpusInputSchema>;
 export type CorpusRelease = z.infer<typeof CorpusReleaseSchema>;
-export type CorpusLabels = z.infer<typeof CorpusLabelsSchema>;
 export type CorpusPlan = z.infer<typeof CorpusPlanSchema>;

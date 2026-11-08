@@ -74,21 +74,9 @@ export const LibraryHandoffScopeV2Schema = HandoffScopeSchema.safeExtend({
     )
     .max(100),
 });
-export const HandoffScopeProtocolSchema = z.union([
-  HandoffScopeSchema,
-  LibraryHandoffScopeV2Schema,
-]);
-export const PrepareHandoffProtocolSchema = z.union([
-  PrepareHandoffSchema,
-  PrepareLibraryHandoffV2Schema,
-]);
 export const ApplyLibraryHandoffV2Schema = ApplyHandoffSchema.omit({
   acknowledgeProtectedLegacySources: true,
 }).extend({ schemaVersion: z.literal(2) });
-export const ApplyHandoffProtocolSchema = z.union([
-  ApplyHandoffSchema,
-  ApplyLibraryHandoffV2Schema,
-]);
 export const HandoffNetworkV2Schema = HandoffNetworkEvidenceSchema.extend({
   schemaVersion: z.literal(2),
   claims: z.array(HandoffNetworkEvidenceSchema.shape.claims.element).max(0),
@@ -104,12 +92,6 @@ export const HandoffNetworkV2Schema = HandoffNetworkEvidenceSchema.extend({
     )
     .max(1000),
 });
-export const HandoffNetworkProtocolSchema = z.union([
-  HandoffNetworkEvidenceSchema,
-  HandoffNetworkV2Schema,
-]);
-export type HandoffProtocolScope = z.infer<typeof HandoffScopeProtocolSchema>;
-export type LibraryHandoffScopeV2 = z.infer<typeof LibraryHandoffScopeV2Schema>;
 export const FinishedLibraryHandoffV2Schema = z.strictObject({
   schemaVersion: z.literal(2),
   scopeHash: EvidenceHashSchema,
@@ -133,21 +115,3 @@ export const LibraryHandoffSelectionV2Schema = z.strictObject({
     )
     .max(25),
 });
-
-export function handoffProtocolVersion(scope: HandoffProtocolScope): 1 | 2 {
-  return "schemaVersion" in scope ? 2 : 1;
-}
-
-export function assertHandoffNetworkProtocol(
-  scope: HandoffProtocolScope,
-  network: { schemaVersion: 1 | 2 },
-): void {
-  if (network.schemaVersion !== handoffProtocolVersion(scope))
-    throw new Error("Handoff file and network protocols differ");
-}
-
-export function handoffFileEdition(
-  file: HandoffProtocolScope["files"][number],
-): z.infer<typeof MovieEditionKeySchema> {
-  return "edition" in file ? file.edition : "default";
-}

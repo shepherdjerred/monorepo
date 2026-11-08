@@ -1,4 +1,5 @@
 import { archiveClosure } from "./closure.ts";
+import { nativeInventoryContext } from "#infrastructure/native-recovery/inventory-context.ts";
 import { snapshotArchiveFile } from "./file-snapshot.ts";
 import { NativeArchiveScopeProtection } from "./errors.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -19,17 +20,7 @@ export async function archiveInventory(
   tx: Prisma.TransactionClient,
   cursor: string | null,
 ) {
-  const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
-  const restore = await tx.operation.findFirst({
-    where: {
-      kind: "restore_observe",
-      status: "completed",
-      result: { path: ["recoveryEpoch"], equals: runtime.recoveryEpoch },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const { runtime, restore } = await nativeInventoryContext(tx);
   const rows = await tx.upgradeCleanup.findMany({
     where: {
       state: "pending",

@@ -2,8 +2,25 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
+FROM base AS manifests
+COPY --parents \
+  package.json scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/media'
+
 FROM base AS deps
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/media'
 
 FROM deps AS build
@@ -11,15 +28,19 @@ COPY --parents tsconfig.base.json packages/media packages/config packages/featur
 RUN cd packages/media && bun run generate && bun run build
 
 FROM base AS prod-deps
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/media'
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM base AS runtime
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/media /app/packages/media
 COPY --parents packages/config packages/feature-flags ./
 WORKDIR /app/packages/media
-RUN bunx --no-install --trust prisma generate
+RUN bunx --no-install --trust prisma generate \
+    && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7352

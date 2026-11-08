@@ -1,13 +1,7 @@
 import { z } from "zod";
-import {
-  NativeArchiveScopeSchema,
-  NativeArchiveFileEvidenceSchema,
-} from "./archive.ts";
+import { NativeArchiveScopeSchema } from "./archive.ts";
 import { NativeArchiveContinuationViewSchema } from "./archive-view.ts";
-import {
-  NativeCompensationScopeSchema,
-  NativeCompensationFileEvidenceSchema,
-} from "./compensation.ts";
+import { NativeCompensationScopeSchema } from "./compensation.ts";
 import {
   NativeCompensationContinuationViewSchema,
   SettledNativeCompensationSchema,
@@ -24,7 +18,6 @@ import {
 } from "./terminal.ts";
 import {
   NativeQuarantineScopeSchema,
-  NativeQuarantineFileEvidenceSchema,
   NativeQuarantineRestorationSchema,
   NativeQuarantineParticipantEvidenceSchema,
 } from "./quarantine.ts";
@@ -117,12 +110,6 @@ export const NativeStoredScopeSchema = z.union([
   NativeQuarantineScopeSchema,
   NativeArchiveScopeSchema,
   NativeCompensationScopeSchema,
-]);
-export const NativeStoredFileEvidenceSchema = z.union([
-  NativePublishedFileEvidenceSchema,
-  NativeQuarantineFileEvidenceSchema,
-  NativeArchiveFileEvidenceSchema,
-  NativeCompensationFileEvidenceSchema,
 ]);
 export const FinishedNativeV2Schema = z.strictObject({
   schemaVersion: z.literal(2),

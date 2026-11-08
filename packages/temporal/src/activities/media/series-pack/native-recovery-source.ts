@@ -1,3 +1,4 @@
+import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -140,7 +141,7 @@ export function createNativeSeriesPackSourceRoleV1(
           workflowId: start.workflowId,
           runId: handle.firstExecutionRunId,
         };
-      });
+      }, caseDeadline);
       expect(dispatched.dispatched).toBe(1);
       const started = execution;
       if (started === undefined)
@@ -192,21 +193,12 @@ export function createNativeSeriesPackSourceRoleV1(
       ]);
       const target = path.join(directory, "source-history.json");
       await Bun.write(target, serialized);
-      const replay = Bun.spawn(
-        [node, "--experimental-strip-types", script, "replay", target],
-        {
-          env: childEnvironment,
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "pipe",
-        },
-      );
-      const [code, , failure] = await Promise.all([
-        replay.exited,
-        new Response(replay.stdout).text(),
-        new Response(replay.stderr).text(),
-      ]);
-      expect(code, failure).toBe(0);
+      await replayWorkflowFile({
+        node: node,
+        script: script,
+        filename: target,
+        childEnvironment: childEnvironment,
+      });
     },
   };
 }

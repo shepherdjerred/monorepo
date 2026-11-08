@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { compensationInventoryItem } from "./inventory/item.ts";
 import {
   NativeCompensationInventorySchema,
   NativeCompensationContinuationViewSchema,
@@ -135,16 +136,11 @@ export async function compensationInventory(
       orderBy: { id: "asc" },
     });
     items.push({
-      transitionId: row.id,
-      attemptId: row.attemptId,
-      birthEpoch: row.birthEpoch,
-      media,
-      predecessors: intent.entries.flatMap((item) =>
-        item.predecessor === null
-          ? []
-          : [{ assetId: item.predecessor.id, path: item.predecessor.path }],
-      ),
-      successorAssetIds: intent.entries.map((item) => item.entry.assetId),
+      ...compensationInventoryItem({
+        transition: row,
+        media,
+        entries: intent.entries,
+      }),
       selectable: protection === null,
       protection,
     });

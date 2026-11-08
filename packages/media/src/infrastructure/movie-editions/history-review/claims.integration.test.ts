@@ -31,6 +31,9 @@ test.each(["default", "directors_cut"] as const)(
   async (edition) => {
     const f = await createMovieHistoryFixture(edition, bytes);
     closers.push(f.close);
+    await f.db.qualityProfileDefault.create({
+      data: { kind: "movie", profileId: f.original.profile.id },
+    });
     const context = await new PrismaMediaApplication(
       f.db,
       f.settings,

@@ -1,17 +1,17 @@
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { Worker } from "@temporalio/worker";
+
 import { expect, test } from "vitest";
 import { createMovieContinuationFixture } from "@shepherdjerred/media/testing/movie-retry-continuation-workflow";
-import {
-  createMovieNetworkWorkerActivitiesV4,
-  createMovieFileWorkerActivitiesV4,
-} from "#activities/media/movie-editions.ts";
+import { startMovieRoleActivitiesV4 as startRoles } from "#activities/media/testing/movie-role-activities.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { verifyMovieHistory } from "#activities/media/testing/replay.ts";
 import {
+  mediaWorkflowWorkerScript,
+  createMovieRoleEnvironment,
+  closeMovieRoleFixture as closeRole,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
 } from "#activities/media/testing/role-worker.ts";
@@ -35,64 +35,6 @@ function birth(attempt: NonNullable<Evidence["attempt"]>) {
     movieEditionChoiceRevision: attempt.movieEditionChoiceRevision,
     movieEditionAuthority: attempt.movieEditionAuthority,
   };
-}
-
-async function startRoles(
-  environment: TestWorkflowEnvironment,
-  scenario: Scenario,
-  roles: { workers: Worker[]; running: Promise<void>[] },
-) {
-  const network = await Worker.create({
-    connection: environment.nativeConnection,
-    namespace: "dev",
-    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-    activities: {
-      ...createMovieNetworkWorkerActivitiesV4(() =>
-        Promise.resolve({ movie: scenario.movie }),
-      ),
-      finishMediaOperation: scenario.finishMediaOperation,
-    },
-  });
-  roles.workers.push(network);
-  roles.running.push(network.run());
-  const files = await Worker.create({
-    connection: environment.nativeConnection,
-    namespace: "dev",
-    taskQueue: TASK_QUEUES.MEDIA_FILES,
-    activities: createMovieFileWorkerActivitiesV4(() =>
-      Promise.resolve({ movie: scenario.fileMovie }),
-    ),
-  });
-  roles.workers.push(files);
-  roles.running.push(files.run());
-}
-
-async function closeRole(input: {
-  workers: Worker[];
-  running: Promise<void>[];
-  workflow: Bun.Subprocess | undefined;
-  fixture: Scenario | undefined;
-  environment: TestWorkflowEnvironment;
-  directory: string;
-}) {
-  try {
-    try {
-      for (const worker of input.workers) worker.shutdown();
-      await Promise.all(input.running);
-    } finally {
-      if (input.workflow !== undefined) {
-        input.workflow.kill("SIGTERM");
-        await input.workflow.exited;
-      }
-    }
-  } finally {
-    try {
-      await input.fixture?.close();
-    } finally {
-      await input.environment.teardown();
-      await rm(input.directory, { recursive: true, force: true });
-    }
-  }
 }
 
 async function assertCompleted(
@@ -146,14 +88,7 @@ test.each(["intent", "imported", "plex"] as const)(
     const directory = await mkdtemp(
       path.join(tmpdir(), "media-movie-continuation-role-"),
     );
-    const environment = await TestWorkflowEnvironment.createLocal({
-      server: {
-        executable: { type: "existing-path", path: temporal },
-        ip: "127.0.0.1",
-        namespace: "dev",
-        ui: false,
-      },
-    });
+    const environment = await createMovieRoleEnvironment(temporal);
     let fixture: Scenario | undefined;
     let workflow: Bun.Subprocess | undefined;
     const workers: Worker[] = [];
@@ -178,10 +113,7 @@ test.each(["intent", "imported", "plex"] as const)(
         return { runId: actual.runId, status: actual.status.name };
       });
       scenario.enableFailure(phase);
-      const script = new URL(
-        "../../../../scripts/media-system/workflow-worker.ts",
-        import.meta.url,
-      ).pathname;
+      const script = mediaWorkflowWorkerScript;
       const childEnvironment = { PATH: Bun.env["PATH"] ?? "/usr/bin:/bin" };
       workflow = await startMovieWorkflowWorker({
         node,

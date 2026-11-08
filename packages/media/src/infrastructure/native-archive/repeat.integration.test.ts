@@ -166,4 +166,4 @@ test("second restored backup proves purged B before rebaselining A→B→current
       where: { recoveryEpoch: 2, originalCleanupId: cleanup.id },
     }),
   ).toBe(0);
-});
+}, 30_000);

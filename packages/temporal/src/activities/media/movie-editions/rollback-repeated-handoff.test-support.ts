@@ -1,4 +1,5 @@
-import { Worker } from "@temporalio/worker";
+import { createMediaActivityTestWorker } from "#activities/media/testing/activity-workers.ts";
+
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import type { HandoffScenario } from "./rollback-handoff.test-support.ts";
 import {
@@ -72,8 +73,7 @@ export async function repeatedHandoffRoles(
   const actual = createRequestedMovieRollbackFileWorkerActivitiesV1(() =>
     Promise.resolve({ movie: scenario.fileMovie }),
   );
-  const files = await Worker.create({
-    connection: environment.nativeConnection,
+  const files = await createMediaActivityTestWorker(environment, {
     namespace: "default",
     taskQueue: TASK_QUEUES.MEDIA_FILES,
     activities: {
@@ -86,8 +86,7 @@ export async function repeatedHandoffRoles(
         ),
     },
   });
-  const network = await Worker.create({
-    connection: environment.nativeConnection,
+  const network = await createMediaActivityTestWorker(environment, {
     namespace: "default",
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {

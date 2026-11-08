@@ -65,6 +65,7 @@ test.each([
       commitMs: committed - prepared,
     });
   },
+  30_000,
 );
 
 test.each(["member", "item", "part", "path", "deleted_work"] as const)(

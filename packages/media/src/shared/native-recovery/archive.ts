@@ -323,22 +323,7 @@ export const NativeArchiveExecutionSchema = z.strictObject({
   continuationId: z.uuid(),
   descriptorHash: Hash,
   recoveryEpoch: z.int().nonnegative(),
-  participants: z
-    .array(
-      z.strictObject({
-        assetId: z.uuid(),
-        subtitleId: z.uuid().nullable(),
-        libraryKind: z.enum(["movies", "tv"]),
-        location: z.enum(["rollback", "quarantine"]),
-        id: z.string().regex(/^[\w-]{1,100}$/u),
-        canonicalPath: Path,
-        checksum: Hash,
-        sizeBytes: z.string().regex(/^\d+$/u),
-        identity: NativeFileIdentitySchema,
-      }),
-    )
-    .min(1)
-    .max(101),
+  participants: z.array(ArchiveParticipant).min(1).max(101),
 });
 export const NativeArchiveCompletionSchema = z.strictObject({
   schemaVersion: z.literal(1),

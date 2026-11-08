@@ -1,13 +1,16 @@
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { expect, test } from "vitest";
 import { createAutomaticMovieRollbackHandoffFixture } from "@shepherdjerred/media/testing/movie-automatic-rollback-handoff";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  mediaWorkflowWorkerScript,
+  movieWorkflowChildEnvironment,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
+  closeMovieRoleFixtureSequential,
 } from "#activities/media/testing/role-worker.ts";
 import { verifyMovieHistory } from "#activities/media/testing/replay.ts";
 import {
@@ -121,14 +124,8 @@ test("a real interrupted automatic rollback closes both original runs and resume
       immutable: await fixture.immutable(),
       state: await fixture.state(),
     };
-    const script = new URL(
-      "../../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
-    const runtimePath = Bun.env["PATH"];
-    if (runtimePath === undefined || runtimePath.length === 0)
-      throw new Error("Pinned runtime PATH required");
-    const childEnvironment = { PATH: runtimePath };
+    const script = mediaWorkflowWorkerScript;
+    const childEnvironment = movieWorkflowChildEnvironment();
     workflow = await startMovieWorkflowWorker({
       node,
       script,
@@ -266,22 +263,17 @@ test("a real interrupted automatic rollback closes both original runs and resume
   } finally {
     interruption?.continueAdmission();
     interruption?.continueAck();
-    try {
-      if (roles !== undefined) {
-        for (const worker of roles.workers) worker.shutdown();
-        await Promise.all(roles.running);
-      }
-      if (workflow !== undefined) {
-        workflow.kill("SIGTERM");
-        await workflow.exited;
-      }
-    } finally {
-      try {
-        await scenario?.close();
-      } finally {
-        await environment.teardown();
-        await rm(directory, { recursive: true, force: true });
-      }
-    }
+    await closeMovieRoleFixtureSequential({
+      stopActivities: async () => {
+        if (roles !== undefined) {
+          for (const worker of roles.workers) worker.shutdown();
+          await Promise.all(roles.running);
+        }
+      },
+      workflow,
+      fixture: scenario,
+      environment,
+      directory,
+    });
   }
 }, 90_000);

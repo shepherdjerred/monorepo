@@ -3,6 +3,7 @@ import type { NotificationContext } from "#automation/notifications/types.ts";
 import type { MovieNoticeDelivery } from "./authority.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
+import { movieNoticeRecipient } from "./recipient.ts";
 import {
   assertPreparedMovieRemovalNoticeV4,
   type PreparedMovieRemovalNoticeV4,
@@ -57,19 +58,7 @@ async function removalRecipient(
   delivery: MovieNoticeDelivery,
 ): Promise<{ channel: "email" | "discord"; recipient: string } | null> {
   const preference = delivery.user.notificationPreference;
-  if (preference?.removalCompleted !== true || delivery.user.restricted)
-    return null;
-  if (delivery.channel === "email")
-    return preference.emailEnabled &&
-      delivery.user.emailVerifiedAt !== null &&
-      delivery.user.email !== null
-      ? { channel: "email", recipient: delivery.user.email }
-      : null;
-  if (delivery.channel === "discord")
-    return preference.discordEnabled &&
-      delivery.user.discordId !== null &&
-      (await context.personalDiscordAvailable?.()) === true
-      ? { channel: "discord", recipient: delivery.user.discordId }
-      : null;
-  return null;
+  return preference?.removalCompleted !== true || delivery.user.restricted
+    ? null
+    : movieNoticeRecipient(context, delivery, preference);
 }

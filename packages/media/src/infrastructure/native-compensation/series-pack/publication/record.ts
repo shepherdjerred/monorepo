@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { canonicalJson } from "#migration/profile-import.ts";
 import {
   SeriesPackNativePublicationCommandV2Schema,
@@ -162,11 +161,4 @@ export async function readSeriesPackNativePublicationV1(
   };
   assertServingReceipt3();
   return { record, operation, ...identity, proof, release };
-}
-
-export function seriesPackNativeContinuationHashV1(
-  row: Awaited<ReturnType<typeof readSeriesPackNativeCoreRecordV1>>["row"],
-) {
-  const { receipt: _receipt, ...continuation } = row;
-  return identityHash(nativeJson(continuation));
 }

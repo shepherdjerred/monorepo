@@ -89,8 +89,4 @@ export const LibraryPlexReceiptV1Schema = z
       Date.parse(proof.committedAt) < Date.parse(verification.expiresAt)
     );
   }, "Library serving completion must retain its exact source and original verification bounds");
-export const LibraryPlexReceiptEnvelopeV1Schema = z.strictObject({
-  receipt: LibraryPlexReceiptV1Schema,
-  receiptHash: Hash,
-});
 export type LibraryPlexReceiptV1 = z.infer<typeof LibraryPlexReceiptV1Schema>;

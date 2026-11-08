@@ -1,3 +1,7 @@
+import {
+  embeddedSubtitleFields,
+  embeddedProbeEvidence,
+} from "#automation/files/subtitle-lifecycle/embedded-data.ts";
 import nodePath from "node:path";
 import type { Transaction, FilePlanEntry } from "#automation/files/types.ts";
 import { FileGuardError } from "#automation/files/types.ts";
@@ -32,41 +36,15 @@ export async function writeSeriesPackEmbeddedV1(
       throw new FileGuardError("embedded_content_changed");
     const row = await tx.subtitleAsset.create({
       data: {
-        id: subtitle.id,
-        assetId: entry.assetId,
-        language: subtitle.language,
-        providerId: "embedded",
-        state: "validated",
-        qualityStatus: "accepted",
-        storageKind: "sidecar",
-        ownershipEpoch: epoch,
-        checksum: subtitle.checksum,
-        videoChecksum: entry.checksum,
-        videoVersion: 0,
-        content: new Uint8Array(prepared.bytes),
-        ...(observed === undefined
-          ? {}
-          : {
-              forced: observed.forced,
-              hearingImpaired: observed.hearingImpaired,
-            }),
-        provenance: {
-          filename: `embedded.${subtitle.format}`,
-          description: "Embedded text track from the exact imported video",
-          format: subtitle.format,
-          streamIndex: subtitle.streamIndex,
-          checksum: subtitle.checksum,
-        },
+        ...embeddedSubtitleFields({
+          entry,
+          subtitle,
+          epoch: epoch,
+          bytes: prepared.bytes,
+          observed,
+        }),
         matchingEvidence: {
-          ...(facts === undefined || observed === undefined
-            ? {}
-            : {
-                embeddedSourceV2: {
-                  schemaVersion: 2,
-                  probeHash: facts.probeHash,
-                  streamIndex: observed.streamIndex,
-                },
-              }),
+          ...embeddedProbeEvidence(facts, observed),
           assetVersion: 0,
           assetChecksum: entry.checksum,
           exactMediaMatch: true,

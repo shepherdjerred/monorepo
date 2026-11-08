@@ -52,8 +52,3 @@ export const MoviePlexReceiptV2Schema = z.strictObject({
   publishedAt: z.iso.datetime(),
   committedAt: z.iso.datetime(),
 });
-export const MoviePlexReceiptEnvelopeV2Schema = z.strictObject({
-  receipt: MoviePlexReceiptV2Schema,
-  receiptHash: Hash,
-});
-export type MoviePlexReceiptV2 = z.infer<typeof MoviePlexReceiptV2Schema>;

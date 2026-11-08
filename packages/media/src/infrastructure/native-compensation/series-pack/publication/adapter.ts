@@ -3,13 +3,11 @@ import type { PublicationAuthorityReadBudget } from "#infrastructure/publication
 import type { PlexBindingLockScope } from "#shared/plex-binding/expected.ts";
 import {
   assertCompensationPublicationPhase as assertHistoricalPhase,
-  assertCompensationPublicationPhaseCurrent as assertHistoricalCurrent,
   assertCompensationPublicationLockScope as assertHistoricalLockScope,
   type CompensationPublicationPhase as HistoricalPhase,
 } from "#infrastructure/native-compensation/publication/phase.ts";
 import {
   assertSeriesPackNativePublicationPhaseV1,
-  assertSeriesPackNativePublicationPhaseCurrentV1,
   assertSeriesPackNativePublicationLockScopeV1,
   type SeriesPackNativePublicationPhaseV1,
 } from "./phase.ts";
@@ -40,14 +38,4 @@ export function assertCompensationPublicationLockScope(
     return;
   }
   assertHistoricalLockScope(tx, phase, scope, budget);
-}
-
-export function assertCompensationPublicationPhaseCurrent(
-  tx: Prisma.TransactionClient,
-  phase: CompensationPublicationPhase,
-  budget: PublicationAuthorityReadBudget,
-) {
-  return "protocol" in phase
-    ? assertSeriesPackNativePublicationPhaseCurrentV1(tx, phase, budget)
-    : assertHistoricalCurrent(tx, phase, budget);
 }

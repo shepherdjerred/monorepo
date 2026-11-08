@@ -190,4 +190,3 @@ export const NativeRecoveryInventorySchema = z.strictObject({
     .max(100),
 });
 export type NativeRecoveryScope = z.infer<typeof NativeRecoveryScopeSchema>;
-export type NativeRecoveryFile = z.infer<typeof NativeRecoveryFileSchema>;

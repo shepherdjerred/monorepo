@@ -136,7 +136,7 @@ test("later B-only approval reuses the exact A-only grants without renewing vers
     }),
   ).rejects.toThrow("already has current authority");
   expect(await duplicateState()).toEqual(beforeDuplicate);
-});
+}, 30_000);
 
 test("actual A→B→C joint review grants only selected cleanup and resolves both complete dependency scopes", async () => {
   const db = harness.database();

@@ -80,16 +80,6 @@ export async function readOrdinaryPlexRestoration(
   return { receipt, manifest };
 }
 
-/** A source FilePlan proves bytes, never current request, choice, or generation consent. */
-export async function assertOrdinaryPlexLineage(
-  tx: Prisma.TransactionClient,
-  group: PlexPhysicalGroup,
-  purpose: "cold_ordinary" | "current_acquisition" = "cold_ordinary",
-): Promise<void> {
-  const reader = await ordinaryPlexLineageReader(tx, [group]);
-  await reader.assert(group, purpose);
-}
-
 /** Exact parent indexing lives only in this capture/assert call, never across a transaction or write. */
 export async function ordinaryPlexLineageReader(
   tx: Prisma.TransactionClient,

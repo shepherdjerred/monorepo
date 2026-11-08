@@ -1,4 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
 import {
   CancelMovieRequestV3Schema,
   RevokeMovieEditionChoiceV3Schema,
@@ -98,16 +97,5 @@ export function movieProtectionMutationOptions() {
     onSuccess: (_result: unknown, input: MovieProtectionSubmission) =>
       invalidateMovieRequests(input.body.scope.mediaId),
     retry: false as const,
-  };
-}
-
-export function useMovieProtection() {
-  const mutation = useMutation(movieProtectionMutationOptions());
-  return {
-    ...mutation,
-    submit: (input: MovieProtectionSubmission) => {
-      if (!commandNeedsReview(mutation.error))
-        mutation.mutate(movieProtectionAttempt(mutation, input));
-    },
   };
 }

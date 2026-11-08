@@ -175,9 +175,6 @@ export const NativeQuarantineRestorationSchema = z.strictObject({
 });
 export type NativeQuarantineScope = z.infer<typeof NativeQuarantineScopeSchema>;
 export type NativeQuarantineFile = z.infer<typeof NativeQuarantineFileSchema>;
-export type NativeQuarantineFileEvidence = z.infer<
-  typeof NativeQuarantineFileEvidenceSchema
->;
 export type NativeQuarantineContinuation = z.infer<
   typeof NativeQuarantineContinuationSchema
 >;

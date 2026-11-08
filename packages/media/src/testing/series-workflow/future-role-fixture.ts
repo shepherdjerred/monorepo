@@ -1,7 +1,7 @@
-import { readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { createManagedSeriesFixture } from "./fixture.ts";
 import { futureSeriesCatalog } from "./catalog-wire.ts";
@@ -23,17 +23,7 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 export async function createFutureSeriesWorkflowFixture(
   options: { memberPath?: string } = {},
 ) {
-  const cluster = await startMediaTestPostgres();
-  const db = cluster.database;
-  const directories: string[] = [];
-  const close = async () => {
-    try {
-      await cluster.close();
-    } finally {
-      for (const directory of directories)
-        await rm(directory, { recursive: true, force: true });
-    }
-  };
+  const { db, directories, close } = await createFixtureLifecycle();
   try {
     const original = await movieVideoFixture(1280);
     const upgrade = await movieVideoFixture(1920, undefined, {

@@ -5,7 +5,6 @@ import {
 } from "#testing/movie-workflow/retry-continuation-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
-import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { z } from "zod";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
@@ -109,19 +108,6 @@ export async function attemptInput(f: Fixture, operationId: string) {
     operationId,
     attemptId: evidence.attempt.id,
     scope: f.input.scope,
-  };
-}
-
-export async function actualQueued(f: Fixture, operationId: string) {
-  const operation = await f.db.operation.findUniqueOrThrow({
-    where: { id: operationId },
-  });
-  expect(operation.kind).toBe("reconcile_movie_edition_v4");
-  return {
-    operation,
-    input: MovieOperationV4Schema.parse(
-      z.object(MovieOperationV4Schema.shape).parse(operation.payload),
-    ),
   };
 }
 

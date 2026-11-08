@@ -1,6 +1,8 @@
+import {
+  readRetainedProviderSource,
+  retainedProviderSourceMatches,
+} from "#automation/acquisition-management/retained-source.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import { StoredCandidateSchema } from "#automation/providers.ts";
-import { candidateSourceIdentity } from "#automation/candidate-evidence.ts";
 import { serializable } from "#automation/store.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
@@ -41,24 +43,12 @@ export async function assessSeriesPackV1(
     throw seriesPackChanged(
       "Pack interpretation requires actual retained provider bytes",
     );
-  const source = StoredCandidateSchema.parse(
-    JSON.parse(
-      context.cipher.decrypt(
-        release.encryptedSource,
-        `release:${release.providerId}:${release.providerReleaseId}`,
-      ),
-    ),
+  const source = readRetainedProviderSource(
+    context.cipher,
+    release.encryptedSource,
+    release,
   );
-  if (
-    source.providerId !== release.providerId ||
-    source.providerReleaseId !== release.providerReleaseId ||
-    source.title !== release.title ||
-    source.sizeBytes !==
-      PublicReleaseAttributesSchema.parse(release.attributes).sizeBytes ||
-    (input.observedSource !== undefined &&
-      candidateSourceIdentity(source) !==
-        candidateSourceIdentity(input.observedSource))
-  )
+  if (!retainedProviderSourceMatches(source, release, input.observedSource))
     throw seriesPackChanged(
       "Observed pack source differs from its original retained bytes",
     );

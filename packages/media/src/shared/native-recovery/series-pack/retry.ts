@@ -18,6 +18,3 @@ export const SeriesPackNativeRetryV1Schema = z.strictObject({
   observedAt: z.iso.datetime(),
   expiresAt: z.iso.datetime(),
 });
-export type SeriesPackNativeRetryV1 = z.infer<
-  typeof SeriesPackNativeRetryV1Schema
->;

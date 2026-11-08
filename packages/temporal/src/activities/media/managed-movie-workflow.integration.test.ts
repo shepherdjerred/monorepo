@@ -1,17 +1,17 @@
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { Worker } from "@temporalio/worker";
+
 import { expect, test } from "vitest";
 import { createManagedMovieWorkflowFixture } from "@shepherdjerred/media/testing/managed-movie-workflow";
-import {
-  createMovieNetworkWorkerActivitiesV4,
-  createMovieFileWorkerActivitiesV4,
-} from "./movie-editions.ts";
+import { startMovieRoleActivitiesV4 } from "./testing/movie-role-activities.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { verifyMovieHistory } from "./testing/replay.ts";
 import {
+  mediaWorkflowWorkerScript,
+  createMovieRoleEnvironment,
+  closeMovieRoleFixture,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
 } from "./testing/role-worker.ts";
@@ -31,14 +31,7 @@ test.each([
     const directory = await mkdtemp(
       path.join(tmpdir(), "media-managed-movie-role-"),
     );
-    const environment = await TestWorkflowEnvironment.createLocal({
-      server: {
-        executable: { type: "existing-path", path: temporal },
-        ip: "127.0.0.1",
-        namespace: "dev",
-        ui: false,
-      },
-    });
+    const environment = await createMovieRoleEnvironment(temporal);
     let fixture:
       Awaited<ReturnType<typeof createManagedMovieWorkflowFixture>> | undefined;
     let workflow: Bun.Subprocess | undefined;
@@ -51,10 +44,7 @@ test.each([
       expect(initial.attempts).toEqual([]);
       expect(initial.personalRequests).toBe(0);
       expect(initial.personalChoices).toBe(0);
-      const script = new URL(
-        "../../../scripts/media-system/workflow-worker.ts",
-        import.meta.url,
-      ).pathname;
+      const script = mediaWorkflowWorkerScript;
       const childEnvironment = { PATH: Bun.env["PATH"] ?? "/usr/bin:/bin" };
       workflow = await startMovieWorkflowWorker({
         node,
@@ -63,29 +53,10 @@ test.each([
         directory,
         childEnvironment,
       });
-      const network = await Worker.create({
-        connection: environment.nativeConnection,
-        namespace: "dev",
-        taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-        activities: {
-          ...createMovieNetworkWorkerActivitiesV4(() =>
-            Promise.resolve({ movie: scenario.movie }),
-          ),
-          finishMediaOperation: scenario.finishMediaOperation,
-        },
+      await startMovieRoleActivitiesV4(environment, scenario, {
+        workers,
+        running,
       });
-      workers.push(network);
-      running.push(network.run());
-      const files = await Worker.create({
-        connection: environment.nativeConnection,
-        namespace: "dev",
-        taskQueue: TASK_QUEUES.MEDIA_FILES,
-        activities: createMovieFileWorkerActivitiesV4(() =>
-          Promise.resolve({ movie: scenario.fileMovie }),
-        ),
-      });
-      workers.push(files);
-      running.push(files.run());
       const dispatched = await scenario.dispatch(async (start) => {
         if (start.input["operationId"] !== scenario.input.operationId)
           throw new Error(
@@ -160,24 +131,14 @@ test.each([
         });
       }
     } finally {
-      try {
-        try {
-          for (const worker of workers) worker.shutdown();
-          await Promise.all(running);
-        } finally {
-          if (workflow !== undefined) {
-            workflow.kill("SIGTERM");
-            await workflow.exited;
-          }
-        }
-      } finally {
-        try {
-          await fixture?.close();
-        } finally {
-          await environment.teardown();
-          await rm(directory, { recursive: true, force: true });
-        }
-      }
+      await closeMovieRoleFixture({
+        workers,
+        running,
+        workflow,
+        fixture,
+        environment,
+        directory,
+      });
     }
   },
   60_000,

@@ -1,5 +1,6 @@
+import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { Worker } from "@temporalio/worker";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
@@ -14,6 +15,9 @@ import {
 import { createMovieWatchWorkerActivitiesV4 } from "./movie-watch.ts";
 import { createPlexBoundConsumerActivities } from "./plex-consumers.ts";
 import {
+  mediaWorkflowWorkerScript,
+  movieWorkflowChildEnvironment,
+  closeMovieRoleFixture,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
 } from "./testing/role-worker.ts";
@@ -60,14 +64,8 @@ test.each([
         true,
       );
       expect(initial.journals).toEqual([]);
-      const script = new URL(
-        "../../../scripts/media-system/workflow-worker.ts",
-        import.meta.url,
-      ).pathname;
-      const runtimePath = Bun.env["PATH"];
-      if (runtimePath === undefined || runtimePath.length === 0)
-        throw new Error("Pinned runtime PATH required");
-      const childEnvironment = { PATH: runtimePath };
+      const script = mediaWorkflowWorkerScript;
+      const childEnvironment = movieWorkflowChildEnvironment();
       workflow = await startMovieWorkflowWorker({
         node,
         script,
@@ -189,24 +187,14 @@ test.each([
         });
       }
     } finally {
-      try {
-        try {
-          for (const worker of workers) worker.shutdown();
-          await Promise.all(running);
-        } finally {
-          if (workflow !== undefined) {
-            workflow.kill("SIGTERM");
-            await workflow.exited;
-          }
-        }
-      } finally {
-        try {
-          await fixture?.close();
-        } finally {
-          await environment.teardown();
-          await rm(directory, { recursive: true, force: true });
-        }
-      }
+      await closeMovieRoleFixture({
+        workers,
+        running,
+        workflow,
+        fixture,
+        environment,
+        directory,
+      });
     }
   },
   60_000,
@@ -218,6 +206,22 @@ const PhysicalReceipt = z.object({
     .catchall(z.json()),
   receiptHash: z.string(),
 });
+const PlexAssociation = z.object({
+  item: z
+    .object({
+      ratingKey: z.string(),
+      media: z.tuple([
+        z
+          .object({
+            parts: z.tuple([
+              z.object({ id: z.string(), file: z.string() }).catchall(z.json()),
+            ]),
+          })
+          .catchall(z.json()),
+      ]),
+    })
+    .catchall(z.json()),
+});
 const PlexReceipt = z.object({
   receipt: z
     .object({
@@ -226,28 +230,7 @@ const PlexReceipt = z.object({
       assetPlexPublishedAt: z.iso.datetime().nullable(),
       observation: z
         .object({
-          associations: z.tuple([
-            z
-              .object({
-                item: z
-                  .object({
-                    ratingKey: z.string(),
-                    media: z.tuple([
-                      z
-                        .object({
-                          parts: z.tuple([
-                            z
-                              .object({ id: z.string(), file: z.string() })
-                              .catchall(z.json()),
-                          ]),
-                        })
-                        .catchall(z.json()),
-                    ]),
-                  })
-                  .catchall(z.json()),
-              })
-              .catchall(z.json()),
-          ]),
+          associations: z.tuple([PlexAssociation.catchall(z.json())]),
           verification: z
             .object({ passes: z.array(z.json()) })
             .catchall(z.json()),
@@ -309,26 +292,7 @@ function assertActualRestoration(
   expect(
     raw.movieRestorePlexReceiptV1.receipt.observation.verification.passes,
   ).toHaveLength(2);
-  const original = z
-    .object({
-      item: z
-        .object({
-          ratingKey: z.string(),
-          media: z.tuple([
-            z
-              .object({
-                parts: z.tuple([
-                  z
-                    .object({ id: z.string(), file: z.string() })
-                    .catchall(z.json()),
-                ]),
-              })
-              .catchall(z.json()),
-          ]),
-        })
-        .catchall(z.json()),
-    })
-    .parse(scenario.originalAssociation.evidence);
+  const original = PlexAssociation.parse(scenario.originalAssociation.evidence);
   const actual =
     raw.movieRestorePlexReceiptV1.receipt.observation.associations[0].item;
   expect(actual.ratingKey).toBe(original.item.ratingKey);
@@ -412,25 +376,10 @@ async function replayRestoreHistory(
   ]);
   const historyPath = path.join(options.directory, `${options.name}.json`);
   await Bun.write(historyPath, history);
-  const replay = Bun.spawn(
-    [
-      options.node,
-      "--experimental-strip-types",
-      options.script,
-      "replay",
-      historyPath,
-    ],
-    {
-      env: options.childEnvironment,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [code, , error] = await Promise.all([
-    replay.exited,
-    new Response(replay.stdout).text(),
-    new Response(replay.stderr).text(),
-  ]);
-  expect(code, error).toBe(0);
+  await replayWorkflowFile({
+    node: options.node,
+    script: options.script,
+    filename: historyPath,
+    childEnvironment: options.childEnvironment,
+  });
 }

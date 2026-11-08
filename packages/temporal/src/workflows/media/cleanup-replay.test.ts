@@ -1,3 +1,7 @@
+import {
+  createMediaWorkflowTestWorker,
+  drainMediaWorkflowTestWorkers,
+} from "#activities/media/testing/workflow-workers.ts";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
@@ -31,12 +35,10 @@ test.each(histories)(
     const calls: { kind: string; input: unknown }[] = [];
     let cleanups = 0;
     try {
-      const workflow = await Worker.create({
-        connection: environment.nativeConnection,
-        taskQueue: TASK_QUEUES.WORKFLOWS,
-        workflowsPath: new URL(`fixtures/${fixture}.ts`, import.meta.url)
-          .pathname,
-      });
+      const workflow = await createMediaWorkflowTestWorker(
+        environment,
+        new URL(`fixtures/${fixture}.ts`, import.meta.url).pathname,
+      );
       const files = await Worker.create({
         connection: environment.nativeConnection,
         taskQueue: TASK_QUEUES.MEDIA_FILES,
@@ -133,12 +135,7 @@ test.each(histories)(
       );
       await Worker.runReplayHistory({ workflowsPath }, history);
     } finally {
-      try {
-        for (const { worker } of started) worker.shutdown();
-        await Promise.all(started.map(({ running }) => running));
-      } finally {
-        await environment.teardown();
-      }
+      await drainMediaWorkflowTestWorkers(environment, started);
     }
   },
   60_000,

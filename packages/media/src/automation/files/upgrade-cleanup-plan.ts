@@ -27,13 +27,10 @@ type CleanupAsset = Pick<
   subtitles: SubtitleAsset[];
 };
 
-/** Pure descriptor derivation. It neither certifies journals nor mutates historical cleanup rows. */
-export function deriveUpgradeCleanupPlan(input: {
-  asset: CleanupAsset;
-  successor: Pick<LibraryAsset, "owned" | "state" | "checksum">;
-  controlRoot: string;
-}): UpgradeCleanupPlan {
-  const { asset, successor, controlRoot } = input;
+function cleanupAssetKind(
+  asset: CleanupAsset,
+  successor: Pick<LibraryAsset, "owned" | "state" | "checksum">,
+) {
   if (
     !asset.owned ||
     asset.state !== "superseded" ||
@@ -46,6 +43,17 @@ export function deriveUpgradeCleanupPlan(input: {
   const kind = asset.coverage[0]?.media.kind;
   if (kind !== "movie" && kind !== "episode")
     throw new FileGuardError("cleanup_coverage_unknown");
+  return kind;
+}
+
+/** Pure descriptor derivation. It neither certifies journals nor mutates historical cleanup rows. */
+export function deriveUpgradeCleanupPlan(input: {
+  asset: CleanupAsset;
+  successor: Pick<LibraryAsset, "owned" | "state" | "checksum">;
+  controlRoot: string;
+}): UpgradeCleanupPlan {
+  const { asset, successor, controlRoot } = input;
+  const kind = cleanupAssetKind(asset, successor);
   return UpgradeCleanupPlanSchema.parse({
     libraryKind: kind === "movie" ? "movies" : "tv",
     assetVersion: asset.version,
@@ -85,18 +93,7 @@ export async function prepareUpgradeCleanupPlan(
     where: { id: cleanup.successorAssetId },
   });
   const asset = cleanup.asset;
-  if (
-    !asset.owned ||
-    asset.state !== "superseded" ||
-    asset.checksum === null ||
-    successor.checksum === null ||
-    !successor.owned ||
-    !["published", "superseded", "purged"].includes(successor.state)
-  )
-    throw new FileGuardError("cleanup_ownership_changed");
-  const kind = asset.coverage[0]?.media.kind;
-  if (kind !== "movie" && kind !== "episode")
-    throw new FileGuardError("cleanup_coverage_unknown");
+  const kind = cleanupAssetKind(asset, successor);
   const libraryKind = kind === "movie" ? "movies" : "tv";
   const roots = context.roots[libraryKind];
   const controlRoot = storedFilePath(context, libraryKind, "control", "");

@@ -1,20 +1,25 @@
+import {
+  plexRoleActivities,
+  createMediaActivityTestWorker,
+  createAcquisitionFileTestWorker,
+} from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { Worker } from "@temporalio/worker";
+
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createMultiSeasonRoleFixtureV1 } from "@shepherdjerred/media/testing/multi-season-workflow";
-import {
-  createAcquisitionNetworkWorkerActivities,
-  createAcquisitionFileWorkerActivities,
-} from "#activities/media/acquisition.ts";
+import { createAcquisitionNetworkWorkerActivities } from "#activities/media/acquisition.ts";
 import { createSeriesPackFeedWorkerActivities } from "#activities/media/series-pack-feed.ts";
-import { createPlexPublicationActivities } from "#activities/media/plex-publication.ts";
-import { createPlexBoundConsumerActivities } from "#activities/media/plex-consumers.ts";
+
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  mediaWorkflowWorkerScript,
+  movieWorkflowChildEnvironment,
+  createMovieRoleEnvironment,
+  closeMovieRoleFixture,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
 } from "#activities/media/testing/role-worker.ts";
@@ -25,14 +30,7 @@ test("actual multi-season feed outbox reaches separate Node, Network and Files w
   const directory = await mkdtemp(
     path.join(tmpdir(), "media-series-pack-role-"),
   );
-  const environment = await TestWorkflowEnvironment.createLocal({
-    server: {
-      executable: { type: "existing-path", path: temporal },
-      ip: "127.0.0.1",
-      namespace: "dev",
-      ui: false,
-    },
-  });
+  const environment = await createMovieRoleEnvironment(temporal);
   let fixture:
     Awaited<ReturnType<typeof createMultiSeasonRoleFixtureV1>> | undefined;
   let workflow: Bun.Subprocess | undefined;
@@ -44,14 +42,8 @@ test("actual multi-season feed outbox reaches separate Node, Network and Files w
     const before = await scenario.evidence();
     expect(before.attempts).toEqual([]);
     expect(before.personalRequests).toBe(0);
-    const script = new URL(
-      "../../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
-    const runtimePath = Bun.env["PATH"];
-    if (runtimePath === undefined || runtimePath.length === 0)
-      throw new Error("Pinned runtime PATH required");
-    const childEnvironment = { PATH: runtimePath };
+    const script = mediaWorkflowWorkerScript;
+    const childEnvironment = movieWorkflowChildEnvironment();
     workflow = await startMovieWorkflowWorker({
       node,
       script,
@@ -59,8 +51,7 @@ test("actual multi-season feed outbox reaches separate Node, Network and Files w
       directory,
       childEnvironment,
     });
-    const network = await Worker.create({
-      connection: environment.nativeConnection,
+    const network = await createMediaActivityTestWorker(environment, {
       namespace: "dev",
       taskQueue: TASK_QUEUES.MEDIA_NETWORK,
       activities: {
@@ -70,19 +61,15 @@ test("actual multi-season feed outbox reaches separate Node, Network and Files w
         ...createSeriesPackFeedWorkerActivities(() =>
           Promise.resolve({ seriesPackFeed: scenario.seriesPackFeed }),
         ),
-        ...createPlexPublicationActivities(() => Promise.resolve(scenario)),
-        ...createPlexBoundConsumerActivities(() => Promise.resolve(scenario)),
+        ...plexRoleActivities(() => Promise.resolve(scenario)),
         finishMediaOperation: scenario.finishMediaOperation,
       },
     });
-    const files = await Worker.create({
-      connection: environment.nativeConnection,
-      namespace: "dev",
-      taskQueue: TASK_QUEUES.MEDIA_FILES,
-      activities: createAcquisitionFileWorkerActivities(() =>
-        Promise.resolve({ acquisition: scenario.fileAcquisition }),
-      ),
-    });
+    const files = await createAcquisitionFileTestWorker(
+      environment,
+      "dev",
+      () => Promise.resolve({ acquisition: scenario.fileAcquisition }),
+    );
     workers.push(network, files);
     running.push(network.run(), files.run());
     const started: { workflowId: string; phase: "feed" | "acquire" }[] = [];
@@ -193,23 +180,13 @@ test("actual multi-season feed outbox reaches separate Node, Network and Files w
     });
     expect(prepared).toBe(true);
   } finally {
-    try {
-      try {
-        for (const worker of workers) worker.shutdown();
-        await Promise.all(running);
-      } finally {
-        if (workflow !== undefined) {
-          workflow.kill("SIGTERM");
-          await workflow.exited;
-        }
-      }
-    } finally {
-      try {
-        await fixture?.close();
-      } finally {
-        await environment.teardown();
-        await rm(directory, { recursive: true, force: true });
-      }
-    }
+    await closeMovieRoleFixture({
+      workers,
+      running,
+      workflow,
+      fixture,
+      environment,
+      directory,
+    });
   }
 }, 60_000);

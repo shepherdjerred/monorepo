@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Prisma, ReleaseCandidate } from "#generated/prisma/client.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
-import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
+import { candidateSourceEvidence } from "#infrastructure/acquisition-identity/source-evidence.ts";
 import { MediaError } from "#application/errors.ts";
 import { parseMovieCutV2 } from "#domain/editions/parse-v2.ts";
 import { evaluateMovieCutV2 } from "#domain/editions/selection-v2.ts";
@@ -58,17 +58,7 @@ export function providerMovieCutV2(
   source: ProviderCandidate,
   canonical: CutCanonical,
 ) {
-  const sourceEvidence = z.record(z.string(), z.json()).parse(
-    CandidateSourceEvidenceSchema.parse({
-      infoHash: source.infoHash.toLowerCase(),
-      ...(source.references === undefined
-        ? {}
-        : { references: source.references }),
-      ...(source.editionEvidence === undefined
-        ? {}
-        : { editionEvidence: source.editionEvidence }),
-    }),
-  );
+  const sourceEvidence = candidateSourceEvidence(source);
   return assess(
     canonical,
     releaseCut(

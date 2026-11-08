@@ -224,7 +224,7 @@ export function createNativeRecoveryPrerequisiteV1(scenario: Fixture) {
           throw error;
         }
         started.push(start.workflowId);
-      });
+      }, caseDeadline);
       const workflowId = started[0];
       if (workflowId === undefined)
         throw new Error("Actual acquisition was not dispatched");

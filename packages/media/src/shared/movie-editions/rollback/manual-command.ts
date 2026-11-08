@@ -65,10 +65,6 @@ export const RequestMovieRollbackResultV1Schema = z.strictObject({
   status: z.literal("queued"),
   expiresAt: z.iso.datetime(),
 });
-
-export type MovieRollbackExpectedV1 = z.infer<
-  typeof MovieRollbackExpectedV1Schema
->;
 export type RequestMovieRollbackV1 = z.infer<
   typeof RequestMovieRollbackV1Schema
 >;

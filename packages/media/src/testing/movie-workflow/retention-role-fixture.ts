@@ -144,7 +144,11 @@ export async function createMovieRetentionWorkflowFixture(
       );
       const journals = await Promise.all(
         names
-          .filter((name) => name.startsWith(`${f.input.operationId}-`))
+          .filter(
+            (name) =>
+              name.startsWith(`${f.input.operationId}-`) &&
+              name.endsWith(".json"),
+          )
           .sort()
           .map(async (name) =>
             ManifestSchema.parse(

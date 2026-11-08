@@ -412,10 +412,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/media.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,
       "tokens": 75
@@ -435,6 +431,10 @@
     "packages/homelab/src/cdk8s/src/resources/bugsink/index.ts|packages/homelab/src/cdk8s/src/resources/bugsink/index.ts": {
       "clones": 1,
       "tokens": 83
+    },
+    "packages/homelab/src/cdk8s/src/resources/delivery/network/temporal.test.ts|packages/homelab/src/cdk8s/src/resources/media/application/postal-network-policy.test.ts": {
+      "clones": 1,
+      "tokens": 96
     },
     "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/freshrss/freshrss.test.ts": {
       "clones": 1,
@@ -511,6 +511,1754 @@
     "packages/macos-ai-subscription-tracker/scripts/verify-app.ts|packages/macos-ai-subscription-tracker/scripts/verify-notarized-app.ts": {
       "clones": 1,
       "tokens": 192
+    },
+    "packages/media/src/automation/acquisition-candidates.ts|packages/media/src/automation/files/quality-guard.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/future.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/managed.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/compensated-source.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/completed-source.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/guards.integration.test.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication-protection.integration.test.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 106
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/staging.integration.test.ts": {
+      "clones": 1,
+      "tokens": 102
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/acquisition-management/terminal.integration.test.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/automation/reconciliation/library-series.integration.test.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch-authority.integration.test.ts|packages/media/src/testing/series-workflow/per-episode/import.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/acquisition-management/cross-batch.integration.test.ts|packages/media/src/automation/acquisition-management/cross-batch.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/acquisition-management/future.integration.test.ts|packages/media/src/automation/acquisition-management/managed.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/acquisition-management/future.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/compensated-source.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/acquisition-management/future.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/completed-source.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/acquisition-management/future.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/acquisition-management/future.integration.test.ts|packages/media/src/testing/series-workflow/per-episode/import.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/acquisition-management/managed.integration.test.ts|packages/media/src/automation/acquisition-management/managed.integration.test.ts": {
+      "clones": 4,
+      "tokens": 351
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/assessment.ts|packages/media/src/infrastructure/acquisition-identity/series-pack/authority.ts": {
+      "clones": 1,
+      "tokens": 203
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/compensated-source.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/completed-source.integration.test.ts": {
+      "clones": 4,
+      "tokens": 411
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/compensated-source.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/compensated-source.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/source-removal.integration.test.ts": {
+      "clones": 2,
+      "tokens": 161
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/completed-source.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/source-removal.integration.test.ts": {
+      "clones": 1,
+      "tokens": 137
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/flow.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/flow.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/staging.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/publication-recovery.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/publication-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/publication.integration.test.ts|packages/media/src/testing/series-workflow/per-episode/publication-fixture.ts": {
+      "clones": 2,
+      "tokens": 205
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/published-rollback.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/source-removal.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/acquisition-management/series-pack/staging.integration.test.ts|packages/media/src/automation/acquisition-management/series-pack/staging.integration.test.ts": {
+      "clones": 2,
+      "tokens": 152
+    },
+    "packages/media/src/automation/capacity/ordering.integration.test.ts|packages/media/src/automation/capacity/ordering.integration.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/editions/acquisition.integration.test.ts|packages/media/src/automation/editions/acquisition.integration.test.ts": {
+      "clones": 1,
+      "tokens": 177
+    },
+    "packages/media/src/automation/editions/acquisition.integration.test.ts|packages/media/src/automation/editions/consumers.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/editions/acquisition.integration.test.ts|packages/media/src/automation/files/editions/choice.integration.test.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/media/src/automation/feeds/matching.integration.test.ts|packages/media/src/automation/movie-editions/reservation.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/feeds/matching.ts|packages/media/src/automation/feeds/series-pack/matching.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/automation/files/acquisition-identity/activities.integration.test.ts|packages/media/src/automation/files/lifecycle-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/files/acquisition-identity/coverage.integration.test.ts|packages/media/src/infrastructure/acquisition-identity/sponsor.integration.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/automation/files/acquisition-identity/coverage.integration.test.ts|packages/media/src/infrastructure/editions/acquisition.integration.test.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/files/committed-publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/files/editions/choice.integration.test.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/files/editions/cuts.integration.test.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/files/lifecycle-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 192
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/files/resolved-profile.integration.test.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/files/retention-freshness.integration.test.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/native-archive/fixtures/shared-tv.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/publication-proof/authority.integration.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/automation/publication-proof/producer.integration.test.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/infrastructure/publication-proof/locked-snapshots.integration.test.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/files/activities.integration.test.ts|packages/media/src/infrastructure/publication-proof/store.integration.test.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/files/committed-publication.integration.test.ts|packages/media/src/automation/files/plex-binding/upgrade-cleanup.test-support.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
+    "packages/media/src/automation/files/committed-publication.integration.test.ts|packages/media/src/automation/native-archive/test-fixture.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/media/src/automation/files/committed-publication.integration.test.ts|packages/media/src/infrastructure/native-archive/publication-transition.test-support.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/files/committed-publication.ts|packages/media/src/automation/files/publication.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/automation/files/editions/cuts.integration.test.ts|packages/media/src/infrastructure/recovery/legacy-claims/lifecycle.integration.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/automation/files/editions/freshness.integration.test.ts|packages/media/src/automation/native-archive/tests/cleanup-syscall.integration.test.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/media/src/automation/files/editions/freshness.integration.test.ts|packages/media/src/filesystem/operations/staging.test.ts": {
+      "clones": 1,
+      "tokens": 122
+    },
+    "packages/media/src/automation/files/editions/freshness.integration.test.ts|packages/media/src/filesystem/publication-proof/before-effect.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/files/editions/staging.ts|packages/media/src/automation/files/movie-editions/staging.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/automation/files/lifecycle-recovery.integration.test.ts|packages/media/src/automation/files/plex-binding/upgrade-cleanup.test-support.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/automation/files/movie-editions/inspection.integration.test.ts|packages/media/src/automation/files/movie-editions/inspection.integration.test.ts": {
+      "clones": 2,
+      "tokens": 264
+    },
+    "packages/media/src/automation/files/movie-editions/inspection.integration.test.ts|packages/media/src/automation/files/movie-editions/publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 144
+    },
+    "packages/media/src/automation/files/movie-editions/inspection.integration.test.ts|packages/media/src/automation/movie-editions/plex-publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 122
+    },
+    "packages/media/src/automation/files/movie-editions/publication-intent.ts|packages/media/src/automation/publication-proof/intent.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/files/movie-editions/publication.integration.test.ts|packages/media/src/automation/files/movie-editions/publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/automation/files/movie-editions/rollback/manual-preparation.ts|packages/media/src/automation/files/movie-editions/rollback/manual-publication.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/files/movie-editions/rollback/manual-publication.ts|packages/media/src/automation/files/movie-editions/rollback/publication.ts": {
+      "clones": 3,
+      "tokens": 307
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/automation/handoff/apply.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/automation/handoff/plex-edit-protection.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/automation/handoff/plex-v3.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/automation/handoff/subtitles.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/automation/network/handoff.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/automation/plex-binding/library.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/files/paths/mapped-download.integration.test.ts|packages/media/src/infrastructure/recovery/handoff.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/files/plex-binding/lifecycle.integration.test.ts|packages/media/src/automation/files/plex-binding/lifecycle.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/files/plex-binding/lifecycle.integration.test.ts|packages/media/src/automation/files/plex-binding/purge.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/files/plex-binding/lifecycle.integration.test.ts|packages/media/src/automation/files/subtitle-lifecycle/ownership.integration.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/files/recovery.ts|packages/media/src/automation/publication-proof/local-compensation.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/files/resolved-profile.integration.test.ts|packages/media/src/automation/publication-proof/failed-ack.integration.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/automation/files/resolved-profile.integration.test.ts|packages/media/src/automation/publication-proof/producer.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/files/resolved-profile.integration.test.ts|packages/media/src/infrastructure/publication-proof/locked-snapshots.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/files/resolved-profile.integration.test.ts|packages/media/src/infrastructure/publication-proof/store.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/files/series-pack/publication/compensated.ts|packages/media/src/automation/files/series-pack/publication/complete.ts": {
+      "clones": 2,
+      "tokens": 197
+    },
+    "packages/media/src/automation/files/series-pack/publication/intent.ts|packages/media/src/automation/files/series-pack/publication/prepare.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/files/series-pack/publication/inverse.ts|packages/media/src/automation/files/series-pack/publication/physical.ts": {
+      "clones": 3,
+      "tokens": 219
+    },
+    "packages/media/src/automation/files/test-support.ts|packages/media/src/automation/native-archive/fixtures/shared-tv.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/handoff/adopt.ts|packages/media/src/automation/handoff/library-adopt.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/media/src/automation/handoff/apply.integration.test.ts|packages/media/src/automation/handoff/claims.integration.test.ts": {
+      "clones": 2,
+      "tokens": 225
+    },
+    "packages/media/src/automation/handoff/apply.integration.test.ts|packages/media/src/automation/handoff/plex-v3.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/handoff/apply.integration.test.ts|packages/media/src/automation/handoff/subtitles.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/handoff/library-tv.integration.test.ts|packages/media/src/automation/handoff/library.integration.test.ts": {
+      "clones": 1,
+      "tokens": 98
+    },
+    "packages/media/src/automation/handoff/library-tv.integration.test.ts|packages/media/src/automation/plex-binding/library-tv.test-fixture.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/handoff/library-tv.integration.test.ts|packages/media/src/infrastructure/movie-editions/library-parent.integration.test.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/handoff/plan.ts|packages/media/src/automation/native-recovery/plan.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/media/src/automation/handoff/plex-edit-protection.integration.test.ts|packages/media/src/automation/handoff/plex-v3.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/handoff/plex-v3.integration.test.ts|packages/media/src/automation/handoff/plex-v3.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/movie-editions/candidates.ts|packages/media/src/automation/movie-editions/release-assessment.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/media/src/automation/movie-editions/cleanup.integration.test.ts|packages/media/src/automation/movie-editions/restored-cleanup.integration.test.ts": {
+      "clones": 2,
+      "tokens": 189
+    },
+    "packages/media/src/automation/movie-editions/cleanup.integration.test.ts|packages/media/src/automation/movie-editions/restored-upgrade.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/movie-editions/managed.integration.test.ts|packages/media/src/automation/movie-editions/managed/consent.integration.test.ts": {
+      "clones": 3,
+      "tokens": 362
+    },
+    "packages/media/src/automation/movie-editions/managed.integration.test.ts|packages/media/src/automation/movie-editions/retry.integration.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/movie-editions/managed.integration.test.ts|packages/media/src/automation/seeding/movie-upgrade-source.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/movie-editions/managed.integration.test.ts|packages/media/src/testing/movie-workflow/cleanup-fixture.ts": {
+      "clones": 1,
+      "tokens": 99
+    },
+    "packages/media/src/automation/movie-editions/managed.integration.test.ts|packages/media/src/testing/movie-workflow/upgrade-fixture.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/movie-editions/managed/guards.integration.test.ts|packages/media/src/automation/movie-editions/restored-upgrade.integration.test.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/movie-editions/managed/guards.integration.test.ts|packages/media/src/automation/seeding/movie-upgrade-source.integration.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/media/src/automation/movie-editions/notifications/authority.ts|packages/media/src/automation/movie-editions/notifications/removal-authority.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
+    "packages/media/src/automation/movie-editions/notifications/captions.integration.test.ts|packages/media/src/automation/movie-editions/notifications/delivery.integration.test.ts": {
+      "clones": 2,
+      "tokens": 202
+    },
+    "packages/media/src/automation/movie-editions/notifications/captions.ts|packages/media/src/automation/movie-editions/notifications/replacement-captions.ts": {
+      "clones": 2,
+      "tokens": 203
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/automation/movie-editions/retention/removal-completion.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/automation/movie-editions/retry.integration.test.ts": {
+      "clones": 3,
+      "tokens": 238
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/automation/movie-editions/transfer-reuse/retry.integration.test.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/automation/retention/lifecycle.test-fixture.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/testing/movie-workflow/restored-cleanup-fixture.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/movie-editions/notifications/interventions.integration.test.ts|packages/media/src/testing/movie-workflow/retention-fixture.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/movie-editions/notifications/library-captions.integration.test.ts|packages/media/src/automation/plex-binding/library-captions.integration.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/automation/movie-editions/plex-publication.integration.test.ts|packages/media/src/automation/movie-editions/plex-publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/movie-editions/plex-publication.integration.test.ts|packages/media/src/automation/movie-editions/subtitles/installation.integration.test.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/media/src/automation/movie-editions/plex-publication.ts|packages/media/src/automation/movie-editions/retention/restore-plex.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/movie-editions/plex-verification.ts|packages/media/src/automation/publication/association.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/automation/movie-editions/release-assessment.integration.test.ts|packages/media/src/automation/movie-editions/reservation.integration.test.ts": {
+      "clones": 2,
+      "tokens": 179
+    },
+    "packages/media/src/automation/movie-editions/reservation.integration.test.ts|packages/media/src/automation/movie-editions/submission.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/movie-editions/restored-cleanup.integration.test.ts|packages/media/src/automation/movie-editions/restored-upgrade.integration.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/movie-editions/retention/evaluate.integration.test.ts|packages/media/src/automation/movie-editions/retention/warning-budget.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/quarantine-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-finalization.integration.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-plex.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/warning-budget.integration.test.ts": {
+      "clones": 2,
+      "tokens": 197
+    },
+    "packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/purge.integration.test.ts": {
+      "clones": 3,
+      "tokens": 333
+    },
+    "packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/quarantine-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-recovery.integration.test.ts": {
+      "clones": 4,
+      "tokens": 467
+    },
+    "packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore.integration.test.ts": {
+      "clones": 1,
+      "tokens": 125
+    },
+    "packages/media/src/automation/movie-editions/retention/purge.integration.test.ts|packages/media/src/automation/movie-editions/retention/quarantine.integration.test.ts": {
+      "clones": 2,
+      "tokens": 210
+    },
+    "packages/media/src/automation/movie-editions/retention/purge.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore.integration.test.ts": {
+      "clones": 2,
+      "tokens": 190
+    },
+    "packages/media/src/automation/movie-editions/retention/purge.ts|packages/media/src/automation/movie-editions/retention/quarantine.ts": {
+      "clones": 1,
+      "tokens": 84
+    },
+    "packages/media/src/automation/movie-editions/retention/quarantine-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/quarantine-watch.integration.test.ts": {
+      "clones": 2,
+      "tokens": 172
+    },
+    "packages/media/src/automation/movie-editions/retention/quarantine-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/quarantine.integration.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/media/src/automation/movie-editions/retention/quarantine-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/warning-budget.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/movie-editions/retention/quarantine-watch.integration.test.ts|packages/media/src/automation/movie-editions/retention/queue.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/movie-editions/retention/quarantine-watch.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/automation/movie-editions/retention/quarantine.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore.integration.test.ts": {
+      "clones": 2,
+      "tokens": 180
+    },
+    "packages/media/src/automation/movie-editions/retention/queue.integration.test.ts|packages/media/src/automation/plex-events/movie-watch.integration.test.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/movie-editions/retention/queue.test-fixture.ts|packages/media/src/automation/plex-binding/library.test-fixture.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/movie-editions/retention/queue.test-fixture.ts|packages/media/src/automation/plex-events/test-support.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/movie-editions/retention/queue.test-fixture.ts|packages/media/src/testing/movie-workflow/rollback/rollback-fixture.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/movie-editions/retention/removal-completion.integration.test.ts|packages/media/src/automation/movie-editions/retention/removal-completion.integration.test.ts": {
+      "clones": 3,
+      "tokens": 216
+    },
+    "packages/media/src/automation/movie-editions/retention/removal-completion.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-finalization.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/movie-editions/retention/removal-completion.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/compensation.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/movie-editions/retention/removal-completion.ts|packages/media/src/automation/movie-editions/retention/restore-finalization.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-finalization.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-plex.integration.test.ts": {
+      "clones": 3,
+      "tokens": 352
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-finalization.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/compensation.integration.test.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-finalization.integration.test.ts|packages/media/src/testing/movie-workflow/restore-role-fixture.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-plex.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore-plex.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-plex.ts|packages/media/src/automation/movie-editions/rollback/manual-verification.ts": {
+      "clones": 1,
+      "tokens": 137
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-plex.ts|packages/media/src/automation/movie-editions/rollback/verification.ts": {
+      "clones": 2,
+      "tokens": 222
+    },
+    "packages/media/src/automation/movie-editions/retention/restore-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/restore.integration.test.ts": {
+      "clones": 3,
+      "tokens": 436
+    },
+    "packages/media/src/automation/movie-editions/retention/restore.integration.test.ts|packages/media/src/testing/movie-workflow/restore-role-fixture.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/movie-editions/retention/scope.ts|packages/media/src/infrastructure/movie-editions/retention/quarantine-authority.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/movie-editions/retry.integration.test.ts|packages/media/src/automation/movie-editions/retry.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/movie-editions/retry.integration.test.ts|packages/media/src/automation/movie-editions/transfer-reuse/fixture.test-support.ts": {
+      "clones": 2,
+      "tokens": 175
+    },
+    "packages/media/src/automation/movie-editions/retry.integration.test.ts|packages/media/src/automation/movie-editions/transfer-reuse/guards.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/movie-editions/retry/continuation.ts|packages/media/src/automation/movie-editions/retry/recovery.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/movie-editions/retry/continuation/support.ts|packages/temporal/src/activities/media/movie-editions/continuation-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/media/src/automation/movie-editions/retry/recovery.ts|packages/media/src/automation/movie-editions/retry/sweep.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/movie-editions/rollback/manual-playback.ts|packages/media/src/automation/movie-editions/rollback/retry-handoff.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/movie-editions/rollback/manual-playback.ts|packages/media/src/automation/movie-editions/rollback/retry-playback.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/media/src/automation/movie-editions/rollback/manual-verification.ts|packages/media/src/automation/movie-editions/rollback/verification.ts": {
+      "clones": 3,
+      "tokens": 336
+    },
+    "packages/media/src/automation/movie-editions/submission-authority.ts|packages/media/src/automation/movie-editions/submission.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/movie-editions/submission.integration.test.ts|packages/media/src/automation/movie-editions/submission.integration.test.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/media/src/automation/movie-editions/submission.integration.test.ts|packages/media/src/automation/reconciliation/submission.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/adopted.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/ancestry.integration.test.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/adopted.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/compensation.integration.test.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/adopted.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/guards.integration.test.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/adopted.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/compensation.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/guards.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/compensation.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/recovery.integration.test.ts": {
+      "clones": 1,
+      "tokens": 99
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/guards.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/staging.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/guards.integration.test.ts|packages/media/src/infrastructure/movie-editions/history-review/release.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/replacement.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/timezone.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/movie-editions/subtitle-replacement/schema.integration.test.ts|packages/media/src/automation/movie-editions/subtitle-replacement/staging.integration.test.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/movie-editions/subtitles/installation.integration.test.ts|packages/media/src/automation/movie-editions/subtitles/policy.integration.test.ts": {
+      "clones": 3,
+      "tokens": 287
+    },
+    "packages/media/src/automation/movie-editions/subtitles/network.ts|packages/media/src/automation/movie-editions/subtitles/network.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/movie-editions/subtitles/policy.integration.test.ts|packages/media/src/automation/movie-editions/subtitles/policy.integration.test.ts": {
+      "clones": 2,
+      "tokens": 156
+    },
+    "packages/media/src/automation/movie-editions/subtitles/policy.integration.test.ts|packages/media/src/infrastructure/movie-editions/library-parent.integration.test.ts": {
+      "clones": 1,
+      "tokens": 113
+    },
+    "packages/media/src/automation/movie-editions/transfer-reuse/guards.integration.test.ts|packages/media/src/automation/movie-editions/transfer-reuse/guards.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/movie-editions/transfer-reuse/guards.integration.test.ts|packages/media/src/automation/movie-editions/transfer-reuse/retry.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/movie-editions/transfer-reuse/guards.integration.test.ts|packages/media/src/automation/movie-editions/transfer-reuse/reuse.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/native-archive/apply.ts|packages/media/src/automation/native-quarantine/apply.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/native-archive/cleanup-locks.ts|packages/media/src/automation/native-archive/physical.ts": {
+      "clones": 1,
+      "tokens": 136
+    },
+    "packages/media/src/automation/native-archive/cleanup-test-support.ts|packages/media/src/automation/native-archive/cleanup.integration.test.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/automation/native-archive/cleanup-test-support.ts|packages/media/src/automation/native-archive/tests/subtitle-cleanup.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/native-archive/cleanup-test-support.ts|packages/media/src/infrastructure/native-archive/execution-phase.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/native-archive/cleanup-test-support.ts|packages/media/src/migration/native-archive/late-claims.integration.test.ts": {
+      "clones": 1,
+      "tokens": 123
+    },
+    "packages/media/src/automation/native-archive/crash.integration.test.ts|packages/media/src/automation/native-quarantine/adversarial.integration.test.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/native-archive/fixtures/cleanup-crash.ts|packages/media/src/automation/native-compensation/fixtures/crash.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/automation/native-archive/fixtures/cleanup-crash.ts|packages/media/src/automation/native-quarantine/fixtures/restore-crash.ts": {
+      "clones": 1,
+      "tokens": 126
+    },
+    "packages/media/src/automation/native-archive/fixtures/late-claim.ts|packages/media/src/infrastructure/recovery/legacy-claims/lifecycle-fixture.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/automation/native-archive/fixtures/late-claim.ts|packages/media/src/migration/native-archive/late-claims.integration.test.ts": {
+      "clones": 2,
+      "tokens": 181
+    },
+    "packages/media/src/automation/native-archive/plan.ts|packages/media/src/automation/native-quarantine/plan.ts": {
+      "clones": 1,
+      "tokens": 96
+    },
+    "packages/media/src/automation/native-archive/plan.ts|packages/media/src/automation/native-recovery/plan.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/native-archive/protection.integration.test.ts|packages/media/src/automation/native-archive/protection.integration.test.ts": {
+      "clones": 3,
+      "tokens": 272
+    },
+    "packages/media/src/automation/native-archive/subtitles.ts|packages/media/src/automation/native-quarantine/subtitles.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/media/src/automation/native-archive/test-fixture.ts|packages/media/src/automation/native-recovery/terminal-test-support.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
+    "packages/media/src/automation/native-archive/tests/cleanup-measurement.integration.test.ts|packages/media/src/automation/native-archive/tests/cleanup-sdk-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/automation/native-archive/tests/cleanup-measurement.integration.test.ts|packages/media/src/automation/native-archive/tests/cleanup-syscall.integration.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/automation/native-archive/tests/cleanup-sdk-deadline.integration.test.ts|packages/media/src/infrastructure/native-archive/execution/deadline.integration.test.ts": {
+      "clones": 4,
+      "tokens": 405
+    },
+    "packages/media/src/automation/native-archive/tests/subtitle-cleanup.integration.test.ts|packages/media/src/migration/native-archive/late-claims.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/automation/native-compensation/native-grant.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/automation/native-compensation/prefix-crash.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/automation/native-compensation/protection.integration.test.ts": {
+      "clones": 1,
+      "tokens": 120
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/automation/native-compensation/tests/measurement.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/automation/native-compensation/tests/sdk-commit-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/automation/native-compensation/tests/unacknowledged-crash.integration.test.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/infrastructure/native-compensation/inverse-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/native-compensation/crash.integration.test.ts|packages/media/src/infrastructure/native-compensation/repeat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/native-compensation/embedded.integration.test.ts|packages/media/src/automation/native-compensation/files.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/native-compensation/fixtures/household.ts|packages/media/src/automation/native-compensation/native-grant-fixture.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/native-compensation/late-claim.integration.test.ts|packages/media/src/automation/native-compensation/publication-race.integration.test.ts": {
+      "clones": 1,
+      "tokens": 144
+    },
+    "packages/media/src/automation/native-compensation/late-claim.integration.test.ts|packages/media/src/automation/native-compensation/tests/publication-freshness.integration.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/media/src/automation/native-compensation/late-claim.integration.test.ts|packages/media/src/infrastructure/native-compensation/publication/phase.integration.test.ts": {
+      "clones": 1,
+      "tokens": 145
+    },
+    "packages/media/src/automation/native-compensation/measurement.ts|packages/media/src/automation/native-compensation/proof.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/native-compensation/measurement.ts|packages/media/src/automation/native-compensation/series-pack/measurement.ts": {
+      "clones": 4,
+      "tokens": 709
+    },
+    "packages/media/src/automation/native-compensation/native-grant-fixture.ts|packages/media/src/infrastructure/native-archive/household.integration.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/media/src/automation/native-compensation/native-grant-fixture.ts|packages/media/src/infrastructure/native-archive/publication-transition.test-support.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/media/src/automation/native-compensation/prefix-crash.integration.test.ts|packages/media/src/infrastructure/native-compensation/repeat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/native-compensation/proof.ts|packages/media/src/automation/native-compensation/series-pack/proof.ts": {
+      "clones": 5,
+      "tokens": 589
+    },
+    "packages/media/src/automation/native-compensation/protection.integration.test.ts|packages/media/src/automation/native-compensation/tests/sdk-commit-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/native-compensation/publication-race.integration.test.ts|packages/media/src/automation/native-compensation/tests/publication-freshness.integration.test.ts": {
+      "clones": 2,
+      "tokens": 356
+    },
+    "packages/media/src/automation/native-compensation/publication-race.integration.test.ts|packages/media/src/infrastructure/native-compensation/publication/phase.integration.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/automation/native-compensation/replacement-fixture.ts|packages/media/src/automation/subtitle-replacement/test-fixture.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/native-compensation/series-pack/measurement.ts|packages/media/src/automation/native-compensation/series-pack/proof.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/native-compensation/tests/measurement.integration.test.ts|packages/media/src/automation/native-compensation/tests/settled-prefix.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/native-compensation/tests/sdk-commit-deadline.integration.test.ts|packages/media/src/infrastructure/native-compensation/inverse-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/automation/native-compensation/tests/subtitle-lock.integration.test.ts|packages/media/src/infrastructure/native-compensation/successor-lifecycle.integration.test.ts": {
+      "clones": 2,
+      "tokens": 188
+    },
+    "packages/media/src/automation/native-quarantine/adversarial.integration.test.ts|packages/media/src/automation/native-quarantine/apply.integration.test.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/automation/native-quarantine/adversarial.integration.test.ts|packages/media/src/infrastructure/native-quarantine/repeat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/automation/native-quarantine/files.ts|packages/media/src/automation/native-recovery/files.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/media/src/automation/native-quarantine/plan.ts|packages/media/src/infrastructure/native-compensation/approval.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/native-recovery/apply.integration.test.ts|packages/media/src/automation/native-recovery/terminal-lifecycle.integration.test.ts": {
+      "clones": 3,
+      "tokens": 337
+    },
+    "packages/media/src/automation/native-recovery/apply.integration.test.ts|packages/media/src/automation/native-recovery/terminal-subtitles.integration.test.ts": {
+      "clones": 1,
+      "tokens": 237
+    },
+    "packages/media/src/automation/native-recovery/apply.integration.test.ts|packages/media/src/infrastructure/native-archive/repeat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 181
+    },
+    "packages/media/src/automation/native-recovery/apply.integration.test.ts|packages/media/src/infrastructure/native-compensation/execution/prior-projection.integration.test.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
+    "packages/media/src/automation/native-recovery/household.integration.test.ts|packages/media/src/infrastructure/native-quarantine/household.integration.test.ts": {
+      "clones": 2,
+      "tokens": 944
+    },
+    "packages/media/src/automation/native-recovery/http.integration.test.ts|packages/media/src/infrastructure/native-archive/http.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/native-recovery/http.integration.test.ts|packages/media/src/infrastructure/native-quarantine/http.integration.test.ts": {
+      "clones": 2,
+      "tokens": 361
+    },
+    "packages/media/src/automation/native-recovery/terminal-lifecycle.integration.test.ts|packages/media/src/automation/native-recovery/terminal-subtitles.integration.test.ts": {
+      "clones": 2,
+      "tokens": 294
+    },
+    "packages/media/src/automation/native-recovery/terminal-subtitle-test-support.ts|packages/media/src/infrastructure/native-compensation/caption-replacement.test-support.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/native-recovery/terminal-subtitle-test-support.ts|packages/media/src/infrastructure/native-quarantine/repeat-replacement-support.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/native-recovery/terminal-subtitles.integration.test.ts|packages/media/src/infrastructure/native-compensation/repeat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/media/src/automation/native-recovery/terminal-subtitles.integration.test.ts|packages/media/src/infrastructure/native-quarantine/repeat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/automation/network/handoff.integration.test.ts|packages/media/src/automation/plex-binding/library.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/network/handoff.integration.test.ts|packages/media/src/infrastructure/recovery/handoff.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/notifications/default-edition.integration.test.ts|packages/media/src/automation/notifications/default-edition.integration.test.ts": {
+      "clones": 1,
+      "tokens": 202
+    },
+    "packages/media/src/automation/notifications/health-fixture.ts|packages/media/src/infrastructure/handoff/authority.integration.test.ts": {
+      "clones": 1,
+      "tokens": 173
+    },
+    "packages/media/src/automation/notifications/message.ts|packages/media/src/automation/notifications/message.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/notifications/owner-health.integration.test.ts|packages/media/src/automation/notifications/owner-health.integration.test.ts": {
+      "clones": 2,
+      "tokens": 180
+    },
+    "packages/media/src/automation/plex-binding/bounds.integration.test.ts|packages/media/src/automation/plex-binding/catalog.integration.test.ts": {
+      "clones": 1,
+      "tokens": 118
+    },
+    "packages/media/src/automation/plex-binding/bounds.integration.test.ts|packages/media/src/automation/plex-binding/publication-canonical.integration.test.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/media/src/automation/plex-binding/catalog.integration.test.ts|packages/media/src/automation/plex-binding/publication-canonical.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/automation/plex-binding/library-fixture/movie-paths.ts|packages/media/src/testing/library-movie.ts": {
+      "clones": 1,
+      "tokens": 121
+    },
+    "packages/media/src/automation/plex-binding/library.test-fixture.ts|packages/media/src/testing/movie-workflow/rollback/rollback-fixture.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/plex-binding/publication-expiry.integration.test.ts|packages/media/src/automation/plex-binding/publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/media/src/automation/plex-binding/publication-expiry.integration.test.ts|packages/media/src/automation/plex-binding/refresh-authority.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/plex-binding/publication.integration.test.ts|packages/media/src/automation/plex-binding/refresh-authority.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/plex-binding/restore-publication.integration.test.ts|packages/media/src/automation/plex-binding/restore-publication.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/plex-binding/restore.test-fixture.ts|packages/media/src/testing/movie-plex-v4.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/plex-binding/reverify.integration.test.ts|packages/media/src/automation/plex-binding/reverify.integration.test.ts": {
+      "clones": 1,
+      "tokens": 116
+    },
+    "packages/media/src/automation/plex-events/library-movie-watch.integration.test.ts|packages/media/src/automation/plex-events/movie-watch.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/plex-events/library-movie-watch.integration.test.ts|packages/media/src/automation/subtitles/embedded.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/plex-events/movie-watch.integration.test.ts|packages/media/src/automation/subtitles/embedded.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/plex-events/movie-watch.integration.test.ts|packages/media/src/testing/movie-plex-v4.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/plex-events/movie-watch.integration.test.ts|packages/media/src/testing/movie-workflow/wire.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/plex-events/ordering.integration.test.ts|packages/media/src/automation/plex-events/ordering.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/automation/plex-events/test-support.ts|packages/media/src/testing/movie-workflow/rollback/rollback-fixture.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/automation/plex-exclusion/exclusion.integration.test.ts|packages/media/src/automation/plex-exclusion/exclusion.integration.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/media/src/automation/publication-proof/embedded.integration.test.ts|packages/media/src/infrastructure/native-compensation/caption.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/publication/binding.ts|packages/media/src/automation/publication/finalization-binding.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/reconciliation/coverage-authority.integration.test.ts|packages/media/src/automation/reconciliation/coverage-authority.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/automation/reconciliation/coverage.integration.test.ts|packages/media/src/automation/reconciliation/coverage.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/automation/retention/lifecycle.test-fixture.ts|packages/media/src/testing/movie-workflow/retention-fixture.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/automation/seeding.integration.test.ts|packages/media/src/automation/seeding.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/automation/seeding/movie-source.ts|packages/media/src/automation/seeding/series-pack-source.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/seeding/movie-upgrade-source.integration.test.ts|packages/media/src/testing/movie-workflow/retry-continuation-fixture.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/automation/seeding/movie-upgrade-source.integration.test.ts|packages/media/src/testing/movie-workflow/upgrade-fixture.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/automation/seeding/series-pack-cohort.ts|packages/media/src/automation/seeding/series-pack-native/cohort.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/automation/seeding/series-pack-native/source.ts|packages/media/src/automation/seeding/series-pack-source.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/media/src/automation/subtitle-replacement/adversarial.integration.test.ts|packages/media/src/automation/subtitle-replacement/apply.integration.test.ts": {
+      "clones": 2,
+      "tokens": 158
+    },
+    "packages/media/src/automation/subtitle-replacement/test-fixture.ts|packages/media/src/infrastructure/manual-subtitle-replacement.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/automation/subtitles/embedded.integration.test.ts|packages/media/src/testing/series-workflow/per-episode/caption-acceptance.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/media/src/automation/subtitles/target-authority.integration.test.ts|packages/media/src/automation/subtitles/target-authority.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/client/movie-editions/api.ts|packages/media/src/client/movie-editions/request-api-v4.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
+    "packages/media/src/client/movie-editions/api.ts|packages/media/src/testing/movie-workflow/history/history-http-fixture.ts": {
+      "clones": 1,
+      "tokens": 113
+    },
+    "packages/media/src/client/movie-editions/api.ts|packages/media/src/testing/movie-workflow/history/history-review-fixture.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/client/movie-editions/protection-v4.ts|packages/media/src/client/movie-editions/protection.ts": {
+      "clones": 1,
+      "tokens": 260
+    },
+    "packages/media/src/client/movie-editions/request.test.ts|packages/media/src/client/movie-editions/v4-test-support.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/client/movie-editions/rollback-api.test.ts|packages/media/src/client/movie-editions/subtitle-api-v2.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/client/movie-editions/subtitle-api-v2.test.ts|packages/media/src/client/movie-editions/subtitle-api-v2.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/client/target-controls/commands.test.ts|packages/media/src/client/target-controls/commands.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/filesystem/measurement.test.ts|packages/media/src/filesystem/operations/staging.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/filesystem/publication-proof/recorder.test.ts|packages/media/src/filesystem/publication-proof/recorder.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/infrastructure/acquisition-identity/library-management.ts|packages/media/src/infrastructure/acquisition-identity/library-management.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/infrastructure/acquisition-identity/library-management.ts|packages/media/src/infrastructure/acquisition-identity/series-policy.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/infrastructure/acquisition-identity/locks.ts|packages/media/src/infrastructure/handoff/default-edition.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/infrastructure/acquisition-identity/series-pack/publication/inverse-receipts.ts|packages/media/src/infrastructure/acquisition-identity/series-pack/publication/receipts.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/media/src/infrastructure/acquisition-identity/test-fixture.ts|packages/media/src/infrastructure/editions/command-v2-flow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/action-authorization.integration.test.ts|packages/media/src/infrastructure/action-authorization.integration.test.ts": {
+      "clones": 6,
+      "tokens": 552
+    },
+    "packages/media/src/infrastructure/capacity/config.test.ts|packages/media/src/infrastructure/plex-events/config.test.ts": {
+      "clones": 1,
+      "tokens": 120
+    },
+    "packages/media/src/infrastructure/editions/command-cas.integration.test.ts|packages/media/src/infrastructure/editions/command-cas.integration.test.ts": {
+      "clones": 2,
+      "tokens": 158
+    },
+    "packages/media/src/infrastructure/editions/command-cas.integration.test.ts|packages/media/src/infrastructure/movie-editions/races.integration.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/infrastructure/editions/command-v1-compat.integration.test.ts|packages/media/src/infrastructure/editions/command-v1-compat.integration.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/infrastructure/handoff/storage-observer.ts|packages/media/src/infrastructure/native-recovery/storage-refresh.ts": {
+      "clones": 1,
+      "tokens": 115
+    },
+    "packages/media/src/infrastructure/movie-editions/cleanup/expected.ts|packages/media/src/infrastructure/plex-binding/cleanup-scope.ts": {
+      "clones": 2,
+      "tokens": 186
+    },
+    "packages/media/src/infrastructure/movie-editions/configuration.integration.test.ts|packages/media/src/server/media/movie-edition-http.test-support.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/infrastructure/movie-editions/freshness.integration.test.ts|packages/media/src/infrastructure/movie-editions/races.integration.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/claims.integration.test.ts|packages/media/src/infrastructure/movie-editions/history-review/historical-consumers.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/claims.integration.test.ts|packages/media/src/testing/movie-workflow/history/history-cleanup-fixture.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/cleanup.integration.test.ts|packages/media/src/infrastructure/movie-editions/history-review/historical-consumers.integration.test.ts": {
+      "clones": 2,
+      "tokens": 163
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/consent.integration.test.ts|packages/media/src/infrastructure/movie-editions/history-review/consent.integration.test.ts": {
+      "clones": 1,
+      "tokens": 131
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/consent.integration.test.ts|packages/media/src/infrastructure/movie-editions/history-review/sql.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/consent.integration.test.ts|packages/media/src/infrastructure/plex-admin-account.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/service.ts|packages/media/src/infrastructure/recovery/service.ts": {
+      "clones": 2,
+      "tokens": 146
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/sql.integration.test.ts|packages/media/src/testing/movie-workflow/history/history-cleanup-fixture.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/infrastructure/movie-editions/history-review/timezone.integration.test.ts|packages/media/src/infrastructure/movie-editions/test-support.ts": {
+      "clones": 1,
+      "tokens": 95
+    },
+    "packages/media/src/infrastructure/movie-editions/library-proof.ts|packages/media/src/infrastructure/movie-editions/publication/restore-reference.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/media/src/infrastructure/movie-editions/lifecycle/public/commands.integration.test.ts|packages/media/src/testing/movie-workflow/fixture.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/movie-editions/lifecycle/public/public-demand.ts|packages/media/src/infrastructure/movie-editions/management/authority.ts": {
+      "clones": 2,
+      "tokens": 151
+    },
+    "packages/media/src/infrastructure/movie-editions/lifecycle/retry/retry-continuation-source.ts|packages/media/src/infrastructure/movie-editions/lifecycle/retry/retry-source.ts": {
+      "clones": 1,
+      "tokens": 179
+    },
+    "packages/media/src/infrastructure/movie-editions/plex/commit.ts|packages/media/src/infrastructure/movie-editions/retention/restore-plex-commit.ts": {
+      "clones": 2,
+      "tokens": 164
+    },
+    "packages/media/src/infrastructure/movie-editions/plex/commit.ts|packages/media/src/infrastructure/movie-editions/rollback/plex-commit.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/infrastructure/movie-editions/publication/restore-reference.ts|packages/media/src/infrastructure/movie-editions/rollback/reference.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/infrastructure/movie-editions/publication/restore-reference.ts|packages/media/src/infrastructure/movie-editions/subtitle-replacement/source-capture.ts": {
+      "clones": 1,
+      "tokens": 140
+    },
+    "packages/media/src/infrastructure/movie-editions/publication/store.ts|packages/media/src/infrastructure/publication-proof/grants.ts": {
+      "clones": 1,
+      "tokens": 104
+    },
+    "packages/media/src/infrastructure/movie-editions/publication/store.ts|packages/media/src/infrastructure/publication-proof/store.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/infrastructure/movie-editions/races.integration.test.ts|packages/media/src/infrastructure/movie-editions/races.integration.test.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/infrastructure/movie-editions/retention/quarantine-watch.ts|packages/media/src/infrastructure/plex-binding/quarantine.ts": {
+      "clones": 1,
+      "tokens": 143
+    },
+    "packages/media/src/infrastructure/movie-editions/retention/restore-demand.ts|packages/media/src/infrastructure/movie-editions/retention/restore-plex-demand.ts": {
+      "clones": 2,
+      "tokens": 188
+    },
+    "packages/media/src/infrastructure/movie-editions/retention/restore-plex-commit.ts|packages/media/src/infrastructure/movie-editions/rollback/plex-commit.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/media/src/infrastructure/movie-editions/retention/restore-plex-expected.ts|packages/media/src/infrastructure/movie-editions/rollback/manual/manual-plex-expected.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/movie-editions/retention/restore-plex-expected.ts|packages/media/src/infrastructure/movie-editions/rollback/plex-expected.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/infrastructure/movie-editions/rollback/manual/manual-authority.ts|packages/media/src/infrastructure/movie-editions/rollback/manual/manual-plex-expected.ts": {
+      "clones": 1,
+      "tokens": 170
+    },
+    "packages/media/src/infrastructure/movie-editions/rollback/manual/manual-command.integration.test.ts|packages/media/src/testing/movie-workflow/rollback/manual-rollback-fixture.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/movie-editions/rollback/manual/manual-playback-store.ts|packages/media/src/infrastructure/movie-editions/rollback/retry/retry-playback-store.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/infrastructure/movie-editions/subtitle-replacement/service.ts|packages/media/src/infrastructure/subtitle-replacement/service.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/infrastructure/native-archive/caption.test-support.ts|packages/media/src/infrastructure/native-archive/renewal.test-support.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/infrastructure/native-archive/execution-phase.integration.test.ts|packages/media/src/infrastructure/native-archive/execution/discovery.integration.test.ts": {
+      "clones": 2,
+      "tokens": 353
+    },
+    "packages/media/src/infrastructure/native-archive/execution-phase.integration.test.ts|packages/media/src/infrastructure/native-compensation/execution-phase.integration.test.ts": {
+      "clones": 2,
+      "tokens": 148
+    },
+    "packages/media/src/infrastructure/native-archive/execution/deadline.integration.test.ts|packages/media/src/infrastructure/native-compensation/inverse-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/infrastructure/native-archive/execution/discovery-check.ts|packages/media/src/infrastructure/native-compensation/execution/discovery-check.ts": {
+      "clones": 2,
+      "tokens": 248
+    },
+    "packages/media/src/infrastructure/native-archive/file-snapshot.ts|packages/media/src/infrastructure/native-recovery/scope.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/infrastructure/native-archive/guards.ts|packages/media/src/infrastructure/native-compensation/guards.ts": {
+      "clones": 1,
+      "tokens": 96
+    },
+    "packages/media/src/infrastructure/native-archive/guards.ts|packages/media/src/infrastructure/native-recovery/guards.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/native-archive/household.integration.test.ts|packages/media/src/infrastructure/native-archive/publication-transition.test-support.ts": {
+      "clones": 1,
+      "tokens": 147
+    },
+    "packages/media/src/infrastructure/native-archive/plan.ts|packages/media/src/shared/plex-binding/native-projections.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/media/src/infrastructure/native-archive/publication-transition.test-support.ts|packages/media/src/infrastructure/native-compensation/adjacent-caption.integration.test.ts": {
+      "clones": 1,
+      "tokens": 94
+    },
+    "packages/media/src/infrastructure/native-archive/publication-transition.test-support.ts|packages/media/src/infrastructure/native-quarantine/repeat.integration.test.ts": {
+      "clones": 2,
+      "tokens": 232
+    },
+    "packages/media/src/infrastructure/native-archive/repeat.integration.test.ts|packages/media/src/infrastructure/native-archive/service.integration.test.ts": {
+      "clones": 1,
+      "tokens": 106
+    },
+    "packages/media/src/infrastructure/native-archive/service.integration.test.ts|packages/media/src/infrastructure/native-archive/service.integration.test.ts": {
+      "clones": 1,
+      "tokens": 103
+    },
+    "packages/media/src/infrastructure/native-archive/service.ts|packages/media/src/infrastructure/native-compensation/series-pack/service.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/infrastructure/native-archive/service.ts|packages/media/src/infrastructure/native-compensation/service.ts": {
+      "clones": 3,
+      "tokens": 265
+    },
+    "packages/media/src/infrastructure/native-archive/service.ts|packages/media/src/infrastructure/native-quarantine/service.ts": {
+      "clones": 3,
+      "tokens": 297
+    },
+    "packages/media/src/infrastructure/native-archive/service.ts|packages/media/src/infrastructure/native-recovery/service.ts": {
+      "clones": 2,
+      "tokens": 190
+    },
+    "packages/media/src/infrastructure/native-archive/snapshots.ts|packages/media/src/infrastructure/native-quarantine/scope.ts": {
+      "clones": 4,
+      "tokens": 386
+    },
+    "packages/media/src/infrastructure/native-archive/snapshots.ts|packages/media/src/infrastructure/native-recovery/scope.ts": {
+      "clones": 2,
+      "tokens": 268
+    },
+    "packages/media/src/infrastructure/native-archive/tests/parent-receipt.integration.test.ts|packages/media/src/infrastructure/native-compensation/inverse-deadline.integration.test.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/infrastructure/native-compensation/adjacent-caption.integration.test.ts|packages/media/src/infrastructure/native-compensation/caption.integration.test.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
+    "packages/media/src/infrastructure/native-compensation/approval-budget.integration.test.ts|packages/media/src/infrastructure/native-compensation/approval-budget.integration.test.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/infrastructure/native-compensation/caption-replacement.test-support.ts|packages/media/src/infrastructure/native-quarantine/repeat-replacement-support.ts": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/media/src/infrastructure/native-compensation/guards.ts|packages/media/src/infrastructure/native-compensation/series-pack/locks.ts": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/media/src/infrastructure/native-compensation/guards.ts|packages/media/src/infrastructure/native-compensation/state.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/media/src/infrastructure/native-compensation/guards.ts|packages/media/src/infrastructure/publication-proof/locks.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/infrastructure/native-compensation/publication.ts|packages/media/src/infrastructure/native-compensation/publication/phase.ts": {
+      "clones": 2,
+      "tokens": 584
+    },
+    "packages/media/src/infrastructure/native-compensation/publication.ts|packages/media/src/infrastructure/native-compensation/series-pack/publication/current.ts": {
+      "clones": 3,
+      "tokens": 280
+    },
+    "packages/media/src/infrastructure/native-compensation/publication/phase.ts|packages/media/src/infrastructure/native-compensation/series-pack/publication/phase.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/infrastructure/native-compensation/series-pack/interrupted.ts|packages/media/src/infrastructure/native-recovery/snapshots.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/infrastructure/native-compensation/series-pack/phase.ts|packages/media/src/infrastructure/native-compensation/series-pack/publication/phase.ts": {
+      "clones": 1,
+      "tokens": 116
+    },
+    "packages/media/src/infrastructure/native-compensation/series-pack/publication/commit.ts|packages/media/src/infrastructure/native-compensation/series-pack/publication/record.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/infrastructure/native-quarantine/prior-authority.ts|packages/media/src/infrastructure/native-quarantine/settled.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/infrastructure/native-quarantine/scope.ts|packages/media/src/infrastructure/native-recovery/scope.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/infrastructure/plex-binding/commit.ts|packages/media/src/infrastructure/plex-binding/library/commit.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/plex-binding/native/execution-parent.integration.test.ts|packages/media/src/infrastructure/plex-binding/native/execution-parent.integration.test.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/infrastructure/plex-binding/native/native-catalog-tv.integration.test.ts|packages/media/src/infrastructure/plex-binding/native/native-catalog.integration.test.ts": {
+      "clones": 4,
+      "tokens": 399
+    },
+    "packages/media/src/infrastructure/plex-binding/native/native-catalog.ts|packages/media/src/infrastructure/plex-binding/native/native-observation.ts": {
+      "clones": 2,
+      "tokens": 161
+    },
+    "packages/media/src/infrastructure/plex-binding/native/native-parent.ts|packages/media/src/infrastructure/plex-binding/native/native-parent.ts": {
+      "clones": 1,
+      "tokens": 144
+    },
+    "packages/media/src/infrastructure/plex-binding/quarantine-commit.ts|packages/media/src/infrastructure/plex-binding/quarantine-invalidation.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/infrastructure/plex-binding/schema/schema-authority.integration.test.ts|packages/media/src/infrastructure/plex-binding/schema/schema.integration.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/infrastructure/plex-binding/schema/schema.integration.test.ts|packages/media/src/infrastructure/plex-binding/schema/schema.integration.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/media/src/infrastructure/plex-binding/watch.integration.test.ts|packages/media/src/infrastructure/plex-binding/watch.integration.test.ts": {
+      "clones": 2,
+      "tokens": 168
+    },
+    "packages/media/src/infrastructure/plex-exclusion-service.ts|packages/media/src/infrastructure/plex-exclusion-service.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/infrastructure/publication-proof/locked-snapshots.integration.test.ts|packages/media/src/infrastructure/publication-proof/store.integration.test.ts": {
+      "clones": 2,
+      "tokens": 172
+    },
+    "packages/media/src/infrastructure/recovery/legacy-claims/movie/projection.ts|packages/media/src/infrastructure/recovery/legacy-claims/projection.ts": {
+      "clones": 1,
+      "tokens": 79
+    },
+    "packages/media/src/infrastructure/recovery/legacy-claims/release.integration.test.ts|packages/media/src/infrastructure/recovery/legacy-claims/test-fixture.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/recovery/legacy-claims/release.integration.test.ts|packages/media/src/testing/movie-workflow/history/history-cleanup-fixture.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/infrastructure/recovery/managed.integration.test.ts|packages/media/src/infrastructure/recovery/privacy.integration.test.ts": {
+      "clones": 1,
+      "tokens": 141
+    },
+    "packages/media/src/infrastructure/recovery/partial-release.integration.test.ts|packages/media/src/infrastructure/recovery/service.integration.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/infrastructure/subtitle-replacement/service.ts|packages/media/src/infrastructure/subtitle-replacement/service.ts": {
+      "clones": 2,
+      "tokens": 196
+    },
+    "packages/media/src/infrastructure/visibility/access.ts|packages/media/src/shared/movie-editions/lifecycle/public-v4.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/migration/handoff-network/torrent-evidence.integration.test.ts|packages/media/src/migration/handoff-network/torrents.test.ts": {
+      "clones": 1,
+      "tokens": 83
+    },
+    "packages/media/src/migration/native-archive/activities.ts|packages/media/src/migration/native-plex/archive.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/migration/native-archive/plex.ts|packages/media/src/migration/native-compensation/plex.ts": {
+      "clones": 2,
+      "tokens": 183
+    },
+    "packages/media/src/migration/native-compensation/activities.ts|packages/media/src/migration/native-plex/compensation.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/migration/native-compensation/plex.ts|packages/media/src/migration/native-compensation/series-pack/plex.ts": {
+      "clones": 4,
+      "tokens": 1568
+    },
+    "packages/media/src/migration/native-network/producer.ts|packages/media/src/migration/native-network/quarantine.ts": {
+      "clones": 4,
+      "tokens": 338
+    },
+    "packages/media/src/migration/native-network/storage.integration.test.ts|packages/media/src/migration/native-network/storage.integration.test.ts": {
+      "clones": 1,
+      "tokens": 139
+    },
+    "packages/media/src/migration/native-plex/archive.ts|packages/media/src/migration/native-plex/compensation.ts": {
+      "clones": 2,
+      "tokens": 148
+    },
+    "packages/media/src/migration/runtime-evidence.ts|packages/media/src/migration/series-pack-evidence.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/server/media/movie-edition-http.test-support.ts|packages/media/src/testing/movie-workflow/public-http-fixture.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/shared/acquisition/series-pack-publication-v1.ts|packages/media/src/shared/publication-proof/intent.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/shared/handoff.ts|packages/media/src/shared/native-recovery.ts": {
+      "clones": 1,
+      "tokens": 92
+    },
+    "packages/media/src/shared/handoff.ts|packages/media/src/shared/native-subtitles.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/media/src/shared/movie-editions/history-review-v3.ts|packages/media/src/shared/recovery.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/media/src/shared/movie-editions/notifications-v4.ts|packages/media/src/shared/movie-editions/removal-v4.ts": {
+      "clones": 1,
+      "tokens": 101
+    },
+    "packages/media/src/shared/movie-editions/plex-v2.ts|packages/media/src/shared/plex-binding/publication.ts": {
+      "clones": 1,
+      "tokens": 77
+    },
+    "packages/media/src/shared/movie-editions/restore-plex-v1.ts|packages/media/src/shared/movie-editions/rollback/plex.ts": {
+      "clones": 2,
+      "tokens": 171
+    },
+    "packages/media/src/shared/native-recovery/archive.ts|packages/media/src/shared/publication-proof/intent.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/media/src/shared/native-recovery/series-pack/evidence.ts|packages/media/src/shared/publication-proof/references.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/media/src/testing/corpus/capture/privacy.test.ts|packages/media/src/testing/corpus/capture/private.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/media/src/testing/movie-plex-v4.ts|packages/media/src/testing/movie-workflow/wire.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/media/src/testing/movie-workflow/cleanup-fixture.ts|packages/media/src/testing/movie-workflow/rollback/rollback-fixture.ts": {
+      "clones": 1,
+      "tokens": 154
+    },
+    "packages/media/src/testing/movie-workflow/cleanup-fixture.ts|packages/media/src/testing/movie-workflow/upgrade-fixture.ts": {
+      "clones": 1,
+      "tokens": 160
+    },
+    "packages/media/src/testing/movie-workflow/history/history-cleanup-fixture.ts|packages/media/src/testing/movie-workflow/rollback/rollback-origin-fixture.ts": {
+      "clones": 1,
+      "tokens": 145
+    },
+    "packages/media/src/testing/movie-workflow/history/history-http-fixture.ts|packages/media/src/testing/movie-workflow/history/history-review-fixture.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/media/src/testing/movie-workflow/restored-cleanup-fixture.ts|packages/media/src/testing/movie-workflow/retention-fixture.ts": {
+      "clones": 2,
+      "tokens": 142
+    },
+    "packages/media/src/testing/movie-workflow/rollback/rollback-http-fixture.ts|packages/media/src/testing/movie-workflow/subtitles/subtitle-replacement-http-fixture.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/testing/movie-workflow/rollback/rollback-lineage-fixture.ts|packages/media/src/testing/movie-workflow/subtitles/subtitle-replacement-fixture.ts": {
+      "clones": 1,
+      "tokens": 81
+    },
+    "packages/media/src/testing/movie-workflow/subtitles/adopted-replacement-fixture.ts|packages/media/src/testing/movie-workflow/subtitles/subtitle-replacement-fixture.ts": {
+      "clones": 2,
+      "tokens": 183
+    },
+    "packages/media/src/testing/movie-workflow/wire.ts|packages/media/src/testing/series-workflow/wire.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/media/src/testing/postgres.ts|packages/tracker/src/testing/postgres.ts": {
+      "clones": 2,
+      "tokens": 167
+    },
+    "packages/media/src/testing/series-workflow/cross-batch-fixture.ts|packages/media/src/testing/series-workflow/multi-season-fixture.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/media/src/testing/series-workflow/fixture.ts|packages/media/src/testing/series-workflow/per-episode/fixture.ts": {
+      "clones": 1,
+      "tokens": 126
+    },
+    "packages/media/src/testing/series-workflow/future-role-fixture.ts|packages/media/src/testing/series-workflow/role-fixture.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/media/src/testing/series-workflow/multi-season-fixture.ts|packages/media/src/testing/series-workflow/per-episode/fixture.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/media/src/testing/series-workflow/multi-season-role-fixture.ts|packages/media/src/testing/series-workflow/per-episode/rollback-role-fixture.ts": {
+      "clones": 1,
+      "tokens": 70
     },
     "packages/monarch/src/lib/classifier/prompt.test.ts|packages/monarch/src/lib/classifier/prompt.test.ts": {
       "clones": 1,
@@ -1032,6 +2780,98 @@
       "clones": 1,
       "tokens": 79
     },
+    "packages/temporal/src/activities/media/future-series-workflow.integration.test.ts|packages/temporal/src/activities/media/managed-series-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/temporal/src/activities/media/library-handoff.test.ts|packages/temporal/src/activities/media/library-handoff.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/temporal/src/activities/media/library-handoff.test.ts|packages/temporal/src/activities/media/plex-publication.test.ts": {
+      "clones": 2,
+      "tokens": 147
+    },
+    "packages/temporal/src/activities/media/library-plex-binding.integration.test.ts|packages/temporal/src/activities/media/provider-feed.integration.test.ts": {
+      "clones": 2,
+      "tokens": 175
+    },
+    "packages/temporal/src/activities/media/managed-movie-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/temporal/src/activities/media/managed-series-workflow.integration.test.ts|packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts": {
+      "clones": 1,
+      "tokens": 105
+    },
+    "packages/temporal/src/activities/media/movie-editions.test.ts|packages/temporal/src/activities/media/movie-editions.test.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/temporal/src/activities/media/movie-editions/automatic-rollback-handoff-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-handoff-workflow.integration.test.ts": {
+      "clones": 2,
+      "tokens": 196
+    },
+    "packages/temporal/src/activities/media/movie-editions/continuation-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-editions/retry-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 142
+    },
+    "packages/temporal/src/activities/media/movie-editions/continuation-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-editions/subtitle-replacement-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback-crash.integration.test.ts|packages/temporal/src/activities/media/movie-editions/manual-rollback-guards.integration.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback-crash.integration.test.ts|packages/temporal/src/activities/media/movie-editions/manual-rollback-native.integration.test.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback-crash.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-source-native.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback-crash.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-timezone-native.integration.test.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback-native.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-timezone-native.integration.test.ts": {
+      "clones": 1,
+      "tokens": 112
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/temporal/src/activities/media/movie-editions/manual-rollback.ts|packages/temporal/src/activities/media/movie-editions/rollback.ts": {
+      "clones": 2,
+      "tokens": 157
+    },
+    "packages/temporal/src/activities/media/movie-editions/rollback-handoff-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-repeated-handoff.integration.test.ts": {
+      "clones": 3,
+      "tokens": 226
+    },
+    "packages/temporal/src/activities/media/movie-editions/rollback-handoff.test-support.ts|packages/temporal/src/activities/media/movie-editions/rollback-repeated-handoff.test-support.ts": {
+      "clones": 1,
+      "tokens": 99
+    },
+    "packages/temporal/src/activities/media/movie-editions/rollback-native.integration.test.ts|packages/temporal/src/activities/media/movie-editions/rollback-origins.integration.test.ts": {
+      "clones": 1,
+      "tokens": 78
+    },
+    "packages/temporal/src/activities/media/movie-editions/subtitle-replacement-workflow.integration.test.ts|packages/temporal/src/activities/media/movie-editions/transfer-reuse-workflow.integration.test.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
+    "packages/temporal/src/activities/media/native-archive.test.ts|packages/temporal/src/activities/media/native-compensation.test.ts": {
+      "clones": 8,
+      "tokens": 1135
+    },
+    "packages/temporal/src/activities/media/series-pack/rollback-role.integration.test.ts|packages/temporal/src/activities/media/series-pack/workflow.integration.test.ts": {
+      "clones": 3,
+      "tokens": 367
+    },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
       "tokens": 141
@@ -1043,6 +2883,82 @@
     "packages/temporal/src/workflows/delivery.ts|packages/temporal/src/workflows/replay-fixtures/delivery-dispatch-before-replication.ts": {
       "clones": 1,
       "tokens": 92
+    },
+    "packages/temporal/src/workflows/media/cleanup.ts|packages/temporal/src/workflows/media/fixtures/cleanup-before-input.ts": {
+      "clones": 2,
+      "tokens": 364
+    },
+    "packages/temporal/src/workflows/media/cleanup.ts|packages/temporal/src/workflows/media/fixtures/cleanup-before-observation.ts": {
+      "clones": 1,
+      "tokens": 87
+    },
+    "packages/temporal/src/workflows/media/core.ts|packages/temporal/src/workflows/media/series-pack/fixtures/acquisition-before-prepare.ts": {
+      "clones": 4,
+      "tokens": 2496
+    },
+    "packages/temporal/src/workflows/media/handoff.ts|packages/temporal/src/workflows/media/native-quarantine.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/temporal/src/workflows/media/movie-editions/acquisition-before-preparation.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition-before-rollback.fixture.ts": {
+      "clones": 2,
+      "tokens": 980
+    },
+    "packages/temporal/src/workflows/media/movie-editions/acquisition-before-preparation.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition.ts": {
+      "clones": 2,
+      "tokens": 765
+    },
+    "packages/temporal/src/workflows/media/movie-editions/acquisition-before-rollback.fixture.ts|packages/temporal/src/workflows/media/movie-editions/acquisition.ts": {
+      "clones": 1,
+      "tokens": 183
+    },
+    "packages/temporal/src/workflows/media/movie-editions/manual-rollback.test.ts|packages/temporal/src/workflows/media/movie-editions/preparation.test.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/temporal/src/workflows/media/movie-editions/preparation.test.ts|packages/temporal/src/workflows/media/movie-editions/rollback.test.ts": {
+      "clones": 1,
+      "tokens": 82
+    },
+    "packages/temporal/src/workflows/media/movie-editions/preparation.test.ts|packages/temporal/src/workflows/media/series-pack/publication.test.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/temporal/src/workflows/media/movie-editions/restore.ts|packages/temporal/src/workflows/media/movie-editions/retention.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/temporal/src/workflows/media/movie-editions/retention.test-support.ts|packages/temporal/src/workflows/media/retention.test.ts": {
+      "clones": 3,
+      "tokens": 342
+    },
+    "packages/temporal/src/workflows/media/movie-editions/retention.test.ts|packages/temporal/src/workflows/media/retention.test.ts": {
+      "clones": 1,
+      "tokens": 86
+    },
+    "packages/temporal/src/workflows/media/movie-editions/retention.ts|packages/temporal/src/workflows/media/retention.ts": {
+      "clones": 3,
+      "tokens": 247
+    },
+    "packages/temporal/src/workflows/media/native-archive.ts|packages/temporal/src/workflows/media/native-compensation.ts": {
+      "clones": 2,
+      "tokens": 174
+    },
+    "packages/temporal/src/workflows/media/native-archive.ts|packages/temporal/src/workflows/media/series-pack/native-compensation.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/temporal/src/workflows/media/native-compensation.ts|packages/temporal/src/workflows/media/series-pack/native-compensation.ts": {
+      "clones": 2,
+      "tokens": 333
+    },
+    "packages/temporal/src/workflows/media/native-quarantine.test.ts|packages/temporal/src/workflows/media/native-recovery.test.ts": {
+      "clones": 4,
+      "tokens": 616
+    },
+    "packages/temporal/src/workflows/media/native-quarantine.test.ts|packages/temporal/src/workflows/media/subtitle-replacement.test.ts": {
+      "clones": 1,
+      "tokens": 70
     },
     "packages/temporal/src/workflows/ops-snapshot.ts|packages/temporal/src/workflows/replay-fixtures/ops-before-ops-queue.ts": {
       "clones": 1,

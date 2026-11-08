@@ -164,7 +164,9 @@ test("real authenticated household release dispatches named retention through se
       expect(await handle.result()).toEqual({ status: "completed" });
       const native = await handle.describe();
       expect(native.workflowId).toBe(`media-operation-${operationId}`);
-      expect(native.runId).toBeTruthy();
+      expect(native.runId).toMatch(
+        /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/u,
+      );
       expect(native.status.name).toBe("COMPLETED");
       const history = await handle.fetchHistory();
       assertScopedMovieRetentionActivityBudgets(

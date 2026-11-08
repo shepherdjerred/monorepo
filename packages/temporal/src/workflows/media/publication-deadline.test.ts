@@ -1,3 +1,4 @@
+import { createMediaWorkflowTestWorker } from "#activities/media/testing/workflow-workers.ts";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
@@ -39,11 +40,10 @@ test("ordinary publication uses the actual SDK finite overall budget without cha
       },
     },
   });
-  const workflow = await Worker.create({
-    connection: environment.nativeConnection,
-    taskQueue: TASK_QUEUES.WORKFLOWS,
+  const workflow = await createMediaWorkflowTestWorker(
+    environment,
     workflowsPath,
-  });
+  );
   const running = [network.run(), files.run()];
   try {
     const handle = await environment.client.workflow.start(

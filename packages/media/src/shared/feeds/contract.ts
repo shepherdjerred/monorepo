@@ -63,7 +63,6 @@ export const FeedMatchProgressV1Schema = z.strictObject({
   cursor: MatchFeedSourceV1Schema.shape.cursor,
   completed: z.boolean(),
 });
-export type FeedCheckpointV1 = z.infer<typeof FeedCheckpointV1Schema>;
 export type FeedPageReceiptV1 = z.infer<typeof FeedPageReceiptV1Schema>;
 export type MatchFeedSourceV1 = z.infer<typeof MatchFeedSourceV1Schema>;
 

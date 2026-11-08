@@ -1,26 +1,23 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { lstat } from "node:fs/promises";
 import path from "node:path";
 import { createManualMovieRollbackFixture } from "@shepherdjerred/media/testing/movie-manual-rollback-workflow";
-import { movieRollbackVideos } from "@shepherdjerred/media/testing/movie-rollback-workflow";
 import { inspectPublicationRecords } from "@shepherdjerred/media/filesystem/publication-proof/records";
 import { movieRollbackSdkEnvironment } from "./rollback-sdk.test-support.ts";
 import { manualMovieRollbackWorkers } from "./manual-rollback-sdk.test-support.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 test.each(["move_link", "move_unlink", "journal_complete"] as const)(
   "manual B-caption durable %s ACK resumes before original A inverse without recreating an import",
   async (step) => {
-    const f = await createManualMovieRollbackFixture("extended_cut", videos);
-    closers.push(f.close);
+    const f = await createManualMovieRollbackFixture(
+      "extended_cut",
+      rollbackInputs.videos(),
+    );
+    rollbackInputs.closeAfterTest(f.close);
     const workers = manualMovieRollbackWorkers(() => Promise.resolve(f.manual));
     const runId = crypto.randomUUID();
     const sdk = (activityId: string) =>

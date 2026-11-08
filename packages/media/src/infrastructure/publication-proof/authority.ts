@@ -85,9 +85,6 @@ export async function resolvePublicationTransitionAuthority(
     originalGrant: result.originalGrant,
   };
 }
-export type PublicationTransitionAuthority = Awaited<
-  ReturnType<typeof resolvePublicationTransitionAuthority>
->;
 
 /** Validate a frozen predecessor's original grant, never synthesize authority for a later version. */
 export async function assertRecordedPublicationGrant(

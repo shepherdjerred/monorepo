@@ -36,18 +36,6 @@ export async function repeatableRead<T>(
   throw new Error("Read transaction retry bound was not enforced");
 }
 
-/** Same sorted row lock order used by filesystem final guards. Acquire before related writes. */
-export async function lockMedia(
-  db: Prisma.TransactionClient,
-  mediaIds: readonly string[],
-): Promise<void> {
-  const ordered = [...new Set(mediaIds)].sort();
-  if (ordered.length === 0) return;
-  await db.$queryRaw(
-    Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join(ordered)}) ORDER BY id FOR UPDATE`,
-  );
-}
-
 export async function needsRestore(
   db: Prisma.TransactionClient,
   mediaId: string,

@@ -96,5 +96,3 @@ export const MovieFilePlanV2Schema = MovieFilePlanV2BaseSchema.superRefine(
       });
   },
 );
-export type MovieFilePlanV2 = z.infer<typeof MovieFilePlanV2Schema>;
-export type MovieFilePlanEntryV2 = z.infer<typeof MovieFilePlanEntryV2Schema>;

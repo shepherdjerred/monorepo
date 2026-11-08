@@ -1,3 +1,7 @@
+import {
+  movieNoticeConfigurationError,
+  assertMovieNoticeAccessUnchanged,
+} from "#automation/movie-editions/notifications/configuration.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
@@ -25,7 +29,6 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { readMovieNoticeProof } from "./source.ts";
 import { currentMovieSubtitleWorkV4 } from "#automation/movie-editions/subtitles/authority.ts";
 import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
-import { MediaError } from "#application/errors.ts";
 
 export type MovieNoticeDelivery = Prisma.NotificationDeliveryGetPayload<{
   include: { event: true; user: { include: { notificationPreference: true } } };
@@ -90,13 +93,10 @@ export async function assertMovieNoticeConfiguration(
     prepared.payload.source.scope.mediaId,
   ]).catch((error: unknown) => {
     prepared.freshness.assertActive();
-    if (error instanceof MediaError && error.code === "plex_scope_unconfigured")
-      throw new PlexBindingProtection("wrong_section");
-    throw error;
+    throw movieNoticeConfigurationError(error);
   });
   prepared.freshness.assertActive();
-  if (identityHash(access) !== identityHash(prepared.access))
-    throw new PlexBindingProtection("wrong_section");
+  assertMovieNoticeAccessUnchanged(access, prepared.access);
 }
 
 /** The same invocation allowance and original SDK/writer/mapping deadline span claim and send. */

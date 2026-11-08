@@ -1,10 +1,13 @@
-import { z } from "zod";
+import {
+  seriesPackSealPayload,
+  seriesPackSealOperationData,
+  seriesPackSealOutcomeData,
+} from "./seal-data.ts";
 import type { FileContext } from "#automation/files/types.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import type { MediaAttemptOperation } from "#shared/automation.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import { canonicalJson } from "#migration/profile-import.ts";
 import { loadSeriesPackPublicationRecordV1 } from "#infrastructure/acquisition-identity/series-pack/publication/store.ts";
 import { readSeriesPackInverseV1 } from "#infrastructure/acquisition-identity/series-pack/publication/inverse-receipts.ts";
 import { readSeriesPackPhysicalV1 } from "#infrastructure/acquisition-identity/series-pack/publication/receipts.ts";
@@ -173,33 +176,17 @@ export async function sealSeriesPackCompensationV1(
           await tx.acquisitionReservation.deleteMany({
             where: { attemptId: input.attemptId },
           });
-          const payload = {
-            schemaVersion: 1,
-            kind: "seal_series_pack_publication_v1",
-            attemptId: input.attemptId,
-            operationId: input.operationId,
-            intentHash: parent.reference.intentHash,
+          const payload = seriesPackSealPayload(
+            input,
+            parent.reference.intentHash,
             outcome,
-            outcomeHash: identityHash(outcome),
-            raw: canonicalJson(z.json().parse(outcome)),
-          };
+          );
           await tx.operation.create({
-            data: {
-              id: sealOperationId,
-              kind: payload.kind,
-              targetId: input.attemptId,
-              userId: null,
-              status: "completed",
-              idempotencyKey: `series-pack-publication-seal-v1:${input.attemptId}`,
-              payload: z.record(z.string(), z.json()).parse(payload),
-            },
+            data: seriesPackSealOperationData(sealOperationId, payload),
           });
           await tx.mediaPublicationTransition.update({
             where: { id: parent.reference.transitionId },
-            data: {
-              outcome: z.record(z.string(), z.json()).parse(outcome),
-              outcomeHash: payload.outcomeHash,
-            },
+            data: seriesPackSealOutcomeData(payload),
           });
           deadline.assertActive();
           await context.checkpoint(

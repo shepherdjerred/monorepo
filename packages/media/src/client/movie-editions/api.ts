@@ -4,25 +4,10 @@ import {
   MovieRequestResultV3Schema,
   type MovieRequestV3,
 } from "#shared/movie-editions/commands.ts";
-import {
-  MovieEditionContextV3Schema,
-  type MovieEditionContextV3,
-} from "#shared/movie-editions/view.ts";
+import { type MovieEditionContextV3 } from "#shared/movie-editions/view.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import { LanguageSchema } from "#shared/contract.ts";
-import { readApi, writeApi, queryClient } from "#client/api.ts";
-
-export async function readMovieContext(mediaId: string, subjectUserId: string) {
-  return readApi(
-    `/media/${encodeURIComponent(mediaId)}/movie-edition-context?subjectUserId=${encodeURIComponent(subjectUserId)}`,
-    MovieEditionContextV3Schema.refine(
-      (context) =>
-        context.mediaId === mediaId && context.subjectUserId === subjectUserId,
-      "Movie choices belong to another title or requester",
-    ),
-    3,
-  );
-}
+import { writeApi, queryClient } from "#client/api.ts";
 
 export function movieRequest(
   context: MovieEditionContextV3,

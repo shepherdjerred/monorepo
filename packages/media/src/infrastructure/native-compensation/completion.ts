@@ -15,7 +15,6 @@ import { settleReviewedReservations } from "#infrastructure/publication-proof/li
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 import {
-  assertNativeCompensationPhase,
   assertCompensationPhaseCurrent,
   assertCompensationPhaseTransaction,
   type CompensationExecutionAuthority,
@@ -23,7 +22,7 @@ import {
 } from "./guards.ts";
 import { NativeCompensationProtection } from "./protection.ts";
 import { assertCompensationRestoredParticipants } from "./completion-proof.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 
 type ExecutionInput = {
@@ -42,15 +41,6 @@ type WriteOptions = {
   freshness?: PlexBindingFreshness | undefined;
   budget: PublicationAuthorityReadBudget;
 };
-
-export async function persistCompensationExecution(
-  tx: Prisma.TransactionClient,
-  input: ExecutionInput,
-  budget = new PublicationAuthorityReadBudget(),
-): Promise<void> {
-  const phase = await assertNativeCompensationPhase(tx, input.activity, budget);
-  return persistExecution(tx, input, phase, { budget });
-}
 
 export async function persistCompensationPhaseExecution(
   tx: Prisma.TransactionClient,
@@ -126,15 +116,6 @@ async function persistExecution(
   record.execution = execution;
   authority.version = current.version;
   authority.execution = execution;
-}
-
-export async function commitNativeCompensation(
-  tx: Prisma.TransactionClient,
-  input: CompletionInput,
-  budget = new PublicationAuthorityReadBudget(),
-): Promise<void> {
-  const phase = await assertNativeCompensationPhase(tx, input.activity, budget);
-  return commitCompletion(tx, input, phase, { budget });
 }
 
 export async function commitCompensationPhaseCompletion(

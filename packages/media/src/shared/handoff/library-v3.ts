@@ -90,7 +90,6 @@ export const LibraryHandoffSelectionV3Schema =
     scope: LibraryHandoffScopeV3Schema,
     plexEdits: z.array(PlexEditionProofV1Schema).max(25),
   });
-export type LibraryHandoffScopeV3 = z.infer<typeof LibraryHandoffScopeV3Schema>;
 export const LibrarySubtitlePolicyIdsSchema = z
   .array(z.uuid())
   .min(1)

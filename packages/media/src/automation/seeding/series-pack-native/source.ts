@@ -1,3 +1,4 @@
+import { seedingObservation } from "#automation/seeding/observation.ts";
 import path from "node:path";
 import { z } from "zod";
 import type { Prisma, Torrent } from "#generated/prisma/client.ts";
@@ -303,17 +304,7 @@ async function underLocks(
   });
   const evaluated = evaluateSeeding(
     RecordedSeedingPolicySchema.parse(current.seedingPolicy),
-    {
-      ratio:
-        observed.ratio.kind === "finite"
-          ? observed.ratio.value
-          : observed.ratio,
-      seedingSeconds: observed.seeding_time,
-      sizeBytes: observed.size,
-      complete: observed.progress === 1,
-      owned: current.owned,
-      dependenciesRemaining: false,
-    },
+    seedingObservation(observed, current.owned),
   );
   if (phase === "evaluation" || !evaluated.eligible) {
     if (input.claimed)

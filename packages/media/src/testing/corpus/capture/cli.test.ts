@@ -1,33 +1,11 @@
 import { expect, test } from "vitest";
-import { spawn } from "node:child_process";
+import { runCorpusCommand } from "#testing/corpus/command.ts";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const packageRoot = fileURLToPath(new URL("../../../../", import.meta.url));
 async function command(args: string[]) {
-  return new Promise<{ code: number | null; stdout: string; stderr: string }>(
-    (resolve, reject) => {
-      const child = spawn(
-        "bun",
-        ["--no-install", "scripts/corpus/capture.ts", ...args],
-        {
-          cwd: packageRoot,
-          stdio: ["ignore", "pipe", "pipe"],
-          signal: AbortSignal.timeout(3000),
-        },
-      );
-      let stdout = "",
-        stderr = "";
-      child.stdout.setEncoding("utf8").on("data", (value: string) => {
-        stdout += value;
-      });
-      child.stderr.setEncoding("utf8").on("data", (value: string) => {
-        stderr += value;
-      });
-      child.once("error", reject);
-      child.once("close", (code) => resolve({ code, stdout, stderr }));
-    },
-  );
+  return runCorpusCommand(packageRoot, "scripts/corpus/capture.ts", args);
 }
 test("actual capture CLI rejects incomplete arguments without exposing input or reading credentials", async () => {
   const result = await command(["--recyclarr-reference", "do-not-print-this"]);

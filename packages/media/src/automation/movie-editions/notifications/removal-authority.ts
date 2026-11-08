@@ -1,3 +1,7 @@
+import {
+  movieNoticeConfigurationError,
+  assertMovieNoticeAccessUnchanged,
+} from "#automation/movie-editions/notifications/configuration.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { NotificationContext } from "#automation/notifications/types.ts";
 import type { MovieNoticeDelivery } from "./authority.ts";
@@ -19,7 +23,6 @@ import { networkMovieAccess } from "#automation/editions/access.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { readMovieRemovalSourceV4 } from "./removal-source.ts";
 import { currentMovieRemovalV4 } from "./removal-current.ts";
-import { MediaError } from "#application/errors.ts";
 
 export type PreparedMovieRemovalNoticeV4 = Awaited<
   ReturnType<typeof prepareMovieRemovalNoticeV4>
@@ -69,13 +72,10 @@ export async function assertMovieRemovalNoticeConfiguration(
     prepared.payload.source.scope.mediaId,
   ]).catch((error: unknown) => {
     prepared.freshness.assertActive();
-    if (error instanceof MediaError && error.code === "plex_scope_unconfigured")
-      throw new PlexBindingProtection("wrong_section");
-    throw error;
+    throw movieNoticeConfigurationError(error);
   });
   prepared.freshness.assertActive();
-  if (identityHash(access) !== identityHash(prepared.access))
-    throw new PlexBindingProtection("wrong_section");
+  assertMovieNoticeAccessUnchanged(access, prepared.access);
 }
 
 export async function assertPreparedMovieRemovalNoticeV4(

@@ -1,5 +1,4 @@
-import { rm } from "node:fs/promises";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { createManagedSeriesFixture } from "./fixture.ts";
 import { extendManagedSeriesBatch } from "./cross-batch-fixture.ts";
@@ -16,17 +15,7 @@ import {
 export async function createManagedSeriesWorkflowFixture(
   options: { crossBatch?: "series" | "episodes" } = {},
 ) {
-  const cluster = await startMediaTestPostgres();
-  const db = cluster.database;
-  const directories: string[] = [];
-  const close = async () => {
-    try {
-      await cluster.close();
-    } finally {
-      for (const directory of directories)
-        await rm(directory, { recursive: true, force: true });
-    }
-  };
+  const { db, directories, close } = await createFixtureLifecycle();
   try {
     const original = await movieVideoFixture(1280);
     const upgrade = await movieVideoFixture(1920, undefined, {

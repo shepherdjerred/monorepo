@@ -1,4 +1,8 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type {
+  LibraryAsset,
+  MediaIntent,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import type { ManualSubtitle } from "#shared/admin.ts";
 import { validateSubtitle } from "#integrations/subtitle-validation.ts";
 import { MediaError } from "#application/errors.ts";
@@ -23,6 +27,48 @@ export function parseManualSubtitle(input: ManualSubtitle, bytes: Uint8Array) {
       422,
     );
   }
+}
+
+/** Pure stored metadata; callers retain their own locks, policy and epoch reads. */
+export function manualSubtitleMetadata(args: {
+  input: ManualSubtitle;
+  validated: ReturnType<typeof parseManualSubtitle>;
+  checksum: string;
+  actorId: string;
+  asset: Pick<LibraryAsset, "checksum" | "version">;
+  authority: string;
+  recoveryEpoch: number;
+  intents: readonly Pick<MediaIntent, "mediaId" | "generation">[];
+}) {
+  const { input, validated, asset } = args;
+  return {
+    checksum: args.checksum,
+    videoChecksum: asset.checksum,
+    videoVersion: asset.version,
+    forced: input.forced ?? false,
+    hearingImpaired: input.hearingImpaired ?? null,
+    content: new TextEncoder().encode(validated.text),
+    provenance: {
+      filename: input.filename,
+      description: input.description,
+      format: validated.format,
+      uploadedBy: args.actorId,
+      simplifiedEvidence: validated.simplifiedEvidence,
+      traditionalEvidence: validated.traditionalEvidence,
+    },
+    matchingEvidence: {
+      assetVersion: asset.version,
+      assetChecksum: asset.checksum,
+      exactMediaMatch: true,
+      videoVersionMatch: true,
+      ownerConfirmed: true,
+      targetAuthority: args.authority,
+      recoveryEpoch: args.recoveryEpoch,
+      generations: Object.fromEntries(
+        args.intents.map((intent) => [intent.mediaId, intent.generation]),
+      ),
+    },
+  };
 }
 export async function lockSubtitleAsset(
   tx: Prisma.TransactionClient,

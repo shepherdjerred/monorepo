@@ -103,9 +103,6 @@ export type PublicationPath = z.infer<typeof PublicationPathSchema>;
 export type PhysicalPathState = z.infer<typeof PhysicalPathStateSchema>;
 export type PublicationJournal = z.infer<typeof PublicationJournalSchema>;
 export type LockedPrimitiveEffect = z.infer<typeof LockedPrimitiveEffectSchema>;
-export type LockedJournalCompletion = z.infer<
-  typeof LockedJournalCompletionSchema
->;
 export type LockedPublicationEvent = z.infer<
   typeof LockedPublicationEventSchema
 >;

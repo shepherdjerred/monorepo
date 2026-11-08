@@ -1,6 +1,5 @@
 import { Prisma } from "#generated/prisma/client.ts";
-import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
-import { z } from "zod";
+import { candidateSourceEvidence } from "#infrastructure/acquisition-identity/source-evidence.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import type { ReleaseAttributes } from "#shared/contract.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
@@ -75,17 +74,7 @@ export async function persistCandidateSnapshot(
           input.searchedForMediaId === undefined
             ? []
             : [input.searchedForMediaId],
-        sourceEvidence: z.record(z.string(), z.json()).parse(
-          CandidateSourceEvidenceSchema.parse({
-            infoHash: source.infoHash.toLowerCase(),
-            ...(source.references === undefined
-              ? {}
-              : { references: source.references }),
-            ...(source.editionEvidence === undefined
-              ? {}
-              : { editionEvidence: source.editionEvidence }),
-          }),
-        ),
+        sourceEvidence: candidateSourceEvidence(source),
         attributes: PublicReleaseAttributesSchema.parse(next),
         evaluation,
         encryptedSource: context.cipher.encrypt(JSON.stringify(source), aad),
@@ -137,17 +126,7 @@ export async function persistCandidateSnapshot(
               : [input.searchedForMediaId]),
           ]),
         ].slice(0, 100),
-        sourceEvidence: z.record(z.string(), z.json()).parse(
-          CandidateSourceEvidenceSchema.parse({
-            infoHash: source.infoHash.toLowerCase(),
-            ...(source.references === undefined
-              ? {}
-              : { references: source.references }),
-            ...(source.editionEvidence === undefined
-              ? {}
-              : { editionEvidence: source.editionEvidence }),
-          }),
-        ),
+        sourceEvidence: candidateSourceEvidence(source),
       },
     });
     return { ...next, id: releaseId };

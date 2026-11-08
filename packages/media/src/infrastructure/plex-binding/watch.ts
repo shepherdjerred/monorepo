@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { PlexWatchProjection, Prisma } from "#generated/prisma/client.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
 import {
   BoundWatchAuthoritySchema,
@@ -96,6 +96,25 @@ async function assertBoundAuthority(
   }
 }
 
+function parseWatchProjectionAuthority(row: PlexWatchProjection) {
+  const stored = parsePlexRecord(
+    BoundWatchAuthoritySchema,
+    row.authority,
+    row.authorityHash,
+  );
+  if (
+    row.evidenceId !== stored.binding.evidenceId ||
+    row.associationHash !== stored.binding.associationHash ||
+    row.bindingRevision !== stored.binding.revision ||
+    row.purpose !== stored.purpose ||
+    row.mediaId !== stored.binding.scope.mediaId ||
+    row.edition !== stored.binding.scope.edition ||
+    row.source !== "plex"
+  )
+    throw new Error("Watch projection relational authority changed");
+  return stored;
+}
+
 /** Protective clearing preserves immutable integrity without requiring still-positive authority. */
 async function assertUnknownWatchClear(
   tx: Prisma.TransactionClient,
@@ -116,21 +135,7 @@ async function assertUnknownWatchClear(
     },
   });
   if (row === null) return;
-  const stored = parsePlexRecord(
-    BoundWatchAuthoritySchema,
-    row.authority,
-    row.authorityHash,
-  );
-  if (
-    row.evidenceId !== stored.binding.evidenceId ||
-    row.associationHash !== stored.binding.associationHash ||
-    row.bindingRevision !== stored.binding.revision ||
-    row.purpose !== stored.purpose ||
-    row.mediaId !== stored.binding.scope.mediaId ||
-    row.edition !== stored.binding.scope.edition ||
-    row.source !== "plex"
-  )
-    throw new Error("Watch projection relational authority changed");
+  const stored = parseWatchProjectionAuthority(row);
   if (row.watchBatchRevision >= input.watchBatchRevision)
     throw new PlexBindingProtection("scope_changed");
   await readImmutableWatchAssociation(tx, stored, budget);
@@ -155,21 +160,7 @@ export async function readCurrentBoundWatch(
   });
   if (row === null || watch === null)
     return { status: "unknown", reason: "missing" };
-  const stored = parsePlexRecord(
-    BoundWatchAuthoritySchema,
-    row.authority,
-    row.authorityHash,
-  );
-  if (
-    row.evidenceId !== stored.binding.evidenceId ||
-    row.associationHash !== stored.binding.associationHash ||
-    row.bindingRevision !== stored.binding.revision ||
-    row.purpose !== stored.purpose ||
-    row.mediaId !== stored.binding.scope.mediaId ||
-    row.edition !== stored.binding.scope.edition ||
-    row.source !== "plex"
-  )
-    throw new Error("Watch projection relational authority changed");
+  const stored = parseWatchProjectionAuthority(row);
   if (identityHash(stored) !== identityHash(authority))
     return { status: "unknown", reason: "authority_changed" };
   if (

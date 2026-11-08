@@ -99,9 +99,3 @@ export type MovieEditionRequestView = z.infer<
 export type MovieEditionRequestListV3 = z.infer<
   typeof MovieEditionRequestListV3Schema
 >;
-export type MovieEditionContextQuery = z.infer<
-  typeof MovieEditionContextQuerySchema
->;
-export type MovieEditionRequestListQuery = z.infer<
-  typeof MovieEditionRequestListQuerySchema
->;

@@ -47,7 +47,6 @@ export type FileContext = {
   verifyPlexExclusion?: (roots: MediaFileRoots) => Promise<void>;
 };
 export const GenerationsSchema = filePlan.GenerationsSchema;
-export const EmbeddedSubtitleSchema = filePlan.EmbeddedSubtitleSchema;
 export const FilePlanEntrySchema = filePlan.FilePlanEntrySchema;
 export const FilePlanSchema = z.array(FilePlanEntrySchema).min(1);
 export type FilePlanEntry = z.infer<typeof FilePlanEntrySchema>;

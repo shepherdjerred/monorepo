@@ -1,25 +1,19 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { createManualMovieRollbackFixture } from "@shepherdjerred/media/testing/movie-manual-rollback-workflow";
 import { movieRollbackSourceHarness } from "@shepherdjerred/media/testing/movie-rollback-source";
-import { movieRollbackVideos } from "@shepherdjerred/media/testing/movie-rollback-workflow";
 import { createSeedingWorkerActivities } from "#activities/media/seeding.ts";
 import { createMovieNetworkWorkerActivitiesV4 } from "#activities/media/movie-editions.ts";
 import { rollbackGuardScenario } from "./rollback-guards.test-support.ts";
 import { movieRollbackSdkEnvironment } from "./rollback-sdk.test-support.ts";
 import { manualMovieRollbackWorkers } from "./manual-rollback-sdk.test-support.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 test("actual automatic rejected B source drains only after original A rebind while imported B birth stays literal", async () => {
-  const f = await rollbackGuardScenario(videos);
-  closers.push(f.close);
+  const f = await rollbackGuardScenario(rollbackInputs.videos());
+  rollbackInputs.closeAfterTest(f.close);
   await f.reject();
   await f.admit();
   const source = await movieRollbackSourceHarness({
@@ -74,8 +68,11 @@ test("actual automatic rejected B source drains only after original A rebind whi
 }, 60_000);
 
 test("actual manual rollback source drains after real closure before its queued wrapper ACK without deleting either caption lineage", async () => {
-  const f = await createManualMovieRollbackFixture("extended_cut", videos);
-  closers.push(f.close);
+  const f = await createManualMovieRollbackFixture(
+    "extended_cut",
+    rollbackInputs.videos(),
+  );
+  rollbackInputs.closeAfterTest(f.close);
   const workers = manualMovieRollbackWorkers(() => Promise.resolve(f.manual));
   const originalNetwork = createMovieNetworkWorkerActivitiesV4(() =>
     Promise.resolve({ movie: f.movie }),

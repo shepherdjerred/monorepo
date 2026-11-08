@@ -102,4 +102,3 @@ export type SeriesPackInterpretationV1 = z.infer<
   typeof SeriesPackInterpretationV1Schema
 >;
 export type CapturedSeriesPackV1 = z.infer<typeof CapturedSeriesPackV1Schema>;
-export type SeriesPackSelectionV1 = z.infer<typeof SeriesPackSelectionV1Schema>;

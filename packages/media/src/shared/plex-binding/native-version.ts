@@ -117,4 +117,3 @@ export const NativePlexSelectionV3Schema = z
     "Native selection lifecycle differs from its approved proof",
   );
 export type FinishedNativePlexV3 = z.infer<typeof FinishedNativePlexV3Schema>;
-export type NativePlexSelectionV3 = z.infer<typeof NativePlexSelectionV3Schema>;

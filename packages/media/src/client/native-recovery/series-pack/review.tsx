@@ -11,6 +11,7 @@ import { writeApi } from "#client/api.ts";
 import { PageTitle, ErrorNotice, humanize } from "#client/components.tsx";
 import { nativeReviewAcknowledged } from "#client/native-recovery/acknowledgement.ts";
 import { CompensationStatus } from "#client/native-recovery/compensation/status.tsx";
+import { RecoveryProofDetails } from "#client/native-recovery/proof-details.tsx";
 
 export function SeriesPackNativeReview({
   user,
@@ -164,15 +165,10 @@ export function SeriesPackNativeReview({
             </button>
           </>
         )}
-        <details>
-          <summary>Operator proof details</summary>
-          <p>Plan digest: {review.planHash ?? "Pending inspection"}</p>
-          <p>
-            Review expires:{" "}
-            {review.expiresAt === null
-              ? "Not prepared"
-              : new Date(review.expiresAt).toLocaleString()}
-          </p>
+        <RecoveryProofDetails
+          planHash={review.planHash}
+          expiresAt={review.expiresAt}
+        >
           <p>
             Recorded changes:{" "}
             {review.plan?.files.acknowledgedEffects.length ??
@@ -180,7 +176,7 @@ export function SeriesPackNativeReview({
             . Exact inverse steps:{" "}
             {review.plan?.files.steps.length ?? "Pending inspection"}.
           </p>
-        </details>
+        </RecoveryProofDetails>
       </section>
     </>
   );

@@ -103,12 +103,3 @@ export function movieNoticeSourceHash(payload: MovieNoticeV4) {
     ? payload.captionHash
     : payload.publicationHash;
 }
-
-export function readMoviePublicationNoticeV4(
-  raw: unknown,
-): MoviePublicationNoticeV4 | null {
-  const header = z.object({ kind: z.string().optional() }).parse(raw);
-  return header.kind === "movie_publication"
-    ? MoviePublicationNoticeV4Schema.parse(raw)
-    : null;
-}

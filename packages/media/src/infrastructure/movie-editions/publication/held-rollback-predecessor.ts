@@ -13,14 +13,19 @@ export type HeldMovieRollbackPredecessorV1 = {
 };
 
 /** Called only by actual capture after its full snapshot/reference traversal,
- * while the shared producer holds the complete DB and native path locks. */
+ * while the shared producer holds the complete DB and native path locks.
+ * Both rollback and restore grants bind that exact captured predecessor. */
 export function holdCapturedMovieRollbackPredecessorV1(
   tx: Prisma.TransactionClient,
   intent: MoviePublicationIntentV2,
   budget: PublicationAuthorityReadBudget,
 ): HeldMovieRollbackPredecessorV1 | undefined {
   const { predecessor, originalGrant } = intent.entries[0];
-  if (originalGrant?.kind !== "movie_rollback_publication_v1") return undefined;
+  if (
+    originalGrant?.kind !== "movie_rollback_publication_v1" &&
+    originalGrant?.kind !== "movie_restore_publication_v1"
+  )
+    return undefined;
   if (
     originalGrant.assetId !== predecessor?.id ||
     originalGrant.assetVersion !== predecessor.version ||
@@ -54,8 +59,10 @@ export function assertHeldMovieRollbackPredecessorV1(
     held.budget !== input.budget ||
     held.intentHash !== identityHash(input.intent) ||
     held.grantHash !== identityHash(input.intent.entries[0].originalGrant) ||
-    input.intent.entries[0].originalGrant?.kind !==
-      "movie_rollback_publication_v1"
+    (input.intent.entries[0].originalGrant?.kind !==
+      "movie_rollback_publication_v1" &&
+      input.intent.entries[0].originalGrant?.kind !==
+        "movie_restore_publication_v1")
   )
     throw new Error(
       "Captured rollback predecessor crossed its transaction, original allowance or exact intent",

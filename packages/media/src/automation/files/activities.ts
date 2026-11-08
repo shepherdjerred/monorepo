@@ -164,10 +164,7 @@ export function createMediaFileActivities(
       } catch (error_) {
         const error = physicalError(error_);
         const repaired = await repairLegacyProtection(context, error, budget);
-        if (repaired !== null) return { status: "protected", reason: repaired };
-        if (error instanceof FileGuardError)
-          return { status: "protected", reason: error.reason };
-        throw error;
+        return protectedRemovalResult(error, repaired);
       }
     },
     purgeMediaFiles: async ({ decisionId, operationId }) => {
@@ -184,10 +181,7 @@ export function createMediaFileActivities(
       } catch (error_) {
         const error = physicalError(error_);
         const repaired = await repairLegacyProtection(context, error, budget);
-        if (repaired !== null) return { status: "protected", reason: repaired };
-        if (error instanceof FileGuardError)
-          return { status: "protected", reason: error.reason };
-        throw error;
+        return protectedRemovalResult(error, repaired);
       }
     },
     restoreMediaFiles: async ({ mediaId, operationId }) => {
@@ -235,4 +229,14 @@ function physicalError(error: unknown): unknown {
     ["lineage_unresolved", "edition_not_available"].includes(error.code)
     ? new FileGuardError(error.code)
     : error;
+}
+
+function protectedRemovalResult(
+  error: unknown,
+  repaired: string | null,
+): { status: "protected"; reason: string } {
+  if (repaired !== null) return { status: "protected", reason: repaired };
+  if (error instanceof FileGuardError)
+    return { status: "protected", reason: error.reason };
+  throw error;
 }

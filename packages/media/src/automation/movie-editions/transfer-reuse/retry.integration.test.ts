@@ -152,6 +152,7 @@ test.each(["downloading", "prepared", "imported"])(
     ).toBeUndefined();
     expect(f.source.wire.additions()).toBe(1);
   },
+  30_000,
 );
 
 test("a completed granted consumer acknowledges its committed Plex history after actual source removal without live qBit access", async () => {

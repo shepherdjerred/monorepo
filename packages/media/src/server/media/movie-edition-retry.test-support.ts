@@ -1,7 +1,7 @@
 import { expect, vi } from "vitest";
+import { stubSessionStorage } from "#testing/browser-storage.ts";
 import { MutationObserver, QueryClient } from "@tanstack/react-query";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { commandFixture } from "#infrastructure/editions/command-test-support.ts";
+import { commandHttpFixture } from "./command-http-fixture.ts";
 import {
   MovieEditionContextV3Schema,
   MovieEditionRequestListV3Schema,
@@ -22,24 +22,13 @@ async function retryFixture(
   dependencies: MediaAppDependencies,
   headers: Record<string, string>,
 ) {
-  const cluster = await startMediaTestPostgres();
+  const { db, f, close } = await commandHttpFixture();
   try {
-    const db = cluster.database;
-    const f = await commandFixture(db);
     dependencies.media = f.service;
     dependencies.auth.authenticate = () =>
       Promise.resolve({ actor: f.actor, csrfHash: "csrf-hash" });
     const app = createMediaApp(dependencies);
-    const values = new Map<string, string>();
-    vi.stubGlobal("sessionStorage", {
-      getItem: (key: string) => values.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        values.set(key, value);
-      },
-      removeItem: (key: string) => {
-        values.delete(key);
-      },
-    });
+    stubSessionStorage();
     vi.stubGlobal("document", { cookie: "media-csrf=csrf-token" });
     const client = new QueryClient({
       defaultOptions: { mutations: { retry: false } },
@@ -118,12 +107,12 @@ async function retryFixture(
         unsubscribe();
         client.clear();
         vi.unstubAllGlobals();
-        await cluster.close();
+        await close();
       },
     };
   } catch (error) {
     vi.unstubAllGlobals();
-    await cluster.close();
+    await close();
     throw error;
   }
 }
@@ -214,7 +203,9 @@ export async function verifyMovieProtectionLostAck(
     expect(f.calls).toHaveLength(2);
     expect(f.calls[1]).toEqual(f.calls[0]);
     expect(f.calls[0]?.body).toBe(JSON.stringify(original.body));
-    expect(f.calls[0]?.key).toBeTruthy();
+    expect(f.calls[0]?.key).toMatch(
+      /^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/u,
+    );
     expect(
       await f.db.mediaRequest.findUniqueOrThrow({
         where: { id: renewed.requestId },

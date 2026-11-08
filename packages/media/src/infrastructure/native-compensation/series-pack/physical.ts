@@ -51,20 +51,6 @@ export async function findSeriesPackNativePhysicalHistoryV1(
   return references;
 }
 
-export async function resolveSeriesPackNativePhysicalV1(
-  tx: Prisma.TransactionClient,
-  input: { continuationId: string; assetId: string },
-  budget: PublicationAuthorityReadBudget,
-) {
-  const record = await readSeriesPackNativeCoreRecordV1(
-    tx,
-    input.continuationId,
-    budget,
-  );
-  const current = await snapshotPublicationAsset(tx, input.assetId, budget);
-  return projectSeriesPackNativePhysicalV1(tx, { record, current }, budget);
-}
-
 /** The exact queried completion and snapshot must belong to THIS same TX and
  * allowance. Caller may avoid requerying a snapshot it genuinely already paid. */
 export async function projectSeriesPackNativePhysicalV1(

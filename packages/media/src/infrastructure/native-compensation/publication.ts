@@ -5,7 +5,6 @@ import {
   NativeCompensationVerifiedPublicationSchema,
   NativeCompensationFenceReleaseSchema,
   type NativeCompensationActivityInput,
-  type NativeCompensationVerifiedPublication,
 } from "#shared/native-recovery/compensation-runtime.ts";
 import {
   ClosedCoordinatorObservationSchema,
@@ -361,103 +360,4 @@ export async function assertCompensatedPublication(
     verifiedPublication,
     freshness: context.freshness,
   };
-}
-export type CompensationPublicationAuthority = Awaited<
-  ReturnType<typeof assertCompensatedPublication>
->;
-
-function assertPublicationCoverage(
-  authority: CompensationPublicationAuthority,
-  proof: NativeCompensationVerifiedPublication,
-) {
-  if (
-    proof.continuationId !== authority.continuationId ||
-    proof.operationId !== authority.publicationOperationId ||
-    proof.recoveryEpoch !== authority.recoveryEpoch ||
-    proof.completionHash !== authority.completionHash ||
-    proof.commandHash !== authority.commandHash ||
-    proof.bindingsHash !== authority.bindingsHash ||
-    snapshotHash(proof.generations) !== snapshotHash(authority.generations) ||
-    proof.items.length !== authority.mediaIds.length ||
-    new Set(proof.items.map((item) => item.mediaId)).size !==
-      authority.mediaIds.length
-  )
-    throw new Error(
-      "Compensation verified publication omitted exact command coverage",
-    );
-}
-
-export async function commitCompensatedPublication(
-  tx: Prisma.TransactionClient,
-  input: {
-    activity: NativeCompensationActivityInput;
-    publication: NativeCompensationVerifiedPublication;
-  },
-  budget = new PublicationAuthorityReadBudget(),
-): Promise<void> {
-  const authority = await assertCompensatedPublication(
-    tx,
-    input.activity,
-    budget,
-  );
-  const proof = NativeCompensationVerifiedPublicationSchema.parse(
-    input.publication,
-  );
-  if (authority.verifiedPublication !== null) {
-    if (
-      snapshotHash(nativeJson(authority.verifiedPublication)) !==
-      snapshotHash(nativeJson(proof))
-    )
-      throw new Error("Compensation verified publication is immutable");
-    return;
-  }
-  if (authority.freshness === null)
-    throw new Error("Unverified publication lacks a live freshness fence");
-  assertPublicationCoverage(authority, proof);
-  for (const item of proof.items) {
-    const asset = authority.assets.find((row) => row.assetId === item.assetId);
-    const current = await tx.libraryAsset.findUniqueOrThrow({
-      where: { id: item.assetId },
-    });
-    if (
-      asset === undefined ||
-      !asset.mediaIds.includes(item.mediaId) ||
-      asset.assetVersion !== item.assetVersion ||
-      asset.checksum !== item.checksum ||
-      current.path !== item.canonicalPath
-    )
-      throw new Error(
-        "Compensation verified Plex item differs from completed physical binding",
-      );
-  }
-  const chain = await compensationAncestors(
-    tx,
-    authority.continuationId,
-    budget,
-  );
-  for (const ancestor of chain) {
-    if (ancestor.row.fenceRelease !== null)
-      throw new Error("Compensation ancestor fence was already released");
-    const release = NativeCompensationFenceReleaseSchema.parse({
-      schemaVersion: 1,
-      continuationId: ancestor.row.id,
-      transitionId: ancestor.row.transitionId,
-      settlingContinuationId: authority.continuationId,
-      settlingCompletionHash: authority.completionHash,
-      publicationHash: snapshotHash(nativeJson(proof)),
-      releasedAt: proof.verifiedAt,
-    });
-    await tx.nativePublicationCompensationContinuation.update({
-      where: { id: ancestor.row.id },
-      data: {
-        fenceRelease: z.record(z.string(), z.json()).parse(release),
-        ...(ancestor.row.id === authority.continuationId
-          ? { verifiedPublication: z.record(z.string(), z.json()).parse(proof) }
-          : {}),
-        version: { increment: 1 },
-      },
-    });
-    authority.freshness.assertActive();
-  }
-  authority.freshness.assertActive();
 }

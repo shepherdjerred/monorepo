@@ -1,4 +1,9 @@
+import {
+  movieNoticeConfigurationError,
+  assertMovieNoticeAccessUnchanged,
+} from "#automation/movie-editions/notifications/configuration.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { MediaError } from "#application/errors.ts";
 import type { NotificationContext } from "#automation/notifications/types.ts";
 import type { MovieNoticeDelivery } from "#automation/movie-editions/notifications/authority.ts";
 import {
@@ -20,7 +25,6 @@ import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { assertMovieInterventionSourceV4 } from "./source.ts";
-import { MediaError } from "#application/errors.ts";
 import { assertCurrentMovieFailureV4 } from "./current-failure.ts";
 
 type Input = {
@@ -74,13 +78,10 @@ export async function assertMovieInterventionConfiguration(
     prepared.payload.source.mediaId,
   ]).catch((error: unknown) => {
     prepared.freshness.assertActive();
-    if (error instanceof MediaError && error.code === "plex_scope_unconfigured")
-      throw new PlexBindingProtection("wrong_section");
-    throw error;
+    throw movieNoticeConfigurationError(error);
   });
   prepared.freshness.assertActive();
-  if (identityHash(access) !== identityHash(prepared.access))
-    throw new PlexBindingProtection("wrong_section");
+  assertMovieNoticeAccessUnchanged(access, prepared.access);
 }
 
 export async function assertPreparedMovieInterventionV4(

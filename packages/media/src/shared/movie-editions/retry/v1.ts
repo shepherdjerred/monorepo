@@ -29,9 +29,6 @@ export const MovieRetryClosedWorkflowV1Schema = z.strictObject({
     "TIMED_OUT",
   ]),
 });
-export type MovieRetryClosedWorkflowV1 = z.infer<
-  typeof MovieRetryClosedWorkflowV1Schema
->;
 
 /** The receipt records fresh real observations while retaining the exact original attempt and birth. */
 export const MovieRetryRenewalV1Schema = z.strictObject({

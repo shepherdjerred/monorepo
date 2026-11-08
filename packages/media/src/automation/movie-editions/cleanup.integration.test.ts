@@ -250,9 +250,11 @@ test("Network and Files retain the caller's exhausted provenance allowance", asy
     publicationExecution: () => fileExecution,
     movieManagement: { execution: fileExecution, budget: fileBudget },
   });
-  await expect(
-    files.cleanupSupersededMediaFile(f.cleanupInput),
-  ).rejects.toThrow("100 total queried records");
+  expect(await files.cleanupSupersededMediaFile(f.cleanupInput)).toEqual({
+    status: "protected",
+    reason: "archive_transition_reconciliation_required",
+  });
+  expect(() => fileBudget.consume(0)).toThrow("100 total queried records");
   expect(
     createHash("sha256")
       .update(await readFile(workerFilePath(f.files, f.old.path)))

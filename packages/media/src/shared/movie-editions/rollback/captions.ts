@@ -87,6 +87,3 @@ export const MovieRollbackCaptionOutcomeV1Schema = z.strictObject({
 export type MovieRollbackCaptionManifestV1 = z.infer<
   typeof MovieRollbackCaptionManifestV1Schema
 >;
-export type MovieRollbackCaptionOutcomeV1 = z.infer<
-  typeof MovieRollbackCaptionOutcomeV1Schema
->;

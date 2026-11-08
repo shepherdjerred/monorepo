@@ -103,9 +103,6 @@ export type MovieRestoreReferenceV1 = z.infer<
 export type MovieTransitionReferenceV2 = z.infer<
   typeof MovieTransitionReferenceV2Schema
 >;
-export type MovieLibraryReferenceV2 = z.infer<
-  typeof MovieLibraryReferenceV2Schema
->;
 export const MoviePublicationEntryV2Schema = z.strictObject({
   entry: MovieFilePlanEntryV2Schema,
   entryHash: Hash,

@@ -54,7 +54,9 @@ export async function assertRollbackHeldPredecessorGuards(
     );
     const held = holdCapturedMovieRollbackPredecessorV1(tx, intent, budget);
     if (held === undefined)
-      throw new Error("Actual C did not consume a rollback predecessor");
+      throw new Error(
+        "Actual publication did not capture its restore or rollback predecessor",
+      );
     assertHeldMovieRollbackPredecessorV1(tx, { intent, budget }, held);
     expect(() => {
       assertHeldMovieRollbackPredecessorV1(

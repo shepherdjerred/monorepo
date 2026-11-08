@@ -113,7 +113,7 @@ test("an actual interrupted twenty-four-file Node acquisition resumes a terminal
         const next = await retryNativeSeriesPackCoordinatorV1(
           scenario,
           environment,
-          { phase: "physical", effect },
+          { phase: "physical", effect, caseDeadline },
           charges,
         );
         const role = createNativeSeriesPackRecoveryRoleV1(
@@ -202,6 +202,7 @@ test("actual household review and a terminal publication coordinator retry verif
       environment,
       {
         phase: "publication",
+        caseDeadline,
         effect: {
           schemaVersion: 1,
           continuationId: row.id,

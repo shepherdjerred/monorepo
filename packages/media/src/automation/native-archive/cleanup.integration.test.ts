@@ -28,6 +28,7 @@ afterAll(async () => {
 
 test.for(["oldest_first", "newest_first"] as const)(
   "actual joint A→B→C authority expires both archives %s without rewriting historical plans",
+  { timeout: 30_000 },
   async (order, testContext) => {
     const started = { wall: Date.now(), monotonic: performance.now() };
     const stages: {

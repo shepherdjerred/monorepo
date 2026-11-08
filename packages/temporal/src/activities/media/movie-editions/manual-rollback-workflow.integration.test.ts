@@ -1,7 +1,8 @@
+import { createMediaActivityTestWorker } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
+
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import type { WorkflowHandle } from "@temporalio/client";
 import { expect, test } from "vitest";
@@ -12,8 +13,11 @@ import {
 } from "#activities/media/movie-editions/manual-rollback.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  mediaWorkflowWorkerScript,
+  movieWorkflowChildEnvironment,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
+  closeMovieRoleFixtureSequential,
 } from "#activities/media/testing/role-worker.ts";
 import { verifyMovieHistory } from "#activities/media/testing/replay.ts";
 
@@ -25,8 +29,7 @@ async function manualRoles(
   environment: TestWorkflowEnvironment,
   scenario: Scenario,
 ) {
-  const network = await Worker.create({
-    connection: environment.nativeConnection,
+  const network = await createMediaActivityTestWorker(environment, {
     namespace: "default",
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {
@@ -36,8 +39,7 @@ async function manualRoles(
       finishMediaOperation: scenario.finishMediaOperation,
     },
   });
-  const files = await Worker.create({
-    connection: environment.nativeConnection,
+  const files = await createMediaActivityTestWorker(environment, {
     namespace: "default",
     taskQueue: TASK_QUEUES.MEDIA_FILES,
     activities: createRequestedMovieRollbackFileWorkerActivitiesV1(() =>
@@ -158,14 +160,8 @@ test("actual independent owner outbox dispatch runs manual caption inverse throu
     expect(commandBefore.userId).not.toBe(scenario.network.actor.id);
     expect(commandBefore.outbox?.dispatchedAt).toBeNull();
     expect(commandBefore.outbox?.payload).toEqual(commandBefore.payload);
-    const script = new URL(
-      "../../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
-    const runtimePath = Bun.env["PATH"];
-    if (runtimePath === undefined || runtimePath.length === 0)
-      throw new Error("Pinned runtime PATH required");
-    const childEnvironment = { PATH: runtimePath };
+    const script = mediaWorkflowWorkerScript;
+    const childEnvironment = movieWorkflowChildEnvironment();
     workflow = await startMovieWorkflowWorker({
       node,
       script,
@@ -224,22 +220,17 @@ test("actual independent owner outbox dispatch runs manual caption inverse throu
       childEnvironment,
     });
   } finally {
-    try {
-      if (roles !== undefined) {
-        for (const worker of roles.workers) worker.shutdown();
-        await Promise.all(roles.running);
-      }
-      if (workflow !== undefined) {
-        workflow.kill("SIGTERM");
-        await workflow.exited;
-      }
-    } finally {
-      try {
-        await fixture?.close();
-      } finally {
-        await environment.teardown();
-        await rm(directory, { recursive: true, force: true });
-      }
-    }
+    await closeMovieRoleFixtureSequential({
+      stopActivities: async () => {
+        if (roles !== undefined) {
+          for (const worker of roles.workers) worker.shutdown();
+          await Promise.all(roles.running);
+        }
+      },
+      workflow,
+      fixture: fixture,
+      environment,
+      directory,
+    });
   }
 }, 90_000);

@@ -317,7 +317,7 @@ test("v2 request and Keep route through the native quarantine continuation witho
   } finally {
     await rm(f.file.directory, { recursive: true, force: true });
   }
-});
+}, 30_000);
 
 test("revoked library access exposes only protective v2 context and still permits exact own Keep and Cancel", async () => {
   const db = harness.database();

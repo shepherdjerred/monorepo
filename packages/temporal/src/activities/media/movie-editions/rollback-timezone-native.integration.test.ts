@@ -1,23 +1,20 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { createMovieRollbackTimezoneFixture } from "@shepherdjerred/media/testing/movie-rollback-timezone";
-import { movieRollbackVideos } from "@shepherdjerred/media/testing/movie-rollback-workflow";
 import { movieRollbackSdkEnvironment } from "./rollback-sdk.test-support.ts";
 import { manualMovieRollbackWorkers } from "./manual-rollback-sdk.test-support.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 test.each(["America/Los_Angeles", "Asia/Tokyo"] as const)(
   "actual manual rollback retains exact UTC instants with %s PostgreSQL sessions",
   async (timezone) => {
-    const f = await createMovieRollbackTimezoneFixture(timezone, videos);
-    closers.push(f.close);
+    const f = await createMovieRollbackTimezoneFixture(
+      timezone,
+      rollbackInputs.videos(),
+    );
+    rollbackInputs.closeAfterTest(f.close);
     const workers = manualMovieRollbackWorkers(() => Promise.resolve(f.manual));
     const runId = crypto.randomUUID();
     const sdk = (activityId: string) =>

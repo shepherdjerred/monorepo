@@ -1,6 +1,6 @@
 import { expect } from "vitest";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { commandFixture } from "#infrastructure/editions/command-test-support.ts";
+import type { Database } from "#infrastructure/database.ts";
+import { commandHttpFixture } from "./command-http-fixture.ts";
 import {
   MovieEditionContextV3Schema,
   MovieEditionRequestListV3Schema,
@@ -16,14 +16,9 @@ export async function verifyMovieEditionHttp(
   dependencies: MediaAppDependencies,
   headers: Record<string, string>,
 ) {
-  const cluster = await startMediaTestPostgres();
-  const db = cluster.database;
+  const { db, f, close } = await commandHttpFixture();
   try {
-    const f = await commandFixture(db);
-    dependencies.media = f.service;
-    dependencies.auth.authenticate = () =>
-      Promise.resolve({ actor: f.actor, csrfHash: "csrf-hash" });
-    const app = createMediaApp(dependencies);
+    const app = commandApp(dependencies, f);
     const base = `/api/v3/media/${f.media.id}`;
     const before = await movieRows(db, f.media.id);
     const read = await app.request(`${base}/movie-edition-context`, {
@@ -145,14 +140,11 @@ export async function verifyMovieEditionHttp(
     expect(await db.torrent.count()).toBe(0);
     expect(dependencies.onError).not.toHaveBeenCalled();
   } finally {
-    await cluster.close();
+    await close();
   }
 }
 
-async function movieRows(
-  db: Awaited<ReturnType<typeof startMediaTestPostgres>>["database"],
-  mediaId: string,
-) {
+async function movieRows(db: Database, mediaId: string) {
   return {
     media: await db.mediaItem.findUniqueOrThrow({ where: { id: mediaId } }),
     definitions: await db.mediaEditionDefinition.findMany({
@@ -170,14 +162,9 @@ export async function verifyMovieProtectionHttp(
   dependencies: MediaAppDependencies,
   headers: Record<string, string>,
 ) {
-  const cluster = await startMediaTestPostgres();
+  const { db, f, close } = await commandHttpFixture();
   try {
-    const db = cluster.database;
-    const f = await commandFixture(db);
-    dependencies.media = f.service;
-    dependencies.auth.authenticate = () =>
-      Promise.resolve({ actor: f.actor, csrfHash: "csrf-hash" });
-    const app = createMediaApp(dependencies);
+    const app = commandApp(dependencies, f);
     const context = await f.service.getMovieEditionContext(
       f.actor,
       f.media.id,
@@ -284,6 +271,16 @@ export async function verifyMovieProtectionHttp(
     expect(await db.acquisitionAttempt.count()).toBe(0);
     expect(dependencies.onError).not.toHaveBeenCalled();
   } finally {
-    await cluster.close();
+    await close();
   }
+}
+
+function commandApp(
+  dependencies: MediaAppDependencies,
+  fixture: Awaited<ReturnType<typeof commandHttpFixture>>["f"],
+) {
+  dependencies.media = fixture.service;
+  dependencies.auth.authenticate = () =>
+    Promise.resolve({ actor: fixture.actor, csrfHash: "csrf-hash" });
+  return createMediaApp(dependencies);
 }

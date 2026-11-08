@@ -2,6 +2,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { NotificationContext } from "#automation/notifications/types.ts";
 import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
+import { movieNoticeRecipient } from "./recipient.ts";
 import {
   assertPreparedMovieNoticeV4,
   type MovieNoticeDelivery,
@@ -55,23 +56,9 @@ async function personalTarget(
   delivery: MovieNoticeDelivery,
 ): Promise<{ channel: "email" | "discord"; recipient: string } | null> {
   const preference = delivery.user.notificationPreference;
-  if (
-    preference === null ||
+  return preference === null ||
     delivery.user.restricted ||
     (delivery.event.kind === "media_upgraded" && !preference.upgrades)
-  )
-    return null;
-  if (delivery.channel === "email")
-    return preference.emailEnabled &&
-      delivery.user.emailVerifiedAt !== null &&
-      delivery.user.email !== null
-      ? { channel: "email", recipient: delivery.user.email }
-      : null;
-  if (delivery.channel === "discord")
-    return preference.discordEnabled &&
-      delivery.user.discordId !== null &&
-      (await context.personalDiscordAvailable?.()) === true
-      ? { channel: "discord", recipient: delivery.user.discordId }
-      : null;
-  return null;
+    ? null
+    : movieNoticeRecipient(context, delivery, preference);
 }

@@ -4,6 +4,7 @@ import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
 import { queueMovieRetentionCheck } from "#automation/movie-editions/retention/queue.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { movieTargetAfter } from "./movie-cursor.ts";
 
 const CursorSchema = z.tuple([z.uuid(), MovieEditionKeySchema]);
 export const MOVIE_WATCH_CURSOR = "movie-watch:";
@@ -27,14 +28,7 @@ export async function sweepMovieWatch(
       edition: { not: "default" },
       availability: { in: ["available", "quarantined"] },
       media: { kind: "movie" },
-      ...(cursor === null
-        ? {}
-        : {
-            OR: [
-              { mediaId: { gt: cursor[0] } },
-              { mediaId: cursor[0], edition: { gt: cursor[1] } },
-            ],
-          }),
+      ...movieTargetAfter(cursor),
     },
     orderBy: [{ mediaId: "asc" }, { edition: "asc" }],
     take: 2,

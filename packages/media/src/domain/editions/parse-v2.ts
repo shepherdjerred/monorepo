@@ -1,4 +1,5 @@
-import type { CutConclusion, CutKind } from "#shared/editions/evidence.ts";
+import type { CutKind } from "#shared/editions/evidence.ts";
+import { cutConclusion as conclusion } from "./conclusion.ts";
 import type { MovieCutEvidenceV2 } from "#shared/movie-editions/cut-v2.ts";
 import { parseCutEvidence } from "./parse.ts";
 import {
@@ -20,21 +21,6 @@ function conventionalMarker(token: string): CutKind | null {
   const values = words(token).map((word) => word.value);
   if (values[0] === "edition") values.shift();
   return values.length === 1 ? (CONVENTIONAL[values[0] ?? ""] ?? null) : null;
-}
-
-function conclusion(markers: readonly Marker[]): CutConclusion {
-  const cuts = [
-    ...new Set(
-      markers.flatMap((marker) => (marker.cut === null ? [] : [marker.cut])),
-    ),
-  ].sort();
-  if (cuts.length > 1) return { kind: "conflict", cuts };
-  if (markers.some((marker) => marker.cut === null))
-    return { kind: "ambiguous" };
-  const cut = cuts[0];
-  return cut === undefined
-    ? { kind: "standard_unmarked" }
-    : { kind: "named", cut };
 }
 
 function plexMarkers(text: string): Marker[] {

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { MediaItem } from "#generated/prisma/client.ts";
 import type { PlexItem } from "#integrations/plex.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { NativeCompensationExecutionContext } from "#shared/native-recovery/compensation-runtime.ts";
@@ -113,50 +112,4 @@ function collectPaths(
       items.push(item);
     found.set(part.file, items);
   }
-}
-
-async function matchesIdentity(
-  context: MediaAutomationContext,
-  media: MediaItem,
-  item: PlexItem,
-  execution?: NativeCompensationExecutionContext,
-): Promise<boolean> {
-  const external = z
-    .object({
-      imdb: z.string().nullable().optional(),
-      seriesTmdb: z.number().optional(),
-    })
-    .parse(media.externalIds);
-  const key =
-    media.kind === "episode" && item.grandparentRatingKey !== undefined
-      ? item.grandparentRatingKey
-      : item.ratingKey;
-  const metadata = await publicationAwait(execution, () =>
-    context.plex.metadata(key, execution?.signal),
-  );
-  const identifiers = new Set(metadata.Guid?.map((guid) => guid.id));
-  return media.kind === "episode"
-    ? external.seriesTmdb !== undefined &&
-        identifiers.has(`tmdb://${String(external.seriesTmdb)}`) &&
-        item.index === media.episodeNumber &&
-        item.parentIndex === media.seasonNumber
-    : (media.tmdbId !== null &&
-        identifiers.has(`tmdb://${String(media.tmdbId)}`)) ||
-        (external.imdb != null && identifiers.has(`imdb://${external.imdb}`));
-}
-
-export async function matchedItem(
-  context: MediaAutomationContext,
-  media: MediaItem,
-  candidates: PlexItem[],
-  execution?: NativeCompensationExecutionContext,
-): Promise<PlexItem | undefined> {
-  for (const candidate of candidates) {
-    if (
-      candidate.type === media.kind &&
-      (await matchesIdentity(context, media, candidate, execution))
-    )
-      return candidate;
-  }
-  return undefined;
 }

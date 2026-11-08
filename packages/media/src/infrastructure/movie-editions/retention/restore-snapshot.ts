@@ -3,6 +3,7 @@ import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { MovieRestoreAssetV1Schema } from "#shared/movie-editions/restore-v1.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { publicationSubtitleSnapshot } from "#infrastructure/publication-proof/snapshots.ts";
+import { publicationAssetFields } from "#infrastructure/publication-proof/asset-fields.ts";
 import { videoSubtitleWhere } from "#automation/files/subtitle-lifecycle/ownership.ts";
 
 /** Capture every caption row, keeping independently owned history outside the video transition. */
@@ -45,21 +46,7 @@ export async function snapshotMovieRestoreAssetV1(
   return MovieRestoreAssetV1Schema.parse({
     schemaVersion: 2,
     scope,
-    id: asset.id,
-    version: asset.version,
-    edition: asset.edition,
-    editionRootId: asset.editionRootId,
-    owned: asset.owned,
-    ownershipEpoch: asset.ownershipEpoch,
-    state: asset.state,
-    path: asset.path,
-    sourcePath: asset.sourcePath,
-    checksum: asset.checksum,
-    sizeBytes: asset.sizeBytes.toString(),
-    properties: asset.properties,
-    supersededByAssetId: asset.supersededByAssetId,
-    plexPublishedAt: asset.plexPublishedAt?.toISOString() ?? null,
-    rollbackExpiresAt: asset.rollbackExpiresAt?.toISOString() ?? null,
+    ...publicationAssetFields(asset),
     coverage: asset.coverage.map(({ mediaId, edition, current }) => ({
       mediaId,
       edition,

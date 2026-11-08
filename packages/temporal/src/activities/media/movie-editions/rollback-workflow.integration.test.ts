@@ -1,7 +1,8 @@
+import { createMediaActivityTestWorker } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
+
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import type { WorkflowHandle } from "@temporalio/client";
 import { expect, test } from "vitest";
@@ -12,8 +13,10 @@ import {
 } from "#activities/media/movie-editions.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  mediaWorkflowWorkerScript,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
+  closeMovieRoleFixtureSequential,
 } from "#activities/media/testing/role-worker.ts";
 import { verifyMovieHistory } from "#activities/media/testing/replay.ts";
 
@@ -23,8 +26,7 @@ async function movieRollbackRoles(
   environment: TestWorkflowEnvironment,
   scenario: Scenario,
 ) {
-  const network = await Worker.create({
-    connection: environment.nativeConnection,
+  const network = await createMediaActivityTestWorker(environment, {
     namespace: "default",
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {
@@ -34,8 +36,7 @@ async function movieRollbackRoles(
       finishMediaOperation: scenario.finishMediaOperation,
     },
   });
-  const files = await Worker.create({
-    connection: environment.nativeConnection,
+  const files = await createMediaActivityTestWorker(environment, {
     namespace: "default",
     taskQueue: TASK_QUEUES.MEDIA_FILES,
     activities: createMovieFileWorkerActivitiesV4(() =>
@@ -93,10 +94,7 @@ test("actual root and child wait through thirty Plex observations, restore A wit
     const scenario = fixture;
     const before = await scenario.state();
     const immutable = await scenario.immutable();
-    const script = new URL(
-      "../../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
+    const script = mediaWorkflowWorkerScript;
     const childEnvironment = { PATH: Bun.env["PATH"] ?? "/usr/bin:/bin" };
     workflow = await startMovieWorkflowWorker({
       node,
@@ -174,22 +172,17 @@ test("actual root and child wait through thirty Plex observations, restore A wit
         childEnvironment,
       });
   } finally {
-    try {
-      if (roles !== undefined) {
-        for (const worker of roles.workers) worker.shutdown();
-        await Promise.all(roles.running);
-      }
-      if (workflow !== undefined) {
-        workflow.kill("SIGTERM");
-        await workflow.exited;
-      }
-    } finally {
-      try {
-        await fixture?.close();
-      } finally {
-        await environment.teardown();
-        await rm(directory, { recursive: true, force: true });
-      }
-    }
+    await closeMovieRoleFixtureSequential({
+      stopActivities: async () => {
+        if (roles !== undefined) {
+          for (const worker of roles.workers) worker.shutdown();
+          await Promise.all(roles.running);
+        }
+      },
+      workflow,
+      fixture: fixture,
+      environment,
+      directory,
+    });
   }
 }, 90_000);

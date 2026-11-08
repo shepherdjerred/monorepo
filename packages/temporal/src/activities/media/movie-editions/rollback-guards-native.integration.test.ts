@@ -1,21 +1,15 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
-import { movieRollbackVideos } from "@shepherdjerred/media/testing/movie-rollback-workflow";
+import { expect, test } from "vitest";
 import type { PublicationAuthorityReadBudget } from "@shepherdjerred/media/publication-authority-budget";
 import { createMovieFileWorkerActivitiesV4 } from "#activities/media/movie-editions.ts";
 import { rollbackGuardScenario } from "./rollback-guards.test-support.ts";
 
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-const closers: (() => Promise<void>)[] = [];
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 test("automatic rollback requires its genuine negative event before admission", async () => {
-  const f = await rollbackGuardScenario(videos);
-  closers.push(f.close);
+  const f = await rollbackGuardScenario(rollbackInputs.videos());
+  rollbackInputs.closeAfterTest(f.close);
   const before = await f.state();
   expect(
     await f
@@ -29,8 +23,8 @@ test("automatic rollback requires its genuine negative event before admission", 
 }, 60_000);
 
 test("a real later successful B Plex receipt defeats the earlier genuine rejection", async () => {
-  const f = await rollbackGuardScenario(videos);
-  closers.push(f.close);
+  const f = await rollbackGuardScenario(rollbackInputs.videos());
+  rollbackInputs.closeAfterTest(f.close);
   await f.reject();
   expect(
     await f
@@ -50,8 +44,8 @@ test("a real later successful B Plex receipt defeats the earlier genuine rejecti
 test.each(["generation", "pair"] as const)(
   "actual %s drift blocks automatic rollback with zero inverse effects",
   async (kind) => {
-    const f = await rollbackGuardScenario(videos);
-    closers.push(f.close);
+    const f = await rollbackGuardScenario(rollbackInputs.videos());
+    rollbackInputs.closeAfterTest(f.close);
     await f.reject();
     if (kind === "generation")
       await f.db.mediaIntent.update({
@@ -84,8 +78,8 @@ test.each(["generation", "pair"] as const)(
 );
 
 test("one actual Files invocation with 99 already paid cannot begin inverse effects", async () => {
-  const f = await rollbackGuardScenario(videos);
-  closers.push(f.close);
+  const f = await rollbackGuardScenario(rollbackInputs.videos());
+  rollbackInputs.closeAfterTest(f.close);
   await f.reject();
   await f.admit();
   const before = await f.state();
@@ -118,8 +112,8 @@ test("one actual Files invocation with 99 already paid cannot begin inverse effe
 }, 60_000);
 
 test("pending SQL fence protects OLD caption and coverage identity when moved to an unrelated asset", async () => {
-  const f = await rollbackGuardScenario(videos);
-  closers.push(f.close);
+  const f = await rollbackGuardScenario(rollbackInputs.videos());
+  rollbackInputs.closeAfterTest(f.close);
   await f.reject();
   await f.admit();
   // An explicitly foreign unowned row supplies no physical or serving authority.

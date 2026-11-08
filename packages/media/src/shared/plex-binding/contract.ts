@@ -238,11 +238,7 @@ export const PlexInvalidationReasonSchema = z.enum([
 
 export type PlexBindingScope = z.infer<typeof PlexBindingScopeSchema>;
 export type PlexAccess = z.infer<typeof PlexAccessSchema>;
-export type PlexDefinitionRef = z.infer<typeof PlexDefinitionRefSchema>;
 export type PlexPhysicalGroup = z.infer<typeof PlexPhysicalGroupSchema>;
-export type PlexPartIdentity = z.infer<typeof PlexPartIdentitySchema>;
-export type PlexItemIdentity = z.infer<typeof PlexItemIdentitySchema>;
-export type PlexEpisodeHierarchy = z.infer<typeof PlexEpisodeHierarchySchema>;
 export type PlexAssociationV1 = z.infer<typeof PlexAssociationV1Schema>;
 export type PlexMovieAssociationV2 = z.infer<
   typeof PlexMovieAssociationV2Schema

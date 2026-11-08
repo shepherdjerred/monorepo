@@ -72,7 +72,9 @@ export async function createManagedSeriesFixture(
       : { episodeSpan: { season: 1, first: 1, last: bytes.episodeCount } }),
   });
   const context = { ...f.context, ...wire };
-  const files = f.files;
+  // Acquisition uses canonical worker paths without changing the earlier
+  // adoption context's independently observed mount roots.
+  const files = { ...f.files };
   files.pathMapping = {
     canonical: (kind, root, relative) =>
       root === "downloads"

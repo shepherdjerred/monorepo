@@ -192,10 +192,6 @@ export const NativeCompensationEffectRefsSchema = z.array(
 export type PrepareNativeCompensation = z.infer<
   typeof PrepareNativeCompensationSchema
 >;
-export type ApplyNativeCompensation = z.infer<
-  typeof ApplyNativeCompensationSchema
->;
-export type RevokedReservation = z.infer<typeof RevokedReservationSchema>;
 export type InterruptedPublicationWork = z.infer<
   typeof InterruptedPublicationWorkSchema
 >;
@@ -211,18 +207,9 @@ export type NativeCompensationFileEvidence = z.infer<
 export type NativeCompensationNetworkEvidence = z.infer<
   typeof NativeCompensationNetworkEvidenceSchema
 >;
-export type NativeCompensationDescriptor = z.infer<
-  typeof NativeCompensationDescriptorSchema
->;
 export type NativeCompensationExecution = z.infer<
   typeof NativeCompensationExecutionSchema
 >;
 export type NativeCompensationStep = z.infer<
   typeof NativeCompensationStepSchema
->;
-export type FinishedNativeCompensation = z.infer<
-  typeof FinishedNativeCompensationSchema
->;
-export type NativeCompensationExecutionNetworkEvidence = z.infer<
-  typeof NativeCompensationExecutionNetworkEvidenceSchema
 >;

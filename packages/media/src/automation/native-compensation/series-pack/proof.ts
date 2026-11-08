@@ -1,8 +1,5 @@
 import { SeriesPackNativeFileEvidenceV3Schema } from "#shared/native-recovery/series-pack/evidence.ts";
-import {
-  SeriesPackNativeCompensationScopeV3Schema,
-  type SeriesPackNativeCompensationScopeV3,
-} from "#shared/native-recovery/series-pack/scope.ts";
+import { type SeriesPackNativeCompensationScopeV3 } from "#shared/native-recovery/series-pack/scope.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { inspectPublicationRecords } from "#filesystem/publication-proof/records.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
@@ -204,21 +201,4 @@ export async function captureSeriesPackNativeProofV1(
     evidence,
     assertCurrent,
   };
-}
-
-export async function prepareSeriesPackNativeProofV1(
-  context: CompensationFileContext,
-  planId: string,
-  budget: PublicationAuthorityReadBudget,
-) {
-  const plan = await context.files.db.nativeRecoveryPlan.findUniqueOrThrow({
-    where: { id: planId },
-  });
-  budget.consume(1);
-  assertPublicationActive(context.files);
-  return await captureSeriesPackNativeProofV1(
-    context,
-    SeriesPackNativeCompensationScopeV3Schema.parse(plan.scope),
-    { planId, budget },
-  );
 }

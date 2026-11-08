@@ -15,10 +15,7 @@ import {
   NativeCompensationNetworkEvidenceSchema,
   NativeCompensationExecutionNetworkEvidenceSchema,
 } from "#shared/native-recovery/compensation.ts";
-import {
-  PlexAssociationV1Schema,
-  type PlexBindingFreshness,
-} from "./contract.ts";
+import { PlexAssociationV1Schema } from "./contract.ts";
 import { PlexVerificationFactsSchema } from "./observations.ts";
 import { NativeCompensationCatalogSchema } from "./native-catalog.ts";
 import { PlexCanonicalTargetSchema } from "./canonical.ts";
@@ -221,15 +218,7 @@ export type NativePlexParent = z.infer<typeof NativePlexParentSchema>;
 export type NativePlexObservation = z.infer<typeof NativePlexObservationSchema>;
 export type NativePlexProofParent = z.infer<typeof NativePlexProofParentSchema>;
 export type NativePlexProofRef = z.infer<typeof NativePlexProofRefSchema>;
-export type NativePlexProofBatch = z.infer<typeof NativePlexProofBatchSchema>;
 export type NativePlexProofTiming = z.infer<typeof NativePlexProofTimingSchema>;
-export type NativePlexSelectionRefs = z.infer<
-  typeof NativePlexSelectionRefsSchema
->;
 export type NativePlexNetworkEvidence = z.infer<
   typeof NativePlexNetworkEvidenceSchema
 >;
-export type VerifiedNativePlex = {
-  observation: NativePlexObservation;
-  freshness: PlexBindingFreshness;
-};

@@ -3,7 +3,6 @@ import { lockMovieChoiceIdentities } from "#infrastructure/movie-editions/access
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
-import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { deliveryInclude, eventMediaIds } from "./message.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import {
@@ -74,11 +73,4 @@ export async function lockDelivery(
     where: { id },
     include: deliveryInclude,
   });
-}
-
-export async function deliveryRuntimeActive(
-  tx: Prisma.TransactionClient,
-  epoch: number,
-): Promise<boolean> {
-  return await lockRuntimeAuthority(tx, epoch);
 }

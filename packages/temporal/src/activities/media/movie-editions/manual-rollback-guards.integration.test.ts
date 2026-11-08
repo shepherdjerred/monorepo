@@ -1,22 +1,19 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { z } from "zod";
 import { createManualMovieRollbackFixture } from "@shepherdjerred/media/testing/movie-manual-rollback-workflow";
-import { movieRollbackVideos } from "@shepherdjerred/media/testing/movie-rollback-workflow";
 import { movieRollbackSdkEnvironment } from "./rollback-sdk.test-support.ts";
 import { manualMovieRollbackWorkers } from "./manual-rollback-sdk.test-support.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 async function scenario() {
-  const f = await createManualMovieRollbackFixture("extended_cut", videos);
-  closers.push(f.close);
+  const f = await createManualMovieRollbackFixture(
+    "extended_cut",
+    rollbackInputs.videos(),
+  );
+  rollbackInputs.closeAfterTest(f.close);
   const runId = crypto.randomUUID();
   const sdk = (activityId: string) =>
     movieRollbackSdkEnvironment({

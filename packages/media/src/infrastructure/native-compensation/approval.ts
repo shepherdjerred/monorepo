@@ -1,4 +1,4 @@
-import { Prisma, type Operation } from "#generated/prisma/client.ts";
+import type { Prisma, Operation } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import {
   FinishedNativeCompensationSchema,
@@ -18,8 +18,7 @@ import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
 import { installNativeAuthority } from "#automation/native-recovery/authority.ts";
 import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { unconfirmedRecoveryHoldWrite } from "#infrastructure/recovery/hold-write.ts";
 import { queueOperation } from "#automation/store.ts";
 import { assertNativeCompensationSnapshot } from "./guards.ts";
 import type { NativePlexProofRef } from "#shared/plex-binding/native.ts";
@@ -302,22 +301,9 @@ export async function applyCompensationApproval(
   const descriptorHash = snapshotHash(nativeJson(descriptor));
   const recoveryHoldBindings = [];
   for (const mediaId of input.scope.intent.mediaIds) {
-    const hold = await tx.recoveryHold.upsert({
-      where: targetWhere(defaultScope(mediaId)),
-      create: {
-        mediaId,
-        recoveryEpoch: runtime.recoveryEpoch,
-        reason: "recovery_request_history_unconfirmed",
-      },
-      update: {
-        recoveryEpoch: runtime.recoveryEpoch,
-        reason: "recovery_request_history_unconfirmed",
-        releasedAt: null,
-        releasedById: null,
-        releaseEvidence: Prisma.DbNull,
-        version: { increment: 1 },
-      },
-    });
+    const hold = await tx.recoveryHold.upsert(
+      unconfirmedRecoveryHoldWrite(mediaId, runtime.recoveryEpoch),
+    );
     recoveryHoldBindings.push({
       mediaId,
       version: hold.version,

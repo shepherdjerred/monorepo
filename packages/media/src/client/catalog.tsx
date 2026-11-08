@@ -11,6 +11,7 @@ import type { TargetSubmission } from "./target-controls/mutation.ts";
 import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 import type { MediaUser } from "#shared/contract.ts";
 import { MovieRequestForm } from "./movie-editions/request.tsx";
+import { SeriesRequestOptions } from "#client/series/request-options.tsx";
 import { ApiError, queryClient, readApi, writeApi } from "./api.ts";
 import {
   EmptyState,
@@ -358,28 +359,12 @@ function RequestForm({ user, item }: { user: MediaUser; item: CatalogDetail }) {
         Comma-separated language codes. Use zh-CN for Simplified Chinese.
       </p>
       {item.kind === "series" && (
-        <>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={future}
-              onChange={(event) => {
-                setFuture(event.target.checked);
-              }}
-            />
-            Include future episodes
-          </label>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={specials}
-              onChange={(event) => {
-                setSpecials(event.target.checked);
-              }}
-            />
-            Include specials
-          </label>
-        </>
+        <SeriesRequestOptions
+          future={future}
+          specials={specials}
+          onFutureChange={setFuture}
+          onSpecialsChange={setSpecials}
+        />
       )}
       <button
         className="button primary"

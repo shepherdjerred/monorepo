@@ -1,3 +1,7 @@
+import {
+  createMediaWorkflowTestWorker,
+  drainMediaWorkflowTestWorkers,
+} from "#activities/media/testing/workflow-workers.ts";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
@@ -25,11 +29,10 @@ test.each(["observed", "complete", "protected_then_observed"] as const)(
     };
     let observations = 0;
     try {
-      const workflow = await Worker.create({
-        connection: environment.nativeConnection,
-        taskQueue: TASK_QUEUES.WORKFLOWS,
+      const workflow = await createMediaWorkflowTestWorker(
+        environment,
         workflowsPath,
-      });
+      );
       const files = await Worker.create({
         connection: environment.nativeConnection,
         taskQueue: TASK_QUEUES.MEDIA_FILES,
@@ -139,12 +142,7 @@ test.each(["observed", "complete", "protected_then_observed"] as const)(
       });
       await Worker.runReplayHistory({ workflowsPath }, history);
     } finally {
-      try {
-        for (const { worker } of started) worker.shutdown();
-        await Promise.all(started.map(({ running }) => running));
-      } finally {
-        await environment.teardown();
-      }
+      await drainMediaWorkflowTestWorkers(environment, started);
     }
   },
   60_000,

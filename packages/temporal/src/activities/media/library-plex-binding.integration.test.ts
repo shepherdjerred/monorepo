@@ -1,7 +1,15 @@
+import {
+  mediaWorkflowWorkerScript,
+  createMovieRoleEnvironment,
+  pinnedMovieRuntimes,
+  startMovieWorkflowWorker,
+  closeMovieRoleFixtureSequential,
+} from "./testing/role-worker.ts";
+import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
@@ -13,24 +21,9 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 /** Bun runs real Activities and files; the credentialless Node process owns Workflow isolates/replay. */
 test("initial library outbox reaches the real Network Activity and retains replayable IDs-only history", async () => {
-  const temporal = Bun.which("temporal");
-  if (temporal === null) throw new Error("Pinned Temporal CLI required");
-  const nodeResult = Bun.spawnSync(["mise", "which", "node"], {
-    stdout: "pipe",
-    stderr: "inherit",
-  });
-  if (nodeResult.exitCode !== 0)
-    throw new Error("Pinned Node resolution failed");
-  const node = nodeResult.stdout.toString().trim();
+  const { temporal, node } = pinnedMovieRuntimes();
   const directory = await mkdtemp(path.join(tmpdir(), "media-library-worker-"));
-  const environment = await TestWorkflowEnvironment.createLocal({
-    server: {
-      executable: { type: "existing-path", path: temporal },
-      ip: "127.0.0.1",
-      namespace: "dev",
-      ui: false,
-    },
-  });
+  const environment = await createMovieRoleEnvironment(temporal);
   let fixture:
     Awaited<ReturnType<typeof createLibraryBindingWorkerFixture>> | undefined;
   let workflow: Bun.Subprocess | undefined;
@@ -39,34 +32,15 @@ test("initial library outbox reaches the real Network Activity and retains repla
   try {
     fixture = await createLibraryBindingWorkerFixture();
     const scenario = fixture;
-    const script = new URL(
-      "../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
-    const marker = path.join(directory, "ready");
+    const script = mediaWorkflowWorkerScript;
     const childEnvironment = { PATH: Bun.env["PATH"] ?? "/usr/bin:/bin" };
-    workflow = Bun.spawn(
-      [
-        node,
-        "--experimental-strip-types",
-        script,
-        "run",
-        environment.address.replace(/^localhost:/u, "127.0.0.1:"),
-        marker,
-      ],
-      {
-        env: childEnvironment,
-        stdin: "ignore",
-        stdout: Bun.file(path.join(directory, "workflow.log")),
-        stderr: Bun.file(path.join(directory, "workflow-errors.log")),
-      },
-    );
-    const deadline = performance.now() + 30_000;
-    while (!(await Bun.file(marker).exists())) {
-      if (workflow.exitCode !== null || performance.now() >= deadline)
-        throw new Error(`Workflow worker startup failed; inspect ${directory}`);
-      await Bun.sleep(100);
-    }
+    workflow = await startMovieWorkflowWorker({
+      node,
+      script,
+      address: environment.address,
+      directory,
+      childEnvironment,
+    });
     let invocations = 0;
     const activities = createLibraryPlexBindingNetworkActivities(() => {
       invocations++;
@@ -119,38 +93,24 @@ test("initial library outbox reaches the real Network Activity and retains repla
     assertPrivateHistory(history, ["Synthetic Film", "libraryPlexReceiptV1"]);
     const historyPath = path.join(directory, "history.json");
     await Bun.write(historyPath, history);
-    const replay = Bun.spawn(
-      [node, "--experimental-strip-types", script, "replay", historyPath],
-      {
-        env: childEnvironment,
-        stdin: "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      },
-    );
-    const [exitCode, , replayError] = await Promise.all([
-      replay.exited,
-      new Response(replay.stdout).text(),
-      new Response(replay.stderr).text(),
-    ]);
-    expect(exitCode, replayError).toBe(0);
+    await replayWorkflowFile({
+      node: node,
+      script: script,
+      filename: historyPath,
+      childEnvironment: childEnvironment,
+    });
   } finally {
-    try {
-      if (running !== undefined) {
-        network?.shutdown();
-        await running;
-      }
-      if (workflow !== undefined) {
-        workflow.kill("SIGTERM");
-        await workflow.exited;
-      }
-    } finally {
-      try {
-        await fixture?.close();
-      } finally {
-        await environment.teardown();
-        await rm(directory, { recursive: true, force: true });
-      }
-    }
+    await closeMovieRoleFixtureSequential({
+      stopActivities: async () => {
+        if (running !== undefined) {
+          network?.shutdown();
+          await running;
+        }
+      },
+      workflow,
+      fixture: fixture,
+      environment,
+      directory,
+    });
   }
 }, 60_000);

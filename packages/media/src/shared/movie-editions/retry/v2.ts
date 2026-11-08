@@ -150,6 +150,3 @@ export const MovieRetryPlexCaptureV1Schema = z.strictObject({
   generation: z.int().nonnegative(),
   recoveryEpoch: z.int().nonnegative(),
 });
-export type MovieRetryPlexCaptureV1 = z.infer<
-  typeof MovieRetryPlexCaptureV1Schema
->;

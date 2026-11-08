@@ -8,9 +8,8 @@ import { createNotificationActivities } from "#automation/notifications.ts";
 import { evaluateMovieRetentionV4 } from "#automation/movie-editions/retention/evaluate.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
-import { rm } from "node:fs/promises";
 
 /** Only retention policy time advances; publication, warning, receipt and authority clocks stay real. */
 export async function createMovieRetentionFixture(
@@ -140,17 +139,7 @@ export async function createAdoptedMovieRetentionFixture(
   edition: MovieEditionKey,
   bytes: Uint8Array,
 ) {
-  const cluster = await startMediaTestPostgres();
-  const db = cluster.database;
-  const directories: string[] = [];
-  const close = async () => {
-    try {
-      await cluster.close();
-    } finally {
-      for (const directory of directories)
-        await rm(directory, { recursive: true, force: true });
-    }
-  };
+  const { db, directories, close } = await createFixtureLifecycle();
   try {
     const f = await createManagedMovieFixture(
       { database: () => db },

@@ -20,6 +20,3 @@ export const MovieAcquisitionIdentityV2Schema =
       value.coverage[0] === value.scope.mediaId,
     "Movie acquisition identity must cover its exact edition scope",
   );
-export type MovieAcquisitionIdentityV2 = z.infer<
-  typeof MovieAcquisitionIdentityV2Schema
->;

@@ -61,6 +61,3 @@ export const NativeTerminalEvidenceSchema = z.strictObject({
 export type NativeTerminalDescriptor = z.infer<
   typeof NativeTerminalDependencySchema
 >;
-export type NativeTerminalEvidence = z.infer<
-  typeof NativeTerminalEvidenceSchema
->;

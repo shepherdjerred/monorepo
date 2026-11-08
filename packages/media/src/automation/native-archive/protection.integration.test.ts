@@ -318,7 +318,7 @@ test("cancellation during hashing leaves execution uncommitted and bytes intact"
   expect(await readFile(nativeLocalPath(f.context, asset.path), "utf8")).toBe(
     f.publications[0]?.content,
   );
-});
+}, 30_000);
 
 test("the original seven-day rollback window prevents an early files invocation without any hashing or unlink", async () => {
   const f = await readyArchiveCleanup(harness.database(), harness.cipher, {

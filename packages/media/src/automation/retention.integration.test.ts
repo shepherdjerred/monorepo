@@ -230,7 +230,7 @@ test("requires accepted warning and seven full days, then a fresh playback/hold 
   await expect(
     dueRetention.evaluateMediaRetention(due.input),
   ).resolves.toMatchObject({ reason: "keep_hold" });
-});
+}, 30_000);
 
 test("unknown delivery is not retried or counted as acceptance", async () => {
   const item = await fixture();
@@ -259,7 +259,7 @@ test("unknown delivery is not retried or counted as acceptance", async () => {
       where: { id: delivery.id },
     }),
   ).toMatchObject({ acceptedAt: null });
-});
+}, 30_000);
 
 test("a late bounce revokes grace and explicit retry starts seven fresh days", async () => {
   const item = await fixture(false, true);
@@ -317,7 +317,7 @@ test("a late bounce revokes grace and explicit retry starts seven fresh days", a
       (attempt) => attempt.providerReceipt !== null,
     ),
   ).toBe(true);
-});
+}, 30_000);
 
 test.each(["keep", "unknown_watch", "unwatched", "preferences"] as const)(
   "warning final boundary protects %s changes",

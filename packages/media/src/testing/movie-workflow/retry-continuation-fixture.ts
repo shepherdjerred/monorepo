@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { expect } from "vitest";
 import { createHash } from "node:crypto";
-import { readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { FileContext } from "#automation/files/types.ts";
@@ -21,7 +21,7 @@ import { createSweepActivities } from "#automation/sweeps.ts";
 import { queryFixtureDatabase } from "#testing/query-client.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { createMovieWorkflowFixture } from "./fixture.ts";
 import { createAcquiredMovieUpgradeFixture } from "./upgrade-fixture.ts";
@@ -98,25 +98,16 @@ async function createBase(
       managementReceiptId: null,
     };
   }
-  const cluster = await startMediaTestPostgres();
-  const directories: string[] = [];
-  const close = async () => {
-    try {
-      await cluster.close();
-    } finally {
-      for (const directory of directories)
-        await rm(directory, { recursive: true, force: true });
-    }
-  };
+  const { db, directories, close } = await createFixtureLifecycle();
   try {
     const f = await createManagedMovieFixture(
-      { database: () => cluster.database },
+      { database: () => db },
       edition,
       (directory) => directories.push(directory),
       bytes,
     );
     return {
-      db: cluster.database,
+      db,
       actor: f.network.actor,
       context: f.context,
       files: f.files,

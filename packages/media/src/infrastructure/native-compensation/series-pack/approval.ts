@@ -1,4 +1,4 @@
-import { Prisma } from "#generated/prisma/client.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { canonicalJson } from "#migration/profile-import.ts";
@@ -17,8 +17,7 @@ import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import { installNativeAuthority } from "#automation/native-recovery/authority.ts";
 import { assertNativeEvidenceFresh } from "#infrastructure/native-recovery/evidence-freshness.ts";
 import { queueOperation } from "#automation/store.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { unconfirmedRecoveryHoldWrite } from "#infrastructure/recovery/hold-write.ts";
 import { loadSeriesPackNativePlexV1 } from "./plex-records.ts";
 import { reserveSeriesPackNativeSqlV1 } from "./sql-budget.ts";
 import type { loadSeriesPackNativeReviewPhaseV1 } from "./review-phase.ts";
@@ -194,22 +193,9 @@ export async function applySeriesPackNativeApprovalV1(
   const descriptorHash = identityHash(descriptor);
   const recoveryHoldBindings = [];
   for (const mediaId of phase.scope.publication.intent.mediaIds) {
-    const hold = await tx.recoveryHold.upsert({
-      where: targetWhere(defaultScope(mediaId)),
-      create: {
-        mediaId,
-        recoveryEpoch: phase.runtime.recoveryEpoch,
-        reason: "recovery_request_history_unconfirmed",
-      },
-      update: {
-        recoveryEpoch: phase.runtime.recoveryEpoch,
-        reason: "recovery_request_history_unconfirmed",
-        releasedAt: null,
-        releasedById: null,
-        releaseEvidence: Prisma.DbNull,
-        version: { increment: 1 },
-      },
-    });
+    const hold = await tx.recoveryHold.upsert(
+      unconfirmedRecoveryHoldWrite(mediaId, phase.runtime.recoveryEpoch),
+    );
     recoveryHoldBindings.push({
       mediaId,
       version: hold.version,

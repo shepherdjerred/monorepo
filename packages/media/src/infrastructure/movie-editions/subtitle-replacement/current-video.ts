@@ -3,6 +3,7 @@ import type { MoviePublicationAssetV2 } from "#shared/movie-editions/publication
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import { publicationAssetIdentityFields } from "#infrastructure/publication-proof/asset-fields.ts";
 
 type Coverage = { mediaId: string; edition: string; current: boolean };
 type Video = Pick<
@@ -40,19 +41,7 @@ export function assertMovieReplacementVideoV2(
 
 function binding(asset: Video | MoviePublicationAssetV2) {
   return {
-    id: asset.id,
-    version: asset.version,
-    edition: asset.edition,
-    editionRootId: asset.editionRootId,
-    owned: asset.owned,
-    ownershipEpoch: asset.ownershipEpoch,
-    state: asset.state,
-    path: asset.path,
-    sourcePath: asset.sourcePath,
-    checksum: asset.checksum,
-    sizeBytes: asset.sizeBytes.toString(),
-    properties: asset.properties,
-    supersededByAssetId: asset.supersededByAssetId,
+    ...publicationAssetIdentityFields(asset),
     coverage: asset.coverage.map(({ mediaId, edition, current }) => ({
       mediaId,
       edition,

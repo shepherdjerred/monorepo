@@ -5,7 +5,6 @@ import type { MovieOperationV4 } from "#shared/movie-editions/lifecycle/automati
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import type { MovieNetworkActivitiesV4 } from "#shared/movie-editions/lifecycle/activities-v4.ts";
 import {
-  MovieRetryCaptureV1Schema,
   MovieRetryRenewalV1Schema,
   type MovieRetryCaptureV1,
 } from "#shared/movie-editions/retry/v1.ts";
@@ -33,13 +32,6 @@ import { movieRetryTorrentV1 } from "./torrent.ts";
 import { submitMovieTorrentV4 } from "#automation/movie-editions/submission.ts";
 import { resumeMovieAttempt } from "./resume.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
-
-export function readMovieRetryCaptureV1(raw: unknown) {
-  const header = z.object({ movieRetryV1: z.unknown().optional() }).parse(raw);
-  return header.movieRetryV1 === undefined
-    ? null
-    : MovieRetryCaptureV1Schema.parse(header.movieRetryV1);
-}
 
 type Input = {
   command: MovieOperationV4;

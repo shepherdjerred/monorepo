@@ -91,28 +91,38 @@ export const UpgradeCleanupPlexExpectedV1Schema = z.strictObject({
   pathsHash: Hash,
   authorityExpiresAt: z.iso.datetime(),
 });
+function hasExactMovieCleanupScope(
+  value: Pick<
+    z.infer<typeof UpgradeCleanupPlexExpectedV1Schema>,
+    "mediaIds" | "groups" | "bindings" | "targets"
+  > & { scope: z.infer<typeof MovieEditionScopeSchema> },
+) {
+  return (
+    value.mediaIds.length === 1 &&
+    value.mediaIds[0] === value.scope.mediaId &&
+    value.scope.rootMediaId === value.scope.mediaId &&
+    value.groups.length === 1 &&
+    value.bindings.length === 1 &&
+    value.targets.length === 1 &&
+    value.targets[0]?.mediaId === value.scope.mediaId &&
+    value.groups.every(
+      (group) =>
+        group.edition === value.scope.edition &&
+        group.canonicalRootId === value.scope.rootMediaId &&
+        group.coverage.length === 1 &&
+        group.coverage[0]?.mediaId === value.scope.mediaId,
+    ) &&
+    value.bindings[0]?.scope.mediaId === value.scope.mediaId &&
+    value.bindings[0].scope.edition === value.scope.edition
+  );
+}
+
 export const MovieUpgradeCleanupPlexExpectedV2Schema =
   UpgradeCleanupPlexExpectedV1Schema.extend({
     schemaVersion: z.literal(2),
     scope: MovieEditionScopeSchema,
   }).refine(
-    (value) =>
-      value.mediaIds.length === 1 &&
-      value.mediaIds[0] === value.scope.mediaId &&
-      value.scope.rootMediaId === value.scope.mediaId &&
-      value.groups.length === 1 &&
-      value.bindings.length === 1 &&
-      value.targets.length === 1 &&
-      value.targets[0]?.mediaId === value.scope.mediaId &&
-      value.groups.every(
-        (group) =>
-          group.edition === value.scope.edition &&
-          group.canonicalRootId === value.scope.rootMediaId &&
-          group.coverage.length === 1 &&
-          group.coverage[0]?.mediaId === value.scope.mediaId,
-      ) &&
-      value.bindings[0]?.scope.mediaId === value.scope.mediaId &&
-      value.bindings[0].scope.edition === value.scope.edition,
+    hasExactMovieCleanupScope,
     "Movie cleanup must retain one exact serving edition",
   );
 /** Additive cleanup context for an actual restored serving successor; old expected bodies remain literal. */
@@ -122,23 +132,7 @@ export const MovieRestoredUpgradeCleanupPlexExpectedV3Schema =
     scope: MovieEditionScopeSchema,
     serving: MovieRestorePlexExpectedV1Schema,
   }).refine(
-    (value) =>
-      value.mediaIds.length === 1 &&
-      value.mediaIds[0] === value.scope.mediaId &&
-      value.scope.rootMediaId === value.scope.mediaId &&
-      value.groups.length === 1 &&
-      value.bindings.length === 1 &&
-      value.targets.length === 1 &&
-      value.targets[0]?.mediaId === value.scope.mediaId &&
-      value.groups.every(
-        (group) =>
-          group.edition === value.scope.edition &&
-          group.canonicalRootId === value.scope.rootMediaId &&
-          group.coverage.length === 1 &&
-          group.coverage[0]?.mediaId === value.scope.mediaId,
-      ) &&
-      value.bindings[0]?.scope.mediaId === value.scope.mediaId &&
-      value.bindings[0].scope.edition === value.scope.edition,
+    hasExactMovieCleanupScope,
     "Restored movie cleanup must retain one exact serving edition",
   );
 /** Rollback has its own physical/serving parents and retains the old cleanup deadline. */
@@ -149,23 +143,7 @@ export const MovieRolledBackUpgradeCleanupPlexExpectedV4Schema = z
     serving: MovieRollbackPlexExpectedV1Schema,
   })
   .refine(
-    (value) =>
-      value.mediaIds.length === 1 &&
-      value.mediaIds[0] === value.scope.mediaId &&
-      value.scope.rootMediaId === value.scope.mediaId &&
-      value.groups.length === 1 &&
-      value.bindings.length === 1 &&
-      value.targets.length === 1 &&
-      value.targets[0]?.mediaId === value.scope.mediaId &&
-      value.groups.every(
-        (group) =>
-          group.edition === value.scope.edition &&
-          group.canonicalRootId === value.scope.rootMediaId &&
-          group.coverage.length === 1 &&
-          group.coverage[0]?.mediaId === value.scope.mediaId,
-      ) &&
-      value.bindings[0]?.scope.mediaId === value.scope.mediaId &&
-      value.bindings[0].scope.edition === value.scope.edition,
+    hasExactMovieCleanupScope,
     "Rolled-back movie cleanup must retain one exact serving edition",
   );
 export const UpgradeCleanupPlexExpectedSchema = z.discriminatedUnion(

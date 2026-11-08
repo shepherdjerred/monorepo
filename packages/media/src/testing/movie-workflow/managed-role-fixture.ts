@@ -1,5 +1,4 @@
-import { rm } from "node:fs/promises";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
 import {
@@ -12,17 +11,7 @@ import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 export async function createManagedMovieWorkflowFixture(
   edition: MovieEditionKey,
 ) {
-  const cluster = await startMediaTestPostgres();
-  const db = cluster.database;
-  const directories: string[] = [];
-  const close = async () => {
-    try {
-      await cluster.close();
-    } finally {
-      for (const directory of directories)
-        await rm(directory, { recursive: true, force: true });
-    }
-  };
+  const { db, directories, close } = await createFixtureLifecycle();
   try {
     const original = await movieVideoFixture();
     const upgrade = await movieVideoFixture(3840, undefined, {

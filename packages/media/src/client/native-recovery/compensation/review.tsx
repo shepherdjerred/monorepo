@@ -6,6 +6,7 @@ import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecy
 import { PageTitle, ErrorNotice, humanize } from "#client/components.tsx";
 import type { MediaUser } from "#shared/contract.ts";
 import { CompensationStatus } from "./status.tsx";
+import { RecoveryProofDetails } from "#client/native-recovery/proof-details.tsx";
 
 export function NativeCompensationReview({
   user,
@@ -144,15 +145,10 @@ export function NativeCompensationReview({
             </button>
           </>
         )}
-        <details>
-          <summary>Operator proof details</summary>
-          <p>Plan digest: {review.planHash ?? "Pending inspection"}</p>
-          <p>
-            Review expires:{" "}
-            {review.expiresAt === null
-              ? "Not prepared"
-              : new Date(review.expiresAt).toLocaleString()}
-          </p>
+        <RecoveryProofDetails
+          planHash={review.planHash}
+          expiresAt={review.expiresAt}
+        >
           <p>
             Acknowledged effects:{" "}
             {plan?.files.acknowledgedEffects.length ?? "Pending inspection"}.
@@ -168,7 +164,7 @@ export function NativeCompensationReview({
               Retained successor SHA-256: {entry.entry.checksum}
             </p>
           ))}
-        </details>
+        </RecoveryProofDetails>
       </section>
     </>
   );

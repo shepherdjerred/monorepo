@@ -21,7 +21,11 @@ import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { createHash } from "node:crypto";
 import { PrismaMediaCommands } from "./commands.ts";
 import type { Database } from "./database.ts";
-import { parseManualSubtitle, lockSubtitleAsset } from "./manual-subtitle.ts";
+import {
+  parseManualSubtitle,
+  lockSubtitleAsset,
+  manualSubtitleMetadata,
+} from "./manual-subtitle.ts";
 import { createManualReplacementCandidate } from "./manual-subtitle-replacement.ts";
 import { queueOperation } from "#automation/store.ts";
 
@@ -396,32 +400,18 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
             qualityStatus: "accepted",
             storageKind: "sidecar",
             ownershipEpoch: runtime.recoveryEpoch,
-            checksum: createHash("sha256").update(validated.text).digest("hex"),
-            videoChecksum: asset.checksum,
-            videoVersion: asset.version,
-            forced: input.forced ?? false,
-            hearingImpaired: input.hearingImpaired ?? null,
-            content: new TextEncoder().encode(validated.text),
-            provenance: {
-              filename: input.filename,
-              description: input.description,
-              format: validated.format,
-              uploadedBy: actor.id,
-              simplifiedEvidence: validated.simplifiedEvidence,
-              traditionalEvidence: validated.traditionalEvidence,
-            },
-            matchingEvidence: {
-              assetVersion: asset.version,
-              assetChecksum: asset.checksum,
-              exactMediaMatch: true,
-              videoVersionMatch: true,
-              ownerConfirmed: true,
-              targetAuthority: work.authority,
+            ...manualSubtitleMetadata({
+              input,
+              validated,
+              asset,
+              intents,
+              actorId: actor.id,
+              checksum: createHash("sha256")
+                .update(validated.text)
+                .digest("hex"),
+              authority: work.authority,
               recoveryEpoch: runtime.recoveryEpoch,
-              generations: Object.fromEntries(
-                intents.map((intent) => [intent.mediaId, intent.generation]),
-              ),
-            },
+            }),
           },
         });
         const operationId = await queueOperation(tx, {

@@ -15,16 +15,16 @@ import {
   type ProviderCandidate,
 } from "./providers.ts";
 
-const RowSchema = z.object({
+export const MagnetDownloadResultSchema = z.object({
   id: z.string().regex(/^\d+$/u),
   title: z.string().min(1),
   sizeBytes: z.number().int().positive(),
 });
-export type MagnetDownloadResult = z.infer<typeof RowSchema>;
+export type MagnetDownloadResult = z.infer<typeof MagnetDownloadResultSchema>;
+const BASE_URL = "https://www.magnetdownload.com";
 
 /** Direct HTML search and the site's json_info endpoint; no proxy process. */
 export class MagnetDownloadProvider {
-  private readonly baseUrl = "https://www.magnetdownload.com";
   constructor(private readonly transport: FetchTransport = fetch) {}
 
   async search(
@@ -35,7 +35,7 @@ export class MagnetDownloadProvider {
     const response = await request(
       this.transport,
       "magnetdownload",
-      endpoint(this.baseUrl, `search/${encodeURIComponent(query)}/`),
+      endpoint(BASE_URL, `search/${encodeURIComponent(query)}/`),
       { ...(signal === undefined ? {} : { signal }) },
     );
     const body = await boundedBytes(
@@ -50,28 +50,36 @@ export class MagnetDownloadProvider {
     result: MagnetDownloadResult,
     signal?: AbortSignal,
   ): Promise<ProviderCandidate> {
-    RowSchema.parse(result);
-    const url = endpoint(this.baseUrl, "api/json_info");
+    MagnetDownloadResultSchema.parse(result);
+    const url = endpoint(BASE_URL, "api/json_info");
     url.search = new URLSearchParams({ hashes: result.id }).toString();
     const response = await request(this.transport, "magnetdownload", url, {
       ...(signal === undefined ? {} : { signal }),
     });
     const metadata = await json(response, "magnetdownload");
     const hash = resolveMagnetDownloadHash(metadata);
-    return {
-      providerId: "magnetdownload",
-      providerReleaseId: result.id,
-      title: result.title,
-      editionEvidence: releaseTitleEvidence("magnetdownload", [
-        { field: "search.infoAnchor.title", text: result.title },
-      ]),
-      sizeBytes: result.sizeBytes,
-      seeders: null,
-      infoHash: hash,
-      detailsUrl: sameOriginUrl(`/info/${result.id}`, this.baseUrl).href,
-      download: { kind: "magnet", value: magnetFor(hash, result.title) },
-    };
+    return magnetDownloadCandidate(result, hash);
   }
+}
+
+/** Rebuild only a resolved, retained source; unresolved rows never become candidates. */
+export function magnetDownloadCandidate(
+  result: MagnetDownloadResult,
+  hash: string,
+): ProviderCandidate {
+  return {
+    providerId: "magnetdownload",
+    providerReleaseId: result.id,
+    title: result.title,
+    editionEvidence: releaseTitleEvidence("magnetdownload", [
+      { field: "search.infoAnchor.title", text: result.title },
+    ]),
+    sizeBytes: result.sizeBytes,
+    seeders: null,
+    infoHash: hash,
+    detailsUrl: sameOriginUrl(`/info/${result.id}`, BASE_URL).href,
+    download: { kind: "magnet", value: magnetFor(hash, result.title) },
+  };
 }
 
 export function parseMagnetDownloadSearch(
@@ -100,7 +108,7 @@ export function parseMagnetDownloadSearch(
     );
     if (exponent === -1)
       throw new IntegrationError("magnetdownload", "invalid-response");
-    return RowSchema.parse({
+    return MagnetDownloadResultSchema.parse({
       id,
       title,
       sizeBytes: Math.round(Number(amount) * 1024 ** exponent),

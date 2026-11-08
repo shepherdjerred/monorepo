@@ -6,7 +6,6 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   loadNativePlexReviewParent,
-  loadNativePlexExecutionParent,
   assertNativePlexOperationParent,
   type NativePlexReviewSnapshot,
 } from "#infrastructure/plex-binding/native/native-parent.ts";
@@ -126,45 +125,6 @@ export async function captureNativeReviewProof(
   const freshness = plexBindingFreshness({
     observed,
     expiresAtMs: Math.min(initial.expiresAtMs, proof.expiresAtMs),
-    guards: [initial],
-  });
-  return {
-    kind: "paired",
-    ref: proof.ref,
-    network: proof.network,
-    freshness,
-    budget,
-  };
-}
-
-export async function captureNativeExecutionProof(
-  files: FileContext,
-  operationId: string,
-  execution: { signal: AbortSignal; assertActive: () => void },
-  budget = new PublicationAuthorityReadBudget(),
-): Promise<PairedNativeProof> {
-  execution.assertActive();
-  const observed = { wall: Date.now(), monotonic: performance.now() };
-  const initial = plexBindingFreshness({
-    observed,
-    expiresAtMs: observed.wall + 60_000,
-    guards: [execution],
-  });
-  const parent = await loadNativePlexExecutionParent(
-    files.db,
-    { operationId },
-    budget,
-  );
-  initial.assertActive();
-  const proof = await readNativePlexOperationProof(
-    files.db,
-    parent.proofParent,
-    initial,
-    budget,
-  );
-  const freshness = plexBindingFreshness({
-    observed,
-    expiresAtMs: proof.expiresAtMs,
     guards: [initial],
   });
   return {

@@ -11,6 +11,7 @@ import { invalidateTarget } from "./target-controls/api.ts";
 import { useTargetCommand } from "./target-controls/mutation.ts";
 import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 import { MovieRequestForm } from "./movie-editions/request.tsx";
+import { SeriesRequestOptions } from "#client/series/request-options.tsx";
 
 export function RequestTitle({
   user,
@@ -124,28 +125,12 @@ function TelevisionRequestTitle({
         Comma-separated codes; zh-CN requests Simplified Chinese.
       </p>
       {kind === "series" && (
-        <>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={future}
-              onChange={(event) => {
-                setFuture(event.target.checked);
-              }}
-            />
-            Include future episodes
-          </label>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={specials}
-              onChange={(event) => {
-                setSpecials(event.target.checked);
-              }}
-            />
-            Include specials
-          </label>
-        </>
+        <SeriesRequestOptions
+          future={future}
+          specials={specials}
+          onFutureChange={setFuture}
+          onSpecialsChange={setSpecials}
+        />
       )}
       <button
         className="button primary"

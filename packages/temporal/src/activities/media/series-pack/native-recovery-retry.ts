@@ -19,6 +19,7 @@ export async function retryNativeSeriesPackCoordinatorV1(
   input: {
     phase: "physical" | "publication";
     effect: NativeCompensationActivityInput;
+    caseDeadline: number;
   },
   charges: { method: string; paid: number }[],
 ) {
@@ -34,20 +35,44 @@ export async function retryNativeSeriesPackCoordinatorV1(
     phase === "physical"
       ? "compensateSeriesPackNativePublicationV1Workflow"
       : "publishSeriesPackNativeCompensationV1Workflow";
+  let startFailure: unknown;
   const dispatched = await scenario.dispatch(async (start) => {
     if (start.input["operationId"] !== effect.operationId)
       throw new Error("Unrelated commands remain queued");
-    expect(start.workflowType).toBe(workflowType);
-    expect(start.input).toEqual(effect);
-    await environment.client.connection.withDeadline(Date.now() + 20_000, () =>
-      environment.client.workflow.start(start.workflowType, {
-        workflowId: start.workflowId,
-        taskQueue: TASK_QUEUES.WORKFLOWS,
-        args: [start.input],
-      }),
+    try {
+      expect(start.workflowType).toBe(workflowType);
+      expect(start.input).toEqual(effect);
+      await environment.client.connection.withDeadline(
+        Date.now() + 20_000,
+        () =>
+          environment.client.workflow.start(start.workflowType, {
+            workflowId: start.workflowId,
+            taskQueue: TASK_QUEUES.WORKFLOWS,
+            args: [start.input],
+          }),
+      );
+    } catch (error) {
+      startFailure = error;
+      throw error;
+    }
+  }, input.caseDeadline);
+  if (dispatched.dispatched !== 1) {
+    const queued = await scenario.db.outboxCommand.findUniqueOrThrow({
+      where: { operationId: effect.operationId },
+      select: {
+        operationId: true,
+        kind: true,
+        createdAt: true,
+        availableAt: true,
+        dispatchedAt: true,
+        attempts: true,
+      },
+    });
+    throw new Error(
+      `Actual native ${phase} coordinator was not dispatched: ${JSON.stringify({ ...dispatched, now: new Date().toISOString(), caseDeadline: input.caseDeadline, queued })}`,
+      { cause: startFailure },
     );
-  });
-  expect(dispatched.dispatched).toBe(1);
+  }
   const handle = environment.client.workflow.getHandle(
     `media-operation-${effect.operationId}`,
   );

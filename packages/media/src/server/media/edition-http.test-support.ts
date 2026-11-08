@@ -1,6 +1,5 @@
 import { expect } from "vitest";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { commandFixture } from "#infrastructure/editions/command-test-support.ts";
+import { commandHttpFixture } from "./command-http-fixture.ts";
 import {
   DefaultCommandV2Schema,
   DefaultCommandResultV2Schema,
@@ -12,10 +11,8 @@ export async function verifyDefaultCommandsHttp(
   dependencies: MediaAppDependencies,
   headers: Record<string, string>,
 ) {
-  const cluster = await startMediaTestPostgres();
+  const { db, f, close } = await commandHttpFixture();
   try {
-    const db = cluster.database;
-    const f = await commandFixture(db);
     dependencies.media = f.service;
     dependencies.auth.authenticate = () =>
       Promise.resolve({
@@ -151,6 +148,6 @@ export async function verifyDefaultCommandsHttp(
     ).toMatchObject({ active: false, excluded: true });
     expect(dependencies.onError).not.toHaveBeenCalled();
   } finally {
-    await cluster.close();
+    await close();
   }
 }

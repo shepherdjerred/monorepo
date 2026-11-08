@@ -72,5 +72,4 @@ export const MovieRestoreReceiptEnvelopeV1Schema = z.strictObject({
   receipt: MovieRestoreReceiptV1Schema,
   receiptHash: Hash,
 });
-export type MovieRestoreAssetV1 = z.infer<typeof MovieRestoreAssetV1Schema>;
 export type MovieRestoreReceiptV1 = z.infer<typeof MovieRestoreReceiptV1Schema>;

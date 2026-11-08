@@ -40,9 +40,6 @@ export const AcquisitionPlexPublicationEnvelopeSchema = z.strictObject({
   receiptHash: Hash,
   receipt: z.json(),
 });
-export type AcquisitionPlexPublicationReceipt = z.infer<
-  typeof AcquisitionPlexPublicationReceiptSchema
->;
 export type AcquisitionPlexPublicationInput = z.infer<
   typeof AcquisitionPlexPublicationInputSchema
 >;

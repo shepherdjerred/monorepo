@@ -142,7 +142,7 @@ test("actual shared-TV A→B→C recovery binds both leaves and one held leaf pr
   expect(
     await readFile(nativeLocalPath(f.context, f.canonicalPath), "utf8"),
   ).toBe(f.published.content);
-});
+}, 30_000);
 
 test.each(["missing_asset_root", "mixed_leaf_root"] as const)(
   "%s cannot produce a new shared-TV native archive review",

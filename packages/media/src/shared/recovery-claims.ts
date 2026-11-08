@@ -102,6 +102,3 @@ export const RecoveryClaimAcknowledgementSchema = z.strictObject({
 export type RecoveryClaimProjection = z.infer<
   typeof RecoveryClaimProjectionSchema
 >;
-export type RecoveryClaimAccounting = z.infer<
-  typeof RecoveryClaimAccountingSchema
->;

@@ -209,6 +209,16 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     fi
     ffmpeg -version >/dev/null
     ffprobe -version >/dev/null
+    # Media exercises real archive extraction and lock-helper process death.
+    # Prove both tools on stale images as well as newly baked ci-base images.
+    if ! command -v ps >/dev/null; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends procps
+    fi
+    if ! command -v 7zz >/dev/null; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends 7zip
+    fi
+    ps --version >/dev/null
+    7zz i >/dev/null
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
     fi

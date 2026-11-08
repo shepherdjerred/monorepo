@@ -12,6 +12,7 @@ import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import {
   lockSubtitleAsset,
+  manualSubtitleMetadata,
   type parseManualSubtitle,
 } from "./manual-subtitle.ts";
 import { lockEffectiveRequests } from "./request-claims.ts";
@@ -107,6 +108,16 @@ export async function createManualReplacementCandidate(
     where: { mediaId: { in: ids }, edition: "default" },
     orderBy: { mediaId: "asc" },
   });
+  const metadata = manualSubtitleMetadata({
+    input,
+    validated,
+    asset,
+    intents,
+    checksum,
+    actorId: actor.id,
+    authority: work.authority,
+    recoveryEpoch: runtime.recoveryEpoch,
+  });
   const candidate = await tx.subtitleAsset.create({
     data: {
       assetId: asset.id,
@@ -116,31 +127,9 @@ export async function createManualReplacementCandidate(
       qualityStatus: "accepted",
       storageKind: "sidecar",
       ownershipEpoch: runtime.recoveryEpoch,
-      checksum,
-      videoChecksum: asset.checksum,
-      videoVersion: asset.version,
-      forced: input.forced ?? false,
-      hearingImpaired: input.hearingImpaired ?? null,
-      content: new TextEncoder().encode(validated.text),
-      provenance: {
-        filename: input.filename,
-        description: input.description,
-        format: validated.format,
-        uploadedBy: actor.id,
-        simplifiedEvidence: validated.simplifiedEvidence,
-        traditionalEvidence: validated.traditionalEvidence,
-      },
+      ...metadata,
       matchingEvidence: {
-        assetVersion: asset.version,
-        assetChecksum: asset.checksum,
-        exactMediaMatch: true,
-        videoVersionMatch: true,
-        ownerConfirmed: true,
-        targetAuthority: work.authority,
-        recoveryEpoch: runtime.recoveryEpoch,
-        generations: Object.fromEntries(
-          intents.map((intent) => [intent.mediaId, intent.generation]),
-        ),
+        ...metadata.matchingEvidence,
         replacementFor: {
           oldSubtitleId: old.id,
           expectedOldVersion: old.version,

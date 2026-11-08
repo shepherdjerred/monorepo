@@ -155,9 +155,3 @@ export async function createSeriesPackPreparationV1(
     }),
   );
 }
-export type SeriesPackPreparationReceiptV1 = ReturnType<
-  typeof readSeriesPackPreparationV1
->;
-export type SeriesPackPhysicalReceiptV1 = ReturnType<
-  typeof readSeriesPackPhysicalV1
->;

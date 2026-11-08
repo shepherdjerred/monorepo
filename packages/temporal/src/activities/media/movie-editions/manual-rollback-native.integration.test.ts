@@ -1,26 +1,21 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { createManualMovieRollbackFixture } from "@shepherdjerred/media/testing/movie-manual-rollback-workflow";
-import {
-  movieRollbackEditions,
-  movieRollbackVideos,
-} from "@shepherdjerred/media/testing/movie-rollback-workflow";
+import { movieRollbackEditions } from "@shepherdjerred/media/testing/movie-rollback-workflow";
 import { movieRollbackSdkEnvironment } from "./rollback-sdk.test-support.ts";
 import { manualMovieRollbackWorkers } from "./manual-rollback-sdk.test-support.ts";
 
-const closers: (() => Promise<void>)[] = [];
-let videos: Awaited<ReturnType<typeof movieRollbackVideos>>;
-beforeAll(async () => {
-  videos = await movieRollbackVideos();
-});
-afterEach(async () => {
-  for (const close of closers.splice(0)) await close();
-});
+import { useMovieRollbackVideos } from "#activities/media/testing/rollback-fixtures.ts";
+
+const rollbackInputs = useMovieRollbackVideos();
 
 test.each(movieRollbackEditions)(
   "actual %s manual owner rollback retains B-owned captions and original A/B history",
   async (edition) => {
-    const f = await createManualMovieRollbackFixture(edition, videos);
-    closers.push(f.close);
+    const f = await createManualMovieRollbackFixture(
+      edition,
+      rollbackInputs.videos(),
+    );
+    rollbackInputs.closeAfterTest(f.close);
     const workers = manualMovieRollbackWorkers(() => Promise.resolve(f.manual));
     const runId = crypto.randomUUID();
     const sdk = (activityId: string) =>

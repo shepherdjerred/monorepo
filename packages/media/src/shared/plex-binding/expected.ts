@@ -125,8 +125,6 @@ export function expectedCoverageMatches(value: {
     targets.every((key, index) => key === previous[index] && covered.has(key))
   );
 }
-
-export type PlexTargetExpected = z.infer<typeof PlexTargetExpectedSchema>;
 export type PlexPublicationParent = z.infer<typeof PlexPublicationParentSchema>;
 export type PlexBindingExpected = z.infer<typeof PlexBindingExpectedSchema>;
 export type PlexBindingLockScope = {

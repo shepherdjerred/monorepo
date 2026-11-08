@@ -43,6 +43,3 @@ export const NativeArchiveContinuationViewSchema = z.strictObject({
   titles: z.array(z.string()),
   reasons: z.array(NativeArchiveReasonSchema),
 });
-export type NativeArchiveInventory = z.infer<
-  typeof NativeArchiveInventorySchema
->;

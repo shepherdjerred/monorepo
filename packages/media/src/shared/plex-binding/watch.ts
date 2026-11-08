@@ -164,9 +164,6 @@ export type QuarantinePlexRef = z.infer<typeof QuarantinePlexRefSchema>;
 export type QuarantinePlexRefV2 = z.infer<typeof QuarantinePlexRefV2Schema>;
 export type BoundWatchAuthority = z.infer<typeof BoundWatchAuthoritySchema>;
 export type PlexWatchProjectionV1 = z.infer<typeof PlexWatchProjectionV1Schema>;
-export type RetentionPlexProjectionV1 = z.infer<
-  typeof RetentionPlexProjectionV1Schema
->;
 export type BoundWatchRead =
   | { status: "known"; projection: PlexWatchProjectionV1 }
   | {

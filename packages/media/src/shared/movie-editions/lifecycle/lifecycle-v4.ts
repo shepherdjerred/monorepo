@@ -86,7 +86,6 @@ export const MovieLifecycleResultV4Schema = z.strictObject({
   applied: MovieTargetExpectedV4Schema,
 });
 export type MovieRequestV4 = z.infer<typeof MovieRequestV4Schema>;
-export type MovieRequestResultV4 = z.infer<typeof MovieRequestResultV4Schema>;
 export type CancelMovieRequestV4 = z.infer<typeof CancelMovieRequestV4Schema>;
 export type RevokeMovieEditionChoiceV4 = z.infer<
   typeof RevokeMovieEditionChoiceV4Schema

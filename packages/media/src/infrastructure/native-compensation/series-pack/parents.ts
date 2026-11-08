@@ -126,15 +126,3 @@ export async function loadSeriesPackNativeParentsV1(
 export type SeriesPackNativeParentsV1 = Awaited<
   ReturnType<typeof loadSeriesPackNativeParentsV1>
 >;
-
-/** Never accept a graph retained by another invocation or another transaction. */
-export function assertSeriesPackNativeParentsV1(
-  tx: Prisma.TransactionClient,
-  graph: SeriesPackNativeParentsV1,
-  budget: PublicationAuthorityReadBudget,
-) {
-  if (graph.transaction !== tx || graph.budget !== budget)
-    throw new Error(
-      "Native pack parents belong to another transaction or allowance",
-    );
-}

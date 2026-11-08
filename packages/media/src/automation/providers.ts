@@ -14,6 +14,7 @@ import {
   type ProviderRecentPage,
 } from "#integrations/providers.ts";
 import { MagnetDownloadProvider } from "#integrations/magnetdownload.ts";
+import { resumeMagnetDownloadSearch } from "./provider-search/magnetdownload.ts";
 import { IntegrationError, type FetchTransport } from "#integrations/http.ts";
 import { setTimeout } from "node:timers/promises";
 import {
@@ -71,6 +72,7 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
   private async client(
     providerId: string,
     transport: FetchTransport,
+    ownerId: string,
   ): Promise<TrackerClient> {
     const id = ProviderIdSchema.parse(providerId);
     if (id === "knaben") return new KnabenProvider(transport);
@@ -78,14 +80,12 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
     if (id === "magnetdownload") {
       const client = new MagnetDownloadProvider(transport);
       return {
-        search: async (input) => {
-          if (input.page !== undefined && input.page !== 1) return [];
-          const results = await client.search(input.query);
-          const candidates: ProviderCandidate[] = [];
-          for (const result of results.slice(0, 3))
-            candidates.push(await client.resolve(result));
-          return candidates;
-        },
+        search: (input) =>
+          resumeMagnetDownloadSearch(
+            { db: this.db, cipher: this.cipher, ownerId },
+            client,
+            input,
+          ),
       };
     }
     const provider = await this.db.mediaProvider.findUniqueOrThrow({
@@ -162,6 +162,7 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
         await this.client(
           providerId,
           this.transport(providerId, ownerId, policy.minimumIntervalSeconds),
+          ownerId,
         ),
       );
       await this.db.mediaProvider.update({

@@ -7,8 +7,8 @@ import {
   type CutSource,
   type EditionText,
   type CutEvidence,
-  type CutConclusion,
 } from "#shared/editions/evidence.ts";
+import { cutConclusion as conclusion } from "./conclusion.ts";
 import {
   words,
   titleSpans,
@@ -150,18 +150,4 @@ function addUnknownQualifiers(
         cut: null,
       });
   }
-}
-function conclusion(markers: readonly Marker[]): CutConclusion {
-  const cuts = [
-    ...new Set(
-      markers.flatMap((marker) => (marker.cut === null ? [] : [marker.cut])),
-    ),
-  ].sort();
-  if (cuts.length > 1) return { kind: "conflict", cuts };
-  if (markers.some((marker) => marker.cut === null))
-    return { kind: "ambiguous" };
-  const cut = cuts[0];
-  return cut === undefined
-    ? { kind: "standard_unmarked" }
-    : { kind: "named", cut };
 }

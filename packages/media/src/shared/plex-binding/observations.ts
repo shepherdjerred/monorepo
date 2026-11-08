@@ -84,7 +84,6 @@ export const PlexBindingVerificationCompletionSchema = z
       Date.parse(value.committedAt) < Date.parse(value.verification.expiresAt),
     "Plex completion must bind every committed scope within verification freshness",
   );
-export type PlexVerificationFacts = z.infer<typeof PlexVerificationFactsSchema>;
 export type ServingPlexObservation = z.infer<
   typeof ServingPlexObservationSchema
 >;
@@ -93,7 +92,4 @@ export type VerifiedServingPlex = ServingPlexObservation & {
 };
 export type PlexVerificationProtected = z.infer<
   typeof PlexVerificationProtectedSchema
->;
-export type PlexBindingVerificationCompletion = z.infer<
-  typeof PlexBindingVerificationCompletionSchema
 >;

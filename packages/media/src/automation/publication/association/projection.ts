@@ -113,8 +113,6 @@ export function projectItem(item: PlexItem) {
   };
 }
 
-export type ProjectedItem = ReturnType<typeof projectItem>;
-
 export function observedEditionTitle(item: PlexItem): string | null {
   return item.editionTitle === "" ? null : (item.editionTitle ?? null);
 }

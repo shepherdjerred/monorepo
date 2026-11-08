@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
 import { assertPrivateHistory } from "./history.ts";
+import { replayWorkflowFile } from "./process.ts";
 
 /** Schema2 uses the unchanged historical replacement Workflow budgets and private input envelope. */
 export async function replayMovieReplacementHistory(
@@ -62,25 +63,5 @@ export async function replayMovieReplacementHistory(
   ]);
   const filename = path.join(input.directory, `${input.name}.json`);
   await Bun.write(filename, serialized);
-  const replay = Bun.spawn(
-    [
-      input.node,
-      "--experimental-strip-types",
-      input.script,
-      "replay",
-      filename,
-    ],
-    {
-      env: input.childEnvironment,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [exitCode, , error] = await Promise.all([
-    replay.exited,
-    new Response(replay.stdout).text(),
-    new Response(replay.stderr).text(),
-  ]);
-  assert.equal(exitCode, 0, error);
+  await replayWorkflowFile({ ...input, filename });
 }

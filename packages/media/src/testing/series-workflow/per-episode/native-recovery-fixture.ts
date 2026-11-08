@@ -32,6 +32,7 @@ import { createSeedingNetworkFacet } from "#automation/seeding/facet.ts";
 import { SeriesPackNativeSeedCommandV1Schema } from "#shared/native-recovery/series-pack/source.ts";
 import { nativeSeriesPackRequesterWatchV1 } from "./native-requester-watch.ts";
 import { nativeSeriesPackRetryCommandsV1 } from "./native-retry.ts";
+import type { Database } from "#infrastructure/database.ts";
 
 type Interrupted = { operationId: string; attemptId: string };
 /** Both imports, original acquisition/outbox and WAL are genuine. The Temporal
@@ -280,8 +281,8 @@ export async function createPerEpisodeNativeRecoveryFixtureV1(
         stop = ports.stop;
         describe = ports.describe;
       },
-      dispatch: (start: WorkflowStarter) =>
-        createOutboxActivities(db, start).dispatchMediaOutbox(),
+      dispatch: (start: WorkflowStarter, caseDeadline: number) =>
+        dispatchNativeFixtureOutbox(db, start, caseDeadline),
       roleCommand: (start: WorkflowStart) =>
         start.input["operationId"] === f.input.operationId,
       finishMediaOperation: createOutboxActivities(db, () =>
@@ -435,4 +436,29 @@ export async function createPerEpisodeNativeRecoveryFixtureV1(
     await close();
     throw error;
   }
+}
+
+/** Imports leave multiple scheduler pages; slow runs can make prior failed
+ * starts due again. Drive real bounded pages without rewriting queue clocks. */
+async function dispatchNativeFixtureOutbox(
+  db: Database,
+  start: WorkflowStarter,
+  caseDeadline: number,
+) {
+  const dueAtStart = await db.outboxCommand.count({
+    where: { dispatchedAt: null, availableAt: { lte: new Date() } },
+  });
+  const dispatcher = createOutboxActivities(db, start);
+  let inspected = 0;
+  let deferred = 0;
+  let passes = 0;
+  while (inspected < dueAtStart && Date.now() < caseDeadline) {
+    const result = await dispatcher.dispatchMediaOutbox();
+    passes++;
+    deferred += result.deferred;
+    inspected += result.dispatched + result.deferred;
+    if (result.dispatched > 0 || result.deferred === 0)
+      return { dispatched: result.dispatched, deferred, passes, dueAtStart };
+  }
+  return { dispatched: 0, deferred, passes, dueAtStart };
 }

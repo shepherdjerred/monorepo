@@ -12,14 +12,6 @@ import { sealSeriesPackCompensationV1 } from "./compensated.ts";
 import { rollbackPublishedSeriesPackV1 } from "./rollback.ts";
 import type { MediaAttemptOperation } from "#shared/automation.ts";
 
-export type SeriesPackPublicationActivityNameV1 =
-  | "prepareSeriesPackMembersPublicationV1"
-  | "sealSeriesPackPublicationIntentV1"
-  | "publishSeriesPackMembersV1"
-  | "sealSeriesPackPublicationOutcomeV1"
-  | "compensateSeriesPackMembersV1"
-  | "sealSeriesPackCompensationV1";
-
 function publicationFailure(error: unknown) {
   if (error instanceof FileGuardError)
     return {

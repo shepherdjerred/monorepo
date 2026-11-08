@@ -50,6 +50,3 @@ export const MovieRollbackRetryPlaybackV1Schema = z
         )
     );
   }, "Automatic rollback retry playback must preserve its actual original SDK/writer clock");
-export type MovieRollbackRetryPlaybackV1 = z.infer<
-  typeof MovieRollbackRetryPlaybackV1Schema
->;

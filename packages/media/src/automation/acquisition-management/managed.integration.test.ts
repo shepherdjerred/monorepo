@@ -354,9 +354,11 @@ test("file publication consumes the caller's remaining provenance allowance with
       access: await f.context.plexAccess("show"),
     },
   });
-  await expect(physical.promoteMediaFiles(command)).rejects.toThrow(
-    "100 total queried records",
-  );
+  expect(await physical.promoteMediaFiles(command)).toEqual({
+    status: "blocked",
+    reason: "archive_transition_reconciliation_required",
+  });
+  expect(() => budget.consume(0)).toThrow("100 total queried records");
   expect(
     createHash("sha256")
       .update(await readFile(f.target))

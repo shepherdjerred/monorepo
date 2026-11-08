@@ -1,14 +1,18 @@
+import { createMediaActivityTestWorker } from "#activities/media/testing/activity-workers.ts";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { Worker } from "@temporalio/worker";
+import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import { expect, test } from "vitest";
 import { createMovieReplacementRoleFixture } from "@shepherdjerred/media/testing/movie-subtitle-replacement-workflow";
 import type { SubtitleReplacementInput } from "@shepherdjerred/media/subtitle-replacement";
 import { callMovieSubtitleReplacementV2 } from "./subtitle-replacement.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  mediaWorkflowWorkerScript,
+  createMovieRoleEnvironment,
+  closeMovieRoleFixture as closeRole,
   pinnedMovieRuntimes,
   startMovieWorkflowWorker,
 } from "#activities/media/testing/role-worker.ts";
@@ -21,8 +25,7 @@ async function startRoles(
   scenario: Scenario,
   roles: { workers: Worker[]; running: Promise<void>[] },
 ) {
-  const network = await Worker.create({
-    connection: environment.nativeConnection,
+  const network = await createMediaActivityTestWorker(environment, {
     namespace: "dev",
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {
@@ -34,8 +37,7 @@ async function startRoles(
   roles.running.push(network.run());
   const load = () =>
     Promise.resolve({ movieReplacement: scenario.movieReplacement });
-  const files = await Worker.create({
-    connection: environment.nativeConnection,
+  const files = await createMediaActivityTestWorker(environment, {
     namespace: "dev",
     taskQueue: TASK_QUEUES.MEDIA_FILES,
     activities: {
@@ -59,47 +61,12 @@ async function startRoles(
   roles.running.push(files.run());
 }
 
-async function closeRole(input: {
-  workers: Worker[];
-  running: Promise<void>[];
-  workflow: Bun.Subprocess | undefined;
-  fixture: Scenario | undefined;
-  environment: TestWorkflowEnvironment;
-  directory: string;
-}) {
-  try {
-    try {
-      for (const worker of input.workers) worker.shutdown();
-      await Promise.all(input.running);
-    } finally {
-      if (input.workflow !== undefined) {
-        input.workflow.kill("SIGTERM");
-        await input.workflow.exited;
-      }
-    }
-  } finally {
-    try {
-      await input.fixture?.close();
-    } finally {
-      await input.environment.teardown();
-      await rm(input.directory, { recursive: true, force: true });
-    }
-  }
-}
-
 test("native named caption preparation, interrupted Files swap and owner recovery preserve exact authority and replay all histories", async () => {
   const { temporal, node } = pinnedMovieRuntimes();
   const directory = await mkdtemp(
     path.join(tmpdir(), "media-movie-caption-replacement-role-"),
   );
-  const environment = await TestWorkflowEnvironment.createLocal({
-    server: {
-      executable: { type: "existing-path", path: temporal },
-      ip: "127.0.0.1",
-      namespace: "dev",
-      ui: false,
-    },
-  });
+  const environment = await createMovieRoleEnvironment(temporal);
   let fixture: Scenario | undefined;
   let workflow: Bun.Subprocess | undefined;
   const workers: Worker[] = [];
@@ -122,10 +89,7 @@ test("native named caption preparation, interrupted Files swap and owner recover
       return { runId: actual.runId, status: actual.status.name };
     });
     const scenario = fixture;
-    const script = new URL(
-      "../../../../scripts/media-system/workflow-worker.ts",
-      import.meta.url,
-    ).pathname;
+    const script = mediaWorkflowWorkerScript;
     const childEnvironment = { PATH: Bun.env["PATH"] ?? "/usr/bin:/bin" };
     workflow = await startMovieWorkflowWorker({
       node,
