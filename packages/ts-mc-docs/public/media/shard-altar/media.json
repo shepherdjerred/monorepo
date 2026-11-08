@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "shard-altar",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/shard-altar/original.webp",
+  "poster": "/media/shard-altar/poster.webp",
+  "alt": "The emerald altar inside the preserved spawn windmill.",
+  "caption": "Right-click the windmill's emerald block while holding your gear.",
+  "annotations": []
+}

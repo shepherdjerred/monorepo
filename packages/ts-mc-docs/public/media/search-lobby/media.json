@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "search-lobby",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/search-lobby/original.webp",
+  "poster": "/media/search-lobby/poster.webp",
+  "alt": "The copied live RWF lobby contains the authored waiting room and kit displays.",
+  "caption": "Join Search and Destroy to enter its lobby and choose your kit.",
+  "annotations": []
+}

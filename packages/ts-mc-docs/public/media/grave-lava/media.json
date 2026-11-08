@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "grave-lava",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/grave-lava/original.webp",
+  "poster": "/media/grave-lava/poster.webp",
+  "alt": "An actual lava death places the player's recoverable grave at their last safe position beside the lava pit.",
+  "caption": "After a lava death, check /graves and return to your last safe position to collect your belongings.",
+  "annotations": []
+}

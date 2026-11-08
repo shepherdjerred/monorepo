@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "quest-completion-reward",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/quest-completion-reward/original.webp",
   "poster": "/media/quest-completion-reward/poster.webp",
-  "alt": "The completed blacksmith quest pays 750 crystals; the balance rises from 500 to 1,250.",
-  "caption": "The completed blacksmith quest pays 750 crystals; the balance rises from 500 to 1,250.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.65, 0.67],
-      "to": [0.18, 0.84],
-      "text": "750 crystals earned",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "alt": "Completing Thomas's actual material deliveries pays 750 crystals and updates the wallet.",
+  "caption": "Finish every delivery to receive the quest's reward.",
+  "annotations": []
 }

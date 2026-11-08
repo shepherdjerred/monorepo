@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "java-multiplayer-list",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/java-multiplayer-list/original.webp",
+  "poster": "/media/java-multiplayer-list/poster.webp",
+  "alt": "The Java multiplayer screen lists The Storm and shows a successful ping to the actual demo server.",
+  "caption": "Add The Storm in Java Edition's multiplayer screen, then select its entry to connect.",
+  "annotations": []
+}

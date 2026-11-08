@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "spawn-town",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/spawn-town/original.webp",
+  "poster": "/media/spawn-town/poster.webp",
+  "alt": "The path by the windmill overlooks the preserved wheat fields and Spawn Town.",
+  "caption": "Explore the original roads, fields, and buildings around Spawn Town.",
+  "annotations": []
+}

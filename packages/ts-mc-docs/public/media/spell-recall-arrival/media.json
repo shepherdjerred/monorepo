@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "spell-recall-arrival",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/spell-recall-arrival/original.webp",
   "poster": "/media/spell-recall-arrival/poster.webp",
-  "alt": "Recall returns to the recorded Mark and consumes the remaining 15 redstone.",
+  "alt": "Recall returns the player to the recorded Mark after spending the remaining redstone.",
   "caption": "Recall returns to the recorded Mark and consumes the remaining 15 redstone.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.6, 0.77],
-      "to": [0.45, 0.95],
-      "text": "Recall focus",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

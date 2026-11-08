@@ -2,11 +2,11 @@
   "schema": 1,
   "name": "rwf-spectator-view",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/rwf-spectator-view/original.webp",
   "poster": "/media/rwf-spectator-view/poster.webp",
-  "alt": "The spectator overlook keeps you outside the fight; this view shows Valley of Death between rounds.",
-  "caption": "The spectator overlook keeps you outside the fight; this view shows Valley of Death between rounds.",
+  "alt": "A genuine spectator watches Valley of Death from its authored overview point.",
+  "caption": "Leave the match and use /rwf spectate to watch from the spectator view.",
   "annotations": []
 }

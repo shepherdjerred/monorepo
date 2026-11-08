@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "worlds-menu",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/worlds-menu/original.webp",
+  "poster": "/media/worlds-menu/poster.webp",
+  "alt": "The Travel menu offers Frontier, Skylands, and Main Map 2.",
+  "caption": "Use /worlds to choose an available world, and /spawn to return to main spawn.",
+  "annotations": []
+}

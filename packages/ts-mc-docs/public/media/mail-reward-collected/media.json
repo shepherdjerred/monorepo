@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "mail-reward-collected",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/mail-reward-collected/original.webp",
   "poster": "/media/mail-reward-collected/poster.webp",
-  "alt": "The selected delivery is collected into the inventory; make room before claiming large deliveries.",
-  "caption": "The selected delivery is collected into the inventory; make room before claiming large deliveries.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.68, 0.64],
-      "to": [0.2, 0.83],
-      "text": "Collected",
-      "startMs": 0,
-      "endMs": 15000
-    }
-  ]
+  "alt": "The mailbox has no pending reward deliveries after the selected eight iron ingots reach the player's hotbar.",
+  "caption": "The selected delivery is saved into your inventory; make room before claiming large deliveries.",
+  "annotations": []
 }

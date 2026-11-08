@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "spell-mark-info",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/spell-mark-info/original.webp",
+  "poster": "/media/spell-mark-info/poster.webp",
+  "alt": "The Mark spell information lists its tier, reagents, and cooldown.",
+  "caption": "Use /spells info mark to check the requirements before binding a focus.",
+  "annotations": []
+}

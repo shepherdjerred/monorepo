@@ -2,8 +2,8 @@
   "schema": 1,
   "name": "chat-channels",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/chat-channels/original.webp",
   "poster": "/media/chat-channels/poster.webp",
   "alt": "The channel list shows which conversations are visible and where you are speaking.",
@@ -12,7 +12,7 @@
     {
       "kind": "arrow",
       "from": [0.65, 0.68],
-      "to": [0.2, 0.79],
+      "to": [0.25, 0.625],
       "text": "Selected channel",
       "startMs": 0,
       "endMs": 12000

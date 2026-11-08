@@ -6,24 +6,24 @@
   "height": 720,
   "src": "/media/rwf-defuse-demo/clip.mp4",
   "poster": "/media/rwf-defuse-demo/poster.webp",
-  "alt": "Defusing an armed team bomb with the real Bomb Fuse.",
-  "caption": "Keep right-clicking your own armed bomb until the defuse completes; a long pause resets progress.",
+  "alt": "The Blue Team player repeatedly right-clicks with a genuine fuse until the actual armed bomb is defused.",
+  "caption": "Keep using your fuse on your team's armed bomb until the defuse finishes.",
   "annotations": [
     {
       "kind": "arrow",
-      "from": [0.04, 0.14],
-      "to": [0.49, 0.46],
-      "text": "Keep right-clicking",
-      "startMs": 0,
-      "endMs": 9333
+      "from": [0.08, 0.22],
+      "to": [0.5, 0.065],
+      "text": "Keep clicking to fill the bar",
+      "startMs": 67,
+      "endMs": 8567
     },
     {
       "kind": "label",
-      "from": [0.65, 0.14],
-      "to": [0.65, 0.14],
-      "text": "Defused",
-      "startMs": 9333,
-      "endMs": 13000
+      "from": [0.08, 0.22],
+      "to": [0.08, 0.22],
+      "text": "Defused: your bomb is safe",
+      "startMs": 9400,
+      "endMs": 11400
     }
   ]
 }

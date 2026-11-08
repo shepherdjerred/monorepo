@@ -2,8 +2,8 @@
   "schema": 1,
   "name": "bank-unmatched",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/bank-unmatched/original.webp",
   "poster": "/media/bank-unmatched/poster.webp",
   "alt": "Four spruce logs remain in the deposit bank after the matching items moved",
@@ -12,7 +12,7 @@
     {
       "kind": "arrow",
       "from": [0.23, 0.23],
-      "to": [0.445, 0.34],
+      "to": [0.415, 0.26],
       "text": "Unmatched logs stay here",
       "startMs": 0,
       "endMs": 12000

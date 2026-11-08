@@ -14,16 +14,16 @@
       "from": [0.65, 0.28],
       "to": [0.5, 0.5],
       "text": "Upper stop",
-      "startMs": 233,
-      "endMs": 2033
+      "startMs": 367,
+      "endMs": 2167
     },
     {
       "kind": "arrow",
       "from": [0.65, 0.28],
       "to": [0.5, 0.5],
       "text": "Back at ground",
-      "startMs": 2433,
-      "endMs": 4233
+      "startMs": 2733,
+      "endMs": 4533
     }
   ]
 }

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "historic-market-shop",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/historic-market-shop/original.webp",
+  "poster": "/media/historic-market-shop/poster.webp",
+  "alt": "A preserved player-built market shop retains its original sign on the copied live map.",
+  "caption": "The old market preserves player-built shops from the server's history.",
+  "annotations": []
+}

@@ -9,7 +9,7 @@ Keep a chest shop stocked and funded so customers can complete the trades on its
 
 See [Player shops](/trading/shops/) for the sign format and trade directions. Put the items you sell in the attached container. To buy items from customers, leave room in the container and keep enough crystals in your balance. Use `/shop info` while looking at the shop to inspect it. Break and replace the sign to change its offer.
 
-<div><storm-media data-manifest="/media/shop-stock/media.json"><figure><img alt="The shop trades the matching items stored in its container." src="/media/shop-stock/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The shop trades the matching items stored in its container.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/shop-stock/media.json"><figure><img alt="A barrel holds sixty-four oak planks available for shop trades" src="/media/shop-stock/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>The shop trades the matching items stored in its container.</figcaption></figure></storm-media></div>
 <p><a href="/media/shop-stock/annotated.webp" download>Download annotated image</a></p>
 
 Use `/shop` to check how many chest shops you own and your limit. Shopkeeper levels I through V allow 5, 10, 20, 35, and 50 shops respectively.

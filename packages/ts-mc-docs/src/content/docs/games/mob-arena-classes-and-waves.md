@@ -11,7 +11,7 @@ Archer, Madman, Guardian, Healer, Wolfmaster, Tank, Knight, Oddjob, and Chemist 
 
 ![Class signs and the iron ready block in the Colosseum lobby.](/screenshots/mob-arena-classes.webp)
 
-<div><storm-media data-manifest="/media/mob-arena-knight-kit/media.json"><figure><img alt="The Knight's arena armor, shield, sword, and supplies" src="/media/mob-arena-knight-kit/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Choosing Knight equips its arena armor and weapons; your survival belongings return when you leave.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/mob-arena-knight-kit/media.json"><figure><img alt="The actual starter Knight kit appears in the player&apos;s arena inventory." src="/media/mob-arena-knight-kit/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Knight starts with close-range equipment; arena gear stays inside the arena.</figcaption></figure></storm-media></div>
 
 ## Survive the waves
 

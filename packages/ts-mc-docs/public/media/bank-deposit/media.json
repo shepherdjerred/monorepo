@@ -2,8 +2,8 @@
   "schema": 1,
   "name": "bank-deposit",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/bank-deposit/original.webp",
   "poster": "/media/bank-deposit/poster.webp",
   "alt": "Cobblestone, oak planks, and spruce logs placed in the deposit bank",
@@ -12,7 +12,7 @@
     {
       "kind": "arrow",
       "from": [0.23, 0.23],
-      "to": [0.42, 0.34],
+      "to": [0.373, 0.26],
       "text": "Deposit all three types",
       "startMs": 0,
       "endMs": 12000

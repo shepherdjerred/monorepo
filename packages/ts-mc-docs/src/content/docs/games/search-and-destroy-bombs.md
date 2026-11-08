@@ -18,18 +18,18 @@ the same bomb, including you, takes one second off, and some kits carry a fuse b
 clicking for more than three quarters of a second and the progress resets.
 The last living player on a team arms instantly.
 
-<div><storm-media data-manifest="/media/rwf-bomb-fuse/media.json"><figure><img alt="The real Bomb Fuse item and its instructions in the round inventory" src="/media/rwf-bomb-fuse/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>Every kit carries the Bomb Fuse; hold it to arm enemy bombs and defuse your own.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/rwf-bomb-fuse/media.json"><figure><img alt="The genuine Bomb Fuse item appears in the player&apos;s actual match inventory." src="/media/rwf-bomb-fuse/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Hold your Bomb Fuse to arm an enemy bomb or defuse your own armed bomb.</figcaption></figure></storm-media></div>
 
-<div><storm-media data-manifest="/media/rwf-defuse-demo/media.json"><figure><video controls muted playsinline preload="metadata" poster="/media/rwf-defuse-demo/poster.webp" aria-label="Defusing an armed team bomb with the real Bomb Fuse" src="/media/rwf-defuse-demo/clip.mp4" width="1280" height="720"></video><figcaption>Keep right-clicking your own armed bomb until the defuse completes; a long pause resets progress.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/rwf-defuse-demo/media.json"><figure><video controls muted playsinline preload="metadata" poster="/media/rwf-defuse-demo/poster.webp" aria-label="The Blue Team player repeatedly right-clicks with a genuine fuse until the actual armed bomb is defused." src="/media/rwf-defuse-demo/clip.mp4" width="1280" height="720"></video><figcaption>Keep using your fuse on your team&apos;s armed bomb until the defuse finishes.</figcaption></figure></storm-media></div>
 
 <details>
 <summary>Compare safe, armed, and defused bombs</summary>
 
-<div><storm-media data-manifest="/media/rwf-bomb-safe/media.json"><figure><img alt="An unarmed Red Team bomb on A Miner Dispute" src="/media/rwf-bomb-safe/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>An unarmed team bomb is safe; only an enemy can arm it with the Bomb Fuse.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/rwf-bomb-safe/media.json"><figure><img alt="Blue Team&apos;s real TNT bomb is safe before an enemy starts arming it." src="/media/rwf-bomb-safe/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>A safe team bomb appears as TNT at its authored site.</figcaption></figure></storm-media></div>
 
-<div><storm-media data-manifest="/media/rwf-bomb-armed/media.json"><figure><img alt="The armed Red Team bomb and its countdown" src="/media/rwf-bomb-armed/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>The armed Red Team bomb shows its countdown; defend and defuse your own bomb with the fuse.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/rwf-bomb-armed/media.json"><figure><img alt="A Red Team player has armed Blue Team&apos;s bomb through ordinary fuse interaction." src="/media/rwf-bomb-armed/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>An armed bomb becomes primed TNT with a visible countdown.</figcaption></figure></storm-media></div>
 
-<div><storm-media data-manifest="/media/rwf-bomb-defused/media.json"><figure><img alt="The Red Team bomb returns to its safe state after defusing" src="/media/rwf-bomb-defused/original.webp" width="2560" height="1440" loading="lazy" decoding="async"><figcaption>After a successful defuse, the bomb returns to its safe state.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/rwf-bomb-defused/media.json"><figure><img alt="The defuse announcement and restored TNT block confirm the real bomb is safe again." src="/media/rwf-bomb-defused/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>A successful defuse restores the bomb and announces the result to the match.</figcaption></figure></storm-media></div>
 
 </details>
 

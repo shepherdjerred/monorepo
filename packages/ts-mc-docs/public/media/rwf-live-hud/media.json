@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "rwf-live-hud",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/rwf-live-hud/original.webp",
   "poster": "/media/rwf-live-hud/poster.webp",
-  "alt": "The live round HUD shows each team’s surviving players and bomb status.",
-  "caption": "The live round HUD shows your team, surviving players, and bomb state.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.64, 0.21],
-      "to": [0.91, 0.44],
-      "text": "Team and bomb state",
-      "startMs": 0,
-      "endMs": 15000
-    }
-  ]
+  "alt": "The live Valley of Death round displays the actual Blue Team inventory and match HUD.",
+  "caption": "Your team and the match state appear in the live round HUD.",
+  "annotations": []
 }

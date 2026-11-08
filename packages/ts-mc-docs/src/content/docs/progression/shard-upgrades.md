@@ -11,9 +11,11 @@ Use Storm Shards at the spawn windmill during rain to add Storm tiers to support
 
 ![The emerald block set into the floor inside the spawn windmill is the shard altar.](/screenshots/shard-altar.webp)
 
-<div><storm-media data-manifest="/media/storm-upgrade-before/media.json"><figure><img src="/media/storm-upgrade-before/original.webp" width="2560" height="1440" loading="lazy" alt="Hold eligible equipment and right-click an authored emerald-block altar in the rain." /><figcaption>Hold eligible equipment and right-click an authored emerald-block altar in the rain. <a href="/media/storm-upgrade-before/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/storm-upgrade-before/media.json"><figure><img alt="The diamond sword has no Storm upgrade before the altar interaction." src="/media/storm-upgrade-before/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Hold eligible gear and bring a shard to the windmill altar while it rains.</figcaption></figure></storm-media></div>
+<p><a href="/media/storm-upgrade-before/annotated.webp" download>Download annotated image</a></p>
 
-<div><storm-media data-manifest="/media/storm-upgrade-after/media.json"><figure><img src="/media/storm-upgrade-after/original.webp" width="2560" height="1440" loading="lazy" alt="The successful first upgrade adds Storm I lore and consumes exactly one Storm Shard." /><figcaption>The successful first upgrade adds Storm I lore and consumes exactly one Storm Shard. <a href="/media/storm-upgrade-after/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/storm-upgrade-after/media.json"><figure><img alt="The sword&apos;s actual lore now shows Storm I after consuming one shard." src="/media/storm-upgrade-after/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>The first upgrade consumes one shard and adds Storm I to the gear.</figcaption></figure></storm-media></div>
+<p><a href="/media/storm-upgrade-after/annotated.webp" download>Download annotated image</a></p>
 
 | Tier attempted | Shards per attempt | Failure chance |
 | -------------- | ------------------ | -------------- |

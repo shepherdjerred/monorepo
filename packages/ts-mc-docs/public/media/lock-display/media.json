@@ -2,8 +2,8 @@
   "schema": 1,
   "name": "lock-display",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/lock-display/original.webp",
   "poster": "/media/lock-display/poster.webp",
   "alt": "A display lock lets visitors look without moving items.",
@@ -12,7 +12,7 @@
     {
       "kind": "arrow",
       "from": [0.59, 0.65],
-      "to": [0.32, 0.84],
+      "to": [0.31, 0.815],
       "text": "Look only",
       "startMs": 0,
       "endMs": 12000

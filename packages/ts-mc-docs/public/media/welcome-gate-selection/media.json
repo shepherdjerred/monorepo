@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "welcome-gate-selection",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/welcome-gate-selection/original.webp",
+  "poster": "/media/welcome-gate-selection/poster.webp",
+  "alt": "The welcome gate's actual sign interaction selects Skylands.",
+  "caption": "Right-click the gate sign to select a world, then press its button.",
+  "annotations": []
+}

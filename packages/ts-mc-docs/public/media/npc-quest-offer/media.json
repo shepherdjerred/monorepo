@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "npc-quest-offer",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/npc-quest-offer/original.webp",
+  "poster": "/media/npc-quest-offer/poster.webp",
+  "alt": "Thomas offers A Blacksmith's Task in an actual NPC conversation.",
+  "caption": "Talk to Thomas at the forge and choose Accept to start his quest.",
+  "annotations": []
+}

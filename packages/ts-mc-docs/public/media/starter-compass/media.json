@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "starter-compass",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/starter-compass/original.webp",
   "poster": "/media/starter-compass/poster.webp",
-  "alt": "Right-click the starter compass to choose a biome for a wilderness trip.",
+  "alt": "The genuine starter compass opens the server's biome chooser.",
   "caption": "Right-click the starter compass to choose a biome for a wilderness trip.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.74, 0.24],
-      "to": [0.62, 0.54],
-      "text": "Choose a biome",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "sorting-settings",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/sorting-settings/original.webp",
+  "poster": "/media/sorting-settings/poster.webp",
+  "alt": "The Sorting menu shows the available automatic sorting and hotkey preferences.",
+  "caption": "Use /sort to choose which sorting shortcuts and automatic actions are enabled.",
+  "annotations": []
+}

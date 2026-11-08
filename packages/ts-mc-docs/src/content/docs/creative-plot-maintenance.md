@@ -13,7 +13,8 @@ Stand on your plot and use `/creative floor sand`, `/creative wall quartz`, or `
 
 Stand on a plot you own and use `/creative merge 2;1` to join it to a plot at `2;1` that you also own. They must share a side, not just a corner. The road between them stays, and you can build on it.
 
-<div><storm-media data-manifest="/media/creative-merged-plots/media.json"><figure><img src="/media/creative-merged-plots/original.webp" width="2560" height="1440" loading="lazy" alt="Merge neighboring plots you own; their road remains in place." /><figcaption>Merge neighboring plots you own; their road remains in place. <a href="/media/creative-merged-plots/annotated.webp">Download annotated image</a>.</figcaption></figure></storm-media></div>
+<div><storm-media data-manifest="/media/creative-merged-plots/media.json"><figure><img alt="The player&apos;s two neighboring Creative plots are joined through the ordinary merge command." src="/media/creative-merged-plots/original.webp" width="1280" height="720" loading="lazy" decoding="async"><figcaption>Claim both neighboring plots, then use /creative merge with the adjacent plot ID.</figcaption></figure></storm-media></div>
+<p><a href="/media/creative-merged-plots/annotated.webp" download>Download annotated image</a></p>
 
 Use `/creative unlink` once the road between them matches the template again. Each plot keeps its own name, description, floor, wall, and biome. Members, the deny list, and flags are copied onto each plot.
 

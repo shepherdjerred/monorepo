@@ -2,20 +2,11 @@
   "schema": 1,
   "name": "spell-mark-cast",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/spell-mark-cast/original.webp",
   "poster": "/media/spell-mark-cast/poster.webp",
-  "alt": "Mark records this location and consumes 15 redstone and 15 lapis lazuli.",
+  "alt": "Mark records the current position and spends its required reagents.",
   "caption": "Mark records this location and consumes 15 redstone and 15 lapis lazuli.",
-  "annotations": [
-    {
-      "kind": "arrow",
-      "from": [0.63, 0.65],
-      "to": [0.23, 0.84],
-      "text": "Saved location",
-      "startMs": 0,
-      "endMs": 12000
-    }
-  ]
+  "annotations": []
 }

@@ -2,8 +2,8 @@
   "schema": 1,
   "name": "lock-trusted",
   "kind": "image",
-  "width": 2560,
-  "height": 1440,
+  "width": 1280,
+  "height": 720,
   "src": "/media/lock-trusted/original.webp",
   "poster": "/media/lock-trusted/poster.webp",
   "alt": "Lock information lists TsmcDemoHelper with manage access",
@@ -12,7 +12,7 @@
     {
       "kind": "arrow",
       "from": [0.59, 0.65],
-      "to": [0.26, 0.84],
+      "to": [0.055, 0.815],
       "text": "Manage access",
       "startMs": 0,
       "endMs": 12000

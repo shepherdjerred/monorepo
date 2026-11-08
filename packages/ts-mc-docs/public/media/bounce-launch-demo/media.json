@@ -6,24 +6,24 @@
   "height": 720,
   "src": "/media/bounce-launch-demo/clip.mp4",
   "poster": "/media/bounce-launch-demo/poster.webp",
-  "alt": "The real player rises and lands after a Bounce piston receives power.",
-  "caption": "A three-second first-person Bounce launch and landing; landing can cause fall damage.",
+  "alt": "A real redstone pulse activates the Bounce piston and launches the second player upward.",
+  "caption": "Powering the piston launches entities in front of its head.",
   "annotations": [
     {
       "kind": "label",
-      "from": [0.69, 0.22],
-      "to": [0.69, 0.22],
-      "text": "Launch",
-      "startMs": 300,
-      "endMs": 1500
+      "from": [0.08, 0.12],
+      "to": [0.08, 0.12],
+      "text": "Redstone pulse → launch",
+      "startMs": 67,
+      "endMs": 1367
     },
     {
       "kind": "label",
-      "from": [0.69, 0.22],
-      "to": [0.69, 0.22],
-      "text": "Landing",
-      "startMs": 2000,
-      "endMs": 3000
+      "from": [0.08, 0.12],
+      "to": [0.08, 0.12],
+      "text": "The player rises, then falls",
+      "startMs": 1367,
+      "endMs": 3567
     }
   ]
 }

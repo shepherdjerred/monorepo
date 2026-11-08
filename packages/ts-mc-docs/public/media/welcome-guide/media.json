@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "welcome-guide",
+  "kind": "image",
+  "width": 1280,
+  "height": 720,
+  "src": "/media/welcome-guide/original.webp",
+  "poster": "/media/welcome-guide/poster.webp",
+  "alt": "The Storm's welcome book explains the first steps on the server.",
+  "caption": "Use /guide to reopen the welcome book.",
+  "annotations": []
+}
