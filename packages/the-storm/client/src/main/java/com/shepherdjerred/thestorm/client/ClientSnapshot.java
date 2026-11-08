@@ -40,10 +40,12 @@ final class ClientSnapshot {
     }
     return Map.ofEntries(
         Map.entry("connected", true),
+        Map.entry("clientLoaded", requireNonNull(client.getConnection()).hasClientLoaded()),
         Map.entry("renderedFrames", RenderCapture.renderedFrames()),
         Map.entry(
             "terrainReady",
-            terrainLoaded(client)
+            requireNonNull(client.getConnection()).hasClientLoaded()
+                && terrainLoaded(client)
                 && client.levelRenderer.hasRenderedAllSections()
                 && terrainVisible(client)),
         Map.entry("chunkStats", client.level.gatherChunkSourceStats()),

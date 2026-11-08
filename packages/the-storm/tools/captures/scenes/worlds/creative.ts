@@ -80,6 +80,8 @@ export default defineCaptureScene({
       (s) =>
         s.connected &&
         s.world === "minecraft:creative" &&
+        s["terrainReady"] === true &&
+        s.screen === "" &&
         Math.abs(s.position[1] - 66) < 0.2,
     );
     await helper.action("hotbar", { slot: 0 });

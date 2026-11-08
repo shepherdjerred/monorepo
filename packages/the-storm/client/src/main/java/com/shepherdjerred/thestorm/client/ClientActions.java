@@ -470,6 +470,8 @@ final class ClientActions {
     if (!recovery) Protocol.keys(request.arguments(), Set.of());
     if (client.gui.screen() != null)
       throw new IllegalStateException("Close the screen to interact");
+    if (!java.util.Objects.requireNonNull(client.getConnection()).hasClientLoaded())
+      throw new IllegalStateException("Wait for the world loading handshake before interacting");
     var player = java.util.Objects.requireNonNull(client.player);
     var mode = java.util.Objects.requireNonNull(client.gameMode);
     var hit = client.hitResult;

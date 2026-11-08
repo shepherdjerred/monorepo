@@ -257,6 +257,8 @@ the private `messages` history remains available for assertions. The isolated
 camera profile uses a larger interface scale. Scene screenshots wait for fresh
 rendered frames and a completed hand swing, and aimed interactions wait for a
 fresh raycast. Sneaking interactions wait for the player's crouching pose.
+Terrain readiness includes Minecraft's world loading handshake. Native use and
+attack actions refuse to predict an interaction before that handshake completes.
 
 ## Documentation capture
 

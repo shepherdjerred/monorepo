@@ -88,7 +88,8 @@ export default defineCaptureScene({
     await context.action("clear-overlays");
     await context.capture(presentation(shots, "welcome-stargate"));
     await waitClosed(context);
-    await control(context, [3, 75, 111], [3.5, 73, 113.5]);
+    // The button is within reach from the portal approach; stage before the clip.
+    await control(context, [3, 75, 111], [6.5, 73, 113.5]);
     await context.record(
       presentation(shots, "welcome-gate"),
       async () => {
@@ -96,7 +97,6 @@ export default defineCaptureScene({
           await context.use();
           await context.feedback("World gate open to Skylands.");
         });
-        await context.teleport([6.5, 73, 113.5], 180, 0);
         await context.lookAt([6.5, 75, 110.5]);
         await context.step("travel", async () => {
           // Stop walking at the world transition instead of carrying movement off the arrival island.
@@ -119,7 +119,7 @@ export default defineCaptureScene({
         });
         await context.lookAt([0, 82, 0]);
       },
-      4,
+      6,
     );
     await context.action("clear-overlays");
     const overlook: [number, number, number] = [15.5, 129, 30.5];
