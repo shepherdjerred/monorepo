@@ -50,14 +50,13 @@ final class EffectRunner {
         world.send(player, Notices.info(text));
         yield CompletableFuture.completedFuture(true);
       }
-      case Action.Teleport(var region) -> {
-        yield world.teleport(
-            player,
-            wiring
-                .content()
-                .region(region)
-                .orElseThrow(() -> new IllegalStateException("missing quest region: " + region)));
-      }
+      case Action.Teleport(var region) ->
+          world.teleport(
+              player,
+              wiring
+                  .content()
+                  .region(region)
+                  .orElseThrow(() -> new IllegalStateException("missing quest region: " + region)));
       case Action.Spawn spawn -> {
         world.spawn(
             player,

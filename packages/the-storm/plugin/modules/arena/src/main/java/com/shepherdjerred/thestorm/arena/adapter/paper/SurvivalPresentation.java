@@ -196,9 +196,7 @@ final class SurvivalPresentation {
         + " · "
         + switch (type) {
           case FOOD -> "3 bread for 2 emeralds";
-          case RUNEFORGE -> {
-            yield "select equipment · augment I–III";
-          }
+          case RUNEFORGE -> "select equipment · augment I–III";
           case STONEWARD, GALESTRIDE, EMBERWEAVE, SOULBOND -> {
             var perk =
                 com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.valueOf(type.name());

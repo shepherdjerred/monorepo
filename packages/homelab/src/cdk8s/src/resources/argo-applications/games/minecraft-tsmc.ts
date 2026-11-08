@@ -152,7 +152,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
     serviceAnnotations: {
-      // mc-router 1.47.2 ignores defaultServer when externalServerName is present.
+      // mc-router 1.55.0 ignores defaultServer when externalServerName is present.
       // The default handles both Storm hostnames and IP-based directory pings.
       "mc-router.itzg.me/defaultServer": "true",
       "mc-router.itzg.me/autoScaleDown": "false",

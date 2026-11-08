@@ -83,14 +83,13 @@ final class LobbySettings {
                     Math.max(0, config.match().maxCombatants() - runner.humans()));
             yield options.withCount(OptionalInt.of(count));
           }
-          case SettingsMenu.DIFFICULTY -> {
-            yield options.withDifficulty(
-                switch (options.difficulty()) {
-                  case EASY -> BotDifficulty.NORMAL;
-                  case NORMAL -> BotDifficulty.HARD;
-                  case HARD -> BotDifficulty.EASY;
-                });
-          }
+          case SettingsMenu.DIFFICULTY ->
+              options.withDifficulty(
+                  switch (options.difficulty()) {
+                    case EASY -> BotDifficulty.NORMAL;
+                    case NORMAL -> BotDifficulty.HARD;
+                    case HARD -> BotDifficulty.EASY;
+                  });
           default -> options;
         };
     if (!next.equals(options) && session.select(player.getUniqueId(), next)) {

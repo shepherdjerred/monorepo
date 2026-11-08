@@ -1,9 +1,9 @@
 {
   "paper": {
-    "version": "26.3-223",
-    "url": "https://fill-data.papermc.io/v1/objects/f8e684a4fef2a8b46d03aac049b49d59275e9ce5367dba7c6075cb5780f38470/paper-26.3-223.jar",
-    "sha256": "f8e684a4fef2a8b46d03aac049b49d59275e9ce5367dba7c6075cb5780f38470",
-    "file": "paper-26.3-223.jar"
+    "version": "26.3-244",
+    "url": "https://fill-data.papermc.io/v1/objects/9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf/paper-26.3-244.jar",
+    "sha256": "9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf",
+    "file": "paper-26.3-244.jar"
   },
   "paperDefaults": [
     {
@@ -30,17 +30,17 @@
   "plugins": [
     {
       "name": "GrimAC",
-      "version": "2.3.75-d8b8ae4",
-      "url": "https://cdn.modrinth.com/data/LJNGWSvH/versions/clrLeCYp/grimac-bukkit-2.3.75-d8b8ae4.jar",
-      "sha256": "9693c1d7ce3e1a4c4288966d6311a6a9f2c20cbf2b3e25462c8f6ecc36310403",
-      "file": "GrimAC-2.3.75-d8b8ae4.jar"
+      "version": "2.3.75-85d931f",
+      "url": "https://cdn.modrinth.com/data/LJNGWSvH/versions/j42l2u1k/grimac-bukkit-2.3.75-85d931f.jar",
+      "sha256": "48229d32fc65882a7a4573a63fbda9b175f7537ec79eddfd89d94cfc51fdcd15",
+      "file": "GrimAC-2.3.75-85d931f.jar"
     },
     {
       "name": "Citizens",
-      "version": "2.0.44-b4256",
-      "url": "https://ci.citizensnpcs.co/job/Citizens2/4256/artifact/dist/target/Citizens-2.0.44-b4256.jar",
-      "sha256": "d1f02151fd7c1ccd0b8d317249ea9cf60039711b4e3317bd6641a385878946c6",
-      "file": "Citizens-2.0.44-b4256.jar"
+      "version": "2.0.44-b4269",
+      "url": "https://ci.citizensnpcs.co/job/Citizens2/4269/artifact/dist/target/Citizens-2.0.44-b4269.jar",
+      "sha256": "e6b0a0e3346bd2cb982bcd3e1b628143629042e1a50479ae3c24858e2cacde22",
+      "file": "Citizens-2.0.44-b4269.jar"
     },
     {
       "name": "BlueMap",
@@ -51,10 +51,10 @@
     },
     {
       "name": "Chunky",
-      "version": "1.5.3",
-      "url": "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
-      "sha256": "530d2c7430a96a39957391b7088be144daa3108f7665896d1c23aa8dd4af32f3",
-      "file": "Chunky-1.5.3.jar"
+      "version": "1.5.66",
+      "url": "https://cdn.modrinth.com/data/fALzjamp/versions/selGpja4/Chunky-Bukkit-1.5.66.jar",
+      "sha256": "809aa579e201196d323fbb8cdc86e8f27c2734d53a2f10db18ac70d16199f16b",
+      "file": "Chunky-1.5.66.jar"
     },
     {
       "name": "CoreProtect",
@@ -72,10 +72,10 @@
     },
     {
       "name": "Geyser-Spigot",
-      "version": "2.12.0 build 1271",
-      "url": "https://download.geysermc.org/v2/projects/geyser/versions/2.12.0/builds/1271/downloads/spigot",
-      "sha256": "dd2ad0e4e79cedfce492c4e527a93adf4f9dfa93fc09ea05e6eaf18ac5ea079e",
-      "file": "Geyser-Spigot-2.12.0-b1271.jar"
+      "version": "2.12.1 build 1295",
+      "url": "https://download.geysermc.org/v2/projects/geyser/versions/2.12.1/builds/1295/downloads/spigot",
+      "sha256": "b60ff8f9a007f30823cf40173532a0390e6150cdfc577551f6f37bdd5ccd1528",
+      "file": "Geyser-Spigot-2.12.1-b1295.jar"
     },
     {
       "name": "LuckPerms",
@@ -86,24 +86,24 @@
     },
     {
       "name": "Multiverse-Core",
-      "version": "5.8.1",
-      "url": "https://cdn.modrinth.com/data/3wmN97b8/versions/YZ2Ji4IS/multiverse-core-5.8.1.jar",
-      "sha256": "bc3f34e2d747fdf024f44868747bb016b08fa11d98ccb4ffcac958f083151a83",
-      "file": "Multiverse-Core-5.8.1.jar"
+      "version": "5.8.2",
+      "url": "https://cdn.modrinth.com/data/3wmN97b8/versions/de7TbcZG/multiverse-core-5.8.2.jar",
+      "sha256": "792252b6bbcf17c94ab8385e595281c830d7a40c946aea1832d8a010702bb630",
+      "file": "Multiverse-Core-5.8.2.jar"
     },
     {
       "name": "ViaBackwards",
-      "version": "5.12.1",
-      "url": "https://cdn.modrinth.com/data/NpvuJQoq/versions/dWw67APC/ViaBackwards-5.12.1.jar",
-      "sha256": "dd72f7a459cbf1ea7862781dac92ed0ba738aa3cb3b7955e716ba379889d612a",
-      "file": "ViaBackwards-5.12.1.jar"
+      "version": "5.12.2",
+      "url": "https://cdn.modrinth.com/data/NpvuJQoq/versions/WFO37e8T/ViaBackwards-5.12.2.jar",
+      "sha256": "e989440e0aad7e12d4685d7a57df854691b67660966a95ec0450e20ce98e87ab",
+      "file": "ViaBackwards-5.12.2.jar"
     },
     {
       "name": "ViaVersion",
-      "version": "5.12.1",
-      "url": "https://cdn.modrinth.com/data/P1OZGk5p/versions/5WgnasGG/ViaVersion-5.12.1.jar",
-      "sha256": "551265afd892e78bb869162e08b4fdd151c518e245fce60af36b0603ad695d76",
-      "file": "ViaVersion-5.12.1.jar"
+      "version": "5.12.2",
+      "url": "https://cdn.modrinth.com/data/P1OZGk5p/versions/Fkfcr89K/ViaVersion-5.12.2.jar",
+      "sha256": "c0b63badcb0f7d38f4443e06820f2b8142dd4f0d3b0511f9330ff1050430e6b2",
+      "file": "ViaVersion-5.12.2.jar"
     },
     {
       "name": "WorldEdit",

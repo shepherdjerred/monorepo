@@ -3,6 +3,8 @@ import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/mis
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -20,10 +22,18 @@ import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homel
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const NAMESPACE = "minecraft-shuxin";
+const RCON_SECRET_NAME = "minecraft-shuxin-rcon";
 
 /** Objects the root renders beside the Application; the `minecraft-shuxin-companion` companion chart renders the same objects under transition rendering. */
 export function createMinecraftShuxinResources(chart: Chart): void {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
+  // The chart's own RCON secret would render a new random password on every
+  // ArgoCD refresh. Item minecraft-shuxin-rcon; required concealed field
+  // MINECRAFT_RCON_PASSWORD.
+  new OnePasswordItem(chart, "minecraft-shuxin-rcon-1p", {
+    spec: { itemPath: vaultItemPath("u2ziyueyhzqna5ig2tmbbr6pam") },
+    metadata: { name: RCON_SECRET_NAME, namespace: NAMESPACE },
+  });
   // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
   createMinecraftConfigMaps(chart, "shuxin", NAMESPACE);
 
@@ -158,7 +168,9 @@ export function createMinecraftShuxinApp(chart: Chart) {
       ],
       rcon: {
         enabled: true,
-        withGeneratedPassword: true,
+        withGeneratedPassword: false,
+        existingSecret: RCON_SECRET_NAME,
+        secretKey: "MINECRAFT_RCON_PASSWORD",
       },
     },
     persistence: {

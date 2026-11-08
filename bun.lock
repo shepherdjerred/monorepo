@@ -2489,7 +2489,7 @@
         "@typescript/native": "npm:typescript@7.0.2",
         "eslint": "^10.7.0",
         "jiti": "^2.7.0",
-        "minecraft-data": "3.117.0",
+        "minecraft-data": "3.119.0",
         "mineflayer": "4.39.0",
         "typescript": "^6.0.3",
         "vec3": "^0.1.7",
@@ -7247,7 +7247,7 @@
 
     "min-indent": ["min-indent@1.0.1", "", {}, "sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg=="],
 
-    "minecraft-data": ["minecraft-data@3.117.0", "", {}, "sha512-glKv0EEmVwKvJwdNAKAal2P7gi/nijU9rEMp8gJmqYYRVswS6hA0q9566lcGHH07Ocmpqw5bMRbARC25pR13gA=="],
+    "minecraft-data": ["minecraft-data@3.119.0", "", {}, "sha512-RElo0o2RooEzpeQO+QEHzTmHVTgOdbbomGQYBmWIaU1pupEmAItQb+LpJyL2EDXmpKicOU4swtBVzwIWae5l5g=="],
 
     "minecraft-folder-path": ["minecraft-folder-path@1.2.0", "", {}, "sha512-qaUSbKWoOsH9brn0JQuBhxNAzTDMwrOXorwuRxdJKKKDYvZhtml+6GVCUrY5HRiEsieBEjCUnhVpDuQiKsiFaw=="],
 

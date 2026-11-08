@@ -7,6 +7,7 @@ import {
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { getMinecraftDynmapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -27,6 +28,7 @@ import {
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const NAMESPACE = "minecraft-sjerred";
+const RCON_SECRET_NAME = "minecraft-sjerred-rcon";
 const DISCORD_SECRET_NAME = "minecraft-sjerred-discord";
 const CURSEFORGE_SECRET_NAME = "minecraft-sjerred-curseforge";
 const DATA_PVC_NAME = "minecraft-sjerred-rlcraft-data";
@@ -36,6 +38,13 @@ const DYNMAP_MOD_URL =
 /** Objects the root renders beside the Application; the `minecraft-sjerred-companion` companion chart renders the same objects under transition rendering. */
 export function createMinecraftSjerredResources(chart: Chart): void {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_566);
+  // The chart's own RCON secret would render a new random password on every
+  // ArgoCD refresh. Item minecraft-sjerred-rcon; required concealed field
+  // MINECRAFT_RCON_PASSWORD.
+  new OnePasswordItem(chart, "minecraft-sjerred-rcon-1p", {
+    spec: { itemPath: vaultItemPath("5xotqi2ojl7cgj67huxwwj66se") },
+    metadata: { name: RCON_SECRET_NAME, namespace: NAMESPACE },
+  });
   new KubePersistentVolumeClaim(chart, "minecraft-sjerred-rlcraft-data", {
     metadata: {
       name: DATA_PVC_NAME,
@@ -169,7 +178,9 @@ export function createMinecraftSjerredApp(chart: Chart) {
       extraPorts: [getMinecraftDynmapPort()],
       rcon: {
         enabled: true,
-        withGeneratedPassword: true,
+        withGeneratedPassword: false,
+        existingSecret: RCON_SECRET_NAME,
+        secretKey: "MINECRAFT_RCON_PASSWORD",
       },
     },
     persistence: {

@@ -362,11 +362,11 @@ describe("minecraft-tsmc image configuration", () => {
       },
       {
         name: "Geyser-Spigot",
-        version: "2.12.0 build 1271",
-        url: "https://download.geysermc.org/v2/projects/geyser/versions/2.12.0/builds/1271/downloads/spigot",
+        version: "2.12.1 build 1295",
+        url: "https://download.geysermc.org/v2/projects/geyser/versions/2.12.1/builds/1295/downloads/spigot",
         sha256:
-          "dd2ad0e4e79cedfce492c4e527a93adf4f9dfa93fc09ea05e6eaf18ac5ea079e",
-        file: "Geyser-Spigot-2.12.0-b1271.jar",
+          "b60ff8f9a007f30823cf40173532a0390e6150cdfc577551f6f37bdd5ccd1528",
+        file: "Geyser-Spigot-2.12.1-b1295.jar",
       },
     ]);
   });

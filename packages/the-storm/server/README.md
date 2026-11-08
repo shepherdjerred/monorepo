@@ -13,7 +13,7 @@ operational parameter overrides with the declared list; recording credentials
 remain supplied by the chart's `extraEnv` secret references.
 
 The Storm uses mc-router's default backend for `ts-mc.net`, `mc.ts-mc.net`,
-and status checks that send a resolved IP. The pinned mc-router 1.47.2 ignores
+and status checks that send a resolved IP. The pinned mc-router 1.55.0 ignores
 `defaultServer` when `externalServerName` is also present, so the Service must
 declare only the default annotation. Other servers retain their explicit
 hostname routes and take precedence. This keeps the default attached to the
@@ -363,7 +363,7 @@ backup. Do not combine an old plugin database with newer player data.
 Citizens publishes only mutable Maven snapshots; the runnable plugin jar exists
 only on Jenkins,
 `https://ci.citizensnpcs.co/job/Citizens2/<build>/artifact/dist/target/`.
-`plugins.json` pins build 4256 (`2.0.44-b4256`, 2026-09-26) by URL and sha256,
+`plugins.json` pins build 4269 (`2.0.44-b4269`, 2026-11-01) by URL and sha256,
 as does `tests/e2e/harness/pins.ts`. The plugin compiles against the same
 Jenkins jar: `plugin/gradle/libs.versions.toml` pins `citizens` to that build,
 `settings.gradle.kts` resolves it through an ivy repository, and

@@ -12,7 +12,7 @@
 # Gradle and Corretto majors match .mise.toml's gradle and java pins
 # (minecraft-tsmc.test.ts enforces the Gradle version). Renovate's Dockerfile
 # manager updates every FROM pin in this file.
-FROM gradle:9.7.1-jdk25-corretto@sha256:b65cce4c0be158a0ddb99e431d329d40c02f99c567e0fffdad52d3e44815aa16 AS plugin
+FROM gradle:9.8.2-jdk25-corretto@sha256:0818532dd91d330e96f2ef7807ec78a44de2ec0f718d83f927e3ea91d67c1960 AS plugin
 WORKDIR /src
 COPY plugin/ plugin/
 COPY public-status.json public-status.json
@@ -35,7 +35,7 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 ########################
 # Keep this digest equal to the version catalog's itzg/minecraft-server pin
 # (minecraft-tsmc.test.ts enforces it; renovate.json groups both into one PR).
-FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749 AS fetch
+FROM itzg/minecraft-server:2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776 AS fetch
 COPY server/plugins.json server/fetch.sh /build/
 RUN bash /build/fetch.sh /build/plugins.json /out
 COPY server/build-livemap.sh /build/
@@ -53,7 +53,7 @@ RUN java -Dpaperclip.patchonly=true -jar "$(jq -r .paper.file /build/plugins.jso
 ########################
 ## release image
 ########################
-FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749 AS release
+FROM itzg/minecraft-server:2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776 AS release
 COPY --from=fetch /out/paper/ /opt/paper/
 COPY --from=fetch /out/paper-defaults/ /opt/paper-defaults/
 COPY --from=fetch /out/plugins/ /plugins/
@@ -88,7 +88,7 @@ ENV TYPE=PAPER \
   VERSION=26.3 \
   CFG_PROXY_PROTOCOL=false \
   CFG_COREPROTECT_DONATION_KEY="" \
-  PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-223.jar \
+  PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-244.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
   JVM_OPTS="-Dpaper.maxChatCommandInputSize=4096 -Dchunky.maxWorkingCount=4 -Dchunky.awaitTicketRemoval=true" \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \

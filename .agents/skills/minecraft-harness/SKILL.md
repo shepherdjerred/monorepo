@@ -1,6 +1,6 @@
 ---
 name: minecraft-harness
-description: Drive disposable Minecraft (Paper 26.2) sandboxes through `toolkit mc` — run console commands, edit with WorldEdit, read exact block states, snapshot and restore regions, playtest with Citizens actors, and watch events and logs — and make guarded, journaled, undoable changes on live tsmc with `--target live`. Use to try out a plugin change, prototype a build, validate a gameplay idea, or apply an agreed change to The Storm.
+description: Drive disposable Minecraft (Paper 26.3) sandboxes through `toolkit mc` — run console commands, edit with WorldEdit, read exact block states, snapshot and restore regions, playtest with Citizens actors, and watch events and logs — and make guarded, journaled, undoable changes on live tsmc with `--target live`. Use to try out a plugin change, prototype a build, validate a gameplay idea, or apply an agreed change to The Storm.
 allowed-tools:
   - Bash
   - Read
@@ -8,9 +8,9 @@ allowed-tools:
 
 # Minecraft harness
 
-`toolkit mc` talks to the mc-harness daemon, which runs Paper 26.2 sandboxes
+`toolkit mc` talks to the mc-harness daemon, which runs Paper 26.3 sandboxes
 with WorldEdit and the repo's MCBridge plugin. Every world operation goes
-through MCBridge, so reads return exact 26.2 block states and WorldEdit runs as
+through MCBridge, so reads return exact 26.3 block states and WorldEdit runs as
 a named actor (`agent:<session>`) with its own undo history. Package detail:
 `packages/mc-harness/README.md`.
 
@@ -32,7 +32,7 @@ toolkit mc info                          # versions, worlds, plugins, capabiliti
 ```
 
 `sandbox up` prints the sandbox id and the game port, so a person can join with
-a 26.2 client at `127.0.0.1:<port>` (offline mode). With one sandbox running,
+a 26.3 client at `127.0.0.1:<port>` (offline mode). With one sandbox running,
 commands target it automatically; otherwise pass `--target <id>`.
 
 `--provider kubernetes` runs the sandbox as a pod in the cluster's `mc-sandbox`
