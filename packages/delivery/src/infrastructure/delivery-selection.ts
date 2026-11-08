@@ -1,4 +1,5 @@
 import { DeliveryError } from "#domain/error.ts";
+import { failedWithoutEffect } from "./execution/failure-effect.ts";
 import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
 import { lock, required, audit, wire } from "./delivery-records.ts";
@@ -55,9 +56,13 @@ async function reconcileEnvironment(
     },
     orderBy: { createdAt: "desc" },
   });
+  // D2: a failure blocks automatic successors, except one that provably
+  // changed nothing; that one blocks only its own set revision, as a
+  // cancellation does (automaticSelectionBlocked).
   if (
     last !== null &&
-    ["failed", "awaiting_approval", "running"].includes(last.status)
+    ["failed", "awaiting_approval", "running"].includes(last.status) &&
+    !(await failedWithoutEffect(this.database, last))
   )
     return null;
   const target = await automaticTarget(this.database, row);
@@ -265,6 +270,7 @@ export async function automaticSelectionBlocked(
   if (last === null) return false;
   switch (last.status) {
     case "canceled":
+    case "failed":
       return last.versionSetRevisionId === targetId;
     case "queued":
       return (

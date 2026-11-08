@@ -530,7 +530,12 @@ which releases them (D11).
 
 - D1. Request, audit event, and outbox submission commit in one transaction.
 - D2. A failed deployment blocks automatic successors in that environment
-  until an operator acts.
+  until an operator acts. A failure that provably changed
+  nothing is the exception: it is not recovery-required, every stage it
+  recorded is read-only work or an apply-safety step settled `failed` after
+  its body was restored, and one of them failed. It blocks only its own set
+  revision, as a cancellation does, so a newer one is selected automatically
+  (`src/infrastructure/execution/failure-effect.ts`).
 - D3. Automatic selection coalesces only queued, unapproved automatic
   requests. Cancellation, rejection, or an alarm (W2) suppresses that
   selection until a newer eligible set revision exists or an operator asks
