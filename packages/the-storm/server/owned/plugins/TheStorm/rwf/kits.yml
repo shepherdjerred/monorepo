@@ -26,7 +26,7 @@ kits:
   - id: trooper
     name: Trooper
     description: >-
-      The kit that sets the standards for all others. It receives a set of iron armor and an iron sword, along with three golden apples with which it can quickly recover from fights.
+      The kit that sets the standards for all others. It receives a set of iron armor and an iron sword, along with five golden apples with which it can quickly recover from fights.
     price: 0
     tier: BASIC
     category: CLASSIC
