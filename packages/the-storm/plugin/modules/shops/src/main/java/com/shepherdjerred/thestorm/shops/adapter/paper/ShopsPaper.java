@@ -198,7 +198,11 @@ public final class ShopsPaper {
     var parser = new ShopSignParser(settings.maxQuantity(), settings.adminShopLabel());
     var discovery =
         new WorldShopDiscovery(
-            context, blocks, state.store(), new WorldShopDiscovery.Parsing(parser, templates));
+            context,
+            blocks,
+            state.store(),
+            new WorldShopDiscovery.Parsing(
+                parser, templates, new ServerOffers(state.catalogs(), state.registry())));
     var protection = services.require(Protection.class);
     var events = server.getPluginManager();
     events.registerEvents(discovery, plugin);

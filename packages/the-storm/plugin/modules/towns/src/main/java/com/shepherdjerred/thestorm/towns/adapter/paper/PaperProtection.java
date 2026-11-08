@@ -258,23 +258,23 @@ final class PaperProtection implements Protection {
             : locks.mayBreak(check.player(), check.bypass(), halves);
     if (!opened
         || (opensContainer(check.action())
-            && !itemMoveAllowed(check.player(), check.action(), check.block()))) {
+            && halves.stream().anyMatch(block -> !itemMoveAllowed(check, block)))) {
       return new Verdict.Deny(new Denial.Locked());
     }
     return verdict;
   }
 
   /** Opening is already decided. Insert and remove also follow the lock's direction. */
-  private boolean itemMoveAllowed(UUID player, ProtectedAction action, Block block) {
-    if (action == ProtectedAction.OPEN_CONTAINER) {
+  private boolean itemMoveAllowed(ContainerCheck check, Block block) {
+    if (check.action() == ProtectedAction.OPEN_CONTAINER) {
       return true;
     }
-    var online = server.getPlayer(player);
-    if (online == null) {
-      return false;
-    }
-    var movement = locks.movement(online, block);
-    return action == ProtectedAction.INSERT_ITEM
+    var online = server.getPlayer(check.player());
+    var movement =
+        online == null
+            ? locks.movement(check.player(), check.bypass(), block)
+            : locks.movement(online, block);
+    return check.action() == ProtectedAction.INSERT_ITEM
         ? movement == LockAccess.Movement.FULL || movement == LockAccess.Movement.PUT
         : movement == LockAccess.Movement.FULL || movement == LockAccess.Movement.TAKE;
   }

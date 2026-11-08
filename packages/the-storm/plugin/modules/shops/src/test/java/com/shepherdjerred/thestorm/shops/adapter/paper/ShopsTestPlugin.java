@@ -94,6 +94,12 @@ public class ShopsTestPlugin extends JavaPlugin {
     return ((ReadyServerShops) services.require(ServerShops.class)).isReady();
   }
 
+  private @org.jspecify.annotations.Nullable ModuleContext moduleContext;
+
+  ModuleContext context() {
+    return Objects.requireNonNull(moduleContext, "module context");
+  }
+
   @Override
   public void onEnable() {
     var directory = Objects.requireNonNull(ShopsTestPlugin.directory, "directory");
@@ -159,6 +165,7 @@ public class ShopsTestPlugin extends JavaPlugin {
             RandomGenerator.getDefault(),
             getComponentLogger(),
             com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
+    moduleContext = context;
     new ShopsModule().enable(context);
   }
 

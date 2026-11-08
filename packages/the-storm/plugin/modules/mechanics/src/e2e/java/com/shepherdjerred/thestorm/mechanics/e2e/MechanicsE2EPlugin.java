@@ -56,7 +56,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     var database = StormDatabase.open(getDataPath().resolve("mechanics-e2e.db"));
     this.database = database;
     var services = new Services();
-    services.provide(Protection.class, new OpenProtection());
+    services.provide(Protection.class, new OpenProtection(productionProtection()));
     services.provide(
         com.shepherdjerred.thestorm.core.world.LoadedBlockEntities.class,
         org.bukkit.Chunk::getTileEntities);
@@ -249,7 +249,23 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     block.setBlockData(state, false);
   }
 
+  private Protection productionProtection() {
+    var plugin =
+        java.util.Objects.requireNonNull(getServer().getPluginManager().getPlugin("TheStorm"));
+    try {
+      return Protection.class.cast(
+          plugin.getClass().getMethod("service", Class.class).invoke(plugin, Protection.class));
+    } catch (ReflectiveOperationException error) {
+      throw new IllegalStateException("Production protection service is unavailable", error);
+    }
+  }
+
   private static final class OpenProtection implements Protection {
+    private final Protection production;
+
+    OpenProtection(Protection production) {
+      this.production = production;
+    }
 
     @Override
     public java.util.Optional<UUID> automationActor(Location location) {
@@ -260,6 +276,10 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
+      if (action == ProtectedAction.OPEN_CONTAINER
+          || action == ProtectedAction.INSERT_ITEM
+          || action == ProtectedAction.REMOVE_ITEM)
+        return production.check(player, action, location);
       if (location.getBlockX() == 532
           && action == ProtectedAction.USE_REDSTONE
           && !player.equals(new UUID(0, 532)))

@@ -63,6 +63,10 @@ final class WorldShopData {
                 && !accounts.permits(data, UUID.fromString(require(sign, ownerId)))));
   }
 
+  boolean identified(Sign sign) {
+    return sign.getPersistentDataContainer().has(ownerKind);
+  }
+
   Optional<SignShop> read(Sign sign, SignLines lines, Optional<BlockPos> physicalContainer) {
     var data = sign.getPersistentDataContainer();
     if (!data.has(ownerKind) || revoked(sign)) return Optional.empty();

@@ -17,6 +17,81 @@ import org.junit.jupiter.api.Test;
 
 final class WorldShopSignsTest extends ShopsFixture {
   @Test
+  void anInterruptedShopStaysClosedWhileItsNeighboringChestChunkIsUnloaded() throws Exception {
+    var owner = player("Alice", 1);
+    var chest = chest(16);
+    var sign = world.getBlockAt(15, 64, 0);
+    sign.setType(Material.OAK_WALL_SIGN);
+    sign.setBlockData(server.createBlockData("minecraft:oak_wall_sign[facing=west]"));
+    var shop =
+        new com.shepherdjerred.thestorm.shops.domain.shop.SignShop(
+            7,
+            ShopBlocks.pos(sign),
+            java.util.Optional.of(ShopBlocks.pos(chest)),
+            new com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner.Player(
+                owner.getUniqueId(), "Alice"),
+            1,
+            com.shepherdjerred.thestorm.shops.domain.price.ShopPrices.buyOnly(10),
+            java.util.Optional.of(new ItemTemplates().plain(Material.COAL)),
+            java.time.Instant.EPOCH);
+    var registry = new ShopRegistry(List.of(shop), 7);
+    var blocks = new ShopBlocks(plugin, registry, Set.of(Material.CHEST));
+    blocks.rewrite(sign, shop, shop.lines("Admin Shop"));
+    registry.close(7, "interrupted import");
+    blocks.discovery(
+        ignored -> {
+          throw new AssertionError("an identified sign cannot get a replacement identity");
+        },
+        ignored -> {});
+    world.unloadChunk(1, 0);
+    assertThat(blocks.shopAtSign(sign)).isEmpty();
+    assertThat(registry.closure(7)).contains("interrupted import");
+    world.loadChunk(1, 0);
+    assertThat(blocks.shopAtSign(sign)).contains(shop);
+    assertThat(registry.closure(7)).contains("interrupted import");
+  }
+
+  @Test
+  void aLateRecoveredUnlimitedShopIsClosedWhenItsPricesLoopWithTheCatalog() throws Exception {
+    var sign = signOn(chest(32));
+    var registry = new ShopRegistry(List.of(), 0);
+    var blocks = new ShopBlocks(plugin, registry, Set.of(Material.CHEST));
+    var templates = new ItemTemplates();
+    var shop =
+        new com.shepherdjerred.thestorm.shops.domain.shop.SignShop(
+            7,
+            ShopBlocks.pos(sign),
+            blocks.connectedContainer(sign).map(ShopBlocks::pos),
+            new com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner.Admin(),
+            1,
+            com.shepherdjerred.thestorm.shops.domain.price.ShopPrices.buyOnly(1),
+            java.util.Optional.of(templates.plain(Material.DIAMOND)),
+            java.time.Instant.EPOCH);
+    blocks.rewrite(sign, shop, shop.lines("Admin Shop"));
+    var catalogs =
+        com.shepherdjerred.thestorm.shops.adapter.content.CatalogDirectory.load(
+            ShopsTestPlugin.OWNED.resolve("shops"), ShopsPaper::isItem);
+    new WorldShopDiscovery(
+        plugin.context(),
+        blocks,
+        new JooqShopStore(plugin.database()),
+        new WorldShopDiscovery.Parsing(
+            new com.shepherdjerred.thestorm.shops.domain.sign.ShopSignParser(64, "Admin Shop"),
+            templates,
+            new com.shepherdjerred.thestorm.shops.app.ServerOffers(catalogs, registry)));
+    world.unloadChunk(2, 0);
+    assertThat(blocks.shopAtSign(sign)).isEmpty();
+    world.loadChunk(2, 0);
+    assertThat(blocks.shopAtSign(sign)).contains(shop);
+    assertThat(registry.closure(7)).isPresent();
+    registry.retainClosure(7, "interrupted import");
+    registry.evict(7);
+    assertThat(blocks.shopAtSign(sign)).contains(shop);
+    assertThat(registry.closure(7)).contains("interrupted import");
+    assertThat(storedShops()).contains(shop);
+  }
+
+  @Test
   void questionMarkUsesTheFirstStockedItemAndFillsTheOwner() throws Exception {
     var owner = player("Alice", 1);
     var chest = chest(0);
@@ -60,6 +135,7 @@ final class WorldShopSignsTest extends ShopsFixture {
   void containerDiscoveryDoesNotLoadANeighboringChunk() {
     var chest = chest(16);
     var sign = world.getBlockAt(15, 64, 0);
+    sign.setType(Material.OAK_WALL_SIGN);
     sign.setBlockData(server.createBlockData("minecraft:oak_wall_sign[facing=west]"));
     world.unloadChunk(1, 0);
     assertThat(world.isChunkLoaded(1, 0)).isFalse();

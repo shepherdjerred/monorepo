@@ -118,6 +118,13 @@ public final class ShopRegistry {
     if (!byId.containsKey(id)) {
       throw new IllegalArgumentException("no shop " + id);
     }
+    retainClosure(id, why);
+  }
+
+  /** Retains a durable recovery obligation even before that shop's chunk has been discovered. */
+  public void retainClosure(long id, String why) {
+    if (id < 1) throw new IllegalArgumentException("invalid shop id " + id);
+    observeLastId(id);
     closed.put(id, why);
   }
 
@@ -138,6 +145,11 @@ public final class ShopRegistry {
 
   public void remove(long id) {
     closed.remove(id);
+    evict(id);
+  }
+
+  /** Drops a cached definition without forgetting why the identity must remain closed. */
+  public void evict(long id) {
     var shop = byId.remove(id);
     if (shop == null) {
       return;

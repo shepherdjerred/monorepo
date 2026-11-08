@@ -33,9 +33,13 @@ final class WorldShopDiscovery implements Listener {
   private final ShopStore store;
   private final ShopSignParser parser;
   private final ItemTemplates templates;
+  private final com.shepherdjerred.thestorm.shops.app.ServerOffers offers;
   private final Set<BlockPos> pending = new HashSet<>();
 
-  record Parsing(ShopSignParser signs, ItemTemplates items) {}
+  record Parsing(
+      ShopSignParser signs,
+      ItemTemplates items,
+      com.shepherdjerred.thestorm.shops.app.ServerOffers offers) {}
 
   WorldShopDiscovery(ModuleContext context, ShopBlocks blocks, ShopStore store, Parsing parsing) {
     this.context = context;
@@ -43,6 +47,7 @@ final class WorldShopDiscovery implements Listener {
     this.store = store;
     this.parser = parsing.signs();
     this.templates = parsing.items();
+    this.offers = parsing.offers();
     blocks.discovery(this::discover, this::index);
   }
 
@@ -73,6 +78,16 @@ final class WorldShopDiscovery implements Listener {
   }
 
   private void index(SignShop shop) {
+    offers
+        .check(shop)
+        .ifPresent(
+            problem -> {
+              if (blocks.registry().closure(shop.id()).isEmpty())
+                blocks.registry().close(shop.id(), problem.describe());
+              context
+                  .logger()
+                  .error("Closed recovered admin shop {}: {}", shop.id(), problem.describe());
+            });
     Background.logFailure(store.indexShop(shop), context.logger(), "index world shop " + shop.id());
   }
 

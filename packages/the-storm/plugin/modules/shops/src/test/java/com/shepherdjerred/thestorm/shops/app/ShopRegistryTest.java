@@ -37,6 +37,23 @@ final class ShopRegistryTest {
   }
 
   @Test
+  void recoveryClosuresSurviveCacheEvictionAndCanPrecedeDiscovery() {
+    var registry = new ShopRegistry(List.of(), 0);
+    registry.retainClosure(42, "interrupted import");
+    assertThat(registry.nextId()).isEqualTo(43);
+    var recovered = shop(42, ALICE, 1);
+    registry.add(recovered);
+    registry.evict(42);
+    assertThat(registry.closure(42)).contains("interrupted import");
+    registry.add(recovered);
+    assertThat(registry.closure(42)).contains("interrupted import");
+    registry.reopen(42, "different reason");
+    assertThat(registry.closure(42)).contains("interrupted import");
+    registry.reopen(42, "interrupted import");
+    assertThat(registry.closure(42)).isEmpty();
+  }
+
+  @Test
   void indexesShopsBySignContainerAndOwner() {
     var first = shop(3, ALICE, 1);
     var second = shop(7, ALICE, 2);

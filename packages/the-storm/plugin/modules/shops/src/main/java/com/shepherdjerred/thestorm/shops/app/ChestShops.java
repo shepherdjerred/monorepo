@@ -454,7 +454,7 @@ public final class ChestShops {
       var loop = offers.check(shop);
       if (loop.isPresent()) {
         var why = loop.orElseThrow().describe();
-        registry.close(shop.id(), why);
+        if (registry.closure(shop.id()).isEmpty()) registry.close(shop.id(), why);
         logger.error("Closed admin shop {} at {}: {}", shop.id(), shop.sign(), why);
         closedNow.add(shop);
       }

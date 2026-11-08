@@ -233,20 +233,20 @@ public final class ShopBlocks {
   public Optional<SignShop> shopAtSign(Block block) {
     if (!loaded(block)) return Optional.empty();
     if (!(block.getState(false) instanceof Sign sign)) {
-      registry.atSign(pos(block)).ifPresent(shop -> registry.remove(shop.id()));
+      registry.atSign(pos(block)).ifPresent(shop -> registry.evict(shop.id()));
       return Optional.empty();
     }
     var lines = lines(sign);
     var previous = registry.atSign(pos(block));
     upgradeIdentity(sign, previous, lines);
     if (worldData.revoked(sign)) {
-      previous.ifPresent(shop -> registry.remove(shop.id()));
+      previous.ifPresent(shop -> registry.evict(shop.id()));
       return Optional.empty();
     }
     var found = worldData.read(sign, lines, connectedContainer(block).map(ShopBlocks::pos));
     if (found.isEmpty()) {
-      previous.ifPresent(shop -> registry.remove(shop.id()));
-      if (registry.isReady()) discover.accept(block);
+      previous.ifPresent(shop -> registry.evict(shop.id()));
+      if (registry.isReady() && !worldData.identified(sign)) discover.accept(block);
       return registry.atSign(pos(block));
     }
     var current = found.orElseThrow();
@@ -266,8 +266,8 @@ public final class ShopBlocks {
     }
     if (!previous.equals(Optional.of(current))) {
       var closure = registry.closure(current.id());
-      previous.ifPresent(shop -> registry.remove(shop.id()));
-      registry.remove(current.id());
+      previous.ifPresent(shop -> registry.evict(shop.id()));
+      registry.evict(current.id());
       registry.add(current);
       var installed = current;
       closure.ifPresent(reason -> registry.close(installed.id(), reason));

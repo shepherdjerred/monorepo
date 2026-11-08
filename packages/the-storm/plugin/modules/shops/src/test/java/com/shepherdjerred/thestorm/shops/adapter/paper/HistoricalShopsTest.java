@@ -131,6 +131,57 @@ final class HistoricalShopsTest extends ShopsFixture {
   }
 
   @Test
+  void aMissingOriginalTemplateDoesNotBlockTheFollowingListing() throws Exception {
+    var first = oldSign();
+    var original = entry();
+    var missing =
+        new Entry(
+            original.id(),
+            original.world(),
+            original.sign(),
+            original.container(),
+            original.owner(),
+            original.ownerName(),
+            original.item(),
+            original.quantity(),
+            original.price(),
+            original.stockTarget(),
+            original.historicalItemName(),
+            original.signFormat(),
+            new com.shepherdjerred.thestorm.shops.adapter.content.HistoricalShopCatalog.Details(
+                original.expectedLines(), 0, false, true));
+    var next =
+        new Entry(
+            "next-shop",
+            world.getName(),
+            new Point(4, 64, 1),
+            new Point(4, 64, 0),
+            OWNER,
+            "Pigrider102",
+            "diamond",
+            1,
+            18,
+            16,
+            "Diamond",
+            SignFormat.QUANTITY_ITEM,
+            com.shepherdjerred.thestorm.shops.adapter.content.HistoricalShopCatalog.Details.LEGACY);
+    var second = signOn(chest(4));
+    var state = (Sign) second.getState();
+    for (var index = 0; index < 4; index++)
+      state.getSide(Side.FRONT).line(index, Component.text(next.expectedLines().get(index)));
+    state.update();
+    var registry = new ShopRegistry(List.of(), 0);
+    var blocks = new ShopBlocks(plugin, registry, Set.of(Material.CHEST));
+    var store = new JooqShopStore(plugin.database());
+    finish(importer(registry, blocks, store).restore(List.of(missing, next)));
+    assertThat(registry.atSign(ShopBlocks.pos(first))).isEmpty();
+    assertThat(registry.atSign(ShopBlocks.pos(second))).isPresent();
+    assertThat(count(inventoryOf(world.getBlockAt(4, 64, 0)), Material.DIAMOND)).isEqualTo(16);
+    assertThat(store.pendingHistoricalShops().get()).isEmpty();
+    assertThat(store.completedHistoricalShops().get()).containsOnlyKeys("next-shop");
+  }
+
+  @Test
   void convertsAWholeBowAndArrowsDealAndStocksEachPartOnlyOnce() throws Exception {
     var sign = oldSign();
     var raw = List.of("[Buy]", "1 Bow &", "32 Arrows", "10 Cr");

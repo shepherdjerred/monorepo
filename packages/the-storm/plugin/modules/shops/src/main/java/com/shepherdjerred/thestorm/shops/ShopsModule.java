@@ -131,12 +131,8 @@ public final class ShopsModule implements StormModule {
   private static void closeInterrupted(
       ModuleContext context, ShopRegistry registry, List<Long> ids) {
     for (var id : ids) {
-      if (registry.byId(id).isPresent()) {
-        registry.close(id, "historical import needs staff reconciliation");
-        context
-            .logger()
-            .error("Historical shop {} has an interrupted import; it remains closed", id);
-      }
+      registry.retainClosure(id, "historical import needs staff reconciliation");
+      context.logger().error("Historical shop {} has an interrupted import; it remains closed", id);
     }
   }
 

@@ -85,7 +85,10 @@ final class LockListenersTest extends AegisServer {
               lock(CAROL, 147, Y, Z).withType(LockType.PUBLIC, ""),
               lock(CAROL, 148, Y, Z).withType(LockType.PASSWORD, "gate"),
               lock(CAROL, 152, Y, Z).withFlag(LockFlag.AUTOCLOSE, true),
-              lock(CAROL, 153, Y, Z))) {
+              lock(CAROL, 153, Y, Z),
+              lock(CAROL, 154, Y, Z).withType(LockType.DONATION, ""),
+              lock(CAROL, 155, Y, Z).withType(LockType.SUPPLY, ""),
+              lock(CAROL, 156, Y, Z).withType(LockType.DISPLAY, ""))) {
         store.save(lock).get(10, TimeUnit.SECONDS);
       }
     } catch (Exception e) {
@@ -113,6 +116,38 @@ final class LockListenersTest extends AegisServer {
     block(147, Y, Z).setType(Material.CHEST);
     block(148, Y, Z).setType(Material.CHEST);
     block(152, Y, Z).setType(Material.IRON_DOOR);
+    for (var x = 154; x <= 156; x++) block(x, Y, Z).setType(Material.CHEST);
+  }
+
+  @Test
+  void offlineActorsRetainOwnershipAndDirectionalLockRestrictions() {
+    var port = plugin.services.require(Protection.class);
+    carol.disconnect();
+    assertThat(server.getPlayer(CAROL)).isNull();
+    assertThat(server.getPlayer(DAVE)).isNull();
+    for (var x : new int[] {CHEST_X, 154, 155, 156}) {
+      var location = block(x, Y, Z).getLocation();
+      assertThat(port.check(CAROL, ProtectedAction.INSERT_ITEM, location).isAllowed()).isTrue();
+      assertThat(port.check(CAROL, ProtectedAction.REMOVE_ITEM, location).isAllowed()).isTrue();
+      assertThat(port.check(DAVE, ProtectedAction.INSERT_ITEM, location).isAllowed())
+          .isEqualTo(x == 154);
+      assertThat(port.check(DAVE, ProtectedAction.REMOVE_ITEM, location).isAllowed())
+          .isEqualTo(x == 155);
+    }
+  }
+
+  @Test
+  void offlineItemMovesRespectBothHalvesOfADirectionalDoubleChest() {
+    var port = plugin.services.require(Protection.class);
+    block(154, Y, Z)
+        .setBlockData(server.createBlockData("minecraft:chest[facing=north,type=left]"));
+    block(155, Y, Z)
+        .setBlockData(server.createBlockData("minecraft:chest[facing=north,type=right]"));
+    for (var x : new int[] {154, 155}) {
+      var location = block(x, Y, Z).getLocation();
+      assertThat(port.check(DAVE, ProtectedAction.INSERT_ITEM, location).isAllowed()).isFalse();
+      assertThat(port.check(DAVE, ProtectedAction.REMOVE_ITEM, location).isAllowed()).isFalse();
+    }
   }
 
   @Test

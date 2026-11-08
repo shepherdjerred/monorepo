@@ -179,7 +179,7 @@ final class HistoricalShops implements Listener {
       return CompletableFuture.completedFuture(null);
     }
     var material = ItemTemplates.item(entry.item());
-    var reason = importProblem(entry, sign, chest, material.isPresent());
+    var reason = importProblem(entry, sign, chest, material);
     if (reason != null) {
       logger.warn("Historical shop {} skipped: {}", entry.id(), reason);
       return CompletableFuture.completedFuture(null);
@@ -224,15 +224,27 @@ final class HistoricalShops implements Listener {
   }
 
   private @org.jspecify.annotations.Nullable String importProblem(
-      Entry entry, Block sign, Block chest, boolean itemAvailable) {
-    if (!itemAvailable) return "item is unavailable";
+      Entry entry, Block sign, Block chest, Optional<org.bukkit.Material> material) {
+    if (material.isEmpty()) return "item is unavailable";
     if (!matches(sign, entry)) return "sign text or block changed";
     if (hasShopStamp(sign)) return "sign already has a shop stamp";
     if (!blocks.isShopContainer(chest)) {
       awaitingContainer.add(entry);
       return "container is missing";
     }
+    if (entry.details().sourceSlot() >= 0
+        && originalItem(entry, material.orElseThrow(), chest).isEmpty())
+      return "original item template is missing or changed";
     return accessProblem(entry, sign, chest).orElse(null);
+  }
+
+  private static Optional<ItemStack> originalItem(
+      Entry entry, org.bukkit.Material material, Block chest) {
+    if (!(chest.getState() instanceof org.bukkit.block.Container container))
+      return Optional.empty();
+    return Optional.ofNullable(
+            container.getSnapshotInventory().getItem(entry.details().sourceSlot()))
+        .filter(item -> item.getType() == material && !ItemTemplates.holdsItems(item));
   }
 
   private CompletableFuture<Void> finishImport(
@@ -305,12 +317,12 @@ final class HistoricalShops implements Listener {
   private com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint historicalItem(
       Entry entry, org.bukkit.Material material, Block chest) {
     if (entry.details().sourceSlot() >= 0) {
-      if (!(chest.getState() instanceof org.bukkit.block.Container container))
-        throw new IllegalStateException(
-            "Original shop template container disappeared: " + entry.id());
-      var original = container.getSnapshotInventory().getItem(entry.details().sourceSlot());
-      if (original == null || original.getType() != material || ItemTemplates.holdsItems(original))
-        throw new IllegalStateException("Original shop item changed: " + entry.id());
+      var original =
+          originalItem(entry, material, chest)
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Validated original shop item changed: " + entry.id()));
       return historicalBundle(entry, original);
     }
     var restored = restoredEnchantment(entry, material);
