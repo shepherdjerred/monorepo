@@ -6,7 +6,6 @@ import {
   ClientStartRequestSchema,
   DEFAULT_CLIENT_NAME,
 } from "@shepherdjerred/mc-harness/protocol/client.ts";
-import { LIVE_TARGET_ID } from "@shepherdjerred/mc-harness/protocol/live.ts";
 import {
   mcClientActionCommand,
   mcClientCaptureCommand,
@@ -35,6 +34,9 @@ const OPTIONS = {
   ticks: { type: "string" },
   out: { type: "string" },
   all: { type: "boolean", default: false },
+  reason: { type: "string" },
+  "allow-players": { type: "boolean", default: false },
+  "allow-protected": { type: "boolean", default: false },
 } as const satisfies ParseArgsOptionsConfig;
 
 async function start(values: {
@@ -43,13 +45,11 @@ async function start(values: {
   op: boolean;
   "game-mode"?: string | undefined;
   json: boolean;
+  reason?: string | undefined;
+  "allow-players": boolean;
+  "allow-protected": boolean;
 }): Promise<void> {
   const target = await resolveTarget(values.target);
-  if (target === LIVE_TARGET_ID) {
-    throw new Error(
-      "Error: the real client joins sandboxes only (offline-mode loopback); live tsmc is online-mode. Use an actor or a sandbox.",
-    );
-  }
   const gameMode = values["game-mode"]?.toUpperCase();
   await mcClientStartCommand(
     ClientStartRequestSchema.parse({
@@ -59,6 +59,11 @@ async function start(values: {
       ...(gameMode === undefined ? {} : { gameMode }),
     }),
     values.json,
+    {
+      reason: values.reason,
+      allowPlayers: values["allow-players"],
+      allowProtected: values["allow-protected"],
+    },
   );
 }
 
@@ -66,6 +71,11 @@ export async function handleMcClient(args: string[]): Promise<void> {
   const [action = "", ...rest] = args;
   const { values, positionals } = parseMcArgs(OPTIONS, rest, {});
   const { json } = values;
+  const write = {
+    reason: values.reason,
+    allowPlayers: values["allow-players"],
+    allowProtected: values["allow-protected"],
+  };
   switch (action) {
     case "start": {
       await start(values);
@@ -79,7 +89,7 @@ export async function handleMcClient(args: string[]): Promise<void> {
       const names = values.all
         ? await runningClientNames()
         : [await resolveClient(values.name)];
-      await mcClientStopCommand(names, json);
+      await mcClientStopCommand(names, json, write);
       return;
     }
   }
@@ -94,12 +104,13 @@ export async function handleMcClient(args: string[]): Promise<void> {
   }
   // Arguments are validated before the daemon is contacted.
   const request = actionRequest(action, positionals, values.ticks);
-  await mcClientActionCommand(
-    await resolveClient(values.name),
-    request.action,
-    request.body,
+  await mcClientActionCommand({
+    name: await resolveClient(values.name),
+    action: request.action,
+    body: request.body,
     json,
-  );
+    write,
+  });
 }
 
 function actionRequest(

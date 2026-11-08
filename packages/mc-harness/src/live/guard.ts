@@ -210,6 +210,13 @@ export type LiveWriteOp =
   | { kind: "actor-spawn"; name: string; world: string }
   | { kind: "actor-remove"; name: string }
   | {
+      kind: "client-action";
+      name: string;
+      action: string;
+      world?: string | undefined;
+      pos?: BlockPos | undefined;
+    }
+  | {
       kind: "actor-act";
       name: string;
       act: string;
@@ -371,7 +378,25 @@ export function assessLiveWrite(
     case "actor-act": {
       return assessActorAct(op, config);
     }
+    case "client-action": {
+      return assessClientAction(op);
+    }
   }
+}
+
+function assessClientAction(
+  op: Extract<LiveWriteOp, { kind: "client-action" }>,
+): LiveAssessment {
+  if (!["start", "stop", "move", "hotbar"].includes(op.action))
+    throw new Error("Unsupported live client action");
+  return {
+    read: false,
+    tier: 0,
+    dangerous: false,
+    world: null,
+    box: null,
+    summary: `client ${op.name} ${op.action}`,
+  };
 }
 
 const BLOCK_ACTIONS = new Set(["break", "place", "use"]);

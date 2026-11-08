@@ -111,7 +111,7 @@ describe("toolkit mc client", () => {
     expect(unknown.stderr).toContain('unknown client action "dance"');
   });
 
-  test("never starts against live tsmc", async () => {
+  test("live start reaches the daemon instead of starting a client directly", async () => {
     const { stderr, exitCode } = await runMcCommand([
       "client",
       "start",
@@ -119,7 +119,7 @@ describe("toolkit mc client", () => {
       "live",
     ]);
     expect(exitCode).toBe(1);
-    expect(stderr).toContain("joins sandboxes only");
+    expect(stderr).toContain("toolkit mc daemon start");
   });
 
   test("negative look angles reach the daemon", async () => {

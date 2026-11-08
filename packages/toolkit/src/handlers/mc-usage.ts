@@ -42,9 +42,11 @@ Actors (Citizens player NPCs; profiles paper and storm-dev):
   toolkit mc actor act <name> command|chat <text…>
   toolkit mc actor act <name> attack --entity <uuid> | --type <entity-type>
 
-Real client (a rendered Minecraft client the daemon runs against a sandbox; offline
-mode, so never live; needs a desktop session and Java 25; the first start compiles it):
+Real client (needs a desktop session and Java 25; the first start compiles it).
+Sandboxes use offline accounts. Live uses the signed-in Prism Launcher account
+and requires --target live and --reason; it never grants op or changes game mode:
   toolkit mc client start [--target <id>] [--name HarnessClient] [--op] [--game-mode creative] [--json]
+  toolkit mc client start --target live --reason "<why>"
   toolkit mc client ls | status [--name n] [--json]
   toolkit mc client look <yaw> <pitch>   Yaw 0 south, 90 west, 180 north, 270 east; pitch 90 is down
   toolkit mc client move <forward|back|left|right|jump|sneak|sprint|attack|use…> [--ticks 20]
@@ -52,6 +54,8 @@ mode, so never live; needs a desktop session and Java 25; the first start compil
   toolkit mc client command <text…>     Runs as the player (no leading slash)
   toolkit mc client capture [--out f.png]   Screenshot of the rendered frame
   toolkit mc client stop [--name n] | --all
+Live move, hotbar and stop require --reason. Use, attacks and commands are
+disabled in live clients.
 --name picks the client when several run (default: the only one).
 
 ${LIVE_USAGE}

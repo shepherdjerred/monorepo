@@ -36,6 +36,11 @@ final class ClientActions {
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
     var args = request.arguments();
+    if (session.live()
+        && !Set.of("status", "shutdown", "release", "capture", "look", "hotbar", "input")
+            .contains(request.action())) {
+      throw new IllegalArgumentException("Action is not available in a live session");
+    }
     if (Set.of("status", "shutdown", "release", "server-list").contains(request.action())) {
       return control(client, request);
     }
@@ -237,6 +242,9 @@ final class ClientActions {
     for (var button : requested) {
       if (!button.isString()) throw new IllegalArgumentException("Invalid button");
       buttons.add(button.stringValue());
+    }
+    if (session.live() && (buttons.contains("attack") || buttons.contains("use"))) {
+      throw new IllegalArgumentException("Live interactions are unavailable");
     }
     var result = inputs.start(peer, buttons, Protocol.integer(args, "ticks", 1, 100));
     apply(client);

@@ -57,6 +57,22 @@ dependencies {
   testCompileOnly(libs.errorprone.annotations)
 }
 
+// Stage the exact pinned Fabric API alongside the client mod for an isolated
+// Prism instance. Prism owns account authentication; no credentials are copied.
+val prismFabricApi = configurations.create("prismFabricApi") { isTransitive = false }
+dependencies { add(prismFabricApi.name, libs.fabric.api) }
+tasks.register<Copy>("stagePrism") {
+  dependsOn(tasks.jar)
+  from(tasks.jar)
+  from(prismFabricApi) { rename { "fabric-api.jar" } }
+  into(layout.buildDirectory.dir("prism-mods"))
+  doLast {
+    layout.buildDirectory.file("prism-mods/metadata.json").get().asFile.writeText(
+      """{"minecraft":"${libs.versions.client.minecraft.get()}","fabricLoader":"${libs.versions.fabric.loader.get()}","clientJar":"${tasks.jar.get().archiveFileName.get()}"}"""
+    )
+  }
+}
+
 pmd { ruleSetFiles = files("../plugin/config/pmd/ruleset.xml") }
 
 loom {
