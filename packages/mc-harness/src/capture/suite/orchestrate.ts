@@ -22,6 +22,8 @@ import {
   retainSuiteRun,
   readSuiteRun,
   restoreCapture,
+  retainedSuiteFile,
+  relativeSuiteFile,
 } from "./archive.ts";
 import { command } from "./process.ts";
 import type { BlobStore } from "./store.ts";
@@ -102,6 +104,7 @@ export async function runSuite(options: SuiteOptions) {
     cache = path.join(MC_DIR, "suite-blobs");
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const suite = await loadSuite(options.suiteFile);
+  relativeSuiteFile(options.repoRoot, options.suiteFile);
   selectScenarios(suite, options);
   await verifyLiveFixtureClass();
   const store = awsStore("the-storm-capture-fixtures");
@@ -231,6 +234,7 @@ export async function captureSuite(options: CaptureOptions) {
       schema: 1 as const,
       id: options.id,
       suite: suite.id,
+      suiteFile: relativeSuiteFile(options.repoRoot, options.suiteFile),
       fixture: options.fixture,
       runtime: options.runtime.hash,
       rollout: rolloutHash,
@@ -259,7 +263,7 @@ export async function captureSuite(options: CaptureOptions) {
 }
 
 export async function replaySuite(
-  options: Omit<SuiteOptions, "runtime">,
+  options: Omit<SuiteOptions, "runtime" | "suiteFile">,
   runId: string,
 ) {
   const cache = path.join(MC_DIR, "suite-blobs");
@@ -278,10 +282,7 @@ export async function replaySuite(
       ? previous.selection
       : {};
   const recordedSuite = await loadSuite(
-    path.join(
-      sourceDirectory,
-      path.relative(options.repoRoot, options.suiteFile),
-    ),
+    path.join(sourceDirectory, previous.suiteFile),
   );
   if (
     recordedSuite.id !== previous.suite ||
@@ -292,6 +293,7 @@ export async function replaySuite(
     throw new Error("Replay selection is outside the retained suite run");
   return dispatchCapture({
     ...options,
+    suiteFile: retainedSuiteFile(options.repoRoot, previous),
     store,
     ...selection,
     directory,
@@ -304,13 +306,13 @@ export async function replaySuite(
 }
 
 export async function renderSuite(
-  options: Omit<SuiteOptions, "runtime">,
+  options: Omit<SuiteOptions, "runtime" | "suiteFile">,
   runId: string,
 ): Promise<void> {
   const store = awsStore("the-storm-capture-fixtures");
   const cache = path.join(MC_DIR, "suite-blobs"),
     run = await readSuiteRun(store, cache, runId);
-  const suite = await loadSuite(options.suiteFile);
+  const suite = await loadSuite(retainedSuiteFile(options.repoRoot, run));
   if (suite.id !== run.suite)
     throw new Error("Render suite identity differs from the retained run");
   const selected = selectScenarios(suite, options).filter(

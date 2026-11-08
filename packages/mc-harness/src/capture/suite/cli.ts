@@ -27,8 +27,21 @@ export async function suiteMain(args: string[]): Promise<void> {
   if (action === "recover-export")
     return recoverExport(z.uuid().parse(identifier));
   const root = path.resolve(import.meta.dirname, "../../../../..");
+  const selection = {
+    ...(parsed.values.scenario === undefined
+      ? {}
+      : { scenario: parsed.values.scenario }),
+    ...(parsed.values.shot === undefined ? {} : { shot: parsed.values.shot }),
+  };
+  if (action === "replay" || action === "render") {
+    const options = { repoRoot: root, ...selection };
+    const id = z.uuid().parse(identifier);
+    if (action === "render") return renderSuite(options, id);
+    process.stdout.write(JSON.stringify(await replaySuite(options, id)) + "\n");
+    return;
+  }
   const file =
-    identifier === "tsmc" || action === "render" || action === "replay"
+    identifier === "tsmc"
       ? path.join(root, "packages/the-storm/tools/captures/suite.ts")
       : path.resolve(z.string().min(1).parse(identifier));
   const imported: unknown = await import(pathToFileURL(file).href);
@@ -78,14 +91,5 @@ export async function suiteMain(args: string[]): Promise<void> {
     process.stdout.write(JSON.stringify(result) + "\n");
     return;
   }
-  if (action === "replay") {
-    process.stdout.write(
-      JSON.stringify(await replaySuite(options, z.uuid().parse(identifier))) +
-        "\n",
-    );
-    return;
-  }
-  if (action === "render")
-    return renderSuite(options, z.uuid().parse(identifier));
   throw new Error(`Unknown suite action ${action}`);
 }

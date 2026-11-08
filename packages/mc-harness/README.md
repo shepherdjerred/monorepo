@@ -286,6 +286,8 @@ It reuses the saved terrain and runtime without another production export.
 `render` uses retained raw frames with the current presentation metadata and
 starts neither Minecraft nor a rollout reader. Video annotations can anchor to
 recorded step names with `atStep` and relative `startMs`/`endMs` offsets.
+Run indexes retain the suite's repository-relative source path, so custom suites
+replay from their saved checkout and render from their current presentation files.
 Regeneration preserves existing annotated download links. A recovery command
 returns a failing status while restoration remains unfinished.
 

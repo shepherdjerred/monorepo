@@ -6,6 +6,17 @@ import { DocsFramesSchema } from "#protocol/media.ts";
 import { retainBlob, cachedBlob, type BlobStore } from "./store.ts";
 
 const hash = z.string().regex(/^[a-f0-9]{64}$/u);
+const suiteFile = z
+  .string()
+  .min(1)
+  .refine(
+    (file) =>
+      !file.includes("\\") &&
+      !file
+        .split("/")
+        .some((part) => part === "" || part === "." || part === ".."),
+    "Suite file must be a repository-relative path",
+  );
 const FileSchema = z.strictObject({
   path: z
     .string()
@@ -23,6 +34,7 @@ export const SuiteRunSchema = z.strictObject({
   schema: z.literal(1),
   id: z.uuid(),
   suite: z.string(),
+  suiteFile,
   fixture: hash,
   runtime: hash,
   rollout: hash.nullable(),
@@ -33,6 +45,14 @@ export const SuiteRunSchema = z.strictObject({
   scenarios: z.array(z.strictObject({ id: z.string(), archive: hash })),
 });
 export type SuiteRun = z.infer<typeof SuiteRunSchema>;
+
+export function retainedSuiteFile(repoRoot: string, run: SuiteRun): string {
+  return path.join(repoRoot, suiteFile.parse(run.suiteFile));
+}
+
+export function relativeSuiteFile(repoRoot: string, file: string): string {
+  return suiteFile.parse(path.relative(repoRoot, file));
+}
 
 export async function archiveCapture(
   store: BlobStore,
