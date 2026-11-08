@@ -3,6 +3,7 @@ import type {
   NotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
 import { prisma } from "#src/database/index.ts";
+import { matchNotificationPreferenceSuppression } from "#src/temporal/notification/account-preference.ts";
 import { client } from "#src/discord/client.ts";
 import { deliveryGuildId } from "#src/temporal/notification/channel-guild.ts";
 import { DmKindSchema, type DmKind } from "#src/discord/utils/dm-contracts.ts";
@@ -447,6 +448,8 @@ async function preSendSuppressionOf(
   record: NotificationIntentRecord,
   guildId: DiscordGuildId | undefined,
 ): Promise<NotificationUnsentSuppressionReason | undefined> {
+  const preference = await matchNotificationPreferenceSuppression(record);
+  if (preference !== undefined) return preference;
   if ("announcementId" in record) {
     if (
       record.intent.target.kind === "channel" &&

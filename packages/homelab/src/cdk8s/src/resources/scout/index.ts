@@ -36,6 +36,10 @@ import {
 import { createScoutActivityWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import {
+  riotRsoEnv,
+  SCOUT_RSO_PROVISIONED,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/riot-rso.ts";
+import {
   createScoutTemporalMetricsServiceMonitor,
   scoutTemporalMetricsContainerPort,
   scoutTemporalMetricsEnv,
@@ -49,7 +53,11 @@ function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
-export function createScoutDeployment(chart: Chart, stage: Stage) {
+export function createScoutDeployment(
+  chart: Chart,
+  stage: Stage,
+  bootstrap?: { riotSignOnProvisioned: boolean },
+) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -374,6 +382,11 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   const roleEnvVariables: Record<string, EnvValue> = {
     ...envVariables,
+    ...((bootstrap?.riotSignOnProvisioned ?? SCOUT_RSO_PROVISIONED[stage])
+      ? riotRsoEnv(
+          Secret.fromSecretName(chart, "riot-rso-secret", onePasswordItem.name),
+        )
+      : {}),
     ...scoutTemporalMetricsEnv,
     SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
   };

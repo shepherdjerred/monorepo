@@ -19,6 +19,17 @@ install unrelated toolchains. Resolving it through mise keeps Vite's HTTP server
 on Node when Playwright runs under Bun; the Bun server can abort concurrent
 browser requests with `ERR_STREAM_WRITE_AFTER_END`.
 
+## Personal notification settings
+
+The account menu opens `/app/settings`. A Discord login can verify multiple
+League accounts with Riot and choose each account's game-start and game-end
+notifications globally. No server membership or manager permission is needed.
+The page explains that tracking and shared report names/mentions continue.
+Existing toggles work even when new linking is disabled or unconfigured.
+An account already owned by another Discord login links to support instead of
+transferring ownership. Settings stories cover enabled, disabled, empty,
+unconfigured, and conflict states.
+
 ## Player and match review
 
 Player profiles keep their tab, game window, queues, champion filter, and

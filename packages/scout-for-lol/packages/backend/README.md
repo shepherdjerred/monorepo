@@ -26,6 +26,44 @@ Product announcements commit their intent and recoverable Workflow start in
 PostgreSQL. Announcements freeze their content and chart artifacts in S3 before
 delivery. Ambiguous external effects require operator reconciliation.
 
+## Verified League accounts and match notifications
+
+Discord remains the web login. Any signed-in user can open `/app/settings`,
+without guild membership or manager permissions, and link multiple League
+accounts through Riot Sign On. Each PUUID has one verified Discord owner.
+An ownership conflict requires support; linking never transfers ownership.
+There is no self-service unlink operation.
+
+`RiotAccountPreference` stores the owner, PUUID, verified Riot ID, verification
+time, and global match-notification preference. New links default to enabled;
+re-verification preserves the preference. Deleting a Discord user clears the
+owner but preserves the PUUID preference. A future verified owner inherits it.
+
+Disabled accounts cannot trigger automatic prematch or postmatch notifications
+in any server, including future subscriptions. Channel resolution, readiness,
+attempt creation, and final pre-send checks read current preferences. A shared
+match can still notify through another eligible account. Report contents,
+names, mentions, tracking, profiles, statistics, and history stay intact.
+Suppression uses the existing `recipient-preference` reason and is terminal;
+re-enabling does not backfill missed notifications. An already dispatched
+Discord request can complete.
+
+The code flow uses Client Secret Basic, S256 PKCE, `openid`, signed ID-token
+issuer/audience/expiry/nonce validation, and `/accounts/me`. The same Riot ID
+must resolve to the same PUUID through Scout's API key before it can be linked.
+Tokens exist only during verification and are never persisted. A five-minute
+encrypted HttpOnly Lax cookie carries the nonce, verifier, and state. The
+callback records temporary proof; a CSRF-protected same-origin mutation must
+consume it under the original Strict Discord session. OAuth state and session
+identifiers are hashed. Expired attempts are removed on the next link start;
+the dev database pull excludes all `RiotOAuthLinkAttempt` rows.
+
+`riot_account_linking_enabled` gates new links only. It defaults off, with
+managed beta targeting. Existing account controls and enforcement are always
+available. `RIOT_RSO_CLIENT_ID` and `RIOT_RSO_CLIENT_SECRET` are credential
+bootstrap, separate from the Discord application ID and Riot API key. See
+[provision Riot account linking](../../../docs/wiki/src/content/docs/how-to/provision-scout-riot-account-linking.md).
+
 ## Support messages
 
 `SupportConversation` joins web feedback, private Discord forms, and bot DMs by

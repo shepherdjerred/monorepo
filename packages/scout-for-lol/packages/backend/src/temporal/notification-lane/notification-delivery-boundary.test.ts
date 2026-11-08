@@ -47,6 +47,12 @@ const stubs = vi.hoisted(() => ({
   fetchChannelForDelivery: vi.fn(),
   send: vi.fn(),
   sendDM: vi.fn(),
+  matchNotificationPreferenceSuppression: vi.fn(),
+}));
+
+vi.mock("#src/temporal/notification/account-preference.ts", () => ({
+  matchNotificationPreferenceSuppression:
+    stubs.matchNotificationPreferenceSuppression,
 }));
 
 vi.mock("#src/temporal/notification-lane/notification-reads.ts", () => ({
@@ -123,6 +129,7 @@ function attestedReport(): unknown {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  stubs.matchNotificationPreferenceSuppression.mockResolvedValue(undefined);
   // These legacy global-artifact fixtures predate guild presentations.
   vi.spyOn(prisma.notificationPresentation, "findUnique").mockResolvedValue(
     null,
@@ -429,6 +436,50 @@ describe("the prematch-shaped path", () => {
     const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
     expect(sent.content).toBe("someone started a game");
   });
+});
+
+describe("a preference changed after the delivery attempt started", () => {
+  test.each(["prematch", "postmatch"] as const)(
+    "checks %s after building the message and stops before Discord",
+    async (kind) => {
+      stubs.requireIntentRecord.mockResolvedValue(
+        intentRecord("channel", kind),
+      );
+      stubs.resolveNotificationGate.mockResolvedValue({
+        kind,
+        target: "channel",
+        policy: "normal",
+        decision: "permitted",
+      });
+      stubs.matchNotificationPreferenceSuppression.mockResolvedValue(
+        "recipient-preference",
+      );
+
+      const result = await deliverNotification(attemptRef());
+
+      expect(result).toEqual({
+        outcome: "suppressed",
+        reason: "recipient-preference",
+      });
+      const artifactRead =
+        kind === "prematch"
+          ? stubs.buildPrematchNotificationMessage
+          : stubs.readAttestedReportArtifact;
+      expect(artifactRead).toHaveBeenCalledTimes(1);
+      expect(
+        stubs.matchNotificationPreferenceSuppression,
+      ).toHaveBeenCalledTimes(1);
+      const buildOrder = artifactRead.mock.invocationCallOrder[0];
+      const checkOrder =
+        stubs.matchNotificationPreferenceSuppression.mock
+          .invocationCallOrder[0];
+      if (buildOrder === undefined || checkOrder === undefined)
+        throw new Error("Expected message build and preference check");
+      expect(buildOrder).toBeLessThan(checkOrder);
+      expect(stubs.send).not.toHaveBeenCalled();
+      expect(stubs.sendDM).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("what the send assembles", () => {

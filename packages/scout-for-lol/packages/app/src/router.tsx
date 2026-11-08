@@ -6,6 +6,7 @@ import {
 } from "react-router";
 import { SCOUT_GUILD_PAGES } from "@scout-for-lol/data";
 import { Login } from "#src/routes/login.tsx";
+import { AccountSettings } from "#src/routes/settings.tsx";
 import { GuildPicker } from "#src/routes/guild/guild-picker.tsx";
 import { ManageServers } from "#src/routes/manage-servers.tsx";
 import { GuildSubscriptions } from "#src/routes/guild/guild-subscriptions.tsx";
@@ -358,6 +359,11 @@ export const routes: RouteObject[] = [
             ],
           },
           { path: "manage", element: <ManageServers /> },
+          {
+            path: "settings",
+            element: <AccountSettings />,
+            errorElement: <RouteErrorPanel />,
+          },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
           {

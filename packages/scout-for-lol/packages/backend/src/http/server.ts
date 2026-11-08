@@ -23,6 +23,7 @@ import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 import { handleSupportScreenshot } from "#src/support/http.ts";
 import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
+import { handleRiotAuthRoutes } from "#src/trpc/riot/http.ts";
 import { createContext } from "#src/trpc/context.ts";
 import { handleDevLogin } from "#src/trpc/dev-login.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
@@ -239,6 +240,8 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
 
   // Web auth: Discord OAuth start/install/callback/logout — see
   // handleAuthRoutes for the individual routes and their error handling.
+  const riotAuthResponse = await handleRiotAuthRoutes(request, url);
+  if (riotAuthResponse !== null) return riotAuthResponse;
   const authResponse = await handleAuthRoutes(request, url);
   if (authResponse !== null) {
     return authResponse;

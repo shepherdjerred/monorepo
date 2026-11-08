@@ -38,6 +38,12 @@ const stubs = vi.hoisted(() => ({
   isPolicyEnabled: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
   retireIfAudienceGone: vi.fn(),
+  matchNotificationPreferenceSuppression: vi.fn(),
+}));
+
+vi.mock("#src/temporal/notification/account-preference.ts", () => ({
+  matchNotificationPreferenceSuppression:
+    stubs.matchNotificationPreferenceSuppression,
 }));
 
 vi.mock("#src/configuration/flags.ts", async () => {
@@ -77,6 +83,7 @@ const NONCE = NotificationAttemptNonceSchema.parse("kind-policy-attempt");
 
 beforeEach(() => {
   vi.clearAllMocks();
+  stubs.matchNotificationPreferenceSuppression.mockResolvedValue(undefined);
   stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: hallGuildId });
   stubs.retireIfAudienceGone.mockResolvedValue(undefined);
 });
@@ -84,7 +91,10 @@ beforeEach(() => {
 let seq = 0;
 
 async function mint(
-  kind: Extract<NotificationIntentKind, "hall-record-break" | "postmatch">,
+  kind: Extract<
+    NotificationIntentKind,
+    "hall-record-break" | "postmatch" | "prematch"
+  >,
   state: "pending" | "ready",
 ): Promise<NotificationIntentKey> {
   seq += 1;
@@ -92,7 +102,7 @@ async function mint(
   const key = NotificationIntentKeySchema.parse(
     kind === "hall-record-break"
       ? hallRecordBreakIntentKey(matchId, hallGuildId)
-      : `postmatch-discord:${matchId}:${testChannelId(String(seq))}`,
+      : `${kind}-discord:${matchId}:${testChannelId(String(seq))}`,
   );
   const outcome = await upsertIntent(prisma, {
     matchId,
@@ -131,6 +141,54 @@ async function storedState(key: NotificationIntentKey) {
     attemptCount: stored.intent.attemptCount,
   };
 }
+
+describe("account notification preferences at write boundaries", () => {
+  test.each(["prematch", "postmatch"] as const)(
+    "suppresses pending %s and never resurrects it after re-enabling",
+    async (kind) => {
+      const key = await mint(kind, "pending");
+      stubs.matchNotificationPreferenceSuppression.mockResolvedValue(
+        "recipient-preference",
+      );
+      const result = await markNotificationReady({
+        stage: STAGE,
+        intentKey: key,
+      });
+      expect(result.state).toEqual({
+        kind: "suppressed",
+        reason: "recipient-preference",
+      });
+      stubs.matchNotificationPreferenceSuppression.mockResolvedValue(undefined);
+      await markNotificationReady({ stage: STAGE, intentKey: key });
+      expect(await storedState(key)).toEqual({
+        state: { kind: "suppressed", reason: "recipient-preference" },
+        attemptCount: 0,
+      });
+    },
+  );
+  test.each(["prematch", "postmatch"] as const)(
+    "suppresses ready %s before minting an attempt",
+    async (kind) => {
+      const key = await mint(kind, "ready");
+      stubs.matchNotificationPreferenceSuppression.mockResolvedValue(
+        "recipient-preference",
+      );
+      const result = await beginNotificationSend({
+        stage: STAGE,
+        intentKey: key,
+        attemptNonce: NONCE,
+      });
+      expect(result.state).toEqual({
+        kind: "suppressed",
+        reason: "recipient-preference",
+      });
+      expect(await storedState(key)).toEqual({
+        state: { kind: "suppressed", reason: "recipient-preference" },
+        attemptCount: 0,
+      });
+    },
+  );
+});
 
 describe("markNotificationReady under the Hall policy", () => {
   test("suppresses a hall intent as feature-disabled when the guild turned the Hall off", async () => {

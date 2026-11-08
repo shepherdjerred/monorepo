@@ -264,6 +264,8 @@ function computeConfiguration() {
       "https://scout-for-lol.com",
     ),
     riotApiToken: getRequiredEnvVar("RIOT_API_KEY"),
+    riotRsoClientId: getOptionalEnvVar("RIOT_RSO_CLIENT_ID"),
+    riotRsoClientSecret: getOptionalEnvVar("RIOT_RSO_CLIENT_SECRET"),
     databaseUrl: getRequiredEnvVar("DATABASE_URL"),
     port: env.get("PORT").default("3000").asPortNumber(),
     s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
@@ -442,6 +444,12 @@ const configuration: Configuration = {
   },
   get riotApiToken() {
     return getConfiguration().riotApiToken;
+  },
+  get riotRsoClientId() {
+    return getConfiguration().riotRsoClientId;
+  },
+  get riotRsoClientSecret() {
+    return getConfiguration().riotRsoClientSecret;
   },
   get databaseUrl() {
     return getConfiguration().databaseUrl;

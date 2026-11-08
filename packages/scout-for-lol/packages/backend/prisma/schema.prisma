@@ -598,6 +598,45 @@ model User {
   challengeRuns        ChallengeRun[]
   scoutClientDevices   ScoutClientDevice[]
   scoutClientApprovals ScoutClientPairing[]  @relation("ScoutClientPairingApprover")
+  riotAccounts         RiotAccountPreference[]
+  riotLinkAttempts     RiotOAuthLinkAttempt[]
+}
+
+/// Verified ownership and delivery preference, independent of server tracking rows.
+model RiotAccountPreference {
+  puuid                     String   @id
+  ownerDiscordId            String?
+  gameName                  String
+  tagLine                   String
+  verifiedAt                DateTime
+  matchNotificationsEnabled Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  owner User? @relation(fields: [ownerDiscordId], references: [discordId], onDelete: SetNull)
+
+  @@index([ownerDiscordId])
+  @@index([matchNotificationsEnabled])
+}
+
+/// Short-lived OAuth proof. Provider tokens and PKCE verifiers are never stored here.
+model RiotOAuthLinkAttempt {
+  stateDigest    String    @id
+  discordId      String
+  sessionDigest  String
+  expiresAt      DateTime
+  claimedAt      DateTime?
+  verifiedPuuid  String?
+  gameName       String?
+  tagLine        String?
+  verifiedAt     DateTime?
+  consumedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [discordId], references: [discordId], onDelete: Cascade)
+
+  @@index([discordId, createdAt])
+  @@index([expiresAt])
 }
 
 /// One short-lived native-client browser approval request. Only a digest of
