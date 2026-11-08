@@ -188,3 +188,474 @@ regions:
       limited: true
       allow:
         [CUSTOM, COMMAND, SPELL, REINFORCEMENTS, SLIME_SPLIT, JOCKEY, MOUNT]
+
+  # BEGIN generated Skylands beacon protection
+  - id: skylands-towers
+    name: Skylands Launch Towers
+    profile: PRESERVE
+    areas:
+      chunks: []
+      cuboids:
+        # H apron.
+        - world: skylands
+          from: { x: -38, y: 149, z: 26 }
+          to: { x: 58, y: 319, z: 122 }
+        # I1 apron.
+        - world: skylands
+          from: { x: 842, y: 203, z: 538 }
+          to: { x: 938, y: 319, z: 634 }
+        # I2 apron.
+        - world: skylands
+          from: { x: -38, y: 202, z: 1066 }
+          to: { x: 58, y: 319, z: 1162 }
+        # I3 apron.
+        - world: skylands
+          from: { x: -1014, y: 226, z: 517 }
+          to: { x: -918, y: 319, z: 613 }
+        # I4 apron.
+        - world: skylands
+          from: { x: -1046, y: 226, z: -614 }
+          to: { x: -950, y: 319, z: -518 }
+        # I5 apron.
+        - world: skylands
+          from: { x: -54, y: 147, z: -1110 }
+          to: { x: 42, y: 319, z: -1014 }
+        # I6 apron.
+        - world: skylands
+          from: { x: 933, y: 147, z: -646 }
+          to: { x: 1029, y: 319, z: -550 }
+        # O1 apron.
+        - world: skylands
+          from: { x: 2282, y: 203, z: -43 }
+          to: { x: 2378, y: 319, z: 53 }
+        # O2 apron.
+        - world: skylands
+          from: { x: 1930, y: 149, z: 1061 }
+          to: { x: 2026, y: 319, z: 1157 }
+        # O3 apron.
+        - world: skylands
+          from: { x: 1082, y: 148, z: 1971 }
+          to: { x: 1178, y: 319, z: 2067 }
+        # O4 apron.
+        - world: skylands
+          from: { x: -43, y: 203, z: 2234 }
+          to: { x: 53, y: 319, z: 2330 }
+        # O5 apron.
+        - world: skylands
+          from: { x: -1206, y: 218, z: 1941 }
+          to: { x: -1110, y: 319, z: 2037 }
+        # O6 apron.
+        - world: skylands
+          from: { x: -2038, y: 171, z: 1194 }
+          to: { x: -1942, y: 319, z: 1290 }
+        # O7 apron.
+        - world: skylands
+          from: { x: -2331, y: 203, z: -43 }
+          to: { x: -2235, y: 319, z: 53 }
+        # O8 apron.
+        - world: skylands
+          from: { x: -2059, y: 169, z: -1206 }
+          to: { x: -1963, y: 319, z: -1110 }
+        # O9 apron.
+        - world: skylands
+          from: { x: -1238, y: 147, z: -2022 }
+          to: { x: -1142, y: 319, z: -1926 }
+        # O10 apron.
+        - world: skylands
+          from: { x: 10, y: 170, z: -2326 }
+          to: { x: 106, y: 319, z: -2230 }
+        # O11 apron.
+        - world: skylands
+          from: { x: 1114, y: 171, z: -2022 }
+          to: { x: 1210, y: 319, z: -1926 }
+        # O12 apron.
+        - world: skylands
+          from: { x: 1813, y: 204, z: -1195 }
+          to: { x: 1909, y: 319, z: -1099 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1, y: 149, z: 22 }
+          to: { x: 21, y: 319, z: 47 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1, y: 149, z: 22 }
+          to: { x: 22, y: 319, z: 42 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2, y: 149, z: 20 }
+          to: { x: 22, y: 319, z: 42 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2, y: 149, z: 20 }
+          to: { x: 23, y: 319, z: 40 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 3, y: 149, z: 18 }
+          to: { x: 23, y: 319, z: 40 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 3, y: 149, z: 18 }
+          to: { x: 24, y: 319, z: 38 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 4, y: 149, z: 16 }
+          to: { x: 24, y: 319, z: 38 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 4, y: 149, z: 16 }
+          to: { x: 25, y: 319, z: 36 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 5, y: 149, z: 15 }
+          to: { x: 25, y: 319, z: 36 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 5, y: 149, z: 15 }
+          to: { x: 26, y: 319, z: 35 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 6, y: 149, z: 14 }
+          to: { x: 26, y: 319, z: 35 }
+        # H approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 6, y: 149, z: 14 }
+          to: { x: 34, y: 319, z: 34 }
+        # I1 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 822, y: 203, z: 571 }
+          to: { x: 888, y: 319, z: 591 }
+        # I1 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 822, y: 203, z: 568 }
+          to: { x: 842, y: 319, z: 591 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -8, y: 202, z: 1136 }
+          to: { x: 12, y: 319, z: 1172 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -8, y: 202, z: 1152 }
+          to: { x: 20, y: 319, z: 1172 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 0, y: 202, z: 1152 }
+          to: { x: 20, y: 319, z: 1178 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 0, y: 202, z: 1158 }
+          to: { x: 21, y: 319, z: 1178 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1, y: 202, z: 1158 }
+          to: { x: 21, y: 319, z: 1180 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1, y: 202, z: 1160 }
+          to: { x: 22, y: 319, z: 1180 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2, y: 202, z: 1160 }
+          to: { x: 22, y: 319, z: 1183 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2, y: 202, z: 1163 }
+          to: { x: 23, y: 319, z: 1183 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 3, y: 202, z: 1163 }
+          to: { x: 23, y: 319, z: 1188 }
+        # I2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 3, y: 202, z: 1168 }
+          to: { x: 26, y: 319, z: 1188 }
+        # I3 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -976, y: 226, z: 567 }
+          to: { x: -956, y: 319, z: 687 }
+        # I4 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -986, y: 226, z: -562 }
+          to: { x: -919, y: 319, z: -542 }
+        # I4 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -939, y: 226, z: -562 }
+          to: { x: -919, y: 319, z: -540 }
+        # I4 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -939, y: 226, z: -560 }
+          to: { x: -916, y: 319, z: -540 }
+        # I5 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2, y: 147, z: -1082 }
+          to: { x: 62, y: 319, z: -1062 }
+        # I6 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1008, y: 147, z: -616 }
+          to: { x: 1049, y: 319, z: -596 }
+        # O1 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2318, y: 203, z: -63 }
+          to: { x: 2338, y: 319, z: 3 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2003, y: 149, z: 1065 }
+          to: { x: 2029, y: 319, z: 1085 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2009, y: 149, z: 1057 }
+          to: { x: 2029, y: 319, z: 1085 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2009, y: 149, z: 1057 }
+          to: { x: 2030, y: 319, z: 1077 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2010, y: 149, z: 1051 }
+          to: { x: 2030, y: 319, z: 1077 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2008, y: 149, z: 1051 }
+          to: { x: 2030, y: 319, z: 1071 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2008, y: 149, z: 1049 }
+          to: { x: 2028, y: 319, z: 1071 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2006, y: 149, z: 1049 }
+          to: { x: 2028, y: 319, z: 1069 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2006, y: 149, z: 1041 }
+          to: { x: 2026, y: 319, z: 1069 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2005, y: 149, z: 1041 }
+          to: { x: 2026, y: 319, z: 1061 }
+        # O2 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 2005, y: 149, z: 1031 }
+          to: { x: 2025, y: 319, z: 1061 }
+        # O3 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1094, y: 148, z: 2044 }
+          to: { x: 1114, y: 319, z: 2087 }
+        # O3 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1094, y: 148, z: 2067 }
+          to: { x: 1122, y: 319, z: 2087 }
+        # O4 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -63, y: 203, z: 2272 }
+          to: { x: -10, y: 319, z: 2292 }
+        # O5 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1158, y: 218, z: 2017 }
+          to: { x: -1138, y: 319, z: 2078 }
+        # O5 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1158, y: 218, z: 2058 }
+          to: { x: -1086, y: 319, z: 2078 }
+        # O5 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1106, y: 218, z: 2058 }
+          to: { x: -1086, y: 319, z: 2079 }
+        # O5 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1106, y: 218, z: 2059 }
+          to: { x: -1084, y: 319, z: 2079 }
+        # O6 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1998, y: 171, z: 1200 }
+          to: { x: -1921, y: 319, z: 1220 }
+        # O6 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1941, y: 171, z: 1192 }
+          to: { x: -1921, y: 319, z: 1220 }
+        # O6 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1941, y: 171, z: 1192 }
+          to: { x: -1918, y: 319, z: 1212 }
+        # O7 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -2293, y: 203, z: 7 }
+          to: { x: -2273, y: 319, z: 73 }
+        # O8 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1995, y: 169, z: -1224 }
+          to: { x: -1975, y: 319, z: -1159 }
+        # O8 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1995, y: 169, z: -1224 }
+          to: { x: -1945, y: 319, z: -1204 }
+        # O8 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1965, y: 169, z: -1229 }
+          to: { x: -1945, y: 319, z: -1204 }
+        # O8 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1965, y: 169, z: -1229 }
+          to: { x: -1942, y: 319, z: -1209 }
+        # O8 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1962, y: 169, z: -1230 }
+          to: { x: -1942, y: 319, z: -1209 }
+        # O8 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1962, y: 169, z: -1230 }
+          to: { x: -1939, y: 319, z: -1210 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1162, y: 147, z: -1949 }
+          to: { x: -1141, y: 319, z: -1929 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1161, y: 147, z: -1949 }
+          to: { x: -1141, y: 319, z: -1924 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1161, y: 147, z: -1944 }
+          to: { x: -1139, y: 319, z: -1924 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1159, y: 147, z: -1944 }
+          to: { x: -1139, y: 319, z: -1920 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1159, y: 147, z: -1940 }
+          to: { x: -1137, y: 319, z: -1920 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1157, y: 147, z: -1940 }
+          to: { x: -1137, y: 319, z: -1904 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1157, y: 147, z: -1924 }
+          to: { x: -1135, y: 319, z: -1904 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1155, y: 147, z: -1924 }
+          to: { x: -1135, y: 319, z: -1900 }
+        # O9 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: -1155, y: 147, z: -1920 }
+          to: { x: -1134, y: 319, z: -1900 }
+        # O10 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 60, y: 170, z: -2290 }
+          to: { x: 130, y: 319, z: -2270 }
+        # O10 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 110, y: 170, z: -2292 }
+          to: { x: 130, y: 319, z: -2270 }
+        # O10 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 110, y: 170, z: -2292 }
+          to: { x: 134, y: 319, z: -2272 }
+        # O11 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1176, y: 171, z: -1994 }
+          to: { x: 1218, y: 319, z: -1974 }
+        # O11 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1198, y: 171, z: -1995 }
+          to: { x: 1218, y: 319, z: -1974 }
+        # O11 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1198, y: 171, z: -1995 }
+          to: { x: 1219, y: 319, z: -1975 }
+        # O11 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1199, y: 171, z: -1996 }
+          to: { x: 1219, y: 319, z: -1975 }
+        # O11 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1199, y: 171, z: -1996 }
+          to: { x: 1230, y: 319, z: -1976 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1800, y: 204, z: -1168 }
+          to: { x: 1844, y: 319, z: -1148 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1800, y: 204, z: -1168 }
+          to: { x: 1820, y: 319, z: -1147 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1799, y: 204, z: -1167 }
+          to: { x: 1820, y: 319, z: -1147 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1799, y: 204, z: -1167 }
+          to: { x: 1819, y: 319, z: -1145 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1798, y: 204, z: -1165 }
+          to: { x: 1819, y: 319, z: -1145 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1798, y: 204, z: -1165 }
+          to: { x: 1818, y: 319, z: -1143 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1797, y: 204, z: -1163 }
+          to: { x: 1818, y: 319, z: -1143 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1797, y: 204, z: -1163 }
+          to: { x: 1817, y: 319, z: -1140 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1796, y: 204, z: -1160 }
+          to: { x: 1817, y: 319, z: -1140 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1796, y: 204, z: -1160 }
+          to: { x: 1816, y: 319, z: -1138 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1795, y: 204, z: -1158 }
+          to: { x: 1816, y: 319, z: -1138 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1795, y: 204, z: -1158 }
+          to: { x: 1815, y: 319, z: -1135 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1794, y: 204, z: -1155 }
+          to: { x: 1815, y: 319, z: -1135 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1794, y: 204, z: -1155 }
+          to: { x: 1814, y: 319, z: -1131 }
+        # O12 approach: deck plus eight-block edge buffer.
+        - world: skylands
+          from: { x: 1793, y: 204, z: -1151 }
+          to: { x: 1814, y: 319, z: -1131 }
+    allow:
+      - action: INTERACT
+        subjects:
+          [
+            DOOR,
+            TRAPDOOR,
+            FENCE_GATE,
+            BUTTON,
+            LEVER,
+            PRESSURE_PLATE,
+            TRIPWIRE,
+            BELL,
+          ]
+      - action: INTERACT_ENTITY
+        subjects: [VILLAGER, VEHICLE, ANIMAL]
+      - action: OPEN_CONTAINER
+        subjects: [CONTAINER]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION, ENDER_PEARL, CHORUS_FRUIT]
+      - action: SET_HOME
+        subjects: [LOCATION]
+      - action: ATTACK_PLAYER
+        subjects: [PLAYER]
+    mobSpawns:
+      limited: false
+      allow: []
+  # END generated Skylands beacon protection

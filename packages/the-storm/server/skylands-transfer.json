@@ -1,5 +1,6 @@
 {
-  "operation": "export",
-  "id": "skylands-towers-20261107",
-  "volumeDigest": "40459e7cda1642749e3165e1aa610dfe173ab205426a529a804093ee4d7e13ac"
+  "operation": "install",
+  "id": "skylands-beacons-20261107",
+  "volumeDigest": "40459e7cda1642749e3165e1aa610dfe173ab205426a529a804093ee4d7e13ac",
+  "digest": "0711c6848c187c08b5d3cec3579ff911601b7151cfda51d79076d32f8206945d"
 }

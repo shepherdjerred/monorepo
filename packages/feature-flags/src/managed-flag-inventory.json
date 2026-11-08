@@ -3353,6 +3353,18 @@
       ]
     },
     {
+      "key": "the-storm-skylands-launch-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-skylands-launch",
+      "purpose": "Allows new button-activated Skylands beacon launches; existing flight recovery and cleanup remain active when disabled.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwf-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -3933,6 +3945,14 @@
         },
         {
           "key": "the-storm-shop-rentals-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-skylands-launch-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

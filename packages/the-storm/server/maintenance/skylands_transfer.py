@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import stat
 from pathlib import Path
 
 from maintenance import files
@@ -60,6 +61,27 @@ def manifest_digest(manifest: dict[str, str]) -> str:
     return hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
+def refresh_changed_regions(target: Path, staged: Path, root: Path, digest: str) -> None:
+    """Retain BlueMap's cache, but make changed terrain visible to its region-file scanner."""
+    before = files.files(target / "region")
+    after = files.files(staged / "region")
+    changed = sorted(name for name in before.keys() | after.keys() if before.get(name) != after.get(name))
+    for name in changed:
+        if not re.fullmatch(r"r\.-?\d+\.-?\d+\.mca", name):
+            raise ValueError("Unexpected terrain region filename")
+        if name in after:
+            os.utime(staged / "region" / name, None)
+    files.sync_directory(staged / "region")
+    files.save(
+        root / "dirty-regions.json",
+        {
+            "schemaVersion": 1,
+            "digest": digest,
+            "regions": changed,
+        },
+    )
+
+
 def validate_payload(payload: Path) -> dict[str, str]:
     regular_path(payload)
     manifest = files.files(payload)
@@ -67,8 +89,10 @@ def validate_payload(payload: Path) -> dict[str, str]:
     if not required.issubset(manifest):
         raise ValueError("Transfer lacks native dimension or parent save metadata")
     for name in manifest:
-        if not (name in {MARKER, VOLUME_MARKER, "world/level.dat"} or name.startswith(
-            (str(DIMENSION) + "/", "world/data/", "world/datapacks/"))):
+        if not (
+            name in {MARKER, VOLUME_MARKER, "world/level.dat"}
+            or name.startswith((str(DIMENSION) + "/", "world/data/", "world/datapacks/"))
+        ):
             raise ValueError("Transfer contains data outside Skylands and its parent metadata")
     if identity(payload / MARKER) != {"world": "skylands", "seed": 1731, "format": "layered-v1"}:
         raise ValueError("Unexpected Skylands generation identity")
@@ -118,7 +142,13 @@ def install_world(data: Path, request_id: str, expected_digest: str) -> None:
         state = None
         if receipt.exists():
             state = json.loads(receipt.read_text())
-            if not isinstance(state, dict) or set(state) != {"schemaVersion", "status", "digest"} or state.get("digest") != expected_digest or type(state.get("schemaVersion")) is not int or state["schemaVersion"] != 1:
+            if (
+                not isinstance(state, dict)
+                or set(state) != {"schemaVersion", "status", "digest"}
+                or state.get("digest") != expected_digest
+                or type(state.get("schemaVersion")) is not int
+                or state["schemaVersion"] != 1
+            ):
                 raise ValueError("Install request identity changed")
             if state["status"] == "COMPLETE":
                 # Completed requests remain inert even after staging payload cleanup.
@@ -149,9 +179,14 @@ def install_world(data: Path, request_id: str, expected_digest: str) -> None:
                 raise ValueError("Insufficient room to stage the replacement")
             copy_checked(payload / DIMENSION, staged)
             owner = target.stat()
+            directory_mode = stat.S_IMODE(owner.st_mode)
             for path in (staged, *staged.rglob("*")):
                 if (path.stat().st_uid, path.stat().st_gid) != (owner.st_uid, owner.st_gid):
                     os.chown(path, owner.st_uid, owner.st_gid)
+                # Local sandbox copies are writable by Paper's container UID. Do not carry
+                # those permissive authoring modes back into the production save.
+                os.chmod(path, directory_mode if path.is_dir() else directory_mode & 0o666)
+            refresh_changed_regions(target, staged, root, expected_digest)
             files.save(receipt, {"schemaVersion": 1, "status": "APPLYING", "digest": expected_digest})
         if not original.exists():
             if not staged.is_dir() or files.files(staged) != expected:

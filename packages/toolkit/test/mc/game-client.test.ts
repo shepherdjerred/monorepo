@@ -122,6 +122,13 @@ describe("toolkit mc client", () => {
     expect(stderr).toContain("toolkit mc daemon start");
   });
 
+  test("close reaches the daemon as a supported client action", async () => {
+    const { stderr, exitCode } = await runMcCommand(["client", "close"]);
+    expect(exitCode).toBe(1);
+    expect(stderr).not.toContain("unknown client action");
+    expect(stderr).toContain("toolkit mc daemon start");
+  });
+
   test("negative look angles reach the daemon", async () => {
     const { stderr, exitCode } = await runMcCommand([
       "client",

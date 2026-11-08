@@ -18,6 +18,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** Shared asynchronous rollout reader. Every command evaluates its actor. */
 public final class ManagedGameplay implements AutoCloseable {
+  private static final String NAMESPACE_KEY = "the-storm";
   private static final Duration CACHE_TTL = Duration.ofSeconds(30);
 
   private record EvaluationKey(String key, UUID actor) {}
@@ -93,7 +94,7 @@ public final class ManagedGameplay implements AutoCloseable {
               json.writeValueAsString(
                   Map.of(
                       "namespace_key",
-                      "the-storm",
+                      NAMESPACE_KEY,
                       "flag_key",
                       key,
                       "entity_id",

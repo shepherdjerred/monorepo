@@ -3,6 +3,7 @@ import path from "node:path";
 import { BridgeClient } from "#bridge/client.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { CACHE_DIR } from "#protocol/paths.ts";
+import { instanceOwner } from "#protocol/instance.ts";
 import {
   newSandboxId,
   newSandboxSecrets,
@@ -33,6 +34,7 @@ import {
 } from "./pod-watch.ts";
 import {
   buildSandboxPod,
+  OWNER_ANNOTATION,
   MAIN_CONTAINER,
   MAX_ACTIVE_DEADLINE_SECONDS,
   sandboxPodName,
@@ -104,7 +106,10 @@ export class KubernetesSandboxProvider implements SandboxProvider {
   }
 
   private get owner(): string {
-    return this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`;
+    return instanceOwner(
+      this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`,
+      Bun.env["TOOLKIT_MC_INSTANCE"],
+    );
   }
 
   private get pollMs(): number {
@@ -284,6 +289,13 @@ export class KubernetesSandboxProvider implements SandboxProvider {
 
   async destroy(id: string): Promise<void> {
     const record = await this.options.store.read(id);
+    if (record === null) {
+      const pods = await sandboxPods(this.kubectl);
+      const pod = pods.get(id);
+      if (pod?.metadata.annotations?.[OWNER_ANNOTATION] !== this.owner) {
+        throw new Error(`No sandbox ${id} in this instance`);
+      }
+    }
     this.forwards.get(id)?.stop();
     this.forwards.delete(id);
     const pod =
@@ -309,6 +321,7 @@ export class KubernetesSandboxProvider implements SandboxProvider {
     const reaped: string[] = [];
     const pods = await sandboxPods(this.kubectl);
     for (const [id, pod] of pods) {
+      if (pod.metadata.annotations?.[OWNER_ANNOTATION] !== this.owner) continue;
       if (podIsReapable(pod, now)) {
         await this.destroy(id);
         reaped.push(id);

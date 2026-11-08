@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { dockerCreateArgs } from "#providers/docker/provider.ts";
 import {
-  dockerCreateArgs,
+  currentDockerEndpoints,
   LABELS,
   parseSandboxRows,
-} from "#providers/docker/provider.ts";
+} from "#providers/docker/rows.ts";
 import { newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
@@ -88,6 +89,7 @@ describe("docker sandbox argv", () => {
         keep: false,
         running: true,
         stale: false,
+        ports: "",
       },
       {
         containerId: "fff123def456",
@@ -96,6 +98,7 @@ describe("docker sandbox argv", () => {
         keep: true,
         running: false,
         stale: true,
+        ports: "",
       },
     ]);
   });
@@ -109,6 +112,20 @@ describe("docker sandbox argv", () => {
 
   it("generates ids the IPC schema accepts", () => {
     expect(newSandboxId()).toMatch(/^sbx-[0-9a-f]{6}$/u);
+  });
+
+  it("resolves all current published ports after Docker changes their allocation", () => {
+    const endpoints = currentDockerEndpoints(
+      "127.0.0.1:32916->25565/tcp, 127.0.0.1:32917->25575/tcp, 127.0.0.1:32918->25580/tcp",
+    );
+    expect(endpoints).toEqual({
+      game: { host: "127.0.0.1", port: 32_916 },
+      rcon: { host: "127.0.0.1", port: 32_917 },
+      bridge: { host: "127.0.0.1", port: 32_918 },
+    });
+    expect(() => currentDockerEndpoints("0.0.0.0:32916->25565/tcp")).toThrow(
+      "loopback",
+    );
   });
 });
 

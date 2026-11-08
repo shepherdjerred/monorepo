@@ -2,6 +2,8 @@ import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
+import { instanceOwner } from "#protocol/instance.ts";
+import { stageWorldDirectory } from "#sandbox/world-source.ts";
 import { copyRealMap } from "#sandbox/map-copy.ts";
 import { startCaptureProxy } from "./proxy.ts";
 import { SandboxLifecycle } from "./lifecycle.ts";
@@ -38,13 +40,12 @@ import {
   warmMounts,
 } from "./paper-container.ts";
 
-export const LABELS = {
-  sandbox: "mc-harness.sandbox",
-  profile: "mc-harness.profile",
-  expiresAt: "mc-harness.expires-at",
-  owner: "mc-harness.owner",
-  keep: "mc-harness.keep",
-} as const;
+import {
+  LABELS,
+  parseSandboxRows,
+  SANDBOX_ROW_FORMAT,
+  currentDockerEndpoints,
+} from "./rows.ts";
 
 function isPublishedStorm(profileName: string): boolean {
   return profileName === "storm-prod" || profileName === "storm-candidate";
@@ -113,37 +114,6 @@ export function dockerCreateArgs(
   ];
 }
 
-export type SandboxRow = {
-  containerId: string;
-  id: string;
-  expiresAt: string;
-  keep: boolean;
-  running: boolean;
-  /** Exited or dead: unusable. A just-created container is not stale. */
-  stale: boolean;
-};
-
-/** Parses `docker ps -a` rows formatted by `SANDBOX_ROW_FORMAT`. */
-export function parseSandboxRows(stdout: string): SandboxRow[] {
-  return stdout
-    .split("\n")
-    .filter((line) => line.trim().length > 0)
-    .map((line) => {
-      const [containerId = "", id = "", expiresAt = "", keep = "", state = ""] =
-        line.split("\t");
-      return {
-        containerId,
-        id,
-        expiresAt,
-        keep: keep === "true",
-        running: state === "running",
-        stale: state === "exited" || state === "dead",
-      };
-    });
-}
-
-export const SANDBOX_ROW_FORMAT = `{{.ID}}\t{{.Label "${LABELS.sandbox}"}}\t{{.Label "${LABELS.expiresAt}"}}\t{{.Label "${LABELS.keep}"}}\t{{.State}}`;
-
 /**
  * Runs sandboxes as local Docker containers from the pinned itzg image. Creates
  * are serialized: concurrent boots would share and race on the Paperclip warm
@@ -172,7 +142,10 @@ export class DockerSandboxProvider implements SandboxProvider {
   }
 
   private get owner(): string {
-    return this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`;
+    return instanceOwner(
+      this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`,
+      Bun.env["TOOLKIT_MC_INSTANCE"],
+    );
   }
 
   async preflight(): Promise<void> {
@@ -251,6 +224,7 @@ export class DockerSandboxProvider implements SandboxProvider {
     );
     const containerId = stdout.trim();
     try {
+      await this.copySavedWorld(request, dir, containerId, progress);
       if (mapSource !== undefined)
         await docker(["cp", path.join(dir, "world"), `${containerId}:/data/`]);
       if (isPublishedStorm(request.profile)) {
@@ -361,23 +335,42 @@ export class DockerSandboxProvider implements SandboxProvider {
     }
   }
 
+  private async copySavedWorld(
+    request: SandboxCreateRequest,
+    dir: string,
+    containerId: string,
+    progress: Progress,
+  ): Promise<void> {
+    if (request.worldDirectory === undefined) return;
+    progress("copying saved world into the stopped container");
+    const world = path.join(dir, "seed-world");
+    await stageWorldDirectory(request.worldDirectory, world);
+    await docker(["cp", world, `${containerId}:/data/world`]);
+  }
+
   async list(): Promise<SandboxRecord[]> {
     const records = await this.options.store.listFor("docker");
     const rows = await this.rows();
-    const running = new Set(
+    const running = new Map(
       rows
         .filter((row) => row.running)
-        .map((row) => row.containerId.slice(0, 12)),
+        .map((row) => [row.containerId.slice(0, 12), row]),
     );
     const listed = await Promise.all(
       records.map((record) =>
         this.lifecycle.run(record.id, async () => {
           const current = await this.options.store.read(record.id);
           if (current === null) return;
-          if (!running.has(dockerContainerId(current).slice(0, 12)))
+          const row = running.get(dockerContainerId(current).slice(0, 12));
+          if (row === undefined)
             return { ...current, status: "stopped" as const };
           const adopted =
-            current.world === "real-map" ? await this.adopt(current) : current;
+            current.world === "real-map"
+              ? await this.adopt(current)
+              : {
+                  ...current,
+                  endpoints: currentDockerEndpoints(row.ports),
+                };
           return { ...adopted, status: "ready" as const };
         }),
       ),

@@ -621,6 +621,67 @@ extended fixture exports `template-geometry.json`; its wrapped `templates` array
 is the domain test fixture when native assets or geometry rules intentionally
 change. Rebuild and regenerate fresh worlds after such changes.
 
+### Skylands beacons
+
+The `skytravel` module runs after `qol` and uses its combat status. Terrain
+generation does not place towers. The strict `skytravel.json` catalog names
+their surveyed bases, launch pads, buttons and accessible entrances. Only
+commissioned entries accept clicks or appear in BlueMap's Skylands beacon set.
+BlueMap redraws those markers on reload without replacing its terrain cache.
+
+Stand on a beacon's three-by-three roof pad and press its stone button to launch.
+Only the clicking survival player launches. A two-second countdown cancels on
+leaving the pad, taking damage, entering combat, teleporting or disconnecting.
+Passengers, vehicles, duplicate requests and players in combat are refused.
+The managed `the-storm-skylands-launch-enabled` flag gates new launches only;
+its production default is off and its beta default is on. Flag failures close
+new launches. Flight recovery, expiry and landing cleanup do not read that flag.
+
+The updraft reaches Y480, then grants up to 120 seconds of view-steered gliding.
+Looking down slows horizontal travel for a controlled landing. Armour,
+inventories and creative-flight permissions are untouched. Only fall damage is
+ignored during the flight and its final descent, which lasts at most 30 seconds
+after assistance expires. The first landing ends both privileges. Void death,
+PvP and other survival damage stay normal. Grim's movement prediction checks are
+paused only during assistance; combat checks and previously disabled checks
+retain their states. Vanilla's floating-player kick is exempted only for that
+active assistance lease; the server's `allow-flight` setting stays unchanged.
+SQLite commits the lease before launch and preserves its
+original absolute deadlines and 15-second cooldown across reconnects/restarts.
+
+`tools/skylands/towers/beacon.ts` is the reusable build program; the reviewed
+approach waypoints and biome palettes live beside it. Author against a complete
+consistent world copy, retaining private captures outside Git:
+
+```bash
+python3 packages/the-storm/tools/skylands/author-towers.py --target sbx-abcdef --instance skylands-towers --workspaces /tmp/skylands-builds --phase prepare
+# Inspect every site render before applying the compiled programs to the sandbox.
+python3 packages/the-storm/tools/skylands/author-towers.py --target sbx-abcdef --instance skylands-towers --workspaces /tmp/skylands-builds --phase place
+python3 packages/the-storm/tools/skylands/author-towers.py --target sbx-abcdef --instance skylands-towers --workspaces /tmp/skylands-builds --phase replay
+```
+
+The tool refuses live targets. Compile includes structural lint, placement
+freezes the result, and replay compares exact saved blocks while accounting for
+server-computed fence/pane connections. Walk the approaches and stairs, then
+test launches in disposable copies before sealing the authored dimension for
+the server's stopped-save transfer. Copying the parent world, player saves or
+plugin databases back to production is outside that transfer's scope.
+
+The extended native network check stays outside CI. On a disposable authored
+copy with launches enabled, start ordinary survival clients through
+`toolkit mc client start --target <sandbox> --name <name>`. Run all 36 neighbour
+links in both directions (or one directed `--link H I1`) with:
+
+```bash
+python3 packages/the-storm/tools/skylands/verify-network.py --daemon-socket ~/.toolkit/mc/instances/skylands-towers/daemon.sock --target sbx-abcdef --clients BeaconPilot2 BeaconPilot3 --output /tmp/skylands-native-results
+```
+
+The check rejects live targets and clients belonging to another sandbox. It
+clicks the actual buttons, steers native clients, observes server gliding and
+landing state, checks health and inventory preservation, and retains private
+position samples. Source-pad locks and off-pad parking prevent test clients
+from blocking one another's buttons. Use fresh output directories for reruns.
+
 ## NPCs and the town watch
 
 The NPC module reads strict content from `server/owned/plugins/TheStorm/npcs/`
@@ -764,6 +825,23 @@ safe region from its actual spawn position; the End arrival platform is protecte
 separately. Repository-owned regions in `towns.yml` cover the larger main spawn
 and arenas. Safe regions deny all player damage, harmful potions, hostile spawns,
 fire and griefing without blocking the arena's declared gameplay allowances.
+
+The `skylands-towers` region protects the commissioned public launch sites. Each site
+has a 97×97-block apron from 16 blocks below its base standing level through
+Y319, protecting the entire footprint against nearby walls and overhead roofs.
+The cuboids in `towns.yml` define each site's position and bounds. `PRESERVE` denies building and
+griefing while allowing public controls, containers, entity interaction and
+travel. Normal survival damage and opt-in PvP remain enabled, subject to the
+existing spawn safe region. Town claims cover whole vertical columns, so chunks
+overlapping a reservation cannot be claimed at another height; block protection
+outside the cuboids still follows the surrounding land. This includes islands
+above a tower inside its footprint. Approach corridors extend protection ten
+blocks from their centreline: the five-wide deck plus eight blocks beyond its
+edge. Exposed decks have rails, lighting and open entrances onto existing land.
+The finite bounds cannot prevent walls outside their boundaries. Verify the
+complete approach and launcher as an ordinary survival player without placing
+or breaking blocks before commissioning a site. Protection and launch mechanics
+are separate: disabling new launches does not allow destruction or walling-off.
 
 `parcels.yml` declares exact block bounds, corroborated UUID owners and survey
 provenance. Holdings are separate from Town membership, Governor limits and

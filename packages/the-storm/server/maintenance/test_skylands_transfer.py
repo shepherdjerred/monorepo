@@ -1,10 +1,13 @@
 import json
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from maintenance import files, skylands_transfer as transfer, startup
+from maintenance import files, startup
+from maintenance import skylands_transfer as transfer
 from maintenance.skylands import MARKER, require_generation
 
 
@@ -29,7 +32,11 @@ class SkylandsTransferTest(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(value)
         (self.data / MARKER).write_text(json.dumps({"world": "skylands", "seed": 1731, "format": "layered-v1"}))
-        (self.data / transfer.VOLUME_MARKER).write_text(json.dumps({"schemaVersion": 1, "status": "COMPLETE", "retired": ["wilds", "peaks"], "requestId": "production"}))
+        (self.data / transfer.VOLUME_MARKER).write_text(
+            json.dumps(
+                {"schemaVersion": 1, "status": "COMPLETE", "retired": ["wilds", "peaks"], "requestId": "production"}
+            )
+        )
 
     def candidate(self):
         payload = transfer.export_world(self.data, "candidate")
@@ -43,7 +50,12 @@ class SkylandsTransferTest(unittest.TestCase):
         require_generation(payload, payload / MARKER)
         self.assertIn(str(transfer.DIMENSION / "poi/r.0.0.mca"), names)
         self.assertIn(str(transfer.DIMENSION / "entities/r.0.0.mca"), names)
-        self.assertFalse(any("frontier" in name or "playerdata" in name or "session.lock" in name or name.endswith(".db") for name in names))
+        self.assertFalse(
+            any(
+                "frontier" in name or "playerdata" in name or "session.lock" in name or name.endswith(".db")
+                for name in names
+            )
+        )
         before = files.files(payload)
         transfer.export_world(self.data, "export")
         self.assertEqual(files.files(payload), before)
@@ -59,7 +71,10 @@ class SkylandsTransferTest(unittest.TestCase):
         self.assertEqual(files.files(self.data / "world/playerdata"), before)
         self.assertEqual((self.data / "plugins/TheStorm/the-storm.db").read_bytes(), b"real database")
         self.assertEqual((self.data / "world/dimensions/minecraft/frontier/region/r.0.0.mca").read_bytes(), b"frontier")
-        self.assertEqual((transfer.transfer_root(self.data, "candidate") / "original-dimension/region/r.0.0.mca").read_bytes(), b"original terrain")
+        self.assertEqual(
+            (transfer.transfer_root(self.data, "candidate") / "original-dimension/region/r.0.0.mca").read_bytes(),
+            b"original terrain",
+        )
         # A reboot must not reinstall the candidate over subsequent live edits.
         (self.data / transfer.DIMENSION / "region/r.0.0.mca").write_bytes(b"later live edits")
         transfer.install_world(self.data, "candidate", digest)
@@ -82,11 +97,32 @@ class SkylandsTransferTest(unittest.TestCase):
             transfer.install_world(self.data, "candidate", digest)
         self.assertEqual((self.data / transfer.DIMENSION / "region/r.0.0.mca").read_bytes(), b"original terrain")
 
+    def test_install_keeps_bluemap_cache_and_refreshes_only_changed_regions(self):
+        region = self.data / transfer.DIMENSION / "region"
+        unchanged = region / "r.1.0.mca"
+        unchanged.write_bytes(b"untouched terrain")
+        os.utime(unchanged, (1, 1))
+        cached = self.data / "bluemap/web/maps/skylands/tile.json"
+        cached.parent.mkdir(parents=True)
+        cached.write_bytes(b"retained render")
+        payload, digest = self.candidate()
+        changed = payload / transfer.DIMENSION / "region/r.0.0.mca"
+        os.utime(changed, (1, 1))
+        changed.chmod(0o666)
+        transfer.install_world(self.data, "candidate", digest)
+        self.assertEqual(cached.read_bytes(), b"retained render")
+        self.assertEqual(unchanged.stat().st_mtime, 1)
+        installed = region / "r.0.0.mca"
+        self.assertGreater(installed.stat().st_mtime, 1)
+        self.assertEqual(stat.S_IMODE(installed.stat().st_mode), 0o644)
+        dirty = json.loads((transfer.transfer_root(self.data, "candidate") / "dirty-regions.json").read_text())
+        self.assertEqual(dirty, {"schemaVersion": 1, "digest": digest, "regions": ["r.0.0.mca"]})
+
     def test_interrupted_rename_resumes_without_losing_original(self):
         _, digest = self.candidate()
         rename = Path.rename
 
-        def interrupt(source, destination):
+        def interrupt(source: Path, destination: Path) -> Path:
             if source.name == ".skylands-candidate":
                 raise OSError("interrupted after original was retained")
             return rename(source, destination)

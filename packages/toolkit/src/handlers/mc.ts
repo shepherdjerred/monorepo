@@ -163,6 +163,7 @@ async function handleSandbox(args: string[]): Promise<void> {
     "artifact-file": { type: "string" },
     world: { type: "string", default: "flat" },
     "map-directory": { type: "string" },
+    "world-dir": { type: "string" },
     "map-spawn": { type: "string" },
     "rollout-url": { type: "string" },
     "rollout-environment": { type: "string" },
@@ -180,6 +181,7 @@ async function handleSandbox(args: string[]): Promise<void> {
         profile,
         ...(await publishedProfileInputs(profile, values["artifact-file"])),
         world: WorldKindSchema.parse(values.world),
+        worldDirectory: values["world-dir"],
         ...(values["map-directory"] === undefined
           ? {}
           : { mapDirectory: values["map-directory"] }),

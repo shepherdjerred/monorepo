@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -50,6 +51,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     com.shepherdjerred.thestorm.arena.adapter.paper.ArenaFixtures.install(this, content.toPath());
     RepeaterFixtures.install(this);
     HeritageFixtures.install(this);
+    SkytravelFixtures.install(this);
     new BeginnerFixtures(this).register();
     world = Objects.requireNonNull(getServer().getWorld("world"));
     var modules = section(yaml("config.yml"), "modules");
@@ -65,7 +67,15 @@ public final class StormFixtures extends JavaPlugin implements Listener {
       merchantStands();
     }
     if (townsOn) {
-      protectedWorlds();
+      var generatedWorlds =
+          switchedOn(modules, "skylands")
+              ? Set.of(
+                  com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+                          content.toPath().resolve("skylands.json"),
+                          com.shepherdjerred.thestorm.skylands.domain.SkylandsConfig.class)
+                      .world())
+              : Set.<String>of();
+      protectedWorlds(generatedWorlds);
       HistoricalLockFixtures.seed(world, content.toPath());
     }
     if (enabled(modules, "essentials", prepared)) {
@@ -306,7 +316,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
   }
 
   /** Region protection needs its named worlds even when the arena module is disabled. */
-  private void protectedWorlds() {
+  private void protectedWorlds(Set<String> generatedWorlds) {
     var towns =
         com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
             content.toPath().resolve("towns.yml"),
@@ -323,6 +333,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
         .flatMap(region -> region.areas().all().stream())
         .map(com.shepherdjerred.thestorm.towns.domain.region.Area::world)
         .distinct()
+        .filter(name -> !generatedWorlds.contains(name))
         .filter(name -> getServer().getWorld(name) == null)
         .forEach(this::voidWorld);
     var parcels =
