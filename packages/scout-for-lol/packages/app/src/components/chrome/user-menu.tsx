@@ -1,4 +1,4 @@
-import { Bug, ChevronDown, LogOut } from "lucide-react";
+import { Bug, ChevronDown, LogOut, Shield } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -63,6 +63,12 @@ export function UserMenu(props: { username: string }) {
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="gap-2 text-xs">
+          <Link to="/settings">
+            <Shield className="size-3.5 text-scout-subtle" aria-hidden="true" />
+            <span>Privacy settings</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild className="gap-2 text-xs">
           <Link to="/feedback">
             <Bug className="size-3.5 text-scout-subtle" aria-hidden="true" />

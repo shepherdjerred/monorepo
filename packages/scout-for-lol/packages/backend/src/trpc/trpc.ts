@@ -147,7 +147,7 @@ const hasWebSession = middleware(async ({ ctx, next }) => {
  * AND a same-origin Origin header. Use webMutationProcedure for any
  * state-changing endpoint.
  */
-const hasWebSessionWithCsrf = middleware(async ({ ctx, next }) => {
+export function requireWebMutationSession(ctx: Context) {
   if (ctx.webSession === null || ctx.user === null) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -178,13 +178,11 @@ const hasWebSessionWithCsrf = middleware(async ({ ctx, next }) => {
     });
   }
 
-  return next({
-    ctx: {
-      ...ctx,
-      webSession: ctx.webSession,
-      user: ctx.user,
-    },
-  });
+  return { ...ctx, webSession: ctx.webSession, user: ctx.user };
+}
+
+const hasWebSessionWithCsrf = middleware(async ({ ctx, next }) => {
+  return next({ ctx: requireWebMutationSession(ctx) });
 });
 
 export const webProcedure = instrumentedProcedure.use(hasWebSession);

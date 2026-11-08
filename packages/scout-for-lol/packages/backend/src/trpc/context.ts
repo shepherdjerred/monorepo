@@ -21,6 +21,10 @@ export const CSRF_COOKIE = "scout_csrf";
 export const CSRF_HEADER = "x-csrf-token";
 
 export type WebSession = {
+  /** Session identity used to bind an account-link flow to the initiating login. */
+  sessionId?: string | undefined;
+  /** Encrypted, short-lived Riot linking cookie; never returned by a procedure. */
+  riotLinkCookie?: string | undefined;
   /** Discord snowflake ID from the verified JWT `sub` */
   discordId: DiscordAccountId;
   /** Raw CSRF token value as carried by the scout_csrf cookie (used to validate header on mutations) */
@@ -137,6 +141,8 @@ export async function createContext(request: Request): Promise<Context> {
         webSessionRejectedTotal.inc({ reason: "unknown_user" });
       } else {
         webSession = {
+          sessionId: claims.jti,
+          riotLinkCookie: cookies.get("scout_riot_link"),
           discordId: DiscordAccountIdSchema.parse(claims.sub),
           csrfToken: cookies.get(CSRF_COOKIE) ?? null,
           origin: request.headers.get("Origin"),

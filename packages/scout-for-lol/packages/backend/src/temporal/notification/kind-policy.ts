@@ -6,6 +6,7 @@ import { dareStatusSuppression } from "#src/temporal/notification/dare-status-no
 import { duelStatusSuppression } from "#src/temporal/notification/duel-status-notification.ts";
 import { hallRecordBreakSuppression } from "#src/temporal/notification/hall-record-break-notification.ts";
 import { productAnnouncementSuppression } from "#src/temporal/notification/product/policy.ts";
+import { matchNotificationPreferenceSuppression } from "#src/temporal/notification/account-preference.ts";
 import {
   suppress,
   type NotificationTransitionResult,
@@ -72,7 +73,7 @@ async function kindSuppressionOf(
       );
     case "postmatch":
     case "prematch":
-      return undefined;
+      return await matchNotificationPreferenceSuppression(record);
   }
 }
 

@@ -236,6 +236,7 @@ export function selectDumpableExtensions(
  * worth looking at locally.
  */
 export const EXCLUDED_TABLE_DATA: readonly string[] = [
+  "RiotOAuthLinkAttempt",
   "ApiToken",
   "InstallAttributionToken",
 ];

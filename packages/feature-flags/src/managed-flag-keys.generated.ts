@@ -181,6 +181,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "hall_of_fame_enabled",
   "initial_match_history_import_enabled",
   "mvp_votes_enabled",
+  "riot_account_linking_enabled",
   "scout-consumer-player-profiles-enabled",
   "scout-explore-analysis-enabled",
   "scout-explore-model-picker-enabled",

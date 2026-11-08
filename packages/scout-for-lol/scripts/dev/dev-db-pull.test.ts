@@ -215,6 +215,7 @@ describe("argv builders", () => {
       '--exclude-table-data=public."ApiToken"',
       '--exclude-table-data=public."ExploreConversation"',
       '--exclude-table-data=public."InstallAttributionToken"',
+      '--exclude-table-data=public."RiotOAuthLinkAttempt"',
       '--exclude-table-data=public."TournamentLobby"',
       '--exclude-table-data=public."User"',
     ]);
@@ -282,6 +283,7 @@ describe("handoffMessage", () => {
 describe("credential handling", () => {
   test("leaves no data for the credential-only tables", () => {
     expect(EXCLUDED_TABLE_DATA).toEqual([
+      "RiotOAuthLinkAttempt",
       "ApiToken",
       "InstallAttributionToken",
     ]);
@@ -349,6 +351,7 @@ describe("credential handling", () => {
       "ApiToken",
       "ExploreConversation",
       "InstallAttributionToken",
+      "RiotOAuthLinkAttempt",
       "TournamentLobby",
       "User",
     ]);

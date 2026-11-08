@@ -104,7 +104,10 @@ export async function oldestReadyNotificationIntentAt(
  * rule that pages at one — a systemic mint failure misses unfiltered matches
  * too, and it cannot fire on a correct deployment. The subscription and its
  * account must predate the last cursor advance, so a subscription added later
- * does not retroactively make an old match look owed.
+ * does not retroactively make an old match look owed. Disabled accounts and
+ * preferences changed after completion are excluded too: re-enabling must not
+ * retroactively make an intentionally skipped match look owed. This remains
+ * conservative when re-verification changes the preference row's timestamp.
  *
  * Silent-backfill and ARCHIVE_ONLY observations mint nothing by design and are
  * excluded, as is anything another pipeline owns. A match carrying the
@@ -159,6 +162,11 @@ export async function countUnmintedLivePostmatchMatches(
                     WHERE ta."riotMatchId" = m."riotMatchId"
                       AND s."isMuted" = false
                       AND s."filters" IS NULL
+                      AND NOT EXISTS (SELECT 1
+                                        FROM "RiotAccountPreference" AS p
+                                       WHERE p."puuid" = ta."puuid"
+                                         AND (p."matchNotificationsEnabled" = false
+                                              OR p."updatedAt" > m."completedAt"))
                       AND a."createdTime" <= m."completedAt"
                       AND s."createdTime" <= m."completedAt")`);
   return singleRow(z.strictObject({ count: z.number().int() }), rows).count;

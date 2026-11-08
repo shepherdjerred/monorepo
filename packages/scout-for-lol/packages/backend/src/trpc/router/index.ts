@@ -5,6 +5,7 @@
  */
 
 import { authRouter } from "#src/trpc/router/auth.router.ts";
+import { riotAccountRouter } from "#src/trpc/riot/router.ts";
 import { challengeRouter } from "#src/trpc/router/challenge.router.ts";
 import { clashRouter } from "#src/trpc/router/clash/clash.router.ts";
 import { competitionRouter } from "#src/trpc/router/competitions/competition.router.ts";
@@ -36,6 +37,7 @@ import type { AnyRouter, inferRouterOutputs } from "@trpc/server";
 
 export const appRouter = router({
   auth: authRouter,
+  riotAccount: riotAccountRouter,
   telemetry: telemetryRouter,
   installAttribution: installAttributionRouter,
   feedback: feedbackRouter,

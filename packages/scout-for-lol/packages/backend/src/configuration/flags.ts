@@ -167,6 +167,7 @@ export type FlagName =
   | "scout_durable_orchestration_enabled"
   | "scout_support_conversations_enabled"
   | "scout-consumer-player-profiles-enabled"
+  | "riot_account_linking_enabled"
   | "voice_assistant_enabled";
 
 /**
@@ -214,6 +215,7 @@ function applicableOverrides(config: FlagConfig): FlagOverride[] {
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
+  riot_account_linking_enabled: { default: false, overrides: [] },
   hall_of_fame_enabled: {
     default: false,
     overrides: [

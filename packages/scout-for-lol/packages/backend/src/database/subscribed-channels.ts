@@ -9,6 +9,7 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { notificationOptOuts } from "#src/database/riot-accounts.ts";
 
 const logger = createLogger("database");
 
@@ -55,6 +56,7 @@ export async function getChannelsSubscribedToPlayers(
       },
     });
 
+    const optedOut = await notificationOptOuts(puuids, prismaClient);
     const queryTime = Date.now() - startTime;
     logger.info(
       `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`,
@@ -71,6 +73,7 @@ export async function getChannelsSubscribedToPlayers(
       }
     >();
     for (const account of accounts) {
+      if (optedOut.has(account.puuid)) continue;
       for (const subscription of account.player.subscriptions) {
         const channel = DiscordChannelIdSchema.parse(subscription.channelId);
         let entry = byChannel.get(channel);

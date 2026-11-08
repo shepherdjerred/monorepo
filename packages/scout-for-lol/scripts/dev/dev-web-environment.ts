@@ -16,6 +16,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   string,
   boolean | string | number
 > = {
+  riot_account_linking_enabled: false,
   ai_reports_enabled: false,
   ai_reports_unlimited: false,
   dares_enabled: false,
