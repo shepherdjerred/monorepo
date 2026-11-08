@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { ApplicationFailure } from "@temporalio/activity";
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { RecipeDefinitionSchema } from "@shepherdjerred/delivery/model-contract";
 import { workerImageProofInput } from "#lib/delivery/workers/worker-image-proof.ts";
@@ -46,6 +47,7 @@ function effects(
   states: DeploymentDetail[],
   deployments: unknown[] = [],
   unsettledHosts = 0,
+  prepareError?: Error,
 ) {
   const calls: string[] = [];
   let reload = 0;
@@ -81,6 +83,7 @@ function effects(
     },
     prepare: async () => {
       calls.push("prepare");
+      if (prepareError !== undefined) throw prepareError;
       return PLAN;
     },
     step: async (_id, plan, action) => {
@@ -180,6 +183,32 @@ describe("worker-rollout step (E5)", () => {
     ]);
   });
 
+  test("a read-only preflight failure settles the step failed, nothing promoted", async () => {
+    const synced = temporal([{ key: "step-sync", status: "succeeded" }]);
+    const refused = ApplicationFailure.nonRetryable(
+      "worker-preflight failed: replay diverged",
+      "DeliveryReadOnlyStageFailed",
+    );
+    const run = effects([synced], [], 0, refused);
+    await expect(runWorkerRolloutStep(synced, KEY, run.effects)).rejects.toBe(
+      refused,
+    );
+    expect(run.calls).toEqual([
+      `record ${KEY} running`,
+      "hosts",
+      "prepare",
+      `record ${KEY} failed`,
+    ]);
+  });
+  test("any other planning failure leaves the step running for recovery", async () => {
+    const synced = temporal([{ key: "step-sync", status: "succeeded" }]);
+    const unknown = new Error("Delivery API unavailable");
+    const run = effects([synced], [], 0, unknown);
+    await expect(runWorkerRolloutStep(synced, KEY, run.effects)).rejects.toBe(
+      unknown,
+    );
+    expect(run.calls).toEqual([`record ${KEY} running`, "hosts", "prepare"]);
+  });
   test("a resumed step routes by the recorded plan and skips settled Jobs", async () => {
     const resumed = rolling(["promote"]);
     const verified = rolling(["promote", "verify"]);
