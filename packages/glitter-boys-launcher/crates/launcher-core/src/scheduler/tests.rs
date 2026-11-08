@@ -243,7 +243,11 @@ fn client_handoff_is_visible_and_launch_failure_has_recovery_guidance() -> Resul
         );
         engine
             .tx
-            .send(Completion { id, result })
+            .send(Completion {
+                id,
+                result,
+                staging: None,
+            })
             .map_err(|e| Error::Invalid(e.to_string()))?;
         engine.receive();
         let s = engine
@@ -446,11 +450,13 @@ fn fixture() -> Result<(tempfile::TempDir, Engine)> {
             queued: true,
             pausing: false,
             handoff: false,
+            resumable: false,
             error: None,
         }),
         busy: false,
         queued: 2,
         error: None,
+        download_limit_mbps: None,
     }));
     Ok((
         temp,
@@ -538,6 +544,7 @@ fn one_failure_cancels_its_siblings_but_not_another_game() -> Result<()> {
         .send(Completion {
             id: 1,
             result: Err(Error::Invalid("broken fixture".into())),
+            staging: None,
         })
         .map_err(|e| Error::Invalid(e.to_string()))?;
     engine.receive();
@@ -545,6 +552,101 @@ fn one_failure_cancels_its_siblings_but_not_another_game() -> Result<()> {
     assert!(engine.enabled[2]);
     assert!(other.check().is_ok());
     assert!(engine.settings.queue.contains(&Game::T5));
+    Ok(())
+}
+#[test]
+fn failed_finish_keeps_unpacked_files_so_retry_skips_extraction() -> Result<()> {
+    let (temp, mut engine) = fixture()?;
+    let finish = |engine: &mut Engine, id: u64, error: Error| -> Result<()> {
+        engine.enabled[index(Game::Iw4x)] = true;
+        engine.running.insert(
+            id,
+            Running {
+                key: Key::Finish(Game::Iw4x),
+                cancel: Cancellation::default(),
+                started: Instant::now(),
+                bytes: 0,
+                meter: Arc::new(Mutex::new(Meter::default())),
+            },
+        );
+        let staging = tempfile::tempdir_in(temp.path())?;
+        std::fs::create_dir(staging.path().join("iw4x"))?;
+        engine
+            .tx
+            .send(Completion {
+                id,
+                result: Err(error),
+                staging: Some(staging),
+            })
+            .map_err(|e| Error::Invalid(e.to_string()))?;
+        engine.receive();
+        Ok(())
+    };
+    finish(
+        &mut engine,
+        1,
+        Error::Step {
+            step: crate::Step::Promote,
+            path: "iw4x".into(),
+            source: std::io::Error::other("in use"),
+            held: Vec::new(),
+        },
+    )?;
+    let kept = engine.staged[index(Game::Iw4x)]
+        .as_ref()
+        .map(|dir| dir.path().join("iw4x"));
+    assert!(kept.as_ref().is_some_and(|path| path.is_dir()));
+    {
+        let s = engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?;
+        assert_eq!(s.games[index(Game::Iw4x)].phase, Phase::Failed);
+        assert!(s.games[index(Game::Iw4x)].resumable);
+    }
+    // Free up space can delete retained files; they are then unpacked again.
+    let retained = engine.staged[index(Game::Iw4x)]
+        .as_ref()
+        .map(|dir| dir.path().join("iw4x"));
+    if let Some(path) = &retained {
+        std::fs::remove_dir_all(path)?;
+    }
+    engine.drop_missing_staging(Game::Iw4x);
+    assert!(engine.staged[index(Game::Iw4x)].is_none());
+    assert!(
+        !engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?
+            .games[index(Game::Iw4x)]
+        .resumable
+    );
+    // Damaged archive data must be unpacked again.
+    finish(
+        &mut engine,
+        2,
+        Error::Archive(zip::result::ZipError::FileNotFound),
+    )?;
+    assert!(engine.staged[index(Game::Iw4x)].is_none());
+    assert!(kept.is_some_and(|path| !path.exists()));
+    // A required file missing after unpacking (for example removed by antivirus) cannot
+    // be restored by finishing again, so the next attempt unpacks the archive again.
+    finish(
+        &mut engine,
+        3,
+        Error::Invalid("Modern Warfare 2 is missing a required file after extraction".into()),
+    )?;
+    assert!(engine.staged[index(Game::Iw4x)].is_none());
+    // A step waiting on the player keeps the files.
+    finish(
+        &mut engine,
+        4,
+        Error::ActionRequired {
+            title: "A game updater is still running",
+            next_step: "Close any MW2 or IW4x windows, then choose Try again in Get help.",
+        },
+    )?;
+    assert!(engine.staged[index(Game::Iw4x)].is_some());
     Ok(())
 }
 #[test]
@@ -696,5 +798,30 @@ fn download_capacity_counts_shared_artifact_once() -> Result<()> {
     assert_eq!(engine.running.len(), 2);
     assert!(engine.uses(Game::T5, &engine.catalog.plutonium.sha256));
     assert!(engine.uses(Game::T6, &engine.catalog.plutonium.sha256));
+    Ok(())
+}
+#[test]
+fn an_unsaved_download_limit_is_reported_without_stopping_installs() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    // A directory where the preference file belongs makes the save fail.
+    std::fs::create_dir_all(engine.data.join("network.json"))?;
+    engine.command(Command::DownloadLimit(Some(50)))?;
+    let s = engine
+        .shared
+        .lock()
+        .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?;
+    assert_eq!(
+        s.download_limit_mbps, None,
+        "the cap only changes once saved"
+    );
+    assert_eq!(
+        s.error.as_ref().map(|p| p.title),
+        Some("The download limit couldn't be saved")
+    );
+    drop(s);
+    // Out-of-range values are rejected before anything is written.
+    std::fs::remove_dir(engine.data.join("network.json"))?;
+    engine.command(Command::DownloadLimit(Some(0)))?;
+    assert!(!engine.data.join("network.json").exists());
     Ok(())
 }

@@ -22,6 +22,7 @@ pub fn verify_microsoft(path: &Path) -> Result<()> {
     .stderr(std::process::Stdio::null())
     .status()?;
     if !status.success() {
+        tracing::warn!(path = %path.display(), code = ?status.code(), "Microsoft signature check failed");
         return Err(Error::Invalid("The component installer does not have a valid Microsoft signature. Restore the official installer before retrying.".into()));
     }
     Ok(())
@@ -47,6 +48,7 @@ pub fn verify_publisher(path: &Path, publisher: &str) -> Result<()> {
     .stderr(std::process::Stdio::null())
     .status()?;
     if !status.success() {
+        tracing::warn!(path = %path.display(), publisher, code = ?status.code(), "update publisher check failed");
         return Err(Error::Invalid(
             "Launcher update publisher could not be verified".into(),
         ));
@@ -66,6 +68,14 @@ pub fn run(path: &Path, parameters: &str) -> Result<u32> {
     .creation_flags(0x0800_0000)
     .stdin(std::process::Stdio::null())
     .output()?;
+    tracing::info!(
+        path = %path.display(),
+        parameters,
+        status = ?output.status.code(),
+        stdout = %String::from_utf8_lossy(&output.stdout).trim(),
+        stderr = %String::from_utf8_lossy(&output.stderr).trim(),
+        "component installer finished"
+    );
     if !output.status.success() {
         return Err(Error::Invalid(format!(
             "Windows could not start component setup: {}",

@@ -39,6 +39,7 @@ glitter-boys-core = { path = "../launcher-core" }
 open.workspace = true
 rfd.workspace = true
 serde_json.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

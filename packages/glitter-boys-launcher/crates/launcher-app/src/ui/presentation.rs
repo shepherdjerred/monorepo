@@ -56,8 +56,8 @@ pub(super) fn card_copy(g: &GameStatus) -> CardCopy {
         },
         Phase::Failed => CardCopy {
             status: "Setup couldn't finish",
-            helper: "Choose Get help for the next step.",
-            action: "Try again",
+            helper: "",
+            action: "Get help",
         },
         Phase::Ready => CardCopy {
             status: "Ready to play",
@@ -65,12 +65,20 @@ pub(super) fn card_copy(g: &GameStatus) -> CardCopy {
             action: "Play",
         },
     };
+    // A failure leads to its explanation first; Try again lives beside the details.
     if let Some(problem) = &g.error {
         copy.status = problem.title;
         copy.helper = problem.next_step;
-        copy.action = "Try again";
+        copy.action = "Get help";
     }
     copy
+}
+/// "50 Mbps" while downloads are capped and this game is downloading.
+pub(super) fn cap_text(game: &GameStatus, limit_mbps: Option<u32>) -> Option<String> {
+    (game.phase == Phase::Downloading && !game.pausing)
+        .then_some(limit_mbps)
+        .flatten()
+        .map(|mbps| format!("{mbps} Mbps"))
 }
 pub(super) fn speed_text(rate: f64) -> String {
     if rate >= 999_950_000.0 {
@@ -95,6 +103,7 @@ pub(super) fn step_label(g: &GameStatus) -> &'static str {
         Phase::Preparing => match g.progress.phase {
             "Updating IW4x" => "Updating MW2",
             "Finishing installation" => "Finishing installation",
+            "Waiting for a security scan" => "Waiting for antivirus to finish scanning",
             "Installing Microsoft components" => "Installing Windows components",
             _ => "Setting up the game launcher",
         },
@@ -123,8 +132,9 @@ pub(super) fn progress_text(g: &GameStatus) -> String {
         _ => percent,
     }
 }
-pub(super) fn row_progress_text(game: &GameStatus) -> String {
+pub(super) fn row_progress_text(game: &GameStatus, limit_mbps: Option<u32>) -> String {
     let progress = progress_text(game);
+    let cap = cap_text(game, limit_mbps).map(|cap| format!("capped at {cap}"));
     let timing = if matches!(game.phase, Phase::Preparing | Phase::Launching) {
         game.timing
             .stage_elapsed
@@ -144,7 +154,7 @@ pub(super) fn row_progress_text(game: &GameStatus) -> String {
     } else {
         None
     };
-    [Some(progress).filter(|text| !text.is_empty()), timing]
+    [Some(progress).filter(|text| !text.is_empty()), cap, timing]
         .into_iter()
         .flatten()
         .collect::<Vec<_>>()

@@ -81,7 +81,13 @@ pub struct Launcher {
     healthy: bool,
     settings_tab: SettingsTab,
     keep_saves: bool,
+    /// The Mbps value being edited in Settings, seeded from the saved limit.
+    download_limit_draft: Option<u32>,
+    /// A support bundle being written in the background.
+    export: Option<BundleExport>,
 }
+type BundleExport =
+    std::sync::mpsc::Receiver<(PathBuf, Result<glitter_boys_core::support::BundleSummary>)>;
 impl Launcher {
     pub fn new(
         context: &eframe::CreationContext<'_>,
@@ -101,6 +107,8 @@ impl Launcher {
             healthy: false,
             settings_tab: SettingsTab::General,
             keep_saves: true,
+            download_limit_draft: None,
+            export: None,
         })
     }
     fn report(&mut self, error: &glitter_boys_core::Error) {
@@ -194,7 +202,11 @@ impl Launcher {
                 let problem = self.problem.as_ref().or(snapshot.error.as_ref());
                 if self.closing {
                     ui.label(
-                        RichText::new(presentation::closing_text(snapshot))
+                        RichText::new(if self.export.is_some() {
+                            "Saving support bundle before closing…".to_string()
+                        } else {
+                            presentation::closing_text(snapshot)
+                        })
                             .small()
                             .color(LILAC),
                     );
@@ -291,13 +303,14 @@ impl eframe::App for Launcher {
             && let Ok(updater) = &self.updater
             && let Err(error) = updater.apply_on_exit()
         {
-            glitter_boys_core::diagnostics::record(
-                None,
-                glitter_boys_core::diagnostics::Operation::UpdateApply,
-                glitter_boys_core::diagnostics::Outcome::Failed,
-                glitter_boys_core::diagnostics::failure(&error),
-                0,
-                0,
+            tracing::warn!(%error, "launcher update could not be activated");
+            glitter_boys_core::diagnostics::record_event(
+                glitter_boys_core::diagnostics::EventInput::new(
+                    None,
+                    glitter_boys_core::diagnostics::Operation::UpdateApply,
+                    glitter_boys_core::diagnostics::Outcome::Failed,
+                ),
+                Some(&error),
             );
         }
     }
@@ -313,7 +326,9 @@ impl eframe::App for Launcher {
                 Err(e) => self.report(&e),
             }
         }
-        let busy = self.snapshot().is_ok_and(|s| s.busy);
+        self.poll_export();
+        // A support bundle being written also holds the window open until it is saved.
+        let busy = self.snapshot().is_ok_and(|s| s.busy) || self.export.is_some();
         if context.input(|i| i.viewport().close_requested()) && busy {
             context.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.closing = true;
@@ -334,7 +349,7 @@ impl eframe::App for Launcher {
                 ui.heading("Glitter Boys couldn't open your library");
                 ui.label(problem.next_step);
                 ui.label("Your game files have not been removed.");
-                self.problem_contents(ui, &problem);
+                self.problem_contents(ui, &problem, None);
             }
         }
     }

@@ -81,9 +81,15 @@ impl Launcher {
                     .games
                     .iter()
                     .any(|other| other.phase == Phase::Launching));
+        let failed = game.phase == Phase::Failed;
         if game.phase == Phase::Ready {
             if let Some(mode) = play_buttons(&mut action_ui, game.game, enabled) {
                 self.send(Command::Play(game.game, mode));
+            }
+        } else if failed {
+            // Explain first: the reason and Try again live together in Get help.
+            if button(&mut action_ui, Icon::Help, copy.action, true).clicked() {
+                self.dialog = Some(Dialog::Details(index));
             }
         } else if action_ui
             .add_enabled_ui(enabled, |ui| {
@@ -96,7 +102,6 @@ impl Launcher {
                         | Phase::Downloading
                         | Phase::Extracting
                         | Phase::Preparing => Icon::Pause,
-                        Phase::Failed => Icon::Refresh,
                         _ => Icon::Download,
                     },
                     copy.action,
@@ -125,7 +130,10 @@ impl Launcher {
         {
             self.dialog = Some(Dialog::Cancel(index));
         }
-        if game.error.is_some() && button(&mut action_ui, Icon::Help, "Get help", false).clicked() {
+        if game.error.is_some()
+            && !failed
+            && button(&mut action_ui, Icon::Help, "Get help", false).clicked()
+        {
             self.dialog = Some(Dialog::Details(index));
         }
 
@@ -186,6 +194,13 @@ impl Launcher {
             )
             .on_hover_text(&status);
         });
+        if game.error.is_some() && !copy.helper.is_empty() && !active {
+            content
+                .add(
+                    egui::Label::new(RichText::new(copy.helper).size(12.0).color(MUTED)).truncate(),
+                )
+                .on_hover_text(copy.helper);
+        }
         if game.pausing {
             content.add(
                 egui::Label::new(
@@ -202,14 +217,33 @@ impl Launcher {
             } else {
                 0.0
             };
-            content.add(
+            let capped = presentation::cap_text(game, snapshot.download_limit_mbps).is_some();
+            let bar = content.add(
                 egui::ProgressBar::new(fraction)
                     .desired_height(16.0)
                     .corner_radius(4)
                     .fill(Color32::from_rgb(78, 61, 109))
-                    .text(RichText::new(presentation::row_progress_text(game)).size(11.0))
+                    .text(
+                        RichText::new(presentation::row_progress_text(
+                            game,
+                            snapshot.download_limit_mbps,
+                        ))
+                        .size(11.0),
+                    )
                     .animate(game.progress.total == 0),
             );
+            if capped {
+                icons::draw(
+                    ui.painter(),
+                    Icon::Gauge,
+                    egui::Rect::from_center_size(
+                        egui::pos2(bar.rect.right() - 12.0, bar.rect.center().y),
+                        egui::vec2(12.0, 12.0),
+                    ),
+                    LILAC,
+                );
+                bar.on_hover_text("Download speed is limited. Change it in Settings → General.");
+            }
         }
     }
 }

@@ -10,8 +10,98 @@ use std::{
     fs::{File, OpenOptions},
     io::{Read, Write},
     path::{Path, PathBuf},
-    time::Duration,
+    sync::{
+        LazyLock, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
+    time::{Duration, Instant},
 };
+
+/// Highest accepted download cap, in megabits per second.
+pub const MAX_LIMIT_MBPS: u32 = 10_000;
+
+/// A token bucket shared by every launcher download in this process.
+pub struct RateLimit {
+    bytes_per_second: AtomicU64,
+    bucket: Mutex<Bucket>,
+}
+struct Bucket {
+    tokens: f64,
+    last: Instant,
+}
+impl RateLimit {
+    fn new() -> Self {
+        Self {
+            bytes_per_second: AtomicU64::new(0),
+            bucket: Mutex::new(Bucket {
+                tokens: 0.0,
+                last: Instant::now(),
+            }),
+        }
+    }
+    fn set(&self, bytes_per_second: u64) {
+        let mut bucket = self.bucket.lock().unwrap_or_else(|p| p.into_inner());
+        bucket.tokens = 0.0;
+        bucket.last = Instant::now();
+        self.bytes_per_second
+            .store(bytes_per_second, Ordering::Release);
+    }
+    fn rate(&self) -> u64 {
+        self.bytes_per_second.load(Ordering::Acquire)
+    }
+    /// Take `bytes` from the bucket and return how long the caller must wait to stay
+    /// under the cap. A one-second burst lets short gaps refill without overshooting.
+    fn reserve(&self, bytes: u64, now: Instant) -> Duration {
+        let rate = self.rate();
+        if rate == 0 {
+            return Duration::ZERO;
+        }
+        let mut bucket = self.bucket.lock().unwrap_or_else(|p| p.into_inner());
+        let refill = now.saturating_duration_since(bucket.last).as_secs_f64() * rate as f64;
+        bucket.last = now;
+        bucket.tokens = (bucket.tokens + refill).min(rate as f64) - bytes as f64;
+        if bucket.tokens >= 0.0 {
+            Duration::ZERO
+        } else {
+            Duration::from_secs_f64(-bucket.tokens / rate as f64)
+        }
+    }
+    /// Wait out the cap for `bytes`, in short slices so Pause stays immediate and a
+    /// changed limit applies to downloads already running.
+    async fn throttle(&self, bytes: u64, cancel: &Cancellation) -> Result<()> {
+        let rate = self.rate();
+        let mut wait = self.reserve(bytes, Instant::now());
+        while !wait.is_zero() {
+            cancel.check()?;
+            if self.rate() != rate {
+                return Ok(());
+            }
+            let slice = wait.min(Duration::from_millis(50));
+            tokio::time::sleep(slice).await;
+            wait = wait.saturating_sub(slice);
+        }
+        Ok(())
+    }
+}
+static LIMIT: LazyLock<RateLimit> = LazyLock::new(RateLimit::new);
+
+/// Bytes per second for a cap in Mbps (0 means unlimited), rejecting unsupported values.
+pub fn limit_bytes_per_second(mbps: Option<u32>) -> Result<u64> {
+    match mbps {
+        None => Ok(0),
+        Some(mbps @ 1..=MAX_LIMIT_MBPS) => Ok(u64::from(mbps) * 125_000),
+        Some(_) => Err(Error::Invalid(format!(
+            "Choose a download limit from 1 to {MAX_LIMIT_MBPS} Mbps"
+        ))),
+    }
+}
+
+/// Cap every launcher download, or remove the cap with `None`. Applies immediately.
+pub fn set_limit_mbps(mbps: Option<u32>) -> Result<()> {
+    LIMIT.set(limit_bytes_per_second(mbps)?);
+    tracing::info!(?mbps, "download limit changed");
+    Ok(())
+}
 
 pub struct DownloadClient {
     transport: Client,
@@ -208,6 +298,7 @@ async fn fetch_async(
                 completed: offset,
                 total: artifact.bytes,
             });
+            LIMIT.throttle(read as u64, cancel).await?;
         }
         output.sync_all()?;
         if offset != artifact.bytes {
@@ -261,5 +352,72 @@ mod tests {
             Err(Error::Paused)
         ));
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod limit_tests {
+    use super::*;
+
+    #[test]
+    fn cap_converts_mbps_and_meters_bytes_over_time() {
+        let limit = RateLimit::new();
+        let start = Instant::now();
+        assert_eq!(limit.reserve(10_000_000, start), Duration::ZERO, "no cap");
+        limit.set(8 * 125_000); // 8 Mbps = 1 MB/s
+        let start = Instant::now();
+        // 10 MB at 1 MB/s needs about 10 seconds of waiting in total.
+        let mut waited = Duration::ZERO;
+        let mut now = start;
+        for _ in 0..10 {
+            let wait = limit.reserve(1_000_000, now);
+            waited += wait;
+            now += wait;
+        }
+        assert!(
+            (9.9..=10.1).contains(&waited.as_secs_f64()),
+            "waited {waited:?}"
+        );
+        // Idle time refills at most one second of burst.
+        let wait = limit.reserve(1_000_000, now + Duration::from_secs(60));
+        assert_eq!(wait, Duration::ZERO);
+        let wait = limit.reserve(1_000_000, now + Duration::from_secs(60));
+        assert!((0.99..=1.01).contains(&wait.as_secs_f64()), "{wait:?}");
+    }
+
+    #[test]
+    fn pause_and_limit_changes_interrupt_a_throttled_wait() -> Result<()> {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?;
+        let limit = RateLimit::new();
+        limit.set(125_000); // 1 Mbps: 10 MB would take 80 s.
+        let cancel = Cancellation::default();
+        cancel.pause();
+        let started = Instant::now();
+        assert!(matches!(
+            runtime.block_on(limit.throttle(10_000_000, &cancel)),
+            Err(Error::Paused)
+        ));
+        assert!(started.elapsed() < Duration::from_secs(1));
+        let limit = std::sync::Arc::new(limit);
+        let changer = limit.clone();
+        let thread = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(100));
+            changer.set(0);
+        });
+        let started = Instant::now();
+        runtime.block_on(limit.throttle(10_000_000, &Cancellation::default()))?;
+        assert!(started.elapsed() < Duration::from_secs(2));
+        thread
+            .join()
+            .map_err(|_| Error::Invalid("limit thread panicked".into()))?;
+        Ok(())
+    }
+
+    #[test]
+    fn limits_outside_the_supported_range_are_rejected() {
+        assert!(set_limit_mbps(Some(0)).is_err());
+        assert!(set_limit_mbps(Some(MAX_LIMIT_MBPS + 1)).is_err());
     }
 }

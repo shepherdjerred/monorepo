@@ -136,8 +136,24 @@ selected library before deleting anything.
 
 ## Client adapters
 
-- **IW4x:** installs the pinned official launcher, runs `--skip-launch` to update
-  a new installation, then starts that launcher for Play.
+- **IW4x:** installs the pinned official launcher (v1.1.8-b.24), runs
+  `--skip-launch --no-self-update --no-shortcuts --no-connect-protocol` to update
+  a new installation in its temporary folder, then starts that launcher with
+  `--no-self-update` for Play from the final folder, where it creates shortcuts,
+  Steam library entries, and the `iw4x://` handler with real paths; game files
+  still update. Launchers from v1.1.8 on refuse to run unless `iw4mp.exe` sits
+  next to them, which the MW2 archive does not ship, so keep the pin until the
+  archive changes. Without `--no-self-update` the pinned launcher replaces itself
+  with the newest upstream build and exits while the replacement keeps the staged
+  folder as its working directory (os error 32 on promotion). Without
+  `--no-shortcuts` it adds the temporary folder to Steam's library and restarts
+  Steam, which then holds the folder (os error 5 on promotion). Before a staged
+  game is moved into the library, setup waits until no process runs from or works
+  inside that folder, then retries the move for up to three minutes while Windows
+  reports it held (shown as "Waiting for antivirus to finish scanning"); on giving
+  up, the error names the files still held open. When a final setup step fails,
+  the unpacked files are kept for that launcher session so Try again skips the
+  extraction.
 - **Plutonium:** sets only `t5Path` or `t6Path` while its client is closed,
   preserves unrelated configuration, runs the official updater with
   `-update-only`, and opens the fixed `plutonium://play/` link for the selected
@@ -182,12 +198,36 @@ are removed after the benchmark. Concurrent disk activity affects the result.
 
 ## Diagnostics
 
-`crates/launcher-core/src/diagnostics.rs` owns the allow-listed event contract.
-Local JSONL logs rotate at 10 MiB, keep at most five files, and expire after seven
-days. Exports contain only those structured events. They never read client login
-configuration. Fields are release, game, operation, outcome, coarse failure,
-duration, bytes, timestamp, and schema version. There are no free-text messages,
-account IDs, installation IDs, IP addresses, paths, or user names in event payloads.
+`crates/launcher-core/src/diagnostics.rs` owns three local records under
+`<data>\diagnostics\logs`, all expiring after seven days:
+
+- `events-*.jsonl`: the allow-listed event contract, rotated at 10 MiB with at
+  most five files. These are the only records ever uploaded.
+- `launcher.<date>.log`: structured JSON text logs (`tracing`), rotated daily.
+  They record startup context, every job with its id, phase changes, full error
+  chains, update checks, prerequisite results, and panics with location and
+  backtrace.
+- `processes/*.log`: stdout and stderr of IW4x, BOIII, and component installer
+  helpers, written to a file handle so a helper can never block on a full pipe.
+  Plutonium output is never captured because it can carry account details; only
+  its exit status is logged.
+
+Event fields are release, game, operation, outcome, coarse failure, duration,
+bytes, timestamp, and schema version. Schema 2 (0.1.9) adds the installation
+`step`, an `io_kind` category, the numeric `os_error`, and a per-run `job` id.
+There are no free-text messages, account IDs, installation IDs, IP addresses,
+paths, or user names in event payloads. Schema 2 events queue in
+`pending\v2\`, which earlier releases skip, so an update rollback never stalls
+on events an older parser rejects.
+
+**Save support bundle** (Help, or Get help on a failed game) writes one local zip:
+a `summary.json` (version, Windows, disks, update state, each game's phase,
+error, receipt, and prerequisite checks, and relevant running processes with
+their folders), all three logs, launcher state files, and name/size listings of
+the library, client, and leftover staging folders, plus small IW4x launcher files.
+It never reads Plutonium's folder, never reads save, profile, or `*.cfg`/`*.ini`
+contents, and replaces the Windows profile path and user name. Entries keep
+their newest 20 MiB and the bundle stops adding logs at 100 MiB.
 
 Automatic reporting defaults on and has an in-app opt-out. Opt-out clears queued
 uploads and prevents new ones; a request already in flight can finish. Debug
@@ -195,12 +235,17 @@ builds never upload. The disk queue keeps at most 1,000 events for 24 hours;
 batches contain at most 25 events, with bounded network timeouts and backoff.
 Telemetry failures do not prevent game installation or launch.
 
-The Rust `launcher-service` crate accepts the same typed contract, exposes public
-HTTP ingestion on 8080 and private Prometheus metrics on 9091, limits request size
-and aggregate request rate, and bounds release-label cardinality. Metrics use
-at-least-once delivery, so a retried accepted batch can be counted twice. Failed
-operations and sanitized panic events forward to Bugsink using its bootstrap
-`BUGSINK_DSN`. Native crash dumps and symbolicated stacks are not implemented.
+The Rust `launcher-service` crate accepts schema 1 batches from older releases and
+schema 2 batches, exposes public HTTP ingestion on 8080 and private Prometheus
+metrics on 9091, limits request size and aggregate request rate, and bounds
+release-label cardinality. `glitter_launcher_failures_total` breaks failed events
+down by step, `io_kind`, and OS error code, with at most 32 distinct codes.
+Metrics use at-least-once delivery, so a retried accepted batch can be counted
+twice. Failed operations and sanitized panic events forward to Bugsink using its
+bootstrap `BUGSINK_DSN`, tagged and fingerprinted by operation, failure, step,
+and OS error so distinct causes stay separate issues. Native crash dumps and
+symbolicated stacks are not implemented.
+
 Edge/proxy access logs have their own retention outside this event contract.
 
 Its Dockerfile belongs to this package; build, smoke-test, and publish the image
@@ -227,6 +272,15 @@ only an inactive chart marker and creates no ArgoCD Application or workload.
 Activation requires a real published image digest and a granted
 `glitter-boys-launcher-credentials` 1Password item. Change those through the
 normal homelab GitOps release path; never activate the unpublished digest marker.
+
+## Download speed limit
+
+Settings → General → **Limit download speed** caps every launcher download (game
+archives, client archives, and launcher updates) at the chosen Mbps, shared
+across concurrent downloads and applied immediately to downloads in progress.
+Traffic from the IW4x, Plutonium, and BOIII updaters is not limited. The value is
+stored in `<data>\network.json`, not `settings.json`, whose exact shape older
+releases read after a rollback.
 
 ## Release and signing runbook
 

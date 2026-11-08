@@ -68,6 +68,7 @@ fn game_status(phase: Phase) -> GameStatus {
         queued: false,
         pausing: false,
         handoff: false,
+        resumable: false,
         progress: Progress {
             phase: "Downloading",
             completed: 1_000_000_000,
@@ -91,6 +92,7 @@ fn unrelated_downloads_do_not_disable_uninstall() {
         busy: true,
         queued: 1,
         error: None,
+        download_limit_mbps: None,
     };
     snapshot.games[3].phase = Phase::Downloading;
     assert!(dialogs::can_uninstall(&snapshot, 0));
@@ -137,7 +139,7 @@ fn simple_cards_explain_the_next_action_and_stage_not_a_total_install_eta() {
         "Restart Windows, then try again.",
         "fixture",
     ));
-    assert_eq!(card_copy(&g).action, "Try again");
+    assert_eq!(card_copy(&g).action, "Get help");
     assert_eq!(card_copy(&g).helper, "Restart Windows, then try again.");
 }
 
@@ -147,7 +149,7 @@ fn progress_and_closing_show_the_actual_step_and_its_elapsed_time() {
     game.timing.bytes_per_second = Some(1.2e9);
     assert_eq!(presentation::progress_text(&game), "50% · 1.2 GB/s");
     assert_eq!(
-        presentation::row_progress_text(&game),
+        presentation::row_progress_text(&game, None),
         "50% · 1.2 GB/s · About 4 min left"
     );
     game.progress.phase = "Checking download";
@@ -157,7 +159,10 @@ fn progress_and_closing_show_the_actual_step_and_its_elapsed_time() {
     game.pausing = true;
     game.progress.total = 0;
     game.pausing = false;
-    assert_eq!(presentation::row_progress_text(&game), "15s elapsed");
+    assert_eq!(
+        presentation::row_progress_text(&game, Some(50)),
+        "15s elapsed"
+    );
     game.pausing = true;
     assert_eq!(presentation::step_label(&game), "Updating MW2");
     let snapshot = Snapshot {
@@ -166,6 +171,7 @@ fn progress_and_closing_show_the_actual_step_and_its_elapsed_time() {
         busy: true,
         queued: 1,
         error: None,
+        download_limit_mbps: None,
     };
     assert_eq!(
         presentation::closing_text(&snapshot),
@@ -192,7 +198,7 @@ fn dialogs_fit_with_long_errors_and_keyboard_escape_closes_them() -> Result<()> 
         message: None,
         problem: Some(Problem::new(
             "Setup couldn't finish",
-            "Try again. If this continues, save a support report from Help.",
+            "Try again. If this continues, save a support bundle from Help.",
             "file path and error ".repeat(1000),
         )),
         dialog: None,
@@ -200,6 +206,8 @@ fn dialogs_fit_with_long_errors_and_keyboard_escape_closes_them() -> Result<()> 
         closing: false,
         updater: glitter_boys_core::updates::Updater::new(),
         healthy: false,
+        download_limit_draft: None,
+        export: None,
     };
     for size in [egui::vec2(760.0, 560.0), egui::vec2(900.0, 640.0)] {
         for scale in [1.0, 1.25, 1.5, 2.0] {
@@ -242,9 +250,12 @@ fn dialogs_fit_with_long_errors_and_keyboard_escape_closes_them() -> Result<()> 
                             busy: true,
                             queued: 4,
                             error: None,
+                            download_limit_mbps: failed.then_some(50),
                         };
                         if failed {
                             snapshot.games[0].error = app.problem.clone();
+                            snapshot.games[0].phase = Phase::Failed;
+                            snapshot.games[0].resumable = true;
                         }
                         app.dialog = Some(dialog);
                         for frame in 0..3 {
@@ -272,7 +283,7 @@ fn dialogs_fit_with_long_errors_and_keyboard_escape_closes_them() -> Result<()> 
                                 if let Some(rect) = app.show_dialog(ui.ctx(), &snapshot) {
                                     assert!(
                                         rect.width() <= size.x && rect.height() <= size.y,
-                                        "dialog overflow: {rect:?} at {size:?}"
+                                        "dialog overflow: {rect:?} at {size:?} scale {scale} tab {:?} failed {failed}", tab as u8
                                     );
                                     if frame > 0 {
                                         assert!(
@@ -306,7 +317,7 @@ fn all_controls_fit_at_minimum_size_with_long_paths_and_errors() -> Result<()> {
         scheduler: Scheduler::start(Catalog::bundled()?, data.path().into(), settings)?,
         _lock: state::exclusive_lock(&data.path().join("launcher.lock"))?,
     };
-    let mut app=Launcher{game_icons:game_art::load(&egui::Context::default())?,settings_tab:SettingsTab::General,keep_saves:true,problem:None,dialog:None,advanced_help:false,library:Ok(library),message:Some("A very long network error that should be truncated instead of adding rows and hiding the footer. ".repeat(8)),closing:false,updater:Err(glitter_boys_core::Error::Invalid("test".into())),healthy:false};
+    let mut app=Launcher{game_icons:game_art::load(&egui::Context::default())?,settings_tab:SettingsTab::General,keep_saves:true,problem:None,dialog:None,advanced_help:false,library:Ok(library),message:Some("A very long network error that should be truncated instead of adding rows and hiding the footer. ".repeat(8)),closing:false,updater:Err(glitter_boys_core::Error::Invalid("test".into())),healthy:false,download_limit_draft:None,export:None};
     for size in [egui::vec2(760.0, 560.0), egui::vec2(900.0, 640.0)] {
         for scale in [1.0, 1.25, 1.5, 2.0] {
             for phase in [
@@ -341,10 +352,11 @@ fn all_controls_fit_at_minimum_size_with_long_paths_and_errors() -> Result<()> {
                         queued: true,
                         pausing: false,
                         handoff: false,
+                        resumable: false,
                         error: (phase == Phase::Failed).then(|| {
                             Problem::new(
                                 "Setup couldn't finish",
-                                "Try again. If this continues, save a support report from Help.",
+                                "Try again. If this continues, save a support bundle from Help.",
                                 "A detailed error".repeat(40),
                             )
                         }),
@@ -352,6 +364,7 @@ fn all_controls_fit_at_minimum_size_with_long_paths_and_errors() -> Result<()> {
                     busy: phase == Phase::Downloading,
                     queued: 4,
                     error: None,
+                    download_limit_mbps: Some(50),
                 };
                 // Font atlas/layout settle over successive frames, matching the native app.
                 for _ in 0..2 {
@@ -383,4 +396,33 @@ fn all_controls_fit_at_minimum_size_with_long_paths_and_errors() -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[test]
+fn failed_setup_leads_with_its_reason_and_capped_downloads_say_so() {
+    let mut g = game_status(Phase::Failed);
+    assert_eq!(card_copy(&g).action, "Get help");
+    assert_eq!(card_copy(&g).status, "Setup couldn't finish");
+    g.error = Some(Problem::new(
+        "A game file is in use",
+        "Close the game, its launcher, and any window open in the game folder, then try again.",
+        "Moving the game into place failed for C:/Games/iw4x: in use [os error 32]",
+    ));
+    let copy = card_copy(&g);
+    assert_eq!(copy.status, "A game file is in use");
+    assert!(copy.helper.starts_with("Close the game"));
+    assert_eq!(copy.action, "Get help");
+
+    let mut downloading = game_status(Phase::Downloading);
+    downloading.timing.bytes_per_second = Some(6.0e6);
+    assert_eq!(
+        presentation::row_progress_text(&downloading, Some(50)),
+        "50% · 6 MB/s · capped at 50 Mbps · About 4 min left"
+    );
+    assert_eq!(
+        presentation::row_progress_text(&downloading, None),
+        "50% · 6 MB/s · About 4 min left"
+    );
+    downloading.phase = Phase::Extracting;
+    assert!(presentation::cap_text(&downloading, Some(50)).is_none());
 }

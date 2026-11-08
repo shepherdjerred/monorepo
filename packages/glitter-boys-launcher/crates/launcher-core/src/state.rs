@@ -115,38 +115,35 @@ pub struct Receipt {
     pub prerequisites_complete: bool,
 }
 
-/// A bounded local history of launcher events, with no account data or raw client output.
-#[derive(Default, Serialize, Deserialize)]
+/// Network preferences. Kept out of `settings.json`, whose exact shape older releases
+/// still read after an update rollback.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Diagnostics {
-    events: Vec<String>,
+pub struct Network {
+    pub version: u32,
+    /// Global cap for launcher downloads, in megabits per second.
+    pub download_limit_mbps: Option<u32>,
 }
 
-impl Diagnostics {
+impl Network {
     pub fn load(data: &Path) -> Result<Self> {
-        match std::fs::read(data.join("diagnostics.json")) {
-            Ok(bytes) => Ok(serde_json::from_slice(&bytes)?),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Self::default()),
+        match std::fs::read(data.join("network.json")) {
+            Ok(bytes) => {
+                let network: Self = serde_json::from_slice(&bytes)?;
+                if network.version != 1 {
+                    return Err(Error::Invalid("Unsupported network settings".into()));
+                }
+                Ok(network)
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Self {
+                version: 1,
+                download_limit_mbps: None,
+            }),
             Err(error) => Err(error.into()),
         }
     }
-    pub fn record(&mut self, data: &Path, event: String) -> Result<()> {
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| Error::Invalid("Windows clock is invalid".into()))?
-            .as_secs();
-        self.events.push(format!("{timestamp}: {event}"));
-        if self.events.len() > 200 {
-            self.events.drain(..self.events.len() - 200);
-        }
-        write_json(&data.join("diagnostics.json"), self)
-    }
-    pub fn export(&self) -> String {
-        format!(
-            "Glitter Boys {}\nEvent times are Unix seconds.\n{}\n",
-            env!("CARGO_PKG_VERSION"),
-            self.events.join("\n")
-        )
+    pub fn save(&self, data: &Path) -> Result<()> {
+        write_json(&data.join("network.json"), self)
     }
 }
 
@@ -286,6 +283,28 @@ mod tests {
             std::fs::read(saves.join("boiii_players/config.cfg"))?,
             b"saved settings"
         );
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod network_tests {
+    use super::*;
+    #[test]
+    fn network_settings_round_trip_and_reject_unknown_fields() -> Result<()> {
+        let data = crate::test_tempdir()?;
+        assert_eq!(Network::load(data.path())?.download_limit_mbps, None);
+        let network = Network {
+            version: 1,
+            download_limit_mbps: Some(50),
+        };
+        network.save(data.path())?;
+        assert_eq!(Network::load(data.path())?, network);
+        std::fs::write(
+            data.path().join("network.json"),
+            br#"{"version":1,"download_limit_mbps":50,"proxy":"x"}"#,
+        )?;
+        assert!(Network::load(data.path()).is_err());
         Ok(())
     }
 }

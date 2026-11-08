@@ -11,15 +11,58 @@ pub mod problem;
 pub mod scheduler;
 pub mod state;
 pub mod storage;
+pub mod support;
 pub mod updates;
 
 #[cfg(windows)]
 mod windows_installer;
 
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
+use serde::{Deserialize, Serialize};
+use std::{
+    path::{Path, PathBuf},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
 };
+
+/// The installation step a filesystem or process failure happened in. Allow-listed so it
+/// can be reported without free text.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Step {
+    CreateClients,
+    UnpackClient,
+    CopyClient,
+    SpawnUpdater,
+    WaitUpdater,
+    CheckFiles,
+    RestoreSaves,
+    WriteReceipt,
+    Promote,
+}
+
+impl Step {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::CreateClients => "Creating the client folder",
+            Self::UnpackClient => "Unpacking the game launcher",
+            Self::CopyClient => "Copying the game launcher",
+            Self::SpawnUpdater => "Starting the game updater",
+            Self::WaitUpdater => "Waiting for the game updater",
+            Self::CheckFiles => "Checking game files",
+            Self::RestoreSaves => "Restoring saves",
+            Self::WriteReceipt => "Recording the installation",
+            Self::Promote => "Moving the game into place",
+        }
+    }
+}
+
+impl std::fmt::Display for Step {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.label())
+    }
+}
 
 /// Errors at the filesystem, network, archive, and client boundaries.
 #[derive(Debug, thiserror::Error)]
@@ -33,6 +76,15 @@ pub enum Error {
     Invalid(String),
     #[error("Paused. Your downloaded files are saved; choose Resume to continue.")]
     Paused,
+    #[error("{step} failed for {}: {source}{}", path.display(), held_suffix(held))]
+    Step {
+        step: Step,
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+        /// Files found held open by another program when the step gave up.
+        held: Vec<PathBuf>,
+    },
     #[error("File operation failed: {0}")]
     Io(#[from] std::io::Error),
     #[error("Download failed: {0}")]
@@ -44,6 +96,60 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+fn held_suffix(held: &[PathBuf]) -> String {
+    if held.is_empty() {
+        return String::new();
+    }
+    let names: Vec<_> = held.iter().map(|p| p.display().to_string()).collect();
+    format!(" (held open by another program: {})", names.join(", "))
+}
+
+impl Error {
+    /// The OS-level error behind a filesystem or process failure, when there is one.
+    pub fn io(&self) -> Option<&std::io::Error> {
+        match self {
+            Self::Io(source) | Self::Step { source, .. } => Some(source),
+            _ => None,
+        }
+    }
+    pub fn step(&self) -> Option<Step> {
+        match self {
+            Self::Step { step, .. } => Some(*step),
+            _ => None,
+        }
+    }
+}
+
+/// Attach the installation step and path to an I/O failure.
+pub trait StepExt<T> {
+    fn step(self, step: Step, path: &Path) -> Result<T>;
+}
+
+impl<T> StepExt<T> for std::io::Result<T> {
+    fn step(self, step: Step, path: &Path) -> Result<T> {
+        self.map_err(|source| Error::Step {
+            step,
+            path: path.to_path_buf(),
+            source,
+            held: Vec::new(),
+        })
+    }
+}
+
+impl<T> StepExt<T> for Result<T> {
+    fn step(self, step: Step, path: &Path) -> Result<T> {
+        self.map_err(|error| match error {
+            Error::Io(source) => Error::Step {
+                step,
+                path: path.to_path_buf(),
+                source,
+                held: Vec::new(),
+            },
+            other => other,
+        })
+    }
+}
 
 /// Cooperative pause signal. Archive extraction resumes from a fresh staging directory.
 #[derive(Clone, Default)]
