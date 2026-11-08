@@ -12,6 +12,8 @@ pub(super) enum Icon {
     Trash,
     Refresh,
     Info,
+    /// A speedometer, shown while downloads are capped.
+    Gauge,
 }
 pub(super) fn button(ui: &mut egui::Ui, icon: Icon, label: &str, primary: bool) -> egui::Response {
     let text = RichText::new(format!("    {label}")).size(13.0);
@@ -123,6 +125,21 @@ pub(super) fn draw(p: &egui::Painter, icon: Icon, rect: egui::Rect, color: Color
                 (0.9, 0.7),
             ]);
             line(&[(0.9, 0.05), (0.9, 0.35), (0.6, 0.35)]);
+        }
+        Icon::Gauge => {
+            // An upper arc, tick marks, and a needle resting low (capped).
+            let center = point(0.5, 0.68);
+            let radius = rect.width() * 0.44;
+            let arc: Vec<egui::Pos2> = (0..=16)
+                .map(|i| {
+                    let angle = std::f32::consts::PI * (1.0 + i as f32 / 16.0);
+                    center + egui::vec2(angle.cos(), angle.sin()) * radius
+                })
+                .collect();
+            p.add(egui::Shape::line(arc, stroke));
+            line(&[(0.06, 0.68), (0.94, 0.68)]);
+            line(&[(0.5, 0.68), (0.3, 0.42)]);
+            p.circle_filled(center, 1.4, color);
         }
         Icon::Help | Icon::Info => {
             p.circle_stroke(rect.center(), rect.width() * 0.47, stroke);

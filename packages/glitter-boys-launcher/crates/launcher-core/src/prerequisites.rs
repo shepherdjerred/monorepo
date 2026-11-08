@@ -72,7 +72,9 @@ pub fn ensure(game: Game, directory: &Path) -> Result<()> {
     #[cfg(windows)]
     {
         for requirement in requirements(game)? {
-            if windows::satisfied(&requirement)? {
+            let satisfied = windows::satisfied(&requirement)?;
+            tracing::info!(game = game.id(), requirement = %requirement.id, satisfied, "prerequisite checked");
+            if satisfied {
                 crate::diagnostics::record(
                     Some(game),
                     crate::diagnostics::Operation::Prerequisite,
@@ -104,7 +106,9 @@ pub fn ensure(game: Game, directory: &Path) -> Result<()> {
             } else {
                 "/passive /norestart"
             };
-            match crate::windows_installer::run(&path, args)? {
+            let code = crate::windows_installer::run(&path, args)?;
+            tracing::info!(game = game.id(), requirement = %requirement.id, code, "prerequisite installer exited");
+            match code {
                 0 | 1638 => {}
                 3010 | 1641 => {
                     return Err(Error::ActionRequired {
@@ -120,7 +124,7 @@ pub fn ensure(game: Game, directory: &Path) -> Result<()> {
                 }
                 code => {
                     return Err(Error::Invalid(format!(
-                        "{} setup returned {code}. Open diagnostics for support.",
+                        "{} setup returned {code}. Save a support bundle from Get help and send it to Jerred.",
                         requirement.id
                     )));
                 }

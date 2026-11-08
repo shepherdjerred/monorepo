@@ -18,7 +18,8 @@ impl Launcher {
                     ui.heading(format!("{} details", g.game.title()));
                     ui.label(RichText::new(format!("Released {}", g.game.release_year())).small().color(MUTED));
                     if let Some(problem) = &g.error {
-                        self.problem_contents(ui, problem);
+                        let retry = (g.phase == Phase::Failed).then_some((g.game, g.resumable));
+                        self.problem_contents(ui, problem, retry);
                     } else if g.phase == Phase::Ready {
                         ui.label("Ready to play");
                         if ui.add_enabled_ui(can_uninstall(snapshot, index), |ui| button(ui, Icon::Trash, "Uninstall", false)).inner.on_disabled_hover_text("Wait for the storage check or current removal to finish.").clicked() {
@@ -40,6 +41,13 @@ impl Launcher {
                         }
                         if let Some(rate) = g.timing.bytes_per_second {
                             ui.label(format!("{}: {}", if g.progress.phase == "Checking download" { "Checking speed" } else if g.phase == Phase::Extracting { "Unpacking speed" } else { "Download speed" }, presentation::speed_text(rate)));
+                        }
+                        if let Some(cap) = presentation::cap_text(g, snapshot.download_limit_mbps) {
+                            let mbps = snapshot.download_limit_mbps.unwrap_or_default();
+                            ui.label(format!(
+                                "Download limit: {cap} (about {})",
+                                presentation::speed_text(f64::from(mbps) * 125_000.0)
+                            ));
                         }
                         if let Some(remaining) = g.timing.remaining {
                             ui.label(format!(
@@ -101,7 +109,7 @@ impl Launcher {
                 }
                 Dialog::Problem => {
                     if let Some(problem) = self.problem.clone().or_else(|| snapshot.error.clone()) {
-                        self.problem_contents(ui, &problem);
+                        self.problem_contents(ui, &problem, None);
                     } else {
                         ui.label("There's nothing to resolve right now.");
                     }
@@ -115,19 +123,38 @@ impl Launcher {
         }
         Some(response.response.rect)
     }
-    pub(super) fn problem_contents(&mut self, ui: &mut egui::Ui, problem: &Problem) {
+    /// A problem, its next step, and its technical details. `retry` offers Try again for a
+    /// failed game setup, noting when the unpacked files will be reused.
+    pub(super) fn problem_contents(
+        &mut self,
+        ui: &mut egui::Ui,
+        problem: &Problem,
+        retry: Option<(Game, bool)>,
+    ) {
         ui.label(RichText::new(problem.title).strong().color(PINK));
         ui.label(problem.next_step);
         ui.label(RichText::new("Error details").small().weak());
         // Keep arbitrary OS paths and upstream output from pushing actions outside the dialog.
         bounded_text(ui, &problem.details, 3);
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
+            if let Some((game, resumable)) = retry {
+                let response = button(ui, Icon::Refresh, "Try again", true);
+                let response = if resumable {
+                    response.on_hover_text("Continues from the files already unpacked.")
+                } else {
+                    response
+                };
+                if response.clicked() {
+                    self.send(Command::Install(game));
+                    self.dialog = None;
+                }
+            }
             if ui.button("Copy error details").clicked() {
                 ui.ctx().copy_text(problem.details.clone());
                 self.message = Some("Error details copied.".into());
             }
-            if ui.button("Save support report").clicked() {
-                self.export_report();
+            if ui.button("Save support bundle").clicked() {
+                self.export_bundle();
             }
         });
     }
@@ -273,6 +300,41 @@ impl Launcher {
                 ui.label(RichText::new("Saved downloads stay in their original folder. Install again there to reuse them.").small());
             }
             ui.separator();
+            let mut draft = *self
+                .download_limit_draft
+                .get_or_insert(snapshot.download_limit_mbps.unwrap_or(50));
+            let mut limited = snapshot.download_limit_mbps.is_some();
+            ui.horizontal(|ui| {
+                if ui.checkbox(&mut limited, "Limit download speed to").changed() {
+                    self.send(Command::DownloadLimit(limited.then_some(draft)));
+                }
+                let response = ui.add_enabled(
+                    limited,
+                    egui::DragValue::new(&mut draft)
+                        .range(1..=glitter_boys_core::download::MAX_LIMIT_MBPS)
+                        .speed(1.0)
+                        .suffix(" Mbps"),
+                );
+                ui.label(
+                    RichText::new(format!(
+                        "≈ {}",
+                        presentation::speed_text(f64::from(draft) * 125_000.0)
+                    ))
+                    .small()
+                    .color(MUTED),
+                );
+                self.download_limit_draft = Some(draft);
+                // Apply when the value settles, not on every drag step.
+                if let Some(current) = snapshot.download_limit_mbps
+                    && (response.drag_stopped() || response.lost_focus())
+                    && draft != current
+                {
+                    self.send(Command::DownloadLimit(Some(draft)));
+                }
+            })
+            .response
+            .on_hover_text("Applies to game downloads right away. Updates run by MW2 or Plutonium themselves aren't limited.");
+            ui.separator();
             let mut enabled = glitter_boys_core::diagnostics::enabled();
             if ui
                 .checkbox(&mut enabled, "Share error and performance reports")
@@ -282,7 +344,7 @@ impl Launcher {
                 self.report(&e);
             }
             ui.label(
-                RichText::new("Reports exclude passwords, account details, file paths, and chat.")
+                RichText::new("Reports are numbers and categories only: no passwords, account details, file paths, or chat.")
                     .small(),
             );
             return;
@@ -329,11 +391,11 @@ impl Launcher {
         }
         ui.label("Black Ops and Black Ops II may ask you to sign in to Plutonium. Sign in only in its own window; Glitter Boys never asks for your password.");
         ui.separator();
-        ui.label("Still stuck? Save a support report and send it to Jerred with a description of what happened.");
-        if ui.button("Save support report").clicked() {
-            self.export_report();
+        ui.label("Still stuck? Save a support bundle and send it to Jerred with a description of what happened.");
+        if ui.button("Save support bundle").clicked() {
+            self.export_bundle();
         }
-        ui.label(RichText::new("Saving a report doesn't send it anywhere. It contains launcher events, not your Plutonium account details.").small());
+        ui.label(RichText::new("Saving a bundle doesn't send it anywhere. It has launcher logs, settings, and file names from your game folders, with your Windows user name removed. It never includes Plutonium account details, saves, or passwords.").small());
         ui.checkbox(&mut self.advanced_help, "Show advanced tools");
         if self.advanced_help {
             ui.horizontal(|ui| {
@@ -346,18 +408,47 @@ impl Launcher {
             });
         }
     }
-    fn export_report(&mut self) {
-        if let Some(path) = rfd::FileDialog::new()
-            .set_file_name("glitter-boys-support.txt")
+    fn export_bundle(&mut self) {
+        let Some(path) = rfd::FileDialog::new()
+            .set_file_name(glitter_boys_core::support::file_name(
+                std::time::SystemTime::now(),
+            ))
+            .add_filter("Zip archive", &["zip"])
             .save_file()
-        {
-            match glitter_boys_core::diagnostics::export(&path) {
-                Ok(()) => {
-                    self.message = Some(format!("Support report saved to {}", path.display()));
-                    self.dialog = None;
+        else {
+            return;
+        };
+        let snapshot = self.snapshot().ok();
+        let update = self.updater.as_ref().ok().and_then(|u| u.snapshot().ok());
+        let (data, library) = match &self.library {
+            Ok(library) => (library.data.clone(), Some(library.settings.library.clone())),
+            Err(_) => match glitter_boys_core::state::data_directory() {
+                Ok(data) => (data, None),
+                Err(e) => return self.report(&e),
+            },
+        };
+        let result = glitter_boys_core::support::write_bundle(
+            &path,
+            &glitter_boys_core::support::BundleInput {
+                data: &data,
+                library: library.as_deref(),
+                snapshot: snapshot.as_ref(),
+                update: update.as_ref(),
+                launcher_problem: self.problem.as_ref(),
+            },
+        );
+        match result {
+            Ok(summary) => {
+                tracing::info!(path = %path.display(), entries = summary.entries, truncated = ?summary.truncated, "support bundle saved");
+                self.message = Some(format!("Support bundle saved to {}", path.display()));
+                self.dialog = None;
+                if let Some(folder) = path.parent()
+                    && let Err(e) = open::that(folder)
+                {
+                    tracing::warn!(%e, "could not open the bundle folder");
                 }
-                Err(e) => self.report(&e),
             }
+            Err(e) => self.report(&e),
         }
     }
     fn open_logs(&mut self) {

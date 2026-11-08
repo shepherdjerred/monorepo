@@ -81,6 +81,8 @@ pub struct Launcher {
     healthy: bool,
     settings_tab: SettingsTab,
     keep_saves: bool,
+    /// The Mbps value being edited in Settings, seeded from the saved limit.
+    download_limit_draft: Option<u32>,
 }
 impl Launcher {
     pub fn new(
@@ -101,6 +103,7 @@ impl Launcher {
             healthy: false,
             settings_tab: SettingsTab::General,
             keep_saves: true,
+            download_limit_draft: None,
         })
     }
     fn report(&mut self, error: &glitter_boys_core::Error) {
@@ -291,13 +294,14 @@ impl eframe::App for Launcher {
             && let Ok(updater) = &self.updater
             && let Err(error) = updater.apply_on_exit()
         {
-            glitter_boys_core::diagnostics::record(
-                None,
-                glitter_boys_core::diagnostics::Operation::UpdateApply,
-                glitter_boys_core::diagnostics::Outcome::Failed,
-                glitter_boys_core::diagnostics::failure(&error),
-                0,
-                0,
+            tracing::warn!(%error, "launcher update could not be activated");
+            glitter_boys_core::diagnostics::record_event(
+                glitter_boys_core::diagnostics::EventInput::new(
+                    None,
+                    glitter_boys_core::diagnostics::Operation::UpdateApply,
+                    glitter_boys_core::diagnostics::Outcome::Failed,
+                ),
+                Some(&error),
             );
         }
     }
@@ -334,7 +338,7 @@ impl eframe::App for Launcher {
                 ui.heading("Glitter Boys couldn't open your library");
                 ui.label(problem.next_step);
                 ui.label("Your game files have not been removed.");
-                self.problem_contents(ui, &problem);
+                self.problem_contents(ui, &problem, None);
             }
         }
     }

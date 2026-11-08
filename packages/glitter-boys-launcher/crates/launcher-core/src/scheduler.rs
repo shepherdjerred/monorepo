@@ -44,6 +44,8 @@ pub struct GameStatus {
     pub pausing: bool,
     pub handoff: bool,
     pub error: Option<Problem>,
+    /// A failed setup kept its unpacked files; Try again continues from them.
+    pub resumable: bool,
 }
 #[derive(Clone)]
 pub struct Snapshot {
@@ -52,6 +54,8 @@ pub struct Snapshot {
     pub busy: bool,
     pub queued: usize,
     pub error: Option<Problem>,
+    /// The global download cap in Mbps, when one is set.
+    pub download_limit_mbps: Option<u32>,
 }
 pub enum Command {
     DismissStorageMessage,
@@ -63,6 +67,8 @@ pub enum Command {
     Clear,
     Play(Game, Mode),
     Shutdown,
+    /// Cap all launcher downloads in Mbps, or remove the cap.
+    DownloadLimit(Option<u32>),
 }
 pub struct Scheduler {
     sender: Sender<Command>,
@@ -87,17 +93,21 @@ impl Scheduler {
                 queued: settings.queue.contains(&game),
                 pausing: false,
                 handoff: false,
+                resumable: false,
             });
         }
         let games = games
             .try_into()
             .map_err(|_| Error::Invalid("Incomplete game state".into()))?;
+        let network = state::Network::load(&data)?;
+        download::set_limit_mbps(network.download_limit_mbps)?;
         let snapshot = Arc::new(Mutex::new(Snapshot {
             storage: storage::Status::default(),
             games,
             busy: false,
             queued: settings.queue.len(),
             error: None,
+            download_limit_mbps: network.download_limit_mbps,
         }));
         let (sender, receiver) = mpsc::channel();
         let shared = snapshot.clone();
@@ -189,6 +199,8 @@ struct Running {
 struct Completion {
     id: u64,
     result: Result<Output>,
+    /// Unpacked game files returned by a failed finish, kept for the next attempt.
+    staging: Option<tempfile::TempDir>,
 }
 struct Engine {
     catalog: Catalog,
@@ -237,6 +249,7 @@ impl Engine {
     }
     fn status(&mut self, game: Game, phase: Phase, error: Option<Problem>) {
         let now = Instant::now();
+        let resumable = self.staged[index(game)].is_some();
         let clock = &mut self.clocks[index(game)];
         if phase == Phase::Launching {
             *clock = Clock::default();
@@ -271,8 +284,12 @@ impl Engine {
             if phase == Phase::Launching {
                 g.handoff = false;
             }
+            if phase != g.phase {
+                tracing::info!(game = game.id(), from = ?g.phase, to = ?phase, "game phase");
+            }
             g.phase = phase;
             g.error = error;
+            g.resumable = resumable;
         }
     }
     fn stop_all(&mut self) {
@@ -379,6 +396,7 @@ impl Engine {
                     | Command::Pause(_)
                     | Command::PauseAll
                     | Command::DismissStorageMessage
+                    | Command::DownloadLimit(_)
             )
         {
             return Ok(());
@@ -512,6 +530,17 @@ impl Engine {
                 self.stopping = true;
                 self.stop_all();
             }
+            Command::DownloadLimit(mbps) => {
+                download::set_limit_mbps(mbps)?;
+                state::Network {
+                    version: 1,
+                    download_limit_mbps: mbps,
+                }
+                .save(&self.data)?;
+                if let Ok(mut s) = self.shared.lock() {
+                    s.download_limit_mbps = mbps;
+                }
+            }
         }
         for job in self.running.values() {
             let needed = match &job.key {
@@ -626,7 +655,7 @@ impl Engine {
                         game,
                         Phase::Failed,
                         Some(
-                            Problem::new("A game folder already exists", "Your files are safe. Choose a different game folder in Settings, or save a support report from Help.", "Existing game files were preserved; they cannot be imported by this launcher."),
+                            Problem::new("A game folder already exists", "Your files are safe. Choose a different game folder in Settings, or save a support bundle from Help.", "Existing game files were preserved; they cannot be imported by this launcher."),
                         ),
                     );
                     continue;
@@ -866,14 +895,35 @@ impl Engine {
         let catalog = self.catalog.clone();
         let root = self.settings.library.clone();
         let data = self.data.clone();
+        let span = tracing::info_span!(
+            "job",
+            id,
+            operation = ?key.operation(),
+            game = key.game().map(Game::id),
+        );
         std::thread::Builder::new()
             .name("launcher-task".into())
             .spawn(move || {
+                let _span = span.entered();
+                tracing::info!("job started");
                 let mut progress_failed = false;
-                let mut progress = |p: Progress| match progress_meter.lock() {
-                    Ok(mut meter) => meter.update(p, Instant::now()),
-                    Err(_) => progress_failed = true,
+                let mut last_phase = "";
+                let mut progress = |p: Progress| {
+                    if p.phase != last_phase {
+                        tracing::info!(
+                            phase = p.phase,
+                            completed = p.completed,
+                            total = p.total,
+                            "progress phase"
+                        );
+                        last_phase = p.phase;
+                    }
+                    match progress_meter.lock() {
+                        Ok(mut meter) => meter.update(p, Instant::now()),
+                        Err(_) => progress_failed = true,
+                    }
                 };
+                let mut retained: Option<tempfile::TempDir> = None;
                 let result =
                     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<Output> {
                         match work {
@@ -932,18 +982,23 @@ impl Engine {
                                 Ok(Output::Extraction(staging))
                             }
                             Work::Finish(game, staging, client) => {
-                                install::finalize(
+                                let finished = install::finalize(
                                     &catalog,
                                     game,
                                     install::InstallLocations {
                                         library: &root,
                                         data: &data,
                                     },
-                                    staging,
+                                    &staging,
                                     &client,
                                     &signal,
                                     &mut progress,
-                                )?;
+                                );
+                                if finished.is_err() {
+                                    // Keep the unpacked files so Try again resumes here.
+                                    retained = Some(staging);
+                                }
+                                finished?;
                                 Ok(Output::Finished)
                             }
                             Work::Play(game, mode) => {
@@ -962,7 +1017,23 @@ impl Engine {
                 } else {
                     result
                 };
-                let _ = tx.send(Completion { id, result });
+                match &result {
+                    Ok(_) => tracing::info!("job succeeded"),
+                    Err(Error::Paused) => tracing::info!("job paused"),
+                    Err(error) => tracing::error!(
+                        error = %error,
+                        chain = %crate::problem::error_chain(error),
+                        step = ?error.step(),
+                        os_error = ?error.io().and_then(std::io::Error::raw_os_error),
+                        staging_retained = retained.is_some(),
+                        "job failed"
+                    ),
+                }
+                let _ = tx.send(Completion {
+                    id,
+                    result,
+                    staging: retained,
+                });
             })?;
         let bytes = match &key {
             Key::Download(h) => Game::ALL
@@ -978,13 +1049,16 @@ impl Engine {
             Key::Extract(g) => self.catalog.package(*g)?.expanded_bytes,
             _ => 0,
         };
-        crate::diagnostics::record(
-            key.game(),
-            key.operation(),
-            crate::diagnostics::Outcome::Started,
+        crate::diagnostics::record_event(
+            crate::diagnostics::EventInput {
+                job: Some(id),
+                ..crate::diagnostics::EventInput::new(
+                    key.game(),
+                    key.operation(),
+                    crate::diagnostics::Outcome::Started,
+                )
+            },
             None,
-            0,
-            0,
         );
         self.running.insert(
             id,
@@ -1003,26 +1077,30 @@ impl Engine {
             let Some(job) = self.running.remove(&completion.id) else {
                 continue;
             };
+            let mut retained = completion.staging;
             let outcome = match &completion.result {
                 Ok(_) => crate::diagnostics::Outcome::Succeeded,
                 Err(Error::Paused) => crate::diagnostics::Outcome::Paused,
                 Err(_) => crate::diagnostics::Outcome::Failed,
             };
-            crate::diagnostics::record(
-                job.key.game(),
-                job.key.operation(),
-                outcome,
+            crate::diagnostics::record_event(
+                crate::diagnostics::EventInput {
+                    game: job.key.game(),
+                    operation: job.key.operation(),
+                    outcome,
+                    duration_ms: job.started.elapsed().as_millis().min(u64::MAX as u128) as u64,
+                    bytes: if completion.result.is_ok() {
+                        job.bytes
+                    } else {
+                        0
+                    },
+                    job: Some(completion.id),
+                },
                 completion
                     .result
                     .as_ref()
                     .err()
-                    .and_then(crate::diagnostics::failure),
-                job.started.elapsed().as_millis().min(u64::MAX as u128) as u64,
-                if completion.result.is_ok() {
-                    job.bytes
-                } else {
-                    0
-                },
+                    .filter(|e| !matches!(e, Error::Paused)),
             );
             match completion.result {
                 Ok(Output::Storage(report, message)) => {
@@ -1083,7 +1161,7 @@ impl Engine {
                                 {
                                     s.error = Some(Problem::new(
                                         "Installed, but cleanup needs attention",
-                                        "You can play. Save a support report from Help if the extra files remain.",
+                                        "You can play. Save a support bundle from Help if the extra files remain.",
                                         e.to_string(),
                                     ));
                                 }
@@ -1143,7 +1221,20 @@ impl Engine {
                                 other.cancel.pause();
                             }
                         }
-                        self.staged[index(game)] = None;
+                        // A finish that failed for a reason other than bad archive data keeps
+                        // its unpacked files, so Try again skips the multi-gigabyte extract.
+                        self.staged[index(game)] = match job.key {
+                            Key::Finish(g)
+                                if g == game
+                                    && !matches!(
+                                        error,
+                                        Error::Paused | Error::Archive(_) | Error::Json(_)
+                                    ) =>
+                            {
+                                retained.take()
+                            }
+                            _ => None,
+                        };
                         self.status(
                             game,
                             if matches!(job.key, Key::Play(_)) {

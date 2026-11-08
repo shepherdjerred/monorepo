@@ -486,11 +486,18 @@ impl Updater {
         let spawned = std::thread::Builder::new()
             .name("launcher-update".into())
             .spawn(move || {
+                let started = std::time::Instant::now();
                 let result = (|| -> Result<UpdateCheckResult> {
                     let profile = profile()?;
                     let Some(root) = root else {
                         return Ok(UpdateCheckResult::Current);
                     };
+                    tracing::info!(
+                        url = %profile.manifest_url,
+                        current = env!("CARGO_PKG_VERSION"),
+                        root = %root.display(),
+                        "checking for launcher updates"
+                    );
                     if profile.public_keys.is_empty() || profile.publisher.is_none() {
                         return Err(Error::Invalid(
                             "Updates await release signing configuration".into(),
@@ -527,6 +534,11 @@ impl Updater {
                         .map_err(|_| Error::Invalid("Windows clock is invalid".into()))?
                         .as_secs();
                     let release = verify(&envelope, &profile, "0.0.0", now)?;
+                    tracing::info!(
+                        published = %release.version,
+                        expires = release.expires,
+                        "release manifest verified"
+                    );
                     if version(&release.version)? <= version(env!("CARGO_PKG_VERSION"))? {
                         return Ok(UpdateCheckResult::Current);
                     }
@@ -594,17 +606,34 @@ impl Updater {
                     prune_completed_download(&root, &release.artifact)?;
                     Ok(UpdateCheckResult::Ready(release.version))
                 })();
-                diagnostics::record(
-                    None,
-                    Operation::UpdateCheck,
-                    if result.is_ok() {
-                        Outcome::Succeeded
-                    } else {
-                        Outcome::Failed
+                match &result {
+                    Ok(UpdateCheckResult::Current) => tracing::info!("launcher is up to date"),
+                    Ok(UpdateCheckResult::Ready(version)) => {
+                        tracing::info!(%version, "launcher update staged")
+                    }
+                    Ok(UpdateCheckResult::FailedRelease) => {
+                        tracing::warn!("published update previously failed to start; skipped")
+                    }
+                    Err(error) => tracing::warn!(
+                        %error,
+                        chain = %crate::problem::error_chain(error),
+                        "launcher update check failed"
+                    ),
+                }
+                diagnostics::record_event(
+                    diagnostics::EventInput {
+                        duration_ms: started.elapsed().as_millis() as u64,
+                        ..diagnostics::EventInput::new(
+                            None,
+                            Operation::UpdateCheck,
+                            if result.is_ok() {
+                                Outcome::Succeeded
+                            } else {
+                                Outcome::Failed
+                            },
+                        )
                     },
-                    result.as_ref().err().and_then(diagnostics::failure),
-                    0,
-                    0,
+                    result.as_ref().err(),
                 );
                 if let Ok(mut s) = state.lock() {
                     s.checking = false;
@@ -655,6 +684,7 @@ impl Updater {
             return Err(Error::Invalid("Staged update version mismatch".into()));
         }
         validate_payload(&root.join("versions").join(&version), &release)?;
+        tracing::info!(from = %current.version, to = %version, "launcher update activated for next start");
         state::write_json(
             &root.join("current.json"),
             &Active {

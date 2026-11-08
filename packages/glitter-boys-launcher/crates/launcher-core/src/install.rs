@@ -1,7 +1,7 @@
 //! Transactional fresh installations. Existing game directories are never replaced.
 
 use crate::{
-    Cancellation, Error, Progress, Result, archive,
+    Cancellation, Error, Progress, Result, Step, StepExt, archive,
     catalog::{Catalog, Game, GamePackage},
     download, launch, state,
 };
@@ -182,7 +182,7 @@ pub fn install(
         catalog,
         game,
         InstallLocations { library, data },
-        staging,
+        &staging,
         &client_artifact,
         cancel,
         progress,
@@ -219,11 +219,22 @@ pub(crate) struct InstallLocations<'a> {
     pub data: &'a Path,
 }
 
+/// How long a client updater may keep working in the staged folder after its first
+/// process exits (for example while a replacement of itself finishes an update).
+const UPDATER_RELEASE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(600);
+/// Unpacked size of the catalog's pinned IW4x launcher archive (v1.1.8-b.24).
+///
+/// Keep this pin until the MW2 archive ships `iw4mp.exe`: launchers from v1.1.8 on refuse
+/// to run unless it sits next to them, and this archive has only `iw4x.exe`.
+const IW4X_LAUNCHER_EXPANDED_BYTES: u64 = 42_111_097;
+
+/// Finish a staged installation. The staging folder stays owned by the caller, so a
+/// failure here keeps the unpacked game files for the next attempt.
 pub(crate) fn finalize(
     catalog: &Catalog,
     game: Game,
     locations: InstallLocations<'_>,
-    staging: tempfile::TempDir,
+    staging: &tempfile::TempDir,
     client_artifact: &Path,
     cancel: &Cancellation,
     progress: &mut dyn FnMut(Progress),
@@ -233,49 +244,57 @@ pub(crate) fn finalize(
     let package = catalog.package(game)?;
     let destination = library.join(game.id());
     let clients = data.join("Clients");
-    std::fs::create_dir_all(&clients)?;
+    std::fs::create_dir_all(&clients).step(Step::CreateClients, &clients)?;
     match game {
         Game::T5 | Game::T6 => {
-            let updater = client_artifact;
-            std::fs::copy(updater, clients.join("plutonium.exe"))?;
+            let target = clients.join("plutonium.exe");
+            std::fs::copy(client_artifact, &target).step(Step::CopyClient, &target)?;
         }
         Game::Iw4x => {
-            let launcher = client_artifact.to_path_buf();
             let unpacked = tempfile::Builder::new()
                 .prefix(".gb-client-")
-                .tempdir_in(library)?;
+                .tempdir_in(library)
+                .step(Step::UnpackClient, library)?;
             archive::extract(
-                &[launcher],
+                &[client_artifact.to_path_buf()],
                 unpacked.path(),
-                42_111_097,
+                IW4X_LAUNCHER_EXPANDED_BYTES,
                 None,
                 cancel,
                 progress,
-            )?;
-            std::fs::copy(
-                unpacked.path().join("iw4x-launcher.exe"),
-                staged_game.join("iw4x-launcher.exe"),
-            )?;
+            )
+            .step(Step::UnpackClient, unpacked.path())?;
+            let launcher = staged_game.join("iw4x-launcher.exe");
+            std::fs::copy(unpacked.path().join("iw4x-launcher.exe"), &launcher)
+                .step(Step::CopyClient, &launcher)?;
             progress(Progress {
                 phase: "Updating IW4x",
                 completed: 0,
                 total: 0,
             });
             cancel.check()?;
-            let mut updater = launch::command(&staged_game.join("iw4x-launcher.exe"), &staged_game)
-                .arg("--skip-launch")
-                .spawn()?;
+            // The catalog pins a reviewed launcher. Without --no-self-update it replaces
+            // itself with the newest upstream build (which rejects this game folder), exits,
+            // and leaves the replacement running with the staged folder as its working
+            // directory, so the folder cannot be moved (os error 32).
+            let mut updater = launch::spawn_logged(
+                launch::command(&launcher, &staged_game)
+                    .args(["--skip-launch", "--no-self-update"]),
+                "iw4x-update",
+            )
+            .step(Step::SpawnUpdater, &launcher)?;
             launch::wait_success(&mut updater, cancel, "IW4x update")?;
         }
         Game::T7 => {
-            let launcher = client_artifact;
-            std::fs::copy(launcher, staged_game.join("boiii.exe"))?;
+            let target = staged_game.join("boiii.exe");
+            std::fs::copy(client_artifact, &target).step(Step::CopyClient, &target)?;
         }
     }
     for file in &package.required_files {
         if !staged_game.join(file).is_file() {
+            tracing::warn!(game = game.id(), file, "required file missing after setup");
             return Err(Error::Invalid(format!(
-                "{} is missing a required file after extraction",
+                "{} is missing a required file after extraction ({file})",
                 game.title()
             )));
         }
@@ -286,23 +305,28 @@ pub(crate) fn finalize(
         completed: 0,
         total: 0,
     });
-    crate::storage::restore_saves(library, game, &staged_game)?;
+    launch::wait_for_directory_release(&staged_game, cancel, UPDATER_RELEASE_TIMEOUT)?;
+    crate::storage::restore_saves(library, game, &staged_game)
+        .step(Step::RestoreSaves, &staged_game)?;
+    let receipt = staged_game.join(".glitter-boys-install.json");
     state::write_json(
-        &staged_game.join(".glitter-boys-install.json"),
+        &receipt,
         &state::Receipt {
             version: 1,
             catalog_version: catalog.version,
             game,
             prerequisites_complete: false,
         },
-    )?;
+    )
+    .step(Step::WriteReceipt, &receipt)?;
     // Atomic directory rename exposes readiness only after all preceding checks pass.
     if destination.exists() {
         return Err(Error::Invalid(
             "The destination appeared during installation. Existing files were preserved.".into(),
         ));
     }
-    std::fs::rename(&staged_game, &destination)?;
+    std::fs::rename(&staged_game, &destination).step(Step::Promote, &staged_game)?;
+    tracing::info!(game = game.id(), destination = %destination.display(), "game promoted");
     Ok(())
 }
 

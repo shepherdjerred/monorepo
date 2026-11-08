@@ -22,11 +22,13 @@ struct Batch {
 }
 fn validate(bytes: &[u8]) -> Result<Batch, String> {
     let batch: Batch = serde_json::from_slice(bytes).map_err(|_| "invalid schema".to_string())?;
-    if batch.schema != 1 || batch.events.is_empty() || batch.events.len() > 25 {
+    // Schema 1 batches come from 0.1.x releases before 0.1.9; schema 2 adds failure context.
+    if !matches!(batch.schema, 1 | 2) || batch.events.is_empty() || batch.events.len() > 25 {
         return Err("invalid batch".into());
     }
     for e in &batch.events {
-        if e.schema != 1
+        if !e.valid_schema()
+            || e.schema > batch.schema
             || updates::version(&e.release).is_err()
             || e.duration_ms > 7 * 86400 * 1000
             || e.bytes > 512 * 1024 * 1024 * 1024
@@ -47,11 +49,43 @@ struct Measure {
 struct Metrics {
     series: BTreeMap<String, Measure>,
     releases: BTreeSet<String>,
+    /// Failed events by step and OS error code (schema 2), with bounded label values.
+    failures: BTreeMap<String, u64>,
+    os_errors: BTreeSet<i32>,
     rejected: u64,
     report_failed: u64,
 }
+fn label<T: serde::Serialize>(value: &T) -> String {
+    serde_json::to_value(value)
+        .ok()
+        .and_then(|v| v.as_str().map(str::to_owned))
+        .unwrap_or_else(|| "none".into())
+}
 impl Metrics {
+    fn observe_failure(&mut self, event: &Event) {
+        if event.outcome != Outcome::Failed {
+            return;
+        }
+        let os_error = match event.os_error {
+            None => "none".to_string(),
+            Some(code) if self.os_errors.contains(&code) || self.os_errors.len() < 32 => {
+                self.os_errors.insert(code);
+                code.to_string()
+            }
+            Some(_) => "other".to_string(),
+        };
+        let key = format!(
+            "game=\"{}\",operation=\"{}\",failure=\"{}\",step=\"{}\",io_kind=\"{}\",os_error=\"{os_error}\"",
+            event.game.map(|g| g.id()).unwrap_or("launcher"),
+            label(&event.operation),
+            label(&event.failure),
+            label(&event.step),
+            label(&event.io_kind),
+        );
+        *self.failures.entry(key).or_default() += 1;
+    }
     fn observe(&mut self, event: &Event) {
+        self.observe_failure(event);
         let version = if self.releases.contains(&event.release) || self.releases.len() < 32 {
             self.releases.insert(event.release.clone());
             event.release.as_str()
@@ -85,6 +119,7 @@ impl Metrics {
             "# TYPE glitter_launcher_events_total counter".into(),
             "# TYPE glitter_launcher_bytes_total counter".into(),
             "# TYPE glitter_launcher_duration_seconds histogram".into(),
+            "# TYPE glitter_launcher_failures_total counter".into(),
             format!("glitter_launcher_rejected_total {}", self.rejected),
             format!(
                 "glitter_launcher_reporting_failures_total {}",
@@ -120,8 +155,53 @@ impl Metrics {
                 m.count
             ));
         }
+        for (labels, count) in &self.failures {
+            lines.push(format!(
+                "glitter_launcher_failures_total{{{labels}}} {count}"
+            ));
+        }
         lines.join("\n") + "\n"
     }
+}
+/// Sentry store payload for one failed event. Grouping uses the allow-listed failure
+/// context so different causes (in use, disk full, blocked) stay separate issues.
+fn bugsink_event(event: &Event) -> serde_json::Value {
+    let os_error = event.os_error.map(|c| c.to_string());
+    let message = match (&event.step, event.os_error) {
+        (Some(_), Some(code)) => format!(
+            "{} failed at {} (os error {code})",
+            label(&event.operation),
+            label(&event.step)
+        ),
+        (Some(_), None) => format!(
+            "{} failed at {}",
+            label(&event.operation),
+            label(&event.step)
+        ),
+        _ => format!("{:?}: {:?}", event.operation, event.failure),
+    };
+    serde_json::json!({
+        "platform": "other",
+        "level": "error",
+        "logger": "glitter-boys",
+        "release": event.release,
+        "message": message,
+        "fingerprint": [
+            label(&event.operation),
+            label(&event.failure),
+            label(&event.step),
+            os_error.clone().unwrap_or_else(|| "none".into()),
+        ],
+        "tags": {
+            "game": event.game.map(|g| g.id()).unwrap_or("launcher"),
+            "operation": event.operation,
+            "failure": event.failure,
+            "step": event.step,
+            "io_kind": event.io_kind,
+            "os_error": os_error,
+            "schema": event.schema,
+        },
+    })
 }
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if std::env::args().any(|a| a == "--smoke") {
@@ -189,7 +269,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             return;
         };
         for event in receiver {
-            let body = serde_json::json!({"platform":"other","level":"error","logger":"glitter-boys","release":event.release,"message":format!("{:?}: {:?}",event.operation,event.failure),"tags":{"game":event.game.map(|g|g.id()).unwrap_or("launcher"),"operation":event.operation,"failure":event.failure}});
+            let body = bugsink_event(&event);
             let response = runtime.block_on(async {
                 client
                     .post(target.clone())
@@ -295,11 +375,49 @@ mod tests {
                 failure: None,
                 duration_ms: 500,
                 bytes: 10,
+                step: None,
+                io_kind: None,
+                os_error: None,
+                job: None,
             };
             metrics.observe(&event);
         }
         assert_eq!(metrics.releases.len(), 32);
         assert_eq!(metrics.series.len(), 33);
         assert!(metrics.render().contains("le=\"+Inf\""));
+    }
+    const OLD: &str = r#"{"schema":1,"at":1,"release":"0.1.7","game":"iw4x","operation":"prepare","outcome":"failed","failure":"filesystem","duration_ms":4721,"bytes":0}"#;
+    const NEW: &str = r#"{"schema":2,"at":1,"release":"0.1.9","game":"iw4x","operation":"prepare","outcome":"failed","failure":"filesystem","duration_ms":4721,"bytes":0,"step":"promote","io_kind":"other","os_error":32,"job":4}"#;
+    #[test]
+    fn accepts_old_and_new_clients_but_not_mixed_up_schemas() {
+        assert!(validate(format!(r#"{{"schema":1,"events":[{OLD}]}}"#).as_bytes()).is_ok());
+        assert!(validate(format!(r#"{{"schema":2,"events":[{NEW},{OLD}]}}"#).as_bytes()).is_ok());
+        // A schema 1 batch cannot carry schema 2 events, and schema 1 events cannot carry new fields.
+        assert!(validate(format!(r#"{{"schema":1,"events":[{NEW}]}}"#).as_bytes()).is_err());
+        let smuggled = OLD.replace(r#""bytes":0"#, r#""bytes":0,"os_error":32"#);
+        assert!(validate(format!(r#"{{"schema":2,"events":[{smuggled}]}}"#).as_bytes()).is_err());
+        assert!(validate(format!(r#"{{"schema":3,"events":[{NEW}]}}"#).as_bytes()).is_err());
+        let text = NEW.replace(r#""job":4"#, r#""job":4,"message":"C:/Users/private""#);
+        assert!(validate(format!(r#"{{"schema":2,"events":[{text}]}}"#).as_bytes()).is_err());
+    }
+    #[test]
+    fn failures_are_labelled_by_step_and_grouped_by_cause() -> Result<(), serde_json::Error> {
+        let mut metrics = Metrics::default();
+        let event: Event = serde_json::from_str(NEW)?;
+        metrics.observe(&event);
+        assert!(metrics.render().contains(
+            r#"glitter_launcher_failures_total{game="iw4x",operation="prepare",failure="filesystem",step="promote",io_kind="other",os_error="32"} 1"#
+        ));
+        for code in 0..100 {
+            let mut e = event.clone();
+            e.os_error = Some(code);
+            metrics.observe(&e);
+        }
+        assert_eq!(metrics.os_errors.len(), 32);
+        let report = bugsink_event(&event);
+        assert_eq!(report["message"], "prepare failed at promote (os error 32)");
+        assert_eq!(report["fingerprint"][2], "promote");
+        assert_eq!(report["tags"]["os_error"], "32");
+        Ok(())
     }
 }

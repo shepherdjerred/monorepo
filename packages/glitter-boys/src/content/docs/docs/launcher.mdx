@@ -58,9 +58,15 @@ temporary files, and saves/settings/mods.
 
 Keep the launcher open while it checks and unpacks files. **Pause** on a row or **Pause all**
 keeps downloaded bytes for later. After closing and reopening the launcher,
-choose **Resume** to continue, or **Try again** if an error occurred. Unpacking starts again if interrupted;
+choose **Resume** to continue. If setup stops with an error, choose **Get help** on
+the game and then **Try again**. Unpacking starts again if interrupted;
 the downloaded ZIP does not need to be fetched again if it passed verification.
 Large games can take a while to set up, especially on a hard drive or external drive.
+
+To limit how much bandwidth installs use, open **Settings** and check **Limit download
+speed to**, then choose a speed in Mbps. The limit applies right away to every game
+download, and a speedometer icon appears on downloads it slows. Updates that MW2 or
+Plutonium download themselves aren't limited.
 
 To stop installing a game altogether, pause it and choose **Cancel**. Confirming
 removes it from the list and deletes its unneeded downloads. Downloads needed by
@@ -124,8 +130,11 @@ reports automatically. You can turn it off anytime. Reports
 contain the game, launcher version, operation, outcome, duration, and byte count.
 They exclude account details, passwords, usernames, file paths, and chat. Local
 logs remain available through **Help → Show advanced tools → Open logs**.
-Use **Help → Save support report** to save a file you can send to Jerred.
-Saving the file does not send it anywhere.
+Use **Help → Save support bundle** to save a ZIP file you can send to Jerred.
+Saving the file does not send it anywhere. It contains the launcher's logs and
+settings, your games' setup state, and the names and sizes of files in your game
+folders, with your Windows user name removed. It never includes Plutonium account
+details, passwords, saves, or the contents of your game settings.
 
 Open **Settings → Updates** to check for launcher updates. An update takes effect
 after you close and reopen the launcher. If a check fails, your installed games
@@ -150,16 +159,22 @@ Uninstalling Glitter Boys itself keeps your games.
 
 ## If something stops
 
-Choose **Get help** on the affected game for an explanation and a next step.
-You can copy error details or save a support report from that screen.
+The game's card shows what went wrong and what to do next. Choose **Get help** on
+the affected game for the details; **Try again**, **Copy error details**, and
+**Save support bundle** are on that screen. When the last setup step fails, Try again
+continues from the files already unpacked instead of unpacking the game again.
 
 - **Download interrupted:** check your connection and choose **Try again**.
+- **A game file is in use:** close the game, its launcher, and any File Explorer
+  window open in the game folder, then choose **Try again**.
+- **Windows Security blocked a game file:** open **Windows Security → Protection
+  history**, allow the blocked file, then choose **Try again**.
 - **Not enough space:** free space on your game drive and try again. To change drives, pause all
   installations, open **Settings**, and choose **Remove paused installations from
   the list**, then **Change game folder**. Saved downloads stay in the original folder.
 - **Game already running:** switch to its window or close it before launching again.
-- **Still stuck:** choose **Help → Save support report** and send the file and the visible
-  error to Jerred. The export contains launcher events, not Plutonium credentials.
+- **Still stuck:** choose **Help → Save support bundle** and send the ZIP and the visible
+  error to Jerred. The bundle never contains Plutonium credentials.
 
 The [manual Windows guides](/docs/) cover client-specific troubleshooting.
 For a Mac, use the [Apple silicon guide](/docs/crossplay/macos/) and
