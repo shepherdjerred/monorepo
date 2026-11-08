@@ -214,9 +214,10 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     if ! command -v ps >/dev/null; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends procps
     fi
-    if ! command -v 7zz >/dev/null; then
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends 7zip
-    fi
+    # Media subprocesses intentionally omit mise shims from their credential-free
+    # PATH. Expose the exact pinned archive tool on that stable path, as for gh.
+    SEVEN_ZIP_EXECUTABLE=$(mise_ci which 7zz)
+    ln -sf "$SEVEN_ZIP_EXECUTABLE" /usr/local/bin/7zz
     ps --version >/dev/null
     7zz i >/dev/null
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
