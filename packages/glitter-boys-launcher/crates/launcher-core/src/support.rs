@@ -91,6 +91,8 @@ impl Redactor {
             replacements.push((profile.to_owned(), "%USERPROFILE%", false));
             // JSON logs escape backslashes.
             replacements.push((profile.replace('\\', "\\\\"), "%USERPROFILE%", false));
+            // Debug-formatted paths in JSON logs are escaped twice.
+            replacements.push((profile.replace('\\', "\\\\\\\\"), "%USERPROFILE%", false));
             replacements.push((profile.replace('\\', "/"), "%USERPROFILE%", false));
         }
         // Any length of user name; whole words only, so a short name like "ab" does not
@@ -295,7 +297,24 @@ fn add_everything<W: Write + Seek>(bundle: &mut Bundle<W>, input: &BundleInput<'
             "state/app/failed-update.json",
             &root.join("failed-update.json"),
         )?;
-        bundle.text("listings/app.txt", &listing(root, 2))?;
+        // The install folder can be shared with other software; list only the
+        // launcher's own entries in it.
+        let mut app = String::new();
+        let _ = writeln!(app, "# {}", root.display());
+        if let Ok(entries) = fs::read_dir(root) {
+            let mut owned: Vec<_> = entries
+                .flatten()
+                .filter(|e| crate::storage::launcher_owned(&e.file_name().to_string_lossy()))
+                .collect();
+            owned.sort_by_key(|e| e.file_name());
+            for entry in owned {
+                let _ = writeln!(app, "== {}", entry.file_name().to_string_lossy());
+                if entry.file_type().is_ok_and(|t| t.is_dir()) {
+                    app.push_str(&listing(&entry.path(), 2));
+                }
+            }
+        }
+        bundle.text("listings/app.txt", &app)?;
     }
     if let Some(library) = input.library {
         for game in Game::ALL {
@@ -686,6 +705,12 @@ mod tests {
         assert!(out.contains(r"%USERPROFILE%\AppData"));
         assert!(out.contains(r"%USERPROFILE%\\x"));
         assert!(out.contains("%USERPROFILE%/y"));
+        // Debug-formatted paths inside JSON logs carry doubly escaped backslashes.
+        let profile_only = Redactor::new(Some(r"C:\Users\Jerred"), None);
+        assert_eq!(
+            profile_only.apply(r#""exe":"Some(\"C:\\\\Users\\\\Jerred\\\\app.exe\")""#),
+            r#""exe":"Some(\"%USERPROFILE%\\\\app.exe\")""#
+        );
     }
 
     #[test]

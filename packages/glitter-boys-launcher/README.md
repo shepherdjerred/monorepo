@@ -246,14 +246,6 @@ bootstrap `BUGSINK_DSN`, tagged and fingerprinted by operation, failure, step,
 and OS error so distinct causes stay separate issues. Native crash dumps and
 symbolicated stacks are not implemented.
 
-## Download speed limit
-
-Settings → General → **Limit download speed** caps every launcher download (game
-archives, client archives, and launcher updates) at the chosen Mbps, shared
-across concurrent downloads and applied immediately to downloads in progress.
-Traffic from the IW4x, Plutonium, and BOIII updaters is not limited. The value is
-stored in `<data>\network.json`, not `settings.json`, whose exact shape older
-releases read after a rollback.
 Edge/proxy access logs have their own retention outside this event contract.
 
 Its Dockerfile belongs to this package; build, smoke-test, and publish the image
@@ -280,6 +272,15 @@ only an inactive chart marker and creates no ArgoCD Application or workload.
 Activation requires a real published image digest and a granted
 `glitter-boys-launcher-credentials` 1Password item. Change those through the
 normal homelab GitOps release path; never activate the unpublished digest marker.
+
+## Download speed limit
+
+Settings → General → **Limit download speed** caps every launcher download (game
+archives, client archives, and launcher updates) at the chosen Mbps, shared
+across concurrent downloads and applied immediately to downloads in progress.
+Traffic from the IW4x, Plutonium, and BOIII updaters is not limited. The value is
+stored in `<data>\network.json`, not `settings.json`, whose exact shape older
+releases read after a rollback.
 
 ## Release and signing runbook
 

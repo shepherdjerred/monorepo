@@ -353,7 +353,13 @@ fn add_app_usage(
         })
         .collect::<Result<_>>()?;
     for (i, root) in roots.iter().enumerate().skip(1) {
-        if roots[..i].iter().any(|previous| root.starts_with(previous)) {
+        // Skip a root already counted inside an earlier one. The install folder (index 2)
+        // is only partly scanned (launcher-owned entries), so roots inside it still count.
+        if roots[..i]
+            .iter()
+            .enumerate()
+            .any(|(j, previous)| j != 2 && root.starts_with(previous))
+        {
             continue;
         }
         let excluded: Vec<_> = roots[..i]
@@ -386,7 +392,7 @@ fn add_app_usage(
 }
 
 /// Entries the installer and updater create in the launcher's install folder.
-fn launcher_owned(name: &str) -> bool {
+pub(crate) fn launcher_owned(name: &str) -> bool {
     let name = name.to_ascii_lowercase();
     matches!(
         name.as_str(),
@@ -684,12 +690,14 @@ mod tests {
         let app = temp.path().join("Games");
         let library = app.join("Glitter").join("GlitterBoys");
         let data = temp.path().join("data");
-        let plutonium = temp.path().join("Plutonium");
+        // Plutonium inside the shared folder is still counted, as shared.
+        let plutonium = app.join("Plutonium");
         for directory in [&library, &data, &plutonium, &app.join("versions/0.1.9")] {
             fs::create_dir_all(directory)?;
         }
         fs::write(app.join("versions/0.1.9/glitter-boys.exe"), vec![0; 23])?;
         fs::write(app.join("current.json"), vec![0; 7])?;
+        fs::write(plutonium.join("plutonium.exe"), vec![0; 29])?;
         // Someone else's game folder with a junction, beside the launcher files.
         let other = app.join("OtherGame");
         fs::create_dir_all(other.join("real"))?;
@@ -704,6 +712,7 @@ mod tests {
         let mut report = Report::default();
         add_app_usage(&mut report, &library, &data, &app, &plutonium)?;
         assert_eq!(report.launcher, 23 + 7);
+        assert_eq!(report.shared, 29);
         // A link the launcher does own is still refused, and named.
         let error = scan_files(&other, &[], &mut |_, _| Ok(()));
         assert!(error.is_err_and(|e| e.to_string().contains("linked")));
