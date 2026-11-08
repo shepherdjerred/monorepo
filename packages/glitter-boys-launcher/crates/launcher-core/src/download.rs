@@ -85,18 +85,20 @@ impl RateLimit {
 }
 static LIMIT: LazyLock<RateLimit> = LazyLock::new(RateLimit::new);
 
+/// Bytes per second for a cap in Mbps (0 means unlimited), rejecting unsupported values.
+pub fn limit_bytes_per_second(mbps: Option<u32>) -> Result<u64> {
+    match mbps {
+        None => Ok(0),
+        Some(mbps @ 1..=MAX_LIMIT_MBPS) => Ok(u64::from(mbps) * 125_000),
+        Some(_) => Err(Error::Invalid(format!(
+            "Choose a download limit from 1 to {MAX_LIMIT_MBPS} Mbps"
+        ))),
+    }
+}
+
 /// Cap every launcher download, or remove the cap with `None`. Applies immediately.
 pub fn set_limit_mbps(mbps: Option<u32>) -> Result<()> {
-    let bytes_per_second = match mbps {
-        None => 0,
-        Some(mbps @ 1..=MAX_LIMIT_MBPS) => u64::from(mbps) * 125_000,
-        Some(_) => {
-            return Err(Error::Invalid(format!(
-                "Choose a download limit from 1 to {MAX_LIMIT_MBPS} Mbps"
-            )));
-        }
-    };
-    LIMIT.set(bytes_per_second);
+    LIMIT.set(limit_bytes_per_second(mbps)?);
     tracing::info!(?mbps, "download limit changed");
     Ok(())
 }

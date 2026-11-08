@@ -83,7 +83,11 @@ pub struct Launcher {
     keep_saves: bool,
     /// The Mbps value being edited in Settings, seeded from the saved limit.
     download_limit_draft: Option<u32>,
+    /// A support bundle being written in the background.
+    export: Option<BundleExport>,
 }
+type BundleExport =
+    std::sync::mpsc::Receiver<(PathBuf, Result<glitter_boys_core::support::BundleSummary>)>;
 impl Launcher {
     pub fn new(
         context: &eframe::CreationContext<'_>,
@@ -104,6 +108,7 @@ impl Launcher {
             settings_tab: SettingsTab::General,
             keep_saves: true,
             download_limit_draft: None,
+            export: None,
         })
     }
     fn report(&mut self, error: &glitter_boys_core::Error) {
@@ -317,6 +322,7 @@ impl eframe::App for Launcher {
                 Err(e) => self.report(&e),
             }
         }
+        self.poll_export();
         let busy = self.snapshot().is_ok_and(|s| s.busy);
         if context.input(|i| i.viewport().close_requested()) && busy {
             context.send_viewport_cmd(egui::ViewportCommand::CancelClose);

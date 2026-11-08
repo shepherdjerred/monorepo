@@ -153,7 +153,13 @@ impl Launcher {
                 ui.ctx().copy_text(problem.details.clone());
                 self.message = Some("Error details copied.".into());
             }
-            if ui.button("Save support bundle").clicked() {
+            if ui
+                .add_enabled(
+                    self.export.is_none(),
+                    egui::Button::new("Save support bundle"),
+                )
+                .clicked()
+            {
                 self.export_bundle();
             }
         });
@@ -392,7 +398,13 @@ impl Launcher {
         ui.label("Black Ops and Black Ops II may ask you to sign in to Plutonium. Sign in only in its own window; Glitter Boys never asks for your password.");
         ui.separator();
         ui.label("Still stuck? Save a support bundle and send it to Jerred with a description of what happened.");
-        if ui.button("Save support bundle").clicked() {
+        if ui
+            .add_enabled(
+                self.export.is_none(),
+                egui::Button::new("Save support bundle"),
+            )
+            .clicked()
+        {
             self.export_bundle();
         }
         ui.label(RichText::new("Saving a bundle doesn't send it anywhere. It has launcher logs, settings, and file names from your game folders, with your Windows user name removed. It never includes Plutonium account details, saves, or passwords.").small());
@@ -427,28 +439,64 @@ impl Launcher {
                 Err(e) => return self.report(&e),
             },
         };
-        let result = glitter_boys_core::support::write_bundle(
-            &path,
-            &glitter_boys_core::support::BundleInput {
-                data: &data,
-                library: library.as_deref(),
-                snapshot: snapshot.as_ref(),
-                update: update.as_ref(),
-                launcher_problem: self.problem.as_ref(),
-            },
-        );
+        let problem = self.problem.clone();
+        let (sender, receiver) = std::sync::mpsc::channel();
+        // Scanning game folders and compressing logs can take a while on a slow drive;
+        // keep the window responsive and report when it finishes.
+        let spawned = std::thread::Builder::new()
+            .name("support-bundle".into())
+            .spawn(move || {
+                let result = glitter_boys_core::support::write_bundle(
+                    &path,
+                    &glitter_boys_core::support::BundleInput {
+                        data: &data,
+                        library: library.as_deref(),
+                        snapshot: snapshot.as_ref(),
+                        update: update.as_ref(),
+                        launcher_problem: problem.as_ref(),
+                    },
+                );
+                let _ = sender.send((path, result));
+            });
+        match spawned {
+            Ok(_) => {
+                self.export = Some(receiver);
+                self.message = Some("Saving support bundle…".into());
+                self.dialog = None;
+            }
+            Err(e) => self.report(&e.into()),
+        }
+    }
+    /// Report a finished background export, once.
+    pub(super) fn poll_export(&mut self) {
+        let Some(receiver) = &self.export else {
+            return;
+        };
+        let (path, result) = match receiver.try_recv() {
+            Ok(done) => done,
+            Err(std::sync::mpsc::TryRecvError::Empty) => return,
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                self.export = None;
+                return self.report(&glitter_boys_core::Error::Invalid(
+                    "Saving the support bundle stopped unexpectedly".into(),
+                ));
+            }
+        };
+        self.export = None;
         match result {
             Ok(summary) => {
                 tracing::info!(path = %path.display(), entries = summary.entries, truncated = ?summary.truncated, "support bundle saved");
                 self.message = Some(format!("Support bundle saved to {}", path.display()));
-                self.dialog = None;
                 if let Some(folder) = path.parent()
                     && let Err(e) = open::that(folder)
                 {
                     tracing::warn!(%e, "could not open the bundle folder");
                 }
             }
-            Err(e) => self.report(&e),
+            Err(e) => {
+                self.message = None;
+                self.report(&e);
+            }
         }
     }
     fn open_logs(&mut self) {

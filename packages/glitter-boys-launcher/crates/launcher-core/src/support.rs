@@ -75,7 +75,8 @@ fn civil_date(days: i64) -> (i64, u32, u32) {
 
 /// Replace the Windows profile folder and user name in support text.
 pub struct Redactor {
-    replacements: Vec<(String, &'static str)>,
+    /// (text to find, replacement, whole words only)
+    replacements: Vec<(String, &'static str, bool)>,
 }
 impl Redactor {
     pub fn from_environment() -> Self {
@@ -86,21 +87,23 @@ impl Redactor {
     }
     pub fn new(profile: Option<&str>, user: Option<&str>) -> Self {
         let mut replacements = Vec::new();
-        if let Some(profile) = profile.filter(|p| p.len() > 3) {
-            replacements.push((profile.to_owned(), "%USERPROFILE%"));
+        if let Some(profile) = profile.filter(|p| !p.trim_end_matches(['\\', '/']).is_empty()) {
+            replacements.push((profile.to_owned(), "%USERPROFILE%", false));
             // JSON logs escape backslashes.
-            replacements.push((profile.replace('\\', "\\\\"), "%USERPROFILE%"));
-            replacements.push((profile.replace('\\', "/"), "%USERPROFILE%"));
+            replacements.push((profile.replace('\\', "\\\\"), "%USERPROFILE%", false));
+            replacements.push((profile.replace('\\', "/"), "%USERPROFILE%", false));
         }
-        if let Some(user) = user.filter(|u| u.len() >= 3) {
-            replacements.push((user.to_owned(), "<user>"));
+        // Any length of user name; whole words only, so a short name like "ab" does not
+        // rewrite ordinary words that contain it.
+        if let Some(user) = user.filter(|u| !u.is_empty()) {
+            replacements.push((user.to_owned(), "<user>", true));
         }
         Self { replacements }
     }
     pub fn apply(&self, text: &str) -> String {
         let mut text = text.to_owned();
-        for (needle, replacement) in &self.replacements {
-            text = replace_ignore_case(&text, needle, replacement);
+        for (needle, replacement, whole_word) in &self.replacements {
+            text = replace_ignore_case(&text, needle, replacement, *whole_word);
         }
         text
     }
@@ -134,25 +137,45 @@ fn strip_terminal_codes(text: &str) -> String {
     }
     out
 }
-fn replace_ignore_case(text: &str, needle: &str, replacement: &str) -> String {
-    if needle.is_empty() {
+/// Case-insensitive (Unicode lowercase) replacement that works on characters, so it is
+/// correct even where lowercasing changes a string's byte length.
+fn replace_ignore_case(text: &str, needle: &str, replacement: &str, whole_word: bool) -> String {
+    let wanted: Vec<char> = needle.chars().flat_map(char::to_lowercase).collect();
+    if wanted.is_empty() {
         return text.to_owned();
     }
-    let lower_text = text.to_lowercase();
-    let lower_needle = needle.to_lowercase();
-    // Lowercasing can change byte lengths for some scripts; only use the fast path when not.
-    if lower_text.len() != text.len() || lower_needle.len() != needle.len() {
-        return text.replace(needle, replacement);
-    }
+    let word = |c: char| c.is_alphanumeric() || c == '_';
+    // Byte offset just past a match of `wanted` starting at `start`, if there is one.
+    let match_at = |start: usize| -> Option<usize> {
+        let mut want = wanted.iter();
+        let mut pending = want.next();
+        for (offset, c) in text[start..].char_indices() {
+            for lower in c.to_lowercase() {
+                if pending != Some(&lower) {
+                    return None;
+                }
+                pending = want.next();
+            }
+            if pending.is_none() {
+                return Some(start + offset + c.len_utf8());
+            }
+        }
+        None
+    };
     let mut out = String::with_capacity(text.len());
     let mut last = 0;
-    for (index, _) in lower_text.match_indices(&lower_needle) {
-        if index < last {
-            continue;
+    let mut previous: Option<char> = None;
+    for (index, c) in text.char_indices() {
+        if index >= last
+            && !(whole_word && previous.is_some_and(word))
+            && let Some(end) = match_at(index)
+            && !(whole_word && text[end..].chars().next().is_some_and(word))
+        {
+            out.push_str(&text[last..index]);
+            out.push_str(replacement);
+            last = end;
         }
-        out.push_str(&text[last..index]);
-        out.push_str(replacement);
-        last = index + needle.len();
+        previous = Some(c);
     }
     out.push_str(&text[last..]);
     out
@@ -353,7 +376,30 @@ fn add_everything<W: Write + Seek>(bundle: &mut Bundle<W>, input: &BundleInput<'
 /// revision markers, the launcher's newest run logs (`cache/launcher_*.log`), and the
 /// game console log its crash reporter keeps (`sentry/attachments/console.log`).
 fn iw4x_files(folder: &Path) -> Vec<PathBuf> {
+    // Contents are read only from real folders inside the game folder: a link or junction
+    // could point anywhere, including at private files.
+    let plain = |directory: &Path| {
+        directory
+            .strip_prefix(folder)
+            .map(|relative| {
+                std::iter::once(folder.to_path_buf())
+                    .chain(
+                        relative
+                            .ancestors()
+                            .filter(|a| !a.as_os_str().is_empty())
+                            .map(|a| folder.join(a)),
+                    )
+                    .all(|path| {
+                        fs::symlink_metadata(&path)
+                            .is_ok_and(|m| m.is_dir() && !crate::storage::redirected(&m))
+                    })
+            })
+            .unwrap_or(false)
+    };
     let small_files = |directory: PathBuf| -> Vec<(PathBuf, String, SystemTime)> {
+        if !plain(&directory) {
+            return Vec::new();
+        }
         fs::read_dir(directory)
             .map(|entries| {
                 entries
@@ -639,6 +685,39 @@ mod tests {
         assert!(out.contains(r"%USERPROFILE%\AppData"));
         assert!(out.contains(r"%USERPROFILE%\\x"));
         assert!(out.contains("%USERPROFILE%/y"));
+    }
+
+    #[test]
+    fn short_and_unicode_user_names_are_removed_as_whole_words() {
+        let r = Redactor::new(Some(r"C:\Users\ab"), Some("ab"));
+        let out = r.apply(r#"owner AB signed in; "C:\\Users\\Ab\\x"; table about ab_c"#);
+        assert_eq!(
+            out,
+            r#"owner <user> signed in; "%USERPROFILE%\\x"; table about ab_c"#
+        );
+        // Lowercasing "Ⱥ" (2 bytes) gives "ⱥ" (3 bytes); matching must stay case-insensitive.
+        let r = Redactor::new(None, Some("Ⱥnna"));
+        assert_eq!(r.apply("ⱥnna wrote ȺNNA"), "<user> wrote <user>");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn redirected_iw4x_log_folders_are_not_read() -> Result<()> {
+        let temp = crate::test_tempdir()?;
+        let game = temp.path().join("iw4x");
+        let private = temp.path().join("private");
+        fs::create_dir_all(&game)?;
+        fs::create_dir_all(&private)?;
+        fs::write(private.join("launcher_secret.log"), b"private")?;
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(game.join("cache"))
+            .arg(&private)
+            .stdout(std::process::Stdio::null())
+            .status()?;
+        assert!(status.success(), "junction fixture");
+        assert!(iw4x_files(&game).is_empty());
+        Ok(())
     }
 
     #[test]

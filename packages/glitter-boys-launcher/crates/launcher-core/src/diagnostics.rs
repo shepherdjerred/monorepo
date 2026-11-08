@@ -179,9 +179,8 @@ fn initialize_logging(logs: &Path) -> Result<()> {
         .build(logs)
         .map_err(|e| crate::Error::Invalid(format!("Launcher log could not be opened: {e}")))?;
     let (writer, guard) = tracing_appender::non_blocking(appender);
-    // GLITTER_BOYS_LOG overrides verbosity for local troubleshooting.
-    let filter = EnvFilter::try_from_env("GLITTER_BOYS_LOG")
-        .unwrap_or_else(|_| EnvFilter::new("info,glitter_boys_core=debug,glitter_boys_app=debug"));
+    // Fixed verbosity: launcher behavior is not configured through environment variables.
+    let filter = EnvFilter::new("info,glitter_boys_core=debug,glitter_boys_app=debug");
     let subscriber = fmt()
         .json()
         .with_writer(writer)

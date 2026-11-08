@@ -603,6 +603,23 @@ fn failed_finish_keeps_unpacked_files_so_retry_skips_extraction() -> Result<()> 
         assert_eq!(s.games[index(Game::Iw4x)].phase, Phase::Failed);
         assert!(s.games[index(Game::Iw4x)].resumable);
     }
+    // Free up space can delete retained files; they are then unpacked again.
+    let retained = engine.staged[index(Game::Iw4x)]
+        .as_ref()
+        .map(|dir| dir.path().join("iw4x"));
+    if let Some(path) = &retained {
+        std::fs::remove_dir_all(path)?;
+    }
+    engine.drop_missing_staging(Game::Iw4x);
+    assert!(engine.staged[index(Game::Iw4x)].is_none());
+    assert!(
+        !engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?
+            .games[index(Game::Iw4x)]
+        .resumable
+    );
     // Damaged archive data must be unpacked again.
     finish(
         &mut engine,
@@ -762,5 +779,30 @@ fn download_capacity_counts_shared_artifact_once() -> Result<()> {
     assert_eq!(engine.running.len(), 2);
     assert!(engine.uses(Game::T5, &engine.catalog.plutonium.sha256));
     assert!(engine.uses(Game::T6, &engine.catalog.plutonium.sha256));
+    Ok(())
+}
+#[test]
+fn an_unsaved_download_limit_is_reported_without_stopping_installs() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    // A directory where the preference file belongs makes the save fail.
+    std::fs::create_dir_all(engine.data.join("network.json"))?;
+    engine.command(Command::DownloadLimit(Some(50)))?;
+    let s = engine
+        .shared
+        .lock()
+        .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?;
+    assert_eq!(
+        s.download_limit_mbps, None,
+        "the cap only changes once saved"
+    );
+    assert_eq!(
+        s.error.as_ref().map(|p| p.title),
+        Some("The download limit couldn't be saved")
+    );
+    drop(s);
+    // Out-of-range values are rejected before anything is written.
+    std::fs::remove_dir(engine.data.join("network.json"))?;
+    engine.command(Command::DownloadLimit(Some(0)))?;
+    assert!(!engine.data.join("network.json").exists());
     Ok(())
 }

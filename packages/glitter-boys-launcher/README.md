@@ -199,7 +199,7 @@ are removed after the benchmark. Concurrent disk activity affects the result.
 - `launcher.<date>.log`: structured JSON text logs (`tracing`), rotated daily.
   They record startup context, every job with its id, phase changes, full error
   chains, update checks, prerequisite results, and panics with location and
-  backtrace. `GLITTER_BOYS_LOG` overrides the filter for local troubleshooting.
+  backtrace.
 - `processes/*.log`: stdout and stderr of IW4x, BOIII, and component installer
   helpers, written to a file handle so a helper can never block on a full pipe.
   Plutonium output is never captured because it can carry account details; only

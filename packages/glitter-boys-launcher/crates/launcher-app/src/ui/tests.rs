@@ -207,6 +207,7 @@ fn dialogs_fit_with_long_errors_and_keyboard_escape_closes_them() -> Result<()> 
         updater: glitter_boys_core::updates::Updater::new(),
         healthy: false,
         download_limit_draft: None,
+        export: None,
     };
     for size in [egui::vec2(760.0, 560.0), egui::vec2(900.0, 640.0)] {
         for scale in [1.0, 1.25, 1.5, 2.0] {
@@ -316,7 +317,7 @@ fn all_controls_fit_at_minimum_size_with_long_paths_and_errors() -> Result<()> {
         scheduler: Scheduler::start(Catalog::bundled()?, data.path().into(), settings)?,
         _lock: state::exclusive_lock(&data.path().join("launcher.lock"))?,
     };
-    let mut app=Launcher{game_icons:game_art::load(&egui::Context::default())?,settings_tab:SettingsTab::General,keep_saves:true,problem:None,dialog:None,advanced_help:false,library:Ok(library),message:Some("A very long network error that should be truncated instead of adding rows and hiding the footer. ".repeat(8)),closing:false,updater:Err(glitter_boys_core::Error::Invalid("test".into())),healthy:false,download_limit_draft:None};
+    let mut app=Launcher{game_icons:game_art::load(&egui::Context::default())?,settings_tab:SettingsTab::General,keep_saves:true,problem:None,dialog:None,advanced_help:false,library:Ok(library),message:Some("A very long network error that should be truncated instead of adding rows and hiding the footer. ".repeat(8)),closing:false,updater:Err(glitter_boys_core::Error::Invalid("test".into())),healthy:false,download_limit_draft:None,export:None};
     for size in [egui::vec2(760.0, 560.0), egui::vec2(900.0, 640.0)] {
         for scale in [1.0, 1.25, 1.5, 2.0] {
             for phase in [

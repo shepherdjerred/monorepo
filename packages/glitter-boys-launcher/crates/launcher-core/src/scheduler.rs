@@ -247,6 +247,22 @@ impl Engine {
             clocks: std::array::from_fn(|_| Clock::default()),
         }
     }
+    /// Free up space may remove the unpacked files a failed setup kept; unpack again then.
+    fn drop_missing_staging(&mut self, game: Game) {
+        if self.staged[index(game)]
+            .as_ref()
+            .is_some_and(|staging| !staging.path().join(game.id()).is_dir())
+        {
+            tracing::info!(
+                game = game.id(),
+                "retained unpacked files are gone; unpacking again"
+            );
+            self.staged[index(game)] = None;
+            if let Ok(mut s) = self.shared.lock() {
+                s.games[index(game)].resumable = false;
+            }
+        }
+    }
     fn status(&mut self, game: Game, phase: Phase, error: Option<Problem>) {
         let now = Instant::now();
         let resumable = self.staged[index(game)].is_some();
@@ -531,14 +547,29 @@ impl Engine {
                 self.stop_all();
             }
             Command::DownloadLimit(mbps) => {
-                download::set_limit_mbps(mbps)?;
-                state::Network {
-                    version: 1,
-                    download_limit_mbps: mbps,
-                }
-                .save(&self.data)?;
+                // A preference that can't be saved is reported, never fatal to installs:
+                // the applied limit and the snapshot only change once it is saved.
+                let saved = download::limit_bytes_per_second(mbps)
+                    .and_then(|_| {
+                        state::Network {
+                            version: 1,
+                            download_limit_mbps: mbps,
+                        }
+                        .save(&self.data)
+                    })
+                    .and_then(|()| download::set_limit_mbps(mbps));
                 if let Ok(mut s) = self.shared.lock() {
-                    s.download_limit_mbps = mbps;
+                    match saved {
+                        Ok(()) => s.download_limit_mbps = mbps,
+                        Err(error) => {
+                            tracing::warn!(%error, "download limit not saved");
+                            s.error = Some(Problem::new(
+                                "The download limit couldn't be saved",
+                                "Check that your launcher drive has free space, then set the limit again.",
+                                error.to_string(),
+                            ));
+                        }
+                    }
                 }
             }
         }
@@ -701,6 +732,7 @@ impl Engine {
             {
                 continue;
             }
+            self.drop_missing_staging(game);
             if let Some(staging) = self.staged[i].take() {
                 // Client ZIP extraction shares the extraction slot; no nested pools compete.
                 if self
@@ -1105,6 +1137,9 @@ impl Engine {
             match completion.result {
                 Ok(Output::Storage(report, message)) => {
                     self.verified.retain(|_, path| path.exists());
+                    for game in Game::ALL {
+                        self.drop_missing_staging(game);
+                    }
                     if let Key::Storage(action) = job.key
                         && let Some(game) = action.game()
                     {
