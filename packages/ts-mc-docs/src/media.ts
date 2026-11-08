@@ -1,88 +1,19 @@
-import {
-  PublicMediaSchema,
-  type PublicMedia,
-} from "@shepherdjerred/mc-harness/protocol/media.ts";
+import { PublicMediaSchema } from "@shepherdjerred/mc-harness/protocol/media.ts";
 import { overlaySvg } from "@shepherdjerred/mc-harness/protocol/media-overlay.ts";
 
-const icons = {
-  annotations:
-    "M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Zm10 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z",
-  expand: "M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4",
-  download: "M10 2v10m-4-4 4 4 4-4M3 13v4h14v-4",
-};
-
-function actionLabel(
-  element: HTMLElement,
-  icon: keyof typeof icons,
-  text: string,
-): void {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 20 20");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "1.6");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  svg.setAttribute("aria-hidden", "true");
-  const shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  shape.setAttribute("d", icons[icon]);
-  svg.append(shape);
-  const label = document.createElement("span");
-  label.textContent = text;
-  element.append(svg, label);
-}
-
-function cueTime(milliseconds: number): string {
-  const seconds = Math.floor(milliseconds / 1000);
-  return `${Math.floor(seconds / 60).toString()}:${(seconds % 60).toString().padStart(2, "0")}`;
-}
-
-function annotationSteps(
-  manifest: PublicMedia,
-  media: HTMLImageElement | HTMLVideoElement,
-  signal: AbortSignal,
-): HTMLOListElement {
-  const steps = document.createElement("ol");
-  steps.className = "storm-media-steps";
-  steps.setAttribute("role", "list");
-  steps.setAttribute(
-    "aria-label",
-    media instanceof HTMLVideoElement ? "Video moments" : "Annotation key",
-  );
-  manifest.annotations.forEach((cue, index) => {
-    const row = document.createElement("li");
-    row.className = "storm-media-step";
-    const number = document.createElement("span");
-    number.className = "storm-media-step-number";
-    number.setAttribute("aria-hidden", "true");
-    number.textContent = (index + 1).toString();
-    const label = document.createElement("span");
-    label.className = "storm-media-step-label";
-    label.textContent = cue.text;
-    if (media instanceof HTMLVideoElement) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.setAttribute(
-        "aria-label",
-        `Jump to ${cueTime(cue.startMs)}: ${cue.text}`,
-      );
-      const time = document.createElement("span");
-      time.className = "storm-media-step-time";
-      time.textContent = cueTime(cue.startMs);
-      time.setAttribute("aria-hidden", "true");
-      button.append(number, label, time);
-      button.addEventListener(
-        "click",
-        () => {
-          media.currentTime = cue.startMs / 1000;
-        },
-        { signal },
-      );
-      row.append(button);
-    } else row.append(number, label);
-    steps.append(row);
-  });
-  return steps;
+function annotationToggle(): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "storm-media-toggle";
+  button.setAttribute("aria-label", "Annotations");
+  button.setAttribute("aria-pressed", "true");
+  button.append("Annotations ");
+  const state = document.createElement("span");
+  state.className = "storm-media-toggle-state";
+  state.textContent = "On";
+  state.setAttribute("aria-hidden", "true");
+  button.append(state);
+  return button;
 }
 
 /** Retain the original download markup for the unenhanced and disconnected states. */
@@ -107,6 +38,97 @@ function replaceDownloadFallback(root: HTMLElement, href: string): () => void {
   original.replaceWith(marker);
   return () => {
     marker.replaceWith(original);
+  };
+}
+
+function imageLightbox(
+  root: HTMLElement,
+  stage: HTMLElement,
+  media: HTMLImageElement,
+  signal: AbortSignal,
+): () => void {
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "storm-media-open";
+  open.setAttribute("aria-label", `Enlarge screenshot: ${media.alt}`);
+  open.setAttribute("aria-haspopup", "dialog");
+  stage.append(open);
+  const dialog = document.createElement("dialog");
+  dialog.className = "storm-media-lightbox";
+  dialog.setAttribute("aria-label", media.alt || "Enlarged screenshot");
+  const figure = document.createElement("figure");
+  const caption = root.querySelector("figcaption");
+  if (caption) figure.append(caption.cloneNode(true));
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "storm-media-close";
+  close.setAttribute("aria-label", "Close enlarged screenshot");
+  close.textContent = "×";
+  close.autofocus = true;
+  dialog.append(figure, close);
+  root.append(dialog);
+  const placeholder = document.createElement("div");
+  placeholder.setAttribute("aria-hidden", "true");
+  let expanded = false;
+  const restore = () => {
+    if (!expanded) return;
+    placeholder.replaceWith(stage);
+    expanded = false;
+  };
+  const closeLightbox = () => {
+    dialog.close();
+    restore();
+    open.focus({ preventScroll: true });
+  };
+  open.addEventListener(
+    "click",
+    () => {
+      placeholder.style.height = `${stage.getBoundingClientRect().height.toString()}px`;
+      stage.before(placeholder);
+      figure.prepend(stage);
+      expanded = true;
+      dialog.showModal();
+    },
+    { signal },
+  );
+  close.addEventListener("click", closeLightbox, { signal });
+  dialog.addEventListener(
+    "cancel",
+    (event) => {
+      event.preventDefault();
+      closeLightbox();
+    },
+    { signal },
+  );
+  dialog.addEventListener(
+    "close",
+    () => {
+      if (!expanded) return;
+      restore();
+      open.focus({ preventScroll: true });
+    },
+    { signal },
+  );
+  dialog.addEventListener(
+    "click",
+    (event) => {
+      if (event.target !== dialog) return;
+      const bounds = dialog.getBoundingClientRect();
+      if (
+        event.clientX < bounds.left ||
+        event.clientX > bounds.right ||
+        event.clientY < bounds.top ||
+        event.clientY > bounds.bottom
+      )
+        closeLightbox();
+    },
+    { signal },
+  );
+  return () => {
+    dialog.close();
+    restore();
+    dialog.remove();
+    open.remove();
   };
 }
 
@@ -149,8 +171,7 @@ class StormMedia extends HTMLElement {
       media instanceof HTMLImageElement || media instanceof HTMLVideoElement
     ))
       throw new Error("Missing media fallback");
-    const original = media.getAttribute("src");
-    if (original !== manifest.src)
+    if (media.getAttribute("src") !== manifest.src)
       throw new Error("Media source differs from its manifest");
     const stage = document.createElement("div");
     stage.className = "storm-media-stage";
@@ -160,63 +181,31 @@ class StormMedia extends HTMLElement {
     overlay.className = "storm-media-overlay";
     overlay.setAttribute("aria-hidden", "true");
     stage.append(overlay);
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = "storm-media-action storm-media-toggle";
-    actionLabel(toggle, "annotations", "Annotations");
-    const toggleState = document.createElement("span");
-    toggleState.className = "storm-media-toggle-state";
-    toggleState.textContent = "On";
-    toggleState.setAttribute("aria-hidden", "true");
-    toggle.append(toggleState);
-    toggle.setAttribute("aria-pressed", "true");
-    toggle.setAttribute("aria-label", "Hide annotations");
-    toggle.title = "Hide annotations";
-    const steps = annotationSteps(manifest, media, signal);
-    const controls = document.createElement("div");
-    controls.className = "storm-media-controls";
-    const toolbar = document.createElement("div");
-    toolbar.className = "storm-media-toolbar";
-    const actions = document.createElement("div");
-    actions.className = "storm-media-actions";
-    if (manifest.annotations.length > 0) actions.append(toggle);
-    if (media instanceof HTMLImageElement) {
-      const fullSize = document.createElement("a");
-      fullSize.className = "storm-media-action storm-media-full-size";
-      fullSize.href = manifest.src;
-      fullSize.target = "_blank";
-      fullSize.rel = "noopener";
-      fullSize.setAttribute("aria-label", "Open full-size image in a new tab");
-      actionLabel(fullSize, "expand", "Full size");
-      actions.append(fullSize);
-    }
-    const download = document.createElement("a");
-    download.className = "storm-media-action storm-media-download";
-    const downloadPath = `/media/${manifest.name}/annotated.${manifest.kind === "video" ? "mp4" : "webp"}`;
-    download.href = downloadPath;
-    download.download = "";
-    download.title = `Download ${manifest.annotations.length > 0 ? "annotated " : ""}${manifest.kind}`;
-    download.setAttribute("aria-label", download.title);
-    actionLabel(download, "download", "Download");
-    const restoreDownload = replaceDownloadFallback(this, downloadPath);
-    actions.append(download);
-    toolbar.append(actions);
-    controls.append(toolbar);
-    if (manifest.annotations.length > 0) controls.append(steps);
-    this.append(controls);
-    this.classList.add("storm-media-enhanced");
-    this.classList.toggle("storm-media-video", manifest.kind === "video");
+    const toggle = annotationToggle();
+    if (manifest.annotations.length > 0) stage.append(toggle);
     toggle.addEventListener(
       "click",
       () => {
         overlay.hidden = !overlay.hidden;
-        const label = overlay.hidden ? "Show annotations" : "Hide annotations";
-        toggle.setAttribute("aria-label", label);
-        toggle.title = label;
-        toggleState.textContent = overlay.hidden ? "Off" : "On";
         toggle.setAttribute("aria-pressed", String(!overlay.hidden));
+        const state = toggle.querySelector("span");
+        if (state) state.textContent = overlay.hidden ? "Off" : "On";
       },
       { signal },
+    );
+    const description = document.createElement("p");
+    description.className = "storm-media-description";
+    description.textContent = manifest.annotations
+      .map((cue) => cue.text)
+      .join(". ");
+    if (manifest.annotations.length > 0) this.append(description);
+    const restoreLightbox =
+      media instanceof HTMLImageElement
+        ? imageLightbox(this, stage, media, signal)
+        : undefined;
+    const restoreDownload = replaceDownloadFallback(
+      this,
+      `/media/${manifest.name}/annotated.${manifest.kind === "video" ? "mp4" : "webp"}`,
     );
     let previous = "";
     const draw = () => {
@@ -245,11 +234,11 @@ class StormMedia extends HTMLElement {
     observer.observe(stage);
     this.cleanup = () => {
       observer.disconnect();
+      restoreLightbox?.();
       stage.before(media);
       stage.remove();
-      controls.remove();
+      description.remove();
       restoreDownload();
-      this.classList.remove("storm-media-enhanced", "storm-media-video");
     };
     draw();
   }
