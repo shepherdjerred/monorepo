@@ -3,7 +3,6 @@ import {
   workerHostSpecification,
 } from "@shepherdjerred/delivery/contract";
 import type {
-  WorkerRolloutSnapshot,
   EvidenceInput,
   WorkerRolloutAction,
   WorkerRolloutPlan,
@@ -31,6 +30,10 @@ import {
 } from "#lib/worker-deployment-proofs.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import { workerRolloutTarget } from "./worker-pool.ts";
+import {
+  workerAcceptanceMode,
+  type WorkerRoutingSnapshot,
+} from "./worker-acceptance.ts";
 
 export type DeliveryWorkerConnection = { address: string; tls?: boolean };
 export type DeliveryWorkerReceipt = {
@@ -44,7 +47,7 @@ export type DeliveryWorkerReceipt = {
 type Options = ReturnType<typeof rolloutOptions>;
 
 function rolloutOptions(
-  detail: WorkerRolloutSnapshot,
+  detail: WorkerRoutingSnapshot,
   connection: DeliveryWorkerConnection,
 ) {
   const policy = workerRolloutTarget(detail);
@@ -156,9 +159,13 @@ async function requireCandidate(options: Options, run: RolloutCommandRunner) {
 
 /** Candidate code runs separately from the controller's routing/image proofs. */
 async function prepareRoute(
-  detail: WorkerRolloutSnapshot,
+  detail: WorkerRoutingSnapshot,
   connection: DeliveryWorkerConnection,
-  runners: { run: RolloutCommandRunner; candidate: RolloutCommandRunner },
+  runners: {
+    run: RolloutCommandRunner;
+    candidate: RolloutCommandRunner;
+    restored: WorkerRoutingSnapshot | null;
+  },
   namespace: "prod" | "beta",
 ): Promise<WorkerRolloutPlan> {
   const { run, candidate } = runners;
@@ -170,7 +177,8 @@ async function prepareRoute(
   );
   await requireCandidate(options, run);
   await runWorkerDeploymentPreflight(options, candidate);
-  await requireAcceptancePrerequisite(options, run);
+  if (workerAcceptanceMode(detail, runners.restored) === "prerequisite")
+    await requireAcceptancePrerequisite(options, run);
   const state = await routing(options, run);
   // A previous attempt may have promoted this exact candidate before final verification failed.
   // It must still pass the full preflight above and the exclusive-current verification below.
@@ -206,10 +214,13 @@ async function prepareRoute(
 }
 
 export async function prepareDeliveryWorkerRollout(
-  detail: WorkerRolloutSnapshot,
+  detail: WorkerRoutingSnapshot,
   connection: DeliveryWorkerConnection,
   run: RolloutCommandRunner,
-  candidate: RolloutCommandRunner = run,
+  proof?: {
+    candidate: RolloutCommandRunner;
+    restored: WorkerRoutingSnapshot | null;
+  },
 ): Promise<WorkerRolloutPlan> {
   const options = rolloutOptions(detail, connection);
   const plans = [];
@@ -218,7 +229,11 @@ export async function prepareDeliveryWorkerRollout(
       await prepareRoute(
         detail,
         connection,
-        { run, candidate },
+        {
+          run,
+          candidate: proof?.candidate ?? run,
+          restored: proof?.restored ?? null,
+        },
         route.namespace,
       ),
     );
@@ -235,7 +250,7 @@ export async function prepareDeliveryWorkerRollout(
 }
 
 function requirePlan(
-  detail: WorkerRolloutSnapshot,
+  detail: WorkerRoutingSnapshot,
   plan: WorkerRolloutPlan,
   options: Options,
 ) {
@@ -298,15 +313,17 @@ async function canary(
 async function promote(
   options: Options,
   plan: WorkerRolloutPlan,
-  run: RolloutCommandRunner,
-  candidate: RolloutCommandRunner,
+  runners: { run: RolloutCommandRunner; candidate: RolloutCommandRunner },
+  acceptance: "prerequisite" | "restoration",
 ) {
+  const { run, candidate } = runners;
   const before = await routing(options, run);
   requireNoRamp(before);
   // Inspect an ambiguous prior response before repeating the same mutation.
   if (before.currentVersionBuildID === options.buildId) return;
   unchangedStable(before, plan);
-  await requireAcceptancePrerequisite(options, run);
+  if (acceptance === "prerequisite")
+    await requireAcceptancePrerequisite(options, run);
   await verifyCandidateImageBuildId(
     options.candidateImage,
     options.buildId,
@@ -321,7 +338,8 @@ async function promote(
 
 async function stepRoute(
   input: {
-    detail: WorkerRolloutSnapshot;
+    detail: WorkerRoutingSnapshot;
+    restored?: WorkerRoutingSnapshot | null;
     plan: WorkerRolloutPlan;
     action: WorkerRolloutAction;
     connection: DeliveryWorkerConnection;
@@ -336,10 +354,11 @@ async function stepRoute(
   };
   const plan = WorkerRolloutPlanSchema.parse(input.plan);
   requirePlan(input.detail, plan, options);
+  const acceptance = workerAcceptanceMode(input.detail, input.restored ?? null);
   await requireCandidate(options, run);
   switch (input.action) {
     case "promote":
-      await promote(options, plan, run, candidate);
+      await promote(options, plan, { run, candidate }, acceptance);
       break;
     case "verify":
       break;

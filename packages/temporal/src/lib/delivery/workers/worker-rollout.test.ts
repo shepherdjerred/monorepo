@@ -231,7 +231,7 @@ describe("PostgreSQL-owned worker rollout routing", () => {
       detail(),
       connection,
       controller.run,
-      candidate.run,
+      { candidate: candidate.run, restored: null },
     );
     expect(prepared.candidateBuildId).toBe(CANDIDATE);
     await stepDeliveryWorkerRollout(
@@ -267,12 +267,10 @@ describe("PostgreSQL-owned worker rollout routing", () => {
     const controller = fixture();
     const candidate = fixture({ checkout: STABLE });
     await expect(
-      prepareDeliveryWorkerRollout(
-        detail(),
-        connection,
-        controller.run,
-        candidate.run,
-      ),
+      prepareDeliveryWorkerRollout(detail(), connection, controller.run, {
+        candidate: candidate.run,
+        restored: null,
+      }),
     ).rejects.toThrow("does not match candidate");
     expect(candidate.commands.some((argv) => argv[0] === "bun")).toBe(false);
     await expect(

@@ -5,7 +5,6 @@ import {
   EvidenceInputSchema,
   WorkerRolloutPlanSchema,
   WorkerRolloutActionSchema,
-  WorkerRolloutSnapshotSchema,
   type WorkerRolloutPlan,
   type WorkerRolloutAction,
   type DeploymentDetail,
@@ -32,6 +31,7 @@ import {
   workerRunnerImage,
 } from "#lib/delivery/workers/worker-plan.ts";
 import { executorIdentity } from "#activities/delivery/model/stages.ts";
+import { workerRoutingInput } from "#lib/delivery/workers/worker-acceptance.ts";
 
 /**
  * Stages whose Job only reads and proves (image provenance, candidate replay
@@ -160,6 +160,18 @@ const connection = {
   address: "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
 };
 
+async function routingInput(detail: DeploymentDetail) {
+  const restoredId = detail.deployment.restoredDeploymentId;
+  const restored =
+    restoredId === null
+      ? null
+      : await deliveryRequest(
+          `deployments/${encodeURIComponent(restoredId)}`,
+          DeploymentDetailSchema,
+        );
+  return workerRoutingInput(detail, restored);
+}
+
 export async function inspectDeliveryWorkerImages(id: string): Promise<void> {
   const detail = await load(id);
   // Read the control plane before the Job records its running stage: a read
@@ -218,7 +230,7 @@ export async function prepareDeliveryWorker(
 ): Promise<WorkerRolloutPlan> {
   const detail = await load(id);
   const job = await workerJob(detail, "worker-preflight", "worker-preflight", {
-    detail: WorkerRolloutSnapshotSchema.parse(detail),
+    ...(await routingInput(detail)),
     connection,
   });
   const plan = WorkerRolloutPlanSchema.parse(job.result);
@@ -248,7 +260,7 @@ export async function stepDeliveryWorker(
 ): Promise<void> {
   const detail = await load(id);
   const job = await workerJob(detail, `worker-${action}`, "worker-step", {
-    detail: WorkerRolloutSnapshotSchema.parse(detail),
+    ...(await routingInput(detail)),
     plan: WorkerRolloutPlanSchema.parse(plan),
     action: WorkerRolloutActionSchema.parse(action),
     connection,
