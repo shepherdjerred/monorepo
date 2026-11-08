@@ -129,6 +129,58 @@ test("missing, substituted and overlapping source spans fail instead of changing
   ).toThrow("invalid source span");
 });
 
+test("a real overlapping unknown qualifier stays ambiguous without aborting movie matching", () => {
+  const title = "Harry Potter and the Half-Blood Prince";
+  const sourceTitle = `${title} Extended Version 2009`;
+  const input: ReleaseMatchInput = {
+    id: "candidate",
+    providerId: "knaben",
+    title: sourceTitle,
+    sizeBytes: 1000,
+    media: { id: "movie", kind: "movie", title, year: 2009 },
+  };
+  const evidence = parseMovieCutV2({
+    source: {
+      kind: "provider",
+      providerId: "knaben",
+      providerReleaseId: "real-title-regression",
+    },
+    sourceDigest: "a".repeat(64),
+    canonical: {
+      rootMediaId: "movie",
+      title,
+      aliases: [],
+      digest: "b".repeat(64),
+    },
+    attribution: "provider_texts",
+    texts: [
+      {
+        text: sourceTitle,
+        provenance: { kind: "release-title", field: "title" },
+      },
+    ],
+  });
+  expect(evidence.texts[0]?.markers).toEqual([
+    { start: 39, end: 55, token: "Extended Version", cut: null },
+  ]);
+  expect(evidence.conclusion).toEqual({ kind: "ambiguous" });
+  expect(matchMovieReleaseV4(input, evidence).attributes).toMatchObject({
+    identityConfidence: "exact",
+    title: sourceTitle,
+    mediaIds: ["movie"],
+  });
+  for (const edition of ["default", "extended_cut"] as const)
+    expect(
+      evaluateMovieCutV2({
+        edition,
+        phase: "candidate",
+        candidate: evidence,
+        current: [],
+        members: [],
+      }).accepted,
+    ).toBe(false);
+});
+
 test("v4 leaves unmarked matching and literal legacy matching behavior unchanged", () => {
   const unmarked = fixture("");
   expect(matchMovieReleaseV4(unmarked.input, unmarked.evidence)).toEqual(

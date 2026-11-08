@@ -78,7 +78,19 @@ export function conventionalMovieCutTexts(
     const wrappers = plexMarkers(text.text).filter(
       (marker) => !contained(marker, text.canonicalSpans),
     );
-    const markers = text.markers
+    // An unknown qualifier can contain a bare marker ("Extended Version").
+    // Keep the whole unknown phrase before interpreting conventional bare words.
+    const outerMarkers = text.markers.filter(
+      (marker) =>
+        marker.cut !== null ||
+        !text.markers.some(
+          (other) =>
+            other.cut === null &&
+            contained(marker, [other]) &&
+            (other.start < marker.start || other.end > marker.end),
+        ),
+    );
+    const markers = outerMarkers
       .filter((marker) => !contained(marker, wrappers))
       .map((marker) => ({
         ...marker,
