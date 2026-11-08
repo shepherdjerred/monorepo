@@ -52,22 +52,29 @@ test("exports one real client, Workflow and Activity call graph", async () => {
       namespace: "default",
       taskQueue,
       workflowsPath: new URL("test-support.ts", import.meta.url).pathname,
-      activities: { probe: () => Promise.resolve("ok") },
       interceptors: {
         workflowModules: tracing.workflowModules,
-        activity: tracing.activity,
       },
       sinks: tracing.sinks,
     });
+    const activityWorker = await Worker.create({
+      connection: environment.nativeConnection,
+      namespace: "default",
+      taskQueue: "tracing-regression-activities",
+      activities: { probe: () => Promise.resolve("ok") },
+      interceptors: { activity: tracing.activity },
+    });
     await expect(
       worker.runUntil(() =>
-        client.workflow.execute<typeof tracingProbeWorkflow>(
-          "tracingProbeWorkflow",
-          {
-            workflowId: "tracing-regression-" + crypto.randomUUID(),
-            taskQueue,
-            args: [],
-          },
+        activityWorker.runUntil(() =>
+          client.workflow.execute<typeof tracingProbeWorkflow>(
+            "tracingProbeWorkflow",
+            {
+              workflowId: "tracing-regression-" + crypto.randomUUID(),
+              taskQueue,
+              args: [],
+            },
+          ),
         ),
       ),
     ).resolves.toBe("ok");
@@ -121,22 +128,29 @@ test("tracing replays an untraced history without changing UUIDs or exporting re
       namespace: "default",
       taskQueue: "untraced-history",
       workflowsPath,
-      activities: { capture: (id: string) => Promise.resolve(id) },
       sinks: { uuidCapture },
     });
-    const original = await worker.runUntil(async () => {
-      const handle = await environment.client.workflow.start<
-        typeof tracingReplayProbeWorkflow
-      >("tracingReplayProbeWorkflow", {
-        workflowId: "untraced-history-" + crypto.randomUUID(),
-        taskQueue: "untraced-history",
-        args: [],
-      });
-      return {
-        id: await handle.result(),
-        history: await handle.fetchHistory(),
-      };
+    const activityWorker = await Worker.create({
+      connection: environment.nativeConnection,
+      namespace: "default",
+      taskQueue: "tracing-regression-activities",
+      activities: { capture: (id: string) => Promise.resolve(id) },
     });
+    const original = await worker.runUntil(() =>
+      activityWorker.runUntil(async () => {
+        const handle = await environment.client.workflow.start<
+          typeof tracingReplayProbeWorkflow
+        >("tracingReplayProbeWorkflow", {
+          workflowId: "untraced-history-" + crypto.randomUUID(),
+          taskQueue: "untraced-history",
+          args: [],
+        });
+        return {
+          id: await handle.result(),
+          history: await handle.fetchHistory(),
+        };
+      }),
+    );
     const exporter = new InMemorySpanExporter();
     const tracing = createTemporalWorkerTracing({
       exporter: createValidatedWorkflowSpanSink(

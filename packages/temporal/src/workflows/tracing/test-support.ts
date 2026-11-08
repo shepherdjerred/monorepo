@@ -5,6 +5,7 @@ const activities = proxyActivities<{
   probe: () => Promise<string>;
   capture: (id: string) => Promise<string>;
 }>({
+  taskQueue: "tracing-regression-activities",
   startToCloseTimeout: "5 seconds",
 });
 
