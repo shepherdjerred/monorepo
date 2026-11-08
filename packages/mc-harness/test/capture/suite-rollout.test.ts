@@ -2,9 +2,37 @@ import { it, expect } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { localRollout } from "#src/capture/suite/rollout.ts";
+import { localRollout, rolloutListenHost } from "#src/capture/suite/rollout.ts";
 import { memoryStore } from "./suite-fixtures.ts";
 import { SandboxCreateRequestSchema } from "#protocol/ipc.ts";
+
+const loopback = () => Promise.resolve("127.0.0.1");
+
+it("binds Linux readers to Docker's IPv4 bridge and preserves Desktop loopback routing", async () => {
+  const inspected: string[][] = [];
+  const inspect = (argv: string[]) => {
+    inspected.push(argv);
+    return Promise.resolve('[{"Gateway":"fd00::1"},{"Gateway":"172.17.0.1"}]');
+  };
+  expect(await rolloutListenHost("darwin", inspect)).toBe("127.0.0.1");
+  expect(inspected).toEqual([]);
+  expect(await rolloutListenHost("linux", inspect)).toBe("172.17.0.1");
+  expect(inspected).toEqual([
+    [
+      "docker",
+      "network",
+      "inspect",
+      "bridge",
+      "--format",
+      "{{json .IPAM.Config}}",
+    ],
+  ]);
+  await expect(
+    rolloutListenHost("linux", () =>
+      Promise.resolve('[{"Gateway":"fd00::1"}]'),
+    ),
+  ).rejects.toThrow("IPv4 gateway");
+});
 
 it("records the first real evaluation and replays it after upstream disappears", async () => {
   let enabled = true,
@@ -19,14 +47,17 @@ it("records the first real evaluation and replays it after upstream disappears",
   });
   const store = memoryStore();
   const cache = await mkdtemp(path.join(os.tmpdir(), "rollout-test-"));
-  const recorder = await localRollout({
-    source: {
-      url: `http://127.0.0.1:${String(upstream.port)}`,
-      environment: "prod",
+  const recorder = await localRollout(
+    {
+      source: {
+        url: `http://127.0.0.1:${String(upstream.port)}`,
+        environment: "prod",
+      },
+      store,
+      cache,
     },
-    store,
-    cache,
-  });
+    loopback,
+  );
   const request = {
     namespace_key: "the-storm",
     flag_key: "example",
@@ -55,7 +86,7 @@ it("records the first real evaluation and replays it after upstream disappears",
     const snapshot = await recorder.retain();
     await upstream.stop(true);
     await recorder.stop();
-    const replay = await localRollout({ snapshot, store, cache });
+    const replay = await localRollout({ snapshot, store, cache }, loopback);
     try {
       expect(await evaluate(replay.bootstrap.url)).toEqual({ enabled: true });
     } finally {

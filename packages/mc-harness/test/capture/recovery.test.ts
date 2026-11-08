@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
@@ -167,6 +167,46 @@ function driver(transport: FakeTransport): Parameters<typeof restoreScene>[3] {
 }
 
 describe("capture recovery", () => {
+  it("exits unsuccessfully when the CLI leaves restoration unfinished", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "capture-recovery-cli-"));
+    try {
+      const run = fixture();
+      run.id = "capture-00000000-0000-4000-8000-000000000001";
+      await mkdir(path.join(root, "captures"));
+      await initializeRun(path.join(root, "captures", run.id), run);
+      const child = Bun.spawn(
+        [
+          process.execPath,
+          path.resolve("src/capture/cli.ts"),
+          "recover",
+          run.id,
+          "--target",
+          "live",
+          "--reason",
+          "Test unfinished restoration",
+        ],
+        {
+          env: {
+            ...Bun.env,
+            TOOLKIT_MC_DIRECTORY: root,
+            OP_SERVICE_ACCOUNT_TOKEN: undefined,
+            MC_BRIDGE_TOKEN: undefined,
+          },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      const [code, out] = await Promise.all([
+        child.exited,
+        new Response(child.stdout).text(),
+        new Response(child.stderr).text(),
+      ]);
+      expect(code).toBe(1);
+      expect(RunSchema.parse(JSON.parse(out)).state).toBe("needs-recovery");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
   it("requires observed player cleanup confirmation before restoring its target", async () => {
     const root = await mkdtemp(
       path.join(os.tmpdir(), "capture-player-cleanup-"),

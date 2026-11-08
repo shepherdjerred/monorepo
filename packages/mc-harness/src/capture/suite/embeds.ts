@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mediaFigure } from "#protocol/media-markup.ts";
+import { mediaFigure, mediaMarkup } from "#protocol/media-markup.ts";
 import { PublicMediaSchema } from "#protocol/media.ts";
 import type { PublicMedia } from "#protocol/media.ts";
 import { command } from "./process.ts";
@@ -10,9 +10,17 @@ export function replaceFigures(
 ): string {
   return text.replaceAll(
     /<div><storm-media data-manifest="\/media\/([a-z0-9-]+)\/media\.json">[\s\S]*?<\/storm-media><\/div>/gu,
-    (original: string, name: string) => {
+    (original: string, name: string, offset: number) => {
       const manifest = manifests.get(name);
-      return manifest === undefined ? original : mediaFigure(manifest);
+      if (manifest === undefined) return original;
+      const download = `/media/${name}/annotated.${manifest.kind === "video" ? "mp4" : "webp"}`;
+      const inline = original.includes(`href="${download}"`);
+      const following = text.slice(offset + original.length);
+      const external =
+        /^\s*<p>\s*<a\s[^>]*href="([^"]+)"/u.exec(following)?.[1] === download;
+      return inline && !external
+        ? mediaMarkup(manifest)
+        : mediaFigure(manifest);
     },
   );
 }

@@ -50,17 +50,20 @@ function isPublishedStorm(profileName: string): boolean {
 }
 
 /** `docker create` argv for a sandbox; pure so the label/port shape is tested. */
-export function dockerCreateArgs(options: {
-  id: string;
-  profileName: string;
-  profile: ResolvedProfile;
-  /** Null when the profile stages no plugins (the image keeps its own). */
-  pluginsDir: string | null;
-  cacheDir: string;
-  expiresAt: string;
-  owner: string;
-  keep: boolean;
-}): string[] {
+export function dockerCreateArgs(
+  options: {
+    id: string;
+    profileName: string;
+    profile: ResolvedProfile;
+    /** Null when the profile stages no plugins (the image keeps its own). */
+    pluginsDir: string | null;
+    cacheDir: string;
+    expiresAt: string;
+    owner: string;
+    keep: boolean;
+  },
+  platform: NodeJS.Platform = process.platform,
+): string[] {
   const pluginsDir = options.pluginsDir;
   return [
     "create",
@@ -76,6 +79,12 @@ export function dockerCreateArgs(options: {
     `${LABELS.owner}=${options.owner}`,
     "--label",
     `${LABELS.keep}=${options.keep.toString()}`,
+    ...(platform === "linux" &&
+    options.profile.env["FLIPT_URL"]?.startsWith(
+      "http://host.docker.internal:",
+    ) === true
+      ? ["--add-host", "host.docker.internal:host-gateway"]
+      : []),
     ...(isPublishedStorm(options.profileName)
       ? [
           "--user",

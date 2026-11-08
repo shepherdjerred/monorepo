@@ -169,6 +169,7 @@ async function recoverScene(
   print(
     JSON.stringify(await runScene(directory, recovery, run, true), null, 2),
   );
+  if (run.state === "needs-recovery") process.exitCode = 1;
   return;
 }
 

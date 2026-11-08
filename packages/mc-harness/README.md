@@ -274,10 +274,16 @@ client/Mojang dependencies still require their registries or local caches.
 
 Live boolean rollout decisions are recorded once per request identity through
 a local reader. Replay restores those decisions and refuses unrecorded ones.
+On macOS the reader binds loopback through Docker Desktop's host routing.
+On Linux it binds Docker's default IPv4 bridge gateway; the sandbox maps
+`host.docker.internal` through Docker's `host-gateway` route. The listener
+does not bind every host interface.
 It reuses the saved terrain and runtime without another production export.
 `render` uses retained raw frames with the current presentation metadata and
 starts neither Minecraft nor a rollout reader. Video annotations can anchor to
 recorded step names with `atStep` and relative `startMs`/`endMs` offsets.
+Regeneration preserves existing annotated download links. A recovery command
+returns a failing status while restoration remains unfinished.
 
 Raw captures, terrain, source inputs and run indexes live as SHA-256 addressed
 objects in the private bucket. Uploads and downloads verify their bytes; run

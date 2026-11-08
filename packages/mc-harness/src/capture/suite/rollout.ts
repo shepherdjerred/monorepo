@@ -1,5 +1,36 @@
 import { z } from "zod";
 import { retainBlob, cachedBlob, type BlobStore } from "./store.ts";
+import { command } from "./process.ts";
+
+/** Linux containers reach a host reader through the default bridge, not host loopback. */
+export async function rolloutListenHost(
+  platform: NodeJS.Platform = process.platform,
+  inspect: (argv: string[]) => Promise<string> = command,
+): Promise<string> {
+  if (platform !== "linux") return "127.0.0.1";
+  const configs = z
+    .array(z.object({ Gateway: z.union([z.ipv4(), z.ipv6()]) }))
+    .parse(
+      JSON.parse(
+        await inspect([
+          "docker",
+          "network",
+          "inspect",
+          "bridge",
+          "--format",
+          "{{json .IPAM.Config}}",
+        ]),
+      ),
+    );
+  const gateway = configs
+    .map((config) => config.Gateway)
+    .find((value) => z.ipv4().safeParse(value).success);
+  if (gateway === undefined)
+    throw new Error(
+      "Docker's default bridge needs an IPv4 gateway for capture rollout",
+    );
+  return gateway;
+}
 
 const RequestSchema = z.object({
   namespace_key: z.string(),
@@ -27,12 +58,15 @@ function requestKey(value: z.infer<typeof RequestSchema>): string {
 }
 
 /** Record each effective decision once; replay never contacts the upstream reader. */
-export async function localRollout(options: {
-  source?: { url: string; environment: "prod" | "beta" };
-  snapshot?: string;
-  store: BlobStore;
-  cache: string;
-}) {
+export async function localRollout(
+  options: {
+    source?: { url: string; environment: "prod" | "beta" };
+    snapshot?: string;
+    store: BlobStore;
+    cache: string;
+  },
+  listenHost: () => Promise<string> = rolloutListenHost,
+) {
   const restored =
     options.snapshot === undefined
       ? undefined
@@ -75,7 +109,7 @@ export async function localRollout(options: {
     return entry;
   };
   const server = Bun.serve({
-    hostname: "127.0.0.1",
+    hostname: await listenHost(),
     port: 0,
     fetch: async (request) => {
       try {

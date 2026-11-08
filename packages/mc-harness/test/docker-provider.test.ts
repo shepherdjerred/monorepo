@@ -13,16 +13,21 @@ const secrets = { bridgeToken: "b".repeat(48), rconPassword: "c".repeat(48) };
 
 describe("docker sandbox argv", () => {
   it("publishes every port on loopback only and labels the container", () => {
-    const args = dockerCreateArgs({
+    const profile = resolveProfile(
+      { profile: "paper", world: "flat" },
+      secrets,
+    );
+    const options = {
       id: "sbx-abc123",
       profileName: "paper",
-      profile: resolveProfile({ profile: "paper", world: "flat" }, secrets),
+      profile,
       pluginsDir: "/tmp/plugins",
       cacheDir: "/tmp/cache",
       expiresAt: "2026-10-04T00:00:00.000Z",
       owner: "me@host",
       keep: false,
-    });
+    };
+    const args = dockerCreateArgs(options, "linux");
     expect(args.filter((_, i) => args[i - 1] === "-p")).toEqual([
       "127.0.0.1::25565",
       "127.0.0.1::25575",
@@ -34,6 +39,12 @@ describe("docker sandbox argv", () => {
     expect(args).toContain("/tmp/plugins:/plugins:ro");
     expect(args).toContain(`MC_BRIDGE_TOKEN=${secrets.bridgeToken}`);
     expect(args.at(-1)).toMatch(/^itzg\/minecraft-server:.+@sha256:/u);
+    expect(args).not.toContain("--add-host");
+    profile.env["FLIPT_URL"] = "http://host.docker.internal:12345";
+    expect(dockerCreateArgs(options, "linux")).toContain(
+      "host.docker.internal:host-gateway",
+    );
+    expect(dockerCreateArgs(options, "darwin")).not.toContain("--add-host");
   });
 
   it("mounts storm image overlays as individual files in Docker", () => {
