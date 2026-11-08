@@ -14,7 +14,9 @@ fail loudly.
 for consumer outage behavior. The default environment is production; consumers
 with beta deployments pass their actual Flipt environment explicitly.
 
-`createFlagMetricsRecorder` adapts a process-owned registry. Evaluation values
+`createFlagMetricSet` registers the shared metric families through factories
+that close over the application's client and registry; the library owns neither.
+`createFlagMetricsRecorder` adapts those metrics. Evaluation values
 are bounded to `true`, `false`, `non_boolean`, and `error`. Variant values and
 targeting identifiers are never labels. `feature_flag_provider_info` identifies
 the configured Flipt pair and is cleared at shutdown.

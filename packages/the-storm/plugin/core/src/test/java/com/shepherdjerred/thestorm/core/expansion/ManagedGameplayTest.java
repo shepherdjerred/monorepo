@@ -23,10 +23,11 @@ final class ManagedGameplayTest {
         new ManagedGameplay(
             (key, id) -> response.get(),
             () -> {},
-            false,
             InstantSource.system(),
-            java.util.Set.of(
-                ManagedGameplay.STAFF, ManagedGameplay.IDENTITY, ManagedGameplay.LETTERS));
+            new ManagedGameplay.OutageDefaults(
+                false,
+                java.util.Set.of(
+                    ManagedGameplay.STAFF, ManagedGameplay.IDENTITY, ManagedGameplay.LETTERS)));
     assertThat(gameplay.enabled(ManagedGameplay.STAFF, actor).join()).isTrue();
     assertThatThrownBy(() -> gameplay.enabled(ManagedGameplay.IP, actor).join())
         .hasRootCauseMessage("offline");

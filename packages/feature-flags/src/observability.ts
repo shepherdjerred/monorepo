@@ -75,6 +75,59 @@ type GaugeMetric = {
   readonly set: (value: number) => void;
 };
 
+type MetricDefinition<Label extends string> = {
+  readonly name: string;
+  readonly help: string;
+  readonly labelNames: readonly Label[];
+};
+
+/** Factories close over the application's own metrics client and registry. */
+export type FlagMetricFactory = {
+  readonly counter: <Label extends string>(
+    definition: MetricDefinition<Label>,
+  ) => CounterMetric<Readonly<Record<Label, string>>>;
+  readonly gauge: <Label extends string>(
+    definition: MetricDefinition<Label>,
+  ) => {
+    readonly reset: () => void;
+    readonly set: {
+      (value: number): void;
+      (labels: Readonly<Record<Label, string>>, value: number): void;
+    };
+  };
+};
+
+/** Registers the shared metric families without choosing a client or registry. */
+export function createFlagMetricSet(factory: FlagMetricFactory) {
+  return {
+    evaluations: factory.counter({
+      name: FEATURE_FLAG_METRICS.evaluations,
+      help: "Feature flag evaluations by bounded result",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.evaluations,
+    }),
+    errors: factory.counter({
+      name: FEATURE_FLAG_METRICS.errors,
+      help: "Feature flag errors by operation",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.errors,
+    }),
+    providerReady: factory.gauge({
+      name: FEATURE_FLAG_METRICS.providerReady,
+      help: "Feature flag provider readiness",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.providerReady,
+    }),
+    snapshotAge: factory.gauge({
+      name: FEATURE_FLAG_METRICS.snapshotAge,
+      help: "Feature flag snapshot age in seconds",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.snapshotAge,
+    }),
+    providerInfo: factory.gauge({
+      name: FEATURE_FLAG_METRICS.providerInfo,
+      help: "Configured Flipt environment and namespace",
+      labelNames: FEATURE_FLAG_METRIC_LABELS.providerInfo,
+    }),
+  };
+}
+
 /** Adapts process-owned Prometheus metrics to the shared lifecycle contract. */
 export function createFlagMetricsRecorder(input: {
   readonly evaluations: CounterMetric<{

@@ -157,6 +157,7 @@ const grafanaDashboards = [
   "buildkitd-dashboard",
   "ci-capacity-dashboard",
   "discord-plays-dashboard",
+  "feature-flags-dashboard",
   "gitckup-dashboard",
   "scout-for-lol-dashboard",
   "scout-for-lol-durable-dashboard",
