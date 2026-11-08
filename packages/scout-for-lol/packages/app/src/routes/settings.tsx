@@ -8,13 +8,10 @@ import { readCsrfCookie, useTRPC } from "#src/lib/query/trpc.ts";
 const StartSchema = z.object({ authorizeUrl: z.url() });
 const ErrorSchema = z.object({ message: z.string() });
 const CALLBACK_MESSAGES: Readonly<Record<string, string>> = {
-  cancelled:
-    "Riot sign-in was cancelled. Your accounts and notification settings have not changed.",
-  expired:
-    "That Riot sign-in expired or was already used. Please start linking again.",
-  failed: "Riot account verification could not complete. Please try again.",
-  "project-mismatch":
-    "Riot verification is not configured for Scout’s API project. Please contact support.",
+  cancelled: "Riot sign-in was cancelled.",
+  expired: "Sign-in expired. Try linking your account again.",
+  failed: "Couldn’t link your Riot account. Try again.",
+  "project-mismatch": "We couldn’t link this account.",
 };
 
 export function AccountSettings() {
@@ -37,21 +34,17 @@ export function AccountSettings() {
       retry: false,
       onSuccess: async ({ kind }) => {
         if (kind === "linked") {
-          setNotice(
-            "Riot account verified. You can now choose its match notifications.",
-          );
+          setNotice("Account linked.");
           await refresh();
         } else
           setError(
             kind === "account-conflict"
-              ? "This Riot account is linked to another Discord login. Contact support to resolve the existing link."
+              ? "This Riot account is linked to another Discord account."
               : (CALLBACK_MESSAGES["expired"] ?? null),
           );
       },
       onError: async () => {
-        setError(
-          "The Riot link could not be completed. Refresh your accounts before trying again.",
-        );
+        setError("Couldn’t link your account. Try linking it again.");
         await refresh();
       },
       onSettled: () => {
@@ -72,14 +65,12 @@ export function AccountSettings() {
       onSuccess: async ({ enabled }) => {
         setError(null);
         setNotice(
-          enabled
-            ? "Match notifications enabled for this account."
-            : "This account will no longer trigger match notifications in any Scout server.",
+          enabled ? "Match notifications on." : "Match notifications off.",
         );
         await refresh();
       },
-      onError: (failure) => {
-        setError(failure.message);
+      onError: () => {
+        setError("Couldn’t save your preference. Try again.");
       },
     }),
   );
@@ -100,7 +91,7 @@ export function AccountSettings() {
         setError(
           parsed.success
             ? parsed.data.message
-            : "Riot sign-in could not start. Please retry.",
+            : "Couldn’t start Riot sign-in. Try again.",
         );
         return;
       }
@@ -109,19 +100,19 @@ export function AccountSettings() {
         throw new Error("Unexpected Riot authorization origin");
       globalThis.location.assign(authorizeUrl);
     } catch {
-      setError("Riot sign-in could not start. Please retry.");
+      setError("Couldn’t start Riot sign-in. Try again.");
     } finally {
       setLinking(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-6 py-10">
-      <h1 className="text-2xl font-semibold">Account settings</h1>
-      {accounts.isPending && <p role="status">Loading League accounts…</p>}
+    <div className="mx-auto max-w-2xl space-y-8 px-6 py-10">
+      <h1 className="text-2xl font-semibold">Settings</h1>
+      {accounts.isPending && <p role="status">Loading accounts…</p>}
       {accounts.error !== null && (
         <p role="alert" className="text-scout-danger">
-          Your account settings could not load. Please refresh.
+          Couldn’t load your accounts. Please refresh.
         </p>
       )}
       {accounts.data !== undefined && (

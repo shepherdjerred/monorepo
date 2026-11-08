@@ -13,6 +13,14 @@ const account = {
 const meta = {
   title: "Settings/League accounts",
   component: RiotAccountsSettings,
+  decorators: [
+    (renderStory) => (
+      <div className="mx-auto max-w-2xl space-y-8 px-6 py-10">
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        {renderStory()}
+      </div>
+    ),
+  ],
   args: {
     data: {
       accounts: [account],
@@ -30,6 +38,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Verified: Story = {};
+export const MultipleAccounts: Story = {
+  args: {
+    data: {
+      ...meta.args.data,
+      accounts: [
+        account,
+        {
+          ...account,
+          puuid: LeaguePuuidSchema.parse("R".repeat(78)),
+          gameName: "Stargazer",
+          matchNotificationsEnabled: false,
+        },
+      ],
+    },
+  },
+};
 export const NotificationsOff: Story = {
   args: {
     data: {
@@ -52,7 +76,6 @@ export const NotConfigured: Story = {
 };
 export const Conflict: Story = {
   args: {
-    error:
-      "This Riot account is linked to another Discord login. Contact support to resolve the existing link.",
+    error: "This Riot account is linked to another Discord account.",
   },
 };

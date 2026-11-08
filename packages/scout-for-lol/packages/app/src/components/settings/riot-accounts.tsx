@@ -17,24 +17,26 @@ export function RiotAccountsSettings(props: {
 }) {
   const canLink = props.data.linkingEnabled && props.data.linkingConfigured;
   return (
-    <section className="space-y-6" aria-labelledby="league-accounts-heading">
+    <section className="space-y-5" aria-labelledby="league-accounts-heading">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="league-accounts-heading" className="text-xl font-semibold">
+        <h2 id="league-accounts-heading" className="text-lg font-semibold">
           League accounts
         </h2>
-        <Button onClick={props.onLink} disabled={!canLink || props.linking}>
-          {props.linking ? "Opening Riot…" : "Link Riot account"}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={props.onLink}
+          disabled={!canLink || props.linking}
+        >
+          {props.linking ? "Connecting…" : "Link Riot account"}
         </Button>
       </div>
-      <p className="text-scout-subtle">
-        Verify your League accounts by signing in with Riot. You can then choose
-        whether each account triggers automatic game-start and game-end posts in
-        any Scout server.
+      <p className="text-sm text-scout-subtle">
+        Game-start and game-end posts across all Scout servers.
       </p>
       {!canLink && (
         <p className="text-sm text-scout-subtle">
-          New Riot account links are not available yet. Existing notification
-          settings still work.
+          Account linking is currently unavailable.
         </p>
       )}
       {props.notice !== null && (
@@ -44,72 +46,75 @@ export function RiotAccountsSettings(props: {
       )}
       {props.error !== null && (
         <p role="alert" className="text-sm text-scout-danger">
-          {props.error}
+          {props.error}{" "}
+          <Link className="underline" to="/feedback">
+            Contact support
+          </Link>
         </p>
       )}
       {props.data.accounts.length === 0 ? (
-        <div className="rounded-lg border border-scout-border p-6">
-          <p className="font-medium">No verified League accounts yet</p>
+        <div className="rounded-lg border border-scout-border bg-scout-surface px-5 py-6">
+          <p className="text-sm font-medium">No linked accounts</p>
           <p className="mt-2 text-sm text-scout-subtle">
-            Link an account to manage its match notifications. You can link more
-            than one account.
+            Link your Riot account to manage match notifications.
           </p>
         </div>
       ) : (
-        props.data.accounts.map((account) => (
-          <div
-            key={account.puuid}
-            className="flex flex-wrap items-center justify-between gap-5 rounded-lg border border-scout-border bg-scout-surface p-6"
-          >
-            <div className="min-w-0 flex-1 space-y-2">
-              <h3 className="break-words text-lg font-semibold">
-                {account.gameName}#{account.tagLine}
-              </h3>
-              <p className="text-xs text-scout-subtle">Verified with Riot</p>
-              <label
-                htmlFor={`notifications-${account.puuid}`}
-                className="block text-sm font-medium"
-              >
-                Match notifications
-              </label>
-              <p className="text-sm text-scout-subtle">
-                {account.matchNotificationsEnabled
-                  ? "This account can trigger game-start and game-end posts in every Scout server that follows it."
-                  : "This account will not trigger game-start or game-end posts in any Scout server."}
-              </p>
-            </div>
-            <Switch
-              id={`notifications-${account.puuid}`}
-              aria-label={`Match notifications for ${account.gameName}#${account.tagLine}`}
-              checked={account.matchNotificationsEnabled}
-              disabled={props.savingPuuid !== null}
-              onCheckedChange={(enabled) => {
-                props.onSetEnabled(account, enabled);
-              }}
-            />
-          </div>
-        ))
+        <ul className="divide-y divide-scout-border rounded-lg border border-scout-border bg-scout-surface">
+          {props.data.accounts.map((account) => (
+            <li
+              key={account.puuid}
+              className="flex items-center justify-between gap-4 px-5 py-4"
+            >
+              <div className="min-w-0 space-y-1">
+                <h3 className="break-words text-sm font-medium">
+                  {account.gameName}#{account.tagLine}
+                </h3>
+                <label
+                  htmlFor={`notifications-${account.puuid}`}
+                  className="block text-xs text-scout-subtle"
+                >
+                  Match notifications
+                </label>
+              </div>
+              <Switch
+                id={`notifications-${account.puuid}`}
+                aria-label={`Match notifications for ${account.gameName}#${account.tagLine}`}
+                checked={account.matchNotificationsEnabled}
+                disabled={props.savingPuuid !== null}
+                onCheckedChange={(enabled) => {
+                  props.onSetEnabled(account, enabled);
+                }}
+              />
+            </li>
+          ))}
+        </ul>
       )}
-      <div className="space-y-2 text-sm text-scout-subtle">
-        <p>
-          Turning notifications off keeps tracking, profiles, statistics, and
-          match history available. If another player triggers a shared report,
-          your account can still appear with its normal name and Discord
-          mentions.
-        </p>
-        <p>
-          Already posted messages stay in Discord. A notification already being
-          sent may still arrive. Turning notifications back on does not request
-          reports for missed games.
-        </p>
-        <p>
-          Account linked to a different Discord login?{" "}
-          <Link className="text-scout-accent underline" to="/feedback">
-            Contact support
-          </Link>{" "}
-          to resolve the existing link.
-        </p>
-      </div>
+      <p className="text-sm text-scout-subtle">
+        Tracking, stats, and history continue. Shared reports may still include
+        your name and Discord mentions.
+      </p>
+      <details className="text-sm text-scout-subtle">
+        <summary className="w-fit cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-scout-focus">
+          How notifications work
+        </summary>
+        <div className="mt-3 space-y-2">
+          <p>
+            Turning notifications off stops posts triggered by this account
+            across all Scout servers.
+          </p>
+          <p>
+            Existing posts stay in Discord. Posts already being sent may still
+            arrive. Turning notifications back on won’t post missed games.
+          </p>
+          <p>
+            <Link className="underline" to="/feedback">
+              Contact support
+            </Link>{" "}
+            for help with a linked account.
+          </p>
+        </div>
+      </details>
     </section>
   );
 }
